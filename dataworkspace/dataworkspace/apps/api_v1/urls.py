@@ -11,50 +11,50 @@ from dataworkspace.apps.api_v1.views import (
 
 urlpatterns = [
     path(
-        'application/<str:public_host>',
+        "application/<str:public_host>",
         csrf_exempt(login_required(application_api_view)),
-        name='application-detail',
+        name="application-detail",
     ),
-    path('application', csrf_exempt(applications_api_view), name='application-list'),
+    path("application", csrf_exempt(applications_api_view), name="application-list"),
     path(
-        'aws_credentials',
+        "aws_credentials",
         csrf_exempt(login_required(aws_credentials_api_view)),
-        name='aws-credentials',
+        name="aws-credentials",
     ),
     path(
-        'dataset/',
-        include(('dataworkspace.apps.api_v1.datasets.urls', 'dataset'), namespace='dataset'),
+        "dataset/",
+        include(("dataworkspace.apps.api_v1.datasets.urls", "dataset"), namespace="dataset"),
     ),
     path(
-        'reference-dataset/',
+        "reference-dataset/",
         include(
-            ('dataworkspace.apps.api_v1.datasets.urls', 'reference-dataset'),
-            namespace='reference-dataset',
+            ("dataworkspace.apps.api_v1.datasets.urls", "reference-dataset"),
+            namespace="reference-dataset",
         ),
     ),
     path(
-        'eventlog/',
+        "eventlog/",
         include(
-            ('dataworkspace.apps.api_v1.eventlog.urls', 'eventlog'),
-            namespace='eventlog',
+            ("dataworkspace.apps.api_v1.eventlog.urls", "eventlog"),
+            namespace="eventlog",
         ),
     ),
     path(
-        'account/',
-        include(('dataworkspace.apps.api_v1.accounts.urls', 'account'), namespace='account'),
+        "account/",
+        include(("dataworkspace.apps.api_v1.accounts.urls", "account"), namespace="account"),
     ),
     path(
-        'application-instance/',
+        "application-instance/",
         include(
-            ('dataworkspace.apps.api_v1.applications.urls', 'application-instance'),
-            namespace='application-instance',
+            ("dataworkspace.apps.api_v1.applications.urls", "application-instance"),
+            namespace="application-instance",
         ),
     ),
     path(
-        'core/',
+        "core/",
         include(
-            ('dataworkspace.apps.api_v1.core.urls', 'core'),
-            namespace='core',
+            ("dataworkspace.apps.api_v1.core.urls", "core"),
+            namespace="core",
         ),
     ),
 ]

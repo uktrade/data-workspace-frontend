@@ -30,7 +30,7 @@ def _include_table(t):
 
 
 def connection_schema_cache_key(user, connection_alias):
-    return f'_explorer_cache_key_{user.profile.sso_id}_{connection_alias}'
+    return f"_explorer_cache_key_{user.profile.sso_id}_{connection_alias}"
 
 
 def schema_info(user, connection_alias):
@@ -50,15 +50,15 @@ def clear_schema_info_cache_for_user(user):
         cache.delete(connection_schema_cache_key(user, connection))
 
 
-Column = namedtuple('Column', ['name', 'type'])
-Table = namedtuple('Table', ['name', 'columns'])
+Column = namedtuple("Column", ["name", "type"])
+Table = namedtuple("Table", ["name", "columns"])
 
 
-class TableName(namedtuple("TableName", ['schema', 'name'])):
+class TableName(namedtuple("TableName", ["schema", "name"])):
     __slots__ = ()
 
     def __str__(self):
-        return f'{self.schema}.{self.name}'
+        return f"{self.schema}.{self.name}"
 
 
 def build_schema_info(user, connection_alias):
@@ -86,7 +86,7 @@ def build_schema_info(user, connection_alias):
         # Fetch schema, table, column_name, column_type in one query, avoiding
         # information_schema since there is suspicion it is slow
         cursor.execute(
-            '''
+            """
             SELECT
               pg_namespace.nspname AS schema_name,
               pg_class.relname AS table_name,
@@ -108,22 +108,22 @@ def build_schema_info(user, connection_alias):
               attnum > 0
             ORDER BY
               pg_namespace.nspname, pg_class.relname, attnum
-        '''
+        """
         )
-        results = [row for row in cursor.fetchall() if _include_table(row['table_name'])]
+        results = [row for row in cursor.fetchall() if _include_table(row["table_name"])]
 
     return [
         Table(
             TableName(schema_name, table_name),
-            [Column(column['column_name'], column['column_type']) for column in columns],
+            [Column(column["column_name"], column["column_type"]) for column in columns],
         )
         for (schema_name, table_name), columns in groupby(
-            results, lambda row: (row['schema_name'], row['table_name'])
+            results, lambda row: (row["schema_name"], row["table_name"])
         )
     ]
 
 
 def get_user_schema_info(request):
     schema = schema_info(user=request.user, connection_alias=settings.EXPLORER_DEFAULT_CONNECTION)
-    tables_columns = ['.'.join(schema_table) for schema_table, _ in schema]
+    tables_columns = [".".join(schema_table) for schema_table, _ in schema]
     return schema, tables_columns

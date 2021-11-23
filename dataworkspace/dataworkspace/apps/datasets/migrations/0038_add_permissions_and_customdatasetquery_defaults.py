@@ -5,54 +5,54 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [('datasets', '0037_add_dataset_soft_delete')]
+    dependencies = [("datasets", "0037_add_dataset_soft_delete")]
 
     operations = [
         migrations.AlterModelOptions(
-            name='datacutdataset',
+            name="datacutdataset",
             options={
-                'permissions': [
+                "permissions": [
                     (
-                        'manage_unpublished_datacut_datasets',
-                        'Manage (create, view, edit) unpublished datacut datasets',
+                        "manage_unpublished_datacut_datasets",
+                        "Manage (create, view, edit) unpublished datacut datasets",
                     )
                 ],
-                'verbose_name': 'Data Cut Dataset',
+                "verbose_name": "Data Cut Dataset",
             },
         ),
         migrations.AlterModelOptions(
-            name='masterdataset',
+            name="masterdataset",
             options={
-                'permissions': [
+                "permissions": [
                     (
-                        'manage_unpublished_master_datasets',
-                        'Manage (create, view, edit) unpublished master datasets',
+                        "manage_unpublished_master_datasets",
+                        "Manage (create, view, edit) unpublished master datasets",
                     )
                 ],
-                'verbose_name': 'Master Dataset',
+                "verbose_name": "Master Dataset",
             },
         ),
         migrations.AlterModelOptions(
-            name='referencedataset',
+            name="referencedataset",
             options={
-                'permissions': [
+                "permissions": [
                     (
-                        'manage_unpublished_reference_datasets',
-                        'Manage (create, view, edit) unpublished reference datasets',
+                        "manage_unpublished_reference_datasets",
+                        "Manage (create, view, edit) unpublished reference datasets",
                     )
                 ],
-                'verbose_name': 'Reference dataset',
+                "verbose_name": "Reference dataset",
             },
         ),
         migrations.AddField(
-            model_name='customdatasetquery',
-            name='reviewed',
+            model_name="customdatasetquery",
+            name="reviewed",
             field=models.BooleanField(default=True),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='customdatasetquery',
-            name='reviewed',
+            model_name="customdatasetquery",
+            name="reviewed",
             field=models.BooleanField(default=False),
         ),
     ]

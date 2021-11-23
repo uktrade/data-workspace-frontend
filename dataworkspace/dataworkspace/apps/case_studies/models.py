@@ -17,7 +17,7 @@ class CaseStudy(TimeStampedUserModel):
     department_name = models.CharField(max_length=255, blank=True)
     service_name = models.CharField(max_length=255, blank=True)
     outcome = models.CharField(max_length=255, blank=True)
-    image = models.FileField(blank=True, storage=S3FileStorage(location='case-studies'))
+    image = models.FileField(blank=True, storage=S3FileStorage(location="case-studies"))
     background = RichTextField(blank=True)
     solution = RichTextField(blank=True)
     impact = RichTextField(blank=True)
@@ -27,8 +27,8 @@ class CaseStudy(TimeStampedUserModel):
     quote_department_name = models.CharField(max_length=255, blank=True)
 
     class Meta:
-        verbose_name_plural = 'Case studies'
-        ordering = ('-created_date',)
+        verbose_name_plural = "Case studies"
+        ordering = ("-created_date",)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -56,4 +56,4 @@ class CaseStudy(TimeStampedUserModel):
         return self.name
 
     def get_absolute_url(self):
-        return reverse('case-studies:case-study', args=(self.slug,))
+        return reverse("case-studies:case-study", args=(self.slug,))

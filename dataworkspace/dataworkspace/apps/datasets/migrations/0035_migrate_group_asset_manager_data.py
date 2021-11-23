@@ -8,12 +8,12 @@ def add_dataset_iam_info(apps, _):
     Update all datasets to have the same IAM contact information
     as their data grouping
     """
-    Dataset = apps.get_model('datasets', 'DataSet')
+    Dataset = apps.get_model("datasets", "DataSet")
     for dataset in Dataset.objects.exclude(grouping__isnull=True).all():
         dataset.information_asset_owner = dataset.grouping.information_asset_owner
         dataset.information_asset_manager = dataset.grouping.information_asset_manager
         dataset.save()
-    ReferenceDataset = apps.get_model('datasets', 'ReferenceDataset')
+    ReferenceDataset = apps.get_model("datasets", "ReferenceDataset")
     for ref_dataset in ReferenceDataset.objects.exclude(group__isnull=True).all():
         ref_dataset.information_asset_owner = ref_dataset.group.information_asset_owner
         ref_dataset.information_asset_manager = ref_dataset.group.information_asset_manager
@@ -22,6 +22,6 @@ def add_dataset_iam_info(apps, _):
 
 class Migration(migrations.Migration):
 
-    dependencies = [('datasets', '0034_add_dataset_asset_manager_fields')]
+    dependencies = [("datasets", "0034_add_dataset_asset_manager_fields")]
 
     operations = [migrations.RunPython(add_dataset_iam_info, migrations.RunPython.noop)]

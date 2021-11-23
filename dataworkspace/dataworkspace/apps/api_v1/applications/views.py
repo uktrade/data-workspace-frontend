@@ -8,7 +8,7 @@ from dataworkspace.apps.applications.models import ApplicationInstance
 
 
 class ApplicationInstanceCursorPagination(CursorPagination):
-    ordering = ('id',)
+    ordering = ("id",)
 
 
 class ApplicationInstanceViewSet(viewsets.ModelViewSet):

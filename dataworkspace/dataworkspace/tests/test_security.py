@@ -11,7 +11,7 @@ from dataworkspace.tests.factories import (
 
 
 def test_baseline_content_security_policy(client):
-    response = client.get(reverse('datasets:find_datasets'))
+    response = client.get(reverse("datasets:find_datasets"))
     assert response.status_code == 200
 
     policies = get_response_csp_as_set(response)
@@ -31,15 +31,15 @@ def test_baseline_content_security_policy(client):
 
 
 @pytest.mark.parametrize(
-    'url,factory,unsafe_inline_script',
+    "url,factory,unsafe_inline_script",
     (
-        ('admin:datasets_referencedataset_add', None, True),
-        ('admin:datasets_referencedataset_change', ReferenceDatasetFactory, True),
-        ('admin:datasets_masterdataset_add', None, True),
-        ('admin:datasets_masterdataset_change', MasterDataSetFactory, True),
-        ('admin:datasets_datacutdataset_add', None, True),
-        ('admin:datasets_datacutdataset_change', DatacutDataSetFactory, True),
-        ('admin:index', None, False),
+        ("admin:datasets_referencedataset_add", None, True),
+        ("admin:datasets_referencedataset_change", ReferenceDatasetFactory, True),
+        ("admin:datasets_masterdataset_add", None, True),
+        ("admin:datasets_masterdataset_change", MasterDataSetFactory, True),
+        ("admin:datasets_datacutdataset_add", None, True),
+        ("admin:datasets_datacutdataset_change", DatacutDataSetFactory, True),
+        ("admin:index", None, False),
     ),
 )
 def test_dataset_admin_pages_allow_inline_scripts_for_ckeditor_support(
@@ -55,10 +55,10 @@ def test_dataset_admin_pages_allow_inline_scripts_for_ckeditor_support(
 
     full_url = reverse(url, args=args)
     response = staff_client.get(full_url, follow=True)
-    script_src = get_csp_section(response, 'script-src')
+    script_src = get_csp_section(response, "script-src")
     assert ("'unsafe-inline'" in script_src) is unsafe_inline_script
 
-    style_src = get_csp_section(response, 'style-src')
+    style_src = get_csp_section(response, "style-src")
     assert "'unsafe-inline'" in style_src
 
 
@@ -66,6 +66,6 @@ def get_csp_section(response, policy_type):
     return next(
         filter(
             lambda policy: policy.strip().startswith(policy_type),
-            response.get('content-security-policy').split(';'),
+            response.get("content-security-policy").split(";"),
         )
     )

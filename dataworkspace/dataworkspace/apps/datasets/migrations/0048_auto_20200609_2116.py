@@ -4,7 +4,7 @@ from django.db import migrations
 
 
 def copy_permissions(apps, schema_editor):
-    VisualisationCatalogueItem = apps.get_model('datasets', 'VisualisationCatalogueItem')
+    VisualisationCatalogueItem = apps.get_model("datasets", "VisualisationCatalogueItem")
 
     visualisations = VisualisationCatalogueItem.objects.all()
     for visualisation in visualisations:
@@ -18,6 +18,6 @@ def noop(apps, schema_editor):
 
 class Migration(migrations.Migration):
 
-    dependencies = [('datasets', '0047_auto_20200609_1027')]
+    dependencies = [("datasets", "0047_auto_20200609_1027")]
 
     operations = [migrations.RunPython(code=copy_permissions, reverse_code=noop)]

@@ -6,29 +6,29 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [('datasets', '0027_migrate_master_datasets')]
+    dependencies = [("datasets", "0027_migrate_master_datasets")]
 
     operations = [
         migrations.CreateModel(
-            name='SourceTag',
+            name="SourceTag",
             fields=[
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
                 (
-                    'id',
+                    "id",
                     models.UUIDField(default=uuid.uuid4, primary_key=True, serialize=False),
                 ),
-                ('name', models.CharField(max_length=255, unique=True)),
+                ("name", models.CharField(max_length=255, unique=True)),
             ],
-            options={'abstract': False},
+            options={"abstract": False},
         ),
         migrations.AddField(
-            model_name='dataset',
-            name='source_tags',
+            model_name="dataset",
+            name="source_tags",
             field=models.ManyToManyField(
                 blank=True,
-                related_name='_dataset_source_tags_+',
-                to='datasets.SourceTag',
+                related_name="_dataset_source_tags_+",
+                to="datasets.SourceTag",
             ),
         ),
     ]

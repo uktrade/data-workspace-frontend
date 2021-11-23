@@ -36,7 +36,7 @@ def async_test(func):
 
 
 class TestApplication(unittest.TestCase):
-    '''Tests the behaviour of the application, including Proxy'''
+    """Tests the behaviour of the application, including Proxy"""
 
     def add_async_cleanup(self, coroutine):
         loop = asyncio.get_event_loop()
@@ -54,89 +54,89 @@ class TestApplication(unittest.TestCase):
         self.add_async_cleanup(cleanup_application_1)
 
         is_logged_in = True
-        codes = iter(['some-code'])
-        tokens = iter(['token-1'])
+        codes = iter(["some-code"])
+        tokens = iter(["token-1"])
         auth_to_me = {
-            'Bearer token-1': {
-                'email': 'test@test.com',
-                'contact_email': 'test@test.com',
-                'related_emails': [],
-                'first_name': 'Peter',
-                'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            "Bearer token-1": {
+                "email": "test@test.com",
+                "contact_email": "test@test.com",
+                "related_emails": [],
+                "first_name": "Peter",
+                "last_name": "Piper",
+                "user_id": "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2",
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+        await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
         _, _, _ = await make_all_tools_visible()
 
         # Ensure the user doesn't see the application link since they don't
         # have permission
-        async with session.request('GET', 'http://dataworkspace.test:8000/') as response:
+        async with session.request("GET", "http://dataworkspace.test:8000/") as response:
             content = await response.text()
-        self.assertNotIn('Test Application', content)
+        self.assertNotIn("Test Application", content)
 
         stdout, stderr, code = await give_user_app_perms()
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
         # Make a request to the tools page
-        async with session.request('GET', 'http://dataworkspace.test:8000/tools/') as response:
+        async with session.request("GET", "http://dataworkspace.test:8000/tools/") as response:
             content = await response.text()
 
         # Ensure the user sees the link to the application
         self.assertEqual(200, response.status)
-        self.assertIn('Test Application</button>', content)
+        self.assertIn("Test Application</button>", content)
 
         self.assertIn('action="http://testapplication-23b40dd9.dataworkspace.test:8000/"', content)
 
         async with session.request(
-            'GET', 'http://testapplication-23b40dd9.dataworkspace.test:8000/'
+            "GET", "http://testapplication-23b40dd9.dataworkspace.test:8000/"
         ) as response:
             application_content_1 = await response.text()
 
-        self.assertIn('Test Application is loading...', application_content_1)
+        self.assertIn("Test Application is loading...", application_content_1)
 
         async with session.request(
-            'GET', 'http://testapplication-23b40dd9.dataworkspace.test:8000/'
+            "GET", "http://testapplication-23b40dd9.dataworkspace.test:8000/"
         ) as response:
             application_content_2 = await response.text()
 
-        self.assertIn('Test Application is loading...', application_content_2)
+        self.assertIn("Test Application is loading...", application_content_2)
 
-        await until_non_202(session, 'http://testapplication-23b40dd9.dataworkspace.test:8000/')
+        await until_non_202(session, "http://testapplication-23b40dd9.dataworkspace.test:8000/")
 
         # The initial connection has to be a GET, since these are redirected
         # to SSO. Unsure initial connection being a non-GET is a feature that
         # needs to be supported / what should happen in this case
-        sent_headers = {'from-downstream': 'downstream-header-value'}
+        sent_headers = {"from-downstream": "downstream-header-value"}
 
         async with session.request(
-            'GET',
-            'http://testapplication-23b40dd9.dataworkspace.test:8000/http',
+            "GET",
+            "http://testapplication-23b40dd9.dataworkspace.test:8000/http",
             headers=sent_headers,
         ) as response:
             received_content = await response.json()
             received_headers = response.headers
 
         # Assert that we received the echo
-        self.assertEqual(received_content['method'], 'GET')
-        self.assertEqual(received_content['headers']['from-downstream'], 'downstream-header-value')
-        self.assertEqual(received_headers['from-upstream'], 'upstream-header-value')
+        self.assertEqual(received_content["method"], "GET")
+        self.assertEqual(received_content["headers"]["from-downstream"], "downstream-header-value")
+        self.assertEqual(received_headers["from-upstream"], "upstream-header-value")
 
         # We are authorized by SSO, and can do non-GETs
         async def sent_content():
             for _ in range(10000):
-                yield b'Some content'
+                yield b"Some content"
 
-        sent_headers = {'from-downstream': 'downstream-header-value'}
+        sent_headers = {"from-downstream": "downstream-header-value"}
         async with session.request(
-            'PATCH',
-            'http://testapplication-23b40dd9.dataworkspace.test:8000/http',
+            "PATCH",
+            "http://testapplication-23b40dd9.dataworkspace.test:8000/http",
             data=sent_content(),
             headers=sent_headers,
         ) as response:
@@ -144,51 +144,51 @@ class TestApplication(unittest.TestCase):
             received_headers = response.headers
 
         # Assert that we received the echo
-        self.assertEqual(received_content['method'], 'PATCH')
-        self.assertEqual(received_content['headers']['from-downstream'], 'downstream-header-value')
-        self.assertEqual(received_content['content'], 'Some content' * 10000)
-        self.assertEqual(received_headers['from-upstream'], 'upstream-header-value')
+        self.assertEqual(received_content["method"], "PATCH")
+        self.assertEqual(received_content["headers"]["from-downstream"], "downstream-header-value")
+        self.assertEqual(received_content["content"], "Some content" * 10000)
+        self.assertEqual(received_headers["from-upstream"], "upstream-header-value")
 
         # Assert that transfer-encoding does not become chunked unnecessarily
         async with session.request(
-            'GET', 'http://testapplication-23b40dd9.dataworkspace.test:8000/http'
+            "GET", "http://testapplication-23b40dd9.dataworkspace.test:8000/http"
         ) as response:
             received_content = await response.json()
-        header_keys = [key.lower() for key in received_content['headers'].keys()]
-        self.assertNotIn('transfer-encoding', header_keys)
+        header_keys = [key.lower() for key in received_content["headers"].keys()]
+        self.assertNotIn("transfer-encoding", header_keys)
 
         async with session.request(
-            'PATCH',
-            'http://testapplication-23b40dd9.dataworkspace.test:8000/http',
-            data=b'1234',
+            "PATCH",
+            "http://testapplication-23b40dd9.dataworkspace.test:8000/http",
+            data=b"1234",
         ) as response:
             received_content = await response.json()
-        header_keys = [key.lower() for key in received_content['headers'].keys()]
-        self.assertNotIn('transfer-encoding', header_keys)
-        self.assertEqual(received_content['content'], '1234')
+        header_keys = [key.lower() for key in received_content["headers"].keys()]
+        self.assertNotIn("transfer-encoding", header_keys)
+        self.assertEqual(received_content["content"], "1234")
 
         # Make a websockets connection to the proxy
-        sent_headers = {'from-downstream-websockets': 'websockets-header-value'}
+        sent_headers = {"from-downstream-websockets": "websockets-header-value"}
         async with session.ws_connect(
-            'http://testapplication-23b40dd9.dataworkspace.test:8000/websockets',
+            "http://testapplication-23b40dd9.dataworkspace.test:8000/websockets",
             headers=sent_headers,
         ) as wsock:
             msg = await wsock.receive()
             headers = json.loads(msg.data)
 
-            await wsock.send_bytes(b'some-\0binary-data')
+            await wsock.send_bytes(b"some-\0binary-data")
             msg = await wsock.receive()
             received_binary_content = msg.data
 
-            await wsock.send_str('some-text-data')
+            await wsock.send_str("some-text-data")
             msg = await wsock.receive()
             received_text_content = msg.data
 
             await wsock.close()
 
-        self.assertEqual(headers['from-downstream-websockets'], 'websockets-header-value')
-        self.assertEqual(received_binary_content, b'some-\0binary-data')
-        self.assertEqual(received_text_content, 'some-text-data')
+        self.assertEqual(headers["from-downstream-websockets"], "websockets-header-value")
+        self.assertEqual(received_binary_content, b"some-\0binary-data")
+        self.assertEqual(received_text_content, "some-text-data")
 
         # Test that if we will the application, and restart, we initially
         # see an error that the application stopped, but then after refresh
@@ -197,37 +197,37 @@ class TestApplication(unittest.TestCase):
         cleanup_application_2 = await create_application()
         self.add_async_cleanup(cleanup_application_2)
 
-        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+        await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
         async with session.request(
-            'GET', 'http://testapplication-23b40dd9.dataworkspace.test:8000/'
+            "GET", "http://testapplication-23b40dd9.dataworkspace.test:8000/"
         ) as response:
             error_content = await response.text()
 
-        self.assertIn('Application STOPPED', error_content)
+        self.assertIn("Application STOPPED", error_content)
 
         async with session.request(
-            'GET', 'http://testapplication-23b40dd9.dataworkspace.test:8000/'
+            "GET", "http://testapplication-23b40dd9.dataworkspace.test:8000/"
         ) as response:
             content = await response.text()
 
-        self.assertIn('Test Application is loading...', content)
+        self.assertIn("Test Application is loading...", content)
 
-        await until_non_202(session, 'http://testapplication-23b40dd9.dataworkspace.test:8000/')
+        await until_non_202(session, "http://testapplication-23b40dd9.dataworkspace.test:8000/")
 
-        sent_headers = {'from-downstream': 'downstream-header-value'}
+        sent_headers = {"from-downstream": "downstream-header-value"}
         async with session.request(
-            'GET',
-            'http://testapplication-23b40dd9.dataworkspace.test:8000/http',
+            "GET",
+            "http://testapplication-23b40dd9.dataworkspace.test:8000/http",
             headers=sent_headers,
         ) as response:
             received_content = await response.json()
             received_headers = response.headers
 
         # Assert that we received the echo
-        self.assertEqual(received_content['method'], 'GET')
-        self.assertEqual(received_content['headers']['from-downstream'], 'downstream-header-value')
-        self.assertEqual(received_headers['from-upstream'], 'upstream-header-value')
+        self.assertEqual(received_content["method"], "GET")
+        self.assertEqual(received_content["headers"]["from-downstream"], "downstream-header-value")
+        self.assertEqual(received_headers["from-upstream"], "upstream-header-value")
 
     @async_test
     async def test_db_application_can_read_and_write_to_private_and_team_schemas(self):
@@ -241,88 +241,88 @@ class TestApplication(unittest.TestCase):
         self.add_async_cleanup(cleanup_application_1)
 
         is_logged_in = True
-        codes = iter(['some-code'])
-        tokens = iter(['token-1'])
+        codes = iter(["some-code"])
+        tokens = iter(["token-1"])
         auth_to_me = {
-            'Bearer token-1': {
-                'email': 'test@test.com',
-                'contact_email': 'test@test.com',
-                'related_emails': [],
-                'first_name': 'Peter',
-                'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            "Bearer token-1": {
+                "email": "test@test.com",
+                "contact_email": "test@test.com",
+                "related_emails": [],
+                "first_name": "Peter",
+                "last_name": "Piper",
+                "user_id": "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2",
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+        await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
         # Ensure the record has been created
-        async with session.request('GET', 'http://dataworkspace.test:8000/') as response:
+        async with session.request("GET", "http://dataworkspace.test:8000/") as response:
             await response.text()
 
         # Slightly unfortunately, we need a dataset in the database for the
         # user to have their private schema created
-        dataset_id_test_dataset = '70ce6fdd-1791-4806-bbe0-4cf880a9cc37'
-        table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
+        dataset_id_test_dataset = "70ce6fdd-1791-4806-bbe0-4cf880a9cc37"
+        table_id = "5a2ee5dd-f025-4939-b0a1-bb85ab7504d7"
         stdout, stderr, code = await create_private_dataset(
-            'my_database',
-            'DATACUT',
+            "my_database",
+            "DATACUT",
             dataset_id_test_dataset,
-            'test_dataset',
+            "test_dataset",
             table_id,
-            'test_dataset',
+            "test_dataset",
         )
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
-        stdout, stderr, code = await give_user_dataset_perms('test_dataset')
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        stdout, stderr, code = await give_user_dataset_perms("test_dataset")
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
         _, _, _ = await make_all_tools_visible()
         stdout, stderr, code = await give_user_app_perms()
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
-        await ensure_team_created('not-my-team')
-        await ensure_team_created('My Team')
-        await add_user_to_team('7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2', 'My Team')
+        await ensure_team_created("not-my-team")
+        await ensure_team_created("My Team")
+        await add_user_to_team("7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2", "My Team")
 
         async with session.request(
-            'GET', 'http://testdbapplication-23b40dd9.dataworkspace.test:8000/'
+            "GET", "http://testdbapplication-23b40dd9.dataworkspace.test:8000/"
         ) as response:
             application_content_1 = await response.text()
 
-        self.assertIn('Tool with DB access is loading...', application_content_1)
+        self.assertIn("Tool with DB access is loading...", application_content_1)
 
         async with session.request(
-            'GET', 'http://testdbapplication-23b40dd9.dataworkspace.test:8000/'
+            "GET", "http://testdbapplication-23b40dd9.dataworkspace.test:8000/"
         ) as response:
             application_content_2 = await response.text()
 
-        self.assertIn('Tool with DB access is loading...', application_content_2)
+        self.assertIn("Tool with DB access is loading...", application_content_2)
 
-        await until_non_202(session, 'http://testdbapplication-23b40dd9.dataworkspace.test:8000/')
+        await until_non_202(session, "http://testdbapplication-23b40dd9.dataworkspace.test:8000/")
 
         # Check we go wrong when we have no table
         table = uuid.uuid4().hex
         async with session.request(
-            'GET',
-            f'http://testdbapplication-23b40dd9.dataworkspace.test:8000/my_database/_user_23b40dd9/{table}',
+            "GET",
+            f"http://testdbapplication-23b40dd9.dataworkspace.test:8000/my_database/_user_23b40dd9/{table}",
         ) as response:
             received_status = response.status
             content = await response.text()
         self.assertEqual(received_status, 500)
-        self.assertEqual(content, '500 Internal Server Error\n\nServer got itself in trouble')
+        self.assertEqual(content, "500 Internal Server Error\n\nServer got itself in trouble")
 
         # Make the table in the private schema
         async with session.request(
-            'POST',
-            f'http://testdbapplication-23b40dd9.dataworkspace.test:8000/my_database/_user_23b40dd9/{table}',
+            "POST",
+            f"http://testdbapplication-23b40dd9.dataworkspace.test:8000/my_database/_user_23b40dd9/{table}",
         ) as response:
             received_status = response.status
             await response.text()
@@ -330,19 +330,19 @@ class TestApplication(unittest.TestCase):
 
         # Fetch everything from the table in the private schema
         async with session.request(
-            'GET',
-            f'http://testdbapplication-23b40dd9.dataworkspace.test:8000/my_database/_user_23b40dd9/{table}',
+            "GET",
+            f"http://testdbapplication-23b40dd9.dataworkspace.test:8000/my_database/_user_23b40dd9/{table}",
         ) as response:
             received_status = response.status
             content = await response.text()
         self.assertEqual(received_status, 200)
-        self.assertEqual(json.loads(content), {'data': [[1, 'orange']]})
+        self.assertEqual(json.loads(content), {"data": [[1, "orange"]]})
 
         # Make the table in the team schema
         team_table = uuid.uuid4().hex
         async with session.request(
-            'POST',
-            f'http://testdbapplication-23b40dd9.dataworkspace.test:8000/my_database/_team_my_team/{team_table}',
+            "POST",
+            f"http://testdbapplication-23b40dd9.dataworkspace.test:8000/my_database/_team_my_team/{team_table}",
         ) as response:
             received_status = response.status
             await response.text()
@@ -350,19 +350,19 @@ class TestApplication(unittest.TestCase):
 
         # Get data from the team schema table
         async with session.request(
-            'GET',
-            f'http://testdbapplication-23b40dd9.dataworkspace.test:8000/my_database/_team_my_team/{team_table}',
+            "GET",
+            f"http://testdbapplication-23b40dd9.dataworkspace.test:8000/my_database/_team_my_team/{team_table}",
         ) as response:
             received_status = response.status
             content = await response.text()
         self.assertEqual(received_status, 200)
-        self.assertEqual(json.loads(content), {'data': [[1, 'orange']]})
+        self.assertEqual(json.loads(content), {"data": [[1, "orange"]]})
 
         # Ensure we cannot make a table in another team's schema
         another_team_table = uuid.uuid4().hex
         async with session.request(
-            'POST',
-            f'http://testdbapplication-23b40dd9.dataworkspace.test:8000/my_database/_team_not_my_team/{another_team_table}',
+            "POST",
+            f"http://testdbapplication-23b40dd9.dataworkspace.test:8000/my_database/_team_not_my_team/{another_team_table}",
         ) as response:
             received_status = response.status
             await response.text()
@@ -370,7 +370,7 @@ class TestApplication(unittest.TestCase):
 
         # Stop the application
         async with session.request(
-            'POST', 'http://testdbapplication-23b40dd9.dataworkspace.test:8000/stop'
+            "POST", "http://testdbapplication-23b40dd9.dataworkspace.test:8000/stop"
         ) as response:
             await response.text()
 
@@ -386,122 +386,122 @@ class TestApplication(unittest.TestCase):
         self.add_async_cleanup(cleanup_application_1)
 
         is_logged_in = True
-        codes = iter(['some-code'])
-        tokens = iter(['token-1'])
+        codes = iter(["some-code"])
+        tokens = iter(["token-1"])
         auth_to_me = {
-            'Bearer token-1': {
-                'email': 'test@test.com',
-                'contact_email': 'test@test.com',
-                'related_emails': [],
-                'first_name': 'Peter',
-                'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            "Bearer token-1": {
+                "email": "test@test.com",
+                "contact_email": "test@test.com",
+                "related_emails": [],
+                "first_name": "Peter",
+                "last_name": "Piper",
+                "user_id": "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2",
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+        await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
-        stdout, stderr, code = await create_visualisation_echo('testvisualisation')
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        stdout, stderr, code = await create_visualisation_echo("testvisualisation")
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
         # Ensure the user doesn't see the visualisation link on the home page
-        async with session.request('GET', 'http://dataworkspace.test:8000/') as response:
+        async with session.request("GET", "http://dataworkspace.test:8000/") as response:
             content = await response.text()
-        self.assertNotIn('Test testvisualisation', content)
+        self.assertNotIn("Test testvisualisation", content)
 
         # Ensure the user doesn't have access to the application
         async with session.request(
-            'GET', 'http://testvisualisation.dataworkspace.test:8000/'
+            "GET", "http://testvisualisation.dataworkspace.test:8000/"
         ) as response:
             content = await response.text()
 
-        self.assertIn('You are not allowed to access this page', content)
+        self.assertIn("You are not allowed to access this page", content)
         self.assertEqual(response.status, 403)
 
         # Ensure that the user can't see a visualisation which is published if they don't have authorization
         stdout, stderr, code = await toggle_visualisation_visibility(
-            'testvisualisation', visible=True
+            "testvisualisation", visible=True
         )
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
         # Ensure the user doesn't have access to the application
         async with session.request(
-            'GET', 'http://testvisualisation.dataworkspace.test:8000/'
+            "GET", "http://testvisualisation.dataworkspace.test:8000/"
         ) as response:
             content = await response.text()
 
-        self.assertIn('You are not allowed to access this page', content)
+        self.assertIn("You are not allowed to access this page", content)
         self.assertEqual(response.status, 403)
 
         # Ensure that the user can't see a visualisation which is unpublished, even if if they have authorization
-        stdout, stderr, code = await give_user_visualisation_perms('testvisualisation')
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        stdout, stderr, code = await give_user_visualisation_perms("testvisualisation")
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
         stdout, stderr, code = await toggle_visualisation_visibility(
-            'testvisualisation', visible=False
+            "testvisualisation", visible=False
         )
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
         # Ensure the user doesn't have access to the application
         async with session.request(
-            'GET', 'http://testvisualisation.dataworkspace.test:8000/'
+            "GET", "http://testvisualisation.dataworkspace.test:8000/"
         ) as response:
             content = await response.text()
 
-        self.assertIn('You are not allowed to access this page', content)
+        self.assertIn("You are not allowed to access this page", content)
         self.assertEqual(response.status, 403)
 
         # Finally, if the visualisation is published *and* they have authorization, they can see it.
         stdout, stderr, code = await toggle_visualisation_visibility(
-            'testvisualisation', visible=True
+            "testvisualisation", visible=True
         )
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
         async with session.request(
-            'GET', 'http://testvisualisation.dataworkspace.test:8000/'
+            "GET", "http://testvisualisation.dataworkspace.test:8000/"
         ) as response:
             application_content_1 = await response.text()
 
-        self.assertIn('testvisualisation is loading...', application_content_1)
+        self.assertIn("testvisualisation is loading...", application_content_1)
 
-        await until_non_202(session, 'http://testvisualisation.dataworkspace.test:8000/')
+        await until_non_202(session, "http://testvisualisation.dataworkspace.test:8000/")
 
-        sent_headers = {'from-downstream': 'downstream-header-value'}
+        sent_headers = {"from-downstream": "downstream-header-value"}
         async with session.request(
-            'GET',
-            'http://testvisualisation.dataworkspace.test:8000/http',
+            "GET",
+            "http://testvisualisation.dataworkspace.test:8000/http",
             headers=sent_headers,
         ) as response:
             received_content = await response.json()
             received_headers = response.headers
 
         # Assert that we received the echo
-        self.assertEqual(received_content['method'], 'GET')
-        self.assertEqual(received_content['headers']['from-downstream'], 'downstream-header-value')
-        self.assertEqual(received_content['headers']['sso-profile-email'], 'test@test.com')
-        self.assertEqual(received_headers['from-upstream'], 'upstream-header-value')
+        self.assertEqual(received_content["method"], "GET")
+        self.assertEqual(received_content["headers"]["from-downstream"], "downstream-header-value")
+        self.assertEqual(received_content["headers"]["sso-profile-email"], "test@test.com")
+        self.assertEqual(received_headers["from-upstream"], "upstream-header-value")
 
         stdout, stderr, code = await set_visualisation_wrap(
-            'testvisualisation', 'FULL_HEIGHT_IFRAME'
+            "testvisualisation", "FULL_HEIGHT_IFRAME"
         )
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
         async with session.request(
-            'GET',
-            'http://testvisualisation.dataworkspace.test:8000/',
+            "GET",
+            "http://testvisualisation.dataworkspace.test:8000/",
             headers=sent_headers,
         ) as response:
             received_content = await response.text()
@@ -512,17 +512,17 @@ class TestApplication(unittest.TestCase):
         )
 
         async with session.request(
-            'GET',
-            'http://testvisualisation--8888.dataworkspace.test:8000/http',
+            "GET",
+            "http://testvisualisation--8888.dataworkspace.test:8000/http",
             headers=sent_headers,
         ) as response:
             received_content = await response.json()
             received_headers = response.headers
 
         # Assert that we received the echo
-        self.assertEqual(received_content['method'], 'GET')
-        self.assertEqual(received_content['headers']['from-downstream'], 'downstream-header-value')
-        self.assertEqual(received_headers['from-upstream'], 'upstream-header-value')
+        self.assertEqual(received_content["method"], "GET")
+        self.assertEqual(received_content["headers"]["from-downstream"], "downstream-header-value")
+        self.assertEqual(received_headers["from-upstream"], "upstream-header-value")
 
     @async_test
     async def test_visualisation_commit_shows_content_if_authorized(self):
@@ -536,38 +536,38 @@ class TestApplication(unittest.TestCase):
         self.add_async_cleanup(cleanup_application_1)
 
         is_logged_in = True
-        codes = iter(['some-code'])
-        tokens = iter(['token-1'])
+        codes = iter(["some-code"])
+        tokens = iter(["token-1"])
         auth_to_me = {
-            'Bearer token-1': {
-                'email': 'test@test.com',
-                'contact_email': 'test@test.com',
-                'related_emails': [],
-                'first_name': 'Peter',
-                'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            "Bearer token-1": {
+                "email": "test@test.com",
+                "contact_email": "test@test.com",
+                "related_emails": [],
+                "first_name": "Peter",
+                "last_name": "Piper",
+                "user_id": "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2",
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+        await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
-        stdout, stderr, code = await create_visualisation_echo('testvisualisation')
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        stdout, stderr, code = await create_visualisation_echo("testvisualisation")
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
         def handle_users(request):
-            return web.json_response([{'id': 1234}], status=200)
+            return web.json_response([{"id": 1234}], status=200)
 
         project = {
-            'id': 3,
-            'name': 'testvisualisation',
-            'tag_list': ['visualisation'],
-            'default_branch': 'my-default-3',
-            'description': 'The vis',
-            'web_url': 'https://some.domain.test/',
+            "id": 3,
+            "name": "testvisualisation",
+            "tag_list": ["visualisation"],
+            "default_branch": "my-default-3",
+            "description": "The vis",
+            "web_url": "https://some.domain.test/",
         }
 
         def handle_project(request):
@@ -576,7 +576,7 @@ class TestApplication(unittest.TestCase):
         access_level = 20
 
         def handle_members(request):
-            return web.json_response([{'id': 1234, 'access_level': access_level}], status=200)
+            return web.json_response([{"id": 1234, "access_level": access_level}], status=200)
 
         def handle_general_gitlab(request):
             return web.json_response({})
@@ -584,61 +584,61 @@ class TestApplication(unittest.TestCase):
         gitlab_cleanup = await create_server(
             8007,
             [
-                web.get('/api/v4/users', handle_users),
-                web.get('/api/v4/projects/3/members/all', handle_members),
-                web.get('/api/v4/projects/3', handle_project),
-                web.get('/{path:.*}', handle_general_gitlab),
+                web.get("/api/v4/users", handle_users),
+                web.get("/api/v4/projects/3/members/all", handle_members),
+                web.get("/api/v4/projects/3", handle_project),
+                web.get("/{path:.*}", handle_general_gitlab),
             ],
         )
         self.add_async_cleanup(gitlab_cleanup)
 
         # Ensure the user doesn't have access to the application
         async with session.request(
-            'GET', 'http://testvisualisation--11372717.dataworkspace.test:8000/'
+            "GET", "http://testvisualisation--11372717.dataworkspace.test:8000/"
         ) as response:
             content = await response.text()
 
-        self.assertIn('You are not allowed to access this page', content)
+        self.assertIn("You are not allowed to access this page", content)
         self.assertEqual(response.status, 403)
 
         access_level = 30
 
         async with session.request(
-            'GET', 'http://testvisualisation--11372717.dataworkspace.test:8000/'
+            "GET", "http://testvisualisation--11372717.dataworkspace.test:8000/"
         ) as response:
             application_content_1 = await response.text()
 
-        self.assertIn('testvisualisation [11372717]', application_content_1)
-        self.assertIn('is loading...', application_content_1)
+        self.assertIn("testvisualisation [11372717]", application_content_1)
+        self.assertIn("is loading...", application_content_1)
 
-        await until_non_202(session, 'http://testvisualisation--11372717.dataworkspace.test:8000/')
+        await until_non_202(session, "http://testvisualisation--11372717.dataworkspace.test:8000/")
 
-        sent_headers = {'from-downstream': 'downstream-header-value'}
+        sent_headers = {"from-downstream": "downstream-header-value"}
         async with session.request(
-            'GET',
-            'http://testvisualisation--11372717.dataworkspace.test:8000/http',
+            "GET",
+            "http://testvisualisation--11372717.dataworkspace.test:8000/http",
             headers=sent_headers,
         ) as response:
             received_content = await response.json()
             received_headers = response.headers
 
         # Assert that we received the echo
-        self.assertEqual(received_content['method'], 'GET')
-        self.assertEqual(received_content['headers']['from-downstream'], 'downstream-header-value')
-        self.assertEqual(received_headers['from-upstream'], 'upstream-header-value')
+        self.assertEqual(received_content["method"], "GET")
+        self.assertEqual(received_content["headers"]["from-downstream"], "downstream-header-value")
+        self.assertEqual(received_headers["from-upstream"], "upstream-header-value")
 
         async with session.request(
-            'GET',
-            'http://testvisualisation--11372717--8888.dataworkspace.test:8000/http',
+            "GET",
+            "http://testvisualisation--11372717--8888.dataworkspace.test:8000/http",
             headers=sent_headers,
         ) as response:
             received_content = await response.json()
             received_headers = response.headers
 
         # Assert that we received the echo
-        self.assertEqual(received_content['method'], 'GET')
-        self.assertEqual(received_content['headers']['from-downstream'], 'downstream-header-value')
-        self.assertEqual(received_headers['from-upstream'], 'upstream-header-value')
+        self.assertEqual(received_content["method"], "GET")
+        self.assertEqual(received_content["headers"]["from-downstream"], "downstream-header-value")
+        self.assertEqual(received_headers["from-upstream"], "upstream-header-value")
 
     @async_test
     async def test_visualisation_shows_dataset_if_authorised(self):
@@ -652,108 +652,108 @@ class TestApplication(unittest.TestCase):
         self.add_async_cleanup(cleanup_application_1)
 
         is_logged_in = True
-        codes = iter(['some-code'])
-        tokens = iter(['token-1'])
+        codes = iter(["some-code"])
+        tokens = iter(["token-1"])
         auth_to_me = {
-            'Bearer token-1': {
-                'email': 'test@test.com',
-                'contact_email': 'test@test.com',
-                'related_emails': [],
-                'first_name': 'Peter',
-                'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            "Bearer token-1": {
+                "email": "test@test.com",
+                "contact_email": "test@test.com",
+                "related_emails": [],
+                "first_name": "Peter",
+                "last_name": "Piper",
+                "user_id": "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2",
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+        await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
         # Ensure user created
-        async with session.request('GET', 'http://dataworkspace.test:8000/') as response:
+        async with session.request("GET", "http://dataworkspace.test:8000/") as response:
             await response.text()
 
-        dataset_id_test_dataset = '70ce6fdd-1791-4806-bbe0-4cf880a9cc37'
-        table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
+        dataset_id_test_dataset = "70ce6fdd-1791-4806-bbe0-4cf880a9cc37"
+        table_id = "5a2ee5dd-f025-4939-b0a1-bb85ab7504d7"
         stdout, stderr, code = await create_private_dataset(
-            'my_database',
-            'MASTER',
+            "my_database",
+            "MASTER",
             dataset_id_test_dataset,
-            'test_dataset',
+            "test_dataset",
             table_id,
-            'test_dataset',
+            "test_dataset",
         )
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
-        dataset_id_dataset_1 = '0dea6147-d355-4b6d-a140-0304ef9cfeca'
-        table_id = '39e3fa48-9352-471a-b278-3eca5ba92921'
+        dataset_id_dataset_1 = "0dea6147-d355-4b6d-a140-0304ef9cfeca"
+        table_id = "39e3fa48-9352-471a-b278-3eca5ba92921"
         stdout, stderr, code = await create_private_dataset(
-            'test_external_db',
-            'MASTER',
+            "test_external_db",
+            "MASTER",
             dataset_id_dataset_1,
-            'dataset_1',
+            "dataset_1",
             table_id,
-            'dataset_1',
+            "dataset_1",
         )
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
-        dataset_id_dataset_2 = 'ccddcf9a-4997-4761-bd5a-06854d0a6483'
-        table_id = '426f6862-9880-4a1f-82a1-8496a5400820'
+        dataset_id_dataset_2 = "ccddcf9a-4997-4761-bd5a-06854d0a6483"
+        table_id = "426f6862-9880-4a1f-82a1-8496a5400820"
         stdout, stderr, code = await create_private_dataset(
-            'test_external_db2',
-            'MASTER',
+            "test_external_db2",
+            "MASTER",
             dataset_id_dataset_2,
-            'dataset_2',
+            "dataset_2",
             table_id,
-            'dataset_2',
+            "dataset_2",
         )
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
-        stdout, stderr, code = await create_visualisation_dataset('testvisualisation-a', 3)
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        stdout, stderr, code = await create_visualisation_dataset("testvisualisation-a", 3)
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
-        stdout, stderr, code = await give_user_visualisation_perms('testvisualisation-a')
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        stdout, stderr, code = await give_user_visualisation_perms("testvisualisation-a")
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
         def handle_users(request):
-            return web.json_response([{'id': 1234}], status=200)
+            return web.json_response([{"id": 1234}], status=200)
 
         def handle_project_3(request):
             return web.json_response(
                 {
-                    'id': 3,
-                    'name': 'testvisualisation',
-                    'tag_list': ['visualisation'],
-                    'default_branch': 'master',
-                    'description': 'The vis',
-                    'web_url': 'https://some.domain.test/',
+                    "id": 3,
+                    "name": "testvisualisation",
+                    "tag_list": ["visualisation"],
+                    "default_branch": "master",
+                    "description": "The vis",
+                    "web_url": "https://some.domain.test/",
                 }
             )
 
         def handle_project_4(request):
             return web.json_response(
                 {
-                    'id': 4,
-                    'name': 'testvisualisation',
-                    'tag_list': ['visualisation'],
-                    'default_branch': 'master',
-                    'description': 'The vis',
-                    'web_url': 'https://some.domain.test/',
+                    "id": 4,
+                    "name": "testvisualisation",
+                    "tag_list": ["visualisation"],
+                    "default_branch": "master",
+                    "description": "The vis",
+                    "web_url": "https://some.domain.test/",
                 }
             )
 
         def handle_members(request):
-            return web.json_response([{'id': 1234, 'access_level': 30}], status=200)
+            return web.json_response([{"id": 1234, "access_level": 30}], status=200)
 
         def handle_general_gitlab(request):
             return web.json_response({})
@@ -761,23 +761,23 @@ class TestApplication(unittest.TestCase):
         gitlab_cleanup = await create_server(
             8007,
             [
-                web.get('/api/v4/users', handle_users),
-                web.get('/api/v4/projects/3/members/all', handle_members),
-                web.get('/api/v4/projects/3', handle_project_3),
-                web.get('/api/v4/projects/4/members/all', handle_members),
-                web.get('/api/v4/projects/4', handle_project_4),
-                web.get('/{path:.*}', handle_general_gitlab),
+                web.get("/api/v4/users", handle_users),
+                web.get("/api/v4/projects/3/members/all", handle_members),
+                web.get("/api/v4/projects/3", handle_project_3),
+                web.get("/api/v4/projects/4/members/all", handle_members),
+                web.get("/api/v4/projects/4", handle_project_4),
+                web.get("/{path:.*}", handle_general_gitlab),
             ],
         )
         self.add_async_cleanup(gitlab_cleanup)
 
-        stdout, stderr, code = await give_user_dataset_perms('dataset_1')
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        stdout, stderr, code = await give_user_dataset_perms("dataset_1")
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
         async with session.request(
-            'GET', 'http://dataworkspace.test:8000/visualisations/3/datasets'
+            "GET", "http://dataworkspace.test:8000/visualisations/3/datasets"
         ) as response:
             status = response.status
             content = await response.text()
@@ -787,14 +787,14 @@ class TestApplication(unittest.TestCase):
         await give_user_visualisation_developer_perms()
 
         async with session.request(
-            'GET', 'http://dataworkspace.test:8000/visualisations/3/datasets'
+            "GET", "http://dataworkspace.test:8000/visualisations/3/datasets"
         ) as response:
             received_status = response.status
             content = await response.text()
 
         self.assertEqual(received_status, 200)
         csrf_token = re.match(
-            r'.*name=\"csrfmiddlewaretoken\"\svalue=\"([^\"]+)\".*',
+            r".*name=\"csrfmiddlewaretoken\"\svalue=\"([^\"]+)\".*",
             content,
             flags=re.DOTALL,
         )[1]
@@ -802,12 +802,12 @@ class TestApplication(unittest.TestCase):
         # The user only has access dataset_2, not dataset_1: we test that
         # a user cannot add access to a dataset they don't have access to
         async with session.request(
-            'POST',
-            'http://dataworkspace.test:8000/visualisations/3/datasets',
+            "POST",
+            "http://dataworkspace.test:8000/visualisations/3/datasets",
             data=(
-                ('dataset', dataset_id_dataset_2),
-                ('dataset', dataset_id_dataset_1),
-                ('csrfmiddlewaretoken', csrf_token),
+                ("dataset", dataset_id_dataset_2),
+                ("dataset", dataset_id_dataset_1),
+                ("csrfmiddlewaretoken", csrf_token),
             ),
         ) as response:
             received_status = response.status
@@ -816,17 +816,17 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(received_status, 200)
 
         async with session.request(
-            'GET', 'http://testvisualisation-a.dataworkspace.test:8000/'
+            "GET", "http://testvisualisation-a.dataworkspace.test:8000/"
         ) as response:
             application_content_1 = await response.text()
 
-        self.assertIn('testvisualisation-a is loading...', application_content_1)
+        self.assertIn("testvisualisation-a is loading...", application_content_1)
 
-        await until_non_202(session, 'http://testvisualisation-a.dataworkspace.test:8000/')
+        await until_non_202(session, "http://testvisualisation-a.dataworkspace.test:8000/")
 
         async with session.request(
-            'GET',
-            'http://testvisualisation-a.dataworkspace.test:8000/my_database/test_dataset',
+            "GET",
+            "http://testvisualisation-a.dataworkspace.test:8000/my_database/test_dataset",
         ) as response:
             received_status = response.status
             content = await response.text()
@@ -834,161 +834,161 @@ class TestApplication(unittest.TestCase):
         # This application should not have permission to access the database,
         # and we get a simple 500 page from the visualisation in this case
         self.assertEqual(received_status, 500)
-        self.assertEqual(content, '500 Internal Server Error\n\nServer got itself in trouble')
+        self.assertEqual(content, "500 Internal Server Error\n\nServer got itself in trouble")
 
         async with session.request(
-            'GET',
-            'http://testvisualisation-a.dataworkspace.test:8000/test_external_db2/dataset_2',
+            "GET",
+            "http://testvisualisation-a.dataworkspace.test:8000/test_external_db2/dataset_2",
         ) as response:
             received_status = response.status
             content = await response.text()
 
         self.assertEqual(received_status, 500)
-        self.assertEqual(content, '500 Internal Server Error\n\nServer got itself in trouble')
+        self.assertEqual(content, "500 Internal Server Error\n\nServer got itself in trouble")
 
         async with session.request(
-            'GET',
-            'http://testvisualisation-a.dataworkspace.test:8000/test_external_db/dataset_1',
+            "GET",
+            "http://testvisualisation-a.dataworkspace.test:8000/test_external_db/dataset_1",
         ) as response:
             received_status = response.status
             content = await response.json()
 
-        self.assertEqual(content, {'data': [1, 2]})
+        self.assertEqual(content, {"data": [1, 2]})
 
         # Stop the application
         async with session.request(
-            'POST', 'http://testvisualisation-a.dataworkspace.test:8000/stop'
+            "POST", "http://testvisualisation-a.dataworkspace.test:8000/stop"
         ) as response:
             await response.text()
 
         # The first request after an application stopped unexpectedly should
         # be an error
         async with session.request(
-            'GET', 'http://testvisualisation-a.dataworkspace.test:8000/'
+            "GET", "http://testvisualisation-a.dataworkspace.test:8000/"
         ) as response:
             content = await response.text()
-        self.assertIn('Sorry, there is a problem with the service', content)
+        self.assertIn("Sorry, there is a problem with the service", content)
 
         # Give the visualisation permission to a dataset that the user
         # doesn't have access to.
         stdout, stderr, code = await give_visualisation_dataset_perms(
-            'testvisualisation-a', 'dataset_2'
+            "testvisualisation-a", "dataset_2"
         )
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
         async with session.request(
-            'GET', 'http://dataworkspace.test:8000/visualisations/3/datasets'
+            "GET", "http://dataworkspace.test:8000/visualisations/3/datasets"
         ) as response:
             received_status = response.status
             content = await response.text()
 
         self.assertEqual(received_status, 200)
         csrf_token = re.match(
-            r'.*name=\"csrfmiddlewaretoken\"\svalue=\"([^\"]+)\".*',
+            r".*name=\"csrfmiddlewaretoken\"\svalue=\"([^\"]+)\".*",
             content,
             flags=re.DOTALL,
         )[1]
 
         # No datasets posted, i.e. attempting to removing access from all datasets
         async with session.request(
-            'POST',
-            'http://dataworkspace.test:8000/visualisations/3/datasets',
-            data=(('csrfmiddlewaretoken', csrf_token),),
+            "POST",
+            "http://dataworkspace.test:8000/visualisations/3/datasets",
+            data=(("csrfmiddlewaretoken", csrf_token),),
         ) as response:
             received_status = response.status
             await response.text()
 
         async with session.request(
-            'GET', 'http://testvisualisation-a.dataworkspace.test:8000/'
+            "GET", "http://testvisualisation-a.dataworkspace.test:8000/"
         ) as response:
             application_content_1 = await response.text()
 
-        self.assertIn('testvisualisation-a is loading...', application_content_1)
+        self.assertIn("testvisualisation-a is loading...", application_content_1)
 
-        await until_non_202(session, 'http://testvisualisation-a.dataworkspace.test:8000/')
+        await until_non_202(session, "http://testvisualisation-a.dataworkspace.test:8000/")
 
         # The application does have access to the dataset that the user does
         # not have access to, even though user tried to remove it
         async with session.request(
-            'GET',
-            'http://testvisualisation-a.dataworkspace.test:8000/test_external_db2/dataset_2',
+            "GET",
+            "http://testvisualisation-a.dataworkspace.test:8000/test_external_db2/dataset_2",
         ) as response:
             received_status = response.status
             content = await response.json()
 
-        self.assertEqual(content, {'data': [1, 2]})
+        self.assertEqual(content, {"data": [1, 2]})
 
         # The application now does not have access to the dataset that the
         # user removed
         async with session.request(
-            'GET',
-            'http://testvisualisation-a.dataworkspace.test:8000/test_external_db/dataset_1',
+            "GET",
+            "http://testvisualisation-a.dataworkspace.test:8000/test_external_db/dataset_1",
         ) as response:
             received_status = response.status
             content = await response.text()
 
         self.assertEqual(received_status, 500)
-        self.assertEqual(content, '500 Internal Server Error\n\nServer got itself in trouble')
+        self.assertEqual(content, "500 Internal Server Error\n\nServer got itself in trouble")
 
         # Stop the application
         async with session.request(
-            'POST', 'http://testvisualisation-a.dataworkspace.test:8000/stop'
+            "POST", "http://testvisualisation-a.dataworkspace.test:8000/stop"
         ) as response:
             await response.text()
 
-        stdout, stderr, code = await create_visualisation_dataset('testvisualisation-b', 4)
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        stdout, stderr, code = await create_visualisation_dataset("testvisualisation-b", 4)
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
-        stdout, stderr, code = await give_user_visualisation_perms('testvisualisation-b')
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        stdout, stderr, code = await give_user_visualisation_perms("testvisualisation-b")
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
         async with session.request(
-            'GET', 'http://dataworkspace.test:8000/visualisations/4/datasets'
+            "GET", "http://dataworkspace.test:8000/visualisations/4/datasets"
         ) as response:
             status = response.status
             content = await response.text()
 
         self.assertEqual(200, status)
-        self.assertNotIn('test_dataset', content)
+        self.assertNotIn("test_dataset", content)
 
         stdout, stderr, code = await give_visualisation_dataset_perms(
-            'testvisualisation-b', 'test_dataset'
+            "testvisualisation-b", "test_dataset"
         )
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
         async with session.request(
-            'GET', 'http://dataworkspace.test:8000/visualisations/4/datasets'
+            "GET", "http://dataworkspace.test:8000/visualisations/4/datasets"
         ) as response:
             status = response.status
             content = await response.text()
 
-        self.assertIn('test_dataset', content)
+        self.assertIn("test_dataset", content)
 
         async with session.request(
-            'GET', 'http://testvisualisation-b.dataworkspace.test:8000/'
+            "GET", "http://testvisualisation-b.dataworkspace.test:8000/"
         ) as response:
             application_content_2 = await response.text()
 
-        self.assertIn('testvisualisation-b is loading...', application_content_2)
+        self.assertIn("testvisualisation-b is loading...", application_content_2)
 
-        await until_non_202(session, 'http://testvisualisation-b.dataworkspace.test:8000/')
+        await until_non_202(session, "http://testvisualisation-b.dataworkspace.test:8000/")
 
         async with session.request(
-            'GET',
-            'http://testvisualisation-b.dataworkspace.test:8000/my_database/test_dataset',
+            "GET",
+            "http://testvisualisation-b.dataworkspace.test:8000/my_database/test_dataset",
         ) as response:
             received_status = response.status
             received_content = await response.json()
 
-        self.assertEqual(received_content, {'data': list(range(1, 20001))})
+        self.assertEqual(received_content, {"data": list(range(1, 20001))})
         self.assertEqual(received_status, 200)
 
     @async_test
@@ -1003,78 +1003,78 @@ class TestApplication(unittest.TestCase):
         self.add_async_cleanup(cleanup_application_1)
 
         is_logged_in = True
-        codes = iter(['some-code'])
-        tokens = iter(['token-1'])
+        codes = iter(["some-code"])
+        tokens = iter(["token-1"])
         auth_to_me = {
-            'Bearer token-1': {
-                'email': 'test@test.com',
-                'contact_email': 'test@test.com',
-                'related_emails': [],
-                'first_name': 'Peter',
-                'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            "Bearer token-1": {
+                "email": "test@test.com",
+                "contact_email": "test@test.com",
+                "related_emails": [],
+                "first_name": "Peter",
+                "last_name": "Piper",
+                "user_id": "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2",
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+        await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
         # Make a request to the home page, which ensures the user is in the DB
-        async with session.request('GET', 'http://dataworkspace.test:8000/') as response:
+        async with session.request("GET", "http://dataworkspace.test:8000/") as response:
             await response.text()
 
         await asyncio.sleep(1)
 
         stdout, stderr, code = await give_user_app_perms()
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
         async with session.request(
-            'GET',
-            'http://testapplication-23b40dd9.dataworkspace.test:8000/',
+            "GET",
+            "http://testapplication-23b40dd9.dataworkspace.test:8000/",
         ) as response:
             application_content_1 = await response.text()
 
-        self.assertIn('Test Application is loading...', application_content_1)
+        self.assertIn("Test Application is loading...", application_content_1)
 
         async with session.request(
-            'GET', 'http://testapplication-23b40dd9.dataworkspace.test:8000/'
+            "GET", "http://testapplication-23b40dd9.dataworkspace.test:8000/"
         ) as response:
             application_content_2 = await response.text()
 
-        self.assertIn('Test Application is loading...', application_content_2)
+        self.assertIn("Test Application is loading...", application_content_2)
 
-        await until_non_202(session, 'http://testapplication-23b40dd9.dataworkspace.test:8000/')
+        await until_non_202(session, "http://testapplication-23b40dd9.dataworkspace.test:8000/")
 
         # The initial connection has to be a GET, since these are redirected
         # to SSO. Unsure initial connection being a non-GET is a feature that
         # needs to be supported / what should happen in this case
-        sent_headers = {'from-downstream': 'downstream-header-value'}
+        sent_headers = {"from-downstream": "downstream-header-value"}
 
         async with session.request(
-            'GET',
-            'http://testapplication-23b40dd9.dataworkspace.test:8000/http',
+            "GET",
+            "http://testapplication-23b40dd9.dataworkspace.test:8000/http",
             headers=sent_headers,
         ) as response:
             received_content = await response.json()
             received_headers = response.headers
 
         # Assert that we received the echo
-        self.assertEqual(received_content['method'], 'GET')
-        self.assertEqual(received_content['headers']['from-downstream'], 'downstream-header-value')
-        self.assertEqual(received_headers['from-upstream'], 'upstream-header-value')
+        self.assertEqual(received_content["method"], "GET")
+        self.assertEqual(received_content["headers"]["from-downstream"], "downstream-header-value")
+        self.assertEqual(received_headers["from-upstream"], "upstream-header-value")
 
         # We are authorized by SSO, and can do non-GETs
         async def sent_content():
             for _ in range(10000):
-                yield b'Some content'
+                yield b"Some content"
 
-        sent_headers = {'from-downstream': 'downstream-header-value'}
+        sent_headers = {"from-downstream": "downstream-header-value"}
         async with session.request(
-            'PATCH',
-            'http://testapplication-23b40dd9.dataworkspace.test:8000/http',
+            "PATCH",
+            "http://testapplication-23b40dd9.dataworkspace.test:8000/http",
             data=sent_content(),
             headers=sent_headers,
         ) as response:
@@ -1082,33 +1082,33 @@ class TestApplication(unittest.TestCase):
             received_headers = response.headers
 
         # Assert that we received the echo
-        self.assertEqual(received_content['method'], 'PATCH')
-        self.assertEqual(received_content['headers']['from-downstream'], 'downstream-header-value')
-        self.assertEqual(received_content['content'], 'Some content' * 10000)
-        self.assertEqual(received_headers['from-upstream'], 'upstream-header-value')
+        self.assertEqual(received_content["method"], "PATCH")
+        self.assertEqual(received_content["headers"]["from-downstream"], "downstream-header-value")
+        self.assertEqual(received_content["content"], "Some content" * 10000)
+        self.assertEqual(received_headers["from-upstream"], "upstream-header-value")
 
         # Make a websockets connection to the proxy
-        sent_headers = {'from-downstream-websockets': 'websockets-header-value'}
+        sent_headers = {"from-downstream-websockets": "websockets-header-value"}
         async with session.ws_connect(
-            'http://testapplication-23b40dd9.dataworkspace.test:8000/websockets',
+            "http://testapplication-23b40dd9.dataworkspace.test:8000/websockets",
             headers=sent_headers,
         ) as wsock:
             msg = await wsock.receive()
             headers = json.loads(msg.data)
 
-            await wsock.send_bytes(b'some-\0binary-data')
+            await wsock.send_bytes(b"some-\0binary-data")
             msg = await wsock.receive()
             received_binary_content = msg.data
 
-            await wsock.send_str('some-text-data')
+            await wsock.send_str("some-text-data")
             msg = await wsock.receive()
             received_text_content = msg.data
 
             await wsock.close()
 
-        self.assertEqual(headers['from-downstream-websockets'], 'websockets-header-value')
-        self.assertEqual(received_binary_content, b'some-\0binary-data')
-        self.assertEqual(received_text_content, 'some-text-data')
+        self.assertEqual(headers["from-downstream-websockets"], "websockets-header-value")
+        self.assertEqual(received_binary_content, b"some-\0binary-data")
+        self.assertEqual(received_text_content, "some-text-data")
 
     @async_test
     async def test_application_redirects_to_sso_if_initially_not_authorized(self):
@@ -1128,21 +1128,21 @@ class TestApplication(unittest.TestCase):
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+        await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
         # Make a request to the application home page
-        async with session.request('GET', 'http://dataworkspace.test:8000/') as response:
+        async with session.request("GET", "http://dataworkspace.test:8000/") as response:
             content = await response.text()
 
         self.assertEqual(200, response.status)
-        self.assertIn('This is the login page', content)
+        self.assertIn("This is the login page", content)
 
         # Make a request to the application admin page
-        async with session.request('GET', 'http://dataworkspace.test:8000/admin') as response:
+        async with session.request("GET", "http://dataworkspace.test:8000/admin") as response:
             content = await response.text()
 
         self.assertEqual(200, response.status)
-        self.assertIn('This is the login page', content)
+        self.assertIn("This is the login page", content)
 
     @async_test
     async def test_application_shows_forbidden_if_not_auth_ip(self):
@@ -1157,60 +1157,60 @@ class TestApplication(unittest.TestCase):
 
         # Create application with a non-open whitelist
         cleanup_application = await create_application(
-            env=lambda: {'APPLICATION_IP_WHITELIST__1': '1.2.3.4/32'}
+            env=lambda: {"APPLICATION_IP_WHITELIST__1": "1.2.3.4/32"}
         )
         self.add_async_cleanup(cleanup_application)
 
         is_logged_in = True
-        codes = iter(['some-code'])
-        tokens = iter(['token-1'])
+        codes = iter(["some-code"])
+        tokens = iter(["token-1"])
         auth_to_me = {
-            'Bearer token-1': {
-                'email': 'test@test.com',
-                'contact_email': 'test@test.com',
-                'related_emails': [],
-                'first_name': 'Peter',
-                'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            "Bearer token-1": {
+                "email": "test@test.com",
+                "contact_email": "test@test.com",
+                "related_emails": [],
+                "first_name": "Peter",
+                "last_name": "Piper",
+                "user_id": "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2",
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+        await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
         # Make a request to the home page, which creates the user...
-        async with session.request('GET', 'http://dataworkspace.test:8000/') as response:
+        async with session.request("GET", "http://dataworkspace.test:8000/") as response:
             await response.text()
 
         # ... with application permissions...
         stdout, stderr, code = await give_user_app_perms()
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
         # ... and can make requests to the home page...
-        async with session.request('GET', 'http://dataworkspace.test:8000/') as response:
+        async with session.request("GET", "http://dataworkspace.test:8000/") as response:
             content = await response.text()
-        self.assertNotIn('You are not allowed to access this page', content)
+        self.assertNotIn("You are not allowed to access this page", content)
         self.assertEqual(response.status, 200)
 
         # ... but not the application...
         async with session.request(
-            'GET', 'http://testapplication-23b40dd9.dataworkspace.test:8000/http'
+            "GET", "http://testapplication-23b40dd9.dataworkspace.test:8000/http"
         ) as response:
             content = await response.text()
-        self.assertIn('You are not allowed to access this page', content)
+        self.assertIn("You are not allowed to access this page", content)
         self.assertEqual(response.status, 403)
 
         # ... and it can't be spoofed...
         async with session.request(
-            'GET',
-            'http://testapplication-23b40dd9.dataworkspace.test:8000/http',
-            headers={'x-forwarded-for': '1.2.3.4'},
+            "GET",
+            "http://testapplication-23b40dd9.dataworkspace.test:8000/http",
+            headers={"x-forwarded-for": "1.2.3.4"},
         ) as response:
             content = await response.text()
-        self.assertIn('You are not allowed to access this page', content)
+        self.assertIn("You are not allowed to access this page", content)
         self.assertEqual(response.status, 403)
 
         await cleanup_application()
@@ -1218,16 +1218,16 @@ class TestApplication(unittest.TestCase):
         # ... but that X_FORWARDED_FOR_TRUSTED_HOPS and subnets are respected
         cleanup_application = await create_application(
             env=lambda: {
-                'APPLICATION_IP_WHITELIST__1': '1.2.3.4/32',
-                'APPLICATION_IP_WHITELIST__2': '5.0.0.0/8',
-                'X_FORWARDED_FOR_TRUSTED_HOPS': '2',
+                "APPLICATION_IP_WHITELIST__1": "1.2.3.4/32",
+                "APPLICATION_IP_WHITELIST__2": "5.0.0.0/8",
+                "X_FORWARDED_FOR_TRUSTED_HOPS": "2",
                 "SENTRY_DSN": "http://foobar@localhost:8009/123",
                 "SENTRY_ENVIRONMENT": "Test",
             }
         )
         self.add_async_cleanup(cleanup_application)
 
-        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+        await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
         # Starting the application is asynchronous, with the proxy component starting up faster
         # than the Django application. So initial calls to the healthcheck fail at the proxy ->
@@ -1238,77 +1238,77 @@ class TestApplication(unittest.TestCase):
         sentry_requests.clear()
 
         async with session.request(
-            'GET',
-            'http://testapplication-23b40dd9.dataworkspace.test:8000/http',
-            headers={'x-forwarded-for': '1.2.3.4'},
+            "GET",
+            "http://testapplication-23b40dd9.dataworkspace.test:8000/http",
+            headers={"x-forwarded-for": "1.2.3.4"},
         ) as response:
             content = await response.text()
-        self.assertIn('Test Application is loading...', content)
+        self.assertIn("Test Application is loading...", content)
         self.assertEqual(response.status, 202)
 
         async with session.request(
-            'GET',
-            'http://testapplication-23b40dd9.dataworkspace.test:8000/http',
-            headers={'x-forwarded-for': '6.5.4.3, 1.2.3.4'},
+            "GET",
+            "http://testapplication-23b40dd9.dataworkspace.test:8000/http",
+            headers={"x-forwarded-for": "6.5.4.3, 1.2.3.4"},
         ) as response:
             content = await response.text()
-        self.assertIn('Test Application is loading...', content)
+        self.assertIn("Test Application is loading...", content)
         self.assertEqual(response.status, 202)
 
         async with session.request(
-            'GET',
-            'http://testapplication-23b40dd9.dataworkspace.test:8000/http',
-            headers={'x-forwarded-for': '5.1.1.1'},
+            "GET",
+            "http://testapplication-23b40dd9.dataworkspace.test:8000/http",
+            headers={"x-forwarded-for": "5.1.1.1"},
         ) as response:
             content = await response.text()
-        self.assertIn('Test Application is loading...', content)
+        self.assertIn("Test Application is loading...", content)
         self.assertEqual(response.status, 202)
 
         async with session.request(
-            'GET',
-            'http://testapplication-23b40dd9.dataworkspace.test:8000/http',
-            headers={'x-forwarded-for': '6.5.4.3'},
+            "GET",
+            "http://testapplication-23b40dd9.dataworkspace.test:8000/http",
+            headers={"x-forwarded-for": "6.5.4.3"},
         ) as response:
             content = await response.text()
 
-        self.assertIn('You are not allowed to access this page', content)
+        self.assertIn("You are not allowed to access this page", content)
         self.assertEqual(response.status, 403)
 
         async with session.request(
-            'GET',
-            'http://testapplication-23b40dd9.dataworkspace.test:8000/http',
-            headers={'x-forwarded-for': '1.2.3.4, 6.5.4.3'},
+            "GET",
+            "http://testapplication-23b40dd9.dataworkspace.test:8000/http",
+            headers={"x-forwarded-for": "1.2.3.4, 6.5.4.3"},
         ) as response:
             content = await response.text()
 
-        self.assertIn('You are not allowed to access this page', content)
+        self.assertIn("You are not allowed to access this page", content)
         self.assertEqual(response.status, 403)
 
         # The healthcheck is allowed from a private IP: simulates ALB
         async with session.request(
-            'GET', 'http://dataworkspace.test:8000/healthcheck'
+            "GET", "http://dataworkspace.test:8000/healthcheck"
         ) as response:
             content = await response.text()
 
-        self.assertEqual('OK', content)
+        self.assertEqual("OK", content)
         self.assertEqual(response.status, 200)
 
         # ... and from a publically routable one: simulates Pingdom
         async with session.request(
-            'GET',
-            'http://dataworkspace.test:8000/healthcheck',
-            headers={'x-forwarded-for': '8.8.8.8'},
+            "GET",
+            "http://dataworkspace.test:8000/healthcheck",
+            headers={"x-forwarded-for": "8.8.8.8"},
         ) as response:
             content = await response.text()
 
-        self.assertEqual('OK', content)
+        self.assertEqual("OK", content)
         self.assertEqual(response.status, 200)
 
         # ... but not allowed to get to the application
         assert len(sentry_requests) == 0
         async with session.request(
-            'GET',
-            'http://testapplication-23b40dd9.dataworkspace.test:8000/healthcheck',
+            "GET",
+            "http://testapplication-23b40dd9.dataworkspace.test:8000/healthcheck",
             headers={},
         ) as response:
             content = await response.text()
@@ -1322,13 +1322,13 @@ class TestApplication(unittest.TestCase):
         assert len(sentry_requests) == 1
 
         async with session.request(
-            'GET',
-            'http://testapplication-23b40dd9.dataworkspace.test:8000/healthcheck',
-            headers={'x-forwarded-for': '8.8.8.8'},
+            "GET",
+            "http://testapplication-23b40dd9.dataworkspace.test:8000/healthcheck",
+            headers={"x-forwarded-for": "8.8.8.8"},
         ) as response:
             content = await response.text()
 
-        self.assertIn('You are not allowed to access this page', content)
+        self.assertIn("You are not allowed to access this page", content)
         self.assertEqual(response.status, 403)
 
     @async_test
@@ -1345,62 +1345,62 @@ class TestApplication(unittest.TestCase):
         # because the user already exists.
         cleanup_application = await create_application(
             env=lambda: {
-                'APPLICATION_IP_WHITELIST__1': '1.2.3.4/32',
+                "APPLICATION_IP_WHITELIST__1": "1.2.3.4/32",
                 "EXPLORER_CONNECTIONS": '{"Postgres": "my_database"}',
             }
         )
         self.add_async_cleanup(cleanup_application)
 
         is_logged_in = True
-        codes = iter(['some-code'])
-        tokens = iter(['token-1'])
+        codes = iter(["some-code"])
+        tokens = iter(["token-1"])
         auth_to_me = {
-            'Bearer token-1': {
-                'email': 'test@test.com',
-                'contact_email': 'test@test.com',
-                'related_emails': [],
-                'first_name': 'Peter',
-                'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            "Bearer token-1": {
+                "email": "test@test.com",
+                "contact_email": "test@test.com",
+                "related_emails": [],
+                "first_name": "Peter",
+                "last_name": "Piper",
+                "user_id": "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2",
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+        await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
         # Make a request to the home page, which creates the user...
-        async with session.request('GET', 'http://dataworkspace.test:8000/') as response:
+        async with session.request("GET", "http://dataworkspace.test:8000/") as response:
             await response.text()
 
         # ... with application permissions...
         stdout, stderr, code = await give_user_app_perms()
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
         # ... and can make requests to the home page...
-        async with session.request('GET', 'http://dataworkspace.test:8000/') as response:
+        async with session.request("GET", "http://dataworkspace.test:8000/") as response:
             content = await response.text()
-        self.assertNotIn('You are not allowed to access this page', content)
+        self.assertNotIn("You are not allowed to access this page", content)
         self.assertEqual(response.status, 200)
 
         # ... but not data explorer...
         async with session.request(
-            'GET', 'http://dataworkspace.test:8000/data-explorer/'
+            "GET", "http://dataworkspace.test:8000/data-explorer/"
         ) as response:
             content = await response.text()
-        self.assertIn('You are not allowed to access this page', content)
+        self.assertIn("You are not allowed to access this page", content)
         self.assertEqual(response.status, 403)
 
         # ... and it can't be spoofed...
         async with session.request(
-            'GET',
-            'http://dataworkspace.test:8000/data-explorer/',
-            headers={'x-forwarded-for': '1.2.3.4'},
+            "GET",
+            "http://dataworkspace.test:8000/data-explorer/",
+            headers={"x-forwarded-for": "1.2.3.4"},
         ) as response:
             content = await response.text()
-        self.assertIn('You are not allowed to access this page', content)
+        self.assertIn("You are not allowed to access this page", content)
         self.assertEqual(response.status, 403)
 
         await cleanup_application()
@@ -1408,51 +1408,51 @@ class TestApplication(unittest.TestCase):
         # ... but that X_FORWARDED_FOR_TRUSTED_HOPS and subnets are respected
         cleanup_application = await create_application(
             env=lambda: {
-                'APPLICATION_IP_WHITELIST__1': '1.2.3.4/32',
-                'APPLICATION_IP_WHITELIST__2': '5.0.0.0/8',
-                'X_FORWARDED_FOR_TRUSTED_HOPS': '2',
+                "APPLICATION_IP_WHITELIST__1": "1.2.3.4/32",
+                "APPLICATION_IP_WHITELIST__2": "5.0.0.0/8",
+                "X_FORWARDED_FOR_TRUSTED_HOPS": "2",
                 "EXPLORER_CONNECTIONS": '{"Postgres": "my_database"}',
             }
         )
         self.add_async_cleanup(cleanup_application)
 
-        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+        await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
         async with session.request(
-            'GET',
-            'http://dataworkspace.test:8000/data-explorer/',
-            headers={'x-forwarded-for': '1.2.3.4'},
+            "GET",
+            "http://dataworkspace.test:8000/data-explorer/",
+            headers={"x-forwarded-for": "1.2.3.4"},
         ) as response:
             content = await response.text()
-        self.assertIn('Welcome to Data Explorer', content)
+        self.assertIn("Welcome to Data Explorer", content)
         self.assertEqual(response.status, 200)
 
         async with session.request(
-            'GET',
-            'http://dataworkspace.test:8000/data-explorer/',
-            headers={'x-forwarded-for': '6.5.4.3, 1.2.3.4'},
+            "GET",
+            "http://dataworkspace.test:8000/data-explorer/",
+            headers={"x-forwarded-for": "6.5.4.3, 1.2.3.4"},
         ) as response:
             content = await response.text()
-        self.assertIn('Welcome to Data Explorer', content)
+        self.assertIn("Welcome to Data Explorer", content)
         self.assertEqual(response.status, 200)
 
         async with session.request(
-            'GET',
-            'http://dataworkspace.test:8000/data-explorer/',
-            headers={'x-forwarded-for': '5.1.1.1'},
+            "GET",
+            "http://dataworkspace.test:8000/data-explorer/",
+            headers={"x-forwarded-for": "5.1.1.1"},
         ) as response:
             content = await response.text()
-        self.assertIn('Welcome to Data Explorer', content)
+        self.assertIn("Welcome to Data Explorer", content)
         self.assertEqual(response.status, 200)
 
         async with session.request(
-            'GET',
-            'http://dataworkspace.test:8000/data-explorer/',
-            headers={'x-forwarded-for': '6.5.4.3'},
+            "GET",
+            "http://dataworkspace.test:8000/data-explorer/",
+            headers={"x-forwarded-for": "6.5.4.3"},
         ) as response:
             content = await response.text()
 
-        self.assertIn('You are not allowed to access this page', content)
+        self.assertIn("You are not allowed to access this page", content)
         self.assertEqual(response.status, 403)
 
     @async_test
@@ -1468,85 +1468,85 @@ class TestApplication(unittest.TestCase):
 
         cleanup_application = await create_application(
             env=lambda: {
-                'APPLICATION_IP_WHITELIST__1': '1.2.3.4/32',
-                'APPLICATION_IP_WHITELIST__2': '5.0.0.0/8',
-                'X_FORWARDED_FOR_TRUSTED_HOPS': '2',
-                'SUPERSET_ROOT': 'http://localhost:8008/',
+                "APPLICATION_IP_WHITELIST__1": "1.2.3.4/32",
+                "APPLICATION_IP_WHITELIST__2": "5.0.0.0/8",
+                "X_FORWARDED_FOR_TRUSTED_HOPS": "2",
+                "SUPERSET_ROOT": "http://localhost:8008/",
             }
         )
         self.add_async_cleanup(cleanup_application)
 
         is_logged_in = True
-        codes = iter(['some-code'])
-        tokens = iter(['token-1'])
+        codes = iter(["some-code"])
+        tokens = iter(["token-1"])
         auth_to_me = {
-            'Bearer token-1': {
-                'email': 'test@test.com',
-                'contact_email': 'test@test.com',
-                'related_emails': [],
-                'first_name': 'Peter',
-                'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            "Bearer token-1": {
+                "email": "test@test.com",
+                "contact_email": "test@test.com",
+                "related_emails": [],
+                "first_name": "Peter",
+                "last_name": "Piper",
+                "user_id": "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2",
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+        await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
         # Ensure user created
-        async with session.request('GET', 'http://dataworkspace.test:8000/') as response:
+        async with session.request("GET", "http://dataworkspace.test:8000/") as response:
             await response.text()
 
         stdout, stderr, code = await give_user_app_perms()
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
-        dataset_id_test_dataset = '70ce6fdd-1791-4806-bbe0-4cf880a9cc37'
-        table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
+        dataset_id_test_dataset = "70ce6fdd-1791-4806-bbe0-4cf880a9cc37"
+        table_id = "5a2ee5dd-f025-4939-b0a1-bb85ab7504d7"
         stdout, stderr, code = await create_private_dataset(
-            'my_database',
-            'MASTER',
+            "my_database",
+            "MASTER",
             dataset_id_test_dataset,
-            'test_dataset',
+            "test_dataset",
             table_id,
-            'test_dataset',
+            "test_dataset",
         )
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
-        stdout, stderr, code = await give_user_dataset_perms('test_dataset')
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        stdout, stderr, code = await give_user_dataset_perms("test_dataset")
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
         stdout, stderr, code = await create_visusalisation(
-            'test_visualisation', 'REQUIRES_AUTHENTICATION', 'SUPERSET', 1
+            "test_visualisation", "REQUIRES_AUTHENTICATION", "SUPERSET", 1
         )
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
         async with session.request(
-            'GET',
-            'http://superset-edit.dataworkspace.test:8000/',
-            headers={'x-forwarded-for': '1.2.3.4'},
+            "GET",
+            "http://superset-edit.dataworkspace.test:8000/",
+            headers={"x-forwarded-for": "1.2.3.4"},
         ) as response:
             self.assertEqual(response.status, 200)
 
-        assert superset_requests[0].headers['Credentials-Memorable-Name'] == 'my_database'
-        assert superset_requests[0].headers['Credentials-Db-Name'] == 'datasets'
-        assert superset_requests[0].headers['Credentials-Db-Host'] == 'data-workspace-postgres'
-        assert superset_requests[0].headers['Credentials-Db-Port'] == '5432'
-        assert superset_requests[0].headers['Credentials-Db-Persistent-Role'] == '_user_23b40dd9'
+        assert superset_requests[0].headers["Credentials-Memorable-Name"] == "my_database"
+        assert superset_requests[0].headers["Credentials-Db-Name"] == "datasets"
+        assert superset_requests[0].headers["Credentials-Db-Host"] == "data-workspace-postgres"
+        assert superset_requests[0].headers["Credentials-Db-Port"] == "5432"
+        assert superset_requests[0].headers["Credentials-Db-Persistent-Role"] == "_user_23b40dd9"
         assert (
-            superset_requests[0].headers['Credentials-Db-User'].startswith('user_test_test_com_')
+            superset_requests[0].headers["Credentials-Db-User"].startswith("user_test_test_com_")
         )
-        assert superset_requests[0].headers['Credentials-Db-User'].endswith('superset')
-        assert 'Credentials-Db-Password' in superset_requests[0].headers
-        assert 'Credentials-Db-Id' in superset_requests[0].headers
+        assert superset_requests[0].headers["Credentials-Db-User"].endswith("superset")
+        assert "Credentials-Db-Password" in superset_requests[0].headers
+        assert "Credentials-Db-Id" in superset_requests[0].headers
 
     @async_test
     async def test_superset_public_headers(self):
@@ -1561,81 +1561,81 @@ class TestApplication(unittest.TestCase):
 
         cleanup_application = await create_application(
             env=lambda: {
-                'APPLICATION_IP_WHITELIST__1': '1.2.3.4/32',
-                'APPLICATION_IP_WHITELIST__2': '5.0.0.0/8',
-                'X_FORWARDED_FOR_TRUSTED_HOPS': '2',
-                'SUPERSET_ROOT': 'http://localhost:8008/',
+                "APPLICATION_IP_WHITELIST__1": "1.2.3.4/32",
+                "APPLICATION_IP_WHITELIST__2": "5.0.0.0/8",
+                "X_FORWARDED_FOR_TRUSTED_HOPS": "2",
+                "SUPERSET_ROOT": "http://localhost:8008/",
             }
         )
         self.add_async_cleanup(cleanup_application)
 
         is_logged_in = True
-        codes = iter(['some-code'])
-        tokens = iter(['token-1'])
+        codes = iter(["some-code"])
+        tokens = iter(["token-1"])
         auth_to_me = {
-            'Bearer token-1': {
-                'email': 'test@test.com',
-                'contact_email': 'test@test.com',
-                'related_emails': [],
-                'first_name': 'Peter',
-                'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            "Bearer token-1": {
+                "email": "test@test.com",
+                "contact_email": "test@test.com",
+                "related_emails": [],
+                "first_name": "Peter",
+                "last_name": "Piper",
+                "user_id": "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2",
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+        await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
         # Ensure user created
-        async with session.request('GET', 'http://dataworkspace.test:8000/') as response:
+        async with session.request("GET", "http://dataworkspace.test:8000/") as response:
             await response.text()
 
         stdout, stderr, code = await give_user_app_perms()
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
-        dataset_id_test_dataset = '70ce6fdd-1791-4806-bbe0-4cf880a9cc37'
-        table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
+        dataset_id_test_dataset = "70ce6fdd-1791-4806-bbe0-4cf880a9cc37"
+        table_id = "5a2ee5dd-f025-4939-b0a1-bb85ab7504d7"
         stdout, stderr, code = await create_private_dataset(
-            'my_database',
-            'MASTER',
+            "my_database",
+            "MASTER",
             dataset_id_test_dataset,
-            'test_dataset',
+            "test_dataset",
             table_id,
-            'test_dataset',
+            "test_dataset",
         )
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
-        stdout, stderr, code = await give_user_dataset_perms('test_dataset')
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        stdout, stderr, code = await give_user_dataset_perms("test_dataset")
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
         stdout, stderr, code = await create_visusalisation(
-            'test_visualisation', 'REQUIRES_AUTHENTICATION', 'SUPERSET', 1
+            "test_visualisation", "REQUIRES_AUTHENTICATION", "SUPERSET", 1
         )
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
         async with session.request(
-            'GET',
-            'http://superset.dataworkspace.test:8000/',
-            headers={'x-forwarded-for': '1.2.3.4'},
+            "GET",
+            "http://superset.dataworkspace.test:8000/",
+            headers={"x-forwarded-for": "1.2.3.4"},
         ) as response:
             self.assertEqual(response.status, 200)
 
-        assert superset_requests[0].headers['Credentials-Memorable-Name'] == 'my_database'
-        assert superset_requests[0].headers['Credentials-Db-Name'] == 'datasets'
-        assert superset_requests[0].headers['Credentials-Db-Host'] == 'data-workspace-postgres'
-        assert superset_requests[0].headers['Credentials-Db-Port'] == '5432'
-        assert superset_requests[0].headers['Credentials-Db-User'] == 'postgres'
-        assert superset_requests[0].headers['Credentials-Db-Password'] == 'postgres'
-        assert superset_requests[0].headers['Dashboards'] == '1'
+        assert superset_requests[0].headers["Credentials-Memorable-Name"] == "my_database"
+        assert superset_requests[0].headers["Credentials-Db-Name"] == "datasets"
+        assert superset_requests[0].headers["Credentials-Db-Host"] == "data-workspace-postgres"
+        assert superset_requests[0].headers["Credentials-Db-Port"] == "5432"
+        assert superset_requests[0].headers["Credentials-Db-User"] == "postgres"
+        assert superset_requests[0].headers["Credentials-Db-Password"] == "postgres"
+        assert superset_requests[0].headers["Dashboards"] == "1"
 
     @async_test
     async def test_application_redirects_to_sso_again_if_token_expired(self):
@@ -1649,17 +1649,17 @@ class TestApplication(unittest.TestCase):
         self.add_async_cleanup(cleanup_application)
 
         is_logged_in = True
-        codes = iter(['some-code', 'some-other-code'])
-        tokens = iter(['token-1', 'token-2'])
+        codes = iter(["some-code", "some-other-code"])
+        tokens = iter(["token-1", "token-2"])
         auth_to_me = {
             # No token-1
-            'Bearer token-2': {
-                'email': 'test@test.com',
-                'contact_email': 'test@test.com',
-                'related_emails': [],
-                'first_name': 'Peter',
-                'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            "Bearer token-2": {
+                "email": "test@test.com",
+                "contact_email": "test@test.com",
+                "related_emails": [],
+                "first_name": "Peter",
+                "last_name": "Piper",
+                "user_id": "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2",
             }
         }
         sso_cleanup, number_of_times_at_sso = await create_sso(
@@ -1667,10 +1667,10 @@ class TestApplication(unittest.TestCase):
         )
         self.add_async_cleanup(sso_cleanup)
 
-        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+        await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
         # Make a request to the home page
-        async with session.request('GET', 'http://dataworkspace.test:8000/') as response:
+        async with session.request("GET", "http://dataworkspace.test:8000/") as response:
             self.assertEqual(number_of_times_at_sso(), 2)
             self.assertEqual(200, response.status)
 
@@ -1686,90 +1686,90 @@ class TestApplication(unittest.TestCase):
         self.add_async_cleanup(cleanup_application)
 
         is_logged_in = True
-        codes = iter(['some-code', 'some-other-code'])
-        tokens = iter(['token-1', 'token-2'])
+        codes = iter(["some-code", "some-other-code"])
+        tokens = iter(["token-1", "token-2"])
         auth_to_me = {
             # No token-1
-            'Bearer token-2': {
-                'email': 'test@test.com',
-                'contact_email': 'test@test.com',
-                'related_emails': [],
-                'first_name': 'Peter',
-                'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            "Bearer token-2": {
+                "email": "test@test.com",
+                "contact_email": "test@test.com",
+                "related_emails": [],
+                "first_name": "Peter",
+                "last_name": "Piper",
+                "user_id": "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2",
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+        await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
-        dataset_id_test_dataset = '70ce6fdd-1791-4806-bbe0-4cf880a9cc37'
-        table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
+        dataset_id_test_dataset = "70ce6fdd-1791-4806-bbe0-4cf880a9cc37"
+        table_id = "5a2ee5dd-f025-4939-b0a1-bb85ab7504d7"
 
         stdout, stderr, code = await create_metadata_table()
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
         stdout, stderr, code = await create_private_dataset(
-            'my_database',
-            'DATACUT',
+            "my_database",
+            "DATACUT",
             dataset_id_test_dataset,
-            'test_dataset',
+            "test_dataset",
             table_id,
-            'test_dataset',
+            "test_dataset",
         )
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
         async with session.request(
-            'GET', f'http://dataworkspace.test:8000/datasets/{dataset_id_test_dataset}'
+            "GET", f"http://dataworkspace.test:8000/datasets/{dataset_id_test_dataset}"
         ) as response:
             content = await response.text()
 
-        self.assertIn('You need to request access to view this data.', content)
+        self.assertIn("You need to request access to view this data.", content)
 
         async with session.request(
-            'GET',
-            'http://dataworkspace.test:8000/table_data/my_database/public/test_dataset',
+            "GET",
+            "http://dataworkspace.test:8000/table_data/my_database/public/test_dataset",
         ) as response:
             content = await response.text()
             status = response.status
 
         self.assertEqual(status, 403)
-        self.assertEqual(content, '')
+        self.assertEqual(content, "")
 
-        stdout, stderr, code = await give_user_dataset_perms('test_dataset')
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        stdout, stderr, code = await give_user_dataset_perms("test_dataset")
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
         async with session.request(
-            'GET',
-            'http://dataworkspace.test:8000/datasets/70ce6fdd-1791-4806-bbe0-4cf880a9cc37',
+            "GET",
+            "http://dataworkspace.test:8000/datasets/70ce6fdd-1791-4806-bbe0-4cf880a9cc37",
         ) as response:
             content = await response.text()
 
-        self.assertNotIn('You need to request access to view these links', content)
+        self.assertNotIn("You need to request access to view these links", content)
 
         async with session.request(
-            'GET',
-            'http://dataworkspace.test:8000/table_data/my_database/public/test_dataset',
+            "GET",
+            "http://dataworkspace.test:8000/table_data/my_database/public/test_dataset",
         ) as response:
             content = await response.text()
 
         rows = list(csv.reader(io.StringIO(content)))
-        self.assertEqual(rows[0], ['id', 'data'])
-        self.assertEqual(rows[1][1], 'test data 1')
-        self.assertEqual(rows[2][1], 'test data 2')
-        self.assertEqual(rows[20001][0], 'Number of rows: 20000')
+        self.assertEqual(rows[0], ["id", "data"])
+        self.assertEqual(rows[1][1], "test data 1")
+        self.assertEqual(rows[2][1], "test data 2")
+        self.assertEqual(rows[20001][0], "Number of rows: 20000")
 
         async def fetch_num_connections():
             pool = await aiopg.create_pool(
-                'dbname=dataworkspace user=postgres password=postgres '
-                'host=data-workspace-postgres'
+                "dbname=dataworkspace user=postgres password=postgres "
+                "host=data-workspace-postgres"
             )
             async with pool.acquire() as conn:
                 async with conn.cursor() as cur:
@@ -1783,18 +1783,18 @@ class TestApplication(unittest.TestCase):
         # Django database
         num_connections_1 = await fetch_num_connections()
         response_1 = await session.request(
-            'GET',
-            'http://dataworkspace.test:8000/table_data/my_database/public/test_dataset',
+            "GET",
+            "http://dataworkspace.test:8000/table_data/my_database/public/test_dataset",
         )
         num_connections_2 = await fetch_num_connections()
         response_2 = await session.request(
-            'GET',
-            'http://dataworkspace.test:8000/table_data/my_database/public/test_dataset',
+            "GET",
+            "http://dataworkspace.test:8000/table_data/my_database/public/test_dataset",
         )
         num_connections_3 = await fetch_num_connections()
         response_3 = await session.request(
-            'GET',
-            'http://dataworkspace.test:8000/table_data/my_database/public/test_dataset',
+            "GET",
+            "http://dataworkspace.test:8000/table_data/my_database/public/test_dataset",
         )
         num_connections_4 = await fetch_num_connections()
 
@@ -1809,9 +1809,9 @@ class TestApplication(unittest.TestCase):
         rows_2 = list(csv.reader(io.StringIO(await response_2.text())))
         rows_3 = list(csv.reader(io.StringIO(await response_3.text())))
 
-        self.assertEqual(rows_1[20001][0], 'Number of rows: 20000')
-        self.assertEqual(rows_2[20001][0], 'Number of rows: 20000')
-        self.assertEqual(rows_3[20001][0], 'Number of rows: 20000')
+        self.assertEqual(rows_1[20001][0], "Number of rows: 20000")
+        self.assertEqual(rows_2[20001][0], "Number of rows: 20000")
+        self.assertEqual(rows_3[20001][0], "Number of rows: 20000")
 
     @async_test
     async def test_hawk_authenticated_source_table_api_endpoint(self):
@@ -1825,53 +1825,53 @@ class TestApplication(unittest.TestCase):
         self.add_async_cleanup(cleanup_application)
 
         is_logged_in = True
-        codes = iter(['some-code', 'some-other-code'])
-        tokens = iter(['token-1', 'token-2'])
+        codes = iter(["some-code", "some-other-code"])
+        tokens = iter(["token-1", "token-2"])
         auth_to_me = {
             # No token-1
-            'Bearer token-2': {
-                'email': 'test@test.com',
-                'contact_email': 'test@test.com',
-                'related_emails': [],
-                'first_name': 'Peter',
-                'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            "Bearer token-2": {
+                "email": "test@test.com",
+                "contact_email": "test@test.com",
+                "related_emails": [],
+                "first_name": "Peter",
+                "last_name": "Piper",
+                "user_id": "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2",
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+        await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
         # Check that with no authorization header there is no access
-        dataset_id = '70ce6fdd-1791-4806-bbe0-4cf880a9cc37'
-        table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
-        url = f'http://dataworkspace.test:8000/api/v1/dataset/{dataset_id}/{table_id}'
+        dataset_id = "70ce6fdd-1791-4806-bbe0-4cf880a9cc37"
+        table_id = "5a2ee5dd-f025-4939-b0a1-bb85ab7504d7"
+        url = f"http://dataworkspace.test:8000/api/v1/dataset/{dataset_id}/{table_id}"
         stdout, stderr, code = await create_private_dataset(
-            'my_database',
-            'MASTER',
+            "my_database",
+            "MASTER",
             dataset_id,
-            'test_dataset',
+            "test_dataset",
             table_id,
-            'test_dataset',
+            "test_dataset",
         )
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
-        async with session.request('GET', url) as response:
+        async with session.request("GET", url) as response:
             status = response.status
             content = await response.text()
         self.assertEqual(status, 401)
 
         # unauthenticated request
-        client_id = os.environ['HAWK_SENDERS__1__id']
-        client_key = 'incorrect_key'
-        algorithm = os.environ['HAWK_SENDERS__1__algorithm']
-        method = 'GET'
-        content = ''
-        content_type = ''
-        credentials = {'id': client_id, 'key': client_key, 'algorithm': algorithm}
+        client_id = os.environ["HAWK_SENDERS__1__id"]
+        client_key = "incorrect_key"
+        algorithm = os.environ["HAWK_SENDERS__1__algorithm"]
+        method = "GET"
+        content = ""
+        content_type = ""
+        credentials = {"id": client_id, "key": client_key, "algorithm": algorithm}
         sender = mohawk.Sender(
             credentials=credentials,
             url=url,
@@ -1879,21 +1879,21 @@ class TestApplication(unittest.TestCase):
             content=content,
             content_type=content_type,
         )
-        headers = {'Authorization': sender.request_header, 'Content-Type': content_type}
+        headers = {"Authorization": sender.request_header, "Content-Type": content_type}
 
-        async with session.request('GET', url, headers=headers) as response:
+        async with session.request("GET", url, headers=headers) as response:
             status = response.status
             content = await response.text()
         self.assertEqual(status, 401)
 
         # authenticated request
-        client_id = os.environ['HAWK_SENDERS__1__id']
-        client_key = os.environ['HAWK_SENDERS__1__key']
-        algorithm = os.environ['HAWK_SENDERS__1__algorithm']
-        method = 'GET'
-        content = ''
-        content_type = ''
-        credentials = {'id': client_id, 'key': client_key, 'algorithm': algorithm}
+        client_id = os.environ["HAWK_SENDERS__1__id"]
+        client_key = os.environ["HAWK_SENDERS__1__key"]
+        algorithm = os.environ["HAWK_SENDERS__1__algorithm"]
+        method = "GET"
+        content = ""
+        content_type = ""
+        credentials = {"id": client_id, "key": client_key, "algorithm": algorithm}
         sender = mohawk.Sender(
             credentials=credentials,
             url=url,
@@ -1901,15 +1901,15 @@ class TestApplication(unittest.TestCase):
             content=content,
             content_type=content_type,
         )
-        headers = {'Authorization': sender.request_header, 'Content-Type': content_type}
+        headers = {"Authorization": sender.request_header, "Content-Type": content_type}
 
-        async with session.request('GET', url, headers=headers) as response:
+        async with session.request("GET", url, headers=headers) as response:
             status = response.status
             content = await response.text()
         self.assertEqual(status, 200)
 
         # replay attack
-        async with session.request('GET', url, headers=headers) as response:
+        async with session.request("GET", url, headers=headers) as response:
             status = response.status
             content = await response.text()
         self.assertEqual(status, 401)
@@ -1923,17 +1923,17 @@ class TestApplication(unittest.TestCase):
         self.add_async_cleanup(cleanup_application)
 
         is_logged_in = True
-        codes = iter(['some-code', 'some-other-code'])
-        tokens = iter(['token-1', 'token-2'])
+        codes = iter(["some-code", "some-other-code"])
+        tokens = iter(["token-1", "token-2"])
         auth_to_me = {
             # No token-1
-            'Bearer token-2': {
-                'email': 'test@test.com',
-                'contact_email': 'test@test.com',
-                'related_emails': [],
-                'first_name': 'Peter',
-                'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            "Bearer token-2": {
+                "email": "test@test.com",
+                "contact_email": "test@test.com",
+                "related_emails": [],
+                "first_name": "Peter",
+                "last_name": "Piper",
+                "user_id": "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2",
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
@@ -1942,16 +1942,16 @@ class TestApplication(unittest.TestCase):
         mirror_cleanup = await create_mirror()
         self.add_async_cleanup(mirror_cleanup)
 
-        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+        await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
         async with session.request(
-            'GET',
-            'http://testvisualisation--11372717.dataworkspace.test:8000/__mirror/some/path/in/mirror',
+            "GET",
+            "http://testvisualisation--11372717.dataworkspace.test:8000/__mirror/some/path/in/mirror",
         ) as response:
             status = response.status
             content = await response.text()
         self.assertEqual(status, 200)
-        self.assertEqual(content, 'Mirror path: /some-remote-folder/some/path/in/mirror')
+        self.assertEqual(content, "Mirror path: /some-remote-folder/some/path/in/mirror")
 
     @async_test
     async def test_gitlab_application_can_be_managed(self):
@@ -1965,25 +1965,25 @@ class TestApplication(unittest.TestCase):
         self.add_async_cleanup(cleanup_application)
 
         is_logged_in = True
-        codes = iter(['some-code', 'some-other-code'])
-        tokens = iter(['token-1', 'token-2'])
+        codes = iter(["some-code", "some-other-code"])
+        tokens = iter(["token-1", "token-2"])
         auth_to_me = {
-            'Bearer token-2': {
-                'email': 'test@test.com',
-                'contact_email': 'test@test.com',
-                'related_emails': [],
-                'first_name': 'Peter',
-                'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            "Bearer token-2": {
+                "email": "test@test.com",
+                "contact_email": "test@test.com",
+                "related_emails": [],
+                "first_name": "Peter",
+                "last_name": "Piper",
+                "user_id": "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2",
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+        await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
         async with session.request(
-            'GET', 'http://dataworkspace.test:8000/visualisations'
+            "GET", "http://dataworkspace.test:8000/visualisations"
         ) as response:
             status = response.status
         self.assertEqual(status, 403)
@@ -1991,22 +1991,22 @@ class TestApplication(unittest.TestCase):
         await give_user_visualisation_developer_perms()
 
         def handle_group(request):
-            return web.json_response({'web_url': 'https://some.domain.test/'}, status=200)
+            return web.json_response({"web_url": "https://some.domain.test/"}, status=200)
 
         users_query = {}
 
         def handle_users(request):
             nonlocal users_query
             users_query = request.query
-            return web.json_response([{'id': 1234}], status=200)
+            return web.json_response([{"id": 1234}], status=200)
 
         project = {
-            'id': 3,
-            'name': 'Michal\'s Vis_ualisat-tion---',
-            'tag_list': ['visualisation'],
-            'default_branch': 'my-default-3',
-            'description': 'The vis',
-            'web_url': 'https://some.domain.test/',
+            "id": 3,
+            "name": "Michal's Vis_ualisat-tion---",
+            "tag_list": ["visualisation"],
+            "default_branch": "my-default-3",
+            "description": "The vis",
+            "web_url": "https://some.domain.test/",
         }
         projects_query = {}
 
@@ -2016,16 +2016,16 @@ class TestApplication(unittest.TestCase):
             return web.json_response(
                 [
                     {
-                        'id': 1,
-                        'name': 'not-a-vis',
-                        'tag_list': ['some-tag'],
-                        'default_branch': 'my-default-1',
+                        "id": 1,
+                        "name": "not-a-vis",
+                        "tag_list": ["some-tag"],
+                        "default_branch": "my-default-1",
                     },
                     {
-                        'id': 2,
-                        'name': 'is-a-vis',
-                        'tag_list': ['visualisation'],
-                        'default_branch': 'my-default-2',
+                        "id": 2,
+                        "name": "is-a-vis",
+                        "tag_list": ["visualisation"],
+                        "default_branch": "my-default-2",
                     },
                     project,
                 ],
@@ -2038,25 +2038,25 @@ class TestApplication(unittest.TestCase):
         access_level = 30
 
         def handle_members(request):
-            return web.json_response([{'id': 1234, 'access_level': access_level}], status=200)
+            return web.json_response([{"id": 1234, "access_level": access_level}], status=200)
 
         def handle_branches(request):
             return web.json_response(
                 [
                     {
-                        'name': 'my-default-3',
-                        'commit': {
-                            'id': 'some-id',
-                            'short_id': 'abcdef12',
-                            'committed_date': '2015-01-01T01:01:01.000Z',
+                        "name": "my-default-3",
+                        "commit": {
+                            "id": "some-id",
+                            "short_id": "abcdef12",
+                            "committed_date": "2015-01-01T01:01:01.000Z",
                         },
                     },
                     {
-                        'name': 'feature/my-feature-3',
-                        'commit': {
-                            'id': 'some-id',
-                            'short_id': 'abcdef12',
-                            'committed_date': '2015-01-01T01:01:01.000Z',
+                        "name": "feature/my-feature-3",
+                        "commit": {
+                            "id": "some-id",
+                            "short_id": "abcdef12",
+                            "committed_date": "2015-01-01T01:01:01.000Z",
                         },
                     },
                 ],
@@ -2069,66 +2069,66 @@ class TestApplication(unittest.TestCase):
         gitlab_cleanup = await create_server(
             8007,
             [
-                web.get('/api/v4/groups/visualisations', handle_group),
-                web.get('/api/v4/users', handle_users),
-                web.get('/api/v4/projects', handle_projects),
-                web.get('/api/v4/projects/3/members/all', handle_members),
-                web.get('/api/v4/projects/3', handle_project),
-                web.get('/api/v4/projects/3/repository/branches', handle_branches),
-                web.get('/{path:.*}', handle_general_gitlab),
+                web.get("/api/v4/groups/visualisations", handle_group),
+                web.get("/api/v4/users", handle_users),
+                web.get("/api/v4/projects", handle_projects),
+                web.get("/api/v4/projects/3/members/all", handle_members),
+                web.get("/api/v4/projects/3", handle_project),
+                web.get("/api/v4/projects/3/repository/branches", handle_branches),
+                web.get("/{path:.*}", handle_general_gitlab),
             ],
         )
         self.add_async_cleanup(gitlab_cleanup)
 
         async with session.request(
-            'GET', 'http://dataworkspace.test:8000/visualisations'
+            "GET", "http://dataworkspace.test:8000/visualisations"
         ) as response:
             status = response.status
             content = await response.text()
         self.assertEqual(status, 200)
 
-        self.assertEqual(users_query['extern_uid'], '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2')
-        self.assertEqual(projects_query['sudo'], '1234')
-        self.assertNotIn('not-a-vis', content)
-        self.assertIn('is-a-vis', content)
+        self.assertEqual(users_query["extern_uid"], "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
+        self.assertEqual(projects_query["sudo"], "1234")
+        self.assertNotIn("not-a-vis", content)
+        self.assertIn("is-a-vis", content)
 
         access_level = 20
         async with session.request(
-            'GET', 'http://dataworkspace.test:8000/visualisations/3/users/give-access'
+            "GET", "http://dataworkspace.test:8000/visualisations/3/users/give-access"
         ) as response:
             status = response.status
             content = await response.text()
 
         self.assertEqual(status, 403)
-        self.assertNotIn('Give access', content)
+        self.assertNotIn("Give access", content)
 
         access_level = 30
         async with session.request(
-            'GET', 'http://dataworkspace.test:8000/visualisations/3/users/give-access'
+            "GET", "http://dataworkspace.test:8000/visualisations/3/users/give-access"
         ) as response:
             status = response.status
             content = await response.text()
 
         self.assertEqual(status, 200)
-        self.assertIn('Give access', content)
+        self.assertIn("Give access", content)
 
         def handle_general_ecr(request):
             return web.json_response(
-                {'imageDetails': [{'imageTags': ['michals-vis-ualisat-tion--abcdef12']}]}
+                {"imageDetails": [{"imageTags": ["michals-vis-ualisat-tion--abcdef12"]}]}
             )
 
-        ecr_cleanup = await create_server(8008, [web.post('/{path:.*}', handle_general_ecr)])
+        ecr_cleanup = await create_server(8008, [web.post("/{path:.*}", handle_general_ecr)])
         self.add_async_cleanup(ecr_cleanup)
 
         async with session.request(
-            'GET',
-            'http://dataworkspace.test:8000/visualisations/3/branches/my-default-3',
+            "GET",
+            "http://dataworkspace.test:8000/visualisations/3/branches/my-default-3",
         ) as response:
             status = response.status
             content = await response.text()
 
         self.assertEqual(status, 200)
-        self.assertIn('Production: abcdef12', content)
+        self.assertIn("Production: abcdef12", content)
 
         self.assertIn('href="http://michals-vis-ualisat-tion.dataworkspace.test:8000/', content)
         self.assertIn(
@@ -2139,13 +2139,13 @@ class TestApplication(unittest.TestCase):
         # Check that the access level must have been cached
         access_level = 20
         async with session.request(
-            'GET', 'http://dataworkspace.test:8000/visualisations/3/users/give-access'
+            "GET", "http://dataworkspace.test:8000/visualisations/3/users/give-access"
         ) as response:
             status = response.status
             content = await response.text()
 
         self.assertEqual(status, 200)
-        self.assertIn('Give access', content)
+        self.assertIn("Give access", content)
 
     @async_test
     async def test_sentry_dsn_does_not_stop_proxy_from_becoming_healthy(self):
@@ -2163,7 +2163,7 @@ class TestApplication(unittest.TestCase):
         )
         self.add_async_cleanup(cleanup_application)
 
-        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+        await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
     @async_test
     async def test_search_filter_result_predictions(self):
@@ -2171,22 +2171,22 @@ class TestApplication(unittest.TestCase):
         self.add_async_cleanup(cleanup_application)
 
         is_logged_in = True
-        codes = iter(['some-code'])
-        tokens = iter(['token-1'])
+        codes = iter(["some-code"])
+        tokens = iter(["token-1"])
         auth_to_me = {
-            'Bearer token-1': {
-                'email': 'test@test.com',
-                'contact_email': 'test@test.com',
-                'related_emails': [],
-                'first_name': 'Peter',
-                'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            "Bearer token-1": {
+                "email": "test@test.com",
+                "contact_email": "test@test.com",
+                "related_emails": [],
+                "first_name": "Peter",
+                "last_name": "Piper",
+                "user_id": "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2",
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+        await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
         _, _, code = await create_sample_datasets_and_visualisations()
         assert code == 0
@@ -2294,22 +2294,22 @@ class TestApplication(unittest.TestCase):
         self.add_async_cleanup(cleanup_application)
 
         is_logged_in = True
-        codes = iter(['some-code'])
-        tokens = iter(['token-1'])
+        codes = iter(["some-code"])
+        tokens = iter(["token-1"])
         auth_to_me = {
-            'Bearer token-1': {
-                'email': 'peter@test.com',
-                'contact_email': 'peter@test.com',
-                'related_emails': [],
-                'first_name': 'Peter',
-                'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            "Bearer token-1": {
+                "email": "peter@test.com",
+                "contact_email": "peter@test.com",
+                "related_emails": [],
+                "first_name": "Peter",
+                "last_name": "Piper",
+                "user_id": "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2",
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.add_async_cleanup(sso_cleanup)
 
-        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+        await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
         _, _, code = await create_application_db_user()
         assert code == 0
@@ -2321,21 +2321,21 @@ class TestApplication(unittest.TestCase):
         assert code == 0
 
         # Initial log in forces redirect to admin homepage
-        async with session.request('GET', 'http://dataworkspace.test:8000/admin') as response:
+        async with session.request("GET", "http://dataworkspace.test:8000/admin") as response:
             await response.text()
             self.assertEqual(200, response.status)
 
         async with session.request(
-            'GET', 'http://dataworkspace.test:8000/admin/datasets/toolqueryauditlog/'
+            "GET", "http://dataworkspace.test:8000/admin/datasets/toolqueryauditlog/"
         ) as response:
             content = await response.text()
             self.assertEqual(200, response.status)
             self.assertIn(
-                'CREATE TABLE IF NOT EXISTS query_log_test (id INT, name TEXT);',
+                "CREATE TABLE IF NOT EXISTS query_log_test (id INT, name TEXT);",
                 content,
             )
-            self.assertIn('INSERT INTO query_log_test VALUES(1, &#x27;a record&#x27;);', content)
-            self.assertIn('SELECT * FROM query_log_test;', content)
+            self.assertIn("INSERT INTO query_log_test VALUES(1, &#x27;a record&#x27;);", content)
+            self.assertIn("SELECT * FROM query_log_test;", content)
 
     @async_test
     async def test_sso_token_endpoint_header(self):
@@ -2348,7 +2348,7 @@ class TestApplication(unittest.TestCase):
         cleanup_application = await create_application()
         self.add_async_cleanup(cleanup_application)
 
-        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
+        await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
         headers = {}
 
@@ -2368,21 +2368,21 @@ class TestApplication(unittest.TestCase):
         sso_app = web.Application()
         sso_app.add_routes(
             [
-                web.get('/o/authorize/', handle_authorize),
-                web.post('/o/token/', handle_token),
-                web.get('/api/v1/user/me/', handle_me),
+                web.get("/o/authorize/", handle_authorize),
+                web.post("/o/token/", handle_token),
+                web.get("/api/v1/user/me/", handle_me),
             ]
         )
 
         sso_runner = web.AppRunner(sso_app)
         await sso_runner.setup()
-        sso_site = web.TCPSite(sso_runner, '0.0.0.0', 8005)
+        sso_site = web.TCPSite(sso_runner, "0.0.0.0", 8005)
         await sso_site.start()
 
-        async with session.request('GET', 'http://dataworkspace.test:8000/'):
+        async with session.request("GET", "http://dataworkspace.test:8000/"):
             assert (
-                'Accept-Encoding' not in headers
-            ), 'Encoding incorrectly sent to SSO token endpoint'
+                "Accept-Encoding" not in headers
+            ), "Encoding incorrectly sent to SSO token endpoint"
 
         await sso_site.stop()
 
@@ -2398,17 +2398,17 @@ class TestApplication(unittest.TestCase):
         self.add_async_cleanup(cleanup_application)
 
         is_logged_in = True
-        codes = iter(['some-code', 'some-other-code'])
-        tokens = iter(['token-1', 'token-2'])
+        codes = iter(["some-code", "some-other-code"])
+        tokens = iter(["token-1", "token-2"])
         auth_to_me = {
             # No token-1
-            'Bearer token-2': {
-                'email': 'test@test.com',
-                'contact_email': 'test@test.com',
-                'related_emails': [],
-                'first_name': 'Peter',
-                'last_name': 'Piper',
-                'user_id': '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
+            "Bearer token-2": {
+                "email": "test@test.com",
+                "contact_email": "test@test.com",
+                "related_emails": [],
+                "first_name": "Peter",
+                "last_name": "Piper",
+                "user_id": "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2",
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
@@ -2416,99 +2416,99 @@ class TestApplication(unittest.TestCase):
 
         await set_waffle_flag(settings.DATASET_FINDER_ADMIN_ONLY_FLAG)
 
-        await until_succeeds('http://dataworkspace.test:8000/healthcheck')
-        await until_succeeds('http://data-workspace-es:9200/_cat/indices')
+        await until_succeeds("http://dataworkspace.test:8000/healthcheck")
+        await until_succeeds("http://data-workspace-es:9200/_cat/indices")
         await setup_elasticsearch_indexes()
 
         # Hit Data Workspace to create user
         async with session.request(
-            'GET',
-            'http://dataworkspace.test:8000/',
+            "GET",
+            "http://dataworkspace.test:8000/",
         ) as response:
             content = await response.text()
 
         async with session.request(
-            'GET',
-            'http://dataworkspace.test:8000/finder',
+            "GET",
+            "http://dataworkspace.test:8000/finder",
         ) as response:
             content = await response.text()
 
         self.assertEqual(response.status, 200)
         self.assertIn("Search all our data", content)
 
-        dataset_id_test_dataset = '70ce6fdd-1791-4806-bbe0-4cf880a9cc37'
-        table_id = '5a2ee5dd-f025-4939-b0a1-bb85ab7504d7'
+        dataset_id_test_dataset = "70ce6fdd-1791-4806-bbe0-4cf880a9cc37"
+        table_id = "5a2ee5dd-f025-4939-b0a1-bb85ab7504d7"
         stdout, stderr, code = await create_private_dataset(
-            'my_database',
-            'MASTER',
+            "my_database",
+            "MASTER",
             dataset_id_test_dataset,
-            'test_dataset',
+            "test_dataset",
             table_id,
-            'test_dataset',
+            "test_dataset",
         )
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
         # Dataset not discoverable because IAO/IAM hasn't opted in
         async with session.request(
-            'GET',
-            'http://dataworkspace.test:8000/finder?q=data',
+            "GET",
+            "http://dataworkspace.test:8000/finder?q=data",
         ) as response:
             content = await response.text()
 
-        self.assertIn('There are no matches for the phrase “data”.', content)
+        self.assertIn("There are no matches for the phrase “data”.", content)
 
         # Toggle the opt-in to make it discoverable even without the user having access
         stdout, stderr, code = await dataset_finder_opt_in_dataset(
-            schema='public', table='test_dataset'
+            schema="public", table="test_dataset"
         )
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
         # Users can now see results for the dataset even if they don't have access
         async with session.request(
-            'GET',
-            'http://dataworkspace.test:8000/finder?q=data',
+            "GET",
+            "http://dataworkspace.test:8000/finder?q=data",
         ) as response:
             content = await response.text()
 
-        self.assertIn('1 results', content)
+        self.assertIn("1 results", content)
         self.assertIn('<strong>100</strong> matching rows in "public"."test_dataset"', content)
 
         # Revoke the opt-in but give them access - should still be visible in results
         stdout, stderr, code = await dataset_finder_opt_in_dataset(
-            schema='public', table='test_dataset', opted_in=False
+            schema="public", table="test_dataset", opted_in=False
         )
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
-        stdout, stderr, code = await give_user_dataset_perms('test_dataset')
-        self.assertEqual(stdout, b'')
-        self.assertEqual(stderr, b'')
+        stdout, stderr, code = await give_user_dataset_perms("test_dataset")
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
 
         # Users can still see results for the dataset even if the IAO/IAM hasn't opted in - because they have explicit
         # access
         async with session.request(
-            'GET',
-            'http://dataworkspace.test:8000/finder?q=data',
+            "GET",
+            "http://dataworkspace.test:8000/finder?q=data",
         ) as response:
             content = await response.text()
 
-        self.assertIn('1 results', content)
+        self.assertIn("1 results", content)
         self.assertIn('<strong>100</strong> matching rows in "public"."test_dataset"', content)
 
         # Users shouldn't be able to see results for indexes that aren't covered by the correct alias (e.g. new indexes
         # currently being written to by data-flow).
         async with session.request(
-            'GET',
-            'http://dataworkspace.test:8000/finder?q=new',
+            "GET",
+            "http://dataworkspace.test:8000/finder?q=new",
         ) as response:
             content = await response.text()
-        self.assertIn('There are no matches for the phrase “new”.', content)
+        self.assertIn("There are no matches for the phrase “new”.", content)
 
 
 def client_session():
@@ -2532,41 +2532,41 @@ async def create_sso(is_logged_in, codes, tokens, auth_to_me):
         number_of_times += 1
 
         if not is_logged_in:
-            return web.Response(status=200, text='This is the login page')
+            return web.Response(status=200, text="This is the login page")
 
-        state = request.query['state']
+        state = request.query["state"]
         latest_code = next(codes)
         return web.Response(
             status=302,
             headers={
-                'Location': request.query['redirect_uri'] + f'?state={state}&code={latest_code}'
+                "Location": request.query["redirect_uri"] + f"?state={state}&code={latest_code}"
             },
         )
 
     async def handle_token(request):
-        if (await request.post())['code'] != latest_code:
+        if (await request.post())["code"] != latest_code:
             return web.json_response({}, status=403)
 
         token = next(tokens)
-        return web.json_response({'access_token': token}, status=200)
+        return web.json_response({"access_token": token}, status=200)
 
     async def handle_me(request):
-        if request.headers['authorization'] in auth_to_me:
-            return web.json_response(auth_to_me[request.headers['authorization']], status=200)
+        if request.headers["authorization"] in auth_to_me:
+            return web.json_response(auth_to_me[request.headers["authorization"]], status=200)
 
         return web.json_response({}, status=403)
 
     sso_app = web.Application()
     sso_app.add_routes(
         [
-            web.get('/o/authorize/', handle_authorize),
-            web.post('/o/token/', handle_token),
-            web.get('/api/v1/user/me/', handle_me),
+            web.get("/o/authorize/", handle_authorize),
+            web.post("/o/token/", handle_token),
+            web.get("/api/v1/user/me/", handle_me),
         ]
     )
     sso_runner = web.AppRunner(sso_app)
     await sso_runner.setup()
-    sso_site = web.TCPSite(sso_runner, '0.0.0.0', 8005)
+    sso_site = web.TCPSite(sso_runner, "0.0.0.0", 8005)
     await sso_site.start()
 
     def get_number_of_times():
@@ -2580,7 +2580,7 @@ async def create_server(port, routes):
     app.add_routes(routes)
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, '0.0.0.0', port)
+    site = web.TCPSite(runner, "0.0.0.0", port)
     await site.start()
 
     return runner.cleanup
@@ -2588,13 +2588,13 @@ async def create_server(port, routes):
 
 async def create_mirror():
     async def handle(request):
-        return web.Response(text=f'Mirror path: {request.path}', status=200)
+        return web.Response(text=f"Mirror path: {request.path}", status=200)
 
     mirror_app = web.Application()
-    mirror_app.add_routes([web.get('/{path:.*}', handle)])
+    mirror_app.add_routes([web.get("/{path:.*}", handle)])
     mirror_runner = web.AppRunner(mirror_app)
     await mirror_runner.setup()
-    mirror_site = web.TCPSite(mirror_runner, '0.0.0.0', 8006)
+    mirror_site = web.TCPSite(mirror_runner, "0.0.0.0", 8006)
     await mirror_site.start()
 
     return mirror_runner.cleanup
@@ -2606,13 +2606,13 @@ async def create_sentry():
     async def handle(request):
         nonlocal sentry_requests
         sentry_requests.append(request)
-        return web.Response(text='OK', status=200)
+        return web.Response(text="OK", status=200)
 
     sentry_app = web.Application()
-    sentry_app.add_routes([web.post('/{path:.*}', handle)])
+    sentry_app.add_routes([web.post("/{path:.*}", handle)])
     sentry_runner = web.AppRunner(sentry_app)
     await sentry_runner.setup()
-    sentry_site = web.TCPSite(sentry_runner, '0.0.0.0', 8009)
+    sentry_site = web.TCPSite(sentry_runner, "0.0.0.0", 8009)
     await sentry_site.start()
 
     return sentry_runner.cleanup, sentry_requests
@@ -2624,13 +2624,13 @@ async def create_superset():
     async def handle(request):
         nonlocal superset_requests
         superset_requests.append(request)
-        return web.Response(text='OK', status=200)
+        return web.Response(text="OK", status=200)
 
     superset_app = web.Application()
-    superset_app.add_routes([web.get('/{path:.*}', handle)])
+    superset_app.add_routes([web.get("/{path:.*}", handle)])
     superset_runner = web.AppRunner(superset_app)
     await superset_runner.setup()
-    superset_site = web.TCPSite(superset_runner, '0.0.0.0', 8008)
+    superset_site = web.TCPSite(superset_runner, "0.0.0.0", 8008)
     await superset_site.start()
 
     return superset_runner.cleanup, superset_requests
@@ -2640,7 +2640,7 @@ async def create_superset():
 # The environment must be the same as in the Dockerfile
 async def create_application(env=lambda: {}):
     proc = await asyncio.create_subprocess_exec(
-        '/dataworkspace/start-test.sh',
+        "/dataworkspace/start-test.sh",
         env={**os.environ, **env()},
         preexec_fn=os.setsid,
     )
@@ -2649,11 +2649,11 @@ async def create_application(env=lambda: {}):
         try:
             os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
             await asyncio.sleep(3)
-            if os.path.exists('/home/django/celerybeat.pid'):
-                with open('/home/django/celerybeat.pid') as f:
+            if os.path.exists("/home/django/celerybeat.pid"):
+                with open("/home/django/celerybeat.pid") as f:
                     print(f.read())
                 try:
-                    os.unlink('/home/django/celerybeat.pid')
+                    os.unlink("/home/django/celerybeat.pid")
                 except FileNotFoundError:
                     pass
         except ProcessLookupError:
@@ -2670,9 +2670,9 @@ async def make_all_tools_visible():
         )
         ApplicationTemplate.objects.all().update(visible=True)
         """
-    ).encode('ascii')
+    ).encode("ascii")
     make_visible = await asyncio.create_subprocess_shell(
-        'django-admin shell',
+        "django-admin shell",
         env=os.environ,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
@@ -2690,7 +2690,7 @@ async def until_succeeds(url):
     async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(connect=1.0)) as session:
         while True:
             try:
-                async with session.request('GET', url) as response:
+                async with session.request("GET", url) as response:
                     response.raise_for_status()
             except (aiohttp.ClientConnectorError, aiohttp.ClientResponseError):
                 if loop.time() >= fail_if_later:
@@ -2702,7 +2702,7 @@ async def until_succeeds(url):
 
 async def until_non_202(session, url):
     for _ in range(0, 600):
-        async with session.request('GET', url) as response:
+        async with session.request("GET", url) as response:
             if response.status != 202:
                 return
         await asyncio.sleep(0.1)
@@ -2713,14 +2713,14 @@ async def until_non_202(session, url):
 async def flush_database():
     await (  # noqa
         await asyncio.create_subprocess_shell(
-            'django-admin flush --no-input --database default', env=os.environ
+            "django-admin flush --no-input --database default", env=os.environ
         )
     ).wait()
 
 
 async def flush_redis():
-    redis_client = await aioredis.create_redis('redis://data-workspace-redis:6379')
-    await redis_client.execute('FLUSHDB')
+    redis_client = await aioredis.create_redis("redis://data-workspace-redis:6379")
+    await redis_client.execute("FLUSHDB")
 
 
 async def give_user_superuser_perms():
@@ -2733,9 +2733,9 @@ async def give_user_superuser_perms():
         user.is_superuser = True
         user.save()
         """
-    ).encode('ascii')
+    ).encode("ascii")
     give_perm = await asyncio.create_subprocess_shell(
-        'django-admin shell',
+        "django-admin shell",
         env=os.environ,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
@@ -2769,9 +2769,9 @@ async def give_user_app_perms():
         user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
         user.user_permissions.add(permission)
         """
-    ).encode('ascii')
+    ).encode("ascii")
     give_perm = await asyncio.create_subprocess_shell(
-        'django-admin shell',
+        "django-admin shell",
         env=os.environ,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
@@ -2805,9 +2805,9 @@ async def give_user_visualisation_developer_perms():
         user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
         user.user_permissions.add(permission)
         """
-    ).encode('ascii')
+    ).encode("ascii")
     give_perm = await asyncio.create_subprocess_shell(
-        'django-admin shell',
+        "django-admin shell",
         env=os.environ,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
@@ -2833,9 +2833,9 @@ async def create_metadata_table():
                 '''
             )
         """
-    ).encode('ascii')
+    ).encode("ascii")
     give_perm = await asyncio.create_subprocess_shell(
-        'django-admin shell',
+        "django-admin shell",
         env=os.environ,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
@@ -2878,10 +2878,10 @@ async def create_private_dataset(
             table="{table_name}",
         )
         """
-    ).encode('ascii')
+    ).encode("ascii")
 
     give_perm = await asyncio.create_subprocess_shell(
-        'django-admin shell',
+        "django-admin shell",
         env=os.environ,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
@@ -2915,10 +2915,10 @@ async def create_visusalisation(visualisation_name, user_access_type, link_type,
             visualisation_type="{link_type}",
         )
         """
-    ).encode('ascii')
+    ).encode("ascii")
 
     give_perm = await asyncio.create_subprocess_shell(
-        'django-admin shell',
+        "django-admin shell",
         env=os.environ,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
@@ -2949,10 +2949,10 @@ async def give_user_dataset_perms(name):
             user=user,
         )
         """
-    ).encode('ascii')
+    ).encode("ascii")
 
     give_perm = await asyncio.create_subprocess_shell(
-        'django-admin shell',
+        "django-admin shell",
         env=os.environ,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
@@ -2977,10 +2977,10 @@ async def dataset_finder_opt_in_dataset(schema, table, opted_in=True):
         st.dataset_finder_opted_in = {opted_in}
         st.save()
         """
-    ).encode('ascii')
+    ).encode("ascii")
 
     give_perm = await asyncio.create_subprocess_shell(
-        'django-admin shell',
+        "django-admin shell",
         env=os.environ,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
@@ -3009,10 +3009,10 @@ async def give_user_visualisation_perms(name):
             visualisation=VisualisationCatalogueItem.objects.get(visualisation_template=visualisationtemplate),
         )
         """
-    ).encode('ascii')
+    ).encode("ascii")
 
     give_perm = await asyncio.create_subprocess_shell(
-        'django-admin shell',
+        "django-admin shell",
         env=os.environ,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
@@ -3047,9 +3047,9 @@ async def create_visualisation_echo(name):
             visualisation_template=template
         )
         """
-    ).encode('ascii')
+    ).encode("ascii")
     give_perm = await asyncio.create_subprocess_shell(
-        'django-admin shell',
+        "django-admin shell",
         env=os.environ,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
@@ -3073,9 +3073,9 @@ template = VisualisationTemplate.objects.get(
 template.visible = {visible}
 template.save()
         """
-    ).encode('ascii')
+    ).encode("ascii")
     give_perm = await asyncio.create_subprocess_shell(
-        'django-admin shell',
+        "django-admin shell",
         env=os.environ,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
@@ -3099,9 +3099,9 @@ async def set_visualisation_wrap(name, wrap):
         template.wrap = "{wrap}"
         template.save()
         """
-    ).encode('ascii')
+    ).encode("ascii")
     give_perm = await asyncio.create_subprocess_shell(
-        'django-admin shell',
+        "django-admin shell",
         env=os.environ,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
@@ -3135,9 +3135,9 @@ async def create_visualisation_dataset(name, gitlab_project_id):
             visualisation_template=template
         )
         """
-    ).encode('ascii')
+    ).encode("ascii")
     give_perm = await asyncio.create_subprocess_shell(
-        'django-admin shell',
+        "django-admin shell",
         env=os.environ,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
@@ -3224,10 +3224,10 @@ async def give_visualisation_dataset_perms(vis_name, dataset_name):
             dataset=dataset,
         )
         """
-    ).encode('ascii')
+    ).encode("ascii")
 
     give_perm = await asyncio.create_subprocess_shell(
-        'django-admin shell',
+        "django-admin shell",
         env=os.environ,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
@@ -3247,10 +3247,10 @@ async def set_waffle_flag(flag_name, everyone=True):
         flag = Flag.objects.create(name='{flag_name}', everyone={everyone})
         flag.save()
         """
-    ).encode('ascii')
+    ).encode("ascii")
 
     give_perm = await asyncio.create_subprocess_shell(
-        'django-admin shell',
+        "django-admin shell",
         env=os.environ,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
@@ -3369,10 +3369,10 @@ try:
 except IntegrityError:
     pass
         """
-    ).encode('ascii')
+    ).encode("ascii")
 
     give_perm = await asyncio.create_subprocess_shell(
-        'django-admin shell',
+        "django-admin shell",
         env=os.environ,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
@@ -3428,9 +3428,9 @@ async def create_application_db_user():
                     """
                 )
         '''
-    ).encode('ascii')
+    ).encode("ascii")
     shell = await asyncio.create_subprocess_shell(
-        'django-admin shell',
+        "django-admin shell",
         env=os.environ,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
@@ -3447,17 +3447,17 @@ async def create_query_logs():
     Run some queries to generate the pgaudit logs
     """
     python_code = textwrap.dedent(
-        '''
+        """
         from django.db import connections
         with connections["my_database"].cursor() as cursor:
             cursor.execute('CREATE TABLE IF NOT EXISTS query_log_test (id INT, name TEXT);')
             cursor.execute("INSERT INTO query_log_test VALUES(1, 'a record');")
             cursor.execute('SELECT * FROM query_log_test;')
-        '''
-    ).encode('ascii')
+        """
+    ).encode("ascii")
 
     shell = await asyncio.create_subprocess_shell(
-        'django-admin shell',
+        "django-admin shell",
         env=os.environ,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
@@ -3475,15 +3475,15 @@ async def sync_query_logs():
     :return:
     """
     python_code = textwrap.dedent(
-        '''
+        """
         from django.core.cache import cache
         from dataworkspace.apps.applications.utils import _do_sync_tool_query_logs
         cache.delete('query_tool_logs_last_run')
         _do_sync_tool_query_logs()
-        '''
-    ).encode('ascii')
+        """
+    ).encode("ascii")
     shell = await asyncio.create_subprocess_shell(
-        'django-admin shell',
+        "django-admin shell",
         env=os.environ,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
@@ -3499,9 +3499,9 @@ async def setup_elasticsearch_indexes():
     Setup some Elasticsearch indexes for Dataset Finder tests
     """
     client = AsyncElasticsearch(hosts=[{"host": "data-workspace-es", "port": 9200}])
-    known_index_name = '20200101t120000--public--test_dataset--1'
-    known_index_alias = 'public--test_dataset'
-    incoming_index_name = '20200101t120000--public--test_dataset--2'
+    known_index_name = "20200101t120000--public--test_dataset--1"
+    known_index_alias = "public--test_dataset"
+    incoming_index_name = "20200101t120000--public--test_dataset--2"
 
     try:
         await client.indices.delete(known_index_name)

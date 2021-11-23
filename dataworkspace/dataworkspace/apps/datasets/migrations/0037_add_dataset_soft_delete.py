@@ -9,34 +9,34 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('datasets', '0036_auto_20200205_1531'),
+        ("datasets", "0036_auto_20200205_1531"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='dataset',
-            name='created_by',
+            model_name="dataset",
+            name="created_by",
             field=models.ForeignKey(
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
-                related_name='created+',
+                related_name="created+",
                 to=settings.AUTH_USER_MODEL,
             ),
         ),
         migrations.AddField(
-            model_name='dataset',
-            name='deleted',
+            model_name="dataset",
+            name="deleted",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='dataset',
-            name='updated_by',
+            model_name="dataset",
+            name="updated_by",
             field=models.ForeignKey(
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
-                related_name='updated+',
+                related_name="updated+",
                 to=settings.AUTH_USER_MODEL,
             ),
         ),

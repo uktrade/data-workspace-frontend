@@ -8,7 +8,7 @@ def generate_uuids(apps, _):
     """
     Generate unique uuids for ReferenceDatasets
     """
-    ReferenceDataset = apps.get_model('datasets', 'ReferenceDataset')
+    ReferenceDataset = apps.get_model("datasets", "ReferenceDataset")
     for dataset in ReferenceDataset.objects.all():
         dataset.uuid = uuid.uuid4()
         dataset.save()
@@ -16,13 +16,13 @@ def generate_uuids(apps, _):
 
 class Migration(migrations.Migration):
 
-    dependencies = [('datasets', '0028_add_dataset_source_tags')]
+    dependencies = [("datasets", "0028_add_dataset_source_tags")]
 
     operations = [
         # Add (nullable) ReferenceDataset.uuid
         migrations.AddField(
-            model_name='referencedataset',
-            name='uuid',
+            model_name="referencedataset",
+            name="uuid",
             field=models.UUIDField(blank=True, default=uuid.uuid4, editable=False, null=True),
         ),
         # Create unique uuids for ReferenceDatasets

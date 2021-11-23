@@ -9,44 +9,44 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('applications', '0013_auto_20201030_0844'),
+        ("applications", "0013_auto_20201030_0844"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='UserToolConfiguration',
+            name="UserToolConfiguration",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
                 (
-                    'size',
+                    "size",
                     models.IntegerField(
                         choices=[
-                            (1, 'Small'),
-                            (2, 'Medium (default)'),
-                            (3, 'Large'),
-                            (4, 'Extra Large'),
+                            (1, "Small"),
+                            (2, "Medium (default)"),
+                            (3, "Large"),
+                            (4, "Extra Large"),
                         ],
                         default=2,
                     ),
                 ),
                 (
-                    'tool_template',
+                    "tool_template",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.PROTECT,
-                        related_name='user_tool_configuration',
-                        to='applications.ToolTemplate',
+                        related_name="user_tool_configuration",
+                        to="applications.ToolTemplate",
                     ),
                 ),
                 (
-                    'user',
+                    "user",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.PROTECT,
                         to=settings.AUTH_USER_MODEL,

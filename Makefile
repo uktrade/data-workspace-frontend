@@ -31,7 +31,7 @@ docker-check-migrations:
 
 .PHONY: check-black
 check-black:
-	black --exclude=venv --skip-string-normalization --line-length=99 --check .
+	black --exclude=venv --line-length=99 --check .
 
 .PHONY: check-pylint
 check-pylint:
@@ -43,7 +43,7 @@ check: check-flake8 check-black check-pylint
 
 .PHONY: format
 format:
-	black --exclude=venv --skip-string-normalization --line-length=99 .
+	black --exclude=venv --line-length=99 .
 
 .PHONY: save-requirements
 save-requirements:

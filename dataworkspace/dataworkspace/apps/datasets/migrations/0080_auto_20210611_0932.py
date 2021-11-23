@@ -6,29 +6,29 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0079_datasetvisualisation_thumbnail'),
+        ("datasets", "0079_datasetvisualisation_thumbnail"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='referencedatasetuploadlogrecord',
-            name='errors',
+            model_name="referencedatasetuploadlogrecord",
+            name="errors",
             field=models.JSONField(null=True),
         ),
         migrations.AlterField(
-            model_name='referencedatasetuploadlogrecord',
-            name='row_data',
+            model_name="referencedatasetuploadlogrecord",
+            name="row_data",
             field=models.JSONField(),
         ),
         migrations.AlterField(
-            model_name='sourcetable',
-            name='data_grid_column_config',
+            model_name="sourcetable",
+            name="data_grid_column_config",
             field=models.JSONField(
                 blank=True,
                 help_text='Must be a list of json objects defining:\n\n- "field": "[column name]" (required)\n- '
                 + '"headerName": "[pretty column name]" (optional, defaults to "field")\n- '
                 + '"sortable": [true|false] (optional, default: true)\n- "filter": "[true|false|ag-grid filter name]" '
-                + '(optional, default: true)',
+                + "(optional, default: true)",
                 null=True,
             ),
         ),

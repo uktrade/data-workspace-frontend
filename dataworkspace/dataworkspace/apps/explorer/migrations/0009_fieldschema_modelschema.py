@@ -6,56 +6,56 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('explorer', '0008_auto_20190308_1642'),
+        ("explorer", "0008_auto_20190308_1642"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='FieldSchema',
+            name="FieldSchema",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
-                ('name', models.CharField(max_length=16)),
+                ("name", models.CharField(max_length=16)),
                 (
-                    'data_type',
+                    "data_type",
                     models.CharField(
                         choices=[
-                            ('character', 'character'),
-                            ('text', 'text'),
-                            ('integer', 'integer'),
-                            ('float', 'float'),
-                            ('boolean', 'boolean'),
-                            ('date', 'date'),
+                            ("character", "character"),
+                            ("text", "text"),
+                            ("integer", "integer"),
+                            ("float", "float"),
+                            ("boolean", "boolean"),
+                            ("date", "date"),
                         ],
                         editable=False,
                         max_length=16,
                     ),
                 ),
             ],
-            options={'abstract': False},
+            options={"abstract": False},
         ),
         migrations.CreateModel(
-            name='ModelSchema',
+            name="ModelSchema",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
-                ('_modified', models.DateTimeField(auto_now=True)),
-                ('name', models.CharField(max_length=32, unique=True)),
+                ("_modified", models.DateTimeField(auto_now=True)),
+                ("name", models.CharField(max_length=32, unique=True)),
             ],
-            options={'abstract': False},
+            options={"abstract": False},
         ),
     ]

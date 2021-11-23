@@ -15,10 +15,10 @@ class GOVUKDesignSystemWidgetMixin:
         self,
         *,
         label_is_heading=True,
-        heading='h1',
-        heading_class='govuk-label-wrapper',
-        label_size='l',
-        extra_label_classes='',
+        heading="h1",
+        heading_class="govuk-label-wrapper",
+        label_size="l",
+        extra_label_classes="",
         small=False,
         show_selected_file=False,
         **kwargs,
@@ -42,7 +42,7 @@ class GOVUKDesignSystemWidgetMixin:
 
     def get_context(self, name, value, attrs):
         context = super().get_context(name, value, attrs)
-        context['widget'].update(self.custom_context)
+        context["widget"].update(self.custom_context)
 
         return context
 
@@ -64,44 +64,44 @@ class GOVUKDesignSystemFieldMixin:
 
         super().__init__(help_text=help_text, **kwargs)
 
-        self.widget.custom_context['label'] = self.label
-        self.widget.custom_context['help_text'] = self.help_text
-        self.widget.custom_context['help_html'] = self.help_html
+        self.widget.custom_context["label"] = self.label
+        self.widget.custom_context["help_text"] = self.help_text
+        self.widget.custom_context["help_html"] = self.help_html
 
 
 class GOVUKDesignSystemTextWidget(GOVUKDesignSystemWidgetMixin, forms.widgets.TextInput):
-    template_name = 'design_system/textinput.html'
+    template_name = "design_system/textinput.html"
 
 
 class GOVUKDesignSystemEmailWidget(GOVUKDesignSystemWidgetMixin, forms.widgets.EmailInput):
-    template_name = 'design_system/textinput.html'
+    template_name = "design_system/textinput.html"
 
 
 class GOVUKDesignSystemTextareaWidget(GOVUKDesignSystemWidgetMixin, forms.widgets.Textarea):
-    template_name = 'design_system/textarea.html'
+    template_name = "design_system/textarea.html"
 
 
 class GOVUKDesignSystemRadiosWidget(GOVUKDesignSystemWidgetMixin, forms.widgets.RadioSelect):
-    template_name = 'design_system/radio.html'
+    template_name = "design_system/radio.html"
     option_template_name = "design_system/radio_option.html"
 
 
 class GOVUKDesignSystemCheckboxesWidget(
     GOVUKDesignSystemWidgetMixin, forms.widgets.CheckboxSelectMultiple
 ):
-    template_name = 'design_system/checkbox.html'
+    template_name = "design_system/checkbox.html"
     option_template_name = "design_system/checkbox_option.html"
 
 
 class GOVUKDesignSystemFileInputWidget(GOVUKDesignSystemWidgetMixin, forms.widgets.FileInput):
-    template_name = 'design_system/file.html'
+    template_name = "design_system/file.html"
 
     def format_value(self, value):
         """
         Return the file object if it has a defined url attribute.
         """
         if value:
-            return value.name.split('!')[0]
+            return value.name.split("!")[0]
         return super().format_value(value)
 
 
@@ -126,7 +126,7 @@ class GOVUKDesignSystemRadioField(GOVUKDesignSystemFieldMixin, forms.ChoiceField
 
 
 class GOVUKDesignSystemSingleCheckboxWidget(GOVUKDesignSystemWidgetMixin, CheckboxInput):
-    template_name = 'design_system/single_checkbox.html'
+    template_name = "design_system/single_checkbox.html"
 
 
 class GOVUKDesignSystemBooleanField(GOVUKDesignSystemFieldMixin, forms.BooleanField):
@@ -148,7 +148,7 @@ class GOVUKDesignSystemEmailValidationModelChoiceField(
 
     def clean(self, value):
         if value:
-            EmailValidator(message=self.error_messages['invalid_email'])(value.lower())
+            EmailValidator(message=self.error_messages["invalid_email"])(value.lower())
         return super().clean(value.lower() if value else value)
 
 
@@ -168,7 +168,7 @@ class GOVUKDesignSystemModelForm(forms.ModelForm):
                 if self.errors.get(field.name) and not isinstance(
                     self.fields[field.name].widget, forms.HiddenInput
                 ):
-                    self.fields[field.name].widget.custom_context['errors'] = self.errors[
+                    self.fields[field.name].widget.custom_context["errors"] = self.errors[
                         field.name
                     ]
 
@@ -200,7 +200,7 @@ class GOVUKDesignSystemForm(forms.Form):
                 if self.errors.get(field.name) and not isinstance(
                     self.fields[field.name].widget, forms.HiddenInput
                 ):
-                    self.fields[field.name].widget.custom_context['errors'] = self.errors[
+                    self.fields[field.name].widget.custom_context["errors"] = self.errors[
                         field.name
                     ]
 

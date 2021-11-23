@@ -7,21 +7,21 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    dependencies = [('datasets', '0031_add_referencedataset_source_tags')]
+    dependencies = [("datasets", "0031_add_referencedataset_source_tags")]
 
     operations = [
         migrations.AlterField(
-            model_name='referencedataset',
-            name='uuid',
+            model_name="referencedataset",
+            name="uuid",
             field=models.UUIDField(default=uuid.uuid4, editable=False),
         ),
         migrations.AlterField(
-            model_name='referencedatasetfield',
-            name='reference_dataset',
+            model_name="referencedatasetfield",
+            name="reference_dataset",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name='fields',
-                to='datasets.ReferenceDataset',
+                related_name="fields",
+                to="datasets.ReferenceDataset",
             ),
         ),
     ]

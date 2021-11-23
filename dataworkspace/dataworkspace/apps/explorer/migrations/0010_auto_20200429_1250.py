@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('explorer', '0009_fieldschema_modelschema'),
+        ("explorer", "0009_fieldschema_modelschema"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='fieldschema',
-            name='name',
+            model_name="fieldschema",
+            name="name",
             field=models.CharField(max_length=256, unique=True),
         ),
         migrations.AlterField(
-            model_name='modelschema',
-            name='name',
+            model_name="modelschema",
+            name="name",
             field=models.CharField(max_length=256, unique=True),
         ),
     ]

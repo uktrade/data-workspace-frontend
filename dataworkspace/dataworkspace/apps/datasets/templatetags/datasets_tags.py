@@ -24,7 +24,7 @@ def visualisation_link_or_plain_text(text, condition, dataset_uuid, object_id):
 @register.simple_tag(takes_context=True)
 def url_replace(context, **kwargs):
 
-    query = context['request'].GET.copy()
+    query = context["request"].GET.copy()
     for key, value in kwargs.items():
         query[key] = value
 
@@ -40,7 +40,7 @@ def _get_localised_date(utc_date: datetime) -> datetime:
     if timezone.is_naive(utc_date):
         utc_date = utc_date.replace(tzinfo=pytz.UTC)
 
-    timezone.activate(pytz.timezone('Europe/London'))
+    timezone.activate(pytz.timezone("Europe/London"))
     localised_date = timezone.localtime(utc_date)
     offset = relativedelta(localised_date.replace(tzinfo=None), utc_date.replace(tzinfo=None))
 

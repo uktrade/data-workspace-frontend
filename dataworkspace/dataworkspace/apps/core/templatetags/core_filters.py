@@ -25,7 +25,7 @@ def get_choice_field_data_for_gtm(field: ChoiceField):
 
     # NB: The str() *is* required here as the labels are overridden for scrolling_filter into
     # a SearchableChoice object
-    return ';'.join(sorted(str(x.data['label']) for x in field if x.data['selected']))
+    return ";".join(sorted(str(x.data["label"]) for x in field if x.data["selected"]))
 
 
 @register.filter
@@ -33,15 +33,15 @@ def minimal_markdown(text):
     md = Markdown()
     return Markup(
         bleach.clean(
-            md.convert(text or ''),
-            tags=['p', 'ul', 'ol', 'li', 'strong', 'br'],
+            md.convert(text or ""),
+            tags=["p", "ul", "ol", "li", "strong", "br"],
             attributes={},
             strip=True,
         )
     )
 
 
-@register.filter('startswith')
+@register.filter("startswith")
 def startswith(text, starts):
     if isinstance(text, str):
         return text.startswith(starts)

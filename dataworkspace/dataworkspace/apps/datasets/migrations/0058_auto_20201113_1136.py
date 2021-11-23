@@ -7,39 +7,39 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0057_auto_20201021_1454'),
+        ("datasets", "0057_auto_20201021_1454"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Tag',
+            name="Tag",
             fields=[
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
                 (
-                    'id',
+                    "id",
                     models.UUIDField(default=uuid.uuid4, primary_key=True, serialize=False),
                 ),
                 (
-                    'type',
-                    models.IntegerField(choices=[(1, 'Source'), (2, 'Topic')], default=1),
+                    "type",
+                    models.IntegerField(choices=[(1, "Source"), (2, "Topic")], default=1),
                 ),
-                ('name', models.CharField(max_length=255, unique=True)),
+                ("name", models.CharField(max_length=255, unique=True)),
             ],
-            options={'abstract': False},
+            options={"abstract": False},
         ),
         migrations.AddField(
-            model_name='dataset',
-            name='tags',
+            model_name="dataset",
+            name="tags",
             field=models.ManyToManyField(
-                blank=True, related_name='_dataset_tags_+', to='datasets.Tag'
+                blank=True, related_name="_dataset_tags_+", to="datasets.Tag"
             ),
         ),
         migrations.AddField(
-            model_name='referencedataset',
-            name='tags',
+            model_name="referencedataset",
+            name="tags",
             field=models.ManyToManyField(
-                blank=True, related_name='_referencedataset_tags_+', to='datasets.Tag'
+                blank=True, related_name="_referencedataset_tags_+", to="datasets.Tag"
             ),
         ),
     ]

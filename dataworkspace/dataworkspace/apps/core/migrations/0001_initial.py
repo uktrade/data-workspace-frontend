@@ -13,12 +13,12 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Database',
+            name="Database",
             fields=[
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
                 (
-                    'id',
+                    "id",
                     models.UUIDField(
                         default=uuid.uuid4,
                         editable=False,
@@ -27,26 +27,26 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    'memorable_name',
+                    "memorable_name",
                     models.CharField(
-                        help_text='Must match the set of environment variables starting with DATA_DB__[memorable_name]__',
+                        help_text="Must match the set of environment variables starting with DATA_DB__[memorable_name]__",
                         max_length=128,
                         unique=True,
-                        validators=[django.core.validators.RegexValidator(regex='[A-Za-z0-9_]')],
+                        validators=[django.core.validators.RegexValidator(regex="[A-Za-z0-9_]")],
                     ),
                 ),
                 (
-                    'is_public',
+                    "is_public",
                     models.BooleanField(
                         default=False,
                         help_text=(
-                            'If public, the same credentials for the database will be shared with each user. '
-                            'If not public, each user must be explicilty given access, '
-                            'and temporary credentials will be created for each.'
+                            "If public, the same credentials for the database will be shared with each user. "
+                            "If not public, each user must be explicilty given access, "
+                            "and temporary credentials will be created for each."
                         ),
                     ),
                 ),
             ],
-            options={'db_table': 'app_database'},
+            options={"db_table": "app_database"},
         )
     ]

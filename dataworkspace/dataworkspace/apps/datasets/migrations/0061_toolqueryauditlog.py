@@ -8,35 +8,35 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0001_initial'),
+        ("core", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('datasets', '0060_auto_20201113_1221'),
+        ("datasets", "0060_auto_20201113_1221"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ToolQueryAuditLog',
+            name="ToolQueryAuditLog",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
-                ('rolename', models.CharField(max_length=64)),
-                ('query_sql', models.TextField()),
-                ('timestamp', models.DateTimeField()),
+                ("rolename", models.CharField(max_length=64)),
+                ("query_sql", models.TextField()),
+                ("timestamp", models.DateTimeField()),
                 (
-                    'database',
+                    "database",
                     models.ForeignKey(
-                        on_delete=django.db.models.deletion.PROTECT, to='core.Database'
+                        on_delete=django.db.models.deletion.PROTECT, to="core.Database"
                     ),
                 ),
                 (
-                    'user',
+                    "user",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.PROTECT,
                         to=settings.AUTH_USER_MODEL,

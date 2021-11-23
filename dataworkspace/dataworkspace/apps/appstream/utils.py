@@ -15,14 +15,14 @@ def connect_aws_client(aws_service):
 
 
 def get_fleet_status():
-    client = connect_aws_client('appstream')
+    client = connect_aws_client("appstream")
 
     fleet_status = client.describe_fleets(Names=[settings.APPSTREAM_FLEET_NAME])
     return fleet_status
 
 
 def get_app_sessions():
-    client = connect_aws_client('appstream')
+    client = connect_aws_client("appstream")
 
     app_sessions = client.describe_sessions(
         StackName=settings.APPSTREAM_STACK_NAME, FleetName=settings.APPSTREAM_FLEET_NAME
@@ -32,12 +32,12 @@ def get_app_sessions():
 
 
 def scale_fleet(min_capacity, max_capacity):
-    client = connect_aws_client('application-autoscaling')
+    client = connect_aws_client("application-autoscaling")
 
     scale_response = client.register_scalable_target(
-        ServiceNamespace='appstream',
-        ResourceId='fleet/' + settings.APPSTREAM_FLEET_NAME,
-        ScalableDimension='appstream:fleet:DesiredCapacity',
+        ServiceNamespace="appstream",
+        ResourceId="fleet/" + settings.APPSTREAM_FLEET_NAME,
+        ScalableDimension="appstream:fleet:DesiredCapacity",
         MinCapacity=min_capacity,
         MaxCapacity=max_capacity,
     )
@@ -46,55 +46,55 @@ def scale_fleet(min_capacity, max_capacity):
 
 
 def get_fleet_scale():
-    client = connect_aws_client('application-autoscaling')
+    client = connect_aws_client("application-autoscaling")
 
     scale_response = client.describe_scalable_targets(
-        ServiceNamespace='appstream',
-        ResourceIds=['fleet/' + settings.APPSTREAM_FLEET_NAME],
-        ScalableDimension='appstream:fleet:DesiredCapacity',
+        ServiceNamespace="appstream",
+        ResourceIds=["fleet/" + settings.APPSTREAM_FLEET_NAME],
+        ScalableDimension="appstream:fleet:DesiredCapacity",
     )
 
     return (
-        scale_response['ScalableTargets'][0]['MinCapacity'],
-        scale_response['ScalableTargets'][0]['MaxCapacity'],
+        scale_response["ScalableTargets"][0]["MinCapacity"],
+        scale_response["ScalableTargets"][0]["MaxCapacity"],
     )
 
 
 def check_fleet_running():
     fleet_status = get_fleet_status()
-    print(fleet_status['Fleets'][0]['State'])
+    print(fleet_status["Fleets"][0]["State"])
 
-    return fleet_status['Fleets'][0]['State']
+    return fleet_status["Fleets"][0]["State"]
 
 
 def stop_fleet():
-    client = connect_aws_client('appstream')
+    client = connect_aws_client("appstream")
 
     stop_response = client.stop_fleet(Name=settings.APPSTREAM_FLEET_NAME)
     print(stop_response)
 
 
 def start_fleet():
-    client = connect_aws_client('appstream')
+    client = connect_aws_client("appstream")
 
     start_response = client.start_fleet(Name=settings.APPSTREAM_FLEET_NAME)
     print(start_response)
 
 
 def restart_fleet():
-    print('Stopping fleet')
+    print("Stopping fleet")
     stop_fleet()
 
-    while check_fleet_running() != 'STOPPED':
-        print('Still running')
+    while check_fleet_running() != "STOPPED":
+        print("Still running")
         gevent.sleep(15)
 
-    print('Fleet stopped')
-    print('Starting fleet')
+    print("Fleet stopped")
+    print("Starting fleet")
     start_fleet()
 
-    while check_fleet_running() != 'RUNNING':
-        print('Still starting')
+    while check_fleet_running() != "RUNNING":
+        print("Still starting")
         gevent.sleep(15)
 
-    print('Fleet running')
+    print("Fleet running")

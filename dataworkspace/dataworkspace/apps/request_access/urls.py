@@ -13,43 +13,43 @@ from dataworkspace.apps.request_access.views import (
 
 urlpatterns = [
     path(
-        '',
+        "",
         login_required(DatasetAccessRequest.as_view()),
-        name='index',
+        name="index",
     ),
     path(
-        '<uuid:dataset_uuid>',
+        "<uuid:dataset_uuid>",
         login_required(DatasetAccessRequest.as_view()),
-        name='dataset',
+        name="dataset",
     ),
     path(
-        '<int:pk>/dataset',
+        "<int:pk>/dataset",
         login_required(DatasetAccessRequestUpdate.as_view()),
-        name='dataset-request-update',
+        name="dataset-request-update",
     ),
     path(
-        '<int:pk>/tools',
+        "<int:pk>/tools",
         login_required(ToolsAccessRequestPart1.as_view()),
-        name='tools-1',
+        name="tools-1",
     ),
     path(
-        '<int:pk>/spss-stata',
+        "<int:pk>/spss-stata",
         login_required(ToolsAccessRequestPart2.as_view()),
-        name='tools-2',
+        name="tools-2",
     ),
     path(
-        '<int:pk>/spss-stata-reason',
+        "<int:pk>/spss-stata-reason",
         login_required(ToolsAccessRequestPart3.as_view()),
-        name='tools-3',
+        name="tools-3",
     ),
     path(
-        '<int:pk>/summary',
+        "<int:pk>/summary",
         login_required(AccessRequestSummaryPage.as_view()),
-        name='summary-page',
+        name="summary-page",
     ),
     path(
-        '<int:pk>/confirmation',
+        "<int:pk>/confirmation",
         login_required(AccessRequestConfirmationPage.as_view()),
-        name='confirmation-page',
+        name="confirmation-page",
     ),
 ]

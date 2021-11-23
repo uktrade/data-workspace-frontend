@@ -9,18 +9,18 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('explorer', '0011_remove_query_snapshot'),
+        ("explorer", "0011_remove_query_snapshot"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='PlaygroundSQL',
+            name="PlaygroundSQL",
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False)),
-                ('sql', models.TextField()),
-                ('created_at', models.DateTimeField(auto_now=True)),
+                ("id", models.AutoField(primary_key=True, serialize=False)),
+                ("sql", models.TextField()),
+                ("created_at", models.DateTimeField(auto_now=True)),
                 (
-                    'created_by_user',
+                    "created_by_user",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         to=settings.AUTH_USER_MODEL,

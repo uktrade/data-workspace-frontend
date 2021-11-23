@@ -13,11 +13,11 @@ from dataworkspace.apps.datasets.models import ReferenceDataset
 class BaseTestCaseMixin:
     def setUp(self):
         self.user = get_user_model().objects.create(
-            username='bob.testerson@test.com', is_staff=True, is_superuser=True
+            username="bob.testerson@test.com", is_staff=True, is_superuser=True
         )
         self.user.user_permissions.add(
             Permission.objects.get(
-                codename='start_all_applications',
+                codename="start_all_applications",
                 content_type=ContentType.objects.get_for_model(ApplicationInstance),
             )
         )
@@ -25,12 +25,12 @@ class BaseTestCaseMixin:
         self.user.profile.save()
 
         self.user_data = {
-            'HTTP_SSO_PROFILE_EMAIL': self.user.email,
-            'HTTP_SSO_PROFILE_CONTACT_EMAIL': self.user.email,
-            'HTTP_SSO_PROFILE_RELATED_EMAILS': '',
-            'HTTP_SSO_PROFILE_USER_ID': 'aae8901a-082f-4f12-8c6c-fdf4aeba2d68',
-            'HTTP_SSO_PROFILE_LAST_NAME': 'Bob',
-            'HTTP_SSO_PROFILE_FIRST_NAME': 'Testerson',
+            "HTTP_SSO_PROFILE_EMAIL": self.user.email,
+            "HTTP_SSO_PROFILE_CONTACT_EMAIL": self.user.email,
+            "HTTP_SSO_PROFILE_RELATED_EMAILS": "",
+            "HTTP_SSO_PROFILE_USER_ID": "aae8901a-082f-4f12-8c6c-fdf4aeba2d68",
+            "HTTP_SSO_PROFILE_LAST_NAME": "Bob",
+            "HTTP_SSO_PROFILE_FIRST_NAME": "Testerson",
         }
 
     def _authenticated_get(self, url, params=None):
@@ -45,10 +45,10 @@ class BaseTestCaseMixin:
     @staticmethod
     def _create_reference_dataset(**kwargs):
         ref_data_fields = dict(
-            name='Test Reference Dataset 1',
-            table_name='ref_test_dataset',
-            short_description='Testing...',
-            slug='test-reference-dataset-1',
+            name="Test Reference Dataset 1",
+            table_name="ref_test_dataset",
+            short_description="Testing...",
+            slug="test-reference-dataset-1",
             published=True,
         )
         ref_data_fields.update(kwargs)
@@ -77,11 +77,11 @@ class BaseAdminTestCase(BaseTestCase):
     def setUp(self):
         super().setUp()
         # Authenticate the user on the admin site
-        self._authenticated_post(reverse('admin:index'))
+        self._authenticated_post(reverse("admin:index"))
 
 
 def get_response_csp_as_set(response):
-    policies = response['Content-Security-Policy'].split(';')
+    policies = response["Content-Security-Policy"].split(";")
     policies = {policy.strip() for policy in policies}
 
     return policies
@@ -89,12 +89,12 @@ def get_response_csp_as_set(response):
 
 def get_http_sso_data(user):
     return {
-        'HTTP_SSO_PROFILE_EMAIL': user.email,
-        'HTTP_SSO_PROFILE_CONTACT_EMAIL': user.email,
-        'HTTP_SSO_PROFILE_RELATED_EMAILS': '',
-        'HTTP_SSO_PROFILE_USER_ID': user.profile.sso_id,
-        'HTTP_SSO_PROFILE_LAST_NAME': user.last_name,
-        'HTTP_SSO_PROFILE_FIRST_NAME': user.first_name,
+        "HTTP_SSO_PROFILE_EMAIL": user.email,
+        "HTTP_SSO_PROFILE_CONTACT_EMAIL": user.email,
+        "HTTP_SSO_PROFILE_RELATED_EMAILS": "",
+        "HTTP_SSO_PROFILE_USER_ID": user.profile.sso_id,
+        "HTTP_SSO_PROFILE_LAST_NAME": user.last_name,
+        "HTTP_SSO_PROFILE_FIRST_NAME": user.first_name,
     }
 
 

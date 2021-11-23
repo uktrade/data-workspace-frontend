@@ -39,7 +39,7 @@ class DeletableModel(models.Model):
         :param kwargs: dict - add force=True to delete from the database
         :return:
         """
-        force = kwargs.pop('force', False)
+        force = kwargs.pop("force", False)
         if force:
             super().delete(**kwargs)
         else:
@@ -55,14 +55,14 @@ class UserLogModel(models.Model):
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name='created+',
+        related_name="created+",
     )
     updated_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name='updated+',
+        related_name="updated+",
     )
 
     class Meta:
@@ -84,56 +84,56 @@ class Database(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     memorable_name = models.CharField(
-        validators=[RegexValidator(regex=r'[A-Za-z0-9_]')],
+        validators=[RegexValidator(regex=r"[A-Za-z0-9_]")],
         max_length=128,
         blank=False,
         unique=True,
-        help_text='Must match the set of environment variables starting with DATA_DB__[memorable_name]__',
+        help_text="Must match the set of environment variables starting with DATA_DB__[memorable_name]__",
     )
     is_public = models.BooleanField(
         default=False,
         help_text=(
-            'If public, the same credentials for the database will be shared with each user. '
-            'If not public, each user must be explicilty given access, '
-            'and temporary credentials will be created for each.'
+            "If public, the same credentials for the database will be shared with each user. "
+            "If not public, each user must be explicilty given access, "
+            "and temporary credentials will be created for each."
         ),
     )
 
     class Meta:
-        db_table = 'app_database'
+        db_table = "app_database"
 
     def __str__(self):
-        return f'{self.memorable_name}'
+        return f"{self.memorable_name}"
 
 
 class DatabaseUser(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='db_user'
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="db_user"
     )
     username = models.CharField(max_length=256)
     deleted_date = models.DateTimeField(null=True, blank=True)
 
 
 class HowSatisfiedType(models.TextChoices):
-    very_satified = 'very-satified', 'Very satisfied'
-    satified = 'satified', 'Satisfied'
-    neither = 'neither', 'Neither satisfied nor dissatisfied'
-    dissatisfied = 'dissatisfied', 'Dissatisfied'
-    very_dissatisfied = 'very-dissatisfied', 'Very dissatisfied'
+    very_satified = "very-satified", "Very satisfied"
+    satified = "satified", "Satisfied"
+    neither = "neither", "Neither satisfied nor dissatisfied"
+    dissatisfied = "dissatisfied", "Dissatisfied"
+    very_dissatisfied = "very-dissatisfied", "Very dissatisfied"
 
 
 class TryingToDoType(models.TextChoices):
-    looking = 'looking', 'Looking for data'
-    access_data = 'access-data', 'Trying to access data'
-    analyse_data = 'analyse-data', 'Analyse data'
-    use_tool = 'use-tool', 'Use a tool'
-    create_visualisation = 'create-visualisation', 'Create a data visualisation'
-    share_date = 'share-date', 'Share data'
-    share_visualisation = 'share-visualisation', 'Share a data visualisation'
-    view_visualisation = 'view-visualisation', 'View a data visualisation'
-    other = 'other', 'Other'
-    dont_know = 'dont-know', 'Don’t know'
+    looking = "looking", "Looking for data"
+    access_data = "access-data", "Trying to access data"
+    analyse_data = "analyse-data", "Analyse data"
+    use_tool = "use-tool", "Use a tool"
+    create_visualisation = "create-visualisation", "Create a data visualisation"
+    share_date = "share-date", "Share data"
+    share_visualisation = "share-visualisation", "Share a data visualisation"
+    view_visualisation = "view-visualisation", "View a data visualisation"
+    other = "other", "Other"
+    dont_know = "dont-know", "Don’t know"
 
 
 class UserSatisfactionSurvey(TimeStampedModel):
@@ -158,7 +158,7 @@ class Team(TimeStampedModel):
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if not self.schema_name:
-            self.schema_name = '_team_' + re.sub('[^a-z0-9]', '_', self.name.lower())[:63]
+            self.schema_name = "_team_" + re.sub("[^a-z0-9]", "_", self.name.lower())[:63]
         super().save(
             force_insert=force_insert,
             force_update=force_update,
@@ -168,9 +168,9 @@ class Team(TimeStampedModel):
 
 
 class TeamMembership(TimeStampedModel):
-    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='memberships')
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="memberships")
     user = models.ForeignKey(
-        get_user_model(), on_delete=models.CASCADE, related_name='team_memberships'
+        get_user_model(), on_delete=models.CASCADE, related_name="team_memberships"
     )
 
     class Meta:

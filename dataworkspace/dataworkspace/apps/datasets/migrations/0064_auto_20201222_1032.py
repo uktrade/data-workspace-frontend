@@ -7,13 +7,13 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0063_tool_query_audit_log_constraints'),
+        ("datasets", "0063_tool_query_audit_log_constraints"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='visualisationcatalogueitem',
-            name='description',
+            model_name="visualisationcatalogueitem",
+            name="description",
             field=ckeditor.fields.RichTextField(blank=True, null=True),
         ),
     ]

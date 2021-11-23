@@ -23,8 +23,8 @@ class ElasticsearchClient:
             self._client = Elasticsearch(
                 hosts=[
                     {
-                        'host': settings.DATASET_FINDER_ES_HOST,
-                        'port': settings.DATASET_FINDER_ES_PORT,
+                        "host": settings.DATASET_FINDER_ES_HOST,
+                        "port": settings.DATASET_FINDER_ES_PORT,
                     },
                 ],
                 timeout=60,
@@ -36,13 +36,13 @@ class ElasticsearchClient:
             self._aws_auth = BotoAWSRequestsAuth(
                 aws_host=settings.DATASET_FINDER_ES_HOST,
                 aws_region=region,
-                aws_service='es',
+                aws_service="es",
             )
             self._client = Elasticsearch(
                 hosts=[
                     {
-                        'host': settings.DATASET_FINDER_ES_HOST,
-                        'port': settings.DATASET_FINDER_ES_PORT,
+                        "host": settings.DATASET_FINDER_ES_HOST,
+                        "port": settings.DATASET_FINDER_ES_PORT,
                     },
                 ],
                 http_auth=self._aws_auth,
@@ -77,8 +77,8 @@ class ElasticsearchClient:
     ):
         queries = [
             {
-                'bool': {
-                    'must': {
+                "bool": {
+                    "must": {
                         "multi_match": {
                             "query": phrase,
                             "type": "phrase",
@@ -95,7 +95,7 @@ class ElasticsearchClient:
                 "query": {"bool": {"must": queries}},
                 "aggs": {"indexes": {"terms": {"field": "_index"}}},
             },
-            index=','.join(index_aliases),
+            index=",".join(index_aliases),
             ignore_unavailable=True,
             from_=from_,
             size=size,
@@ -112,14 +112,14 @@ class ElasticsearchClient:
         for batch in self._batch_indexes(index_aliases):
             resp = self.search(phrase, batch, 0, 0, filters=filters)
 
-            if resp['hits']['total']['value'] > 0:
+            if resp["hits"]["total"]["value"] > 0:
                 for r in resp["aggregations"]["indexes"]["buckets"]:
                     # The Elasticsearch index names have a structured format:
                     # {timestamp}--{schema}--{table}--{arbitrary_number}
-                    _, schema, table, _ = r['key'].split('--')
+                    _, schema, table, _ = r["key"].split("--")
                     results.append(
                         _TableMatchResult(
-                            index=r['key'],
+                            index=r["key"],
                             schema=schema,
                             table=table,
                             count=r["doc_count"],
@@ -139,7 +139,7 @@ class ElasticsearchClient:
         Return a list of the fields stored in an elasticsearch index
         """
         mapping = self.client.indices.get_mapping(index_alias)
-        return list(list(mapping.values())[0]['mappings']['properties'].keys())
+        return list(list(mapping.values())[0]["mappings"]["properties"].keys())
 
 
 es_client = ElasticsearchClient()

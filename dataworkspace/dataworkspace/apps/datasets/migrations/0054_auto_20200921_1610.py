@@ -8,77 +8,84 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0053_set_custom_dataset_query_tables'),
+        ("datasets", "0053_set_custom_dataset_query_tables"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='referencedatasetfield',
-            name='linked_reference_dataset_field',
+            model_name="referencedatasetfield",
+            name="linked_reference_dataset_field",
             field=models.ForeignKey(
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.PROTECT,
-                related_name='linked_dataset_fields',
-                to='datasets.ReferenceDatasetField',
+                related_name="linked_dataset_fields",
+                to="datasets.ReferenceDatasetField",
             ),
         ),
         migrations.AddField(
-            model_name='referencedatasetfield',
-            name='relationship_name',
+            model_name="referencedatasetfield",
+            name="relationship_name",
             field=models.CharField(
                 blank=True,
-                help_text='For use with linked reference dataset fields only. Give a name for the linked reference dataset, which will be appended with "_id" to form a foreign key in the database table. Where multiple fields are selected from the same linked reference dataset, the same name should be used',
+                help_text="For use with linked reference dataset fields only. Give a name for the "
+                'linked reference dataset, which will be appended with "_id" to form a '
+                "foreign key in the database table. Where multiple fields are selected "
+                "from the same linked reference dataset, the same name should be used",
                 max_length=255,
                 null=True,
                 validators=[
                     django.core.validators.RegexValidator(
-                        message='Relationship names must start with a letter and contain only letters, numbers, underscores and full stops.',
-                        regex='^[a-zA-Z][a-zA-Z0-9_\\.]*$',
+                        message="Relationship names must start with a letter and contain only "
+                        "letters, numbers, underscores and full stops.",
+                        regex="^[a-zA-Z][a-zA-Z0-9_\\.]*$",
                     )
                 ],
             ),
         ),
         migrations.AlterField(
-            model_name='referencedatasetfield',
-            name='column_name',
+            model_name="referencedatasetfield",
+            name="column_name",
             field=models.CharField(
                 blank=True,
-                help_text='Descriptive name for the field. This name is used in the Data Workspace database. Leave blank for linked reference dataset fields',
+                help_text="Descriptive name for the field. This name is used in the "
+                "Data Workspace database. Leave blank for linked reference dataset fields",
                 max_length=255,
                 null=True,
                 validators=[
                     django.core.validators.RegexValidator(
-                        message='Column names must start with a letter and contain only letters, numbers, underscores and full stops.',
-                        regex='^[a-zA-Z][a-zA-Z0-9_\\.]*$',
+                        message="Column names must start with a letter and contain only"
+                        " letters, numbers, underscores and full stops.",
+                        regex="^[a-zA-Z][a-zA-Z0-9_\\.]*$",
                     )
                 ],
             ),
         ),
         migrations.AlterField(
-            model_name='referencedatasetfield',
-            name='data_type',
+            model_name="referencedatasetfield",
+            name="data_type",
             field=models.IntegerField(
                 choices=[
-                    (1, 'Character field'),
-                    (2, 'Integer field'),
-                    (3, 'Float field'),
-                    (4, 'Date field'),
-                    (5, 'Time field'),
-                    (6, 'Datetime field'),
-                    (7, 'Boolean field'),
-                    (8, 'Linked Reference Dataset field'),
-                    (9, 'Universal unique identifier field'),
-                    (10, 'Auto incrementing integer field'),
+                    (1, "Character field"),
+                    (2, "Integer field"),
+                    (3, "Float field"),
+                    (4, "Date field"),
+                    (5, "Time field"),
+                    (6, "Datetime field"),
+                    (7, "Boolean field"),
+                    (8, "Linked Reference Dataset field"),
+                    (9, "Universal unique identifier field"),
+                    (10, "Auto incrementing integer field"),
                 ]
             ),
         ),
         migrations.AlterField(
-            model_name='referencedatasetfield',
-            name='is_display_name',
+            model_name="referencedatasetfield",
+            name="is_display_name",
             field=models.BooleanField(
                 default=False,
-                help_text='This field is the name that will be displayed in the upload record form when referenced by other datasets',
+                help_text="This field is the name that will be displayed in the upload record form "
+                "when referenced by other datasets",
             ),
         ),
     ]

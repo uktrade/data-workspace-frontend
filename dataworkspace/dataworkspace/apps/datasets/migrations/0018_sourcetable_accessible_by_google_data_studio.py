@@ -5,14 +5,14 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [('datasets', '0017_sourceview')]
+    dependencies = [("datasets", "0017_sourceview")]
 
     operations = [
         migrations.AddField(
-            model_name='sourcetable',
-            name='accessible_by_google_data_studio',
+            model_name="sourcetable",
+            name="accessible_by_google_data_studio",
             field=models.BooleanField(
-                default=False, help_text='Only Superusers can access the data'
+                default=False, help_text="Only Superusers can access the data"
             ),
         )
     ]

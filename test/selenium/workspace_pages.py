@@ -22,17 +22,17 @@ class HomePage(_BaseWorkspacePage):
 
 
 class SupportPage(_BaseWorkspacePage):
-    _url_path = '/support-and-feedback/'
+    _url_path = "/support-and-feedback/"
 
     def select_new_dataset_option(self) -> "RequestDataPage":
-        self.select_radio_button('id_support_type_1')
+        self.select_radio_button("id_support_type_1")
         self._submit("Continue")
 
         return self._check_url_and_return_page(RequestDataPage)
 
 
 class RequestDataPage(_BaseWorkspacePage):
-    _url_path = '/request-data/'
+    _url_path = "/request-data/"
 
     def click_start(self) -> "RequestDataWhoAreYouPage":
         self._submit("Start now")
@@ -41,7 +41,7 @@ class RequestDataPage(_BaseWorkspacePage):
 
 
 class RequestDataWhoAreYouPage(_BaseWorkspacePage):
-    _url_regex = r'/request-data/(?P<pk>\d+)/who-are-you'
+    _url_regex = r"/request-data/(?P<pk>\d+)/who-are-you"
 
     @property
     def _url_path(self):
@@ -57,7 +57,7 @@ class RequestDataWhoAreYouPage(_BaseWorkspacePage):
 
 
 class RequestDataOwnerOrManagerPage(_BaseWorkspacePage):
-    _url_regex = r'/request-data/(?P<pk>\d+)/owner-or-manager'
+    _url_regex = r"/request-data/(?P<pk>\d+)/owner-or-manager"
 
     @property
     def _url_path(self):
@@ -73,7 +73,7 @@ class RequestDataOwnerOrManagerPage(_BaseWorkspacePage):
 
 
 class RequestDataDescriptionPage(_BaseWorkspacePage):
-    _url_regex = r'/request-data/(?P<pk>\d+)/description'
+    _url_regex = r"/request-data/(?P<pk>\d+)/description"
 
     @property
     def _url_path(self):
@@ -89,7 +89,7 @@ class RequestDataDescriptionPage(_BaseWorkspacePage):
 
 
 class RequestDataPurposePage(_BaseWorkspacePage):
-    _url_regex = r'/request-data/(?P<pk>\d+)/purpose'
+    _url_regex = r"/request-data/(?P<pk>\d+)/purpose"
 
     @property
     def _url_path(self):
@@ -105,7 +105,7 @@ class RequestDataPurposePage(_BaseWorkspacePage):
 
 
 class RequestDataSecurityClassificationPage(_BaseWorkspacePage):
-    _url_regex = r'/request-data/(?P<pk>\d+)/security-classification'
+    _url_regex = r"/request-data/(?P<pk>\d+)/security-classification"
 
     @property
     def _url_path(self):
@@ -121,7 +121,7 @@ class RequestDataSecurityClassificationPage(_BaseWorkspacePage):
 
 
 class RequestDataLocationPage(_BaseWorkspacePage):
-    _url_regex = r'/request-data/(?P<pk>\d+)/location'
+    _url_regex = r"/request-data/(?P<pk>\d+)/location"
 
     @property
     def _url_path(self):
@@ -137,7 +137,7 @@ class RequestDataLocationPage(_BaseWorkspacePage):
 
 
 class RequestDataLicencePage(_BaseWorkspacePage):
-    _url_regex = r'/request-data/(?P<pk>\d+)/licence'
+    _url_regex = r"/request-data/(?P<pk>\d+)/licence"
 
     @property
     def _url_path(self):
@@ -153,7 +153,7 @@ class RequestDataLicencePage(_BaseWorkspacePage):
 
 
 class RequestDataCheckAnswersPage(_BaseWorkspacePage):
-    _url_regex = r'/request-data/(?P<pk>\d+)/check-answers'
+    _url_regex = r"/request-data/(?P<pk>\d+)/check-answers"
 
     @property
     def _url_path(self):
@@ -169,7 +169,7 @@ class RequestDataCheckAnswersPage(_BaseWorkspacePage):
 
 
 class RequestDataConfirmationPage(_BaseWorkspacePage):
-    _url_regex = r'/request-data/(?P<pk>\d+)/confirmation'
+    _url_regex = r"/request-data/(?P<pk>\d+)/confirmation"
 
     @property
     def _url_path(self):

@@ -33,5 +33,5 @@ def log_permission_change(
         action_flag=CHANGE,
         change_message=message,
     )
-    extra.update({'message': message})
+    extra.update({"message": message})
     log_event(user, event_type, related_object=obj, extra=extra)

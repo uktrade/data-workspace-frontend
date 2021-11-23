@@ -4,8 +4,8 @@ from dataworkspace.apps.api_v1.applications.views import ApplicationInstanceView
 
 urlpatterns = [
     path(
-        'instances',
-        ApplicationInstanceViewSet.as_view({'get': 'list'}),
-        name='instances',
+        "instances",
+        ApplicationInstanceViewSet.as_view({"get": "list"}),
+        name="instances",
     )
 ]

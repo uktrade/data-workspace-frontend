@@ -6,8 +6,8 @@ from dataworkspace.apps.datasets.constants import TagType
 
 
 def _migrate(apps, model_name):
-    Dataset = apps.get_model('datasets', model_name)
-    Tag = apps.get_model('datasets', 'Tag')
+    Dataset = apps.get_model("datasets", model_name)
+    Tag = apps.get_model("datasets", "Tag")
 
     for dataset in Dataset.objects.all():
         for source_tag in dataset.source_tags.all():
@@ -17,14 +17,14 @@ def _migrate(apps, model_name):
 
 @transaction.atomic
 def migrate_source_tags_to_tags(apps, schema_editor):
-    _migrate(apps, 'Dataset')
-    _migrate(apps, 'ReferenceDataset')
+    _migrate(apps, "Dataset")
+    _migrate(apps, "ReferenceDataset")
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0058_auto_20201113_1136'),
+        ("datasets", "0058_auto_20201113_1136"),
     ]
 
     operations = [migrations.RunPython(migrate_source_tags_to_tags)]

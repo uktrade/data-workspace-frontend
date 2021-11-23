@@ -1,4 +1,4 @@
-''' Addition-only temporary Redis session without race conditions
+""" Addition-only temporary Redis session without race conditions
 
 The Redis storage that comes with aiohttp-session has a race condition when
 there are multiple requests, which can happen even when favicon.ico is
@@ -26,7 +26,7 @@ Note, we don't need to
 
 So we use SET and GET to manually keep a "dict" in Redis that allows multiple
 requests to add keys concurrently
-'''
+"""
 
 import secrets
 import time
@@ -34,13 +34,13 @@ import time
 from aiohttp import web
 
 
-COOKIE_NAME = 'data_workspace_session'
+COOKIE_NAME = "data_workspace_session"
 COOKIE_MAX_AGE = 60 * 60 * 10
 
-REDIS_KEY_PREFIX = 'data_workspace_session___cookie'
+REDIS_KEY_PREFIX = "data_workspace_session___cookie"
 REDIS_MAX_AGE = 60 * 60 * 9
 
-SESSION_KEY = 'SESSION'
+SESSION_KEY = "SESSION"
 
 
 def redis_session_middleware(redis_pool, root_domain_no_port, embed_path):
@@ -57,9 +57,9 @@ def redis_session_middleware(redis_pool, root_domain_no_port, embed_path):
                 return None
 
             with await redis_pool as conn:
-                redis_key = f'{REDIS_KEY_PREFIX}___{cookie_value}___{key}'.encode('ascii')
-                raw = await conn.execute('GET', redis_key)
-            return raw.decode('ascii') if raw is not None else None
+                redis_key = f"{REDIS_KEY_PREFIX}___{cookie_value}___{key}".encode("ascii")
+                raw = await conn.execute("GET", redis_key)
+            return raw.decode("ascii") if raw is not None else None
 
         async def set_value(key, value):
             to_set[key] = value
@@ -82,30 +82,30 @@ def redis_session_middleware(redis_pool, root_domain_no_port, embed_path):
             if to_set:
                 with await redis_pool as conn:
                     for key, value in to_set.items():
-                        redis_key = f'{REDIS_KEY_PREFIX}___{cookie_value}___{key}'.encode('ascii')
-                        redis_value = value.encode('ascii')
-                        await conn.execute('SET', redis_key, redis_value, 'EX', REDIS_MAX_AGE)
+                        redis_key = f"{REDIS_KEY_PREFIX}___{cookie_value}___{key}".encode("ascii")
+                        redis_value = value.encode("ascii")
+                        await conn.execute("SET", redis_key, redis_value, "EX", REDIS_MAX_AGE)
 
             expires = time.strftime(
-                '%a, %d-%b-%Y %T GMT', time.gmtime(time.time() + COOKIE_MAX_AGE)
+                "%a, %d-%b-%Y %T GMT", time.gmtime(time.time() + COOKIE_MAX_AGE)
             )
             secure = (
-                '; Secure'
-                if request.headers.get('x-forwarded-proto', request.url.scheme) == 'https'
-                else ''
+                "; Secure"
+                if request.headers.get("x-forwarded-proto", request.url.scheme) == "https"
+                else ""
             )
 
             # Visualisations embedded in other sites must have SameSite=None cookies. We restrict
             # those cookies to only be sent for visualisation paths. So, for example, they cannot
             # be used for Django admin
-            is_embed = request.url.path.startswith(f'{embed_path}/')
-            path, same_site = (embed_path, 'None') if is_embed else ('/', 'Lax')
+            is_embed = request.url.path.startswith(f"{embed_path}/")
+            path, same_site = (embed_path, "None") if is_embed else ("/", "Lax")
 
             # aiohttp's set_cookie doesn't seem to support the SameSite attribute
             response.headers.add(
-                'set-cookie',
-                f'{COOKIE_NAME}={cookie_value}; domain={root_domain_no_port}; expires={expires}; '
-                f'Max-Age={COOKIE_MAX_AGE}; HttpOnly; Path={path}; SameSite={same_site}{secure}',
+                "set-cookie",
+                f"{COOKIE_NAME}={cookie_value}; domain={root_domain_no_port}; expires={expires}; "
+                f"Max-Age={COOKIE_MAX_AGE}; HttpOnly; Path={path}; SameSite={same_site}{secure}",
             )
             return response
 

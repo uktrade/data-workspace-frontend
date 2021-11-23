@@ -17,46 +17,46 @@ from dataworkspace.apps.applications.views import (
 
 
 urlpatterns = [
-    path('', login_required(visualisations_html_view), name='root'),
-    path('link/<str:link_id>', login_required(visualisation_link_html_view), name='link'),
+    path("", login_required(visualisations_html_view), name="root"),
+    path("link/<str:link_id>", login_required(visualisation_link_html_view), name="link"),
     path(
-        '<str:gitlab_project_id>/branches/<path:branch_name>',
+        "<str:gitlab_project_id>/branches/<path:branch_name>",
         login_required(visualisation_branch_html_view),
-        name='branch',
+        name="branch",
     ),
     path(
-        '<str:gitlab_project_id>/users/give-access',
+        "<str:gitlab_project_id>/users/give-access",
         login_required(visualisation_users_give_access_html_view),
-        name='users-give-access',
+        name="users-give-access",
     ),
     path(
-        '<str:gitlab_project_id>/users/with-access',
+        "<str:gitlab_project_id>/users/with-access",
         login_required(visualisation_users_with_access_html_view),
-        name='users-with-access',
+        name="users-with-access",
     ),
     path(
-        '<str:gitlab_project_id>/catalogue-item',
+        "<str:gitlab_project_id>/catalogue-item",
         login_required(visualisation_catalogue_item_html_view),
-        name='catalogue-item',
+        name="catalogue-item",
     ),
     path(
-        '<str:gitlab_project_id>/approvals',
+        "<str:gitlab_project_id>/approvals",
         login_required(visualisation_approvals_html_view),
-        name='approvals',
+        name="approvals",
     ),
     path(
-        '<str:gitlab_project_id>/datasets',
+        "<str:gitlab_project_id>/datasets",
         login_required(visualisation_datasets_html_view),
-        name='datasets',
+        name="datasets",
     ),
     path(
-        '<str:gitlab_project_id>/publish',
+        "<str:gitlab_project_id>/publish",
         login_required(visualisation_publish_html_view),
-        name='publish',
+        name="publish",
     ),
     path(
-        '<str:gitlab_project_id>/logs/<str:commit_id>',
+        "<str:gitlab_project_id>/logs/<str:commit_id>",
         login_required(visualisation_latest_log_GET),
-        name='logs',
+        name="logs",
     ),
 ]

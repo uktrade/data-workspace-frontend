@@ -10,50 +10,50 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('datasets', '0095_toolqueryauditlog_connection_from'),
+        ("datasets", "0095_toolqueryauditlog_connection_from"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='DataSetSubscription',
+            name="DataSetSubscription",
             fields=[
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
                 (
-                    'id',
+                    "id",
                     models.UUIDField(default=uuid.uuid4, primary_key=True, serialize=False),
                 ),
-                ('notify_on_schema_change', models.BooleanField(default=False)),
-                ('notify_on_data_change', models.BooleanField(default=False)),
+                ("notify_on_schema_change", models.BooleanField(default=False)),
+                ("notify_on_data_change", models.BooleanField(default=False)),
                 (
-                    'created_by',
+                    "created_by",
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        related_name='created+',
+                        related_name="created+",
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
                 (
-                    'dataset',
+                    "dataset",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to='datasets.dataset',
+                        to="datasets.dataset",
                     ),
                 ),
                 (
-                    'updated_by',
+                    "updated_by",
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        related_name='updated+',
+                        related_name="updated+",
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
                 (
-                    'user',
+                    "user",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         to=settings.AUTH_USER_MODEL,
@@ -61,8 +61,8 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                'verbose_name': 'DataSet Subscription',
-                'verbose_name_plural': 'DataSet Subscriptions',
+                "verbose_name": "DataSet Subscription",
+                "verbose_name_plural": "DataSet Subscriptions",
             },
         ),
     ]

@@ -38,7 +38,7 @@ from dataworkspace.apps.core.utils import close_all_connections_if_not_in_atomic
 from dataworkspace.notify import EmailSendFailureException, send_email
 from dataworkspace.utils import TYPE_CODES_REVERSED
 
-logger = logging.getLogger('app')
+logger = logging.getLogger("app")
 
 
 def find_dataset(dataset_uuid, user):
@@ -48,7 +48,7 @@ def find_dataset(dataset_uuid, user):
         return dataset
 
     if not dataset.published:
-        raise Http404('No dataset matches the given query.')
+        raise Http404("No dataset matches the given query.")
 
     return dataset
 
@@ -64,7 +64,7 @@ def find_visualisation(visualisation_uuid, user):
         return visualisation
 
     if not visualisation.published:
-        raise Http404('No visualisation matches the given query.')
+        raise Http404("No visualisation matches the given query.")
 
     return visualisation
 
@@ -88,16 +88,16 @@ def find_dataset_or_visualisation_for_bookmark(model_id):
 
 def dataset_type_to_manage_unpublished_permission_codename(dataset_type: int):
     return {
-        DataSetType.REFERENCE: 'datasets.manage_unpublished_reference_datasets',
-        DataSetType.MASTER: 'datasets.manage_unpublished_master_datasets',
-        DataSetType.DATACUT: 'datasets.manage_unpublished_datacut_datasets',
-        DataSetType.VISUALISATION: 'datasets.manage_unpublished_visualisations',
+        DataSetType.REFERENCE: "datasets.manage_unpublished_reference_datasets",
+        DataSetType.MASTER: "datasets.manage_unpublished_master_datasets",
+        DataSetType.DATACUT: "datasets.manage_unpublished_datacut_datasets",
+        DataSetType.VISUALISATION: "datasets.manage_unpublished_visualisations",
     }[dataset_type]
 
 
 def get_code_snippets_for_table(source_table):
-    if not hasattr(source_table, 'schema') or not hasattr(source_table, 'table'):
-        return {'python': '', 'r': '', 'sql': ''}
+    if not hasattr(source_table, "schema") or not hasattr(source_table, "table"):
+        return {"python": "", "r": "", "sql": ""}
     query = get_sql_snippet(source_table.schema, source_table.table, 50)
     return {
         "python": get_python_snippet(query),
@@ -107,7 +107,7 @@ def get_code_snippets_for_table(source_table):
 
 
 def get_code_snippets_for_reference_table(table):
-    query = get_sql_snippet('public', table, 50)
+    query = get_sql_snippet("public", table, 50)
     return {
         "python": get_python_snippet(query),
         "r": get_r_snippet(query),
@@ -132,7 +132,7 @@ def get_python_snippet(query):
     sqlalchemy.text() is used to make sure the sql string is in a form that sqlalchemy expects.
     `backslash`, `"` and `'''` are also escaped
     """
-    query = query.replace('\\', '\\\\').replace('"', '\\"')
+    query = query.replace("\\", "\\\\").replace('"', '\\"')
     return f"""import os
 import pandas
 import psycopg2
@@ -146,7 +146,7 @@ for chunk in chunks:
 
 
 def get_r_snippet(query):
-    query = query.replace('\\', '\\\\').replace('"', '\\"')
+    query = query.replace("\\", "\\\\").replace('"', '\\"')
     return f"""library(stringr)
 library(DBI)
 getConn <- function(dsn) {{
@@ -206,29 +206,29 @@ def process_quicksight_dashboard_visualisations():
                 return date
         return None
 
-    account_id = boto3.client('sts').get_caller_identity().get('Account')
-    quicksight_client = boto3.client('quicksight')
+    account_id = boto3.client("sts").get_caller_identity().get("Account")
+    quicksight_client = boto3.client("quicksight")
 
-    logger.info('Fetching last updated dates for QuickSight visualisation links')
+    logger.info("Fetching last updated dates for QuickSight visualisation links")
 
     for visualisation_link in VisualisationLink.objects.filter(
-        visualisation_type='QUICKSIGHT', visualisation_catalogue_item__deleted=False
+        visualisation_type="QUICKSIGHT", visualisation_catalogue_item__deleted=False
     ):
         dashboard_id = visualisation_link.identifier
-        logger.info('Fetching last updated date for DashboardId %s', dashboard_id)
+        logger.info("Fetching last updated date for DashboardId %s", dashboard_id)
         try:
             dashboard = quicksight_client.describe_dashboard(
                 AwsAccountId=account_id, DashboardId=dashboard_id
-            )['Dashboard']
+            )["Dashboard"]
         except botocore.exceptions.ClientError as e:
-            if e.response['Error']['Code'] == 'ResourceNotFoundException':
-                logger.error('DashboardId %s not found', dashboard_id)
+            if e.response["Error"]["Code"] == "ResourceNotFoundException":
+                logger.error("DashboardId %s not found", dashboard_id)
                 continue
             raise e
         else:
-            data_set_arns = dashboard['Version']['DataSetArns']
+            data_set_arns = dashboard["Version"]["DataSetArns"]
             logger.info(
-                'Found %d DataSets for DashboardId %s',
+                "Found %d DataSets for DashboardId %s",
                 len(data_set_arns),
                 dashboard_id,
             )
@@ -240,81 +240,81 @@ def process_quicksight_dashboard_visualisations():
                 try:
                     data_set = quicksight_client.describe_data_set(
                         AwsAccountId=account_id, DataSetId=data_set_arn[50:]
-                    )['DataSet']
+                    )["DataSet"]
                 except botocore.exceptions.ClientError as e:
-                    if e.response['Error']['Code'] == 'ResourceNotFoundException':
-                        logger.error('DataSetId %s not found', data_set_arn[50:])
+                    if e.response["Error"]["Code"] == "ResourceNotFoundException":
+                        logger.error("DataSetId %s not found", data_set_arn[50:])
                         continue
                     raise e
                 else:
                     logger.info(
-                        'Fetching last updated date for %s DataSet %s',
-                        data_set['ImportMode'],
-                        data_set['DataSetId'],
+                        "Fetching last updated date for %s DataSet %s",
+                        data_set["ImportMode"],
+                        data_set["DataSetId"],
                     )
-                    data_set_last_updated_time = data_set['LastUpdatedTime']
-                    if data_set['ImportMode'] == 'SPICE':
+                    data_set_last_updated_time = data_set["LastUpdatedTime"]
+                    if data_set["ImportMode"] == "SPICE":
                         last_updated_dates.append(data_set_last_updated_time)
 
-                        for table_id, table_map in data_set['PhysicalTableMap'].items():
+                        for table_id, table_map in data_set["PhysicalTableMap"].items():
                             data_set_type = list(table_map)[0]
-                            if data_set_type == 'CustomSql':
+                            if data_set_type == "CustomSql":
                                 store_sql_query(
                                     visualisation_link,
-                                    data_set['DataSetId'],
+                                    data_set["DataSetId"],
                                     table_id,
-                                    table_map['CustomSql']['SqlQuery'],
+                                    table_map["CustomSql"]["SqlQuery"],
                                 )
                                 tables.extend(
                                     extract_queried_tables_from_sql_query(
                                         database_name,
-                                        table_map['CustomSql']['SqlQuery'],
+                                        table_map["CustomSql"]["SqlQuery"],
                                     )
                                 )
                     else:
-                        for table_id, table_map in data_set['PhysicalTableMap'].items():
+                        for table_id, table_map in data_set["PhysicalTableMap"].items():
                             data_set_type = list(table_map)[0]
-                            if data_set_type == 'RelationalTable':
+                            if data_set_type == "RelationalTable":
                                 last_updated_date_candidate = (
                                     get_last_updated_date_by_table_name(
-                                        table_map['RelationalTable']['Schema'],
-                                        table_map['RelationalTable']['Name'],
+                                        table_map["RelationalTable"]["Schema"],
+                                        table_map["RelationalTable"]["Name"],
                                     )
                                     or data_set_last_updated_time
                                 )
                                 tables.append(
                                     (
-                                        table_map['RelationalTable']['Schema'],
-                                        table_map['RelationalTable']['Name'],
+                                        table_map["RelationalTable"]["Schema"],
+                                        table_map["RelationalTable"]["Name"],
                                     )
                                 )
-                            elif data_set_type == 'CustomSql':
+                            elif data_set_type == "CustomSql":
                                 store_sql_query(
                                     visualisation_link,
-                                    data_set['DataSetId'],
+                                    data_set["DataSetId"],
                                     table_id,
-                                    table_map['CustomSql']['SqlQuery'],
+                                    table_map["CustomSql"]["SqlQuery"],
                                 )
                                 last_updated_date_candidate = max(
-                                    dashboard['LastPublishedTime'],
-                                    dashboard['LastUpdatedTime'],
-                                    data_set['LastUpdatedTime'],
+                                    dashboard["LastPublishedTime"],
+                                    dashboard["LastUpdatedTime"],
+                                    data_set["LastUpdatedTime"],
                                 )
                                 tables.extend(
                                     extract_queried_tables_from_sql_query(
                                         database_name,
-                                        table_map['CustomSql']['SqlQuery'],
+                                        table_map["CustomSql"]["SqlQuery"],
                                     )
                                 )
-                            elif data_set_type == 'S3Source':
+                            elif data_set_type == "S3Source":
                                 last_updated_date_candidate = data_set_last_updated_time
 
                             last_updated_dates.append(last_updated_date_candidate)
 
             if last_updated_dates:
                 logger.info(
-                    'Setting last updated date of %s for DashboardId %s',
-                    max(last_updated_dates).strftime('%d-%m-%Y %H:%M:%S'),
+                    "Setting last updated date of %s for DashboardId %s",
+                    max(last_updated_dates).strftime("%d-%m-%Y %H:%M:%S"),
                     dashboard_id,
                 )
                 visualisation_link.data_source_last_updated = max(last_updated_dates)
@@ -323,7 +323,7 @@ def process_quicksight_dashboard_visualisations():
             if tables:
                 set_dataset_related_visualisation_catalogue_items(visualisation_link, tables)
 
-    logger.info('Finished fetching last updated dates for QuickSight visualisation links')
+    logger.info("Finished fetching last updated dates for QuickSight visualisation links")
 
 
 def store_sql_query(visualisation_link, data_set_id, table_id, sql_query):
@@ -349,14 +349,14 @@ def store_sql_query(visualisation_link, data_set_id, table_id, sql_query):
 
 @celery_app.task()
 def link_superset_visualisations_to_related_datasets():
-    api_url = os.environ['SUPERSET_ROOT'] + '/api/v1/%s'
+    api_url = os.environ["SUPERSET_ROOT"] + "/api/v1/%s"
 
     login_response = requests.post(
-        api_url % 'security/login',
+        api_url % "security/login",
         json={
-            'username': os.environ['SUPERSET_DW_USER_USERNAME'],
-            'password': os.environ['SUPERSET_DW_USER_PASSWORD'],
-            'provider': 'db',
+            "username": os.environ["SUPERSET_DW_USER_USERNAME"],
+            "password": os.environ["SUPERSET_DW_USER_PASSWORD"],
+            "provider": "db",
         },
     )
     if login_response.status_code != 200:
@@ -366,20 +366,20 @@ def link_superset_visualisations_to_related_datasets():
         )
         return
 
-    jwt_access_token = login_response.json()['access_token']
+    jwt_access_token = login_response.json()["access_token"]
 
     database_name, _ = list(settings.DATABASES_DATA.items())[0]
 
     for visualisation_link in VisualisationLink.objects.filter(
-        visualisation_type='SUPERSET', visualisation_catalogue_item__deleted=False
+        visualisation_type="SUPERSET", visualisation_catalogue_item__deleted=False
     ):
         dashboard_id = int(visualisation_link.identifier)
         logger.info("Setting related visualisations for Superset dashboard id %d", dashboard_id)
 
         tables = []
         datasets_response = requests.get(
-            api_url % f'dashboard/{dashboard_id}/datasets',
-            headers={'Authorization': f'Bearer {jwt_access_token}'},
+            api_url % f"dashboard/{dashboard_id}/datasets",
+            headers={"Authorization": f"Bearer {jwt_access_token}"},
         )
         if datasets_response.status_code != 200:
             logger.error(
@@ -389,21 +389,21 @@ def link_superset_visualisations_to_related_datasets():
             )
             continue
 
-        datasets = datasets_response.json()['result']
+        datasets = datasets_response.json()["result"]
         logger.info(
-            'Found %d datasets for Superset dashboard id %d',
+            "Found %d datasets for Superset dashboard id %d",
             len(datasets),
             dashboard_id,
         )
 
         for dataset in datasets:
             logger.info(
-                'Extracting tables from dashboard id %d and dataset if %d',
+                "Extracting tables from dashboard id %d and dataset if %d",
                 dashboard_id,
-                dataset['id'],
+                dataset["id"],
             )
 
-            tables.extend(extract_queried_tables_from_sql_query(database_name, dataset['sql']))
+            tables.extend(extract_queried_tables_from_sql_query(database_name, dataset["sql"]))
 
         if tables:
             set_dataset_related_visualisation_catalogue_items(visualisation_link, tables)
@@ -418,7 +418,7 @@ def set_dataset_related_visualisation_catalogue_items(visualisation_link, tables
             )
         )
         .distinct()
-        .values_list('id', flat=True)
+        .values_list("id", flat=True)
     )
 
     datacuts = list(
@@ -429,7 +429,7 @@ def set_dataset_related_visualisation_catalogue_items(visualisation_link, tables
             )
         )
         .distinct()
-        .values_list('query__dataset__id', flat=True)
+        .values_list("query__dataset__id", flat=True)
     )
 
     for object_id in datasets + datacuts:
@@ -437,109 +437,109 @@ def set_dataset_related_visualisation_catalogue_items(visualisation_link, tables
 
 
 def build_filtered_dataset_query(inner_query, column_config, params):
-    column_map = {x['field']: x for x in column_config}
+    column_map = {x["field"]: x for x in column_config}
     query_params = {
-        'offset': int(params.get('start', 0)),
-        'limit': params.get('limit'),
+        "offset": int(params.get("start", 0)),
+        "limit": params.get("limit"),
     }
-    sort_dir = 'DESC' if params.get('sortDir', '').lower() == 'desc' else 'ASC'
-    sort_fields = [column_config[0]['field']]
-    if params.get('sortField') and params.get('sortField') in column_map:
-        sort_fields = [params.get('sortField')]
+    sort_dir = "DESC" if params.get("sortDir", "").lower() == "desc" else "ASC"
+    sort_fields = [column_config[0]["field"]]
+    if params.get("sortField") and params.get("sortField") in column_map:
+        sort_fields = [params.get("sortField")]
 
     where_clause = []
-    for field, filter_data in params.get('filters', {}).items():
-        terms = [filter_data.get('filter'), filter_data.get('filterTo')]
-        if filter_data['filterType'] == 'date':
-            terms = [filter_data['dateFrom'], filter_data['dateTo']]
+    for field, filter_data in params.get("filters", {}).items():
+        terms = [filter_data.get("filter"), filter_data.get("filterTo")]
+        if filter_data["filterType"] == "date":
+            terms = [filter_data["dateFrom"], filter_data["dateTo"]]
 
         if field in column_map:
-            data_type = column_map[field].get('dataType', filter_data['filterType'])
+            data_type = column_map[field].get("dataType", filter_data["filterType"])
 
             # Searching on invalid uuids will raise an exception.
             # To get around that, if the uuid is invalid we
             # force the query to return no results (`where 1 = 2`)
-            if data_type == 'uuid':
+            if data_type == "uuid":
                 try:
                     UUID(terms[0], version=4)
                 except ValueError:
-                    where_clause.append(SQL('1 = 2'))
+                    where_clause.append(SQL("1 = 2"))
                     break
 
             # Booleans are passed as integers
-            if data_type == 'boolean':
+            if data_type == "boolean":
                 terms[0] = bool(int(terms[0]))
 
-            if data_type == 'text' and filter_data['type'] == 'contains':
-                query_params[field] = f'%{terms[0]}%'
+            if data_type == "text" and filter_data["type"] == "contains":
+                query_params[field] = f"%{terms[0]}%"
                 where_clause.append(
-                    SQL(f'lower({{}}) LIKE lower(%({field})s)').format(Identifier(field))
+                    SQL(f"lower({{}}) LIKE lower(%({field})s)").format(Identifier(field))
                 )
-            elif data_type == 'text' and filter_data['type'] == 'notContains':
-                query_params[field] = f'%{terms[0]}%'
+            elif data_type == "text" and filter_data["type"] == "notContains":
+                query_params[field] = f"%{terms[0]}%"
                 where_clause.append(
-                    SQL(f'lower({{}}) NOT LIKE lower(%({field})s)').format(Identifier(field))
+                    SQL(f"lower({{}}) NOT LIKE lower(%({field})s)").format(Identifier(field))
                 )
-            elif filter_data['type'] == 'equals':
+            elif filter_data["type"] == "equals":
                 query_params[field] = terms[0]
-                if data_type == 'text':
+                if data_type == "text":
                     where_clause.append(
-                        SQL(f'lower({{}}) = lower(%({field})s)').format(Identifier(field))
+                        SQL(f"lower({{}}) = lower(%({field})s)").format(Identifier(field))
                     )
                 else:
-                    where_clause.append(SQL(f'{{}} = %({field})s').format(Identifier(field)))
+                    where_clause.append(SQL(f"{{}} = %({field})s").format(Identifier(field)))
 
-            elif filter_data['type'] == 'notEqual':
+            elif filter_data["type"] == "notEqual":
                 query_params[field] = terms[0]
-                if data_type == 'text':
+                if data_type == "text":
                     where_clause.append(
-                        SQL(f'lower({{}}) != lower(%({field})s)').format(Identifier(field))
+                        SQL(f"lower({{}}) != lower(%({field})s)").format(Identifier(field))
                     )
                 else:
                     where_clause.append(
-                        SQL(f'{{}} is distinct from %({field})s').format(Identifier(field))
+                        SQL(f"{{}} is distinct from %({field})s").format(Identifier(field))
                     )
-            elif filter_data['type'] in ['startsWith', 'endsWith']:
+            elif filter_data["type"] in ["startsWith", "endsWith"]:
                 query_params[field] = (
-                    f'{terms[0]}%' if filter_data['type'] == 'startsWith' else f'%{terms[0]}'
+                    f"{terms[0]}%" if filter_data["type"] == "startsWith" else f"%{terms[0]}"
                 )
                 where_clause.append(
-                    SQL(f'lower({{}}) LIKE lower(%({field})s)').format(Identifier(field))
+                    SQL(f"lower({{}}) LIKE lower(%({field})s)").format(Identifier(field))
                 )
-            elif filter_data['type'] == 'inRange':
+            elif filter_data["type"] == "inRange":
                 where_clause.append(
-                    SQL(f'{{}} BETWEEN %({field}_from)s AND %({field}_to)s').format(
+                    SQL(f"{{}} BETWEEN %({field}_from)s AND %({field}_to)s").format(
                         Identifier(field)
                     )
                 )
-                query_params[f'{field}_from'] = terms[0]
-                query_params[f'{field}_to'] = terms[1]
-            elif filter_data['type'] in ['greaterThan', 'greaterThanOrEqual']:
-                operator = '>' if filter_data['type'] == 'greaterThan' else '>='
-                where_clause.append(SQL(f'{{}} {operator} %({field})s').format(Identifier(field)))
+                query_params[f"{field}_from"] = terms[0]
+                query_params[f"{field}_to"] = terms[1]
+            elif filter_data["type"] in ["greaterThan", "greaterThanOrEqual"]:
+                operator = ">" if filter_data["type"] == "greaterThan" else ">="
+                where_clause.append(SQL(f"{{}} {operator} %({field})s").format(Identifier(field)))
                 query_params[field] = terms[0]
-            elif filter_data['type'] in ['lessThan', 'lessThanOrEqual']:
+            elif filter_data["type"] in ["lessThan", "lessThanOrEqual"]:
                 query_params[field] = terms[0]
-                operator = '<' if filter_data['type'] == 'lessThan' else '<='
-                where_clause.append(SQL(f'{{}} {operator} %({field})s').format(Identifier(field)))
+                operator = "<" if filter_data["type"] == "lessThan" else "<="
+                where_clause.append(SQL(f"{{}} {operator} %({field})s").format(Identifier(field)))
 
     if where_clause:
-        where_clause = SQL('WHERE') + SQL(' AND ').join(where_clause)
+        where_clause = SQL("WHERE") + SQL(" AND ").join(where_clause)
 
     query = SQL(
-        f'''
+        f"""
         SELECT {{}}
         FROM ({{}}) a
         {{}}
         ORDER BY {{}} {sort_dir}
         LIMIT %(limit)s
         OFFSET %(offset)s
-        '''
+        """
     ).format(
-        SQL(',').join(map(Identifier, column_map)),
+        SQL(",").join(map(Identifier, column_map)),
         inner_query,
-        SQL(' ').join(where_clause),
-        SQL(',').join(map(Identifier, sort_fields)),
+        SQL(" ").join(where_clause),
+        SQL(",").join(map(Identifier, sort_fields)),
     )
 
     return query, query_params
@@ -548,7 +548,7 @@ def build_filtered_dataset_query(inner_query, column_config, params):
 @celery_app.task()
 def store_custom_dataset_query_table_structures():
     for query in CustomDatasetQuery.objects.filter(dataset__published=True):
-        sql = query.query.rstrip().rstrip(';')
+        sql = query.query.rstrip().rstrip(";")
 
         tables = extract_queried_tables_from_sql_query(query.database.memorable_name, sql)
         tables_last_updated_date = get_tables_last_updated_date(
@@ -566,7 +566,7 @@ def store_custom_dataset_query_table_structures():
             )
             metadata = cursor.fetchone()
             if not metadata or last_updated_date != metadata[0]:
-                cursor.execute(f'SELECT * FROM ({sql}) sq LIMIT 0')
+                cursor.execute(f"SELECT * FROM ({sql}) sq LIMIT 0")
                 columns = [(col[0], TYPE_CODES_REVERSED[col[1]]) for col in cursor.description]
 
                 cursor.execute(
@@ -585,7 +585,7 @@ def store_custom_dataset_query_table_structures():
 @celery_app.task()
 def send_notification_emails():
     def create_notifications():
-        for table in SourceTable.objects.order_by('id'):
+        for table in SourceTable.objects.order_by("id"):
             changelog = get_table_changelog(
                 table.database.memorable_name, table.schema, table.table
             )
@@ -595,13 +595,13 @@ def send_notification_emails():
             # For now only notify about the most recent change
             change = changelog[0]
             notification, created = Notification.objects.get_or_create(
-                changelog_id=change['change_id'],
-                defaults={'change_date': change['change_date']},
+                changelog_id=change["change_id"],
+                defaults={"change_date": change["change_date"]},
             )
             if created:
                 dataset = table.dataset
                 logger.info(
-                    'Processing notifications for dataset %s',
+                    "Processing notifications for dataset %s",
                     dataset.name,
                 )
                 for subscription in dataset.subscriptions.filter(notify_on_schema_change=True):
@@ -612,7 +612,7 @@ def send_notification_emails():
 
     def send_notifications():
         user_notification_ids = list(
-            UserNotification.objects.filter(email_id=None).values_list('id', flat=True)
+            UserNotification.objects.filter(email_id=None).values_list("id", flat=True)
         )
 
         for user_notification_id in user_notification_ids:
@@ -632,7 +632,7 @@ def send_notification_emails():
                     dataset_name = user_notification.subscription.dataset.name
 
                     logger.info(
-                        'Sending notification about dataset %s changing structure at %s to user %s',
+                        "Sending notification about dataset %s changing structure at %s to user %s",
                         dataset_name,
                         change_date,
                         email_address,
@@ -642,22 +642,22 @@ def send_notification_emails():
                             settings.NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID,
                             email_address,
                             personalisation={
-                                'dataset_name': dataset_name,
-                                'change_date': change_date,
+                                "dataset_name": dataset_name,
+                                "change_date": change_date,
                             },
                         )
                     except EmailSendFailureException:
-                        logger.exception('Failed to send email')
+                        logger.exception("Failed to send email")
                     else:
                         user_notification.email_id = email_id
-                        user_notification.save(update_fields=['email_id'])
+                        user_notification.save(update_fields=["email_id"])
             except IntegrityError as e:
-                logger.error('Exception when sending notifications: %s', e)
+                logger.error("Exception when sending notifications: %s", e)
 
     try:
         with transaction.atomic():
             create_notifications()
     except IntegrityError as e:
-        logger.error('Exception when creating notifications: %s', e)
+        logger.error("Exception when creating notifications: %s", e)
     else:
         send_notifications()

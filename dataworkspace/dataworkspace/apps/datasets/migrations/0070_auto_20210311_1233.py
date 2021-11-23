@@ -7,24 +7,24 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0069_visualisationlink_data_source_last_updated'),
+        ("datasets", "0069_visualisationlink_data_source_last_updated"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='referencedatasetfield',
-            name='column_name',
+            model_name="referencedatasetfield",
+            name="column_name",
             field=models.CharField(
                 blank=True,
-                help_text='Descriptive name for the field. This name is used in '
-                'the Data Workspace database. Leave blank for linked reference dataset fields',
+                help_text="Descriptive name for the field. This name is used in "
+                "the Data Workspace database. Leave blank for linked reference dataset fields",
                 max_length=255,
                 null=True,
                 validators=[
                     django.core.validators.RegexValidator(
-                        message='Column names must be lowercase and must start with a letter and '
-                        'contain only letters, numbers, underscores and full stops.',
-                        regex='^[a-z][a-z0-9_\\.]*$',
+                        message="Column names must be lowercase and must start with a letter and "
+                        "contain only letters, numbers, underscores and full stops.",
+                        regex="^[a-z][a-z0-9_\\.]*$",
                     )
                 ],
             ),

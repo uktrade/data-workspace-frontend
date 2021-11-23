@@ -8,14 +8,14 @@ from zenpy.lib.api_objects import Ticket, User, Comment, CustomField
 
 from dataworkspace.notify import generate_token, send_email
 
-logger = logging.getLogger('app')
+logger = logging.getLogger("app")
 
 zendesk_service_field_id = settings.ZENDESK_SERVICE_FIELD_ID
 zendesk_service_field_value = settings.ZENDESK_SERVICE_FIELD_VALUE
 
 
 def get_username(user):
-    return f'{user.first_name} {user.last_name}'
+    return f"{user.first_name} {user.last_name}"
 
 
 def get_people_url(name):
@@ -47,16 +47,16 @@ Details for the request can be found at
 
 
 def build_private_comment_text(catalogue_item, approval_url):
-    asset_owner_text = 'None'
-    asset_manager_text = 'None'
+    asset_owner_text = "None"
+    asset_manager_text = "None"
 
     iao = catalogue_item.information_asset_owner
     iam = catalogue_item.information_asset_manager
     if iao:
-        asset_owner_text = f'{iao.first_name} {iao.last_name} ' f'<{iao.email}>'
+        asset_owner_text = f"{iao.first_name} {iao.last_name} " f"<{iao.email}>"
 
     if iam:
-        asset_owner_text = f'{iam.first_name} {iam.last_name} ' f'<{iam.email}>'
+        asset_owner_text = f"{iam.first_name} {iam.last_name} " f"<{iam.email}>"
 
     private_comment = f"""
 
@@ -80,11 +80,11 @@ def create_zendesk_ticket(request, access_request, catalogue_item=None):
     )
 
     access_request_url = request.build_absolute_uri(
-        reverse('admin:request_access_accessrequest_change', args=(access_request.id,))
+        reverse("admin:request_access_accessrequest_change", args=(access_request.id,))
     )
 
     authorize_url = request.build_absolute_uri(
-        reverse('admin:auth_user_change', args=[access_request.requester.id])
+        reverse("admin:auth_user_change", args=[access_request.requester.id])
     )
 
     ticket_description = build_ticket_description_text(
@@ -97,7 +97,7 @@ def create_zendesk_ticket(request, access_request, catalogue_item=None):
 
     username = get_username(access_request.requester)
 
-    subject = f'Access Request for {catalogue_item if catalogue_item else username}'
+    subject = f"Access Request for {catalogue_item if catalogue_item else username}"
 
     ticket_audit = client.tickets.create(
         Ticket(
@@ -163,7 +163,7 @@ If access has not been granted to the requestor within 5 working days, this will
         request.user.email,
         message,
         subject=f"Data visualisation access request received - {dataset.name}",
-        tag='visualisation-access-request',
+        tag="visualisation-access-request",
     )
 
     give_access_url = request.build_absolute_uri(
@@ -173,8 +173,8 @@ If access has not been granted to the requestor within 5 working days, this will
         )
     )
     give_access_token = generate_token(
-        {'email': request.user.email, 'ticket': ticket_reference}
-    ).decode('utf-8')
+        {"email": request.user.email, "ticket": ticket_reference}
+    ).decode("utf-8")
 
     contacts = set()
     if dataset.enquiries_contact:
@@ -207,7 +207,7 @@ def create_support_request(user, email, message, tag=None, subject=None):
     )
     ticket_audit = client.tickets.create(
         Ticket(
-            subject=subject or 'Data Workspace Support Request',
+            subject=subject or "Data Workspace Support Request",
             description=message,
             requester=User(email=email, name=user.get_full_name()),
             tags=[tag] if tag else None,

@@ -8,51 +8,51 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0051_auto_20200819_0817'),
+        ("datasets", "0051_auto_20200819_0817"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='CustomDatasetQueryTable',
+            name="CustomDatasetQueryTable",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
                 (
-                    'table',
+                    "table",
                     models.CharField(
                         max_length=1024,
                         validators=[
                             django.core.validators.RegexValidator(
-                                regex='^[a-zA-Z][a-zA-Z0-9_\\.]*$'
+                                regex="^[a-zA-Z][a-zA-Z0-9_\\.]*$"
                             )
                         ],
                     ),
                 ),
                 (
-                    'schema',
+                    "schema",
                     models.CharField(
-                        default='public',
+                        default="public",
                         max_length=1024,
                         validators=[
                             django.core.validators.RegexValidator(
-                                regex='^[a-zA-Z][a-zA-Z0-9_\\.]*$'
+                                regex="^[a-zA-Z][a-zA-Z0-9_\\.]*$"
                             )
                         ],
                     ),
                 ),
                 (
-                    'query',
+                    "query",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name='tables',
-                        to='datasets.CustomDatasetQuery',
+                        related_name="tables",
+                        to="datasets.CustomDatasetQuery",
                     ),
                 ),
             ],

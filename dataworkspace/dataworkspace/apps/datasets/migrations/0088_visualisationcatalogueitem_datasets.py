@@ -6,15 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0087_merge_20210824_0940'),
+        ("datasets", "0087_merge_20210824_0940"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='visualisationcatalogueitem',
-            name='datasets',
+            model_name="visualisationcatalogueitem",
+            name="datasets",
             field=models.ManyToManyField(
-                blank=True, related_name='related_visualisations', to='datasets.DataSet'
+                blank=True, related_name="related_visualisations", to="datasets.DataSet"
             ),
         ),
     ]

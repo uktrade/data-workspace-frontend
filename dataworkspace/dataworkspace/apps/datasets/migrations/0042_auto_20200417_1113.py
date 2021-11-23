@@ -5,12 +5,12 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [('datasets', '0041_auto_20200416_1939')]
+    dependencies = [("datasets", "0041_auto_20200416_1939")]
 
     operations = [
         migrations.AlterField(
-            model_name='visualisationcatalogueitem',
-            name='description',
+            model_name="visualisationcatalogueitem",
+            name="description",
             field=models.TextField(blank=True, null=True),
         )
     ]

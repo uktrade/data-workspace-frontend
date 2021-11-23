@@ -8,7 +8,7 @@ from django.views.generic import DetailView
 
 from dataworkspace.apps.datasets.models import DataSet, ReferenceDataset
 
-logger = logging.getLogger('app')
+logger = logging.getLogger("app")
 
 
 @require_GET
@@ -23,11 +23,11 @@ def datagroup_item_view(request, slug):
         "reference-data-sets": {"use": "0"},
     }
 
-    search_params = QueryDict('', mutable=True)
+    search_params = QueryDict("", mutable=True)
     search_params.update(GROUP_TO_SEARCH_QUERY.get(slug, {}))
 
     return HttpResponseRedirect(
-        reverse('datasets:find_datasets') + '?' + search_params.urlencode()
+        reverse("datasets:find_datasets") + "?" + search_params.urlencode()
     )
 
 
@@ -46,8 +46,8 @@ class ReferenceDatasetDetailView(DetailView):  # pylint: disable=too-many-ancest
         return get_object_or_404(
             ReferenceDataset.objects.live(),
             published=True,
-            group__slug=self.kwargs.get('group_slug'),
-            slug=self.kwargs.get('reference_slug'),
+            group__slug=self.kwargs.get("group_slug"),
+            slug=self.kwargs.get("reference_slug"),
         )
 
     def get(self, request, *args, **kwargs):

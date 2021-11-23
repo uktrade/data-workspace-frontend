@@ -15,45 +15,45 @@ async def async_main(logger, target_file, url, username, password):
     while True:
         await asyncio.sleep(10)
         try:
-            logger.debug('Fetching from %s', url)
+            logger.debug("Fetching from %s", url)
             headers = (
                 (
-                    b'Authorization',
-                    b'Basic ' + base64.b64encode(f'{username}:{password}'.encode('ascii')),
+                    b"Authorization",
+                    b"Basic " + base64.b64encode(f"{username}:{password}".encode("ascii")),
                 ),
             )
-            code, _, body = await request(b'GET', url, headers=headers)
-            logger.debug('Code %s', code)
+            code, _, body = await request(b"GET", url, headers=headers)
+            logger.debug("Code %s", code)
             raw_json = await buffered(body)
-            logger.debug('Received %s', raw_json)
-            applications = json.loads(raw_json)['applications']
-            logger.debug('Found %s', applications)
+            logger.debug("Received %s", raw_json)
+            applications = json.loads(raw_json)["applications"]
+            logger.debug("Found %s", applications)
             file_sd_config = [
                 {
-                    'labels': {
-                        'job': 'tools',
-                        'tool_name': application['name'],
-                        'user': application['user'],
+                    "labels": {
+                        "job": "tools",
+                        "tool_name": application["name"],
+                        "user": application["user"],
                     },
-                    'targets': [
-                        urllib.parse.urlsplit(application['proxy_url']).hostname + ':8889'
+                    "targets": [
+                        urllib.parse.urlsplit(application["proxy_url"]).hostname + ":8889"
                     ],
                 }
                 for application in applications
-                if application['proxy_url'] is not None
+                if application["proxy_url"] is not None
             ]
-            logger.debug('Saving %s to %s', file_sd_config, target_file)
-            with open(target_file, 'w') as file:
+            logger.debug("Saving %s to %s", file_sd_config, target_file)
+            with open(target_file, "w") as file:
                 file.write(json.dumps(file_sd_config))
         except Exception:  # pylint: disable=broad-except
-            logger.exception('Exception fetching targets')
+            logger.exception("Exception fetching targets")
 
 
 def main():
-    target_file = os.environ['TARGET_FILE']
-    url = os.environ['URL']
-    username = os.environ['METRICS_SERVICE_DISCOVERY_BASIC_AUTH_USER']
-    password = os.environ['METRICS_SERVICE_DISCOVERY_BASIC_AUTH_PASSWORD']
+    target_file = os.environ["TARGET_FILE"]
+    url = os.environ["URL"]
+    username = os.environ["METRICS_SERVICE_DISCOVERY_BASIC_AUTH_USER"]
+    password = os.environ["METRICS_SERVICE_DISCOVERY_BASIC_AUTH_PASSWORD"]
 
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
@@ -66,5 +66,5 @@ def main():
     loop.run_until_complete(async_main(logger, target_file, url, username, password))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

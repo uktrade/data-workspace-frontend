@@ -4,7 +4,7 @@ import re
 
 
 def normalise_environment(key_values):
-    separator = '__'
+    separator = "__"
 
     def get_first_component(key):
         return key.split(separator)[0]
@@ -68,11 +68,11 @@ def normalise_environment(key_values):
 env = normalise_environment(os.environ)
 
 # pgweb only allows one database
-_, dsn = list(env['DATABASE_DSN'].items())[0]
-user = re.search(r'user=([a-z0-9_]+)', dsn).groups()[0]
-password = re.search(r'password=([a-zA-Z0-9_]+)', dsn).groups()[0]
-port = re.search(r'port=(\d+)', dsn).groups()[0]
-dbname = re.search(r'dbname=([a-z0-9_\-]+)', dsn).groups()[0]
-host = re.search(r'host=([a-z0-9_\-\.]+)', dsn).groups()[0]
+_, dsn = list(env["DATABASE_DSN"].items())[0]
+user = re.search(r"user=([a-z0-9_]+)", dsn).groups()[0]
+password = re.search(r"password=([a-zA-Z0-9_]+)", dsn).groups()[0]
+port = re.search(r"port=(\d+)", dsn).groups()[0]
+dbname = re.search(r"dbname=([a-z0-9_\-]+)", dsn).groups()[0]
+host = re.search(r"host=([a-z0-9_\-\.]+)", dsn).groups()[0]
 
-print(f'postgres://{user}:{password}@{host}:{port}/{dbname}')
+print(f"postgres://{user}:{password}@{host}:{port}/{dbname}")

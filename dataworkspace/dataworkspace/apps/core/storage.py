@@ -11,14 +11,14 @@ from django.urls import reverse
 
 class S3FileStorage(FileSystemStorage):
     bucket = settings.AWS_UPLOADS_BUCKET
-    base_prefix = 'uploaded-media'
+    base_prefix = "uploaded-media"
 
     def _get_key(self, name):
         return os.path.join(self.base_prefix, self._location, name)
 
     def _save(self, name, content):
-        client = boto3.client('s3')
-        filename = f'{name}!{uuid.uuid4()}'
+        client = boto3.client("s3")
+        filename = f"{name}!{uuid.uuid4()}"
         key = self._get_key(filename)
 
         try:
@@ -28,12 +28,12 @@ class S3FileStorage(FileSystemStorage):
                 Key=key,
             )
         except ClientError as ex:
-            raise Exception('Error saving file: {}'.format(ex.response['Error']['Message']))
+            raise Exception("Error saving file: {}".format(ex.response["Error"]["Message"]))
 
         return filename
 
     def delete(self, name):
-        client = boto3.client('s3')
+        client = boto3.client("s3")
         try:
             client.delete_object(Bucket=self.bucket, Key=self._get_key(name))
         except ClientError:

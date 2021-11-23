@@ -12,10 +12,10 @@ from urllib.parse import parse_qs
 import pytest
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def create_application():
     proc = subprocess.Popen(
-        ['/dataworkspace/start-test.sh'],
+        ["/dataworkspace/start-test.sh"],
         env={
             **os.environ,
             "EXPLORER_CONNECTIONS": '{"Postgres": "my_database"}',
@@ -41,10 +41,10 @@ def set_waffle_flag(flag_name, everyone=True):
         flag.everyone = {everyone}
         flag.save()
         """
-    ).encode('ascii')
+    ).encode("ascii")
 
     give_perm = subprocess.Popen(
-        ['django-admin', 'shell'],
+        ["django-admin", "shell"],
         env=os.environ,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -94,9 +94,9 @@ def create_dataset(dataset_id, dataset_name, table_id, database, user_access_typ
         with connections["{database}"].cursor() as cursor:
             cursor.execute("CREATE TABLE IF NOT EXISTS {dataset_name} (id int primary key)")
     """
-    ).encode('ascii')
+    ).encode("ascii")
     give_perm = subprocess.Popen(
-        ['django-admin', 'shell'],
+        ["django-admin", "shell"],
         env=os.environ,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -115,9 +115,9 @@ def set_dataset_access_type(dataset_id, user_access_type):
         print(DataSet.objects.filter(id="{dataset_id}"))
         DataSet.objects.filter(id="{dataset_id}").update(user_access_type="{user_access_type}")
     """
-    ).encode('ascii')
+    ).encode("ascii")
     give_perm = subprocess.Popen(
-        ['django-admin', 'shell'],
+        ["django-admin", "shell"],
         env=os.environ,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -143,9 +143,9 @@ def reset_data_explorer_credentials(user_sso_id):
             ),
         )
     """
-    ).encode('ascii')
+    ).encode("ascii")
     give_perm = subprocess.Popen(
-        ['django-admin', 'shell'],
+        ["django-admin", "shell"],
         env=os.environ,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -171,29 +171,29 @@ class SSOServer(multiprocessing.Process):
                 nonlocal latest_code
 
                 if not is_logged_in:
-                    self.send_response(200, message='This is the login page')
+                    self.send_response(200, message="This is the login page")
 
-                params = parse_qs(self.path.split('?')[1])
+                params = parse_qs(self.path.split("?")[1])
 
-                location = params['redirect_uri'][0]
-                state = params['state'][0]
+                location = params["redirect_uri"][0]
+                state = params["state"][0]
                 latest_code = next(codes)
 
                 self.send_response(302)
-                self.send_header('Location', f"{location}?state={state}&code={latest_code}")
+                self.send_header("Location", f"{location}?state={state}&code={latest_code}")
                 self.end_headers()
 
             def handle_token(self):
                 nonlocal latest_code
 
-                body = self.rfile.read(int(self.headers['Content-Length'])).decode('ascii')
+                body = self.rfile.read(int(self.headers["Content-Length"])).decode("ascii")
 
                 data = parse_qs(body)
-                if data['code'][0] != latest_code:
+                if data["code"][0] != latest_code:
                     self.send_response(403)
                     self.send_header("Content-Type", "application/json")
                     self.end_headers()
-                    self.wfile.write(b'{}')
+                    self.wfile.write(b"{}")
 
                 token = next(tokens)
 
@@ -202,19 +202,19 @@ class SSOServer(multiprocessing.Process):
                 self.end_headers()
 
                 response = BytesIO()
-                response.write(json.dumps({"access_token": token}).encode('ascii'))
+                response.write(json.dumps({"access_token": token}).encode("ascii"))
 
                 self.wfile.write(response.getvalue())
 
             def handle_me(self):
-                if self.headers['authorization'] in auth_to_me:
+                if self.headers["authorization"] in auth_to_me:
                     self.send_response(200)
                     self.send_header("Content-Type", "application/json")
                     self.end_headers()
 
                     response = BytesIO()
                     response.write(
-                        json.dumps(auth_to_me[self.headers['authorization']]).encode('ascii')
+                        json.dumps(auth_to_me[self.headers["authorization"]]).encode("ascii")
                     )
 
                     self.wfile.write(response.getvalue())
@@ -223,18 +223,18 @@ class SSOServer(multiprocessing.Process):
                 self.send_response(403)
                 self.send_header("Content-Type", "application/json")
                 self.end_headers()
-                self.wfile.write(b'{}')
+                self.wfile.write(b"{}")
 
             def do_GET(self):
-                if self.path.startswith('/o/authorize'):
+                if self.path.startswith("/o/authorize"):
                     self.handle_authorize()
-                elif self.path.startswith('/api/v1/user/me'):
+                elif self.path.startswith("/api/v1/user/me"):
                     self.handle_me()
                 else:
                     raise ValueError(f"Unknown path: {self.path}")
 
             def do_POST(self):
-                if self.path.startswith('/o/token'):
+                if self.path.startswith("/o/token"):
                     self.handle_token()
                 else:
                     raise ValueError(f"Unknown path: {self.path}")
@@ -260,13 +260,13 @@ class ZendeskServer(multiprocessing.Process):
         class ZendeskHandler(BaseHTTPRequestHandler):
             def do_GET(self):
                 nonlocal submitted_tickets
-                if self.path == '/_meta/read-submitted-tickets':
+                if self.path == "/_meta/read-submitted-tickets":
                     self.send_response(200)
-                    self.send_header('Content-Type', "application/json")
+                    self.send_header("Content-Type", "application/json")
                     self.end_headers()
 
                     response = BytesIO()
-                    response.write(json.dumps(submitted_tickets).encode('ascii'))
+                    response.write(json.dumps(submitted_tickets).encode("ascii"))
 
                     self.wfile.write(response.getvalue())
                     return
@@ -275,18 +275,18 @@ class ZendeskServer(multiprocessing.Process):
                 self.end_headers()
 
             def do_POST(self):
-                if self.path == '/api/v2/tickets.json':
+                if self.path == "/api/v2/tickets.json":
                     self.send_response(200)
-                    self.send_header('Content-Type', "application/json")
+                    self.send_header("Content-Type", "application/json")
                     self.end_headers()
 
                     submitted_tickets.append(
                         json.loads(
-                            self.rfile.read(int(self.headers['content-length'])).decode('ascii')
+                            self.rfile.read(int(self.headers["content-length"])).decode("ascii")
                         )
                     )
 
-                    with open('test/stubs/zendesk/create-ticket.json', 'rb') as stub:
+                    with open("test/stubs/zendesk/create-ticket.json", "rb") as stub:
                         response = BytesIO()
                         response.write(stub.read())
 

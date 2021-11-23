@@ -39,7 +39,7 @@ from dataworkspace.apps.explorer.utils import (
 class AppUserCreationForm(forms.ModelForm):
     class Meta:
         model = get_user_model()
-        fields = ('email', 'first_name', 'last_name')
+        fields = ("email", "first_name", "last_name")
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -52,185 +52,185 @@ class AppUserCreationForm(forms.ModelForm):
 
 class AppUserEditForm(forms.ModelForm):
     tools_access_role_arn = forms.CharField(
-        label='Tools access IAM role arn',
-        help_text='The arn for the IAM role required to start local tools',
+        label="Tools access IAM role arn",
+        help_text="The arn for the IAM role required to start local tools",
         required=False,
         widget=AdminTextInputWidget(),
     )
     home_directory_efs_access_point_id = forms.CharField(
-        label='Home directory ID',
-        help_text='EFS Access Point ID',
+        label="Home directory ID",
+        help_text="EFS Access Point ID",
         max_length=128,
         required=False,
         empty_value=None,
         widget=AdminTextInputWidget(),
     )
     can_start_all_applications = forms.BooleanField(
-        label='Can start local tools',
-        help_text='For JupyterLab, rStudio and pgAdmin',
+        label="Can start local tools",
+        help_text="For JupyterLab, rStudio and pgAdmin",
         required=False,
     )
     can_develop_visualisations = forms.BooleanField(
-        label='Can develop visualisations',
-        help_text='To deploy and manage visualisations from code in Gitlab',
+        label="Can develop visualisations",
+        help_text="To deploy and manage visualisations from code in Gitlab",
         required=False,
     )
     can_access_appstream = forms.BooleanField(
-        label='Can access AppStream', help_text='For SPSS and STATA', required=False
+        label="Can access AppStream", help_text="For SPSS and STATA", required=False
     )
     can_access_quicksight = forms.BooleanField(
-        label='Can access QuickSight',
-        help_text='Note: the user must also be given separate access to AWS QuickSight via DIT SSO',
+        label="Can access QuickSight",
+        help_text="Note: the user must also be given separate access to AWS QuickSight via DIT SSO",
         required=False,
     )
     authorized_master_datasets = forms.ModelMultipleChoiceField(
         required=False,
-        widget=FilteredSelectMultiple('master datasets', False),
+        widget=FilteredSelectMultiple("master datasets", False),
         queryset=MasterDataset.objects.live()
         .filter(user_access_type=UserAccessType.REQUIRES_AUTHORIZATION)
-        .order_by('name'),
+        .order_by("name"),
     )
     authorized_data_cut_datasets = forms.ModelMultipleChoiceField(
         required=False,
-        widget=FilteredSelectMultiple('data cut datasets', False),
+        widget=FilteredSelectMultiple("data cut datasets", False),
         queryset=DataCutDataset.objects.live()
         .filter(user_access_type=UserAccessType.REQUIRES_AUTHORIZATION)
-        .order_by('name'),
+        .order_by("name"),
     )
     authorized_visualisations = forms.ModelMultipleChoiceField(
-        label='Authorized visualisations',
+        label="Authorized visualisations",
         required=False,
-        widget=FilteredSelectMultiple('visualisations', False),
+        widget=FilteredSelectMultiple("visualisations", False),
         queryset=None,
     )
 
     class Meta:
         model = get_user_model()
-        fields = '__all__'
+        fields = "__all__"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        instance = kwargs['instance']
+        instance = kwargs["instance"]
 
-        self.fields['tools_access_role_arn'].initial = instance.profile.tools_access_role_arn
-        self.fields['tools_access_role_arn'].widget.attrs['class'] = 'vTextField'
+        self.fields["tools_access_role_arn"].initial = instance.profile.tools_access_role_arn
+        self.fields["tools_access_role_arn"].widget.attrs["class"] = "vTextField"
 
         self.fields[
-            'home_directory_efs_access_point_id'
+            "home_directory_efs_access_point_id"
         ].initial = instance.profile.home_directory_efs_access_point_id
-        self.fields['home_directory_efs_access_point_id'].widget.attrs['class'] = 'vTextField'
+        self.fields["home_directory_efs_access_point_id"].widget.attrs["class"] = "vTextField"
 
-        self.fields['can_start_all_applications'].initial = instance.user_permissions.filter(
-            codename='start_all_applications',
+        self.fields["can_start_all_applications"].initial = instance.user_permissions.filter(
+            codename="start_all_applications",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         ).exists()
 
-        self.fields['can_develop_visualisations'].initial = instance.user_permissions.filter(
-            codename='develop_visualisations',
+        self.fields["can_develop_visualisations"].initial = instance.user_permissions.filter(
+            codename="develop_visualisations",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         ).exists()
 
-        self.fields['can_access_appstream'].initial = instance.user_permissions.filter(
-            codename='access_appstream',
+        self.fields["can_access_appstream"].initial = instance.user_permissions.filter(
+            codename="access_appstream",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         ).exists()
 
-        self.fields['can_access_quicksight'].initial = instance.user_permissions.filter(
-            codename='access_quicksight',
+        self.fields["can_access_quicksight"].initial = instance.user_permissions.filter(
+            codename="access_quicksight",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         ).exists()
 
-        self.fields['authorized_master_datasets'].initial = MasterDataset.objects.live().filter(
+        self.fields["authorized_master_datasets"].initial = MasterDataset.objects.live().filter(
             datasetuserpermission__user=instance
         )
-        self.fields['authorized_data_cut_datasets'].initial = DataCutDataset.objects.live().filter(
+        self.fields["authorized_data_cut_datasets"].initial = DataCutDataset.objects.live().filter(
             datasetuserpermission__user=instance
         )
         self.fields[
-            'authorized_visualisations'
+            "authorized_visualisations"
         ].initial = VisualisationCatalogueItem.objects.live().filter(
             visualisationuserpermission__user=instance
         )
         self.fields[
-            'authorized_visualisations'
-        ].queryset = VisualisationCatalogueItem.objects.live().order_by('name', 'id')
+            "authorized_visualisations"
+        ].queryset = VisualisationCatalogueItem.objects.live().order_by("name", "id")
 
 
 admin.site.unregister(get_user_model())
 
 
 class LocalToolsFilter(admin.SimpleListFilter):
-    title = 'Local tool access'
-    parameter_name = 'can_start_tools'
+    title = "Local tool access"
+    parameter_name = "can_start_tools"
 
     def lookups(self, request, model_admin):
-        return (('yes', 'Can start local tools'), ('no', 'Cannot start local tools'))
+        return (("yes", "Can start local tools"), ("no", "Cannot start local tools"))
 
     def queryset(self, request, queryset):
         perm = Permission.objects.get(
-            codename='start_all_applications',
+            codename="start_all_applications",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
-        if self.value() == 'yes':
+        if self.value() == "yes":
             return queryset.filter(user_permissions=perm)
-        if self.value() == 'no':
+        if self.value() == "no":
             return queryset.exclude(user_permissions=perm)
         return queryset
 
 
 class AppStreamFilter(admin.SimpleListFilter):
-    title = 'AppStream access'
-    parameter_name = 'can_access_appstream'
+    title = "AppStream access"
+    parameter_name = "can_access_appstream"
 
     def lookups(self, request, model_admin):
-        return (('yes', 'Can access AppStream'), ('no', 'Cannot access AppStream'))
+        return (("yes", "Can access AppStream"), ("no", "Cannot access AppStream"))
 
     def queryset(self, request, queryset):
         perm = Permission.objects.get(
-            codename='access_appstream',
+            codename="access_appstream",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
-        if self.value() == 'yes':
+        if self.value() == "yes":
             return queryset.filter(user_permissions=perm)
-        if self.value() == 'no':
+        if self.value() == "no":
             return queryset.exclude(user_permissions=perm)
         return queryset
 
 
 class QuickSightfilter(admin.SimpleListFilter):
-    title = 'QuickSight access'
-    parameter_name = 'can_access_quicksight'
+    title = "QuickSight access"
+    parameter_name = "can_access_quicksight"
 
     def lookups(self, request, model_admin):
         return (
-            ('yes', 'Can access AWS QuickSight'),
-            ('no', 'Cannot access AWS QuickSight'),
+            ("yes", "Can access AWS QuickSight"),
+            ("no", "Cannot access AWS QuickSight"),
         )
 
     def queryset(self, request, queryset):
         perm = Permission.objects.get(
-            codename='access_quicksight',
+            codename="access_quicksight",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
-        if self.value() == 'yes':
+        if self.value() == "yes":
             return queryset.filter(user_permissions=perm)
-        if self.value() == 'no':
+        if self.value() == "no":
             return queryset.exclude(user_permissions=perm)
         return queryset
 
 
 @admin.register(get_user_model())
 class AppUserAdmin(UserAdmin):
-    add_form_template = 'admin/change_form.html'
+    add_form_template = "admin/change_form.html"
     add_form = AppUserCreationForm
     add_fieldsets = (
-        (None, {'classes': ('wide',), 'fields': ('email', 'first_name', 'last_name')}),
+        (None, {"classes": ("wide",), "fields": ("email", "first_name", "last_name")}),
     )
     list_filter = (
-        'is_staff',
-        'is_superuser',
-        'is_active',
-        'groups',
+        "is_staff",
+        "is_superuser",
+        "is_active",
+        "groups",
         LocalToolsFilter,
         AppStreamFilter,
         QuickSightfilter,
@@ -240,76 +240,76 @@ class AppUserAdmin(UserAdmin):
         (
             None,
             {
-                'fields': [
-                    'email',
-                    'sso_id',
-                    'stable_id_suffix',
-                    'tools_access_role_arn',
-                    'home_directory_efs_access_point_id',
-                    'first_name',
-                    'last_name',
-                    'groups',
+                "fields": [
+                    "email",
+                    "sso_id",
+                    "stable_id_suffix",
+                    "tools_access_role_arn",
+                    "home_directory_efs_access_point_id",
+                    "first_name",
+                    "last_name",
+                    "groups",
                 ]
             },
         ),
         (
-            'Permissions',
+            "Permissions",
             {
-                'fields': [
-                    'can_start_all_applications',
-                    'can_develop_visualisations',
-                    'can_access_appstream',
-                    'can_access_quicksight',
-                    'is_staff',
-                    'is_superuser',
+                "fields": [
+                    "can_start_all_applications",
+                    "can_develop_visualisations",
+                    "can_access_appstream",
+                    "can_access_quicksight",
+                    "is_staff",
+                    "is_superuser",
                 ]
             },
         ),
         (
-            'Data Access',
+            "Data Access",
             {
-                'fields': [
-                    'authorized_master_datasets',
-                    'authorized_data_cut_datasets',
-                    'authorized_visualisations',
+                "fields": [
+                    "authorized_master_datasets",
+                    "authorized_data_cut_datasets",
+                    "authorized_visualisations",
                 ]
             },
         ),
     ]
-    readonly_fields = ['sso_id', 'stable_id_suffix']
+    readonly_fields = ["sso_id", "stable_id_suffix"]
 
     class Media:
-        css = {'all': ('data-workspace-admin.css',)}
+        css = {"all": ("data-workspace-admin.css",)}
 
     @transaction.atomic
     def save_model(self, request, obj, form, change):
-        obj.username = form.cleaned_data['email']
+        obj.username = form.cleaned_data["email"]
 
         def log_change(event_type, permission, message):
             log_permission_change(
-                request.user, obj, event_type, {'permission': permission}, message
+                request.user, obj, event_type, {"permission": permission}, message
             )
 
         start_all_applications_permission = Permission.objects.get(
-            codename='start_all_applications',
+            codename="start_all_applications",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
         develop_visualisations_permission = Permission.objects.get(
-            codename='develop_visualisations',
+            codename="develop_visualisations",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
         access_appstream_permission = Permission.objects.get(
-            codename='access_appstream',
+            codename="access_appstream",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
         access_quicksight_permission = Permission.objects.get(
-            codename='access_quicksight',
+            codename="access_quicksight",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
 
-        if 'can_start_all_applications' in form.cleaned_data:
+        if "can_start_all_applications" in form.cleaned_data:
             if (
-                form.cleaned_data['can_start_all_applications']
+                form.cleaned_data["can_start_all_applications"]
                 and start_all_applications_permission not in obj.user_permissions.all()
             ):
                 obj.user_permissions.add(start_all_applications_permission)
@@ -319,90 +319,90 @@ class AppUserAdmin(UserAdmin):
 
                 log_change(
                     EventLog.TYPE_GRANTED_USER_PERMISSION,
-                    'can_start_all_applications',
-                    'Added can_start_all_applications permission',
+                    "can_start_all_applications",
+                    "Added can_start_all_applications permission",
                 )
             elif (
-                not form.cleaned_data['can_start_all_applications']
+                not form.cleaned_data["can_start_all_applications"]
                 and start_all_applications_permission in obj.user_permissions.all()
             ):
                 obj.user_permissions.remove(start_all_applications_permission)
                 log_change(
                     EventLog.TYPE_REVOKED_USER_PERMISSION,
-                    'can_start_all_applications',
-                    'Removed can_start_all_applications permission',
+                    "can_start_all_applications",
+                    "Removed can_start_all_applications permission",
                 )
 
-        if 'can_develop_visualisations' in form.cleaned_data:
+        if "can_develop_visualisations" in form.cleaned_data:
             if (
-                form.cleaned_data['can_develop_visualisations']
+                form.cleaned_data["can_develop_visualisations"]
                 and develop_visualisations_permission not in obj.user_permissions.all()
             ):
                 obj.user_permissions.add(develop_visualisations_permission)
                 log_change(
                     EventLog.TYPE_GRANTED_USER_PERMISSION,
-                    'can_develop_visualisations',
-                    'Added can_develop_visualisations permission',
+                    "can_develop_visualisations",
+                    "Added can_develop_visualisations permission",
                 )
             elif (
-                not form.cleaned_data['can_develop_visualisations']
+                not form.cleaned_data["can_develop_visualisations"]
                 and develop_visualisations_permission in obj.user_permissions.all()
             ):
                 obj.user_permissions.remove(develop_visualisations_permission)
                 log_change(
                     EventLog.TYPE_REVOKED_USER_PERMISSION,
-                    'can_develop_visualisations',
-                    'Removed can_develop_visualisations permission',
+                    "can_develop_visualisations",
+                    "Removed can_develop_visualisations permission",
                 )
 
-        if 'can_access_appstream' in form.cleaned_data:
+        if "can_access_appstream" in form.cleaned_data:
             if (
-                form.cleaned_data['can_access_appstream']
+                form.cleaned_data["can_access_appstream"]
                 and access_appstream_permission not in obj.user_permissions.all()
             ):
                 obj.user_permissions.add(access_appstream_permission)
                 log_change(
                     EventLog.TYPE_GRANTED_USER_PERMISSION,
-                    'can_access_appstream',
-                    'Added can_access_appstream permission',
+                    "can_access_appstream",
+                    "Added can_access_appstream permission",
                 )
             elif (
-                not form.cleaned_data['can_access_appstream']
+                not form.cleaned_data["can_access_appstream"]
                 and access_appstream_permission in obj.user_permissions.all()
             ):
                 obj.user_permissions.remove(access_appstream_permission)
                 log_change(
                     EventLog.TYPE_REVOKED_USER_PERMISSION,
-                    'can_access_appstream',
-                    'Removed can_access_appstream permission',
+                    "can_access_appstream",
+                    "Removed can_access_appstream permission",
                 )
 
-        if 'can_access_quicksight' in form.cleaned_data:
+        if "can_access_quicksight" in form.cleaned_data:
             if (
-                form.cleaned_data['can_access_quicksight']
+                form.cleaned_data["can_access_quicksight"]
                 and access_quicksight_permission not in obj.user_permissions.all()
             ):
                 obj.user_permissions.add(access_quicksight_permission)
                 log_change(
                     EventLog.TYPE_GRANTED_USER_PERMISSION,
-                    'can_access_quicksight',
-                    'Added can_access_quicksight permission',
+                    "can_access_quicksight",
+                    "Added can_access_quicksight permission",
                 )
             elif (
-                not form.cleaned_data['can_access_quicksight']
+                not form.cleaned_data["can_access_quicksight"]
                 and access_quicksight_permission in obj.user_permissions.all()
             ):
                 obj.user_permissions.remove(access_quicksight_permission)
                 log_change(
                     EventLog.TYPE_REVOKED_USER_PERMISSION,
-                    'can_access_quicksight',
-                    'Removed can_access_quicksight permission',
+                    "can_access_quicksight",
+                    "Removed can_access_quicksight permission",
                 )
 
         current_datasets = set(DataSet.objects.live().filter(datasetuserpermission__user=obj))
         authorized_datasets = set(
-            form.cleaned_data.get('authorized_master_datasets', DataSet.objects.none()).union(
-                form.cleaned_data.get('authorized_data_cut_datasets', DataSet.objects.none())
+            form.cleaned_data.get("authorized_master_datasets", DataSet.objects.none()).union(
+                form.cleaned_data.get("authorized_data_cut_datasets", DataSet.objects.none())
             )
         )
 
@@ -414,7 +414,7 @@ class AppUserAdmin(UserAdmin):
                 request.user,
                 obj,
                 EventLog.TYPE_GRANTED_DATASET_PERMISSION,
-                serializers.serialize('python', [dataset])[0],
+                serializers.serialize("python", [dataset])[0],
                 f"Added dataset {dataset} permission",
             )
             if dataset.type == DataSetType.MASTER:
@@ -427,7 +427,7 @@ class AppUserAdmin(UserAdmin):
                 request.user,
                 obj,
                 EventLog.TYPE_REVOKED_DATASET_PERMISSION,
-                serializers.serialize('python', [dataset])[0],
+                serializers.serialize("python", [dataset])[0],
                 f"Removed dataset {dataset} permission",
             )
             if dataset.type == DataSetType.MASTER:
@@ -438,11 +438,11 @@ class AppUserAdmin(UserAdmin):
             clear_schema_info_cache_for_user(obj)
             remove_data_explorer_user_cached_credentials(obj)
 
-        if 'authorized_visualisations' in form.cleaned_data:
+        if "authorized_visualisations" in form.cleaned_data:
             current_visualisations = VisualisationCatalogueItem.objects.filter(
                 visualisationuserpermission__user=obj
             )
-            for visualisation_catalogue_item in form.cleaned_data['authorized_visualisations']:
+            for visualisation_catalogue_item in form.cleaned_data["authorized_visualisations"]:
                 if visualisation_catalogue_item not in current_visualisations.all():
                     VisualisationUserPermission.objects.create(
                         visualisation=visualisation_catalogue_item, user=obj
@@ -451,13 +451,13 @@ class AppUserAdmin(UserAdmin):
                         request.user,
                         obj,
                         EventLog.TYPE_GRANTED_VISUALISATION_PERMISSION,
-                        serializers.serialize('python', [visualisation_catalogue_item])[0],
+                        serializers.serialize("python", [visualisation_catalogue_item])[0],
                         f"Added application {visualisation_catalogue_item} permission",
                     )
             for visualisation_catalogue_item in current_visualisations:
                 if (
                     visualisation_catalogue_item
-                    not in form.cleaned_data['authorized_visualisations']
+                    not in form.cleaned_data["authorized_visualisations"]
                 ):
                     VisualisationUserPermission.objects.filter(
                         visualisation=visualisation_catalogue_item, user=obj
@@ -466,17 +466,17 @@ class AppUserAdmin(UserAdmin):
                         request.user,
                         obj,
                         EventLog.TYPE_REVOKED_VISUALISATION_PERMISSION,
-                        serializers.serialize('python', [visualisation_catalogue_item])[0],
+                        serializers.serialize("python", [visualisation_catalogue_item])[0],
                         f"Removed application {visualisation_catalogue_item} permission",
                     )
 
-        if 'home_directory_efs_access_point_id' in form.cleaned_data:
+        if "home_directory_efs_access_point_id" in form.cleaned_data:
             obj.profile.home_directory_efs_access_point_id = form.cleaned_data[
-                'home_directory_efs_access_point_id'
+                "home_directory_efs_access_point_id"
             ]
 
-        if 'tools_access_role_arn' in form.cleaned_data:
-            obj.profile.tools_access_role_arn = form.cleaned_data['tools_access_role_arn']
+        if "tools_access_role_arn" in form.cleaned_data:
+            obj.profile.tools_access_role_arn = form.cleaned_data["tools_access_role_arn"]
 
         super().save_model(request, obj, form, change)
 

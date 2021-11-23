@@ -5,7 +5,7 @@ from django.utils import timezone
 
 
 def set_default_values_of_published_datasets(apps, schema_editor):
-    ReferenceDataset = apps.get_model('datasets', 'ReferenceDataset')
+    ReferenceDataset = apps.get_model("datasets", "ReferenceDataset")
     datasets = ReferenceDataset.objects.all()
     for dataset in datasets:
         dataset.published_major_version = dataset.major_version
@@ -18,27 +18,27 @@ def set_default_values_of_published_datasets(apps, schema_editor):
 
 class Migration(migrations.Migration):
 
-    dependencies = [('datasets', '0023_add_number_of_downloads_fields')]
+    dependencies = [("datasets", "0023_add_number_of_downloads_fields")]
 
     operations = [
         migrations.AddField(
-            model_name='referencedataset',
-            name='initial_published_at',
+            model_name="referencedataset",
+            name="initial_published_at",
             field=models.DateField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='referencedataset',
-            name='published_at',
+            model_name="referencedataset",
+            name="published_at",
             field=models.DateField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='referencedataset',
-            name='published_major_version',
+            model_name="referencedataset",
+            name="published_major_version",
             field=models.IntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='referencedataset',
-            name='published_minor_version',
+            model_name="referencedataset",
+            name="published_minor_version",
             field=models.IntegerField(default=0),
         ),
         migrations.RunPython(

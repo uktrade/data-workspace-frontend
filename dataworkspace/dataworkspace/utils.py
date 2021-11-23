@@ -4,7 +4,7 @@ from ecs_logging import StdlibFormatter
 
 
 def normalise_environment(key_values):
-    '''Converts denormalised dict of (string -> string) pairs, where the first string
+    """Converts denormalised dict of (string -> string) pairs, where the first string
     is treated as a path into a nested list/dictionary structure
 
     {
@@ -34,12 +34,12 @@ def normalise_environment(key_values):
     This function is recursive, but it would be extremely difficult to hit a stack
     limit, and this function would typically by called once at the start of a
     program, so efficiency isn't too much of a concern.
-    '''
+    """
 
     # Separator is chosen to
     # - show the structure of variables fairly easily;
     # - avoid problems, since underscores are usual in environment variables
-    separator = '__'
+    separator = "__"
 
     def get_first_component(key):
         return key.split(separator)[0]
@@ -106,74 +106,74 @@ class DataWorkspaceECSFormatter(StdlibFormatter):
 
         # If Django has injected a `request` argument (which it does some times, e.g. when there's an exception),
         # we need to stringify it as the raw WSGIRequest cannot be serialized to JSON.
-        if result.get('request'):
-            result['request'] = str(result.get('request'))
+        if result.get("request"):
+            result["request"] = str(result.get("request"))
 
         return result
 
 
 TYPE_CODES_REVERSED = {
-    16: 'boolean',
-    17: 'bytea',
-    18: 'text',
-    19: 'text',
-    20: 'bigint',
-    21: 'smallint',
-    23: 'integer',
-    25: 'text',
-    26: 'tid',
-    114: 'json',
-    199: 'json[]',
-    651: 'cidr[]',
-    700: 'double precision',
-    701: 'double precision',
-    704: 'interval',
-    869: 'inet',
-    1000: 'boolean[]',
-    1001: 'bytea[]',
-    1002: 'text[]',
-    1003: 'text[]',
-    1005: 'integer[]',
-    1006: 'integer[]',
-    1007: 'integer[]',
-    1009: 'text[]',
-    1013: 'tid[]',
-    1014: 'text[]',
-    1015: 'text[]',
-    1016: 'bigint[]',
-    1021: 'float[]',
-    1022: 'float[]',
-    1028: 'tid[]',
-    1040: 'macaddr[]',
-    1041: 'inet[]',
-    1042: 'text',
-    1043: 'text',
-    1082: 'date',
-    1083: 'time',
-    1114: 'timestamp with time zone',
-    1115: 'timestamp without time zone[]',
-    1182: 'date[]',
-    1183: 'time[]',
-    1184: 'timestamp with time zone',
-    1185: 'timestamp with time zone[]',
-    1186: 'timestamp with time zone',
-    1187: 'interval[]',
-    1231: 'decimal[]',
-    1266: 'time',
-    1270: 'time[]',
-    1700: 'numeric',
-    2950: 'uuid',
-    2951: 'text[]',
-    3802: 'jsonb',
-    3807: 'jsonb[]',
-    3904: 'type',
-    3905: 'typeARRAY',
-    3906: 'type',
-    3907: 'typeARRAY',
-    3908: 'tsrange',
-    3909: 'tsrange[]',
-    3910: 'tstzrange',
-    3911: 'tstzrange[]',
-    3912: 'daterange',
-    3913: 'daterange[]',
+    16: "boolean",
+    17: "bytea",
+    18: "text",
+    19: "text",
+    20: "bigint",
+    21: "smallint",
+    23: "integer",
+    25: "text",
+    26: "tid",
+    114: "json",
+    199: "json[]",
+    651: "cidr[]",
+    700: "double precision",
+    701: "double precision",
+    704: "interval",
+    869: "inet",
+    1000: "boolean[]",
+    1001: "bytea[]",
+    1002: "text[]",
+    1003: "text[]",
+    1005: "integer[]",
+    1006: "integer[]",
+    1007: "integer[]",
+    1009: "text[]",
+    1013: "tid[]",
+    1014: "text[]",
+    1015: "text[]",
+    1016: "bigint[]",
+    1021: "float[]",
+    1022: "float[]",
+    1028: "tid[]",
+    1040: "macaddr[]",
+    1041: "inet[]",
+    1042: "text",
+    1043: "text",
+    1082: "date",
+    1083: "time",
+    1114: "timestamp with time zone",
+    1115: "timestamp without time zone[]",
+    1182: "date[]",
+    1183: "time[]",
+    1184: "timestamp with time zone",
+    1185: "timestamp with time zone[]",
+    1186: "timestamp with time zone",
+    1187: "interval[]",
+    1231: "decimal[]",
+    1266: "time",
+    1270: "time[]",
+    1700: "numeric",
+    2950: "uuid",
+    2951: "text[]",
+    3802: "jsonb",
+    3807: "jsonb[]",
+    3904: "type",
+    3905: "typeARRAY",
+    3906: "type",
+    3907: "typeARRAY",
+    3908: "tsrange",
+    3909: "tsrange[]",
+    3910: "tstzrange",
+    3911: "tstzrange[]",
+    3912: "daterange",
+    3913: "daterange[]",
 }

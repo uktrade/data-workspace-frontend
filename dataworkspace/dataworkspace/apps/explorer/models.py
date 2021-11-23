@@ -29,7 +29,7 @@ def swap_params(sql, params):
 def extract_params(text):
     regex = re.compile(r"\$\$([a-z0-9_]+)(?:\:([^\$]+))?\$\$")
     params = re.findall(regex, text.lower())
-    return {p[0]: p[1] if len(p) > 1 else '' for p in params}
+    return {p[0]: p[1] if len(p) > 1 else "" for p in params}
 
 
 def shared_dict_update(target, source):
@@ -41,7 +41,7 @@ def shared_dict_update(target, source):
 
 def get_params_for_url(query):  # pylint: disable=inconsistent-return-statements
     if query.params:
-        return '|'.join(['%s:%s' % (p, v) for p, v in query.params.items()])
+        return "|".join(["%s:%s" % (p, v) for p, v in query.params.items()])
 
 
 class PlaygroundSQL(models.Model):
@@ -76,13 +76,13 @@ class Query(models.Model):
     )
 
     def __init__(self, *args, **kwargs):
-        self.params = kwargs.get('params')
-        kwargs.pop('params', None)
+        self.params = kwargs.get("params")
+        kwargs.pop("params", None)
         super(Query, self).__init__(*args, **kwargs)
 
     class Meta:
-        ordering = ['title']
-        verbose_name_plural = 'Queries'
+        ordering = ["title"]
+        verbose_name_plural = "Queries"
 
     def __str__(self):
         return self.title
@@ -91,7 +91,7 @@ class Query(models.Model):
         return self.querylog_set.count()
 
     def avg_duration(self):
-        return self.querylog_set.aggregate(models.Avg('duration'))['duration__avg']
+        return self.querylog_set.aggregate(models.Avg("duration"))["duration__avg"]
 
     def final_sql(self):
         return swap_params(self.sql, self.available_params())
@@ -111,7 +111,7 @@ class Query(models.Model):
         return p
 
     def get_absolute_url(self):
-        return reverse("explorer:query_detail", kwargs={'query_id': self.id})
+        return reverse("explorer:query_detail", kwargs={"query_id": self.id})
 
     @property
     def params_for_url(self):
@@ -142,10 +142,10 @@ class QueryLog(models.Model):
         if self.query is not None:
             return self.query.title
 
-        return f'Playground - {self.sql[:32]}'
+        return f"Playground - {self.sql[:32]}"
 
     class Meta:
-        ordering = ['-run_at']
+        ordering = ["-run_at"]
 
 
 class ModelSchema(AbstractModelSchema):

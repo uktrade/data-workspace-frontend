@@ -13,13 +13,13 @@ def common(request):
     can_see_visualisations_tab = False
 
     return {
-        'root_href': f'{request.scheme}://{settings.APPLICATION_ROOT_DOMAIN}/',
-        'can_see_visualisations_tab': can_see_visualisations_tab,
-        'gtm_container_id': settings.GTM_CONTAINER_ID,
-        'gtm_container_environment_params': settings.GTM_CONTAINER_ENVIRONMENT_PARAMS,
-        'CASE_STUDIES_FLAG': settings.CASE_STUDIES_FLAG,
-        'NOTIFY_ON_DATASET_CHANGE_FLAG': settings.NOTIFY_ON_DATASET_CHANGE_FLAG,
-        'ZENDESK_EMAIL': settings.ZENDESK_EMAIL,
-        'TEAMS_DATA_WORKSPACE_COMMUNITY_URL': settings.TEAMS_DATA_WORKSPACE_COMMUNITY_URL,
-        'DATA_WORKSPACE_ROADMAP_URL': settings.DATA_WORKSPACE_ROADMAP_URL,
+        "root_href": f"{request.scheme}://{settings.APPLICATION_ROOT_DOMAIN}/",
+        "can_see_visualisations_tab": can_see_visualisations_tab,
+        "gtm_container_id": settings.GTM_CONTAINER_ID,
+        "gtm_container_environment_params": settings.GTM_CONTAINER_ENVIRONMENT_PARAMS,
+        "CASE_STUDIES_FLAG": settings.CASE_STUDIES_FLAG,
+        "NOTIFY_ON_DATASET_CHANGE_FLAG": settings.NOTIFY_ON_DATASET_CHANGE_FLAG,
+        "ZENDESK_EMAIL": settings.ZENDESK_EMAIL,
+        "TEAMS_DATA_WORKSPACE_COMMUNITY_URL": settings.TEAMS_DATA_WORKSPACE_COMMUNITY_URL,
+        "DATA_WORKSPACE_ROADMAP_URL": settings.DATA_WORKSPACE_ROADMAP_URL,
     }

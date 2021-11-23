@@ -6,29 +6,31 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [('datasets', '0005_auto_20190813_1536')]
+    dependencies = [("datasets", "0005_auto_20190813_1536")]
 
     operations = [
         migrations.AddField(
-            model_name='referencedatasetfield',
-            name='column_name',
+            model_name="referencedatasetfield",
+            name="column_name",
             field=models.CharField(
-                help_text='Descriptive column name for the field - Column name will be used in external databases',
+                help_text="Descriptive column name for the field - Column name will be used in "
+                "external databases",
                 max_length=255,
                 null=True,
                 validators=[
                     django.core.validators.RegexValidator(
-                        message='Column names must start with a letter and contain only letters, numbers, underscores and full stops.',
-                        regex='^[a-zA-Z][a-zA-Z0-9_\\.]*$',
+                        message="Column names must start with a letter and contain only letters, "
+                        "numbers, underscores and full stops.",
+                        regex="^[a-zA-Z][a-zA-Z0-9_\\.]*$",
                     )
                 ],
             ),
         ),
         migrations.AlterUniqueTogether(
-            name='referencedatasetfield',
+            name="referencedatasetfield",
             unique_together={
-                ('reference_dataset', 'column_name'),
-                ('reference_dataset', 'name'),
+                ("reference_dataset", "column_name"),
+                ("reference_dataset", "name"),
             },
         ),
     ]
