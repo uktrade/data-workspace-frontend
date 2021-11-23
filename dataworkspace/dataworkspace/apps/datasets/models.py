@@ -126,6 +126,9 @@ class Tag(TimeStampedModel):
     type = models.IntegerField(choices=TagType.choices, default=TagType.SOURCE)
     name = models.CharField(max_length=255, unique=True)
 
+    class Meta:
+        ordering = ("name",)
+
     def __str__(self):
         return f"{dict(TagType.choices).get(self.type)}: {self.name}"
 

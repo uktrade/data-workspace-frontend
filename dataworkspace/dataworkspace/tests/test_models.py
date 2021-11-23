@@ -675,7 +675,9 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
     def test_data_grid_column_config(self):
         ds = factories.ReferenceDatasetFactory.create()
         field1 = factories.ReferenceDatasetFieldFactory(
-            reference_dataset=ds, data_type=ReferenceDatasetField.DATA_TYPE_CHAR, sort_order=1,
+            reference_dataset=ds,
+            data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
+            sort_order=1,
         )
         field2 = factories.ReferenceDatasetFieldFactory(
             reference_dataset=ds, data_type=ReferenceDatasetField.DATA_TYPE_INT, sort_order=2
