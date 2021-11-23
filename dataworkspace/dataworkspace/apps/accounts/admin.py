@@ -1,7 +1,9 @@
+import logging
+
 from django import forms
 
 
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.admin.widgets import (
     AdminTextInputWidget,
     FilteredSelectMultiple,
@@ -13,6 +15,11 @@ from django.contrib.contenttypes.models import ContentType
 from django.core import serializers
 from django.db import transaction
 
+from dataworkspace.apps.accounts.utils import (
+    SSOApiException,
+    add_user_access_profile,
+    remove_user_access_profile,
+)
 from dataworkspace.apps.core.utils import stable_identification_suffix
 from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType
 from dataworkspace.apps.datasets.models import (
@@ -34,6 +41,8 @@ from dataworkspace.apps.explorer.schema import clear_schema_info_cache_for_user
 from dataworkspace.apps.explorer.utils import (
     remove_data_explorer_user_cached_credentials,
 )
+
+logger = logging.getLogger("app")
 
 
 class AppUserCreationForm(forms.ModelForm):
@@ -360,6 +369,14 @@ class AppUserAdmin(UserAdmin):
                 form.cleaned_data["can_access_appstream"]
                 and access_appstream_permission not in obj.user_permissions.all()
             ):
+                try:
+                    add_user_access_profile(request.user, "appstream")
+                except SSOApiException as e:
+                    messages.error(
+                        request,
+                        "Unable to give user access to appstream via SSO API: %s" % e,
+                    )
+
                 obj.user_permissions.add(access_appstream_permission)
                 log_change(
                     EventLog.TYPE_GRANTED_USER_PERMISSION,
@@ -370,6 +387,14 @@ class AppUserAdmin(UserAdmin):
                 not form.cleaned_data["can_access_appstream"]
                 and access_appstream_permission in obj.user_permissions.all()
             ):
+                try:
+                    remove_user_access_profile(request.user, "appstream")
+                except SSOApiException as e:
+                    messages.error(
+                        request,
+                        "Unable to revoke user access to appstream via SSO API: %s" % e,
+                    )
+
                 obj.user_permissions.remove(access_appstream_permission)
                 log_change(
                     EventLog.TYPE_REVOKED_USER_PERMISSION,
@@ -382,6 +407,14 @@ class AppUserAdmin(UserAdmin):
                 form.cleaned_data["can_access_quicksight"]
                 and access_quicksight_permission not in obj.user_permissions.all()
             ):
+                try:
+                    add_user_access_profile(request.user, "quicksight")
+                except SSOApiException as e:
+                    messages.error(
+                        request,
+                        "Unable to give user access to quicksight via SSO API: %s" % e,
+                    )
+
                 obj.user_permissions.add(access_quicksight_permission)
                 log_change(
                     EventLog.TYPE_GRANTED_USER_PERMISSION,
@@ -392,6 +425,14 @@ class AppUserAdmin(UserAdmin):
                 not form.cleaned_data["can_access_quicksight"]
                 and access_quicksight_permission in obj.user_permissions.all()
             ):
+                try:
+                    remove_user_access_profile(request.user, "quicksight")
+                except SSOApiException as e:
+                    messages.error(
+                        request,
+                        "Unable to revoke user access to quicksight via SSO API: %s" % e,
+                    )
+
                 obj.user_permissions.remove(access_quicksight_permission)
                 log_change(
                     EventLog.TYPE_REVOKED_USER_PERMISSION,
