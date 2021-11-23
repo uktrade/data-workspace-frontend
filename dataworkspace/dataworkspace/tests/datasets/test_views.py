@@ -1790,14 +1790,14 @@ def test_find_datasets_search_by_source_name(client):
     assert list(response.context["datasets"]) == [
         expected_search_result(
             ds1,
-            search_rank=0.121585,
+            search_rank=0.12158542,
             source_tag_names=[source.name, source_2.name],
             source_tag_ids=MatchUnorderedMembers([source.id, source_2.id]),
             has_access=False,
         ),
         expected_search_result(
             rds,
-            search_rank=0.121585,
+            search_rank=0.12158542,
             purpose=DataSetType.DATACUT,
             data_type=DataSetType.REFERENCE,
         ),
@@ -1825,14 +1825,14 @@ def test_find_datasets_search_by_topic_name(client):
     assert list(response.context["datasets"]) == [
         expected_search_result(
             ds1,
-            search_rank=0.121585,
+            search_rank=0.12158542,
             topic_tag_names=MatchUnorderedMembers([topic.name, topic_2.name]),
             topic_tag_ids=MatchUnorderedMembers([topic.id, topic_2.id]),
             has_access=False,
         ),
         expected_search_result(
             rds,
-            search_rank=0.121585,
+            search_rank=0.12158542,
             topic_tag_names=[topic.name],
             topic_tag_ids=[topic.id],
         ),
@@ -1858,9 +1858,13 @@ def test_find_datasets_name_weighting(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ds4, has_access=False, search_rank=0.759909),
-        expected_search_result(ds1, has_access=False, search_rank=0.607927),
-        expected_search_result(ds2, has_access=False, search_rank=0.243171),
+        expected_search_result(
+            ds4,
+            has_access=False,
+            search_rank=0.75990885,
+        ),
+        expected_search_result(ds1, has_access=False, search_rank=0.6079271),
+        expected_search_result(ds2, has_access=False, search_rank=0.24317084),
     ]
 
 
