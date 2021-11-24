@@ -585,11 +585,16 @@ def store_custom_dataset_query_table_structures():
 @celery_app.task()
 def send_notification_emails():
     def create_notifications():
+        logger.info("Creating notifications")
         for table in SourceTable.objects.order_by("id"):
+            logger.info("Creating notification for source table %s %s", table.schema, table.table)
             changelog = get_table_changelog(
                 table.database.memorable_name, table.schema, table.table
             )
             if len(changelog) == 0:
+                logger.info(
+                    "No changelog records found for table %s %s", table.schema, table.table
+                )
                 return
 
             # For now only notify about the most recent change
@@ -609,6 +614,10 @@ def send_notification_emails():
                         notification=notification,
                         subscription=subscription,
                     )
+            else:
+                logger.info(
+                    "Notification already exists for change_id %s, skipping", change["change_id"]
+                )
 
     def send_notifications():
         user_notification_ids = list(
