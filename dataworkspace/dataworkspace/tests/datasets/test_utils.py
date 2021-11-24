@@ -916,7 +916,9 @@ class TestSendNotificationEmails:
                 "frank.exampleson@test.com",
                 personalisation={
                     "dataset_name": ds.name,
-                    "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                    "change_date": datetime.datetime(2021, 1, 1, 0, 0)
+                    .replace(tzinfo=pytz.UTC)
+                    .isoformat(),
                 },
             )
         ]
@@ -959,7 +961,9 @@ class TestSendNotificationEmails:
                 "frank.exampleson@test.com",
                 personalisation={
                     "dataset_name": ds.name,
-                    "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                    "change_date": datetime.datetime(2021, 1, 1, 0, 0)
+                    .replace(tzinfo=pytz.UTC)
+                    .isoformat(),
                 },
             )
         ]
@@ -1010,7 +1014,9 @@ class TestSendNotificationEmails:
                 "frank.exampleson@test.com",
                 personalisation={
                     "dataset_name": ds.name,
-                    "change_date": datetime.datetime(2021, 1, 1, 1, 0).replace(tzinfo=pytz.UTC),
+                    "change_date": datetime.datetime(2021, 1, 1, 1, 0)
+                    .replace(tzinfo=pytz.UTC)
+                    .isoformat(),
                 },
             ),
         ]
@@ -1137,7 +1143,9 @@ class TestSendNotificationEmails:
                 "frank.exampleson@test.com",
                 personalisation={
                     "dataset_name": ds.name,
-                    "change_date": datetime.datetime(2021, 1, 1, 1, 0).replace(tzinfo=pytz.UTC),
+                    "change_date": datetime.datetime(2021, 1, 1, 1, 0)
+                    .replace(tzinfo=pytz.UTC)
+                    .isoformat(),
                 },
             )
         ]
