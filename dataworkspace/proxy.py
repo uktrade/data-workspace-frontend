@@ -140,8 +140,8 @@ async def async_main():
             f"frame-ancestors 'self' {root_domain} {public_host}.{root_domain};"
             "img-src 'self' data: blob:;"
             # Both JupyterLab and RStudio need `unsafe-eval`
-            "script-src 'unsafe-inline' 'unsafe-eval' 'self';"
-            "style-src 'unsafe-inline' 'self';"
+            "script-src 'unsafe-inline' 'unsafe-eval' 'self' data:;"
+            "style-src 'unsafe-inline' 'self' data:;"
             "worker-src 'self' blob:;"
         )
 
