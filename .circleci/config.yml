@@ -42,7 +42,8 @@ jobs:
       - image: circleci/python:3.7
     steps:
       - checkout
-      - setup_remote_docker
+      - setup_remote_docker:
+          version: 20.10.6
       - <<: *restore-docker-cache
       - <<: *load-docker-layers
       - run:
@@ -64,7 +65,8 @@ jobs:
       - image: circleci/python:3.7
     steps:
       - checkout
-      - setup_remote_docker
+      - setup_remote_docker:
+          version: 20.10.6
       - <<: *restore-docker-cache
       - <<: *load-docker-layers
       - run:
