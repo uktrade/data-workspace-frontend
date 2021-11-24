@@ -47,7 +47,7 @@ def file_browser_html_view(request):
     return file_browser_html_GET(request) if request.method == "GET" else HttpResponse(status=405)
 
 
-@csp_update(CONNECT_SRC=[settings.APPLICATION_ROOT_DOMAIN, "https://s3.eu-west-2.amazonaws.com"])
+@csp_update(CONNECT_SRC=["https://s3.eu-west-2.amazonaws.com"])
 def file_browser_html_GET(request):
     prefix = get_s3_prefix(str(request.user.profile.sso_id))
 
