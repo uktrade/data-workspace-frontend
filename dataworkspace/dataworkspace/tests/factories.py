@@ -12,16 +12,16 @@ from dataworkspace.apps.eventlog.models import EventLog
 
 
 class UserProfileFactory(factory.django.DjangoModelFactory):
-    sso_id = '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2'
+    sso_id = "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2"
 
     class Meta:
-        model = 'accounts.Profile'
+        model = "accounts.Profile"
 
 
 class UserFactory(factory.django.DjangoModelFactory):
-    username = factory.LazyAttribute(lambda _: f'test.user+{uuid.uuid4()}@example.com')
+    username = factory.LazyAttribute(lambda _: f"test.user+{uuid.uuid4()}@example.com")
     email = factory.LazyAttribute(lambda o: o.username)
-    password = '12345'
+    password = "12345"
 
     class Meta:
         model = get_user_model()
@@ -29,11 +29,11 @@ class UserFactory(factory.django.DjangoModelFactory):
 
 class DatabaseFactory(factory.django.DjangoModelFactory):
     id = factory.LazyAttribute(lambda _: uuid.uuid4())
-    memorable_name = 'test_external_db'
+    memorable_name = "test_external_db"
 
     class Meta:
-        model = 'core.Database'
-        django_get_or_create = ('memorable_name',)
+        model = "core.Database"
+        django_get_or_create = ("memorable_name",)
 
 
 class DataGroupingFactory(factory.django.DjangoModelFactory):
@@ -42,7 +42,7 @@ class DataGroupingFactory(factory.django.DjangoModelFactory):
     slug = factory.fuzzy.FuzzyText(length=10)
 
     class Meta:
-        model = 'datasets.DataGrouping'
+        model = "datasets.DataGrouping"
 
 
 class TagFactory(factory.django.DjangoModelFactory):
@@ -50,7 +50,7 @@ class TagFactory(factory.django.DjangoModelFactory):
     name = factory.fuzzy.FuzzyText()
 
     class Meta:
-        model = 'datasets.Tag'
+        model = "datasets.Tag"
 
 
 class SourceTagFactory(TagFactory):
@@ -68,7 +68,7 @@ class VisualisationDatasetFactory(factory.django.DjangoModelFactory):
     database = factory.SubFactory(DatabaseFactory)
 
     class Meta:
-        model = 'datasets.DataSetVisualisation'
+        model = "datasets.DataSetVisualisation"
 
 
 class DataSetFactory(factory.django.DjangoModelFactory):
@@ -81,7 +81,7 @@ class DataSetFactory(factory.django.DjangoModelFactory):
     type = DataSetType.DATACUT
 
     class Meta:
-        model = 'datasets.DataSet'
+        model = "datasets.DataSet"
 
 
 class DatacutDataSetFactory(DataSetFactory):
@@ -97,7 +97,7 @@ class DataSetUserPermissionFactory(factory.django.DjangoModelFactory):
     dataset = factory.SubFactory(DataSetFactory)
 
     class Meta:
-        model = 'datasets.DataSetUserPermission'
+        model = "datasets.DataSetUserPermission"
 
 
 class DataSetBookmarkFactory(factory.django.DjangoModelFactory):
@@ -105,7 +105,7 @@ class DataSetBookmarkFactory(factory.django.DjangoModelFactory):
     dataset = factory.SubFactory(DataSetFactory)
 
     class Meta:
-        model = 'datasets.DataSetBookmark'
+        model = "datasets.DataSetBookmark"
 
 
 class SourceLinkFactory(factory.django.DjangoModelFactory):
@@ -114,10 +114,10 @@ class SourceLinkFactory(factory.django.DjangoModelFactory):
     name = factory.fuzzy.FuzzyText()
     format = factory.fuzzy.FuzzyText(length=5)
     frequency = factory.fuzzy.FuzzyText(length=5)
-    url = 'http://example.com'
+    url = "http://example.com"
 
     class Meta:
-        model = 'datasets.SourceLink'
+        model = "datasets.SourceLink"
 
 
 class SourceTableFactory(factory.django.DjangoModelFactory):
@@ -126,7 +126,7 @@ class SourceTableFactory(factory.django.DjangoModelFactory):
     database = factory.SubFactory(DatabaseFactory)
 
     class Meta:
-        model = 'datasets.SourceTable'
+        model = "datasets.SourceTable"
 
 
 class SourceViewFactory(factory.django.DjangoModelFactory):
@@ -135,7 +135,7 @@ class SourceViewFactory(factory.django.DjangoModelFactory):
     database = factory.SubFactory(DatabaseFactory)
 
     class Meta:
-        model = 'datasets.SourceView'
+        model = "datasets.SourceView"
 
 
 class CustomDatasetQueryFactory(factory.django.DjangoModelFactory):
@@ -147,7 +147,7 @@ class CustomDatasetQueryFactory(factory.django.DjangoModelFactory):
     frequency = 1
 
     class Meta:
-        model = 'datasets.CustomDatasetQuery'
+        model = "datasets.CustomDatasetQuery"
 
 
 class CustomDatasetQueryTableFactory(factory.django.DjangoModelFactory):
@@ -156,7 +156,7 @@ class CustomDatasetQueryTableFactory(factory.django.DjangoModelFactory):
     schema = factory.fuzzy.FuzzyText()
 
     class Meta:
-        model = 'datasets.CustomDatasetQueryTable'
+        model = "datasets.CustomDatasetQueryTable"
 
 
 class DatasetReferenceCodeFactory(factory.django.DjangoModelFactory):
@@ -165,7 +165,7 @@ class DatasetReferenceCodeFactory(factory.django.DjangoModelFactory):
     counter = 0
 
     class Meta:
-        model = 'datasets.DatasetReferenceCode'
+        model = "datasets.DatasetReferenceCode"
 
 
 class ReferenceDatasetFactory(factory.django.DjangoModelFactory):
@@ -174,10 +174,10 @@ class ReferenceDatasetFactory(factory.django.DjangoModelFactory):
     slug = factory.fuzzy.FuzzyText(length=10)
     published = True
     schema_version = factory.Sequence(lambda n: n)
-    table_name = factory.fuzzy.FuzzyText(length=20, prefix='ref_')
+    table_name = factory.fuzzy.FuzzyText(length=20, prefix="ref_")
 
     class Meta:
-        model = 'datasets.ReferenceDataset'
+        model = "datasets.ReferenceDataset"
 
 
 class ReferenceDataSetBookmarkFactory(factory.django.DjangoModelFactory):
@@ -185,7 +185,7 @@ class ReferenceDataSetBookmarkFactory(factory.django.DjangoModelFactory):
     reference_dataset = factory.SubFactory(ReferenceDatasetFactory)
 
     class Meta:
-        model = 'datasets.ReferenceDataSetBookmark'
+        model = "datasets.ReferenceDataSetBookmark"
 
 
 class ReferenceDatasetFieldFactory(factory.django.DjangoModelFactory):
@@ -195,7 +195,7 @@ class ReferenceDatasetFieldFactory(factory.django.DjangoModelFactory):
     data_type = 1
 
     class Meta:
-        model = 'datasets.ReferenceDatasetField'
+        model = "datasets.ReferenceDatasetField"
 
 
 class EventLogFactory(factory.django.DjangoModelFactory):
@@ -203,21 +203,21 @@ class EventLogFactory(factory.django.DjangoModelFactory):
     event_type = 1
 
     class Meta:
-        model = 'eventlog.EventLog'
+        model = "eventlog.EventLog"
 
 
 class RelatedObjectEventFactory(factory.django.DjangoModelFactory):
     id = factory.Sequence(lambda n: n)
     user = factory.SubFactory(UserFactory)
     timestamp = datetime.now()
-    object_id = factory.SelfAttribute('content_object.id')
+    object_id = factory.SelfAttribute("content_object.id")
     content_type = factory.LazyAttribute(
         lambda o: ContentType.objects.get_for_model(o.content_object)
     )
 
     class Meta:
-        model = 'eventlog.EventLog'
-        exclude = ['content_object']
+        model = "eventlog.EventLog"
+        exclude = ["content_object"]
         abstract = True
 
 
@@ -225,11 +225,11 @@ class DatasetLinkDownloadEventFactory(RelatedObjectEventFactory):
     event_type = EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD
     content_object = factory.SubFactory(DataSetFactory)
     extra = {
-        'url': 'http://google.com',
-        'name': 'a link',
-        'path': '/datasets/download/link',
-        'format': 'test',
-        'link_type': 1,
+        "url": "http://google.com",
+        "name": "a link",
+        "path": "/datasets/download/link",
+        "format": "test",
+        "link_type": 1,
     }
 
 
@@ -237,10 +237,10 @@ class DatasetQueryDownloadEventFactory(RelatedObjectEventFactory):
     event_type = EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD
     content_object = factory.SubFactory(DataSetFactory)
     extra = {
-        'id': 1,
-        'name': 'A test query',
-        'path': '/datasets/0102d134-2d2e-48b5-b8c2-061a6a649fee/query/1/download',
-        'query': 'select * from a_table',
+        "id": 1,
+        "name": "A test query",
+        "path": "/datasets/0102d134-2d2e-48b5-b8c2-061a6a649fee/query/1/download",
+        "query": "select * from a_table",
     }
 
 
@@ -248,9 +248,9 @@ class ReferenceDatasetDownloadEventFactory(RelatedObjectEventFactory):
     event_type = EventLog.TYPE_REFERENCE_DATASET_DOWNLOAD
     content_object = factory.SubFactory(ReferenceDatasetFactory)
     extra = {
-        'path': '/datasets/5ccc3c6a-9f4b-48fa-bba3-89de9b2bc3f0/reference/csv/download',
-        'download_format': 'csv',
-        'reference_dataset_version': '1.1',
+        "path": "/datasets/5ccc3c6a-9f4b-48fa-bba3-89de9b2bc3f0/reference/csv/download",
+        "download_format": "csv",
+        "reference_dataset_version": "1.1",
     }
 
 
@@ -258,9 +258,9 @@ class DatasetAccessRequestEventFactory(RelatedObjectEventFactory):
     event_type = EventLog.TYPE_DATASET_ACCESS_REQUEST
     content_object = factory.SubFactory(DatacutDataSetFactory)
     extra = {
-        'contact_email': 'test@test.com',
-        'goal': 'Access data',
-        'ticket_reference': 999,
+        "contact_email": "test@test.com",
+        "goal": "Access data",
+        "ticket_reference": 999,
     }
 
 
@@ -268,14 +268,14 @@ class DatasetAccessGrantedEventFactory(RelatedObjectEventFactory):
     event_type = EventLog.TYPE_GRANTED_DATASET_PERMISSION
     content_object = factory.SubFactory(UserFactory)
     extra = {
-        'created_by': 1,
-        'updated_by': 1,
-        'deleted': False,
-        'type': 2,
-        'name': 'A dataset',
-        'slug': 'a-dataset',
-        'short_description': 'test',
-        'user_access_type': 'REQUIRES_AUTHORIZATION',
+        "created_by": 1,
+        "updated_by": 1,
+        "deleted": False,
+        "type": 2,
+        "name": "A dataset",
+        "slug": "a-dataset",
+        "short_description": "test",
+        "user_access_type": "REQUIRES_AUTHORIZATION",
     }
 
 
@@ -283,14 +283,14 @@ class DatasetAccessRevokedEventFactory(RelatedObjectEventFactory):
     event_type = EventLog.TYPE_GRANTED_DATASET_PERMISSION
     content_object = factory.SubFactory(UserFactory)
     extra = {
-        'created_by': 1,
-        'updated_by': 1,
-        'deleted': False,
-        'type': 2,
-        'name': 'A dataset',
-        'slug': 'a-dataset',
-        'short_description': 'test',
-        'user_access_type': 'REQUIRES_AUTHORIZATION',
+        "created_by": 1,
+        "updated_by": 1,
+        "deleted": False,
+        "type": 2,
+        "name": "A dataset",
+        "slug": "a-dataset",
+        "short_description": "test",
+        "user_access_type": "REQUIRES_AUTHORIZATION",
     }
 
 
@@ -298,8 +298,8 @@ class VisualisationViewedEventFactory(RelatedObjectEventFactory):
     event_type = EventLog.TYPE_VIEW_VISUALISATION_TEMPLATE
     content_object = factory.SubFactory(DataSetFactory)
     extra = {
-        'id': 1,
-        'name': 'A test visualisation',
+        "id": 1,
+        "name": "A test visualisation",
     }
 
 
@@ -307,8 +307,8 @@ class SupersetVisualisationViewedEventFactory(RelatedObjectEventFactory):
     event_type = EventLog.TYPE_VIEW_SUPERSET_VISUALISATION
     content_object = factory.SubFactory(DataSetFactory)
     extra = {
-        'id': 1,
-        'name': 'A test superset visualisation',
+        "id": 1,
+        "name": "A test superset visualisation",
     }
 
 
@@ -317,13 +317,13 @@ class ApplicationTemplateFactory(factory.django.DjangoModelFactory):
     visible = True
     host_basename = factory.fuzzy.FuzzyText()
     nice_name = factory.fuzzy.FuzzyText()
-    spawner = 'PROCESS'
+    spawner = "PROCESS"
     spawner_time = int(datetime.timestamp(datetime.now()))
-    spawner_options = '{}'
-    application_type = 'TOOL'
+    spawner_options = "{}"
+    application_type = "TOOL"
 
     class Meta:
-        model = 'applications.ApplicationTemplate'
+        model = "applications.ApplicationTemplate"
 
 
 class DataSetApplicationTemplatePermissionFactory(factory.django.DjangoModelFactory):
@@ -331,14 +331,14 @@ class DataSetApplicationTemplatePermissionFactory(factory.django.DjangoModelFact
     dataset = factory.SubFactory(DataSetFactory)
 
     class Meta:
-        model = 'datasets.DataSetApplicationTemplatePermission'
+        model = "datasets.DataSetApplicationTemplatePermission"
 
 
 class VisualisationTemplateFactory(ApplicationTemplateFactory):
-    application_type = 'VISUALISATION'
+    application_type = "VISUALISATION"
 
     class Meta:
-        model = 'applications.VisualisationTemplate'
+        model = "applications.VisualisationTemplate"
 
 
 class VisualisationApprovalFactory(factory.django.DjangoModelFactory):
@@ -348,7 +348,7 @@ class VisualisationApprovalFactory(factory.django.DjangoModelFactory):
     visualisation = factory.SubFactory(VisualisationTemplateFactory)
 
     class Meta:
-        model = 'applications.VisualisationApproval'
+        model = "applications.VisualisationApproval"
 
 
 class VisualisationCatalogueItemFactory(factory.django.DjangoModelFactory):
@@ -364,7 +364,7 @@ class VisualisationCatalogueItemFactory(factory.django.DjangoModelFactory):
     deleted = False
 
     class Meta:
-        model = 'datasets.VisualisationCatalogueItem'
+        model = "datasets.VisualisationCatalogueItem"
 
 
 class VisualisationUserPermissionFactory(factory.django.DjangoModelFactory):
@@ -372,7 +372,7 @@ class VisualisationUserPermissionFactory(factory.django.DjangoModelFactory):
     visualisation = factory.SubFactory(VisualisationCatalogueItemFactory)
 
     class Meta:
-        model = 'datasets.VisualisationUserPermission'
+        model = "datasets.VisualisationUserPermission"
 
 
 class VisualisationBookmarkFactory(factory.django.DjangoModelFactory):
@@ -380,7 +380,7 @@ class VisualisationBookmarkFactory(factory.django.DjangoModelFactory):
     visualisation = factory.SubFactory(VisualisationCatalogueItemFactory)
 
     class Meta:
-        model = 'datasets.VisualisationBookmark'
+        model = "datasets.VisualisationBookmark"
 
 
 class VisualisationLinkFactory(factory.django.DjangoModelFactory):
@@ -388,30 +388,30 @@ class VisualisationLinkFactory(factory.django.DjangoModelFactory):
     visualisation_catalogue_item = factory.SubFactory(VisualisationCatalogueItemFactory)
 
     class Meta:
-        model = 'datasets.VisualisationLink'
+        model = "datasets.VisualisationLink"
 
 
 class ApplicationInstanceFactory(factory.django.DjangoModelFactory):
     id = factory.LazyAttribute(lambda _: uuid.uuid4())
     application_template = factory.SubFactory(ApplicationTemplateFactory)
     owner = factory.SubFactory(UserFactory)
-    public_host = 'https://analysisworkspace.dev.uktrade.io/'
+    public_host = "https://analysisworkspace.dev.uktrade.io/"
     spawner = factory.fuzzy.FuzzyText()
-    spawner_application_template_options = '{}'
+    spawner_application_template_options = "{}"
     spawner_application_instance_id = factory.LazyAttribute(lambda _: uuid.uuid4())
     spawner_created_at = datetime.now() - timedelta(minutes=5)
     spawner_stopped_at = datetime.now()
-    spawner_cpu = factory.fuzzy.FuzzyChoice(['256', '1024', '2048', '4096'])
-    spawner_memory = factory.fuzzy.FuzzyChoice(['512', '8192', '16384', '30720'])
-    state = factory.fuzzy.FuzzyChoice(['SPAWNING', 'RUNNING', 'STOPPED'])
-    proxy_url = 'https://analysisworkspace.dev.uktrade.io/'
-    cpu = factory.fuzzy.FuzzyChoice(['256', '1024', '2048', '4096'])
-    memory = factory.fuzzy.FuzzyChoice(['512', '8192', '16384', '30720'])
+    spawner_cpu = factory.fuzzy.FuzzyChoice(["256", "1024", "2048", "4096"])
+    spawner_memory = factory.fuzzy.FuzzyChoice(["512", "8192", "16384", "30720"])
+    state = factory.fuzzy.FuzzyChoice(["SPAWNING", "RUNNING", "STOPPED"])
+    proxy_url = "https://analysisworkspace.dev.uktrade.io/"
+    cpu = factory.fuzzy.FuzzyChoice(["256", "1024", "2048", "4096"])
+    memory = factory.fuzzy.FuzzyChoice(["512", "8192", "16384", "30720"])
     single_running_or_spawning_integrity = factory.fuzzy.FuzzyText()
     commit_id = factory.fuzzy.FuzzyText(length=8)
 
     class Meta:
-        model = 'applications.ApplicationInstance'
+        model = "applications.ApplicationInstance"
 
 
 class DatabaseUserFactory(factory.django.DjangoModelFactory):
@@ -420,7 +420,7 @@ class DatabaseUserFactory(factory.django.DjangoModelFactory):
     username = factory.fuzzy.FuzzyText(length=8)
 
     class Meta:
-        model = 'core.DatabaseUser'
+        model = "core.DatabaseUser"
 
 
 class ToolQueryAuditLogFactory(factory.django.DjangoModelFactory):
@@ -428,11 +428,11 @@ class ToolQueryAuditLogFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory(UserFactory)
     database = factory.SubFactory(DatabaseFactory)
     rolename = factory.fuzzy.FuzzyText(length=10)
-    query_sql = 'select * from a_table'
+    query_sql = "select * from a_table"
     timestamp = datetime.now()
 
     class Meta:
-        model = 'datasets.ToolQueryAuditLog'
+        model = "datasets.ToolQueryAuditLog"
 
 
 class ToolQueryAuditLogTableFactory(factory.django.DjangoModelFactory):
@@ -442,15 +442,15 @@ class ToolQueryAuditLogTableFactory(factory.django.DjangoModelFactory):
     table = factory.fuzzy.FuzzyText(length=10)
 
     class Meta:
-        model = 'datasets.ToolQueryAuditLogTable'
+        model = "datasets.ToolQueryAuditLogTable"
 
 
 class DatasetFinderQueryLogFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory(UserFactory)
-    query = 'find something'
+    query = "find something"
 
     class Meta:
-        model = 'finder.DatasetFinderQueryLog'
+        model = "finder.DatasetFinderQueryLog"
 
 
 class CaseStudyFactory(factory.django.DjangoModelFactory):
@@ -470,4 +470,11 @@ class CaseStudyFactory(factory.django.DjangoModelFactory):
     quote_department_name = factory.fuzzy.FuzzyText(length=30)
 
     class Meta:
-        model = 'case_studies.CaseStudy'
+        model = "case_studies.CaseStudy"
+
+
+class DataSetSubscriptionFactory(factory.django.DjangoModelFactory):
+    notify_on_schema_change = True
+
+    class Meta:
+        model = "datasets.DataSetSubscription"

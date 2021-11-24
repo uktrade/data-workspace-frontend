@@ -77,17 +77,12 @@ class DataGroupingManager(DeletableQuerySet):
         return (
             self.live()
             .annotate(
-                num_published_datasets=Count(
-                    'dataset', filter=Q(dataset__published=True)
-                ),
+                num_published_datasets=Count("dataset", filter=Q(dataset__published=True)),
                 num_published_reference_datasets=Count(
-                    'referencedataset', filter=Q(referencedataset__published=True)
+                    "referencedataset", filter=Q(referencedataset__published=True)
                 ),
             )
-            .filter(
-                Q(num_published_datasets__gt=0)
-                | Q(num_published_reference_datasets__gt=0)
-            )
+            .filter(Q(num_published_datasets__gt=0) | Q(num_published_reference_datasets__gt=0))
         )
 
 
@@ -102,7 +97,7 @@ class DataGrouping(DeletableTimestampedUserModel):
     information_asset_owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='asset_owner',
+        related_name="asset_owner",
         null=True,
         blank=True,
     )
@@ -110,22 +105,20 @@ class DataGrouping(DeletableTimestampedUserModel):
     information_asset_manager = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='asset_manager',
+        related_name="asset_manager",
         null=True,
         blank=True,
     )
 
-    slug = models.SlugField(
-        max_length=50, db_index=True, unique=True, null=False, blank=False
-    )
+    slug = models.SlugField(max_length=50, db_index=True, unique=True, null=False, blank=False)
 
     objects = DataGroupingManager()
 
     class Meta:
-        db_table = 'app_datagrouping'
+        db_table = "app_datagrouping"
 
     def __str__(self):
-        return f'{self.name}'
+        return f"{self.name}"
 
 
 class Tag(TimeStampedModel):
@@ -134,28 +127,28 @@ class Tag(TimeStampedModel):
     name = models.CharField(max_length=255, unique=True)
 
     def __str__(self):
-        return f'{dict(TagType.choices).get(self.type)}: {self.name}'
+        return f"{dict(TagType.choices).get(self.type)}: {self.name}"
 
 
 class DatasetReferenceCode(TimeStampedModel):
     code = models.CharField(
         max_length=20,
         unique=True,
-        help_text='Short code to identify the source (eg. DH for Data Hub, EW for Export Wins)',
+        help_text="Short code to identify the source (eg. DH for Data Hub, EW for Export Wins)",
     )
     description = models.TextField(null=True, blank=True)
     counter = models.IntegerField(default=0)
 
     class Meta:
-        ordering = ('code',)
+        ordering = ("code",)
 
     def __str__(self):
         return self.code
 
     @transaction.atomic
     def get_next_reference_number(self):
-        self.counter = F('counter') + 1
-        self.save(update_fields=['counter'])
+        self.counter = F("counter") + 1
+        self.save(update_fields=["counter"])
         self.refresh_from_db()
         return self.counter
 
@@ -196,18 +189,18 @@ class DataSet(DeletableTimestampedUserModel):
     published_at = models.DateField(null=True, blank=True)
     eligibility_criteria = ArrayField(models.CharField(max_length=256), null=True)
     number_of_downloads = models.PositiveIntegerField(default=0)
-    tags = models.ManyToManyField(Tag, related_name='+', blank=True)
+    tags = models.ManyToManyField(Tag, related_name="+", blank=True)
     information_asset_owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='info_asset_owned_datasets',
+        related_name="info_asset_owned_datasets",
         null=True,
         blank=True,
     )
     information_asset_manager = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='info_asset_managed_datasets',
+        related_name="info_asset_managed_datasets",
         null=True,
         blank=True,
     )
@@ -219,12 +212,12 @@ class DataSet(DeletableTimestampedUserModel):
         models.CharField(max_length=256),
         blank=True,
         default=list,
-        help_text='Comma-separated list of domain names without spaces, e.g trade.gov.uk,fco.gov.uk',
+        help_text="Comma-separated list of domain names without spaces, e.g trade.gov.uk,fco.gov.uk",
     )
     search_vector = SearchVectorField(null=True, blank=True)
 
     class Meta:
-        db_table = 'app_dataset'
+        db_table = "app_dataset"
         indexes = (GinIndex(fields=["search_vector"]),)
 
     def __init__(self, *args, **kwargs):
@@ -235,9 +228,7 @@ class DataSet(DeletableTimestampedUserModel):
         return self.name
 
     @transaction.atomic
-    def save(
-        self, force_insert=False, force_update=False, using=None, update_fields=None
-    ):
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         self.update_published_timestamp()
         super().save(force_insert, force_update, using, update_fields)
 
@@ -250,13 +241,13 @@ class DataSet(DeletableTimestampedUserModel):
                 obj.reference_number = None
                 obj.save()
 
-        tag_names = ' '.join([x.name for x in self.tags.all()])
+        tag_names = " ".join([x.name for x in self.tags.all()])
         DataSet.objects.filter(id=self.id).update(
             search_vector=(
-                SearchVector('name', weight='A')
-                + SearchVector('short_description', weight='B')
-                + SearchVector(models.Value(tag_names), weight='C')
-                + SearchVector('description', weight='D')
+                SearchVector("name", weight="A")
+                + SearchVector("short_description", weight="B")
+                + SearchVector(models.Value(tag_names), weight="C")
+                + SearchVector("description", weight="D")
             )
         )
 
@@ -265,23 +256,19 @@ class DataSet(DeletableTimestampedUserModel):
         Returns a list of sources related to this dataset
         """
         RELATED_FIELDS = [
-            'sourcetable',
-            'sourceview',
-            'sourcelink',
-            'customdatasetquery',
+            "sourcetable",
+            "sourceview",
+            "sourcelink",
+            "customdatasetquery",
         ]
         related = []
         for related_field in RELATED_FIELDS:
-            related += [
-                copy.copy(obj) for obj in getattr(self, related_field + '_set').all()
-            ]
+            related += [copy.copy(obj) for obj in getattr(self, related_field + "_set").all()]
         return related
 
     def related_datasets(self, order=None):
         if self.type == DataSetType.DATACUT:
-            custom_queries = self.customdatasetquery_set.all().prefetch_related(
-                'tables'
-            )
+            custom_queries = self.customdatasetquery_set.all().prefetch_related("tables")
 
             query_tables = []
             for query in custom_queries:
@@ -294,10 +281,10 @@ class DataSet(DeletableTimestampedUserModel):
                     dataset__deleted=False,
                     table__in=query_tables,
                 )
-                .prefetch_related('dataset')
-                .only('dataset')
-                .distinct('dataset')
-                .order_by('dataset', order or 'dataset__name')
+                .prefetch_related("dataset")
+                .only("dataset")
+                .distinct("dataset")
+                .order_by("dataset", order or "dataset__name")
             ]
 
             return ds_tables
@@ -316,9 +303,9 @@ class DataSet(DeletableTimestampedUserModel):
             datacuts = [
                 row.query.dataset
                 for row in CustomDatasetQueryTable.objects.filter(filters)
-                .only('query__dataset')
-                .distinct('query__dataset')
-                .order_by('query__dataset', order or 'query__dataset__name')
+                .only("query__dataset")
+                .distinct("query__dataset")
+                .order_by("query__dataset", order or "query__dataset__name")
             ]
 
             return datacuts
@@ -334,10 +321,9 @@ class DataSet(DeletableTimestampedUserModel):
             self.published_at = timezone.now()
 
     def user_has_access(self, user):
-        user_email_domain = user.email.split('@')[1]
+        user_email_domain = user.email.split("@")[1]
         return (
-            self.user_access_type
-            in [UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN]
+            self.user_access_type in [UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN]
             or self.datasetuserpermission_set.filter(user=user).exists()
             or user_email_domain in self.authorized_email_domains
         )
@@ -368,8 +354,8 @@ class DataSet(DeletableTimestampedUserModel):
         clone = copy.copy(self)
 
         clone.pk = None
-        clone.name = f'Copy of {self.name}'
-        clone.slug = ''
+        clone.name = f"Copy of {self.name}"
+        clone.slug = ""
         clone.number_of_downloads = 0
         clone.published = False
         clone.save()
@@ -384,35 +370,47 @@ class DataSet(DeletableTimestampedUserModel):
 
     def get_admin_edit_url(self):
         if self.type == DataSetType.MASTER:
-            return reverse('admin:datasets_masterdataset_change', args=(self.id,))
-        return reverse('admin:datasets_datacutdataset_change', args=(self.id,))
+            return reverse("admin:datasets_masterdataset_change", args=(self.id,))
+        return reverse("admin:datasets_datacutdataset_change", args=(self.id,))
 
     def get_absolute_url(self):
-        return '{}#{}'.format(
-            reverse('datasets:dataset_detail', args=(self.id,)), self.slug
-        )
+        return "{}#{}".format(reverse("datasets:dataset_detail", args=(self.id,)), self.slug)
 
     def get_usage_history_url(self):
-        return reverse('datasets:usage_history', args=(self.id,))
+        return reverse("datasets:usage_history", args=(self.id,))
+
+
+class DataSetSubscriptionManager(models.Manager):
+    def active(self, user):
+        return self.filter(
+            Q(notify_on_data_change=True) | Q(notify_on_schema_change=True), user=user
+        )
 
 
 class DataSetSubscription(TimeStampedUserModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
+    dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE, related_name="subscriptions")
 
     notify_on_schema_change = models.BooleanField(default=False)
     notify_on_data_change = models.BooleanField(default=False)
 
+    objects = DataSetSubscriptionManager()
+
     class Meta:
         verbose_name = "DataSet Subscription"
         verbose_name_plural = "DataSet Subscriptions"
+        unique_together = ["user", "dataset"]
 
     def __str__(self):
         return f"{self.user.email} {self.dataset.name}"
 
     def is_active(self):
         return self.notify_on_data_change or self.notify_on_schema_change
+
+    def make_inactive(self):
+        self.notify_on_data_change = False
+        self.notify_on_schema_change = False
 
     def get_list_of_selected_options(self):
         selected = []
@@ -433,11 +431,9 @@ class DataSetVisualisation(DeletableTimestampedUserModel):
     database = models.ForeignKey(Database, default=None, on_delete=models.CASCADE)
     query = models.TextField(null=True, blank=True)
 
-    dataset = models.ForeignKey(
-        DataSet, on_delete=models.CASCADE, related_name='visualisations'
-    )
+    dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE, related_name="visualisations")
 
-    gds_phase_name = models.CharField(max_length=25, default='', blank=True)
+    gds_phase_name = models.CharField(max_length=25, default="", blank=True)
 
 
 class DataSetUserPermission(models.Model):
@@ -445,8 +441,8 @@ class DataSetUserPermission(models.Model):
     dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
 
     class Meta:
-        db_table = 'app_datasetuserpermission'
-        unique_together = ('user', 'dataset')
+        db_table = "app_datasetuserpermission"
+        unique_together = ("user", "dataset")
 
 
 class DataSetBookmark(models.Model):
@@ -454,19 +450,17 @@ class DataSetBookmark(models.Model):
     dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
 
     class Meta:
-        db_table = 'app_datasetbookmark'
-        unique_together = ('user', 'dataset')
+        db_table = "app_datasetbookmark"
+        unique_together = ("user", "dataset")
 
 
 class DataSetApplicationTemplatePermission(models.Model):
-    application_template = models.ForeignKey(
-        ApplicationTemplate, on_delete=models.CASCADE
-    )
+    application_template = models.ForeignKey(ApplicationTemplate, on_delete=models.CASCADE)
     dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
 
     class Meta:
-        db_table = 'app_datasetapplicationtemplatepermission'
-        unique_together = ('dataset', 'application_template')
+        db_table = "app_datasetapplicationtemplatepermission"
+        unique_together = ("dataset", "application_template")
 
 
 class MasterDatasetManager(DeletableQuerySet):
@@ -483,7 +477,7 @@ class MasterDataset(DataSet):
 
     class Meta:
         proxy = True
-        verbose_name = 'Master Dataset'
+        verbose_name = "Master Dataset"
         permissions = [
             (
                 "manage_unpublished_master_datasets",
@@ -515,7 +509,7 @@ class DataCutDataset(DataSet):
 
     class Meta:
         proxy = True
-        verbose_name = 'Data Cut Dataset'
+        verbose_name = "Data Cut Dataset"
         permissions = [
             (
                 "manage_unpublished_datacut_datasets",
@@ -544,15 +538,11 @@ class ReferenceNumberedDatasetSource(TimeStampedModel):
     class Meta:
         abstract = True
 
-    def save(
-        self, force_insert=False, force_update=False, using=None, update_fields=None
-    ):
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         # If a reference code is set on the dataset, add a reference number to this source
         # by incrementing the counter on the reference code model
         if self.reference_number is None and self.dataset.reference_code is not None:
-            self.reference_number = (
-                self.dataset.reference_code.get_next_reference_number()
-            )
+            self.reference_number = self.dataset.reference_code.get_next_reference_number()
         # If the dataset's reference code was unset, unset this source's reference number
         elif self.reference_number is not None and self.dataset.reference_code is None:
             self.reference_number = None
@@ -560,11 +550,8 @@ class ReferenceNumberedDatasetSource(TimeStampedModel):
 
     @property
     def source_reference(self):
-        if (
-            self.dataset.reference_code is not None
-            and self.reference_number is not None
-        ):
-            return ''.join(
+        if self.dataset.reference_code is not None and self.reference_number is not None:
+            return "".join(
                 [
                     self.dataset.reference_code.code.upper(),
                     str(self.reference_number).zfill(5),
@@ -572,10 +559,10 @@ class ReferenceNumberedDatasetSource(TimeStampedModel):
             )
         return None
 
-    def get_filename(self, extension='.csv'):
+    def get_filename(self, extension=".csv"):
         filename = slugify(self.name) + extension  # pylint: disable=no-member
         if self.source_reference is not None:
-            return f'{self.source_reference}-{filename}'
+            return f"{self.source_reference}-{filename}"
         return filename
 
 
@@ -588,26 +575,26 @@ class BaseSource(ReferenceNumberedDatasetSource):
     FREQ_6_MONTHLY = 6
     FREQ_ADHOC = 7
     _FREQ_CHOICES = (
-        (FREQ_DAILY, 'Daily'),
-        (FREQ_WEEKLY, 'Weekly'),
-        (FREQ_MONTHLY, 'Monthly'),
-        (FREQ_QUARTERLY, 'Quarterly'),
-        (FREQ_6_MONTHLY, '6-monthly'),
-        (FREQ_ANNUALLY, 'Annually'),
-        (FREQ_ADHOC, 'Ad hoc'),
+        (FREQ_DAILY, "Daily"),
+        (FREQ_WEEKLY, "Weekly"),
+        (FREQ_MONTHLY, "Monthly"),
+        (FREQ_QUARTERLY, "Quarterly"),
+        (FREQ_6_MONTHLY, "6-monthly"),
+        (FREQ_ANNUALLY, "Annually"),
+        (FREQ_ADHOC, "Ad hoc"),
     )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(
         max_length=1024,
         blank=False,
-        help_text='Used as the displayed text in the download link',
+        help_text="Used as the displayed text in the download link",
     )
     database = models.ForeignKey(Database, default=None, on_delete=models.CASCADE)
     schema = models.CharField(
         max_length=1024,
         blank=False,
-        validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
-        default='public',
+        validators=[RegexValidator(regex=r"^[a-zA-Z][a-zA-Z0-9_\.]*$")],
+        default="public",
     )
     frequency = models.IntegerField(choices=_FREQ_CHOICES, default=FREQ_DAILY)
 
@@ -622,7 +609,7 @@ class SourceTable(BaseSource):
     table = models.CharField(
         max_length=1024,
         blank=False,
-        validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
+        validators=[RegexValidator(regex=r"^[a-zA-Z][a-zA-Z0-9_\.]*$")],
     )
     dataset_finder_opted_in = models.BooleanField(
         default=False,
@@ -635,28 +622,28 @@ class SourceTable(BaseSource):
     )
     data_grid_enabled = models.BooleanField(
         default=False,
-        help_text='Allow users to filter, sort and export data from within the browser',
+        help_text="Allow users to filter, sort and export data from within the browser",
     )
     data_grid_column_config = models.JSONField(
         blank=True,
         null=True,
         help_text=(
-            'Must be a json object with a `columns` key containing a list of json objects defining:\n\n'
+            "Must be a json object with a `columns` key containing a list of json objects defining:\n\n"
             '- "field": "[column name]" (required)\n'
             '- "headerName": "[pretty column name]" (optional, defaults to "field")\n'
             '- "sortable": [true|false] (optional, default: true)\n'
             '- "filter": "[true|false|ag-grid filter name]" (optional, default: true)\n\n'
-            'Optionally can include the fields:\n\n'
+            "Optionally can include the fields:\n\n"
             '- "download_enabled" (defaults to false)\n'
             '- "download_limit" (defaults to 5000 rows)'
         ),
     )
 
     class Meta:
-        db_table = 'app_sourcetable'
+        db_table = "app_sourcetable"
 
     def __str__(self):
-        return f'{self.name} ({self.id})'
+        return f"{self.name} ({self.id})"
 
     def can_show_link_for_user(self, user):
         return False
@@ -671,10 +658,10 @@ class SourceTable(BaseSource):
         )
 
     def get_grid_data_url(self):
-        return reverse('datasets:source_table_data', args=(self.dataset_id, self.id))
+        return reverse("datasets:source_table_data", args=(self.dataset_id, self.id))
 
     def get_data_grid_query(self):
-        return sql.SQL('SELECT * from {}.{}').format(
+        return sql.SQL("SELECT * from {}.{}").format(
             sql.Identifier(self.schema), sql.Identifier(self.table)
         )
 
@@ -695,46 +682,43 @@ class SourceTable(BaseSource):
         }
 
         col_defs = []
-        for col_def in self.data_grid_column_config.get('columns', []):
-            if col_def.get('field') in postgres_column_data_types:
-                col_def['filter'] = col_def.get('filter', True)
-                col_def['sortable'] = col_def.get('sortable', True)
-                pg_data_type = postgres_column_data_types[col_def['field']]
-                col_def['dataType'] = GRID_DATA_TYPE_MAP.get(pg_data_type, pg_data_type)
+        for col_def in self.data_grid_column_config.get("columns", []):
+            if col_def.get("field") in postgres_column_data_types:
+                col_def["filter"] = col_def.get("filter", True)
+                col_def["sortable"] = col_def.get("sortable", True)
+                pg_data_type = postgres_column_data_types[col_def["field"]]
+                col_def["dataType"] = GRID_DATA_TYPE_MAP.get(pg_data_type, pg_data_type)
                 col_defs.append(col_def)
 
         return col_defs
 
     @property
     def data_grid_download_enabled(self):
-        return self.data_grid_column_config.get('download_enabled', False)
+        return self.data_grid_column_config.get("download_enabled", False)
 
     @property
     def data_grid_download_limit(self):
-        return self.data_grid_column_config.get('download_limit', 5000)
+        return self.data_grid_column_config.get("download_limit", 5000)
 
     def get_column_details_url(self):
         return reverse(
-            'datasets:source_table_column_details', args=(self.dataset_id, self.id),
+            "datasets:source_table_column_details",
+            args=(self.dataset_id, self.id),
         )
 
     def get_changelog(self):
-        return get_table_changelog(
-            self.database.memorable_name, self.schema, self.table
-        )
+        return get_table_changelog(self.database.memorable_name, self.schema, self.table)
 
 
 class SourceView(BaseSource):
     view = models.CharField(
         max_length=1024,
         blank=False,
-        validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
+        validators=[RegexValidator(regex=r"^[a-zA-Z][a-zA-Z0-9_\.]*$")],
     )
 
     def get_absolute_url(self):
-        return reverse(
-            'datasets:dataset_source_view_download', args=(self.dataset.id, self.id)
-        )
+        return reverse("datasets:dataset_source_view_download", args=(self.dataset.id, self.id))
 
     def can_show_link_for_user(self, user):
         return True
@@ -750,21 +734,21 @@ class SourceView(BaseSource):
 class SourceLink(ReferenceNumberedDatasetSource):
     TYPE_EXTERNAL = 1
     TYPE_LOCAL = 2
-    _LINK_TYPES = ((TYPE_EXTERNAL, 'External Link'), (TYPE_LOCAL, 'Local Link'))
+    _LINK_TYPES = ((TYPE_EXTERNAL, "External Link"), (TYPE_LOCAL, "Local Link"))
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     link_type = models.IntegerField(choices=_LINK_TYPES, default=TYPE_EXTERNAL)
     name = models.CharField(
         blank=False,
         null=False,
         max_length=128,
-        help_text='Used as the displayed text in the download link',
+        help_text="Used as the displayed text in the download link",
     )
     url = models.CharField(max_length=256)
     format = models.CharField(blank=False, null=False, max_length=10)
     frequency = models.CharField(blank=False, null=False, max_length=50)
 
     class Meta:
-        db_table = 'app_sourcelink'
+        db_table = "app_sourcelink"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -775,7 +759,7 @@ class SourceLink(ReferenceNumberedDatasetSource):
         return self.name
 
     def _is_s3_link(self):
-        return self.url.startswith('s3://')
+        return self.url.startswith("s3://")
 
     def get_frequency_display(self):
         return self.frequency
@@ -785,7 +769,7 @@ class SourceLink(ReferenceNumberedDatasetSource):
         Check whether we can access the file on s3
         :return:
         """
-        client = boto3.client('s3')
+        client = boto3.client("s3")
         try:
             client.head_object(Bucket=settings.AWS_UPLOADS_BUCKET, Key=self.url)
         except ClientError:
@@ -794,15 +778,13 @@ class SourceLink(ReferenceNumberedDatasetSource):
 
     def _delete_s3_file(self):
         if self.local_file_is_accessible():
-            client = boto3.client('s3')
+            client = boto3.client("s3")
             client.delete_object(Bucket=settings.AWS_UPLOADS_BUCKET, Key=self.url)
 
-    def save(
-        self, force_insert=False, force_update=False, using=None, update_fields=None
-    ):
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         # Allow users to change a url from local to external and vice versa
         is_s3_link = self._is_s3_link()
-        was_s3_link = self._original_url.startswith('s3://')
+        was_s3_link = self._original_url.startswith("s3://")
         if self.id is not None and self._original_url != self.url:
             self.link_type = self.TYPE_LOCAL if is_s3_link else self.TYPE_EXTERNAL
         super().save(force_insert, force_update, using, update_fields)
@@ -816,14 +798,10 @@ class SourceLink(ReferenceNumberedDatasetSource):
         super().delete(using, keep_parents)
 
     def get_absolute_url(self):
-        return reverse(
-            'datasets:dataset_source_link_download', args=(self.dataset_id, self.id)
-        )
+        return reverse("datasets:dataset_source_link_download", args=(self.dataset_id, self.id))
 
     def get_preview_url(self):
-        return reverse(
-            'datasets:data_cut_source_link_preview', args=(self.dataset_id, self.id)
-        )
+        return reverse("datasets:data_cut_source_link_preview", args=(self.dataset_id, self.id))
 
     def show_column_filter(self):
         # this will be enabled in subsequent PR
@@ -835,7 +813,7 @@ class SourceLink(ReferenceNumberedDatasetSource):
     def get_filename(self):  # pylint: disable=arguments-differ
         if self.link_type == self.TYPE_LOCAL:
             native_extension = os.path.splitext(self.url)[1]
-            extension = native_extension if native_extension else '.csv'
+            extension = native_extension if native_extension else ".csv"
             return super().get_filename(extension=extension)
 
         return super().get_filename()
@@ -847,10 +825,10 @@ class SourceLink(ReferenceNumberedDatasetSource):
     def get_data_last_updated_date(self):
         if self.link_type == self.TYPE_LOCAL:
             try:
-                metadata = boto3.client('s3').head_object(
+                metadata = boto3.client("s3").head_object(
                     Bucket=settings.AWS_UPLOADS_BUCKET, Key=self.url
                 )
-                return metadata.get('LastModified')
+                return metadata.get("LastModified")
             except ClientError:
                 pass
         return None
@@ -865,23 +843,23 @@ class SourceLink(ReferenceNumberedDatasetSource):
         if (
             not self._is_s3_link()
             or not self.local_file_is_accessible()
-            or not self.url.endswith('.csv')
+            or not self.url.endswith(".csv")
         ):
             return None, []
 
-        client = boto3.client('s3')
+        client = boto3.client("s3")
 
         # Only read a maximum of 100Kb in for preview purposes. This should stop us getting
         # denial-of-service'd by files with a massive amount of data in the first few columns
         file = client.get_object(
             Bucket=settings.AWS_UPLOADS_BUCKET, Key=self.url, Range="bytes=0-102400"
         )
-        head = file['Body'].read().decode('utf-8')
+        head = file["Body"].read().decode("utf-8")
         # Drop anything after the rightmost newline in case we only got a partial row
-        head = head[: head.rindex('\n') + 1]
+        head = head[: head.rindex("\n") + 1]
         csv_data = head.splitlines()
         del csv_data[settings.DATASET_PREVIEW_NUM_OF_ROWS :]
-        fh = StringIO('\n'.join(csv_data))
+        fh = StringIO("\n".join(csv_data))
         reader = csv.DictReader(fh)
         records = []
         for row in reader:
@@ -902,11 +880,11 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
     FREQ_QUARTERLY = 4
     FREQ_ANNUALLY = 5
     _FREQ_CHOICES = (
-        (FREQ_DAILY, 'Daily'),
-        (FREQ_WEEKLY, 'Weekly'),
-        (FREQ_MONTHLY, 'Monthly'),
-        (FREQ_QUARTERLY, 'Quarterly'),
-        (FREQ_ANNUALLY, 'Annually'),
+        (FREQ_DAILY, "Daily"),
+        (FREQ_WEEKLY, "Weekly"),
+        (FREQ_MONTHLY, "Monthly"),
+        (FREQ_QUARTERLY, "Quarterly"),
+        (FREQ_ANNUALLY, "Annually"),
     )
     name = models.CharField(max_length=255)
     database = models.ForeignKey(Database, on_delete=models.CASCADE)
@@ -915,25 +893,21 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
     reviewed = models.BooleanField(default=False)
     data_grid_enabled = models.BooleanField(
         default=False,
-        help_text='Allow users to filter, sort and export data from within the browser',
+        help_text="Allow users to filter, sort and export data from within the browser",
     )
 
     class Meta:
-        verbose_name = 'SQL Query'
-        verbose_name_plural = 'SQL Queries'
+        verbose_name = "SQL Query"
+        verbose_name_plural = "SQL Queries"
 
     def __str__(self):
-        return f'{self.dataset.name}: {self.name}'
+        return f"{self.dataset.name}: {self.name}"
 
     def get_absolute_url(self):
-        return reverse(
-            'datasets:dataset_query_download', args=(self.dataset_id, self.id)
-        )
+        return reverse("datasets:dataset_query_download", args=(self.dataset_id, self.id))
 
     def get_preview_url(self):
-        return reverse(
-            'datasets:data_cut_query_preview', args=(self.dataset_id, self.id)
-        )
+        return reverse("datasets:data_cut_query_preview", args=(self.dataset_id, self.id))
 
     def show_column_filter(self):
         return True
@@ -958,9 +932,7 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
         return None
 
     def user_can_preview(self, user):
-        return self.dataset.user_has_access(user) and (
-            self.reviewed or user.is_superuser
-        )
+        return self.dataset.user_has_access(user) and (self.reviewed or user.is_superuser)
 
     def get_preview_data(self):
         from dataworkspace.apps.core.utils import (  # pylint: disable=cyclic-import,import-outside-toplevel
@@ -973,7 +945,9 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
         sample_size = settings.DATASET_PREVIEW_NUM_OF_ROWS
         if columns:
             rows = get_random_data_sample(
-                self.database.memorable_name, sql.SQL(self.query), sample_size,
+                self.database.memorable_name,
+                sql.SQL(self.query),
+                sample_size,
             )
             for row in rows:
                 record_data = {}
@@ -983,14 +957,12 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
         return columns, records
 
     def get_grid_data_url(self):
-        return reverse(
-            'datasets:custom_dataset_query_data', args=(self.dataset_id, self.id)
-        )
+        return reverse("datasets:custom_dataset_query_data", args=(self.dataset_id, self.id))
 
     @property
     def cleaned_query(self):
         # Replace any single '%' with '%%'
-        return re.sub('(?<!%)%(?!%)', '%%', self.query).rstrip().rstrip(';')
+        return re.sub("(?<!%)%(?!%)", "%%", self.query).rstrip().rstrip(";")
 
     def get_data_grid_query(self):
         return sql.SQL(self.cleaned_query)
@@ -1001,14 +973,16 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
         """
         col_defs = []
         for column in datasets_db.get_columns(
-            self.database.memorable_name, query=self.cleaned_query, include_types=True,
+            self.database.memorable_name,
+            query=self.cleaned_query,
+            include_types=True,
         ):
             col_defs.append(
                 {
-                    'field': column[0],
-                    'filter': True,
-                    'sortable': True,
-                    'dataType': GRID_DATA_TYPE_MAP.get(column[1], column[1]),
+                    "field": column[0],
+                    "filter": True,
+                    "sortable": True,
+                    "dataType": GRID_DATA_TYPE_MAP.get(column[1], column[1]),
                 }
             )
         return col_defs
@@ -1023,7 +997,8 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
 
     def get_column_details_url(self):
         return reverse(
-            'datasets:custom_query_column_details', args=(self.dataset_id, self.id),
+            "datasets:custom_query_column_details",
+            args=(self.dataset_id, self.id),
         )
 
     def get_changelog(self):
@@ -1031,41 +1006,39 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
 
 
 class CustomDatasetQueryTable(models.Model):
-    query = models.ForeignKey(
-        CustomDatasetQuery, on_delete=models.CASCADE, related_name='tables'
-    )
+    query = models.ForeignKey(CustomDatasetQuery, on_delete=models.CASCADE, related_name="tables")
     table = models.CharField(
         max_length=1024,
         blank=False,
-        validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
+        validators=[RegexValidator(regex=r"^[a-zA-Z][a-zA-Z0-9_\.]*$")],
     )
     schema = models.CharField(
         max_length=1024,
         blank=False,
-        validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
-        default='public',
+        validators=[RegexValidator(regex=r"^[a-zA-Z][a-zA-Z0-9_\.]*$")],
+        default="public",
     )
 
 
 class ReferenceDataset(DeletableTimestampedUserModel):
     SORT_DIR_ASC = 1
     SORT_DIR_DESC = 2
-    _SORT_DIR_CHOICES = ((SORT_DIR_ASC, 'Ascending'), (SORT_DIR_DESC, 'Descending'))
+    _SORT_DIR_CHOICES = ((SORT_DIR_ASC, "Ascending"), (SORT_DIR_DESC, "Descending"))
     uuid = models.UUIDField(default=uuid.uuid4, editable=False)
     is_joint_dataset = models.BooleanField(default=False)  # No longer used
     group = models.ForeignKey(DataGrouping, null=True, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     table_name = models.CharField(
-        verbose_name='Table name',
+        verbose_name="Table name",
         max_length=255,
         unique=True,
-        help_text='Descriptive table name for the field - Note: Must start with '
+        help_text="Descriptive table name for the field - Note: Must start with "
         '"ref_" and contain only lowercase letters, numbers and underscores',
         validators=[
             RegexValidator(
-                regex=r'^ref_[a-z0-9_]*$',
+                regex=r"^ref_[a-z0-9_]*$",
                 message='Table names must be prefixed with "ref_" and can contain only '
-                'lowercase letters, numbers and underscores',
+                "lowercase letters, numbers and underscores",
             )
         ],
     )
@@ -1097,33 +1070,30 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         null=True,
         blank=True,
         on_delete=models.CASCADE,
-        help_text='Name of the analysts database to keep in '
-        'sync with this reference dataset',
+        help_text="Name of the analysts database to keep in " "sync with this reference dataset",
     )
     sort_field = models.ForeignKey(
-        'ReferenceDatasetField',
+        "ReferenceDatasetField",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        help_text='The field to order records by in any outputs. '
-        'If not set records will be sorted by last updated date.',
+        help_text="The field to order records by in any outputs. "
+        "If not set records will be sorted by last updated date.",
     )
-    sort_direction = models.IntegerField(
-        default=SORT_DIR_ASC, choices=_SORT_DIR_CHOICES
-    )
+    sort_direction = models.IntegerField(default=SORT_DIR_ASC, choices=_SORT_DIR_CHOICES)
     number_of_downloads = models.PositiveIntegerField(default=0)
-    tags = models.ManyToManyField(Tag, related_name='+', blank=True)
+    tags = models.ManyToManyField(Tag, related_name="+", blank=True)
     information_asset_owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='info_asset_owned_reference_datasets',
+        related_name="info_asset_owned_reference_datasets",
         null=True,
         blank=True,
     )
     information_asset_manager = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='info_asset_managed_reference_datasets',
+        related_name="info_asset_managed_reference_datasets",
         null=True,
         blank=True,
     )
@@ -1138,8 +1108,8 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     search_vector = SearchVectorField(null=True, blank=True)
 
     class Meta:
-        db_table = 'app_referencedataset'
-        verbose_name = 'Reference dataset'
+        db_table = "app_referencedataset"
+        verbose_name = "Reference dataset"
         permissions = [
             (
                 "manage_unpublished_reference_datasets",
@@ -1188,9 +1158,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             self.minor_version = self.published_minor_version
 
     @transaction.atomic
-    def save(
-        self, force_insert=False, force_update=False, using=None, update_fields=None
-    ):
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         create = self.pk is None
         if not create and self._schema_has_changed():
             self.schema_version += 1
@@ -1205,24 +1173,16 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                 editor.create_model(model_class)
             # Create the external database table
             if self.external_database is not None:
-                self._create_external_database_table(
-                    self.external_database.memorable_name
-                )
+                self._create_external_database_table(self.external_database.memorable_name)
         else:
             if self.external_database != self._original_ext_db:
                 # If external db has been changed delete the original table
                 if self._original_ext_db is not None:
-                    self._drop_external_database_table(
-                        self._original_ext_db.memorable_name
-                    )
+                    self._drop_external_database_table(self._original_ext_db.memorable_name)
                 # if external db is now set create the table and sync existing records
                 if self.external_database is not None:
-                    self._create_external_database_table(
-                        self.external_database.memorable_name
-                    )
-                    self.sync_to_external_database(
-                        self.external_database.memorable_name
-                    )
+                    self._create_external_database_table(self.external_database.memorable_name)
+                    self.sync_to_external_database(self.external_database.memorable_name)
 
             # If the db has been changed update it
             if self._schema_has_changed():
@@ -1236,12 +1196,12 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         self._original_ext_db = self.external_database
         self._original_sort_order = self.record_sort_order
 
-        tag_names = ' '.join([x.name for x in self.tags.all()])
+        tag_names = " ".join([x.name for x in self.tags.all()])
         ReferenceDataset.objects.filter(id=self.id).update(
             search_vector=(
-                SearchVector('name', weight='A')
-                + SearchVector('short_description', weight='B')
-                + SearchVector(models.Value(tag_names), weight='C')
+                SearchVector("name", weight="A")
+                + SearchVector("short_description", weight="B")
+                + SearchVector(models.Value(tag_names), weight="C")
             )
         )
 
@@ -1253,7 +1213,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         )
         if linking_fields.count() > 0:
             raise ProtectedError(
-                'Cannot delete reference dataset as it is linked to by other datasets',
+                "Cannot delete reference dataset as it is linked to by other datasets",
                 set(x.reference_dataset for x in linking_fields),
             )
 
@@ -1297,9 +1257,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             f.name
             if f.data_type != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
             else f.relationship_name: f
-            for f in self.fields.filter(
-                data_type__in=ReferenceDatasetField.EDITABLE_DATA_TYPES
-            )
+            for f in self.fields.filter(data_type__in=ReferenceDatasetField.EDITABLE_DATA_TYPES)
         }
 
     @property
@@ -1311,7 +1269,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         return [x.column_name for x in self.fields.all()]
 
     @property
-    def identifier_field(self) -> 'ReferenceDatasetField':
+    def identifier_field(self) -> "ReferenceDatasetField":
         """
         Returns the associated `ReferenceDataField` with `is_identifier`=True
         :return:
@@ -1319,7 +1277,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         return self.fields.get(is_identifier=True)
 
     @property
-    def display_name_field(self) -> 'ReferenceDatasetField':
+    def display_name_field(self) -> "ReferenceDatasetField":
         """
         Returns the associated `ReferenceDataField` with `is_display_name`=True.
         Falls back to the identifier field if no display name is set.
@@ -1350,18 +1308,16 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         """
         records = self.get_records()
         if records.exists():
-            return records.latest('updated_date').updated_date
+            return records.latest("updated_date").updated_date
         return None
 
     @property
     def version(self):
-        return '{}.{}'.format(self.major_version, self.minor_version)
+        return "{}.{}".format(self.major_version, self.minor_version)
 
     @property
     def published_version(self):
-        return '{}.{}'.format(
-            self.published_major_version, self.published_minor_version
-        )
+        return "{}.{}".format(self.published_major_version, self.published_minor_version)
 
     @property
     def record_sort_order(self):
@@ -1370,17 +1326,17 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         If column type is foreign key sort on display name for the related model.
         :return:
         """
-        prefix = '-' if self.sort_direction == self.SORT_DIR_DESC else ''
-        order = 'updated_date'
+        prefix = "-" if self.sort_direction == self.SORT_DIR_DESC else ""
+        order = "updated_date"
         if self.sort_field is not None:
             field = self.sort_field
             order = field.column_name
             if field.data_type == field.DATA_TYPE_FOREIGN_KEY:
-                order = '{}__{}'.format(
+                order = "{}__{}".format(
                     field.relationship_name,
                     field.linked_reference_dataset_field.column_name,
                 )
-        return [''.join([prefix, order])]
+        return ["".join([prefix, order])]
 
     def get_record_model_class(self) -> object:
         """
@@ -1389,7 +1345,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         :return: dynamic model class
         """
         try:
-            model = apps.all_models['datasets'][self.table_name]
+            model = apps.all_models["datasets"][self.table_name]
         except KeyError:
             pass
         else:
@@ -1397,12 +1353,12 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                 return model
 
         try:
-            del apps.all_models['datasets'][self.table_name]
+            del apps.all_models["datasets"][self.table_name]
         except KeyError:
             pass
 
         class Meta:
-            app_label = 'datasets'
+            app_label = "datasets"
             db_table = self.table_name
             ordering = self.record_sort_order
 
@@ -1413,16 +1369,16 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                 else f.relationship_name: f.get_model_field()
                 for f in self.fields.all()
             },
-            '__module__': 'datasets',
-            '__schema_version__': self.schema_version,
-            'Meta': Meta,
+            "__module__": "datasets",
+            "__schema_version__": self.schema_version,
+            "Meta": Meta,
         }
 
         # During the above DB queries, another request may have created and
         # registered the model. Ensure we don't attempt to register another one
         # since Django will raise an exception
         try:
-            return apps.all_models['datasets'][self.table_name]
+            return apps.all_models["datasets"][self.table_name]
         except KeyError:
             pass
 
@@ -1442,7 +1398,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         :param internal_id:
         :return:
         """
-        return self._get_record('id', internal_id)
+        return self._get_record("id", internal_id)
 
     def get_record_by_custom_id(self, record_id: any) -> Optional[dict]:
         """
@@ -1462,9 +1418,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         return self.get_records().get(**{field_name: identifier})
 
     @transaction.atomic
-    def save_record(
-        self, internal_id: Optional[int], form_data: dict, sync_externally=True
-    ):
+    def save_record(self, internal_id: Optional[int], form_data: dict, sync_externally=True):
         """
         Save a record to the local database and associate it with this reference dataset.
         Replicate the record in any linked external databases.
@@ -1522,19 +1476,11 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                 if field.data_type != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
                     record_data[field.column_name] = getattr(record, field.column_name)
                 else:
-                    record_data[field.relationship_name] = getattr(
-                        record, field.relationship_name
-                    )
+                    record_data[field.relationship_name] = getattr(record, field.relationship_name)
 
-            if (
-                model_class.objects.using(external_database)
-                .filter(pk=record.id)
-                .exists()
-            ):
+            if model_class.objects.using(external_database).filter(pk=record.id).exists():
                 with external_model_class(model_class) as mc:
-                    mc.objects.using(external_database).filter(pk=record.id).update(
-                        **record_data
-                    )
+                    mc.objects.using(external_database).filter(pk=record.id).update(**record_data)
             else:
                 with external_model_class(model_class) as mc:
                     mc.objects.using(external_database).create(
@@ -1560,23 +1506,21 @@ class ReferenceDataset(DeletableTimestampedUserModel):
 
     def get_database_names(self):
         if self.external_database is not None:
-            return ['default', self.external_database.memorable_name]
-        return ['default']
+            return ["default", self.external_database.memorable_name]
+        return ["default"]
 
     def get_absolute_url(self):
-        return '{}#{}'.format(
-            reverse('datasets:dataset_detail', args=(self.uuid,)), self.slug
-        )
+        return "{}#{}".format(reverse("datasets:dataset_detail", args=(self.uuid,)), self.slug)
 
     def get_admin_edit_url(self):
-        return reverse('admin:datasets_referencedataset_change', args=(self.id,))
+        return reverse("admin:datasets_referencedataset_change", args=(self.id,))
 
     @staticmethod
     def get_type_display():
         """
         Allow for reference dataset type name display in api responses to match datasets.
         """
-        return 'Reference Dataset'
+        return "Reference Dataset"
 
     def user_has_bookmarked(self, user):
         return self.referencedatasetbookmark_set.filter(user=user).exists()
@@ -1608,18 +1552,18 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                 else field.linked_reference_dataset_field.data_type
             )
             col_def = {
-                'headerName': field.name,
-                'field': column_name,
-                'sortable': True,
-                'filter': 'agTextColumnFilter',
+                "headerName": field.name,
+                "field": column_name,
+                "sortable": True,
+                "filter": "agTextColumnFilter",
             }
             if data_type in [
                 field.DATA_TYPE_INT,
                 field.DATA_TYPE_FLOAT,
             ]:
-                col_def['filter'] = 'agNumberColumnFilter'
+                col_def["filter"] = "agNumberColumnFilter"
             elif data_type in [field.DATA_TYPE_DATE, field.DATA_TYPE_DATETIME]:
-                col_def['filter'] = 'agDateColumnFilter'
+                col_def["filter"] = "agDateColumnFilter"
             col_defs.append(col_def)
         return col_defs
 
@@ -1636,9 +1580,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                     record_data[field.column_name] = getattr(record, field.column_name)
                     # ISO format dates for js compatibility
                     if isinstance(record_data[field.column_name], datetime):
-                        record_data[field.column_name] = record_data[
-                            field.column_name
-                        ].isoformat()
+                        record_data[field.column_name] = record_data[field.column_name].isoformat()
                 else:
                     relationship = getattr(record, field.relationship_name)
                     record_data[field.linked_reference_dataset_field.column_name] = (
@@ -1658,13 +1600,13 @@ class ReferenceDataSetBookmark(models.Model):
     reference_dataset = models.ForeignKey(ReferenceDataset, on_delete=models.CASCADE)
 
     class Meta:
-        db_table = 'app_referencedatasetbookmark'
-        unique_together = ('user', 'reference_dataset')
+        db_table = "app_referencedatasetbookmark"
+        unique_together = ("user", "reference_dataset")
 
 
 class ReferenceDatasetRecordBase(models.Model):
     reference_dataset = models.ForeignKey(
-        ReferenceDataset, on_delete=models.CASCADE, related_name='records'
+        ReferenceDataset, on_delete=models.CASCADE, related_name="records"
     )
     updated_date = models.DateTimeField(auto_now=True)
 
@@ -1672,9 +1614,7 @@ class ReferenceDatasetRecordBase(models.Model):
         abstract = True
 
     def __str__(self):
-        return str(
-            getattr(self, self.reference_dataset.display_name_field.column_name, None)
-        )
+        return str(getattr(self, self.reference_dataset.display_name_field.column_name, None))
 
 
 class ReferenceDatasetField(TimeStampedUserModel):
@@ -1688,26 +1628,26 @@ class ReferenceDatasetField(TimeStampedUserModel):
     DATA_TYPE_FOREIGN_KEY = 8
     DATA_TYPE_UUID = 9
     _DATA_TYPES = (
-        (DATA_TYPE_CHAR, 'Character field'),
-        (DATA_TYPE_INT, 'Integer field'),
-        (DATA_TYPE_FLOAT, 'Float field'),
-        (DATA_TYPE_DATE, 'Date field'),
-        (DATA_TYPE_TIME, 'Time field'),
-        (DATA_TYPE_DATETIME, 'Datetime field'),
-        (DATA_TYPE_BOOLEAN, 'Boolean field'),
-        (DATA_TYPE_FOREIGN_KEY, 'Linked Reference Dataset field'),
-        (DATA_TYPE_UUID, 'Universal unique identifier field'),
+        (DATA_TYPE_CHAR, "Character field"),
+        (DATA_TYPE_INT, "Integer field"),
+        (DATA_TYPE_FLOAT, "Float field"),
+        (DATA_TYPE_DATE, "Date field"),
+        (DATA_TYPE_TIME, "Time field"),
+        (DATA_TYPE_DATETIME, "Datetime field"),
+        (DATA_TYPE_BOOLEAN, "Boolean field"),
+        (DATA_TYPE_FOREIGN_KEY, "Linked Reference Dataset field"),
+        (DATA_TYPE_UUID, "Universal unique identifier field"),
     )
     DATA_TYPE_MAP = {
-        DATA_TYPE_CHAR: 'varchar(255)',
-        DATA_TYPE_INT: 'integer',
-        DATA_TYPE_FLOAT: 'float',
-        DATA_TYPE_DATE: 'date',
-        DATA_TYPE_TIME: 'time',
-        DATA_TYPE_DATETIME: 'timestamp',
-        DATA_TYPE_BOOLEAN: 'boolean',
-        DATA_TYPE_FOREIGN_KEY: 'integer',
-        DATA_TYPE_UUID: 'uuid',
+        DATA_TYPE_CHAR: "varchar(255)",
+        DATA_TYPE_INT: "integer",
+        DATA_TYPE_FLOAT: "float",
+        DATA_TYPE_DATE: "date",
+        DATA_TYPE_TIME: "time",
+        DATA_TYPE_DATETIME: "timestamp",
+        DATA_TYPE_BOOLEAN: "boolean",
+        DATA_TYPE_FOREIGN_KEY: "integer",
+        DATA_TYPE_UUID: "uuid",
     }
     _DATA_TYPE_FORM_FIELD_MAP = {
         DATA_TYPE_CHAR: forms.CharField,
@@ -1742,30 +1682,30 @@ class ReferenceDatasetField(TimeStampedUserModel):
         DATA_TYPE_FOREIGN_KEY,
     )
     reference_dataset = models.ForeignKey(
-        ReferenceDataset, on_delete=models.CASCADE, related_name='fields'
+        ReferenceDataset, on_delete=models.CASCADE, related_name="fields"
     )
     data_type = models.IntegerField(choices=_DATA_TYPES)
     is_identifier = models.BooleanField(
-        default=False, help_text='This field is the unique identifier for the record'
+        default=False, help_text="This field is the unique identifier for the record"
     )
     is_display_name = models.BooleanField(
         default=False,
-        help_text='This field is the name that will be displayed in the upload '
-        'record form when referenced by other datasets',
+        help_text="This field is the name that will be displayed in the upload "
+        "record form when referenced by other datasets",
     )
-    name = models.CharField(max_length=255, help_text='The display name for the field')
+    name = models.CharField(max_length=255, help_text="The display name for the field")
     column_name = models.CharField(
         max_length=255,
         blank=True,
         null=True,
-        help_text='Descriptive name for the field. This name is used in the Data Workspace '
-        'database. Leave blank for linked reference dataset fields',
+        help_text="Descriptive name for the field. This name is used in the Data Workspace "
+        "database. Leave blank for linked reference dataset fields",
         validators=[
             RegexValidator(
-                regex=r'^[a-z][a-z0-9_\.]*$',
-                message='Column names must be lowercase and must '
-                'start with a letter and contain only '
-                'letters, numbers, underscores and full stops.',
+                regex=r"^[a-z][a-z0-9_\.]*$",
+                message="Column names must be lowercase and must "
+                "start with a letter and contain only "
+                "letters, numbers, underscores and full stops.",
             )
         ],
     )
@@ -1774,14 +1714,14 @@ class ReferenceDatasetField(TimeStampedUserModel):
     linked_reference_dataset = models.ForeignKey(
         ReferenceDataset,
         on_delete=models.PROTECT,
-        related_name='linked_fields',
+        related_name="linked_fields",
         null=True,
         blank=True,
     )  # No longer used
     linked_reference_dataset_field = models.ForeignKey(
-        'self',
+        "self",
         on_delete=models.PROTECT,
-        related_name='linked_dataset_fields',
+        related_name="linked_dataset_fields",
         null=True,
         blank=True,
     )
@@ -1789,28 +1729,28 @@ class ReferenceDatasetField(TimeStampedUserModel):
         max_length=255,
         blank=True,
         null=True,
-        help_text='For use with linked reference dataset fields only. Give a name for the '
+        help_text="For use with linked reference dataset fields only. Give a name for the "
         'linked reference dataset, which will be appended with "_id" to form a foreign key '
-        'in the database table. Where multiple fields are selected from the same linked '
-        'reference dataset, the same name should be used',
+        "in the database table. Where multiple fields are selected from the same linked "
+        "reference dataset, the same name should be used",
         validators=[
             RegexValidator(
-                regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$',
-                message='Relationship names must start with a letter and contain only '
-                'letters, numbers, underscores and full stops.',
+                regex=r"^[a-zA-Z][a-zA-Z0-9_\.]*$",
+                message="Relationship names must start with a letter and contain only "
+                "letters, numbers, underscores and full stops.",
             )
         ],
     )
     sort_order = models.PositiveIntegerField(default=0, blank=False, null=False)
 
     class Meta:
-        db_table = 'app_referencedatasetfield'
+        db_table = "app_referencedatasetfield"
         unique_together = (
-            ('reference_dataset', 'name'),
-            ('reference_dataset', 'column_name'),
+            ("reference_dataset", "name"),
+            ("reference_dataset", "column_name"),
         )
-        verbose_name = 'Reference dataset field'
-        ordering = ('sort_order',)
+        verbose_name = "Reference dataset field"
+        ordering = ("sort_order",)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1819,7 +1759,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
         self._original_column_name = self.column_name
 
     def __str__(self):
-        return '{}: {}'.format(self.reference_dataset.name, self.name)
+        return "{}: {}".format(self.reference_dataset.name, self.name)
 
     def _add_column_to_db(self):
         """
@@ -1832,9 +1772,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
         for database in self.reference_dataset.get_database_names():
             with connections[database].schema_editor() as editor:
                 if self.data_type != self.DATA_TYPE_FOREIGN_KEY:
-                    editor.add_field(
-                        model_class, model_class._meta.get_field(self.column_name)
-                    )
+                    editor.add_field(model_class, model_class._meta.get_field(self.column_name))
                 else:
                     editor.add_field(
                         model_class,
@@ -1871,11 +1809,11 @@ class ReferenceDatasetField(TimeStampedUserModel):
             with connections[database].cursor() as cursor:
                 cursor.execute(
                     sql.SQL(
-                        '''
+                        """
                         ALTER TABLE {table_name}
                         ALTER COLUMN {column_name} TYPE {data_type}
                         USING {column_name}::text::{data_type}
-                        '''
+                        """
                     ).format(
                         table_name=sql.Identifier(self.reference_dataset.table_name),
                         column_name=sql.Identifier(self.column_name),
@@ -1884,9 +1822,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
                 )
 
     @transaction.atomic
-    def save(
-        self, force_insert=False, force_update=False, using=None, update_fields=None
-    ):
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         """
         On ReferenceDatasetField save update the associated table.
         :param force_insert:
@@ -1901,25 +1837,24 @@ class ReferenceDatasetField(TimeStampedUserModel):
         # to another reference dataset field
         if (
             self.linked_reference_dataset_field
-            and self.linked_reference_dataset_field.data_type
-            == self.DATA_TYPE_FOREIGN_KEY
+            and self.linked_reference_dataset_field.data_type == self.DATA_TYPE_FOREIGN_KEY
         ):
             raise ValidationError(
-                'Unable to link reference dataset fields to another field that is itself linked'
+                "Unable to link reference dataset fields to another field that is itself linked"
             )
 
         # Ensure a reference dataset field cannot link to a field in a dataset that has a
         # linked field pointing to a field in the current dataset (circular link)
         circular_reference_datasets = ReferenceDatasetField.objects.filter(
             linked_reference_dataset_field__reference_dataset=self.reference_dataset
-        ).values_list('reference_dataset_id', flat=True)
+        ).values_list("reference_dataset_id", flat=True)
         if (
             self.linked_reference_dataset_field
             and self.linked_reference_dataset_field.reference_dataset.id
             in circular_reference_datasets
         ):
             raise ValidationError(
-                'Unable to link reference dataset fields to another field that points back to this dataset (circular link)'
+                "Unable to link reference dataset fields to another field that points back to this dataset (circular link)"
             )
 
         # If this is a newly created field add it to the db
@@ -1994,27 +1929,27 @@ class ReferenceDatasetField(TimeStampedUserModel):
         Falls back to `CharField` if not found.
         :return:
         """
-        field_data = {'label': self.name}
+        field_data = {"label": self.name}
         if self.data_type == self.DATA_TYPE_DATE:
-            field_data['widget'] = forms.DateInput(attrs={'type': 'date'})
-            field_data['input_formats'] = (
-                '%Y-%m-%d',
-                '%d-%m-%Y',
-                '%y-%m-%d',
-                '%d-%m-%y',
-                '%d/%m/%Y',
-                '%d/%m/%y',
+            field_data["widget"] = forms.DateInput(attrs={"type": "date"})
+            field_data["input_formats"] = (
+                "%Y-%m-%d",
+                "%d-%m-%Y",
+                "%y-%m-%d",
+                "%d-%m-%y",
+                "%d/%m/%Y",
+                "%d/%m/%y",
             )
         elif self.data_type == self.DATA_TYPE_TIME:
-            field_data['widget'] = forms.DateInput(attrs={'type': 'time'})
+            field_data["widget"] = forms.DateInput(attrs={"type": "time"})
         elif self.data_type == self.DATA_TYPE_FOREIGN_KEY:
             field_data[
-                'queryset'
+                "queryset"
             ] = self.linked_reference_dataset_field.reference_dataset.get_records()
-            field_data['label'] = self.relationship_name_for_record_forms
-        field_data['required'] = self.is_identifier or self.required
+            field_data["label"] = self.relationship_name_for_record_forms
+        field_data["required"] = self.is_identifier or self.required
         field = self._DATA_TYPE_FORM_FIELD_MAP.get(self.data_type)(**field_data)
-        field.widget.attrs['required'] = field.required
+        field.widget.attrs["required"] = field.required
         return field
 
     def get_model_field(self):
@@ -2024,21 +1959,21 @@ class ReferenceDatasetField(TimeStampedUserModel):
         """
         model_field = self._DATA_TYPE_MODEL_FIELD_MAP.get(self.data_type)
         model_config = {
-            'verbose_name': self.name,
-            'blank': not self.is_identifier and not self.required,
-            'null': not self.is_identifier and not self.required,
-            'max_length': 255,
+            "verbose_name": self.name,
+            "blank": not self.is_identifier and not self.required,
+            "null": not self.is_identifier and not self.required,
+            "max_length": 255,
         }
         if self.data_type == self.DATA_TYPE_FOREIGN_KEY:
             model_config.update(
                 {
-                    'verbose_name': 'Linked Reference Dataset field',
-                    'to': self.linked_reference_dataset_field.reference_dataset.get_record_model_class(),
-                    'on_delete': models.DO_NOTHING,
+                    "verbose_name": "Linked Reference Dataset field",
+                    "to": self.linked_reference_dataset_field.reference_dataset.get_record_model_class(),
+                    "on_delete": models.DO_NOTHING,
                 }
             )
         elif self.data_type == self.DATA_TYPE_UUID:
-            model_config.update({'default': uuid.uuid4, 'editable': False})
+            model_config.update({"default": uuid.uuid4, "editable": False})
         return model_field(**model_config)
 
     @property
@@ -2054,8 +1989,8 @@ class ReferenceDatasetField(TimeStampedUserModel):
         if self.data_type != self.DATA_TYPE_FOREIGN_KEY:
             return None
 
-        if ':' in self.name:
-            return self.name.split(':')[0]
+        if ":" in self.name:
+            return self.name.split(":")[0]
         return self.relationship_name
 
 
@@ -2063,22 +1998,16 @@ class ReferenceDatasetUploadLog(TimeStampedUserModel):
     reference_dataset = models.ForeignKey(ReferenceDataset, on_delete=models.CASCADE)
 
     class Meta:
-        ordering = ('created_date',)
+        ordering = ("created_date",)
 
     def additions(self):
-        return self.records.filter(
-            status=ReferenceDatasetUploadLogRecord.STATUS_SUCCESS_ADDED
-        )
+        return self.records.filter(status=ReferenceDatasetUploadLogRecord.STATUS_SUCCESS_ADDED)
 
     def updates(self):
-        return self.records.filter(
-            status=ReferenceDatasetUploadLogRecord.STATUS_SUCCESS_UPDATED
-        )
+        return self.records.filter(status=ReferenceDatasetUploadLogRecord.STATUS_SUCCESS_UPDATED)
 
     def errors(self):
-        return self.records.filter(
-            status=ReferenceDatasetUploadLogRecord.STATUS_FAILURE
-        )
+        return self.records.filter(status=ReferenceDatasetUploadLogRecord.STATUS_FAILURE)
 
 
 class ReferenceDatasetUploadLogRecord(TimeStampedModel):
@@ -2086,22 +2015,22 @@ class ReferenceDatasetUploadLogRecord(TimeStampedModel):
     STATUS_SUCCESS_UPDATED = 2
     STATUS_FAILURE = 3
     _STATUS_CHOICES = (
-        (STATUS_SUCCESS_ADDED, 'Record added successfully'),
-        (STATUS_SUCCESS_UPDATED, 'Record updated successfully'),
-        (STATUS_FAILURE, 'Record upload failed'),
+        (STATUS_SUCCESS_ADDED, "Record added successfully"),
+        (STATUS_SUCCESS_UPDATED, "Record updated successfully"),
+        (STATUS_FAILURE, "Record upload failed"),
     )
     upload_log = models.ForeignKey(
-        ReferenceDatasetUploadLog, on_delete=models.CASCADE, related_name='records'
+        ReferenceDatasetUploadLog, on_delete=models.CASCADE, related_name="records"
     )
     status = models.IntegerField(choices=_STATUS_CHOICES)
     row_data = models.JSONField()
     errors = models.JSONField(null=True)
 
     class Meta:
-        ordering = ('created_date',)
+        ordering = ("created_date",)
 
     def __str__(self):
-        return '{}: {}'.format(self.created_date, self.get_status_display())
+        return "{}: {}".format(self.created_date, self.get_status_display())
 
 
 class VisualisationCatalogueItem(DeletableTimestampedUserModel):
@@ -2112,10 +2041,8 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         VisualisationTemplate, on_delete=models.CASCADE, null=True, blank=True
     )
     name = models.CharField(max_length=255, null=False, blank=False)
-    slug = models.SlugField(
-        max_length=50, db_index=True, unique=True, null=False, blank=False
-    )
-    tags = models.ManyToManyField(Tag, related_name='+', blank=True)
+    slug = models.SlugField(max_length=50, db_index=True, unique=True, null=False, blank=False)
+    tags = models.ManyToManyField(Tag, related_name="+", blank=True)
     short_description = models.CharField(max_length=255)
     description = RichTextField(null=True, blank=True)
     enquiries_contact = models.ForeignKey(
@@ -2123,14 +2050,14 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         on_delete=models.CASCADE,
         null=True,
         blank=True,
-        related_name='+',
+        related_name="+",
     )
     secondary_enquiries_contact = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         null=True,
         blank=True,
-        related_name='+',
+        related_name="+",
     )
     licence = models.CharField(null=False, blank=True, max_length=256)
     retention_policy = models.TextField(null=True, blank=True)
@@ -2144,14 +2071,14 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     information_asset_owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='info_asset_owned_visualisations',
+        related_name="info_asset_owned_visualisations",
         null=True,
         blank=True,
     )
     information_asset_manager = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='info_asset_managed_visualisations',
+        related_name="info_asset_managed_visualisations",
         null=True,
         blank=True,
     )
@@ -2162,9 +2089,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         default=UserAccessType.REQUIRES_AUTHENTICATION,
     )
     events = GenericRelation(EventLog)
-    datasets = models.ManyToManyField(
-        DataSet, related_name='related_visualisations', blank=True
-    )
+    datasets = models.ManyToManyField(DataSet, related_name="related_visualisations", blank=True)
 
     # Used as a parallel to DataSet.type, which will help other parts of the codebase
     # easily distinguish between reference datasets, datacuts, master datasets and visualisations.
@@ -2173,7 +2098,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         models.CharField(max_length=256),
         blank=True,
         default=list,
-        help_text='Comma-separated list of domain names without spaces, e.g trade.gov.uk,fco.gov.uk',
+        help_text="Comma-separated list of domain names without spaces, e.g trade.gov.uk,fco.gov.uk",
     )
 
     licence_url = models.CharField(
@@ -2191,14 +2116,10 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         indexes = (GinIndex(fields=["search_vector"]),)
 
     def get_admin_edit_url(self):
-        return reverse(
-            'admin:datasets_visualisationcatalogueitem_change', args=(self.id,)
-        )
+        return reverse("admin:datasets_visualisationcatalogueitem_change", args=(self.id,))
 
     def get_absolute_url(self):
-        return '{}#{}'.format(
-            reverse('datasets:dataset_detail', args=(self.id,)), self.slug
-        )
+        return "{}#{}".format(reverse("datasets:dataset_detail", args=(self.id,)), self.slug)
 
     def update_published_and_updated_timestamps(self):
         if not self.published:
@@ -2210,19 +2131,17 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         self.updated_at = timezone.now()
 
     @transaction.atomic
-    def save(
-        self, force_insert=False, force_update=False, using=None, update_fields=None
-    ):
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         self.update_published_and_updated_timestamps()
         super().save(force_insert, force_update, using, update_fields)
 
-        tag_names = ' '.join([x.name for x in self.tags.all()])
+        tag_names = " ".join([x.name for x in self.tags.all()])
         VisualisationCatalogueItem.objects.filter(id=self.id).update(
             search_vector=(
-                SearchVector('name', weight='A')
-                + SearchVector('short_description', weight='B')
-                + SearchVector(models.Value(tag_names), weight='C')
-                + SearchVector('description', weight='D')
+                SearchVector("name", weight="A")
+                + SearchVector("short_description", weight="B")
+                + SearchVector(models.Value(tag_names), weight="C")
+                + SearchVector("description", weight="D")
             )
         )
 
@@ -2249,11 +2168,10 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         return links
 
     def user_has_access(self, user):
-        user_email_domain = user.email.split('@')[1]
+        user_email_domain = user.email.split("@")[1]
 
         return (
-            self.user_access_type
-            in [UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN]
+            self.user_access_type in [UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN]
             or self.visualisationuserpermission_set.filter(user=user).exists()
             or user_email_domain in self.authorized_email_domains
         )
@@ -2271,7 +2189,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         return self.visualisationbookmark_set.count()
 
     def get_usage_history_url(self):
-        return reverse('datasets:visualisation_usage_history', args=(self.id,))
+        return reverse("datasets:visualisation_usage_history", args=(self.id,))
 
     def __str__(self):
         return self.name
@@ -2279,31 +2197,30 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
 
 class VisualisationUserPermission(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    visualisation = models.ForeignKey(
-        VisualisationCatalogueItem, on_delete=models.CASCADE
-    )
+    visualisation = models.ForeignKey(VisualisationCatalogueItem, on_delete=models.CASCADE)
 
     class Meta:
-        db_table = 'app_visualisationuserpermission'
-        unique_together = ('user', 'visualisation')
+        db_table = "app_visualisationuserpermission"
+        unique_together = ("user", "visualisation")
 
 
 class VisualisationBookmark(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    visualisation = models.ForeignKey(
-        VisualisationCatalogueItem, on_delete=models.CASCADE
-    )
+    visualisation = models.ForeignKey(VisualisationCatalogueItem, on_delete=models.CASCADE)
 
     class Meta:
-        db_table = 'app_visualisationbookmark'
-        unique_together = ('user', 'visualisation')
+        db_table = "app_visualisationbookmark"
+        unique_together = ("user", "visualisation")
 
 
 class VisualisationLink(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     visualisation_type = models.CharField(
         max_length=64,
-        choices=(('QUICKSIGHT', 'AWS QuickSight'), ('SUPERSET', 'Superset'),),
+        choices=(
+            ("QUICKSIGHT", "AWS QuickSight"),
+            ("SUPERSET", "Superset"),
+        ),
         null=False,
         blank=False,
     )
@@ -2311,10 +2228,11 @@ class VisualisationLink(TimeStampedModel):
         blank=False,
         null=False,
         max_length=128,
-        help_text='Used as the displayed text in the download link',
+        help_text="Used as the displayed text in the download link",
     )
     identifier = models.CharField(
-        max_length=256, help_text='For QuickSight, the dashboard ID.',
+        max_length=256,
+        help_text="For QuickSight, the dashboard ID.",
     )
     visualisation_catalogue_item = models.ForeignKey(
         VisualisationCatalogueItem, on_delete=models.CASCADE
@@ -2322,10 +2240,10 @@ class VisualisationLink(TimeStampedModel):
     data_source_last_updated = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        db_table = 'app_visualisationlink'
+        db_table = "app_visualisationlink"
 
     def get_absolute_url(self):
-        return reverse('visualisations:link', kwargs={"link_id": self.id})
+        return reverse("visualisations:link", kwargs={"link_id": self.id})
 
 
 class VisualisationLinkSqlQuery(TimeStampedModel):
@@ -2335,7 +2253,7 @@ class VisualisationLinkSqlQuery(TimeStampedModel):
     sql_query = models.TextField()
     is_latest = models.BooleanField()
     visualisation_link = models.ForeignKey(
-        VisualisationLink, on_delete=models.CASCADE, related_name='sql_queries'
+        VisualisationLink, on_delete=models.CASCADE, related_name="sql_queries"
     )
 
 
@@ -2351,19 +2269,34 @@ class ToolQueryAuditLog(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=('timestamp', 'id')),
+            models.Index(fields=("timestamp", "id")),
         ]
 
 
 class ToolQueryAuditLogTable(models.Model):
     audit_log = models.ForeignKey(
-        ToolQueryAuditLog, on_delete=models.CASCADE, related_name='tables'
+        ToolQueryAuditLog, on_delete=models.CASCADE, related_name="tables"
     )
     schema = models.CharField(
         max_length=63,
-        validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
-        default='public',
+        validators=[RegexValidator(regex=r"^[a-zA-Z][a-zA-Z0-9_\.]*$")],
+        default="public",
     )
     table = models.CharField(
-        max_length=63, validators=[RegexValidator(regex=r'^[a-zA-Z][a-zA-Z0-9_\.]*$')],
+        max_length=63,
+        validators=[RegexValidator(regex=r"^[a-zA-Z][a-zA-Z0-9_\.]*$")],
     )
+
+
+class Notification(TimeStampedModel):
+    changelog_id = models.IntegerField(unique=True)
+    change_date = models.DateTimeField()
+
+
+class UserNotification(TimeStampedModel):
+    notification = models.ForeignKey(Notification, on_delete=models.PROTECT)
+    subscription = models.ForeignKey(DataSetSubscription, on_delete=models.PROTECT)
+    email_id = models.UUIDField(null=True)
+
+    class Meta:
+        unique_together = ["notification", "subscription"]

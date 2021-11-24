@@ -6,7 +6,7 @@ from django.db.utils import DatabaseError
 
 @transaction.atomic
 def set_query_tables(apps, schema_editor):
-    CustomDatasetQuery = apps.get_model('datasets', 'CustomDatasetQuery')
+    CustomDatasetQuery = apps.get_model("datasets", "CustomDatasetQuery")
 
     for query in CustomDatasetQuery.objects.all():
         if query.tables.all():
@@ -34,7 +34,7 @@ def set_query_tables(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0052_customdatasetquerytable'),
+        ("datasets", "0052_customdatasetquerytable"),
     ]
 
     operations = [

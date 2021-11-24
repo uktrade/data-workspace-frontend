@@ -26,7 +26,7 @@ from dataworkspace.apps.core.utils import (
 from dataworkspace.apps.explorer.models import QueryLog
 
 
-logger = logging.getLogger('app')
+logger = logging.getLogger("app")
 EXPLORER_PARAM_TOKEN = "$$"
 
 
@@ -36,11 +36,11 @@ def param(name):
 
 def safe_login_prompt(request):
     defaults = {
-        'template_name': 'admin/login.html',
-        'authentication_form': AuthenticationForm,
-        'extra_context': {
-            'title': 'Log in',
-            'app_path': request.get_full_path(),
+        "template_name": "admin/login.html",
+        "authentication_form": AuthenticationForm,
+        "extra_context": {
+            "title": "Log in",
+            "app_path": request.get_full_path(),
             REDIRECT_FIELD_NAME: request.get_full_path(),
         },
     }
@@ -60,12 +60,12 @@ def get_int_from_request(request, name, default):
 
 
 def get_params_from_request(request):
-    val = request.GET.get('params', None)
+    val = request.GET.get("params", None)
     try:
         d = {}
-        tuples = val.split('|')
+        tuples = val.split("|")
         for t in tuples:
-            res = t.split(':')
+            res = t.split(":")
             d[res[0]] = res[1]
         return d
     except Exception:  # pylint: disable=broad-except
@@ -87,19 +87,19 @@ def url_get_page(request):
 
 
 def url_get_query_id(request):
-    return get_int_from_request(request, 'query_id', None)
+    return get_int_from_request(request, "query_id", None)
 
 
 def url_get_log_id(request):
-    return get_int_from_request(request, 'querylog_id', None)
+    return get_int_from_request(request, "querylog_id", None)
 
 
 def url_get_show(request):
-    return bool(get_int_from_request(request, 'show', 1))
+    return bool(get_int_from_request(request, "show", 1))
 
 
 def url_get_save(request):
-    return bool(get_int_from_request(request, 'save', 0))
+    return bool(get_int_from_request(request, "save", 0))
 
 
 def url_get_params(request):
@@ -107,7 +107,7 @@ def url_get_params(request):
 
 
 def fmt_sql(sql):
-    return sqlparse.format(sql, reindent=True, keyword_case='upper')
+    return sqlparse.format(sql, reindent=True, keyword_case="upper")
 
 
 def noop_decorator(f):
@@ -122,7 +122,7 @@ class QueryException(Exception):
     pass
 
 
-credentials_version_key = 'explorer_credentials_version'
+credentials_version_key = "explorer_credentials_version"
 
 
 def get_user_cached_credentials_key(user):
@@ -144,15 +144,15 @@ def get_user_explorer_connection_settings(user, alias):
 
     if alias not in connections:
         raise InvalidExplorerConnectionException(
-            'Attempted to access connection %s, but that is not a registered Explorer connection.'
+            "Attempted to access connection %s, but that is not a registered Explorer connection."
             % alias
         )
 
     def get_available_user_connections(_user_credentials):
-        return {data['memorable_name']: data for data in _user_credentials}
+        return {data["memorable_name"]: data for data in _user_credentials}
 
     with cache.lock(
-        f'get-explorer-connection-{user.profile.sso_id}',
+        f"get-explorer-connection-{user.profile.sso_id}",
         blocking_timeout=30,
         timeout=180,
     ):
@@ -175,7 +175,7 @@ def get_user_explorer_connection_settings(user, alias):
         if not user_credentials:
             db_role_schema_suffix = db_role_schema_suffix_for_user(user)
             source_tables = source_tables_for_user(user)
-            db_user = postgres_user(user.email, suffix='explorer')
+            db_user = postgres_user(user.email, suffix="explorer")
             duration = timedelta(hours=24)
             cache_duration = (duration - timedelta(minutes=15)).total_seconds()
 
@@ -214,11 +214,11 @@ def invalidate_data_explorer_user_cached_credentials():
 @contextmanager
 def user_explorer_connection(connection_settings):
     with psycopg2.connect(
-        dbname=connection_settings['db_name'],
-        host=connection_settings['db_host'],
-        user=connection_settings['db_user'],
-        password=connection_settings['db_password'],
-        port=connection_settings['db_port'],
+        dbname=connection_settings["db_name"],
+        host=connection_settings["db_host"],
+        user=connection_settings["db_user"],
+        password=connection_settings["db_password"],
+        port=connection_settings["db_port"],
     ) as conn:
         yield conn
 
@@ -233,17 +233,15 @@ def get_total_pages(total_rows, page_size):
 
 
 def tempory_query_table_name(user, query_log_id):
-    schema_name = f'{USER_SCHEMA_STEM}{db_role_schema_suffix_for_user(user)}'
-    return f'{schema_name}._data_explorer_tmp_query_{query_log_id}'
+    schema_name = f"{USER_SCHEMA_STEM}{db_role_schema_suffix_for_user(user)}"
+    return f"{schema_name}._data_explorer_tmp_query_{query_log_id}"
 
 
 def fetch_query_results(query_log_id):
     query_log = get_object_or_404(QueryLog, pk=query_log_id)
 
     user = query_log.run_by_user
-    user_connection_settings = get_user_explorer_connection_settings(
-        user, query_log.connection
-    )
+    user_connection_settings = get_user_explorer_connection_settings(user, query_log.connection)
     table_name = tempory_query_table_name(user, query_log.id)
     with user_explorer_connection(user_connection_settings) as conn:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -251,17 +249,15 @@ def fetch_query_results(query_log_id):
         cursor.execute("select oid from pg_type where typname='jsonb'")
         jsonb_code = cursor.fetchone()[0]
 
-        cursor.execute(f'SELECT * FROM {table_name}')
+        cursor.execute(f"SELECT * FROM {table_name}")
         # strip the prefix from the results
-        description = [(re.sub(r'col_\d*_', '', s.name),) for s in cursor.description]
-        headers = [d[0].strip() for d in description] if description else ['--']
+        description = [(re.sub(r"col_\d*_", "", s.name),) for s in cursor.description]
+        headers = [d[0].strip() for d in description] if description else ["--"]
         data_list = [list(r) for r in cursor]
-        types = [
-            'jsonb' if t.type_code == jsonb_code else None for t in cursor.description
-        ]
+        types = ["jsonb" if t.type_code == jsonb_code else None for t in cursor.description]
         data = [
             [
-                json.dumps(row, indent=2) if types[i] == 'jsonb' else row
+                json.dumps(row, indent=2) if types[i] == "jsonb" else row
                 for i, row in enumerate(record)
             ]
             for record in data_list

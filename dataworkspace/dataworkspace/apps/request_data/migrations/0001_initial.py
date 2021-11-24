@@ -14,77 +14,77 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='DataRequest',
+            name="DataRequest",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
                 (
-                    'requester',
+                    "requester",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.PROTECT,
-                        related_name='data_requests',
+                        related_name="data_requests",
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
                 (
-                    'requester_role',
+                    "requester_role",
                     models.CharField(
                         choices=[
-                            ('IAO', 'Information Asset Owner'),
-                            ('IAM', 'Information Asset Manager'),
+                            ("IAO", "Information Asset Owner"),
+                            ("IAM", "Information Asset Manager"),
                             (
-                                'delegate',
-                                'A colleague delegated by the owner or manager',
+                                "delegate",
+                                "A colleague delegated by the owner or manager",
                             ),
-                            ('other', 'Someone else'),
+                            ("other", "Someone else"),
                         ],
                         max_length=256,
                     ),
                 ),
                 (
-                    'name_of_owner_or_manager',
+                    "name_of_owner_or_manager",
                     models.CharField(blank=True, max_length=256),
                 ),
-                ('data_description', models.TextField()),
-                ('data_purpose', models.TextField()),
-                ('data_location', models.TextField(blank=True)),
+                ("data_description", models.TextField()),
+                ("data_purpose", models.TextField()),
+                ("data_location", models.TextField(blank=True)),
                 (
-                    'security_classification',
+                    "security_classification",
                     models.CharField(
                         choices=[
-                            ('official', 'Official (includes public data)'),
-                            ('commercially-sensitive', 'Official-Sensitive Commercial'),
-                            ('personal', 'Official-Sensitive Personal'),
+                            ("official", "Official (includes public data)"),
+                            ("commercially-sensitive", "Official-Sensitive Commercial"),
+                            ("personal", "Official-Sensitive Personal"),
                             (
-                                'locsen',
-                                'Official-Sensitive LocSen (location sensitive)',
+                                "locsen",
+                                "Official-Sensitive LocSen (location sensitive)",
                             ),
-                            ('secret', 'Secret'),
-                            ('top-secret', 'Top secret'),
-                            ('unknown', 'I don’t know'),
+                            ("secret", "Secret"),
+                            ("top-secret", "Top secret"),
+                            ("unknown", "I don’t know"),
                         ],
                         max_length=256,
                     ),
                 ),
                 (
-                    'status',
+                    "status",
                     models.CharField(
-                        choices=[('draft', 'Draft'), ('submitted', 'Submitted')],
-                        default='draft',
+                        choices=[("draft", "Draft"), ("submitted", "Submitted")],
+                        default="draft",
                         max_length=256,
                     ),
                 ),
-                ('zendesk_ticket_id', models.CharField(max_length=256)),
+                ("zendesk_ticket_id", models.CharField(max_length=256)),
             ],
-            options={'abstract': False},
+            options={"abstract": False},
         ),
     ]

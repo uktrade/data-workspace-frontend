@@ -12,20 +12,20 @@ import ckeditor.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('applications', '0001_squashed_0022_auto_20200414_1352'),
+        ("applications", "0001_squashed_0022_auto_20200414_1352"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('datasets', '0039_auto_20200309_1108'),
+        ("datasets", "0039_auto_20200309_1108"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='VisualisationCatalogueItem',
+            name="VisualisationCatalogueItem",
             fields=[
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
-                ('deleted', models.BooleanField(default=False)),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
+                ("deleted", models.BooleanField(default=False)),
                 (
-                    'id',
+                    "id",
                     models.UUIDField(
                         default=uuid.uuid4,
                         editable=False,
@@ -33,85 +33,85 @@ class Migration(migrations.Migration):
                         serialize=False,
                     ),
                 ),
-                ('name', models.CharField(max_length=255)),
-                ('slug', models.SlugField(unique=True)),
-                ('short_description', models.CharField(max_length=255)),
-                ('description', ckeditor.fields.RichTextField(blank=True, null=True)),
-                ('licence', models.CharField(blank=True, max_length=256)),
-                ('retention_policy', models.TextField(blank=True, null=True)),
+                ("name", models.CharField(max_length=255)),
+                ("slug", models.SlugField(unique=True)),
+                ("short_description", models.CharField(max_length=255)),
+                ("description", ckeditor.fields.RichTextField(blank=True, null=True)),
+                ("licence", models.CharField(blank=True, max_length=256)),
+                ("retention_policy", models.TextField(blank=True, null=True)),
                 (
-                    'personal_data',
+                    "personal_data",
                     models.CharField(blank=True, max_length=128, null=True),
                 ),
-                ('restrictions_on_usage', models.TextField(blank=True, null=True)),
-                ('published', models.BooleanField(default=False)),
-                ('published_at', models.DateField(blank=True, null=True)),
-                ('updated_at', models.DateField(blank=True, null=True)),
+                ("restrictions_on_usage", models.TextField(blank=True, null=True)),
+                ("published", models.BooleanField(default=False)),
+                ("published_at", models.DateField(blank=True, null=True)),
+                ("updated_at", models.DateField(blank=True, null=True)),
                 (
-                    'created_by',
+                    "created_by",
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        related_name='created+',
+                        related_name="created+",
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
                 (
-                    'enquiries_contact',
+                    "enquiries_contact",
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name='+',
+                        related_name="+",
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
                 (
-                    'secondary_enquiries_contact',
+                    "secondary_enquiries_contact",
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name='+',
+                        related_name="+",
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
                 (
-                    'information_asset_manager',
+                    "information_asset_manager",
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name='info_asset_managed_visualisations',
+                        related_name="info_asset_managed_visualisations",
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
                 (
-                    'information_asset_owner',
+                    "information_asset_owner",
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name='info_asset_owned_visualisations',
+                        related_name="info_asset_owned_visualisations",
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
                 (
-                    'updated_by',
+                    "updated_by",
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        related_name='updated+',
+                        related_name="updated+",
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
                 (
-                    'visualisation_template',
+                    "visualisation_template",
                     models.OneToOneField(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to='applications.VisualisationTemplate',
+                        to="applications.VisualisationTemplate",
                     ),
                 ),
             ],

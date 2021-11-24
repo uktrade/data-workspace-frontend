@@ -7,17 +7,17 @@ import dataworkspace.apps.core.storage
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('case_studies', '0002_auto_20210602_1557'),
+        ("case_studies", "0002_auto_20210602_1557"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='casestudy',
-            name='image',
+            model_name="casestudy",
+            name="image",
             field=models.ImageField(
                 blank=True,
                 storage=dataworkspace.apps.core.storage.S3FileStorage(),
-                upload_to='',
+                upload_to="",
             ),
         ),
     ]

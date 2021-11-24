@@ -5,18 +5,18 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('request_data', '0001_initial'),
+        ("request_data", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='datarequest',
-            name='requester_role',
+            model_name="datarequest",
+            name="requester_role",
             field=models.CharField(
                 choices=[
-                    ('IAO', 'I am the Information Asset Owner'),
-                    ('IAM', 'I am the Information Asset Manager'),
-                    ('other', 'I am someone else'),
+                    ("IAO", "I am the Information Asset Owner"),
+                    ("IAM", "I am the Information Asset Manager"),
+                    ("other", "I am someone else"),
                 ],
                 max_length=256,
             ),

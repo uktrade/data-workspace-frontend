@@ -19,20 +19,20 @@ from gevent.pywsgi import WSGIServer
 
 
 def run_server():
-    server = WSGIServer(('127.0.0.1', 8002), get_wsgi_application())
+    server = WSGIServer(("127.0.0.1", 8002), get_wsgi_application())
     gevent.signal_handler(signal.SIGTERM, server.stop)
 
-    print('Starting WSGIServer...', flush=True)
+    print("Starting WSGIServer...", flush=True)
     server.serve_forever()
 
-    print('Stopping WSGIServer. Waiting for all requests to complete...', flush=True)
+    print("Stopping WSGIServer. Waiting for all requests to complete...", flush=True)
     gevent.get_hub().join()
 
-    print('Requests completed. Exiting gracefully.', flush=True)
+    print("Requests completed. Exiting gracefully.", flush=True)
 
 
 if settings.DEBUG is True and settings.LOCAL is True:
-    print('Running in DEBUG mode with hot reloader')
+    print("Running in DEBUG mode with hot reloader")
     run_with_reloader(run_server)
 else:
     run_server()

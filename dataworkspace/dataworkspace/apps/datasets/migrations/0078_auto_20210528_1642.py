@@ -7,23 +7,23 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0003_usersatisfactionsurvey'),
-        ('datasets', '0077_datasetvisualisation'),
+        ("core", "0003_usersatisfactionsurvey"),
+        ("datasets", "0077_datasetvisualisation"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='datasetvisualisation',
-            name='database',
+            model_name="datasetvisualisation",
+            name="database",
             field=models.ForeignKey(
                 default=None,
                 on_delete=django.db.models.deletion.CASCADE,
-                to='core.Database',
+                to="core.Database",
             ),
         ),
         migrations.AddField(
-            model_name='datasetvisualisation',
-            name='query',
+            model_name="datasetvisualisation",
+            name="query",
             field=models.TextField(blank=True, null=True),
         ),
     ]

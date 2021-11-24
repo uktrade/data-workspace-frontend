@@ -20,9 +20,7 @@ class TestVisualisationApproval:
             object_id=a.id,
             content_type=ContentType.objects.get_for_model(a),
         )
-        assert (
-            len(events) == 1
-        ), "A visualisation approval eventlog entry should be created"
+        assert len(events) == 1, "A visualisation approval eventlog entry should be created"
 
     @pytest.mark.django_db
     def test_eventlog_entry_on_unapprove(self):
@@ -37,9 +35,7 @@ class TestVisualisationApproval:
             object_id=a.id,
             content_type=ContentType.objects.get_for_model(a),
         )
-        assert (
-            len(events) == 1
-        ), "A visualisation unapproval eventlog entry should be created"
+        assert len(events) == 1, "A visualisation unapproval eventlog entry should be created"
 
     @pytest.mark.django_db
     def test_unapproved_record_cannot_be_reapproved(self):

@@ -14,17 +14,17 @@ from dataworkspace.apps.core.utils import (
 
 
 class Command(BaseCommand):
-    help = 'Creates and saves DB credentials for all SSO users'
+    help = "Creates and saves DB credentials for all SSO users"
 
     def handle(self, *args, **options):
-        self.stdout.write('store_db_creds_in_s3 started')
+        self.stdout.write("store_db_creds_in_s3 started")
 
         bucket = settings.NOTEBOOKS_BUCKET
-        self.stdout.write('Will store credentials in bucket {}'.format(bucket))
+        self.stdout.write("Will store credentials in bucket {}".format(bucket))
 
-        all_users = get_user_model().objects.order_by('last_name', 'first_name', 'id')
+        all_users = get_user_model().objects.order_by("last_name", "first_name", "id")
         for user in all_users:
-            self.stdout.write(f'Creating credentials for {user.email}')
+            self.stdout.write(f"Creating credentials for {user.email}")
 
             source_tables = source_tables_for_user(user)
             db_role_schema_suffix = db_role_schema_suffix_for_user(user)
@@ -38,4 +38,4 @@ class Command(BaseCommand):
             write_credentials_to_bucket(user, creds)
             self.stdout.write(str(creds))
 
-        self.stdout.write(self.style.SUCCESS('store_db_creds_in_s3 finished'))
+        self.stdout.write(self.style.SUCCESS("store_db_creds_in_s3 finished"))

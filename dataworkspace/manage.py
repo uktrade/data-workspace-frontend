@@ -6,7 +6,7 @@ import sys
 
 
 def main():
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dataworkspace.settings.base')
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "dataworkspace.settings.base")
     try:
         from django.core.management import (  # pylint: disable=import-outside-toplevel
             execute_from_command_line,
@@ -14,11 +14,11 @@ def main():
     except ImportError as exc:
         raise ImportError(
             "Couldn't import Django. Are you sure it's installed and "
-            'available on your PYTHONPATH environment variable? Did you '
-            'forget to activate a virtual environment?'
+            "available on your PYTHONPATH environment variable? Did you "
+            "forget to activate a virtual environment?"
         ) from exc
     execute_from_command_line(sys.argv)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

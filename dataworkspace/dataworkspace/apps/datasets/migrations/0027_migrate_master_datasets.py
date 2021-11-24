@@ -6,7 +6,7 @@ from dataworkspace.apps.datasets.constants import DataSetType
 
 
 def migrate_data_cut_to_master_dataset(apps, _):
-    model = apps.get_model('datasets', 'DataCutDataset')
+    model = apps.get_model("datasets", "DataCutDataset")
     for dataset in model.objects.filter(sourcetable__isnull=False):
         dataset.type = DataSetType.MASTER
         dataset.save()
@@ -14,7 +14,7 @@ def migrate_data_cut_to_master_dataset(apps, _):
 
 class Migration(migrations.Migration):
 
-    dependencies = [('datasets', '0026_add_dataset_type_proxy_models')]
+    dependencies = [("datasets", "0026_add_dataset_type_proxy_models")]
 
     operations = [
         migrations.RunPython(

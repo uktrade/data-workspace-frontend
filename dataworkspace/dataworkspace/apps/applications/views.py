@@ -77,31 +77,31 @@ from dataworkspace.zendesk import update_zendesk_ticket
 
 TOOL_LOADING_MESSAGES = [
     {
-        'title': 'Principle 1 of the Data Protection Act 2018',
-        'body': 'You must make sure that information is used fairly, lawfully and transparently.',
+        "title": "Principle 1 of the Data Protection Act 2018",
+        "body": "You must make sure that information is used fairly, lawfully and transparently.",
     },
     {
-        'title': 'Principle 2 of the Data Protection Act 2018',
-        'body': 'You must make sure that information is used for specified, explicit purposes.',
+        "title": "Principle 2 of the Data Protection Act 2018",
+        "body": "You must make sure that information is used for specified, explicit purposes.",
     },
     {
-        'title': 'Principle 3 of the Data Protection Act 2018',
-        'body': 'You must make sure that information is used in a way that is adequate, relevant '
-        'and limited to only what is necessary.',
+        "title": "Principle 3 of the Data Protection Act 2018",
+        "body": "You must make sure that information is used in a way that is adequate, relevant "
+        "and limited to only what is necessary.",
     },
     {
-        'title': 'Principle 4 of the Data Protection Act 2018',
-        'body': 'You must make sure that information is accurate and, where necessary, kept up to date.',
+        "title": "Principle 4 of the Data Protection Act 2018",
+        "body": "You must make sure that information is accurate and, where necessary, kept up to date.",
     },
     {
-        'title': 'Principle 5 of the Data Protection Act 2018',
-        'body': 'You must make sure that information is kept for no longer than is necessary.',
+        "title": "Principle 5 of the Data Protection Act 2018",
+        "body": "You must make sure that information is kept for no longer than is necessary.",
     },
     {
-        'title': 'Principle 6 of the Data Protection Act 2018',
-        'body': 'You must make sure that information is handled in a way that ensures appropriate '
-        'security, including protection against unlawful or unauthorised processing, access, '
-        'loss, destruction or damage.',
+        "title": "Principle 6 of the Data Protection Act 2018",
+        "body": "You must make sure that information is handled in a way that ensures appropriate "
+        "security, including protection against unlawful or unauthorised processing, access, "
+        "loss, destruction or damage.",
     },
 ]
 
@@ -110,47 +110,43 @@ TOOL_LOADING_MESSAGES = [
 def application_spawning_html_view(request, public_host):
     return (
         application_spawning_html_GET(request, public_host)
-        if request.method == 'GET'
+        if request.method == "GET"
         else HttpResponse(status=405)
     )
 
 
 def application_spawning_html_GET(request, public_host):
     try:
-        application_instance = get_api_visible_application_instance_by_public_host(
-            public_host
-        )
+        application_instance = get_api_visible_application_instance_by_public_host(public_host)
     except ApplicationInstance.DoesNotExist:
         return public_error_500_html_view(request)
 
     context = {
-        'application_nice_name': application_instance.application_template.nice_name,
-        'commit_id': application_instance.commit_id,
-        'loading_message': TOOL_LOADING_MESSAGES[
+        "application_nice_name": application_instance.application_template.nice_name,
+        "commit_id": application_instance.commit_id,
+        "loading_message": TOOL_LOADING_MESSAGES[
             random.randint(0, len(TOOL_LOADING_MESSAGES) - 1)
         ],
     }
-    return render(request, 'spawning.html', context, status=202)
+    return render(request, "spawning.html", context, status=202)
 
 
 @csp_exempt
 def application_running_html_view(request, public_host):
     return (
         application_running_html_GET(request, public_host)
-        if request.method == 'GET'
+        if request.method == "GET"
         else HttpResponse(status=405)
     )
 
 
 def application_running_html_GET(request, public_host):
     try:
-        application_instance = get_api_visible_application_instance_by_public_host(
-            public_host
-        )
+        application_instance = get_api_visible_application_instance_by_public_host(public_host)
     except ApplicationInstance.DoesNotExist:
         return public_error_500_html_view(request)
 
-    if application_instance.application_template.application_type == 'VISUALISATION':
+    if application_instance.application_template.application_type == "VISUALISATION":
         try:
             visualisation_catalogue_item = VisualisationCatalogueItem.objects.get(
                 visualisation_template=application_instance.application_template
@@ -162,101 +158,97 @@ def application_running_html_GET(request, public_host):
             request.user,
             EventLog.TYPE_VIEW_VISUALISATION_TEMPLATE,
             visualisation_catalogue_item,
-            serializers.serialize(
-                'python', [visualisation_catalogue_item.visualisation_template]
-            )[0],
+            serializers.serialize("python", [visualisation_catalogue_item.visualisation_template])[
+                0
+            ],
         )
 
     port = urlsplit(application_instance.proxy_url).port
     context = {
-        'visualisation_src': f'{request.scheme}://{application_instance.public_host}--{port}.'
-        f'{settings.APPLICATION_ROOT_DOMAIN}/',
-        'nice_name': application_instance.application_template.nice_name,
-        'wrap': application_instance.application_template.wrap,
+        "visualisation_src": f"{request.scheme}://{application_instance.public_host}--{port}."
+        f"{settings.APPLICATION_ROOT_DOMAIN}/",
+        "nice_name": application_instance.application_template.nice_name,
+        "wrap": application_instance.application_template.wrap,
     }
 
-    return render(request, 'running.html', context, status=200)
+    return render(request, "running.html", context, status=200)
 
 
 def tools_html_view(request):
     return (
         tools_html_POST(request)
-        if request.method == 'POST'
+        if request.method == "POST"
         else tools_html_GET(request)
-        if request.method == 'GET'
+        if request.method == "GET"
         else HttpResponse(status=405)
     )
 
 
 def tools_html_GET(request):
-    sso_id_hex_short = stable_identification_suffix(
-        str(request.user.profile.sso_id), short=True
-    )
+    sso_id_hex_short = stable_identification_suffix(str(request.user.profile.sso_id), short=True)
 
     application_instances = {
         application_instance.application_template: application_instance
         for application_instance in ApplicationInstance.objects.filter(
-            owner=request.user, state__in=['RUNNING', 'SPAWNING']
+            owner=request.user, state__in=["RUNNING", "SPAWNING"]
         )
     }
 
     def link(application_template):
         app = application_template.host_basename
-        return f'{request.scheme}://{app}-{sso_id_hex_short}.{settings.APPLICATION_ROOT_DOMAIN}/'
+        return f"{request.scheme}://{app}-{sso_id_hex_short}.{settings.APPLICATION_ROOT_DOMAIN}/"
 
     return render(
         request,
-        'tools.html',
+        "tools.html",
         {
-            'applications': [
+            "applications": [
                 {
-                    'host_basename': application_template.host_basename,
-                    'nice_name': application_template.nice_name,
-                    'link': link(application_template),
-                    'instance': application_instances.get(application_template, None),
-                    'summary': application_template.application_summary,
-                    'help_link': application_template.application_help_link,
-                    'tool_configuration': application_template.user_tool_configuration.filter(
+                    "host_basename": application_template.host_basename,
+                    "nice_name": application_template.nice_name,
+                    "link": link(application_template),
+                    "instance": application_instances.get(application_template, None),
+                    "summary": application_template.application_summary,
+                    "help_link": application_template.application_help_link,
+                    "tool_configuration": application_template.user_tool_configuration.filter(
                         user=request.user
                     ).first()
                     or UserToolConfiguration.default_config(),
                 }
                 for application_template in ApplicationTemplate.objects.all()
-                .filter(visible=True, application_type='TOOL')
-                .exclude(nice_name='Superset')
-                .order_by('nice_name')
+                .filter(visible=True, application_type="TOOL")
+                .exclude(nice_name="Superset")
+                .order_by("nice_name")
             ],
-            'appstream_url': settings.APPSTREAM_URL,
-            'gitlab_url': settings.GITLAB_URL_FOR_TOOLS,
-            'quicksight_url': reverse('applications:quicksight_redirect'),
-            'superset_url': settings.SUPERSET_DOMAINS['edit'],
-            'your_files_enabled': settings.YOUR_FILES_ENABLED,
-            'SUPERSET_FLAG': settings.SUPERSET_FLAG,
+            "appstream_url": settings.APPSTREAM_URL,
+            "gitlab_url": settings.GITLAB_URL_FOR_TOOLS,
+            "quicksight_url": reverse("applications:quicksight_redirect"),
+            "superset_url": settings.SUPERSET_DOMAINS["edit"],
+            "your_files_enabled": settings.YOUR_FILES_ENABLED,
+            "SUPERSET_FLAG": settings.SUPERSET_FLAG,
         },
     )
 
 
 def tools_html_POST(request):
-    public_host = request.POST['public_host']
-    redirect_target = {'root': 'root', 'applications:tools': 'applications:tools'}[
-        request.POST['redirect_target']
+    public_host = request.POST["public_host"]
+    redirect_target = {"root": "root", "applications:tools": "applications:tools"}[
+        request.POST["redirect_target"]
     ]
     try:
         application_instance = ApplicationInstance.objects.get(
             owner=request.user,
             public_host=public_host,
-            state__in=['RUNNING', 'SPAWNING'],
+            state__in=["RUNNING", "SPAWNING"],
         )
     except ApplicationInstance.DoesNotExist:
         # The user could force a POST for any public_host, and will be able to
         # get the server to show this message, but this is acceptable since it
         # won't cause any harm
-        messages.success(request, 'Stopped')
+        messages.success(request, "Stopped")
     else:
         stop_spawner_and_application(application_instance)
-        messages.success(
-            request, 'Stopped ' + application_instance.application_template.nice_name
-        )
+        messages.success(request, "Stopped " + application_instance.application_template.nice_name)
     return redirect(redirect_target)
 
 
@@ -265,37 +257,35 @@ def tools_html_POST(request):
     frame_ancestors=settings.VISUALISATION_EMBED_DOMAINS,
 )
 def _get_embedded_quicksight_dashboard(request, dashboard_id, catalogue_item):
-    dashboard_name, dashboard_url = get_quicksight_dashboard_name_url(
-        dashboard_id, request.user
-    )
+    dashboard_name, dashboard_url = get_quicksight_dashboard_name_url(dashboard_id, request.user)
     extra_params = urlencode(
         [("punyCodeEmbedOrigin", f"{request.scheme}://{request.get_host()}/")]
     )
 
     context = {
-        'visualisation_src': f'{dashboard_url}&{extra_params}',
-        'nice_name': dashboard_name,
-        'wrap': 'IFRAME_WITH_VISUALISATIONS_HEADER',
-        'catalogue_item': catalogue_item,
+        "visualisation_src": f"{dashboard_url}&{extra_params}",
+        "nice_name": dashboard_name,
+        "wrap": "IFRAME_WITH_VISUALISATIONS_HEADER",
+        "catalogue_item": catalogue_item,
     }
 
-    return render(request, 'quicksight_running.html', context, status=200)
+    return render(request, "quicksight_running.html", context, status=200)
 
 
-@csp_update(frame_src=settings.SUPERSET_DOMAINS['view'])
+@csp_update(frame_src=settings.SUPERSET_DOMAINS["view"])
 def _get_embedded_superset_dashboard(request, dashboard_id, catalogue_item):
     context = {
-        'dashboard_url': f'{settings.SUPERSET_DOMAINS["view"]}/superset/dashboard/{dashboard_id}?standalone=true',
-        'nice_name': catalogue_item,
-        'wrap': 'IFRAME_WITH_VISUALISATIONS_HEADER',
-        'catalogue_item': catalogue_item,
+        "dashboard_url": f'{settings.SUPERSET_DOMAINS["view"]}/superset/dashboard/{dashboard_id}?standalone=true',
+        "nice_name": catalogue_item,
+        "wrap": "IFRAME_WITH_VISUALISATIONS_HEADER",
+        "catalogue_item": catalogue_item,
     }
-    return render(request, 'superset_running.html', context, status=200)
+    return render(request, "superset_running.html", context, status=200)
 
 
 @require_GET
 def quicksight_start_polling_sync_and_redirect(request):
-    if not request.user.has_perm('applications.access_quicksight'):
+    if not request.user.has_perm("applications.access_quicksight"):
         return HttpResponse(status=403)
 
     sync_quicksight_permissions.delay(
@@ -313,31 +303,29 @@ def visualisation_link_html_view(request, link_id):
     except VisualisationLink.DoesNotExist:
         return HttpResponse(status=404)
 
-    if not visualisation_link.visualisation_catalogue_item.user_has_access(
-        request.user
-    ):
+    if not visualisation_link.visualisation_catalogue_item.user_has_access(request.user):
         return redirect(
-            'request_access:dataset',
+            "request_access:dataset",
             dataset_uuid=visualisation_link.visualisation_catalogue_item_id,
         )
 
     identifier = visualisation_link.identifier
-    if visualisation_link.visualisation_type == 'QUICKSIGHT':
+    if visualisation_link.visualisation_type == "QUICKSIGHT":
         log_event(
             request.user,
             EventLog.TYPE_VIEW_QUICKSIGHT_VISUALISATION,
             visualisation_link.visualisation_catalogue_item,
-            serializers.serialize('python', [visualisation_link])[0],
+            serializers.serialize("python", [visualisation_link])[0],
         )
         return _get_embedded_quicksight_dashboard(
             request, identifier, visualisation_link.visualisation_catalogue_item
         )
-    elif visualisation_link.visualisation_type == 'SUPERSET':
+    elif visualisation_link.visualisation_type == "SUPERSET":
         log_event(
             request.user,
             EventLog.TYPE_VIEW_SUPERSET_VISUALISATION,
             visualisation_link.visualisation_catalogue_item,
-            serializers.serialize('python', [visualisation_link])[0],
+            serializers.serialize("python", [visualisation_link])[0],
         )
         return _get_embedded_superset_dashboard(
             request, identifier, visualisation_link.visualisation_catalogue_item
@@ -345,17 +333,17 @@ def visualisation_link_html_view(request, link_id):
 
     return HttpResponse(
         status=500,
-        content=f'Unsupported visualisation type: {visualisation_link.visualisation_type}'.encode(
-            'utf8'
+        content=f"Unsupported visualisation type: {visualisation_link.visualisation_type}".encode(
+            "utf8"
         ),
     )
 
 
 def visualisations_html_view(request):
-    if not request.user.has_perm('applications.develop_visualisations'):
+    if not request.user.has_perm("applications.develop_visualisations"):
         raise PermissionDenied()
 
-    if not request.method == 'GET':
+    if not request.method == "GET":
         return HttpResponse(status=405)
 
     return visualisations_html_GET(request)
@@ -363,11 +351,11 @@ def visualisations_html_view(request):
 
 def visualisations_html_GET(request):
     gitlab_users = gitlab_api_v4(
-        'GET',
-        '/users',
+        "GET",
+        "/users",
         params=(
-            ('extern_uid', request.user.profile.sso_id),
-            ('provider', 'oauth2_generic'),
+            ("extern_uid", request.user.profile.sso_id),
+            ("provider", "oauth2_generic"),
         ),
     )
     has_gitlab_user = bool(gitlab_users)
@@ -378,62 +366,58 @@ def visualisations_html_GET(request):
         return HttpResponse(status=500)
 
     gitlab_url = (
-        urlsplit(
-            gitlab_api_v4('GET', f'groups/{settings.GITLAB_VISUALISATIONS_GROUP}')[
-                'web_url'
-            ]
-        )
-        ._replace(path='/', query='', fragment='')
+        urlsplit(gitlab_api_v4("GET", f"groups/{settings.GITLAB_VISUALISATIONS_GROUP}")["web_url"])
+        ._replace(path="/", query="", fragment="")
         .geturl()
     )
 
     def get_projects(gitlab_user):
         gitlab_projects_including_non_visualisation = gitlab_api_v4(
-            'GET',
-            'projects',
+            "GET",
+            "projects",
             params=(
-                ('archived', 'false'),
-                ('min_access_level', DEVELOPER_ACCESS_LEVEL),
-                ('sudo', gitlab_user['id']),
-                ('per_page', '100'),
+                ("archived", "false"),
+                ("min_access_level", DEVELOPER_ACCESS_LEVEL),
+                ("sudo", gitlab_user["id"]),
+                ("per_page", "100"),
             ),
         )
         gitlab_projects = [
             gitlab_project
             for gitlab_project in gitlab_projects_including_non_visualisation
-            if 'visualisation' in [tag.lower() for tag in gitlab_project['tag_list']]
+            if "visualisation" in [tag.lower() for tag in gitlab_project["tag_list"]]
         ]
         return sorted(
             [
                 {
-                    'gitlab_project': gitlab_project,
-                    'manage_link': reverse(
-                        'visualisations:branch',
+                    "gitlab_project": gitlab_project,
+                    "manage_link": reverse(
+                        "visualisations:branch",
                         kwargs={
-                            'gitlab_project_id': gitlab_project['id'],
-                            'branch_name': gitlab_project['default_branch'],
+                            "gitlab_project_id": gitlab_project["id"],
+                            "branch_name": gitlab_project["default_branch"],
                         },
                     ),
                 }
                 for gitlab_project in gitlab_projects
             ],
-            key=lambda d: d['gitlab_project']['name'].lower(),
+            key=lambda d: d["gitlab_project"]["name"].lower(),
         )
 
     return render(
         request,
-        'visualisations.html',
+        "visualisations.html",
         {
-            'has_gitlab_user': has_gitlab_user,
-            'gitlab_url': gitlab_url,
-            'projects': get_projects(gitlab_users[0]) if has_gitlab_user else [],
+            "has_gitlab_user": has_gitlab_user,
+            "gitlab_url": gitlab_url,
+            "projects": get_projects(gitlab_users[0]) if has_gitlab_user else [],
         },
         status=200,
     )
 
 
 def visualisation_branch_html_view(request, gitlab_project_id, branch_name):
-    if not request.user.has_perm('applications.develop_visualisations'):
+    if not request.user.has_perm("applications.develop_visualisations"):
         raise PermissionDenied()
 
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
@@ -441,10 +425,10 @@ def visualisation_branch_html_view(request, gitlab_project_id, branch_name):
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
         raise PermissionDenied()
 
-    if request.method == 'GET':
+    if request.method == "GET":
         return visualisation_branch_html_GET(request, gitlab_project, branch_name)
 
-    if request.method == 'POST':
+    if request.method == "POST":
         return visualisation_branch_html_POST(request, gitlab_project, branch_name)
 
     return HttpResponse(status=405)
@@ -453,22 +437,22 @@ def visualisation_branch_html_view(request, gitlab_project_id, branch_name):
 def visualisation_branch_html_GET(request, gitlab_project, branch_name):
     branches = _visualisation_branches(gitlab_project)
 
-    matching_branches = [branch for branch in branches if branch['name'] == branch_name]
+    matching_branches = [branch for branch in branches if branch["name"] == branch_name]
     if len(matching_branches) > 1:
-        raise Exception('Too many matching branches')
+        raise Exception("Too many matching branches")
     if not matching_branches:
         raise Http404
 
     application_template = _application_template(gitlab_project)
     current_branch = matching_branches[0]
-    latest_commit = current_branch['commit']
+    latest_commit = current_branch["commit"]
     latest_commit_link = f'{gitlab_project["web_url"]}/commit/{latest_commit["id"]}'
     latest_commit_preview_link = (
         f'{request.scheme}://{application_template.host_basename}--{latest_commit["short_id"]}'
-        f'.{settings.APPLICATION_ROOT_DOMAIN}/'
+        f".{settings.APPLICATION_ROOT_DOMAIN}/"
     )
     latest_commit_date = datetime.datetime.strptime(
-        latest_commit['committed_date'], '%Y-%m-%dT%H:%M:%S.%f%z'
+        latest_commit["committed_date"], "%Y-%m-%dT%H:%M:%S.%f%z"
     )
     latest_commit_tag_exists = get_spawner(application_template.spawner).tags_for_tag(
         application_options(application_template),
@@ -476,20 +460,18 @@ def visualisation_branch_html_GET(request, gitlab_project, branch_name):
     )
 
     host_basename = application_template.host_basename
-    production_link = (
-        f'{request.scheme}://{host_basename}.{settings.APPLICATION_ROOT_DOMAIN}/'
-    )
+    production_link = f"{request.scheme}://{host_basename}.{settings.APPLICATION_ROOT_DOMAIN}/"
     tags = get_spawner(application_template.spawner).tags_for_tag(
         application_options(application_template), application_template.host_basename
     )
     production_commit_id = None
     for tag in tags:
-        possible_host_basename, _, host_basename_or_commit_id = tag.rpartition('--')
+        possible_host_basename, _, host_basename_or_commit_id = tag.rpartition("--")
         if possible_host_basename:
             production_commit_id = host_basename_or_commit_id
             break
 
-    is_default_branch = current_branch['name'] == gitlab_project['default_branch']
+    is_default_branch = current_branch["name"] == gitlab_project["default_branch"]
     # It might not be good, UI-wise, to force the user to have to preview a
     # commit before it can be released. However, building a Docker image is
     # done via the preview link, so this is the quickest/easiest thing for
@@ -497,72 +479,72 @@ def visualisation_branch_html_GET(request, gitlab_project, branch_name):
     must_preview_latest_commit_to_release = (
         is_default_branch
         and not latest_commit_tag_exists
-        and latest_commit['short_id'] != production_commit_id
+        and latest_commit["short_id"] != production_commit_id
     )
     can_release_latest_commit = (
         is_default_branch
         and latest_commit_tag_exists
-        and latest_commit['short_id'] != production_commit_id
+        and latest_commit["short_id"] != production_commit_id
     )
-    latest_commit_is_released = latest_commit['short_id'] == production_commit_id
+    latest_commit_is_released = latest_commit["short_id"] == production_commit_id
     can_download_logs = can_release_latest_commit or (
         not is_default_branch and latest_commit_tag_exists
     )
 
     return _render_visualisation(
         request,
-        'visualisation_branch.html',
+        "visualisation_branch.html",
         gitlab_project,
         application_template,
         branches,
-        current_menu_item='branches',
+        current_menu_item="branches",
         template_specific_context={
-            'is_default_branch': is_default_branch,
-            'can_download_logs': can_download_logs,
-            'production_link': production_link,
-            'production_commit_id': production_commit_id,
-            'current_branch': current_branch,
-            'latest_commit': latest_commit,
-            'latest_commit_link': latest_commit_link,
-            'latest_commit_preview_link': latest_commit_preview_link,
-            'latest_commit_date': latest_commit_date,
-            'can_release_latest_commit': can_release_latest_commit,
-            'must_preview_latest_commit_to_release': must_preview_latest_commit_to_release,
-            'latest_commit_is_released': latest_commit_is_released,
+            "is_default_branch": is_default_branch,
+            "can_download_logs": can_download_logs,
+            "production_link": production_link,
+            "production_commit_id": production_commit_id,
+            "current_branch": current_branch,
+            "latest_commit": latest_commit,
+            "latest_commit_link": latest_commit_link,
+            "latest_commit_preview_link": latest_commit_preview_link,
+            "latest_commit_date": latest_commit_date,
+            "can_release_latest_commit": can_release_latest_commit,
+            "must_preview_latest_commit_to_release": must_preview_latest_commit_to_release,
+            "latest_commit_is_released": latest_commit_is_released,
         },
     )
 
 
 def visualisation_branch_html_POST(request, gitlab_project, branch_name):
-    release_commit = request.POST['release-commit']
+    release_commit = request.POST["release-commit"]
     application_template = _application_template(gitlab_project)
     get_spawner(application_template.spawner).retag(
         application_options(application_template),
-        f'{application_template.host_basename}--{release_commit}',
+        f"{application_template.host_basename}--{release_commit}",
         application_template.host_basename,
     )
 
     try:
         application_instance = ApplicationInstance.objects.get(
             public_host=application_template.host_basename,
-            state__in=['RUNNING', 'SPAWNING'],
+            state__in=["RUNNING", "SPAWNING"],
         )
     except ApplicationInstance.DoesNotExist:
         pass
     else:
         stop_spawner_and_application(application_instance)
 
-    messages.success(request, f'Released commit {release_commit} to production')
+    messages.success(request, f"Released commit {release_commit} to production")
 
     return redirect(
-        'visualisations:branch',
-        gitlab_project_id=gitlab_project['id'],
+        "visualisations:branch",
+        gitlab_project_id=gitlab_project["id"],
         branch_name=branch_name,
     )
 
 
 def visualisation_users_with_access_html_view(request, gitlab_project_id):
-    if not request.user.has_perm('applications.develop_visualisations'):
+    if not request.user.has_perm("applications.develop_visualisations"):
         raise PermissionDenied()
 
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
@@ -570,10 +552,10 @@ def visualisation_users_with_access_html_view(request, gitlab_project_id):
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
         raise PermissionDenied()
 
-    if request.method == 'GET':
+    if request.method == "GET":
         return visualisation_users_with_access_html_GET(request, gitlab_project)
 
-    if request.method == 'POST':
+    if request.method == "POST":
         return visualisation_users_with_access_html_POST(request, gitlab_project)
 
     return HttpResponse(status=405)
@@ -586,22 +568,22 @@ def visualisation_users_with_access_html_GET(request, gitlab_project):
         get_user_model()
         .objects.filter(
             visualisationuserpermission__visualisation__visualisation_template__gitlab_project_id=gitlab_project[
-                'id'
+                "id"
             ]
         )
-        .order_by('id')
+        .order_by("id")
     )
 
     return _render_visualisation(
         request,
-        'visualisation_users_with_access.html',
+        "visualisation_users_with_access.html",
         gitlab_project,
         application_template,
         branches,
-        current_menu_item='users-with-access',
+        current_menu_item="users-with-access",
         template_specific_context={
-            'application_template': application_template,
-            'users': users,
+            "application_template": application_template,
+            "users": users,
         },
     )
 
@@ -611,7 +593,7 @@ def visualisation_users_with_access_html_POST(request, gitlab_project):
     visualisation_catalogue_item = VisualisationCatalogueItem.objects.get(
         visualisation_template=application_template
     )
-    user_id = request.POST['user-id']
+    user_id = request.POST["user-id"]
     user = get_user_model().objects.get(id=user_id)
 
     content_type_id = ContentType.objects.get_for_model(user).pk
@@ -635,20 +617,18 @@ def visualisation_users_with_access_html_POST(request, gitlab_project):
                 object_id=user.id,
                 object_repr=force_str(user),
                 action_flag=CHANGE,
-                change_message=f'Removed visualisation {application_template} permission',
+                change_message=f"Removed visualisation {application_template} permission",
             )
 
     messages.success(
         request,
         f'{user.get_full_name()} can no longer view the ‘{gitlab_project["name"]}’ visualisation.',
     )
-    return redirect(
-        'visualisations:users-with-access', gitlab_project_id=gitlab_project['id']
-    )
+    return redirect("visualisations:users-with-access", gitlab_project_id=gitlab_project["id"])
 
 
 def visualisation_users_give_access_html_view(request, gitlab_project_id):
-    if not request.user.has_perm('applications.develop_visualisations'):
+    if not request.user.has_perm("applications.develop_visualisations"):
         raise PermissionDenied()
 
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
@@ -657,17 +637,13 @@ def visualisation_users_give_access_html_view(request, gitlab_project_id):
         raise PermissionDenied()
 
     token = request.GET.get("token")
-    token_data = decrypt_token(token.encode('utf-8')) if token else {}
+    token_data = decrypt_token(token.encode("utf-8")) if token else {}
 
-    if request.method == 'GET':
-        return visualisation_users_give_access_html_GET(
-            request, gitlab_project, token_data
-        )
+    if request.method == "GET":
+        return visualisation_users_give_access_html_GET(request, gitlab_project, token_data)
 
-    if request.method == 'POST':
-        return visualisation_users_give_access_html_POST(
-            request, gitlab_project, token_data
-        )
+    if request.method == "POST":
+        return visualisation_users_give_access_html_POST(request, gitlab_project, token_data)
 
     return HttpResponse(status=405)
 
@@ -678,14 +654,14 @@ def visualisation_users_give_access_html_GET(request, gitlab_project, token_data
 
     return _render_visualisation(
         request,
-        'visualisation_users_give_access.html',
+        "visualisation_users_give_access.html",
         gitlab_project,
         application_template,
         branches,
-        current_menu_item='users-give-access',
+        current_menu_item="users-give-access",
         template_specific_context={
-            'application_template': application_template,
-            'email_address': token_data.get("email", ""),
+            "application_template": application_template,
+            "email_address": token_data.get("email", ""),
         },
     )
 
@@ -697,39 +673,37 @@ def visualisation_users_give_access_html_POST(request, gitlab_project, token_dat
         visualisation_template=application_template
     )
 
-    email_address = request.POST['email-address'].strip().lower()
+    email_address = request.POST["email-address"].strip().lower()
 
     def error(email_address_error):
         return _render_visualisation(
             request,
-            'visualisation_users_give_access.html',
+            "visualisation_users_give_access.html",
             gitlab_project,
             application_template,
             branches,
-            current_menu_item='users-give-access',
+            current_menu_item="users-give-access",
             template_specific_context={
-                'email_address': email_address,
-                'email_address_error': email_address_error,
-                'application_template': application_template,
+                "email_address": email_address,
+                "email_address_error": email_address_error,
+                "application_template": application_template,
             },
         )
 
     if not email_address:
-        return error('Enter the user\'s email address')
+        return error("Enter the user's email address")
 
     try:
         EmailValidator()(email_address)
     except ValidationError:
-        return error(
-            'Enter the user\'s email address in the correct format, like name@example.com'
-        )
+        return error("Enter the user's email address in the correct format, like name@example.com")
 
     User = get_user_model()
 
     try:
         user = User.objects.get(email=email_address)
     except User.DoesNotExist:
-        return error('The user must have previously visited Data Workspace')
+        return error("The user must have previously visited Data Workspace")
 
     content_type_id = ContentType.objects.get_for_model(user).pk
 
@@ -744,10 +718,10 @@ def visualisation_users_give_access_html_POST(request, gitlab_project, token_dat
                 object_id=user.id,
                 object_repr=force_str(user),
                 action_flag=CHANGE,
-                change_message=f'Added visualisation {application_template} permission',
+                change_message=f"Added visualisation {application_template} permission",
             )
     except IntegrityError:
-        return error(f'{user.get_full_name()} already has access')
+        return error(f"{user.get_full_name()} already has access")
 
     if email_address == token_data.get("email", "").strip().lower():
         update_zendesk_ticket(
@@ -774,21 +748,15 @@ def visualisation_users_give_access_html_POST(request, gitlab_project, token_dat
         request,
         f'{user.get_full_name()} now has view access to {gitlab_project["name"]}',
     )
-    return redirect(
-        'visualisations:users-give-access', gitlab_project_id=gitlab_project['id']
-    )
+    return redirect("visualisations:users-give-access", gitlab_project_id=gitlab_project["id"])
 
 
 def _visualisation_gitlab_project(gitlab_project_id):
-    gitlab_project, status = gitlab_api_v4_with_status(
-        'GET', f'projects/{gitlab_project_id}'
-    )
+    gitlab_project, status = gitlab_api_v4_with_status("GET", f"projects/{gitlab_project_id}")
     if status == 404:
         raise Http404
     if status != 200:
-        raise Exception(
-            f'Unable to find GitLab project {gitlab_project_id}: received {status}'
-        )
+        raise Exception(f"Unable to find GitLab project {gitlab_project_id}: received {status}")
 
     return gitlab_project
 
@@ -797,13 +765,13 @@ def _visualisation_branches(gitlab_project):
     # Sort default branch first, the remaining in last commit order
     def branch_sort_key(branch):
         return (
-            branch['name'] == gitlab_project['default_branch'],
-            branch['commit']['committed_date'],
-            branch['name'],
+            branch["name"] == gitlab_project["default_branch"],
+            branch["commit"]["committed_date"],
+            branch["name"],
         )
 
     return sorted(
-        gitlab_api_v4('GET', f'/projects/{gitlab_project["id"]}/repository/branches'),
+        gitlab_api_v4("GET", f'/projects/{gitlab_project["id"]}/repository/branches'),
         key=branch_sort_key,
         reverse=True,
     )
@@ -811,7 +779,7 @@ def _visualisation_branches(gitlab_project):
 
 def _application_template(gitlab_project):
     try:
-        return ApplicationTemplate.objects.get(gitlab_project_id=gitlab_project['id'])
+        return ApplicationTemplate.objects.get(gitlab_project_id=gitlab_project["id"])
     except ApplicationTemplate.DoesNotExist:
         pass
 
@@ -826,12 +794,12 @@ def _application_template(gitlab_project):
     # - in many cases people don't even look at the URL
     # - it can be changed by an admin if it needs to be
     # - there is a plan to make it changable by the user
-    name_1 = gitlab_project['name']
+    name_1 = gitlab_project["name"]
     name_2 = name_1.lower()
-    name_3 = re.sub(r'[_\s]', '-', name_2)
-    name_4 = re.sub(r'[^a-z0-9\-]', '', name_3)
-    name_5 = name_4.strip('-')
-    name_6 = re.sub('-+', '-', name_5)
+    name_3 = re.sub(r"[_\s]", "-", name_2)
+    name_4 = re.sub(r"[^a-z0-9\-]", "", name_3)
+    name_5 = name_4.strip("-")
+    name_6 = re.sub("-+", "-", name_5)
     path_and_dns_safe_root = name_6
 
     # Attempt to make ApplicationTemplate.host_basename and
@@ -844,28 +812,28 @@ def _application_template(gitlab_project):
     max_attempts = 20
     for i in range(0, max_attempts):
         if i == 0:
-            suffix = ''
+            suffix = ""
         else:
-            suffix = '-' + str(i)
+            suffix = "-" + str(i)
         path_and_dns_safe_name = path_and_dns_safe_root + suffix
 
         try:
             with transaction.atomic():
                 visualisation_template = ApplicationTemplate.objects.create(
                     host_basename=path_and_dns_safe_name,
-                    nice_name=gitlab_project['name'],
-                    spawner='FARGATE',
+                    nice_name=gitlab_project["name"],
+                    spawner="FARGATE",
                     spawner_time=120,
-                    spawner_options='{}',
-                    application_type='VISUALISATION',
-                    gitlab_project_id=gitlab_project['id'],
-                    wrap='FULL_HEIGHT_IFRAME',
+                    spawner_options="{}",
+                    application_type="VISUALISATION",
+                    gitlab_project_id=gitlab_project["id"],
+                    wrap="FULL_HEIGHT_IFRAME",
                     visible=False,
                 )
                 VisualisationCatalogueItem.objects.create(
-                    name=gitlab_project['name'],
+                    name=gitlab_project["name"],
                     slug=path_and_dns_safe_name,
-                    short_description=gitlab_project['description'],
+                    short_description=gitlab_project["description"],
                     visualisation_template=visualisation_template,
                     user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
                 )
@@ -879,9 +847,7 @@ def _application_template(gitlab_project):
             # which case there is no need to fail: we can query again to try
             # to find it. Only if it again can't be found do we actually fail
             try:
-                return ApplicationTemplate.objects.get(
-                    gitlab_project_id=gitlab_project['id']
-                )
+                return ApplicationTemplate.objects.get(gitlab_project_id=gitlab_project["id"])
             except ApplicationTemplate.DoesNotExist:
                 raise integrity_error
 
@@ -899,19 +865,17 @@ def _render_visualisation(
     # For templates that inherit from _visualisation.html. This is factored
     # out, in a way so that any context variables required, but not passed from
     # the view have a chance to be caught by linting
-    catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(
-        gitlab_project
-    )
+    catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(gitlab_project)
     return render(
         request,
         template,
         {
-            'gitlab_project': gitlab_project,
-            'catalogue_item': catalogue_item,
-            'show_users_section': catalogue_item.user_access_type
+            "gitlab_project": gitlab_project,
+            "catalogue_item": catalogue_item,
+            "show_users_section": catalogue_item.user_access_type
             == UserAccessType.REQUIRES_AUTHORIZATION,
-            'branches': branches,
-            'current_menu_item': current_menu_item,
+            "branches": branches,
+            "current_menu_item": current_menu_item,
             **template_specific_context,
         },
         status=status,
@@ -919,7 +883,7 @@ def _render_visualisation(
 
 
 def visualisation_catalogue_item_html_view(request, gitlab_project_id):
-    if not request.user.has_perm('applications.develop_visualisations'):
+    if not request.user.has_perm("applications.develop_visualisations"):
         raise PermissionDenied()
 
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
@@ -927,10 +891,10 @@ def visualisation_catalogue_item_html_view(request, gitlab_project_id):
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
         raise PermissionDenied()
 
-    if request.method == 'GET':
+    if request.method == "GET":
         return visualisation_catalogue_item_html_GET(request, gitlab_project)
 
-    if request.method == 'POST':
+    if request.method == "POST":
         return visualisation_catalogue_item_html_POST(request, gitlab_project)
 
     return HttpResponse(status=405)
@@ -952,29 +916,25 @@ def _get_visualisation_catalogue_item_for_gitlab_project(gitlab_project):
 
 
 def visualisation_catalogue_item_html_GET(request, gitlab_project):
-    catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(
-        gitlab_project
-    )
+    catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(gitlab_project)
     form = VisualisationsUICatalogueItemForm(instance=catalogue_item)
 
     # We don't want client-side validation on this field, so we remove it - but only for the GET request.
-    form.fields['short_description'].required = False
+    form.fields["short_description"].required = False
 
     return _render_visualisation(
         request,
-        'visualisation_catalogue_item.html',
+        "visualisation_catalogue_item.html",
         gitlab_project,
         catalogue_item.visualisation_template,
         _visualisation_branches(gitlab_project),
-        current_menu_item='catalogue-item',
-        template_specific_context={'form': form},
+        current_menu_item="catalogue-item",
+        template_specific_context={"form": form},
     )
 
 
 def visualisation_catalogue_item_html_POST(request, gitlab_project):
-    catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(
-        gitlab_project
-    )
+    catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(gitlab_project)
     user_access_type = catalogue_item.user_access_type
     form = VisualisationsUICatalogueItemForm(request.POST, instance=catalogue_item)
     if form.is_valid():
@@ -983,9 +943,7 @@ def visualisation_catalogue_item_html_POST(request, gitlab_project):
             if user_access_type != catalogue_item.user_access_type:
                 LogEntry.objects.log_action(
                     user_id=request.user.pk,
-                    content_type_id=ContentType.objects.get_for_model(
-                        get_user_model()
-                    ).pk,
+                    content_type_id=ContentType.objects.get_for_model(get_user_model()).pk,
                     object_id=catalogue_item.visualisation_template.pk,
                     object_repr=force_str(catalogue_item.visualisation_template),
                     action_flag=CHANGE,
@@ -994,28 +952,24 @@ def visualisation_catalogue_item_html_POST(request, gitlab_project):
                         f"to: {catalogue_item.user_access_type}"
                     ),
                 )
-        return redirect(
-            'visualisations:catalogue-item', gitlab_project_id=gitlab_project['id']
-        )
+        return redirect("visualisations:catalogue-item", gitlab_project_id=gitlab_project["id"])
 
-    form_errors = [
-        (field.id_for_label, field.errors[0]) for field in form if field.errors
-    ]
+    form_errors = [(field.id_for_label, field.errors[0]) for field in form if field.errors]
 
     return _render_visualisation(
         request,
-        'visualisation_catalogue_item.html',
+        "visualisation_catalogue_item.html",
         gitlab_project,
         catalogue_item.visualisation_template,
         _visualisation_branches(gitlab_project),
-        current_menu_item='catalogue-item',
+        current_menu_item="catalogue-item",
         template_specific_context={"form": form, "form_errors": form_errors},
         status=400 if form_errors else 200,
     )
 
 
 def visualisation_approvals_html_view(request, gitlab_project_id):
-    if not request.user.has_perm('applications.develop_visualisations'):
+    if not request.user.has_perm("applications.develop_visualisations"):
         raise PermissionDenied()
 
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
@@ -1023,10 +977,10 @@ def visualisation_approvals_html_view(request, gitlab_project_id):
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
         raise PermissionDenied()
 
-    if request.method == 'GET':
+    if request.method == "GET":
         return visualisation_approvals_html_GET(request, gitlab_project)
 
-    if request.method == 'POST':
+    if request.method == "POST":
         return visualisation_approvals_html_POST(request, gitlab_project)
 
     return HttpResponse(status=405)
@@ -1051,15 +1005,15 @@ def visualisation_approvals_html_GET(request, gitlab_project):
 
     return _render_visualisation(
         request,
-        'visualisation_approvals.html',
+        "visualisation_approvals.html",
         gitlab_project,
         application_template,
         _visualisation_branches(gitlab_project),
-        current_menu_item='approvals',
+        current_menu_item="approvals",
         template_specific_context={
-            'approvals': approvals,
-            'already_approved': approval.approved if approval else False,
-            'form': form,
+            "approvals": approvals,
+            "already_approved": approval.approved if approval else False,
+            "form": form,
         },
     )
 
@@ -1085,24 +1039,22 @@ def visualisation_approvals_html_POST(request, gitlab_project):
         form.save()
         return redirect(request.path)
 
-    form_errors = [
-        (field.id_for_label, field.errors[0]) for field in form if field.errors
-    ]
+    form_errors = [(field.id_for_label, field.errors[0]) for field in form if field.errors]
 
     return _render_visualisation(
         request,
-        'visualisation_approvals.html',
+        "visualisation_approvals.html",
         gitlab_project,
         application_template,
         _visualisation_branches(gitlab_project),
-        current_menu_item='approvals',
+        current_menu_item="approvals",
         template_specific_context={"form": form, "form_errors": form_errors},
         status=400 if form_errors else 200,
     )
 
 
 def visualisation_datasets_html_view(request, gitlab_project_id):
-    if not request.user.has_perm('applications.develop_visualisations'):
+    if not request.user.has_perm("applications.develop_visualisations"):
         raise PermissionDenied()
 
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
@@ -1110,10 +1062,10 @@ def visualisation_datasets_html_view(request, gitlab_project_id):
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
         raise PermissionDenied()
 
-    if request.method == 'GET':
+    if request.method == "GET":
         return visualisation_datasets_html_GET(request, gitlab_project)
 
-    if request.method == 'POST':
+    if request.method == "POST":
         return visualisation_datasets_html_POST(request, gitlab_project)
 
     return HttpResponse(status=405)
@@ -1125,12 +1077,12 @@ def visualisation_datasets_html_GET(request, gitlab_project):
 
     return _render_visualisation(
         request,
-        'visualisation_datasets.html',
+        "visualisation_datasets.html",
         gitlab_project,
         application_template,
         _visualisation_branches(gitlab_project),
-        current_menu_item='datasets',
-        template_specific_context={'datasets': datasets},
+        current_menu_item="datasets",
+        template_specific_context={"datasets": datasets},
         status=200,
     )
 
@@ -1142,14 +1094,14 @@ def visualisation_datasets_html_POST(request, gitlab_project):
     # Sets for O(1) lookup, and lists for deterministic looping
 
     previously_selected_dataset_ids = [
-        str(dataset['id']) for dataset, _ in datasets if dataset['selected']
+        str(dataset["id"]) for dataset, _ in datasets if dataset["selected"]
     ]
     previously_selected_dataset_ids_set = set(previously_selected_dataset_ids)
     selectable_dataset_ids_set = {
-        str(dataset['id']) for dataset, _ in datasets if dataset['selectable']
+        str(dataset["id"]) for dataset, _ in datasets if dataset["selectable"]
     }
 
-    selected_dataset_ids = request.POST.getlist('dataset')
+    selected_dataset_ids = request.POST.getlist("dataset")
     selected_dataset_ids_set = set(selected_dataset_ids)
 
     datasets_ids_to_give_access_to = [
@@ -1161,8 +1113,7 @@ def visualisation_datasets_html_POST(request, gitlab_project):
     datasets_ids_to_remove_access_from = [
         dataset_id
         for dataset_id in previously_selected_dataset_ids
-        if dataset_id in selectable_dataset_ids_set
-        and dataset_id not in selected_dataset_ids_set
+        if dataset_id in selectable_dataset_ids_set and dataset_id not in selected_dataset_ids_set
     ]
 
     visualisation_template_content_type_id = ContentType.objects.get_for_model(
@@ -1192,8 +1143,8 @@ def visualisation_datasets_html_POST(request, gitlab_project):
                     object_id=application_template.id,
                     object_repr=force_str(application_template),
                     action_flag=CHANGE,
-                    change_message=f'Gave access to dataset {dataset} '
-                    f'({dataset.id}) using the visualisation UI',
+                    change_message=f"Gave access to dataset {dataset} "
+                    f"({dataset.id}) using the visualisation UI",
                 )
                 LogEntry.objects.log_action(
                     user_id=request.user.pk,
@@ -1201,8 +1152,8 @@ def visualisation_datasets_html_POST(request, gitlab_project):
                     object_id=dataset.id,
                     object_repr=force_str(dataset),
                     action_flag=CHANGE,
-                    change_message=f'Gave access from {application_template} '
-                    f'({application_template.id}) using the visualisation UI',
+                    change_message=f"Gave access from {application_template} "
+                    f"({application_template.id}) using the visualisation UI",
                 )
         except IntegrityError:
             pass
@@ -1221,8 +1172,8 @@ def visualisation_datasets_html_POST(request, gitlab_project):
                     object_id=application_template.id,
                     object_repr=force_str(application_template),
                     action_flag=CHANGE,
-                    change_message=f'Removed access to the dataset {dataset} '
-                    f'({dataset.id}) using the visualisation UI',
+                    change_message=f"Removed access to the dataset {dataset} "
+                    f"({dataset.id}) using the visualisation UI",
                 )
                 LogEntry.objects.log_action(
                     user_id=request.user.pk,
@@ -1230,15 +1181,15 @@ def visualisation_datasets_html_POST(request, gitlab_project):
                     object_id=dataset.id,
                     object_repr=force_str(dataset),
                     action_flag=CHANGE,
-                    change_message=f'Removed access from {application_template} '
-                    f'({application_template.id}) using the visualisation UI',
+                    change_message=f"Removed access from {application_template} "
+                    f"({application_template.id}) using the visualisation UI",
                 )
         except DataSetApplicationTemplatePermission.DoesNotExist:
             pass
 
-    messages.success(request, 'Saved datasets access')
+    messages.success(request, "Saved datasets access")
 
-    return redirect('visualisations:datasets', gitlab_project_id=gitlab_project['id'])
+    return redirect("visualisations:datasets", gitlab_project_id=gitlab_project["id"])
 
 
 def _datasets(user, application_template):
@@ -1258,29 +1209,27 @@ def _datasets(user, application_template):
     source_tables_app = source_tables_for_app(application_template)
 
     selectable_dataset_ids = set(
-        source_table['dataset']['id']
+        source_table["dataset"]["id"]
         for source_table in source_tables_user
-        if source_table['dataset']['user_access_type']
+        if source_table["dataset"]["user_access_type"]
         in (UserAccessType.REQUIRES_AUTHORIZATION, UserAccessType.OPEN)
     )
 
-    selected_dataset_ids = set(
-        source_table['dataset']['id'] for source_table in source_tables_app
-    )
+    selected_dataset_ids = set(source_table["dataset"]["id"] for source_table in source_tables_app)
 
     source_tables_without_select_info = _without_duplicates_preserve_order(
         source_tables_user + source_tables_app,
-        key=lambda x: (x['dataset']['id'], x['schema'], x['table']),
+        key=lambda x: (x["dataset"]["id"], x["schema"], x["table"]),
     )
 
     source_tables = [
         {
-            'dataset': {
-                'selectable': source_table['dataset']['id'] in selectable_dataset_ids,
-                'selected': source_table['dataset']['id'] in selected_dataset_ids,
-                **source_table['dataset'],
+            "dataset": {
+                "selectable": source_table["dataset"]["id"] in selectable_dataset_ids,
+                "selected": source_table["dataset"]["id"] in selected_dataset_ids,
+                **source_table["dataset"],
             },
-            **{key: value for key, value in source_table.items() if key != 'dataset'},
+            **{key: value for key, value in source_table.items() if key != "dataset"},
         }
         for source_table in source_tables_without_select_info
     ]
@@ -1288,23 +1237,21 @@ def _datasets(user, application_template):
     tables_sorted_by_dataset = sorted(
         source_tables,
         key=lambda x: (
-            x['dataset']['name'],
-            x['dataset']['id'],
-            x['schema'],
-            x['table'],
+            x["dataset"]["name"],
+            x["dataset"]["id"],
+            x["schema"],
+            x["table"],
         ),
     )
 
     return [
         (dataset, list(tables))
-        for dataset, tables in itertools.groupby(
-            tables_sorted_by_dataset, lambda x: x['dataset']
-        )
+        for dataset, tables in itertools.groupby(tables_sorted_by_dataset, lambda x: x["dataset"])
     ]
 
 
 def visualisation_publish_html_view(request, gitlab_project_id):
-    if not request.user.has_perm('applications.develop_visualisations'):
+    if not request.user.has_perm("applications.develop_visualisations"):
         raise PermissionDenied()
 
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
@@ -1312,10 +1259,10 @@ def visualisation_publish_html_view(request, gitlab_project_id):
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
         raise PermissionDenied()
 
-    if request.method == 'GET':
+    if request.method == "GET":
         return visualisation_publish_html_GET(request, gitlab_project)
 
-    if request.method == 'POST':
+    if request.method == "POST":
         return visualisation_publish_html_POST(request, gitlab_project)
 
     return HttpResponse(status=405)
@@ -1354,13 +1301,9 @@ def _visualisation_catalogue_item_is_complete(catalogue_item):
     )
 
 
-def _render_visualisation_publish_html(
-    request, gitlab_project, catalogue_item=None, errors=None
-):
+def _render_visualisation_publish_html(request, gitlab_project, catalogue_item=None, errors=None):
     if not catalogue_item:
-        catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(
-            gitlab_project
-        )
+        catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(gitlab_project)
     application_template = catalogue_item.visualisation_template
     visualisation_approved = _visualisation_is_approved(application_template)
     visualisation_published = _visualisation_is_published(application_template)
@@ -1370,14 +1313,14 @@ def _render_visualisation_publish_html(
     catalogue_item_complete = _visualisation_catalogue_item_is_complete(catalogue_item)
     return _render_visualisation(
         request,
-        'visualisation_publish.html',
+        "visualisation_publish.html",
         gitlab_project,
         application_template,
         _visualisation_branches(gitlab_project),
-        current_menu_item='publish',
+        current_menu_item="publish",
         template_specific_context={
-            'visualisation_domain': visualisation_domain,
-            'visualisation_link': f"{request.scheme}://{visualisation_domain}",
+            "visualisation_domain": visualisation_domain,
+            "visualisation_link": f"{request.scheme}://{visualisation_domain}",
             "catalogue_complete": catalogue_item_complete,
             "catalogue_published": catalogue_item.published,
             "visualisation_published": visualisation_published,
@@ -1393,12 +1336,8 @@ def visualisation_publish_html_GET(request, gitlab_project):
 
 @transaction.atomic
 def _set_published_on_catalogue_item(request, gitlab_project, catalogue_item, publish):
-    visualisation_approved = _visualisation_is_approved(
-        catalogue_item.visualisation_template
-    )
-    visualisation_published = _visualisation_is_published(
-        catalogue_item.visualisation_template
-    )
+    visualisation_approved = _visualisation_is_approved(catalogue_item.visualisation_template)
+    visualisation_published = _visualisation_is_published(catalogue_item.visualisation_template)
     catalogue_item_complete = _visualisation_catalogue_item_is_complete(catalogue_item)
     if publish is False or (
         visualisation_approved and visualisation_published and catalogue_item_complete
@@ -1421,7 +1360,7 @@ def _set_published_on_catalogue_item(request, gitlab_project, catalogue_item, pu
 
     if visualisation_approved is False:
         error = (
-            reverse("visualisations:approvals", args=(gitlab_project['id'],)),
+            reverse("visualisations:approvals", args=(gitlab_project["id"],)),
             "The visualisation must be approved by two developers before it can be published.",
         )
 
@@ -1433,7 +1372,7 @@ def _set_published_on_catalogue_item(request, gitlab_project, catalogue_item, pu
 
     elif catalogue_item_complete is False:
         error = (
-            reverse("visualisations:catalogue-item", args=(gitlab_project['id'],)),
+            reverse("visualisations:catalogue-item", args=(gitlab_project["id"],)),
             "You must complete all fields of the catalogue item before it can be published.",
         )
 
@@ -1446,9 +1385,7 @@ def _set_published_on_catalogue_item(request, gitlab_project, catalogue_item, pu
 
 
 @transaction.atomic
-def _set_published_on_visualisation(
-    request, gitlab_project, application_template, publish
-):
+def _set_published_on_visualisation(request, gitlab_project, application_template, publish):
     visualisation_approved = _visualisation_is_approved(application_template)
     if publish is False or visualisation_approved:
         application_template.visible = publish
@@ -1469,7 +1406,7 @@ def _set_published_on_visualisation(
 
     if visualisation_approved is False:
         error = (
-            reverse("visualisations:approvals", args=(gitlab_project['id'],)),
+            reverse("visualisations:approvals", args=(gitlab_project["id"],)),
             "The visualisation must be approved by two developers before it can be published.",
         )
 
@@ -1481,27 +1418,25 @@ def _set_published_on_visualisation(
 
 def visualisation_publish_html_POST(request, gitlab_project):
     application_template = _application_template(gitlab_project)
-    action = request.POST.get('action', '').lower()
-    catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(
-        gitlab_project
-    )
+    action = request.POST.get("action", "").lower()
+    catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(gitlab_project)
 
-    if action == 'publish-catalogue':
+    if action == "publish-catalogue":
         return _set_published_on_catalogue_item(
             request, gitlab_project, catalogue_item, publish=True
         )
 
-    elif action == 'unpublish-catalogue':
+    elif action == "unpublish-catalogue":
         return _set_published_on_catalogue_item(
             request, gitlab_project, catalogue_item, publish=False
         )
 
-    elif action == 'publish-visualisation':
+    elif action == "publish-visualisation":
         return _set_published_on_visualisation(
             request, gitlab_project, application_template, publish=True
         )
 
-    elif action == 'unpublish-visualisation':
+    elif action == "unpublish-visualisation":
         return _set_published_on_visualisation(
             request, gitlab_project, application_template, publish=False
         )
@@ -1509,12 +1444,10 @@ def visualisation_publish_html_POST(request, gitlab_project):
     return HttpResponse(
         status=400,
         content=(
-            f'Invalid action: {action} is not one of '
-            '[publish-catalogue|unpublish-catalogue|publish-visualisation]'.encode(
-                'utf8'
-            )
+            f"Invalid action: {action} is not one of "
+            "[publish-catalogue|unpublish-catalogue|publish-visualisation]".encode("utf8")
         ),
-        content_type='utf8',
+        content_type="utf8",
     )
 
 
@@ -1528,37 +1461,39 @@ def _without_duplicates_preserve_order(seq, key):
 class UserToolSizeConfigurationView(SuccessMessageMixin, UpdateView):
 
     model = UserToolConfiguration
-    fields = ['size']
-    template_name = 'user_tool_size_configuration_form.html'
+    fields = ["size"]
+    template_name = "user_tool_size_configuration_form.html"
     success_message = "Saved %(tool_template)s size"
 
     def get_object(self, queryset=None):
         try:
             return UserToolConfiguration.objects.get(
                 user=self.request.user,
-                tool_template__host_basename=self.kwargs['tool_host_basename'],
+                tool_template__host_basename=self.kwargs["tool_host_basename"],
             )
         except UserToolConfiguration.DoesNotExist:
             try:
                 return UserToolConfiguration(
                     user=self.request.user,
                     tool_template=ToolTemplate.objects.get(
-                        host_basename=self.kwargs['tool_host_basename']
+                        host_basename=self.kwargs["tool_host_basename"]
                     ),
                 )
             except ToolTemplate.DoesNotExist:
                 raise Http404
 
     def get_success_url(self):
-        return reverse('applications:tools')
+        return reverse("applications:tools")
 
     def get_success_message(self, cleaned_data):
-        return self.success_message % dict(tool_template=self.object.tool_template,)
+        return self.success_message % dict(
+            tool_template=self.object.tool_template,
+        )
 
 
 def _download_log(filename, events):
-    response = HttpResponse(content_type='text/plain')
-    response['Content-Disposition'] = f'attachment; filename={filename}.log'
+    response = HttpResponse(content_type="text/plain")
+    response["Content-Disposition"] = f"attachment; filename={filename}.log"
     with closing(StringIO()) as logfile:
         if events:
             for event in events:
@@ -1566,7 +1501,7 @@ def _download_log(filename, events):
                     f'{datetime.datetime.fromtimestamp(event["timestamp"] / 1000)} - {event["message"]}\n'
                 )
         else:
-            logfile.write('No logs were found for this visualisation.')
+            logfile.write("No logs were found for this visualisation.")
         response.write(logfile.getvalue())
     return response
 
@@ -1582,22 +1517,18 @@ def visualisation_latest_log_GET(request, gitlab_project_id, commit_id):
     try:
         app_instance = ApplicationInstance.objects.filter(
             application_template=application_template, commit_id=commit_id
-        ).latest('created_date')
+        ).latest("created_date")
     except ApplicationInstance.DoesNotExist:
         return _download_log(filename, [])
 
     container_name = json.loads(app_instance.spawner_application_template_options)[
-        'CONTAINER_NAME'
+        "CONTAINER_NAME"
     ]
-    task_arn = json.loads(app_instance.spawner_application_instance_id)[
-        'task_arn'
-    ].split('/')[-1]
+    task_arn = json.loads(app_instance.spawner_application_instance_id)["task_arn"].split("/")[-1]
 
-    log_stream = f'{container_name}/{container_name}/{task_arn}'
+    log_stream = f"{container_name}/{container_name}/{task_arn}"
 
     return _download_log(
         filename,
-        fetch_visualisation_log_events(
-            settings.VISUALISATION_CLOUDWATCH_LOG_GROUP, log_stream
-        ),
+        fetch_visualisation_log_events(settings.VISUALISATION_CLOUDWATCH_LOG_GROUP, log_stream),
     )

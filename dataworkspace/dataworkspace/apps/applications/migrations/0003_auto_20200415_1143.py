@@ -6,16 +6,16 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [('applications', '0002_remove_applicationtemplate_host_pattern')]
+    dependencies = [("applications", "0002_remove_applicationtemplate_host_pattern")]
 
     operations = [
         migrations.AlterField(
-            model_name='applicationtemplate',
-            name='name',
+            model_name="applicationtemplate",
+            name="name",
             field=models.CharField(
-                help_text='Used in URLs: only lowercase letters allowed',
+                help_text="Used in URLs: only lowercase letters allowed",
                 max_length=128,
-                validators=[django.core.validators.RegexValidator(regex='^[a-z]+$')],
+                validators=[django.core.validators.RegexValidator(regex="^[a-z]+$")],
             ),
         )
     ]

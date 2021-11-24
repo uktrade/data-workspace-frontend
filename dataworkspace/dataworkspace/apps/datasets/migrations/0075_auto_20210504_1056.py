@@ -7,16 +7,16 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0074_dataset_bookmarks'),
+        ("datasets", "0074_dataset_bookmarks"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='sourcetable',
-            name='data_grid_column_config',
+            model_name="sourcetable",
+            name="data_grid_column_config",
             field=django.contrib.postgres.fields.jsonb.JSONField(
                 blank=True,
-                help_text='Must be a list of json objects defining:\n\n'
+                help_text="Must be a list of json objects defining:\n\n"
                 '- "field": "[column name]" (required)\n'
                 '- "headerName": "[pretty column name]" (optional, defaults to "field")\n'
                 '- "sortable": [true|false] (optional, default: true)\n'
@@ -25,11 +25,11 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AddField(
-            model_name='sourcetable',
-            name='data_grid_enabled',
+            model_name="sourcetable",
+            name="data_grid_enabled",
             field=models.BooleanField(
                 default=False,
-                help_text='Allow users to filter, sort and export data from within the browser',
+                help_text="Allow users to filter, sort and export data from within the browser",
             ),
         ),
     ]

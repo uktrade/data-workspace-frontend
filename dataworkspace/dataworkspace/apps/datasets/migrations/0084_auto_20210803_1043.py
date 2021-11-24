@@ -7,29 +7,29 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0083_merge_20210730_1531'),
+        ("datasets", "0083_merge_20210730_1531"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='dataset',
-            name='authorized_email_domains',
+            model_name="dataset",
+            name="authorized_email_domains",
             field=django.contrib.postgres.fields.ArrayField(
                 base_field=models.CharField(max_length=256),
                 blank=True,
                 default=list,
-                help_text='Comma-separated list of domain names without spaces, e.g trade.gov.uk,fco.gov.uk',
+                help_text="Comma-separated list of domain names without spaces, e.g trade.gov.uk,fco.gov.uk",
                 size=None,
             ),
         ),
         migrations.AlterField(
-            model_name='visualisationcatalogueitem',
-            name='authorized_email_domains',
+            model_name="visualisationcatalogueitem",
+            name="authorized_email_domains",
             field=django.contrib.postgres.fields.ArrayField(
                 base_field=models.CharField(max_length=256),
                 blank=True,
                 default=list,
-                help_text='Comma-separated list of domain names without spaces, e.g trade.gov.uk,fco.gov.uk',
+                help_text="Comma-separated list of domain names without spaces, e.g trade.gov.uk,fco.gov.uk",
                 size=None,
             ),
         ),

@@ -5,76 +5,74 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [('datasets', '0025_referencedataset_description_rich_text_field')]
+    dependencies = [("datasets", "0025_referencedataset_description_rich_text_field")]
 
     operations = [
         migrations.CreateModel(
-            name='DataCutDataset',
+            name="DataCutDataset",
             fields=[],
             options={
-                'verbose_name': 'Data Cut Dataset',
-                'proxy': True,
-                'indexes': [],
-                'constraints': [],
+                "verbose_name": "Data Cut Dataset",
+                "proxy": True,
+                "indexes": [],
+                "constraints": [],
             },
-            bases=('datasets.dataset',),
+            bases=("datasets.dataset",),
         ),
         migrations.CreateModel(
-            name='MasterDataset',
+            name="MasterDataset",
             fields=[],
             options={
-                'verbose_name': 'Master Dataset',
-                'proxy': True,
-                'indexes': [],
-                'constraints': [],
+                "verbose_name": "Master Dataset",
+                "proxy": True,
+                "indexes": [],
+                "constraints": [],
             },
-            bases=('datasets.dataset',),
+            bases=("datasets.dataset",),
         ),
         migrations.AddField(
-            model_name='dataset',
-            name='type',
-            field=models.IntegerField(
-                choices=[(1, 'Master Dataset'), (2, 'Data Cut')], default=2
-            ),
+            model_name="dataset",
+            name="type",
+            field=models.IntegerField(choices=[(1, "Master Dataset"), (2, "Data Cut")], default=2),
         ),
         migrations.CreateModel(
-            name='DataCutDatasetUserPermission',
+            name="DataCutDatasetUserPermission",
             fields=[],
-            options={'proxy': True, 'indexes': [], 'constraints': []},
-            bases=('datasets.datasetuserpermission',),
+            options={"proxy": True, "indexes": [], "constraints": []},
+            bases=("datasets.datasetuserpermission",),
         ),
         migrations.CreateModel(
-            name='MasterDatasetUserPermission',
+            name="MasterDatasetUserPermission",
             fields=[],
-            options={'proxy': True, 'indexes': [], 'constraints': []},
-            bases=('datasets.datasetuserpermission',),
+            options={"proxy": True, "indexes": [], "constraints": []},
+            bases=("datasets.datasetuserpermission",),
         ),
-        migrations.RemoveField(model_name='dataset', name='redactions'),
-        migrations.RemoveField(model_name='dataset', name='volume'),
+        migrations.RemoveField(model_name="dataset", name="redactions"),
+        migrations.RemoveField(model_name="dataset", name="volume"),
         migrations.AddField(
-            model_name='sourcetable',
-            name='frequency',
+            model_name="sourcetable",
+            name="frequency",
             field=models.IntegerField(
                 choices=[
-                    (1, 'Daily'),
-                    (2, 'Weekly'),
-                    (3, 'Monthly'),
-                    (4, 'Quarterly'),
-                    (5, 'Annually'),
+                    (1, "Daily"),
+                    (2, "Weekly"),
+                    (3, "Monthly"),
+                    (4, "Quarterly"),
+                    (5, "Annually"),
                 ],
                 default=1,
             ),
         ),
         migrations.AddField(
-            model_name='sourceview',
-            name='frequency',
+            model_name="sourceview",
+            name="frequency",
             field=models.IntegerField(
                 choices=[
-                    (1, 'Daily'),
-                    (2, 'Weekly'),
-                    (3, 'Monthly'),
-                    (4, 'Quarterly'),
-                    (5, 'Annually'),
+                    (1, "Daily"),
+                    (2, "Weekly"),
+                    (3, "Monthly"),
+                    (4, "Quarterly"),
+                    (5, "Annually"),
                 ],
                 default=1,
             ),

@@ -29,69 +29,67 @@ from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.apps.core.utils import create_tools_access_iam_role
 
 
-SCHEMA_STRING = {'dataType': 'STRING', 'semantics': {'conceptType': 'DIMENSION'}}
+SCHEMA_STRING = {"dataType": "STRING", "semantics": {"conceptType": "DIMENSION"}}
 
 SCHEMA_STRING_DATE = {
-    'dataType': 'STRING',
-    'semantics': {'conceptType': 'DIMENSION', 'semanticType': 'YEAR_MONTH_DAY'},
+    "dataType": "STRING",
+    "semantics": {"conceptType": "DIMENSION", "semanticType": "YEAR_MONTH_DAY"},
 }
 
 SCHEMA_STRING_DATE_TIME = {
-    'dataType': 'STRING',
-    'semantics': {'conceptType': 'DIMENSION', 'semanticType': 'YEAR_MONTH_DAY_SECOND'},
+    "dataType": "STRING",
+    "semantics": {"conceptType": "DIMENSION", "semanticType": "YEAR_MONTH_DAY_SECOND"},
 }
 
-SCHEMA_BOOLEAN = {'dataType': 'BOOLEAN', 'semantics': {'conceptType': 'DIMENSION'}}
+SCHEMA_BOOLEAN = {"dataType": "BOOLEAN", "semantics": {"conceptType": "DIMENSION"}}
 
-SCHEMA_NUMBER = {'dataType': 'NUMBER', 'semantics': {'conceptType': 'METRIC'}}
+SCHEMA_NUMBER = {"dataType": "NUMBER", "semantics": {"conceptType": "METRIC"}}
 
 SCHEMA_DATA_TYPE_PATTERNS = (
-    (r'^(character varying.*)|(text)$', SCHEMA_STRING, lambda v: v),
-    (r'^(uuid)$', SCHEMA_STRING, str),
+    (r"^(character varying.*)|(text)$", SCHEMA_STRING, lambda v: v),
+    (r"^(uuid)$", SCHEMA_STRING, str),
     (
         # Not sure if this is suitable for Google Data Studio analysis, but avoids the error if
         # passing an array as a value:
         # "The data returned from the community connector is malformed"
-        r'^text\[\]$',
+        r"^text\[\]$",
         SCHEMA_STRING,
-        ','.join,
+        ",".join,
     ),
     (
-        r'^date$',
+        r"^date$",
         SCHEMA_STRING_DATE,
-        lambda v: v.strftime('%Y%m%d') if v is not None else None,
+        lambda v: v.strftime("%Y%m%d") if v is not None else None,
     ),
     (
-        r'^timestamp.*$',
+        r"^timestamp.*$",
         SCHEMA_STRING_DATE_TIME,
-        lambda v: v.strftime('%Y%m%d%H%M%S') if v is not None else None,
+        lambda v: v.strftime("%Y%m%d%H%M%S") if v is not None else None,
     ),
-    (r'^boolean$', SCHEMA_BOOLEAN, lambda v: v),
+    (r"^boolean$", SCHEMA_BOOLEAN, lambda v: v),
     (
-        r'^(bigint)|(decimal)|(integer)|(numeric)|(real)|(double precision)$',
+        r"^(bigint)|(decimal)|(integer)|(numeric)|(real)|(double precision)$",
         SCHEMA_NUMBER,
         lambda v: v,
     ),
 )
 
-logger = logging.getLogger('app')
+logger = logging.getLogger("app")
 
 
 def applications_api_view(request):
     return (
-        applications_api_GET(request)
-        if request.method == 'GET'
-        else JsonResponse({}, status=405)
+        applications_api_GET(request) if request.method == "GET" else JsonResponse({}, status=405)
     )
 
 
 def applications_api_GET(request):
     return JsonResponse(
         {
-            'applications': [
+            "applications": [
                 api_application_dict(application)
                 for application in ApplicationInstance.objects.filter(
-                    state__in=['RUNNING', 'SPAWNING']
+                    state__in=["RUNNING", "SPAWNING"]
                 )
             ]
         },
@@ -104,22 +102,20 @@ def application_api_view(request, public_host):
         JsonResponse({}, status=403)
         if not application_api_is_allowed(request, public_host)
         else application_api_GET(request, public_host)
-        if request.method == 'GET'
+        if request.method == "GET"
         else application_api_PUT(request, public_host)
-        if request.method == 'PUT'
+        if request.method == "PUT"
         else application_api_PATCH(request, public_host)
-        if request.method == 'PATCH'
+        if request.method == "PATCH"
         else application_api_DELETE(request, public_host)
-        if request.method == 'DELETE'
+        if request.method == "DELETE"
         else JsonResponse({}, status=405)
     )
 
 
 def application_api_GET(request, public_host):
     try:
-        application_instance = get_api_visible_application_instance_by_public_host(
-            public_host
-        )
+        application_instance = get_api_visible_application_instance_by_public_host(public_host)
     except ApplicationInstance.DoesNotExist:
         return JsonResponse({}, status=404)
 
@@ -131,15 +127,11 @@ def application_api_PUT(request, public_host):
     # key prevents duplicate spawning/running applications at the same
     # public host
     try:
-        application_instance = get_api_visible_application_instance_by_public_host(
-            public_host
-        )
+        application_instance = get_api_visible_application_instance_by_public_host(public_host)
     except ApplicationInstance.DoesNotExist:
         pass
     else:
-        return JsonResponse(
-            {'message': 'Application instance already exists'}, status=409
-        )
+        return JsonResponse({"message": "Application instance already exists"}, status=409)
 
     try:
         (
@@ -149,17 +141,13 @@ def application_api_PUT(request, public_host):
             commit_id,
         ) = application_template_tag_user_commit_from_host(public_host)
     except ApplicationTemplate.DoesNotExist:
-        return JsonResponse(
-            {'message': 'Application template does not exist'}, status=400
-        )
+        return JsonResponse({"message": "Application template does not exist"}, status=400)
 
     app_type = application_template.application_type
 
-    if app_type == 'TOOL':
+    if app_type == "TOOL":
         tool_configuration = (
-            application_template.user_tool_configuration.filter(
-                user=request.user
-            ).first()
+            application_template.user_tool_configuration.filter(user=request.user).first()
             or UserToolConfiguration.default_config()
         )
         cpu = tool_configuration.size_config.cpu
@@ -178,16 +166,14 @@ def application_api_PUT(request, public_host):
             spawner_application_template_options=spawner_options,
             spawner_application_instance_id=json.dumps({}),
             public_host=public_host,
-            state='SPAWNING',
+            state="SPAWNING",
             single_running_or_spawning_integrity=public_host,
             cpu=cpu,
             memory=memory,
             commit_id=commit_id,
         )
     except IntegrityError:
-        application_instance = get_api_visible_application_instance_by_public_host(
-            public_host
-        )
+        application_instance = get_api_visible_application_instance_by_public_host(public_host)
     else:
         spawn.delay(
             application_template.spawner,
@@ -202,28 +188,24 @@ def application_api_PUT(request, public_host):
 
 def application_api_PATCH(request, public_host):
     try:
-        application_instance = get_api_visible_application_instance_by_public_host(
-            public_host
-        )
+        application_instance = get_api_visible_application_instance_by_public_host(public_host)
     except ApplicationInstance.DoesNotExist:
         return JsonResponse({}, status=404)
 
-    state = json.loads(request.body)['state']
+    state = json.loads(request.body)["state"]
 
-    if state != 'RUNNING':
+    if state != "RUNNING":
         return JsonResponse({}, status=400)
 
     application_instance.state = state
-    application_instance.save(update_fields=['state'])
+    application_instance.save(update_fields=["state"])
 
     return JsonResponse({}, status=200)
 
 
 def application_api_DELETE(request, public_host):
     try:
-        application_instance = get_api_visible_application_instance_by_public_host(
-            public_host
-        )
+        application_instance = get_api_visible_application_instance_by_public_host(public_host)
     except ApplicationInstance.DoesNotExist:
         return JsonResponse({}, status=200)
 
@@ -235,13 +217,13 @@ def application_api_DELETE(request, public_host):
 def aws_credentials_api_view(request):
     return (
         aws_credentials_api_GET(request)
-        if request.method == 'GET'
+        if request.method == "GET"
         else JsonResponse({}, status=405)
     )
 
 
 def aws_credentials_api_GET(request):
-    client = boto3.client('sts')
+    client = boto3.client("sts")
     role_arn, _ = create_tools_access_iam_role(
         request.user.email,
         str(request.user.profile.sso_id),
@@ -254,9 +236,9 @@ def aws_credentials_api_GET(request):
         try:
             credentials = client.assume_role(
                 RoleArn=role_arn,
-                RoleSessionName='s3_access_' + str(request.user.profile.sso_id),
+                RoleSessionName="s3_access_" + str(request.user.profile.sso_id),
                 DurationSeconds=60 * 60,
-            )['Credentials']
+            )["Credentials"]
         except Exception:  # pylint: disable=broad-except
             if i == max_attempts - 1:
                 raise
@@ -267,10 +249,10 @@ def aws_credentials_api_GET(request):
 
     return JsonResponse(
         {
-            'AccessKeyId': credentials['AccessKeyId'],
-            'SecretAccessKey': credentials['SecretAccessKey'],
-            'SessionToken': credentials['SessionToken'],
-            'Expiration': credentials['Expiration'],
+            "AccessKeyId": credentials["AccessKeyId"],
+            "SecretAccessKey": credentials["SecretAccessKey"],
+            "SessionToken": credentials["SessionToken"],
+            "Expiration": credentials["Expiration"],
         },
         status=200,
     )
@@ -281,7 +263,7 @@ def get_postgres_column_names_data_types(sourcetable):
         database_dsn(settings.DATABASES_DATA[sourcetable.database.memorable_name])
     ) as conn, conn.cursor() as cur:
         cur.execute(
-            '''
+            """
             SELECT
                 pg_attribute.attname AS column_name,
                 pg_catalog.format_type(pg_attribute.atttypid, pg_attribute.atttypmod) AS data_type
@@ -298,7 +280,7 @@ def get_postgres_column_names_data_types(sourcetable):
                 AND pg_class.relname = %s
             ORDER BY
                 attnum ASC;
-        ''',
+        """,
             (sourcetable.schema, sourcetable.table),
         )
         return cur.fetchall()
@@ -316,8 +298,8 @@ def schema_value_func_for_data_types(sourcetable):
     return [
         (
             {
-                'name': column_name,
-                'label': column_name.replace('_', ' ').capitalize(),
+                "name": column_name,
+                "label": column_name.replace("_", " ").capitalize(),
                 **schema,
             },
             value_func,
@@ -348,7 +330,7 @@ def get_rows(sourcetable, schema_value_funcs, query_var):
     ) as conn, conn.cursor() as cur:
 
         cur.execute(
-            '''
+            """
             SELECT
                 pg_attribute.attname AS column_name
             FROM
@@ -367,7 +349,7 @@ def get_rows(sourcetable, schema_value_funcs, query_var):
                 AND pg_index.indisprimary
             ORDER BY
                 pg_attribute.attnum
-        ''',
+        """,
             (sourcetable.schema, sourcetable.table),
         )
         primary_key_column_names = [row[0] for row in cur.fetchall()]
@@ -375,24 +357,22 @@ def get_rows(sourcetable, schema_value_funcs, query_var):
     with connect(
         database_dsn(settings.DATABASES_DATA[sourcetable.database.memorable_name])
     ) as conn, conn.cursor(
-        name='google_data_studio_all_table_data'
+        name="google_data_studio_all_table_data"
     ) as cur:  # Named cursor => server-side cursor
 
         cur.itersize = cursor_itersize
         cur.arraysize = cursor_itersize
 
-        fields_sql = sql.SQL(',').join(
-            [sql.Identifier(schema['name']) for schema, _ in schema_value_funcs]
+        fields_sql = sql.SQL(",").join(
+            [sql.Identifier(schema["name"]) for schema, _ in schema_value_funcs]
         )
-        primary_key_sql = sql.SQL(',').join(
+        primary_key_sql = sql.SQL(",").join(
             [sql.Identifier(column_name) for column_name in primary_key_column_names]
         )
         schema_sql = sql.Identifier(sourcetable.schema)
         table_sql = sql.Identifier(sourcetable.table)
 
-        query_sql, vars_sql = query_var(
-            fields_sql, schema_sql, table_sql, primary_key_sql
-        )
+        query_sql, vars_sql = query_var(fields_sql, schema_sql, table_sql, primary_key_sql)
         cur.execute(query_sql, vars_sql)
 
         while True:
@@ -404,6 +384,6 @@ def get_rows(sourcetable, schema_value_funcs, query_var):
                     schema_value_funcs[i][1](value)
                     for i, value in enumerate(requested_field_values)
                 ]
-                yield {'values': values}, primary_key_values
+                yield {"values": values}, primary_key_values
             if not rows:
                 break

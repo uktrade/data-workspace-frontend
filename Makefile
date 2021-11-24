@@ -58,7 +58,7 @@ docker-check-migrations:
 
 .PHONY: check-black
 check-black:
-	black --exclude=venv --skip-string-normalization --check .
+	black --exclude=venv --line-length=99 --check .
 
 .PHONY: check-pylint
 check-pylint:
@@ -74,7 +74,7 @@ docker-format:
 
 .PHONY: format
 format:
-	black --exclude=venv --skip-string-normalization .
+	black --exclude=venv --line-length=99 .
 
 .PHONY: save-requirements
 save-requirements:
@@ -128,4 +128,3 @@ docker-test-sequential:
 	docker-compose -f docker-compose-test-local.yml -p data-workspace-test up -d
 	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test pytest /test/selenium/test_request_data.py -x -v
 	docker-compose -f docker-compose-test-local.yml -p data-workspace-test stop
-

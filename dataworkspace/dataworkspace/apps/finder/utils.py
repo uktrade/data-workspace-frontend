@@ -26,9 +26,7 @@ class _DatasetMatch:
         return sum(m.count for m in self.table_matches)
 
 
-def group_tables_by_master_dataset(
-    matches: List[_TableMatchResult], user
-) -> List[_DatasetMatch]:
+def group_tables_by_master_dataset(matches: List[_TableMatchResult], user) -> List[_DatasetMatch]:
     if matches == []:
         return []
 
@@ -78,13 +76,13 @@ def _enrich_and_suppress_matches(request, matches: Iterable[_TableMatchResult]):
 
     queryset = SourceTable.objects.filter(match_table_filter)
 
-    no_access_filter = Q(
-        dataset__user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
-    ) & ~Q(dataset__datasetuserpermission__user=request.user)
+    no_access_filter = Q(dataset__user_access_type=UserAccessType.REQUIRES_AUTHORIZATION) & ~Q(
+        dataset__datasetuserpermission__user=request.user
+    )
 
     # Pull out just the information we need
     tables_with_access_info = queryset.values(
-        'schema', 'table', 'dataset_finder_opted_in', 'name'
+        "schema", "table", "dataset_finder_opted_in", "name"
     ).annotate(
         has_access=Case(
             When(no_access_filter, then=False),
@@ -93,7 +91,7 @@ def _enrich_and_suppress_matches(request, matches: Iterable[_TableMatchResult]):
         )
     )
 
-    mapped_tables = {(t['schema'], t['table']): t for t in tables_with_access_info}
+    mapped_tables = {(t["schema"], t["table"]): t for t in tables_with_access_info}
 
     visible_matches = []
     has_suppressed_results = False
@@ -104,14 +102,14 @@ def _enrich_and_suppress_matches(request, matches: Iterable[_TableMatchResult]):
             continue
 
         if (
-            not mapped_tables[key]['dataset_finder_opted_in']
-            and not mapped_tables[key]['has_access']
+            not mapped_tables[key]["dataset_finder_opted_in"]
+            and not mapped_tables[key]["has_access"]
         ):
             has_suppressed_results = True
             continue
 
-        match.name = mapped_tables[key]['name']
-        match.has_access = mapped_tables[key]['has_access']
+        match.name = mapped_tables[key]["name"]
+        match.has_access = mapped_tables[key]["has_access"]
         visible_matches.append(match)
 
     return visible_matches, has_suppressed_results
@@ -119,10 +117,10 @@ def _enrich_and_suppress_matches(request, matches: Iterable[_TableMatchResult]):
 
 def get_index_aliases_for_all_published_source_tables():
     return list(
-        o['index_alias']
+        o["index_alias"]
         for o in SourceTable.objects.filter(
             dataset__published=True, dataset__deleted=False
-        ).values(index_alias=Concat('schema', Value('--'), 'table'))
+        ).values(index_alias=Concat("schema", Value("--"), "table"))
     )
 
 
@@ -158,73 +156,65 @@ class ResultsProxy:
             filters=self.filters,
         )
 
-        return resp['hits']['hits']
+        return resp["hits"]["hits"]
 
 
 def build_grid_filters(column_config, params):
     es_filters = []
-    column_map = {x['field']: x for x in column_config}
+    column_map = {x["field"]: x for x in column_config}
     for field, filter_data in params.items():
-        data_type = column_map[field].get('dataType', filter_data['filterType'])
-        term = filter_data.get('filter')
+        data_type = column_map[field].get("dataType", filter_data["filterType"])
+        term = filter_data.get("filter")
 
         # Booleans are passed as integers
-        if data_type == 'boolean':
+        if data_type == "boolean":
             term = bool(int(term))
 
-        if data_type == 'date':
-            term = datetime.strptime(filter_data['dateFrom'], '%Y-%m-%d %H:%M:%S')
+        if data_type == "date":
+            term = datetime.strptime(filter_data["dateFrom"], "%Y-%m-%d %H:%M:%S")
 
         if field in column_map:
-            if filter_data['type'] == 'contains':
+            if filter_data["type"] == "contains":
                 es_filters.append(
                     {
-                        'bool': {
-                            'must': {'match_phrase': {field: term}}
-                            if ' ' in term
-                            else {'wildcard': {field: {'value': f'*{term}*'}}}
+                        "bool": {
+                            "must": {"match_phrase": {field: term}}
+                            if " " in term
+                            else {"wildcard": {field: {"value": f"*{term}*"}}}
                         }
                     }
                 )
 
-            elif filter_data['type'] == 'notContains':
+            elif filter_data["type"] == "notContains":
                 es_filters.append(
                     {
-                        'bool': {
-                            'must_not': {'match_phrase': {field: term}}
-                            if ' ' in term
-                            else {'wildcard': {field: {'value': f'*{term}*'}}}
+                        "bool": {
+                            "must_not": {"match_phrase": {field: term}}
+                            if " " in term
+                            else {"wildcard": {field: {"value": f"*{term}*"}}}
                         }
                     }
                 )
 
-            elif filter_data['type'] == 'equals':
-                es_filters.append({'term': {field: term}})
+            elif filter_data["type"] == "equals":
+                es_filters.append({"term": {field: term}})
 
-            elif filter_data['type'] == 'notEqual':
-                es_filters.append({'bool': {'must_not': {'term': {field: term}}}})
+            elif filter_data["type"] == "notEqual":
+                es_filters.append({"bool": {"must_not": {"term": {field: term}}}})
 
-            elif filter_data['type'] in ['lessThan', 'greaterThan']:
+            elif filter_data["type"] in ["lessThan", "greaterThan"]:
+                es_filters.append(
+                    {"range": {field: {"lt" if filter_data["type"] == "lessThan" else "gt": term}}}
+                )
+
+            elif filter_data["type"] == "inRange":
                 es_filters.append(
                     {
-                        'range': {
+                        "range": {
                             field: {
-                                'lt'
-                                if filter_data['type'] == 'lessThan'
-                                else 'gt': term
-                            }
-                        }
-                    }
-                )
-
-            elif filter_data['type'] == 'inRange':
-                es_filters.append(
-                    {
-                        'range': {
-                            field: {
-                                'gte': term,
-                                'lte': datetime.strptime(
-                                    filter_data['dateTo'], '%Y-%m-%d %H:%M:%S'
+                                "gte": term,
+                                "lte": datetime.strptime(
+                                    filter_data["dateTo"], "%Y-%m-%d %H:%M:%S"
                                 ),
                             }
                         }

@@ -14,6 +14,6 @@ class Command(BaseCommand):
         push_tool_monitoring_dashboard_datasets()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     settings.configure()
     Command().handle()

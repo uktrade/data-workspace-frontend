@@ -6,17 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0061_toolqueryauditlog'),
+        ("datasets", "0061_toolqueryauditlog"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='visualisationcatalogueitem',
-            name='tags',
+            model_name="visualisationcatalogueitem",
+            name="tags",
             field=models.ManyToManyField(
                 blank=True,
-                related_name='_visualisationcatalogueitem_tags_+',
-                to='datasets.Tag',
+                related_name="_visualisationcatalogueitem_tags_+",
+                to="datasets.Tag",
             ),
         ),
     ]

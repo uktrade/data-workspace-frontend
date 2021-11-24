@@ -33,7 +33,7 @@ class TestGetTotalPages(TestCase):
             self.assertEqual(
                 actual_result,
                 expected_total_pages,
-                msg=f'Total rows {total_rows}, Page size {page_size}',
+                msg=f"Total rows {total_rows}, Page size {page_size}",
             )
 
 
@@ -41,7 +41,7 @@ class TestExporters:
     @pytest.fixture(autouse=True)
     def setUp(self):
         fetch_query_results_patcher = patch(
-            'dataworkspace.apps.explorer.exporters.fetch_query_results'
+            "dataworkspace.apps.explorer.exporters.fetch_query_results"
         )
         mock_fetch_query_results = fetch_query_results_patcher.start()
 
@@ -52,78 +52,68 @@ class TestExporters:
         yield
         fetch_query_results_patcher.stop()
 
-    @patch('dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings')
+    @patch("dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings")
     def test_writing_csv_unicode_sync(self, mock_connection_settings):
         self.mock_fetch_query_results.return_value = (
-            ('a', 'b'),
-            [(1, None), (u'Jenét', 1)],
+            ("a", "b"),
+            [(1, None), ("Jenét", 1)],
             None,
         )
 
         res = CSVExporter(request=self.request, querylog=QueryLogFactory()).get_output()
-        assert res == 'a,b\r\n1,\r\nJenét,1\r\n'
+        assert res == "a,b\r\n1,\r\nJenét,1\r\n"
 
-    @patch('dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings')
+    @patch("dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings")
     def test_writing_csv_custom_delimiter_sync(self, mock_connection_settings):
         self.mock_fetch_query_results.return_value = (
-            ('?column?', '?column?'),
+            ("?column?", "?column?"),
             [(1, 2)],
             None,
         )
 
-        res = CSVExporter(request=self.request, querylog=QueryLogFactory()).get_output(
-            delim='|'
-        )
-        assert res == '?column?|?column?\r\n1|2\r\n'
+        res = CSVExporter(request=self.request, querylog=QueryLogFactory()).get_output(delim="|")
+        assert res == "?column?|?column?\r\n1|2\r\n"
 
-    @patch('dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings')
+    @patch("dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings")
     def test_writing_json_unicode_sync(self, mock_connection_settings):
         self.mock_fetch_query_results.return_value = (
-            ('a', 'b'),
-            [(1, None), (u'Jenét', '1')],
+            ("a", "b"),
+            [(1, None), ("Jenét", "1")],
             None,
         )
 
-        res = JSONExporter(
-            request=self.request, querylog=QueryLogFactory()
-        ).get_output()
-        assert res == json.dumps([{'a': 1, 'b': None}, {'a': 'Jenét', 'b': '1'}])
+        res = JSONExporter(request=self.request, querylog=QueryLogFactory()).get_output()
+        assert res == json.dumps([{"a": 1, "b": None}, {"a": "Jenét", "b": "1"}])
 
-    @patch('dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings')
+    @patch("dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings")
     def test_writing_json_datetimes_sync(self, mock_connection_settings):
         self.mock_fetch_query_results.return_value = (
-            ('a', 'b'),
+            ("a", "b"),
             [(1, date.today())],
             None,
         )
 
-        res = JSONExporter(
-            request=self.request, querylog=QueryLogFactory()
-        ).get_output()
-        assert res == json.dumps([{'a': 1, 'b': date.today()}], cls=DjangoJSONEncoder)
+        res = JSONExporter(request=self.request, querylog=QueryLogFactory()).get_output()
+        assert res == json.dumps([{"a": 1, "b": date.today()}], cls=DjangoJSONEncoder)
 
-    @patch('dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings')
+    @patch("dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings")
     def test_writing_excel_sync(self, mock_connection_settings):
         self.mock_fetch_query_results.return_value = (
-            ('a', 'b'),
-            [(1, None), (u'Jenét', datetime.now())],
+            ("a", "b"),
+            [(1, None), ("Jenét", datetime.now())],
             None,
         )
 
-        res = ExcelExporter(
-            request=self.request, querylog=QueryLogFactory()
-        ).get_output()
-        assert res[:2] == six.b('PK')
+        res = ExcelExporter(request=self.request, querylog=QueryLogFactory()).get_output()
+        assert res[:2] == six.b("PK")
 
-    @patch('dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings')
+    @patch("dataworkspace.apps.explorer.utils.get_user_explorer_connection_settings")
     def test_writing_excel_dict_fields_sync(self, mock_connection_settings):
         self.mock_fetch_query_results.return_value = (
-            ('a', 'b'),
-            [(1, ['foo', 'bar']), (2, {'foo': 'bar'})],
+            ("a", "b"),
+            [(1, ["foo", "bar"]), (2, {"foo": "bar"})],
             None,
         )
 
-        res = ExcelExporter(
-            request=self.request, querylog=QueryLogFactory()
-        ).get_output()
-        assert res[:2] == six.b('PK')
+        res = ExcelExporter(request=self.request, querylog=QueryLogFactory()).get_output()
+        assert res[:2] == six.b("PK")

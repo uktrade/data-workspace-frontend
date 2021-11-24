@@ -6,15 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0062_visualisationcatalogueitem_tags'),
+        ("datasets", "0062_visualisationcatalogueitem_tags"),
     ]
 
     operations = [
         migrations.AddConstraint(
-            model_name='toolqueryauditlog',
+            model_name="toolqueryauditlog",
             constraint=models.UniqueConstraint(
-                fields=('rolename', 'query_sql', 'timestamp'),
-                name='unique toolqueryauditlog',
+                fields=("rolename", "query_sql", "timestamp"),
+                name="unique toolqueryauditlog",
             ),
         ),
     ]

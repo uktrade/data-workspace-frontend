@@ -7,100 +7,104 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0073_auto_20210419_1639'),
+        ("datasets", "0073_auto_20210419_1639"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='DataSetBookmark',
+            name="DataSetBookmark",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
                 (
-                    'dataset',
+                    "dataset",
                     models.ForeignKey(
-                        on_delete=models.deletion.CASCADE, to='datasets.DataSet',
+                        on_delete=models.deletion.CASCADE,
+                        to="datasets.DataSet",
                     ),
                 ),
                 (
-                    'user',
+                    "user",
                     models.ForeignKey(
-                        on_delete=models.deletion.CASCADE, to=settings.AUTH_USER_MODEL,
+                        on_delete=models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
                     ),
                 ),
             ],
             options={
-                'db_table': 'app_datasetbookmark',
-                'unique_together': {('user', 'dataset')},
+                "db_table": "app_datasetbookmark",
+                "unique_together": {("user", "dataset")},
             },
         ),
         migrations.CreateModel(
-            name='ReferenceDataSetBookmark',
+            name="ReferenceDataSetBookmark",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
                 (
-                    'reference_dataset',
+                    "reference_dataset",
                     models.ForeignKey(
                         on_delete=models.deletion.CASCADE,
-                        to='datasets.ReferenceDataset',
+                        to="datasets.ReferenceDataset",
                     ),
                 ),
                 (
-                    'user',
+                    "user",
                     models.ForeignKey(
-                        on_delete=models.deletion.CASCADE, to=settings.AUTH_USER_MODEL,
+                        on_delete=models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
                     ),
                 ),
             ],
             options={
-                'db_table': 'app_referencedatasetbookmark',
-                'unique_together': {('user', 'reference_dataset')},
+                "db_table": "app_referencedatasetbookmark",
+                "unique_together": {("user", "reference_dataset")},
             },
         ),
         migrations.CreateModel(
-            name='VisualisationBookmark',
+            name="VisualisationBookmark",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
                 (
-                    'visualisation',
+                    "visualisation",
                     models.ForeignKey(
                         on_delete=models.deletion.CASCADE,
-                        to='datasets.VisualisationCatalogueItem',
+                        to="datasets.VisualisationCatalogueItem",
                     ),
                 ),
                 (
-                    'user',
+                    "user",
                     models.ForeignKey(
-                        on_delete=models.deletion.CASCADE, to=settings.AUTH_USER_MODEL,
+                        on_delete=models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
                     ),
                 ),
             ],
             options={
-                'db_table': 'app_visualisationbookmark',
-                'unique_together': {('user', 'visualisation')},
+                "db_table": "app_visualisationbookmark",
+                "unique_together": {("user", "visualisation")},
             },
         ),
     ]

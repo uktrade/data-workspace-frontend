@@ -6,8 +6,8 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0093_auto_20211018_1717'),
-        ('datasets', '0093_visualisationlinksqlquery_table_id'),
+        ("datasets", "0093_auto_20211018_1717"),
+        ("datasets", "0093_visualisationlinksqlquery_table_id"),
     ]
 
     operations = []

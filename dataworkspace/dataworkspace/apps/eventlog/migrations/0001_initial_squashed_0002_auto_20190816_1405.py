@@ -12,52 +12,52 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('contenttypes', '0002_remove_content_type_name'),
+        ("contenttypes", "0002_remove_content_type_name"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='EventLog',
+            name="EventLog",
             fields=[
-                ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('timestamp', models.DateTimeField(auto_now=True, db_index=True)),
+                ("id", models.BigAutoField(primary_key=True, serialize=False)),
+                ("timestamp", models.DateTimeField(auto_now=True, db_index=True)),
                 (
-                    'event_type',
+                    "event_type",
                     models.IntegerField(
                         choices=[
-                            (1, 'Dataset source link download'),
-                            (2, 'Dataset source table download'),
-                            (3, 'Reference dataset download'),
-                            (4, 'Table data download'),
+                            (1, "Dataset source link download"),
+                            (2, "Dataset source table download"),
+                            (3, "Reference dataset download"),
+                            (4, "Table data download"),
                         ]
                     ),
                 ),
-                ('object_id', models.CharField(max_length=255, null=True)),
+                ("object_id", models.CharField(max_length=255, null=True)),
                 (
-                    'extra',
+                    "extra",
                     django.contrib.postgres.fields.jsonb.JSONField(
                         encoder=django.core.serializers.json.DjangoJSONEncoder,
                         null=True,
                     ),
                 ),
                 (
-                    'content_type',
+                    "content_type",
                     models.ForeignKey(
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        to='contenttypes.ContentType',
+                        to="contenttypes.ContentType",
                     ),
                 ),
                 (
-                    'user',
+                    "user",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.DO_NOTHING,
-                        related_name='events',
+                        related_name="events",
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
             ],
-            options={'ordering': ('-timestamp',), 'get_latest_by': 'timestamp'},
+            options={"ordering": ("-timestamp",), "get_latest_by": "timestamp"},
         )
     ]

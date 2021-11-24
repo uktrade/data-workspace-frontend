@@ -6,25 +6,28 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0067_merge_20201230_0939'),
+        ("datasets", "0067_merge_20201230_0939"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='sourcetable', name='accessible_by_google_data_studio',
+            model_name="sourcetable",
+            name="accessible_by_google_data_studio",
         ),
         migrations.AlterField(
-            model_name='visualisationlink',
-            name='visualisation_type',
+            model_name="visualisationlink",
+            name="visualisation_type",
             field=models.CharField(
-                choices=[('QUICKSIGHT', 'AWS QuickSight')], max_length=64,
+                choices=[("QUICKSIGHT", "AWS QuickSight")],
+                max_length=64,
             ),
         ),
         migrations.AlterField(
-            model_name='visualisationlink',
-            name='identifier',
+            model_name="visualisationlink",
+            name="identifier",
             field=models.CharField(
-                help_text='For QuickSight, the dashboard ID.', max_length=256,
+                help_text="For QuickSight, the dashboard ID.",
+                max_length=256,
             ),
         ),
     ]

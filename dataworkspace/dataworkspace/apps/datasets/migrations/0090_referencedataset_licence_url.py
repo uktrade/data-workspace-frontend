@@ -6,16 +6,16 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0089_visualisationcatalogueitem_licence_url'),
+        ("datasets", "0089_visualisationcatalogueitem_licence_url"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='referencedataset',
-            name='licence_url',
+            model_name="referencedataset",
+            name="licence_url",
             field=models.CharField(
                 blank=True,
-                help_text='Link to license (optional)',
+                help_text="Link to license (optional)",
                 max_length=1024,
                 null=True,
             ),

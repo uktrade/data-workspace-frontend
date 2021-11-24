@@ -19,9 +19,9 @@ def get_exporter_class(format_):
 
 
 class BaseExporter:
-    name = ''
-    content_type = ''
-    file_extension = ''
+    name = ""
+    content_type = ""
+    file_extension = ""
 
     def __init__(self, querylog, request):
         self.querylog = querylog
@@ -47,21 +47,21 @@ class BaseExporter:
 
     def get_filename(self):
         # build list of valid chars, build filename from title and replace spaces
-        valid_chars = '-_.() %s%s' % (string.ascii_letters, string.digits)
-        filename = ''.join(c for c in self.querylog.title if c in valid_chars)
-        filename = filename.replace(' ', '_')
-        return '{}{}'.format(filename, self.file_extension)
+        valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
+        filename = "".join(c for c in self.querylog.title if c in valid_chars)
+        filename = filename.replace(" ", "_")
+        return "{}{}".format(filename, self.file_extension)
 
 
 class CSVExporter(BaseExporter):
 
-    name = 'CSV'
-    content_type = 'text/csv'
-    file_extension = '.csv'
+    name = "CSV"
+    content_type = "text/csv"
+    file_extension = ".csv"
 
     def _get_output(self, headers, data, **kwargs):
-        delim = kwargs.get('delim') or settings.EXPLORER_CSV_DELIMETER
-        delim = '\t' if delim == 'tab' else str(delim)
+        delim = kwargs.get("delim") or settings.EXPLORER_CSV_DELIMETER
+        delim = "\t" if delim == "tab" else str(delim)
         delim = settings.EXPLORER_CSV_DELIMETER if len(delim) > 1 else delim
         csv_data = StringIO()
         writer = csv.writer(csv_data, delimiter=delim)
@@ -73,15 +73,15 @@ class CSVExporter(BaseExporter):
 
 class JSONExporter(BaseExporter):
 
-    name = 'JSON'
-    content_type = 'application/json'
-    file_extension = '.json'
+    name = "JSON"
+    content_type = "application/json"
+    file_extension = ".json"
 
     def _get_output(self, headers, data, **kwargs):
         rows = []
         for row in data:
             rows.append(  # pylint: disable=unnecessary-comprehension
-                dict(zip([str(h) if h is not None else '' for h in headers], row))
+                dict(zip([str(h) if h is not None else "" for h in headers], row))
             )
 
         json_data = json.dumps(rows, cls=DjangoJSONEncoder)
@@ -90,23 +90,23 @@ class JSONExporter(BaseExporter):
 
 class ExcelExporter(BaseExporter):
 
-    name = 'Excel'
-    content_type = 'application/vnd.ms-excel'
-    file_extension = '.xlsx'
+    name = "Excel"
+    content_type = "application/vnd.ms-excel"
+    file_extension = ".xlsx"
 
     def _get_output(self, headers, data, **kwargs):
         import xlsxwriter  # pylint: disable=import-outside-toplevel
 
         output = BytesIO()
 
-        wb = xlsxwriter.Workbook(output, {'in_memory': True})
+        wb = xlsxwriter.Workbook(output, {"in_memory": True})
 
         ws = wb.add_worksheet(name=self._format_title())
 
         # Write headers
         row = 0
         col = 0
-        header_style = wb.add_format({'bold': True})
+        header_style = wb.add_format({"bold": True})
         for header in headers:
             ws.write(row, col, str(header), header_style)
             col += 1

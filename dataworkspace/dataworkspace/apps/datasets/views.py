@@ -106,11 +106,16 @@ from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 
 
-logger = logging.getLogger('app')
+logger = logging.getLogger("app")
 
 
 def get_datasets_data_for_user_matching_query(
-    datasets: QuerySet, query, use=None, data_type=None, user=None, id_field='id',
+    datasets: QuerySet,
+    query,
+    use=None,
+    data_type=None,
+    user=None,
+    id_field="id",
 ):
     """
     Filters the dataset queryset for:
@@ -128,9 +133,7 @@ def get_datasets_data_for_user_matching_query(
     if user:
         if is_reference_query:
             reference_type = DataSetType.REFERENCE
-            reference_perm = dataset_type_to_manage_unpublished_permission_codename(
-                reference_type
-            )
+            reference_perm = dataset_type_to_manage_unpublished_permission_codename(reference_type)
 
             if user.has_perm(reference_perm):
                 visibility_filter |= Q(published=False)
@@ -140,12 +143,8 @@ def get_datasets_data_for_user_matching_query(
                 DataSetType.MASTER,
                 DataSetType.DATACUT,
             )
-            master_perm = dataset_type_to_manage_unpublished_permission_codename(
-                master_type
-            )
-            datacut_perm = dataset_type_to_manage_unpublished_permission_codename(
-                datacut_type
-            )
+            master_perm = dataset_type_to_manage_unpublished_permission_codename(master_type)
+            datacut_perm = dataset_type_to_manage_unpublished_permission_codename(datacut_type)
 
             if user.has_perm(master_perm):
                 visibility_filter |= Q(published=False, type=master_type)
@@ -156,7 +155,7 @@ def get_datasets_data_for_user_matching_query(
     datasets = datasets.filter(visibility_filter)
 
     # Filter out datasets that don't match the search terms
-    datasets = datasets.annotate(search_rank=SearchRank(F('search_vector'), query))
+    datasets = datasets.annotate(search_rank=SearchRank(F("search_vector"), query))
 
     if query:
         datasets = datasets.filter(search_vector=query)
@@ -180,7 +179,9 @@ def get_datasets_data_for_user_matching_query(
 
     datasets = datasets.annotate(
         _has_access=Case(
-            When(access_filter, then=True), default=False, output_field=BooleanField(),
+            When(access_filter, then=True),
+            default=False,
+            output_field=BooleanField(),
         )
         if access_filter
         else Value(True, BooleanField()),
@@ -198,26 +199,18 @@ def get_datasets_data_for_user_matching_query(
 
     # Pull in the source tag IDs for the dataset
     datasets = datasets.annotate(
-        source_tag_ids=ArrayAgg(
-            'tags', filter=Q(tags__type=TagType.SOURCE), distinct=True
-        )
+        source_tag_ids=ArrayAgg("tags", filter=Q(tags__type=TagType.SOURCE), distinct=True)
     )
     datasets = datasets.annotate(
-        source_tag_names=ArrayAgg(
-            'tags__name', filter=Q(tags__type=TagType.SOURCE), distinct=True
-        )
+        source_tag_names=ArrayAgg("tags__name", filter=Q(tags__type=TagType.SOURCE), distinct=True)
     )
 
     # Pull in the topic tag IDs for the dataset
     datasets = datasets.annotate(
-        topic_tag_ids=ArrayAgg(
-            'tags', filter=Q(tags__type=TagType.TOPIC), distinct=True
-        )
+        topic_tag_ids=ArrayAgg("tags", filter=Q(tags__type=TagType.TOPIC), distinct=True)
     )
     datasets = datasets.annotate(
-        topic_tag_names=ArrayAgg(
-            'tags__name', filter=Q(tags__type=TagType.TOPIC), distinct=True
-        )
+        topic_tag_names=ArrayAgg("tags__name", filter=Q(tags__type=TagType.TOPIC), distinct=True)
     )
 
     # Define a `purpose` column denoting the dataset type.
@@ -229,12 +222,10 @@ def get_datasets_data_for_user_matching_query(
             has_visuals=Value(False, BooleanField()),
         )
     else:
-        dataset_visual_filter = DataSetVisualisation.objects.filter(
-            dataset_id=OuterRef('id')
-        )
+        dataset_visual_filter = DataSetVisualisation.objects.filter(dataset_id=OuterRef("id"))
         datasets = datasets.annotate(
-            purpose=F('type'),
-            data_type=F('type'),
+            purpose=F("type"),
+            data_type=F("type"),
             is_open_data=Case(
                 When(user_access_type=UserAccessType.OPEN, then=True),
                 default=False,
@@ -253,49 +244,47 @@ def get_datasets_data_for_user_matching_query(
     datasets = (
         datasets.values(
             id_field,
-            'name',
-            'slug',
-            'short_description',
-            'search_rank',
-            'source_tag_names',
-            'source_tag_ids',
-            'topic_tag_names',
-            'topic_tag_ids',
-            'purpose',
-            'data_type',
-            'published',
-            'published_at',
-            'is_open_data',
-            'has_visuals',
+            "name",
+            "slug",
+            "short_description",
+            "search_rank",
+            "source_tag_names",
+            "source_tag_ids",
+            "topic_tag_names",
+            "topic_tag_ids",
+            "purpose",
+            "data_type",
+            "published",
+            "published_at",
+            "is_open_data",
+            "has_visuals",
         )
-        .annotate(has_access=BoolOr('_has_access'))
-        .annotate(is_bookmarked=BoolOr('_is_bookmarked'))
+        .annotate(has_access=BoolOr("_has_access"))
+        .annotate(is_bookmarked=BoolOr("_is_bookmarked"))
     )
 
     return datasets.values(
         id_field,
-        'name',
-        'slug',
-        'short_description',
-        'search_rank',
-        'source_tag_names',
-        'source_tag_ids',
-        'topic_tag_names',
-        'topic_tag_ids',
-        'purpose',
-        'data_type',
-        'published',
-        'published_at',
-        'is_open_data',
-        'has_visuals',
-        'has_access',
-        'is_bookmarked',
+        "name",
+        "slug",
+        "short_description",
+        "search_rank",
+        "source_tag_names",
+        "source_tag_ids",
+        "topic_tag_names",
+        "topic_tag_ids",
+        "purpose",
+        "data_type",
+        "published",
+        "published_at",
+        "is_open_data",
+        "has_visuals",
+        "has_access",
+        "is_bookmarked",
     )
 
 
-def get_visualisations_data_for_user_matching_query(
-    visualisations: QuerySet, query, user=None
-):
+def get_visualisations_data_for_user_matching_query(visualisations: QuerySet, query, user=None):
     """
     Filters the visualisation queryset for:
         1) visibility (whether the user can know if the visualisation exists)
@@ -308,18 +297,14 @@ def get_visualisations_data_for_user_matching_query(
     if not (
         user
         and user.has_perm(
-            dataset_type_to_manage_unpublished_permission_codename(
-                DataSetType.VISUALISATION
-            )
+            dataset_type_to_manage_unpublished_permission_codename(DataSetType.VISUALISATION)
         )
     ):
         visualisations = visualisations.filter(published=True)
 
     # Filter out visualisations that don't match the search terms
 
-    visualisations = visualisations.annotate(
-        search_rank=SearchRank(F('search_vector'), query)
-    )
+    visualisations = visualisations.annotate(search_rank=SearchRank(F("search_vector"), query))
 
     if query:
         visualisations = visualisations.filter(search_vector=query)
@@ -348,7 +333,9 @@ def get_visualisations_data_for_user_matching_query(
 
     visualisations = visualisations.annotate(
         _has_access=Case(
-            When(access_filter, then=True), default=False, output_field=BooleanField(),
+            When(access_filter, then=True),
+            default=False,
+            output_field=BooleanField(),
         )
         if access_filter
         else Value(True, BooleanField()),
@@ -367,28 +354,20 @@ def get_visualisations_data_for_user_matching_query(
 
     # Pull in the source tag IDs for the dataset
     visualisations = visualisations.annotate(
-        source_tag_ids=ArrayAgg(
-            'tags', filter=Q(tags__type=TagType.SOURCE), distinct=True
-        )
+        source_tag_ids=ArrayAgg("tags", filter=Q(tags__type=TagType.SOURCE), distinct=True)
     )
 
     visualisations = visualisations.annotate(
-        source_tag_names=ArrayAgg(
-            'tags__name', filter=Q(tags__type=TagType.SOURCE), distinct=True
-        )
+        source_tag_names=ArrayAgg("tags__name", filter=Q(tags__type=TagType.SOURCE), distinct=True)
     )
 
     # Pull in the topic tag IDs for the dataset
     visualisations = visualisations.annotate(
-        topic_tag_ids=ArrayAgg(
-            'tags', filter=Q(tags__type=TagType.TOPIC), distinct=True
-        )
+        topic_tag_ids=ArrayAgg("tags", filter=Q(tags__type=TagType.TOPIC), distinct=True)
     )
 
     visualisations = visualisations.annotate(
-        topic_tag_names=ArrayAgg(
-            'tags__name', filter=Q(tags__type=TagType.TOPIC), distinct=True
-        )
+        topic_tag_names=ArrayAgg("tags__name", filter=Q(tags__type=TagType.TOPIC), distinct=True)
     )
 
     visualisations = visualisations.annotate(
@@ -408,44 +387,44 @@ def get_visualisations_data_for_user_matching_query(
     # of the records say that access is available.
     visualisations = (
         visualisations.values(
-            'id',
-            'name',
-            'slug',
-            'short_description',
-            'search_rank',
-            'source_tag_names',
-            'source_tag_ids',
-            'topic_tag_names',
-            'topic_tag_ids',
-            'purpose',
-            'data_type',
-            'published',
-            'published_at',
-            'is_open_data',
-            'has_visuals',
+            "id",
+            "name",
+            "slug",
+            "short_description",
+            "search_rank",
+            "source_tag_names",
+            "source_tag_ids",
+            "topic_tag_names",
+            "topic_tag_ids",
+            "purpose",
+            "data_type",
+            "published",
+            "published_at",
+            "is_open_data",
+            "has_visuals",
         )
-        .annotate(has_access=BoolOr('_has_access'))
-        .annotate(is_bookmarked=BoolOr('_is_bookmarked'))
+        .annotate(has_access=BoolOr("_has_access"))
+        .annotate(is_bookmarked=BoolOr("_is_bookmarked"))
     )
 
     return visualisations.values(
-        'id',
-        'name',
-        'slug',
-        'short_description',
-        'search_rank',
-        'source_tag_names',
-        'source_tag_ids',
-        'topic_tag_names',
-        'topic_tag_ids',
-        'purpose',
-        'data_type',
-        'published',
-        'published_at',
-        'is_open_data',
-        'has_visuals',
-        'has_access',
-        'is_bookmarked',
+        "id",
+        "name",
+        "slug",
+        "short_description",
+        "search_rank",
+        "source_tag_names",
+        "source_tag_ids",
+        "topic_tag_names",
+        "topic_tag_ids",
+        "purpose",
+        "data_type",
+        "published",
+        "published_at",
+        "is_open_data",
+        "has_visuals",
+        "has_access",
+        "is_bookmarked",
     )
 
 
@@ -463,16 +442,16 @@ def _matches_filters(
     user_inaccessible: bool = False,
 ):
     return (
-        (not bookmark or data['is_bookmarked'])
-        and (unpublished or data['published'])
-        and (not opendata or data['is_open_data'])
-        and (not withvisuals or data['has_visuals'])
-        and (not use or use == [None] or data['purpose'] in use)
-        and (not data_type or data_type == [None] or data['data_type'] in data_type)
-        and (not source_ids or source_ids.intersection(set(data['source_tag_ids'])))
-        and (not topic_ids or topic_ids.intersection(set(data['topic_tag_ids'])))
-        and (not user_accessible or data['has_access'])
-        and (not user_inaccessible or not data['has_access'])
+        (not bookmark or data["is_bookmarked"])
+        and (unpublished or data["published"])
+        and (not opendata or data["is_open_data"])
+        and (not withvisuals or data["has_visuals"])
+        and (not use or use == [None] or data["purpose"] in use)
+        and (not data_type or data_type == [None] or data["data_type"] in data_type)
+        and (not source_ids or source_ids.intersection(set(data["source_tag_ids"])))
+        and (not topic_ids or topic_ids.intersection(set(data["topic_tag_ids"])))
+        and (not user_accessible or data["has_access"])
+        and (not user_inaccessible or not data["has_access"])
     )
 
 
@@ -484,11 +463,14 @@ def sorted_datasets_and_visualisations_matching_query_for_user(
     and returns them, sorted by incoming sort field, default is desc(search_rank).
     """
     master_and_datacut_datasets = get_datasets_data_for_user_matching_query(
-        DataSet.objects.live(), query, use, data_type, user=user, id_field='id'
+        DataSet.objects.live(), query, use, data_type, user=user, id_field="id"
     )
 
     reference_datasets = get_datasets_data_for_user_matching_query(
-        ReferenceDataset.objects.live(), query, user=user, id_field='uuid',
+        ReferenceDataset.objects.live(),
+        query,
+        user=user,
+        id_field="uuid",
     )
 
     visualisations = get_visualisations_data_for_user_matching_query(
@@ -497,7 +479,7 @@ def sorted_datasets_and_visualisations_matching_query_for_user(
 
     # Combine all datasets and visualisations and order them.
 
-    sort_fields = sort_by.split(',')
+    sort_fields = sort_by.split(",")
 
     all_datasets = (
         master_and_datacut_datasets.union(reference_datasets)
@@ -523,27 +505,33 @@ def find_datasets(request):
     form = DatasetSearchForm(request.GET)
 
     data_types = form.fields[
-        'data_type'
+        "data_type"
     ].choices  # Cache these now, as we annotate them with result numbers later which we don't want here.
 
     if form.is_valid():
         query = form.cleaned_data.get("q")
-        unpublished = 'unpublished' in form.cleaned_data.get("admin_filters")
-        open_data = 'opendata' in form.cleaned_data.get("admin_filters")
-        with_visuals = 'withvisuals' in form.cleaned_data.get("admin_filters")
+        unpublished = "unpublished" in form.cleaned_data.get("admin_filters")
+        open_data = "opendata" in form.cleaned_data.get("admin_filters")
+        with_visuals = "withvisuals" in form.cleaned_data.get("admin_filters")
         use = set(form.cleaned_data.get("use"))
         data_type = set(form.cleaned_data.get("data_type", []))
         sort = form.cleaned_data.get("sort")
         source_ids = set(source.id for source in form.cleaned_data.get("source"))
         topic_ids = set(topic.id for topic in form.cleaned_data.get("topic"))
         bookmarked = form.cleaned_data.get("bookmarked")
-        user_accessible = set(form.cleaned_data.get("user_access", [])) == {'yes'}
-        user_inaccessible = set(form.cleaned_data.get("user_access", [])) == {'no'}
+        user_accessible = set(form.cleaned_data.get("user_access", [])) == {"yes"}
+        user_inaccessible = set(form.cleaned_data.get("user_access", [])) == {"no"}
     else:
         return HttpResponseRedirect(reverse("datasets:find_datasets"))
 
-    all_datasets_visible_to_user_matching_query = sorted_datasets_and_visualisations_matching_query_for_user(
-        query=query, use=use, data_type=data_type, user=request.user, sort_by=sort,
+    all_datasets_visible_to_user_matching_query = (
+        sorted_datasets_and_visualisations_matching_query_for_user(
+            query=query,
+            use=use,
+            data_type=data_type,
+            user=request.user,
+            sort_by=sort,
+        )
     )
 
     # Filter out any records that don't match the selected filters. We do this in Python, not the DB, because we need
@@ -578,13 +566,14 @@ def find_datasets(request):
     )
 
     paginator = Paginator(
-        datasets_matching_query_and_filters, settings.SEARCH_RESULTS_DATASETS_PER_PAGE,
+        datasets_matching_query_and_filters,
+        settings.SEARCH_RESULTS_DATASETS_PER_PAGE,
     )
 
-    data_types.append((DataSetType.VISUALISATION, 'Visualisation'))
+    data_types.append((DataSetType.VISUALISATION, "Visualisation"))
     return render(
         request,
-        'datasets/index.html',
+        "datasets/index.html",
         {
             "form": form,
             "query": query,
@@ -592,7 +581,7 @@ def find_datasets(request):
             "data_type": dict(data_types),
             "show_admin_filters": has_unpublished_dataset_access(request.user),
             "DATASET_FINDER_FLAG": settings.DATASET_FINDER_ADMIN_ONLY_FLAG,
-            "sso_user_id": request.META['HTTP_SSO_PROFILE_USER_ID'],
+            "sso_user_id": request.META["HTTP_SSO_PROFILE_USER_ID"],
         },
     )
 
@@ -605,7 +594,7 @@ class DatasetDetailView(DetailView):
         return isinstance(self.object, VisualisationCatalogueItem)
 
     def get_object(self, queryset=None):
-        dataset_uuid = self.kwargs['dataset_uuid']
+        dataset_uuid = self.kwargs["dataset_uuid"]
         dataset = None
         try:
             dataset = ReferenceDataset.objects.live().get(uuid=dataset_uuid)
@@ -614,22 +603,18 @@ class DatasetDetailView(DetailView):
                 dataset = DataSet.objects.live().get(id=dataset_uuid)
             except DataSet.DoesNotExist:
                 try:
-                    dataset = VisualisationCatalogueItem.objects.live().get(
-                        id=dataset_uuid
-                    )
+                    dataset = VisualisationCatalogueItem.objects.live().get(id=dataset_uuid)
                 except VisualisationCatalogueItem.DoesNotExist:
                     pass
 
         if dataset:
-            perm_codename = dataset_type_to_manage_unpublished_permission_codename(
-                dataset.type
-            )
+            perm_codename = dataset_type_to_manage_unpublished_permission_codename(dataset.type)
 
             if not dataset.published and not self.request.user.has_perm(perm_codename):
                 dataset = None
 
         if not dataset:
-            raise Http404('No dataset matches the given query.')
+            raise Http404("No dataset matches the given query.")
 
         return dataset
 
@@ -645,7 +630,7 @@ class DatasetDetailView(DetailView):
 
     def _get_user_tools_access(self) -> bool:
         user_has_tools_access = self.request.user.user_permissions.filter(
-            codename='start_all_applications',
+            codename="start_all_applications",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         ).exists()
 
@@ -655,7 +640,7 @@ class DatasetDetailView(DetailView):
         source_tables = sorted(self.object.sourcetable_set.all(), key=lambda x: x.name)
 
         MasterDatasetInfo = namedtuple(
-            'MasterDatasetInfo', ('source_table', 'code_snippets', 'columns')
+            "MasterDatasetInfo", ("source_table", "code_snippets", "columns")
         )
         master_datasets_info = [
             MasterDatasetInfo(
@@ -675,36 +660,32 @@ class DatasetDetailView(DetailView):
             sorted({t.get_frequency_display() for t in source_tables})
         )
 
-        subscription = self.object.datasetsubscription_set.filter(
-            user=self.request.user
-        )
+        subscription = self.object.subscriptions.filter(user=self.request.user)
 
         ctx.update(
             {
-                'summarised_update_frequency': summarised_update_frequency,
-                'source_text': self._get_source_text(self.object),
-                'has_access': self.object.user_has_access(self.request.user),
-                'has_tools_access': self._get_user_tools_access(),
-                'is_bookmarked': self.object.user_has_bookmarked(self.request.user),
-                'master_datasets_info': master_datasets_info,
-                'source_table_type': DataLinkType.SOURCE_TABLE,
-                'related_data': self.object.related_datasets(),
-                'related_visualisations': self.object.related_visualisations.filter(
+                "summarised_update_frequency": summarised_update_frequency,
+                "source_text": self._get_source_text(self.object),
+                "has_access": self.object.user_has_access(self.request.user),
+                "has_tools_access": self._get_user_tools_access(),
+                "is_bookmarked": self.object.user_has_bookmarked(self.request.user),
+                "master_datasets_info": master_datasets_info,
+                "source_table_type": DataLinkType.SOURCE_TABLE,
+                "related_data": self.object.related_datasets(),
+                "related_visualisations": self.object.related_visualisations.filter(
                     published=True
                 ),
-                'subscription': {
-                    'current_user_is_subscribed': subscription.exists()
+                "subscription": {
+                    "current_user_is_subscribed": subscription.exists()
                     and subscription.first().is_active(),
-                    'details': subscription.first(),
+                    "details": subscription.first(),
                 },
             }
         )
         return ctx
 
     def _get_context_data_for_datacut_dataset(self, ctx, **kwargs):
-        custom_queries = self.object.customdatasetquery_set.all().prefetch_related(
-            'tables'
-        )
+        custom_queries = self.object.customdatasetquery_set.all().prefetch_related("tables")
         datacut_links = sorted(
             chain(
                 self.object.sourcetable_set.all(),
@@ -719,8 +700,8 @@ class DatasetDetailView(DetailView):
         )
 
         DatacutLinkInfo = namedtuple(
-            'DatacutLinkInfo',
-            ('datacut_link', 'can_show_link', 'code_snippets', 'columns'),
+            "DatacutLinkInfo",
+            ("datacut_link", "can_show_link", "code_snippets", "columns"),
         )
         datacut_links_info = [
             DatacutLinkInfo(
@@ -728,7 +709,7 @@ class DatasetDetailView(DetailView):
                 can_show_link=datacut_link.can_show_link_for_user(self.request.user),
                 code_snippets=(
                     get_code_snippets_for_query(datacut_link.query)
-                    if hasattr(datacut_link, 'query')
+                    if hasattr(datacut_link, "query")
                     else None
                 ),
                 columns=(
@@ -737,7 +718,7 @@ class DatasetDetailView(DetailView):
                         query=datacut_link.query,
                         include_types=True,
                     )
-                    if hasattr(datacut_link, 'query')
+                    if hasattr(datacut_link, "query")
                     else None
                 ),
             )
@@ -746,20 +727,20 @@ class DatasetDetailView(DetailView):
 
         ctx.update(
             {
-                'has_access': self.object.user_has_access(self.request.user),
-                'is_bookmarked': self.object.user_has_bookmarked(self.request.user),
-                'datacut_links_info': datacut_links_info,
-                'data_hosted_externally': any(
-                    not source_link.url.startswith('s3://')
+                "has_access": self.object.user_has_access(self.request.user),
+                "is_bookmarked": self.object.user_has_bookmarked(self.request.user),
+                "datacut_links_info": datacut_links_info,
+                "data_hosted_externally": any(
+                    not source_link.url.startswith("s3://")
                     for source_link in self.object.sourcelink_set.all()
                 ),
-                'custom_dataset_query_type': DataLinkType.CUSTOM_QUERY,
-                'related_data': self.object.related_datasets(),
-                'related_visualisations': self.object.related_visualisations.filter(
+                "custom_dataset_query_type": DataLinkType.CUSTOM_QUERY,
+                "related_data": self.object.related_datasets(),
+                "related_visualisations": self.object.related_visualisations.filter(
                     published=True
                 ),
-                'summarised_update_frequency': summarised_update_frequency,
-                'source_text': self._get_source_text(self.object),
+                "summarised_update_frequency": summarised_update_frequency,
+                "source_text": self._get_source_text(self.object),
             }
         )
         return ctx
@@ -774,20 +755,20 @@ class DatasetDetailView(DetailView):
         if self.object.external_database:
             columns = datasets_db.get_columns(
                 self.object.external_database.memorable_name,
-                schema='public',
+                schema="public",
                 table=self.object.table_name,
                 include_types=True,
             )
 
         ctx.update(
             {
-                'preview_limit': preview_limit,
-                'record_count': total_record_count,
-                'records': records,
-                'is_bookmarked': self.object.user_has_bookmarked(self.request.user),
-                'DATA_GRID_REFERENCE_DATASET_FLAG': settings.DATA_GRID_REFERENCE_DATASET_FLAG,
-                'code_snippets': code_snippets,
-                'columns': columns,
+                "preview_limit": preview_limit,
+                "record_count": total_record_count,
+                "records": records,
+                "is_bookmarked": self.object.user_has_bookmarked(self.request.user),
+                "DATA_GRID_REFERENCE_DATASET_FLAG": settings.DATA_GRID_REFERENCE_DATASET_FLAG,
+                "code_snippets": code_snippets,
+                "columns": columns,
             }
         )
         return ctx
@@ -795,22 +776,20 @@ class DatasetDetailView(DetailView):
     def _get_context_data_for_visualisation(self, ctx, **kwargs):
         ctx.update(
             {
-                'has_access': self.object.user_has_access(self.request.user),
-                'is_bookmarked': self.object.user_has_bookmarked(self.request.user),
-                'visualisation_links': self.object.get_visualisation_links(
-                    self.request
-                ),
-                'summarised_update_frequency': 'N/A',
-                'source_text': self._get_source_text(self.object),
+                "has_access": self.object.user_has_access(self.request.user),
+                "is_bookmarked": self.object.user_has_bookmarked(self.request.user),
+                "visualisation_links": self.object.get_visualisation_links(self.request),
+                "summarised_update_frequency": "N/A",
+                "source_text": self._get_source_text(self.object),
             }
         )
         return ctx
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data()
-        ctx['model'] = self.object
-        ctx['DATA_CUT_ENHANCED_PREVIEW_FLAG'] = settings.DATA_CUT_ENHANCED_PREVIEW_FLAG
-        ctx['DATASET_CHANGELOG_PAGE_FLAG'] = settings.DATASET_CHANGELOG_PAGE_FLAG
+        ctx["model"] = self.object
+        ctx["DATA_CUT_ENHANCED_PREVIEW_FLAG"] = settings.DATA_CUT_ENHANCED_PREVIEW_FLAG
+        ctx["DATASET_CHANGELOG_PAGE_FLAG"] = settings.DATASET_CHANGELOG_PAGE_FLAG
 
         if self._is_reference_dataset():
             return self._get_context_data_for_reference_dataset(ctx, **kwargs)
@@ -824,20 +803,18 @@ class DatasetDetailView(DetailView):
         elif self.object.type == DataSetType.DATACUT:
             return self._get_context_data_for_datacut_dataset(ctx, **kwargs)
 
-        raise ValueError(
-            f"Unknown dataset/type for {self.__class__.__name__}: {self.object}"
-        )
+        raise ValueError(f"Unknown dataset/type for {self.__class__.__name__}: {self.object}")
 
     def get_template_names(self):
 
         if self._is_reference_dataset():
-            return ['datasets/referencedataset_detail.html']
+            return ["datasets/referencedataset_detail.html"]
         elif self.object.type == DataSetType.MASTER:
             return ["datasets/master_dataset.html"]
         elif self.object.type == DataSetType.DATACUT:
-            return ['datasets/data_cut_dataset.html']
+            return ["datasets/data_cut_dataset.html"]
         elif self._is_visualisation():
-            return ['datasets/visualisation_catalogue_item.html']
+            return ["datasets/visualisation_catalogue_item.html"]
 
         raise RuntimeError(f"Unknown template for {self}")
 
@@ -845,32 +822,30 @@ class DatasetDetailView(DetailView):
         return min([record_count, settings.REFERENCE_DATASET_PREVIEW_NUM_OF_ROWS])
 
 
-@require_http_methods(['GET', 'POST'])
+@require_http_methods(["GET", "POST"])
 def eligibility_criteria_view(request, dataset_uuid):
     dataset = find_dataset_or_visualisation(dataset_uuid, request.user)
 
-    if request.method == 'POST':
+    if request.method == "POST":
         form = EligibilityCriteriaForm(request.POST)
         if form.is_valid():
-            access_request_id = form.cleaned_data.get('access_request')
-            if form.cleaned_data['meet_criteria']:
-                url = reverse('request_access:dataset', args=[dataset_uuid])
+            access_request_id = form.cleaned_data.get("access_request")
+            if form.cleaned_data["meet_criteria"]:
+                url = reverse("request_access:dataset", args=[dataset_uuid])
                 if access_request_id:
                     url = reverse(
-                        'request_access:dataset-request-update',
+                        "request_access:dataset-request-update",
                         args=[access_request_id],
                     )
             else:
-                url = reverse(
-                    'datasets:eligibility_criteria_not_met', args=[dataset_uuid]
-                )
+                url = reverse("datasets:eligibility_criteria_not_met", args=[dataset_uuid])
 
             return HttpResponseRedirect(url)
 
     return render(
         request,
-        'eligibility_criteria.html',
-        {'dataset': dataset, 'access_request': request.GET.get('access_request')},
+        "eligibility_criteria.html",
+        {"dataset": dataset, "access_request": request.GET.get("access_request")},
     )
 
 
@@ -880,10 +855,10 @@ def eligibility_criteria_not_met_view(request, dataset_uuid):
 
     return render(
         request,
-        'eligibility_criteria_not_met.html',
+        "eligibility_criteria_not_met.html",
         {
-            'dataset': dataset,
-            'is_visualisation': isinstance(dataset, VisualisationCatalogueItem),
+            "dataset": dataset,
+            "is_visualisation": isinstance(dataset, VisualisationCatalogueItem),
         },
     )
 
@@ -902,13 +877,13 @@ class ReferenceDatasetDownloadView(DetailView):
     def get_object(self, queryset=None):
         return get_object_or_404(
             ReferenceDataset.objects.live(),
-            uuid=self.kwargs.get('dataset_uuid'),
-            **{'published': True} if not self.request.user.is_superuser else {},
+            uuid=self.kwargs.get("dataset_uuid"),
+            **{"published": True} if not self.request.user.is_superuser else {},
         )
 
     def get(self, request, *args, **kwargs):
-        dl_format = self.kwargs.get('format')
-        if dl_format not in ['json', 'csv']:
+        dl_format = self.kwargs.get("format")
+        if dl_format not in ["json", "csv"]:
             raise Http404
         ref_dataset = self.get_object()
         records = []
@@ -930,7 +905,7 @@ class ReferenceDatasetDownloadView(DetailView):
             records.append(record_data)
 
         response = HttpResponse()
-        response['Content-Disposition'] = 'attachment; filename={}-{}.{}'.format(
+        response["Content-Disposition"] = "attachment; filename={}-{}.{}".format(
             ref_dataset.slug, ref_dataset.published_version, dl_format
         )
 
@@ -939,19 +914,19 @@ class ReferenceDatasetDownloadView(DetailView):
             EventLog.TYPE_REFERENCE_DATASET_DOWNLOAD,
             ref_dataset,
             extra={
-                'path': request.get_full_path(),
-                'reference_dataset_version': ref_dataset.published_version,
-                'download_format': dl_format,
+                "path": request.get_full_path(),
+                "reference_dataset_version": ref_dataset.published_version,
+                "download_format": dl_format,
             },
         )
-        ref_dataset.number_of_downloads = F('number_of_downloads') + 1
-        ref_dataset.save(update_fields=['number_of_downloads'])
+        ref_dataset.number_of_downloads = F("number_of_downloads") + 1
+        ref_dataset.save(update_fields=["number_of_downloads"])
 
-        if dl_format == 'json':
-            response['Content-Type'] = 'application/json'
+        if dl_format == "json":
+            response["Content-Type"] = "application/json"
             response.write(json.dumps(list(records), cls=DjangoJSONEncoder))
         else:
-            response['Content-Type'] = 'text/csv'
+            response["Content-Type"] = "text/csv"
             with closing(io.StringIO()) as outfile:
                 writer = csv.DictWriter(
                     outfile,
@@ -968,13 +943,13 @@ class SourceLinkDownloadView(DetailView):
     model = SourceLink
 
     def get(self, request, *args, **kwargs):
-        dataset = find_dataset(self.kwargs.get('dataset_uuid'), request.user)
+        dataset = find_dataset(self.kwargs.get("dataset_uuid"), request.user)
 
         if not dataset.user_has_access(self.request.user):
             return HttpResponseForbidden()
 
         source_link = get_object_or_404(
-            SourceLink, id=self.kwargs.get('source_link_id'), dataset=dataset
+            SourceLink, id=self.kwargs.get("source_link_id"), dataset=dataset
         )
 
         log_event(
@@ -982,43 +957,39 @@ class SourceLinkDownloadView(DetailView):
             EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD,
             source_link.dataset,
             extra={
-                'path': request.get_full_path(),
-                **serializers.serialize('python', [source_link])[0],
+                "path": request.get_full_path(),
+                **serializers.serialize("python", [source_link])[0],
             },
         )
-        dataset.number_of_downloads = F('number_of_downloads') + 1
-        dataset.save(update_fields=['number_of_downloads'])
+        dataset.number_of_downloads = F("number_of_downloads") + 1
+        dataset.save(update_fields=["number_of_downloads"])
 
         if source_link.link_type == source_link.TYPE_EXTERNAL:
             return HttpResponseRedirect(source_link.url)
 
-        client = boto3.client('s3')
+        client = boto3.client("s3")
         try:
             file_object = client.get_object(
                 Bucket=settings.AWS_UPLOADS_BUCKET, Key=source_link.url
             )
         except ClientError as ex:
             try:
-                return HttpResponse(
-                    status=ex.response['ResponseMetadata']['HTTPStatusCode']
-                )
+                return HttpResponse(status=ex.response["ResponseMetadata"]["HTTPStatusCode"])
             except KeyError:
                 return HttpResponseServerError()
 
         response = StreamingHttpResponseWithoutDjangoDbConnection(
-            file_object['Body'].iter_chunks(chunk_size=65536),
-            content_type=file_object['ContentType'],
+            file_object["Body"].iter_chunks(chunk_size=65536),
+            content_type=file_object["ContentType"],
         )
-        response[
-            'Content-Disposition'
-        ] = f'attachment; filename="{source_link.get_filename()}"'
-        response['Content-Length'] = file_object['ContentLength']
+        response["Content-Disposition"] = f'attachment; filename="{source_link.get_filename()}"'
+        response["Content-Length"] = file_object["ContentLength"]
 
         return response
 
 
 class SourceDownloadMixin:
-    pk_url_kwarg = 'source_id'
+    pk_url_kwarg = "source_id"
     event_log_type = None
 
     @staticmethod
@@ -1029,10 +1000,8 @@ class SourceDownloadMixin:
         raise NotImplementedError()
 
     def get(self, request, *_, **__):
-        dataset = find_dataset(self.kwargs.get('dataset_uuid'), request.user)
-        db_object = get_object_or_404(
-            self.model, id=self.kwargs.get('source_id'), dataset=dataset
-        )
+        dataset = find_dataset(self.kwargs.get("dataset_uuid"), request.user)
+        db_object = get_object_or_404(self.model, id=self.kwargs.get("source_id"), dataset=dataset)
 
         if not db_object.dataset.user_has_access(self.request.user):
             return HttpResponseForbidden()
@@ -1045,12 +1014,12 @@ class SourceDownloadMixin:
             self.event_log_type,
             db_object.dataset,
             extra={
-                'path': request.get_full_path(),
-                **serializers.serialize('python', [db_object])[0],
+                "path": request.get_full_path(),
+                **serializers.serialize("python", [db_object])[0],
             },
         )
-        dataset.number_of_downloads = F('number_of_downloads') + 1
-        dataset.save(update_fields=['number_of_downloads'])
+        dataset.number_of_downloads = F("number_of_downloads") + 1
+        dataset.save(update_fields=["number_of_downloads"])
         return self.get_table_data(db_object)
 
 
@@ -1060,9 +1029,7 @@ class SourceViewDownloadView(SourceDownloadMixin, DetailView):
 
     @staticmethod
     def db_object_exists(db_object):
-        return view_exists(
-            db_object.database.memorable_name, db_object.schema, db_object.view
-        )
+        return view_exists(db_object.database.memorable_name, db_object.schema, db_object.view)
 
     def get_table_data(self, db_object):
         return table_data(
@@ -1078,14 +1045,12 @@ class CustomDatasetQueryDownloadView(DetailView):
     model = CustomDatasetQuery
 
     def get(self, request, *args, **kwargs):
-        dataset = find_dataset(self.kwargs.get('dataset_uuid'), request.user)
+        dataset = find_dataset(self.kwargs.get("dataset_uuid"), request.user)
 
         if not dataset.user_has_access(self.request.user):
             return HttpResponseForbidden()
 
-        query = get_object_or_404(
-            self.model, id=self.kwargs.get('query_id'), dataset=dataset
-        )
+        query = get_object_or_404(self.model, id=self.kwargs.get("query_id"), dataset=dataset)
 
         if not query.reviewed and not request.user.is_superuser:
             return HttpResponseForbidden()
@@ -1095,23 +1060,21 @@ class CustomDatasetQueryDownloadView(DetailView):
             EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
             query.dataset,
             extra={
-                'path': request.get_full_path(),
-                **serializers.serialize('python', [query])[0],
+                "path": request.get_full_path(),
+                **serializers.serialize("python", [query])[0],
             },
         )
-        dataset.number_of_downloads = F('number_of_downloads') + 1
-        dataset.save(update_fields=['number_of_downloads'])
+        dataset.number_of_downloads = F("number_of_downloads") + 1
+        dataset.save(update_fields=["number_of_downloads"])
 
         filtered_query = sql.SQL(query.query)
-        columns = request.GET.getlist('columns')
+        columns = request.GET.getlist("columns")
 
         if columns:
-            trimmed_query = query.query.rstrip().rstrip(';')
+            trimmed_query = query.query.rstrip().rstrip(";")
 
-            filtered_query = sql.SQL('SELECT {fields} from ({query}) as data;').format(
-                fields=sql.SQL(',').join(
-                    [sql.Identifier(column) for column in columns]
-                ),
+            filtered_query = sql.SQL("SELECT {fields} from ({query}) as data;").format(
+                fields=sql.SQL(",").join([sql.Identifier(column) for column in columns]),
                 query=sql.SQL(trimmed_query),
             )
 
@@ -1120,7 +1083,7 @@ class CustomDatasetQueryDownloadView(DetailView):
             query.database.memorable_name,
             filtered_query,
             query.get_filename(),
-            cursor_name=f'custom_query--{query.id}',
+            cursor_name=f"custom_query--{query.id}",
         )
 
 
@@ -1136,7 +1099,7 @@ class DatasetPreviewView(DetailView, metaclass=ABCMeta):
 
     def get(self, request, *args, **kwargs):
         user = self.request.user
-        dataset = find_dataset(self.kwargs.get('dataset_uuid'), user)
+        dataset = find_dataset(self.kwargs.get("dataset_uuid"), user)
 
         if not dataset.user_has_access(user):
             return HttpResponseForbidden()
@@ -1147,7 +1110,9 @@ class DatasetPreviewView(DetailView, metaclass=ABCMeta):
         sample_size = settings.DATASET_PREVIEW_NUM_OF_ROWS
         if columns:
             rows = get_random_data_sample(
-                source_object.database.memorable_name, sql.SQL(query), sample_size,
+                source_object.database.memorable_name,
+                sql.SQL(query),
+                sample_size,
             )
             for row in rows:
                 record_data = {}
@@ -1159,18 +1124,18 @@ class DatasetPreviewView(DetailView, metaclass=ABCMeta):
 
         return render(
             request,
-            'datasets/dataset_preview.html',
+            "datasets/dataset_preview.html",
             {
-                'dataset': dataset,
-                'source_object': source_object,
-                'fields': columns,
-                'records': records,
-                'preview_limit': sample_size,
-                'record_count': len(records),
-                'fixed_table_height_limit': 10,
-                'truncate_limit': 100,
-                'can_download': can_download,
-                'type': source_object.type,
+                "dataset": dataset,
+                "source_object": source_object,
+                "fields": columns,
+                "records": records,
+                "preview_limit": sample_size,
+                "record_count": len(records),
+                "fixed_table_height_limit": 10,
+                "truncate_limit": 100,
+                "can_download": can_download,
+                "type": source_object.type,
             },
         )
 
@@ -1180,14 +1145,12 @@ class SourceTablePreviewView(DatasetPreviewView):
 
     def get_preview_data(self, dataset):
         source_table_object = get_object_or_404(
-            self.model, id=self.kwargs.get('table_uuid'), dataset=dataset
+            self.model, id=self.kwargs.get("table_uuid"), dataset=dataset
         )
         database_name = source_table_object.database.memorable_name
         table_name = source_table_object.table
         schema_name = source_table_object.schema
-        columns = datasets_db.get_columns(
-            database_name, schema=schema_name, table=table_name
-        )
+        columns = datasets_db.get_columns(database_name, schema=schema_name, table=table_name)
         preview_query = f"""
             select * from "{schema_name}"."{table_name}"
         """
@@ -1199,7 +1162,7 @@ class CustomDatasetQueryPreviewView(DatasetPreviewView):
 
     def get_preview_data(self, dataset):
         query_object = get_object_or_404(
-            self.model, id=self.kwargs.get('query_id'), dataset=dataset
+            self.model, id=self.kwargs.get("query_id"), dataset=dataset
         )
 
         if not query_object.reviewed and not self.request.user.is_superuser:
@@ -1216,9 +1179,7 @@ class SourceTableColumnDetails(View):
     def get(self, request, dataset_uuid, table_uuid):
         try:
             dataset = DataSet.objects.get(id=dataset_uuid, type=DataSetType.MASTER)
-            source_table = SourceTable.objects.get(
-                id=table_uuid, dataset__id=dataset_uuid
-            )
+            source_table = SourceTable.objects.get(id=table_uuid, dataset__id=dataset_uuid)
         except (DataSet.DoesNotExist, SourceTable.DoesNotExist):
             return HttpResponse(status=404)
 
@@ -1230,7 +1191,7 @@ class SourceTableColumnDetails(View):
         )
         return render(
             request,
-            'datasets/source_table_column_details.html',
+            "datasets/source_table_column_details.html",
             context={
                 "dataset": dataset,
                 "source_table": source_table,
@@ -1244,18 +1205,18 @@ class ReferenceDatasetColumnDetails(View):
         dataset = get_object_or_404(
             ReferenceDataset.objects.live(),
             uuid=dataset_uuid,
-            **{'published': True} if not self.request.user.is_superuser else {},
+            **{"published": True} if not self.request.user.is_superuser else {},
         )
 
         columns = datasets_db.get_columns(
             dataset.external_database.memorable_name,
-            schema='public',
+            schema="public",
             table=dataset.table_name,
             include_types=True,
         )
         return render(
             request,
-            'datasets/referencedataset_column_details.html',
+            "datasets/referencedataset_column_details.html",
             context={"dataset": dataset, "columns": columns},
         )
 
@@ -1265,11 +1226,13 @@ class ReferenceDatasetGridView(View):
         dataset = get_object_or_404(
             ReferenceDataset.objects.live(),
             uuid=dataset_uuid,
-            **{'published': True} if not self.request.user.is_superuser else {},
+            **{"published": True} if not self.request.user.is_superuser else {},
         )
 
         return render(
-            request, 'datasets/reference_dataset_grid.html', context={"model": dataset},
+            request,
+            "datasets/reference_dataset_grid.html",
+            context={"model": dataset},
         )
 
 
@@ -1291,16 +1254,16 @@ class RelatedDataView(View):
 
         if form.is_valid():
             related_datasets = dataset.related_datasets(
-                order=form.cleaned_data.get('sort') or form.fields['sort'].initial
+                order=form.cleaned_data.get("sort") or form.fields["sort"].initial
             )
 
             return render(
                 request,
-                'datasets/related_data.html',
+                "datasets/related_data.html",
                 context={
                     "dataset": dataset,
                     "related_data": related_datasets,
-                    'form': form,
+                    "form": form,
                 },
             )
 
@@ -1309,7 +1272,7 @@ class RelatedDataView(View):
 
 class DataCutPreviewView(WaffleFlagMixin, DetailView):
     waffle_flag = settings.DATA_CUT_ENHANCED_PREVIEW_FLAG
-    template_name = 'datasets/data_cut_preview.html'
+    template_name = "datasets/data_cut_preview.html"
 
     def dispatch(self, request, *args, **kwargs):
         if not self.get_object().dataset.user_has_access(self.request.user):
@@ -1317,29 +1280,27 @@ class DataCutPreviewView(WaffleFlagMixin, DetailView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_object(self, queryset=None):
-        return get_object_or_404(
-            self.kwargs['model_class'], pk=self.kwargs['object_id']
-        )
+        return get_object_or_404(self.kwargs["model_class"], pk=self.kwargs["object_id"])
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         model = self.get_object()
         ctx.update(
             {
-                'can_download': model.can_show_link_for_user(self.request.user),
-                'form_action': model.get_absolute_url(),
-                'can_filter_columns': model.show_column_filter(),
-                'truncate_limit': 100,
-                'fixed_table_height_limit': 10,
+                "can_download": model.can_show_link_for_user(self.request.user),
+                "form_action": model.get_absolute_url(),
+                "can_filter_columns": model.show_column_filter(),
+                "truncate_limit": 100,
+                "fixed_table_height_limit": 10,
             }
         )
         if model.user_can_preview(self.request.user):
             columns, records = model.get_preview_data()
             ctx.update(
                 {
-                    'columns': columns,
-                    'records': records,
-                    'preview_limit': min(
+                    "columns": columns,
+                    "records": records,
+                    "preview_limit": min(
                         [len(records), settings.REFERENCE_DATASET_PREVIEW_NUM_OF_ROWS]
                     ),
                 }
@@ -1349,33 +1310,33 @@ class DataCutPreviewView(WaffleFlagMixin, DetailView):
 
 class DatasetUsageHistoryView(View):
     def get(self, request, dataset_uuid, **kwargs):
-        model_class = kwargs['model_class']
+        model_class = kwargs["model_class"]
         try:
             dataset = model_class.objects.get(id=dataset_uuid)
         except model_class.DoesNotExist:
             return HttpResponse(status=404)
 
         if dataset.type == DataSetType.MASTER:
-            tables = list(dataset.sourcetable_set.values_list('table', flat=True))
+            tables = list(dataset.sourcetable_set.values_list("table", flat=True))
             return render(
                 request,
-                'datasets/dataset_usage_history.html',
+                "datasets/dataset_usage_history.html",
                 context={
                     "dataset": dataset,
                     "event_description": "Queried",
                     "rows": ToolQueryAuditLogTable.objects.filter(table__in=tables)
-                    .annotate(day=TruncDay('audit_log__timestamp'))
-                    .annotate(email=F('audit_log__user__email'))
-                    .annotate(object=F('table'))
-                    .order_by('-day')
-                    .values('day', 'email', 'object')
-                    .annotate(count=Count('id'))[:100],
+                    .annotate(day=TruncDay("audit_log__timestamp"))
+                    .annotate(email=F("audit_log__user__email"))
+                    .annotate(object=F("table"))
+                    .order_by("-day")
+                    .values("day", "email", "object")
+                    .annotate(count=Count("id"))[:100],
                 },
             )
 
         return render(
             request,
-            'datasets/dataset_usage_history.html',
+            "datasets/dataset_usage_history.html",
             context={
                 "dataset": dataset,
                 "event_description": "Viewed"
@@ -1390,37 +1351,34 @@ class DatasetUsageHistoryView(View):
                         EventLog.TYPE_VIEW_QUICKSIGHT_VISUALISATION,
                     ]
                 )
-                .annotate(day=TruncDay('timestamp'))
-                .annotate(email=F('user__email'))
+                .annotate(day=TruncDay("timestamp"))
+                .annotate(email=F("user__email"))
                 .annotate(
                     object=Func(
-                        F('extra'),
-                        Value('fields'),
-                        Value('name'),
-                        function='jsonb_extract_path_text',
+                        F("extra"),
+                        Value("fields"),
+                        Value("name"),
+                        function="jsonb_extract_path_text",
                         output_field=CharField(),
                     ),
                 )
-                .order_by('-day')
-                .values('day', 'email', 'object')
-                .annotate(count=Count('id'))[:100],
+                .order_by("-day")
+                .values("day", "email", "object")
+                .annotate(count=Count("id"))[:100],
             },
         )
 
 
 class DataCutSourceDetailView(DetailView):
-    template_name = 'datasets/data_cut_source_detail.html'
+    template_name = "datasets/data_cut_source_detail.html"
 
     def _user_can_access(self):
         source = self.get_object()
-        return (
-            source.dataset.user_has_access(self.request.user)
-            and source.data_grid_enabled
-        )
+        return source.dataset.user_has_access(self.request.user) and source.data_grid_enabled
 
     def dispatch(self, request, *args, **kwargs):
         if not self._user_can_access():
-            dataset_uuid = self.kwargs.get('dataset_uuid')
+            dataset_uuid = self.kwargs.get("dataset_uuid")
             dataset = find_dataset(dataset_uuid, self.request.user)
 
             return HttpResponseRedirect(dataset.get_absolute_url())
@@ -1428,31 +1386,24 @@ class DataCutSourceDetailView(DetailView):
 
     def get_object(self, queryset=None):
         return get_object_or_404(
-            self.kwargs['model_class'],
-            dataset__id=self.kwargs.get('dataset_uuid'),
-            pk=self.kwargs['object_id'],
-            **{'dataset__published': True}
-            if not self.request.user.is_superuser
-            else {},
+            self.kwargs["model_class"],
+            dataset__id=self.kwargs.get("dataset_uuid"),
+            pk=self.kwargs["object_id"],
+            **{"dataset__published": True} if not self.request.user.is_superuser else {},
         )
 
 
 class DataGridDataView(DetailView):
     def _user_can_access(self):
         source = self.get_object()
-        return (
-            source.dataset.user_has_access(self.request.user)
-            and source.data_grid_enabled
-        )
+        return source.dataset.user_has_access(self.request.user) and source.data_grid_enabled
 
     def get_object(self, queryset=None):
         return get_object_or_404(
-            self.kwargs['model_class'],
-            dataset__id=self.kwargs.get('dataset_uuid'),
-            pk=self.kwargs['object_id'],
-            **{'dataset__published': True}
-            if not self.request.user.is_superuser
-            else {},
+            self.kwargs["model_class"],
+            dataset__id=self.kwargs.get("dataset_uuid"),
+            pk=self.kwargs["object_id"],
+            **{"dataset__published": True} if not self.request.user.is_superuser else {},
         )
 
     def dispatch(self, request, *args, **kwargs):
@@ -1466,7 +1417,8 @@ class DataGridDataView(DetailView):
             database_dsn(settings.DATABASES_DATA[source.database.memorable_name])
         ) as connection:
             with connection.cursor(
-                name='data-grid-data', cursor_factory=psycopg2.extras.RealDictCursor,
+                name="data-grid-data",
+                cursor_factory=psycopg2.extras.RealDictCursor,
             ) as cursor:
                 cursor.execute(query, query_params)
                 return cursor.fetchall()
@@ -1474,39 +1426,41 @@ class DataGridDataView(DetailView):
     def post(self, request, *args, **kwargs):
         source = self.get_object()
 
-        if request.GET.get('download'):
+        if request.GET.get("download"):
             if not source.data_grid_download_enabled:
                 return JsonResponse({}, status=403)
 
             filters = {}
-            for filter_data in [json.loads(x) for x in request.POST.getlist('filters')]:
+            for filter_data in [json.loads(x) for x in request.POST.getlist("filters")]:
                 filters.update(filter_data)
             column_config = [
                 x
                 for x in source.get_column_config()
-                if x['field'] in request.POST.getlist('columns', [])
+                if x["field"] in request.POST.getlist("columns", [])
             ]
             if not column_config:
                 return JsonResponse({}, status=400)
 
             post_data = {
-                'filters': filters,
-                'limit': source.data_grid_download_limit,
-                'sortDir': request.POST.get('sortDir', 'ASC'),
-                'sortField': request.POST.get('sortField', column_config[0]['field']),
+                "filters": filters,
+                "limit": source.data_grid_download_limit,
+                "sortDir": request.POST.get("sortDir", "ASC"),
+                "sortField": request.POST.get("sortField", column_config[0]["field"]),
             }
         else:
-            post_data = json.loads(request.body.decode('utf-8'))
-            post_data['limit'] = min(post_data.get('limit', 100), 100)
+            post_data = json.loads(request.body.decode("utf-8"))
+            post_data["limit"] = min(post_data.get("limit", 100), 100)
             column_config = source.get_column_config()
 
         original_query = source.get_data_grid_query()
         query, params = build_filtered_dataset_query(
-            original_query, column_config, post_data,
+            original_query,
+            column_config,
+            post_data,
         )
 
-        if request.GET.get('download'):
-            correlation_id = {'correlation_id': str(uuid.uuid4())}
+        if request.GET.get("download"):
+            correlation_id = {"correlation_id": str(uuid.uuid4())}
 
             log_event(
                 request.user,
@@ -1516,7 +1470,7 @@ class DataGridDataView(DetailView):
             )
 
             def write_metrics_to_eventlog(log_data):
-                logger.debug('write_metrics_to_eventlog %s', log_data)
+                logger.debug("write_metrics_to_eventlog %s", log_data)
 
                 log_data.update(correlation_id)
                 log_event(
@@ -1530,9 +1484,7 @@ class DataGridDataView(DetailView):
                 request.user.email,
                 source.database.memorable_name,
                 query,
-                request.POST.get(
-                    'export_file_name', f'custom-{source.dataset.slug}-export.csv'
-                ),
+                request.POST.get("export_file_name", f"custom-{source.dataset.slug}-export.csv"),
                 params,
                 original_query,
                 write_metrics_to_eventlog,
@@ -1540,7 +1492,7 @@ class DataGridDataView(DetailView):
             )
 
         records = self._get_rows(source, query, params)
-        return JsonResponse({'records': records})
+        return JsonResponse({"records": records})
 
 
 class DatasetVisualisationPreview(View):
@@ -1549,27 +1501,23 @@ class DatasetVisualisationPreview(View):
 
         if visualisation.query:
             with psycopg2.connect(
-                database_dsn(
-                    settings.DATABASES_DATA[visualisation.database.memorable_name]
-                )
+                database_dsn(settings.DATABASES_DATA[visualisation.database.memorable_name])
             ) as connection:
-                with connection.cursor(
-                    cursor_factory=psycopg2.extras.RealDictCursor
-                ) as cursor:
+                with connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
                     cursor.execute(visualisation.query)
                     data = cursor.fetchall()
             try:
                 # vega-lite, 'data' is a dictionary
-                vega_definition['data']['values'] = data
+                vega_definition["data"]["values"] = data
             except TypeError:
                 # vega, 'data' is a list, and we support setting the query
                 # results as the first item
-                vega_definition['data'][0]['values'] = data
+                vega_definition["data"][0]["values"] = data
 
         return vega_definition
 
     def get(self, request, dataset_uuid, object_id, **kwargs):
-        model_class = kwargs['model_class']
+        model_class = kwargs["model_class"]
         try:
             dataset = model_class.objects.get(id=dataset_uuid)
         except model_class.DoesNotExist:
@@ -1586,7 +1534,7 @@ class DatasetVisualisationPreview(View):
 
 class DatasetVisualisationView(View):
     def get(self, request, dataset_uuid, object_id, **kwargs):
-        model_class = kwargs['model_class']
+        model_class = kwargs["model_class"]
         try:
             dataset = model_class.objects.get(id=dataset_uuid)
         except model_class.DoesNotExist:
@@ -1599,7 +1547,7 @@ class DatasetVisualisationView(View):
 
         return render(
             request,
-            'datasets/visualisation.html',
+            "datasets/visualisation.html",
             context={"dataset_uuid": dataset_uuid, "visualisation": visualisation},
         )
 
@@ -1608,19 +1556,17 @@ class CustomQueryColumnDetails(View):
     def get(self, request, dataset_uuid, query_id):
         try:
             dataset = DataSet.objects.get(id=dataset_uuid, type=DataSetType.DATACUT)
-            query = CustomDatasetQuery.objects.get(
-                id=query_id, dataset__id=dataset_uuid
-            )
+            query = CustomDatasetQuery.objects.get(id=query_id, dataset__id=dataset_uuid)
         except (DataSet.DoesNotExist, CustomDatasetQuery.DoesNotExist):
             return HttpResponse(status=404)
 
         return render(
             request,
-            'datasets/data_cut_column_details.html',
+            "datasets/data_cut_column_details.html",
             context={
-                'dataset': dataset,
-                'query': query,
-                'columns': datasets_db.get_columns(
+                "dataset": dataset,
+                "query": query,
+                "columns": datasets_db.get_columns(
                     query.database.memorable_name, query=query.query, include_types=True
                 ),
             },
@@ -1629,15 +1575,24 @@ class CustomQueryColumnDetails(View):
 
 class SourceChangelogView(WaffleFlagMixin, DetailView):
     waffle_flag = settings.DATASET_CHANGELOG_PAGE_FLAG
-    template_name = 'datasets/source_changelog.html'
-    context_object_name = 'source'
+    template_name = "datasets/source_changelog.html"
+    context_object_name = "source"
+
+    def get_context_data(self, **kwargs):
+        if self.kwargs["model_class"] == SourceTable:
+            change_type = "Table structure updated"
+        elif self.kwargs["model_class"] == CustomDatasetQuery:
+            change_type = "Dataset query structure updated"
+
+        ctx = super().get_context_data(**kwargs)
+        ctx["change_type"] = change_type
+        return ctx
 
     def get_object(self, queryset=None):
+
         return get_object_or_404(
-            self.kwargs['model_class'],
-            dataset__id=self.kwargs.get('dataset_uuid'),
-            pk=self.kwargs['source_id'],
-            **{'dataset__published': True}
-            if not self.request.user.is_superuser
-            else {},
+            self.kwargs["model_class"],
+            dataset__id=self.kwargs.get("dataset_uuid"),
+            pk=self.kwargs["source_id"],
+            **{"dataset__published": True} if not self.request.user.is_superuser else {},
         )

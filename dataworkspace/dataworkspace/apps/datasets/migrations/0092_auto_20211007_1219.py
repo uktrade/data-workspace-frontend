@@ -6,45 +6,45 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0091_visualisationlinksqlquery'),
+        ("datasets", "0091_visualisationlinksqlquery"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='dataset',
-            name='user_access_type',
+            model_name="dataset",
+            name="user_access_type",
             field=models.CharField(
                 choices=[
                     (
-                        'OPEN',
-                        'Everyone - for public data only, suitable to be shown in demos',
+                        "OPEN",
+                        "Everyone - for public data only, suitable to be shown in demos",
                     ),
-                    ('REQUIRES_AUTHENTICATION', 'All logged in users'),
+                    ("REQUIRES_AUTHENTICATION", "All logged in users"),
                     (
-                        'REQUIRES_AUTHORIZATION',
-                        'Only specific authorized users or email domains',
+                        "REQUIRES_AUTHORIZATION",
+                        "Only specific authorized users or email domains",
                     ),
                 ],
-                default='REQUIRES_AUTHORIZATION',
+                default="REQUIRES_AUTHORIZATION",
                 max_length=64,
             ),
         ),
         migrations.AlterField(
-            model_name='visualisationcatalogueitem',
-            name='user_access_type',
+            model_name="visualisationcatalogueitem",
+            name="user_access_type",
             field=models.CharField(
                 choices=[
                     (
-                        'OPEN',
-                        'Everyone - for public data only, suitable to be shown in demos',
+                        "OPEN",
+                        "Everyone - for public data only, suitable to be shown in demos",
                     ),
-                    ('REQUIRES_AUTHENTICATION', 'All logged in users'),
+                    ("REQUIRES_AUTHENTICATION", "All logged in users"),
                     (
-                        'REQUIRES_AUTHORIZATION',
-                        'Only specific authorized users or email domains',
+                        "REQUIRES_AUTHORIZATION",
+                        "Only specific authorized users or email domains",
                     ),
                 ],
-                default='REQUIRES_AUTHENTICATION',
+                default="REQUIRES_AUTHENTICATION",
                 max_length=64,
             ),
         ),

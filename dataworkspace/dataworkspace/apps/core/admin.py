@@ -8,7 +8,7 @@ from dataworkspace.apps.core.models import (
 
 
 class DeletableTimeStampedUserTabularInline(admin.TabularInline):
-    exclude = ['created_date', 'updated_date', 'created_by', 'updated_by', 'deleted']
+    exclude = ["created_date", "updated_date", "created_by", "updated_by", "deleted"]
 
 
 class TimeStampedUserAdmin(admin.ModelAdmin):
@@ -20,7 +20,7 @@ class TimeStampedUserAdmin(admin.ModelAdmin):
 
 
 class DeletableTimeStampedUserAdmin(TimeStampedUserAdmin):
-    exclude = ['created_date', 'updated_date', 'created_by', 'updated_by', 'deleted']
+    exclude = ["created_date", "updated_date", "created_by", "updated_by", "deleted"]
 
     def get_queryset(self, request):
         # Only show non-deleted models in admin
@@ -33,8 +33,8 @@ class DeletableTimeStampedUserAdmin(TimeStampedUserAdmin):
         :return:
         """
         actions = super().get_actions(request)
-        if 'delete_selected' in actions:
-            del actions['delete_selected']
+        if "delete_selected" in actions:
+            del actions["delete_selected"]
         return actions
 
 
@@ -45,7 +45,7 @@ class TeamMembershipAdmin(admin.TabularInline):
 
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):
-    readonly_fields = ['schema_name']
+    readonly_fields = ["schema_name"]
     inlines = (TeamMembershipAdmin,)
 
 
@@ -56,9 +56,9 @@ class CSPRichTextEditorMixin:
     # do so - and we don't have a clean way to either hash the inline script on-demand
     # or inject our request CSP nonce.
     @csp_update(SCRIPT_SRC="'unsafe-inline'")
-    def add_view(self, request, form_url='', extra_context=None):
+    def add_view(self, request, form_url="", extra_context=None):
         return super().add_view(request, form_url, extra_context)
 
     @csp_update(SCRIPT_SRC="'unsafe-inline'")
-    def change_view(self, request, object_id, form_url='', extra_context=None):
+    def change_view(self, request, object_id, form_url="", extra_context=None):
         return super().change_view(request, object_id, form_url, extra_context)
