@@ -264,6 +264,6 @@ class TestDataExplorer:
         # The cached credentials should have been cleared, so new ones will be generated where access isn't available.
         assert home_page.read_result_headers() == []
         assert home_page.read_result_rows() == []
-        assert "permission denied for relation" in home_page.get_html()
+        assert "permission denied for table" in home_page.get_html()
         assert "Columns in public.explorer_dataset" not in home_page.get_html()
         assert "Columns in public.explorer_2_dataset" in home_page.get_html()
