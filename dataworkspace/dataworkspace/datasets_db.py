@@ -117,6 +117,9 @@ def get_custom_dataset_query_changelog(database_name: str, query):
 
 
 def get_changelog_from_metadata_rows(rows):
+    if not rows:
+        return []
+
     # Always add the first row to the change log
     changelog = [
         {

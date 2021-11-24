@@ -60,7 +60,7 @@ angular.module('aws-js-s3-explorer').factory('s3', (Config) => {
         credentials: new Credentials(),
         region: Config.region
     });
-    return new AWS.S3();
+    return new AWS.S3({s3ForcePathStyle: true });
 });
 
 angular.module('aws-js-s3-explorer').run(($rootScope) => {
