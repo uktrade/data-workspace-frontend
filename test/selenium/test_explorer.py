@@ -204,7 +204,7 @@ class TestDataExplorer:
 
         assert home_page.read_result_headers() == []
         assert home_page.read_result_rows() == []
-        assert "permission denied for relation" in home_page.get_html()
+        assert "permission denied for table" in home_page.get_html()
 
     def test_data_explorer_cached_credentials_can_be_reset_using_admin_action(self, _application):
         # This doesn't strictly test that the action is available to an admin, but it does test the routine
