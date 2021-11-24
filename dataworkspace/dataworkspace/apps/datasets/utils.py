@@ -310,13 +310,14 @@ def process_quicksight_dashboard_visualisations():
 
                             last_updated_dates.append(last_updated_date_candidate)
 
-            logger.info(
-                'Setting last updated date of %s for DashboardId %s',
-                max(last_updated_dates).strftime('%d-%m-%Y %H:%M:%S'),
-                dashboard_id,
-            )
-            visualisation_link.data_source_last_updated = max(last_updated_dates)
-            visualisation_link.save()
+            if last_updated_dates:
+                logger.info(
+                    'Setting last updated date of %s for DashboardId %s',
+                    max(last_updated_dates).strftime('%d-%m-%Y %H:%M:%S'),
+                    dashboard_id,
+                )
+                visualisation_link.data_source_last_updated = max(last_updated_dates)
+                visualisation_link.save()
 
             if tables:
                 set_dataset_related_visualisation_catalogue_items(
