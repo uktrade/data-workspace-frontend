@@ -595,7 +595,7 @@ def send_notification_emails():
                 logger.info(
                     "No changelog records found for table %s %s", table.schema, table.table
                 )
-                return
+                continue
 
             # For now only notify about the most recent change
             change = changelog[0]
