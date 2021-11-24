@@ -652,7 +652,7 @@ def send_notification_emails():
                             email_address,
                             personalisation={
                                 "dataset_name": dataset_name,
-                                "change_date": change_date,
+                                "change_date": change_date.isoformat(),
                             },
                         )
                     except EmailSendFailureException:
