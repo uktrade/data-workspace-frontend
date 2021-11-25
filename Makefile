@@ -58,7 +58,7 @@ docker-check-migrations:
 
 .PHONY: check-black
 check-black:
-	black --exclude=venv --line-length=99 --check .
+	black --check .
 
 .PHONY: check-pylint
 check-pylint:
@@ -68,13 +68,13 @@ check-pylint:
 check: check-flake8 check-black check-pylint
 
 .PHONY: docker-format
-docker-format:
-	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash -c "cd /app && black --exclude=venv --skip-string-normalization ."
+docker-format: first-use
+	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash -c "cd /app && black ."
 
 
 .PHONY: format
 format:
-	black --exclude=venv --line-length=99 .
+	black .
 
 .PHONY: save-requirements
 save-requirements:
