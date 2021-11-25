@@ -861,7 +861,7 @@ class TestExternalModels(BaseModelsTests):
     def _record_exists(table_name, identifier_field, record_id, database="test_external_db"):
         with connections[database].cursor() as cursor:
             cursor.execute(
-                "SELECT COUNT(*) FROM {} WHERE {}=%s".format(table_name, identifier_field),
+                f"SELECT COUNT(*) FROM {table_name} WHERE {identifier_field}=%s",
                 [record_id],
             )
             return cursor.fetchone()[0] == 1

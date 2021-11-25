@@ -26,7 +26,7 @@ class TestApplicationAPI(BaseTestCase):
         response = self._authenticated_put(
             reverse(
                 "api_v1:application-detail",
-                args=("testapplication-{}".format(str(self.user.profile.sso_id)[:8]),),
+                args=(f"testapplication-{str(self.user.profile.sso_id)[:8]}",),
             )
         )
         self.assertEqual(response.status_code, 200)

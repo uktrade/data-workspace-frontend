@@ -253,6 +253,7 @@ class TestHomePage:
 
     def test_playground_renders_with_query_sql(self, staff_user, staff_client):
         query = SimpleQueryFactory(sql="select 1;", created_by_user=staff_user)
+        # pylint: disable=consider-using-f-string
         resp = staff_client.get("%s?query_id=%s" % (reverse("explorer:index"), query.id))
         assert resp.status_code == 200
         assert "select 1;" in resp.content.decode(resp.charset)
@@ -260,6 +261,7 @@ class TestHomePage:
     def test_cannot_open_playground_with_another_users_query(self, staff_client):
         other_user = UserFactory(email="foo@bar.net")
         query = SimpleQueryFactory(sql="select 1;", created_by_user=other_user)
+        # pylint: disable=consider-using-f-string
         resp = staff_client.get("%s?query_id=%s" % (reverse("explorer:index"), query.id))
         assert resp.status_code == 404
 
@@ -299,6 +301,7 @@ class TestHomePage:
 
     def test_query_with_no_resultset_doesnt_throw_error(self, staff_user, staff_client):
         query = SimpleQueryFactory(sql="", created_by_user=staff_user)
+        # pylint: disable=consider-using-f-string
         resp = staff_client.get("%s?query_id=%s" % (reverse("explorer:index"), query.id))
         assert resp.status_code == 200
 
@@ -307,10 +310,12 @@ class TestHomePage:
         my_querylog = QueryLogFactory(run_by_user=staff_user)
         other_querylog = QueryLogFactory(run_by_user=user)
 
+        # pylint: disable=consider-using-f-string
         resp = staff_client.get("%s?querylog_id=%s" % (reverse("explorer:index"), my_querylog.id))
         assert resp.status_code == 200
         assert "FOUR" in resp.content.decode(resp.charset)
 
+        # pylint: disable=consider-using-f-string
         resp = staff_client.get(
             "%s?querylog_id=%s" % (reverse("explorer:index"), other_querylog.id)
         )

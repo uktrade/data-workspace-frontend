@@ -30,9 +30,9 @@ def flush_database(connection):
         cursor.execute(sql)
         sql = "CREATE SCHEMA public;"
         cursor.execute(sql)
-        sql = "GRANT ALL ON SCHEMA public TO {};".format(current_user)
+        sql = f"GRANT ALL ON SCHEMA public TO {current_user};"
         cursor.execute(sql)
-        sql = "GRANT ALL ON SCHEMA public TO {};".format(current_user)
+        sql = "GRANT ALL ON SCHEMA public TO {current_user};"
         cursor.execute(sql)
 
 
@@ -69,20 +69,16 @@ class TestAPIDatasetView(TestCase):
         with psycopg2.connect(
             database_dsn(settings.DATABASES_DATA[memorable_name])
         ) as conn, conn.cursor() as cur:
-            sql = """
-            create table {table} (id int primary key, name varchar(100), timestamp timestamp)
-            """.format(
-                table=table
-            )
+            sql = f"create table {table} (id int primary key, name varchar(100), timestamp timestamp)"
             cur.execute(sql)
-            sql = """insert into {table} values (%s, %s, %s)""".format(table=self.table)
+            sql = f"insert into {self.table} values (%s, %s, %s)"
             values = [
                 (0, "abigail", "2019-01-01 01:00"),
                 (1, "romeo", "2019-01-01 02:00"),
             ]
             cur.executemany(sql, values)
 
-        url = "/api/v1/dataset/{}/{}".format(dataset.id, source_table.id)
+        url = f"/api/v1/dataset/{dataset.id}/{source_table.id}"
         response = self.client.get(url)
         expected = {
             "headers": ["id", "name", "timestamp"],
@@ -114,14 +110,10 @@ class TestAPIDatasetView(TestCase):
         with psycopg2.connect(
             database_dsn(settings.DATABASES_DATA[memorable_name])
         ) as conn, conn.cursor() as cur:
-            sql = """
-            create table {table} (id int primary key, name varchar(100), timestamp timestamp)
-            """.format(
-                table=table
-            )
+            sql = f"create table {table} (id int primary key, name varchar(100), timestamp timestamp)"
             cur.execute(sql)
 
-        url = "/api/v1/dataset/{}/{}".format(dataset.id, source_table.id)
+        url = f"/api/v1/dataset/{dataset.id}/{source_table.id}"
         response = self.client.get(url)
         expected = {"headers": ["id", "name", "timestamp"], "next": None, "values": []}
 
@@ -147,20 +139,12 @@ class TestAPIDatasetView(TestCase):
         with psycopg2.connect(
             database_dsn(settings.DATABASES_DATA[memorable_name])
         ) as conn, conn.cursor() as cur:
-            sql = """
-            create table {table} (id int primary key, name varchar(100), timestamp timestamp)
-            """.format(
-                table=table
-            )
+            sql = f"create table {table} (id int primary key, name varchar(100), timestamp timestamp)"
             cur.execute(sql)
-            sql = """
-            create view view_{table} as (select * from {table})
-            """.format(
-                table=table
-            )
+            sql = f"create view view_{table} as (select * from {table})"
             cur.execute(sql)
 
-        url = "/api/v1/dataset/{}/{}".format(dataset.id, view_source_table.id)
+        url = f"/api/v1/dataset/{dataset.id}/{view_source_table.id}"
         with pytest.raises(ValueError) as e:
             self.client.get(url)
 
@@ -186,14 +170,10 @@ class TestAPIDatasetView(TestCase):
         with psycopg2.connect(
             database_dsn(settings.DATABASES_DATA[memorable_name])
         ) as conn, conn.cursor() as cur:
-            sql = """
-            create table {table} (id int, name varchar(100), timestamp timestamp)
-            """.format(
-                table=table
-            )
+            sql = f"create table {table} (id int, name varchar(100), timestamp timestamp)"
             cur.execute(sql)
 
-        url = "/api/v1/dataset/{}/{}".format(dataset.id, source_table.id)
+        url = "/api/v1/dataset/{dataset.id}/{source_table.id}"
         with pytest.raises(ValueError) as e:
             self.client.get(url)
 
@@ -215,7 +195,7 @@ class TestAPIDatasetView(TestCase):
             dataset=dataset, database=database, table=table
         )[0]
 
-        url = "/api/v1/dataset/{}/{}".format(dataset.id, source_table.id)
+        url = f"/api/v1/dataset/{dataset.id}/{source_table.id}"
         with pytest.raises(ValueError) as e:
             self.client.get(url)
 
@@ -238,17 +218,13 @@ class TestAPIDatasetView(TestCase):
         with psycopg2.connect(
             database_dsn(settings.DATABASES_DATA[memorable_name])
         ) as conn, conn.cursor() as cur:
-            sql = """
-            create table {table} (id int primary key, name varchar(100))
-            """.format(
-                table=table
-            )
+            sql = f"create table {table} (id int primary key, name varchar(100))"
             cur.execute(sql)
-            sql = """insert into {table} values (%s, %s)""".format(table=self.table)
+            sql = f"insert into {self.table} values (%s, %s)"
             values = [(0, "abigail"), (1, "romeo")]
             cur.executemany(sql, values)
 
-        url = "/api/v1/dataset/{}/{}?$searchAfter=0".format(dataset.id, source_table.id)
+        url = f"/api/v1/dataset/{dataset.id}/{source_table.id}?$searchAfter=0"
         response = self.client.get(url)
         expected = {"headers": ["id", "name"], "values": [[1, "romeo"]], "next": None}
 

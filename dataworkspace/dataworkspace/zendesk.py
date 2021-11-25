@@ -19,9 +19,7 @@ def get_username(user):
 
 
 def get_people_url(name):
-    return "https://people.trade.gov.uk/search?search_filters[]=people&query={}".format(
-        urllib.parse.quote(name)
-    )
+    return f"https://people.trade.gov.uk/search?search_filters[]=people&query={urllib.parse.quote(name)}"
 
 
 def build_ticket_description_text(access_request, access_request_url, catalogue_item=None):
