@@ -29,6 +29,7 @@ class EventLogAdmin(admin.ModelAdmin):
 
     def user_link(self, obj):
         return format_html(
+            # pylint: disable=consider-using-f-string
             '<a href="{}">{}</a>'.format(
                 reverse("admin:auth_user_change", args=(obj.user.id,)),
                 obj.user.get_full_name(),
@@ -49,6 +50,7 @@ class EventLogAdmin(admin.ModelAdmin):
         except NoReverseMatch:
             return obj.related_object
 
+        # pylint: disable=consider-using-f-string
         return format_html('<a href="{}">{}</a>'.format(url, obj.related_object))
 
     related_object_link.short_description = "Related Object"
@@ -75,6 +77,7 @@ class EventLogAdmin(admin.ModelAdmin):
     def export_events(self, request, queryset):
         field_names = ["timestamp", "user", "event_type", "related_object", "extra"]
         response = HttpResponse(content_type="text/csv")
+        # pylint: disable=consider-using-f-string
         response["Content-Disposition"] = "attachment; filename=event-log-{}.csv".format(
             datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         )

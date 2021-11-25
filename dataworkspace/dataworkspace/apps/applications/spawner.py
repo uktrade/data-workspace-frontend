@@ -301,7 +301,7 @@ class FargateSpawner:
                     tag,
                 )
                 if "id" not in pipeline:
-                    raise Exception("Unable to start pipeline: {}".format(pipeline))
+                    raise Exception(f"Unable to start pipeline: {pipeline}")
                 pipeline_id = pipeline["id"]
                 application_instance.spawner_application_instance_id = json.dumps(
                     {"pipeline_id": pipeline_id, "task_arn": None}
@@ -316,13 +316,13 @@ class FargateSpawner:
                         pipeline["status"] not in RUNNING_PIPELINE_STATUSES
                         and pipeline["status"] not in SUCCESS_PIPELINE_STATUSES
                     ):
-                        raise Exception("Pipeline failed {}".format(pipeline))
+                        raise Exception(f"Pipeline failed {pipeline}")
                     if pipeline["status"] in SUCCESS_PIPELINE_STATUSES:
                         break
                 else:
                     logger.error("Pipeline took too long, cancelling: %s", pipeline)
                     _gitlab_ecr_pipeline_cancel(pipeline_id)
-                    raise Exception("Pipeline {} took too long".format(pipeline))
+                    raise Exception(f"Pipeline {pipeline} took too long")
 
             # It doesn't really matter what the suffix is: it could even be a random
             # number, but we choose the short hashed version of the SSO ID to help debugging
@@ -659,7 +659,7 @@ def _fargate_task_stop(cluster_name, task_arn):
             sleep_time = sleep_time * 2
         else:
             return
-    raise Exception("Unable to stop Fargate task {}".format(task_arn))
+    raise Exception(f"Unable to stop Fargate task {task_arn}")
 
 
 def _fargate_task_run(

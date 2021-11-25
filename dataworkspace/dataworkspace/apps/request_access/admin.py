@@ -35,7 +35,7 @@ class AccessRequestAdmin(admin.ModelAdmin):
         else:
             url = reverse("admin:datasets_masterdataset_change", args=(catalogue_item.id,))
 
-        return '<a href="%s">%s</a>' % (url, catalogue_item)
+        return f'<a href="{url}">{catalogue_item}</a>'
 
     catalogue_item.allow_tags = True
 

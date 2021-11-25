@@ -75,6 +75,7 @@ class ApplicationInstanceAdmin(admin.ModelAdmin):
         except MetricsException as exception:
             return exception.args[0] if exception.args else "Error"
 
+        # pylint: disable=consider-using-f-string
         return "{0:.2f}% at {1}".format(
             max_cpu,
             datetime.datetime.fromtimestamp(ts_at_max)
@@ -466,7 +467,7 @@ class VisualisationTemplateAdmin(admin.ModelAdmin):
             log_change(
                 EventLog.TYPE_GRANTED_DATASET_PERMISSION,
                 dataset,
-                "Added dataset {} permission".format(dataset),
+                f"Added dataset {dataset} permission",
             )
         for dataset in current_master_datasets - authorized_master_datasets:
             DataSetApplicationTemplatePermission.objects.filter(

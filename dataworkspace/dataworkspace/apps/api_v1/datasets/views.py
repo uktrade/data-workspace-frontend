@@ -111,6 +111,7 @@ def _get_dataset_primary_key(connection, schema, table):
 
 
 def _len_chunk_header(num_chunk_bytes):
+    # pylint: disable=consider-using-f-string
     return len("%X\r\n" % num_chunk_bytes)
 
 
@@ -156,7 +157,7 @@ def _get_streaming_http_response(streaming_class, request, primary_key, columns,
                 search_after = [columns.index(k) for k in primary_key]
                 search_after = [row[i] for i in search_after]
                 search_after = "&".join(["$searchAfter={}".format(k) for k in search_after])
-                next_url = "{}?{}".format(base_url, search_after)
+                next_url = f"{base_url}?{search_after}"
                 yield from yield_chunks(b'], "next": "' + next_url.encode("utf-8") + b'"}')
                 break
         else:

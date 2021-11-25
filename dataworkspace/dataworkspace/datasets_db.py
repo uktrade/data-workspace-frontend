@@ -17,13 +17,13 @@ def get_columns(database_name, schema=None, table=None, query=None, include_type
             psycopg2.sql.Identifier(schema), psycopg2.sql.Identifier(table)
         )
     elif query is not None:
-        source = psycopg2.sql.SQL("({}) AS custom_query".format(query.rstrip(";")))
+        source = psycopg2.sql.SQL(f'({query.rstrip(";")}) AS custom_query')
     else:
         raise ValueError("Either table or query are required")
 
     with connections[database_name].cursor() as cursor:
         try:
-            cursor.execute(psycopg2.sql.SQL("SELECT * from {} WHERE false").format(source))
+            cursor.execute(psycopg2.sql.SQL(f"SELECT * from {source} WHERE false"))
 
             if include_types:
                 return [
