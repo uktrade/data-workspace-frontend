@@ -5,13 +5,7 @@
 
 {% block initialGTMDataLayer %}
   {{ block.super }}
-  <script nonce="{{ request.csp_nonce }}">dataLayer.push({
-    "userId": "{{ SSO_USER_ID }}",
-    "event": "catalogueView",
-    "catalogueId": "{{ model.uuid }}",
-    "catalogueName": "{{ model.name }}",
-    "catalogueType": "reference"
-  })</script>
+  {% include 'partials/gtm_datalayer.html' with catalogue_type='reference' %}
 {% endblock %}
 {% block footer_scripts %}
   {% flag DATA_GRID_REFERENCE_DATASET_FLAG %}
