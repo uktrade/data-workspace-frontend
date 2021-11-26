@@ -167,6 +167,7 @@ class TestDatasetViews:
         ds = factory.create(published=True, deleted=False)
         response = client.get(ds.get_absolute_url())
         assert "dataLayer.push({" in response.content.decode(response.charset)
+        assert "userId:" in response.content.decode(response.charset)
 
     @pytest.mark.parametrize(
         "request_client,published",
