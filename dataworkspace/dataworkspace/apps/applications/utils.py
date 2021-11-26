@@ -274,6 +274,7 @@ def application_instance_max_cpu(application_instance):
     try:
         response = requests.get(url, params)
     except requests.RequestException:
+        # pylint: disable=raise-missing-from
         raise UnexpectedMetricsException("Error connecting to metrics server")
 
     response_dict = response.json()
@@ -286,6 +287,7 @@ def application_instance_max_cpu(application_instance):
         values = response_dict["data"]["result"][0]["values"]
     except (IndexError, KeyError):
         # The server not having metrics yet should not be reported as an error
+        # pylint: disable=raise-missing-from
         raise ExpectedMetricsException("Unknown")
 
     max_cpu = 0.0
@@ -1242,6 +1244,7 @@ def _fetch_docker_pgaudit_logs(from_date, to_date):
         last_modified = datetime.datetime.fromtimestamp(os.path.getmtime(path)).replace(tzinfo=utc)
         if last_modified <= from_date or last_modified > to_date:
             continue
+        # pylint: disable=unspecified-encoding
         with open(path, "r") as log_fh:
             log_reader = csv.DictReader(log_fh, fieldnames=settings.POSTGRES_LOG_HEADERS)
             logs += _parse_postgres_log(log_reader, from_date, to_date)

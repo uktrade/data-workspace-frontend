@@ -143,6 +143,7 @@ class ProcessSpawner:
             }
 
             logger.info("Starting %s", cmd)
+            # pylint: disable=consider-using-with
             proc = subprocess.Popen(cmd, cwd="/home/django", env=database_env)
 
             application_instance.spawner_application_instance_id = json.dumps(

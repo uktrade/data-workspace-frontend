@@ -14,6 +14,7 @@ import pytest
 
 @pytest.fixture(scope="module")
 def create_application():
+    # pylint: disable=consider-using-with
     proc = subprocess.Popen(
         ["/dataworkspace/start-test.sh"],
         env={
@@ -43,6 +44,7 @@ def set_waffle_flag(flag_name, everyone=True):
         """
     ).encode("ascii")
 
+    # pylint: disable=consider-using-with
     give_perm = subprocess.Popen(
         ["django-admin", "shell"],
         env=os.environ,
@@ -95,6 +97,7 @@ def create_dataset(dataset_id, dataset_name, table_id, database, user_access_typ
             cursor.execute("CREATE TABLE IF NOT EXISTS {dataset_name} (id int primary key)")
     """
     ).encode("ascii")
+    # pylint: disable=consider-using-with
     give_perm = subprocess.Popen(
         ["django-admin", "shell"],
         env=os.environ,
@@ -116,6 +119,7 @@ def set_dataset_access_type(dataset_id, user_access_type):
         DataSet.objects.filter(id="{dataset_id}").update(user_access_type="{user_access_type}")
     """
     ).encode("ascii")
+    # pylint: disable=consider-using-with
     give_perm = subprocess.Popen(
         ["django-admin", "shell"],
         env=os.environ,
@@ -144,6 +148,7 @@ def reset_data_explorer_credentials(user_sso_id):
         )
     """
     ).encode("ascii")
+    # pylint: disable=consider-using-with
     give_perm = subprocess.Popen(
         ["django-admin", "shell"],
         env=os.environ,

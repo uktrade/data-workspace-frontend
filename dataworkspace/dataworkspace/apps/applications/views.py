@@ -849,6 +849,7 @@ def _application_template(gitlab_project):
             try:
                 return ApplicationTemplate.objects.get(gitlab_project_id=gitlab_project["id"])
             except ApplicationTemplate.DoesNotExist:
+                # pylint: disable=raise-missing-from
                 raise integrity_error
 
 
@@ -1480,6 +1481,7 @@ class UserToolSizeConfigurationView(SuccessMessageMixin, UpdateView):
                     ),
                 )
             except ToolTemplate.DoesNotExist:
+                # pylint: disable=raise-missing-from
                 raise Http404
 
     def get_success_url(self):

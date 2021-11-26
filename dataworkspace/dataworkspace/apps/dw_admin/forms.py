@@ -699,6 +699,7 @@ class VisualisationLinkForm(forms.ModelForm):
             try:
                 uuid.UUID(identifier)
             except ValueError:
+                # pylint: disable=raise-missing-from
                 raise forms.ValidationError("Quicksight identifiers must be a UUID.")
 
         return identifier

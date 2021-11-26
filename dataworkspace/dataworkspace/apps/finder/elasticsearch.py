@@ -89,6 +89,7 @@ class ElasticsearchClient:
             }
         ] + (filters if filters else [])
 
+        # pylint: disable=unexpected-keyword-arg
         return self._client.search(
             body={
                 "sort": [{"_id": {"order": "asc"}}],

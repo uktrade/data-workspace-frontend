@@ -22,6 +22,7 @@ from dataworkspace.tests.factories import UserFactory
 class TestSupportViews(BaseTestCase):
     def test_landing_page(self):
         response = self._authenticated_get(reverse("support"))
+        # pylint: disable=no-member
         assert response.status_code == 200
         self.assertContains(response, "I would like to have technical support")
         self.assertContains(response, "I would like to add a new dataset")
@@ -114,6 +115,7 @@ class TestSupportViews(BaseTestCase):
 
     def test_tech_support_page(self):
         response = self._authenticated_get(reverse("technical-support") + "?email=a@b.com")
+        # pylint: disable=no-member
         assert response.status_code == 200
         self.assertContains(response, "What were you trying to do?")
         self.assertContains(response, "What happened?")
@@ -121,6 +123,7 @@ class TestSupportViews(BaseTestCase):
 
     def test_tech_support_no_email(self):
         response = self._authenticated_get(reverse("technical-support"))
+        # pylint: disable=no-member
         assert response.status_code == 400
 
     def test_tech_support_invalid_message(self):

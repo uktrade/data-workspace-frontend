@@ -35,7 +35,7 @@ check-black:
 
 .PHONY: check-pylint
 check-pylint:
-	 env PYTHONPATH=app python3 -m pylint.__main__ --rcfile .pylintrc dataworkspace/dataworkspace test
+	 env PYTHONPATH=app python3 -m pylint.__main__ --rcfile .pylintrc --output-format=colorized dataworkspace/dataworkspace test
 
 .PHONY: check
 check: check-flake8 check-black check-pylint

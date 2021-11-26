@@ -87,6 +87,7 @@ def normalise_environment(key_values):
             except ValueError:
                 return False
 
+        # pylint: disable=use-a-generator
         return all([is_int(key) for key, value in nested_structured_dict.items()])
 
     def list_sorted_by_int_key():
