@@ -22,5 +22,5 @@ def common(request):
         "ZENDESK_EMAIL": settings.ZENDESK_EMAIL,
         "TEAMS_DATA_WORKSPACE_COMMUNITY_URL": settings.TEAMS_DATA_WORKSPACE_COMMUNITY_URL,
         "DATA_WORKSPACE_ROADMAP_URL": settings.DATA_WORKSPACE_ROADMAP_URL,
-        "SSO_USER_ID": request.META.get("HTTP_SSO_PROFILE_USER_ID", ""),
+        "SSO_USER_ID": request.META["HTTP_SSO_PROFILE_USER_ID"],
     }

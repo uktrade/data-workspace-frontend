@@ -170,9 +170,10 @@ class TestDatasetViews:
         headers = {
             "HTTP_SSO_PROFILE_USER_ID": sso_id,
         }
+        
         response = client.get(ds.get_absolute_url(), **headers)
         assert "dataLayer.push({" in response.content.decode(response.charset)
-        assert f'userId: "{ sso_id }"' in response.content.decode(response.charset)
+        assert f'"userId": "{ sso_id }"' in response.content.decode(response.charset)
 
     @pytest.mark.parametrize(
         "request_client,published",
