@@ -1,4 +1,5 @@
 import io
+import uuid
 from unittest import mock
 
 import psycopg2
@@ -165,9 +166,13 @@ class TestDatasetViews:
     )
     def test_renders_gtm_push(self, client, factory):
         ds = factory.create(published=True, deleted=False)
-        response = client.get(ds.get_absolute_url())
+        sso_id = uuid.uuid4()
+        headers = {
+            "HTTP_SSO_PROFILE_USER_ID": sso_id,
+        }
+        response = client.get(ds.get_absolute_url(), **headers)
         assert "dataLayer.push({" in response.content.decode(response.charset)
-        assert "userId:" in response.content.decode(response.charset)
+        assert f'userId: "{ sso_id }"' in response.content.decode(response.charset)
 
     @pytest.mark.parametrize(
         "request_client,published",
