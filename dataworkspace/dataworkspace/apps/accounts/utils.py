@@ -7,10 +7,17 @@ from django.contrib.auth import (
     HASH_SESSION_KEY,
     authenticate,
 )
+from django.conf import settings
 from django.contrib.sessions.backends.base import CreateError
 from django.http import HttpResponseForbidden
+import requests
+
 
 logger = logging.getLogger("app")
+
+
+class SSOApiException(Exception):
+    pass
 
 
 def login_required(func):
@@ -60,3 +67,28 @@ def login_required(func):
         return func(request, *args, **kwargs)
 
     return _login_required
+
+
+def add_user_access_profile(user, access_profile_name):
+    return _process_user_access_profile(user, access_profile_name, requests.put)
+
+
+def remove_user_access_profile(user, access_profile_name):
+    return _process_user_access_profile(user, access_profile_name, requests.delete)
+
+
+def _process_user_access_profile(user, access_profile_name, func):
+    sso_base_url = settings.AUTHBROKER_URL
+    sso_admin_scope_token = settings.SSO_ADMIN_SCOPE_TOKEN
+
+    response = func(
+        sso_base_url + f"api/v1/user/permission/{user.profile.sso_id}/",
+        data={"access-profile-slug": access_profile_name},
+        headers={"Authorization": f"Bearer {sso_admin_scope_token}"},
+    )
+
+    try:
+        response.raise_for_status()
+    except Exception as e:
+        logger.exception(e)
+        raise SSOApiException
