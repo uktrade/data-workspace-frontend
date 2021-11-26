@@ -8,6 +8,7 @@ GTMDatasetSearchSupport.prototype.pushSearchEvent = function pushSearchEvent() {
   if (typeof dataLayer !== "undefined") {
     var update = {
       event: "filter",
+      userId: window.SSO_USER_ID,
       searchTerms: document.getElementById("search").value,
       resultsReturned: parseInt(
         document.getElementById("search-results-count").textContent

@@ -25,6 +25,7 @@
     {% block initialGTMDataLayer %}
       <script nonce="{{ request.csp_nonce }}">
         window.dataLayer = window.dataLayer || [];
+        window.SSO_USER_ID = "{{ SSO_USER_ID }}";
       </script>
     {% endblock %}
   {% endif %}
