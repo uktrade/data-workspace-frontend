@@ -171,6 +171,7 @@ class DataSet(DeletableTimestampedUserModel):
     short_description = models.CharField(blank=False, null=False, max_length=256)
     grouping = models.ForeignKey(DataGrouping, null=True, on_delete=models.CASCADE)
     description = RichTextField(null=False, blank=False)
+    acronyms = models.CharField(blank=True, default="", max_length=255)
     enquiries_contact = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
     )
@@ -251,6 +252,7 @@ class DataSet(DeletableTimestampedUserModel):
                 + SearchVector("short_description", weight="B")
                 + SearchVector(models.Value(tag_names), weight="C")
                 + SearchVector("description", weight="D")
+                + SearchVector("acronyms", weight="D")
             )
         )
 
@@ -1048,6 +1050,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     slug = models.SlugField()
     short_description = models.CharField(max_length=255)
     description = RichTextField(null=True, blank=True)
+    acronyms = models.CharField(blank=True, default="", max_length=255)
     enquiries_contact = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
     )
@@ -1204,6 +1207,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             search_vector=(
                 SearchVector("name", weight="A")
                 + SearchVector("short_description", weight="B")
+                + SearchVector("acronyms", weight="D")
                 + SearchVector(models.Value(tag_names), weight="C")
             )
         )
