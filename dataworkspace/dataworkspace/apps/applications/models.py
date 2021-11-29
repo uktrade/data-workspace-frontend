@@ -120,6 +120,7 @@ class ToolTemplate(ApplicationTemplate):
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         self.application_type = "TOOL"
 
+        # pylint: disable=super-with-arguments
         super(ToolTemplate, self).save(force_insert, force_update, using, update_fields)
 
 
@@ -136,6 +137,7 @@ class VisualisationTemplate(ApplicationTemplate):
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         self.application_type = "VISUALISATION"
 
+        # pylint: disable=super-with-arguments
         super(VisualisationTemplate, self).save(force_insert, force_update, using, update_fields)
 
 

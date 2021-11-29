@@ -451,6 +451,7 @@ class TestCreateTableViews:
     def test_dag_status_invalid(self, status_code, client):
         execution_date = "02-05T13:33:49.266040+00:00"
         with requests_mock.Mocker() as rmock:
+            # pylint: disable=use-maxsplit-arg
             rmock.get(
                 "https://data-flow/api/experimental/dags/DataWorkspaceS3ImportPipeline"
                 f'/dag_runs/{execution_date.split("+")[0]}',
@@ -464,6 +465,7 @@ class TestCreateTableViews:
     def test_dag_status(self, client):
         execution_date = "02-05T13:33:49.266040+00:00"
         with requests_mock.Mocker() as rmock:
+            # pylint: disable=use-maxsplit-arg
             rmock.get(
                 "https://data-flow/api/experimental/dags/DataWorkspaceS3ImportPipeline"
                 f'/dag_runs/{execution_date.split("+")[0]}',
@@ -480,6 +482,7 @@ class TestCreateTableViews:
         execution_date = "02-05T13:33:49.266040+00:00"
         task_id = "task-id"
         with requests_mock.Mocker() as rmock:
+            # pylint: disable=use-maxsplit-arg
             rmock.get(
                 "https://data-flow/api/experimental/dags/DataWorkspaceS3ImportPipeline"
                 f'/dag_runs/{execution_date.split("+")[0]}/tasks/{task_id}',
@@ -497,6 +500,7 @@ class TestCreateTableViews:
         execution_date = "02-05T13:33:49.266040+00:00"
         task_id = "task-id"
         with requests_mock.Mocker() as rmock:
+            # pylint: disable=use-maxsplit-arg
             rmock.get(
                 "https://data-flow/api/experimental/dags/DataWorkspaceS3ImportPipeline"
                 f'/dag_runs/{execution_date.split("+")[0]}/tasks/{task_id}',

@@ -1993,6 +1993,7 @@ class ReferenceDatasetField(TimeStampedUserModel):
             return None
 
         if ":" in self.name:
+            # pylint: disable=use-maxsplit-arg
             return self.name.split(":")[0]
         return self.relationship_name
 

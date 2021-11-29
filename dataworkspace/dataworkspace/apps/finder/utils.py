@@ -135,6 +135,7 @@ class ResultsProxy:
     """
 
     def __init__(self, es_client, index_alias, phrase, count, filters=None):
+        # pylint: disable=super-with-arguments
         super(ResultsProxy, self).__init__()
         self._client = es_client
         self.index_alias = index_alias

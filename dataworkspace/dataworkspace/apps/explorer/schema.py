@@ -24,6 +24,7 @@ def _get_excludes():
 
 
 def _include_table(t):
+    # pylint: disable=use-a-generator
     if _get_includes() is not None:
         return any([t.startswith(p) for p in _get_includes()])
     return not any([t.startswith(p) for p in _get_excludes()])

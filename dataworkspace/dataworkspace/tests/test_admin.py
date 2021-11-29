@@ -37,11 +37,13 @@ class TestCustomAdminSite(BaseAdminTestCase):
         self.user.is_superuser = False
         self.user.save()
         response = self._authenticated_get(reverse("admin:login"))
+        # pylint: disable=no-member
         self.assertEqual(response.status_code, 404)
 
     def test_admin_access(self):
         # Ensure admins are able to view the admin site
         response = self._authenticated_get(reverse("admin:login"))
+        # pylint: disable=no-member
         self.assertEqual(response.status_code, 302)
 
 

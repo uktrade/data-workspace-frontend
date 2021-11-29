@@ -2650,6 +2650,7 @@ async def create_application(env=lambda: {}):
             os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
             await asyncio.sleep(3)
             if os.path.exists("/home/django/celerybeat.pid"):
+                # pylint: disable=unspecified-encoding
                 with open("/home/django/celerybeat.pid") as f:
                     print(f.read())
                 try:

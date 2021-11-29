@@ -60,6 +60,7 @@ class CreateTableForm(GOVUKDesignSystemForm):
         try:
             client.head_object(Bucket=settings.NOTEBOOKS_BUCKET, Key=path)
         except ClientError:
+            # pylint: disable=raise-missing-from
             raise ValidationError("This file does not exist in S3")
 
         return path

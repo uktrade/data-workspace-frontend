@@ -42,6 +42,7 @@ class QueryForm(ModelForm):
     )
 
     def __init__(self, *args, **kwargs):
+        # pylint: disable=super-with-arguments
         super(QueryForm, self).__init__(*args, **kwargs)
         self.fields["connection"].widget.choices = self.connections
         if not self.instance.connection:
@@ -51,6 +52,7 @@ class QueryForm(ModelForm):
     def clean(self):
         if self.instance and self.data.get("created_by_user", None):
             self.cleaned_data["created_by_user"] = self.instance.created_by_user
+        # pylint: disable=super-with-arguments
         return super(QueryForm, self).clean()
 
     @property
