@@ -5,7 +5,6 @@ from rest_framework.serializers import Serializer
 
 from dataworkspace.tests import factories
 from dataworkspace.apps.api_v1.accounts.serializers import UserSerializer
-from dataworkspace.apps.applications.models import ApplicationInstance
 
 
 @pytest.mark.django_db
@@ -41,5 +40,3 @@ class TestUserSerializer:
             "access_appstream": True,
         }
 
-    def test_user_sso(self):
-        user = self.factory()
