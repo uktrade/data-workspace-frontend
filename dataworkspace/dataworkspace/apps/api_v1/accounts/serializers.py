@@ -27,4 +27,3 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_user_sso(self, user):
         return user.profile.sso_id.hex
-

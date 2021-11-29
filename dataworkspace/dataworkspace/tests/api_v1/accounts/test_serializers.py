@@ -1,7 +1,6 @@
 import pytest
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
-from rest_framework.serializers import Serializer
 
 from dataworkspace.tests import factories
 from dataworkspace.apps.api_v1.accounts.serializers import UserSerializer
@@ -39,4 +38,3 @@ class TestUserSerializer:
             "start_all_applications": False,
             "access_appstream": True,
         }
-
