@@ -8,17 +8,28 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = get_user_model()
-        fields = ("id", "email", "first_name", "last_name", "is_superuser", "is_staff", "user_permissions_subset", "user_sso")
+        fields = (
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "is_superuser",
+            "is_staff",
+            "user_permissions_subset",
+            "user_sso",
+        )
 
     def get_user_permissions_subset(self, user):
-        perms_to_check = ["develop_visualisations", "access_appstream", "access_quicksight", "start_all_applications"]
+        perms_to_check = [
+            "develop_visualisations",
+            "access_appstream",
+            "access_quicksight",
+            "start_all_applications",
+        ]
         user_permissions_subset = user.user_permissions.filter(
             codename__in=perms_to_check
         )
-        output = {
-            perm: False
-            for perm in perms_to_check
-        }
+        output = {perm: False for perm in perms_to_check}
         for permission in user_permissions_subset:
             codename = permission.codename
             if codename in perms_to_check:
