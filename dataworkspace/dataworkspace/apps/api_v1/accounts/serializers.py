@@ -26,9 +26,7 @@ class UserSerializer(serializers.ModelSerializer):
             "access_quicksight",
             "start_all_applications",
         ]
-        user_permissions_subset = user.user_permissions.filter(
-            codename__in=perms_to_check
-        )
+        user_permissions_subset = user.user_permissions.filter(codename__in=perms_to_check)
         output = {perm: False for perm in perms_to_check}
         for permission in user_permissions_subset:
             codename = permission.codename

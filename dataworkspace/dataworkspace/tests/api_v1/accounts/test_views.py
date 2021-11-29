@@ -10,9 +10,7 @@ from dataworkspace.tests.api_v1.base import BaseAPIViewTest
 class TestUserAPIView(BaseAPIViewTest):
     url = reverse("api-v1:account:users")
     factory = factories.UserFactory
-    pagination_class = (
-        "dataworkspace.apps.api_v1.accounts.views.UserCursorPagination.page_size"
-    )
+    pagination_class = "dataworkspace.apps.api_v1.accounts.views.UserCursorPagination.page_size"
 
     def expected_response(self, user):
         return {
