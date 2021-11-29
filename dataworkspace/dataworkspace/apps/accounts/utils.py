@@ -91,4 +91,4 @@ def _process_user_access_profile(user, access_profile_name, func):
         response.raise_for_status()
     except Exception as e:
         logger.exception(e)
-        raise SSOApiException
+        raise SSOApiException from None
