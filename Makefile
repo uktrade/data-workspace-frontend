@@ -40,6 +40,10 @@ check-pylint:
 .PHONY: check
 check: check-flake8 check-black check-pylint
 
+.PHONY: docker-check
+docker-check:
+	docker compose -f docker-compose-dev.yml run --rm data-workspace bash -c "cd /app && make check"
+
 
 .PHONY: format
 format:
