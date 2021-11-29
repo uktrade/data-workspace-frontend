@@ -14,7 +14,6 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from psycopg2.sql import Identifier, Literal, SQL
 import requests
-
 from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
     CustomDatasetQueryTable,

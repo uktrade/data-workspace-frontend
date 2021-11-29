@@ -21,10 +21,11 @@
   <link rel="stylesheet" href="{% static 'govuk-frontend-3.12.0-without-gds-transport.min.css' %}">
   <link rel="stylesheet" href="{% static 'data-workspace.css' %}">
 
-  {% if not debug and gtm_container_id %}
+  {% if gtm_container_id %}
     {% block initialGTMDataLayer %}
       <script nonce="{{ request.csp_nonce }}">
         window.dataLayer = window.dataLayer || [];
+        window.SSO_USER_ID = "{{ SSO_USER_ID }}";
       </script>
     {% endblock %}
   {% endif %}
