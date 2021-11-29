@@ -42,11 +42,11 @@ check: check-flake8 check-black check-pylint
 
 .PHONY: docker-check
 docker-check:
-	docker compose -f docker-compose-dev.yml run --rm data-workspace bash -c "cd /app && make check"
+	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash -c "cd /app && make check"
 
 .PHONY: docker-format
 docker-format:
-	docker compose -f docker-compose-dev.yml run --rm data-workspace bash -c "cd /dataworkspace && black --exclude=venv --line-length=99 ."
+	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash -c "cd /dataworkspace && black --exclude=venv --line-length=99 ."
 
 
 .PHONY: format
