@@ -699,11 +699,15 @@ class SourceTable(BaseSource):
 
     @property
     def data_grid_download_enabled(self):
-        return self.data_grid_column_config.get("download_enabled", False)
+        if self.data_grid_column_config:
+            return self.data_grid_column_config.get("download_enabled", False)
+        return False
 
     @property
     def data_grid_download_limit(self):
-        return self.data_grid_column_config.get("download_limit", 5000)
+        if self.data_grid_column_config:
+            return self.data_grid_column_config.get("download_limit", 5000)
+        return 5000
 
     def get_column_details_url(self):
         return reverse(

@@ -1,3 +1,4 @@
+import csv
 import json
 import logging
 
@@ -18,6 +19,7 @@ from waffle.decorators import waffle_flag
 from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace import datasets_db
+from dataworkspace.apps.core.utils import StreamingHttpResponseWithoutDjangoDbConnection
 from dataworkspace.apps.datasets.constants import GRID_DATA_TYPE_MAP
 from dataworkspace.apps.datasets.models import SourceTable
 from dataworkspace.apps.finder.elasticsearch import es_client
@@ -163,12 +165,17 @@ class DataGridResultsView(BaseResultsView):
         raise Http404
 
     def post(self, request, *args, **kwargs):
-        search_term = request.GET.get("q")
-        post_data = json.loads(request.body.decode("utf-8"))
-        start = int(post_data.get("start", 0))
-        limit = int(post_data.get("limit", 100))
+        if request.GET.get("download"):
+            start = 0
+            limit = self.get_object().data_grid_download_limit
+            filters = json.loads(request.POST.get("filters", "{}"))
+        else:
+            start = int(request.POST.get("start", 0))
+            limit = min(int(request.POST.get("limit", 100)), 100)
+            filters = json.loads(request.body.decode("utf-8")).get("filters", {})
 
-        filters = build_grid_filters(self._get_column_config(), post_data.get("filters", {}))
+        search_term = request.GET.get("q")
+        filters = build_grid_filters(self._get_column_config(), filters)
 
         result_count = es_client.get_count(search_term, self._get_index_alias(), filters=filters)
 
@@ -184,5 +191,30 @@ class DataGridResultsView(BaseResultsView):
         records = []
         if len(results) > 0 and "_source" in results[0]:
             records = [result["_source"] for result in results]
+
+        if request.GET.get("download"):
+
+            class PseudoBuffer:
+                def write(self, value):
+                    return value
+
+            field_names = request.POST.getlist("columns")
+
+            pseudo_buffer = PseudoBuffer()
+            csv_writer = csv.DictWriter(
+                pseudo_buffer, field_names, extrasaction="ignore", quoting=csv.QUOTE_NONNUMERIC
+            )
+
+            def data():
+                yield csv_writer.writerow(dict((name, name) for name in field_names))
+                yield from (csv_writer.writerow(record) for record in records)
+
+            filename = request.POST.get("export_file_name")
+            response = StreamingHttpResponseWithoutDjangoDbConnection(
+                data(),
+                content_type="text/csv",
+            )
+            response["Content-Disposition"] = f'attachment; filename="{filename}"'
+            return response
 
         return JsonResponse({"total": result_count, "records": records})

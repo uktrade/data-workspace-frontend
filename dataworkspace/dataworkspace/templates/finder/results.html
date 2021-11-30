@@ -1,5 +1,5 @@
 {% extends '_main.html' %}
-{% load static datasets_tags explorer_tags %}
+{% load static core_tags datasets_tags explorer_tags humanize %}
 
 {% block go_back %}
   {% if backlink %}
@@ -17,8 +17,9 @@
     window.initDataGrid(
         JSON.parse(document.getElementById('column_data').textContent),
         '{% url 'finder:data_grid_results' source_table.schema source_table.table %}?{{ request.GET.urlencode }}',
+        '&download=1',
         null,
-        null
+        '{{ source_table.name }}-{{ search_term }}-custom-export.csv'
     );
   </script>
 {% endblock footer_scripts %}
@@ -65,9 +66,10 @@
       {% if total_results > 0 %}
         <div id="data-grid" class="ag-theme-alpine"></div>
         <div class="govuk-!-margin-top-4">
-          <a class="govuk-button govuk-button--primary" target="_blank" href="{% query_table_in_explorer_link source_table.schema source_table.table %}">
-            Open in Data Explorer
-          </a>
+          <button class="govuk-button" data-module="govuk-button" id="data-grid-download">
+            Download this data{% if object.data_grid_download_limit %} (max
+            {{ object.data_grid_download_limit|intcomma }} rows){% endif %}
+          </button>
           <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-filters">
             Reset filters
           </button>
