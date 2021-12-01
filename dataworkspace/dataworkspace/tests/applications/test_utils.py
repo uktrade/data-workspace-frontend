@@ -1,3 +1,4 @@
+# pylint: disable=unspecified-encoding
 import datetime
 import json
 import os

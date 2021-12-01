@@ -20,6 +20,13 @@ class TestUserAPIView(BaseAPIViewTest):
             "last_name": user.last_name,
             "is_staff": user.is_staff,
             "is_superuser": user.is_superuser,
+            "user_permissions_subset": {
+                "develop_visualisations": False,
+                "access_appstream": False,
+                "access_quicksight": False,
+                "start_all_applications": False,
+            },
+            "user_sso": user.profile.sso_id.hex,
         }
 
     def test_success(self, unauthenticated_client):

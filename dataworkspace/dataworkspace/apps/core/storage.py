@@ -28,6 +28,7 @@ class S3FileStorage(FileSystemStorage):
                 Key=key,
             )
         except ClientError as ex:
+            # pylint: disable=raise-missing-from
             raise Exception("Error saving file: {}".format(ex.response["Error"]["Message"]))
 
         return filename

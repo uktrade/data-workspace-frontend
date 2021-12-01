@@ -1,5 +1,6 @@
 from django.urls import path
 
+# pylint: disable=consider-using-from-import
 import dataworkspace.apps.api_v1.datasets.views as views
 
 urlpatterns = [

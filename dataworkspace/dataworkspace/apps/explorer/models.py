@@ -78,6 +78,7 @@ class Query(models.Model):
     def __init__(self, *args, **kwargs):
         self.params = kwargs.get("params")
         kwargs.pop("params", None)
+        # pylint: disable=super-with-arguments
         super(Query, self).__init__(*args, **kwargs)
 
     class Meta:

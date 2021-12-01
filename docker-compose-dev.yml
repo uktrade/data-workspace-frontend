@@ -20,6 +20,7 @@ services:
       - "data-workspace-redis"
       - "data-workspace-es"
     volumes:
+      - .:/app
       - ./dataworkspace:/dataworkspace
   data-workspace-celery:
     build:
