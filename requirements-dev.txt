@@ -102,7 +102,7 @@ click==7.1.2
     #   tabulator
 coverage==5.4
     # via pytest-cov
-cryptography==3.3.2
+cryptography==3.4.8
     # via -r requirements.txt
 debugpy==1.2.1
     # via -r requirements-dev.in
