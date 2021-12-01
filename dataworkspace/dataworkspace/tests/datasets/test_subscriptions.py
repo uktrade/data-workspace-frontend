@@ -7,7 +7,7 @@ from dataworkspace.tests import factories
 
 
 @pytest.mark.django_db
-@override_flag(settings.NOTIFY_ON_DATASET_CHANGE_FLAG, active=True)
+@override_flag(settings.NOTIFY_ON_MASTER_DATASET_CHANGE_FLAG, active=True)
 def test_subscription_appears_when_flag_is_active(client):
     ds = factories.DataSetFactory.create(
         type=DataSetType.MASTER,
@@ -21,7 +21,7 @@ def test_subscription_appears_when_flag_is_active(client):
 
 
 @pytest.mark.django_db
-@override_flag(settings.NOTIFY_ON_DATASET_CHANGE_FLAG, active=False)
+@override_flag(settings.NOTIFY_ON_MASTER_DATASET_CHANGE_FLAG, active=False)
 def test_subscription_hidden_when_flag_is_false(client):
     ds = factories.DataSetFactory.create(
         type=DataSetType.MASTER,
