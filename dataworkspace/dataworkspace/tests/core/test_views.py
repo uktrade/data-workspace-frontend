@@ -1,4 +1,5 @@
 import io
+import uuid
 
 import botocore
 import mock
@@ -176,6 +177,29 @@ def test_csp_on_files_endpoint_includes_s3(client):
         "connect-src dataworkspace.test:8000 https://www.google-analytics.com https://s3.eu-west-2.amazonaws.com"
         in policies
     )
+
+
+@override_settings(DEBUG=False, GTM_CONTAINER_ID="test")
+@pytest.mark.parametrize(
+    "path_name",
+    (
+        "root",
+        "applications:tools",
+        "about",
+    ),
+)
+def test_sso_user_id_in_gtm_datalayer(client, path_name):
+
+    sso_id = uuid.uuid4()
+    headers = {
+        "HTTP_SSO_PROFILE_USER_ID": sso_id,
+    }
+
+    response = client.get(reverse(path_name), **headers)
+
+    assert response.status_code == 200
+    assert "dataLayer.push({" in response.content.decode(response.charset)
+    assert f'"id": "{ sso_id }"' in response.content.decode(response.charset)
 
 
 @pytest.mark.parametrize("request_client", ("client", "staff_client"), indirect=["request_client"])
