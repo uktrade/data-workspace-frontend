@@ -27,13 +27,13 @@
       <script nonce="{{ request.csp_nonce }}">
         window.dataLayer = window.dataLayer || [];
         window.dataLayer.push({
-          'event': 'pageLoaded', 
-          'user': {
-            'status': 'logged-in', 
-            'id': '{{ SSO_USER_ID }}'
+          "event": "pageLoaded",
+          "user": {
+            "status": "logged-in",
+            "id": "{{ SSO_USER_ID }}"
           },
-          'page': {
-            'type': '{{ GTM_PAGE_TYPE }}'
+          "page": {
+            "type": "{{ GTM_PAGE_TYPE }}"
           }
         });
       </script>
