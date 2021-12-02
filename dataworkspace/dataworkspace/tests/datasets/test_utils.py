@@ -676,7 +676,7 @@ class TestStoreCustomDatasetQueryTableStructures:
             records[0].items()
             >= {
                 "change_date": datetime.datetime.strptime(
-                    "2021-01-01 15:00", "%Y-%m-%d %H:%M"
+                    "01/01/2021 - 15:00:00", "%d/%m/%Y - %H:%M:%S"
                 ).replace(tzinfo=pytz.UTC),
                 "table_structure": '[["a", "text"], ["b", "integer"]]',
             }.items()
@@ -706,7 +706,7 @@ class TestStoreCustomDatasetQueryTableStructures:
             records[0].items()
             >= {
                 "change_date": datetime.datetime.strptime(
-                    "2021-01-01 16:00", "%Y-%m-%d %H:%M"
+                    "01/01/2021 - 16:00:00", "%d/%m/%Y - %H:%M:%S"
                 ).replace(tzinfo=pytz.UTC),
                 "table_structure": '[["a", "text"], ["b", "integer"]]',
             }.items()
@@ -737,7 +737,7 @@ class TestStoreCustomDatasetQueryTableStructures:
             records[0].items()
             >= {
                 "change_date": datetime.datetime.strptime(
-                    "2021-01-01 15:00", "%Y-%m-%d %H:%M"
+                    "01/01/2021 - 15:00:00", "%d/%m/%Y - %H:%M:%S"
                 ).replace(tzinfo=pytz.UTC),
                 "table_structure": '[["a", "text"], ["b", "integer"]]',
             }.items()
@@ -773,7 +773,7 @@ class TestStoreCustomDatasetQueryTableStructures:
             records[0].items()
             >= {
                 "change_date": datetime.datetime.strptime(
-                    "2021-01-01 15:00", "%Y-%m-%d %H:%M"
+                    "01/01/2021 - 15:00:00", "%d/%m/%Y - %H:%M:%S"
                 ).replace(tzinfo=pytz.UTC),
                 "table_structure": '[["a", "text"], ["b", "integer"]]',
             }.items()
@@ -808,8 +808,8 @@ class TestStoreCustomDatasetQueryTableStructures:
         assert (
             records[0].items()
             >= {
-                "change_date": datetime.datetime.strptime(
-                    "2021-01-01 16:00", "%Y-%m-%d %H:%M"
+                'change_date': datetime.datetime.strptime(
+                    '2021-01-01 16:00', '%Y-%m-%d %H:%M'
                 ).replace(tzinfo=pytz.UTC),
                 "table_structure": '[["a", "text"]]',
             }.items()
@@ -818,8 +818,8 @@ class TestStoreCustomDatasetQueryTableStructures:
         assert (
             records[1].items()
             >= {
-                "change_date": datetime.datetime.strptime(
-                    "2021-01-01 15:00", "%Y-%m-%d %H:%M"
+                'change_date': datetime.datetime.strptime(
+                    '2021-01-01 15:00', '%Y-%m-%d %H:%M'
                 ).replace(tzinfo=pytz.UTC),
                 "table_structure": '[["a", "text"], ["b", "integer"]]',
             }.items()
@@ -860,8 +860,8 @@ class TestStoreCustomDatasetQueryTableStructures:
         assert (
             records[0].items()
             >= {
-                "change_date": datetime.datetime.strptime(
-                    "2021-01-01 17:00", "%Y-%m-%d %H:%M"
+                'change_date': datetime.datetime.strptime(
+                    '2021-01-01 17:00', '%Y-%m-%d %H:%M'
                 ).replace(tzinfo=pytz.UTC),
                 "table_structure": '[["a", "text"], ["b", "integer"]]',
             }.items()
@@ -870,8 +870,8 @@ class TestStoreCustomDatasetQueryTableStructures:
         assert (
             records[1].items()
             >= {
-                "change_date": datetime.datetime.strptime(
-                    "2021-01-01 16:00", "%Y-%m-%d %H:%M"
+                'change_date': datetime.datetime.strptime(
+                    '2021-01-01 16:00', '%Y-%m-%d %H:%M'
                 ).replace(tzinfo=pytz.UTC),
                 "table_structure": '[["a", "text"]]',
             }.items()
@@ -880,8 +880,8 @@ class TestStoreCustomDatasetQueryTableStructures:
         assert (
             records[2].items()
             >= {
-                "change_date": datetime.datetime.strptime(
-                    "2021-01-01 15:00", "%Y-%m-%d %H:%M"
+                'change_date': datetime.datetime.strptime(
+                    '2021-01-01 15:00', '%Y-%m-%d %H:%M'
                 ).replace(tzinfo=pytz.UTC),
                 "table_structure": '[["a", "text"], ["b", "integer"]]',
             }.items()
@@ -916,9 +916,7 @@ class TestSendNotificationEmails:
                 "frank.exampleson@test.com",
                 personalisation={
                     "dataset_name": ds.name,
-                    "change_date": datetime.datetime(2021, 1, 1, 0, 0)
-                    .replace(tzinfo=pytz.UTC)
-                    .isoformat(),
+                    "change_date": "01/01/2021 - 00:00:00",
                 },
             )
         ]
@@ -961,9 +959,7 @@ class TestSendNotificationEmails:
                 "frank.exampleson@test.com",
                 personalisation={
                     "dataset_name": ds.name,
-                    "change_date": datetime.datetime(2021, 1, 1, 0, 0)
-                    .replace(tzinfo=pytz.UTC)
-                    .isoformat(),
+                    "change_date": "01/01/2021 - 00:00:00",
                 },
             )
         ]
@@ -1014,9 +1010,7 @@ class TestSendNotificationEmails:
                 "frank.exampleson@test.com",
                 personalisation={
                     "dataset_name": ds.name,
-                    "change_date": datetime.datetime(2021, 1, 1, 1, 0)
-                    .replace(tzinfo=pytz.UTC)
-                    .isoformat(),
+                    "change_date": "01/01/2021 - 01:00:00",
                 },
             ),
         ]
@@ -1143,9 +1137,7 @@ class TestSendNotificationEmails:
                 "frank.exampleson@test.com",
                 personalisation={
                     "dataset_name": ds.name,
-                    "change_date": datetime.datetime(2021, 1, 1, 1, 0)
-                    .replace(tzinfo=pytz.UTC)
-                    .isoformat(),
+                    "change_date": "01/01/2021 - 01:00:00",
                 },
             )
         ]

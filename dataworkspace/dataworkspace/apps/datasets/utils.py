@@ -635,7 +635,7 @@ def send_notification_emails():
                         # the filter above was executed
                         continue
 
-                    change_date = user_notification.notification.change_date
+                    change_date = user_notification.notification.change_date.strftime("%d/%m/%Y - %H:%M:%S")
                     email_address = user_notification.subscription.user.email
                     dataset_name = user_notification.subscription.dataset.name
 
@@ -651,7 +651,7 @@ def send_notification_emails():
                             email_address,
                             personalisation={
                                 "dataset_name": dataset_name,
-                                "change_date": change_date.isoformat(),
+                                "change_date": change_date,
                             },
                         )
                     except EmailSendFailureException:
