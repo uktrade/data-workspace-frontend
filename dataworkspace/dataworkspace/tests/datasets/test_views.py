@@ -315,6 +315,21 @@ def test_find_datasets_filters_by_query(client):
     ]
 
 
+def test_find_datasets_filters_by_query_acronym(client):
+    factories.DataSetFactory.create(published=True, name="A dataset")
+    factories.ReferenceDatasetFactory.create(published=True, name="A reference dataset")
+    factories.VisualisationCatalogueItemFactory.create(published=True, name="A visualisation")
+
+    ds = factories.DataSetFactory.create(published=True, name="A new dataset", acronyms="EW")
+
+    response = client.get(reverse("datasets:find_datasets"), {"q": "EW"})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(ds, purpose=ds.type, has_access=False),
+    ]
+
+
 def test_find_datasets_filters_by_use(client):
     factories.DataSetFactory.create(published=True, type=1, name="A dataset")
     ds = factories.DataSetFactory.create(published=True, type=2, name="A new dataset")
