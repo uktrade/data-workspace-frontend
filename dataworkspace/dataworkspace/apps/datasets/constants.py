@@ -62,7 +62,7 @@ GRID_ACRONYM_MAP = (
     ("BOP", "Balance of Payments"),
     (
         "CSP",
-        "Civil Service Pensions)",
+        "Civil Service Pensions"),
         ("DIT", "Department for International Trade"),
         ("DMAS", "Digital Market Access Service"),
         ("DNB", "Dun and Bradstreet"),
