@@ -151,7 +151,8 @@ def metadata_db(db):
                 dataflow_swapped_tables_utc TIMESTAMP WITHOUT TIME ZONE,
                 table_structure JSONB,
                 data_id INTEGER,
-                data_type INTEGER NOT NULL
+                data_type INTEGER NOT NULL,
+                data_hash_v1 TEXT
             );
             TRUNCATE TABLE dataflow.metadata;
             INSERT INTO dataflow.metadata (table_schema, table_name, source_data_modified_utc, table_structure, data_type)
@@ -185,7 +186,8 @@ def test_dataset(db):
                 dataflow_swapped_tables_utc TIMESTAMP WITHOUT TIME ZONE,
                 table_structure JSONB,
                 data_id INTEGER,
-                data_type INTEGER NOT NULL
+                data_type INTEGER NOT NULL,
+                data_hash_v1 TEXT
             );
             TRUNCATE TABLE dataflow.metadata;
             INSERT INTO dataflow.metadata (table_schema, table_name, source_data_modified_utc, table_structure, data_type)

@@ -30,7 +30,9 @@ from dataworkspace.apps.datasets.models import (
 from dataworkspace.cel import celery_app
 from dataworkspace.datasets_db import (
     extract_queried_tables_from_sql_query,
-    get_table_changelog,
+    get_custom_dataset_query_changelog,
+    get_data_hash,
+    get_source_table_changelog,
     get_tables_last_updated_date,
 )
 from dataworkspace.apps.core.utils import close_all_connections_if_not_in_atomic_block
@@ -544,6 +546,50 @@ def build_filtered_dataset_query(inner_query, column_config, params):
     return query, query_params
 
 
+def _get_column_diff(record):
+    column_names = [c[0] for c in record["table_structure"]]
+    previous_column_names = [c[0] for c in record["previous_table_structure"]]
+    columns_added = list(set(column_names) - set(previous_column_names))
+    columns_removed = list(set(previous_column_names) - set(column_names))
+    return columns_added, columns_removed
+
+
+def get_human_readable_source_table_changelog(source_table):
+    changelog = get_source_table_changelog(
+        source_table.database.memorable_name, source_table.schema, source_table.table
+    )
+    for record in changelog:
+        if not record["previous_table_structure"] and not record["previous_data_hash"]:
+            record["change_type"] = ["Table creation"]
+        else:
+            record["change_type"] = []
+            if record["previous_table_structure"] != record["table_structure"]:
+                record["change_type"].append("Columns")
+                record["columns_added"], record["columns_removed"] = _get_column_diff(record)
+            if record["previous_data_hash"] != record["data_hash"]:
+                record["change_type"].append("Data")
+        record["change_type"] = " and ".join(record["change_type"])
+    return changelog
+
+
+def get_human_readable_custom_dataset_query_changelog(custom_dataset_query):
+    changelog = get_custom_dataset_query_changelog(
+        custom_dataset_query.database.memorable_name, custom_dataset_query
+    )
+    for record in changelog:
+        if not record["previous_table_structure"] and not record["previous_data_hash"]:
+            record["change_type"] = ["Query creation"]
+        else:
+            record["change_type"] = []
+            if record["previous_table_structure"] != record["table_structure"]:
+                record["change_type"].append("Columns")
+                record["columns_added"], record["columns_removed"] = _get_column_diff(record)
+            if record["previous_data_hash"] != record["data_hash"]:
+                record["change_type"].append("Data")
+        record["change_type"] = " and ".join(record["change_type"])
+    return changelog
+
+
 @celery_app.task()
 def store_custom_dataset_query_table_structures():
     for query in CustomDatasetQuery.objects.filter(dataset__published=True):
@@ -555,7 +601,11 @@ def store_custom_dataset_query_table_structures():
         )
         query_last_updated_date = query.modified_date
 
-        last_updated_date = max(tables_last_updated_date, query_last_updated_date)
+        last_updated_date = (
+            max(tables_last_updated_date, query_last_updated_date)
+            if tables_last_updated_date
+            else query_last_updated_date
+        )
         with connections[query.database.memorable_name].cursor() as cursor:
             cursor.execute(
                 SQL(
@@ -565,16 +615,19 @@ def store_custom_dataset_query_table_structures():
             )
             metadata = cursor.fetchone()
             if not metadata or last_updated_date != metadata[0]:
+                data_hash = get_data_hash(cursor, sql)
                 cursor.execute(f"SELECT * FROM ({sql}) sq LIMIT 0")
                 columns = [(col[0], TYPE_CODES_REVERSED[col[1]]) for col in cursor.description]
 
                 cursor.execute(
                     SQL(
-                        "INSERT INTO dataflow.metadata (source_data_modified_utc, table_structure, data_id, data_type)"
-                        "VALUES ({},{},{},{})"
+                        "INSERT INTO dataflow.metadata"
+                        "(source_data_modified_utc, table_structure, data_hash_v1, data_id, data_type)"
+                        "VALUES ({},{},{},{},{})"
                     ).format(
                         Literal(last_updated_date),
                         Literal(json.dumps(columns)),
+                        Literal(data_hash),
                         Literal(query.id),
                         Literal(int(DataSetType.DATACUT)),
                     )
@@ -587,7 +640,7 @@ def send_notification_emails():
         logger.info("Creating notifications")
         for table in SourceTable.objects.order_by("id"):
             logger.info("Creating notification for source table %s %s", table.schema, table.table)
-            changelog = get_table_changelog(
+            changelog = get_source_table_changelog(
                 table.database.memorable_name, table.schema, table.table
             )
             if len(changelog) == 0:

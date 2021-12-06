@@ -62,8 +62,6 @@ from dataworkspace.apps.datasets.constants import (
 from dataworkspace.apps.datasets.model_utils import external_model_class
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.datasets_db import (
-    get_custom_dataset_query_changelog,
-    get_table_changelog,
     get_tables_last_updated_date,
 )
 
@@ -715,9 +713,6 @@ class SourceTable(BaseSource):
             args=(self.dataset_id, self.id),
         )
 
-    def get_changelog(self):
-        return get_table_changelog(self.database.memorable_name, self.schema, self.table)
-
 
 class SourceView(BaseSource):
     view = models.CharField(
@@ -735,9 +730,6 @@ class SourceView(BaseSource):
     @property
     def type(self):
         return DataLinkType.SOURCE_VIEW
-
-    def get_changelog(self):
-        return []
 
 
 class SourceLink(ReferenceNumberedDatasetSource):
@@ -878,9 +870,6 @@ class SourceLink(ReferenceNumberedDatasetSource):
 
         return reader.fieldnames, records
 
-    def get_changelog(self):
-        return []
-
 
 class CustomDatasetQuery(ReferenceNumberedDatasetSource):
     FREQ_DAILY = 1
@@ -1009,9 +998,6 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
             "datasets:custom_query_column_details",
             args=(self.dataset_id, self.id),
         )
-
-    def get_changelog(self):
-        return get_custom_dataset_query_changelog(self.database.memorable_name, self)
 
 
 class CustomDatasetQueryTable(models.Model):
