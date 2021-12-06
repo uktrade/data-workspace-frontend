@@ -1,4 +1,4 @@
-apache-superset==1.2.0
+apache-superset
 gevent==21.1.2
 gunicorn==20.0.4
 Pillow==8.3.2
