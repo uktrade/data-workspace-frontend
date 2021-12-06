@@ -18,6 +18,7 @@
     window.initDataGrid(
       JSON.parse(document.getElementById('column_data').textContent),
       '{{ object.get_grid_data_url }}',
+      '?download=1',
       null,
       '{{ object.name }}-custom-export.csv'
     );

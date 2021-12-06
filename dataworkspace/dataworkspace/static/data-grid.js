@@ -98,7 +98,7 @@ function createInputFormField(name, value) {
   field.setAttribute('value', value);
   return field;
 }
-function initDataGrid(columnConfig, dataEndpoint, records, exportFileName) {
+function initDataGrid(columnConfig, dataEndpoint, downloadSegment, records, exportFileName) {
   for (var i=0; i<columnConfig.length; i++) {
     var column = columnConfig[i];
     // Try to determine filter types from the column config.
@@ -235,7 +235,7 @@ function initDataGrid(columnConfig, dataEndpoint, records, exportFileName) {
       if (dataEndpoint) {
         // Download a csv via the backend using current sort/filter options.
         var form = document.createElement('form');
-        form.action = dataEndpoint + '?download=1'
+        form.action = dataEndpoint + downloadSegment;
         form.method = 'POST';
         form.enctype = 'application/x-www-form-urlencoded';
 
