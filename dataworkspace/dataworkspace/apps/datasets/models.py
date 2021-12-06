@@ -238,9 +238,9 @@ class DataSet(DeletableTimestampedUserModel):
 
         acronyms = []
         for pairing in GRID_ACRONYM_MAP:
-            if pairing[1] in self.description:
+            if re.search(r"\b{}\b".format(pairing[1]), self.description, re.I) is not None:
                 acronyms.append(pairing[0])
-            if pairing[0] in self.description:
+            if re.search(r"\b{}\b".format(pairing[0]), self.description, re.I) is not None:
                 acronyms.append(pairing[1])
 
         self.acronyms = " ".join(acronyms)
