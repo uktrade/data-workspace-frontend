@@ -56,6 +56,7 @@ from dataworkspace.apps.datasets.constants import (
     DataSetType,
     DataLinkType,
     GRID_DATA_TYPE_MAP,
+    GRID_ACRONYM_MAP,
     TagType,
     UserAccessType,
 )
@@ -235,6 +236,15 @@ class DataSet(DeletableTimestampedUserModel):
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         self.update_published_timestamp()
         super().save(force_insert, force_update, using, update_fields)
+
+        acronyms = []
+        for pairing in GRID_ACRONYM_MAP:
+            if pairing[1] in description:
+                acronyms.append(pairing[0])
+            if pairing[0] in description:
+                acronyms.append(pairing[1])
+
+        DataSet.acronyms = " ".join(acronyms)
 
         # If the model's reference code has changed as part of this update reset the reference
         # number for any associated sources. This will trigger the source to update it's reference
