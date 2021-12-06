@@ -320,9 +320,11 @@ def test_find_datasets_filters_by_query_acronym(client):
     factories.ReferenceDatasetFactory.create(published=True, name="A reference dataset")
     factories.VisualisationCatalogueItemFactory.create(published=True, name="A visualisation")
 
-    ds = factories.DataSetFactory.create(published=True, name="A new dataset", acronyms="EW")
+    ds = factories.DataSetFactory.create(published=True, description="testing EW acronym")
 
-    response = client.get(reverse("datasets:find_datasets"), {"q": "EW"})
+    assert ds.acronyms == "Export Wins"
+
+    response = client.get(reverse("datasets:find_datasets"), {"q": "export wins"})
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
