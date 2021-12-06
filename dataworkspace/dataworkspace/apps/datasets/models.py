@@ -237,13 +237,11 @@ class DataSet(DeletableTimestampedUserModel):
         self.update_published_timestamp()
         super().save(force_insert, force_update, using, update_fields)
 
-        description = models.TextField(blank=True, null=True)
-
         acronyms = []
         for pairing in GRID_ACRONYM_MAP:
-            if pairing[1] in description:
+            if pairing[1] in self.description:
                 acronyms.append(pairing[0])
-            if pairing[0] in description:
+            if pairing[0] in self.description:
                 acronyms.append(pairing[1])
 
         DataSet.acronyms = " ".join(acronyms)
