@@ -56,6 +56,7 @@ from dataworkspace.apps.datasets.constants import (
     DataSetType,
     DataLinkType,
     GRID_DATA_TYPE_MAP,
+    GRID_ACRONYM_MAP,
     TagType,
     UserAccessType,
 )
@@ -234,6 +235,16 @@ class DataSet(DeletableTimestampedUserModel):
     @transaction.atomic
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         self.update_published_timestamp()
+
+        acronyms = []
+        for pairing in GRID_ACRONYM_MAP:
+            if re.search(r"\b{}\b".format(pairing[1]), self.description, re.I) is not None:
+                acronyms.append(pairing[0])
+            if re.search(r"\b{}\b".format(pairing[0]), self.description, re.I) is not None:
+                acronyms.append(pairing[1])
+
+        self.acronyms = " ".join(acronyms)
+
         super().save(force_insert, force_update, using, update_fields)
 
         # If the model's reference code has changed as part of this update reset the reference
