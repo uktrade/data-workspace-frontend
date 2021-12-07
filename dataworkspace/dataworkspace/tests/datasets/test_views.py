@@ -322,7 +322,7 @@ def test_find_datasets_filters_by_query_acronym(client):
 
     ds = factories.DataSetFactory.create(published=True, description="testing EW acronym")
 
-    assert ds.acronyms == "Export Wins"
+    assert ds.acronyms == "export win"
 
     response = client.get(reverse("datasets:find_datasets"), {"q": "export wins"})
 
