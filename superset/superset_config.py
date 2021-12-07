@@ -10,7 +10,7 @@ from flask_login import login_user
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 # Semi-magical request-local proxy objects
-from flask import g, json, make_response, redirect, request
+from flask import g, json, make_response, redirect, request, session
 
 from superset import db, security_manager
 from superset.security import SupersetSecurityManager
@@ -56,9 +56,11 @@ class DataWorkspaceRemoteUserView(AuthView):
         email_parts[0] += f"+{role_name.lower()}"
         email = "@".join(email_parts)
 
+        redirect_url = request.args.get("next", self.appbuilder.get_url_for_index)
+
         # If user already logged in, redirect to index...
         if g.user is not None and g.user.is_authenticated:
-            return redirect(self.appbuilder.get_url_for_index)
+            return redirect(redirect_url)
 
         app = self.appbuilder.get_app
 
@@ -66,6 +68,11 @@ class DataWorkspaceRemoteUserView(AuthView):
             is_admin = request.headers["Sso-Profile-Email"] in app.config["ADMIN_USERS"]
             if not is_admin:
                 return make_response({}, 401)
+
+        # Due to the way we add user perms, users will see a flash message
+        # "Access Denied" when they log in, even though they have all the access
+        # they need. To work around that, clear any flash messages when logging in
+        session["_flashes"].clear()
 
         # ... else if user exists but not logged in, update details, log in, and redirect to index
         user = security_manager.find_user(username=username)
@@ -75,7 +82,7 @@ class DataWorkspaceRemoteUserView(AuthView):
             user.email = email
             security_manager.update_user(user)
             login_user(user)
-            return redirect(self.appbuilder.get_url_for_index)
+            return redirect(redirect_url)
 
         # ... else create user, login, and redirect to index
         user = security_manager.add_user(
@@ -90,7 +97,7 @@ class DataWorkspaceRemoteUserView(AuthView):
             return make_response(f"Unable to find or create a user with role {role_name}", 500)
 
         login_user(user)
-        return redirect(self.appbuilder.get_url_for_index)
+        return redirect(redirect_url)
 
 
 def apply_public_role_permissions(sm, user, role_name):
@@ -118,7 +125,7 @@ def apply_public_role_permissions(sm, user, role_name):
     for dashboard_id in request.headers["Dashboards"].split(","):
         if not dashboard_id:
             continue
-        dashboard = db.session.query(Dashboard).get(dashboard_id)
+        dashboard = db.session.query(Dashboard).get(dashboard_id)  # pylint: disable=no-member
         if dashboard is not None:
             for datasource in dashboard.slices:
                 permission_view_menu = sm.add_permission_view_menu(
@@ -171,13 +178,13 @@ def apply_editor_role_permissions(sm, user, role_name):
     delete_datasource_perms(sm, role)
 
     # Give users access to any slices they are owners of
-    for datasource in db.session.query(Slice).filter(
+    for datasource in db.session.query(Slice).filter(  # pylint: disable=no-member
         Slice.owners.any(sm.user_model.id.in_([user.get_id()]))
     ):
         apply_datasource_perm(sm, role, datasource)
 
     # Give users access to any datasets they are owners of
-    for table in db.session.query(SqlaTable).filter(
+    for table in db.session.query(SqlaTable).filter(  # pylint: disable=no-member
         SqlaTable.owners.any(sm.user_model.id.in_([user.get_id()]))  # pylint: disable=no-member
     ):
         apply_datasource_perm(sm, role, table)
@@ -190,7 +197,7 @@ def apply_editor_role_permissions(sm, user, role_name):
         # if they were tables.
         if table.is_sqllab_view:
             table.is_sqllab_view = False
-            db.session.add(table)
+            db.session.add(table)  # pylint: disable=no-member
 
     user.roles.append(role)
     sm.get_session.commit()
@@ -252,10 +259,10 @@ def app_mutator(app):
     base_api.BaseSupersetModelRestApi = BaseSupersetModelRestApi
 
     class CustomJSONEncoder(json.JSONEncoder):
-        def default(self, obj):  # pylint: disable=arguments-differ
-            if isinstance(obj, decimal.Decimal):
-                return str(obj)
-            return super().default(obj)
+        def default(self, o):  # pylint: disable=arguments-differ
+            if isinstance(o, decimal.Decimal):
+                return str(o)
+            return super().default(o)
 
     with app.app_context():
         app.json_encoder = CustomJSONEncoder
