@@ -69,10 +69,15 @@ class DataWorkspaceRemoteUserView(AuthView):
             if not is_admin:
                 return make_response({}, 401)
 
-        # Due to the way we add user perms, users will see a flash message
-        # "Access Denied" when they log in, even though they have all the access
-        # they need. To work around that, clear any flash messages when logging in
-        session["_flashes"].clear()
+        # In flask, when a user is not authenticated or lacks permissions for a page they
+        # they are redirected (to either the index or login page), and a flash message is added
+        # to the session saying "Access is denied".
+        # So, in the case when a public (unauthed) DW user tries to view a DW embedded dashboard,
+        # they will be redirected to this login flow and flask will add the access denied
+        # message to their session. There is no easy way around this so in this specific
+        # case clear the message queue before the public user is redirected to the dashboard
+        if role_name == "Public" and redirect_url != self.appbuilder.get_url_for_index:
+            session["_flashes"].clear()
 
         # ... else if user exists but not logged in, update details, log in, and redirect to index
         user = security_manager.find_user(username=username)
