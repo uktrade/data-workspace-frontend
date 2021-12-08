@@ -808,8 +808,8 @@ class TestStoreCustomDatasetQueryTableStructures:
         assert (
             records[0].items()
             >= {
-                'change_date': datetime.datetime.strptime(
-                    '2021-01-01 16:00', '%Y-%m-%d %H:%M'
+                "change_date": datetime.datetime.strptime(
+                    "2021-01-01 16:00", "%Y-%m-%d %H:%M"
                 ).replace(tzinfo=pytz.UTC),
                 "table_structure": '[["a", "text"]]',
             }.items()
@@ -818,8 +818,8 @@ class TestStoreCustomDatasetQueryTableStructures:
         assert (
             records[1].items()
             >= {
-                'change_date': datetime.datetime.strptime(
-                    '2021-01-01 15:00', '%Y-%m-%d %H:%M'
+                "change_date": datetime.datetime.strptime(
+                    "2021-01-01 15:00", "%Y-%m-%d %H:%M"
                 ).replace(tzinfo=pytz.UTC),
                 "table_structure": '[["a", "text"], ["b", "integer"]]',
             }.items()
@@ -860,8 +860,8 @@ class TestStoreCustomDatasetQueryTableStructures:
         assert (
             records[0].items()
             >= {
-                'change_date': datetime.datetime.strptime(
-                    '2021-01-01 17:00', '%Y-%m-%d %H:%M'
+                "change_date": datetime.datetime.strptime(
+                    "2021-01-01 17:00", "%Y-%m-%d %H:%M"
                 ).replace(tzinfo=pytz.UTC),
                 "table_structure": '[["a", "text"], ["b", "integer"]]',
             }.items()
@@ -870,8 +870,8 @@ class TestStoreCustomDatasetQueryTableStructures:
         assert (
             records[1].items()
             >= {
-                'change_date': datetime.datetime.strptime(
-                    '2021-01-01 16:00', '%Y-%m-%d %H:%M'
+                "change_date": datetime.datetime.strptime(
+                    "2021-01-01 16:00", "%Y-%m-%d %H:%M"
                 ).replace(tzinfo=pytz.UTC),
                 "table_structure": '[["a", "text"]]',
             }.items()
@@ -880,8 +880,8 @@ class TestStoreCustomDatasetQueryTableStructures:
         assert (
             records[2].items()
             >= {
-                'change_date': datetime.datetime.strptime(
-                    '2021-01-01 15:00', '%Y-%m-%d %H:%M'
+                "change_date": datetime.datetime.strptime(
+                    "2021-01-01 15:00", "%Y-%m-%d %H:%M"
                 ).replace(tzinfo=pytz.UTC),
                 "table_structure": '[["a", "text"], ["b", "integer"]]',
             }.items()
