@@ -3,29 +3,38 @@ from unittest.mock import call, MagicMock, patch
 import pytz
 
 from django.conf import settings
+from django.db import connections
 from django.test import override_settings
 from freezegun import freeze_time
 import pytest
 
 from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.apps.datasets.constants import DataSetType
-from dataworkspace.apps.datasets.models import Notification, UserNotification
+from dataworkspace.apps.datasets.models import (
+    Notification,
+    ReferenceDatasetField,
+    UserNotification,
+)
 from dataworkspace.apps.datasets.utils import (
     dataset_type_to_manage_unpublished_permission_codename,
     get_code_snippets_for_query,
     get_code_snippets_for_table,
     get_human_readable_custom_dataset_query_changelog,
+    get_human_readable_reference_dataset_changelog,
     get_human_readable_source_table_changelog,
     link_superset_visualisations_to_related_datasets,
     process_quicksight_dashboard_visualisations,
     send_notification_emails,
     store_custom_dataset_query_table_structures,
+    store_reference_dataset_metadata,
 )
 from dataworkspace.datasets_db import get_custom_dataset_query_changelog
 from dataworkspace.tests.factories import (
     CustomDatasetQueryFactory,
     DataSetFactory,
     DataSetSubscriptionFactory,
+    ReferenceDatasetFactory,
+    ReferenceDatasetFieldFactory,
     SourceTableFactory,
     VisualisationLinkFactory,
 )
@@ -1226,8 +1235,21 @@ class TestSendNotificationEmails:
 
 @pytest.mark.django_db
 class TestHumanReadableChangelog:
+    @pytest.mark.parametrize(
+        "factory,func,creation_change_type",
+        (
+            (SourceTableFactory, get_human_readable_source_table_changelog, "Table creation"),
+            (
+                ReferenceDatasetFactory,
+                get_human_readable_reference_dataset_changelog,
+                "Reference dataset creation",
+            ),
+        ),
+    )
     @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
-    def test_source_table_changelog_structure_only(self, mock_get_source_table_changelog):
+    def test_table_changelog_structure_only(
+        self, mock_get_source_table_changelog, factory, func, creation_change_type
+    ):
         mock_get_source_table_changelog.return_value = [
             {
                 "change_id": 2,
@@ -1250,9 +1272,9 @@ class TestHumanReadableChangelog:
                 "previous_data_hash": None,
             },
         ]
-        source_table = SourceTableFactory()
+        table = factory()
         assert (
-            get_human_readable_source_table_changelog(source_table)[0].items()
+            func(table)[0].items()
             >= {
                 "columns_added": [],
                 "columns_removed": ["b"],
@@ -1260,14 +1282,27 @@ class TestHumanReadableChangelog:
             }.items()
         )
         assert (
-            get_human_readable_source_table_changelog(source_table)[1].items()
+            func(table)[1].items()
             >= {
-                "change_type": "Table creation",
+                "change_type": creation_change_type,
             }.items()
         )
 
+    @pytest.mark.parametrize(
+        "factory,func,creation_change_type",
+        (
+            (SourceTableFactory, get_human_readable_source_table_changelog, "Table creation"),
+            (
+                ReferenceDatasetFactory,
+                get_human_readable_reference_dataset_changelog,
+                "Reference dataset creation",
+            ),
+        ),
+    )
     @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
-    def test_source_table_changelog_data_only(self, mock_get_source_table_changelog):
+    def test_table_changelog_data_only(
+        self, mock_get_source_table_changelog, factory, func, creation_change_type
+    ):
         mock_get_source_table_changelog.return_value = [
             {
                 "change_id": 2,
@@ -1290,22 +1325,35 @@ class TestHumanReadableChangelog:
                 "previous_data_hash": None,
             },
         ]
-        source_table = SourceTableFactory()
+        table = factory()
         assert (
-            get_human_readable_source_table_changelog(source_table)[0].items()
+            func(table)[0].items()
             >= {
                 "change_type": "Data",
             }.items()
         )
         assert (
-            get_human_readable_source_table_changelog(source_table)[1].items()
+            func(table)[1].items()
             >= {
-                "change_type": "Table creation",
+                "change_type": creation_change_type,
             }.items()
         )
 
+    @pytest.mark.parametrize(
+        "factory,func,creation_change_type",
+        (
+            (SourceTableFactory, get_human_readable_source_table_changelog, "Table creation"),
+            (
+                ReferenceDatasetFactory,
+                get_human_readable_reference_dataset_changelog,
+                "Reference dataset creation",
+            ),
+        ),
+    )
     @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
-    def test_source_table_changelog_structure_and_data(self, mock_get_source_table_changelog):
+    def test_table_changelog_structure_and_data(
+        self, mock_get_source_table_changelog, factory, func, creation_change_type
+    ):
         mock_get_source_table_changelog.return_value = [
             {
                 "change_id": 2,
@@ -1328,9 +1376,9 @@ class TestHumanReadableChangelog:
                 "previous_data_hash": None,
             },
         ]
-        source_table = SourceTableFactory()
+        table = factory()
         assert (
-            get_human_readable_source_table_changelog(source_table)[0].items()
+            func(table)[0].items()
             >= {
                 "columns_added": [],
                 "columns_removed": ["b"],
@@ -1338,9 +1386,9 @@ class TestHumanReadableChangelog:
             }.items()
         )
         assert (
-            get_human_readable_source_table_changelog(source_table)[1].items()
+            func(table)[1].items()
             >= {
-                "change_type": "Table creation",
+                "change_type": creation_change_type,
             }.items()
         )
 
@@ -1466,4 +1514,217 @@ class TestHumanReadableChangelog:
             >= {
                 "change_type": "Query creation",
             }.items()
+        )
+
+
+class TestStoreReferenceDatasetMetadata:
+    def _get_metadata_records(self, db, table_name):
+        with connections[db.memorable_name].cursor() as cursor:
+            cursor.execute(
+                f"""
+                SELECT source_data_modified_utc, table_structure, data_hash_v1::text
+                FROM dataflow.metadata
+                WHERE table_schema='public'
+                AND table_name = '{table_name}'
+                ORDER BY source_data_modified_utc DESC
+                """
+            )
+            return cursor.fetchall()
+
+    @pytest.mark.django_db
+    def test_new_metadata_record(self, metadata_db):
+        # If no metadata record exists, create one
+        rds = ReferenceDatasetFactory.create(published=True)
+        field1 = ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds,
+            name="id",
+            data_type=2,
+            is_identifier=True,
+            sort_order=1,
+            column_name="field1",
+        )
+        field2 = ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds,
+            name="name",
+            data_type=1,
+            is_display_name=True,
+            sort_order=2,
+            column_name="field2",
+        )
+        with freeze_time("2022-01-01 15:00:00"):
+            rds.save_record(
+                None,
+                {
+                    "reference_dataset": rds,
+                    field1.column_name: 1,
+                    field2.column_name: "A record",
+                },
+            )
+        num_metadata_records = len(self._get_metadata_records(metadata_db, rds.table_name))
+        store_reference_dataset_metadata()
+        metadata_records = self._get_metadata_records(metadata_db, rds.table_name)
+        assert len(metadata_records) == num_metadata_records + 1
+        assert metadata_records[0] == (
+            datetime.datetime(2022, 1, 1, 15, 0),
+            f'[["{field1.column_name}", "integer"], ["{field2.column_name}", "varchar(255)"]]',
+            "\\xabd305d1d73aa2aa0f99fb899f8af4da",
+        )
+
+    @pytest.mark.django_db
+    def test_metadata_only_created_when_update_has_occurred(self, metadata_db):
+        # Ensure no metadata record is added if there has been no new updates
+        rds = ReferenceDatasetFactory.create(published=True)
+        field1 = ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds, name="id", data_type=2, is_identifier=True, sort_order=1
+        )
+        field2 = ReferenceDatasetFieldFactory.create(
+            reference_dataset=rds, name="name", data_type=1, is_display_name=True, sort_order=2
+        )
+        rds.save_record(
+            None,
+            {
+                "reference_dataset": rds,
+                field1.column_name: 1,
+                field2.column_name: "A record",
+            },
+        )
+        store_reference_dataset_metadata()
+        num_metadata_records = len(self._get_metadata_records(metadata_db, rds.table_name))
+        store_reference_dataset_metadata()
+        assert len(self._get_metadata_records(metadata_db, rds.table_name)) == num_metadata_records
+
+    @pytest.mark.django_db
+    def test_structure_change(self, metadata_db):
+        # Test that structural changes are logged to the metadata db
+        with freeze_time("2022-01-01 15:00:00"):
+            rds = ReferenceDatasetFactory.create(published=True)
+            field1 = ReferenceDatasetFieldFactory.create(
+                reference_dataset=rds,
+                name="id",
+                data_type=2,
+                is_identifier=True,
+                sort_order=1,
+                column_name="field1",
+            )
+        store_reference_dataset_metadata()
+        num_metadata_records = len(self._get_metadata_records(metadata_db, rds.table_name))
+
+        with freeze_time("2022-01-02 15:00:00"):
+            field2 = ReferenceDatasetFieldFactory.create(
+                reference_dataset=rds,
+                name="name",
+                data_type=1,
+                is_display_name=True,
+                sort_order=2,
+                column_name="field2",
+            )
+
+        store_reference_dataset_metadata()
+        metadata_records = self._get_metadata_records(metadata_db, rds.table_name)
+        assert len(metadata_records) == num_metadata_records + 1
+        assert metadata_records[0] == (
+            datetime.datetime(2022, 1, 2, 15, 0),
+            f'[["{field1.column_name}", "integer"], ["{field2.column_name}", "varchar(255)"]]',
+            "\\xd41d8cd98f00b204e9800998ecf8427e",
+        )
+
+    @pytest.mark.django_db
+    def test_data_change(self, metadata_db):
+        # Test that data changes are logged to the metadata db
+        with freeze_time("2023-01-01 15:00:00"):
+            rds = ReferenceDatasetFactory.create(published=True)
+            field1 = ReferenceDatasetFieldFactory.create(
+                reference_dataset=rds,
+                name="id",
+                data_type=2,
+                is_identifier=True,
+                sort_order=1,
+                column_name="field1",
+            )
+            rds.save_record(
+                None,
+                {
+                    "reference_dataset": rds,
+                    field1.column_name: 1,
+                },
+            )
+        store_reference_dataset_metadata()
+        num_metadata_records = len(self._get_metadata_records(metadata_db, rds.table_name))
+        with freeze_time("2023-01-02 15:00:00"):
+            rds.save_record(
+                None,
+                {
+                    "reference_dataset": rds,
+                    field1.column_name: 2,
+                },
+            )
+        store_reference_dataset_metadata()
+        metadata_records = self._get_metadata_records(metadata_db, rds.table_name)
+        assert len(metadata_records) == num_metadata_records + 1
+        assert metadata_records[0] == (
+            datetime.datetime(2023, 1, 2, 15, 0),
+            f'[["{field1.column_name}", "integer"]]',
+            "\\x020fa027bf573ca013b4afa6db9dc4e3",
+        )
+
+    @pytest.mark.django_db
+    def test_related_dataset_data_change(self, metadata_db):
+        # Ensure changes to linked reference datasets are picked up
+        with freeze_time("2021-01-01 15:00:00"):
+            rds = ReferenceDatasetFactory.create(published=True)
+            field1 = ReferenceDatasetFieldFactory.create(
+                reference_dataset=rds,
+                name="id",
+                data_type=2,
+                is_identifier=True,
+                sort_order=1,
+                column_name="field1",
+            )
+            linked_rds = ReferenceDatasetFactory.create(published=True)
+            ReferenceDatasetFieldFactory.create(
+                reference_dataset=linked_rds,
+                name="linked",
+                data_type=ReferenceDatasetField.DATA_TYPE_CHAR,
+                is_identifier=True,
+                is_display_name=True,
+                sort_order=1,
+                column_name="linked",
+            )
+            ReferenceDatasetFieldFactory.create(
+                reference_dataset=rds,
+                name="link",
+                relationship_name="link",
+                column_name="link",
+                data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY,
+                linked_reference_dataset_field=linked_rds.fields.get(is_identifier=True),
+            )
+            linked_to_record = linked_rds.save_record(
+                None, {"reference_dataset": linked_rds, "linked": "A1"}
+            )
+            rds.save_record(
+                None,
+                {
+                    "reference_dataset": rds,
+                    field1.column_name: 1,
+                    "link_id": linked_to_record.id,
+                },
+            )
+
+        store_reference_dataset_metadata()
+        original_metadata = self._get_metadata_records(metadata_db, rds.table_name)
+        assert original_metadata[0] == (
+            datetime.datetime(2021, 1, 1, 15, 0),
+            '[["link", "integer"], ["field1", "integer"]]',
+            "\\x70a19af821fb397c0e4cd5be0e9bb559",
+        )
+        with freeze_time("2021-01-02 15:00:00"):
+            linked_rds.save_record(
+                linked_to_record.id, {"reference_dataset": linked_rds, "linked": "A2"}
+            )
+        store_reference_dataset_metadata()
+        new_metadata = self._get_metadata_records(metadata_db, rds.table_name)
+        assert new_metadata[0] == (
+            datetime.datetime(2021, 1, 2, 15, 0),
+            '[["link", "integer"], ["field1", "integer"]]',
+            "\\x99de61a1849a552c6165cc731b52d466",
         )

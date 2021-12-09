@@ -152,7 +152,8 @@ def metadata_db(db):
                 table_structure JSONB,
                 data_id INTEGER,
                 data_type INTEGER NOT NULL,
-                data_hash_v1 TEXT
+                data_hash_v1 TEXT,
+                primary_keys TEXT[]
             );
             TRUNCATE TABLE dataflow.metadata;
             INSERT INTO dataflow.metadata (table_schema, table_name, source_data_modified_utc, table_structure, data_type)

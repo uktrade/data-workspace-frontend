@@ -1,5 +1,7 @@
 import copy
 import csv
+import hashlib
+import json
 import operator
 import os
 import re
@@ -1601,6 +1603,30 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                     )
             records.append(record_data)
         return records
+
+    def get_metadata_table_hash(self):
+        """
+        Hash reference dataset records as the user would see them. This allows
+        us to include linked dataset fields in the hash.
+        """
+        hashed_data = hashlib.md5()
+        for record in self.get_records().order_by(self.identifier_field.column_name):
+            data = {}
+            for field in self.fields.all():
+                if field.data_type != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
+                    data[field.column_name] = getattr(record, field.column_name)
+                else:
+                    relationship = getattr(record, field.relationship_name)
+                    data[field.linked_reference_dataset_field.column_name] = (
+                        getattr(
+                            relationship,
+                            field.linked_reference_dataset_field.column_name,
+                        )
+                        if relationship
+                        else None
+                    )
+            hashed_data.update(json.dumps(data).encode("utf-8"))
+        return hashed_data.digest()
 
 
 class ReferenceDataSetBookmark(models.Model):

@@ -152,6 +152,9 @@
           <th class="govuk-table__header">Version</th>
           <th class="govuk-table__header">Last updated</th>
           <th class="govuk-table__header">Action</th>
+          {% flag DATASET_CHANGELOG_PAGE_FLAG %}
+            <th class="govuk-table__header">History</th>
+          {% endflag %}
         </tr>
         </thead>
         <tbody>
@@ -169,6 +172,14 @@
               View/Download
             </a>
           </td>
+          {% flag DATASET_CHANGELOG_PAGE_FLAG %}
+            <td class="govuk-table__cell app-table_cell--no-border">
+              <a class="govuk-link govuk-link--no-visited-state"
+                 href="{% url 'datasets:reference_dataset_changelog' dataset_uuid=model.uuid %}">
+                Changelog
+              </a>
+            </td>
+          {% endflag %}
         </tr>
         </tbody>
       </table>
