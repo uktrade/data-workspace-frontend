@@ -19,9 +19,6 @@ from dataworkspace.apps.datasets.utils import (
     dataset_type_to_manage_unpublished_permission_codename,
     get_code_snippets_for_query,
     get_code_snippets_for_table,
-    get_human_readable_custom_dataset_query_changelog,
-    get_human_readable_reference_dataset_changelog,
-    get_human_readable_source_table_changelog,
     link_superset_visualisations_to_related_datasets,
     process_quicksight_dashboard_visualisations,
     send_notification_emails,
@@ -661,7 +658,7 @@ def get_dsn():
     return database_dsn(settings.DATABASES_DATA["my_database"])
 
 
-class TestStoreCustomDatasetQueryTableStructures:
+class TestStoreCustomDatasetQueryMetadata:
     @pytest.mark.django_db
     @patch("dataworkspace.apps.datasets.utils.get_tables_last_updated_date")
     @patch("dataworkspace.apps.datasets.utils.get_data_hash")
@@ -965,22 +962,33 @@ class TestStoreCustomDatasetQueryTableStructures:
 
 class TestSendNotificationEmails:
     @pytest.mark.django_db
-    @override_settings(NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID="000000000000000000000000000")
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_COLUMNS_TEMPLATE_ID="000000000000000000000000000"
+    )
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_ALL_DATA_TEMPLATE_ID="000000000000000000000000001"
+    )
     @patch("dataworkspace.apps.datasets.utils.send_email")
     @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
-    def test_structure_change_sends_notification(
+    def test_structure_change_sends_notification_to_structure_change_subscriber(
         self, mock_get_source_table_changelog, mock_send_email, user
     ):
         mock_get_source_table_changelog.return_value = [
             {
                 "change_id": 1,
                 "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_structure": [["id", "uuid"], ["name", "text"]],
+                "previous_table_structure": [["name", "text"]],
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "abcdefghijklmnopqrstuvwxyz",
             }
         ]
         mock_send_email.return_value = "00000000-0000-0000-0000-000000000000"
 
         ds = DataSetFactory.create(type=DataSetType.MASTER)
-        ds.subscriptions.create(user=user, notify_on_schema_change=True)
+        ds.subscriptions.create(
+            user=user, notify_on_schema_change=True, notify_on_data_change=False
+        )
 
         SourceTableFactory.create(dataset=ds, database__memorable_name="my_database")
 
@@ -991,10 +999,11 @@ class TestSendNotificationEmails:
                 "000000000000000000000000000",
                 "frank.exampleson@test.com",
                 personalisation={
+                    "change_date": "01/01/2021 - 00:00:00",
                     "dataset_name": ds.name,
-                    "change_date": datetime.datetime(2021, 1, 1, 0, 0)
-                    .replace(tzinfo=pytz.UTC)
-                    .isoformat(),
+                    "dataset_url": f"dataworkspace.test:8000{ds.get_absolute_url()}",
+                    "manage_subscriptions_url": "dataworkspace.test:8000/datasets/email_preferences",
+                    "summary": "Column id was added",
                 },
             )
         ]
@@ -1011,22 +1020,115 @@ class TestSendNotificationEmails:
         assert str(user_notifications[0].email_id) == "00000000-0000-0000-0000-000000000000"
 
     @pytest.mark.django_db
-    @override_settings(NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID="000000000000000000000000000")
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_COLUMNS_TEMPLATE_ID="000000000000000000000000000"
+    )
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_ALL_DATA_TEMPLATE_ID="000000000000000000000000001"
+    )
     @patch("dataworkspace.apps.datasets.utils.send_email")
     @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
-    def test_multiple_runs_dont_send_duplicate_notifications(
+    def test_data_change_doesnt_send_notification_to_structure_change_subscriber(
         self, mock_get_source_table_changelog, mock_send_email, user
     ):
         mock_get_source_table_changelog.return_value = [
             {
                 "change_id": 1,
                 "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_structure": [["id", "uuid"], ["name", "text"]],
+                "previous_table_structure": [["id", "uuid"], ["name", "text"]],
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "aaaaaaghijklmnopqrstuvwxyz",
             }
         ]
         mock_send_email.return_value = "00000000-0000-0000-0000-000000000000"
 
         ds = DataSetFactory.create(type=DataSetType.MASTER)
-        ds.subscriptions.create(user=user, notify_on_schema_change=True)
+        ds.subscriptions.create(
+            user=user, notify_on_schema_change=True, notify_on_data_change=False
+        )
+
+        SourceTableFactory.create(dataset=ds, database__memorable_name="my_database")
+
+        send_notification_emails()
+
+        assert not mock_send_email.called
+
+        notifications = Notification.objects.all()
+        user_notifications = UserNotification.objects.all()
+
+        assert len(notifications) == 1
+        assert len(user_notifications) == 0
+
+    @pytest.mark.django_db
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_COLUMNS_TEMPLATE_ID="000000000000000000000000000"
+    )
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_ALL_DATA_TEMPLATE_ID="000000000000000000000000001"
+    )
+    @patch("dataworkspace.apps.datasets.utils.send_email")
+    @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
+    def test_no_change_doesnt_send_notification_to_structure_change_subscriber(
+        self, mock_get_source_table_changelog, mock_send_email, user
+    ):
+        mock_get_source_table_changelog.return_value = [
+            {
+                "change_id": 1,
+                "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_structure": [["id", "uuid"], ["name", "text"]],
+                "previous_table_structure": [["id", "uuid"], ["name", "text"]],
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "abcdefghijklmnopqrstuvwxyz",
+            }
+        ]
+        mock_send_email.return_value = "00000000-0000-0000-0000-000000000000"
+
+        ds = DataSetFactory.create(type=DataSetType.MASTER)
+        ds.subscriptions.create(
+            user=user, notify_on_schema_change=True, notify_on_data_change=False
+        )
+
+        SourceTableFactory.create(dataset=ds, database__memorable_name="my_database")
+
+        send_notification_emails()
+
+        assert not mock_send_email.called
+
+        notifications = Notification.objects.all()
+        user_notifications = UserNotification.objects.all()
+
+        assert len(notifications) == 1
+        assert len(user_notifications) == 0
+
+    @pytest.mark.django_db
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_COLUMNS_TEMPLATE_ID="000000000000000000000000000"
+    )
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_ALL_DATA_TEMPLATE_ID="000000000000000000000000001"
+    )
+    @patch("dataworkspace.apps.datasets.utils.send_email")
+    @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
+    def test_structure_change_sends_notification_to_all_changes_subscriber(
+        self, mock_get_source_table_changelog, mock_send_email, user
+    ):
+        mock_get_source_table_changelog.return_value = [
+            {
+                "change_id": 1,
+                "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_structure": [["id", "uuid"], ["name", "text"]],
+                "previous_table_structure": [["name", "text"]],
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "abcdefghijklmnopqrstuvwxyz",
+            }
+        ]
+        mock_send_email.return_value = "00000000-0000-0000-0000-000000000000"
+
+        ds = DataSetFactory.create(type=DataSetType.MASTER)
+        ds.subscriptions.create(
+            user=user, notify_on_schema_change=True, notify_on_data_change=True
+        )
 
         SourceTableFactory.create(dataset=ds, database__memorable_name="my_database")
 
@@ -1037,10 +1139,290 @@ class TestSendNotificationEmails:
                 "000000000000000000000000000",
                 "frank.exampleson@test.com",
                 personalisation={
+                    "change_date": "01/01/2021 - 00:00:00",
                     "dataset_name": ds.name,
-                    "change_date": datetime.datetime(2021, 1, 1, 0, 0)
-                    .replace(tzinfo=pytz.UTC)
-                    .isoformat(),
+                    "dataset_url": f"dataworkspace.test:8000{ds.get_absolute_url()}",
+                    "manage_subscriptions_url": "dataworkspace.test:8000/datasets/email_preferences",
+                    "summary": "Column id was added",
+                },
+            )
+        ]
+
+        notifications = Notification.objects.all()
+        user_notifications = UserNotification.objects.all()
+
+        assert len(notifications) == 1
+        assert len(user_notifications) == 1
+
+        assert user_notifications[0].notification == notifications[0]
+        assert user_notifications[0].subscription.dataset == ds
+        assert user_notifications[0].subscription.user.email == "frank.exampleson@test.com"
+        assert str(user_notifications[0].email_id) == "00000000-0000-0000-0000-000000000000"
+
+    @pytest.mark.django_db
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_COLUMNS_TEMPLATE_ID="000000000000000000000000000"
+    )
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_ALL_DATA_TEMPLATE_ID="000000000000000000000000001"
+    )
+    @patch("dataworkspace.apps.datasets.utils.send_email")
+    @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
+    def test_data_change_sends_notification_to_all_changes_subscriber(
+        self, mock_get_source_table_changelog, mock_send_email, user
+    ):
+        mock_get_source_table_changelog.return_value = [
+            {
+                "change_id": 1,
+                "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_structure": [["id", "uuid"], ["name", "text"]],
+                "previous_table_structure": [["id", "uuid"], ["name", "text"]],
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "aaaaaaghijklmnopqrstuvwxyz",
+            }
+        ]
+        mock_send_email.return_value = "00000000-0000-0000-0000-000000000000"
+
+        ds = DataSetFactory.create(type=DataSetType.MASTER)
+        ds.subscriptions.create(
+            user=user, notify_on_schema_change=True, notify_on_data_change=True
+        )
+
+        SourceTableFactory.create(dataset=ds, database__memorable_name="my_database")
+
+        send_notification_emails()
+
+        assert mock_send_email.call_args_list == [
+            call(
+                "000000000000000000000000001",
+                "frank.exampleson@test.com",
+                personalisation={
+                    "change_date": "01/01/2021 - 00:00:00",
+                    "dataset_name": ds.name,
+                    "dataset_url": f"dataworkspace.test:8000{ds.get_absolute_url()}",
+                    "manage_subscriptions_url": "dataworkspace.test:8000/datasets/email_preferences",
+                    "summary": "N/A",
+                },
+            )
+        ]
+
+        notifications = Notification.objects.all()
+        user_notifications = UserNotification.objects.all()
+
+        assert len(notifications) == 1
+        assert len(user_notifications) == 1
+
+        assert user_notifications[0].notification == notifications[0]
+        assert user_notifications[0].subscription.dataset == ds
+        assert user_notifications[0].subscription.user.email == "frank.exampleson@test.com"
+        assert str(user_notifications[0].email_id) == "00000000-0000-0000-0000-000000000000"
+
+    @pytest.mark.django_db
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_COLUMNS_TEMPLATE_ID="000000000000000000000000000"
+    )
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_ALL_DATA_TEMPLATE_ID="000000000000000000000000001"
+    )
+    @patch("dataworkspace.apps.datasets.utils.send_email")
+    @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
+    def test_no_change_doesnt_send_notification_to_all_changes_subscriber(
+        self, mock_get_source_table_changelog, mock_send_email, user
+    ):
+        mock_get_source_table_changelog.return_value = [
+            {
+                "change_id": 1,
+                "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_structure": [["id", "uuid"], ["name", "text"]],
+                "previous_table_structure": [["id", "uuid"], ["name", "text"]],
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "abcdefghijklmnopqrstuvwxyz",
+            }
+        ]
+        mock_send_email.return_value = "00000000-0000-0000-0000-000000000000"
+
+        ds = DataSetFactory.create(type=DataSetType.MASTER)
+        ds.subscriptions.create(
+            user=user, notify_on_schema_change=True, notify_on_data_change=True
+        )
+
+        SourceTableFactory.create(dataset=ds, database__memorable_name="my_database")
+
+        send_notification_emails()
+
+        assert not mock_send_email.called
+
+        notifications = Notification.objects.all()
+        user_notifications = UserNotification.objects.all()
+
+        assert len(notifications) == 1
+        assert len(user_notifications) == 0
+
+    @pytest.mark.django_db
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_COLUMNS_TEMPLATE_ID="000000000000000000000000000"
+    )
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_ALL_DATA_TEMPLATE_ID="000000000000000000000000001"
+    )
+    @patch("dataworkspace.apps.datasets.utils.send_email")
+    @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
+    def test_structure_change_doesnt_send_notification_to_no_change_subscriber(
+        self, mock_get_source_table_changelog, mock_send_email, user
+    ):
+        mock_get_source_table_changelog.return_value = [
+            {
+                "change_id": 1,
+                "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_structure": [["id", "uuid"], ["name", "text"]],
+                "previous_table_structure": [["name", "text"]],
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "abcdefghijklmnopqrstuvwxyz",
+            }
+        ]
+        mock_send_email.return_value = "00000000-0000-0000-0000-000000000000"
+
+        ds = DataSetFactory.create(type=DataSetType.MASTER)
+        ds.subscriptions.create(
+            user=user, notify_on_schema_change=False, notify_on_data_change=False
+        )
+
+        SourceTableFactory.create(dataset=ds, database__memorable_name="my_database")
+
+        send_notification_emails()
+
+        assert not mock_send_email.called
+
+        notifications = Notification.objects.all()
+        user_notifications = UserNotification.objects.all()
+
+        assert len(notifications) == 1
+        assert len(user_notifications) == 0
+
+    @pytest.mark.django_db
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_COLUMNS_TEMPLATE_ID="000000000000000000000000000"
+    )
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_ALL_DATA_TEMPLATE_ID="000000000000000000000000001"
+    )
+    @patch("dataworkspace.apps.datasets.utils.send_email")
+    @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
+    def test_data_change_doesnt_send_notification_to_no_change_subscriber(
+        self, mock_get_source_table_changelog, mock_send_email, user
+    ):
+        mock_get_source_table_changelog.return_value = [
+            {
+                "change_id": 1,
+                "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_structure": [["id", "uuid"], ["name", "text"]],
+                "previous_table_structure": [["id", "uuid"], ["name", "text"]],
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "aaaaaaghijklmnopqrstuvwxyz",
+            }
+        ]
+        mock_send_email.return_value = "00000000-0000-0000-0000-000000000000"
+
+        ds = DataSetFactory.create(type=DataSetType.MASTER)
+        ds.subscriptions.create(
+            user=user, notify_on_schema_change=False, notify_on_data_change=False
+        )
+
+        SourceTableFactory.create(dataset=ds, database__memorable_name="my_database")
+
+        send_notification_emails()
+
+        assert not mock_send_email.called
+
+        notifications = Notification.objects.all()
+        user_notifications = UserNotification.objects.all()
+
+        assert len(notifications) == 1
+        assert len(user_notifications) == 0
+
+    @pytest.mark.django_db
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_COLUMNS_TEMPLATE_ID="000000000000000000000000000"
+    )
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_ALL_DATA_TEMPLATE_ID="000000000000000000000000001"
+    )
+    @patch("dataworkspace.apps.datasets.utils.send_email")
+    @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
+    def test_no_change_doesnt_send_notification_to_no_change_subscriber(
+        self, mock_get_source_table_changelog, mock_send_email, user
+    ):
+        mock_get_source_table_changelog.return_value = [
+            {
+                "change_id": 1,
+                "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_structure": [["id", "uuid"], ["name", "text"]],
+                "previous_table_structure": [["id", "uuid"], ["name", "text"]],
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "abcdefghijklmnopqrstuvwxyz",
+            }
+        ]
+        mock_send_email.return_value = "00000000-0000-0000-0000-000000000000"
+
+        ds = DataSetFactory.create(type=DataSetType.MASTER)
+        ds.subscriptions.create(
+            user=user, notify_on_schema_change=False, notify_on_data_change=False
+        )
+
+        SourceTableFactory.create(dataset=ds, database__memorable_name="my_database")
+
+        send_notification_emails()
+
+        assert not mock_send_email.called
+
+        notifications = Notification.objects.all()
+        user_notifications = UserNotification.objects.all()
+
+        assert len(notifications) == 1
+        assert len(user_notifications) == 0
+
+    @pytest.mark.django_db
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_COLUMNS_TEMPLATE_ID="000000000000000000000000000"
+    )
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_ALL_DATA_TEMPLATE_ID="000000000000000000000000001"
+    )
+    @patch("dataworkspace.apps.datasets.utils.send_email")
+    @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
+    def test_multiple_runs_dont_send_duplicate_notifications(
+        self, mock_get_source_table_changelog, mock_send_email, user
+    ):
+        mock_get_source_table_changelog.return_value = [
+            {
+                "change_id": 1,
+                "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_structure": [["id", "uuid"], ["name", "text"]],
+                "previous_table_structure": [["name", "text"]],
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "aaaaafghijklmnopqrstuvwxyz",
+            }
+        ]
+        mock_send_email.return_value = "00000000-0000-0000-0000-000000000000"
+
+        ds = DataSetFactory.create(type=DataSetType.MASTER)
+        ds.subscriptions.create(
+            user=user, notify_on_schema_change=True, notify_on_data_change=False
+        )
+        SourceTableFactory.create(dataset=ds, database__memorable_name="my_database")
+
+        send_notification_emails()
+
+        assert mock_send_email.call_args_list == [
+            call(
+                "000000000000000000000000000",
+                "frank.exampleson@test.com",
+                personalisation={
+                    "change_date": "01/01/2021 - 00:00:00",
+                    "dataset_name": ds.name,
+                    "dataset_url": f"dataworkspace.test:8000{ds.get_absolute_url()}",
+                    "manage_subscriptions_url": "dataworkspace.test:8000/datasets/email_preferences",
+                    "summary": "Column id was added",
                 },
             )
         ]
@@ -1060,26 +1442,41 @@ class TestSendNotificationEmails:
         assert len(user_notifications) == 1
 
     @pytest.mark.django_db
-    @override_settings(NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID="000000000000000000000000000")
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_COLUMNS_TEMPLATE_ID="000000000000000000000000000"
+    )
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_ALL_DATA_TEMPLATE_ID="000000000000000000000000001"
+    )
     @patch("dataworkspace.apps.datasets.utils.send_email")
     @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
-    def test_changelog_records_with_different_structures_sends_single_notification(
+    def test_mutliple_changelog_records_send_single_notification(
         self, mock_get_source_table_changelog, mock_send_email, user
     ):
         mock_get_source_table_changelog.return_value = [
             {
                 "change_id": 2,
-                "change_date": datetime.datetime(2021, 1, 1, 1, 0).replace(tzinfo=pytz.UTC),
+                "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_structure": [["id", "uuid"], ["name", "text"]],
+                "previous_table_structure": [["name", "text"]],
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "aaaaafghijklmnopqrstuvwxyz",
             },
             {
                 "change_id": 1,
                 "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_structure": [["name", "text"]],
+                "previous_table_structure": [["name", "text"]],
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "abcdefghijklmnopqrstuvwxyz",
             },
         ]
         mock_send_email.return_value = "00000000-0000-0000-0000-000000000000"
 
         ds = DataSetFactory.create(type=DataSetType.MASTER)
-        ds.subscriptions.create(user=user, notify_on_schema_change=True)
+        ds.subscriptions.create(
+            user=user, notify_on_schema_change=True, notify_on_data_change=False
+        )
 
         SourceTableFactory.create(dataset=ds, database__memorable_name="my_database")
 
@@ -1091,10 +1488,11 @@ class TestSendNotificationEmails:
                 "000000000000000000000000000",
                 "frank.exampleson@test.com",
                 personalisation={
+                    "change_date": "01/01/2021 - 00:00:00",
                     "dataset_name": ds.name,
-                    "change_date": datetime.datetime(2021, 1, 1, 1, 0)
-                    .replace(tzinfo=pytz.UTC)
-                    .isoformat(),
+                    "dataset_url": f"dataworkspace.test:8000{ds.get_absolute_url()}",
+                    "manage_subscriptions_url": "dataworkspace.test:8000/datasets/email_preferences",
+                    "summary": "Column id was added",
                 },
             ),
         ]
@@ -1106,7 +1504,12 @@ class TestSendNotificationEmails:
         assert len(user_notifications) == 1
 
     @pytest.mark.django_db
-    @override_settings(NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID="000000000000000000000000000")
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_COLUMNS_TEMPLATE_ID="000000000000000000000000000"
+    )
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_ALL_DATA_TEMPLATE_ID="000000000000000000000000001"
+    )
     @patch("dataworkspace.apps.datasets.utils.send_email")
     @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
     def test_changelog_records_with_no_subscribers_doesnt_send_notifications(
@@ -1116,6 +1519,10 @@ class TestSendNotificationEmails:
             {
                 "change_id": 1,
                 "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_structure": [["id", "uuid"], ["name", "text"]],
+                "previous_table_structure": [["name", "text"]],
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "aaaaafghijklmnopqrstuvwxyz",
             }
         ]
         mock_send_email.return_value = "00000000-0000-0000-0000-000000000000"
@@ -1134,7 +1541,12 @@ class TestSendNotificationEmails:
         assert len(user_notifications) == 0
 
     @pytest.mark.django_db
-    @override_settings(NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID="000000000000000000000000000")
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_COLUMNS_TEMPLATE_ID="000000000000000000000000000"
+    )
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_ALL_DATA_TEMPLATE_ID="000000000000000000000000001"
+    )
     @patch("dataworkspace.apps.datasets.utils.send_email")
     @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
     def test_subscription_after_changelog_gets_processed_doesnt_send_notifications(
@@ -1144,6 +1556,10 @@ class TestSendNotificationEmails:
             {
                 "change_id": 1,
                 "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_structure": [["id", "uuid"], ["name", "text"]],
+                "previous_table_structure": [["name", "text"]],
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "aaaaafghijklmnopqrstuvwxyz",
             }
         ]
         mock_send_email.return_value = "00000000-0000-0000-0000-000000000000"
@@ -1161,7 +1577,9 @@ class TestSendNotificationEmails:
         assert len(notifications) == 1
         assert len(user_notifications) == 0
 
-        ds.subscriptions.create(user=user, notify_on_schema_change=True)
+        ds.subscriptions.create(
+            user=user, notify_on_schema_change=True, notify_on_data_change=False
+        )
 
         send_notification_emails()
 
@@ -1174,7 +1592,12 @@ class TestSendNotificationEmails:
         assert len(user_notifications) == 0
 
     @pytest.mark.django_db
-    @override_settings(NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID="000000000000000000000000000")
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_COLUMNS_TEMPLATE_ID="000000000000000000000000000"
+    )
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_ALL_DATA_TEMPLATE_ID="000000000000000000000000001"
+    )
     @patch("dataworkspace.apps.datasets.utils.send_email")
     @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
     def test_subscription_after_changelog_gets_processed_but_before_new_structure_change_sends_one_notification(
@@ -1184,6 +1607,10 @@ class TestSendNotificationEmails:
             {
                 "change_id": 1,
                 "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_structure": [["id", "uuid"], ["name", "text"]],
+                "previous_table_structure": [["name", "text"]],
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "aaaaafghijklmnopqrstuvwxyz",
             }
         ]
         mock_send_email.return_value = "00000000-0000-0000-0000-000000000000"
@@ -1201,16 +1628,26 @@ class TestSendNotificationEmails:
         assert len(notifications) == 1
         assert len(user_notifications) == 0
 
-        ds.subscriptions.create(user=user, notify_on_schema_change=True)
+        ds.subscriptions.create(
+            user=user, notify_on_schema_change=True, notify_on_data_change=False
+        )
 
         mock_get_source_table_changelog.return_value = [
             {
                 "change_id": 2,
-                "change_date": datetime.datetime(2021, 1, 1, 1, 0).replace(tzinfo=pytz.UTC),
+                "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_structure": [["name", "text"]],
+                "previous_table_structure": [["id", "uuid"], ["name", "text"]],
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "aaaaafghijklmnopqrstuvwxyz",
             },
             {
                 "change_id": 1,
                 "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_structure": [["id", "uuid"], ["name", "text"]],
+                "previous_table_structure": [["name", "text"]],
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "aaaaafghijklmnopqrstuvwxyz",
             },
         ]
         send_notification_emails()
@@ -1220,10 +1657,11 @@ class TestSendNotificationEmails:
                 "000000000000000000000000000",
                 "frank.exampleson@test.com",
                 personalisation={
+                    "change_date": "01/01/2021 - 00:00:00",
                     "dataset_name": ds.name,
-                    "change_date": datetime.datetime(2021, 1, 1, 1, 0)
-                    .replace(tzinfo=pytz.UTC)
-                    .isoformat(),
+                    "dataset_url": f"dataworkspace.test:8000{ds.get_absolute_url()}",
+                    "manage_subscriptions_url": "dataworkspace.test:8000/datasets/email_preferences",
+                    "summary": "Column id was removed",
                 },
             )
         ]
@@ -1233,290 +1671,6 @@ class TestSendNotificationEmails:
 
         assert len(notifications) == 2
         assert len(user_notifications) == 1
-
-
-@pytest.mark.django_db
-class TestHumanReadableChangelog:
-    @pytest.mark.parametrize(
-        "factory,func,creation_change_type",
-        (
-            (SourceTableFactory, get_human_readable_source_table_changelog, "Table creation"),
-            (
-                ReferenceDatasetFactory,
-                get_human_readable_reference_dataset_changelog,
-                "Reference dataset creation",
-            ),
-        ),
-    )
-    @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
-    def test_table_changelog_structure_only(
-        self, mock_get_source_table_changelog, factory, func, creation_change_type
-    ):
-        mock_get_source_table_changelog.return_value = [
-            {
-                "change_id": 2,
-                "change_date": datetime.datetime.strptime(
-                    "2021-01-01 16:00", "%Y-%m-%d %H:%M"
-                ).replace(tzinfo=pytz.UTC),
-                "table_structure": [["a", "text"]],
-                "previous_table_structure": [["a", "text"], ["b", "integer"]],
-                "data_hash": "abcdefghijklmnopqrstuvwxyz",
-                "previous_data_hash": "abcdefghijklmnopqrstuvwxyz",
-            },
-            {
-                "change_id": 1,
-                "change_date": datetime.datetime.strptime(
-                    "2021-01-01 15:00", "%Y-%m-%d %H:%M"
-                ).replace(tzinfo=pytz.UTC),
-                "table_structure": [["a", "text"], ["b", "integer"]],
-                "previous_table_structure": None,
-                "data_hash": "abcdefghijklmnopqrstuvwxyz",
-                "previous_data_hash": None,
-            },
-        ]
-        table = factory()
-        assert (
-            func(table)[0].items()
-            >= {
-                "columns_added": [],
-                "columns_removed": ["b"],
-                "change_type": "Columns",
-            }.items()
-        )
-        assert (
-            func(table)[1].items()
-            >= {
-                "change_type": creation_change_type,
-            }.items()
-        )
-
-    @pytest.mark.parametrize(
-        "factory,func,creation_change_type",
-        (
-            (SourceTableFactory, get_human_readable_source_table_changelog, "Table creation"),
-            (
-                ReferenceDatasetFactory,
-                get_human_readable_reference_dataset_changelog,
-                "Reference dataset creation",
-            ),
-        ),
-    )
-    @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
-    def test_table_changelog_data_only(
-        self, mock_get_source_table_changelog, factory, func, creation_change_type
-    ):
-        mock_get_source_table_changelog.return_value = [
-            {
-                "change_id": 2,
-                "change_date": datetime.datetime.strptime(
-                    "2021-01-01 16:00", "%Y-%m-%d %H:%M"
-                ).replace(tzinfo=pytz.UTC),
-                "table_structure": [["a", "text"], ["b", "integer"]],
-                "previous_table_structure": [["a", "text"], ["b", "integer"]],
-                "data_hash": "aaaadefghijklmnopqrstuvwxyz",
-                "previous_data_hash": "abcdefghijklmnopqrstuvwxyz",
-            },
-            {
-                "change_id": 1,
-                "change_date": datetime.datetime.strptime(
-                    "2021-01-01 15:00", "%Y-%m-%d %H:%M"
-                ).replace(tzinfo=pytz.UTC),
-                "table_structure": [["a", "text"], ["b", "integer"]],
-                "previous_table_structure": None,
-                "data_hash": "abcdefghijklmnopqrstuvwxyz",
-                "previous_data_hash": None,
-            },
-        ]
-        table = factory()
-        assert (
-            func(table)[0].items()
-            >= {
-                "change_type": "Data",
-            }.items()
-        )
-        assert (
-            func(table)[1].items()
-            >= {
-                "change_type": creation_change_type,
-            }.items()
-        )
-
-    @pytest.mark.parametrize(
-        "factory,func,creation_change_type",
-        (
-            (SourceTableFactory, get_human_readable_source_table_changelog, "Table creation"),
-            (
-                ReferenceDatasetFactory,
-                get_human_readable_reference_dataset_changelog,
-                "Reference dataset creation",
-            ),
-        ),
-    )
-    @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
-    def test_table_changelog_structure_and_data(
-        self, mock_get_source_table_changelog, factory, func, creation_change_type
-    ):
-        mock_get_source_table_changelog.return_value = [
-            {
-                "change_id": 2,
-                "change_date": datetime.datetime.strptime(
-                    "2021-01-01 16:00", "%Y-%m-%d %H:%M"
-                ).replace(tzinfo=pytz.UTC),
-                "table_structure": [["a", "text"]],
-                "previous_table_structure": [["a", "text"], ["b", "integer"]],
-                "data_hash": "aaaadefghijklmnopqrstuvwxyz",
-                "previous_data_hash": "abcdefghijklmnopqrstuvwxyz",
-            },
-            {
-                "change_id": 1,
-                "change_date": datetime.datetime.strptime(
-                    "2021-01-01 15:00", "%Y-%m-%d %H:%M"
-                ).replace(tzinfo=pytz.UTC),
-                "table_structure": [["a", "text"], ["b", "integer"]],
-                "previous_table_structure": None,
-                "data_hash": "abcdefghijklmnopqrstuvwxyz",
-                "previous_data_hash": None,
-            },
-        ]
-        table = factory()
-        assert (
-            func(table)[0].items()
-            >= {
-                "columns_added": [],
-                "columns_removed": ["b"],
-                "change_type": "Columns and Data",
-            }.items()
-        )
-        assert (
-            func(table)[1].items()
-            >= {
-                "change_type": creation_change_type,
-            }.items()
-        )
-
-    @patch("dataworkspace.apps.datasets.utils.get_custom_dataset_query_changelog")
-    def test_custom_dataset_query_changelog_structure_only(
-        self, mock_get_custom_dataset_query_changelog
-    ):
-        mock_get_custom_dataset_query_changelog.return_value = [
-            {
-                "change_id": 2,
-                "change_date": datetime.datetime.strptime(
-                    "2021-01-01 16:00", "%Y-%m-%d %H:%M"
-                ).replace(tzinfo=pytz.UTC),
-                "table_structure": [["a", "text"]],
-                "previous_table_structure": [["a", "text"], ["b", "integer"]],
-                "data_hash": "abcdefghijklmnopqrstuvwxyz",
-                "previous_data_hash": "abcdefghijklmnopqrstuvwxyz",
-            },
-            {
-                "change_id": 1,
-                "change_date": datetime.datetime.strptime(
-                    "2021-01-01 15:00", "%Y-%m-%d %H:%M"
-                ).replace(tzinfo=pytz.UTC),
-                "table_structure": [["a", "text"], ["b", "integer"]],
-                "previous_table_structure": None,
-                "data_hash": "abcdefghijklmnopqrstuvwxyz",
-                "previous_data_hash": None,
-            },
-        ]
-        custom_dataset_query = CustomDatasetQueryFactory()
-        assert (
-            get_human_readable_custom_dataset_query_changelog(custom_dataset_query)[0].items()
-            >= {
-                "columns_added": [],
-                "columns_removed": ["b"],
-                "change_type": "Columns",
-            }.items()
-        )
-        assert (
-            get_human_readable_custom_dataset_query_changelog(custom_dataset_query)[1].items()
-            >= {
-                "change_type": "Query creation",
-            }.items()
-        )
-
-    @patch("dataworkspace.apps.datasets.utils.get_custom_dataset_query_changelog")
-    def test_custom_dataset_query_changelog_data_only(
-        self, mock_get_custom_dataset_query_changelog
-    ):
-        mock_get_custom_dataset_query_changelog.return_value = [
-            {
-                "change_id": 2,
-                "change_date": datetime.datetime.strptime(
-                    "2021-01-01 16:00", "%Y-%m-%d %H:%M"
-                ).replace(tzinfo=pytz.UTC),
-                "table_structure": [["a", "text"], ["b", "integer"]],
-                "previous_table_structure": [["a", "text"], ["b", "integer"]],
-                "data_hash": "aaaadefghijklmnopqrstuvwxyz",
-                "previous_data_hash": "abcdefghijklmnopqrstuvwxyz",
-            },
-            {
-                "change_id": 1,
-                "change_date": datetime.datetime.strptime(
-                    "2021-01-01 15:00", "%Y-%m-%d %H:%M"
-                ).replace(tzinfo=pytz.UTC),
-                "table_structure": [["a", "text"], ["b", "integer"]],
-                "previous_table_structure": None,
-                "data_hash": "abcdefghijklmnopqrstuvwxyz",
-                "previous_data_hash": None,
-            },
-        ]
-        custom_dataset_query = CustomDatasetQueryFactory()
-        assert (
-            get_human_readable_custom_dataset_query_changelog(custom_dataset_query)[0].items()
-            >= {
-                "change_type": "Data",
-            }.items()
-        )
-        assert (
-            get_human_readable_custom_dataset_query_changelog(custom_dataset_query)[1].items()
-            >= {
-                "change_type": "Query creation",
-            }.items()
-        )
-
-    @patch("dataworkspace.apps.datasets.utils.get_custom_dataset_query_changelog")
-    def test_custom_dataset_query_changelog_structure_and_data(
-        self, mock_get_custom_dataset_query_changelog
-    ):
-        mock_get_custom_dataset_query_changelog.return_value = [
-            {
-                "change_id": 2,
-                "change_date": datetime.datetime.strptime(
-                    "2021-01-01 16:00", "%Y-%m-%d %H:%M"
-                ).replace(tzinfo=pytz.UTC),
-                "table_structure": [["a", "text"]],
-                "previous_table_structure": [["a", "text"], ["b", "integer"]],
-                "data_hash": "aaaadefghijklmnopqrstuvwxyz",
-                "previous_data_hash": "abcdefghijklmnopqrstuvwxyz",
-            },
-            {
-                "change_id": 1,
-                "change_date": datetime.datetime.strptime(
-                    "2021-01-01 15:00", "%Y-%m-%d %H:%M"
-                ).replace(tzinfo=pytz.UTC),
-                "table_structure": [["a", "text"], ["b", "integer"]],
-                "previous_table_structure": None,
-                "data_hash": "abcdefghijklmnopqrstuvwxyz",
-                "previous_data_hash": None,
-            },
-        ]
-        custom_dataset_query = CustomDatasetQueryFactory()
-        assert (
-            get_human_readable_custom_dataset_query_changelog(custom_dataset_query)[0].items()
-            >= {
-                "columns_added": [],
-                "columns_removed": ["b"],
-                "change_type": "Columns and Data",
-            }.items()
-        )
-        assert (
-            get_human_readable_custom_dataset_query_changelog(custom_dataset_query)[1].items()
-            >= {
-                "change_type": "Query creation",
-            }.items()
-        )
 
 
 class TestStoreReferenceDatasetMetadata:

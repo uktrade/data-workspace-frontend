@@ -7,43 +7,14 @@
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-      <h1 class="govuk-heading-l">What changes would you like to get emails about?
-      </h1>
-
-      <div class="govuk-hint">
-        Select all that apply.
-      </div>
-
       <form method="post">
         {% csrf_token %}
         <div class="govuk-form-group">
-          <div class="govuk-checkboxes" data-module="govuk-checkboxes">
-            <div class="govuk-checkboxes__item">
-              <input class="govuk-checkboxes__input"
-                     id="{{ form.notify_on_schema_change.id_for_label }}"
-                     name="{{ form.notify_on_schema_change.name }}"
-                     type="checkbox"
-                {% if form.notify_on_schema_change.value %} checked{% endif %}
-
-              >
-              <label class="govuk-label govuk-checkboxes__label" for="{{ form.notify_on_schema_change.id_for_label }}">
-                Each time columns are added, removed or renamed
-              </label>
+          <fieldset class="govuk-fieldset">
+            <div class="govuk-radios">
+              {{ form.notification_type }}
             </div>
-            <div class="govuk-checkboxes__item">
-              <input class="govuk-checkboxes__input"
-                     id="{{ form.notify_on_data_change.id_for_label }}"
-                     name="{{ form.notify_on_data_change.name }}"
-                     type="checkbox"
-                {% if form.notify_on_data_change.value %} checked{% endif %}
-
-              >
-              <label class="govuk-label govuk-checkboxes__label" for="{{ form.notify_on_data_change.id_for_label }}">
-                Each time data has been changed
-              </label>
-            </div>
-
-          </div>
+          </fieldset>
         </div>
         <div class="govuk-form-group">
           <button type="submit" class="govuk-button">
