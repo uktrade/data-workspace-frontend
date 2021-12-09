@@ -1459,6 +1459,8 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         self.get_record_by_internal_id(internal_id).delete()
         if self.external_database is not None:
             self.sync_to_external_database(self.external_database.memorable_name)
+        self.modified_date = datetime.utcnow()
+        self.save()
 
     @transaction.atomic
     def delete_all_records(self):
@@ -1470,6 +1472,8 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         self.get_records().delete()
         if self.external_database is not None:
             self.sync_to_external_database(self.external_database.memorable_name)
+        self.modified_date = datetime.utcnow()
+        self.save()
 
     def sync_to_external_database(self, external_database):
         """

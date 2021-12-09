@@ -748,8 +748,14 @@ def store_reference_dataset_metadata():
         logger.info(
             "Checking for metadata update for reference dataset '%s'", reference_dataset.name
         )
+
+        # Get the update date from reference dataset
+        latest_update_date = reference_dataset.modified_date
+
         # Get the latest modified date from this reference dataset's fields
-        latest_update_date = reference_dataset.fields.latest("modified_date").modified_date
+        latest_update_date = max(
+            reference_dataset.fields.latest("modified_date").modified_date, latest_update_date
+        )
 
         # Get the latest date the data in this dataset was updated
         data_updated = reference_dataset.data_last_updated
