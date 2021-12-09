@@ -183,4 +183,10 @@ urlpatterns = [
         {"model_class": models.CustomDatasetQuery},
         name="custom_dataset_query_changelog",
     ),
+    path(
+        "reference/<uuid:dataset_uuid>/changelog/",
+        login_required(views.SourceChangelogView.as_view()),
+        {"model_class": models.ReferenceDataset},
+        name="reference_dataset_changelog",
+    ),
 ]

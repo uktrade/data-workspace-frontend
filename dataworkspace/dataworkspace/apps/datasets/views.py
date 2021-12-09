@@ -102,6 +102,7 @@ from dataworkspace.apps.datasets.utils import (
     get_code_snippets_for_query,
     get_code_snippets_for_reference_table,
     get_human_readable_custom_dataset_query_changelog,
+    get_human_readable_reference_dataset_changelog,
     get_human_readable_source_table_changelog,
 )
 from dataworkspace.apps.eventlog.models import EventLog
@@ -1585,9 +1586,17 @@ class SourceChangelogView(WaffleFlagMixin, DetailView):
             ctx["changelog"] = get_human_readable_source_table_changelog(self.get_object())
         elif self.kwargs["model_class"] == CustomDatasetQuery:
             ctx["changelog"] = get_human_readable_custom_dataset_query_changelog(self.get_object())
+        elif self.kwargs["model_class"] == ReferenceDataset:
+            ctx["changelog"] = get_human_readable_reference_dataset_changelog(self.get_object())
         return ctx
 
     def get_object(self, queryset=None):
+        if self.kwargs["model_class"] == ReferenceDataset:
+            return get_object_or_404(
+                self.kwargs["model_class"],
+                uuid=self.kwargs.get("dataset_uuid"),
+                **{"published": True} if not self.request.user.is_superuser else {},
+            )
         return get_object_or_404(
             self.kwargs["model_class"],
             dataset__id=self.kwargs.get("dataset_uuid"),

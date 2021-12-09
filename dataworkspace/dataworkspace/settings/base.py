@@ -358,6 +358,11 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
             "schedule": 60 * 5,
             "args": (),
         },
+        "store-reference-dataset-metadata": {
+            "task": "dataworkspace.apps.datasets.utils.store_reference_dataset_metadata",
+            "schedule": 60 * 5,
+            "args": (),
+        },
     }
 
 CELERY_REDBEAT_REDIS_URL = env["REDIS_URL"]
@@ -659,6 +664,7 @@ DATA_GRID_REFERENCE_DATASET_FLAG = "DATA-GRID-REFERENCE-DATASET"
 CASE_STUDIES_FLAG = "CASE-STUDIES-FLAG"
 NOTIFY_ON_MASTER_DATASET_CHANGE_FLAG = "NOTIFY_ON_MASTER_DATASET_CHANGE_FLAG"
 NOTIFY_ON_DATACUT_CHANGE_FLAG = "NOTIFY_ON_DATACUT_CHANGE_FLAG"
+NOTIFY_ON_REFERENCE_DATASET_CHANGE_FLAG = "NOTIFY_ON_REFERENCE_DATASET_CHANGE_FLAG"
 DATASET_CHANGELOG_PAGE_FLAG = "DATASET_CHANGELOG_PAGE"
 
 DATASET_FINDER_SEARCH_RESULTS_PER_PAGE = 200

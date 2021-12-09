@@ -4,8 +4,9 @@
 {% block page_title %}Changelog for {{ dataset.name }} - {{ block.super }}{% endblock %}
 
 {% block go_back %}
-  <a class="govuk-back-link"
-     href="{% url "datasets:dataset_detail" dataset_uuid=source.dataset.id %}#{{ dataset.slug }}">
+  <a
+    class="govuk-back-link"
+    href="{% if source.dataset %}{{ source.dataset.get_absolute_url }}{% else %}{{ source.get_absolute_url }}{% endif %}">
     Back
   </a>
 {% endblock %}

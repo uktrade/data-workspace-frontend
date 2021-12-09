@@ -21,6 +21,7 @@ from dataworkspace.apps.datasets.models import (
     DataSetType,
     Notification,
     ReferenceDataset,
+    ReferenceDatasetField,
     SourceTable,
     UserNotification,
     VisualisationCatalogueItem,
@@ -590,6 +591,23 @@ def get_human_readable_custom_dataset_query_changelog(custom_dataset_query):
     return changelog
 
 
+def get_human_readable_reference_dataset_changelog(reference_dataset):
+    db_name, _ = list(settings.DATABASES_DATA.items())[0]
+    changelog = get_source_table_changelog(db_name, "public", reference_dataset.table_name)
+    for record in changelog:
+        if not record["previous_table_structure"] and not record["previous_data_hash"]:
+            record["change_type"] = ["Reference dataset creation"]
+        else:
+            record["change_type"] = []
+            if record["previous_table_structure"] != record["table_structure"]:
+                record["change_type"].append("Columns")
+                record["columns_added"], record["columns_removed"] = _get_column_diff(record)
+            if record["previous_data_hash"] != record["data_hash"]:
+                record["change_type"].append("Data")
+        record["change_type"] = " and ".join(record["change_type"])
+    return changelog
+
+
 @celery_app.task()
 def store_custom_dataset_query_table_structures():
     for query in CustomDatasetQuery.objects.filter(dataset__published=True):
@@ -722,3 +740,94 @@ def send_notification_emails():
         logger.error("Exception when creating notifications: %s", e)
     else:
         send_notifications()
+
+
+@celery_app.task()
+def store_reference_dataset_metadata():
+    for reference_dataset in ReferenceDataset.objects.filter(published=True):
+        logger.info(
+            "Checking for metadata update for reference dataset '%s'", reference_dataset.name
+        )
+
+        # Get the update date from reference dataset
+        latest_update_date = reference_dataset.modified_date
+
+        # Get the latest modified date from this reference dataset's fields
+        latest_update_date = max(
+            reference_dataset.fields.latest("modified_date").modified_date, latest_update_date
+        )
+
+        # Get the latest date the data in this dataset was updated
+        data_updated = reference_dataset.data_last_updated
+        if data_updated:
+            latest_update_date = max(latest_update_date, data_updated)
+
+        # Get the latest data updated dates for any linked reference datasets
+        linked_datasets_updated_dates = [
+            field.linked_reference_dataset_field.reference_dataset.data_last_updated
+            for field in reference_dataset.fields.filter(
+                data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
+            )
+        ]
+        if linked_datasets_updated_dates:
+            latest_update_date = max(latest_update_date, max(linked_datasets_updated_dates))
+
+        logger.info(
+            "Latest update date for reference dataset '%s' is %s",
+            reference_dataset.name,
+            latest_update_date,
+        )
+
+        # Get the latest metadata record
+        db_name, _ = list(settings.DATABASES_DATA.items())[0]
+        with connections[db_name].cursor() as cursor:
+            cursor.execute(
+                SQL(
+                    "SELECT DISTINCT ON(source_data_modified_utc)"
+                    "source_data_modified_utc::TIMESTAMP AT TIME ZONE 'UTC' "
+                    "FROM dataflow.metadata "
+                    "WHERE table_schema = 'public' "
+                    "AND table_name = {} "
+                    "ORDER BY source_data_modified_utc DESC"
+                ).format(Literal(reference_dataset.table_name))
+            )
+            metadata = cursor.fetchone()
+
+            # If the metadata record is older than our latest updated date write a new record
+            if not metadata or latest_update_date > metadata[0]:
+                logger.info(
+                    "Creating new metadata record for reference dataset '%s'",
+                    reference_dataset.name,
+                )
+
+                columns = [
+                    (field.column_name, field.get_postgres_datatype())
+                    for field in reference_dataset.fields.all()
+                ]
+                cursor.execute(
+                    SQL(
+                        """
+                        INSERT INTO dataflow.metadata (
+                            source_data_modified_utc,
+                            table_schema,
+                            table_name,
+                            table_structure,
+                            data_hash_v1,
+                            data_type
+                        )
+                        VALUES ({},'public', {}, {}, {}, {})
+                        """
+                    ).format(
+                        Literal(latest_update_date),
+                        Literal(reference_dataset.table_name),
+                        Literal(json.dumps(columns)),
+                        Literal(reference_dataset.get_metadata_table_hash()),
+                        Literal(int(DataSetType.REFERENCE)),
+                    )
+                )
+            else:
+                logger.info(
+                    "Not creating a metadata record for %s as the last updated date is before %s",
+                    reference_dataset.name,
+                    metadata[0],
+                )
