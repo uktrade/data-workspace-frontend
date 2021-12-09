@@ -14,6 +14,8 @@ from dataworkspace.apps.datasets.utils import (
     dataset_type_to_manage_unpublished_permission_codename,
     get_code_snippets_for_query,
     get_code_snippets_for_table,
+    get_human_readable_custom_dataset_query_changelog,
+    get_human_readable_source_table_changelog,
     link_superset_visualisations_to_related_datasets,
     process_quicksight_dashboard_visualisations,
     send_notification_emails,
@@ -654,12 +656,14 @@ def get_dsn():
 class TestStoreCustomDatasetQueryTableStructures:
     @pytest.mark.django_db
     @patch("dataworkspace.apps.datasets.utils.get_tables_last_updated_date")
+    @patch("dataworkspace.apps.datasets.utils.get_data_hash")
     def test_stores_table_structure_first_run_query_updated_after_table(
-        self, mock_get_tables_last_updated_date, test_dataset
+        self, mock_get_data_hash, mock_get_tables_last_updated_date, test_dataset
     ):
         mock_get_tables_last_updated_date.return_value = datetime.datetime.strptime(
             "2021-01-01 14:00", "%Y-%m-%d %H:%M"
         ).replace(tzinfo=pytz.UTC)
+        mock_get_data_hash.return_value = "abcdefghijklmnopqrstuvwxyz"
 
         with freeze_time("2021-01-01 15:00:00"):
             query = CustomDatasetQueryFactory(
@@ -678,18 +682,23 @@ class TestStoreCustomDatasetQueryTableStructures:
                 "change_date": datetime.datetime.strptime(
                     "2021-01-01 15:00", "%Y-%m-%d %H:%M"
                 ).replace(tzinfo=pytz.UTC),
-                "table_structure": '[["a", "text"], ["b", "integer"]]',
+                "table_structure": [["a", "text"], ["b", "integer"]],
+                "previous_table_structure": None,
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": None,
             }.items()
         )
 
     @pytest.mark.django_db
     @patch("dataworkspace.apps.datasets.utils.get_tables_last_updated_date")
+    @patch("dataworkspace.apps.datasets.utils.get_data_hash")
     def test_stores_table_structure_first_run_table_updated_after_query(
-        self, mock_get_tables_last_updated_date, test_dataset
+        self, mock_get_data_hash, mock_get_tables_last_updated_date, test_dataset
     ):
         mock_get_tables_last_updated_date.return_value = datetime.datetime.strptime(
             "2021-01-01 16:00", "%Y-%m-%d %H:%M"
         ).replace(tzinfo=pytz.UTC)
+        mock_get_data_hash.return_value = "abcdefghijklmnopqrstuvwxyz"
 
         with freeze_time("2021-01-01 15:00:00"):
             query = CustomDatasetQueryFactory(
@@ -708,18 +717,23 @@ class TestStoreCustomDatasetQueryTableStructures:
                 "change_date": datetime.datetime.strptime(
                     "2021-01-01 16:00", "%Y-%m-%d %H:%M"
                 ).replace(tzinfo=pytz.UTC),
-                "table_structure": '[["a", "text"], ["b", "integer"]]',
+                "table_structure": [["a", "text"], ["b", "integer"]],
+                "previous_table_structure": None,
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": None,
             }.items()
         )
 
     @pytest.mark.django_db
     @patch("dataworkspace.apps.datasets.utils.get_tables_last_updated_date")
+    @patch("dataworkspace.apps.datasets.utils.get_data_hash")
     def test_multiple_runs_without_change_doesnt_result_in_new_changelog_records(
-        self, mock_get_tables_last_updated_date, test_dataset
+        self, mock_get_data_hash, mock_get_tables_last_updated_date, test_dataset
     ):
         mock_get_tables_last_updated_date.return_value = datetime.datetime.strptime(
             "2021-01-01 14:00", "%Y-%m-%d %H:%M"
         ).replace(tzinfo=pytz.UTC)
+        mock_get_data_hash.return_value = "abcdefghijklmnopqrstuvwxyz"
 
         with freeze_time("2021-01-01 15:00:00"):
             query = CustomDatasetQueryFactory(
@@ -739,18 +753,26 @@ class TestStoreCustomDatasetQueryTableStructures:
                 "change_date": datetime.datetime.strptime(
                     "2021-01-01 15:00", "%Y-%m-%d %H:%M"
                 ).replace(tzinfo=pytz.UTC),
-                "table_structure": '[["a", "text"], ["b", "integer"]]',
+                "table_structure": [["a", "text"], ["b", "integer"]],
+                "previous_table_structure": None,
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": None,
             }.items()
         )
 
     @pytest.mark.django_db
     @patch("dataworkspace.apps.datasets.utils.get_tables_last_updated_date")
-    def test_update_query_where_clause_doesnt_result_in_new_changelog_record(
-        self, mock_get_tables_last_updated_date, test_dataset
+    @patch("dataworkspace.apps.datasets.utils.get_data_hash")
+    def test_update_query_where_clause_results_in_data_change_not_structure_change(
+        self, mock_get_data_hash, mock_get_tables_last_updated_date, test_dataset
     ):
         mock_get_tables_last_updated_date.return_value = datetime.datetime.strptime(
             "2021-01-01 14:00", "%Y-%m-%d %H:%M"
         ).replace(tzinfo=pytz.UTC)
+        mock_get_data_hash.side_effect = [
+            "abcdefghijklmnopqrstuvwxyz",
+            "aaaadefghijklmnopqrstuvwxyz",
+        ]
 
         with freeze_time("2021-01-01 15:00:00"):
             query = CustomDatasetQueryFactory(
@@ -767,26 +789,48 @@ class TestStoreCustomDatasetQueryTableStructures:
 
         records = get_custom_dataset_query_changelog("my_database", query)
 
-        # There should only be one record record as the structure hasn't changed
+        # The current and previous table structure should be the same as only the
+        # where clause has changed.
 
         assert (
             records[0].items()
             >= {
                 "change_date": datetime.datetime.strptime(
+                    "2021-01-01 16:00", "%Y-%m-%d %H:%M"
+                ).replace(tzinfo=pytz.UTC),
+                "table_structure": [["a", "text"], ["b", "integer"]],
+                "previous_table_structure": [["a", "text"], ["b", "integer"]],
+                "data_hash": "aaaadefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "abcdefghijklmnopqrstuvwxyz",
+            }.items()
+        )
+
+        assert (
+            records[1].items()
+            >= {
+                "change_date": datetime.datetime.strptime(
                     "2021-01-01 15:00", "%Y-%m-%d %H:%M"
                 ).replace(tzinfo=pytz.UTC),
-                "table_structure": '[["a", "text"], ["b", "integer"]]',
+                "table_structure": [["a", "text"], ["b", "integer"]],
+                "previous_table_structure": None,
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": None,
             }.items()
         )
 
     @pytest.mark.django_db
     @patch("dataworkspace.apps.datasets.utils.get_tables_last_updated_date")
-    def test_update_query_select_clause_results_in_new_changelog_record(
-        self, mock_get_tables_last_updated_date, test_dataset
+    @patch("dataworkspace.apps.datasets.utils.get_data_hash")
+    def test_update_query_select_clause_results_in_data_change_and_structure_change(
+        self, mock_get_data_hash, mock_get_tables_last_updated_date, test_dataset
     ):
         mock_get_tables_last_updated_date.return_value = datetime.datetime.strptime(
             "2021-01-01 14:00", "%Y-%m-%d %H:%M"
         ).replace(tzinfo=pytz.UTC)
+        mock_get_data_hash.side_effect = [
+            "abcdefghijklmnopqrstuvwxyz",
+            "aaaadefghijklmnopqrstuvwxyz",
+        ]
 
         with freeze_time("2021-01-01 15:00:00"):
             query = CustomDatasetQueryFactory(
@@ -803,7 +847,8 @@ class TestStoreCustomDatasetQueryTableStructures:
 
         records = get_custom_dataset_query_changelog("my_database", query)
 
-        # There should be two records as the query structure has changed
+        # Neither the current and previous table structure or the current and previous
+        # data hash should be the same as the select clause has changed
 
         assert (
             records[0].items()
@@ -811,7 +856,10 @@ class TestStoreCustomDatasetQueryTableStructures:
                 "change_date": datetime.datetime.strptime(
                     "2021-01-01 16:00", "%Y-%m-%d %H:%M"
                 ).replace(tzinfo=pytz.UTC),
-                "table_structure": '[["a", "text"]]',
+                "table_structure": [["a", "text"]],
+                "previous_table_structure": [["a", "text"], ["b", "integer"]],
+                "data_hash": "aaaadefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "abcdefghijklmnopqrstuvwxyz",
             }.items()
         )
 
@@ -821,18 +869,27 @@ class TestStoreCustomDatasetQueryTableStructures:
                 "change_date": datetime.datetime.strptime(
                     "2021-01-01 15:00", "%Y-%m-%d %H:%M"
                 ).replace(tzinfo=pytz.UTC),
-                "table_structure": '[["a", "text"], ["b", "integer"]]',
+                "table_structure": [["a", "text"], ["b", "integer"]],
+                "previous_table_structure": None,
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": None,
             }.items()
         )
 
     @pytest.mark.django_db
     @patch("dataworkspace.apps.datasets.utils.get_tables_last_updated_date")
+    @patch("dataworkspace.apps.datasets.utils.get_data_hash")
     def test_update_query_select_clause_and_change_back_results_in_new_changelog_records(
-        self, mock_get_tables_last_updated_date, test_dataset
+        self, mock_get_data_hash, mock_get_tables_last_updated_date, test_dataset
     ):
         mock_get_tables_last_updated_date.return_value = datetime.datetime.strptime(
             "2021-01-01 14:00", "%Y-%m-%d %H:%M"
         ).replace(tzinfo=pytz.UTC)
+        mock_get_data_hash.side_effect = [
+            "abcdefghijklmnopqrstuvwxyz",
+            "aaaadefghijklmnopqrstuvwxyz",
+            "abcdefghijklmnopqrstuvwxyz",
+        ]
 
         with freeze_time("2021-01-01 15:00:00"):
             query = CustomDatasetQueryFactory(
@@ -855,7 +912,8 @@ class TestStoreCustomDatasetQueryTableStructures:
 
         records = get_custom_dataset_query_changelog("my_database", query)
 
-        # There should be three records as the query structure changed and then changed back
+        # Both the table structure and data hash should have changed and then changed back
+        # as the select clause changed and then changed back
 
         assert (
             records[0].items()
@@ -863,7 +921,10 @@ class TestStoreCustomDatasetQueryTableStructures:
                 "change_date": datetime.datetime.strptime(
                     "2021-01-01 17:00", "%Y-%m-%d %H:%M"
                 ).replace(tzinfo=pytz.UTC),
-                "table_structure": '[["a", "text"], ["b", "integer"]]',
+                "table_structure": [["a", "text"], ["b", "integer"]],
+                "previous_table_structure": [["a", "text"]],
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "aaaadefghijklmnopqrstuvwxyz",
             }.items()
         )
 
@@ -873,7 +934,10 @@ class TestStoreCustomDatasetQueryTableStructures:
                 "change_date": datetime.datetime.strptime(
                     "2021-01-01 16:00", "%Y-%m-%d %H:%M"
                 ).replace(tzinfo=pytz.UTC),
-                "table_structure": '[["a", "text"]]',
+                "table_structure": [["a", "text"]],
+                "previous_table_structure": [["a", "text"], ["b", "integer"]],
+                "data_hash": "aaaadefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "abcdefghijklmnopqrstuvwxyz",
             }.items()
         )
 
@@ -883,7 +947,10 @@ class TestStoreCustomDatasetQueryTableStructures:
                 "change_date": datetime.datetime.strptime(
                     "2021-01-01 15:00", "%Y-%m-%d %H:%M"
                 ).replace(tzinfo=pytz.UTC),
-                "table_structure": '[["a", "text"], ["b", "integer"]]',
+                "table_structure": [["a", "text"], ["b", "integer"]],
+                "previous_table_structure": None,
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": None,
             }.items()
         )
 
@@ -892,11 +959,11 @@ class TestSendNotificationEmails:
     @pytest.mark.django_db
     @override_settings(NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID="000000000000000000000000000")
     @patch("dataworkspace.apps.datasets.utils.send_email")
-    @patch("dataworkspace.apps.datasets.utils.get_table_changelog")
+    @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
     def test_structure_change_sends_notification(
-        self, mock_get_table_changelog, mock_send_email, user
+        self, mock_get_source_table_changelog, mock_send_email, user
     ):
-        mock_get_table_changelog.return_value = [
+        mock_get_source_table_changelog.return_value = [
             {
                 "change_id": 1,
                 "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
@@ -937,11 +1004,11 @@ class TestSendNotificationEmails:
     @pytest.mark.django_db
     @override_settings(NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID="000000000000000000000000000")
     @patch("dataworkspace.apps.datasets.utils.send_email")
-    @patch("dataworkspace.apps.datasets.utils.get_table_changelog")
+    @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
     def test_multiple_runs_dont_send_duplicate_notifications(
-        self, mock_get_table_changelog, mock_send_email, user
+        self, mock_get_source_table_changelog, mock_send_email, user
     ):
-        mock_get_table_changelog.return_value = [
+        mock_get_source_table_changelog.return_value = [
             {
                 "change_id": 1,
                 "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
@@ -985,11 +1052,11 @@ class TestSendNotificationEmails:
     @pytest.mark.django_db
     @override_settings(NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID="000000000000000000000000000")
     @patch("dataworkspace.apps.datasets.utils.send_email")
-    @patch("dataworkspace.apps.datasets.utils.get_table_changelog")
+    @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
     def test_changelog_records_with_different_structures_sends_single_notification(
-        self, mock_get_table_changelog, mock_send_email, user
+        self, mock_get_source_table_changelog, mock_send_email, user
     ):
-        mock_get_table_changelog.return_value = [
+        mock_get_source_table_changelog.return_value = [
             {
                 "change_id": 2,
                 "change_date": datetime.datetime(2021, 1, 1, 1, 0).replace(tzinfo=pytz.UTC),
@@ -1030,11 +1097,11 @@ class TestSendNotificationEmails:
     @pytest.mark.django_db
     @override_settings(NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID="000000000000000000000000000")
     @patch("dataworkspace.apps.datasets.utils.send_email")
-    @patch("dataworkspace.apps.datasets.utils.get_table_changelog")
+    @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
     def test_changelog_records_with_no_subscribers_doesnt_send_notifications(
-        self, mock_get_table_changelog, mock_send_email, user
+        self, mock_get_source_table_changelog, mock_send_email, user
     ):
-        mock_get_table_changelog.return_value = [
+        mock_get_source_table_changelog.return_value = [
             {
                 "change_id": 1,
                 "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
@@ -1058,11 +1125,11 @@ class TestSendNotificationEmails:
     @pytest.mark.django_db
     @override_settings(NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID="000000000000000000000000000")
     @patch("dataworkspace.apps.datasets.utils.send_email")
-    @patch("dataworkspace.apps.datasets.utils.get_table_changelog")
+    @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
     def test_subscription_after_changelog_gets_processed_doesnt_send_notifications(
-        self, mock_get_table_changelog, mock_send_email, user
+        self, mock_get_source_table_changelog, mock_send_email, user
     ):
-        mock_get_table_changelog.return_value = [
+        mock_get_source_table_changelog.return_value = [
             {
                 "change_id": 1,
                 "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
@@ -1098,11 +1165,11 @@ class TestSendNotificationEmails:
     @pytest.mark.django_db
     @override_settings(NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID="000000000000000000000000000")
     @patch("dataworkspace.apps.datasets.utils.send_email")
-    @patch("dataworkspace.apps.datasets.utils.get_table_changelog")
+    @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
     def test_subscription_after_changelog_gets_processed_but_before_new_structure_change_sends_one_notification(
-        self, mock_get_table_changelog, mock_send_email, user
+        self, mock_get_source_table_changelog, mock_send_email, user
     ):
-        mock_get_table_changelog.return_value = [
+        mock_get_source_table_changelog.return_value = [
             {
                 "change_id": 1,
                 "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
@@ -1125,7 +1192,7 @@ class TestSendNotificationEmails:
 
         DataSetSubscriptionFactory(user=user, dataset=ds)
 
-        mock_get_table_changelog.return_value = [
+        mock_get_source_table_changelog.return_value = [
             {
                 "change_id": 2,
                 "change_date": datetime.datetime(2021, 1, 1, 1, 0).replace(tzinfo=pytz.UTC),
@@ -1155,3 +1222,248 @@ class TestSendNotificationEmails:
 
         assert len(notifications) == 2
         assert len(user_notifications) == 1
+
+
+@pytest.mark.django_db
+class TestHumanReadableChangelog:
+    @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
+    def test_source_table_changelog_structure_only(self, mock_get_source_table_changelog):
+        mock_get_source_table_changelog.return_value = [
+            {
+                "change_id": 2,
+                "change_date": datetime.datetime.strptime(
+                    "2021-01-01 16:00", "%Y-%m-%d %H:%M"
+                ).replace(tzinfo=pytz.UTC),
+                "table_structure": [["a", "text"]],
+                "previous_table_structure": [["a", "text"], ["b", "integer"]],
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "abcdefghijklmnopqrstuvwxyz",
+            },
+            {
+                "change_id": 1,
+                "change_date": datetime.datetime.strptime(
+                    "2021-01-01 15:00", "%Y-%m-%d %H:%M"
+                ).replace(tzinfo=pytz.UTC),
+                "table_structure": [["a", "text"], ["b", "integer"]],
+                "previous_table_structure": None,
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": None,
+            },
+        ]
+        source_table = SourceTableFactory()
+        assert (
+            get_human_readable_source_table_changelog(source_table)[0].items()
+            >= {
+                "columns_added": [],
+                "columns_removed": ["b"],
+                "change_type": "Columns",
+            }.items()
+        )
+        assert (
+            get_human_readable_source_table_changelog(source_table)[1].items()
+            >= {
+                "change_type": "Table creation",
+            }.items()
+        )
+
+    @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
+    def test_source_table_changelog_data_only(self, mock_get_source_table_changelog):
+        mock_get_source_table_changelog.return_value = [
+            {
+                "change_id": 2,
+                "change_date": datetime.datetime.strptime(
+                    "2021-01-01 16:00", "%Y-%m-%d %H:%M"
+                ).replace(tzinfo=pytz.UTC),
+                "table_structure": [["a", "text"], ["b", "integer"]],
+                "previous_table_structure": [["a", "text"], ["b", "integer"]],
+                "data_hash": "aaaadefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "abcdefghijklmnopqrstuvwxyz",
+            },
+            {
+                "change_id": 1,
+                "change_date": datetime.datetime.strptime(
+                    "2021-01-01 15:00", "%Y-%m-%d %H:%M"
+                ).replace(tzinfo=pytz.UTC),
+                "table_structure": [["a", "text"], ["b", "integer"]],
+                "previous_table_structure": None,
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": None,
+            },
+        ]
+        source_table = SourceTableFactory()
+        assert (
+            get_human_readable_source_table_changelog(source_table)[0].items()
+            >= {
+                "change_type": "Data",
+            }.items()
+        )
+        assert (
+            get_human_readable_source_table_changelog(source_table)[1].items()
+            >= {
+                "change_type": "Table creation",
+            }.items()
+        )
+
+    @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
+    def test_source_table_changelog_structure_and_data(self, mock_get_source_table_changelog):
+        mock_get_source_table_changelog.return_value = [
+            {
+                "change_id": 2,
+                "change_date": datetime.datetime.strptime(
+                    "2021-01-01 16:00", "%Y-%m-%d %H:%M"
+                ).replace(tzinfo=pytz.UTC),
+                "table_structure": [["a", "text"]],
+                "previous_table_structure": [["a", "text"], ["b", "integer"]],
+                "data_hash": "aaaadefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "abcdefghijklmnopqrstuvwxyz",
+            },
+            {
+                "change_id": 1,
+                "change_date": datetime.datetime.strptime(
+                    "2021-01-01 15:00", "%Y-%m-%d %H:%M"
+                ).replace(tzinfo=pytz.UTC),
+                "table_structure": [["a", "text"], ["b", "integer"]],
+                "previous_table_structure": None,
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": None,
+            },
+        ]
+        source_table = SourceTableFactory()
+        assert (
+            get_human_readable_source_table_changelog(source_table)[0].items()
+            >= {
+                "columns_added": [],
+                "columns_removed": ["b"],
+                "change_type": "Columns and Data",
+            }.items()
+        )
+        assert (
+            get_human_readable_source_table_changelog(source_table)[1].items()
+            >= {
+                "change_type": "Table creation",
+            }.items()
+        )
+
+    @patch("dataworkspace.apps.datasets.utils.get_custom_dataset_query_changelog")
+    def test_custom_dataset_query_changelog_structure_only(
+        self, mock_get_custom_dataset_query_changelog
+    ):
+        mock_get_custom_dataset_query_changelog.return_value = [
+            {
+                "change_id": 2,
+                "change_date": datetime.datetime.strptime(
+                    "2021-01-01 16:00", "%Y-%m-%d %H:%M"
+                ).replace(tzinfo=pytz.UTC),
+                "table_structure": [["a", "text"]],
+                "previous_table_structure": [["a", "text"], ["b", "integer"]],
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "abcdefghijklmnopqrstuvwxyz",
+            },
+            {
+                "change_id": 1,
+                "change_date": datetime.datetime.strptime(
+                    "2021-01-01 15:00", "%Y-%m-%d %H:%M"
+                ).replace(tzinfo=pytz.UTC),
+                "table_structure": [["a", "text"], ["b", "integer"]],
+                "previous_table_structure": None,
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": None,
+            },
+        ]
+        custom_dataset_query = CustomDatasetQueryFactory()
+        assert (
+            get_human_readable_custom_dataset_query_changelog(custom_dataset_query)[0].items()
+            >= {
+                "columns_added": [],
+                "columns_removed": ["b"],
+                "change_type": "Columns",
+            }.items()
+        )
+        assert (
+            get_human_readable_custom_dataset_query_changelog(custom_dataset_query)[1].items()
+            >= {
+                "change_type": "Query creation",
+            }.items()
+        )
+
+    @patch("dataworkspace.apps.datasets.utils.get_custom_dataset_query_changelog")
+    def test_custom_dataset_query_changelog_data_only(
+        self, mock_get_custom_dataset_query_changelog
+    ):
+        mock_get_custom_dataset_query_changelog.return_value = [
+            {
+                "change_id": 2,
+                "change_date": datetime.datetime.strptime(
+                    "2021-01-01 16:00", "%Y-%m-%d %H:%M"
+                ).replace(tzinfo=pytz.UTC),
+                "table_structure": [["a", "text"], ["b", "integer"]],
+                "previous_table_structure": [["a", "text"], ["b", "integer"]],
+                "data_hash": "aaaadefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "abcdefghijklmnopqrstuvwxyz",
+            },
+            {
+                "change_id": 1,
+                "change_date": datetime.datetime.strptime(
+                    "2021-01-01 15:00", "%Y-%m-%d %H:%M"
+                ).replace(tzinfo=pytz.UTC),
+                "table_structure": [["a", "text"], ["b", "integer"]],
+                "previous_table_structure": None,
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": None,
+            },
+        ]
+        custom_dataset_query = CustomDatasetQueryFactory()
+        assert (
+            get_human_readable_custom_dataset_query_changelog(custom_dataset_query)[0].items()
+            >= {
+                "change_type": "Data",
+            }.items()
+        )
+        assert (
+            get_human_readable_custom_dataset_query_changelog(custom_dataset_query)[1].items()
+            >= {
+                "change_type": "Query creation",
+            }.items()
+        )
+
+    @patch("dataworkspace.apps.datasets.utils.get_custom_dataset_query_changelog")
+    def test_custom_dataset_query_changelog_structure_and_data(
+        self, mock_get_custom_dataset_query_changelog
+    ):
+        mock_get_custom_dataset_query_changelog.return_value = [
+            {
+                "change_id": 2,
+                "change_date": datetime.datetime.strptime(
+                    "2021-01-01 16:00", "%Y-%m-%d %H:%M"
+                ).replace(tzinfo=pytz.UTC),
+                "table_structure": [["a", "text"]],
+                "previous_table_structure": [["a", "text"], ["b", "integer"]],
+                "data_hash": "aaaadefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "abcdefghijklmnopqrstuvwxyz",
+            },
+            {
+                "change_id": 1,
+                "change_date": datetime.datetime.strptime(
+                    "2021-01-01 15:00", "%Y-%m-%d %H:%M"
+                ).replace(tzinfo=pytz.UTC),
+                "table_structure": [["a", "text"], ["b", "integer"]],
+                "previous_table_structure": None,
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": None,
+            },
+        ]
+        custom_dataset_query = CustomDatasetQueryFactory()
+        assert (
+            get_human_readable_custom_dataset_query_changelog(custom_dataset_query)[0].items()
+            >= {
+                "columns_added": [],
+                "columns_removed": ["b"],
+                "change_type": "Columns and Data",
+            }.items()
+        )
+        assert (
+            get_human_readable_custom_dataset_query_changelog(custom_dataset_query)[1].items()
+            >= {
+                "change_type": "Query creation",
+            }.items()
+        )

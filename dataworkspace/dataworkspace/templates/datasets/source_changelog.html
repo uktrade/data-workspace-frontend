@@ -23,13 +23,21 @@
         <tr class="govuk-table__row">
           <th class="govuk-table__header">Date</th>
           <th class="govuk-table__header">Change type</th>
+          <th class="govuk-table__header">Details</th>
         </tr>
         </thead>
         <tbody>
-        {% for entry in source.get_changelog %}
+        {% for entry in changelog %}
           <tr class="govuk-table__row">
             <td>{{ entry.change_date|gmt_date }} {{ entry.change_date|time_with_gmt_offset }}</td>
-            <td>{{ change_type }}</td>
+            <td>{{ entry.change_type }}</td>
+            <td>{% if entry.columns_added or entry.columns_removed %}
+                  Columns added: {{ entry.columns_added }}
+                  Columns removed: {{ entry.columns_removed }}
+                {% else %}
+                  N/A
+                {% endif %}
+            </td>
           </tr>
         {% empty %}
           <tr class="govuk-table__row">
