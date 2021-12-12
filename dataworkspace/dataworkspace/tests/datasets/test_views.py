@@ -1279,6 +1279,58 @@ class TestMasterDatasetDetailView(DatasetsCommon):
         assert len(response.context["related_data"]) == 5
         assert "Show all related data" in response.content.decode(response.charset)
 
+    @pytest.mark.django_db
+    def test_master_dataset_subscription(self):
+        master = factories.DataSetFactory.create(
+            type=DataSetType.MASTER,
+            published=True,
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
+        )
+        user = get_user_model().objects.create(email="test@example.com", is_superuser=False)
+        factories.DataSetUserPermissionFactory.create(user=user, dataset=master)
+
+        client = Client(**get_http_sso_data(user))
+        response = client.get(master.get_absolute_url())
+        assert response.status_code == 200
+        assert response.context["subscription"]["current_user_is_subscribed"] is False
+        assert response.context["subscription"]["details"] is None
+
+        subscription = factories.DataSetSubscriptionFactory(user=user, dataset=master)
+
+        response = client.get(master.get_absolute_url())
+        assert response.status_code == 200
+        assert response.context["subscription"]["current_user_is_subscribed"] is True
+        assert response.context["subscription"]["details"] == subscription
+
+
+class TestDatacutDetailView(DatasetsCommon):
+    @pytest.mark.django_db
+    def test_datacut_dataset_subscription(self):
+        datacut = factories.DataSetFactory.create(
+            published=True,
+            type=DataSetType.DATACUT,
+            name="A datacut",
+            user_access_type="REQUIRES_AUTHORIZATION",
+        )
+        user = get_user_model().objects.create(email="test@example.com", is_superuser=False)
+        factories.DataSetUserPermissionFactory.create(user=user, dataset=datacut)
+
+        client = Client(**get_http_sso_data(user))
+        url = reverse("datasets:dataset_detail", args=(datacut.id,))
+        response = client.get(url)
+        assert response.status_code == 200
+        assert response.context["subscription"]["current_user_is_subscribed"] is False
+        assert response.context["subscription"]["details"] is None
+
+        subscription = factories.DataSetSubscriptionFactory(user=user, dataset=datacut)
+
+        assert datacut.subscriptions.filter(user=user).count() == 1
+
+        response = client.get(url)
+        assert response.status_code == 200
+        assert response.context["subscription"]["current_user_is_subscribed"] is True
+        assert response.context["subscription"]["details"] == subscription
+
 
 class TestReferenceDatasetDetailView(DatasetsCommon):
     def _get_ref_dataset(self, table_name: str):
