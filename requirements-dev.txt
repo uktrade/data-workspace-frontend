@@ -18,8 +18,6 @@ amqp==2.6.1
     #   kombu
 appdirs==1.4.4
     # via pyppeteer
-appnope==0.1.2
-    # via ipython
 asgiref==3.3.4
     # via
     #   -r requirements.txt
@@ -214,14 +212,7 @@ ijson==3.1.3
 importlib-metadata==4.8.2
     # via
     #   -r requirements.txt
-    #   flake8
-    #   jsonschema
-    #   kombu
-    #   markdown
-    #   pep517
-    #   pluggy
     #   pyppeteer
-    #   pytest
 iniconfig==1.1.1
     # via pytest
 ipdb==0.13.7
@@ -265,7 +256,7 @@ linear-tsv==1.1.0
     # via
     #   -r requirements.txt
     #   tabulator
-lxml==4.6.3
+lxml==4.6.5
     # via -r requirements-dev.in
 markdown==3.2.2
     # via -r requirements.txt
@@ -518,20 +509,11 @@ tqdm==4.56.0
     # via pyppeteer
 traitlets==5.0.5
     # via ipython
-typed-ast==1.5.1
-    # via
-    #   astroid
-    #   black
 typing-extensions==4.0.0
     # via
     #   -r requirements.txt
     #   aiohttp
-    #   asgiref
-    #   astroid
     #   black
-    #   importlib-metadata
-    #   pylint
-    #   yarl
 unicodecsv==0.14.1
     # via
     #   -r requirements.txt
@@ -580,7 +562,6 @@ zipp==3.6.0
     # via
     #   -r requirements.txt
     #   importlib-metadata
-    #   pep517
 zope.event==4.5.0
     # via
     #   -r requirements.txt
