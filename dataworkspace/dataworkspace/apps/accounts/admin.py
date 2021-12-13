@@ -370,7 +370,7 @@ class AppUserAdmin(UserAdmin):
                 and access_appstream_permission not in obj.user_permissions.all()
             ):
                 try:
-                    add_user_access_profile(request.user, "appstream")
+                    add_user_access_profile(obj, "appstream")
                 except SSOApiException as e:
                     messages.error(
                         request,
@@ -388,7 +388,7 @@ class AppUserAdmin(UserAdmin):
                 and access_appstream_permission in obj.user_permissions.all()
             ):
                 try:
-                    remove_user_access_profile(request.user, "appstream")
+                    remove_user_access_profile(obj, "appstream")
                 except SSOApiException as e:
                     messages.error(
                         request,
@@ -408,7 +408,7 @@ class AppUserAdmin(UserAdmin):
                 and access_quicksight_permission not in obj.user_permissions.all()
             ):
                 try:
-                    add_user_access_profile(request.user, "quicksight")
+                    add_user_access_profile(obj, "quicksight")
                 except SSOApiException as e:
                     messages.error(
                         request,
@@ -426,7 +426,7 @@ class AppUserAdmin(UserAdmin):
                 and access_quicksight_permission in obj.user_permissions.all()
             ):
                 try:
-                    remove_user_access_profile(request.user, "quicksight")
+                    remove_user_access_profile(obj, "quicksight")
                 except SSOApiException as e:
                     messages.error(
                         request,
