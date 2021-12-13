@@ -727,6 +727,8 @@ class DatasetDetailView(DetailView):
             for datacut_link in datacut_links
         ]
 
+        subscription = self.object.subscriptions.filter(user=self.request.user)
+
         ctx.update(
             {
                 "has_access": self.object.user_has_access(self.request.user),
@@ -743,6 +745,11 @@ class DatasetDetailView(DetailView):
                 ),
                 "summarised_update_frequency": summarised_update_frequency,
                 "source_text": self._get_source_text(self.object),
+                "subscription": {
+                    "current_user_is_subscribed": subscription.exists()
+                    and subscription.first().is_active(),
+                    "details": subscription.first(),
+                },
             }
         )
         return ctx

@@ -82,6 +82,11 @@
       {% endif %}
     </div>
     <div class="govuk-grid-column-one-third">
+      {% flag NOTIFY_ON_DATACUT_CHANGE_FLAG %}
+        <p class="govuk-body">
+          {% include "partials/subscription_link.html" with subscription=subscription dataset=dataset %}
+        </p>
+      {% endflag %}
       {% if related_data or related_visualisations %}
         <aside class="app-related-items" role="complementary">
           {% if related_data %}
