@@ -26,7 +26,7 @@ class TestUserAPIView(BaseAPIViewTest):
                 "access_quicksight": False,
                 "start_all_applications": False,
             },
-            "user_sso": user.profile.sso_id.hex,
+            "user_sso": str(user.profile.sso_id),
         }
 
     def test_success(self, unauthenticated_client):
