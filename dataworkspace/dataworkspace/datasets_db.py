@@ -47,12 +47,13 @@ def get_tables_last_updated_date(database_name: str, tables: Tuple[Tuple[str, st
     with connections[database_name].cursor() as cursor:
         cursor.execute(
             """
-            SELECT MIN(modified_date)
+            SELECT MIN(modified_date),MIN(swap_table_date)
             FROM (
                 SELECT
                     table_schema,
                     table_name,
-                    MAX(source_data_modified_utc) AS modified_date
+                    MAX(source_data_modified_utc) AS modified_date,
+                    MAX(dataflow_swapped_tables_utc) AS swap_table_date
                 FROM dataflow.metadata
                 WHERE (table_schema, table_name) IN %s
                 GROUP BY (1, 2)
@@ -60,10 +61,9 @@ def get_tables_last_updated_date(database_name: str, tables: Tuple[Tuple[str, st
             """,
             [tables],
         )
-        dt = cursor.fetchone()[0]
-        if dt is None:
-            return None
-        return dt.replace(tzinfo=pytz.UTC)
+        modified_date, swap_table_date = cursor.fetchone()
+        dt = modified_date or swap_table_date
+        return dt.replace(tzinfo=pytz.UTC) if dt else None
 
 
 def extract_queried_tables_from_sql_query(database_name, query):

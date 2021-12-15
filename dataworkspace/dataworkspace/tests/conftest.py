@@ -156,12 +156,14 @@ def metadata_db(db):
                 primary_keys TEXT[]
             );
             TRUNCATE TABLE dataflow.metadata;
-            INSERT INTO dataflow.metadata (table_schema, table_name, source_data_modified_utc, table_structure, data_type)
+            INSERT INTO dataflow.metadata (
+                table_schema, table_name, source_data_modified_utc, dataflow_swapped_tables_utc, table_structure, data_type
+            )
             VALUES
-                ('public', 'table1', '2020-09-02 00:01:00.0', '{"field1":"int","field2":"varchar"}', 1),
-                ('public', 'table2', '2020-09-01 00:01:00.0', NULL, 1),
-                ('public', 'table1', '2020-01-01 00:01:00.0', NULL, 1),
-                ('public', 'table4', NULL, NULL, 1);
+                ('public','table1','2020-09-02 00:01:00.0','2020-09-02 00:01:00.0','{"field1":"int","field2":"varchar"}',1),
+                ('public','table2','2020-09-01 00:01:00.0','2020-09-02 00:01:00.0',NULL,1),
+                ('public','table1','2020-01-01 00:01:00.0','2020-09-02 00:01:00.0',NULL,1),
+                ('public','table4', NULL,'2021-12-01 00:00:00.0',NULL,1);
             """
         )
         conn.commit()

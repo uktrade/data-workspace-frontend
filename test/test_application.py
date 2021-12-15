@@ -2829,7 +2829,8 @@ async def create_metadata_table():
                 '''
                 CREATE SCHEMA IF NOT EXISTS dataflow;
                 CREATE TABLE IF NOT EXISTS dataflow.metadata (
-                    id int, table_schema text, table_name text, source_data_modified_utc timestamp
+                    id int, table_schema text, table_name text,
+                    source_data_modified_utc timestamp, dataflow_swapped_tables_utc timestamp
                 );
                 '''
             )
