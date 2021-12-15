@@ -32,7 +32,6 @@ from dataworkspace.datasets_db import get_custom_dataset_query_changelog
 from dataworkspace.tests.factories import (
     CustomDatasetQueryFactory,
     DataSetFactory,
-    DataSetSubscriptionFactory,
     ReferenceDatasetFactory,
     ReferenceDatasetFieldFactory,
     SourceTableFactory,
@@ -981,7 +980,8 @@ class TestSendNotificationEmails:
         mock_send_email.return_value = "00000000-0000-0000-0000-000000000000"
 
         ds = DataSetFactory.create(type=DataSetType.MASTER)
-        DataSetSubscriptionFactory(user=user, dataset=ds)
+        ds.subscriptions.create(user=user, notify_on_schema_change=True)
+
         SourceTableFactory.create(dataset=ds, database__memorable_name="my_database")
 
         send_notification_emails()
@@ -1026,7 +1026,8 @@ class TestSendNotificationEmails:
         mock_send_email.return_value = "00000000-0000-0000-0000-000000000000"
 
         ds = DataSetFactory.create(type=DataSetType.MASTER)
-        DataSetSubscriptionFactory(user=user, dataset=ds)
+        ds.subscriptions.create(user=user, notify_on_schema_change=True)
+
         SourceTableFactory.create(dataset=ds, database__memorable_name="my_database")
 
         send_notification_emails()
@@ -1078,7 +1079,8 @@ class TestSendNotificationEmails:
         mock_send_email.return_value = "00000000-0000-0000-0000-000000000000"
 
         ds = DataSetFactory.create(type=DataSetType.MASTER)
-        DataSetSubscriptionFactory(user=user, dataset=ds)
+        ds.subscriptions.create(user=user, notify_on_schema_change=True)
+
         SourceTableFactory.create(dataset=ds, database__memorable_name="my_database")
 
         send_notification_emails()
@@ -1159,7 +1161,7 @@ class TestSendNotificationEmails:
         assert len(notifications) == 1
         assert len(user_notifications) == 0
 
-        DataSetSubscriptionFactory(user=user, dataset=ds)
+        ds.subscriptions.create(user=user, notify_on_schema_change=True)
 
         send_notification_emails()
 
@@ -1199,7 +1201,7 @@ class TestSendNotificationEmails:
         assert len(notifications) == 1
         assert len(user_notifications) == 0
 
-        DataSetSubscriptionFactory(user=user, dataset=ds)
+        ds.subscriptions.create(user=user, notify_on_schema_change=True)
 
         mock_get_source_table_changelog.return_value = [
             {

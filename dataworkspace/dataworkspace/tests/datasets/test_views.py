@@ -1295,7 +1295,7 @@ class TestMasterDatasetDetailView(DatasetsCommon):
         assert response.context["subscription"]["current_user_is_subscribed"] is False
         assert response.context["subscription"]["details"] is None
 
-        subscription = factories.DataSetSubscriptionFactory(user=user, dataset=master)
+        subscription = master.subscriptions.create(user=user, notify_on_schema_change=True)
 
         response = client.get(master.get_absolute_url())
         assert response.status_code == 200
@@ -1322,7 +1322,7 @@ class TestDatacutDetailView(DatasetsCommon):
         assert response.context["subscription"]["current_user_is_subscribed"] is False
         assert response.context["subscription"]["details"] is None
 
-        subscription = factories.DataSetSubscriptionFactory(user=user, dataset=datacut)
+        subscription = datacut.subscriptions.create(user=user, notify_on_schema_change=True)
 
         assert datacut.subscriptions.filter(user=user).count() == 1
 
