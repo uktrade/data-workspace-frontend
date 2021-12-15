@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.views import View
 from django.views.generic import UpdateView
 
-from dataworkspace.apps.datasets.models import DataSet, DataSetSubscription
+from dataworkspace.apps.datasets.models import DataSet, DataSetSubscription, ReferenceDataset
 from dataworkspace.apps.datasets.subscriptions.forms import DataSetSubscriptionForm
 from dataworkspace.apps.datasets.subscriptions.utils import (
     subscribe,
@@ -71,7 +71,10 @@ class DataSetSubscriptionUnsubscribe(View):
 
 class DataSetSubscriptionStartView(View):
     def get(self, request, dataset_uuid):
-        dataset = get_object_or_404(DataSet, id=dataset_uuid)
+        try:
+            dataset = ReferenceDataset.objects.live().get(uuid=dataset_uuid)
+        except ReferenceDataset.DoesNotExist:
+            dataset = get_object_or_404(DataSet, id=dataset_uuid)
 
         subscription = subscribe(user=request.user, dataset=dataset)
         return render(

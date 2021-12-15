@@ -84,7 +84,7 @@
     <div class="govuk-grid-column-one-third">
       {% flag NOTIFY_ON_DATACUT_CHANGE_FLAG %}
         <p class="govuk-body">
-          {% include "partials/subscription_link.html" with subscription=subscription dataset=dataset %}
+          {% include "partials/subscription_link.html" with subscription=subscription dataset=dataset dataset_uuid=dataset.id %}
         </p>
       {% endflag %}
       {% if related_data or related_visualisations %}

@@ -1119,6 +1119,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     # easily distinguish between reference datasets, datacuts, master datasets and visualisations.
     type = DataSetType.REFERENCE
     search_vector = SearchVectorField(null=True, blank=True)
+    subscriptions = GenericRelation(DataSetSubscription)
 
     class Meta:
         db_table = "app_referencedataset"
