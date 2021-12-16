@@ -744,7 +744,7 @@ def send_notification_emails():
 
 @celery_app.task()
 def store_reference_dataset_metadata():
-    for reference_dataset in ReferenceDataset.objects.filter(published=True):
+    for reference_dataset in ReferenceDataset.objects.live().filter(published=True):
         logger.info(
             "Checking for metadata update for reference dataset '%s'", reference_dataset.name
         )
