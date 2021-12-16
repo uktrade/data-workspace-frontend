@@ -1618,13 +1618,15 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             data = {}
             for field in self.fields.all():
                 if field.data_type != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
-                    data[field.column_name] = getattr(record, field.column_name)
+                    data[field.column_name] = str(getattr(record, field.column_name))
                 else:
                     relationship = getattr(record, field.relationship_name)
                     data[field.linked_reference_dataset_field.column_name] = (
-                        getattr(
-                            relationship,
-                            field.linked_reference_dataset_field.column_name,
+                        str(
+                            getattr(
+                                relationship,
+                                field.linked_reference_dataset_field.column_name,
+                            )
                         )
                         if relationship
                         else None
