@@ -108,7 +108,7 @@ decorator==4.4.2
     # via ipython
 dj-database-url==0.5.0
     # via -r requirements.txt
-django==3.2.5
+django==3.2.10
     # via
     #   -r requirements.txt
     #   django-admin-sortable2
@@ -210,9 +210,7 @@ ijson==3.1.3
     #   -r requirements.txt
     #   tabulator
 importlib-metadata==4.8.2
-    # via
-    #   -r requirements.txt
-    #   pyppeteer
+    # via pyppeteer
 iniconfig==1.1.1
     # via pytest
 ipdb==0.13.7
@@ -559,9 +557,7 @@ yarl==1.5.1
 zenpy==2.0.21
     # via -r requirements.txt
 zipp==3.6.0
-    # via
-    #   -r requirements.txt
-    #   importlib-metadata
+    # via importlib-metadata
 zope.event==4.5.0
     # via
     #   -r requirements.txt
