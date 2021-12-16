@@ -1567,7 +1567,7 @@ class TestStoreReferenceDatasetMetadata:
         assert metadata_records[0] == (
             datetime.datetime(2022, 1, 1, 15, 0),
             f'[["{field1.column_name}", "integer"], ["{field2.column_name}", "varchar(255)"]]',
-            "\\xabd305d1d73aa2aa0f99fb899f8af4da",
+            "\\x9de4775b276d45c6fdc740ae770578ed",
         )
 
     @pytest.mark.django_db
@@ -1664,7 +1664,7 @@ class TestStoreReferenceDatasetMetadata:
         assert metadata_records[0] == (
             datetime.datetime(2023, 1, 2, 15, 0),
             f'[["{field1.column_name}", "integer"]]',
-            "\\x020fa027bf573ca013b4afa6db9dc4e3",
+            "\\xe7440c03c0a39364aa1b86b0a8670ebc",
         )
 
     @pytest.mark.django_db
@@ -1715,7 +1715,7 @@ class TestStoreReferenceDatasetMetadata:
         assert original_metadata[0] == (
             datetime.datetime(2021, 1, 1, 15, 0),
             '[["link", "integer"], ["field1", "integer"]]',
-            "\\x70a19af821fb397c0e4cd5be0e9bb559",
+            "\\x51808017c128291ef4e9d509179fabe3",
         )
         with freeze_time("2021-01-02 15:00:00"):
             linked_rds.save_record(
@@ -1726,5 +1726,5 @@ class TestStoreReferenceDatasetMetadata:
         assert new_metadata[0] == (
             datetime.datetime(2021, 1, 2, 15, 0),
             '[["link", "integer"], ["field1", "integer"]]',
-            "\\x99de61a1849a552c6165cc731b52d466",
+            "\\x6777518eb5a5d30aa2e7267bdb11bb60",
         )
