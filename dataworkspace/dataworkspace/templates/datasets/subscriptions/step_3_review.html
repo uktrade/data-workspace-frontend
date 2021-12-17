@@ -14,12 +14,13 @@
       <div class="govuk-form-group">
         <h2 class="govuk-heading-m">What changes would you like to get emails about?</h2>
         <dl class="govuk-summary-list govuk-summary-list--no-border">
-
-
-          {% for option in object.get_list_of_selected_options %}
             <div class="govuk-summary-list__row">
               <dd class="govuk-summary-list__value">
-                {{ option }}
+                {% if object.notify_on_schema_change and object.notify_on_data_change %} 
+                    All changes
+                {% elif object.notify_on_schema_change and not object.notify_on_data_change %}
+                    Only when columns are added, removed, or renamed
+                {% endif %}
               </dd>
               <dd class="govuk-summary-list__actions">
                 <a class="govuk-link" href="{% url "datasets:subscription_options" object.id %}">
@@ -27,46 +28,28 @@
                 </a>
               </dd>
             </div>
-          {% empty %}
-            <div class="govuk-summary-list__row">
-              <dd class="govuk-summary-list__value">
-                You have not selected any options
-              </dd>
-              <dd class="govuk-summary-list__actions">
-                <a class="govuk-link" href="{% url "datasets:subscription_options" object.id %}">
-                  Change<span class="govuk-visually-hidden"> name</span>
-                </a>
-              </dd>
-            </div>
-          {% endfor %}
-
         </dl>
       </div>
-
-      <form method="post">
+      <form method="POST">
         {% csrf_token %}
-        <input type="hidden" name="{{ form.notify_on_data_change.name }}"
-               value="{{ form.notify_on_data_change.value }}"/>
-        <input type="hidden" name="{{ form.notify_on_schema_change.name }}"
-               value="{{ form.notify_on_schema_change.value }}"/>
         <div class="form-group">
-          <div class="govuk-form-group">
+        <div class="govuk-form-group">
             <label class="govuk-label" for="email-address">
               Email address
             </label>
 
             <input class="govuk-input govuk-input--width-20" id="email-address"
-                   value="{{ user.email }}" disabled
-                   name="emailAddress" type="text" required>
+                    value="{{ user.email }}" disabled
+                    name="emailAddress" type="text" required>
           </div>
         </div>
 
         <div class="govuk-form-group">
           <button type="submit" class="govuk-button">Submit</button>
-
+          </div>
         </div>
-      </form>
-    </div>
+      </div>
+    </form>
 
 
   </div>

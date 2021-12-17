@@ -7,7 +7,10 @@ from django.views import View
 from django.views.generic import UpdateView
 
 from dataworkspace.apps.datasets.models import DataSet, DataSetSubscription, ReferenceDataset
-from dataworkspace.apps.datasets.subscriptions.forms import DataSetSubscriptionForm
+from dataworkspace.apps.datasets.subscriptions.forms import (
+    DataSetSubscriptionForm,
+    NotificationType,
+)
 from dataworkspace.apps.datasets.subscriptions.utils import (
     subscribe,
     unsubscribe_from_all,
@@ -89,14 +92,23 @@ class DataSetSubscriptionView(UpdateView):
     form_class = DataSetSubscriptionForm
     model = DataSetSubscription
 
+    def form_valid(self, form):
+        if form.cleaned_data["notification_type"] == NotificationType.COLUMNS:
+            form.instance.notify_on_schema_change = True
+            form.instance.notify_on_data_change = False
+        elif form.cleaned_data["notification_type"] == NotificationType.ALL_CHANGES:
+            form.instance.notify_on_schema_change = True
+            form.instance.notify_on_data_change = True
+        return super().form_valid(form)
+
     def get_success_url(self):
         return reverse("datasets:subscription_review", args=[self.object.id])
 
 
 class DataSetSubscriptionReview(UpdateView):
     template_name = "datasets/subscriptions/step_3_review.html"
-    form_class = DataSetSubscriptionForm
     model = DataSetSubscription
+    fields = []
 
     def get_success_url(self):
         return reverse("datasets:subscription_confirm", args=[self.object.id])

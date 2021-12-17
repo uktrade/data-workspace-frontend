@@ -110,3 +110,8 @@ GRID_ACRONYM_MAP = (
     ("adviser", "Advisors"),
     ("Coronavirus", "Covid"),
 )
+
+
+class NotificationType(models.TextChoices):
+    COLUMNS = "columns", "Only when columns are added, removed, or renamed"
+    ALL_CHANGES = "all_changes", "All changes"

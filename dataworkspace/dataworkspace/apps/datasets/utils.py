@@ -12,12 +12,14 @@ from django.http import Http404
 from django.db import connections, IntegrityError, transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from psycopg2.sql import Identifier, Literal, SQL
 import requests
 from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
     CustomDatasetQueryTable,
     DataSet,
+    DataSetSubscription,
     DataSetType,
     Notification,
     ReferenceDataset,
@@ -547,65 +549,65 @@ def build_filtered_dataset_query(inner_query, column_config, params):
     return query, query_params
 
 
-def _get_column_diff(record):
-    column_names = [c[0] for c in record["table_structure"]]
-    previous_column_names = [c[0] for c in record["previous_table_structure"]]
-    columns_added = list(set(column_names) - set(previous_column_names))
-    columns_removed = list(set(previous_column_names) - set(column_names))
-    return columns_added, columns_removed
-
-
-def get_human_readable_source_table_changelog(source_table):
-    changelog = get_source_table_changelog(
-        source_table.database.memorable_name, source_table.schema, source_table.table
-    )
+def _get_detailed_changelog(changelog, initial_change_type):
     for record in changelog:
         if not record["previous_table_structure"] and not record["previous_data_hash"]:
-            record["change_type"] = ["Table creation"]
+            record["summary"] = initial_change_type
+        elif record["previous_table_structure"] != record["table_structure"]:
+            column_names = [c[0] for c in record["table_structure"]]
+            previous_column_names = [c[0] for c in record["previous_table_structure"]]
+            a = list(set(column_names) - set(previous_column_names))
+            b = list(set(previous_column_names) - set(column_names))
+            if not a and not b:
+                return "N/A"
+            record["summary"] = (
+                (
+                    f'Column{"s" if len(a) > 1 else ""} {" and ".join(a)} {"were" if len(a) > 1 else "was"} added'
+                    if a
+                    else ""
+                )
+                + (", " if a and b else "")
+                + (
+                    f'Column{"s" if len(b) > 1 else ""} {" and ".join(b)} {"were" if len(b) > 1 else "was"} removed'
+                    if b
+                    else ""
+                )
+            )
         else:
-            record["change_type"] = []
-            if record["previous_table_structure"] != record["table_structure"]:
-                record["change_type"].append("Columns")
-                record["columns_added"], record["columns_removed"] = _get_column_diff(record)
-            if record["previous_data_hash"] != record["data_hash"]:
-                record["change_type"].append("Data")
-        record["change_type"] = " and ".join(record["change_type"])
+            record["summary"] = "N/A"
     return changelog
 
 
-def get_human_readable_custom_dataset_query_changelog(custom_dataset_query):
-    changelog = get_custom_dataset_query_changelog(
-        custom_dataset_query.database.memorable_name, custom_dataset_query
-    )
-    for record in changelog:
-        if not record["previous_table_structure"] and not record["previous_data_hash"]:
-            record["change_type"] = ["Query creation"]
-        else:
-            record["change_type"] = []
-            if record["previous_table_structure"] != record["table_structure"]:
-                record["change_type"].append("Columns")
-                record["columns_added"], record["columns_removed"] = _get_column_diff(record)
-            if record["previous_data_hash"] != record["data_hash"]:
-                record["change_type"].append("Data")
-        record["change_type"] = " and ".join(record["change_type"])
-    return changelog
+def get_detailed_changelog(related_object):
+    if isinstance(related_object, SourceTable):
+        return _get_detailed_changelog(
+            get_source_table_changelog(
+                related_object.database.memorable_name, related_object.schema, related_object.table
+            ),
+            "Table creation",
+        )
+    elif isinstance(related_object, CustomDatasetQuery):
+        return _get_detailed_changelog(
+            get_custom_dataset_query_changelog(
+                related_object.database.memorable_name, related_object
+            ),
+            "Query creation",
+        )
+    elif isinstance(related_object, ReferenceDataset):
+        db_name, _ = list(settings.DATABASES_DATA.items())[0]
+        return _get_detailed_changelog(
+            get_source_table_changelog(db_name, "public", related_object.table_name),
+            "Reference dataset creation",
+        )
+    return []
 
 
-def get_human_readable_reference_dataset_changelog(reference_dataset):
-    db_name, _ = list(settings.DATABASES_DATA.items())[0]
-    changelog = get_source_table_changelog(db_name, "public", reference_dataset.table_name)
-    for record in changelog:
-        if not record["previous_table_structure"] and not record["previous_data_hash"]:
-            record["change_type"] = ["Reference dataset creation"]
-        else:
-            record["change_type"] = []
-            if record["previous_table_structure"] != record["table_structure"]:
-                record["change_type"].append("Columns")
-                record["columns_added"], record["columns_removed"] = _get_column_diff(record)
-            if record["previous_data_hash"] != record["data_hash"]:
-                record["change_type"].append("Data")
-        record["change_type"] = " and ".join(record["change_type"])
-    return changelog
+def get_change_item(related_object, change_id):
+    changelog = get_detailed_changelog(related_object)
+    for change in changelog:
+        if change["change_id"] == change_id:
+            return change
+    return None
 
 
 @celery_app.task()
@@ -654,32 +656,68 @@ def store_custom_dataset_query_table_structures():
 
 @celery_app.task()
 def send_notification_emails():
+    """
+    Rules are:
+
+    Signed up for schema changes, there was a schema change, will get an email
+    Signed up for schema changes, there was a data change with no schema change, will not get an email
+    Signed up for schema changes, there was no change, will not get an email
+    Signed up for all changes, there was a schema change, will get an email
+    Signed up for all changes, there was a data change with no schema change, will get an email
+    Signed up for all changes, there was no change, will not get an email
+    Signed up for no changes, there was a schema change, will not get an email
+    Signed up for no changes, there was a data change with no schema change, will not get an email
+    Signed up for no changes, there was no change, will not get an email
+    """
+
     def create_notifications():
         logger.info("Creating notifications")
-        for table in SourceTable.objects.order_by("id"):
-            logger.info("Creating notification for source table %s %s", table.schema, table.table)
-            changelog = get_source_table_changelog(
-                table.database.memorable_name, table.schema, table.table
+        for notifiable_object in (
+            list(SourceTable.objects.order_by("id"))
+            + list(CustomDatasetQuery.objects.order_by("id"))
+            + list(ReferenceDataset.objects.order_by("id"))
+        ):
+            logger.info(
+                "Creating notification for %s %s", type(notifiable_object), notifiable_object.id
             )
+            changelog = get_detailed_changelog(notifiable_object)
             if len(changelog) == 0:
                 logger.info(
-                    "No changelog records found for table %s %s", table.schema, table.table
+                    "No changelog records found for %s %s",
+                    type(notifiable_object),
+                    notifiable_object.id,
                 )
                 continue
 
             # For now only notify about the most recent change
             change = changelog[0]
+            schema_change = change["previous_table_structure"] != change["table_structure"]
+            data_change = change["previous_data_hash"] != change["data_hash"]
+
             notification, created = Notification.objects.get_or_create(
                 changelog_id=change["change_id"],
-                defaults={"change_date": change["change_date"]},
+                defaults={"related_object": notifiable_object},
             )
             if created:
-                dataset = table.dataset
+                dataset = (
+                    notifiable_object
+                    if isinstance(notifiable_object, ReferenceDataset)
+                    else notifiable_object.dataset
+                )
                 logger.info(
                     "Processing notifications for dataset %s",
                     dataset.name,
                 )
-                for subscription in dataset.subscriptions.filter(notify_on_schema_change=True):
+                queryset = DataSetSubscription.objects.none()
+                queryset = (
+                    dataset.subscriptions.filter(notify_on_schema_change=True)
+                    if schema_change
+                    else dataset.subscriptions.filter(notify_on_data_change=True)
+                    if data_change
+                    else DataSetSubscription.objects.none()
+                )
+
+                for subscription in queryset:
                     UserNotification.objects.create(
                         notification=notification,
                         subscription=subscription,
@@ -706,10 +744,25 @@ def send_notification_emails():
                         # the filter above was executed
                         continue
 
-                    change_date = user_notification.notification.change_date
+                    change = get_change_item(
+                        user_notification.notification.related_object,
+                        user_notification.notification.changelog_id,
+                    )
+                    change_date = change["change_date"]
+                    if change["previous_table_structure"] != change["table_structure"]:
+                        template_id = settings.NOTIFY_DATASET_NOTIFICATIONS_COLUMNS_TEMPLATE_ID
+                    elif change["previous_data_hash"] != change["data_hash"]:
+                        template_id = settings.NOTIFY_DATASET_NOTIFICATIONS_ALL_DATA_TEMPLATE_ID
+
                     email_address = user_notification.subscription.user.email
                     dataset_name = user_notification.subscription.dataset.name
-
+                    dataset_url = (
+                        os.environ["APPLICATION_ROOT_DOMAIN"]
+                        + user_notification.subscription.dataset.get_absolute_url()
+                    )
+                    manage_subscriptions_url = os.environ["APPLICATION_ROOT_DOMAIN"] + reverse(
+                        "datasets:email_preferences"
+                    )
                     logger.info(
                         "Sending notification about dataset %s changing structure at %s to user %s",
                         dataset_name,
@@ -718,11 +771,14 @@ def send_notification_emails():
                     )
                     try:
                         email_id = send_email(
-                            settings.NOTIFY_DATASET_NOTIFICATIONS_TEMPLATE_ID,
+                            template_id,
                             email_address,
                             personalisation={
+                                "change_date": change_date.strftime("%d/%m/%Y - %H:%M:%S"),
                                 "dataset_name": dataset_name,
-                                "change_date": change_date.isoformat(),
+                                "dataset_url": dataset_url,
+                                "manage_subscriptions_url": manage_subscriptions_url,
+                                "summary": change["summary"],
                             },
                         )
                     except EmailSendFailureException:

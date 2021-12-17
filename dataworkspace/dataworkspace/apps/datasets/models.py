@@ -2336,7 +2336,9 @@ class ToolQueryAuditLogTable(models.Model):
 
 class Notification(TimeStampedModel):
     changelog_id = models.IntegerField(unique=True)
-    change_date = models.DateTimeField()
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.TextField()
+    related_object = GenericForeignKey("content_type", "object_id")
 
 
 class UserNotification(TimeStampedModel):
