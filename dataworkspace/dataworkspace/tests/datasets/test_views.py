@@ -1295,7 +1295,7 @@ class TestMasterDatasetDetailView(DatasetsCommon):
         assert response.context["subscription"]["current_user_is_subscribed"] is False
         assert response.context["subscription"]["details"] is None
 
-        subscription = factories.DataSetSubscriptionFactory(user=user, dataset=master)
+        subscription = master.subscriptions.create(user=user, notify_on_schema_change=True)
 
         response = client.get(master.get_absolute_url())
         assert response.status_code == 200
@@ -1322,7 +1322,7 @@ class TestDatacutDetailView(DatasetsCommon):
         assert response.context["subscription"]["current_user_is_subscribed"] is False
         assert response.context["subscription"]["details"] is None
 
-        subscription = factories.DataSetSubscriptionFactory(user=user, dataset=datacut)
+        subscription = datacut.subscriptions.create(user=user, notify_on_schema_change=True)
 
         assert datacut.subscriptions.filter(user=user).count() == 1
 
@@ -1505,6 +1505,29 @@ class TestReferenceDatasetDetailView(DatasetsCommon):
 
         assert response.status_code == 200
         assert "View all columns" not in response.content.decode(response.charset)
+
+    @pytest.mark.django_db
+    def test_reference_dataset_subscription(self):
+        rds = factories.ReferenceDatasetFactory.create(
+            published=True,
+        )
+        user = get_user_model().objects.create(email="test@example.com", is_superuser=False)
+
+        client = Client(**get_http_sso_data(user))
+        url = reverse("datasets:dataset_detail", args=(rds.uuid,))
+        response = client.get(url)
+        assert response.status_code == 200
+        assert response.context["subscription"]["current_user_is_subscribed"] is False
+        assert response.context["subscription"]["details"] is None
+
+        subscription = rds.subscriptions.create(user=user, notify_on_schema_change=True)
+
+        assert rds.subscriptions.filter(user=user).count() == 1
+
+        response = client.get(url)
+        assert response.status_code == 200
+        assert response.context["subscription"]["current_user_is_subscribed"] is True
+        assert response.context["subscription"]["details"] == subscription
 
 
 class TestRequestAccess(DatasetsCommon):

@@ -29,3 +29,11 @@ def unsubscribe(subscription_id: str, user):
     subscription.save()
 
     return subscription
+
+
+def subscribe(user, dataset):
+    try:
+        subscription = dataset.subscriptions.get(user=user)
+        return subscription
+    except DataSetSubscription.DoesNotExist:
+        return dataset.subscriptions.create(user=user)

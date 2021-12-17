@@ -769,6 +769,8 @@ class DatasetDetailView(DetailView):
                 include_types=True,
             )
 
+        subscription = self.object.subscriptions.filter(user=self.request.user)
+
         ctx.update(
             {
                 "preview_limit": preview_limit,
@@ -778,6 +780,11 @@ class DatasetDetailView(DetailView):
                 "DATA_GRID_REFERENCE_DATASET_FLAG": settings.DATA_GRID_REFERENCE_DATASET_FLAG,
                 "code_snippets": code_snippets,
                 "columns": columns,
+                "subscription": {
+                    "current_user_is_subscribed": subscription.exists()
+                    and subscription.first().is_active(),
+                    "details": subscription.first(),
+                },
             }
         )
         return ctx

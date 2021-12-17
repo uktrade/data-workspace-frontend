@@ -31,7 +31,8 @@ from django.db import (
 )
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.urls import reverse
@@ -157,6 +158,52 @@ class DatasetReferenceCode(TimeStampedModel):
         return self.counter
 
 
+class DataSetSubscriptionManager(models.Manager):
+    def active(self, user):
+        return self.filter(
+            Q(notify_on_data_change=True) | Q(notify_on_schema_change=True), user=user
+        )
+
+
+class DataSetSubscription(TimeStampedUserModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.SET_NULL)
+    object_id = models.UUIDField(null=True)
+    dataset = GenericForeignKey("content_type", "object_id")
+
+    notify_on_schema_change = models.BooleanField(default=False)
+    notify_on_data_change = models.BooleanField(default=False)
+
+    objects = DataSetSubscriptionManager()
+
+    class Meta:
+        verbose_name = "DataSet Subscription"
+        verbose_name_plural = "DataSet Subscriptions"
+        unique_together = ["user", "object_id"]
+
+    def __str__(self):
+        return f"{self.user.email} {self.object_id}"
+
+    def is_active(self):
+        return self.notify_on_data_change or self.notify_on_schema_change
+
+    def make_inactive(self):
+        self.notify_on_data_change = False
+        self.notify_on_schema_change = False
+
+    def get_list_of_selected_options(self):
+        selected = []
+
+        if self.notify_on_data_change:
+            selected.append("Each time data has been changed")
+
+        if self.notify_on_schema_change:
+            selected.append("Each time columns are added, removed or renamed")
+
+        return selected
+
+
 class DataSet(DeletableTimestampedUserModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     type = models.IntegerField(
@@ -220,6 +267,7 @@ class DataSet(DeletableTimestampedUserModel):
         help_text="Comma-separated list of domain names without spaces, e.g trade.gov.uk,fco.gov.uk",
     )
     search_vector = SearchVectorField(null=True, blank=True)
+    subscriptions = GenericRelation(DataSetSubscription)
 
     class Meta:
         db_table = "app_dataset"
@@ -394,50 +442,6 @@ class DataSet(DeletableTimestampedUserModel):
 
     def get_usage_history_url(self):
         return reverse("datasets:usage_history", args=(self.id,))
-
-
-class DataSetSubscriptionManager(models.Manager):
-    def active(self, user):
-        return self.filter(
-            Q(notify_on_data_change=True) | Q(notify_on_schema_change=True), user=user
-        )
-
-
-class DataSetSubscription(TimeStampedUserModel):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE, related_name="subscriptions")
-
-    notify_on_schema_change = models.BooleanField(default=False)
-    notify_on_data_change = models.BooleanField(default=False)
-
-    objects = DataSetSubscriptionManager()
-
-    class Meta:
-        verbose_name = "DataSet Subscription"
-        verbose_name_plural = "DataSet Subscriptions"
-        unique_together = ["user", "dataset"]
-
-    def __str__(self):
-        return f"{self.user.email} {self.dataset.name}"
-
-    def is_active(self):
-        return self.notify_on_data_change or self.notify_on_schema_change
-
-    def make_inactive(self):
-        self.notify_on_data_change = False
-        self.notify_on_schema_change = False
-
-    def get_list_of_selected_options(self):
-        selected = []
-
-        if self.notify_on_data_change:
-            selected.append("Each time data has been changed")
-
-        if self.notify_on_schema_change:
-            selected.append("Each time columns are added, removed or renamed")
-
-        return selected
 
 
 class DataSetVisualisation(DeletableTimestampedUserModel):
@@ -1115,6 +1119,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     # easily distinguish between reference datasets, datacuts, master datasets and visualisations.
     type = DataSetType.REFERENCE
     search_vector = SearchVectorField(null=True, blank=True)
+    subscriptions = GenericRelation(DataSetSubscription)
 
     class Meta:
         db_table = "app_referencedataset"
