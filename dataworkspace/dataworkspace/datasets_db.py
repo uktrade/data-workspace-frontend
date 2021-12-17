@@ -95,6 +95,7 @@ def get_source_table_changelog(database_name: str, schema: str, table: str):
             WHERE table_schema = %s
             AND table_name = %s
             AND source_data_modified_utc IS NOT NULL
+            AND table_structure IS NOT NULL
             ORDER BY id ASC;
             """,
             [schema, table],
@@ -110,6 +111,7 @@ def get_custom_dataset_query_changelog(database_name: str, query):
             FROM dataflow.metadata
             WHERE data_id = %s
             AND source_data_modified_utc IS NOT NULL
+            AND table_structure IS NOT NULL
             ORDER BY id ASC;
             """,
             [query.id],
