@@ -153,8 +153,12 @@ def get_changelog_from_metadata_rows(rows):
                 {
                     "change_id": next_row_id,
                     "change_date": next_row_change_date.replace(tzinfo=pytz.UTC),
-                    "table_structure": json.loads(next_row_table_structure),
-                    "previous_table_structure": json.loads(row_table_structure),
+                    "table_structure": json.loads(next_row_table_structure)
+                    if next_row_table_structure
+                    else None,
+                    "previous_table_structure": json.loads(row_table_structure)
+                    if row_table_structure
+                    else None,
                     "data_hash": next_row_data_hash,
                     "previous_data_hash": row_data_hash,
                 }
