@@ -76,7 +76,11 @@ class DataWorkspaceRemoteUserView(AuthView):
         # they will be redirected to this login flow and flask will add the access denied
         # message to their session. There is no easy way around this so in this specific
         # case clear the message queue before the public user is redirected to the dashboard
-        if role_name == "Public" and redirect_url != self.appbuilder.get_url_for_index:
+        if (
+            role_name == "Public"
+            and redirect_url != self.appbuilder.get_url_for_index
+            and "_flashes" in session
+        ):
             session["_flashes"].clear()
 
         # ... else if user exists but not logged in, update details, log in, and redirect to index
