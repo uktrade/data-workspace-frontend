@@ -1619,7 +1619,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         us to include linked dataset fields in the hash.
         """
         hashed_data = hashlib.md5()
-        for record in self.get_records().order_by(self.identifier_field.column_name):
+        for record in self.get_records():
             data = {}
             for field in self.fields.all():
                 if field.data_type != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
