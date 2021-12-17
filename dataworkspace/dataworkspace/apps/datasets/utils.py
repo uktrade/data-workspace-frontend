@@ -559,7 +559,9 @@ def _get_detailed_changelog(changelog, initial_change_type):
             a = list(set(column_names) - set(previous_column_names))
             b = list(set(previous_column_names) - set(column_names))
             if not a and not b:
-                return "N/A"
+                record["summary"] = "N/A"
+                continue
+
             record["summary"] = (
                 (
                     f'Column{"s" if len(a) > 1 else ""} {" and ".join(a)} {"were" if len(a) > 1 else "was"} added'
