@@ -477,7 +477,10 @@ class TestApplication(unittest.TestCase):
 
         await until_non_202(session, "http://testvisualisation.dataworkspace.test:8000/")
 
-        sent_headers = {"from-downstream": "downstream-header-value"}
+        sent_headers = {
+            "from-downstream": "downstream-header-value",
+            "Cookie": "test-cookie",
+        }
         async with session.request(
             "GET",
             "http://testvisualisation.dataworkspace.test:8000/http",
@@ -491,6 +494,8 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(received_content["headers"]["from-downstream"], "downstream-header-value")
         self.assertEqual(received_content["headers"]["sso-profile-email"], "test@test.com")
         self.assertEqual(received_headers["from-upstream"], "upstream-header-value")
+        self.assertNotEqual(received_headers["Set-Cookie"], "test-set-cookie")
+        self.assertNotIn("Cookie", received_headers)
 
         stdout, stderr, code = await set_visualisation_wrap(
             "testvisualisation", "FULL_HEIGHT_IFRAME"
@@ -523,6 +528,8 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(received_content["method"], "GET")
         self.assertEqual(received_content["headers"]["from-downstream"], "downstream-header-value")
         self.assertEqual(received_headers["from-upstream"], "upstream-header-value")
+        self.assertNotEqual(received_headers["Set-Cookie"], "test-set-cookie")
+        self.assertNotIn("Cookie", received_headers)
 
     @async_test
     async def test_visualisation_commit_shows_content_if_authorized(self):
@@ -613,7 +620,7 @@ class TestApplication(unittest.TestCase):
 
         await until_non_202(session, "http://testvisualisation--11372717.dataworkspace.test:8000/")
 
-        sent_headers = {"from-downstream": "downstream-header-value"}
+        sent_headers = {"from-downstream": "downstream-header-value", "Cookie": "a-test-cookie"}
         async with session.request(
             "GET",
             "http://testvisualisation--11372717.dataworkspace.test:8000/http",
@@ -626,6 +633,7 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(received_content["method"], "GET")
         self.assertEqual(received_content["headers"]["from-downstream"], "downstream-header-value")
         self.assertEqual(received_headers["from-upstream"], "upstream-header-value")
+        self.assertNotIn("Cookie", received_headers)
 
         async with session.request(
             "GET",
@@ -639,6 +647,7 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(received_content["method"], "GET")
         self.assertEqual(received_content["headers"]["from-downstream"], "downstream-header-value")
         self.assertEqual(received_headers["from-upstream"], "upstream-header-value")
+        self.assertNotIn("Cookie", received_headers)
 
     @async_test
     async def test_visualisation_shows_dataset_if_authorised(self):
