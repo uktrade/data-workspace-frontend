@@ -74,6 +74,9 @@
 {% endblock %}
 
 {% block content %}
+  {% if model.is_draft %}
+    {% include 'draft_reference_dataset_banner.html' %}
+  {% endif %}
   {% if not model.published %}
     {% include 'partials/unpublished_banner.html' with type='dataset' %}
   {% endif %}
