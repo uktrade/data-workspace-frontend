@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0101_auto_20211207_1150'),
+        ("datasets", "0101_auto_20211207_1150"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='referencedataset',
-            name='is_draft',
+            model_name="referencedataset",
+            name="is_draft",
             field=models.BooleanField(default=False),
         ),
     ]

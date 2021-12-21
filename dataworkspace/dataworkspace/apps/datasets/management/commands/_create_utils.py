@@ -39,7 +39,7 @@ class TestData:
         return "Entered text must be either OFFICIAL or OFFICIAL-SENSITIVE."
 
     def get_is_draft(self):
-        return bool(random.randint(0,1))
+        return bool(random.randint(0, 1))
 
     def get_no_retention_policy_text(self):
         return "No retention policy"
