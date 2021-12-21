@@ -38,6 +38,9 @@ class TestData:
     def get_restrictions_on_usage_text(self):
         return "Entered text must be either OFFICIAL or OFFICIAL-SENSITIVE."
 
+    def get_is_draft(self):
+        return bool(random.randint(0,1))
+
     def get_no_retention_policy_text(self):
         return "No retention policy"
 
@@ -163,6 +166,7 @@ def create_fake_reference_dataset():
         licence=test_data.get_licence_text(),
         # licence_url=test_data.get_licence_url(),
         restrictions_on_usage=test_data.get_no_restrictions_on_usage_text(),
+        is_draft=test_data.get_is_draft(),
         published=True,
     )
 
