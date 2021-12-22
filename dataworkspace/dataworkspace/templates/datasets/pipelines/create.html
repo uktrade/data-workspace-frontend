@@ -1,0 +1,48 @@
+{% extends '_main.html' %}
+{% block page_title %}Check your answers before sending your request - {{ block.super }}{% endblock page_title %}
+{% block breadcrumbs %}
+  <div class="govuk-breadcrumbs">
+    <ol class="govuk-breadcrumbs__list">
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="/">Home</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="{% url 'pipelines:index' %}">Pipelines</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">New pipeline
+      </li>
+    </ol>
+  </div>
+{% endblock breadcrumbs %}
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-xl">New pipeline</h1>
+      <form method="post" novalidate>
+        {% include 'design_system/error_summary.html' with form=form %}
+        <fieldset class="govuk-fieldset">
+        {% csrf_token %}
+        <div class="govuk-form-group {% if form.table_name.errors %}govuk-form-group--error{% endif %}">
+            <label class="govuk-label govuk-!-font-weight-bold" for="{{ form.table_name.auto_id }}">
+                {{ form.table_name.label }}
+            </label>
+            <p class="govuk-error-message">
+                <span class="govuk-visually-hidden">Error:</span> {{ form.table_name.errors.0 }}
+            </p>
+            <input class="govuk-input {% if form.table_name.errors %}govuk-input--error{% endif %}" id="{{ form.table_name.auto_id }}" name="{{ form.table_name.name }}" value="{{ form.table_name.value|default_if_none:'' }}" type="text">
+        </div>
+        <div class="govuk-form-group {% if form.sql_query.errors %}govuk-form-group--error{% endif %}">
+            <label class="govuk-label govuk-!-font-weight-bold" for="{{ form.sql_query.auto_id }}">
+                {{ form.sql_query.label }}
+            </label>
+            <p class="govuk-error-message">
+                <span class="govuk-visually-hidden">Error:</span> {{ form.sql_query.errors.0 }}
+            </p>
+            <textarea class="govuk-textarea {% if form.sql_query.errors %}govuk-textarea--error{% endif %}" id="{{ form.sql_query.auto_id }}" name="{{ form.sql_query.name }}" rows="10">{{ form.sql_query.value|default_if_none:'' }}</textarea>
+        </div>
+          <button class="govuk-button" data-module="govuk-button">Save</button>
+        </fieldset>
+      </form>
+    </div>
+  </div>
+{% endblock content %}

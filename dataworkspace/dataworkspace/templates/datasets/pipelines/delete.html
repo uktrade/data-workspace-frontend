@@ -1,0 +1,28 @@
+{% extends '_main.html' %}
+{% block page_title %}Check your answers before sending your request - {{ block.super }}{% endblock page_title %}
+{% block breadcrumbs %}
+<div class="govuk-breadcrumbs">
+    <ol class="govuk-breadcrumbs__list">
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="/">Home</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="{% url 'pipelines:index' %}">Pipelines</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">Delete pipeline
+      </li>
+    </ol>
+  </div>
+{% endblock breadcrumbs %}
+{% block content %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+            <h1 class="govuk-heading-xl">Delete</h1>
+            <h2 class="govuk-heading-l">Are you sure you want to delete {{ object.table_name }}?</h2>
+            <h2 class="govuk-heading-l">This will delete the table including all of its data</h2>
+            <form method="post">{% csrf_token %}
+                <input class="govuk-button govuk-button--warning" type="submit" value="Delete">
+            </form>
+        </div>
+    </div>
+{% endblock %}

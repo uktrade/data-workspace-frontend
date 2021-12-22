@@ -43,6 +43,7 @@ from dataworkspace.apps.datasets.models import (
     DataSetVisualisation,
     DatasetReferenceCode,
     MasterDataset,
+    Pipeline,
     ReferenceDataset,
     ReferenceDatasetField,
     SourceLink,
@@ -1070,3 +1071,9 @@ class ToolQueryAuditLogAdmin(admin.ModelAdmin):
         return self._get_related_datasets(obj, "<br />")
 
     get_detail_related_datasets.short_description = "Related Datasets"
+
+
+@admin.register(Pipeline)
+class PipelineAdmin(admin.ModelAdmin):
+    list_display = ['table_name', 'created_by', 'created_date']
+    readonly_fields = ['created_by', 'created_date', 'updated_by', 'modified_date']

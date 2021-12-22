@@ -2348,3 +2348,9 @@ class UserNotification(TimeStampedModel):
 
     class Meta:
         unique_together = ["notification", "subscription"]
+
+
+class Pipeline(TimeStampedUserModel):
+    table_name = models.CharField(max_length=256)
+    sql_query = models.TextField()
+

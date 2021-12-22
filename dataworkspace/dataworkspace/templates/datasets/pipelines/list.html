@@ -1,0 +1,44 @@
+{% extends '_main.html' %}
+{% block page_title %}Check your answers before sending your request - {{ block.super }}{% endblock page_title %}
+{% block breadcrumbs %}
+  <div class="govuk-breadcrumbs">
+    <ol class="govuk-breadcrumbs__list">
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="/">Home</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">Pipelines
+      </li>
+    </ol>
+  </div>
+{% endblock breadcrumbs %}
+{% block content %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+            <h1 class="govuk-heading-xl">Pipelines</h1>
+            <dl class="govuk-summary-list">
+                <div class="govuk-summary-list__row">
+                    <dt class="govuk-summary-list__value">
+                    <a class="govuk-link" href="{% url 'pipelines:create' %}">Add new pipeline</a>
+                    </dt>
+                    <dd class="govuk-summary-list__actions"></dd>
+                </div>
+                {% for object in object_list %}
+                <div class="govuk-summary-list__row">
+                    <dt class="govuk-summary-list__value">
+                        <h2>{{ object.table_name }}</h2>
+                        <p>The most successful run of this pipeline succeeded at </p>
+                        <a class="govuk-link" href="{% url 'pipelines:edit' object.id %}">Edit</a>&nbsp;
+                        <a class="govuk-link" href="{% url 'pipelines:delete' object.id %}">Delete</a>&nbsp;
+                        <a class="govuk-link" href="#">View logs</a>
+                    </dt>
+                    <dd class="govuk-summary-list__actions">
+                        <button class="govuk-button" data-module="govuk-button">
+                            Run
+                        </button>
+                    </dd>
+                </div>
+                {% endfor %}
+            </dl>
+        </div>
+    </div>
+{% endblock %}
