@@ -75,7 +75,16 @@
 
 {% block content %}
   {% if model.is_draft %}
-    {% include 'draft_reference_dataset_banner.html' %}
+    <div class="govuk-warning-text">
+      <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+      <div class="govuk-warning-text__text">
+        <strong>
+          <span class="govuk-warning-text__assistive">Warning</span>
+            You are viewing a draft reference dataset.
+        </strong>
+        <p class="govuk-body govuk-!-margin-top-4">
+          This reference dataset has not been approved for use by the DIT Reference Data Board.
+        </p>
   {% endif %}
   {% if not model.published %}
     {% include 'partials/unpublished_banner.html' with type='dataset' %}
