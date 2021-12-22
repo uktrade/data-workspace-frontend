@@ -494,6 +494,8 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(received_content["headers"]["from-downstream"], "downstream-header-value")
         self.assertEqual(received_content["headers"]["sso-profile-email"], "test@test.com")
         self.assertEqual(received_headers["from-upstream"], "upstream-header-value")
+        # Assert that cookies were removed from the request and the response
+        self.assertEqual(received_content["headers"]["Cookie"], "")
         self.assertNotEqual(received_headers["Set-Cookie"], "test-set-cookie")
         self.assertNotIn("Cookie", received_headers)
 
@@ -528,6 +530,8 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(received_content["method"], "GET")
         self.assertEqual(received_content["headers"]["from-downstream"], "downstream-header-value")
         self.assertEqual(received_headers["from-upstream"], "upstream-header-value")
+        # Assert that cookies were removed from the request and the response
+        self.assertEqual(received_content["headers"]["Cookie"], "")
         self.assertNotEqual(received_headers["Set-Cookie"], "test-set-cookie")
         self.assertNotIn("Cookie", received_headers)
 
@@ -633,6 +637,9 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(received_content["method"], "GET")
         self.assertEqual(received_content["headers"]["from-downstream"], "downstream-header-value")
         self.assertEqual(received_headers["from-upstream"], "upstream-header-value")
+        # Assert that cookies were removed from the request and the response
+        self.assertEqual(received_content["headers"]["Cookie"], "")
+        self.assertNotEqual(received_headers["Set-Cookie"], "test-set-cookie")
         self.assertNotIn("Cookie", received_headers)
 
         async with session.request(
@@ -647,6 +654,9 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(received_content["method"], "GET")
         self.assertEqual(received_content["headers"]["from-downstream"], "downstream-header-value")
         self.assertEqual(received_headers["from-upstream"], "upstream-header-value")
+        # Assert that cookies were removed from the request and the response
+        self.assertEqual(received_content["headers"]["Cookie"], "")
+        self.assertNotEqual(received_headers["Set-Cookie"], "test-set-cookie")
         self.assertNotIn("Cookie", received_headers)
 
     @async_test
