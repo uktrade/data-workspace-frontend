@@ -2351,6 +2351,5 @@ class UserNotification(TimeStampedModel):
 
 
 class Pipeline(TimeStampedUserModel):
-    table_name = models.CharField(max_length=256)
+    table_name = models.CharField(max_length=256, unique=True)
     sql_query = models.TextField()
-

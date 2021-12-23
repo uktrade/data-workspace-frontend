@@ -146,7 +146,7 @@ urlpatterns = [
     path(
         "pipelines/",
         include(("dataworkspace.apps.datasets.pipelines.urls", "datasets"), namespace="pipelines"),
-    )
+    ),
 ]
 
 if settings.DEBUG:

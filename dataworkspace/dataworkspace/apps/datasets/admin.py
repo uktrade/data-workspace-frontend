@@ -1075,5 +1075,5 @@ class ToolQueryAuditLogAdmin(admin.ModelAdmin):
 
 @admin.register(Pipeline)
 class PipelineAdmin(admin.ModelAdmin):
-    list_display = ['table_name', 'created_by', 'created_date']
-    readonly_fields = ['created_by', 'created_date', 'updated_by', 'modified_date']
+    list_display = ["table_name", "created_by", "created_date"]
+    readonly_fields = ["created_by", "created_date", "updated_by", "modified_date"]
