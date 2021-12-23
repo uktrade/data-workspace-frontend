@@ -54,7 +54,6 @@ locals {
     fargate_spawner__task_subnet           = "${aws_subnet.private_without_egress.*.id[0]}"
 
     fargate_spawner__jupyterlabpython_task_definition_arn = "${aws_ecs_task_definition.jupyterlabpython.family}"
-    fargate_spawner__jupyterlabr_task_definition_arn   = "${aws_ecs_task_definition.jupyterlabr.family}"
     fargate_spawner__rstudio_task_definition_arn   = "${aws_ecs_task_definition.rstudio.family}"
     fargate_spawner__pgadmin_task_definition_arn   = "${aws_ecs_task_definition.pgadmin.family}"
     fargate_spawner__pgweb_task_definition_arn  = "${aws_ecs_task_definition.pgweb.family}"
@@ -409,8 +408,6 @@ data "aws_iam_policy_document" "admin_run_tasks" {
       "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.notebook.family}-*",
       "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.jupyterlabpython.family}",
       "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.jupyterlabpython.family}-*",
-      "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.jupyterlabr.family}",
-      "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.jupyterlabr.family}-*",
       "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.rstudio.family}",
       "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.rstudio.family}-*",
       "arn:aws:ecs:${data.aws_region.aws_region.name}:${data.aws_caller_identity.aws_caller_identity.account_id}:task-definition/${aws_ecs_task_definition.pgadmin.family}",
