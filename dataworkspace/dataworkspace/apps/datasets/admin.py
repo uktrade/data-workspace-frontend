@@ -520,6 +520,7 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
                     "restrictions_on_usage",
                     "sort_field",
                     "sort_direction",
+                    "is_draft",
                 ]
             },
         )

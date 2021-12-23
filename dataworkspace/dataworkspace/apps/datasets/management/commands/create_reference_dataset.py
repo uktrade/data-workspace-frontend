@@ -35,6 +35,7 @@ class Command(BaseCommand):
             licence=test_data.get_licence_text(),
             # licence_url=test_data.get_licence_url(),
             restrictions_on_usage=test_data.get_no_restrictions_on_usage_text(),
+            is_draft=test_data.get_is_draft(),
             published=True,
         )
 

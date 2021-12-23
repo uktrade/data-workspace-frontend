@@ -1038,6 +1038,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     _SORT_DIR_CHOICES = ((SORT_DIR_ASC, "Ascending"), (SORT_DIR_DESC, "Descending"))
     uuid = models.UUIDField(default=uuid.uuid4, editable=False)
     is_joint_dataset = models.BooleanField(default=False)  # No longer used
+    is_draft = models.BooleanField(default=False)
     group = models.ForeignKey(DataGrouping, null=True, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     table_name = models.CharField(
