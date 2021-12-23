@@ -56,7 +56,6 @@ variable notebooks_bucket_cors_domains {
   type = list(string)
 }
 variable notebook_container_image {}
-variable jupyterlab_r_container_image {}
 variable pgweb_container_image {}
 variable superset_container_image {}
 
