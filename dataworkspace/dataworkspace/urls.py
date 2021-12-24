@@ -143,6 +143,10 @@ urlpatterns = [
         include(("dataworkspace.apps.dw_admin.urls", "dw_admin"), namespace="dw-admin"),
     ),
     path("admin/", admin.site.urls),
+    path(
+        "pipelines/",
+        include(("dataworkspace.apps.datasets.pipelines.urls", "datasets"), namespace="pipelines"),
+    ),
 ]
 
 if settings.DEBUG:

@@ -478,3 +478,10 @@ class DataSetSubscriptionFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = "datasets.DataSetSubscription"
+
+
+class PipelineFactory(factory.django.DjangoModelFactory):
+    table_name = factory.fuzzy.FuzzyText(length=20, prefix="schema.")
+
+    class Meta:
+        model = "datasets.Pipeline"
