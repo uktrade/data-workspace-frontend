@@ -6,9 +6,8 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0104_referencedataset_is_draft'),
-        ('datasets', '0105_alter_pipeline_table_name'),
+        ("datasets", "0104_referencedataset_is_draft"),
+        ("datasets", "0105_alter_pipeline_table_name"),
     ]
 
-    operations = [
-    ]
+    operations = []
