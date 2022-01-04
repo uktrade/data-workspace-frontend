@@ -10,6 +10,7 @@ import pytz
 from django.db import connections, transaction
 from django.db.utils import DatabaseError
 
+from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.utils import TYPE_CODES_REVERSED
 
 logger = logging.getLogger("app")
@@ -56,10 +57,11 @@ def get_tables_last_updated_date(database_name: str, tables: Tuple[Tuple[str, st
                     MAX(dataflow_swapped_tables_utc) AS swap_table_date
                 FROM dataflow.metadata
                 WHERE (table_schema, table_name) IN %s
+                AND data_type != %s
                 GROUP BY (1, 2)
             ) a
             """,
-            [tables],
+            [tables, DataSetType.REFERENCE],
         )
         modified_date, swap_table_date = cursor.fetchone()
         dt = modified_date or swap_table_date
