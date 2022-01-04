@@ -1691,23 +1691,23 @@ class TestStoreReferenceDatasetMetadata:
     def test_new_metadata_record(self, metadata_db):
         # If no metadata record exists, create one
         rds = ReferenceDatasetFactory.create(published=True)
-        field1 = ReferenceDatasetFieldFactory.create(
-            reference_dataset=rds,
-            name="id",
-            data_type=2,
-            is_identifier=True,
-            sort_order=1,
-            column_name="field1",
-        )
-        field2 = ReferenceDatasetFieldFactory.create(
-            reference_dataset=rds,
-            name="name",
-            data_type=1,
-            is_display_name=True,
-            sort_order=2,
-            column_name="field2",
-        )
         with freeze_time("2022-01-01 15:00:00"):
+            field1 = ReferenceDatasetFieldFactory.create(
+                reference_dataset=rds,
+                name="id",
+                data_type=2,
+                is_identifier=True,
+                sort_order=1,
+                column_name="field1",
+            )
+            field2 = ReferenceDatasetFieldFactory.create(
+                reference_dataset=rds,
+                name="name",
+                data_type=1,
+                is_display_name=True,
+                sort_order=2,
+                column_name="field2",
+            )
             rds.save_record(
                 None,
                 {
