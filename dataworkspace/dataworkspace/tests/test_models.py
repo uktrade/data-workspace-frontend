@@ -721,7 +721,7 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
             },
             {
                 "headerName": field4.name,
-                "field": field4.linked_reference_dataset_field.column_name,
+                "field": f"{field4.relationship_name}_{field4.linked_reference_dataset_field.column_name}",
                 "sortable": True,
                 "filter": "agNumberColumnFilter",
             },
@@ -797,15 +797,15 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
                 field1.column_name: "Some text",
                 field2.column_name: 123,
                 field3.column_name: date(2020, 1, 1),
-                field4.linked_reference_dataset_field.column_name: None,
-                field5.linked_reference_dataset_field.column_name: None,
+                f"link1_{field4.linked_reference_dataset_field.column_name}": None,
+                f"link2_{field5.linked_reference_dataset_field.column_name}": None,
             },
             {
                 field1.column_name: "More text",
                 field2.column_name: 321,
                 field3.column_name: date(2019, 12, 31),
-                field4.linked_reference_dataset_field.column_name: 1,
-                field5.linked_reference_dataset_field.column_name: "a record",
+                f"link1_{field4.linked_reference_dataset_field.column_name}": 1,
+                f"link2_{field5.linked_reference_dataset_field.column_name}": "a record",
             },
         ]
 

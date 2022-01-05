@@ -1564,7 +1564,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             column_name = (
                 field.column_name
                 if field.data_type != field.DATA_TYPE_FOREIGN_KEY
-                else field.linked_reference_dataset_field.column_name
+                else f"{field.relationship_name}_{field.linked_reference_dataset_field.column_name}"
             )
             data_type = (
                 field.data_type
@@ -1603,7 +1603,9 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                         record_data[field.column_name] = record_data[field.column_name].isoformat()
                 else:
                     relationship = getattr(record, field.relationship_name)
-                    record_data[field.linked_reference_dataset_field.column_name] = (
+                    record_data[
+                        f"{field.relationship_name}_{field.linked_reference_dataset_field.column_name}"
+                    ] = (
                         getattr(
                             relationship,
                             field.linked_reference_dataset_field.column_name,
