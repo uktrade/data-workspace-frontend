@@ -68,7 +68,7 @@ cachetools==4.1.1
     # via
     #   -r requirements.txt
     #   zenpy
-celery-redbeat==1.0.0
+celery-redbeat==2.0.0
     # via -r requirements.txt
 celery==5.2.3
     # via
@@ -594,7 +594,7 @@ zope.interface==5.1.0
 # The following packages are considered to be unsafe in a requirements file:
 pip==21.3.1
     # via pip-tools
-setuptools==59.4.0
+setuptools==59.6.0
     # via
     #   -r requirements.txt
     #   astroid
