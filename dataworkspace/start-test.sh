@@ -22,8 +22,8 @@ set -e
     # Start nginx, proxy and application
     echo "Starting celery, nginx, proxy and django application..."
     parallel --will-cite --line-buffer --jobs 5 --halt now,done=1 ::: \
-        "celery worker --app dataworkspace.cel.celery_app --pool gevent --concurrency 150" \
-        "celery beat   --app dataworkspace.cel.celery_app --pidfile= -S redbeat.RedBeatScheduler" \
+        "celery --app dataworkspace.cel.celery_app worker --pool gevent --concurrency 150" \
+        "celery --app dataworkspace.cel.celery_app beat --pidfile= -S redbeat.RedBeatScheduler" \
         "python3 -m start" \
         "PROXY_PORT='8001' UPSTREAM_ROOT='http://localhost:8002' python3 -m proxy" \
         "nginx -p /home/django"
