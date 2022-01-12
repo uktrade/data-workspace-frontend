@@ -1,6 +1,7 @@
 import io
 from collections import OrderedDict
 from datetime import datetime
+from django.utils import timezone
 
 import botocore
 import mock
@@ -23,6 +24,13 @@ def test_clone_dataset(db):
     assert clone.number_of_downloads == 0
     assert clone.name == f"Copy of {ds.name}"
     assert not clone.published
+
+    # Ensure published date is set to time of cloning, cant just use timezone.now()
+    # due to millisecond difference in .now() at point of cloning and assertion
+    assert (
+        clone.published_at > timezone.now() - timezone.timedelta(hours=1)
+        and clone.published_at <= timezone.now()
+    )
 
 
 def test_clone_dataset_copies_related_objects(db):

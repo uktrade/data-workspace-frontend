@@ -410,6 +410,9 @@ class DataSet(DeletableTimestampedUserModel):
         New dataset is unpublished and has a name prefixed with
         "Copy of <original dataset name>".
 
+        The new datasets published_at date is set to the moment
+        that it was copied.
+
         Related objects (excluding user permissions) are duplicated
         for the new dataset.
 
@@ -422,6 +425,7 @@ class DataSet(DeletableTimestampedUserModel):
         clone.slug = ""
         clone.number_of_downloads = 0
         clone.published = False
+        clone.published_at = timezone.now()
         clone.save()
 
         for obj in self.related_objects():
