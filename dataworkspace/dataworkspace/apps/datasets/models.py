@@ -425,7 +425,7 @@ class DataSet(DeletableTimestampedUserModel):
         clone.slug = ""
         clone.number_of_downloads = 0
         clone.published = False
-        clone.published_at = timezone.now()
+        clone.published_at = None
         clone.save()
 
         for obj in self.related_objects():
