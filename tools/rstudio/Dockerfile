@@ -21,7 +21,7 @@ ENV \
 	LANG=en_US.UTF-8 \
 	LANGUAGE=en_US.UTF-8
 
-COPY exploretiva /exploretiva
+COPY rstudio/exploretiva /exploretiva
 
 RUN \
 	apt-get update && \
@@ -30,7 +30,7 @@ RUN \
 		dirmngr \
 		gnupg2 && \
 	echo "deb http://cran.ma.imperial.ac.uk/bin/linux/debian buster-cran35/" >> /etc/apt/sources.list && \
-	until apt-key adv --keyserver pgp.mit.edu --recv-key 'E19F5F87128899B192B1A2C2AD5F960A256A04AF'; do sleep 10; done && \
+	until apt-key adv --keyserver pgp.mit.edu --recv-key '95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7'; do sleep 10; done && \
 	apt-get clean -y && \
 	apt-get autoremove -y && \
 	apt-get autoclean -y && \
@@ -98,7 +98,7 @@ RUN \
 	Rscript -e 'install.packages("/exploretiva", repos=NULL, type="source")' && \
 	Rscript -e 'install.packages(c("aws.s3", "aws.ec2metadata", "ggraph", "igraph", "RPostgres", "text2vec", "tidytext", "tm", "topicmodels", "widyr", "wordcloud2", "tidyverse"), repos="https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/cran-binary/", clean=TRUE)'
 
-COPY rstudio-start.sh /
+COPY rstudio/rstudio-start.sh /
 
 ENV \
 	USER=rstudio
@@ -110,8 +110,10 @@ RUN \
 	# Avoids errors when installing Java
 	mkdir -p /usr/share/man/man1mkdir -p /usr/share/man/man1 && \
 	echo "root ALL=(ALL:ALL) ALL" > /etc/sudoers && \
-	echo "rstudio ALL=NOPASSWD:/usr/bin/apt,/usr/bin/apt-get,/usr/bin/R" >> /etc/sudoers && \
+	echo "rstudio ALL=NOPASSWD:/usr/local/bin/dw-install,/usr/bin/apt,/usr/bin/apt-get" >> /etc/sudoers && \
 	echo 'PS1="\[\033[01;34m\]\w\[\033[00m\]\$ "' >> /etc/bash.bashrc && \
 	rm /home/rstudio/.bashrc
+
+COPY dw-install /usr/local/bin/dw-install
 
 CMD ["/rstudio-start.sh"]

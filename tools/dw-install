@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# This script wraps `apt update` and `apt install`, but attempts to forbid
+# arbitrary commands being able to be run by the user as root. It exists
+# because allowing the user to `sudo apt` would allow
+# `sudo apt changelog apt`, which runs `less` which then would allows the
+# user to escape into the shell.
+
+# But, full access to `apt update` and `apt install` still cannot be given,
+# since there are 3 ways they can be used to run arbitrary commands
+#
+# 1. Via options in the APT_CONFIG environment variable
+# 2. Via command line options, such as '-o' to specify scripts to run
+# 3. Via a local package that contains custom install script(s)
+#
+# So this script attempts to forbid the 3 above possibilities
+
+set -e
+
+# 1. Clear any options in the APT_CONFIG environment variable
+export APT_CONFIG=''
+
+# 2. and 3. Forbid command line options or local packages
+for var in $*
+do
+   if [[ ${var::1} == "/" || ${var::1} == "." || ${var::1} == "-" ]]
+   then
+     echo "E: It's forbidden to install a local package or pass an option"
+     exit 1
+   fi
+done
+
+# Update, and install requested packages
+apt update
+apt install -y $*

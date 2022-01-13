@@ -88,10 +88,11 @@ RUN \
 	touch /root/yarn-error.log && \
 	chown theia:theia /root/yarn-error.log && \
 	echo "root ALL=(ALL:ALL) ALL" > /etc/sudoers && \
-	echo "theia ALL=NOPASSWD:/usr/bin/apt,/usr/bin/apt-get" >> /etc/sudoers && \
+	echo "theia ALL=NOPASSWD:/usr/local/bin/dw-install,/usr/bin/apt,/usr/bin/apt-get" >> /etc/sudoers && \
 	echo 'PS1="\w\\\\$ \[$(tput sgr0)\]"' >> /etc/bash.bashrc && \
 	rm /home/theia/.bashrc
 
+COPY dw-install /usr/local/bin/dw-install
 COPY theia/vscode_postgres.theia /root/plugins/vscode_postgres.theia
 COPY theia/start.sh /start.sh
 
