@@ -30,7 +30,7 @@ RUN \
 		dirmngr \
 		gnupg2 && \
 	echo "deb http://cran.ma.imperial.ac.uk/bin/linux/debian buster-cran35/" >> /etc/apt/sources.list && \
-	until apt-key adv --keyserver pgp.mit.edu --recv-key 'E19F5F87128899B192B1A2C2AD5F960A256A04AF'; do sleep 10; done && \
+	until apt-key adv --keyserver pgp.mit.edu --recv-key '95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7'; do sleep 10; done && \
 	apt-get clean -y && \
 	apt-get autoremove -y && \
 	apt-get autoclean -y && \
