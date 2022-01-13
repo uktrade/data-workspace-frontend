@@ -110,8 +110,10 @@ RUN \
 	# Avoids errors when installing Java
 	mkdir -p /usr/share/man/man1mkdir -p /usr/share/man/man1 && \
 	echo "root ALL=(ALL:ALL) ALL" > /etc/sudoers && \
-	echo "rstudio ALL=NOPASSWD:/usr/bin/apt,/usr/bin/apt-get,/usr/bin/R" >> /etc/sudoers && \
+	echo "rstudio ALL=NOPASSWD:/usr/local/bin/dw-install,/usr/bin/apt,/usr/bin/apt-get" >> /etc/sudoers && \
 	echo 'PS1="\[\033[01;34m\]\w\[\033[00m\]\$ "' >> /etc/bash.bashrc && \
 	rm /home/rstudio/.bashrc
+
+COPY dw-install /usr/local/bin/dw-install
 
 CMD ["/rstudio-start.sh"]
