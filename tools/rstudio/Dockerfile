@@ -21,7 +21,7 @@ ENV \
 	LANG=en_US.UTF-8 \
 	LANGUAGE=en_US.UTF-8
 
-COPY exploretiva /exploretiva
+COPY rstudio/exploretiva /exploretiva
 
 RUN \
 	apt-get update && \
@@ -98,7 +98,7 @@ RUN \
 	Rscript -e 'install.packages("/exploretiva", repos=NULL, type="source")' && \
 	Rscript -e 'install.packages(c("aws.s3", "aws.ec2metadata", "ggraph", "igraph", "RPostgres", "text2vec", "tidytext", "tm", "topicmodels", "widyr", "wordcloud2", "tidyverse"), repos="https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/cran-binary/", clean=TRUE)'
 
-COPY rstudio-start.sh /
+COPY rstudio/rstudio-start.sh /
 
 ENV \
 	USER=rstudio
