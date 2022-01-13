@@ -1,12 +1,22 @@
+import logging
+
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
+from django.http import HttpResponseRedirect
 from django.urls.base import reverse_lazy
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.urls import reverse
+from requests import RequestException
 
 from dataworkspace.apps.datasets.models import Pipeline
 from dataworkspace.apps.datasets.pipelines.forms import PipelineCreateForm, PipelineEditForm
+from dataworkspace.apps.datasets.pipelines.utils import (
+    delete_pipeline_from_dataflow,
+    save_pipeline_to_dataflow,
+)
+
+logger = logging.getLogger("app")
 
 
 class PipelineCreateView(CreateView):
@@ -19,6 +29,16 @@ class PipelineCreateView(CreateView):
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user
+        form.instance.save()
+        try:
+            save_pipeline_to_dataflow(form.instance)
+        except RequestException as e:
+            messages.error(
+                self.request, "Unable to sync pipeline to data flow. Please try saving again"
+            )
+            logger.exception(e)
+            return HttpResponseRedirect(form.instance.get_absolute_url())
+
         messages.success(self.request, "Pipeline created successfully.")
         return super().form_valid(form)
 
@@ -36,6 +56,16 @@ class PipelineUpdateView(UpdateView, UserPassesTestMixin):
 
     def form_valid(self, form):
         form.instance.updated_by = self.request.user
+        form.instance.save()
+        try:
+            save_pipeline_to_dataflow(form.instance)
+        except RequestException as e:
+            messages.error(
+                self.request, "Unable to sync pipeline to data flow. Please try saving again"
+            )
+            logger.exception(e)
+            return HttpResponseRedirect(form.instance.get_absolute_url())
+
         messages.success(self.request, "Pipeline updated successfully.")
         return super().form_valid(form)
 
@@ -57,5 +87,13 @@ class PipelineDeleteView(DeleteView, UserPassesTestMixin):
         return self.request.user.is_superuser
 
     def delete(self, request, *args, **kwargs):
+        try:
+            delete_pipeline_from_dataflow(self.get_object())
+        except RequestException as e:
+            messages.error(
+                self.request, "Unable to sync pipeline to data flow. Please try deleting again"
+            )
+            logger.exception(e)
+            return HttpResponseRedirect(reverse("pipelines:index"))
         messages.success(self.request, "Pipeline deleted successfully.")
         return super().delete(request, *args, **kwargs)

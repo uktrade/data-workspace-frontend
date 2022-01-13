@@ -14,7 +14,6 @@ from io import StringIO
 from typing import Optional, List
 
 from psycopg2 import sql
-import requests
 
 import boto3
 from botocore.exceptions import ClientError
@@ -38,15 +37,11 @@ from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.urls import reverse
 from django.db.models import F, ProtectedError, Count, Q
-from django.db.models.signals import post_save, post_delete
-from django.dispatch import receiver
 from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import SearchVector, SearchVectorField
 from django.utils.text import slugify
 from django.utils import timezone
-
-from mohawk import Sender
 
 from dataworkspace import datasets_db
 from dataworkspace.apps.core.models import (
@@ -2362,66 +2357,10 @@ class Pipeline(TimeStampedUserModel):
     table_name = models.CharField(max_length=256, unique=True)
     sql_query = models.TextField()
 
+    @property
+    def dag_id(self):
+        table, schema = self.table_name.split(".")
+        return f"DerivedPipeline-{table}-{schema}"
 
-@receiver(post_save, sender=Pipeline)
-def save_pipeline_to_dataflow(instance, **_):
-    config = settings.DATAFLOW_API_CONFIG
-    dag_url = f'{config["DATAFLOW_BASE_URL"]}/api/derived-dags/dag/{instance.id}'
-    hawk_creds = {
-        "id": config["DATAFLOW_HAWK_ID"],
-        "key": config["DATAFLOW_HAWK_KEY"],
-        "algorithm": "sha256",
-    }
-    method = "POST"
-    content_type = "application/json"
-    body = json.dumps(
-        {
-            "table_name": instance.table_name,
-            "sql_query": instance.sql_query,
-        }
-    )
-
-    header = Sender(
-        hawk_creds,
-        dag_url,
-        method.lower(),
-        content=body,
-        content_type=content_type,
-    ).request_header
-
-    response = requests.request(
-        method,
-        dag_url,
-        data=body,
-        headers={"Authorization": header, "Content-Type": content_type},
-    )
-    response.raise_for_status()
-    return response.json()
-
-
-@receiver(post_delete, sender=Pipeline)
-def delete_pipeline_from_dataflow(instance, **_):
-    config = settings.DATAFLOW_API_CONFIG
-    dag_url = f'{config["DATAFLOW_BASE_URL"]}/api/derived-dags/dag/{instance.id}'
-    hawk_creds = {
-        "id": config["DATAFLOW_HAWK_ID"],
-        "key": config["DATAFLOW_HAWK_KEY"],
-        "algorithm": "sha256",
-    }
-    method = "DELETE"
-    content_type = "application/json"
-
-    header = Sender(
-        hawk_creds,
-        dag_url,
-        method.lower(),
-        content_type=content_type,
-    ).request_header
-
-    response = requests.request(
-        method,
-        dag_url,
-        headers={"Authorization": header, "Content-Type": content_type},
-    )
-    response.raise_for_status()
-    return response.json()
+    def get_absolute_url(self):
+        return reverse("pipelines:edit", args=(self.id,))
