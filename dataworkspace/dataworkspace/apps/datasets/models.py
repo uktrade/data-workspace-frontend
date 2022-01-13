@@ -411,7 +411,7 @@ class DataSet(DeletableTimestampedUserModel):
         "Copy of <original dataset name>".
 
         The new datasets published_at date is set to the moment
-        that it was copied.
+        that it is published.
 
         Related objects (excluding user permissions) are duplicated
         for the new dataset.
