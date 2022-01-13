@@ -23,6 +23,7 @@ def test_clone_dataset(db):
     assert clone.slug == ""
     assert clone.number_of_downloads == 0
     assert clone.name == f"Copy of {ds.name}"
+    assert clone.published_at = None
     assert not clone.published
 
 
