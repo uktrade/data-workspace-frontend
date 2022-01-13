@@ -168,10 +168,7 @@ async def async_main():
         )
 
     def clear_cookie_header(headers: Union[CIMultiDict, CIMultiDictProxy]):
-        for key in list(headers.keys()):
-            if key.lower() == "cookie":
-                headers[key] = ""
-        return headers
+        return CIMultiDict(filter_headers(headers, ["cookie"]) + (("cookie", ""),))
 
     def admin_headers_request(downstream_request):
         # When we make a deliberate request to the admin application from the
