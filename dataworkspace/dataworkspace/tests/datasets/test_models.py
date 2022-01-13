@@ -1,7 +1,6 @@
 import io
 from collections import OrderedDict
 from datetime import datetime
-from django.utils import timezone
 
 import botocore
 import mock
