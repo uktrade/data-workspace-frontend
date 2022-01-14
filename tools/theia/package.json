@@ -47,7 +47,8 @@
         "**/braces": "^3.0.2",
         "**/normalize-url": "^4.5.1",
         "**/color-string": "^1.5.5",
-        "**/ansi-regex": "5.0.1"
+        "**/ansi-regex": "5.0.1",
+        "**/follow-redirects": "^1.14.7"
     },
     "theiaPluginsDir": "plugins",
     "theiaPlugins": {
