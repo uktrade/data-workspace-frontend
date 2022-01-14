@@ -10,6 +10,7 @@
         <a class="govuk-breadcrumbs__link" href="{% url 'pipelines:index' %}">Pipelines</a>
       </li>
       <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="{% url 'pipelines:index' %}">{{ object.table_name }}</a>
         {{ object.table_name }}
       </li>
       </li>
@@ -21,6 +22,12 @@
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
+      <h2 class="govuk-caption-m">{{ object.table_name }}</h2>
+      <h1 class="govuk-heading-xl">
+        Logs
+      </h1>
+      <p class="govuk-body">
+        THIS IS WHERE THE LOGS GO
       <h1 class="govuk-heading-xl">
         Logs
       </h1>

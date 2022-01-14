@@ -181,3 +181,11 @@ class PipelineLogsDetailView(DetailView, UserPassesTestMixin):
         return self.request.user.is_superuser
 
 
+
+
+class PipelineLogsDetailView(DetailView, UserPassesTestMixin):
+    model = Pipeline
+    template_name = "datasets/pipelines/logs.html"
+
+    def test_func(self):
+        return self.request.user.is_superuser
