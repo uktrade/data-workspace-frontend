@@ -8,7 +8,7 @@ ipywidgets==7.5.1
 jupyterlab
 jupyterlab-widgets==1.0.0
 matplotlib==3.2.1
-nltk==3.6.4
+nltk
 notebook
 numpy
 pandas==1.2.4
