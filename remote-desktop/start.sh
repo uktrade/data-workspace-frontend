@@ -4,6 +4,7 @@ set -e
 
 mkdir -p /home/dw/Desktop/
 cp /org.qgis.qgis.desktop /home/dw/Desktop/
+cp /gretl.desktop /home/dw/Desktop/
 
 vncserver -SecurityTypes None -xstartup /usr/bin/lxsession :1
 

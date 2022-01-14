@@ -13,8 +13,9 @@ RUN \
 		gnupg \
 		software-properties-common \
 		gzip \
+		gretl \
 		wget && \
-	wget -qO - https://qgis.org/downloads/qgis-2020.gpg.key | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/qgis-archive.gpg --import && \
+	wget -qO - https://qgis.org/downloads/qgis-2021.gpg.key | gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/qgis-archive.gpg --import && \
 	chmod a+r /etc/apt/trusted.gpg.d/qgis-archive.gpg && \
 	add-apt-repository "deb https://qgis.org/ubuntu $(lsb_release -c -s) main" && \
 	apt update && \
@@ -40,7 +41,7 @@ RUN \
 	touch /var/run/nginx.pid && \
 	chown dw:dw /var/run/nginx.pid
 
-COPY start.sh nginx.conf org.qgis.qgis.desktop /
+COPY start.sh nginx.conf org.qgis.qgis.desktop gretl.desktop /
 
 ENV \
 	USER=dw
