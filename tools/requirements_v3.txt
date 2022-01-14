@@ -388,7 +388,7 @@ tensorboard==2.5.0
     # via tensorflow
 tensorflow-estimator==2.5.0
     # via tensorflow
-tensorflow==2.5.1
+tensorflow==2.5.2
     # via -r requirements_v3.in
 termcolor==1.1.0
     # via tensorflow
