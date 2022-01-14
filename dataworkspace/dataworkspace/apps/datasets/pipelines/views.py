@@ -5,6 +5,7 @@ from django.contrib.auth.mixins import UserPassesTestMixin
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls.base import reverse_lazy
+from django.views.generic import DetailView
 from django.views import View
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
@@ -151,3 +152,11 @@ class PipelineStopView(View, IsAdminMixin):
         else:
             messages.success(self.request, "Pipeline stopped successfully.")
         return HttpResponseRedirect(reverse("pipelines:index"))
+
+
+class PipelineLogsDetailView(DetailView, UserPassesTestMixin):
+    model = Pipeline
+    template_name = "datasets/pipelines/logs.html"
+
+    def test_func(self):
+        return self.request.user.is_superuser
