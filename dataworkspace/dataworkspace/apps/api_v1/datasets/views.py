@@ -300,7 +300,7 @@ def _static_int(val, **kwargs):
 
 
 def _static_bool(val, **kwargs):
-    return models.Value(val, models.BooleanField(null=True ** kwargs))
+    return models.Value(val, models.BooleanField(null=True, **kwargs))
 
 
 class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
