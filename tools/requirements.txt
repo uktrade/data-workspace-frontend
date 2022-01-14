@@ -177,7 +177,7 @@ nbformat==5.0.8
     #   notebook
 nest-asyncio==1.4.3
     # via nbclient
-nltk==3.6.4
+nltk==3.6.7
     # via -r requirements.in
 notebook==6.4.3
     # via
@@ -281,7 +281,7 @@ pyzmq==20.0.0
     # via
     #   jupyter-client
     #   notebook
-regex==2021.7.6
+regex==2021.11.10
     # via
     #   -r requirements.in
     #   nltk
