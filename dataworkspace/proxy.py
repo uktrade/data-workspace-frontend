@@ -47,10 +47,12 @@ async def async_main():
     env = normalise_environment(os.environ)
 
     stdout_handler = logging.StreamHandler(sys.stdout)
-    if "dataworkspace.test" not in env["ALLOWED_HOSTS"]:
+    local = "dataworkspace.test" in env["ALLOWED_HOSTS"]
+    if not local:
         stdout_handler.setFormatter(
             ecs_logging.StdlibFormatter(exclude_fields=("log.original", "message"))
         )
+    cookie_name = ("__Secure-" if not local else "") + "data_workspace_session"
     for logger_name in ["aiohttp.server", "aiohttp.web", "aiohttp.access", "proxy"]:
         logger = logging.getLogger(logger_name)
         logger.setLevel(logging.INFO)
@@ -1169,7 +1171,7 @@ async def async_main():
         app = web.Application(
             middlewares=[
                 server_logger(),
-                redis_session_middleware(redis_pool, root_domain_no_port, embed_path),
+                redis_session_middleware(cookie_name, redis_pool, root_domain_no_port, embed_path),
                 authenticate_by_staff_sso(),
                 authenticate_by_basic_auth(),
                 authenticate_by_hawk_auth(),
