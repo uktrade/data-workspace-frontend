@@ -316,7 +316,6 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         "published",
         "created_date",
         "published_at",
-        "is_draft",
         "information_asset_owner",
         "information_asset_manager",
         "enquiries_contact",
