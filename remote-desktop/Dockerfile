@@ -8,7 +8,7 @@ RUN \
 		nginx \
 		procps \
 		task-lxde-desktop \
-		vnc4server \
+		tigervnc-standalone-server \
 		vim \
 		gnupg \
 		software-properties-common \

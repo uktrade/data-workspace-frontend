@@ -6,7 +6,7 @@ mkdir -p /home/dw/Desktop/
 cp /org.qgis.qgis.desktop /home/dw/Desktop/
 cp /gretl.desktop /home/dw/Desktop/
 
-vncserver -SecurityTypes None -xstartup /usr/bin/lxsession :1
+tigervncserver -SecurityTypes None -xstartup /usr/bin/lxsession :1
 
 # The webserver for static files that is build into websocketify occasionally
 # returns 500s. So we don't use it, and instead serve static files through nginx
