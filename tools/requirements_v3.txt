@@ -32,7 +32,7 @@ blis==0.2.4
     # via
     #   spacy
     #   thinc
-bokeh==2.3.0
+bokeh==2.4.2
     # via -r requirements_v3.in
 cachetools==4.2.2
     # via google-auth
@@ -249,7 +249,7 @@ pexpect==4.8.0
     # via ipython
 pickleshare==0.7.5
     # via ipython
-pillow==8.3.2
+pillow==9.0.0
     # via bokeh
 plac==0.9.6
     # via
@@ -300,7 +300,6 @@ pyrsistent==0.17.3
     # via jsonschema
 python-dateutil==2.8.1
     # via
-    #   bokeh
     #   jupyter-client
     #   matplotlib
     #   pandas
@@ -432,7 +431,7 @@ traitlets==5.0.5
     #   nbconvert
     #   nbformat
     #   notebook
-typing-extensions==3.7.4.3
+typing-extensions==4.0.1
     # via
     #   bokeh
     #   tensorflow
