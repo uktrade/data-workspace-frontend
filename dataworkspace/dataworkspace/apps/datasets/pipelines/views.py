@@ -31,7 +31,7 @@ class PipelineCreateView(CreateView):
         form.instance.created_by = self.request.user
         form.instance.save()
         try:
-            save_pipeline_to_dataflow(form.instance)
+            save_pipeline_to_dataflow(form.instance, "POST")
         except RequestException as e:
             messages.error(
                 self.request, "Unable to sync pipeline to data flow. Please try saving again"
@@ -58,7 +58,7 @@ class PipelineUpdateView(UpdateView, UserPassesTestMixin):
         form.instance.updated_by = self.request.user
         form.instance.save()
         try:
-            save_pipeline_to_dataflow(form.instance)
+            save_pipeline_to_dataflow(form.instance, "PUT")
         except RequestException as e:
             messages.error(
                 self.request, "Unable to sync pipeline to data flow. Please try saving again"

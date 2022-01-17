@@ -14,9 +14,8 @@ HAWK_CREDS = {
 }
 
 
-def save_pipeline_to_dataflow(pipeline):
+def save_pipeline_to_dataflow(pipeline, method):
     url = f"{API_URL}/{pipeline.dag_id}"
-    method = "POST"
     content_type = "application/json"
     table_name, schema_name = pipeline.table_name.split(".")
     body = json.dumps(
