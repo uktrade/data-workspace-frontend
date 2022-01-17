@@ -217,8 +217,7 @@ SESSION_COOKIE_SECURE = not LOCAL
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
 
-CSRF_COOKIE_SECURE = not LOCAL
-CSRF_COOKIE_NAME = ("__Secure-" if not LOCAL else "") + "data_workspace_csrf"
+CSRF_USE_SESSIONS = True
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 

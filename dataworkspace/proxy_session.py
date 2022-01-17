@@ -101,10 +101,9 @@ def redis_session_middleware(cookie_name, redis_pool, root_domain_no_port, embed
             path, same_site = (embed_path, "None") if is_embed else ("/", "Lax")
 
             # aiohttp's set_cookie doesn't seem to support the SameSite attribute
-            response.headers.add(
-                "set-cookie",
+            response.headers["set-cookie"] = (
                 f"{cookie_name}={cookie_value}; domain={root_domain_no_port}; expires={expires}; "
-                f"Max-Age={COOKIE_MAX_AGE}; HttpOnly; Path={path}; SameSite={same_site}{secure}",
+                f"Max-Age={COOKIE_MAX_AGE}; HttpOnly; Path={path}; SameSite={same_site}{secure}"
             )
             return response
 
