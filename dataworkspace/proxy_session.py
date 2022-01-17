@@ -35,10 +35,10 @@ from aiohttp import web
 
 
 COOKIE_NAME = "data_workspace_session"
-COOKIE_MAX_AGE = 60 * 60 * 10
+COOKIE_MAX_AGE = 60 * 30
 
 REDIS_KEY_PREFIX = "data_workspace_session___cookie"
-REDIS_MAX_AGE = 60 * 60 * 9
+REDIS_MAX_AGE = 60 * 25
 
 SESSION_KEY = "SESSION"
 
