@@ -10,7 +10,7 @@
         <a class="govuk-breadcrumbs__link" href="{% url 'pipelines:index' %}">Pipelines</a>
       </li>
       <li class="govuk-breadcrumbs__list-item">
-        <a class="govuk-breadcrumbs__link" href="{% url 'pipelines:index' %}">{{ object.table_name }}</a>
+        {{ object.table_name }}
       </li>
       </li>
       <li class="govuk-breadcrumbs__list-item">Logs
