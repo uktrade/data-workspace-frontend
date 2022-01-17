@@ -2359,8 +2359,7 @@ class Pipeline(TimeStampedUserModel):
 
     @property
     def dag_id(self):
-        table, schema = self.table_name.split(".")
-        return f"DerivedPipeline-{table}-{schema}"
+        return f"DerivedPipeline-{self.table_name}"
 
     def get_absolute_url(self):
         return reverse("pipelines:edit", args=(self.id,))
