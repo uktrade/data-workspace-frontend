@@ -187,7 +187,7 @@ notebook==6.4.3
     #   jupyterlab
     #   jupyterlab-server
     #   widgetsnbextension
-numpy==1.19.5
+numpy==1.22.1
     # via
     #   -r requirements.in
     #   blis

@@ -210,7 +210,7 @@ notebook==6.4.3
     #   -r requirements_v3.in
     #   nbclassic
     #   widgetsnbextension
-numpy==1.19.5
+numpy==1.22.1
     # via
     #   -r requirements_v3.in
     #   blis
