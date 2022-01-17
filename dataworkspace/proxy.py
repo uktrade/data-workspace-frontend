@@ -167,9 +167,6 @@ async def async_main():
             if key.lower() not in [x.lower() for x in exclude]
         )
 
-    def clear_cookie_header(headers: Union[CIMultiDict, CIMultiDictProxy]):
-        return CIMultiDict(filter_headers(headers, ["cookie"]) + (("cookie", ""),))
-
     def admin_headers_request(downstream_request):
         # When we make a deliberate request to the admin application from the
         # proxy we don't want to proxy content-length or content-type
@@ -704,7 +701,7 @@ async def async_main():
                 async with client_session.ws_connect(
                     str(upstream_url),
                     headers=(
-                        clear_cookie_header(upstream_headers)
+                        CIMultiDict(filter_headers(upstream_headers, ["cookie"]))
                         if filter_cookies
                         else upstream_headers
                     ),
@@ -829,7 +826,9 @@ async def async_main():
             str(upstream_url),
             params=upstream_query,
             headers=(
-                clear_cookie_header(upstream_headers) if filter_cookies else upstream_headers
+                CIMultiDict(filter_headers(upstream_headers, ["cookie"]))
+                if filter_cookies
+                else upstream_headers
             ),
             data=upstream_data,
             allow_redirects=False,
