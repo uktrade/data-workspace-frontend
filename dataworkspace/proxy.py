@@ -842,8 +842,7 @@ async def async_main():
                     headers=CIMultiDict(
                         filter_headers(
                             upstream_response.headers,
-                            ["transfer-encoding"]
-                            + (["Cookie", "Set-Cookie"] if filter_cookies else []),
+                            ["transfer-encoding"] + (["Set-Cookie"] if filter_cookies else []),
                         )
                         + response_headers
                     ),
