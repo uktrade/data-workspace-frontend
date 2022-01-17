@@ -46,6 +46,7 @@ class CatalogueItemSerializer(serializers.Serializer):
     eligibility_criteria = serializers.ListField()
     source_tables = serializers.SerializerMethodField()
     slug = serializers.CharField()
+    is_draft = serializers.BooleanField(source="draft")
 
     def to_representation(self, instance):
         instance = super().to_representation(instance)

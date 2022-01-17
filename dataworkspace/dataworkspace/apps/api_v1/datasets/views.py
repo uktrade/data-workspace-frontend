@@ -5,6 +5,7 @@ import psycopg2
 from django.conf import settings
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.db import models
+from django.db.models import F
 from django.db.models.functions import Substr
 from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
@@ -298,6 +299,10 @@ def _static_int(val, **kwargs):
     return models.Value(val, models.IntegerField(**kwargs))
 
 
+def _static_bool(val, **kwargs):
+    return models.Value(val, models.BooleanField(null=True, **kwargs))
+
+
 class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
     """
     API endpoint to list catalogue items for consumption by data flow.
@@ -318,6 +323,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         "slug",
         "purpose",
         "source_tags",
+        "draft",
         "personal_data",
         "retention_policy",
         "eligibility_criteria",
@@ -332,6 +338,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
                 distinct=True,
             )
         )
+        .annotate(draft=_static_bool(None))
         .values(*fields)
         .union(
             ReferenceDataset.objects.live()
@@ -346,6 +353,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
                     distinct=True,
                 )
             )
+            .annotate(draft=F("is_draft"))
             .values(*_replace(fields, "id", "uuid"))
         )
         .union(
@@ -358,6 +366,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
                     distinct=True,
                 )
             )
+            .annotate(draft=_static_bool(None))
             .values(*fields)
         )
     ).order_by("created_date")
