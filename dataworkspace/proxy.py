@@ -12,6 +12,7 @@ import sys
 import string
 import uuid
 import urllib
+from typing import Union
 
 import aiohttp
 import ecs_logging
@@ -20,7 +21,7 @@ from aiohttp import web
 import aioredis
 from elasticapm.contrib.aiohttp import ElasticAPM
 from hawkserver import authenticate_hawk_header
-from multidict import CIMultiDict
+from multidict import CIMultiDict, CIMultiDictProxy
 from sentry_sdk import set_user
 from sentry_sdk.integrations.aiohttp import AioHttpIntegration
 from yarl import URL
@@ -156,11 +157,14 @@ async def async_main():
     def get_random_context_logger():
         return ContextAdapter(logger, {"context": "".join(random.choices(CONTEXT_ALPHABET, k=8))})
 
-    def without_transfer_encoding(request_or_response):
+    def filter_headers(headers: Union[CIMultiDict, CIMultiDictProxy], exclude: list):
+        """
+        Return headers with any matches in `exclude` removed
+        """
         return tuple(
             (key, value)
-            for key, value in request_or_response.headers.items()
-            if key.lower() != "transfer-encoding"
+            for key, value in headers.items()
+            if key.lower() not in [x.lower() for x in exclude]
         )
 
     def admin_headers_request(downstream_request):
@@ -186,15 +190,11 @@ async def async_main():
         )
 
     def mirror_headers(downstream_request):
-        return tuple(
-            (key, value)
-            for key, value in downstream_request.headers.items()
-            if key.lower() not in ["host", "transfer-encoding"]
-        )
+        return filter_headers(downstream_request.headers, ["host", "transfer-encoding"])
 
     def application_headers(downstream_request):
         return (
-            without_transfer_encoding(downstream_request)
+            filter_headers(downstream_request.headers, ["transfer-encoding"])
             + (
                 (("x-scheme", downstream_request.headers["x-forwarded-proto"]),)
                 if "x-forwarded-proto" in downstream_request.headers
@@ -229,7 +229,7 @@ async def async_main():
             return "-".join([s.capitalize() for s in header.replace("_", "-").split("-")])
 
         return CIMultiDict(
-            without_transfer_encoding(downstream_request)
+            filter_headers(downstream_request.headers, ["transfer-encoding"])
             + (
                 tuple(
                     [(f"Credentials-{standardise_header(k)}", v) for k, v in credentials.items()]
@@ -461,9 +461,16 @@ async def async_main():
                 (("content-security-policy", csp_application_spawning),),
             )
 
+        is_visualisation = application["type"] == "VISUALISATION"
+
         if is_websocket:
             return await handle_application_websocket(
-                downstream_request, application["proxy_url"], path, query, port_override
+                downstream_request,
+                application["proxy_url"],
+                path,
+                query,
+                port_override,
+                is_visualisation,
             )
 
         if application["state"] == "SPAWNING":
@@ -495,16 +502,18 @@ async def async_main():
             application_upstream(application["proxy_url"], path, port_override),
             query,
             public_host,
+            is_visualisation,
         )
 
     async def handle_application_websocket(
-        downstream_request, proxy_url, path, query, port_override
+        downstream_request, proxy_url, path, query, port_override, is_visualisation
     ):
         upstream_url = application_upstream(proxy_url, path, port_override).with_query(query)
         return await handle_websocket(
             downstream_request,
             CIMultiDict(application_headers(downstream_request)),
             upstream_url,
+            filter_cookies=is_visualisation,
         )
 
     def application_upstream(proxy_url, path, port_override):
@@ -597,10 +606,14 @@ async def async_main():
         )
 
     async def handle_application_http_running_direct(
-        downstream_request, method, upstream_url, query, public_host
+        downstream_request,
+        method,
+        upstream_url,
+        query,
+        public_host,
+        is_visualisation,
     ):
         host = downstream_request.headers["host"]
-
         await send_to_google_analytics(downstream_request)
 
         return await handle_http(
@@ -617,6 +630,7 @@ async def async_main():
                     csp_application_running_direct(host, public_host),
                 ),
             ),
+            filter_cookies=is_visualisation,
         )
 
     async def handle_mirror(downstream_request, method, path):
@@ -663,7 +677,9 @@ async def async_main():
             default_http_timeout,
         )
 
-    async def handle_websocket(downstream_request, upstream_headers, upstream_url):
+    async def handle_websocket(
+        downstream_request, upstream_headers, upstream_url, filter_cookies=False
+    ):
         protocol = downstream_request.headers.get("Sec-WebSocket-Protocol")
         protocols = (protocol,) if protocol else ()
 
@@ -683,7 +699,13 @@ async def async_main():
         async def upstream():
             try:
                 async with client_session.ws_connect(
-                    str(upstream_url), headers=upstream_headers, protocols=protocols
+                    str(upstream_url),
+                    headers=(
+                        CIMultiDict(filter_headers(upstream_headers, ["cookie"]))
+                        if filter_cookies
+                        else upstream_headers
+                    ),
+                    protocols=protocols,
                 ) as upstream_ws:
                     upstream_connection.set_result(upstream_ws)
                     downstream_ws = await downstream_connection
@@ -797,23 +819,31 @@ async def async_main():
         upstream_data,
         timeout,
         response_headers=tuple(),
+        filter_cookies=False,
     ):
         async with client_session.request(
             upstream_method,
             str(upstream_url),
             params=upstream_query,
-            headers=upstream_headers,
+            headers=(
+                CIMultiDict(filter_headers(upstream_headers, ["cookie"]))
+                if filter_cookies
+                else upstream_headers
+            ),
             data=upstream_data,
             allow_redirects=False,
             timeout=timeout,
         ) as upstream_response:
-
             _, _, _, with_session_cookie = downstream_request[SESSION_KEY]
             downstream_response = await with_session_cookie(
                 web.StreamResponse(
                     status=upstream_response.status,
                     headers=CIMultiDict(
-                        without_transfer_encoding(upstream_response) + response_headers
+                        filter_headers(
+                            upstream_response.headers,
+                            ["transfer-encoding"] + (["Set-Cookie"] if filter_cookies else []),
+                        )
+                        + response_headers
                     ),
                 )
             )

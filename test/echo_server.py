@@ -22,7 +22,12 @@ async def async_main():
             "headers": dict(request.headers),
         }
         return web.json_response(
-            data, status=405, headers={"from-upstream": "upstream-header-value"}
+            data,
+            status=405,
+            headers={
+                "from-upstream": "upstream-header-value",
+                "Set-Cookie": "test-set-cookie",
+            },
         )
 
     async def handle_websockets(request):
