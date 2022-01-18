@@ -366,7 +366,7 @@ class CreateTableIngestingView(BaseCreateTableStepView):
 
 
 class CreateTableRenamingTableView(BaseCreateTableStepView):
-    task_name = "swap-dataset-tables"
+    task_name = "swap-dataset-table-datasets_db"
     next_step_url_name = "your-files:create-table-success"
     step = 4
 
