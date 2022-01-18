@@ -1,5 +1,6 @@
 import pytest
 from django.urls import reverse
+from mock import mock
 
 from dataworkspace.apps.datasets.models import Pipeline
 from dataworkspace.tests import factories
@@ -27,7 +28,8 @@ from dataworkspace.tests import factories
         ),
     ),
 )
-def test_create_pipeline(table_name, expected_output, added_pipelines, staff_client):
+@mock.patch("dataworkspace.apps.datasets.pipelines.views.save_pipeline_to_dataflow")
+def test_create_pipeline(mock_sync, table_name, expected_output, added_pipelines, staff_client):
     pipeline_count = Pipeline.objects.count()
     staff_client.post(reverse("admin:index"), follow=True)
     resp = staff_client.post(
@@ -40,7 +42,8 @@ def test_create_pipeline(table_name, expected_output, added_pipelines, staff_cli
 
 
 @pytest.mark.django_db
-def test_edit_pipeline(staff_client):
+@mock.patch("dataworkspace.apps.datasets.pipelines.views.save_pipeline_to_dataflow")
+def test_edit_pipeline(mock_delete, staff_client):
     pipeline = factories.PipelineFactory.create()
     staff_client.post(reverse("admin:index"), follow=True)
     resp = staff_client.post(
@@ -54,7 +57,8 @@ def test_edit_pipeline(staff_client):
 
 
 @pytest.mark.django_db
-def test_delete_pipeline(staff_client):
+@mock.patch("dataworkspace.apps.datasets.pipelines.views.delete_pipeline_from_dataflow")
+def test_delete_pipeline(mock_delete, staff_client):
     pipeline = factories.PipelineFactory.create()
     pipeline_count = Pipeline.objects.count()
     staff_client.post(reverse("admin:index"), follow=True)

@@ -2360,3 +2360,10 @@ class UserNotification(TimeStampedModel):
 class Pipeline(TimeStampedUserModel):
     table_name = models.CharField(max_length=256, unique=True)
     sql_query = models.TextField()
+
+    @property
+    def dag_id(self):
+        return f"DerivedPipeline-{self.table_name}"
+
+    def get_absolute_url(self):
+        return reverse("pipelines:edit", args=(self.id,))
