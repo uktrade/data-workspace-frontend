@@ -29,7 +29,6 @@ class PipelineCreateView(CreateView):
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user
-        form.instance.save()
         try:
             save_pipeline_to_dataflow(form.instance, "POST")
         except RequestException as e:
@@ -37,7 +36,7 @@ class PipelineCreateView(CreateView):
                 self.request, "Unable to sync pipeline to data flow. Please try saving again"
             )
             logger.exception(e)
-            return HttpResponseRedirect(form.instance.get_absolute_url())
+            return self.form_invalid(form)
 
         messages.success(self.request, "Pipeline created successfully.")
         return super().form_valid(form)
@@ -56,7 +55,6 @@ class PipelineUpdateView(UpdateView, UserPassesTestMixin):
 
     def form_valid(self, form):
         form.instance.updated_by = self.request.user
-        form.instance.save()
         try:
             save_pipeline_to_dataflow(form.instance, "PUT")
         except RequestException as e:
@@ -64,7 +62,7 @@ class PipelineUpdateView(UpdateView, UserPassesTestMixin):
                 self.request, "Unable to sync pipeline to data flow. Please try saving again"
             )
             logger.exception(e)
-            return HttpResponseRedirect(form.instance.get_absolute_url())
+            return self.form_invalid(form)
 
         messages.success(self.request, "Pipeline updated successfully.")
         return super().form_valid(form)
