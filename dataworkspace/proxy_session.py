@@ -34,7 +34,6 @@ import time
 from aiohttp import web
 
 
-COOKIE_NAME = "data_workspace_session"
 COOKIE_MAX_AGE = 60 * 30
 
 REDIS_KEY_PREFIX = "data_workspace_session___cookie"
@@ -43,13 +42,13 @@ REDIS_MAX_AGE = 60 * 25
 SESSION_KEY = "SESSION"
 
 
-def redis_session_middleware(redis_pool, root_domain_no_port, embed_path):
+def redis_session_middleware(cookie_name, redis_pool, root_domain_no_port, embed_path):
     def get_secret_cookie_value():
         return secrets.token_urlsafe(64)
 
     @web.middleware
     async def _redis_session_middleware(request, handler):
-        cookie_value = request.cookies.get(COOKIE_NAME)
+        cookie_value = request.cookies.get(cookie_name)
         to_set = {}
 
         async def get_value(key):
@@ -104,7 +103,7 @@ def redis_session_middleware(redis_pool, root_domain_no_port, embed_path):
             # aiohttp's set_cookie doesn't seem to support the SameSite attribute
             response.headers.add(
                 "set-cookie",
-                f"{COOKIE_NAME}={cookie_value}; domain={root_domain_no_port}; expires={expires}; "
+                f"{cookie_name}={cookie_value}; domain={root_domain_no_port}; expires={expires}; "
                 f"Max-Age={COOKIE_MAX_AGE}; HttpOnly; Path={path}; SameSite={same_site}{secure}",
             )
             return response
