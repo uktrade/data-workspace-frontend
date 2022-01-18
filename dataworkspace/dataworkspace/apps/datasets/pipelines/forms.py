@@ -37,7 +37,7 @@ class PipelineCreateForm(GOVUKDesignSystemModelForm):
         validators=(
             RegexValidator(
                 message="Table name must be in the format <schema>.<table name>",
-                regex=r"^[a-zA-Z][a-zA-Z0-9_]*.[a-zA-Z][a-zA-Z0-9_]*$",
+                regex=r"^[a-zA-Z_][a-zA-Z0-9_]*.[a-zA-Z_][a-zA-Z0-9_]*$",
             ),
             validate_schema_and_table,
         ),

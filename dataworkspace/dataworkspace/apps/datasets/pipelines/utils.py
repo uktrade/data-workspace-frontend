@@ -6,7 +6,7 @@ from mohawk import Sender
 from django.conf import settings
 
 
-API_URL = f"{settings.DATAFLOW_API_CONFIG['DATAFLOW_BASE_URL']}/api/derived-dags/dag"
+API_URL = f"{settings.DATAFLOW_API_CONFIG['DATAFLOW_BASE_URL']}/api/experimental/derived-dags/dag"
 HAWK_CREDS = {
     "id": settings.DATAFLOW_API_CONFIG["DATAFLOW_HAWK_ID"],
     "key": settings.DATAFLOW_API_CONFIG["DATAFLOW_HAWK_KEY"],
@@ -17,12 +17,14 @@ HAWK_CREDS = {
 def save_pipeline_to_dataflow(pipeline, method):
     url = f"{API_URL}/{pipeline.dag_id}"
     content_type = "application/json"
-    table_name, schema_name = pipeline.table_name.split(".")
+    schema_name, table_name = pipeline.table_name.split(".")
     body = json.dumps(
         {
+            "schedule": "@daily",
             "schema_name": schema_name,
             "table_name": table_name,
             "type": "sql",
+            "enabled": True,
             "config": {
                 "sql": pipeline.sql_query,
             },
