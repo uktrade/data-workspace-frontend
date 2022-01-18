@@ -24,6 +24,7 @@ def save_pipeline_to_dataflow(pipeline, method):
             "schema_name": schema_name,
             "table_name": table_name,
             "type": "sql",
+            "enabled": True,
             "config": {
                 "sql": pipeline.sql_query,
             },
