@@ -16,4 +16,5 @@ chown -R pgadmin:pgadmin \
 	/var/lib/pgadmin \
 	/var/log/pgadmin
 
+sudo -E -H -u pgadmin python3 /disable_activity.py &
 sudo -E -H -u pgadmin /entrypoint.sh

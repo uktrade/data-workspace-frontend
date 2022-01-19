@@ -8,6 +8,7 @@ ENV \
 
 COPY pgadmin/pgadmin-config.py /pgadmin4/config_local.py
 COPY pgadmin/start.sh /
+COPY pgadmin/disable_activity.py /
 
 USER root
 RUN \
