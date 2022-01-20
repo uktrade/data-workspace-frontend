@@ -23,6 +23,7 @@ SCHEMA_POSTGRES_DATA_TYPE_MAP = {
     "date": PostgresDataTypes.DATE,
     "datetime": PostgresDataTypes.TIMESTAMP,
     "number": PostgresDataTypes.NUMERIC,
+    "numeric": PostgresDataTypes.NUMERIC,
     "text": PostgresDataTypes.TEXT,
     "uuid": PostgresDataTypes.UUID,
 }
