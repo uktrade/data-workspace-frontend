@@ -148,17 +148,34 @@ def application_options(application_template):
 
 
 def api_application_dict(application_instance):
-    spawner_state = get_spawner(application_instance.application_template.spawner).state(
-        application_instance.spawner_application_template_options,
-        application_instance.created_date.replace(tzinfo=None),
-        application_instance.spawner_application_instance_id,
-        application_instance.public_host,
-    )
+    # Cache the most recent state of the spawner on the application instance
+    # to avoid throttling exceptions
+    if (
+        application_instance.spawner_state_refreshed_at is None
+        or application_instance.spawner_state_refreshed_at
+        < datetime.datetime.now() - datetime.timedelta(seconds=2)
+    ):
+        application_instance.spawner_state = get_spawner(
+            application_instance.application_template.spawner
+        ).state(
+            application_instance.spawner_application_template_options,
+            application_instance.created_date.replace(tzinfo=None),
+            application_instance.spawner_application_instance_id,
+            application_instance.public_host,
+        )
+        application_instance.spawner_state_refreshed_at = datetime.datetime.now()
+        application_instance.save(update_fields=["spawner_state", "spawner_state_refreshed_at"])
 
-    # Only pass through the database state if the spawner is running,
-    # Otherwise, we are in an error condition, and so return the spawner
-    # state, so the client (i.e. the proxy) knows to take action
-    api_state = application_instance.state if spawner_state == "RUNNING" else spawner_state
+    # The spawner can be RUNNING or STOPPED, while the application can be
+    # RUNNING, PENDING, or STOPPED. If the spawner is STOPPED (say due to an
+    # error), then the application should appear to be STOPPED, so the proxy
+    # can take action, such as showing an error to the user and issuing a
+    # DELETE.
+    api_state = (
+        "STOPPED"
+        if application_instance.spawner_state == "STOPPED"
+        else application_instance.spawner_state
+    )
 
     sso_id_hex_short = stable_identification_suffix(
         str(application_instance.owner.profile.sso_id), short=True

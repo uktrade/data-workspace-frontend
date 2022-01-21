@@ -198,6 +198,17 @@ class ApplicationInstance(TimeStampedModel):
         max_length=10240,
         help_text="An ID that the spawner understands to control and report on the application",
     )
+    spawner_state = models.CharField(
+        max_length=16,
+        choices=(
+            ("RUNNING", "Running"),
+            ("STOPPED", "Stopped"),
+        ),
+        default="RUNNING",
+    )
+    spawner_state_refreshed_at = models.DateTimeField(
+        help_text="When the state of the spawner was last refreshed", null=True
+    )
 
     # As reported by the spawner
     spawner_created_at = models.DateTimeField(null=True)
