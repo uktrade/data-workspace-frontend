@@ -88,10 +88,14 @@ class PipelineDeleteView(DeleteView, UserPassesTestMixin):
         try:
             delete_pipeline_from_dataflow(self.get_object())
         except RequestException as e:
-            messages.error(
-                self.request, "Unable to sync pipeline to data flow. Please try deleting again"
-            )
-            logger.exception(e)
-            return HttpResponseRedirect(reverse("pipelines:index"))
+            # If the pipeline doesn't exist on airflow, do not raise an error
+            if e.response is None or e.response.status_code != 404:
+                messages.error(
+                    self.request,
+                    "There was a problem deleting the pipeline. If the issue persists please "
+                    "contact our support team.",
+                )
+                logger.exception(e)
+                return HttpResponseRedirect(reverse("pipelines:index"))
         messages.success(self.request, "Pipeline deleted successfully.")
         return super().delete(request, *args, **kwargs)
