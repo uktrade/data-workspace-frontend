@@ -22,7 +22,7 @@ class AccessRequest(TimeStampedModel):
     contact_email = models.CharField(max_length=256, null=True, blank=False)
     reason_for_access = models.TextField(null=True, blank=False)
     training_screenshot = models.FileField(
-        storage=storage.S3FileStorage(location="training_screenshots"),
+        storage=storage.S3FileStorageWithClamAV(location="training_screenshots"),
         null=True,
         blank=True,
     )
