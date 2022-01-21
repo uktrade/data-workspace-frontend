@@ -171,7 +171,6 @@ def api_application_dict(application_instance):
         "wrap": application_instance.application_template.wrap,
         # Used by metrics to label the application
         "name": application_instance.application_template.nice_name,
-        "type": application_instance.application_template.application_type,
     }
 
 
