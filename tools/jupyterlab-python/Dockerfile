@@ -57,7 +57,7 @@ RUN \
     groupadd -g 4356 jovyan && \
     useradd -u 4357 jovyan -g jovyan -m && \
     echo "root ALL=(ALL:ALL) ALL" > /etc/sudoers && \
-    echo "jovyan ALL=NOPASSWD:/usr/local/bin/dw-install,/usr/bin/apt,/usr/bin/apt-get" >> /etc/sudoers && \
+    echo "jovyan ALL=NOPASSWD:/usr/local/bin/dw-install" >> /etc/sudoers && \
     wget -q -O - https://deb.nodesource.com/setup_14.x | bash  && \
     apt-get install -y nodejs && \
     apt-get remove --purge -y \
