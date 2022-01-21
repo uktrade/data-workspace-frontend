@@ -859,7 +859,12 @@ def store_reference_dataset_metadata():
                 )
 
                 columns = [
-                    (field.column_name, field.get_postgres_datatype())
+                    (
+                        field.relationship_name
+                        if field.data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
+                        else field.column_name,
+                        field.get_postgres_datatype(),
+                    )
                     for field in reference_dataset.fields.all()
                 ]
                 cursor.execute(
