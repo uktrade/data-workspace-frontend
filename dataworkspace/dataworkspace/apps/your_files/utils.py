@@ -22,10 +22,12 @@ SCHEMA_POSTGRES_DATA_TYPE_MAP = {
     "boolean": PostgresDataTypes.BOOLEAN,
     "date": PostgresDataTypes.DATE,
     "datetime": PostgresDataTypes.TIMESTAMP,
-    "number": PostgresDataTypes.NUMERIC,
     "numeric": PostgresDataTypes.NUMERIC,
     "text": PostgresDataTypes.TEXT,
     "uuid": PostgresDataTypes.UUID,
+}
+TABLESCHEMA_FIELD_TYPE_MAP = {
+    "number": "numeric",
 }
 
 
@@ -61,7 +63,8 @@ def get_s3_csv_column_types(path):
                 "header_name": field["name"],
                 "column_name": clean_db_identifier(field["name"]),
                 "data_type": SCHEMA_POSTGRES_DATA_TYPE_MAP.get(
-                    field["type"], PostgresDataTypes.TEXT
+                    TABLESCHEMA_FIELD_TYPE_MAP.get(field["type"], field["type"]),
+                    PostgresDataTypes.TEXT,
                 ),
                 "sample_data": [row[idx] for row in rows][:6],
             }
