@@ -108,7 +108,7 @@ class S3FileStorage(FileSystemStorage):
         return f'{reverse("uploaded-media")}?path={self._get_key(name)}'
 
 
-def clamav_file_validator(file: FieldFile):
+def malware_file_validator(file: FieldFile):
     clamav_response = _upload_to_clamav(file)
 
     if clamav_response.malware:

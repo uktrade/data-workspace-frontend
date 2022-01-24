@@ -24,7 +24,7 @@ class AccessRequest(TimeStampedModel):
         storage=storage.S3FileStorage(location="training_screenshots"),
         null=True,
         blank=True,
-        validators=[storage.clamav_file_validator],
+        validators=[storage.malware_file_validator],
     )
     spss_and_stata = models.BooleanField(default=False, blank=True)
     line_manager_email_address = models.CharField(max_length=256, null=True)
