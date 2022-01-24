@@ -5,7 +5,7 @@ from django.db import models
 from django.urls import reverse
 
 from dataworkspace.apps.core.models import TimeStampedUserModel
-from dataworkspace.apps.core.storage import S3FileStorage
+from dataworkspace.apps.core.storage import S3FileStorage, clamav_file_validator
 
 
 class CaseStudy(TimeStampedUserModel):
@@ -17,7 +17,11 @@ class CaseStudy(TimeStampedUserModel):
     department_name = models.CharField(max_length=255, blank=True)
     service_name = models.CharField(max_length=255, blank=True)
     outcome = models.CharField(max_length=255, blank=True)
-    image = models.FileField(blank=True, storage=S3FileStorage(location="case-studies"))
+    image = models.FileField(
+        blank=True,
+        storage=S3FileStorage(location="case-studies"),
+        validators=[clamav_file_validator],
+    )
     background = RichTextField(blank=True)
     solution = RichTextField(blank=True)
     impact = RichTextField(blank=True)
@@ -34,7 +38,9 @@ class CaseStudy(TimeStampedUserModel):
         super().__init__(*args, **kwargs)
         self._original_publish_date = self.publish_date
 
-    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+    def save(
+        self, force_insert=False, force_update=False, using=None, update_fields=None
+    ):
         # If the case study is changing from unpublished to published state
         # update the publish date before saving
         if self.published and not self._original_publish_date:

@@ -3,7 +3,7 @@ import json
 import logging
 from typing import Tuple
 
-import psqlparse
+#import psqlparse
 import psycopg2
 from psycopg2.sql import SQL
 import pytz

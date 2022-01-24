@@ -1,16 +1,45 @@
+import logging
 import os
 import uuid
 
-import logging
-
 import boto3
+import requests
 from botocore.exceptions import ClientError
-from django.core.files.storage import FileSystemStorage
 from django.conf import settings
-
+from django.core.exceptions import ValidationError
+from django.core.files import File
+from django.core.files.storage import FileSystemStorage
+from django.core.files.uploadhandler import UploadFileException
+from django.db.models.fields.files import FieldFile
 from django.urls import reverse
 
 logger = logging.getLogger("app")
+
+
+class AntiVirusServiceErrorException(UploadFileException):
+    pass
+
+
+class ClamAVResponse:
+    def __init__(self, json_response):
+        self.malware = json_response.get("malware", False)
+        self.reason = json_response.get("reason", "")
+
+
+def _upload_to_clamav(file: File) -> ClamAVResponse:
+    clamav_url = settings.CLAMAV_URL
+    clamav_user = settings.CLAMAV_USER
+    clamav_password = settings.CLAMAV_PASSWORD
+
+    logger.debug("post to clamav")
+    response = requests.post(
+        clamav_url, auth=(clamav_user, clamav_password), files={"file": file}
+    )
+    response.raise_for_status()
+
+    clamav_response = ClamAVResponse(response.json())
+
+    return clamav_response
 
 
 class S3FileStorage(FileSystemStorage):
@@ -28,11 +57,27 @@ class S3FileStorage(FileSystemStorage):
     def _get_key(self, name):
         return os.path.join(self.base_prefix, self._location, name)
 
-    def _save(self, name, content):
+    @staticmethod
+    def _av_check(name: str, content: File):
+        logger.debug("S3FileStorageWithClamAV av check %s", name)
+
+        clamav_response = _upload_to_clamav(content)
+
+        if clamav_response.malware:
+            msg = (
+                f"Virus found in {content.name} identified as {clamav_response.reason}"
+            )
+            logger.error(msg)
+            raise AntiVirusServiceErrorException(msg)
+
+        # this feels hacky! rewinding the file object so that it can be re-read ...
+        content.seek(0)
+
+    def _save_to_s3(self, name, content):
+
         client = self._get_client()
         filename = f"{name}!{uuid.uuid4()}"
         key = self._get_key(filename)
-        logger.info("S3FileStorage save %s", key)
 
         try:
             client.put_object(
@@ -48,6 +93,10 @@ class S3FileStorage(FileSystemStorage):
 
         return filename
 
+    def _save(self, name, content):
+        self._av_check(name, content)
+        return self._save_to_s3(name, content)
+
     def delete(self, name):
         client = self._get_client()
         try:
@@ -59,18 +108,10 @@ class S3FileStorage(FileSystemStorage):
         return f'{reverse("uploaded-media")}?path={self._get_key(name)}'
 
 
-class S3FileStorageWithClamAV(S3FileStorage):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args,**kwargs)
-        logger.info("using S3FileStorageWithClamAV")
+def clamav_file_validator(file: FieldFile):
+    clamav_response = _upload_to_clamav(file)
 
-    def _av_check(self, name):
-        # TODO - https://github.com/uktrade/dit-clamav-rest/blob/master/client-examples/example.py
-        # Perhaps review chunking uploads?
-        logger.info("S3FileStorageWithClamAV av check %s", name)
-        pass
-
-    def _save(self, name, content: bytes):
-        logger.info("S3FileStorageWithClamAV save")
-        self._av_check(name)
-        return super()._save(name, content)
+    if clamav_response.malware:
+        msg = f"Virus found in {file.name}"
+        logger.error(msg)
+        raise ValidationError(msg, code="virus_found", params={"value": file})
