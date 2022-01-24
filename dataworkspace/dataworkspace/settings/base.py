@@ -39,15 +39,13 @@ DEBUG = bool(strtobool(env.get("DEBUG", str(LOCAL))))
 
 def aws_fargate_private_ip():
     with urllib.request.urlopen("http://169.254.170.2/v2/metadata") as response:
-        return json.loads(response.read().decode("utf-8"))["Containers"][0]["Networks"][
-            0
-        ]["IPv4Addresses"][0]
+        return json.loads(response.read().decode("utf-8"))["Containers"][0]["Networks"][0][
+            "IPv4Addresses"
+        ][0]
 
 
 ALLOWED_HOSTS = (
-    (env["ALLOWED_HOSTS"])
-    if LOCAL
-    else (env["ALLOWED_HOSTS"] + [aws_fargate_private_ip()])
+    (env["ALLOWED_HOSTS"]) if LOCAL else (env["ALLOWED_HOSTS"] + [aws_fargate_private_ip()])
 )
 
 INTERNAL_IPS = ["127.0.0.1"] if LOCAL else []
@@ -126,9 +124,7 @@ if DEBUG:
 if ELASTIC_APM:
     INSTALLED_APPS.append("elasticapm.contrib.django")
 
-AUTHENTICATION_BACKENDS = [
-    "dataworkspace.apps.accounts.backends.AuthbrokerBackendUsernameIsEmail"
-]
+AUTHENTICATION_BACKENDS = ["dataworkspace.apps.accounts.backends.AuthbrokerBackendUsernameIsEmail"]
 AUTHBROKER_URL = env["AUTHBROKER_URL"]
 AUTHBROKER_CLIENT_ID = env["AUTHBROKER_CLIENT_ID"]
 AUTHBROKER_CLIENT_SECRET = env["AUTHBROKER_CLIENT_SECRET"]
@@ -286,12 +282,8 @@ NOTIFY_VISUALISATION_ACCESS_REQUEST_TEMPLATE_ID = "7cf395da-2f1b-4084-a526-f2fd6
 NOTIFY_VISUALISATION_ACCESS_GRANTED_TEMPLATE_ID = "139d5e94-1044-49f9-99a9-2a094b8986ea"
 NOTIFY_SHARE_EXPLORER_QUERY_TEMPLATE_ID = "8fe771ef-e8b6-4ff2-98a9-8ba208b5a3fa"
 
-NOTIFY_DATASET_NOTIFICATIONS_COLUMNS_TEMPLATE_ID = (
-    "9f992c0d-f6c0-4569-9d06-9e415304f5f9"
-)
-NOTIFY_DATASET_NOTIFICATIONS_ALL_DATA_TEMPLATE_ID = (
-    "daca1854-a2b3-4020-9c19-59bdf6bb309c"
-)
+NOTIFY_DATASET_NOTIFICATIONS_COLUMNS_TEMPLATE_ID = "9f992c0d-f6c0-4569-9d06-9e415304f5f9"
+NOTIFY_DATASET_NOTIFICATIONS_ALL_DATA_TEMPLATE_ID = "daca1854-a2b3-4020-9c19-59bdf6bb309c"
 
 CELERY_BROKER_URL = env["REDIS_URL"]
 CELERY_RESULT_BACKEND = env["REDIS_URL"]
@@ -392,9 +384,9 @@ S3_ASSUME_ROLE_POLICY_DOCUMENT = base64.b64decode(
     env["S3_ASSUME_ROLE_POLICY_DOCUMENT_BASE64"]
 ).decode("utf-8")
 S3_POLICY_NAME = env["S3_POLICY_NAME"]
-S3_POLICY_DOCUMENT_TEMPLATE = base64.b64decode(
-    env["S3_POLICY_DOCUMENT_TEMPLATE_BASE64"]
-).decode("utf-8")
+S3_POLICY_DOCUMENT_TEMPLATE = base64.b64decode(env["S3_POLICY_DOCUMENT_TEMPLATE_BASE64"]).decode(
+    "utf-8"
+)
 S3_PERMISSIONS_BOUNDARY_ARN = env["S3_PERMISSIONS_BOUNDARY_ARN"]
 S3_ROLE_PREFIX = env["S3_ROLE_PREFIX"]
 EFS_ID = env["EFS_ID"]
@@ -436,9 +428,7 @@ FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
 
 SEARCH_RESULTS_DATASETS_PER_PAGE = 15
 
-REFERENCE_DATASET_PREVIEW_NUM_OF_ROWS = int(
-    env.get("REFERENCE_DATASET_PREVIEW_NUM_OF_ROWS", 1000)
-)
+REFERENCE_DATASET_PREVIEW_NUM_OF_ROWS = int(env.get("REFERENCE_DATASET_PREVIEW_NUM_OF_ROWS", 1000))
 DATASET_PREVIEW_NUM_OF_ROWS = int(env.get("DATASET_PREVIEW_NUM_OF_ROWS", 10))
 
 # We explicitly allow some environments to not have a connection to GitLab
@@ -469,9 +459,7 @@ DATABASES = {
     },
 }
 
-DATABASES_DATA = {
-    db: db_config for db, db_config in DATABASES.items() if db in env["DATA_DB"]
-}
+DATABASES_DATA = {db: db_config for db, db_config in DATABASES.items() if db in env["DATA_DB"]}
 # Only used when collectstatic is run
 STATIC_ROOT = "/home/django/static/"
 
@@ -490,7 +478,9 @@ REST_FRAMEWORK = {
 
 QUICKSIGHT_USER_REGION = env["QUICKSIGHT_USER_REGION"]
 QUICKSIGHT_VPC_ARN = env["QUICKSIGHT_VPC_ARN"]
-QUICKSIGHT_DASHBOARD_HOST = "https://eu-west-2.quicksight.aws.amazon.com"  # For proof-of-concept: plan to remove this.
+QUICKSIGHT_DASHBOARD_HOST = (
+    "https://eu-west-2.quicksight.aws.amazon.com"  # For proof-of-concept: plan to remove this.
+)
 QUICKSIGHT_DASHBOARD_GROUP = "DataWorkspace"
 QUICKSIGHT_DASHBOARD_EMBEDDING_ROLE_ARN = env["QUICKSIGHT_DASHBOARD_EMBEDDING_ROLE_ARN"]
 QUICKSIGHT_SSO_URL = "https://sso.trade.gov.uk/idp/sso/init?sp=aws-quicksight&RelayState=https://quicksight.aws.amazon.com"
@@ -575,9 +565,7 @@ en_formats.SHORT_DATETIME_FORMAT = "d/m/Y P"
 
 
 EXPLORER_DEFAULT_ROWS = int(env.get("EXPLORER_DEFAULT_ROWS", 1000))
-EXPLORER_QUERY_TIMEOUT_MS = int(
-    env.get("EXPLORER_QUERY_TIMEOUT_MS", 900_000)
-)  # 15 minutes
+EXPLORER_QUERY_TIMEOUT_MS = int(env.get("EXPLORER_QUERY_TIMEOUT_MS", 900_000))  # 15 minutes
 
 EXPLORER_DEFAULT_DOWNLOAD_ROWS = int(env.get("EXPLORER_DEFAULT_DOWNLOAD_ROWS", 1000))
 
@@ -596,9 +584,7 @@ ACTIVITY_STREAM_BASE_URL = env.get("ACTIVITY_STREAM_BASE_URL")
 ACTIVITY_STREAM_HAWK_CREDENTIALS_ID = env.get("ACTIVITY_STREAM_HAWK_CREDENTIALS_ID")
 ACTIVITY_STREAM_HAWK_CREDENTIALS_KEY = env.get("ACTIVITY_STREAM_HAWK_CREDENTIALS_KEY")
 
-DATASETS_DB_INSTANCE_ID = env.get(
-    "DATASETS_DB_INSTANCE_ID", "analysisworkspace-dev-test-1-aurora"
-)
+DATASETS_DB_INSTANCE_ID = env.get("DATASETS_DB_INSTANCE_ID", "analysisworkspace-dev-test-1-aurora")
 PGAUDIT_LOG_SCOPES = env.get("PGAUDIT_LOG_SCOPES")
 
 VISUALISATION_CLOUDWATCH_LOG_GROUP = env.get("VISUALISATION_CLOUDWATCH_LOG_GROUP")
@@ -687,9 +673,7 @@ DATASET_CHANGELOG_PAGE_FLAG = "DATASET_CHANGELOG_PAGE"
 DATASET_FINDER_SEARCH_RESULTS_PER_PAGE = 200
 
 SLACK_SENTRY_CHANNEL_WEBHOOK = env.get("SLACK_SENTRY_CHANNEL_WEBHOOK", None)
-LONG_RUNNING_QUERY_ALERT_THRESHOLD = env.get(
-    "LONG_RUNNING_QUERY_ALERT_THRESHOLD", "15 minutes"
-)
+LONG_RUNNING_QUERY_ALERT_THRESHOLD = env.get("LONG_RUNNING_QUERY_ALERT_THRESHOLD", "15 minutes")
 
 DATAFLOW_IMPORTS_BUCKET_ROOT = "data-flow-imports"
 DATAFLOW_API_CONFIG = {

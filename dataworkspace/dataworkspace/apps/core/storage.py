@@ -32,9 +32,7 @@ def _upload_to_clamav(file: File) -> ClamAVResponse:
     clamav_password = settings.CLAMAV_PASSWORD
 
     logger.debug("post to clamav")
-    response = requests.post(
-        clamav_url, auth=(clamav_user, clamav_password), files={"file": file}
-    )
+    response = requests.post(clamav_url, auth=(clamav_user, clamav_password), files={"file": file})
     response.raise_for_status()
 
     clamav_response = ClamAVResponse(response.json())
@@ -64,9 +62,7 @@ class S3FileStorage(FileSystemStorage):
         clamav_response = _upload_to_clamav(content)
 
         if clamav_response.malware:
-            msg = (
-                f"Virus found in {content.name} identified as {clamav_response.reason}"
-            )
+            msg = f"Virus found in {content.name} identified as {clamav_response.reason}"
             logger.error(msg)
             raise AntiVirusServiceErrorException(msg)
 
@@ -87,9 +83,7 @@ class S3FileStorage(FileSystemStorage):
             )
         except ClientError as ex:
             # pylint: disable=raise-missing-from
-            raise Exception(
-                "Error saving file: {}".format(ex.response["Error"]["Message"])
-            )
+            raise Exception("Error saving file: {}".format(ex.response["Error"]["Message"]))
 
         return filename
 
