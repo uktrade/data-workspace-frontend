@@ -1201,7 +1201,7 @@ class TestSendNotificationEmails:
                     "dataset_name": ds.name,
                     "dataset_url": f"dataworkspace.test:8000{ds.get_absolute_url()}",
                     "manage_subscriptions_url": "dataworkspace.test:8000/datasets/email_preferences",
-                    "summary": "N/A",
+                    "summary": "Records in the dataset changed",
                 },
             )
         ]
