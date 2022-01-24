@@ -31,7 +31,7 @@ def _upload_to_clamav(file: File) -> ClamAVResponse:
     clamav_user = settings.CLAMAV_USER
     clamav_password = settings.CLAMAV_PASSWORD
 
-    logger.debug("post to clamav")
+    logger.debug("post to clamav %s", clamav_url)
     response = requests.post(clamav_url, auth=(clamav_user, clamav_password), files={"file": file})
     response.raise_for_status()
 
