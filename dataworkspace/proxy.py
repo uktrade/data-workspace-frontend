@@ -64,6 +64,7 @@ async def async_main():
     hawk_senders = env["HAWK_SENDERS"]
     sso_base_url = env["AUTHBROKER_URL"]
     sso_host = URL(sso_base_url).host
+    sso_scheme = URL(sso_base_url).scheme
     sso_client_id = env["AUTHBROKER_CLIENT_ID"]
     sso_client_secret = env["AUTHBROKER_CLIENT_SECRET"]
     redis_url = env["REDIS_URL"]
@@ -122,7 +123,7 @@ async def async_main():
             f"base-uri {root_domain};"
             f"form-action 'none';"
             f"frame-ancestors 'none';"
-            f"frame-src {direct_host} {sso_host} https://www.googletagmanager.com;"
+            f"frame-src {direct_host} {sso_scheme}://{sso_host} https://www.googletagmanager.com;"
             f"img-src {root_domain} https://www.googletagmanager.com https://www.google-analytics.com https://ssl.gstatic.com https://www.gstatic.com;"  # pylint: disable=line-too-long
             f"font-src {root_domain} data: https://fonts.gstatic.com;"
             f"script-src 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://tagmanager.google.com;"  # pylint: disable=line-too-long
@@ -130,21 +131,23 @@ async def async_main():
         )
 
     # A running application should only connect to self: this is where we have the most
-    # concern because we run the least-trusted code
+    # concern because we run the least-trusted code. Slightly unfortunately we also have
+    # to allow it to connect to SSO, since when sessions expire, requests get redirected
+    # to SSO and back
     def csp_application_running_direct(host, public_host):
         return csp_common + (
-            "default-src 'self';"
-            "base-uri 'self';"
+            f"default-src 'self';"
+            f"base-uri 'self';"
             # Safari does not have a 'self' for WebSockets
-            f"connect-src 'self' wss://{host};"
-            "font-src 'self' data:;"
-            "form-action 'self';"
+            f"connect-src 'self' {sso_scheme}://{sso_host} wss://{host};"
+            f"font-src 'self' {sso_scheme}://{sso_host} data:;"
+            f"form-action 'self' {sso_scheme}://{sso_host};"
             f"frame-ancestors 'self' {root_domain} {public_host}.{root_domain};"
-            "img-src 'self' data: blob:;"
+            f"img-src 'self' {sso_scheme}://{sso_host} data: blob:;"
             # Both JupyterLab and RStudio need `unsafe-eval`
-            "script-src 'unsafe-inline' 'unsafe-eval' 'self' data:;"
-            "style-src 'unsafe-inline' 'self' data:;"
-            "worker-src 'self' blob:;"
+            f"script-src 'unsafe-inline' 'unsafe-eval' 'self' {sso_scheme}://{sso_host} data:;"
+            f"style-src 'unsafe-inline' 'self' {sso_scheme}://{sso_host} data:;"
+            f"worker-src 'self' {sso_scheme}://{sso_host} blob:;"
         )
 
     redis_pool = await aioredis.create_redis_pool(redis_url)
