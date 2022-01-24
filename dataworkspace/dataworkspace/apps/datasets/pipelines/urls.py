@@ -21,4 +21,9 @@ urlpatterns = [
         login_required(views.PipelineDeleteView.as_view()),
         name="delete",
     ),
+    path(
+        "<int:pk>/run",
+        login_required(views.PipelineRunView.as_view()),
+        name="run",
+    ),
 ]

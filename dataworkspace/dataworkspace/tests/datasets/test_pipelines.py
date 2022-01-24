@@ -43,7 +43,7 @@ def test_create_pipeline(mock_sync, table_name, expected_output, added_pipelines
 
 @pytest.mark.django_db
 @mock.patch("dataworkspace.apps.datasets.pipelines.views.save_pipeline_to_dataflow")
-def test_edit_pipeline(mock_delete, staff_client):
+def test_edit_pipeline(mock_sync, staff_client):
     pipeline = factories.PipelineFactory.create()
     staff_client.post(reverse("admin:index"), follow=True)
     resp = staff_client.post(
@@ -68,3 +68,15 @@ def test_delete_pipeline(mock_delete, staff_client):
     )
     assert "Pipeline deleted successfully" in resp.content.decode(resp.charset)
     assert pipeline_count - 1 == Pipeline.objects.count()
+
+
+@pytest.mark.django_db
+@mock.patch("dataworkspace.apps.datasets.pipelines.views.run_pipeline")
+def test_run_pipeline(mock_run, staff_client):
+    pipeline = factories.PipelineFactory.create()
+    staff_client.post(reverse("admin:index"), follow=True)
+    resp = staff_client.post(
+        reverse("pipelines:run", args=(pipeline.id,)),
+        follow=True,
+    )
+    assert "Pipeline triggered successfully" in resp.content.decode(resp.charset)

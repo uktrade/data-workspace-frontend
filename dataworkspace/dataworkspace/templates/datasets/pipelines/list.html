@@ -32,9 +32,12 @@
                         <a class="govuk-link" href="#">View logs</a>
                     </dt>
                     <dd class="govuk-summary-list__actions">
-                        <button class="govuk-button" data-module="govuk-button">
+                      <form action="{% url 'pipelines:run' object.id %}" method="POST">
+                        {% csrf_token %}
+                        <button class="govuk-button" data-module="govuk-button" type="submit">
                             Run
                         </button>
+                      </form>
                     </dd>
                 </div>
                 {% endfor %}
