@@ -7,13 +7,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('case_studies', '0004_auto_20210604_0827'),
+        ("case_studies", "0004_auto_20210604_0827"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='casestudy',
-            name='image',
-            field=models.FileField(blank=True, storage=dataworkspace.apps.core.storage.S3FileStorage(location='case-studies'), upload_to='', validators=[dataworkspace.apps.core.storage.malware_file_validator]),
+            model_name="casestudy",
+            name="image",
+            field=models.FileField(
+                blank=True,
+                storage=dataworkspace.apps.core.storage.S3FileStorage(location="case-studies"),
+                upload_to="",
+                validators=[dataworkspace.apps.core.storage.malware_file_validator],
+            ),
         ),
     ]

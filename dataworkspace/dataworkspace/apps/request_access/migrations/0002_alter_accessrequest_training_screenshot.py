@@ -7,13 +7,21 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('request_access', '0001_initial'),
+        ("request_access", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='accessrequest',
-            name='training_screenshot',
-            field=models.FileField(blank=True, null=True, storage=dataworkspace.apps.core.storage.S3FileStorage(location='training_screenshots'), upload_to='', validators=[dataworkspace.apps.core.storage.malware_file_validator]),
+            model_name="accessrequest",
+            name="training_screenshot",
+            field=models.FileField(
+                blank=True,
+                null=True,
+                storage=dataworkspace.apps.core.storage.S3FileStorage(
+                    location="training_screenshots"
+                ),
+                upload_to="",
+                validators=[dataworkspace.apps.core.storage.malware_file_validator],
+            ),
         ),
     ]
