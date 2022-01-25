@@ -66,8 +66,10 @@ class S3FileStorage(FileSystemStorage):
             logger.error(msg)
             raise AntiVirusServiceErrorException(msg)
 
-        # this feels hacky! rewinding the file object so that it can be re-read ...
-        content.seek(0)
+        # this feels hacky! rewinding the file object so that it can be re-read!
+        # without it, we can't call the av_scan _and_ s3 upload
+        if hasattr(content, "seek"):
+            content.seek(0)
 
     def _save_to_s3(self, name, content):
 
