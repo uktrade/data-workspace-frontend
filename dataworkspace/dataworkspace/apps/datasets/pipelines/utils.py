@@ -95,10 +95,7 @@ def run_pipeline(pipeline, run_by_user):
 
 
 def stop_pipeline(pipeline, run_by_user):
-    url = (
-        f"{settings.DATAFLOW_API_CONFIG['DATAFLOW_BASE_URL']}/api/experimental/"
-        f"dags/{pipeline.dag_id}/stop"
-    )
+    url = f"{API_URL}/dag/{pipeline.dag_id}/stop"
     method = "POST"
     content_type = "application/json"
     body = ""
