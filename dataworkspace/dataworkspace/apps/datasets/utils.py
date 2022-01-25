@@ -575,6 +575,8 @@ def _get_detailed_changelog(changelog, initial_change_type):
                     else ""
                 )
             )
+        elif record["previous_data_hash"] != record["data_hash"]:
+            record["summary"] = "Records in the dataset changed"
         else:
             record["summary"] = "N/A"
     return changelog
