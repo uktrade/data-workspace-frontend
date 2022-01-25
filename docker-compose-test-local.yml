@@ -34,6 +34,7 @@ services:
       - db-logs-dev:/var/log/postgres
       - ./dataworkspace:/dataworkspace
       - ./test:/test
+      - .:/app
   data-workspace-postgres:
     build:
       context: postgres

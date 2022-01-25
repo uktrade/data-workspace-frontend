@@ -13,6 +13,7 @@ from dataworkspace.tests.datasets.test_views import DatasetsCommon
 from dataworkspace.tests.factories import DataSetFactory
 from dataworkspace.tests.request_access import factories
 
+from dataworkspace.apps.core.storage import ClamAVResponse
 
 class TestDatasetAccessOnly:
     def test_user_sees_appropriate_message_on_dataset_page(self, client, user, metadata_db):
@@ -190,9 +191,13 @@ class TestToolsAccessOnly:
         "access_type", (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
     )
     @mock.patch("dataworkspace.apps.request_access.views.models.storage.boto3")
+    @mock.patch("dataworkspace.apps.core.storage._upload_to_clamav")
     def test_user_redirected_to_step_2_after_step_1_form_submission(
-        self, mock_boto, access_type, client, metadata_db
+        self, mock_boto, mock_upload_to_clamav, access_type, client, metadata_db
     ):
+
+        mock_upload_to_clamav.return_value = ClamAVResponse({"malware": False})
+
         dataset = DatasetsCommon()._create_master(user_access_type=access_type)
         client.get(reverse("request_access:dataset", kwargs={"dataset_uuid": dataset.id}))
         access_requests = AccessRequest.objects.all()
