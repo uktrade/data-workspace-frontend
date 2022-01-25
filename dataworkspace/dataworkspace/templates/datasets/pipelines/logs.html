@@ -21,12 +21,16 @@
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-      <h2 class="govuk-caption-m">{{ object.table_name }}</h2>
       <h1 class="govuk-heading-xl">
         Logs
       </h1>
+      <h2 class="govuk-caption-m">{{ object.table_name }}</h2>
       <p class="govuk-body">
-        THIS IS WHERE THE LOGS GO
+      <p class="govuk-body">
+<!--      {% if log %} logs is here {% else %}Error{% endif %}-->
+<!--&lt;!&ndash;        {% for l in log %}&ndash;&gt;-->
+        {{ log | linebreaks }}
+<!--        {% endfor %}-->
       </p>
     </div>
   </div>
