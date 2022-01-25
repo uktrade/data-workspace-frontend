@@ -1,4 +1,5 @@
 {% extends '_main.html' %}
+{% load datasets_tags %}
 {% block page_title %}Pipelines - {{ block.super }}{% endblock page_title %}
 {% block breadcrumbs %}
   <div class="govuk-breadcrumbs">
@@ -26,18 +27,43 @@
                 <div class="govuk-summary-list__row">
                     <dt class="govuk-summary-list__value">
                         <h2>{{ object.table_name }}</h2>
-                        <p>The most successful run of this pipeline succeeded at </p>
+                        {% with object.dag_details as dag %}
+                          {% if dag is None %}
+                            <p>Error fetching information for this pipeline</p>
+                          {% elif not dag.enabled %}
+                            <p>This pipeline has been paused</p>
+                          {% elif dag.last_run is None %}
+                            <p>This pipeline has not yet run</p>
+                          {% elif dag.last_run.state == "failed" %}
+                            {% with dag.last_run.end_date|parse_date_string as end_date %}
+                              <p>The most recent run of this pipeline failed at {{ end_date|time_with_gmt_offset }}, {{ end_date|format_date_uk }}</p>
+                            {% endwith %}
+                          {% elif dag.last_run.state == "success" %}
+                            {% with dag.last_run.end_date|parse_date_string as end_date %}
+                              <p>The most recent run of this pipeline succeeded at {{ end_date|time_with_gmt_offset }}, {{ end_date|format_date_uk }}</p>
+                            {% endwith %}
+                          {% else %}
+                            <p>This pipeline is currently running</p>
+                          {% endif %}
+                        {% endwith %}
                         <a class="govuk-link" href="{% url 'pipelines:edit' object.id %}">Edit</a>&nbsp;
                         <a class="govuk-link" href="{% url 'pipelines:delete' object.id %}">Delete</a>&nbsp;
                         <a class="govuk-link" href="#">View logs</a>
                     </dt>
                     <dd class="govuk-summary-list__actions">
-                      <form action="{% url 'pipelines:run' object.id %}" method="POST">
-                        {% csrf_token %}
-                        <button class="govuk-button" data-module="govuk-button" type="submit">
-                            Run
-                        </button>
-                      </form>
+                      {% with object.dag_details.last_run.state as state %}
+                        {% if state == "queued" or state == "running" %}
+                          <form action="{% url 'pipelines:stop' object.id %}" method="POST">
+                            {% csrf_token %}
+                            <button class="govuk-button govuk-button--warning" data-module="govuk-button" type="submit">Stop</button>
+                          </form>
+                        {% else %}
+                          <form action="{% url 'pipelines:run' object.id %}" method="POST">
+                            {% csrf_token %}
+                            <button class="govuk-button" data-module="govuk-button" type="submit">Run</button>
+                          </form>
+                        {% endif %}
+                      {% endwith %}
                     </dd>
                 </div>
                 {% endfor %}

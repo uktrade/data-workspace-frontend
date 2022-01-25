@@ -15,8 +15,10 @@ from dataworkspace.apps.datasets.models import Pipeline
 from dataworkspace.apps.datasets.pipelines.forms import PipelineCreateForm, PipelineEditForm
 from dataworkspace.apps.datasets.pipelines.utils import (
     delete_pipeline_from_dataflow,
+    list_pipelines,
     run_pipeline,
     save_pipeline_to_dataflow,
+    stop_pipeline,
 )
 
 logger = logging.getLogger("app")
@@ -77,6 +79,17 @@ class PipelineListView(ListView, IsAdminMixin):
     model = Pipeline
     template_name = "datasets/pipelines/list.html"
 
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        derived_dags = {}
+        try:
+            derived_dags = list_pipelines()
+        except RequestException as e:
+            logger.exception(e)
+        for pipeline in context["object_list"]:
+            pipeline.dag_details = derived_dags.get(pipeline.dag_id, None)
+        return context
+
 
 class PipelineDeleteView(DeleteView, IsAdminMixin):
     model = Pipeline
@@ -117,4 +130,24 @@ class PipelineRunView(View, IsAdminMixin):
             logger.exception(e)
         else:
             messages.success(self.request, "Pipeline triggered successfully.")
+        return HttpResponseRedirect(reverse("pipelines:index"))
+
+
+class PipelineStopView(View, IsAdminMixin):
+    model = Pipeline
+    success_url = reverse_lazy("pipelines:index")
+
+    def post(self, request, pk, *args, **kwargs):
+        pipeline = get_object_or_404(Pipeline, pk=pk)
+        try:
+            stop_pipeline(pipeline, request.user)
+        except RequestException as e:
+            messages.error(
+                self.request,
+                "There was a problem stopping the pipeline. If the issue persists please "
+                "contact our support team.",
+            )
+            logger.exception(e)
+        else:
+            messages.success(self.request, "Pipeline stopped successfully.")
         return HttpResponseRedirect(reverse("pipelines:index"))

@@ -26,4 +26,9 @@ urlpatterns = [
         login_required(views.PipelineRunView.as_view()),
         name="run",
     ),
+    path(
+        "<int:pk>/stop",
+        login_required(views.PipelineStopView.as_view()),
+        name="stop",
+    ),
 ]
