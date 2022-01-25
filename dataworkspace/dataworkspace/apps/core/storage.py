@@ -22,7 +22,7 @@ class AntiVirusServiceErrorException(UploadFileException):
 
 class ClamAVResponse:
     def __init__(self, json_response):
-        self.malware = json_response.get("malware", False)
+        self.malware = json_response["malware"]
         self.reason = json_response.get("reason", "")
 
 
