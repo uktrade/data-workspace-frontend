@@ -15,6 +15,7 @@ from dataworkspace.tests.request_access import factories
 
 from dataworkspace.apps.core.storage import ClamAVResponse
 
+
 class TestDatasetAccessOnly:
     def test_user_sees_appropriate_message_on_dataset_page(self, client, user, metadata_db):
         dataset = DatasetsCommon()._create_master(
@@ -31,8 +32,8 @@ class TestDatasetAccessOnly:
         assert resp.status_code == 200
         assert "You need to request access to view this data." in resp.content.decode(resp.charset)
         assert (
-            "We will ask you some questions so we can give you access to the tools you need to analyse this data."
-            not in resp.content.decode(resp.charset)
+                "We will ask you some questions so we can give you access to the tools you need to analyse this data."
+                not in resp.content.decode(resp.charset)
         )
 
     def test_request_access_form_is_single_page(self, client, user, metadata_db):
@@ -51,7 +52,7 @@ class TestDatasetAccessOnly:
         assert "Submit" in resp.content.decode(resp.charset)
 
     def test_user_redirected_to_confirmation_page_after_form_submission(
-        self, client, user, metadata_db
+            self, client, user, metadata_db
     ):
         dataset = DatasetsCommon()._create_master(
             user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
@@ -90,8 +91,9 @@ class TestDatasetAccessOnly:
 
     @pytest.mark.django_db
     @mock.patch("dataworkspace.apps.request_access.views.zendesk.Zenpy")
+    @mock.patch("dataworkspace.apps.core.storage._upload_to_clamav")
     def test_zendesk_ticket_created_after_form_submission(
-        self, mock_zendesk_client, client, user, metadata_db
+            self, mock_upload_to_clamav, mock_zendesk_client, client, user, metadata_db
     ):
         class MockTicket:
             @property
@@ -102,6 +104,8 @@ class TestDatasetAccessOnly:
         mock_zenpy_client.tickets.create.return_value = MockTicket()
 
         mock_zendesk_client.return_value = mock_zenpy_client
+
+        mock_upload_to_clamav.return_value = ClamAVResponse({"malware": False})
 
         dataset = DatasetsCommon()._create_master(
             user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
@@ -138,8 +142,8 @@ class TestDatasetAccessOnly:
 
         assert ticket.subject == "Access Request for A master"
         assert (
-            ticket.description
-            == f"""Access request for
+                ticket.description
+                == f"""Access request for
 
 Username:   Frank Exampleson
 Journey:    Dataset access
@@ -169,8 +173,8 @@ class TestToolsAccessOnly:
             resp.charset
         )
         assert (
-            "We will ask you some questions so we can give you access to the tools you need to analyse this data."
-            in resp.content.decode(resp.charset)
+                "We will ask you some questions so we can give you access to the tools you need to analyse this data."
+                in resp.content.decode(resp.charset)
         )
 
     @pytest.mark.parametrize(
@@ -190,13 +194,12 @@ class TestToolsAccessOnly:
     @pytest.mark.parametrize(
         "access_type", (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
     )
-    @mock.patch("dataworkspace.apps.request_access.views.models.storage.boto3")
     @mock.patch("dataworkspace.apps.core.storage._upload_to_clamav")
+    @mock.patch("dataworkspace.apps.request_access.views.models.storage.boto3")
     def test_user_redirected_to_step_2_after_step_1_form_submission(
-        self, mock_boto, mock_upload_to_clamav, access_type, client, metadata_db
+            self, mock_boto, _upload_to_clamav, access_type, client, metadata_db
     ):
-
-        mock_upload_to_clamav.return_value = ClamAVResponse({"malware": False})
+        _upload_to_clamav.return_value = ClamAVResponse({"malware": False})
 
         dataset = DatasetsCommon()._create_master(user_access_type=access_type)
         client.get(reverse("request_access:dataset", kwargs={"dataset_uuid": dataset.id}))
@@ -217,7 +220,7 @@ class TestToolsAccessOnly:
         "access_type", (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
     )
     def test_user_redirected_to_step_3_after_responding_yes_in_step_2(
-        self, access_type, client, metadata_db
+            self, access_type, client, metadata_db
     ):
         dataset = DatasetsCommon()._create_master(user_access_type=access_type)
         client.get(reverse("request_access:dataset", kwargs={"dataset_uuid": dataset.id}))
@@ -237,7 +240,7 @@ class TestToolsAccessOnly:
         "access_type", (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
     )
     def test_user_redirected_to_summary_page_after_responding_no_in_step_2(
-        self, access_type, client, metadata_db
+            self, access_type, client, metadata_db
     ):
         dataset = DatasetsCommon()._create_master(user_access_type=access_type)
         client.get(reverse("request_access:dataset", kwargs={"dataset_uuid": dataset.id}))
@@ -258,7 +261,7 @@ class TestToolsAccessOnly:
         "access_type", (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
     )
     def test_user_redirected_to_summary_page_after_step_3_form_submission(
-        self, access_type, client, metadata_db
+            self, access_type, client, metadata_db
     ):
         dataset = DatasetsCommon()._create_master(user_access_type=access_type)
         client.get(reverse("request_access:dataset", kwargs={"dataset_uuid": dataset.id}))
@@ -287,7 +290,7 @@ class TestToolsAccessOnly:
     @mock.patch("dataworkspace.apps.request_access.views.models.storage.boto3")
     @mock.patch("dataworkspace.apps.request_access.views.zendesk.Zenpy")
     def test_zendesk_ticket_created_after_form_submission(
-        self, mock_zendesk_client, mock_boto, client, metadata_db, access_type
+            self, mock_zendesk_client, mock_boto, client, metadata_db, access_type
     ):
         class MockTicket:
             @property
@@ -323,8 +326,8 @@ class TestToolsAccessOnly:
 
         assert ticket.subject == "Access Request for A master"
         assert (
-            ticket.description
-            == f"""Access request for
+                ticket.description
+                == f"""Access request for
 
 Username:   Frank Exampleson
 Journey:    Tools access
@@ -351,8 +354,8 @@ class TestDatasetAndToolsAccess:
         assert resp.status_code == 200
         assert "You need to request access to view this data." in resp.content.decode(resp.charset)
         assert (
-            "We will ask you some questions so we can give you access to the tools you need to analyse this data."
-            in resp.content.decode(resp.charset)
+                "We will ask you some questions so we can give you access to the tools you need to analyse this data."
+                in resp.content.decode(resp.charset)
         )
 
     def test_request_access_form_is_multipage_form(self, client, metadata_db):
@@ -363,7 +366,7 @@ class TestDatasetAndToolsAccess:
         assert "Continue" in resp.content.decode(resp.charset)
 
     def test_user_redirected_to_tools_form_after_dataset_request_access_form_submission(
-        self, client, metadata_db
+            self, client, metadata_db
     ):
         dataset = DatasetsCommon()._create_master(
             user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
@@ -411,7 +414,7 @@ class TestNoAccessRequired:
         "access_type", (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
     )
     def test_user_sees_appropriate_message_on_request_access_page(
-        self, access_type, client, user, metadata_db
+            self, access_type, client, user, metadata_db
     ):
         DatasetsCommon()._create_master(user_access_type=access_type)
         permission = Permission.objects.get(
