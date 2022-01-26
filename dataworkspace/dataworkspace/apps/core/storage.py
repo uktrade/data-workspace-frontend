@@ -66,7 +66,7 @@ class S3FileStorage(FileSystemStorage):
             logger.error(msg)
             raise AntiVirusServiceErrorException(msg)
 
-        # this feels hacky! rewinding the file object so that it can be re-read!
+        # rewinding the file object so that it can be re-read
         # without it, we can't call the av_scan _and_ s3 upload
         content.seek(0)
 
