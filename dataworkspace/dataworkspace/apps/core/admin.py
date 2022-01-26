@@ -41,6 +41,7 @@ class DeletableTimeStampedUserAdmin(TimeStampedUserAdmin):
 class TeamMembershipAdmin(admin.TabularInline):
     model = TeamMembership
     extra = 1
+    autocomplete_fields = ("user",)
 
 
 @admin.register(Team)
