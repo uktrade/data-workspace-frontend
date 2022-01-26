@@ -1,6 +1,8 @@
 import mock
 import pytest
 
+import io
+
 from dataworkspace.apps.core.storage import (
     S3FileStorage,
     ClamAVResponse,
@@ -15,7 +17,9 @@ def test_file_save(mock_upload_to_clamav, mock_client, mock_uuid):
     mock_upload_to_clamav.return_value = ClamAVResponse({"malware": False})
     mock_uuid.return_value = "xxx-xxx"
     fs = S3FileStorage(location="a-location")
-    assert fs.save("a-filename.txt", b"") == "a-filename.txt!xxx-xxx"
+
+    stream = io.BytesIO(b"")
+    assert fs.save("a-filename.txt", stream) == "a-filename.txt!xxx-xxx"
     mock_client().put_object.assert_called_once_with(
         Body=mock.ANY,
         Bucket="an-upload-bucket",
@@ -40,6 +44,7 @@ def test_file_save_throws_exception_when_virus_found(
     with pytest.raises(AntiVirusServiceErrorException):
         fs = S3FileStorage(location="a-location")
 
-        fs.save("a-filename.txt", b"")
+        stream = io.BytesIO(b"")
+        fs.save("a-filename.txt", stream)
 
         mock_client().put_object.assert_not_called()
