@@ -80,3 +80,15 @@ def test_run_pipeline(mock_run, staff_client):
         follow=True,
     )
     assert "Pipeline triggered successfully" in resp.content.decode(resp.charset)
+
+
+@pytest.mark.django_db
+@mock.patch("dataworkspace.apps.datasets.pipelines.views.stop_pipeline")
+def test_stop_pipeline(mock_stop, staff_client):
+    pipeline = factories.PipelineFactory.create()
+    staff_client.post(reverse("admin:index"), follow=True)
+    resp = staff_client.post(
+        reverse("pipelines:stop", args=(pipeline.id,)),
+        follow=True,
+    )
+    assert "Pipeline stopped successfully" in resp.content.decode(resp.charset)

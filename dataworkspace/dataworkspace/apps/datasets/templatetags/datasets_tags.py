@@ -96,3 +96,10 @@ def format_date_uk(date: Optional[datetime.date]) -> Optional[str]:
         return None
 
     return date.strftime("%-d %B %Y")
+
+
+@register.filter
+def parse_date_string(date_string: Optional[str]) -> Optional[str]:
+    if date_string is None:
+        return None
+    return datetime.strptime(date_string, "%Y-%m-%dT%H:%M:%SZ")
