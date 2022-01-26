@@ -338,7 +338,7 @@ prompt-toolkit==3.0.24
     #   click-repl
     #   ipython
     #   remote-pdb-client
-#psqlparse==1.0rc7
+psqlparse==1.0rc7
     # via -r requirements.txt
 psutil==5.7.2
     # via -r requirements.txt
