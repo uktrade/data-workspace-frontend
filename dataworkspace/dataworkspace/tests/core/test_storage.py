@@ -1,8 +1,7 @@
-import mock
-import pytest
-
 import io
 
+import mock
+import pytest
 from dataworkspace.apps.core.storage import (
     S3FileStorage,
     ClamAVResponse,
