@@ -8,7 +8,6 @@ from dataworkspace.apps.core import storage
 
 
 class AccessRequest(TimeStampedModel):
-
     JOURNEY_TOOLS_ACCESS = "tools_access_only"
     JOURNEY_DATASET_ACCESS = "dataset_access_only"
     JOURNEY_DATASET_AND_TOOLS_ACCESS = "dataset_and_tools_access"
@@ -25,6 +24,7 @@ class AccessRequest(TimeStampedModel):
         storage=storage.S3FileStorage(location="training_screenshots"),
         null=True,
         blank=True,
+        validators=[storage.malware_file_validator],
     )
     spss_and_stata = models.BooleanField(default=False, blank=True)
     line_manager_email_address = models.CharField(max_length=256, null=True)

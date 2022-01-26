@@ -14,7 +14,7 @@ help:
 	@echo -e "$(COLOUR_YELLOW)make docker-test-shell-local$(COLOUR_NONE) : bash shell for the unit tests in a container with your local volume mounted"
 	@echo -e "$(COLOUR_YELLOW)make docker-test-unit-local$(COLOUR_NONE) : runs the unit tests in a container with your local volume mounted"
 	@echo -e "$(COLOUR_YELLOW)make docker-test-integration$(COLOUR_NONE) : runs the integration tests in a container (10 minutes min)"
-
+	@echo -e "$(COLOUR_YELLOW)make logout$(COLOUR_NONE): logs out the current user"
 
 .PHONY: first-use
 first-use:
@@ -107,6 +107,11 @@ docker-test-integration-local:
 
 .PHONY: docker-test-local
 docker-test-local: docker-test-unit-local docker-test-integration-local
+
+.PHONY: logout
+logout:
+	docker-compose exec data-workspace-redis bash -c "redis-cli --scan --pattern data_workspace* | xargs redis-cli unlink"
+
 
 .PHONY: docker-test-sequential
 docker-test-sequential:

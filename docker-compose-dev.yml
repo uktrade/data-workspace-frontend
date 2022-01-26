@@ -19,6 +19,7 @@ services:
       - "data-workspace-postgres"
       - "data-workspace-redis"
       - "data-workspace-es"
+      - "data-workspace-minio"
     volumes:
       - .:/app
       - ./dataworkspace:/dataworkspace
@@ -60,6 +61,21 @@ services:
       - http.port=9200
     ports:
       - "9200:9200"
+
+  data-workspace-minio:
+    image: minio/minio:RELEASE.2021-10-08T23-58-24Z.fips
+    environment:
+#     These are sample keys for local S3 development
+      MINIO_ROOT_USER: AAAAAAAAAAAAAAAAAAAA
+      MINIO_ROOT_PASSWORD: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/bbbbbbb
+      MINIO_REGION: eu-west-2
+    ports:
+      - "9001:9001"
+      - "9000:9000"
+    volumes:
+      - ".local/minio/data:/data"
+    entrypoint: sh
+    command: ['-c', 'mkdir -p /data/my-bucket && mkdir -p /data/uploads && minio server /data --console-address ":9001" ']
 
 
 volumes:

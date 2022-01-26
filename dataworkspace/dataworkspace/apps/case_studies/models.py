@@ -5,7 +5,7 @@ from django.db import models
 from django.urls import reverse
 
 from dataworkspace.apps.core.models import TimeStampedUserModel
-from dataworkspace.apps.core.storage import S3FileStorage
+from dataworkspace.apps.core.storage import S3FileStorage, malware_file_validator
 
 
 class CaseStudy(TimeStampedUserModel):
@@ -17,7 +17,11 @@ class CaseStudy(TimeStampedUserModel):
     department_name = models.CharField(max_length=255, blank=True)
     service_name = models.CharField(max_length=255, blank=True)
     outcome = models.CharField(max_length=255, blank=True)
-    image = models.FileField(blank=True, storage=S3FileStorage(location="case-studies"))
+    image = models.FileField(
+        blank=True,
+        storage=S3FileStorage(location="case-studies"),
+        validators=[malware_file_validator],
+    )
     background = RichTextField(blank=True)
     solution = RichTextField(blank=True)
     impact = RichTextField(blank=True)
