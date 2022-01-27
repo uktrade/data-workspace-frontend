@@ -1,8 +1,12 @@
 from datetime import datetime
 
 from ckeditor.fields import RichTextField
+from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.urls import reverse
+
+
+from django.conf import settings
 
 from dataworkspace.apps.core.models import TimeStampedUserModel
 from dataworkspace.apps.core.storage import S3FileStorage, malware_file_validator
@@ -20,7 +24,10 @@ class CaseStudy(TimeStampedUserModel):
     image = models.FileField(
         blank=True,
         storage=S3FileStorage(location="case-studies"),
-        validators=[malware_file_validator],
+        validators=[
+            malware_file_validator,
+            FileExtensionValidator(settings.ALLOWED_UPLOAD_FILE_EXTENSIONS),
+        ],
     )
     background = RichTextField(blank=True)
     solution = RichTextField(blank=True)

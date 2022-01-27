@@ -205,14 +205,14 @@ class TestToolsAccessOnly:
         client.get(reverse("request_access:dataset", kwargs={"dataset_uuid": dataset.id}))
         access_requests = AccessRequest.objects.all()
 
-        screenshot = SimpleUploadedFile("file.txt", b"file_content")
+        screenshot = SimpleUploadedFile("file.jpg", b"file_content")
         resp = client.post(
             reverse("request_access:tools-1", kwargs={"pk": access_requests[0].pk}),
             {"training_screenshot": screenshot},
         )
 
         assert len(access_requests) == 1
-        assert access_requests[0].training_screenshot.name.startswith("file.txt")
+        assert access_requests[0].training_screenshot.name.startswith("file.jpg")
         assert resp.status_code == 302
         assert resp.url == reverse("request_access:tools-2", kwargs={"pk": access_requests[0].pk})
 
@@ -315,7 +315,7 @@ class TestToolsAccessOnly:
         client.get(reverse("request_access:dataset", kwargs={"dataset_uuid": dataset.id}))
         access_requests = AccessRequest.objects.all()
 
-        screenshot = SimpleUploadedFile("file.txt", b"file_content")
+        screenshot = SimpleUploadedFile("file.jpg", b"file_content")
         client.post(
             reverse("request_access:tools-1", kwargs={"pk": access_requests[0].pk}),
             {"training_screenshot": screenshot},
@@ -491,7 +491,7 @@ class TestEditAccessRequest:
     def test_edit_training_screenshot(self, mock_upload_to_clamav, mock_boto, client, user):
         mock_upload_to_clamav.return_value = ClamAVResponse({"malware": False})
 
-        screenshot1 = SimpleUploadedFile("original-file.txt", b"file_content")
+        screenshot1 = SimpleUploadedFile("original-file.jpg", b"file_content")
         access_request = factories.AccessRequestFactory(
             contact_email="testy-mctestface@example.com",
             training_screenshot=screenshot1,
@@ -500,17 +500,17 @@ class TestEditAccessRequest:
 
         # Ensure the original file name is displayed in the form
         resp = client.get(reverse("request_access:tools-1", kwargs={"pk": access_request.pk}))
-        assert "original-file.txt" in resp.content.decode(resp.charset)
+        assert "original-file.jpg" in resp.content.decode(resp.charset)
 
         # Ensure the file can be updated
-        screenshot2 = SimpleUploadedFile("new-file.txt", b"file_content")
+        screenshot2 = SimpleUploadedFile("new-file.jpg", b"file_content")
         resp = client.post(
             reverse("request_access:tools-1", kwargs={"pk": access_request.pk}),
             {"training_screenshot": screenshot2},
         )
         assert resp.status_code == 302
         access_request.refresh_from_db()
-        assert access_request.training_screenshot.name.split("!")[0] == "new-file.txt"
+        assert access_request.training_screenshot.name.split("!")[0] == "new-file.jpg"
 
     @mock.patch("dataworkspace.apps.request_access.views.models.storage.boto3")
     @mock.patch("dataworkspace.apps.core.storage._upload_to_clamav")
@@ -518,7 +518,7 @@ class TestEditAccessRequest:
         self, mock_upload_to_clamav, mock_boto, client, user
     ):
         mock_upload_to_clamav.return_value = ClamAVResponse({"malware": False})
-        screenshot1 = SimpleUploadedFile("original-file.txt", b"file_content")
+        screenshot1 = SimpleUploadedFile("original-file.jpg", b"file_content")
         access_request = factories.AccessRequestFactory(
             contact_email="testy-mctestface@example.com",
             training_screenshot=screenshot1,

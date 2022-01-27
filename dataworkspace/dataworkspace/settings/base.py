@@ -704,3 +704,5 @@ DATA_WORKSPACE_ROADMAP_URL = env.get("DATA_WORKSPACE_ROADMAP_URL", "")
 CLAMAV_URL = env.get("CLAMAV_URL", "")
 CLAMAV_USER = env.get("CLAMAV_USER", "")
 CLAMAV_PASSWORD = env.get("CLAMAV_PASSWORD", "")
+
+ALLOWED_UPLOAD_FILE_EXTENSIONS = ["bmp", "doc", "docx", "bmp", "jpeg", "jpg", "pdf"]

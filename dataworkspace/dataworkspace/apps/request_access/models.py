@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 
+from django.core.validators import FileExtensionValidator
 from dataworkspace.apps.core.models import (  # pylint: disable=import-error
     TimeStampedModel,
 )
@@ -24,7 +25,10 @@ class AccessRequest(TimeStampedModel):
         storage=storage.S3FileStorage(location="training_screenshots"),
         null=True,
         blank=True,
-        validators=[storage.malware_file_validator],
+        validators=[
+            storage.malware_file_validator,
+            FileExtensionValidator(settings.ALLOWED_UPLOAD_FILE_EXTENSIONS),
+        ],
     )
     spss_and_stata = models.BooleanField(default=False, blank=True)
     line_manager_email_address = models.CharField(max_length=256, null=True)
