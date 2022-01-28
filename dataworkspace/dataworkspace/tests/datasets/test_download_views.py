@@ -31,6 +31,7 @@ def test_master_dataset_with_access_preview(access_type, client, dataset_db):
         database=dataset_db,
         schema="public",
         table="dataset_test",
+        data_grid_enabled=False,
     )
 
     response = client.get(ds.get_absolute_url())
@@ -52,6 +53,7 @@ def test_master_dataset_no_access_preview(client, dataset_db):
         database=dataset_db,
         schema="public",
         table="dataset_test",
+        data_grid_enabled=False,
     )
 
     response = client.get(ds.get_absolute_url())

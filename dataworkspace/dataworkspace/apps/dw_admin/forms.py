@@ -605,42 +605,42 @@ class DataSetVisualisationForm(forms.ModelForm):
 class SourceTableForm(forms.ModelForm):
     model = SourceTable
 
+    class Meta:
+        fields = (
+            "dataset",
+            "name",
+            "database",
+            "schema",
+            "frequency",
+            "table",
+            "dataset_finder_opted_in",
+            "data_grid_enabled",
+            "data_grid_download_enabled",
+            "data_grid_download_limit",
+        )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["dataset"].queryset = MasterDataset.objects.live()
 
-    def clean_data_grid_column_config(self):
-        if self.cleaned_data["data_grid_column_config"] is None:
-            return None
-
-        # Ensure column config is a dict
-        if not isinstance(self.cleaned_data["data_grid_column_config"], dict):
-            raise forms.ValidationError("Column config must be a json object")
-
-        # Ensure column config contains some fields
-        if not self.cleaned_data["data_grid_column_config"].get("columns"):
-            raise forms.ValidationError(
-                "Column config must contain a `columns` key containing column definitions"
-            )
-
-        # Ensure each item in the config has the required fields
-        for column in self.cleaned_data["data_grid_column_config"]["columns"]:
-            if not isinstance(column, dict):
-                raise forms.ValidationError("All items in the config must be json objects")
-            if "field" not in column:
-                raise forms.ValidationError("Each config item must contain a `field` identifier")
-        return self.cleaned_data["data_grid_column_config"]
-
     def clean(self):
         cleaned = self.cleaned_data
-        if (
-            "data_grid_column_config" in cleaned
-            and cleaned["data_grid_enabled"]
-            and cleaned["data_grid_column_config"] is None
-        ):
+        grid_enabled = cleaned.get("data_grid_enabled", False)
+        download_enabled = cleaned.get("data_grid_download_enabled", False)
+        download_limit = cleaned.get("data_grid_download_limit", None)
+
+        if not grid_enabled and (download_enabled or download_limit):
             raise forms.ValidationError(
-                {"data_grid_column_config": "This field is required if reporting is enabled"}
+                {"data_grid_enabled": "Grid must be enabled for download settings to take effect"}
             )
+
+        if download_enabled and not download_limit:
+            raise forms.ValidationError(
+                {
+                    "data_grid_download_limit": "A download limit must be set if downloads are enabled"
+                }
+            )
+
         return cleaned
 
 
