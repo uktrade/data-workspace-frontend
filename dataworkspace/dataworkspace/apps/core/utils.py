@@ -17,6 +17,7 @@ import gevent.queue
 
 import psycopg2
 from psycopg2 import connect, sql
+from psycopg2.sql import SQL
 
 import boto3
 
@@ -572,6 +573,31 @@ def get_team_schemas_for_user(user):
     teams = [{"name": team.name, "schema_name": team.schema_name} for team in teams]
 
     return teams
+
+
+def get_all_schemas():
+    db_name, _ = list(settings.DATABASES_DATA.items())[0]
+    with connections[db_name].cursor() as cursor:
+        cursor.execute(
+            SQL(
+                """
+                SELECT
+                    DISTINCT schemaname AS schema
+                FROM
+                    pg_catalog.pg_tables
+                WHERE
+                    schemaname NOT IN ('dataflow', 'information_schema', 'pg_catalog', 'pg_toast')
+                    AND schemaname NOT LIKE 'pg_temp_%'
+                    AND schemaname NOT LIKE 'pg_toast_temp_%'
+                    AND schemaname NOT LIKE '_user_%'
+                    AND schemaname NOT LIKE '_team_%'
+                ORDER BY
+                    1 ASC
+                """
+            )
+        )
+        schemas = [c[0] for c in cursor.fetchall()]
+    return schemas
 
 
 def is_user_in_teams(user):
