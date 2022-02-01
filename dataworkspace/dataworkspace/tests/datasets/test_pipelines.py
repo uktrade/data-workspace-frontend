@@ -2,9 +2,10 @@ import pytest
 from django.urls import reverse
 from mock import mock
 
+from requests import RequestException
+
 from dataworkspace.apps.datasets.models import Pipeline
 from dataworkspace.tests import factories
-from requests import RequestException
 
 
 @pytest.mark.django_db
