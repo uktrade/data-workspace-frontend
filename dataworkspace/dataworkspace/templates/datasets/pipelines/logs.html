@@ -36,30 +36,24 @@
               <div class="govuk-error-summary__body">
                 <ul class="govuk-list govuk-error-summary__list">
                   <li>
-                    <p> There is a problem retrieving this pipeline's logs. If the
-                 issue persists please contact our support team. </p>
+                    <p> {{ message }} </p>
                   </li>
                 </ul>
               </div>
             </div>
-          {% endif %}
-<!--      {% if level == 'success' %}-->
-<!--        <p> this is success</p>-->
-<!--      {% endif %}-->
+        {% elif level == 'success' %}
+          <ul class="govuk-list">
+            {% for log in logs %}
+            <li>
+              {% for key,value in log.items %}
+              <p class="govuk-body-m">{{ key }}: {{ value }}</p>
+              {% endfor %}
+              <br><br>
+            </li>
+            {% endfor %}
+           </ul>
+        {% endif %}
       {% endfor %}
-
-
-      <ul class="govuk-list">
-        {% for log in logs %}
-        <li>
-          {% for key,value in log.items %}
-          <p class="govuk-body-m">{{ key }}: {{ value }}</p>
-          {% endfor %}
-          <br><br>
-        </li>
-        {% endfor %}
-     </ul>
-
     </div>
   </div>
 {% endblock content %}
