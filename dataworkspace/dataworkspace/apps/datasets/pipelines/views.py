@@ -165,18 +165,20 @@ class PipelineLogsDetailView(DetailView, UserPassesTestMixin):
     model = Pipeline
     template_name = "datasets/pipelines/logs.html"
 
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['errors'] = []
         try:
-            context["log"] = get_pipeline_logs(self.object)
-            messages.success(self.request, "Logs retrieved successfully.")
+            context["logs"] = get_pipeline_logs(self.object)
+            context['errors'].append((
+                "Logs retrieved successfully.", "success"))
         except RequestException as e:
             logger.exception(e)
-            messages.error(
-                self.request,
+            context['errors'].append((
                 "There was a problem retrieving this pipeline's logs. If the "
-                "issue persists please contact our support team.",
-            )
+                 "issue persists please contact our support team.", "error"))
+
         return context
 
     def test_func(self):
