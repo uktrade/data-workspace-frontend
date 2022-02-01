@@ -4,6 +4,7 @@ from mock import mock
 
 from dataworkspace.apps.datasets.models import Pipeline
 from dataworkspace.tests import factories
+from requests import RequestException
 
 
 @pytest.mark.django_db
@@ -93,56 +94,38 @@ def test_stop_pipeline(mock_stop, staff_client):
     )
     assert "Pipeline stopped successfully" in resp.content.decode(resp.charset)
 
-from django.conf import settings
-API_URL = f"{settings.DATAFLOW_API_CONFIG['DATAFLOW_BASE_URL']}/api/experimental/derived-dags"
 
-
-# @pytest.mark.django_db
-# @mock.patch("dataworkspace.apps.datasets.pipelines.views.get_pipeline_logs")
-# def test_pipeline_log_no_log(staff_client, requests_mock):
-#     pipeline = factories.PipelineFactory.create()
-#     test_dag_id = f"DerivedPipeline-{pipeline.table_name}"
-#
-#     requests_mock.get(f"{API_URL}/{test_dag_id}", text="response text", status_code=400)
-#     resp = staff_client.post(
-#         reverse("pipelines:logs", args=(pipeline.id,)),
-#         follow=True,
-#     )
-#     assert "error" in resp.content.decode(resp.charset)
-# #
-# #
 @pytest.mark.django_db
-@mock.patch("dataworkspace.apps.datasets.pipelines.views.get_pipeline_logs")
-def test_pipeline_log_success(staff_client, requests_mock):
+def test_pipeline_log_success(staff_client, mocker):
     pipeline = factories.PipelineFactory.create()
-
-    test_dag_id = f"DerivedPipeline-{pipeline.table_name}"
-    requests_mock.get(f"{API_URL}/{test_dag_id}", text="response text", status_code=200)
-    resp = staff_client.post(
+    _return_value = [
+        {
+            "task_1": "...",
+        }
+    ]
+    mocker.patch(
+        "dataworkspace.apps.datasets.pipelines.views.get_pipeline_logs",
+        return_value=_return_value,
+    )
+    resp = staff_client.get(
         reverse("pipelines:logs", args=(pipeline.id,)),
         follow=True,
     )
-    print("PS1 resp", resp)
-    print("PS1 resp.charset", resp.charset)
-    print("PS1 resp.content.decode(resp.charset)", resp.content.decode(resp.charset))
-
-    assert "Logs retrieved successfully." in resp.content.decode(resp.charset)
+    assert "task_1" in resp.content.decode(resp.charset)
 
 
-
-# @pytest.mark.django_db
-# @mock.patch("dataworkspace.apps.datasets.pipelines.views.get_pipeline_logs")
-# def test_pipeline_log_decode_error(staff_client, requests_mock):
-#     pipeline = factories.PipelineFactory.create()
-#
-#     test_dag_id = f"DerivedPipeline-{pipeline.table_name}"
-#
-#     requests_mock.get(f"{API_URL}/{test_dag_id}", text="response text", status_code=200)
-#     resp = staff_client.post(
-#         reverse("pipelines:logs", args=(pipeline.id,)),
-#         follow=True,
-#     )
-#     assert "response text" in resp.content.decode(resp.charset)
+@pytest.mark.django_db
+def test_pipeline_log_failure(staff_client, mocker):
+    pipeline = factories.PipelineFactory.create()
+    mocker.patch(
+        "dataworkspace.apps.datasets.pipelines.views.get_pipeline_logs",
+        side_effect=RequestException(),
+    )
+    resp = staff_client.get(
+        reverse("pipelines:logs", args=(pipeline.id,)),
+        follow=True,
+    )
+    assert "There is a problem" in resp.content.decode(resp.charset)
 
 
 
