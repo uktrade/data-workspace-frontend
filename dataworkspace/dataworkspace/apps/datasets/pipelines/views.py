@@ -1,4 +1,3 @@
-import requests, json
 import logging
 
 from django.contrib import messages
@@ -7,16 +6,12 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls.base import reverse_lazy
 from django.views.generic import DetailView
-from django.conf import settings
 from django.views import View
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.urls import reverse
 from requests import RequestException
 
-from mohawk import Sender
-
-from mohawk import Sender
 
 from dataworkspace.apps.datasets.models import Pipeline
 from dataworkspace.apps.datasets.pipelines.forms import PipelineCreateForm, PipelineEditForm
@@ -165,19 +160,21 @@ class PipelineLogsDetailView(DetailView, UserPassesTestMixin):
     model = Pipeline
     template_name = "datasets/pipelines/logs.html"
 
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['errors'] = []
+        context["errors"] = []
         try:
             context["logs"] = get_pipeline_logs(self.object)
-            context['errors'].append((
-                "Logs retrieved successfully.", "success"))
+            context["errors"].append(("Logs retrieved successfully.", "success"))
         except RequestException as e:
             logger.exception(e)
-            context['errors'].append((
-                "There was a problem retrieving this pipeline's logs. If the "
-                 "issue persists please contact our support team.", "error"))
+            context["errors"].append(
+                (
+                    "There is a problem retrieving this pipeline's logs. If the "
+                    "issue persists please contact our support team.",
+                    "error",
+                )
+            )
 
         return context
 
