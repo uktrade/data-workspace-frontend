@@ -238,7 +238,7 @@ def process_quicksight_dashboard_visualisations():
             )
             last_updated_dates = []
             tables = []
-            database_name, _ = list(settings.DATABASES_DATA.items())[0]
+            database_name = list(settings.DATABASES_DATA.items())[0][0]
 
             for data_set_arn in data_set_arns:
                 try:
@@ -372,7 +372,7 @@ def link_superset_visualisations_to_related_datasets():
 
     jwt_access_token = login_response.json()["access_token"]
 
-    database_name, _ = list(settings.DATABASES_DATA.items())[0]
+    database_name = list(settings.DATABASES_DATA.items())[0][0]
 
     for visualisation_link in VisualisationLink.objects.filter(
         visualisation_type="SUPERSET", visualisation_catalogue_item__deleted=False
@@ -598,7 +598,7 @@ def get_detailed_changelog(related_object):
             "Query creation",
         )
     elif isinstance(related_object, ReferenceDataset):
-        db_name, _ = list(settings.DATABASES_DATA.items())[0]
+        db_name = list(settings.DATABASES_DATA.items())[0][0]
         return _get_detailed_changelog(
             get_source_table_changelog(db_name, "public", related_object.table_name),
             "Reference dataset creation",
@@ -839,7 +839,7 @@ def store_reference_dataset_metadata():
         )
 
         # Get the latest metadata record
-        db_name, _ = list(settings.DATABASES_DATA.items())[0]
+        db_name = list(settings.DATABASES_DATA.items())[0][0]
         with connections[db_name].cursor() as cursor:
             cursor.execute(
                 SQL(

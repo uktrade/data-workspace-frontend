@@ -703,7 +703,7 @@ class VisualisationLinkAdmin(admin.ModelAdmin):
         user = quicksight_client.describe_user(
             AwsAccountId=account_id, UserName=new_data_source_owner, Namespace="default"
         )["User"]
-        db_name, _ = list(settings.DATABASES_DATA.items())[0]
+        db_name = list(settings.DATABASES_DATA.items())[0][0]
         replacement_datasource_arn = (
             f"arn:aws:quicksight:{user_region}:{account_id}:datasource/"
             + get_data_source_id(db_name, user["Arn"])
