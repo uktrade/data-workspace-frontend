@@ -379,6 +379,7 @@ class RelatedDataCutsSortForm(forms.Form):
         widget=SortSelectWidget(label="Sort by"),
     )
 
+
 class RelatedVisualisationsSortForm(forms.Form):
     sort = forms.ChoiceField(
         required=False,

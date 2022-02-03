@@ -1291,7 +1291,7 @@ class RelatedVisualisationsView(View):
             dataset = DataSet.objects.get(id=dataset_uuid)
         except DataSet.DoesNotExist:
             return HttpResponse(status=404)
-        
+
         form = RelatedVisualisationsSortForm(request.GET)
 
         if form.is_valid():
