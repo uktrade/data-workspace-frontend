@@ -70,8 +70,8 @@ services:
       MINIO_ROOT_PASSWORD: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/bbbbbbb
       MINIO_REGION: eu-west-2
     ports:
-      - "9001:9001"
-      - "9000:9000"
+      - "19001:9001"
+      - "19000:9000"
     volumes:
       - ".local/minio/data:/data"
     entrypoint: sh
