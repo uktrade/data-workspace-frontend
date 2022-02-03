@@ -18,6 +18,8 @@ amqp==5.0.9
     #   kombu
 appdirs==1.4.4
     # via pyppeteer
+appnope==0.1.2
+    # via ipython
 asgiref==3.3.4
     # via
     #   -r requirements.txt
@@ -69,12 +71,12 @@ cachetools==4.1.1
     # via
     #   -r requirements.txt
     #   zenpy
-celery-redbeat==2.0.0
-    # via -r requirements.txt
 celery==5.2.3
     # via
     #   -r requirements.txt
     #   celery-redbeat
+celery-redbeat==2.0.0
+    # via -r requirements.txt
 certifi==2020.6.20
     # via
     #   -r requirements.txt
@@ -92,6 +94,17 @@ chardet==3.0.4
     #   aiohttp
     #   requests
     #   tabulator
+click==8.0.3
+    # via
+    #   -r requirements.txt
+    #   black
+    #   celery
+    #   click-didyoumean
+    #   click-plugins
+    #   click-repl
+    #   pip-tools
+    #   tableschema
+    #   tabulator
 click-didyoumean==0.3.0
     # via
     #   -r requirements.txt
@@ -104,17 +117,6 @@ click-repl==0.2.0
     # via
     #   -r requirements.txt
     #   celery
-click==8.0.3
-    # via
-    #   -r requirements.txt
-    #   black
-    #   celery
-    #   click-didyoumean
-    #   click-plugins
-    #   click-repl
-    #   pip-tools
-    #   tableschema
-    #   tabulator
 coverage==5.4
     # via pytest-cov
 cryptography==3.4.8
@@ -125,6 +127,18 @@ decorator==4.4.2
     # via ipython
 dj-database-url==0.5.0
     # via -r requirements.txt
+django==3.2.11
+    # via
+    #   -r requirements.txt
+    #   django-admin-sortable2
+    #   django-appconf
+    #   django-csp
+    #   django-db-geventpool
+    #   django-debug-toolbar
+    #   django-dynamic-models-readonly
+    #   django-redis
+    #   django-staff-sso-client
+    #   djangorestframework
 django-admin-sortable2==1.0
     # via -r requirements.txt
 django-appconf==1.0.4
@@ -159,18 +173,6 @@ django-staff-sso-client==2.1.0
     # via -r requirements.txt
 django-waffle==2.0.0
     # via -r requirements.txt
-django==3.2.11
-    # via
-    #   -r requirements.txt
-    #   django-admin-sortable2
-    #   django-appconf
-    #   django-csp
-    #   django-db-geventpool
-    #   django-debug-toolbar
-    #   django-dynamic-models-readonly
-    #   django-redis
-    #   django-staff-sso-client
-    #   djangorestframework
 djangorestframework==3.11.2
     # via -r requirements.txt
 docopt==0.6.2
@@ -191,12 +193,12 @@ factory-boy==3.2.0
     # via -r requirements-dev.in
 faker==5.8.0
     # via factory-boy
-flake8-bugbear==21.4.3
-    # via -r requirements-dev.in
 flake8==3.9.1
     # via
     #   -r requirements-dev.in
     #   flake8-bugbear
+flake8-bugbear==21.4.3
+    # via -r requirements-dev.in
 freezegun==1.1.0
     # via -r requirements-dev.in
 future==0.18.2
@@ -226,8 +228,9 @@ ijson==3.1.3
     # via
     #   -r requirements.txt
     #   tabulator
-importlib-metadata==4.8.2
+importlib-metadata==4.10.1
     # via
+    #   -r requirements.txt
     #   click
     #   flake8
     #   jsonschema
@@ -241,10 +244,10 @@ iniconfig==1.1.1
     # via pytest
 ipdb==0.13.7
     # via -r requirements-dev.in
-ipython-genutils==0.2.0
-    # via traitlets
 ipython==7.31.1
     # via ipdb
+ipython-genutils==0.2.0
+    # via traitlets
 isodate==0.6.0
     # via
     #   -r requirements.txt
@@ -384,15 +387,15 @@ pyjwt==1.7.1
     # via
     #   -r requirements.txt
     #   notifications-python-client
-pylint-django==2.3.0
-    # via -r requirements-dev.in
-pylint-plugin-utils==0.6
-    # via pylint-django
 pylint==2.11.1
     # via
     #   -r requirements-dev.in
     #   pylint-django
     #   pylint-plugin-utils
+pylint-django==2.3.0
+    # via -r requirements-dev.in
+pylint-plugin-utils==0.6
+    # via pylint-django
 pyparsing==2.4.7
     # via
     #   -r requirements.txt
@@ -403,6 +406,13 @@ pyrsistent==0.17.3
     # via
     #   -r requirements.txt
     #   jsonschema
+pytest==6.2.4
+    # via
+    #   -r requirements-dev.in
+    #   pytest-cov
+    #   pytest-django
+    #   pytest-mock
+    #   pytest-timeout
 pytest-cov==2.11.1
     # via -r requirements-dev.in
 pytest-django==4.2.0
@@ -411,13 +421,6 @@ pytest-mock==3.5.1
     # via -r requirements-dev.in
 pytest-timeout==1.4.2
     # via -r requirements-dev.in
-pytest==6.2.4
-    # via
-    #   -r requirements-dev.in
-    #   pytest-cov
-    #   pytest-django
-    #   pytest-mock
-    #   pytest-timeout
 python-dateutil==2.8.1
     # via
     #   -r requirements.txt
@@ -446,16 +449,10 @@ redis==3.5.3
     #   django-redis
 regex==2021.11.10
     # via black
-remote-pdb-client==1.0.4
-    # via -r requirements-dev.in
 remote-pdb==2.1.0
     # via -r requirements-dev.in
-requests-mock==1.8.0
+remote-pdb-client==1.0.4
     # via -r requirements-dev.in
-requests-oauthlib==1.3.0
-    # via
-    #   -r requirements.txt
-    #   django-staff-sso-client
 requests==2.25.1
     # via
     #   -r requirements.txt
@@ -466,6 +463,12 @@ requests==2.25.1
     #   tableschema
     #   tabulator
     #   zenpy
+requests-mock==1.8.0
+    # via -r requirements-dev.in
+requests-oauthlib==1.3.0
+    # via
+    #   -r requirements.txt
+    #   django-staff-sso-client
 rfc3986==1.4.0
     # via
     #   -r requirements.txt
@@ -480,7 +483,7 @@ s3transfer==0.3.3
     #   boto3
 selenium==3.141.0
     # via -r requirements-dev.in
-sentry-sdk==0.17.6
+sentry-sdk==1.5.4
     # via -r requirements.txt
 six==1.15.0
     # via
@@ -601,8 +604,9 @@ yarl==1.5.1
     #   aiohttp
 zenpy==2.0.21
     # via -r requirements.txt
-zipp==3.6.0
+zipp==3.7.0
     # via
+    #   -r requirements.txt
     #   importlib-metadata
     #   pep517
 zope.event==4.5.0
@@ -615,16 +619,5 @@ zope.interface==5.1.0
     #   gevent
 
 # The following packages are considered to be unsafe in a requirements file:
-pip==21.3.1
-    # via pip-tools
-setuptools==59.6.0
-    # via
-    #   -r requirements.txt
-    #   astroid
-    #   celery
-    #   gevent
-    #   ipdb
-    #   ipython
-    #   jsonschema
-    #   zope.event
-    #   zope.interface
+# pip
+# setuptools
