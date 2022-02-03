@@ -106,11 +106,19 @@
             <h3 class="govuk-heading-s {% if related_data %}govuk-!-margin-top-8{% endif %}">Related dashboards</h3>
             <nav role="navigation">
               <ul class="govuk-list">
-                {% for master in related_visualisations %}
+                {% for master in related_visualisations|slice:":4" %}
                   <li>
                   {% include "partials/related_data_link.html" with dataset=master css_classname="related-dashboard" %}
                 {% endfor %}
                 </li>
+                {% if related_visualiations|length > 4 %}
+                <li class="govuk-!-margin-top-4">
+                  <a href="{% url "datasets:related_visualisations" dataset_uuid=model.id %}"
+                     class="govuk-link govuk-link--no-visited-state">
+                    Show all related dashboards
+                  </a>
+                </li>
+                {% endif %}
               </ul>
             </nav>
           {% endif %}

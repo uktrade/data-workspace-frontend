@@ -1,0 +1,49 @@
+{% extends '_main.html' %}
+{% load static core_tags %}
+
+{% block page_title %}Related dashboards for {{ dataset.name }} - Data Workspace{% endblock %}
+
+{% block go_back %}
+  <a class="govuk-back-link" href="{% url "datasets:dataset_detail" dataset_uuid=dataset.id %}#{{ dataset.slug }}">
+    Back
+  </a>
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-xl">Related dashboards for {{ dataset.name }}</h1>
+      <form id="sort-form" method="GET">
+        {{ form.sort }}
+      </form>
+    </div>
+  </div>
+  <div class="govuk-grid-row">
+    {% for dataset in related_visualisations %}
+      {% include "partials/related_data.html" with dataset=dataset css="related-dashboard" %}
+      {% if forloop.counter|divisibleby:2 %}
+        </div>
+        <div class="govuk-grid-row">
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  <a class="govuk-link govuk-link--no-visited-state app-back-to-top__link" href="{{ request.path }}#body">
+    <svg role="presentation" focusable="false" class="app-back-to-top__icon" xmlns="http://www.w3.org/2000/svg" width="13" height="17" viewBox="0 0 13 17">
+      <path fill="currentColor" d="M6.5 0L0 6.5 1.4 8l4-4v12.7h2V4l4.3 4L13 6.4z"></path>
+    </svg>
+    Back to top
+  </a>
+{% endblock %}
+
+{% block footer_scripts %}
+  <script nonce="{{ request.csp_nonce }}">
+    let sort_by = document.getElementById('{{ form.sort.id_for_label }}');
+    if (sort_by !== null) {
+      sort_by.addEventListener('change', function (e) {
+        console.log('changed');
+        document.getElementById('sort-form').submit();
+      });
+    }
+  </script>
+{% endblock %}

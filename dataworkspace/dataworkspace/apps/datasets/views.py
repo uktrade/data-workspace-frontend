@@ -79,6 +79,7 @@ from dataworkspace.apps.datasets.forms import (
     EligibilityCriteriaForm,
     RelatedMastersSortForm,
     RelatedDataCutsSortForm,
+    RelatedVisualisationsSortForm,
 )
 from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
@@ -1277,6 +1278,33 @@ class RelatedDataView(View):
                 context={
                     "dataset": dataset,
                     "related_data": related_datasets,
+                    "form": form,
+                },
+            )
+
+        return HttpResponse(status=500)
+
+
+class RelatedVisualisationsView(View):
+    def get(self, request, dataset_uuid):
+        try:
+            dataset = DataSet.objects.get(id=dataset_uuid)
+        except DataSet.DoesNotExist:
+            return HttpResponse(status=404)
+        
+        form = RelatedVisualisationsSortForm(request.GET)
+
+        if form.is_valid():
+            related_visualisations = dataset.related_visualisations.order_by(
+                form.cleaned_data.get("sort") or form.fields["sort"].initial
+            )
+
+            return render(
+                request,
+                "datasets/related_visualisations.html",
+                context={
+                    "dataset": dataset,
+                    "related_visualisations": related_visualisations,
                     "form": form,
                 },
             )
