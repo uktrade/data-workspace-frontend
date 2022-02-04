@@ -1179,10 +1179,6 @@ class DatasetsCommon:
                 name=f"Dashboard {i}",
                 user_access_type=user_access_type,
             )
-            query = factories.VisualisationCatalogueItemFactory.create(
-                dataset=visualisation,
-                database=self._get_database(),
-            )
             visualisations.append(visualisation)
 
         return visualisations
