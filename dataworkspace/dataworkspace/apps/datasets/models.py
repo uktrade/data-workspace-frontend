@@ -645,9 +645,23 @@ class SourceTable(BaseSource):
         ),
     )
     data_grid_enabled = models.BooleanField(
-        default=False,
+        default=True,
         help_text="Allow users to filter, sort and export data from within the browser",
     )
+    data_grid_download_enabled = models.BooleanField(
+        default=False,
+        help_text="Allow users to download from the data grid (requires a download limit)",
+    )
+    data_grid_download_limit = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text=(
+            "Set the maximum number of records that can be downloaded from the data grid "
+            "(required if data grid download is enabled)"
+        ),
+    )
+    # TODO: To be deleted once migrations for replacement fields have been  # pylint: disable=fixme
+    #   run in all envs
     data_grid_column_config = models.JSONField(
         blank=True,
         null=True,
@@ -693,40 +707,22 @@ class SourceTable(BaseSource):
         """
         Return column configuration for the source table in the format expected by ag-grid.
         """
-
-        # Read postgres column names and types in from the db
-        postgres_column_data_types = {
-            col[0]: col[1]
-            for col in datasets_db.get_columns(
-                self.database.memorable_name,
-                schema=self.schema,
-                table=self.table,
-                include_types=True,
-            )
-        }
-
         col_defs = []
-        for col_def in self.data_grid_column_config.get("columns", []):
-            if col_def.get("field") in postgres_column_data_types:
-                col_def["filter"] = col_def.get("filter", True)
-                col_def["sortable"] = col_def.get("sortable", True)
-                pg_data_type = postgres_column_data_types[col_def["field"]]
-                col_def["dataType"] = GRID_DATA_TYPE_MAP.get(pg_data_type, pg_data_type)
-                col_defs.append(col_def)
-
+        for column in datasets_db.get_columns(
+            self.database.memorable_name,
+            schema=self.schema,
+            table=self.table,
+            include_types=True,
+        ):
+            col_defs.append(
+                {
+                    "field": column[0],
+                    "filter": True,
+                    "sortable": True,
+                    "dataType": GRID_DATA_TYPE_MAP.get(column[1], column[1]),
+                }
+            )
         return col_defs
-
-    @property
-    def data_grid_download_enabled(self):
-        if self.data_grid_column_config:
-            return self.data_grid_column_config.get("download_enabled", False)
-        return False
-
-    @property
-    def data_grid_download_limit(self):
-        if self.data_grid_column_config:
-            return self.data_grid_column_config.get("download_limit", 5000)
-        return 5000
 
     def get_column_details_url(self):
         return reverse(

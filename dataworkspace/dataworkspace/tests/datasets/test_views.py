@@ -2931,30 +2931,6 @@ class TestGridDataView:
             table="source_data_test",
             database=factories.DatabaseFactory(memorable_name="my_database"),
             data_grid_enabled=True,
-            data_grid_column_config={
-                "columns": [
-                    {
-                        "field": "id",
-                        "filter": True,
-                        "dataType": "uuid",
-                        "sortable": True,
-                        "primaryKey": True,
-                    },
-                    {"field": "name", "filter": True, "sortable": True},
-                    {
-                        "field": "num",
-                        "filter": True,
-                        "dataType": "numeric",
-                        "sortable": True,
-                    },
-                    {
-                        "field": "date",
-                        "filter": True,
-                        "dataType": "date",
-                        "sortable": True,
-                    },
-                ],
-            },
         )
 
     @pytest.mark.django_db

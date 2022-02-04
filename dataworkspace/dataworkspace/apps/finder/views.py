@@ -167,7 +167,10 @@ class DataGridResultsView(BaseResultsView):
     def post(self, request, *args, **kwargs):
         if request.GET.get("download"):
             start = 0
-            limit = self.get_object().data_grid_download_limit
+            dataset = self.get_object()
+            limit = (
+                dataset.data_grid_download_limit if dataset.data_grid_download_enabled else 5000
+            )
             filters = json.loads(request.POST.get("filters", "{}"))
         else:
             start = int(request.POST.get("start", 0))
