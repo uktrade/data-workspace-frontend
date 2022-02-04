@@ -576,21 +576,21 @@ def get_team_schemas_for_user(user):
 
 
 def get_all_schemas():
-    db_name, _ = list(settings.DATABASES_DATA.items())[0]
+    db_name = list(settings.DATABASES_DATA.items())[0][0]
     with connections[db_name].cursor() as cursor:
         cursor.execute(
             SQL(
                 """
                 SELECT
-                    DISTINCT schemaname AS schema
+                    schema_name
                 FROM
-                    pg_catalog.pg_tables
+                    information_schema.schemata
                 WHERE
-                    schemaname NOT IN ('dataflow', 'information_schema', 'pg_catalog', 'pg_toast')
-                    AND schemaname NOT LIKE 'pg_temp_%'
-                    AND schemaname NOT LIKE 'pg_toast_temp_%'
-                    AND schemaname NOT LIKE '_user_%'
-                    AND schemaname NOT LIKE '_team_%'
+                    schema_name NOT IN ('dataflow', 'information_schema', 'pg_catalog', 'pg_toast')
+                    AND schema_name NOT LIKE 'pg_temp_%'
+                    AND schema_name NOT LIKE 'pg_toast_temp_%'
+                    AND schema_name NOT LIKE '_user_%'
+                    AND schema_name NOT LIKE '_team_%'
                 ORDER BY
                     1 ASC
                 """
@@ -598,6 +598,18 @@ def get_all_schemas():
         )
         schemas = [c[0] for c in cursor.fetchall()]
     return schemas
+
+
+def create_new_schema(schema_name):
+    db_name = list(settings.DATABASES_DATA.items())[0][0]
+    with connections[db_name].cursor() as cursor:
+        cursor.execute(
+            SQL(
+                """
+                CREATE SCHEMA {}
+                """
+            ).format(sql.Identifier(schema_name))
+        )
 
 
 def is_user_in_teams(user):

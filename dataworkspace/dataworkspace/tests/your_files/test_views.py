@@ -214,6 +214,9 @@ class TestCreateTableViews:
         assert b"_team_a_schema (TeamA shared schema)" in response.content
         assert b"_team_b_schema (TeamB shared schema)" in response.content
 
+        # Only admins can create new schemas
+        assert b"Create new schema" not in response.content
+
     @mock.patch("dataworkspace.apps.your_files.forms.get_schema_for_user")
     @mock.patch("dataworkspace.apps.your_files.forms.get_team_schemas_for_user")
     @mock.patch("dataworkspace.apps.your_files.forms.get_all_schemas")
@@ -250,6 +253,9 @@ class TestCreateTableViews:
         )
         assert b"test_schema (your private schema)" in response.content
         assert b"shared schema" not in response.content
+
+        # Only admins can create new schemas
+        assert b"Create new schema" not in response.content
 
     @mock.patch("dataworkspace.apps.your_files.forms.get_schema_for_user")
     @mock.patch("dataworkspace.apps.your_files.forms.get_team_schemas_for_user")
@@ -289,6 +295,119 @@ class TestCreateTableViews:
         assert b"dit" in response.content
         assert b"test_schema (your private schema)" in response.content
         assert b"shared schema" not in response.content
+
+        # Admins should be able to create a new schema
+        assert b"Create new schema" in response.content
+
+    @mock.patch("dataworkspace.apps.your_files.forms.get_schema_for_user")
+    @mock.patch("dataworkspace.apps.your_files.forms.get_team_schemas_for_user")
+    @mock.patch("dataworkspace.apps.your_files.forms.get_all_schemas")
+    @mock.patch("dataworkspace.apps.your_files.utils.boto3.client")
+    @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
+    def test_staff_user_create_new_schema(
+        self,
+        mock_get_s3_prefix,
+        mock_boto_client,
+        mock_get_all_schemas,
+        mock_get_team_schemas_for_user,
+        mock_get_schema_for_user,
+        staff_client,
+    ):
+        mock_get_s3_prefix.return_value = "user/federated/abc"
+        mock_get_all_schemas.return_value = ["public", "dit"]
+        mock_get_schema_for_user.return_value = "test_schema"
+        mock_get_team_schemas_for_user.return_value = []
+
+        params = {
+            "path": "user/federated/abc/a-csv.csv",
+            "table_name": "test_table",
+            "schema": "test_schema",
+        }
+        response = staff_client.post(
+            f'{reverse("your-files:create-table-confirm-schema")}?{urlencode(params)}',
+            data={
+                "path": "user/federated/abc/a-csv.csv",
+                "schema": "new",
+                "table_name": "a_csv",
+                "field1": "integer",
+            },
+        )
+        assert response.status_code == 302
+        assert reverse("your-files:create-schema") in response.get("location")
+
+    @mock.patch("dataworkspace.apps.your_files.forms.get_schema_for_user")
+    @mock.patch("dataworkspace.apps.your_files.forms.get_team_schemas_for_user")
+    @mock.patch("dataworkspace.apps.your_files.forms.get_all_schemas")
+    @mock.patch("dataworkspace.apps.your_files.utils.boto3.client")
+    @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
+    def test_staff_user_create_new_schema_success(
+        self,
+        mock_get_s3_prefix,
+        mock_boto_client,
+        mock_get_all_schemas,
+        mock_get_team_schemas_for_user,
+        mock_get_schema_for_user,
+        staff_client,
+    ):
+        mock_get_s3_prefix.return_value = "user/federated/abc"
+        mock_get_all_schemas.return_value = ["public", "dit"]
+        mock_get_schema_for_user.return_value = "test_schema"
+        mock_get_team_schemas_for_user.return_value = []
+
+        params = {
+            "path": "user/federated/abc/a-csv.csv",
+            "table_name": "test_table",
+        }
+        response = staff_client.post(
+            f'{reverse("your-files:create-schema")}?{urlencode(params)}',
+            data={
+                "schema": "new",
+            },
+        )
+
+        params = {
+            "path": "user/federated/abc/a-csv.csv",
+            "schema": "new",
+            "team": "new",
+            "table_name": "test_table",
+        }
+        assert response.status_code == 302
+        assert (
+            response.get("location")
+            == f'{reverse("your-files:create-table-confirm-name")}?{urlencode(params)}'
+        )
+
+    @mock.patch("dataworkspace.apps.your_files.forms.get_schema_for_user")
+    @mock.patch("dataworkspace.apps.your_files.forms.get_team_schemas_for_user")
+    @mock.patch("dataworkspace.apps.your_files.forms.get_all_schemas")
+    @mock.patch("dataworkspace.apps.your_files.utils.boto3.client")
+    @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
+    def test_staff_user_create_new_schema_fail(
+        self,
+        mock_get_s3_prefix,
+        mock_boto_client,
+        mock_get_all_schemas,
+        mock_get_team_schemas_for_user,
+        mock_get_schema_for_user,
+        staff_client,
+    ):
+        mock_get_s3_prefix.return_value = "user/federated/abc"
+        mock_get_all_schemas.return_value = ["public", "dit"]
+        mock_get_schema_for_user.return_value = "test_schema"
+        mock_get_team_schemas_for_user.return_value = []
+
+        params = {
+            "path": "user/federated/abc/a-csv.csv",
+            "table_name": "test_table",
+        }
+        response = staff_client.post(
+            f'{reverse("your-files:create-schema")}?{urlencode(params)}',
+            data={
+                "schema": "public",
+            },
+        )
+        assert response.status_code == 200
+        assert b"schema &quot;public&quot; already exists" in response.content
 
     @freeze_time("2021-01-01 01:01:01")
     @mock.patch("dataworkspace.apps.your_files.views.get_schema_for_user")

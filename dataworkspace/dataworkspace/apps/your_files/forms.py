@@ -96,7 +96,9 @@ class CreateTableSchemaForm(GOVUKDesignSystemForm):
         super().__init__(*args, **kwargs)
         if self.user.is_staff:
             all_schemas = get_all_schemas()
-            all_choices = [(schema, schema) for schema in all_schemas]
+            all_choices = [(schema, schema) for schema in all_schemas] + [
+                ("new", "None of the above - Create new schema")
+            ]
         else:
             all_choices = []
 
@@ -113,6 +115,14 @@ class CreateTableSchemaForm(GOVUKDesignSystemForm):
         ]
         schema_choices = user_choice + team_choices + all_choices
         self.fields["schema"].choices = schema_choices
+
+
+class CreateSchemaForm(GOVUKDesignSystemForm):
+    schema = GOVUKDesignSystemCharField(
+        label="What would you like to name your schema?",
+        widget=GOVUKDesignSystemTextWidget,
+        error_messages={"required": "You must enter a word."},
+    )
 
 
 class CreateTableDataTypesForm(CreateTableForm):
