@@ -1172,7 +1172,7 @@ class DatasetsCommon:
     ):
         visualisations = []
 
-        for i in range(num): 
+        for i in range(num):
             visualisation = factories.VisualisationDatasetFactory.create(
                 published=True,
                 type=DataSetType.VISUALISATION,
@@ -1289,8 +1289,10 @@ class TestMasterDatasetDetailView(DatasetsCommon):
         response = staff_client.get(url)
         assert response.status_code == 200
         assert len(response.context["related_data"]) == 2
-    
-    def test_master_dataset_detail_page_shows_related_visualisations(self, staff_client, metadata_db):
+
+    def test_master_dataset_detail_page_shows_related_visualisations(
+        self, staff_client, metadata_db
+    ):
         master = self._create_master()
         self._create_related_visualisations(num=2)
 
@@ -1311,7 +1313,7 @@ class TestMasterDatasetDetailView(DatasetsCommon):
         assert response.status_code == 200
         assert len(response.context["related_data"]) == 5
         assert "Show all related data" in response.content.decode(response.charset)
-    
+
     def test_master_dataset_detail_page_shows_link_to_related_visualisations_if_more_than_four(
         self, staff_client, metadata_db
     ):
@@ -2385,7 +2387,7 @@ class TestRelatedDataView:
             datacuts.append(datacut)
 
         return datacuts
-    
+
     def _create_related_visualisations(self, master, num=1):
         visualisations = []
 
@@ -2407,7 +2409,6 @@ class TestRelatedDataView:
             visualisations.append(visualisation)
 
         return visualisations
-        
 
     def test_view_shows_all_related_data_cuts(self, staff_client):
         master = self._create_master()
@@ -2420,7 +2421,6 @@ class TestRelatedDataView:
         assert len(response.context["related_data"]) == 5
         assert all(datacut.name in body for datacut in datacuts)
 
-    
     def test_view_shows_all_related_visualisations(self, staff_client):
         master = self._create_master()
         visualisations = self._create_related_visualisations(master, num=5)
