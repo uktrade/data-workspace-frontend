@@ -1174,7 +1174,6 @@ class DatasetsCommon:
 
         for i in range(num):
             visualisation = factories.VisualisationDatasetFactory.create(
-                published=True,
                 type=DataSetType.VISUALISATION,
                 name=f"Dashboard {i}",
                 user_access_type=user_access_type,
