@@ -2384,16 +2384,19 @@ class TestRelatedDataView:
         return datacuts
 
     def _create_related_visualisations(self, master, num=1):
+        master_dataset = factories.DataSetFactory.create(
+            type=DataSetType.MASTER,
+            published=True,
+            user_access_type=access_type,
+        )
         visualisations = []
 
         for i in range(num):
             visualisation = factories.VisualisationDatasetFactory.create(
-                published=True,
-                type=DataSetType.VISUALISATION,
-                name=f"Visualisation {i}",
-                user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+                dataset=master_dataset, gds_phase_name=expected_gds_phase_name
             )
-            query = factories.VisualisationCatalogueItemFactory.create(
+
+            query = factories.CustomDatasetQueryFactory.create(
                 dataset=visualisation,
                 database=self._get_database(),
                 query="SELECT * FROM test_dataset order by id desc limit 10",
