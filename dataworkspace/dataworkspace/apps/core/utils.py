@@ -438,6 +438,22 @@ def new_private_database_credentials(
                         sql.Identifier(db_role),
                     )
                 )
+                for team_role in db_team_roles_to_revoke:
+                    cur.execute(
+                        sql.SQL(
+                            """
+                            ALTER DEFAULT PRIVILEGES
+                            FOR USER {}
+                            IN SCHEMA {}
+                            REVOKE ALL ON TABLES FROM {};
+                            """
+                        ).format(
+                            sql.Identifier(db_role),
+                            sql.Identifier(team_role),
+                            sql.Identifier(team_role),
+                        )
+                    )
+
             logger.info(
                 "Granting %s to %s",
                 db_team_roles_to_grant,
@@ -455,6 +471,23 @@ def new_private_database_credentials(
                         sql.Identifier(db_role),
                     )
                 )
+                # When this user creates a table in a team schema
+                # ensure all members of that team can access it
+                for team_role in db_team_roles_to_grant:
+                    cur.execute(
+                        sql.SQL(
+                            """
+                            ALTER DEFAULT PRIVILEGES
+                            FOR USER {}
+                            IN SCHEMA {}
+                            GRANT ALL ON TABLES TO {};
+                            """
+                        ).format(
+                            sql.Identifier(db_role),
+                            sql.Identifier(team_role),
+                            sql.Identifier(team_role),
+                        )
+                    )
 
             cur.execute(
                 sql.SQL("GRANT CONNECT ON DATABASE {} TO {};").format(
