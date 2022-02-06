@@ -2394,7 +2394,6 @@ class TestRelatedDataView:
             visualisation = factories.VisualisationCatalogueItemFactory.create(
                 dataset=master_dataset,
                 published=True,
-                type=DataSetType.VISUALISATION,
                 name=f"Visualisation {i}",
                 user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
             )
