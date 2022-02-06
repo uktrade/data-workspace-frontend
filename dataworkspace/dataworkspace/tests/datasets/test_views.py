@@ -2391,15 +2391,19 @@ class TestRelatedDataView:
         visualisations = []
 
         for i in range(num):
-            visualisation = factories.VisualisationDatasetFactory.create(dataset=master_dataset)
-
+            visualisation = factories.VisualisationCatalogueItemFactory.create(
+                published=True,
+                type=DataSetType.VISUALISATION,
+                name=f"Visualisation {i}",
+                user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+            )
             query = factories.CustomDatasetQueryFactory.create(
                 dataset=visualisation,
                 database=self._get_database(),
                 query="SELECT * FROM test_dataset order by id desc limit 10",
             )
             factories.CustomDatasetQueryTableFactory.create(
-                query=query, schema="public", table="test_dataset"
+                query=query, schema="public", table="test_visualisation"
             )
             visualisations.append(visualisation)
 
