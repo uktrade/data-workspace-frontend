@@ -2392,6 +2392,7 @@ class TestRelatedDataView:
 
         for i in range(num):
             visualisation = factories.VisualisationCatalogueItemFactory.create(
+                dataset = master_dataset,
                 published=True,
                 type=DataSetType.VISUALISATION,
                 name=f"Visualisation {i}",
