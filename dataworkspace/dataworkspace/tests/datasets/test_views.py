@@ -2387,14 +2387,11 @@ class TestRelatedDataView:
         master_dataset = factories.DataSetFactory.create(
             type=DataSetType.MASTER,
             published=True,
-            user_access_type=access_type,
         )
         visualisations = []
 
         for i in range(num):
-            visualisation = factories.VisualisationDatasetFactory.create(
-                dataset=master_dataset, gds_phase_name=expected_gds_phase_name
-            )
+            visualisation = factories.VisualisationDatasetFactory.create(dataset=master_dataset)
 
             query = factories.CustomDatasetQueryFactory.create(
                 dataset=visualisation,
