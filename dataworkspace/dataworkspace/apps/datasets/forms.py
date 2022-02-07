@@ -378,3 +378,16 @@ class RelatedDataCutsSortForm(forms.Form):
         initial="query__dataset__name",
         widget=SortSelectWidget(label="Sort by"),
     )
+
+
+class RelatedVisualisationsSortForm(forms.Form):
+    sort = forms.ChoiceField(
+        required=False,
+        choices=[
+            ("name", "A to Z"),
+            ("name", "Z to A"),
+            ("published_at", "Recently published"),
+        ],
+        initial="name",
+        widget=SortSelectWidget(label="Sort by"),
+    )

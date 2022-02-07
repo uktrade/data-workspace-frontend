@@ -1163,6 +1163,19 @@ class DatasetsCommon:
 
         return datacuts
 
+    def _create_related_visualisations(
+        self,
+        master,
+        num=1,
+    ):
+        visualisations = []
+        for _ in range(num):
+            visualisation = factories.VisualisationCatalogueItemFactory.create()
+            visualisation.datasets.add(master)
+            visualisations.append(visualisation)
+
+        return visualisations
+
 
 class TestDatasetVisualisations:
     @pytest.mark.django_db
@@ -1266,6 +1279,17 @@ class TestMasterDatasetDetailView(DatasetsCommon):
         assert response.status_code == 200
         assert len(response.context["related_data"]) == 2
 
+    def test_master_dataset_detail_page_shows_related_visualisations(
+        self, staff_client, metadata_db
+    ):
+        master = self._create_master()
+        self._create_related_visualisations(master, num=2)
+
+        url = reverse("datasets:dataset_detail", args=(master.id,))
+        response = staff_client.get(url)
+        assert response.status_code == 200
+        assert len(response.context["related_visualisations"]) == 2
+
     @pytest.mark.django_db
     def test_master_dataset_detail_page_shows_link_to_related_data_cuts_if_more_than_four(
         self, staff_client, metadata_db
@@ -1278,6 +1302,18 @@ class TestMasterDatasetDetailView(DatasetsCommon):
         assert response.status_code == 200
         assert len(response.context["related_data"]) == 5
         assert "Show all related data" in response.content.decode(response.charset)
+
+    def test_master_dataset_detail_page_shows_link_to_related_visualisations_if_more_than_four(
+        self, staff_client, metadata_db
+    ):
+        master = self._create_master()
+        self._create_related_visualisations(master, num=5)
+
+        url = reverse("datasets:dataset_detail", args=(master.id,))
+        response = staff_client.get(url)
+        assert response.status_code == 200
+        assert len(response.context["related_visualisations"]) == 5
+        assert "Show all related dashboards" in response.content.decode(response.charset)
 
     @pytest.mark.django_db
     def test_master_dataset_subscription(self):
@@ -2351,6 +2387,18 @@ class TestRelatedDataView:
         assert response.status_code == 200
         assert len(response.context["related_data"]) == 5
         assert all(datacut.name in body for datacut in datacuts)
+
+    class TestRelatedVisualisationsView(DatasetsCommon):
+        def test_view_shows_all_related_visualisations(self, staff_client):
+            master = self._create_master()
+            visualisations = self._create_related_visualisations(master, num=5)
+
+            url = reverse("datasets:related_visualisations", args=(master.id,))
+            response = staff_client.get(url)
+            body = response.content.decode(response.charset)
+            assert response.status_code == 200
+            assert len(response.context["related_visualisations"]) == 5
+            assert all(visualisation.name in body for visualisation in visualisations)
 
 
 class TestDatasetUsageHistory:

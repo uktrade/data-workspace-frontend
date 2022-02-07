@@ -72,6 +72,11 @@ urlpatterns = [
         name="related_data",
     ),
     path(
+        "<uuid:dataset_uuid>/related-visualisations",
+        login_required(views.RelatedVisualisationsView.as_view()),
+        name="related_visualisations",
+    ),
+    path(
         "<uuid:dataset_uuid>/preview/<int:object_id>",
         login_required(views.DataCutPreviewView.as_view()),
         {"model_class": models.CustomDatasetQuery},
