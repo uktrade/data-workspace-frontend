@@ -308,7 +308,7 @@ def get_ecs_role_credentials(url):
 
 async def async_main(logger):
     # Suspect that S3 has a very small keep-alive value
-    request_non_redirectable, close_pool = Pool(keep_alive_timeout=4)
+    request_non_redirectable, close_pool = Pool(keep_alive_timeout=4, socket_timeout=30)
     request = redirectable(request_non_redirectable)
 
     credentials = get_ecs_role_credentials(
@@ -416,7 +416,7 @@ async def pypi_mirror(logger, request, s3_context):
         )
         return [
             package.text
-            for package in ET.fromstring(await buffered(body)).findall(
+            for package in ET.fromstring((await buffered(body)).replace(b"\x1b", b"")).findall(
                 "./params/param/value/array/data/value/array/data/value[1]/string"
             )
         ]
