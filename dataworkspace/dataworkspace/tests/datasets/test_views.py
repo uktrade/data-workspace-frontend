@@ -2377,7 +2377,6 @@ class TestRelatedDataView:
 
         return datacuts
 
-
     def test_view_shows_all_related_data_cuts(self, staff_client):
         master = self._create_master()
         datacuts = self._create_related_data_cuts(master, num=5)
