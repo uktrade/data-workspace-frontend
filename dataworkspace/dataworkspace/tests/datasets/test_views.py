@@ -1165,21 +1165,14 @@ class DatasetsCommon:
 
     def _create_related_visualisations(
         self,
-        schema="public",
-        table="test_visualisations",
+        master,
         num=1,
-        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
     ):
         visualisations = []
-
-        for i in range(num):
-            visualisation = factories.VisualisationDatasetFactory.create(
-                type=DataSetType.VISUALISATION,
-                name=f"Dashboard {i}",
-                user_access_type=user_access_type,
-            )
+        for _ in range(num):
+            visualisation = factories.VisualisationCatalogueItemFactory.create()
+            visualisation.datasets.add(master)
             visualisations.append(visualisation)
-
         return visualisations
 
 
@@ -1289,7 +1282,7 @@ class TestMasterDatasetDetailView(DatasetsCommon):
         self, staff_client, metadata_db
     ):
         master = self._create_master()
-        self._create_related_visualisations(num=2)
+        self._create_related_visualisations(master, num=2)
 
         url = reverse("datasets:dataset_detail", args=(master.id,))
         response = staff_client.get(url)
@@ -1313,7 +1306,7 @@ class TestMasterDatasetDetailView(DatasetsCommon):
         self, staff_client, metadata_db
     ):
         master = self._create_master()
-        self._create_related_visualisations(num=5)
+        self._create_related_visualisations(master, num=5)
 
         url = reverse("datasets:dataset_detail", args=(master.id,))
         response = staff_client.get(url)
@@ -2383,28 +2376,6 @@ class TestRelatedDataView:
 
         return datacuts
 
-    def _create_related_visualisations(self, master, num=1):
-        visualisations = []
-
-        for i in range(num):
-            visualisation = factories.VisualisationDatasetFactory.create(
-                published=True,
-                type=DataSetType.VISUALISATION,
-                name=f"Visualisation {i}",
-                user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
-            )
-            query = factories.VisualisationCatalogueItemFactory.create(
-                dataset=visualisation,
-                database=self._get_database(),
-                query="SELECT * FROM test_dataset order by id desc limit 10",
-            )
-            factories.CustomDatasetQueryTableFactory.create(
-                query=query, schema="public", table="test_dataset"
-            )
-            visualisations.append(visualisation)
-
-        return visualisations
-
     def test_view_shows_all_related_data_cuts(self, staff_client):
         master = self._create_master()
         datacuts = self._create_related_data_cuts(master, num=5)
@@ -2416,6 +2387,8 @@ class TestRelatedDataView:
         assert len(response.context["related_data"]) == 5
         assert all(datacut.name in body for datacut in datacuts)
 
+
+class TestRelatedVisualisationsView(DatasetsCommon):
     def test_view_shows_all_related_visualisations(self, staff_client):
         master = self._create_master()
         visualisations = self._create_related_visualisations(master, num=5)
