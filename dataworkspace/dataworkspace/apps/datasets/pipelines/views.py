@@ -164,7 +164,7 @@ class PipelineLogsDetailView(DetailView, UserPassesTestMixin):
         context["errors"] = []
         try:
             context["logs"] = get_pipeline_logs(self.object)
-            context["errors"].append(("Logs retrieved successfully.", "success"))
+            context["success"].append(("Logs retrieved successfully.", "success"))
         except RequestException as e:
             logger.exception(e)
             context["errors"].append(
