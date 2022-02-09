@@ -5,7 +5,7 @@
 
 {% block head %}
   {{ block.super }}
-  <script nonce="{{ request.csp_nonce }}" src="{% static 'jquery-3.4.1.min.js' %}"></script>
+  <script nonce="{{ request.csp_nonce }}" src="{% static 'jquery-3.6.0.min.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}" src="{% static 'gtm-support.js' %}"></script>
 {% endblock %}
 
