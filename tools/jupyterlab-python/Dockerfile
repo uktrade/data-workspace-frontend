@@ -1,9 +1,9 @@
-FROM debian:buster
+FROM debian:bullseye
 
 RUN \
     apt-get update && \
     apt-get install -y --no-install-recommends \
-        locales=2.28-10 && \
+        locales && \
     echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && \
     locale-gen en_US.utf8 && \
     apt-get clean -y && \
@@ -28,32 +28,31 @@ RUN \
         python3-pip \
         python3-dev \
         python3-setuptools \
+        libfreetype-dev \
         ssh \
         vim \
         emacs \
         wget && \
-    echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster main" > /etc/apt/sources.list && \
-    echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster-updates main" >> /etc/apt/sources.list && \
+    echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ bullseye main" > /etc/apt/sources.list && \
+    echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ bullseye-updates main" >> /etc/apt/sources.list && \
     echo "Acquire{Check-Valid-Until false; Retries 10;}" >> /etc/apt/apt.conf && \
     until apt-key adv --keyserver pgp.mit.edu --recv-key 'E19F5F87128899B192B1A2C2AD5F960A256A04AF'; do sleep 10; done && \
     apt-get update && \
     apt-get install -y --no-install-recommends \
-        build-essential=12.6 \
-        git=1:2.20.1-2+deb10u3 \
-        git-man=1:2.20.1-2+deb10u3 \
+        build-essential \
+        git \
+        git-man \
         libxext6 \
         libxrender1 \
         openssl \
-        openssh-client=1:7.9p1-10+deb10u2 \
-        texlive-xetex=2018.20190227-2 \
-        texlive-generic-extra=2018.20190227-2 \
-        texlive-fonts-recommended=2018.20190227-2 \
-        ttf-dejavu \
+        openssh-client \
+        texlive-xetex \
+        texlive-plain-generic \
+        texlive-fonts-recommended \
+        fonts-dejavu-core \
         sudo \
-        man-db=2.8.5-2 \
-        tini=0.18.0-1 && \
-	update-alternatives --install /usr/bin/python python /usr/bin/python3 2 && \
-	update-alternatives --install /usr/bin/python python /usr/bin/python2 1 && \
+        man-db \
+        tini && \
     groupadd -g 4356 jovyan && \
     useradd -u 4357 jovyan -g jovyan -m && \
     echo "root ALL=(ALL:ALL) ALL" > /etc/sudoers && \

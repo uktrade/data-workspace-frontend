@@ -1,9 +1,9 @@
-FROM debian:buster
+FROM debian:bullseye
 
 RUN \
 	apt-get update && \
 	apt-get install -y --no-install-recommends \
-		locales=2.28-10 && \
+		locales && \
 	echo "en_GB.UTF-8 UTF-8" >> /etc/locale.gen && \
 	locale-gen en_GB.utf8 && \
 	rm -rf /var/lib/apt/lists/*
@@ -20,8 +20,8 @@ RUN \
 		dirmngr \
 		gnupg2 && \
 	rm -rf /var/lib/apt/lists/* && \
-	echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster main" > /etc/apt/sources.list && \
-	echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster-updates main" >> /etc/apt/sources.list && \
+	echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ bullseye main" > /etc/apt/sources.list && \
+	echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ bullseye-updates main" >> /etc/apt/sources.list && \
 	echo "Acquire{Check-Valid-Until false; Retries 10;}" >> /etc/apt/apt.conf
 
 RUN \
@@ -35,7 +35,8 @@ RUN \
 		python3 \
 		python3-dev \
 		python3-pip \
-		man-db=2.8.5-2 \
+		libfreetype-dev \
+		man-db \
 		vim \
 		emacs \
 		sudo \
