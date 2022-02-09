@@ -1,0 +1,59 @@
+{% extends '_main.html' %}
+{% block page_title %} Pipeline logs - {{ block.super }}{% endblock page_title %}
+{% block breadcrumbs %}
+  <div class="govuk-breadcrumbs">
+    <ol class="govuk-breadcrumbs__list">
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="/">Home</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="{% url 'pipelines:index' %}">Pipelines</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="{% url 'pipelines:index' %}">{{ object.table_name }}</a>
+        {{ object.table_name }}
+      </li>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">Logs
+      </li>
+    </ol>
+  </div>
+{% endblock breadcrumbs %}
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-xl">
+        Logs
+      </h1>
+      <h2 class="govuk-caption-m">{{ object.table_name }}</h2>
+
+      {% for message, level in messages %}
+      {% if level == 'success' %}
+          <ul class="govuk-list">
+            {% for log in logs %}
+            <li>
+              {% for key,value in log.items %}
+              <p class="govuk-body-m">{{ key }}: {{ value }}</p>
+              {% endfor %}
+              <br><br>
+            </li>
+            {% endfor %}
+        {% else %}
+            <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="govuk-error-summary">
+              <h2 class="govuk-error-summary__title" id="error-summary-title">
+                There is a problem
+              </h2>
+              <div class="govuk-error-summary__body">
+                <ul class="govuk-list govuk-error-summary__list">
+                  <li>
+                    <p> {{ message }} </p>
+                  </li>
+                </ul>
+              </div>
+            </div>
+           </ul>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+{% endblock content %}

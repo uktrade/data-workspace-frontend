@@ -48,7 +48,7 @@
                         {% endwith %}
                         <a class="govuk-link" href="{% url 'pipelines:edit' object.id %}">Edit</a>&nbsp;
                         <a class="govuk-link" href="{% url 'pipelines:delete' object.id %}">Delete</a>&nbsp;
-                        <a class="govuk-link" href="#">View logs</a>
+                        <a class="govuk-link" href="{% url 'pipelines:logs' object.id %}">View logs</a>
                     </dt>
                     <dd class="govuk-summary-list__actions">
                       {% with object.dag_details.last_run.state as state %}
