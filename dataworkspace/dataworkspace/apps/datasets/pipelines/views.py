@@ -161,13 +161,13 @@ class PipelineLogsDetailView(DetailView, UserPassesTestMixin):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["messages"] = []
+        context["custom_message"] = []
         try:
             context["logs"] = get_pipeline_logs(self.object)
-            context["messages"].append(("Logs retrieved successfully.", "success"))
+            context["custom_message"].append(("Logs retrieved successfully.", "success"))
         except RequestException as e:
             logger.exception(e)
-            context["messages"].append(
+            context["custom_message"].append(
                 (
                     "There is a problem retrieving this pipeline's logs. If the "
                     "issue persists please contact our support team.",
