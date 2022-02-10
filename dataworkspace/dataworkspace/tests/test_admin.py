@@ -3409,7 +3409,6 @@ class TestDatasetAdminPytest:
                 "sourcetable_set-0-schema": "test_schema",
                 "sourcetable_set-0-frequency": 1,
                 "sourcetable_set-0-table": "test_table",
-                "sourcetable_set-0-data_grid_column_config": '{"columns": [{"field": "test"}]}',
             },
             follow=True,
         )
