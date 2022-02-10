@@ -5,7 +5,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator, MaxLengthValidator
 
-from dataworkspace.apps.core.utils import get_s3_prefix, table_exists
+from dataworkspace.apps.core.utils import get_all_schemas, get_s3_prefix, table_exists
 from dataworkspace.apps.your_files.utils import SCHEMA_POSTGRES_DATA_TYPE_MAP
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
@@ -94,8 +94,17 @@ class CreateTableSchemaForm(GOVUKDesignSystemForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
+        if self.user.is_staff:
+            all_schemas = get_all_schemas()
+            all_choices = [(schema, schema) for schema in all_schemas] + [
+                ("new", "None of the above - Create new schema")
+            ]
+        else:
+            all_choices = []
+
         user_schema = get_schema_for_user(self.user)
         user_choice = [("user", f"{user_schema} (your private schema)")]
+
         team_schemas = get_team_schemas_for_user(self.user)
         team_choices = [
             (
@@ -104,8 +113,16 @@ class CreateTableSchemaForm(GOVUKDesignSystemForm):
             )
             for team_schema in team_schemas
         ]
-        schema_choices = user_choice + team_choices
+        schema_choices = user_choice + team_choices + all_choices
         self.fields["schema"].choices = schema_choices
+
+
+class CreateSchemaForm(GOVUKDesignSystemForm):
+    schema = GOVUKDesignSystemCharField(
+        label="What would you like to name your schema?",
+        widget=GOVUKDesignSystemTextWidget,
+        error_messages={"required": "You must enter a word."},
+    )
 
 
 class CreateTableDataTypesForm(CreateTableForm):
