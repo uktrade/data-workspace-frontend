@@ -61,8 +61,12 @@
     <div>
       <h2 class="govuk-visually-hidden">Available tools</h2>
 
+      {% with application_summary='Use Quicksight to create and share interactive dashboards using data from Data Workspace.' %}
+        {% include 'partials/tool_section.html' with application_name="Amazon QuickSight" application_summary=application_summary application_help_link=None instance=None application_url=quicksight_url customisable_instance=False has_access=perms.applications.access_quicksight trailing_horizontal_rule=False %}
+      {% endwith %}
+      
       {% flag SUPERSET_FLAG %}
-        {% with application_summary='Superset is a data exploration and visualisation platform using SQL for all skill sets to produce everything from simple line charts to highly detailed geospatial charts.' %}
+        {% with application_summary='Use Superset to create advanced visuals and dashbaords using data from Data Workspace. Requires SQL knowledge.' %}
           {% include 'partials/tool_section.html' with application_name="Superset" application_summary=application_summary application_help_link=None instance=None application_url=superset_url customisable_instance=False has_access=perms.applications.start_all_applications trailing_horizontal_rule=True new=True %}
         {% endwith %}
         {% endflag %}
@@ -98,8 +102,5 @@
         {% endwith %}
       {% endif %}
 
-      {% with application_summary='QuickSight is a visualisations tool supplied by Amazon Web Services (AWS). Use it to create and share dashboards using data from Data Workspace.' %}
-        {% include 'partials/tool_section.html' with application_name="Amazon QuickSight" application_summary=application_summary application_help_link=None instance=None application_url=quicksight_url customisable_instance=False has_access=perms.applications.access_quicksight trailing_horizontal_rule=False %}
-      {% endwith %}
     </div>
 {% endblock %}
