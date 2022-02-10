@@ -27,7 +27,7 @@
       </h1>
       <h2 class="govuk-caption-m">{{ object.table_name }}</h2>
 
-      {% for message, level in messages %}
+      {% for message, level in custom_message %}
       {% if level == 'success' %}
           <ul class="govuk-list">
             {% for log in logs %}
