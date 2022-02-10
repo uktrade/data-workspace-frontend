@@ -53,6 +53,7 @@ RUN \
         sudo \
         man-db \
         tini && \
+    update-alternatives --install /usr/bin/python python /usr/bin/python3 1 && \
     groupadd -g 4356 jovyan && \
     useradd -u 4357 jovyan -g jovyan -m && \
     echo "root ALL=(ALL:ALL) ALL" > /etc/sudoers && \
