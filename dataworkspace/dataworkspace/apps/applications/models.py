@@ -100,6 +100,16 @@ class ApplicationTemplate(TimeStampedModel):
         help_text="A link to a Help Centre article that explains how to use this tool.",
     )
 
+    _GROUPS = (
+        ("VISUALISATIONS", "Visualisation Tools"),
+        ("ANALYSIS", "Data Analysis Tools"),
+        ("MANAGEMENT", "Data Management Tools"),
+        ("IDE", "Integrated Development Environments"),
+    )
+    
+    group_name = models.TextField(choices=_GROUPS, blank=True, null=True)
+
+
     class Meta:
         db_table = "app_applicationtemplate"
         indexes = [
@@ -318,6 +328,7 @@ class UserToolConfiguration(models.Model):
         ),
     }
 
+   
     user = models.ForeignKey(get_user_model(), on_delete=models.PROTECT)
     tool_template = models.ForeignKey(
         ToolTemplate, on_delete=models.PROTECT, related_name="user_tool_configuration"

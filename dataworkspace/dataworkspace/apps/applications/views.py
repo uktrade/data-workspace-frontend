@@ -8,6 +8,7 @@ import re
 from contextlib import closing
 from io import StringIO
 from urllib.parse import urlsplit, urlencode
+from xmlrpc.client import Boolean
 
 from csp.decorators import csp_exempt, csp_update
 from django.conf import settings
@@ -54,6 +55,11 @@ from dataworkspace.apps.applications.utils import (
     get_quicksight_dashboard_name_url,
     sync_quicksight_permissions,
 )
+from dataworkspace.apps.applications.tools_utils import (
+    get_grouped_tools, 
+)
+
+
 from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils import stop_spawner_and_application
 from dataworkspace.apps.core.utils import (
@@ -183,7 +189,6 @@ def tools_html_view(request):
         else HttpResponse(status=405)
     )
 
-
 def tools_html_GET(request):
     sso_id_hex_short = stable_identification_suffix(str(request.user.profile.sso_id), short=True)
 
@@ -198,10 +203,13 @@ def tools_html_GET(request):
         app = application_template.host_basename
         return f"{request.scheme}://{app}-{sso_id_hex_short}.{settings.APPLICATION_ROOT_DOMAIN}/"
 
+    tools = get_grouped_tools()
+
     return render(
         request,
-        "tools.html",
+        "tools_draft.html",
         {
+            "group_tools": tools,
             "applications": [
                 {
                     "host_basename": application_template.host_basename,

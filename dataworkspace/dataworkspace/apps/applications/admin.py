@@ -362,6 +362,8 @@ class ToolTemplateAdmin(admin.ModelAdmin):
 
     form = ToolTemplateEditForm
 
+    list_display = ("nice_name", "group_name",)
+
     fieldsets = [
         (
             None,
@@ -369,6 +371,7 @@ class ToolTemplateAdmin(admin.ModelAdmin):
                 "fields": [
                     "host_basename",
                     "nice_name",
+                    "group_name",
                     "application_summary",
                     "application_help_link",
                     "spawner",
