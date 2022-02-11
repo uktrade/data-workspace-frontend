@@ -1,5 +1,6 @@
 from django.urls import reverse
-from dataworkspace.apps.applications.models import SizeConfig, UserToolConfiguration
+from dataworkspace.apps.applications.models import SizeConfig, UserToolConfiguration, ApplicationTemplate
+
 
 class ToolsViewModel:
     group_name: str
@@ -132,4 +133,34 @@ def get_grouped_tools(request):
             "group_description": "Use these tools to write, modify and test software",
         },
     ]
-    return tools + ide_tools
+
+    all_tools= tools + ide_tools
+
+
+    # groups = {
+    #     "Integrated Development Environments": []
+    # }
+
+    # loop through dictionary in django template
+    # for key,value in object.items ....
+
+    for application_template in ApplicationTemplate.objects.all().filter(visible=True, application_type="TOOL").exclude(nice_name="Superset").order_by("nice_name"):
+        pass        
+        # group =  # find the group from all_tools that has name == application_template.group_name
+        # group = groups[application_template.group_name]
+
+        # group.append(ToolsViewModel(...create from actual model))
+        #  ToolsViewModel(
+                #     name=appliation_template.name,
+                #     host_basename=host_basename,
+                #     summary=application_template.summary,
+                #     link=?? not help link... where does this come from
+                #     has_access=request.user.has_perm("applications.start_all_applications"),
+                    
+                # ),
+        # 
+
+
+
+
+    return all_tools
