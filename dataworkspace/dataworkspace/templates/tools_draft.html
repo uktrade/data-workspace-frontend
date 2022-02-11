@@ -28,15 +28,15 @@
         <a class"govuk-link" href="https://data-services-help.trade.gov.uk">Help Centre.</a>
       </p>
       {% for group in group_tools %}
-      <h3 class="govuk-heading-l">{{group.group_name}}</h3>
-      <br>
-      <p class="govuk-body">{{group.group_description}}</p>
-      <hr class="govuk-section-break govuk-section-break--m govuk-section-break--invisible">
-      {% for tool in group.tools %}
-      {% if application.nice_name != 'Data Explorer' %}
-        {% include 'partials/tool_section.html' with application_host_basename=tool.host_basename application_name=tool.name application_summary=tool.summary application_help_link=tool.help_link instance=tool.instance application_url=tool.link customisable_instance=tool.customisable_instance has_access=perms.applications.start_all_applications tool_configuration=tool.tool_configuration trailing_horizontal_rule=True new=tool.new %}
-      {% endif %}
-      {% endfor %}
+        <div class="govuk-!-margin-top-8">
+        <h3 class="govuk-heading-l">{{group.group_name}}</h3>
+        <div class="govuk-inset-text">{{group.group_description}}</div>
+        {% for tool in group.tools %}
+        {% if application.nice_name != 'Data Explorer' %}
+          {% include 'partials/tool_section.html' with application_host_basename=tool.host_basename application_name=tool.name application_summary=tool.summary application_help_link=tool.help_link instance=tool.instance application_url=tool.link customisable_instance=tool.customisable_instance has_access=tool.has_access tool_configuration=tool.tool_configuration trailing_horizontal_rule=True new=tool.new %}
+        {% endif %}
+        {% endfor %}
+    </div>
       {% endfor %}
 
 
@@ -62,6 +62,7 @@
       <h2 class="govuk-visually-hidden">Available tools</h2>
 
     {% with application_summary='Use Quicksight to create and share interactive dashboards using data from Data Workspace.' %}
+    {{ perms.applications.access_quicksight }}
       {% include 'partials/tool_section.html' with application_name="Amazon QuickSight" application_summary=application_summary application_help_link=None instance=None application_url=quicksight_url customisable_instance=False has_access=perms.applications.access_quicksight trailing_horizontal_rule=False %}
     {% endwith %}
     

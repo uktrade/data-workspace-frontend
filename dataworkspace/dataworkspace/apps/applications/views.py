@@ -203,7 +203,7 @@ def tools_html_GET(request):
         app = application_template.host_basename
         return f"{request.scheme}://{app}-{sso_id_hex_short}.{settings.APPLICATION_ROOT_DOMAIN}/"
 
-    tools = get_grouped_tools()
+    tools = get_grouped_tools(request)
 
     return render(
         request,

@@ -62,22 +62,52 @@
       <h2 class="govuk-visually-hidden">Available tools</h2>
 
       {% with application_summary='Use Quicksight to create and share interactive dashboards using data from Data Workspace.' %}
-        {% include 'partials/tool_section.html' with application_name="Amazon QuickSight" application_summary=application_summary application_help_link=None instance=None application_url=quicksight_url customisable_instance=False has_access=perms.applications.access_quicksight trailing_horizontal_rule=False %}
+        {% include 'partials/tool_section.html' with 
+          application_name="Amazon QuickSight" 
+          application_summary=application_summary 
+          application_help_link=None 
+          instance=None 
+          application_url=quicksight_url 
+          customisable_instance=False 
+          has_access=perms.applications.access_quicksight
+          trailing_horizontal_rule=False %}
       {% endwith %}
       
       {% flag SUPERSET_FLAG %}
         {% with application_summary='Use Superset to create advanced visuals and dashbaords using data from Data Workspace. Requires SQL knowledge.' %}
-          {% include 'partials/tool_section.html' with application_name="Superset" application_summary=application_summary application_help_link=None instance=None application_url=superset_url customisable_instance=False has_access=perms.applications.start_all_applications trailing_horizontal_rule=True new=True %}
+          {% include 'partials/tool_section.html' with application_name="Superset" 
+          application_summary=application_summary 
+          application_help_link=None 
+          instance=None 
+          application_url=superset_url 
+          customisable_instance=False 
+          has_access=perms.applications.start_all_applications 
+          trailing_horizontal_rule=True new=True %}
         {% endwith %}
         {% endflag %}
 
       {% with application_summary='The Data Explorer is a simple tool to explore and work with master datasets on Data Workspace using SQL.' %}
         {% url 'explorer:index' as data_explorer_url %}
-        {% include 'partials/tool_section.html' with application_name="Data Explorer" application_summary=application_summary application_help_link=None instance=None application_url=data_explorer_url customisable_instance=False has_access=perms.applications.start_all_applications trailing_horizontal_rule=True %}
+        {% include 'partials/tool_section.html' with 
+        application_name="Data Explorer" 
+        application_summary=application_summary 
+        application_help_link=None 
+        instance=None 
+        application_url=data_explorer_url 
+        customisable_instance=False 
+        has_access=perms.applications.start_all_applications trailing_horizontal_rule=True %}
       {% endwith %}
 
       {% with application_summary='Collaborate on and store analysis, projects and code with your colleagues.' %}
-        {% include 'partials/tool_section.html' with application_name="GitLab" application_summary=application_summary application_help_link=None instance=None application_url=gitlab_url customisable_instance=False has_access=perms.applications.start_all_applications trailing_horizontal_rule=True %}
+        {% include 'partials/tool_section.html' 
+        with application_name="GitLab" 
+        application_summary=application_summary 
+        application_help_link=None 
+        instance=None 
+        application_url=gitlab_url 
+        customisable_instance=False 
+        has_access=perms.applications.start_all_applications 
+        trailing_horizontal_rule=True %}
       {% endwith %}
 
       {% for application in applications %}

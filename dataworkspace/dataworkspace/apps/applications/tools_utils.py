@@ -1,3 +1,4 @@
+from django.urls import reverse
 from dataworkspace.apps.applications.models import SizeConfig, UserToolConfiguration
 
 class ToolsViewModel:
@@ -10,11 +11,14 @@ class ToolsViewModel:
     customisable_instance: bool = False
     has_access: bool
     tool_configuration: SizeConfig = None
+    # remove this
     trailing_horizonal_rule: bool
     new: bool
 
     def __init__(
-        self, name: str, host_basename: str, summary: str, link: str, help_link: str = "", is_new: bool = False
+        self, name: str, host_basename: str, summary: str, 
+        link: str, help_link: str = "", is_new: bool = False,
+        has_access: bool = False
     ):
         self.name = name
         self.host_basename = host_basename
@@ -22,21 +26,21 @@ class ToolsViewModel:
         self.link = link
         self.help_link = help_link
         self.new = is_new
+        self.has_access = has_access
 
 
-def get_grouped_tools():
-
-
-
+def get_grouped_tools(request):
     tools = [
         {
             "group_name": "Visualisation Tools",
             "tools": [
                 ToolsViewModel(
-                    "Quicksight",
-                    "quicksight",
-                    "Use Quicksight to create and share interactive dashboards using data from Data Workspace.",
-                    "quicksight_url",
+                    name="Quicksight",
+                    host_basename="quicksight",
+                    summary="Use Quicksight to create and share interactive dashboards using data from Data Workspace.",
+                    link=reverse("applications:quicksight_redirect"),
+                    has_access=request.user.has_perm("applications.start_all_applications"),
+                    
                 ),
                 ToolsViewModel(
                     "Superset",
@@ -44,7 +48,7 @@ def get_grouped_tools():
                     "Use Superset to create advanced visuals and dashbaords using data from Data Workspace. Requires SQL knowledge.",
                     "superset_url",
                     "",
-                    True
+                    has_access=request.user.has_perm("applications.start_all_applications")
                 ),
             ],
             "group_description": "Use these tools to create dashboards",
