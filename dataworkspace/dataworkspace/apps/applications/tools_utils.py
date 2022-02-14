@@ -1,5 +1,6 @@
 from django.urls import reverse
 from dataworkspace.apps.applications.models import SizeConfig, UserToolConfiguration, ApplicationTemplate
+from django.conf import settings
 
 
 class ToolsViewModel:
@@ -39,17 +40,20 @@ def get_grouped_tools(request):
                     name="Quicksight",
                     host_basename="quicksight",
                     summary="Use Quicksight to create and share interactive dashboards using data from Data Workspace.",
+                    help_link=None,
                     link=reverse("applications:quicksight_redirect"),
                     has_access=request.user.has_perm("applications.start_all_applications"),
                     
                 ),
                 ToolsViewModel(
-                    "Superset",
-                    "superset",
-                    "Use Superset to create advanced visuals and dashbaords using data from Data Workspace. Requires SQL knowledge.",
-                    "superset_url",
-                    "",
-                    has_access=request.user.has_perm("applications.start_all_applications")
+                    name="Superset",
+                    host_basename="superset",
+                    summary="Use Superset to create advanced visuals and dashbaords using data from Data Workspace. Requires SQL knowledge.",
+                    help_link=None,
+                    link=settings.SUPERSET_DOMAINS["edit"],
+                    has_access=request.user.has_perm("applications.start_all_applications"),
+                    new=True
+
                 ),
             ],
             "group_description": "Use these tools to create dashboards",
@@ -58,24 +62,27 @@ def get_grouped_tools(request):
             "group_name": "Data Analysis Tools",
             "tools": [
                 ToolsViewModel(
-                    "Data Explorer",
-                    "dataexplorer",
-                    "The Data Explorer is a simple tool to explore and work with master datasets on Data Workspace using SQL.",
-                    "data_explorer_url",
+                    name="Data Explorer",
+                    host_basename="dataexplorer",
+                    summary="The Data Explorer is a simple tool to explore and work with master datasets on Data Workspace using SQL.",
+                    help_link=None,
+                    link=url'explorer:index',
+                    has_access=request.user.has_perm("applications.start_all_applications"),
                 ),
+                # ToolsViewModel(
+                #     "pgAdmin",
+                #     "pgadmin",
+                #     "pgAdmin can be used to explore data on Data Workspace using SQL. It is an advanced alternative to Data Explorer, with additional functionality that lets you create and manage your own datasets.",
+                #     "pgadmin_url",
+                #     "Read more",
+                # ),
                 ToolsViewModel(
-                    "pgAdmin",
-                    "pgadmin",
-                    "pgAdmin can be used to explore data on Data Workspace using SQL. It is an advanced alternative to Data Explorer, with additional functionality that lets you create and manage your own datasets.",
-                    "pgadmin_url",
-                    "Read more",
-                ),
-                ToolsViewModel(
-                    "SPSS/STATA",
-                    "spss",
-                    "SPSS and STATA are statistical software packages supplied by IBM and StataCorp respectively. Use them to view, manage and analyse data, as well as create graphical outputs.",
-                    "spss_url",
-                    "Read more",
+                    mame="SPSS / STATA",
+                    host_basename="??",
+                    summary="SPSS and STATA are statistical software packages supplied by IBM and StataCorp respectively. Use them to view, manage and analyse data, as well as create graphical outputs.",
+                    link=settings.APPSTREAM_URL,
+                    has_access=request.user.has_perm("applications.access_appstream"),
+                    help_link='https://data-services-help.trade.gov.uk/data-workspace/how-articles/tools-and-how-access-them/start-using-spss/'
                 ),
             ],
             "group_description": "Use these tools to analyse data",
@@ -84,16 +91,19 @@ def get_grouped_tools(request):
             "group_name": "Data Management Tools",
             "tools": [
                 ToolsViewModel(
-                    "Your Files",
-                    "files",
-                    "Each Data Workspace user has a private home folder accessible by the tools JupyterLab, RStudio, and Theia. You can use 'Your files' to upload files to this folder, and download files from this folder.",
-                    "files_url",
+                    name="Your Files",
+                    host_basename="files",
+                    summary="Each Data Workspace user has a private home folder accessible by the tools JupyterLab, RStudio, and Theia. You can use "Your files" to upload files to this folder, and download files from this folder.",
+                    link=settings.YOUR_FILES_ENABLED,,
+                    has_access=request.user.has_perm("applications.start_all_applications"),
+                    help_link=None,
                 ),
                 ToolsViewModel(
-                    "Gitlab",
-                    "gitlab",
-                    "Collaborate on and store analysis, projects and code with your colleagues",
-                    "gitlab_url",
+                    name="Gitlab",
+                    host_basename="gitlab",
+                    summary="Collaborate on and store analysis, projects and code with your colleagues",
+                    link=settings.GITLAB_URL_FOR_TOOLS,
+                    has_access=request.user.has_perm("applications.start_all_applications"),
                 ),
             ],
             "group_description": "Use these tools to upload data and share data",
