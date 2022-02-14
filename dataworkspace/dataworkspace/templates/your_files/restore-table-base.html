@@ -1,0 +1,25 @@
+{% extends '_main.html' %}
+{% load static %}
+{% block breadcrumbs %}
+  <div class="govuk-breadcrumbs">
+    <ol class="govuk-breadcrumbs__list">
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="{% url 'root' %}">Home</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="{% url 'applications:tools' %}">Tools</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="{% url 'your-files:files' %}">Your files</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="{% url 'your-files:uploaded-tables' %}">Uploaded tables</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">Restore table</li>
+    </ol>
+  </div>
+{% endblock breadcrumbs %}
+{% block footer_scripts %}
+  {{ block.super }}
+  <script nonce="{{ request.csp_nonce }}" src="{% static 'your-files-create-table.js' %}"></script>
+{% endblock footer_scripts %}

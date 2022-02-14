@@ -72,12 +72,9 @@ def get_s3_csv_column_types(path):
     return fields
 
 
-def trigger_dataflow_dag(path, schema, table, column_definitions, dag_run_id):
+def trigger_dataflow_dag(conf, dag, dag_run_id):
     config = settings.DATAFLOW_API_CONFIG
-    trigger_url = (
-        f'{config["DATAFLOW_BASE_URL"]}/api/experimental/'
-        f'dags/{config["DATAFLOW_S3_IMPORT_DAG"]}/dag_runs'
-    )
+    trigger_url = f'{config["DATAFLOW_BASE_URL"]}/api/experimental/' f"dags/{dag}/dag_runs"
     hawk_creds = {
         "id": config["DATAFLOW_HAWK_ID"],
         "key": config["DATAFLOW_HAWK_KEY"],
@@ -89,13 +86,7 @@ def trigger_dataflow_dag(path, schema, table, column_definitions, dag_run_id):
         {
             "run_id": dag_run_id,
             "replace_microseconds": "false",
-            "conf": {
-                "db_role": schema,
-                "file_path": path,
-                "schema_name": schema,
-                "table_name": table,
-                "column_definitions": column_definitions,
-            },
+            "conf": conf,
         }
     )
 
@@ -132,11 +123,11 @@ def copy_file_to_uploads_bucket(from_path, to_path):
     )
 
 
-def get_dataflow_dag_status(execution_date):
+def get_dataflow_dag_status(dag, execution_date):
     config = settings.DATAFLOW_API_CONFIG
     url = (
         f'{config["DATAFLOW_BASE_URL"]}/api/experimental/'
-        f'dags/{config["DATAFLOW_S3_IMPORT_DAG"]}/dag_runs/{execution_date.split("+")[0]}'
+        f'dags/{dag}/dag_runs/{execution_date.split("+")[0]}'
     )
     hawk_creds = {
         "id": config["DATAFLOW_HAWK_ID"],
@@ -158,11 +149,11 @@ def get_dataflow_dag_status(execution_date):
     return response.json()
 
 
-def get_dataflow_task_status(execution_date, task_id):
+def get_dataflow_task_status(dag, execution_date, task_id):
     config = settings.DATAFLOW_API_CONFIG
     url = (
         f'{config["DATAFLOW_BASE_URL"]}/api/experimental/'
-        f'dags/{config["DATAFLOW_S3_IMPORT_DAG"]}/dag_runs/'
+        f"dags/{dag}/dag_runs/"
         f'{execution_date.split("+")[0]}/tasks/{task_id}'
     )
     hawk_creds = {

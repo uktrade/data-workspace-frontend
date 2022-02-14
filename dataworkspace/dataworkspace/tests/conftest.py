@@ -248,6 +248,37 @@ def dataset_db(metadata_db):
 
 
 @pytest.fixture
+def dataset_db_with_swap_table(metadata_db):
+    database = factories.DatabaseFactory(memorable_name="my_database")
+    with psycopg2.connect(database_dsn(settings.DATABASES_DATA["my_database"])) as conn:
+        conn.cursor().execute(
+            """
+            CREATE TABLE IF NOT EXISTS dataset_test (
+                id INT,
+                name VARCHAR(255),
+                date DATE
+            );
+
+            DELETE FROM dataset_test;
+            INSERT INTO dataset_test values(1,'test','2022-01-01');
+
+            CREATE TABLE IF NOT EXISTS dataset_test_20220101t000000_swap (
+                id INT,
+                name VARCHAR(255),
+                date DATE
+            );
+
+            DELETE FROM dataset_test_20220101t000000_swap;
+            INSERT INTO dataset_test_20220101t000000_swap values(1,'test','2022-01-01');
+            INSERT INTO dataset_test_20220101t000000_swap values(2,'test_2','2022-01-02');
+
+            """
+        )
+
+    return database
+
+
+@pytest.fixture
 def dataset_finder_db(metadata_db):
     database = factories.DatabaseFactory(memorable_name="my_database")
     with psycopg2.connect(database_dsn(settings.DATABASES_DATA["my_database"])) as conn:

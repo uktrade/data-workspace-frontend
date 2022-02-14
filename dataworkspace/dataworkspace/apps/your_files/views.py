@@ -7,6 +7,7 @@ from django.conf import settings
 from django.http import (
     Http404,
     HttpResponse,
+    HttpResponseForbidden,
     HttpResponseRedirect,
     HttpResponseBadRequest,
     JsonResponse,
@@ -14,13 +15,16 @@ from django.http import (
 from django.shortcuts import render
 from django.urls import reverse
 from django.views import View
-from django.views.generic import FormView, TemplateView
+from django.views.generic import DetailView, FormView, TemplateView, ListView
+from psycopg2 import sql
 from requests import HTTPError
 
+from dataworkspace import datasets_db
 from dataworkspace.apps.core.utils import (
     create_new_schema,
     db_role_schema_suffix_for_user,
     get_all_schemas,
+    get_random_data_sample,
     get_s3_prefix,
     get_team_schemas_for_user,
     is_user_in_teams,
@@ -35,6 +39,7 @@ from dataworkspace.apps.your_files.forms import (
     CreateTableForm,
     CreateTableSchemaForm,
 )
+from dataworkspace.apps.your_files.models import UploadedTable
 from dataworkspace.apps.your_files.utils import (
     clean_db_identifier,
     copy_file_to_uploads_bucket,
@@ -303,6 +308,7 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
 
     def form_valid(self, form):
         # call new_private_database_credentials to make sure everything is set
+        config = settings.DATAFLOW_API_CONFIG
         user = self.request.user
         source_tables = source_tables_for_user(user)
         db_role_schema_suffix = db_role_schema_suffix_for_user(user)
@@ -329,10 +335,14 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
         filename = cleaned["path"].split("/")[-1]
         try:
             response = trigger_dataflow_dag(
-                import_path,
-                cleaned["schema"],
-                cleaned["table_name"],
-                column_definitions,
+                {
+                    "db_role": cleaned["schema"],
+                    "file_path": import_path,
+                    "schema_name": cleaned["schema"],
+                    "table_name": cleaned["table_name"],
+                    "column_definitions": column_definitions,
+                },
+                config["DATAFLOW_S3_IMPORT_DAG"],
                 f'{cleaned["schema"]}-{cleaned["table_name"]}-{datetime.now().isoformat()}',
             )
         except HTTPError:
@@ -460,6 +470,17 @@ class CreateTableSuccessView(BaseCreateTableTemplateView):
     template_name = "your_files/create-table-success.html"
     step = 5
 
+    def get(self, request, *args, **kwargs):
+        if "execution_date" in request.GET:
+            UploadedTable.objects.get_or_create(
+                schema=request.GET.get("schema"),
+                table_name=request.GET.get("table_name"),
+                data_flow_execution_date=datetime.strptime(
+                    request.GET.get("execution_date").split(".")[0], "%Y-%m-%dT%H:%M:%S"
+                ),
+            )
+        return super().get(request, *args, **kwargs)
+
 
 class CreateTableFailedView(RequiredParameterGetRequestMixin, TemplateView):
     template_name = "your_files/create-table-failed.html"
@@ -503,15 +524,132 @@ class CreateTableDAGStatusView(View):
     """
 
     def get(self, request, execution_date):
+        config = settings.DATAFLOW_API_CONFIG
         try:
-            return JsonResponse(get_dataflow_dag_status(execution_date))
+            return JsonResponse(
+                get_dataflow_dag_status(config["DATAFLOW_S3_IMPORT_DAG"], execution_date)
+            )
         except HTTPError as e:
             return JsonResponse({}, status=e.response.status_code)
 
 
 class CreateTableDAGTaskStatusView(View):
     def get(self, request, execution_date, task_id):
+        config = settings.DATAFLOW_API_CONFIG
         try:
-            return JsonResponse({"state": get_dataflow_task_status(execution_date, task_id)})
+            return JsonResponse(
+                {
+                    "state": get_dataflow_task_status(
+                        config["DATAFLOW_S3_IMPORT_DAG"], execution_date, task_id
+                    )
+                }
+            )
+        except HTTPError as e:
+            return JsonResponse({}, status=e.response.status_code)
+
+
+class ValidateUserIsStaffMixin:
+    def dispatch(self, request, *args, **kwargs):
+        if not self.request.user.is_staff:
+            return HttpResponseForbidden()
+        return super().dispatch(request, *args, **kwargs)
+
+
+class UploadedTableListView(ValidateUserIsStaffMixin, ListView):
+    model = UploadedTable
+    template_name = "your_files/uploaded-table-list.html"
+
+
+class RestoreTableView(ValidateUserIsStaffMixin, DetailView):
+    model = UploadedTable
+    template_name = "your_files/restore-table.html"
+
+    def get_context_data(self, **kwargs):
+        table = self.get_object()
+        db_name = list(settings.DATABASES_DATA.items())[0][0]
+        table_name = (
+            f"{table.table_name}_{table.data_flow_execution_date.strftime('%Y%m%dt000000_swap')}"
+        )
+        schema_name = table.schema
+        columns = datasets_db.get_columns(db_name, schema=schema_name, table=table_name)
+        query = f"""
+            select * from "{schema_name}"."{table_name}"
+        """
+        records = []
+        sample_size = settings.DATASET_PREVIEW_NUM_OF_ROWS
+        if columns:
+            rows = get_random_data_sample(
+                db_name,
+                sql.SQL(query),
+                sample_size,
+            )
+            for row in rows:
+                record_data = {}
+                for i, column in enumerate(columns):
+                    record_data[column] = row[i]
+                records.append(record_data)
+
+        ctx = super().get_context_data(**kwargs)
+        ctx["fields"] = columns
+        ctx["records"] = records
+        ctx["preview_limit"] = sample_size
+        ctx["record_count"] = len(records)
+        ctx["fixed_table_height_limit"] = (10,)
+        ctx["truncate_limit"] = 100
+        return ctx
+
+    def post(self, request, *args, **kwargs):
+        table = self.get_object()
+        config = settings.DATAFLOW_API_CONFIG
+        try:
+            response = trigger_dataflow_dag(
+                {
+                    "ts_nodash": table.data_flow_execution_date.strftime("%Y%m%dt000000"),
+                    "schema_name": table.schema,
+                    "table_name": table.table_name,
+                },
+                config["DATAFLOW_RESTORE_TABLE_DAG"],
+                f"restore-{table.schema}-{table.table_name}-{datetime.now().isoformat()}",
+            )
+        except HTTPError:
+            return HttpResponseRedirect(
+                f'{reverse("your-files:restore-table-failed", kwargs={"pk": table.id})}'
+            )
+
+        params = {
+            "execution_date": response["execution_date"],
+            "task_name": "restore-swap-table-datasets_db",
+        }
+        return HttpResponseRedirect(
+            f'{reverse("your-files:restore-table-in-progress", kwargs={"pk": table.id})}?{urlencode(params)}'
+        )
+
+
+class RestoreTableViewInProgress(ValidateUserIsStaffMixin, DetailView):
+    model = UploadedTable
+    template_name = "your_files/restore-table-in-progress.html"
+
+
+class RestoreTableViewFailed(ValidateUserIsStaffMixin, DetailView):
+    model = UploadedTable
+    template_name = "your_files/restore-table-failed.html"
+
+
+class RestoreTableViewSuccess(ValidateUserIsStaffMixin, DetailView):
+    model = UploadedTable
+    template_name = "your_files/restore-table-success.html"
+
+
+class RestoreTableDAGTaskStatusView(View):
+    def get(self, request, execution_date, task_id):
+        config = settings.DATAFLOW_API_CONFIG
+        try:
+            return JsonResponse(
+                {
+                    "state": get_dataflow_task_status(
+                        config["DATAFLOW_RESTORE_TABLE_DAG"], execution_date, task_id
+                    )
+                }
+            )
         except HTTPError as e:
             return JsonResponse({}, status=e.response.status_code)
