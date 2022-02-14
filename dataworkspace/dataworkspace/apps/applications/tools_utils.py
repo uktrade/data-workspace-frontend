@@ -66,7 +66,7 @@ def get_grouped_tools(request):
                     host_basename="dataexplorer",
                     summary="The Data Explorer is a simple tool to explore and work with master datasets on Data Workspace using SQL.",
                     help_link=None,
-                    link=url'explorer:index',
+                    link="url'explorer:index'",
                     has_access=request.user.has_perm("applications.start_all_applications"),
                 ),
                 # ToolsViewModel(
@@ -93,8 +93,8 @@ def get_grouped_tools(request):
                 ToolsViewModel(
                     name="Your Files",
                     host_basename="files",
-                    summary="Each Data Workspace user has a private home folder accessible by the tools JupyterLab, RStudio, and Theia. You can use "Your files" to upload files to this folder, and download files from this folder.",
-                    link=settings.YOUR_FILES_ENABLED,,
+                    summary="Each Data Workspace user has a private home folder accessible by the tools JupyterLab, RStudio, and Theia. You can use 'Your files' to upload files to this folder, and download files from this folder.",
+                    link=settings.YOUR_FILES_ENABLED,
                     has_access=request.user.has_perm("applications.start_all_applications"),
                     help_link=None,
                 ),
@@ -156,19 +156,19 @@ def get_grouped_tools(request):
 
     for application_template in ApplicationTemplate.objects.all().filter(visible=True, application_type="TOOL").exclude(nice_name="Superset").order_by("nice_name"):
         pass        
-        # group =  # find the group from all_tools that has name == application_template.group_name
+        group =  # find the group from all_tools that has name == application_template.group_name
         # group = groups[application_template.group_name]
 
         # group.append(ToolsViewModel(...create from actual model))
         #  ToolsViewModel(
-                #     name=appliation_template.name,
-                #     host_basename=host_basename,
-                #     summary=application_template.summary,
-                #     link=?? not help link... where does this come from
-                #     has_access=request.user.has_perm("applications.start_all_applications"),
+        #             name=application_template.name,
+        #             host_basename=application_template.host_basename,
+        #             summary=application_template.summary,
+        #             link=settings.?
+        #             has_access=request.user.has_perm("applications.start_all_applications"),
                     
-                # ),
-        # 
+        #         ),
+        
 
 
 
