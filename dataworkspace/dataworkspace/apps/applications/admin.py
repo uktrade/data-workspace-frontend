@@ -362,7 +362,10 @@ class ToolTemplateAdmin(admin.ModelAdmin):
 
     form = ToolTemplateEditForm
 
-    list_display = ("nice_name", "group_name",)
+    list_display = (
+        "nice_name",
+        "group_name",
+    )
 
     fieldsets = [
         (

@@ -1,5 +1,9 @@
 from django.urls import reverse
-from dataworkspace.apps.applications.models import SizeConfig, UserToolConfiguration, ApplicationTemplate
+from dataworkspace.apps.applications.models import (
+    SizeConfig,
+    UserToolConfiguration,
+    ApplicationTemplate,
+)
 from django.conf import settings
 
 
@@ -18,9 +22,14 @@ class ToolsViewModel:
     new: bool
 
     def __init__(
-        self, name: str, host_basename: str, summary: str, 
-        link: str, help_link: str = "", is_new: bool = False,
-        has_access: bool = False
+        self,
+        name: str,
+        host_basename: str,
+        summary: str,
+        link: str,
+        help_link: str = "",
+        is_new: bool = False,
+        has_access: bool = False,
     ):
         self.name = name
         self.host_basename = host_basename
@@ -43,7 +52,6 @@ def get_grouped_tools(request):
                     help_link=None,
                     link=reverse("applications:quicksight_redirect"),
                     has_access=request.user.has_perm("applications.start_all_applications"),
-                    
                 ),
                 ToolsViewModel(
                     name="Superset",
@@ -52,11 +60,11 @@ def get_grouped_tools(request):
                     help_link=None,
                     link=settings.SUPERSET_DOMAINS["edit"],
                     has_access=request.user.has_perm("applications.start_all_applications"),
-                    new=True
-
+                    # new=True
                 ),
             ],
             "group_description": "Use these tools to create dashboards",
+            "group_link": "https://data-services-help.trade.gov.uk/data-workspace/how-to/2-analyse-data/create-a-dashboard/",
         },
         {
             "group_name": "Data Analysis Tools",
@@ -66,7 +74,7 @@ def get_grouped_tools(request):
                     host_basename="dataexplorer",
                     summary="The Data Explorer is a simple tool to explore and work with master datasets on Data Workspace using SQL.",
                     help_link=None,
-                    link="url'explorer:index'",
+                    link=reverse("explorer:index"),
                     has_access=request.user.has_perm("applications.start_all_applications"),
                 ),
                 # ToolsViewModel(
@@ -77,15 +85,16 @@ def get_grouped_tools(request):
                 #     "Read more",
                 # ),
                 ToolsViewModel(
-                    mame="SPSS / STATA",
+                    name="SPSS / STATA",
                     host_basename="??",
                     summary="SPSS and STATA are statistical software packages supplied by IBM and StataCorp respectively. Use them to view, manage and analyse data, as well as create graphical outputs.",
                     link=settings.APPSTREAM_URL,
                     has_access=request.user.has_perm("applications.access_appstream"),
-                    help_link='https://data-services-help.trade.gov.uk/data-workspace/how-articles/tools-and-how-access-them/start-using-spss/'
+                    help_link="https://data-services-help.trade.gov.uk/data-workspace/how-articles/tools-and-how-access-them/start-using-spss/",
                 ),
             ],
             "group_description": "Use these tools to analyse data",
+            "group_link": "https://data-services-help.trade.gov.uk/data-workspace/how-to/2-analyse-data/",
         },
         {
             "group_name": "Data Management Tools",
@@ -94,7 +103,7 @@ def get_grouped_tools(request):
                     name="Your Files",
                     host_basename="files",
                     summary="Each Data Workspace user has a private home folder accessible by the tools JupyterLab, RStudio, and Theia. You can use 'Your files' to upload files to this folder, and download files from this folder.",
-                    link=settings.YOUR_FILES_ENABLED,
+                    link=reverse("your-files:files"),
                     has_access=request.user.has_perm("applications.start_all_applications"),
                     help_link=None,
                 ),
@@ -107,16 +116,17 @@ def get_grouped_tools(request):
                 ),
             ],
             "group_description": "Use these tools to upload data and share data",
-        }
+            "group_link": "https://data-services-help.trade.gov.uk/data-workspace/how-to/2-analyse-data/upload-your-own-data/",
+        },
     ]
-    
-    rstudio =   ToolsViewModel(
-                    "RStudio",
-                    "rstudio",
-                    "RStudio is an integrated development environment (IDE). Use it for statistical programming using R.",
-                    "rstudio_url",
-                    "Read more",
-                )
+
+    rstudio = ToolsViewModel(
+        "RStudio",
+        "rstudio",
+        "RStudio is an integrated development environment (IDE). Use it for statistical programming using R.",
+        "rstudio_url",
+        "Read more",
+    )
 
     rstudio.tool_configuration = UserToolConfiguration.default_config()
     rstudio.customisable_instance = True
@@ -125,7 +135,7 @@ def get_grouped_tools(request):
         {
             "group_name": "Integrated Development Environments",
             "tools": [
-              rstudio,
+                rstudio,
                 ToolsViewModel(
                     "JupyterLab Python",
                     "jupyterlab",
@@ -141,22 +151,30 @@ def get_grouped_tools(request):
                 ),
             ],
             "group_description": "Use these tools to write, modify and test software",
+            "group_link": None,
         },
     ]
 
-    all_tools= tools + ide_tools
-
+    all_tools = tools + ide_tools
 
     # groups = {
-    #     "Integrated Development Environments": []
+    #      #     "Visualisation Tools": [],
+    #     "Data Analysis Tools": [],
+    #     "Data Management Tools": [],
+    #     "Integrated Development Environments": [],
     # }
 
     # loop through dictionary in django template
     # for key,value in object.items ....
 
-    for application_template in ApplicationTemplate.objects.all().filter(visible=True, application_type="TOOL").exclude(nice_name="Superset").order_by("nice_name"):
-        pass        
-        group =  # find the group from all_tools that has name == application_template.group_name
+    for application_template in (
+        ApplicationTemplate.objects.all()
+        .filter(visible=True, application_type="TOOL")
+        .exclude(nice_name="Superset")
+        .order_by("nice_name")
+    ):
+        pass
+        # group =  # find the group from all_tools that has name == application_template.group_name
         # group = groups[application_template.group_name]
 
         # group.append(ToolsViewModel(...create from actual model))
@@ -166,11 +184,7 @@ def get_grouped_tools(request):
         #             summary=application_template.summary,
         #             link=settings.?
         #             has_access=request.user.has_perm("applications.start_all_applications"),
-                    
+
         #         ),
-        
-
-
-
 
     return all_tools
