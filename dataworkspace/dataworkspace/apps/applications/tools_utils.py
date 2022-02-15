@@ -63,7 +63,7 @@ def get_grouped_tools(request):
                     # new=True
                 ),
             ],
-            "group_description": "Use these tools to create dashboards",
+            "group_description": "create dashboards",
             "group_link": "https://data-services-help.trade.gov.uk/data-workspace/how-to/2-analyse-data/create-a-dashboard/",
         },
         {
@@ -93,7 +93,7 @@ def get_grouped_tools(request):
                     help_link="https://data-services-help.trade.gov.uk/data-workspace/how-articles/tools-and-how-access-them/start-using-spss/",
                 ),
             ],
-            "group_description": "Use these tools to analyse data",
+            "group_description": "analyse data",
             "group_link": "https://data-services-help.trade.gov.uk/data-workspace/how-to/2-analyse-data/",
         },
         {
@@ -115,7 +115,7 @@ def get_grouped_tools(request):
                     has_access=request.user.has_perm("applications.start_all_applications"),
                 ),
             ],
-            "group_description": "Use these tools to upload data and share data",
+            "group_description": "upload data and share data",
             "group_link": "https://data-services-help.trade.gov.uk/data-workspace/how-to/2-analyse-data/upload-your-own-data/",
         },
     ]
@@ -150,8 +150,8 @@ def get_grouped_tools(request):
                     "theia_url",
                 ),
             ],
-            "group_description": "Use these tools to write, modify and test software",
-            "group_link": None,
+            "group_description": "write, modify and test software",
+            "group_link": "https://data-services-help.trade.gov.uk/data-workspace/how-to/",
         },
     ]
 

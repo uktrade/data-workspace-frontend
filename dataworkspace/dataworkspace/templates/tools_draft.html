@@ -30,7 +30,14 @@
       {% for group in group_tools %}
         <div class="govuk-!-margin-top-8">
         <h3 class="govuk-heading-l">{{group.group_name}}</h3>
-        <div class="govuk-inset-text">{{group.group_description}}</div>
+        <div class="govuk-inset-text">Use these tools to 
+            {% if group.group_link %}
+            <a class="govuk-link" href="{{ group.group_link }}" target="_blank" rel="noopener noreferrer">
+              {{group.group_description}}
+            </a>
+            {% endif %}
+        </div>
+
         {% for tool in group.tools %}
         {% if application.nice_name != 'Data Explorer' %}
           {% include 'partials/tool_section.html' with application_host_basename=tool.host_basename application_name=tool.name application_summary=tool.summary application_help_link=tool.help_link instance=tool.instance application_url=tool.link customisable_instance=tool.customisable_instance has_access=tool.has_access tool_configuration=tool.tool_configuration trailing_horizontal_rule=True new=tool.new %}
