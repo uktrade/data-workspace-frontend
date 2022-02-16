@@ -38,7 +38,7 @@
               {% include 'request_access/partials/summary-list-row.html' with title='Reason to access this data' description=object.reason_for_access change_link='request_access:dataset-request-update' object_id=object.id %}
             {% endif %}
             {% if object.journey == object.JOURNEY_TOOLS_ACCESS or object.journey == object.JOURNEY_DATASET_AND_TOOLS_ACCESS%}
-              {% include 'request_access/partials/summary-list-row.html' with title='Responsible for Information training proof' description='Uploaded' change_link='request_access:tools-1' object_id=object.id %}
+              {% include 'request_access/partials/summary-list-row.html' with title='Security and Data Protection training proof' description='Uploaded' change_link='request_access:tools-1' object_id=object.id %}
               {% if object.spss_and_stata %}
                 {% include 'request_access/partials/summary-list-row.html' with title='Request SPSS and Stata' description='Yes' change_link='request_access:tools-2' object_id=object.id %}
                 {% include 'request_access/partials/summary-list-row.html' with title='Line manager&apos;s email address' description=object.line_manager_email_address change_link='request_access:tools-3' object_id=object.id %}

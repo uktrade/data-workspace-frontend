@@ -57,7 +57,7 @@ class ToolsAccessRequestFormPart1(GOVUKDesignSystemModelForm):
         fields = ["training_screenshot"]
 
     training_screenshot = GOVUKDesignSystemFileField(
-        label="Responsible for Information training screenshot",
+        label="Security and Data Protection training screenshot",
         help_html=render_to_string("request_access/training-screenshot-hint.html"),
         widget=GOVUKDesignSystemFileInputWidget(
             label_is_heading=True,
