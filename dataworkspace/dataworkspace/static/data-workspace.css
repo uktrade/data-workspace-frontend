@@ -356,7 +356,7 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
 }
 
 .training-screenshot {
-  content: url("/__django_static/assets/images/rit-screenshot.png");
+  content: url("/__django_static/assets/images/sdp-screenshot.png");
 }
 
 .govuk-hint.currently-selected-file {
