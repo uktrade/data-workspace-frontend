@@ -3,7 +3,12 @@ from dataworkspace.apps.applications.models import (
     SizeConfig,
     UserToolConfiguration,
     ApplicationTemplate,
+    ApplicationInstance,
+    
 )
+
+from dataworkspace.apps.applications.utils import stable_identification_suffix
+
 from django.conf import settings
 
 
@@ -13,13 +18,14 @@ class ToolsViewModel:
     summary: str
     link: str
     help_link: str
-    instance: str
+    instance: ApplicationInstance
     customisable_instance: bool = False
     has_access: bool
     tool_configuration: SizeConfig = None
     # remove this
     trailing_horizonal_rule: bool
     new: bool
+    sort_order: int = 1
 
     def __init__(
         self,
@@ -41,6 +47,12 @@ class ToolsViewModel:
 
 
 def get_grouped_tools(request):
+
+    sso_id_hex_short = stable_identification_suffix(str(request.user.profile.sso_id), short=True)
+    def link(application_template):
+        app = application_template.host_basename
+        return f"{request.scheme}://{app}-{sso_id_hex_short}.{settings.APPLICATION_ROOT_DOMAIN}/"
+
     tools = [
         {
             "group_name": "Visualisation Tools",
@@ -77,16 +89,9 @@ def get_grouped_tools(request):
                     link=reverse("explorer:index"),
                     has_access=request.user.has_perm("applications.start_all_applications"),
                 ),
-                # ToolsViewModel(
-                #     "pgAdmin",
-                #     "pgadmin",
-                #     "pgAdmin can be used to explore data on Data Workspace using SQL. It is an advanced alternative to Data Explorer, with additional functionality that lets you create and manage your own datasets.",
-                #     "pgadmin_url",
-                #     "Read more",
-                # ),
                 ToolsViewModel(
                     name="SPSS / STATA",
-                    host_basename="??",
+                    host_basename=None,
                     summary="SPSS and STATA are statistical software packages supplied by IBM and StataCorp respectively. Use them to view, manage and analyse data, as well as create graphical outputs.",
                     link=settings.APPSTREAM_URL,
                     has_access=request.user.has_perm("applications.access_appstream"),
@@ -118,54 +123,22 @@ def get_grouped_tools(request):
             "group_description": "upload data and share data",
             "group_link": "https://data-services-help.trade.gov.uk/data-workspace/how-to/2-analyse-data/upload-your-own-data/",
         },
-    ]
 
-    rstudio = ToolsViewModel(
-        "RStudio",
-        "rstudio",
-        "RStudio is an integrated development environment (IDE). Use it for statistical programming using R.",
-        "rstudio_url",
-        "Read more",
-    )
-
-    rstudio.tool_configuration = UserToolConfiguration.default_config()
-    rstudio.customisable_instance = True
-
-    ide_tools = [
         {
             "group_name": "Integrated Development Environments",
             "tools": [
-                rstudio,
-                ToolsViewModel(
-                    "JupyterLab Python",
-                    "jupyterlab",
-                    "JupyterLab is an integrated development environment (IDE). Use it to create interactive Python notebooks which enable data cleaning, data transformation and statistical modelling.",
-                    "jupyterlab_url",
-                    "Read more",
-                ),
-                ToolsViewModel(
-                    "Theia",
-                    "theia",
-                    "Theia is an integrated development environment (IDE). Use it to do file-based analysis, create visualisations, and analyse datasets from Data Workspace using Structured Query Language (SQL).",
-                    "theia_url",
-                ),
             ],
             "group_description": "write, modify and test software",
             "group_link": "https://data-services-help.trade.gov.uk/data-workspace/how-to/",
         },
     ]
 
-    all_tools = tools + ide_tools
-
-    # groups = {
-    #      #     "Visualisation Tools": [],
-    #     "Data Analysis Tools": [],
-    #     "Data Management Tools": [],
-    #     "Integrated Development Environments": [],
-    # }
-
-    # loop through dictionary in django template
-    # for key,value in object.items ....
+    application_instances = {
+        application_instance.application_template: application_instance
+        for application_instance in ApplicationInstance.objects.filter(
+            owner=request.user, state__in=["RUNNING", "SPAWNING"]
+        )
+    }
 
     for application_template in (
         ApplicationTemplate.objects.all()
@@ -173,18 +146,27 @@ def get_grouped_tools(request):
         .exclude(nice_name="Superset")
         .order_by("nice_name")
     ):
-        pass
-        # group =  # find the group from all_tools that has name == application_template.group_name
-        # group = groups[application_template.group_name]
+        vm = ToolsViewModel(
+            name = application_template.nice_name, 
+            host_basename = application_template.host_basename,
+            summary = application_template.application_summary,
+            link = link(application_template),
+            has_access=request.user.has_perm("applications.start_all_applications"),
+            help_link = application_template.application_help_link,
+        ) 
 
-        # group.append(ToolsViewModel(...create from actual model))
-        #  ToolsViewModel(
-        #             name=application_template.name,
-        #             host_basename=application_template.host_basename,
-        #             summary=application_template.summary,
-        #             link=settings.?
-        #             has_access=request.user.has_perm("applications.start_all_applications"),
+        vm.instance = application_instances.get(application_template, None)
+        vm.tool_configuration = application_template.user_tool_configuration.filter(
+                        user=request.user
+                    ).first() or UserToolConfiguration.default_config()
+        vm.customisable_instance = True
+        
 
-        #         ),
+        for group in tools:
+            if group["group_name"] == application_template.group_name:
+                group["tools"].append(vm)
 
-    return all_tools
+    for group in tools:
+        group["tools"].sort(key=lambda x: x.sort_order)
+
+    return tools

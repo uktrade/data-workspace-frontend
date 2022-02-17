@@ -101,10 +101,10 @@ class ApplicationTemplate(TimeStampedModel):
     )
 
     _GROUPS = (
-        ("VISUALISATIONS", "Visualisation Tools"),
-        ("ANALYSIS", "Data Analysis Tools"),
-        ("MANAGEMENT", "Data Management Tools"),
-        ("IDE", "Integrated Development Environments"),
+        ("Visualisation Tools", "Visualisation Tools"),
+        ("Data Analysis Tools", "Data Analysis Tools"),
+        ("Data Management Tools", "Data Management Tools"),
+        ("Integrated Development Environments", "Integrated Development Environments"),
     )
 
     group_name = models.CharField(max_length=50, choices=_GROUPS, blank=True, null=True)
