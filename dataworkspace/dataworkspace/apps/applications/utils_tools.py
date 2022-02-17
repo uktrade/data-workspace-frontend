@@ -1,4 +1,5 @@
 from django.urls import reverse
+from django.conf import settings
 from dataworkspace.apps.applications.models import (
     SizeConfig,
     UserToolConfiguration,
@@ -7,8 +8,6 @@ from dataworkspace.apps.applications.models import (
 )
 
 from dataworkspace.apps.applications.utils import stable_identification_suffix
-
-from django.conf import settings
 
 
 class ToolsViewModel:
