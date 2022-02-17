@@ -779,7 +779,7 @@ class SourceLink(ReferenceNumberedDatasetSource):
         return True
 
     def _delete_s3_file(self):
-        if self.local_file_is_accessible():
+        if self.url.startswith("s3://sourcelink") and self.local_file_is_accessible():
             client = boto3.client("s3")
             client.delete_object(Bucket=settings.AWS_UPLOADS_BUCKET, Key=self.url)
 

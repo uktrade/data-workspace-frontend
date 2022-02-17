@@ -2587,7 +2587,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 "sourcelink_set-0-id": source_link.id,
                 "sourcelink_set-0-dataset": dataset.id,
                 "sourcelink_set-0-name": "test",
-                "sourcelink_set-0-url": "http://test.com",
+                "sourcelink_set-0-url": "s3://sourcelink/a-file.txt",
                 "sourcelink_set-0-format": "test",
                 "sourcelink_set-0-frequency": "test",
                 "sourcelink_set-0-DELETE": "on",
@@ -2633,7 +2633,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 "sourcelink_set-0-id": source_link.id,
                 "sourcelink_set-0-dataset": dataset.id,
                 "sourcelink_set-0-name": "test",
-                "sourcelink_set-0-url": "http://test.com",
+                "sourcelink_set-0-url": "s3://sourcelink/a-file.txt",
                 "sourcelink_set-0-format": "test",
                 "sourcelink_set-0-frequency": "test",
                 "sourcelink_set-0-DELETE": "on",
@@ -2657,7 +2657,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
         self.assertContains(response, "was changed successfully")
         self.assertEqual(dataset.sourcelink_set.count(), link_count - 1)
         mock_client().delete_object.assert_called_once_with(
-            Bucket=settings.AWS_UPLOADS_BUCKET, Key="http://test.com"
+            Bucket=settings.AWS_UPLOADS_BUCKET, Key="s3://sourcelink/a-file.txt"
         )
 
 
