@@ -190,16 +190,16 @@ class ValidateSchemaMixin:
             schema = self.request.POST.get("schema", get_user_schema(self.request))
 
         if self.request.user.is_staff:
-            all_schemas = get_all_schemas()
+            self.all_schemas = get_all_schemas()
         else:
-            all_schemas = []
+            self.all_schemas = []
 
         user_schema = get_schema_for_user(self.request.user)
         team_schemas = get_team_schemas_for_user(self.request.user)
         schemas = (
             [{"name": "user", "schema_name": user_schema}]
             + team_schemas
-            + [{"name": schema, "schema_name": schema} for schema in all_schemas]
+            + [{"name": schema, "schema_name": schema} for schema in self.all_schemas]
         )
 
         if schema not in [s["schema_name"] for s in schemas]:
@@ -315,15 +315,16 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
         db_user = postgres_user(user.email)
         duration = timedelta(hours=24)
 
-        new_private_database_credentials(
-            db_role_schema_suffix,
-            source_tables,
-            db_user,
-            user,
-            duration,
-        )
-
         cleaned = form.cleaned_data
+        if cleaned["schema"] not in self.all_schemas:
+            new_private_database_credentials(
+                db_role_schema_suffix,
+                source_tables,
+                db_user,
+                user,
+                duration,
+            )
+
         column_definitions = get_s3_csv_column_types(cleaned["path"])
         for field in column_definitions:
             field["data_type"] = SCHEMA_POSTGRES_DATA_TYPE_MAP.get(
@@ -333,15 +334,18 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
         import_path = settings.DATAFLOW_IMPORTS_BUCKET_ROOT + "/" + cleaned["path"]
         copy_file_to_uploads_bucket(cleaned["path"], import_path)
         filename = cleaned["path"].split("/")[-1]
+        conf = {
+            "file_path": import_path,
+            "schema_name": cleaned["schema"],
+            "table_name": cleaned["table_name"],
+            "column_definitions": column_definitions,
+        }
+        if cleaned["schema"] not in self.all_schemas:
+            conf["db_role"] = cleaned["schema"]
+
         try:
             response = trigger_dataflow_dag(
-                {
-                    "db_role": cleaned["schema"],
-                    "file_path": import_path,
-                    "schema_name": cleaned["schema"],
-                    "table_name": cleaned["table_name"],
-                    "column_definitions": column_definitions,
-                },
+                conf,
                 config["DATAFLOW_S3_IMPORT_DAG"],
                 f'{cleaned["schema"]}-{cleaned["table_name"]}-{datetime.now().isoformat()}',
             )
