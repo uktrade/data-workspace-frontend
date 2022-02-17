@@ -8,7 +8,6 @@ import re
 from contextlib import closing
 from io import StringIO
 from urllib.parse import urlsplit, urlencode
-from xmlrpc.client import Boolean
 
 from csp.decorators import csp_exempt, csp_update
 from django.conf import settings
@@ -65,7 +64,6 @@ from dataworkspace.apps.applications.utils import stop_spawner_and_application
 from dataworkspace.apps.core.utils import (
     source_tables_for_app,
     source_tables_for_user,
-    stable_identification_suffix,
 )
 from dataworkspace.apps.core.views import public_error_500_html_view
 from dataworkspace.apps.datasets.constants import UserAccessType
