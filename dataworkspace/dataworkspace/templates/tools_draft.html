@@ -22,21 +22,21 @@
 <h1 class="govuk-heading-xl">Tools</h1>
 <div class="govuk-grid-row govuk-!-margin-bottom-6">
   {% if not perms.applications.start_all_applications %}
-<div class="govuk-grid-row govuk-!-margin-bottom-6">
-  <div class="govuk-grid-column-two-thirds">
-    <div class="govuk-warning-text">
-      <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
-      <div class="govuk-warning-text__text">
-        <strong>
-          <span class="govuk-warning-text__assistive">Warning</span>
-          You need to request access to use tools.
-        </strong>
+  <div class="govuk-grid-row govuk-!-margin-bottom-6">
+    <div class="govuk-grid-column-two-thirds">
+      <div class="govuk-warning-text">
+        <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+        <div class="govuk-warning-text__text">
+          <strong>
+            <span class="govuk-warning-text__assistive">Warning</span>
+            You need to request access to use tools.
+          </strong>
+        </div>
       </div>
+      <a class="govuk-button govuk-button--primary" href="{% url 'request_access:index' %}">Request access</a>
     </div>
-    <a class="govuk-button govuk-button--primary" href="{% url 'request_access:index' %}">Request access</a>
   </div>
-</div>
-{% endif %}
+  {% endif %}
   <div class="govuk-grid-column-full">
     <p class="govuk-body">
       Data Workspace offers access to a range of analysis tools that you can use with datasets in the catalogue.
@@ -55,7 +55,7 @@
       </div>
 
       {% for tool in group.tools %}
-        {% include 'partials/tool_section_wrapper.html' with tool=tool%}
+      {% include 'partials/tool_section_wrapper.html' with tool=tool%}
       {% endfor %}
     </div>
     {% endfor %}
