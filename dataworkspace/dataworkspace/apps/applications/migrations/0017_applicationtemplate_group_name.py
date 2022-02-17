@@ -6,13 +6,22 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('applications', '0016_applicationinstancedbusers_db_persistent_role'),
+        ("applications", "0016_applicationinstancedbusers_db_persistent_role"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='applicationtemplate',
-            name='group_name',
-            field=models.TextField(blank=True, choices=[('VISUALISATIONS', 'Visualisation Tools'), ('ANALYSIS', 'Data Analysis Tools'), ('MANAGEMENT', 'Data Management Tools'), ('IDE', 'Integrated Development Environments')], null=True),
+            model_name="applicationtemplate",
+            name="group_name",
+            field=models.TextField(
+                blank=True,
+                choices=[
+                    ("VISUALISATIONS", "Visualisation Tools"),
+                    ("ANALYSIS", "Data Analysis Tools"),
+                    ("MANAGEMENT", "Data Management Tools"),
+                    ("IDE", "Integrated Development Environments"),
+                ],
+                null=True,
+            ),
         ),
     ]

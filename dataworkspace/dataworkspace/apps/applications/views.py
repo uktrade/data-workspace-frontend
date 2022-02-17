@@ -56,7 +56,7 @@ from dataworkspace.apps.applications.utils import (
     sync_quicksight_permissions,
 )
 from dataworkspace.apps.applications.utils_tools import (
-    get_grouped_tools, 
+    get_grouped_tools,
 )
 
 
@@ -189,6 +189,7 @@ def tools_html_view(request):
         else HttpResponse(status=405)
     )
 
+
 def tools_html_GET(request):
 
     grouped = get_grouped_tools(request)
@@ -196,10 +197,9 @@ def tools_html_GET(request):
     return render(
         request,
         "tools_draft.html",
-        {
-            "grouped_tools": grouped
-        },
+        {"grouped_tools": grouped},
     )
+
 
 def tools_html_POST(request):
     public_host = request.POST["public_host"]

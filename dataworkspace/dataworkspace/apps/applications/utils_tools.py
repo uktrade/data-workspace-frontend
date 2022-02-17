@@ -4,7 +4,6 @@ from dataworkspace.apps.applications.models import (
     UserToolConfiguration,
     ApplicationTemplate,
     ApplicationInstance,
-    
 )
 
 from dataworkspace.apps.applications.utils import stable_identification_suffix
@@ -49,6 +48,7 @@ class ToolsViewModel:
 def get_grouped_tools(request):
 
     sso_id_hex_short = stable_identification_suffix(str(request.user.profile.sso_id), short=True)
+
     def link(application_template):
         app = application_template.host_basename
         return f"{request.scheme}://{app}-{sso_id_hex_short}.{settings.APPLICATION_ROOT_DOMAIN}/"
@@ -123,11 +123,9 @@ def get_grouped_tools(request):
             "group_description": "upload data and share data",
             "group_link": "https://data-services-help.trade.gov.uk/data-workspace/how-to/2-analyse-data/upload-your-own-data/",
         },
-
         {
             "group_name": "Integrated Development Environments",
-            "tools": [
-            ],
+            "tools": [],
             "group_description": "write, modify and test software",
             "group_link": "https://data-services-help.trade.gov.uk/data-workspace/how-to/",
         },
@@ -147,20 +145,20 @@ def get_grouped_tools(request):
         .order_by("nice_name")
     ):
         vm = ToolsViewModel(
-            name = application_template.nice_name, 
-            host_basename = application_template.host_basename,
-            summary = application_template.application_summary,
-            link = link(application_template),
+            name=application_template.nice_name,
+            host_basename=application_template.host_basename,
+            summary=application_template.application_summary,
+            link=link(application_template),
             has_access=request.user.has_perm("applications.start_all_applications"),
-            help_link = application_template.application_help_link,
-        ) 
+            help_link=application_template.application_help_link,
+        )
 
         vm.instance = application_instances.get(application_template, None)
-        vm.tool_configuration = application_template.user_tool_configuration.filter(
-                        user=request.user
-                    ).first() or UserToolConfiguration.default_config()
+        vm.tool_configuration = (
+            application_template.user_tool_configuration.filter(user=request.user).first()
+            or UserToolConfiguration.default_config()
+        )
         vm.customisable_instance = True
-        
 
         for group in tools:
             if group["group_name"] == application_template.group_name:
