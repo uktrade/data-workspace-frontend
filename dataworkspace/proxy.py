@@ -645,12 +645,14 @@ async def async_main():
             query,
             await get_data(downstream_request),
             default_http_timeout,
-            (
+            response_headers=(
                 (
                     "content-security-policy",
                     csp_application_running_direct(host, "superset"),
                 ),
             ),
+            user_exception_on_500=True,
+            user_exception_500_message="An unexpected error occurred in Superset.",
         )
 
     async def handle_admin(downstream_request, method, headers, path, query, data):
@@ -799,6 +801,8 @@ async def async_main():
         upstream_data,
         timeout,
         response_headers=tuple(),
+        user_exception_on_500=False,
+        user_exception_500_message="An unexpected error occurred",
     ):
         async with client_session.request(
             upstream_method,
@@ -809,6 +813,12 @@ async def async_main():
             allow_redirects=False,
             timeout=timeout,
         ) as upstream_response:
+            if user_exception_on_500 and upstream_response.status == 500:
+                async for chunk in upstream_response.content.iter_any():
+                    # leave upstream in a consistent state
+                    pass
+
+                raise UserException(user_exception_500_message, upstream_response.status)
 
             _, _, _, with_session_cookie = downstream_request[SESSION_KEY]
             downstream_response = await with_session_cookie(
