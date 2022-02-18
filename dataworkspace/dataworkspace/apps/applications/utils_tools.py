@@ -66,7 +66,7 @@ def get_grouped_tools(request):
                     help_link=None,
                     link=reverse("applications:quicksight_redirect"),
                     has_access=request.user.has_perm("applications.start_all_applications"),
-                    is_recommended=True
+                    is_recommended=True,
                 ),
                 ToolsViewModel(
                     name="Superset",
@@ -75,7 +75,7 @@ def get_grouped_tools(request):
                     help_link=None,
                     link=settings.SUPERSET_DOMAINS["edit"],
                     has_access=request.user.has_perm("applications.start_all_applications"),
-                    is_new=True
+                    is_new=True,
                 ),
             ],
             "group_description": "create dashboards",
