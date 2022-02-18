@@ -23,6 +23,7 @@ class ToolsViewModel:
     # remove this
     trailing_horizonal_rule: bool
     new: bool
+    recommended: bool
     sort_order: int = 1
 
     def __init__(
@@ -33,6 +34,7 @@ class ToolsViewModel:
         link: str,
         help_link: str = "",
         is_new: bool = False,
+        is_recommended: bool = False,
         has_access: bool = False,
     ):
         self.name = name
@@ -42,6 +44,7 @@ class ToolsViewModel:
         self.help_link = help_link
         self.new = is_new
         self.has_access = has_access
+        self.recommended = is_recommended
 
 
 def get_grouped_tools(request):
@@ -63,6 +66,7 @@ def get_grouped_tools(request):
                     help_link=None,
                     link=reverse("applications:quicksight_redirect"),
                     has_access=request.user.has_perm("applications.start_all_applications"),
+                    is_recommended=True
                 ),
                 ToolsViewModel(
                     name="Superset",
@@ -71,7 +75,7 @@ def get_grouped_tools(request):
                     help_link=None,
                     link=settings.SUPERSET_DOMAINS["edit"],
                     has_access=request.user.has_perm("applications.start_all_applications"),
-                    # new=True
+                    is_new=True
                 ),
             ],
             "group_description": "create dashboards",
