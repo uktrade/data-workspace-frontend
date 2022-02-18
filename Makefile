@@ -30,6 +30,8 @@ docker-build:
 	docker-compose -f docker-compose-test.yml build
 
 
+
+
 .PHONY: docker-test-unit
 docker-test-unit: docker-build
 	docker-compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test pytest /dataworkspace/dataworkspace
@@ -79,6 +81,12 @@ docker-format: first-use
 .PHONY: format
 format:
 	black .
+
+
+.PHONY: dev-shell
+dev-shell:
+	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash
+
 
 .PHONY: save-requirements
 save-requirements:

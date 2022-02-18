@@ -122,7 +122,7 @@ def get_grouped_tools(request):
                     help_link=None,
                 ),
                 ToolsViewModel(
-                    name="Gitlab",
+                    name="GitLab",
                     host_basename="gitlab",
                     summary="Collaborate on and store analysis, projects and "
                     "code with your colleagues",
