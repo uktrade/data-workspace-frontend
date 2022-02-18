@@ -49,12 +49,12 @@ def get_groups(request):
             "group_name": "Visualisation Tools",
             "tools": [
                 ToolsViewModel(
-                    name="Quicksight",
+                    name="QuickSight",
                     host_basename="quicksight",
                     summary="Use Quicksight to create and share interactive dashboards using data from Data Workspace.",
                     help_link=None,
                     link=reverse("applications:quicksight_redirect"),
-                    has_access=request.user.has_perm("applications.start_all_applications"),
+                    has_access=request.user.has_perm("applications.access_quicksight"),
                     tag="Recommended",
                 ),
                 ToolsViewModel(
