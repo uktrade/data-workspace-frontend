@@ -313,7 +313,7 @@ class TestToolsPage:
         client = Client(**get_http_sso_data(user))
         response = client.get(reverse("applications:tools"), follow=True)
 
-        assert len(response.context["applications"]) == 1
+        assert len(response.context["grouped_tools"]) == 4
         assert (
             response.context["applications"][0]["tool_configuration"].size_config.name == "Medium"
         )

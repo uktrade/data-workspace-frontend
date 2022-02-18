@@ -43,7 +43,8 @@
       Find out more about tools and how to start using them in the
       <a class"govuk-link" href="https://data-services-help.trade.gov.uk">Help Centre.</a>
     </p>
-    {% for group in grouped_tools %}
+
+    {% for key, group in tools.items %}
     <div class="govuk-!-margin-top-8">
       <h3 class="govuk-heading-l">{{group.group_name}}</h3>
       <div class="govuk-inset-text">Use these tools to
@@ -52,15 +53,13 @@
           {{group.group_description}}
         </a>
         {% endif %}
-      </div>
-
+        </div>
       {% for tool in group.tools %}
       {% include 'partials/tool_section_wrapper.html' with tool=tool%}
       {% endfor %}
     </div>
     {% endfor %}
-
-
+  
   </div>
 </div>
 {% endblock %}

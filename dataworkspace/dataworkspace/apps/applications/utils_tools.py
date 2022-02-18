@@ -47,16 +47,9 @@ class ToolsViewModel:
         self.recommended = is_recommended
 
 
-def get_grouped_tools(request):
-
-    sso_id_hex_short = stable_identification_suffix(str(request.user.profile.sso_id), short=True)
-
-    def link(application_template):
-        app = application_template.host_basename
-        return f"{request.scheme}://{app}-{sso_id_hex_short}.{settings.APPLICATION_ROOT_DOMAIN}/"
-
-    tools = [
-        {
+def get_groups(request):
+    tools = {
+        "Visualisation Tools": {
             "group_name": "Visualisation Tools",
             "tools": [
                 ToolsViewModel(
@@ -82,7 +75,7 @@ def get_grouped_tools(request):
             "group_description": "create dashboards",
             "group_link": "https://data-services-help.trade.gov.uk/data-workspace/how-to/2-analyse-data/create-a-dashboard/",
         },
-        {
+        "Data Analysis Tools": {
             "group_name": "Data Analysis Tools",
             "tools": [
                 ToolsViewModel(
@@ -109,7 +102,7 @@ def get_grouped_tools(request):
             "group_description": "analyse data",
             "group_link": "https://data-services-help.trade.gov.uk/data-workspace/how-to/2-analyse-data/",
         },
-        {
+        "Data Managament Tools": {
             "group_name": "Data Management Tools",
             "tools": [
                 ToolsViewModel(
@@ -135,13 +128,25 @@ def get_grouped_tools(request):
             "group_link": "https://data-services-help.trade.gov.uk/data-workspace/how-to/"
             "2-analyse-data/upload-your-own-data/",
         },
-        {
+        "Integrated Development Environments": {
             "group_name": "Integrated Development Environments",
             "tools": [],
             "group_description": "write, modify and test software",
             "group_link": "https://data-services-help.trade.gov.uk/data-workspace/how-to/",
         },
-    ]
+    }
+    return tools
+
+
+def get_grouped_tools(request):
+
+    sso_id_hex_short = stable_identification_suffix(str(request.user.profile.sso_id), short=True)
+
+    def link(application_template):
+        app = application_template.host_basename
+        return f"{request.scheme}://{app}-{sso_id_hex_short}.{settings.APPLICATION_ROOT_DOMAIN}/"
+
+    groups = get_groups(request)
 
     application_instances = {
         application_instance.application_template: application_instance
@@ -171,12 +176,11 @@ def get_grouped_tools(request):
             or UserToolConfiguration.default_config()
         )
         vm.customisable_instance = True
+        group = groups.get(application_template.group_name, None)
+        if group:
+            group["tools"].append(vm)
 
-        for group in tools:
-            if group["group_name"] == application_template.group_name:
-                group["tools"].append(vm)
+    for key, value in groups.items():
+        value["tools"].sort(key=lambda x: x.sort_order)
 
-    for group in tools:
-        group["tools"].sort(key=lambda x: x.sort_order)
-
-    return tools
+    return groups

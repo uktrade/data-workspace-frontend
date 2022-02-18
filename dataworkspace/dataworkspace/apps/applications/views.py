@@ -190,12 +190,12 @@ def tools_html_view(request):
 
 def tools_html_GET(request):
 
-    grouped = get_grouped_tools(request)
+    tools = get_grouped_tools(request)
 
     return render(
         request,
         "tools_draft.html",
-        {"grouped_tools": grouped},
+        {"tools": tools},
     )
 
 
