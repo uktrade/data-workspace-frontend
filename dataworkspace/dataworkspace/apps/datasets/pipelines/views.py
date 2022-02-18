@@ -1,15 +1,16 @@
 import logging
-
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls.base import reverse_lazy
+from django.views.generic import DetailView
 from django.views import View
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.urls import reverse
 from requests import RequestException
+
 
 from dataworkspace.apps.datasets.models import Pipeline
 from dataworkspace.apps.datasets.pipelines.forms import PipelineCreateForm, PipelineEditForm
@@ -19,6 +20,7 @@ from dataworkspace.apps.datasets.pipelines.utils import (
     run_pipeline,
     save_pipeline_to_dataflow,
     stop_pipeline,
+    get_pipeline_logs,
 )
 
 logger = logging.getLogger("app")
@@ -151,3 +153,29 @@ class PipelineStopView(View, IsAdminMixin):
         else:
             messages.success(self.request, "Pipeline stopped successfully.")
         return HttpResponseRedirect(reverse("pipelines:index"))
+
+
+class PipelineLogsDetailView(DetailView, UserPassesTestMixin):
+    model = Pipeline
+    template_name = "datasets/pipelines/logs.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["custom_message"] = []
+        try:
+            context["logs"] = get_pipeline_logs(self.object)
+            context["custom_message"].append(("Logs retrieved successfully.", "success"))
+        except RequestException as e:
+            logger.exception(e)
+            context["custom_message"].append(
+                (
+                    "There is a problem retrieving this pipeline's logs. If the "
+                    "issue persists please contact our support team.",
+                    "error",
+                )
+            )
+
+        return context
+
+    def test_func(self):
+        return self.request.user.is_superuser

@@ -660,22 +660,6 @@ class SourceTable(BaseSource):
             "(required if data grid download is enabled)"
         ),
     )
-    # TODO: To be deleted once migrations for replacement fields have been  # pylint: disable=fixme
-    #   run in all envs
-    data_grid_column_config = models.JSONField(
-        blank=True,
-        null=True,
-        help_text=(
-            "Must be a json object with a `columns` key containing a list of json objects defining:\n\n"
-            '- "field": "[column name]" (required)\n'
-            '- "headerName": "[pretty column name]" (optional, defaults to "field")\n'
-            '- "sortable": [true|false] (optional, default: true)\n'
-            '- "filter": "[true|false|ag-grid filter name]" (optional, default: true)\n\n'
-            "Optionally can include the fields:\n\n"
-            '- "download_enabled" (defaults to false)\n'
-            '- "download_limit" (defaults to 5000 rows)'
-        ),
-    )
 
     class Meta:
         db_table = "app_sourcetable"

@@ -2,6 +2,7 @@ from django.urls import path
 
 from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.your_files.views import (
+    CreateSchemaView,
     CreateTableConfirmDataTypesView,
     CreateTableCreatingTableView,
     CreateTableDAGStatusView,
@@ -29,6 +30,11 @@ urlpatterns = [
         "create-table/confirm-schema",
         login_required(CreateTableConfirmSchemaView.as_view()),
         name="create-table-confirm-schema",
+    ),
+    path(
+        "create-schema/",
+        login_required(CreateSchemaView.as_view()),
+        name="create-schema",
     ),
     path(
         "create-table/confirm-name",

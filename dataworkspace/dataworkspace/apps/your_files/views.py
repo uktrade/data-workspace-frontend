@@ -2,8 +2,10 @@ from datetime import datetime, timedelta
 from urllib.parse import urlencode
 
 from csp.decorators import csp_update
+from django.db.utils import ProgrammingError
 from django.conf import settings
 from django.http import (
+    Http404,
     HttpResponse,
     HttpResponseRedirect,
     HttpResponseBadRequest,
@@ -16,7 +18,9 @@ from django.views.generic import FormView, TemplateView
 from requests import HTTPError
 
 from dataworkspace.apps.core.utils import (
+    create_new_schema,
     db_role_schema_suffix_for_user,
+    get_all_schemas,
     get_s3_prefix,
     get_team_schemas_for_user,
     is_user_in_teams,
@@ -26,6 +30,7 @@ from dataworkspace.apps.core.utils import (
 )
 from dataworkspace.apps.your_files.constants import PostgresDataTypes
 from dataworkspace.apps.your_files.forms import (
+    CreateSchemaForm,
     CreateTableDataTypesForm,
     CreateTableForm,
     CreateTableSchemaForm,
@@ -109,26 +114,96 @@ class CreateTableConfirmSchemaView(RequiredParameterGetRequestMixin, FormView):
         return kwargs
 
     def form_valid(self, form):
+        if self.request.user.is_staff:
+            all_schemas = get_all_schemas() + ["new"]
+        else:
+            all_schemas = []
+
         user_schema = get_schema_for_user(self.request.user)
         team_schemas = get_team_schemas_for_user(self.request.user)
-        schemas = [{"name": "user", "schema_name": user_schema}] + team_schemas
+        schemas = (
+            [{"name": "user", "schema_name": user_schema}]
+            + team_schemas
+            + [{"name": schema, "schema_name": schema} for schema in all_schemas]
+        )
         schema_name = [
             schema["schema_name"]
             for schema in schemas
             if schema["name"] == form.cleaned_data["schema"]
         ]
+
         params = {
             "path": self.request.GET["path"],
             "schema": schema_name[0],
             "team": form.cleaned_data["schema"],
             "table_name": self.request.GET.get("table_name"),
         }
+
+        if params["schema"] == "new":
+            del params["schema"]
+            return HttpResponseRedirect(
+                f'{reverse("your-files:create-schema")}?{urlencode(params)}'
+            )
+
         return HttpResponseRedirect(
             f'{reverse("your-files:create-table-confirm-name")}?{urlencode(params)}'
         )
 
 
-class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, FormView):
+class CreateSchemaView(FormView):
+    template_name = "your_files/create-schema.html"
+    form_class = CreateSchemaForm
+
+    def dispatch(self, request, *args, **kwargs):
+        if not self.request.user.is_staff:
+            raise Http404
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        params = {
+            "path": self.request.GET["path"],
+            "schema": form.cleaned_data["schema"],
+            "team": form.cleaned_data["schema"],
+            "table_name": self.request.GET.get("table_name"),
+        }
+        try:
+            create_new_schema(form.cleaned_data["schema"])
+        except ProgrammingError as e:
+            form.add_error(error=str(e), field="schema")
+            return super().form_invalid(form)
+
+        return HttpResponseRedirect(
+            f'{reverse("your-files:create-table-confirm-name")}?{urlencode(params)}'
+        )
+
+
+class ValidateSchemaMixin:
+    def dispatch(self, request, *args, **kwargs):
+        if request.method == "GET":
+            schema = self.request.GET.get("schema", get_user_schema(self.request))
+        else:
+            schema = self.request.POST.get("schema", get_user_schema(self.request))
+
+        if self.request.user.is_staff:
+            all_schemas = get_all_schemas()
+        else:
+            all_schemas = []
+
+        user_schema = get_schema_for_user(self.request.user)
+        team_schemas = get_team_schemas_for_user(self.request.user)
+        schemas = (
+            [{"name": "user", "schema_name": user_schema}]
+            + team_schemas
+            + [{"name": schema, "schema_name": schema} for schema in all_schemas]
+        )
+
+        if schema not in [s["schema_name"] for s in schemas]:
+            raise Http404
+
+        return super().dispatch(request, *args, **kwargs)
+
+
+class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, ValidateSchemaMixin, FormView):
     template_name = "your_files/create-table-confirm-name.html"
     form_class = CreateTableForm
     required_parameters = ["path"]
@@ -194,7 +269,7 @@ class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, FormView):
         return super().form_invalid(form)
 
 
-class CreateTableConfirmDataTypesView(FormView):
+class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
     template_name = "your_files/create-table-confirm-data-types.html"
     form_class = CreateTableDataTypesForm
     required_parameters = [

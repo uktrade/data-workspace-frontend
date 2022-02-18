@@ -31,4 +31,9 @@ urlpatterns = [
         login_required(views.PipelineStopView.as_view()),
         name="stop",
     ),
+    path(
+        "<int:pk>/logs",
+        login_required(views.PipelineLogsDetailView.as_view()),
+        name="logs",
+    ),
 ]

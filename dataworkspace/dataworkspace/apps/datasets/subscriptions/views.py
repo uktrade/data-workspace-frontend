@@ -16,6 +16,8 @@ from dataworkspace.apps.datasets.subscriptions.utils import (
     unsubscribe_from_all,
     unsubscribe,
 )
+from dataworkspace.apps.eventlog.models import EventLog
+from dataworkspace.apps.eventlog.utils import log_event
 
 logger = logging.getLogger("app")
 
@@ -65,6 +67,13 @@ class DataSetSubscriptionUnsubscribe(View):
         else:
             unsubscribed = [unsubscribe(subscription_id, request.user)]
 
+        for subscription in unsubscribed:
+            log_event(
+                request.user,
+                EventLog.TYPE_DATASET_NOTIFICATIONS_UNSUBSCRIBED,
+                related_object=subscription,
+            )
+
         return render(
             request,
             "datasets/subscriptions/unsubscribe_confirm.html",
@@ -99,6 +108,15 @@ class DataSetSubscriptionView(UpdateView):
         elif form.cleaned_data["notification_type"] == NotificationType.ALL_CHANGES:
             form.instance.notify_on_schema_change = True
             form.instance.notify_on_data_change = True
+        log_event(
+            self.request.user,
+            EventLog.TYPE_DATASET_NOTIFICATIONS_SUBSCRIBED,
+            related_object=form.instance,
+            extra={
+                "notify_on_schema_change": form.instance.notify_on_schema_change,
+                "notify_on_data_change": form.instance.notify_on_data_change,
+            },
+        )
         return super().form_valid(form)
 
     def get_success_url(self):
