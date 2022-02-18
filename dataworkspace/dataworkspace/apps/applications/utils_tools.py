@@ -180,7 +180,7 @@ def get_grouped_tools(request):
         if group:
             group["tools"].append(vm)
 
-    for key, value in groups.items():
+    for _key, value in groups.items():
         value["tools"].sort(key=lambda x: x.sort_order)
 
     return groups
