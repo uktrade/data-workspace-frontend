@@ -323,7 +323,6 @@ class TestToolsPage:
 
         assert len(response.context["tools"][group_name]["tools"]) == 3
 
-        # find out mock template
         tool = None
         for item in response.context["tools"][group_name]["tools"]:
             if item.name == template.nice_name:
