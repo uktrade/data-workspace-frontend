@@ -102,7 +102,8 @@ def get_grouped_tools(request):
                     "outputs.",
                     link=settings.APPSTREAM_URL,
                     has_access=request.user.has_perm("applications.access_appstream"),
-                    help_link="https://data-services-help.trade.gov.uk/data-workspace/how-articles/tools-and-how-access-them/start-using-spss/",
+                    help_link="https://data-services-help.trade.gov.uk/data-workspace/how-articles/"
+                    "tools-and-how-access-them/start-using-spss/",
                 ),
             ],
             "group_description": "analyse data",
@@ -131,7 +132,8 @@ def get_grouped_tools(request):
                 ),
             ],
             "group_description": "upload data and share data",
-            "group_link": "https://data-services-help.trade.gov.uk/data-workspace/how-to/2-analyse-data/upload-your-own-data/",
+            "group_link": "https://data-services-help.trade.gov.uk/data-workspace/how-to/"
+            "2-analyse-data/upload-your-own-data/",
         },
         {
             "group_name": "Integrated Development Environments",
