@@ -32,8 +32,7 @@ class ToolsViewModel:
         link: str,
         help_link: str = "",
         has_access: bool = False,
-        tag: str = None
-
+        tag: str = None,
     ):
         self.name = name
         self.host_basename = host_basename
@@ -55,7 +54,9 @@ def get_groups(request):
                     summary="Use Quicksight to create and share interactive dashboards using data from Data Workspace.",
                     help_link=None,
                     link=reverse("applications:quicksight_redirect"),
-                    has_access=request.user.has_perm("applications.start_all_applications"),
+                    has_access=request.user.has_perm(
+                        "applications.start_all_applications"
+                    ),
                     tag="Recommended",
                 ),
                 ToolsViewModel(
@@ -65,7 +66,9 @@ def get_groups(request):
                     "Requires SQL knowledge.",
                     help_link=None,
                     link=settings.SUPERSET_DOMAINS["edit"],
-                    has_access=request.user.has_perm("applications.start_all_applications"),
+                    has_access=request.user.has_perm(
+                        "applications.start_all_applications"
+                    ),
                     tag="New",
                 ),
             ],
@@ -82,7 +85,9 @@ def get_groups(request):
                     "Data Workspace using SQL.",
                     help_link=None,
                     link=reverse("explorer:index"),
-                    has_access=request.user.has_perm("applications.start_all_applications"),
+                    has_access=request.user.has_perm(
+                        "applications.start_all_applications"
+                    ),
                 ),
                 ToolsViewModel(
                     name="SPSS / STATA",
@@ -109,7 +114,9 @@ def get_groups(request):
                     "JupyterLab, RStudio, and Theia. You can use 'Your files' to upload files "
                     "to this folder, and download files from this folder.",
                     link=reverse("your-files:files"),
-                    has_access=request.user.has_perm("applications.start_all_applications"),
+                    has_access=request.user.has_perm(
+                        "applications.start_all_applications"
+                    ),
                     help_link=None,
                 ),
                 ToolsViewModel(
@@ -118,7 +125,9 @@ def get_groups(request):
                     summary="Collaborate on and store analysis, projects and "
                     "code with your colleagues",
                     link=settings.GITLAB_URL_FOR_TOOLS,
-                    has_access=request.user.has_perm("applications.start_all_applications"),
+                    has_access=request.user.has_perm(
+                        "applications.start_all_applications"
+                    ),
                 ),
             ],
             "group_description": "upload data and share data",
@@ -137,7 +146,9 @@ def get_groups(request):
 
 def get_grouped_tools(request):
 
-    sso_id_hex_short = stable_identification_suffix(str(request.user.profile.sso_id), short=True)
+    sso_id_hex_short = stable_identification_suffix(
+        str(request.user.profile.sso_id), short=True
+    )
 
     def link(template):
         app = template.host_basename
@@ -169,7 +180,9 @@ def get_grouped_tools(request):
 
         vm.instance = application_instances.get(application_template, None)
         vm.tool_configuration = (
-            application_template.user_tool_configuration.filter(user=request.user).first()
+            application_template.user_tool_configuration.filter(
+                user=request.user
+            ).first()
             or UserToolConfiguration.default_config()
         )
         vm.customisable_instance = True
