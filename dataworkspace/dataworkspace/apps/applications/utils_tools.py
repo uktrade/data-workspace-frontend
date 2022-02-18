@@ -20,10 +20,8 @@ class ToolsViewModel:
     customisable_instance: bool = False
     has_access: bool
     tool_configuration: SizeConfig = None
-    # remove this
-    trailing_horizonal_rule: bool
-    new: bool
-    recommended: bool
+    trailing_horizontal_rule: bool
+    tag: str
     sort_order: int = 1
 
     def __init__(
@@ -33,18 +31,17 @@ class ToolsViewModel:
         summary: str,
         link: str,
         help_link: str = "",
-        is_new: bool = False,
-        is_recommended: bool = False,
         has_access: bool = False,
+        tag: str = None
+
     ):
         self.name = name
         self.host_basename = host_basename
         self.summary = summary
         self.link = link
         self.help_link = help_link
-        self.new = is_new
         self.has_access = has_access
-        self.recommended = is_recommended
+        self.tag = tag
 
 
 def get_groups(request):
@@ -59,7 +56,7 @@ def get_groups(request):
                     help_link=None,
                     link=reverse("applications:quicksight_redirect"),
                     has_access=request.user.has_perm("applications.start_all_applications"),
-                    is_recommended=True,
+                    tag="Recommended",
                 ),
                 ToolsViewModel(
                     name="Superset",
@@ -69,7 +66,7 @@ def get_groups(request):
                     help_link=None,
                     link=settings.SUPERSET_DOMAINS["edit"],
                     has_access=request.user.has_perm("applications.start_all_applications"),
-                    is_new=True,
+                    tag="New",
                 ),
             ],
             "group_description": "create dashboards",
@@ -142,8 +139,8 @@ def get_grouped_tools(request):
 
     sso_id_hex_short = stable_identification_suffix(str(request.user.profile.sso_id), short=True)
 
-    def link(application_template):
-        app = application_template.host_basename
+    def link(template):
+        app = template.host_basename
         return f"{request.scheme}://{app}-{sso_id_hex_short}.{settings.APPLICATION_ROOT_DOMAIN}/"
 
     groups = get_groups(request)
