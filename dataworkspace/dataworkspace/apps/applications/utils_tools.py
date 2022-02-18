@@ -71,7 +71,8 @@ def get_grouped_tools(request):
                 ToolsViewModel(
                     name="Superset",
                     host_basename="superset",
-                    summary="Use Superset to create advanced visuals and dashbaords using data from Data Workspace. Requires SQL knowledge.",
+                    summary="Use Superset to create advanced visuals and dashbaords using data from Data Workspace. "
+                    "Requires SQL knowledge.",
                     help_link=None,
                     link=settings.SUPERSET_DOMAINS["edit"],
                     has_access=request.user.has_perm("applications.start_all_applications"),
@@ -87,7 +88,8 @@ def get_grouped_tools(request):
                 ToolsViewModel(
                     name="Data Explorer",
                     host_basename="dataexplorer",
-                    summary="The Data Explorer is a simple tool to explore and work with master datasets on Data Workspace using SQL.",
+                    summary="The Data Explorer is a simple tool to explore and work with master datasets on "
+                    "Data Workspace using SQL.",
                     help_link=None,
                     link=reverse("explorer:index"),
                     has_access=request.user.has_perm("applications.start_all_applications"),
@@ -95,7 +97,9 @@ def get_grouped_tools(request):
                 ToolsViewModel(
                     name="SPSS / STATA",
                     host_basename=None,
-                    summary="SPSS and STATA are statistical software packages supplied by IBM and StataCorp respectively. Use them to view, manage and analyse data, as well as create graphical outputs.",
+                    summary="SPSS and STATA are statistical software packages supplied by IBM and StataCorp "
+                    "respectively. Use them to view, manage and analyse data, as well as create graphical "
+                    "outputs.",
                     link=settings.APPSTREAM_URL,
                     has_access=request.user.has_perm("applications.access_appstream"),
                     help_link="https://data-services-help.trade.gov.uk/data-workspace/how-articles/tools-and-how-access-them/start-using-spss/",
@@ -110,7 +114,9 @@ def get_grouped_tools(request):
                 ToolsViewModel(
                     name="Your Files",
                     host_basename="files",
-                    summary="Each Data Workspace user has a private home folder accessible by the tools JupyterLab, RStudio, and Theia. You can use 'Your files' to upload files to this folder, and download files from this folder.",
+                    summary="Each Data Workspace user has a private home folder accessible by the tools "
+                    "JupyterLab, RStudio, and Theia. You can use 'Your files' to upload files "
+                    "to this folder, and download files from this folder.",
                     link=reverse("your-files:files"),
                     has_access=request.user.has_perm("applications.start_all_applications"),
                     help_link=None,
@@ -118,7 +124,8 @@ def get_grouped_tools(request):
                 ToolsViewModel(
                     name="Gitlab",
                     host_basename="gitlab",
-                    summary="Collaborate on and store analysis, projects and code with your colleagues",
+                    summary="Collaborate on and store analysis, projects and "
+                    "code with your colleagues",
                     link=settings.GITLAB_URL_FOR_TOOLS,
                     has_access=request.user.has_perm("applications.start_all_applications"),
                 ),
