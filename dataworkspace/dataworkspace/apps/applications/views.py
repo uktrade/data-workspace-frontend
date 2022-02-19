@@ -194,7 +194,7 @@ def tools_html_GET(request):
 
     return render(
         request,
-        "tools_draft.html",
+        "tools.html",
         {"tools": tools},
     )
 
