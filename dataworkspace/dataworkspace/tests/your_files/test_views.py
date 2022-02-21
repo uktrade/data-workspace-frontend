@@ -489,6 +489,80 @@ class TestCreateTableViews:
         )
 
     @freeze_time("2021-01-01 01:01:01")
+    @mock.patch("dataworkspace.apps.your_files.views.get_all_schemas")
+    @mock.patch("dataworkspace.apps.your_files.views.get_schema_for_user")
+    @mock.patch("dataworkspace.apps.your_files.views.get_team_schemas_for_user")
+    @mock.patch("dataworkspace.apps.your_files.views.trigger_dataflow_dag")
+    @mock.patch("dataworkspace.apps.your_files.views.copy_file_to_uploads_bucket")
+    @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_column_types")
+    @mock.patch("dataworkspace.apps.your_files.utils.boto3.client")
+    @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
+    def test_success_all_schemas(
+        self,
+        mock_get_s3_prefix,
+        mock_boto_client,
+        mock_get_column_types,
+        mock_copy_file,
+        mock_trigger_dag,
+        mock_get_team_schemas_for_user,
+        mock_get_schema_for_user,
+        mock_get_all_schemas,
+        staff_client,
+    ):
+        mock_get_all_schemas.return_value = ["public", "dit"]
+        mock_get_schema_for_user.return_value = "test_schema"
+        mock_get_team_schemas_for_user.return_value = [
+            {"name": "TestTeam", "schema_name": "test_team_schema"},
+        ]
+        mock_get_s3_prefix.return_value = "user/federated/abc"
+        mock_get_column_types.return_value = [
+            {
+                "header_name": "Field 1",
+                "column_name": "field1",
+                "data_type": "text",
+                "sample_data": [1, 2, 3],
+            }
+        ]
+        params = {
+            "path": "user/federated/abc/a-csv.csv",
+            "table_name": "test_table",
+            "schema": "public",
+        }
+        response = staff_client.post(
+            f'{reverse("your-files:create-table-confirm-data-types")}?{urlencode(params)}',
+            data={
+                "path": "user/federated/abc/a-csv.csv",
+                "schema": "public",
+                "table_name": "a_csv",
+                "field1": "integer",
+            },
+            follow=True,
+        )
+        assert b"Validating" in response.content
+        mock_get_column_types.assert_called_with("user/federated/abc/a-csv.csv")
+        mock_copy_file.assert_called_with(
+            "user/federated/abc/a-csv.csv",
+            "data-flow-imports/user/federated/abc/a-csv.csv",
+        )
+        mock_trigger_dag.assert_called_with(
+            {
+                "file_path": "data-flow-imports/user/federated/abc/a-csv.csv",
+                "schema_name": "public",
+                "table_name": "a_csv",
+                "column_definitions": [
+                    {
+                        "header_name": "Field 1",
+                        "column_name": "field1",
+                        "data_type": "integer",
+                        "sample_data": [1, 2, 3],
+                    }
+                ],
+            },
+            "DataWorkspaceS3ImportPipeline",
+            "public-a_csv-2021-01-01T01:01:01",
+        )
+
+    @freeze_time("2021-01-01 01:01:01")
     @mock.patch("dataworkspace.apps.your_files.forms.get_schema_for_user")
     @mock.patch("dataworkspace.apps.your_files.forms.get_team_schemas_for_user")
     def test_invalid_schema(
