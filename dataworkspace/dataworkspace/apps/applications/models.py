@@ -107,7 +107,7 @@ class ApplicationTemplate(TimeStampedModel):
         ("Integrated Development Environments", "Integrated Development Environments"),
     )
 
-    group_name = models.CharField(max_length=50, choices=_GROUPS, blank=True, null=True)
+    group_name = models.CharField(max_length=50, choices=_GROUPS, blank=True, null=True, default="Data Analysis Tools")
 
     class Meta:
         db_table = "app_applicationtemplate"
