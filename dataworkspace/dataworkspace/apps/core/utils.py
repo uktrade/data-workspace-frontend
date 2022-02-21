@@ -201,6 +201,7 @@ def new_private_database_credentials(
                     AND schemaname NOT LIKE 'pg_temp_%'
                     AND schemaname NOT LIKE 'pg_toast_temp_%'
                     AND schemaname NOT LIKE '_team_%'
+                    AND tablename !~ '_\\d{{8}}t\\d{{6}}'
                     AND has_table_privilege({role}, quote_ident(schemaname) || '.' ||
                         quote_ident(tablename), 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER') = true
                 UNION ALL
