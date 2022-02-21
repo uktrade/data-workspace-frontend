@@ -1,0 +1,18 @@
+{% extends 'your_files/restore-table-base.html' %}
+{% load static core_tags %}
+{% block page_title %}Restore table{% endblock page_title %}
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-l">
+        We were unable to restore your table
+      </h1>
+      <p class="govuk-body">
+        Your table, created on {{ object.data_flow_execution_date }}, cannot be restored. Please check the following before you try again.
+      </p>
+      <p class="govuk-body">
+        <a href="{% url 'your_files:uploaded-tables' %}" class="govuk-link">Return to your tables</a>
+      </p>
+    </div>
+  </div>
+{% endblock %}

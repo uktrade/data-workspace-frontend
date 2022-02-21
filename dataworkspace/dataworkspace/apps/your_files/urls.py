@@ -16,6 +16,12 @@ from dataworkspace.apps.your_files.views import (
     CreateTableConfirmSchemaView,
     CreateTableValidatingView,
     CreateTableView,
+    RestoreTableDAGTaskStatusView,
+    RestoreTableView,
+    RestoreTableViewFailed,
+    RestoreTableViewInProgress,
+    RestoreTableViewSuccess,
+    UploadedTableListView,
     file_browser_html_view,
 )
 
@@ -90,5 +96,35 @@ urlpatterns = [
         "create-table/status/<str:execution_date>/<str:task_id>",
         login_required(CreateTableDAGTaskStatusView.as_view()),
         name="create-table-task-status",
+    ),
+    path(
+        "uploaded-tables",
+        login_required(UploadedTableListView.as_view()),
+        name="uploaded-tables",
+    ),
+    path(
+        "restore-table/<int:pk>/",
+        login_required(RestoreTableView.as_view()),
+        name="restore-table",
+    ),
+    path(
+        "restore-table/<int:pk>/in-progress",
+        login_required(RestoreTableViewInProgress.as_view()),
+        name="restore-table-in-progress",
+    ),
+    path(
+        "restore-table/<int:pk>/failed",
+        login_required(RestoreTableViewFailed.as_view()),
+        name="restore-table-failed",
+    ),
+    path(
+        "restore-table/<int:pk>/success",
+        login_required(RestoreTableViewSuccess.as_view()),
+        name="restore-table-success",
+    ),
+    path(
+        "restore-table/status/<str:execution_date>/<str:task_id>",
+        login_required(RestoreTableDAGTaskStatusView.as_view()),
+        name="restore-table-task-status",
     ),
 ]

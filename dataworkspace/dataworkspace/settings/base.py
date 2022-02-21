@@ -681,6 +681,7 @@ DATAFLOW_API_CONFIG = {
     "DATAFLOW_HAWK_ID": env.get("DATAFLOW_HAWK_ID"),
     "DATAFLOW_HAWK_KEY": env.get("DATAFLOW_HAWK_KEY"),
     "DATAFLOW_S3_IMPORT_DAG": env.get("DATAFLOW_S3_IMPORT_DAG"),
+    "DATAFLOW_RESTORE_TABLE_DAG": env.get("DATAFLOW_RESTORE_TABLE_DAG"),
 }
 
 # We increase this from the default (1000) because we want some datasets to be able to be granted to thousands of users

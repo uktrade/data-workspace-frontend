@@ -1,0 +1,69 @@
+{% extends 'your_files/restore-table-base.html' %}
+{% load static core_tags %}
+{% block page_title %}Restore table{% endblock page_title %}
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      <h1 class="govuk-heading-m">Restore table created on {{ object.data_flow_execution_date }}</h1>
+      <h2 class="govuk-heading-m">Preview of data to restore:</h2>
+    
+      <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+          {% if fields %}
+            <p class="govuk-body">
+              Showing {% if record_count < preview_limit %}all {% else %}<strong>{{ preview_limit }}</strong> random {% endif %}rows from data.
+            </p>
+            <div class="scrollable-table {% if record_count <= fixed_table_height_limit %}fixed-table-height{% endif %}" tabindex="0">
+              <table class="govuk-table govuk-!-font-size-16">
+                <thead>
+                  <tr class="govuk-table__row">
+                  {% for field in fields %}
+                      <th class="govuk-table__header ref-data-col-{{ field.get_data_type_display|slugify }}{% if field.is_identifier %} ref-data-col-id{% endif %}">
+                        {{ field }}
+                      </th>
+                  {% endfor %}
+                  </tr>
+                </thead>
+                <tbody>
+                {% for record in records %}
+                  <tr class="govuk-table__row">
+                    {% for field in fields %}
+                      {% with record|get_key:field as value %}
+                        <td class="govuk-table__cell">
+                          {{ value|not_set_if_none|truncatechars:truncate_limit }}
+                        </td>
+                      {% endwith %}
+                    {% endfor %}
+                  </tr>
+                {% empty %}
+                  <tr class="govuk-table__row">
+                    <td colspan="{{ fields|length }}">
+                      This dataset doesn't have any data yet.
+                    </td>
+                  </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <br/>
+          {% else %}
+            <p class="govuk-body">No data available</p>
+          {% endif %}
+        </div>
+      </div>
+      <h2 class="govuk-heading-s">Restore table</h2>
+      <p class="govuk-body">
+        Overwrite existing table {{ object.display_name }} with the above table?
+      </p>
+      <div class="govuk-button-group">
+        <form method="POST">
+          {% csrf_token %}
+          <button type="submit" class="govuk-button govuk-button--warning" data-module="govuk-button">
+            Overwrite
+          </button>
+          <a class="govuk-link" href="{% url 'your_files:uploaded-tables' %}">Cancel</a>
+        </form>
+
+      </div>
+    </div>
+{% endblock content %}

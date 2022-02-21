@@ -1,0 +1,41 @@
+{% extends 'your_files/restore-table-base.html' %}
+{% load explorer_tags %}
+{% block page_title %}Uploaded tables{% endblock page_title %}
+{% block breadcrumbs %}
+  <div class="govuk-breadcrumbs">
+    <ol class="govuk-breadcrumbs__list">
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="{% url 'root' %}">Home</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="{% url 'applications:tools' %}">Tools</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="{% url 'your-files:files' %}">Your files</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">Uploaded tables</li>
+    </ol>
+  </div>
+{% endblock breadcrumbs %}
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      <h1 class="govuk-heading-m">Uploaded tables</h2>
+      <p class="govuk-body">
+        Here you can see all uploaded tables and restore if necessary
+      </p>
+
+        {% regroup object_list by display_name as tables_list %}
+
+        <ul class="govuk-list govuk-list--bullet">
+        {% for tables in tables_list %}
+            <li class="govuk-body-l">{{ tables.grouper }}</li>
+            <ul class="govuk-list govuk-list--bullet">
+              {% for table in tables.list %}
+                <li class="govuk-body-m">{{ table.data_flow_execution_date }} <a href="{% url 'your_files:restore-table' pk=table.id %}">restore</a></li>
+              {% endfor %}
+            </ul>
+        {% endfor %}
+        </ul>
+    </div>
+{% endblock content %}

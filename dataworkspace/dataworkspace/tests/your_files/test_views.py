@@ -1,3 +1,4 @@
+import datetime
 from urllib.parse import urlencode
 
 import botocore
@@ -6,6 +7,8 @@ import requests_mock
 from django.urls import reverse
 from freezegun import freeze_time
 from mock import mock
+
+from dataworkspace.apps.your_files.models import UploadedTable
 
 
 class TestCreateTableViews:
@@ -159,17 +162,21 @@ class TestCreateTableViews:
             "data-flow-imports/user/federated/abc/a-csv.csv",
         )
         mock_trigger_dag.assert_called_with(
-            "data-flow-imports/user/federated/abc/a-csv.csv",
-            "test_schema",
-            "a_csv",
-            [
-                {
-                    "header_name": "Field 1",
-                    "column_name": "field1",
-                    "data_type": "integer",
-                    "sample_data": [1, 2, 3],
-                }
-            ],
+            {
+                "db_role": "test_schema",
+                "file_path": "data-flow-imports/user/federated/abc/a-csv.csv",
+                "schema_name": "test_schema",
+                "table_name": "a_csv",
+                "column_definitions": [
+                    {
+                        "header_name": "Field 1",
+                        "column_name": "field1",
+                        "data_type": "integer",
+                        "sample_data": [1, 2, 3],
+                    }
+                ],
+            },
+            "DataWorkspaceS3ImportPipeline",
             "test_schema-a_csv-2021-01-01T01:01:01",
         )
 
@@ -463,17 +470,21 @@ class TestCreateTableViews:
             "data-flow-imports/user/federated/abc/a-csv.csv",
         )
         mock_trigger_dag.assert_called_with(
-            "data-flow-imports/user/federated/abc/a-csv.csv",
-            "test_team_schema",
-            "a_csv",
-            [
-                {
-                    "header_name": "Field 1",
-                    "column_name": "field1",
-                    "data_type": "integer",
-                    "sample_data": [1, 2, 3],
-                }
-            ],
+            {
+                "db_role": "test_team_schema",
+                "file_path": "data-flow-imports/user/federated/abc/a-csv.csv",
+                "schema_name": "test_team_schema",
+                "table_name": "a_csv",
+                "column_definitions": [
+                    {
+                        "header_name": "Field 1",
+                        "column_name": "field1",
+                        "data_type": "integer",
+                        "sample_data": [1, 2, 3],
+                    }
+                ],
+            },
+            "DataWorkspaceS3ImportPipeline",
             "test_team_schema-a_csv-2021-01-01T01:01:01",
         )
 
@@ -629,13 +640,20 @@ class TestCreateTableViews:
             ({}, 400),
             ({"filename": "test.csv"}, 400),
             ({"filename": "test.csv", "schema": "test"}, 400),
-            ({"filename": "test.csv", "schema": "test", "table_name": "table"}, 400),
             (
                 {
                     "filename": "test.csv",
                     "schema": "test",
                     "table_name": "table",
-                    "execution_date": "2021-01-01",
+                },
+                400,
+            ),
+            (
+                {
+                    "filename": "test.csv",
+                    "schema": "test",
+                    "table_name": "table",
+                    "execution_date": "2021-01-01T00:00:00",
                 },
                 200,
             ),
@@ -646,6 +664,13 @@ class TestCreateTableViews:
         assert response.status_code == status_code
         if status_code == 200:
             assert success_text in response.content
+        if success_text == "Table created":
+            assert len(UploadedTable.objects.all()) == 1
+            assert UploadedTable.objects.all()[0].schema == "test"
+            assert UploadedTable.objects.all()[0].table_name == "table"
+            assert UploadedTable.objects.all()[0].data_flow_execution_date == datetime.datetime(
+                2021, 1, 1
+            )
 
     @pytest.mark.parametrize("status_code", (500, 404))
     def test_dag_status_invalid(self, status_code, client):
@@ -714,3 +739,49 @@ class TestCreateTableViews:
             )
             assert response.status_code == 200
             assert response.json() == {"state": "success"}
+
+
+class TestRestoreTableViews:
+    @freeze_time("2022-01-01 01:01:01")
+    @mock.patch("dataworkspace.apps.your_files.views.trigger_dataflow_dag")
+    def test_restore_table_view(
+        self, mock_trigger_dataflow_dag, dataset_db_with_swap_table, staff_client
+    ):
+        mock_trigger_dataflow_dag.return_value = {"execution_date": "2022-01-01"}
+
+        t = UploadedTable.objects.create(
+            schema="public",
+            table_name="dataset_test",
+            data_flow_execution_date=datetime.datetime(2022, 1, 1),
+        )
+
+        response = staff_client.get(reverse("your_files:restore-table", args=(t.id,)))
+
+        assert b"Restore table created on Jan. 1, 2022, midnight" in response.content
+        assert b"test_2" in response.content
+        assert (
+            b"Overwrite existing table public.dataset_test with the above table?"
+            in response.content
+        )
+
+        response = staff_client.post(reverse("your_files:restore-table", args=(t.id,)))
+
+        mock_trigger_dataflow_dag.assert_called_with(
+            {
+                "ts_nodash": "20220101t000000",
+                "schema_name": "public",
+                "table_name": "dataset_test",
+            },
+            "DataWorkspaceRestoreTablePipeline",
+            "restore-public-dataset_test-2022-01-01T01:01:01",
+        )
+
+        expected_params = {
+            "execution_date": "2022-01-01",
+            "task_name": "restore-swap-table-datasets_db",
+        }
+        assert response.status_code == 302
+        assert (
+            response.get("location")
+            == f'{reverse("your-files:restore-table-in-progress", args=(t.id,))}?{urlencode(expected_params)}'
+        )

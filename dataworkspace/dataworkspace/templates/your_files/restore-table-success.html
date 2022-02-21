@@ -1,0 +1,29 @@
+{% extends 'your_files/restore-table-base.html' %}
+{% load static core_tags explorer_tags %}
+{% block page_title %}Restore table{% endblock page_title %}
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      <div class="govuk-panel govuk-panel--confirmation">
+        <div class="govuk-panel__body govuk-!-font-size-24">
+            Table updated
+        </div>
+        <h1 id="pipeline_header" class="govuk-panel__title">Restore complete</h1>
+      </div>
+    </div>
+  </div>
+  <div class="govuk-grid-row" id="upload_complete">
+    <div class="govuk-grid-column-full">
+      <h2 class="govuk-heading-m">What next?</h2>
+      <p class="govuk-body">
+        You can immediately access your data in tools at <strong>"{{ object.schema }}"."{{ object.table_name }}"</strong>.
+      </p>
+      <a class="govuk-button govuk-button--primary" target="_blank" href="{% query_table_in_explorer_link schema table_name %}">
+        Open in Data Explorer
+      </a>
+      <p class="govuk-body">
+        <a href="{% url 'your_files:uploaded-tables' %}" class="govuk-link">Return to your tables</a>
+      </p>
+    </div>
+  </div>
+{% endblock %}
