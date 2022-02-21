@@ -22,6 +22,7 @@ class ToolsViewModel:
     tool_configuration: SizeConfig = None
     trailing_horizontal_rule: bool
     tag: str
+    tag_extra_css_class: str
     sort_order: int = 1
 
     def __init__(
@@ -33,6 +34,7 @@ class ToolsViewModel:
         help_link: str = "",
         has_access: bool = False,
         tag: str = None,
+        tag_extra_css_class: str = "",
     ):
         self.name = name
         self.host_basename = host_basename
@@ -41,6 +43,7 @@ class ToolsViewModel:
         self.help_link = help_link
         self.has_access = has_access
         self.tag = tag
+        self.tag_extra_css_class = tag_extra_css_class
 
 
 def get_groups(request):
@@ -56,6 +59,7 @@ def get_groups(request):
                     link=reverse("applications:quicksight_redirect"),
                     has_access=request.user.has_perm("applications.access_quicksight"),
                     tag="Recommended",
+                    tag_extra_css_class="govuk-tag--blue",
                 ),
                 ToolsViewModel(
                     name="Superset",
@@ -66,6 +70,7 @@ def get_groups(request):
                     link=settings.SUPERSET_DOMAINS["edit"],
                     has_access=request.user.has_perm("applications.start_all_applications"),
                     tag="New",
+                    tag_extra_css_class="govuk-tag--green",
                 ),
             ],
             "group_description": "create dashboards",
