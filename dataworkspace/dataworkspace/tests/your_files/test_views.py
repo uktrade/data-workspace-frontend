@@ -66,12 +66,10 @@ class TestCreateTableViews:
     @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_column_types")
     @mock.patch("dataworkspace.apps.your_files.utils.boto3.client")
     @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
-    @mock.patch("dataworkspace.apps.your_files.forms.table_exists")
     @mock.patch("dataworkspace.apps.your_files.views.get_schema_for_user")
     def test_trigger_failed(
         self,
         mock_get_schema_for_user,
-        mock_table_exists,
         mock_get_s3_prefix,
         mock_boto_client,
         mock_get_column_types,
@@ -79,7 +77,6 @@ class TestCreateTableViews:
         client,
     ):
         mock_get_schema_for_user.return_value = "test_schema"
-        mock_table_exists.return_value = False
         mock_get_s3_prefix.return_value = "user/federated/abc"
         mock_get_column_types.return_value = [
             {
@@ -627,47 +624,15 @@ class TestCreateTableViews:
         assert b"Table names must be no longer than 42 characters long" in response.content
 
     @freeze_time("2021-01-01 01:01:01")
-    @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_column_types")
-    @mock.patch("dataworkspace.apps.your_files.utils.boto3.client")
-    @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
-    @mock.patch("dataworkspace.apps.your_files.forms.table_exists")
-    @mock.patch("dataworkspace.apps.your_files.views.get_schema_for_user")
-    def test_table_exists(
-        self,
-        mock_get_schema_for_user,
-        mock_table_exists,
-        mock_get_s3_prefix,
-        mock_boto_client,
-        mock_get_column_types,
-        client,
-    ):
-        mock_get_schema_for_user.return_value = "test_schema"
-        mock_table_exists.return_value = True
-        mock_get_s3_prefix.return_value = "user/federated/abc"
-        mock_get_column_types.return_value = {"field1": "varchar"}
-        response = client.post(
-            reverse("your-files:create-table-confirm-name"),
-            data={
-                "path": "user/federated/abc/a-csv.csv",
-                "schema": "test_schema",
-                "table_name": "a_csv",
-            },
-            follow=True,
-        )
-        assert b"Table already exists" in response.content
-
-    @freeze_time("2021-01-01 01:01:01")
     @mock.patch("dataworkspace.apps.your_files.views.trigger_dataflow_dag")
     @mock.patch("dataworkspace.apps.your_files.views.copy_file_to_uploads_bucket")
     @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_column_types")
     @mock.patch("dataworkspace.apps.your_files.utils.boto3.client")
     @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
-    @mock.patch("dataworkspace.apps.your_files.forms.table_exists")
     @mock.patch("dataworkspace.apps.your_files.views.get_schema_for_user")
     def test_table_exists_override(
         self,
         mock_get_schema_for_user,
-        mock_table_exists,
         mock_get_s3_prefix,
         mock_boto_client,
         mock_get_column_types,
@@ -676,7 +641,6 @@ class TestCreateTableViews:
         client,
     ):
         mock_get_schema_for_user.return_value = "test_schema"
-        mock_table_exists.return_value = True
         mock_get_s3_prefix.return_value = "user/federated/abc"
         mock_get_column_types.return_value = [
             {
