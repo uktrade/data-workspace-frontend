@@ -531,7 +531,7 @@ class RestoreTableView(ValidateUserIsStaffMixin, DetailView):
         table = self.get_object()
         db_name = list(settings.DATABASES_DATA.items())[0][0]
         table_name = (
-            f"{table.table_name}_{table.data_flow_execution_date.strftime('%Y%m%dt000000_swap')}"
+            f"{table.table_name}_{table.data_flow_execution_date.strftime('%Y%m%dt%H%M%S_swap')}"
         )
         schema_name = table.schema
         columns = datasets_db.get_columns(db_name, schema=schema_name, table=table_name)
