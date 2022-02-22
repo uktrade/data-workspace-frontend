@@ -646,10 +646,6 @@ def create_new_schema(schema_name):
         )
 
 
-def is_user_in_teams(user):
-    return Team.objects.filter(member=user).exists()
-
-
 def source_tables_for_user(user):
     user_email_domain = user.email.split("@")[1]
 

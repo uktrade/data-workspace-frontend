@@ -27,7 +27,6 @@ from dataworkspace.apps.core.utils import (
     get_random_data_sample,
     get_s3_prefix,
     get_team_schemas_for_user,
-    is_user_in_teams,
     new_private_database_credentials,
     postgres_user,
     source_tables_for_user,
@@ -91,7 +90,6 @@ class CreateTableView(RequiredParameterGetRequestMixin, TemplateView):
                 "path": path,
                 "filename": path.split("/")[-1],
                 "table_name": clean_db_identifier(path),
-                "show_schema": is_user_in_teams(self.request.user),
             }
         )
         return context
@@ -227,11 +225,6 @@ class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, ValidateSchem
                 }
             )
         return initial
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update({"show_schema": is_user_in_teams(self.request.user)})
-        return context
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()

@@ -23,15 +23,9 @@
           <li class="govuk-body-l">a team schema, where your team members all have access</li>
         </ul>
       </p>
-      {% if show_schema %}
       <a href="{% url 'your_files:create-table-confirm-schema' %}?{{ request.GET.urlencode }}&table_name={{ table_name }}" class="govuk-button">
         Continue
       </a>
-      {% else %}
-      <a href="{% url 'your_files:create-table-confirm-name' %}?{{ request.GET.urlencode }}&table_name={{ table_name }}" class="govuk-button">
-        Continue
-      </a>
-      {% endif %}
     </div>
   </div>
 {% endblock %}
