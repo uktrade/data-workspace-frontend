@@ -221,7 +221,6 @@ class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, ValidateSchem
                     "schema": schema,
                     "team": self.request.GET.get("team"),
                     "table_name": self.request.GET.get("table_name"),
-                    "force_overwrite": "overwrite" in self.request.GET,
                 }
             )
         return initial
@@ -236,7 +235,6 @@ class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, ValidateSchem
             "path": form.cleaned_data["path"],
             "schema": form.cleaned_data["schema"],
             "table_name": form.cleaned_data["table_name"],
-            "overwrite": form.cleaned_data["force_overwrite"],
         }
         return HttpResponseRedirect(
             f'{reverse("your-files:create-table-confirm-data-types")}?{urlencode(params)}'
@@ -251,19 +249,6 @@ class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, ValidateSchem
                 f'{reverse("your-files:create-table-failed")}?'
                 f'filename={form.data["path"].split("/")[-1]}'
             )
-
-        # If table name validation failed due to a duplicate table in the db confirm overwrite
-        if errors.get("table_name") and errors["table_name"][0].code == "duplicate-table":
-            params = {
-                "path": form.cleaned_data["path"],
-                "table_name": form.data["table_name"],
-                "overwrite": True,
-            }
-            return HttpResponseRedirect(
-                f'{reverse("your-files:create-table-table-exists")}?{urlencode(params)}'
-            )
-
-        # Otherwise just redisplay the form (likely an invalid table name)
         return super().form_invalid(form)
 
 
@@ -284,7 +269,6 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
                     "path": self.request.GET["path"],
                     "schema": self.request.GET["schema"],
                     "table_name": self.request.GET["table_name"],
-                    "force_overwrite": "overwrite" in self.request.GET,
                 }
             )
         return initial
@@ -486,24 +470,6 @@ class CreateTableFailedView(RequiredParameterGetRequestMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["filename"] = self.request.GET["filename"]
-        return context
-
-
-class CreateTableTableExists(RequiredParameterGetRequestMixin, TemplateView):
-    template_name = "your_files/create-table-table-exists.html"
-    required_parameters = ["path", "table_name"]
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["form"] = CreateTableForm(
-            initial={
-                "path": self.request.GET["path"],
-                "schema": get_user_schema(self.request),
-                "table_name": self.request.GET.get("table_name"),
-                "force_overwrite": True,
-            },
-            user=self.request.user,
-        )
         return context
 
 
