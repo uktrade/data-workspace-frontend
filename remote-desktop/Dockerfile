@@ -1,4 +1,4 @@
-FROM debian:buster
+FROM debian:bullseye
 
 RUN \
 	apt-get update && \
@@ -7,7 +7,11 @@ RUN \
 		ca-certificates \
 		nginx \
 		procps \
-		task-lxde-desktop \
+		dbus-x11 \
+		openbox \
+		sudo \
+		lxqt-themes \
+		task-lxqt-desktop \
 		tigervnc-standalone-server \
 		vim \
 		gnupg \
@@ -38,13 +42,14 @@ RUN gzip -c /webroot/index.html > /webroot/index.html.gz
 RUN \
 	addgroup --system --gid 4356 dw && \
 	adduser --disabled-password --gecos '' --ingroup dw --uid 4357 dw && \
+	echo "root ALL=(ALL:ALL) ALL" > /etc/sudoers && \
 	touch /var/run/nginx.pid && \
 	chown dw:dw /var/run/nginx.pid
 
 COPY start.sh nginx.conf org.qgis.qgis.desktop gretl.desktop /
+COPY lxqt /etc/xdg/lxqt
 
 ENV \
 	USER=dw
-USER dw
 
 CMD ["/start.sh"]
