@@ -521,6 +521,7 @@ class ValidateUserIsStaffMixin:
 class UploadedTableListView(ValidateUserIsStaffMixin, ListView):
     model = UploadedTable
     template_name = "your_files/uploaded-table-list.html"
+    ordering = ["schema", "table_name"]
 
 
 class RestoreTableView(ValidateUserIsStaffMixin, DetailView):
@@ -567,7 +568,7 @@ class RestoreTableView(ValidateUserIsStaffMixin, DetailView):
         try:
             response = trigger_dataflow_dag(
                 {
-                    "ts_nodash": table.data_flow_execution_date.strftime("%Y%m%dt000000"),
+                    "ts_nodash": table.data_flow_execution_date.strftime("%Y%m%dt%H%M%S"),
                     "schema_name": table.schema,
                     "table_name": table.table_name,
                 },
