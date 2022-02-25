@@ -80,6 +80,12 @@ docker-format: first-use
 format:
 	black .
 
+
+.PHONY: dev-shell
+dev-shell:
+	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash
+
+
 .PHONY: save-requirements
 save-requirements:
 	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash -c "cd /app && pip-compile requirements.in"

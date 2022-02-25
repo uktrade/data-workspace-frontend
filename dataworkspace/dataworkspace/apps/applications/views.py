@@ -54,12 +54,16 @@ from dataworkspace.apps.applications.utils import (
     get_quicksight_dashboard_name_url,
     sync_quicksight_permissions,
 )
+from dataworkspace.apps.applications.utils_tools import (
+    get_grouped_tools,
+)
+
+
 from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils import stop_spawner_and_application
 from dataworkspace.apps.core.utils import (
     source_tables_for_app,
     source_tables_for_user,
-    stable_identification_suffix,
 )
 from dataworkspace.apps.core.views import public_error_500_html_view
 from dataworkspace.apps.datasets.constants import UserAccessType
@@ -185,48 +189,13 @@ def tools_html_view(request):
 
 
 def tools_html_GET(request):
-    sso_id_hex_short = stable_identification_suffix(str(request.user.profile.sso_id), short=True)
 
-    application_instances = {
-        application_instance.application_template: application_instance
-        for application_instance in ApplicationInstance.objects.filter(
-            owner=request.user, state__in=["RUNNING", "SPAWNING"]
-        )
-    }
-
-    def link(application_template):
-        app = application_template.host_basename
-        return f"{request.scheme}://{app}-{sso_id_hex_short}.{settings.APPLICATION_ROOT_DOMAIN}/"
+    tools = get_grouped_tools(request)
 
     return render(
         request,
         "tools.html",
-        {
-            "applications": [
-                {
-                    "host_basename": application_template.host_basename,
-                    "nice_name": application_template.nice_name,
-                    "link": link(application_template),
-                    "instance": application_instances.get(application_template, None),
-                    "summary": application_template.application_summary,
-                    "help_link": application_template.application_help_link,
-                    "tool_configuration": application_template.user_tool_configuration.filter(
-                        user=request.user
-                    ).first()
-                    or UserToolConfiguration.default_config(),
-                }
-                for application_template in ApplicationTemplate.objects.all()
-                .filter(visible=True, application_type="TOOL")
-                .exclude(nice_name="Superset")
-                .order_by("nice_name")
-            ],
-            "appstream_url": settings.APPSTREAM_URL,
-            "gitlab_url": settings.GITLAB_URL_FOR_TOOLS,
-            "quicksight_url": reverse("applications:quicksight_redirect"),
-            "superset_url": settings.SUPERSET_DOMAINS["edit"],
-            "your_files_enabled": settings.YOUR_FILES_ENABLED,
-            "SUPERSET_FLAG": settings.SUPERSET_FLAG,
-        },
+        {"tools": tools},
     )
 
 

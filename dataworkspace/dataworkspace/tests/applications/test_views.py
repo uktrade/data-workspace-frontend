@@ -307,39 +307,59 @@ class TestQuickSightPollAndRedirect:
 class TestToolsPage:
     @pytest.mark.django_db
     def test_user_with_no_size_config_shows_default_config(self):
-        factories.ApplicationTemplateFactory()
+        group_name = "Visualisation Tools"
+        template = factories.ApplicationTemplateFactory()
+        template.group_name = group_name
+        template.save()
+
         user = get_user_model().objects.create()
 
         client = Client(**get_http_sso_data(user))
         response = client.get(reverse("applications:tools"), follow=True)
 
-        assert len(response.context["applications"]) == 1
-        assert (
-            response.context["applications"][0]["tool_configuration"].size_config.name == "Medium"
-        )
-        assert response.context["applications"][0]["tool_configuration"].size_config.cpu == 1024
-        assert response.context["applications"][0]["tool_configuration"].size_config.memory == 8192
+        assert len(response.context["tools"][group_name]["tools"]) == 3
+
+        tool = None
+        for item in response.context["tools"][group_name]["tools"]:
+            if item.name == template.nice_name:
+                tool = item
+                break
+
+        assert tool is not None
+
+        assert tool.tool_configuration.size_config.name == "Medium"
+        assert tool.tool_configuration.size_config.cpu == 1024
+        assert tool.tool_configuration.size_config.memory == 8192
 
     @pytest.mark.django_db
     def test_user_with_size_config_shows_correct_config(self):
-        tool = factories.ApplicationTemplateFactory()
+        group_name = "Visualisation Tools"
+        template = factories.ApplicationTemplateFactory()
+        template.group_name = group_name
+        template.save()
+
         user = get_user_model().objects.create()
         UserToolConfiguration.objects.create(
-            user=user, tool_template=tool, size=UserToolConfiguration.SIZE_EXTRA_LARGE
+            user=user,
+            tool_template=template,
+            size=UserToolConfiguration.SIZE_EXTRA_LARGE,
         )
 
         client = Client(**get_http_sso_data(user))
         response = client.get(reverse("applications:tools"), follow=True)
 
-        assert len(response.context["applications"]) == 1
-        assert (
-            response.context["applications"][0]["tool_configuration"].size_config.name
-            == "Extra Large"
-        )
-        assert response.context["applications"][0]["tool_configuration"].size_config.cpu == 4096
-        assert (
-            response.context["applications"][0]["tool_configuration"].size_config.memory == 30720
-        )
+        assert len(response.context["tools"][group_name]["tools"]) == 3
+
+        tool = None
+        for item in response.context["tools"][group_name]["tools"]:
+            if item.name == template.nice_name:
+                tool = item
+                break
+
+        assert tool is not None
+        assert tool.tool_configuration.size_config.name == "Extra Large"
+        assert tool.tool_configuration.size_config.cpu == 4096
+        assert tool.tool_configuration.size_config.memory == 30720
 
 
 class TestUserToolSizeConfigurationView:
