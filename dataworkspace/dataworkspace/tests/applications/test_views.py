@@ -271,7 +271,8 @@ class TestDataVisualisationUIApprovalPage:
 class TestQuickSightPollAndRedirect:
     @pytest.mark.django_db
     @override_settings(QUICKSIGHT_SSO_URL="https://sso.quicksight")
-    def test_view_redirects_to_quicksight_sso_url(self):
+    @mock.patch("dataworkspace.apps.applications.views.boto3.client")
+    def test_view_redirects_to_quicksight_sso_url(self, mock_boto_client):
         user = get_user_model().objects.create(is_staff=True, is_superuser=True)
 
         # Login to admin site
@@ -284,7 +285,8 @@ class TestQuickSightPollAndRedirect:
         assert resp["Location"] == "https://sso.quicksight"
 
     @pytest.mark.django_db
-    def test_view_starts_celery_polling_job(self):
+    @mock.patch("dataworkspace.apps.applications.views.boto3.client")
+    def test_view_starts_celery_polling_job(self, mock_boto_client):
         user = get_user_model().objects.create(is_staff=True, is_superuser=True)
 
         # Login to admin site
