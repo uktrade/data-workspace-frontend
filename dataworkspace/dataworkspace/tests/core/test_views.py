@@ -172,7 +172,6 @@ def test_csp_on_files_endpoint_includes_s3(client):
     assert response.status_code == 200
 
     policies = get_response_csp_as_set(response)
-    # raise Exception(policies)
     assert (
         "connect-src dataworkspace.test:8000 https://www.google-analytics.com "
         "dataworkspace.test:3000 ws://dataworkspace.test:3000 "
