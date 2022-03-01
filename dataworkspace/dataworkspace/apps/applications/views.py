@@ -1,6 +1,4 @@
 import datetime
-
-
 import itertools
 import json
 import random
@@ -9,6 +7,9 @@ from contextlib import closing
 from io import StringIO
 from urllib.parse import urlsplit, urlencode
 
+import boto3
+import botocore
+from botocore.config import Config
 from csp.decorators import csp_exempt, csp_update
 from django.conf import settings
 from django.contrib import messages
@@ -256,6 +257,28 @@ def _get_embedded_superset_dashboard(request, dashboard_id, catalogue_item):
 def quicksight_start_polling_sync_and_redirect(request):
     if not request.user.has_perm("applications.access_quicksight"):
         return HttpResponse(status=403)
+
+    qs_client = boto3.client(
+        "quicksight",
+        region_name=settings.QUICKSIGHT_USER_REGION,
+        config=Config(retries={"mode": "standard", "max_attempts": 10}),
+    )
+    account_id = boto3.client("sts").get_caller_identity().get("Account")
+
+    try:
+        qs_client.register_user(
+            AwsAccountId=account_id,
+            Namespace="default",
+            IdentityType="IAM",
+            IamArn=f"arn:aws:iam::{account_id}:role/quicksight_federation",
+            CustomPermissionsName="author-custom-permissions",
+            UserRole="AUTHOR",
+            SessionName=request.user.profile.sso_id,
+            Email=request.user.email,
+        )
+    except botocore.exceptions.ClientError as e:
+        if e.response["Error"]["Code"] != "ResourceExistsException":
+            raise
 
     sync_quicksight_permissions.delay(
         user_sso_ids_to_update=(request.user.profile.sso_id,),
