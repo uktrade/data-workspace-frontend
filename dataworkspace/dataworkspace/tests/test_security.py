@@ -1,7 +1,6 @@
 import pytest
 
 from django.urls import reverse
-from django.test import override_settings
 
 from dataworkspace.tests.common import get_response_csp_as_set
 from dataworkspace.tests.factories import (
@@ -11,7 +10,6 @@ from dataworkspace.tests.factories import (
 )
 
 
-@override_settings(DEBUG=False, LOCAL=False)
 def test_baseline_content_security_policy(client):
     response = client.get(reverse("datasets:find_datasets"))
     assert response.status_code == 200
