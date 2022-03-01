@@ -43,6 +43,61 @@ def test_create_pipeline(mock_sync, table_name, expected_output, added_pipelines
     assert pipeline_count + added_pipelines == Pipeline.objects.count()
 
 
+@mock.patch("dataworkspace.apps.datasets.pipelines.views.save_pipeline_to_dataflow")
+def test_create_pipeline_validates_valid_sql(mock_sync, staff_client):
+    staff_client.post(reverse("admin:index"), follow=True)
+    resp = staff_client.post(
+        reverse("pipelines:create"),
+        data={"table_name": "test", "sql_query": "SELECT bar as 1;"},
+        follow=True,
+    )
+    assert b"syntax error" in resp.content
+
+
+@mock.patch("dataworkspace.apps.datasets.pipelines.views.save_pipeline_to_dataflow")
+def test_create_pipeline_validates_single_statement(mock_sync, staff_client):
+    staff_client.post(reverse("admin:index"), follow=True)
+    resp = staff_client.post(
+        reverse("pipelines:create"),
+        data={"table_name": "test", "sql_query": "SELECT 1; SELECT 2;"},
+        follow=True,
+    )
+    assert b"Enter a single statement" in resp.content
+
+
+@mock.patch("dataworkspace.apps.datasets.pipelines.views.save_pipeline_to_dataflow")
+def test_create_pipeline_validates_drop_statement(mock_sync, staff_client):
+    staff_client.post(reverse("admin:index"), follow=True)
+    resp = staff_client.post(
+        reverse("pipelines:create"),
+        data={"table_name": "test", "sql_query": "DROP TABLE foo;"},
+        follow=True,
+    )
+    assert b"DROP statements are not supported" in resp.content
+
+
+@mock.patch("dataworkspace.apps.datasets.pipelines.views.save_pipeline_to_dataflow")
+def test_create_pipeline_validates_create_statement(mock_sync, staff_client):
+    staff_client.post(reverse("admin:index"), follow=True)
+    resp = staff_client.post(
+        reverse("pipelines:create"),
+        data={"table_name": "test", "sql_query": "CREATE TABLE foo (f1 int);"},
+        follow=True,
+    )
+    assert b"CREATE statements are not supported" in resp.content
+
+
+@mock.patch("dataworkspace.apps.datasets.pipelines.views.save_pipeline_to_dataflow")
+def test_create_pipeline_validates_duplicate_column_names(mock_sync, staff_client):
+    staff_client.post(reverse("admin:index"), follow=True)
+    resp = staff_client.post(
+        reverse("pipelines:create"),
+        data={"table_name": "test", "sql_query": "SELECT 1 AS foo, 2 AS foo;"},
+        follow=True,
+    )
+    assert b"Duplicate column names found" in resp.content
+
+
 @pytest.mark.django_db
 @mock.patch("dataworkspace.apps.datasets.pipelines.views.save_pipeline_to_dataflow")
 def test_edit_pipeline(mock_sync, staff_client):

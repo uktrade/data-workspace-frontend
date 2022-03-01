@@ -52,6 +52,26 @@ class PipelineCreateForm(GOVUKDesignSystemModelForm):
         error_messages={"required": "Enter an SQL query."},
     )
 
+    def clean_sql_query(self):
+        import psqlparse
+
+        try:
+            statements = psqlparse.parse(self.cleaned_data["sql_query"])
+        except psqlparse.exceptions.PSqlParseError as e:
+            raise ValidationError(e)
+        else:
+            if len(statements) > 1:
+                raise ValidationError("Enter a single statement")
+            if type(statements[0]) == dict:
+                if "CreateStmt" in statements[0]:
+                    raise ValidationError("CREATE statements are not supported")
+                if "DropStmt" in statements[0]:
+                    raise ValidationError("DROP statements are not supported")
+            columns = [t.name for t in statements[0].target_list]
+            if len(columns) != len(set(columns)):
+                raise ValidationError("Duplicate column names found")
+        return self.cleaned_data["sql_query"]
+
 
 class PipelineEditForm(PipelineCreateForm):
     table_name = GOVUKDesignSystemCharField(
