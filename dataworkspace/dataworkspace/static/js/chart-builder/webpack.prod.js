@@ -14,6 +14,9 @@ module.exports = merge(common, {
         NODE_ENV: JSON.stringify("production"),
       },
     }),
-    new BundleTracker({filename: '../stats/chart-builder-stats.json'}),
+    new BundleTracker({
+      filename: '../stats/chart-builder-stats.json',
+      relativePath: true,
+    }),
   ],
  });
