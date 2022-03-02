@@ -273,7 +273,7 @@ def quicksight_start_polling_sync_and_redirect(request):
             IamArn=f"arn:aws:iam::{account_id}:role/quicksight_federation",
             CustomPermissionsName="author-custom-permissions",
             UserRole="AUTHOR",
-            SessionName=request.user.profile.sso_id,
+            SessionName=str(request.user.profile.sso_id),
             Email=request.user.email,
         )
     except botocore.exceptions.ClientError as e:
