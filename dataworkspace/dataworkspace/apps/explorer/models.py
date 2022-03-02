@@ -220,10 +220,13 @@ class ChartBuilderChart(TimeStampedUserModel):
         columns = []
         for trace in traces:
             for column_name in trace["meta"].get("columnNames", {}).values():
-                columns.append(column_name)
+                if isinstance(column_name, dict):
+                    columns += list(column_name.values())
+                else:
+                    columns.append(column_name)
             if trace.get("textsrc", None) is not None:
                 columns.append(trace["textsrc"])
-        return columns
+        return list(set(columns))
 
     def is_published(self):
         return self.datasets.count() > 0
