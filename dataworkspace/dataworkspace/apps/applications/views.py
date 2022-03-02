@@ -280,10 +280,7 @@ def quicksight_start_polling_sync_and_redirect(request):
         if e.response["Error"]["Code"] != "ResourceExistsException":
             raise
 
-    sync_quicksight_permissions.delay(
-        user_sso_ids_to_update=(request.user.profile.sso_id,),
-        poll_for_user_creation=True,
-    )
+    sync_quicksight_permissions.delay(user_sso_ids_to_update=(request.user.profile.sso_id,))
 
     return redirect(settings.QUICKSIGHT_SSO_URL)
 

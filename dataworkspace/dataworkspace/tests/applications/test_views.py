@@ -301,7 +301,6 @@ class TestQuickSightPollAndRedirect:
         assert sync_mock.delay.call_args_list == [
             mock.call(
                 user_sso_ids_to_update=(user.profile.sso_id,),
-                poll_for_user_creation=True,
             )
         ]
 
