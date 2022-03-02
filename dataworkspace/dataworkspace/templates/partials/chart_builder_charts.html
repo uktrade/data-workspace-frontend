@@ -1,6 +1,8 @@
 {% load datasets_tags %}
 {% if model.charts.all %}
-  <hr />
+  {% if model.visualisations.live %}
+    <hr class="govuk-section-break">
+  {% endif %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
       <hr class="govuk-section-break">
