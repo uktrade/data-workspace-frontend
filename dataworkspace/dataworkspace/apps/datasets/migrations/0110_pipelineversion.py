@@ -7,23 +7,33 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0109_remove_data_grid_column_config'),
+        ("datasets", "0109_remove_data_grid_column_config"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='PipelineVersion',
+            name="PipelineVersion",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
-                ('table_name', models.CharField(max_length=256)),
-                ('sql_query', models.TextField()),
-                ('pipeline', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='datasets.pipeline')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
+                ("table_name", models.CharField(max_length=256)),
+                ("sql_query", models.TextField()),
+                (
+                    "pipeline",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="datasets.pipeline"
+                    ),
+                ),
             ],
             options={
-                'ordering': ('-created_date',),
-                'get_latest_by': 'created_date',
+                "ordering": ("-created_date",),
+                "get_latest_by": "created_date",
             },
         ),
     ]
