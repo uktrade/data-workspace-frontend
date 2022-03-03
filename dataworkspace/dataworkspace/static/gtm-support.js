@@ -2,7 +2,31 @@ function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-var GTMDatasetSearchSupport = function () {};
+var GTMDatasetSearchSupport = function () {
+  this.localStorageKeyname = "tempLocalStorage";
+};
+
+GTMDatasetSearchSupport.prototype.pushLinkToLocalStorage =
+  function pushLinkToLocalStorage(link) {
+    var data = $(link).data();
+    console.log("What");
+    try {
+      var json = JSON.stringify(data);
+      localStorage.setItem(this.localStorageKeyname, json);
+      this.pushSearchResultClickEvent(data);
+    } catch (e) {
+      console.log("What");
+      console.error(e);
+    }
+  };
+
+GTMDatasetSearchSupport.prototype.pushSearchResultClickEvent =
+  function pushSearchResultClickEvent(data) {
+    console.log("sending pushSearchResultClickEvent ");
+    if (typeof dataLayer == "undefined") return;
+    console.log("sending pushSearchResultClickEvent ");
+    dataLayer.push(data);
+  };
 
 GTMDatasetSearchSupport.prototype.pushSearchEvent = function pushSearchEvent() {
   if (typeof dataLayer !== "undefined") {

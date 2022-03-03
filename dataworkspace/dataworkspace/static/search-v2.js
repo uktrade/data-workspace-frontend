@@ -25,7 +25,7 @@ var ToggleInputClassOnFocus = function ($el) {
   }
 };
 
-var LiveSearch = function (formSelector, wrapperSelector, GTM) {
+var LiveSearch = function (formSelector, wrapperSelector, GTM, linkSelector) {
   this.wrapperSelector = wrapperSelector;
   this.$wrapper = $(wrapperSelector);
   this.$form = $(formSelector);
@@ -37,6 +37,16 @@ var LiveSearch = function (formSelector, wrapperSelector, GTM) {
 
   this.originalState = this.$form.serializeArray();
   this.saveState();
+
+  var self = this;
+
+  this.$wrapper.on("click", linkSelector, function(e){
+    console.log("click");
+    self.GTM.pushLinkToLocalStorage(this);
+    // e.preventDefault();
+    // e.stopPropagation();
+    // return false;
+  });
 
   this.$form.on(
     "change",
@@ -94,11 +104,13 @@ LiveSearch.prototype.popState = function popState(event) {
 
 LiveSearch.prototype.formChange = function formChange(e) {
   var pageUpdated;
+  console.log("LiveSearch::formChange");
   if (this.isNewState()) {
     this.saveState();
     pageUpdated = this.updateResults();
     pageUpdated.done(
       function () {
+        console.log("done");
         if (typeof this.GTM !== "undefined") {
           this.GTM.pushSearchEvent();
         }
@@ -126,20 +138,25 @@ LiveSearch.prototype.isNewState = function isNewState() {
   return $.param(this.state) !== this.$form.serialize();
 };
 
+
 LiveSearch.prototype.updateResults = function updateResults() {
+  console.log("updateResults");
   this.showLoadingIndicators();
 
   var self = this;
+
   var searchState = $.param(this.state);
   var liveState = this.$form.serializeArray();
   var cachedResultData = this.cache(searchState);
 
   if (typeof cachedResultData === "undefined") {
-    return $.ajax({
+    var payload = {
       url: this.$form.attr("action"),
       data: $.param(liveState),
       searchState: searchState,
-    })
+    };
+    console.log(payload);
+    return $.ajax(payload)
       .done(function (response) {
         self.cache(this.searchState, response);
         self.displayFilterResults(response, this.searchState);
