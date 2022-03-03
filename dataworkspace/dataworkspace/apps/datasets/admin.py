@@ -44,6 +44,7 @@ from dataworkspace.apps.datasets.models import (
     DatasetReferenceCode,
     MasterDataset,
     Pipeline,
+    PipelineVersion,
     ReferenceDataset,
     ReferenceDatasetField,
     SourceLink,
@@ -1074,7 +1075,23 @@ class ToolQueryAuditLogAdmin(admin.ModelAdmin):
     get_detail_related_datasets.short_description = "Related Datasets"
 
 
+class PipelineVersionInline(admin.TabularInline):
+    model = PipelineVersion
+    fields = ("table_name", "sql_query")
+    readonly_fields = ("table_name", "sql_query")
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(Pipeline)
 class PipelineAdmin(admin.ModelAdmin):
     list_display = ["table_name", "created_by", "created_date"]
     readonly_fields = ["created_by", "created_date", "updated_by", "modified_date"]
+    inlines = (PipelineVersionInline,)

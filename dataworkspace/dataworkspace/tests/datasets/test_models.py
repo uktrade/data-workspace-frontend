@@ -276,3 +276,19 @@ class TestSourceLinkPreview:
                 OrderedDict([("col1", "row2-col1"), ("col2", " row2-col2")]),
             ],
         )
+
+
+@pytest.mark.django_db
+def test_pipeline_versions():
+    pipeline = factories.PipelineFactory.create(
+        table_name="schema.original_table_name", sql_query="SELECT 1, 2, 3"
+    )
+    assert pipeline.pipelineversion_set.count() == 0
+    pipeline.table_name = "schema.updated_table"
+    pipeline.save()
+    assert pipeline.pipelineversion_set.count() == 1
+    assert pipeline.pipelineversion_set.latest().table_name == "schema.original_table_name"
+    pipeline.sql_query = "SELECT 4, 5, 6"
+    pipeline.save()
+    assert pipeline.pipelineversion_set.count() == 2
+    assert pipeline.pipelineversion_set.latest().sql_query == "SELECT 1, 2, 3"
