@@ -22,7 +22,7 @@
   <link rel="stylesheet" href="{% static 'data-workspace.css' %}">
 
   
-  {% if gtm_container_id %}
+  {% if GTM_ENABLED %}
     {% block initialGTMDataLayer %}
       <script nonce="{{ request.csp_nonce }}">
         window.dataLayer = window.dataLayer || [];

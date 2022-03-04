@@ -12,10 +12,15 @@ def common(request):
     # database query.
     can_see_visualisations_tab = False
 
+    # handle this here instead of in multiple places in templates
+    # which makes it easier to debug locally
+    gtm_enabled = settings.GTM_CONTAINER_ID and not settings.DEBUG
+
     return {
         "root_href": f"{request.scheme}://{settings.APPLICATION_ROOT_DOMAIN}/",
         "can_see_visualisations_tab": can_see_visualisations_tab,
         "gtm_container_id": settings.GTM_CONTAINER_ID,
+        "GTM_ENABLED": gtm_enabled,
         "gtm_container_environment_params": settings.GTM_CONTAINER_ENVIRONMENT_PARAMS,
         "CASE_STUDIES_FLAG": settings.CASE_STUDIES_FLAG,
         "NOTIFY_ON_MASTER_DATASET_CHANGE_FLAG": settings.NOTIFY_ON_MASTER_DATASET_CHANGE_FLAG,
