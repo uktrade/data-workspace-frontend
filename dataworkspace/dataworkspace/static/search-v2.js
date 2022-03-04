@@ -25,7 +25,7 @@ var ToggleInputClassOnFocus = function ($el) {
   }
 };
 
-var LiveSearch = function (formSelector, wrapperSelector, GTM) {
+var LiveSearch = function (formSelector, wrapperSelector, GTM, linkSelector) {
   this.wrapperSelector = wrapperSelector;
   this.$wrapper = $(wrapperSelector);
   this.$form = $(formSelector);
@@ -37,6 +37,10 @@ var LiveSearch = function (formSelector, wrapperSelector, GTM) {
 
   this.originalState = this.$form.serializeArray();
   this.saveState();
+
+  this.$wrapper.on("click", linkSelector, function(e){
+    self.GTM.pushSearchResultClick(e.target);
+  });
 
   this.$form.on(
     "change",
