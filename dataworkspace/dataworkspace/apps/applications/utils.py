@@ -866,11 +866,10 @@ def sync_quicksight_users(data_client, user_client, account_id, quicksight_user_
 
 @celery_app.task()
 @close_all_connections_if_not_in_atomic_block
-def sync_quicksight_permissions(user_sso_ids_to_update=tuple(), poll_for_user_creation=False):
+def sync_quicksight_permissions(user_sso_ids_to_update=tuple()):
     logger.info(
-        "sync_quicksight_user_datasources(%s, poll_for_user_creation=%s) started",
+        "sync_quicksight_user_datasources(%s) started",
         user_sso_ids_to_update,
-        poll_for_user_creation,
     )
 
     # QuickSight manages users in a single specific regions
@@ -885,47 +884,25 @@ def sync_quicksight_permissions(user_sso_ids_to_update=tuple(), poll_for_user_cr
     account_id = boto3.client("sts").get_caller_identity().get("Account")
 
     quicksight_user_list: List[Dict[str, str]]
-    max_retries = settings.MAX_QUICKSIGHT_THROTTLE_RETRIES
     if len(user_sso_ids_to_update) > 0:
         quicksight_user_list = []
 
         for user_sso_id in user_sso_ids_to_update:
-            # Poll for the user for 5 minutes
-            attempts = (5 * 60) if poll_for_user_creation else max_retries
-            for _ in range(attempts):
-                attempts -= 1
-
-                try:
-                    quicksight_user_list.append(
-                        user_client.describe_user(
-                            AwsAccountId=account_id,
-                            Namespace="default",
-                            # \/ This is the format of the user name created by DIT SSO \/
-                            UserName=f"quicksight_federation/{user_sso_id}",
-                        )["User"]
-                    )
-                    break
-
-                except botocore.exceptions.ClientError as e:
-                    if e.response["Error"]["Code"] == "ResourceNotFoundException":
-                        if attempts > 0:
-                            gevent.sleep(1)
-                        elif poll_for_user_creation:
-                            logger.exception(
-                                "Did not find user with sso id `%s` after 5 minutes",
-                                user_sso_id,
-                            )
-                    elif e.response["Error"]["Code"] == "ThrottlingException":
-                        if attempts > 0:
-                            logger.info("Requests throttled. Trying again in 1 second...")
-                            gevent.sleep(1)
-                        else:
-                            logger.exception(
-                                "Did not find user in %s attempts due to throttling",
-                                max_retries,
-                            )
-                    else:
-                        raise e
+            try:
+                quicksight_user_list.append(
+                    user_client.describe_user(
+                        AwsAccountId=account_id,
+                        Namespace="default",
+                        # \/ This is the format of the user name created by DIT SSO \/
+                        UserName=f"quicksight_federation/{user_sso_id}",
+                    )["User"]
+                )
+            except botocore.exceptions.ClientError as e:
+                logger.info(
+                    "describe_user failed with %s for user %s",
+                    e.response["Error"]["Code"],
+                    user_sso_id,
+                )
 
         sync_quicksight_users(
             data_client=data_client,
@@ -956,9 +933,8 @@ def sync_quicksight_permissions(user_sso_ids_to_update=tuple(), poll_for_user_cr
                 break
 
     logger.info(
-        "sync_quicksight_user_datasources(%s, poll_for_user_creation=%s) finished",
+        "sync_quicksight_user_datasources(%s) finished",
         user_sso_ids_to_update,
-        poll_for_user_creation,
     )
 
 
