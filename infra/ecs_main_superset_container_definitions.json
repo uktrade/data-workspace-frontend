@@ -21,6 +21,12 @@
     },{
       "name": "SECRET_KEY",
       "value": "${secret_key}"
+    },{
+      "name": "SENTRY_DSN",
+      "value": "${sentry_dsn}"
+    },{
+      "name": "SENTRY_ENVIRONMENT",
+      "value": "${sentry_environment}"
     }],
     "essential": true,
     "image": "${container_image}",

@@ -59,6 +59,9 @@ data "template_file" "superset_service_container_definitions" {
     db_user        = "${aws_rds_cluster.superset.master_username}"
     admin_users    = "${var.superset_admin_users}"
     secret_key     = "${random_string.superset_secret_key.result}"
+
+    sentry_dsn = "${var.sentry_notebooks_dsn}"
+    sentry_environment = "${var.sentry_environment}"
   }
 }
 
