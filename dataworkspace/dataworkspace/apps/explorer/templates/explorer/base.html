@@ -55,7 +55,7 @@
                 </style>
                 <![endif]-->
         {% endblock styles %}
-        {% if not debug and gtm_container_id %}
+        {% if GTM_ENABLED %}
           {% block initialGTMDataLayer %}
             <script nonce="{{ request.csp_nonce }}">
               window.dataLayer = window.dataLayer || [];

@@ -4,6 +4,25 @@ function capitalizeFirstLetter(string) {
 
 var GTMDatasetSearchSupport = function () {};
 
+GTMDatasetSearchSupport.prototype.pushSearchResultClick =
+  function pushSearchResultClick(link) {
+    // search results are stored as data-* attributes on the link
+    // jQuery helpfully decodes these into our required object
+    var data = $(link).data();
+    try {
+      this.pushSearchResultClickEvent(data);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+GTMDatasetSearchSupport.prototype.pushSearchResultClickEvent =
+  function pushSearchResultClickEvent(data) {
+    if (typeof dataLayer == "undefined") return;
+    console.log("push to dataLayer", data);
+    var result = dataLayer.push(data);
+  };
+
 GTMDatasetSearchSupport.prototype.pushSearchEvent = function pushSearchEvent() {
   if (typeof dataLayer !== "undefined") {
     var update = {

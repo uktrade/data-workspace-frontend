@@ -1,4 +1,4 @@
-{% if not debug and gtm_container_id %}
+{% if GTM_ENABLED %}
     <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ gtm_container_id }}{{ gtm_container_environment_params | safe }}" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->

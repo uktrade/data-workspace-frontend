@@ -20,7 +20,7 @@
   <link rel="apple-touch-icon" href="{% static 'assets/images/govuk-apple-touch-icon.png' %}">
   <link rel="stylesheet" href="{% static 'govuk-frontend-3.12.0-without-gds-transport.min.css' %}">
 
-  {% if not debug and gtm_container_id %}
+  {% if GTM_ENABLED %}
     {% block initialGTMDataLayer %}
       <script nonce="{{ request.csp_nonce }}">
         window.dataLayer = window.dataLayer || [];

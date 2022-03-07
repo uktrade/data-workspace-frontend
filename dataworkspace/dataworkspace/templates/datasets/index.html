@@ -96,7 +96,7 @@
       <div class="govuk-grid-row">
         <div class="govuk-grid-column-three-quarters">
           <h3 class="govuk-heading-m">
-            <a class="govuk-link" href="{% url "datasets:dataset_detail" dataset_uuid=dataset.id %}#{{ dataset.slug }}">{{ dataset.name }}</a>
+            {% include "partials/gtm_dataset_link.html" with event_type="searchResultClick" search_page_number=datasets.number search_result_rank=forloop.counter search_type="search_bar" dataset=dataset %}
           </h3>
           {% if not dataset.published %}
             <div class="govuk-!-display-inline-block" style="float: right">
@@ -204,7 +204,7 @@
   <script nonce="{{ request.csp_nonce }}" src="{% static 'search-v2.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}">
     $(document).ready(function() {
-      var form = new LiveSearch('#live-search-form', '#live-search-wrapper', new GTMDatasetSearchSupport());
+      var form = new LiveSearch('#live-search-form', '#live-search-wrapper', new GTMDatasetSearchSupport(), ".dataset-link");
       var searchInput = new ToggleInputClassOnFocus($("#live-search-form"))
     });
   </script>

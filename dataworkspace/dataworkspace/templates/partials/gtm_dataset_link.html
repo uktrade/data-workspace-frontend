@@ -1,0 +1,6 @@
+<a class="govuk-link dataset-link" 
+     data-search-page-number="{{ search_page_number }}"
+     data-search-result-rank="{{ search_result_rank }}"
+     data-search-type="{{ search_type }}"
+     data-event="{{ event_type }}"
+     href="{% url "datasets:dataset_detail" dataset_uuid=dataset.id %}#{{ dataset.slug }}">{{ dataset.name }}</a>
