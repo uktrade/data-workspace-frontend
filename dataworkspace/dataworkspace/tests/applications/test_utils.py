@@ -340,7 +340,6 @@ class TestSyncQuickSightPermissions:
         ]
 
     @pytest.mark.django_db
-    @override_settings(MAX_QUICKSIGHT_THROTTLE_RETRIES=1)
     @mock.patch("dataworkspace.apps.core.utils.new_private_database_credentials")
     @mock.patch("dataworkspace.apps.applications.utils.boto3.client")
     @mock.patch("dataworkspace.apps.applications.utils.cache")
@@ -414,80 +413,6 @@ class TestSyncQuickSightPermissions:
                 UserName=f"quicksight_federation/{user2.profile.sso_id}",
             ),
         ]
-        assert len(mock_data_client.create_data_source.call_args_list) == 1
-        assert len(mock_data_client.update_data_source.call_args_list) == 0
-
-    @pytest.mark.django_db
-    @mock.patch("dataworkspace.apps.core.utils.new_private_database_credentials")
-    @mock.patch("dataworkspace.apps.applications.utils.boto3.client")
-    @mock.patch("dataworkspace.apps.applications.utils.cache")
-    def test_poll_until_user_created(self, mock_cache, mock_boto3_client, mock_creds):
-        # Arrange
-        user = UserFactory.create(username="fake@email.com")
-        SourceTableFactory(
-            dataset=MasterDataSetFactory.create(
-                user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
-            )
-        )
-
-        mock_user_client = mock.Mock()
-        mock_user_client.describe_user.side_effect = [
-            botocore.exceptions.ClientError(
-                {
-                    "Error": {
-                        "Code": "ResourceNotFoundException",
-                        "Message": "User not found",
-                    }
-                },
-                "DescribeUser",
-            ),
-        ] * 10 + [
-            {
-                "User": {
-                    "Arn": "Arn",
-                    "Email": "fake@email.com",
-                    "Role": "AUTHOR",
-                    "UserName": "user/fake@email.com",
-                }
-            }
-        ]
-        mock_data_client = mock.Mock()
-        mock_sts_client = mock.Mock()
-        mock_boto3_client.side_effect = [
-            mock_user_client,
-            mock_data_client,
-            mock_sts_client,
-        ]
-
-        # Act
-        with mock.patch("dataworkspace.apps.applications.utils.gevent.sleep"):
-            sync_quicksight_permissions(
-                user_sso_ids_to_update=[str(user.profile.sso_id)],
-                poll_for_user_creation=True,
-            )
-
-        # Assert
-        assert mock_user_client.update_user.call_args_list == [
-            mock.call(
-                AwsAccountId=mock.ANY,
-                Namespace="default",
-                Role="AUTHOR",
-                CustomPermissionsName="author-custom-permissions",
-                UserName="user/fake@email.com",
-                Email="fake@email.com",
-            )
-        ]
-        assert (
-            mock_user_client.describe_user.call_args_list
-            == [
-                mock.call(
-                    AwsAccountId=mock.ANY,
-                    Namespace="default",
-                    UserName=f"quicksight_federation/{user.profile.sso_id}",
-                ),
-            ]
-            * 11
-        )
         assert len(mock_data_client.create_data_source.call_args_list) == 1
         assert len(mock_data_client.update_data_source.call_args_list) == 0
 

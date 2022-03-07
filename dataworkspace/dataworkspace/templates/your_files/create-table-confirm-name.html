@@ -1,13 +1,8 @@
 {% extends '_main.html' %}
-{% load your_files_tags %}
 {% block page_title %}How do you want to name your table? - {{ block.super }}{% endblock page_title %}
 
 {% block go_back %}
-  {% if show_schema %}
-    <a href="{% url 'your_files:create-table-confirm-schema' %}?{% remove_query_params 'overwrite' %}" class="govuk-back-link">Back</a>
-  {% else %}
-    <a href="{% url 'your_files:create-table-confirm' %}?{% remove_query_params 'overwrite' %}" class="govuk-back-link">Back</a>
-  {% endif %}
+    <a href="{% url 'your_files:create-table-confirm-schema' %}?{{ request.GET.urlencode }}" class="govuk-back-link">Back</a>
 {% endblock %}
 
 {% block content %}

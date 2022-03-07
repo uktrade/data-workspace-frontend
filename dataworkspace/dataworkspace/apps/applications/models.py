@@ -100,6 +100,21 @@ class ApplicationTemplate(TimeStampedModel):
         help_text="A link to a Help Centre article that explains how to use this tool.",
     )
 
+    _GROUPS = (
+        ("Visualisation Tools", "Visualisation Tools"),
+        ("Data Analysis Tools", "Data Analysis Tools"),
+        ("Data Management Tools", "Data Management Tools"),
+        ("Integrated Development Environments", "Integrated Development Environments"),
+    )
+
+    group_name = models.CharField(
+        max_length=50,
+        choices=_GROUPS,
+        blank=True,
+        null=True,
+        default="Data Analysis Tools",
+    )
+
     class Meta:
         db_table = "app_applicationtemplate"
         indexes = [

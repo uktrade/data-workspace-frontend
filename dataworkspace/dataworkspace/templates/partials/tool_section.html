@@ -2,7 +2,7 @@
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-two-thirds">
     <h3 class="govuk-heading-m">
-      {{ application_name }}{% if new %}&nbsp;<strong class="govuk-tag">NEW</strong>{% endif %}
+      {{ application_name }}{% if tool.tag %}&nbsp;<strong class="govuk-tag {{ tool.tag_extra_css_class }}">{{ tag }}</strong>{% endif %}
     </h3>
   </div>
 </div>

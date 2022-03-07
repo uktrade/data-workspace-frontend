@@ -5,41 +5,23 @@
 {% block page_title %}Tools - {{ block.super }}{% endblock %}
 
 {% block breadcrumbs %}
-    <div class="govuk-breadcrumbs">
-        <ol class="govuk-breadcrumbs__list">
-            <li class="govuk-breadcrumbs__list-item">
-                <a class="govuk-breadcrumbs__link" href="/">Home</a>
-            </li>
-
-            <li class="govuk-breadcrumbs__list-item">
-                Tools
-            </li>
-        </ol>
-    </div>
+  <div class="govuk-breadcrumbs">
+    <ol class="govuk-breadcrumbs__list">
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="/">Home</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">
+        Tools
+      </li>
+    </ol>
+  </div>
 {% endblock %}
 
 {% block content %}
-  <h1 class="govuk-heading-xl">Tools</h1>
-  <div class="govuk-grid-row govuk-!-margin-bottom-6">
+
+  <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-      <p class="govuk-body">Use these tools to:</p>
-      <ul class="govuk-list govuk-list--bullet">
-        <li>
-          <a href="https://data-services-help.trade.gov.uk/data-workspace/how-to/2-analyse-data/" class="govuk-link">
-            analyse data
-          </a>
-        </li>
-        <li>
-          <a href="https://data-services-help.trade.gov.uk/data-workspace/how-to/2-analyse-data/upload-your-own-data/" class="govuk-link">
-            upload and analyse your own data
-          </a>
-        </li>
-        <li>
-          <a href="https://data-services-help.trade.gov.uk/data-workspace/how-to/2-analyse-data/create-a-dashboard/" class="govuk-link">
-            create dashboards
-          </a>
-        </li>
-      </ul>
+      <h1 class="govuk-heading-xl">Tools</h1>
     </div>
   </div>
   {% if not perms.applications.start_all_applications %}
@@ -58,48 +40,29 @@
       </div>
     </div>
   {% endif %}
-    <div>
-      <h2 class="govuk-visually-hidden">Available tools</h2>
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      <p class="govuk-body govuk-!-margin-bottom-8">
+        Data Workspace offers access to a range of analysis tools that you can use with datasets in the catalogue.
+        Find out more about tools and how to start using them in the
+        <a class="govuk-link" href="https://data-services-help.trade.gov.uk">Help Centre.</a>
+      </p>
 
-      {% flag SUPERSET_FLAG %}
-        {% with application_summary='Superset is a data exploration and visualisation platform using SQL for all skill sets to produce everything from simple line charts to highly detailed geospatial charts.' %}
-          {% include 'partials/tool_section.html' with application_name="Superset" application_summary=application_summary application_help_link=None instance=None application_url=superset_url customisable_instance=False has_access=perms.applications.start_all_applications trailing_horizontal_rule=True new=True %}
-        {% endwith %}
-        {% endflag %}
-
-      {% with application_summary='The Data Explorer is a simple tool to explore and work with master datasets on Data Workspace using SQL.' %}
-        {% url 'explorer:index' as data_explorer_url %}
-        {% include 'partials/tool_section.html' with application_name="Data Explorer" application_summary=application_summary application_help_link=None instance=None application_url=data_explorer_url customisable_instance=False has_access=perms.applications.start_all_applications trailing_horizontal_rule=True %}
-      {% endwith %}
-
-      {% with application_summary='Collaborate on and store analysis, projects and code with your colleagues.' %}
-        {% include 'partials/tool_section.html' with application_name="GitLab" application_summary=application_summary application_help_link=None instance=None application_url=gitlab_url customisable_instance=False has_access=perms.applications.start_all_applications trailing_horizontal_rule=True %}
-      {% endwith %}
-
-      {% for application in applications %}
-        {# This check can be removed when the Data Explorer tool has been removed from Django-Admin/Data Workspace env altogether #}
-        {% if application.nice_name != 'Data Explorer' %}
-          {% include 'partials/tool_section.html' with application_host_basename=application.host_basename application_name=application.nice_name application_summary=application.summary application_help_link=application.help_link instance=application.instance application_url=application.link customisable_instance=True has_access=perms.applications.start_all_applications tool_configuration=application.tool_configuration trailing_horizontal_rule=True %}
-        {% endif %}
+      {% for key, group in tools.items %}
+        <div class="govuk-!-margin-bottom-8">
+          <h3 class="govuk-heading-l">{{ group.group_name }}</h3>
+          <div class="govuk-inset-text">Use these tools to
+            {% if group.group_link %}
+              <a class="govuk-link" href="{{ group.group_link }}" target="_blank" rel="noopener noreferrer">
+                {{ group.group_description }}
+              </a>
+            {% endif %}
+          </div>
+          {% for tool in group.tools %}
+            {% include 'partials/tool_section_wrapper.html' with tool=tool %}
+          {% endfor %}
+        </div>
       {% endfor %}
-
-      {% if your_files_enabled %}
-        {% url 'your-files:files' as files_url %}
-        {% with application_summary='Each Data Workspace user has a private home folder accessible by the tools JupyterLab, RStudio, and Theia. You can use "Your files" to upload files to this folder, and download files from this folder.' %}
-          {% include 'partials/tool_section.html' with application_name="Your files" application_summary=application_summary application_help_link=None instance=None application_url=files_url customisable_instance=False has_access=perms.applications.start_all_applications trailing_horizontal_rule=True %}
-        {% endwith %}
-      {% endif %}
-
-      {% if appstream_url != "https:///" %}
-        {% with spss_state_help_link='https://data-services-help.trade.gov.uk/data-workspace/how-articles/tools-and-how-access-them/start-using-spss/' %}
-          {% with application_summary='SPSS and STATA are statistical software packages supplied by IBM and StataCorp respectively. Use them to view, manage and analyse data, as well as create graphical outputs.' %}
-            {% include 'partials/tool_section.html' with application_name="SPSS / STATA" application_summary=application_summary application_help_link=spss_state_help_link instance=None application_url=appstream_url customisable_instance=False has_access=perms.applications.access_appstream trailing_horizontal_rule=True %}
-          {% endwith %}
-        {% endwith %}
-      {% endif %}
-
-      {% with application_summary='QuickSight is a visualisations tool supplied by Amazon Web Services (AWS). Use it to create and share dashboards using data from Data Workspace.' %}
-        {% include 'partials/tool_section.html' with application_name="Amazon QuickSight" application_summary=application_summary application_help_link=None instance=None application_url=quicksight_url customisable_instance=False has_access=perms.applications.access_quicksight trailing_horizontal_rule=False %}
-      {% endwith %}
     </div>
+  </div>
 {% endblock %}

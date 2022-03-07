@@ -301,11 +301,11 @@ def test_gitlab_access(has_tools_access, expected_href, expected_text):
 @pytest.mark.parametrize(
     "has_quicksight_access, expected_href, expected_text",
     (
-        (True, "/tools/quicksight/redirect", "Open Amazon QuickSight"),
+        (True, "/tools/quicksight/redirect", "Open QuickSight"),
         (
             False,
             "/request-access/",
-            "Request access to Amazon QuickSight",
+            "Request access to QuickSight",
         ),
     ),
 )
@@ -323,8 +323,10 @@ def test_quicksight_link_only_shown_to_user_with_permission(
 
     response = client.get(reverse("applications:tools"))
 
-    soup = BeautifulSoup(response.content.decode(response.charset))
+    content = response.content.decode(response.charset)
+    soup = BeautifulSoup(content)
     quicksight_link = soup.find("a", href=True, text=expected_text)
+
     assert quicksight_link.get("href") == expected_href
 
 

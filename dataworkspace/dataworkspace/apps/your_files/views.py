@@ -27,7 +27,6 @@ from dataworkspace.apps.core.utils import (
     get_random_data_sample,
     get_s3_prefix,
     get_team_schemas_for_user,
-    is_user_in_teams,
     new_private_database_credentials,
     postgres_user,
     source_tables_for_user,
@@ -91,7 +90,6 @@ class CreateTableView(RequiredParameterGetRequestMixin, TemplateView):
                 "path": path,
                 "filename": path.split("/")[-1],
                 "table_name": clean_db_identifier(path),
-                "show_schema": is_user_in_teams(self.request.user),
             }
         )
         return context
@@ -223,15 +221,9 @@ class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, ValidateSchem
                     "schema": schema,
                     "team": self.request.GET.get("team"),
                     "table_name": self.request.GET.get("table_name"),
-                    "force_overwrite": "overwrite" in self.request.GET,
                 }
             )
         return initial
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update({"show_schema": is_user_in_teams(self.request.user)})
-        return context
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -243,7 +235,6 @@ class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, ValidateSchem
             "path": form.cleaned_data["path"],
             "schema": form.cleaned_data["schema"],
             "table_name": form.cleaned_data["table_name"],
-            "overwrite": form.cleaned_data["force_overwrite"],
         }
         return HttpResponseRedirect(
             f'{reverse("your-files:create-table-confirm-data-types")}?{urlencode(params)}'
@@ -258,19 +249,6 @@ class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, ValidateSchem
                 f'{reverse("your-files:create-table-failed")}?'
                 f'filename={form.data["path"].split("/")[-1]}'
             )
-
-        # If table name validation failed due to a duplicate table in the db confirm overwrite
-        if errors.get("table_name") and errors["table_name"][0].code == "duplicate-table":
-            params = {
-                "path": form.cleaned_data["path"],
-                "table_name": form.data["table_name"],
-                "overwrite": True,
-            }
-            return HttpResponseRedirect(
-                f'{reverse("your-files:create-table-table-exists")}?{urlencode(params)}'
-            )
-
-        # Otherwise just redisplay the form (likely an invalid table name)
         return super().form_invalid(form)
 
 
@@ -291,7 +269,6 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
                     "path": self.request.GET["path"],
                     "schema": self.request.GET["schema"],
                     "table_name": self.request.GET["table_name"],
-                    "force_overwrite": "overwrite" in self.request.GET,
                 }
             )
         return initial
@@ -496,24 +473,6 @@ class CreateTableFailedView(RequiredParameterGetRequestMixin, TemplateView):
         return context
 
 
-class CreateTableTableExists(RequiredParameterGetRequestMixin, TemplateView):
-    template_name = "your_files/create-table-table-exists.html"
-    required_parameters = ["path", "table_name"]
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["form"] = CreateTableForm(
-            initial={
-                "path": self.request.GET["path"],
-                "schema": get_user_schema(self.request),
-                "table_name": self.request.GET.get("table_name"),
-                "force_overwrite": True,
-            },
-            user=self.request.user,
-        )
-        return context
-
-
 class CreateTableDAGStatusView(View):
     """
     Check on the status of a DAG that has been run via the create table flow.
@@ -562,6 +521,7 @@ class ValidateUserIsStaffMixin:
 class UploadedTableListView(ValidateUserIsStaffMixin, ListView):
     model = UploadedTable
     template_name = "your_files/uploaded-table-list.html"
+    ordering = ["schema", "table_name"]
 
 
 class RestoreTableView(ValidateUserIsStaffMixin, DetailView):
@@ -572,7 +532,7 @@ class RestoreTableView(ValidateUserIsStaffMixin, DetailView):
         table = self.get_object()
         db_name = list(settings.DATABASES_DATA.items())[0][0]
         table_name = (
-            f"{table.table_name}_{table.data_flow_execution_date.strftime('%Y%m%dt000000_swap')}"
+            f"{table.table_name}_{table.data_flow_execution_date.strftime('%Y%m%dt%H%M%S_swap')}"
         )
         schema_name = table.schema
         columns = datasets_db.get_columns(db_name, schema=schema_name, table=table_name)
@@ -608,7 +568,7 @@ class RestoreTableView(ValidateUserIsStaffMixin, DetailView):
         try:
             response = trigger_dataflow_dag(
                 {
-                    "ts_nodash": table.data_flow_execution_date.strftime("%Y%m%dt000000"),
+                    "ts_nodash": table.data_flow_execution_date.strftime("%Y%m%dt%H%M%S"),
                     "schema_name": table.schema,
                     "table_name": table.table_name,
                 },

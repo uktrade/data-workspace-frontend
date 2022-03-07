@@ -5,7 +5,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator, MaxLengthValidator
 
-from dataworkspace.apps.core.utils import get_all_schemas, get_s3_prefix, table_exists
+from dataworkspace.apps.core.utils import get_all_schemas, get_s3_prefix
 from dataworkspace.apps.your_files.utils import SCHEMA_POSTGRES_DATA_TYPE_MAP
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
@@ -64,24 +64,6 @@ class CreateTableForm(GOVUKDesignSystemForm):
             raise ValidationError("This file does not exist in S3")
 
         return path
-
-    def clean(self):
-        table_name = self.cleaned_data.get("table_name")
-        if table_name:
-            if (
-                table_exists(
-                    settings.EXPLORER_DEFAULT_CONNECTION,
-                    self.cleaned_data["schema"],
-                    table_name,
-                )
-                and not self.cleaned_data.get("force_overwrite")
-            ):
-                self.add_error(
-                    "table_name",
-                    ValidationError("This table already exists", code="duplicate-table"),
-                )
-
-        return super().clean()
 
 
 class CreateTableSchemaForm(GOVUKDesignSystemForm):

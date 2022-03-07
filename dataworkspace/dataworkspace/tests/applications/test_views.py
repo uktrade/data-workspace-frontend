@@ -271,7 +271,8 @@ class TestDataVisualisationUIApprovalPage:
 class TestQuickSightPollAndRedirect:
     @pytest.mark.django_db
     @override_settings(QUICKSIGHT_SSO_URL="https://sso.quicksight")
-    def test_view_redirects_to_quicksight_sso_url(self):
+    @mock.patch("dataworkspace.apps.applications.views.boto3.client")
+    def test_view_redirects_to_quicksight_sso_url(self, mock_boto_client):
         user = get_user_model().objects.create(is_staff=True, is_superuser=True)
 
         # Login to admin site
@@ -284,7 +285,8 @@ class TestQuickSightPollAndRedirect:
         assert resp["Location"] == "https://sso.quicksight"
 
     @pytest.mark.django_db
-    def test_view_starts_celery_polling_job(self):
+    @mock.patch("dataworkspace.apps.applications.views.boto3.client")
+    def test_view_starts_celery_polling_job(self, mock_boto_client):
         user = get_user_model().objects.create(is_staff=True, is_superuser=True)
 
         # Login to admin site
@@ -299,7 +301,6 @@ class TestQuickSightPollAndRedirect:
         assert sync_mock.delay.call_args_list == [
             mock.call(
                 user_sso_ids_to_update=(user.profile.sso_id,),
-                poll_for_user_creation=True,
             )
         ]
 
@@ -307,39 +308,59 @@ class TestQuickSightPollAndRedirect:
 class TestToolsPage:
     @pytest.mark.django_db
     def test_user_with_no_size_config_shows_default_config(self):
-        factories.ApplicationTemplateFactory()
+        group_name = "Visualisation Tools"
+        template = factories.ApplicationTemplateFactory()
+        template.group_name = group_name
+        template.save()
+
         user = get_user_model().objects.create()
 
         client = Client(**get_http_sso_data(user))
         response = client.get(reverse("applications:tools"), follow=True)
 
-        assert len(response.context["applications"]) == 1
-        assert (
-            response.context["applications"][0]["tool_configuration"].size_config.name == "Medium"
-        )
-        assert response.context["applications"][0]["tool_configuration"].size_config.cpu == 1024
-        assert response.context["applications"][0]["tool_configuration"].size_config.memory == 8192
+        assert len(response.context["tools"][group_name]["tools"]) == 3
+
+        tool = None
+        for item in response.context["tools"][group_name]["tools"]:
+            if item.name == template.nice_name:
+                tool = item
+                break
+
+        assert tool is not None
+
+        assert tool.tool_configuration.size_config.name == "Medium"
+        assert tool.tool_configuration.size_config.cpu == 1024
+        assert tool.tool_configuration.size_config.memory == 8192
 
     @pytest.mark.django_db
     def test_user_with_size_config_shows_correct_config(self):
-        tool = factories.ApplicationTemplateFactory()
+        group_name = "Visualisation Tools"
+        template = factories.ApplicationTemplateFactory()
+        template.group_name = group_name
+        template.save()
+
         user = get_user_model().objects.create()
         UserToolConfiguration.objects.create(
-            user=user, tool_template=tool, size=UserToolConfiguration.SIZE_EXTRA_LARGE
+            user=user,
+            tool_template=template,
+            size=UserToolConfiguration.SIZE_EXTRA_LARGE,
         )
 
         client = Client(**get_http_sso_data(user))
         response = client.get(reverse("applications:tools"), follow=True)
 
-        assert len(response.context["applications"]) == 1
-        assert (
-            response.context["applications"][0]["tool_configuration"].size_config.name
-            == "Extra Large"
-        )
-        assert response.context["applications"][0]["tool_configuration"].size_config.cpu == 4096
-        assert (
-            response.context["applications"][0]["tool_configuration"].size_config.memory == 30720
-        )
+        assert len(response.context["tools"][group_name]["tools"]) == 3
+
+        tool = None
+        for item in response.context["tools"][group_name]["tools"]:
+            if item.name == template.nice_name:
+                tool = item
+                break
+
+        assert tool is not None
+        assert tool.tool_configuration.size_config.name == "Extra Large"
+        assert tool.tool_configuration.size_config.cpu == 4096
+        assert tool.tool_configuration.size_config.memory == 30720
 
 
 class TestUserToolSizeConfigurationView:
