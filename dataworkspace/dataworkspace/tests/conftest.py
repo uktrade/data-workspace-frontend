@@ -150,7 +150,7 @@ def metadata_db(db):
                 source_data_modified_utc TIMESTAMP WITHOUT TIME ZONE,
                 dataflow_swapped_tables_utc TIMESTAMP WITHOUT TIME ZONE,
                 table_structure JSONB,
-                data_id INTEGER,
+                data_ids TEXT[],
                 data_type INTEGER NOT NULL,
                 data_hash_v1 TEXT,
                 primary_keys TEXT[]
@@ -188,7 +188,7 @@ def test_dataset(db):
                 source_data_modified_utc TIMESTAMP WITHOUT TIME ZONE,
                 dataflow_swapped_tables_utc TIMESTAMP WITHOUT TIME ZONE,
                 table_structure JSONB,
-                data_id INTEGER,
+                data_ids TEXT[],
                 data_type INTEGER NOT NULL,
                 data_hash_v1 TEXT
             );
