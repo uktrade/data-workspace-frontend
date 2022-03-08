@@ -1,11 +1,13 @@
 import decimal
 import os
 
+import sentry_sdk
 from flask_appbuilder.models.generic.filters import FilterStartsWith
 from flask_appbuilder.security.manager import AUTH_REMOTE_USER
 from flask_appbuilder.security.views import AuthView
 from flask_appbuilder import expose
 from flask_login import login_user
+from sentry_sdk.integrations.flask import FlaskIntegration
 
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -308,3 +310,9 @@ AUTH_TYPE = AUTH_REMOTE_USER
 ADDITIONAL_MIDDLEWARE = [lambda app: ProxyFix(app, x_proto=1)]
 
 FEATURE_FLAGS = {"SQLLAB_BACKEND_PERSISTENCE": True}
+
+if os.environ.get("SENTRY_DSN") is not None:
+    sentry_sdk.init(
+        dsn=os.environ["SENTRY_DSN"],
+        integrations=[FlaskIntegration()],
+    )
