@@ -38,6 +38,8 @@ var LiveSearch = function (formSelector, wrapperSelector, GTM, linkSelector) {
   this.originalState = this.$form.serializeArray();
   this.saveState();
 
+  var self = this;
+
   this.$wrapper.on("click", linkSelector, function(e){
     self.GTM.pushSearchResultClick(e.target);
   });
