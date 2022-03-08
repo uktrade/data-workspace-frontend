@@ -1,4 +1,5 @@
 import logging
+import sys
 import threading
 import time
 
@@ -20,6 +21,7 @@ class CommandRunner(threading.Thread):
             try:
                 call_command(self.command, *self.args)
             except Exception as e:  # pylint: disable=broad-except
+                sys.stderr.write(str(e))
                 logging.error(e)
             time.sleep(1)
 
@@ -47,10 +49,10 @@ class Command(BaseCommand):
         self.stdout.write("Continuously creates dummy datasets. Ctrl+C once you are done.")
 
         tasks = [
-            ("create_master_dataset", []),
-            ("create_datacut_dataset", []),
-            ("create_reference_dataset", []),
-            ("create_visualisation_dataset", []),
+            ("create_fake_dataset", ["master"]),
+            ("create_fake_dataset", ["datacut"]),
+            ("create_fake_dataset", ["reference"]),
+            ("create_fake_dataset", ["visualisation"]),
         ]
         mt = MultiTask(tasks)
         mt.start()
