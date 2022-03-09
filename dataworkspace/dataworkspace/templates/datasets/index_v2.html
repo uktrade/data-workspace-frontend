@@ -1,0 +1,266 @@
+{% extends '_main.html' %}
+{% load humanize %}
+{% load static %}
+{% load core_filters %}
+{% load core_tags %}
+{% load datasets_tags %}
+{% load waffle_tags %}
+
+{% block head %}
+  {{ block.super }}
+  <script nonce="{{ request.csp_nonce }}" src="{% static 'jquery-3.6.0.min.js' %}"></script>
+  <script nonce="{{ request.csp_nonce }}" src="{% static 'gtm-support.js' %}"></script>
+{% endblock %}
+
+{% block initialGTMDataLayer %}
+  {{ block.super }}
+  <script nonce="{{ request.csp_nonce }}">
+    dataLayer.push(
+      {
+        "event": "filter",
+        "searchTerms": "{{ query }}",
+        "resultsReturned": {{ datasets.paginator.count }},
+        {% for field in form %}
+          {% if field.field|is_choice_field %}
+            "filterData{{ field.name | title }}": "{{ field | get_choice_field_data_for_gtm }}"
+            {% if not forloop.last %},{% endif %}
+          {% endif %}
+        {% endfor %}
+      }
+    )
+  </script>
+{% endblock %}
+
+{% block page_title %}Search - {{ block.super }}{% endblock %}
+
+{% block content %}
+
+  <form id="live-search-form" action="{% url 'datasets:find_datasets' %}" method="get">
+
+    <div class="govuk-grid-row">
+      <div class="govuk-grid-column-full">
+        <h1 class="govuk-heading-l">Search Data Workspace</h1>
+        <p class="govuk-body-l">
+          Discover, access and analyse DIT data.
+        </p>
+      </div>
+    </div>
+
+    <div class="govuk-grid-row">
+      <div class="govuk-grid-column-full">
+        <div class="search-field govuk-!-margin-bottom-9">
+          <label class="govuk-label search-field__label" for="search">Search by dataset name or description</label>
+          <div class="search-field-wrapper govuk-!-padding-bottom-6">
+            <input type="search" name="q" id="search" title="Search"
+                   class="govuk-input search-field__item search-field__input js-class-toggle" value="{{ query }}"
+                   aria-controls="search-summary-accessible-hint-wrapper">
+            <div class="search-field-submit-wrapper search-field__item">
+              <input class="search-field__submit" type="submit" value="Search">
+            </div>
+          </div>
+          {% flag DATASET_FINDER_FLAG %}
+            <p class="govuk-body">
+              <a href="{% url 'finder:find_datasets' %}" class="govuk-link govuk-link--no-visited-state">Find
+                datasets</a> containing a specific record.
+            </p>
+          {% endflag %}
+        </div>
+      </div>
+    </div>
+
+    <div id="live-search-wrapper">
+
+      <div class="govuk-grid-row">
+        <div class="govuk-grid-column-one-third">&nbsp;</div>
+        <div class="govuk-grid-column-two-thirds">
+          <div style="float:right;">
+            {{ form.sort }}
+          </div>
+          <p class="govuk-body">
+            <span role="status" id="search-results-count">{{ datasets.paginator.count }}</span> search results
+          </p>
+
+        </div>
+
+      </div>
+
+      <div class="govuk-grid-row">
+        <div class="govuk-grid-column-one-third">
+          <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+        </div>
+        <div class="govuk-grid-column-two-thirds">
+          <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+        </div>
+      </div>
+
+
+      <div class="govuk-grid-row">
+
+        <div class="govuk-grid-column-one-third">
+          <h2 class="govuk-body">&nbsp;</h2>
+          {{ form.bookmarked }}
+          {% if show_admin_filters %}
+            {{ form.admin_filters }}
+          {% endif %}
+          {{ form.use }}
+          {{ form.user_access }}
+          {{ form.data_type }}
+          {% if form.topic.field.choices %}
+            {{ form.topic }}
+          {% endif %}
+          {% if form.source.field.choices %}
+            {{ form.source }}
+          {% endif %}
+        </div>
+        <div class="govuk-grid-column-two-thirds">
+          <div id="search-summary-accessible-hint-wrapper" class="govuk-visually-hidden" aria-atomic="true"
+               aria-live="polite" aria-relevant="additions text" role="status">
+            {{ datasets.paginator.count }} search results
+          </div>
+
+          <div class="govuk-body">
+            <a href="#" class="govuk-link govuk-link--no-visited-state">Reset filters</a>
+            &nbsp;
+            <strong class="govuk-tag">COVID
+              <span class="tag-target">&#x2716;</span>
+            </strong>
+            <strong class="govuk-tag ">2021
+              <span class="tag-target">&#x2716;</span>
+            </strong>
+            <strong class="govuk-tag govuk-tag--green">Transport
+              <span class="tag-target">&#x2716;</span>
+
+            </strong>
+          </div>
+          <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+          {% for dataset in datasets %}
+            <div class="search-result govuk-!-padding-bottom-4 govuk-!-margin-bottom-4">
+              <h3 class="govuk-heading-m">
+                {% if dataset.is_bookmarked %}
+                  {% include 'partials/bookmark-yes.html' %}
+                {% endif %}
+                {% include "partials/gtm_dataset_link.html" with event_type="searchResultClick" search_page_number=datasets.number search_result_rank=forloop.counter search_type="search_bar" dataset=dataset %}
+                {% if not dataset.published %}
+                  <strong class="govuk-tag govuk-tag--grey">
+                    Unpublished
+                  </strong>
+                {% endif %}
+              </h3>
+
+              <p class="govuk-body">{{ dataset.short_description }}</p>
+
+              <p class="govuk-body">
+
+                <span
+                  style="min-width:10rem;display:inline-block">Data type:</span> {{ data_type|get_key:dataset.data_type }}
+                <br>
+                <span style="min-width:10rem;display:inline-block">Source:</span>
+                {% if dataset.source_tag_names|length > 1 %}
+                  {{ dataset.source_tag_names|join:", " }}
+                {% else %}
+                  {{ dataset.source_tag_names.0|default:"N/A" }}
+                {% endif %}
+                <br>
+                <span style="min-width:10rem;display:inline-block">Updated:</span> {{ dataset.published_at }}
+                <br>
+
+                {% if dataset.topic_tag_names|length > 0 %}
+                  <span style="min-width:10rem;display:inline-block">Topics:</span>
+                  {% for tag_name in dataset.topic_tag_names %}
+                    <a href="#" class="govuk-link govuk-link--no-visited-state">#{{ tag_name }}</a>
+                  {% endfor %}
+
+                {% endif %}
+              </p>
+
+
+
+              {% if not dataset.has_access %}
+                <div class="govuk-inset-text govuk-!-margin-bottom-0">
+                  You need to <a href="#" class="govuk-link govuk-link--no-visited-state">request access</a> to use this
+                  data
+                </div>
+              {% endif %}
+
+            </div>
+          {% endfor %}
+
+          <p class="govuk-body" style="display: inline">
+            Displaying datasets {{ datasets.start_index }}&ndash;{{ datasets.end_index }}
+            of {{ datasets.paginator.count }}
+          </p>
+
+          {% if datasets.paginator.num_pages > 1 %}
+            <nav role="navigation" class="govuk-body" aria-label="Search result page navigation"
+                 style="display: inline">
+              <ul class="pagination govuk-list">
+                {% if datasets.has_previous %}
+                  <li><a class="govuk-link" href="{% url_replace page=datasets.previous_page_number %}"
+                         aria-label="Previous page">Previous</a></li>
+                {% endif %}
+
+                {% if datasets.number > 3 %}
+                  <li><a class="govuk-link" href="{% url_replace page=1 %}" aria-label="Page 1">{{ 1 }}</a></li>
+                  {% if datasets.number > 4 %}
+                    <li>&hellip;</li>{% endif %}
+                {% endif %}
+
+                {% for i in datasets.paginator.page_range %}
+                  {% if datasets.number == i %}
+                    <li class="active">{{ i }}</li>
+                  {% elif i >= datasets.number|add:'-2' and i <= datasets.number|add:'2' %}
+                    <li><a class="govuk-link" href="{% url_replace page=i %}" aria-label="Page {{ i }}">{{ i }}</a></li>
+                  {% endif %}
+                {% endfor %}
+
+                {% if datasets.paginator.num_pages > datasets.number|add:'2' %}
+                  {% if datasets.paginator.num_pages > datasets.number|add:'3' %}
+                    <li>&hellip;</li>{% endif %}
+                  <li><a class="govuk-link" href="{% url_replace page=datasets.paginator.num_pages %}"
+                         aria-label="Page {{ datasets.paginator.num_pages }}">{{ datasets.paginator.num_pages }}</a>
+                  </li>
+                {% endif %}
+
+                {% if datasets.has_next %}
+                  <li><a class="govuk-link" href="{% url_replace page=datasets.next_page_number %}"
+                         aria-label="Next page">Next</a></li>
+                {% endif %}
+              </ul>
+            </nav>
+          {% endif %}
+
+          <div {% if datasets.paginator.count %}class="govuk-!-margin-top-9"{% endif %}>
+            <p class="govuk-body">
+              {% if datasets.paginator.count %}
+                If you haven’t found what you’re looking for, please:
+              {% else %}
+                There are no results for your search, please:
+              {% endif %}
+            </p>
+            <ul class="govuk-list govuk-list--bullet">
+              <li>check the spelling of your keywords</li>
+              <li>use more general keywords</li>
+              <li>select or deselect different filters</li>
+              <li><a class="govuk-link" href="{% url 'request_data:index' %}?tag=data-request">ask for us to add the
+                dataset</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+{% endblock %}
+
+{% block footer_scripts %}
+  {% if form.source.field.choices %}
+    {{ form.media }}
+  {% endif %}
+
+  <script nonce="{{ request.csp_nonce }}" src="{% static 'search-v2.js' %}"></script>
+  <script nonce="{{ request.csp_nonce }}">
+    $(document).ready(function () {
+      var form = new LiveSearch('#live-search-form', '#live-search-wrapper', new GTMDatasetSearchSupport(), ".dataset-link");
+      var searchInput = new ToggleInputClassOnFocus($("#live-search-form"))
+    });
+  </script>
+{% endblock %}

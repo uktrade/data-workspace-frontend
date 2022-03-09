@@ -167,8 +167,8 @@
 }
 
 .search-result {
-  padding: 0 0 15px;
-  margin: 0 0 15px;
+  /*padding: 0 0 15px;*/
+  /*margin: 0 0 15px;*/
   border-bottom: 1px solid #bfc1c3;
 }
 
@@ -392,4 +392,3 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   background-size: 18px;
   background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEwIDE4QzExLjc3NSAxNy45OTk2IDEzLjQ5ODggMTcuNDA1NCAxNC44OTcgMTYuMzEyTDE5LjI5MyAyMC43MDhMMjAuNzA3IDE5LjI5NEwxNi4zMTEgMTQuODk4QzE3LjQwNSAxMy40OTk3IDE3Ljk5OTYgMTEuNzc1NCAxOCAxMEMxOCA1LjU4OSAxNC40MTEgMiAxMCAyQzUuNTg5IDIgMiA1LjU4OSAyIDEwQzIgMTQuNDExIDUuNTg5IDE4IDEwIDE4Wk0xMCA0QzEzLjMwOSA0IDE2IDYuNjkxIDE2IDEwQzE2IDEzLjMwOSAxMy4zMDkgMTYgMTAgMTZDNi42OTEgMTYgNCAxMy4zMDkgNCAxMEM0IDYuNjkxIDYuNjkxIDQgMTAgNFoiIGZpbGw9ImJsYWNrIi8+Cjwvc3ZnPgo=");
 }
-

@@ -575,7 +575,7 @@ def find_datasets(request):
     data_types.append((DataSetType.VISUALISATION, "Visualisation"))
     return render(
         request,
-        "datasets/index.html",
+        "datasets/index_v2.html",
         {
             "form": form,
             "query": query,
