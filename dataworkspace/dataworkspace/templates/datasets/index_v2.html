@@ -71,46 +71,686 @@
     <div id="live-search-wrapper">
 
       <div class="govuk-grid-row">
-        <div class="govuk-grid-column-one-third">&nbsp;</div>
-        <div class="govuk-grid-column-two-thirds">
-          <div style="float:right;">
-            {{ form.sort }}
+
+        <div class="govuk-grid-column-one-third filters-container"  style="position:sticky;top:20px">
+          <div style="overflow-y:scroll;max-height:100vh;">
+            <div class="govuk-accordion" data-module="govuk-accordion" id="accordion-default">
+              <div class="govuk-accordion__section ">
+                <div class="govuk-accordion__section-header">
+                  <h2 class="govuk-accordion__section-heading">
+        <span class="govuk-accordion__section-button" id="accordion-default-heading-1">
+          My datasets
+        </span>
+                  </h2>
+                </div>
+                <div id="accordion-default-content-1" class="govuk-accordion__section-content"
+                     aria-labelledby="accordion-default-heading-1">
+                  <div class="govuk-form-group">
+                    <fieldset class="govuk-fieldset" aria-describedby="waste-hint">
+
+                      <div class="govuk-checkboxes govuk-checkboxes--small" data-module="govuk-checkboxes">
+                        <div class="govuk-checkboxes__item">
+                          <input class="govuk-checkboxes__input" id="waste" name="waste" type="checkbox"
+                                 value="carcasses">
+                          <label class="govuk-label govuk-checkboxes__label" for="waste">
+                            My bookmarks
+                          </label>
+                        </div>
+                        <div class="govuk-checkboxes__item">
+                          <input class="govuk-checkboxes__input" id="waste-2" name="waste" type="checkbox"
+                                 value="mines">
+                          <label class="govuk-label govuk-checkboxes__label" for="waste-2">
+                            My dataset subscriptions
+                          </label>
+                        </div>
+
+                      </div>
+
+                    </fieldset>
+                  </div>
+                </div>
+              </div>
+              <div class="govuk-accordion__section ">
+                <div class="govuk-accordion__section-header">
+                  <h2 class="govuk-accordion__section-heading">
+        <span class="govuk-accordion__section-button" id="accordion-default-heading-2">
+          Topics
+        </span>
+                  </h2>
+                </div>
+                <div id="accordion-default-content-2" class="govuk-accordion__section-content"
+                     aria-labelledby="accordion-default-heading-2">
+                  <div class="govuk-form-group">
+                    <fieldset class="govuk-fieldset" aria-describedby="waste-hint">
+                      <div class="govuk-checkboxes govuk-checkboxes--small" data-module="filter-show-more"
+                           data-show-more-id="id_topic">
+
+
+                        <div class="govuk-checkboxes__item ">
+                          <input class="govuk-checkboxes__input" name="topic" type="checkbox"
+                                 value="14cdf00e-9417-41d8-b986-80c71b6312a1" id="id_topic_0">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_topic_0">
+                            COVID-19 (17)
+                          </label>
+                        </div>
+
+
+                        <div class="govuk-checkboxes__item ">
+                          <input class="govuk-checkboxes__input" name="topic" type="checkbox"
+                                 value="e1aa67d0-39e9-4788-9cd0-d93e4e88bc54" id="id_topic_1">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_topic_1">
+                            EU Exit (14)
+                          </label>
+                        </div>
+
+
+                        <div class="govuk-checkboxes__item ">
+                          <input class="govuk-checkboxes__input" name="topic" type="checkbox"
+                                 value="477b5b95-4cd8-4f14-b3e6-06a345f591ed" id="id_topic_2">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_topic_2">
+                            Foreign Direct Investment (FDI) (48)
+                          </label>
+                        </div>
+
+
+                        <div class="govuk-checkboxes__item ">
+                          <input class="govuk-checkboxes__input" name="topic" type="checkbox"
+                                 value="7d7ff494-7e82-4703-96d4-518726bd5af2" id="id_topic_3">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_topic_3">
+                            Free Trade Agreement (FTA) (3)
+                          </label>
+                        </div>
+
+
+                        <div class="govuk-checkboxes__item ">
+                          <input class="govuk-checkboxes__input" name="topic" type="checkbox"
+                                 value="a8a0dcb1-1bd7-4fcc-9d98-7b17f203d19b" id="id_topic_4">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_topic_4">
+                            Imports and exports (21)
+                          </label>
+                        </div>
+
+
+                        <div class="govuk-checkboxes__item ">
+                          <input class="govuk-checkboxes__input" name="topic" type="checkbox"
+                                 value="a9601619-13c0-4487-9ff5-e3263603de3d" id="id_topic_5">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_topic_5">
+                            People data (29)
+                          </label>
+                        </div>
+
+
+                        <div class="govuk-checkboxes__item ">
+                          <input class="govuk-checkboxes__input" name="topic" type="checkbox"
+                                 value="c94546fd-4f39-45e8-a92c-4c0e4a333870" id="id_topic_6">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_topic_6">
+                            Ukraine conflict (23)
+                          </label>
+                        </div>
+
+
+                        <div class="govuk-checkboxes__item ">
+                          <input class="govuk-checkboxes__input" name="topic" type="checkbox"
+                                 value="5382d6c5-5b57-4eb4-8059-a5a82271d729" id="id_topic_7">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_topic_7">
+                            UK regions and nations data (98)
+                          </label>
+                        </div>
+
+
+                      </div>
+                    </fieldset>
+                  </div>
+                </div>
+              </div>
+              <div class="govuk-accordion__section ">
+                <div class="govuk-accordion__section-header">
+                  <h2 class="govuk-accordion__section-heading">
+        <span class="govuk-accordion__section-button" id="accordion-default-heading-3">
+          Data source
+        </span>
+                  </h2>
+                </div>
+                <div id="accordion-default-content-3" class="govuk-accordion__section-content"
+                     aria-labelledby="accordion-default-heading-3">
+
+                  <div class="govuk-form-group">
+                    <fieldset class="govuk-fieldset" aria-describedby="waste-hint">
+                      <div class="govuk-checkboxes govuk-checkboxes--small" id="filter_text_target_id_source">
+
+                        <div class="search-target govuk-checkboxes__item " data-item-seach-text="apple">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="53ced718-dde8-4a80-8b41-f0d2326fbf13" id="id_source_0">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_0">
+                            Apple (1)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item "
+                             data-item-seach-text="british broadcasting corporation">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="da1c1440-ad0b-45f2-b2d1-93dc874e384f" id="id_source_1">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_1">
+                            British Broadcasting Corporation (2)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item " data-item-seach-text="bureau van dijk">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="6936afcc-0ca5-4441-b64e-3dbe6a75e7d6" id="id_source_2">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_2">
+                            Bureau Van Dijk (1)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item " data-item-seach-text="cabinet office">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="6b17961f-a857-49e8-84ee-76d8f50e1f89" id="id_source_3">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_3">
+                            Cabinet Office (4)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item " data-item-seach-text="companies house">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="2efe2e63-19c2-41fd-be4b-fe2110752c7a" id="id_source_4">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_4">
+                            Companies House (6)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item " data-item-seach-text="countries of interest">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="918fa690-3944-41bd-af1b-4668710b0b1c" id="id_source_5">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_5">
+                            Countries of Interest (2)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item " data-item-seach-text="data hub">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="41704f06-e46e-420d-ae05-385fd2fe2e6e" id="id_source_6">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_6">
+                            Data Hub (320)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item "
+                             data-item-seach-text="department for international trade">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="88db1d9e-8e52-43d0-8dd6-13ad6efd8157" id="id_source_7">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_7">
+                            Department for International Trade (292)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item "
+                             data-item-seach-text="department for transport">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="24a80457-f72a-4ac7-83a7-0b383633006c" id="id_source_8">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_8">
+                            Department for Transport (1)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item "
+                             data-item-seach-text="department of health and social care">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="0fe4a5a3-0841-4a75-b257-bc5aeeb525fa" id="id_source_9">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_9">
+                            Department of Health and Social Care (1)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item "
+                             data-item-seach-text="digital market access service">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="1f44be15-d560-4ecb-8e3c-c2b515a541a8" id="id_source_10">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_10">
+                            Digital Market Access Service (3)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item " data-item-seach-text="dun and bradstreet">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="29cb3c42-ab34-47a6-adc1-20aa8cd47652" id="id_source_11">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_11">
+                            Dun and Bradstreet (16)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item "
+                             data-item-seach-text="european centre for disease prevention and control">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="66c1065a-cbc8-4572-acca-8136eaa378fa" id="id_source_12">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_12">
+                            European Centre for Disease Prevention and Control (1)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item " data-item-seach-text="european commission">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="4bb2ddeb-c27c-4ed3-8c82-34a09e6cf76d" id="id_source_13">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_13">
+                            European Commission (1)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item "
+                             data-item-seach-text="european structural and investment funds">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="45841b52-70f9-45bb-8210-0d3e40fa66c3" id="id_source_14">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_14">
+                            European Structural and Investment Funds (2)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item " data-item-seach-text="european union">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="b821e11d-0dd2-44ed-817d-7a61450e70d6" id="id_source_15">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_15">
+                            European Union (2)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item " data-item-seach-text="export opportunities">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="b918791f-5a24-41ea-8e27-5c7a23aece59" id="id_source_16">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_16">
+                            Export Opportunities (1)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item " data-item-seach-text="export wins">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="eee52a2f-4f54-40dc-a68b-d30658987933" id="id_source_17">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_17">
+                            Export Wins (103)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item " data-item-seach-text="federal reserve board">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="de8a74cf-2eca-40e0-820a-d83c8b24b83e" id="id_source_18">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_18">
+                            Federal Reserve Board (1)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item "
+                             data-item-seach-text="financial forecasting tool">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="7a2b71e4-c6c9-464a-972c-c2274a4fdc96" id="id_source_19">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_19">
+                            Financial Forecasting Tool (4)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item " data-item-seach-text="financial times">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="6e7816d6-9fdc-40a5-8326-068ac74fb681" id="id_source_20">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_20">
+                            Financial Times (1)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item "
+                             data-item-seach-text="foreign, commonwealth &amp; development office">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="f72af8f1-e2ae-4b93-9d4b-5d6d82e7ffb7" id="id_source_21">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_21">
+                            Foreign, Commonwealth &amp; Development Office (3)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item "
+                             data-item-seach-text="global supply chain pilot">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="afed4f5a-3f4f-4cf4-ab17-2c1db724e3f2" id="id_source_22">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_22">
+                            Global supply chain pilot (1)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item " data-item-seach-text="google">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="e8f0ea32-7a2d-4795-bfe0-b52320efa1df" id="id_source_23">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_23">
+                            Google (1)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item " data-item-seach-text="google analytics">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="06b5c318-d93a-4ba8-8387-878a7135392b" id="id_source_24">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_24">
+                            Google Analytics (13)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item " data-item-seach-text="great.gov.uk">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="a78b49e7-899a-4b63-a019-3c6bc12e74c6" id="id_source_25">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_25">
+                            Great.gov.uk (25)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item "
+                             data-item-seach-text="higher education statistics agency">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="06a3597c-202d-4fe8-98f2-3e7504ce8145" id="id_source_26">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_26">
+                            Higher Education Statistics Agency (2)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item "
+                             data-item-seach-text="hm revenue and customs">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="f58d32ca-b98e-4bf9-8b2e-6ab574cca1d4" id="id_source_27">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_27">
+                            HM Revenue and Customs (30)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item " data-item-seach-text="innovate uk">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="0369302c-0275-43ae-9382-51535a142fdf" id="id_source_28">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_28">
+                            Innovate UK (1)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item "
+                             data-item-seach-text="international monetary fund">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="e55c5282-586c-455d-b701-c9d097b34179" id="id_source_29">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_29">
+                            International Monetary Fund (1)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item "
+                             data-item-seach-text="international trade centre">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="37073868-ecdf-4cc1-b164-9d75747a6128" id="id_source_30">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_30">
+                            International Trade Centre (1)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item "
+                             data-item-seach-text="johns hopkins university">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="b42ae3ca-aa14-454b-97ed-70c8b2b65a27" id="id_source_31">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_31">
+                            Johns Hopkins University (2)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item " data-item-seach-text="lite">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="26472cf3-762a-4fbc-90fa-63950fa126db" id="id_source_32">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_32">
+                            LITE (3)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item "
+                             data-item-seach-text="office for national statistics">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="68e6f3c7-18e8-46d5-9eca-480c0637d4bd" id="id_source_33">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_33">
+                            Office for National Statistics (22)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item "
+                             data-item-seach-text="organisation for economic co-operation and development">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="b1e7c0cc-88e1-4572-a7a3-f44823348821" id="id_source_34">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_34">
+                            Organisation for Economic Co-operation and Development (2)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item " data-item-seach-text="oxford university">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="62aa84c3-c64b-41f1-adc5-22161617a81a" id="id_source_35">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_35">
+                            Oxford University (2)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item " data-item-seach-text="public health england">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="fd61eca4-b79f-4e13-937a-b208fb14d4c5" id="id_source_36">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_36">
+                            Public Health England (1)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item "
+                             data-item-seach-text="selling online overseas">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="d997a6be-6007-40b1-81ea-fe4096a67482" id="id_source_37">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_37">
+                            Selling Online Overseas (1)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item " data-item-seach-text="statista">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="5da636eb-60aa-4010-a17e-64f63208b569" id="id_source_38">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_38">
+                            Statista (1)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item " data-item-seach-text="thinkdata works">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="53b89d72-745e-4f1a-89be-b3fb54f522e4" id="id_source_39">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_39">
+                            ThinkData Works (1)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item "
+                             data-item-seach-text="transparency international">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="c0cb2628-8e47-4402-a27b-6bb7e8a609d2" id="id_source_40">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_40">
+                            Transparency International (1)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item " data-item-seach-text="uk export finance">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="da91e1d1-bb9e-4b56-a871-849e35c6529f" id="id_source_41">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_41">
+                            UK Export Finance (1)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item "
+                             data-item-seach-text="uk research and innovation">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="8a9735e0-dbb6-4a3d-ba99-6721b5c58919" id="id_source_42">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_42">
+                            UK Research and Innovation (1)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item "
+                             data-item-seach-text="un conference on trade and development">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="aa93f6e7-ab76-4d6b-8b32-cde05f9dc6b5" id="id_source_43">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_43">
+                            UN Conference on Trade and Development (2)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item " data-item-seach-text="united nations">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="ff177a4e-04d1-49e1-a2a3-ee8b695a21c0" id="id_source_44">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_44">
+                            United Nations (3)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item " data-item-seach-text="world bank">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="5001a2e5-4d8d-484b-8073-a70420ee9555" id="id_source_45">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_45">
+                            World Bank (4)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item "
+                             data-item-seach-text="world customs organization">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="b719a8a0-de95-4a40-b3c9-c37f60c9a52f" id="id_source_46">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_46">
+                            World Customs Organization (1)
+                          </label>
+                        </div>
+
+
+                        <div class="search-target govuk-checkboxes__item "
+                             data-item-seach-text="world intellectual property organization">
+                          <input class="govuk-checkboxes__input" name="source" type="checkbox"
+                                 value="e78f1e48-2962-4e1c-99e3-3e8cc10b9d44" id="id_source_47">
+
+                          <label class="govuk-label govuk-checkboxes__label" for="id_source_47">
+                            World Intellectual Property Organization (1)
+                          </label>
+                        </div>
+
+
+                      </div>
+                    </fieldset>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {{ form.bookmarked }}
+            {% if show_admin_filters %}
+              {{ form.admin_filters }}
+            {% endif %}
+            {{ form.use }}
+            {{ form.user_access }}
+            {{ form.data_type }}
+            {% if form.topic.field.choices %}
+              {{ form.topic }}
+            {% endif %}
+            {% if form.source.field.choices %}
+              {{ form.source }}
+            {% endif %}
           </div>
-          <p class="govuk-body">
-            <span role="status" id="search-results-count">{{ datasets.paginator.count }}</span> search results
-          </p>
-
-        </div>
-
-      </div>
-
-      <div class="govuk-grid-row">
-        <div class="govuk-grid-column-one-third">
-          <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
-        </div>
-        <div class="govuk-grid-column-two-thirds">
-          <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
-        </div>
-      </div>
-
-
-      <div class="govuk-grid-row">
-
-        <div class="govuk-grid-column-one-third">
-          <h2 class="govuk-body">&nbsp;</h2>
-          {{ form.bookmarked }}
-          {% if show_admin_filters %}
-            {{ form.admin_filters }}
-          {% endif %}
-          {{ form.use }}
-          {{ form.user_access }}
-          {{ form.data_type }}
-          {% if form.topic.field.choices %}
-            {{ form.topic }}
-          {% endif %}
-          {% if form.source.field.choices %}
-            {{ form.source }}
-          {% endif %}
         </div>
         <div class="govuk-grid-column-two-thirds">
           <div id="search-summary-accessible-hint-wrapper" class="govuk-visually-hidden" aria-atomic="true"
@@ -119,6 +759,15 @@
           </div>
 
           <div class="govuk-body">
+            <div style="float:right;">
+              {{ form.sort }}
+            </div>
+            <p class="govuk-body">
+              <span role="status" id="search-results-count">{{ datasets.paginator.count }}</span> search results
+            </p>
+          </div>
+
+          <div class="govuk-body" style="clear:both;">
             <a href="#" class="govuk-link govuk-link--no-visited-state">Reset filters</a>
             &nbsp;
             <strong class="govuk-tag">COVID
@@ -132,12 +781,16 @@
 
             </strong>
           </div>
+
           <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
           {% for dataset in datasets %}
             <div class="search-result govuk-!-padding-bottom-4 govuk-!-margin-bottom-4">
               <h3 class="govuk-heading-m">
+
                 {% if dataset.is_bookmarked %}
-                  {% include 'partials/bookmark-yes.html' %}
+                  <div style="float:right;">
+                    {% include 'partials/bookmark-yes.html' %}
+                  </div>
                 {% endif %}
                 {% include "partials/gtm_dataset_link.html" with event_type="searchResultClick" search_page_number=datasets.number search_result_rank=forloop.counter search_type="search_bar" dataset=dataset %}
                 {% if not dataset.published %}
