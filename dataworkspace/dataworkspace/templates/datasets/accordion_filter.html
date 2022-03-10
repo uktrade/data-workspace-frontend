@@ -1,0 +1,27 @@
+{% with id=widget.attrs.id %}
+  <div class="govuk-accordion__section" {% if id %} id="{{ id }}"{% endif %}>
+    <div class="govuk-accordion__section-header">
+      <h2 class="govuk-accordion__section-heading">
+                    <span class="govuk-accordion__section-button" id="accordion_filter_heading_{{ id }}">
+                      {{ widget.group_label }}
+                    </span>
+      </h2>
+    </div>
+    <div id="accordion-default-content-1" class="govuk-accordion__section-content"
+         aria-labelledby="accordion_filter_heading_{{ id }}">
+      <div class="govuk-form-group">
+        <fieldset class="govuk-fieldset" aria-describedby="waste-hint">
+
+          <div class="govuk-checkboxes" id="filter_text_target_{{ id }}">
+            {% for group, options, index in widget.optgroups %}
+              {% for option in options %}
+                {% include option.template_name with widget=option hidden=False %}
+              {% endfor %}
+            {% endfor %}
+          </div>
+
+        </fieldset>
+      </div>
+    </div>
+  </div>
+{% endwith %}

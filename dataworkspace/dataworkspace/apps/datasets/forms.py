@@ -45,6 +45,10 @@ class FilterWidget(forms.widgets.CheckboxSelectMultiple):
         js = ("app-filter-show-more-v2.js",)
 
 
+class AccordionFilterWidget(FilterWidget):
+    template_name = "datasets/accordion_filter.html"
+
+
 class ScrollingFilterWidget(FilterWidget):
     template_name = "datasets/scrolling_filter.html"
     option_template_name = "datasets/scrolling_filter_option.html"
@@ -163,6 +167,12 @@ class DatasetSearchForm(forms.Form):
         choices=[("yes", "My bookmarks")],
         required=False,
         widget=FilterWidget("Bookmarks"),
+    )
+
+    my_datasets = forms.TypedMultipleChoiceField(
+        choices=[("bookmarks", "My bookmarks"), ("subscriptions", "My dataset subscriptions")],
+        required=False,
+        widget=AccordionFilterWidget("My datasets"),
     )
 
     use = forms.TypedMultipleChoiceField(
