@@ -17,8 +17,8 @@
     "url": "git+https://github.com/uktrade/data-workspace.git"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Department for International Trade",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/uktrade/data-workspace/issues"
   },
