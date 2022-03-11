@@ -29,7 +29,8 @@
   },
   "resolutions": {
     "ansi-regex": "5.0.1",
-    "node-fetch": "2.6.1",
+    "glob-parent": "5.1.2",
+    "node-fetch": "2.6.7",
     "node-forge": "1.0.0"
   },
   "author": "",
