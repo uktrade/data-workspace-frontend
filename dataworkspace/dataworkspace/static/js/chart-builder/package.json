@@ -23,8 +23,14 @@
     "webpack-merge": "^5.8.0"
   },
   "scripts": {
+    "preinstall": "npx npm-force-resolutions",
     "dev": "./node_modules/.bin/webpack serve --config webpack.dev.js --hot",
     "build": "./node_modules/.bin/webpack build --config webpack.prod.js"
+  },
+  "resolutions": {
+    "ansi-regex": "5.0.1",
+    "node-fetch": "2.6.1",
+    "node-forge": "1.0.0"
   },
   "author": "",
   "license": "ISC"
