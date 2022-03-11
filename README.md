@@ -135,7 +135,7 @@ Add the new dependencies to those `.in` files, or update an existing dependency,
 
 # Front end static assets
 
-We use `node-sass` to build the front end css and include the GOVUK Front End styles.
+We use [node-sass](https://github.com/sass/node-sass#command-line-interface) to build the front end css and include the GOVUK Front End styles.
 
 To build this locally requires NodeJS. Ideally installed via `nvm` https://github.com/nvm-sh/nvm
 
