@@ -512,7 +512,10 @@ def find_datasets(request):
         "data_type"
     ].choices  # Cache these now, as we annotate them with result numbers later which we don't want here.
 
-    query = form.cleaned_data.get("q")
+    filters = form.get_filters()
+    logger.warning(filters.__dict__)
+
+    query = filters.query
     unpublished = "unpublished" in form.cleaned_data.get("admin_filters")
     open_data = "opendata" in form.cleaned_data.get("admin_filters")
     with_visuals = "withvisuals" in form.cleaned_data.get("admin_filters")
@@ -521,7 +524,7 @@ def find_datasets(request):
     sort = form.cleaned_data.get("sort")
     source_ids = set(source.id for source in form.cleaned_data.get("source"))
     topic_ids = set(topic.id for topic in form.cleaned_data.get("topic"))
-    bookmarked = form.cleaned_data.get("bookmarked")
+    bookmarked = filters.bookmarked
     user_accessible = set(form.cleaned_data.get("user_access", [])) == {"yes"}
     user_inaccessible = set(form.cleaned_data.get("user_access", [])) == {"no"}
 

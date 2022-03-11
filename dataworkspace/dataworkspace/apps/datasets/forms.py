@@ -1,5 +1,6 @@
 from collections import defaultdict
 from functools import partial
+import logging
 
 from django import forms
 
@@ -12,6 +13,8 @@ from ...forms import (
     GOVUKDesignSystemTextareaField,
     GOVUKDesignSystemTextareaWidget,
 )
+
+logger = logging.getLogger("app")
 
 
 class FilterWidget(forms.widgets.CheckboxSelectMultiple):
@@ -141,6 +144,9 @@ class SourceTagField(forms.ModelMultipleChoiceField):
 
 
 class DatasetSearchForm(forms.Form):
+    SUBSCRIBED = "subscribed"
+    BOOKMARKED = "bookmarked"
+
     q = forms.CharField(required=False)
 
     user_access = forms.TypedMultipleChoiceField(
@@ -170,7 +176,7 @@ class DatasetSearchForm(forms.Form):
     )
 
     my_datasets = forms.TypedMultipleChoiceField(
-        choices=[("bookmarks", "My bookmarks"), ("subscriptions", "My dataset subscriptions")],
+        choices=[(BOOKMARKED, "My bookmarks"), (SUBSCRIBED, "My dataset subscriptions")],
         required=False,
         widget=AccordionFilterWidget("My datasets"),
     )
@@ -206,7 +212,7 @@ class DatasetSearchForm(forms.Form):
     topic = SourceTagField(
         queryset=Tag.objects.order_by("name").filter(type=TagType.TOPIC),
         required=False,
-        widget=FilterWidget(
+        widget=ScrollingFilterWidget(
             "Choose data topic",
             limit_initial_options=10,
             show_more_label="Show more topics",
@@ -348,10 +354,28 @@ class DatasetSearchForm(forms.Form):
         ]
 
         self.fields["topic"].choices = [
-            (topic_id, topic_text + f" ({counts['topic'][topic_id.value]})")
+            (
+                topic_id,
+                SearchableChoice(topic_text, counts["topic"][topic_id.value]),
+            )
             for topic_id, topic_text in topic_choices
             if topic_id.value in selected_topic_ids or counts["topic"][topic_id.value] != 0
         ]
+
+    def get_filters(self):
+        filters = SearchDatasetsFilters()
+
+        filters.bookmarked = DatasetSearchForm.BOOKMARKED in self.cleaned_data.get("my_datasets")
+        filters.subscribed = DatasetSearchForm.SUBSCRIBED in self.cleaned_data.get("my_datasets")
+        filters.query = self.cleaned_data.get("q")
+
+        return filters
+
+
+class SearchDatasetsFilters:
+    bookmarked: bool
+    subscribed: bool
+    query: str
 
 
 class SearchableChoice:

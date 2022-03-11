@@ -25,5 +25,5 @@ set -e
         "celery --app dataworkspace.cel.celery_app beat --pidfile= -S redbeat.RedBeatScheduler" \
         "python3 -m start" \
         "PROXY_PORT='8001' UPSTREAM_ROOT='http://localhost:8002' nodemon --watch proxy.py --exec 'python3 -m proxy'" \
-        "nginx -p /home/django"
+        "nginx -p /home/django -c /etc/nginx/nginx-dev.conf"
 )

@@ -369,8 +369,9 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
 
 .filter-widget .filter-container__scrolling {
   padding-top: 3px;
-  height: 14rem;
+  max-height: 14rem;
   overflow-y: scroll;
+  max-width:100%;
 }
 
 .search-input__container {
