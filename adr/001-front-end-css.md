@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed: Waiting for review by data-infrastructure team
+Accepted
 
 ## Context
 
