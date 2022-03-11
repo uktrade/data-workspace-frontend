@@ -7,6 +7,7 @@ Proposed: Waiting for review by data-infrastructure team
 ## Context
 
 _What is the issue that we're seeing that is motivating this decision or change?_
+
 We currently use static CSS files copied from various sources. This raises a couple of issues
 - Updating files is manual, labourious and prone to error
 - Static files are not scanned by github vulnerability checks (not really issue for CSS but most static CSS have a corresponding JS file)
