@@ -133,6 +133,21 @@ We use [pip-tools](https://github.com/jazzband/pip-tools) to manage dependencies
 
 Add the new dependencies to those `.in` files, or update an existing dependency, then (with `pip-tools` already installed), run `make save-requirements`.
 
+# Front end static assets
+
+We use `node-sass` to build the front end css and include the GOVUK Front End styles.
+
+To build this locally requires NodeJS. Ideally installed via `nvm` https://github.com/nvm-sh/nvm
+
+
+```
+  npm install
+  npm run build:css
+```
+
+Currently the generated CSS files are committed to source control. We will eventually automate this.
+
+
 
 # Infrastructure
 
