@@ -147,9 +147,6 @@ To build this locally requires NodeJS. Ideally installed via `nvm` https://githu
   npm run build:css
 ```
 
-Currently the generated CSS files are committed to source control. We will eventually automate this.
-
-
 
 # Infrastructure
 
