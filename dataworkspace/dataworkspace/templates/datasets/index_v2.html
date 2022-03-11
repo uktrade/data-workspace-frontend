@@ -918,7 +918,11 @@
   <script nonce="{{ request.csp_nonce }}" src="{% static 'search-v2.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}">
     $(document).ready(function () {
-      var form = new LiveSearch('#live-search-form', '#live-search-wrapper', new GTMDatasetSearchSupport(), ".dataset-link");
+      var form = new LiveSearch('#live-search-form',
+        '#live-search-wrapper',
+        new GTMDatasetSearchSupport(), ".dataset-link",
+        window.GOVUKFrontend
+      );
       var searchInput = new ToggleInputClassOnFocus($("#live-search-form"))
     });
   </script>

@@ -25,7 +25,10 @@ var ToggleInputClassOnFocus = function ($el) {
   }
 };
 
-var LiveSearch = function (formSelector, wrapperSelector, GTM, linkSelector) {
+var LiveSearch = function (formSelector, wrapperSelector, GTM, linkSelector, GOVUKFrontend) {
+
+  this.GOVUKFrontend = GOVUKFrontend;
+
   this.wrapperSelector = wrapperSelector;
   this.$wrapper = $(wrapperSelector);
   this.$form = $(formSelector);
@@ -192,6 +195,13 @@ LiveSearch.prototype.displayFilterResults = function displayFilterResults(
   if (typeof window.installFilterTextSearch === "function") {
     window.installFilterTextSearch();
   }
+
+  // Rebind govuk events if we are connected
+  if(this.GOVUKFrontend) {
+    var wrapperElement = $(this.wrapperSelector).get(0);
+    this.GOVUKFrontend.initAll({scope: wrapperElement});
+  }
+
 };
 
 LiveSearch.prototype.replaceBlock = function replaceBlock(selector, html) {
