@@ -141,6 +141,8 @@ To build this locally requires NodeJS. Ideally installed via `nvm` https://githu
 
 
 ```
+  # this will configure node from .nvmrc or prompt you to install
+  nvm use
   npm install
   npm run build:css
 ```
