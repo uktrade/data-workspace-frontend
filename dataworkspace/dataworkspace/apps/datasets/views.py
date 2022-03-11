@@ -1639,3 +1639,45 @@ class SourceChangelogView(WaffleFlagMixin, DetailView):
             pk=self.kwargs["source_id"],
             **{"dataset__published": True} if not self.request.user.is_superuser else {},
         )
+
+
+class DatasetChartView(WaffleFlagMixin, View):
+    waffle_flag = settings.CHART_BUILDER_PUBLISH_CHARTS_FLAG
+
+    def get_object(self):
+        dataset = get_object_or_404(
+            self.kwargs["model_class"],
+            id=self.kwargs["dataset_uuid"],
+            **{"published": True} if not self.request.user.is_superuser else {},
+        )
+        return dataset.charts.get(id=self.kwargs["object_id"])
+
+    @csp_update(SCRIPT_SRC=["'unsafe-eval'", "blob:"])
+    def get(self, request, **kwargs):
+        chart = self.get_object()
+        if not chart.dataset.user_has_access(request.user):
+            return HttpResponseForbidden()
+        return render(
+            request,
+            "datasets/chart.html",
+            context={
+                "chart": chart,
+            },
+        )
+
+
+class DatasetChartDataView(DatasetChartView):
+    waffle_flag = settings.CHART_BUILDER_PUBLISH_CHARTS_FLAG
+
+    def get(self, request, **kwargs):
+        dataset_chart = self.get_object()
+        if not dataset_chart.dataset.user_has_access(request.user):
+            return HttpResponseForbidden()
+        chart = dataset_chart.chart
+        return JsonResponse(
+            {
+                "total_rows": chart.query_log.rows,
+                "duration": chart.query_log.duration,
+                "data": chart.get_table_data(chart.get_required_columns()),
+            }
+        )

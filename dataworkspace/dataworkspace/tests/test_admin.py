@@ -3155,6 +3155,10 @@ class TestDatasetAdminPytest:
                 "sourcetable_set-0-schema": source_table.schema,
                 "sourcetable_set-0-frequency": source_table.frequency,
                 "sourcetable_set-0-table": source_table.table,
+                "charts-TOTAL_FORMS": "1",
+                "charts-INITIAL_FORMS": "0",
+                "charts-MIN_NUM_FORMS": "0",
+                "charts-MAX_NUM_FORMS": "1000",
             },
             follow=True,
         )
@@ -3208,6 +3212,10 @@ class TestDatasetAdminPytest:
                 "sourcetable_set-0-schema": source_table.schema,
                 "sourcetable_set-0-frequency": source_table.frequency,
                 "sourcetable_set-0-table": source_table.table,
+                "charts-TOTAL_FORMS": "1",
+                "charts-INITIAL_FORMS": "0",
+                "charts-MIN_NUM_FORMS": "0",
+                "charts-MAX_NUM_FORMS": "1000",
             },
             follow=True,
         )
@@ -3270,6 +3278,10 @@ class TestDatasetAdminPytest:
                 "sourcetable_set-0-schema": source_table.schema,
                 "sourcetable_set-0-frequency": source_table.frequency,
                 "sourcetable_set-0-table": source_table.table,
+                "charts-TOTAL_FORMS": "1",
+                "charts-INITIAL_FORMS": "0",
+                "charts-MIN_NUM_FORMS": "0",
+                "charts-MAX_NUM_FORMS": "1000",
             },
             follow=True,
         )
@@ -3323,6 +3335,10 @@ class TestDatasetAdminPytest:
                 "sourcetable_set-0-schema": source_table.schema,
                 "sourcetable_set-0-frequency": source_table.frequency,
                 "sourcetable_set-0-table": source_table.table,
+                "charts-TOTAL_FORMS": "1",
+                "charts-INITIAL_FORMS": "0",
+                "charts-MIN_NUM_FORMS": "0",
+                "charts-MAX_NUM_FORMS": "1000",
             },
             follow=True,
         )
@@ -3367,6 +3383,10 @@ class TestDatasetAdminPytest:
                 "sourcetable_set-0-data_grid_enabled": "on",
                 "sourcetable_set-0-data_grid_download_enabled": "on",
                 "sourcetable_set-0-data_grid_download_limit": "",
+                "charts-TOTAL_FORMS": "1",
+                "charts-INITIAL_FORMS": "0",
+                "charts-MIN_NUM_FORMS": "0",
+                "charts-MAX_NUM_FORMS": "1000",
             },
             follow=True,
         )
@@ -3376,6 +3396,50 @@ class TestDatasetAdminPytest:
         assert "A download limit must be set if downloads are enabled" in response.content.decode(
             "utf-8"
         )
+
+    @pytest.mark.django_db
+    def test_source_table_data_grid_enabled(self, staff_client):
+        staff_client.post(reverse("admin:index"), follow=True)
+        dataset = factories.MasterDataSetFactory.create(
+            published=True, user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
+        )
+        database = factories.DatabaseFactory()
+        num_tables = SourceTable.objects.count()
+        response = staff_client.post(
+            reverse("admin:datasets_masterdataset_change", args=(dataset.id,)),
+            {
+                "published": True,
+                "name": dataset.name,
+                "slug": dataset.slug,
+                "short_description": "test short description",
+                "description": "test description",
+                "type": dataset.type,
+                "user_access_type": dataset.user_access_type,
+                "sourcetable_set-TOTAL_FORMS": "1",
+                "sourcetable_set-INITIAL_FORMS": "0",
+                "sourcetable_set-MIN_NUM_FORMS": "0",
+                "sourcetable_set-MAX_NUM_FORMS": "1000",
+                "visualisations-TOTAL_FORMS": "1",
+                "visualisations-INITIAL_FORMS": "0",
+                "visualisations-MIN_NUM_FORMS": "0",
+                "visualisations-MAX_NUM_FORMS": "1000",
+                "sourcetable_set-0-dataset": dataset.id,
+                "sourcetable_set-0-name": "reporting table",
+                "sourcetable_set-0-database": str(database.id),
+                "sourcetable_set-0-schema": "test_schema",
+                "sourcetable_set-0-frequency": 1,
+                "sourcetable_set-0-table": "test_table",
+                "sourcetable_set-0-data_grid_enabled": "on",
+                "charts-TOTAL_FORMS": "1",
+                "charts-INITIAL_FORMS": "0",
+                "charts-MIN_NUM_FORMS": "0",
+                "charts-MAX_NUM_FORMS": "1000",
+            },
+            follow=True,
+        )
+
+        assert response.status_code == 200
+        assert SourceTable.objects.count() == num_tables + 1
 
     @pytest.mark.django_db
     def test_source_table_reporting_disabled(self, staff_client):
@@ -3409,10 +3473,13 @@ class TestDatasetAdminPytest:
                 "sourcetable_set-0-schema": "test_schema",
                 "sourcetable_set-0-frequency": 1,
                 "sourcetable_set-0-table": "test_table",
+                "charts-TOTAL_FORMS": "1",
+                "charts-INITIAL_FORMS": "0",
+                "charts-MIN_NUM_FORMS": "0",
+                "charts-MAX_NUM_FORMS": "1000",
             },
             follow=True,
         )
 
-        # raise Exception(response.content.decode('utf-8'))
         assert response.status_code == 200
         assert SourceTable.objects.count() == num_tables + 1

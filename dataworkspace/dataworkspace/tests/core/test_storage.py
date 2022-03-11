@@ -2,6 +2,7 @@ import io
 
 import mock
 import pytest
+from django.test import override_settings
 from dataworkspace.apps.core.storage import (
     S3FileStorage,
     ClamAVResponse,
@@ -30,6 +31,7 @@ def test_file_save(mock_upload_to_clamav, mock_client, mock_uuid):
     )
 
 
+@override_settings(LOCAL=False)
 @mock.patch("dataworkspace.apps.core.storage.uuid.uuid4")
 @mock.patch("dataworkspace.apps.core.storage.boto3.client")
 @mock.patch("dataworkspace.apps.core.storage._upload_to_clamav")
