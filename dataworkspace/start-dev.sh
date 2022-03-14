@@ -5,7 +5,7 @@ set -e
 (
     cd "$(dirname "$0")"
 
-    django-admin collectstatic --noinput
+    django-admin collectstatic --noinput -i node_modules -i chart-builder
 
     # Not suitable on a cluster of size > 1, but for our purposes,
     # no need for more
@@ -25,5 +25,5 @@ set -e
         "celery --app dataworkspace.cel.celery_app beat --pidfile= -S redbeat.RedBeatScheduler" \
         "python3 -m start" \
         "PROXY_PORT='8001' UPSTREAM_ROOT='http://localhost:8002' nodemon --watch proxy.py --exec 'python3 -m proxy'" \
-        "nginx -p /home/django -c /etc/nginx/nginx-dev.conf"
+        "nginx -p /home/django"
 )
