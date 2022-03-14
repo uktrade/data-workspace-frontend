@@ -474,7 +474,42 @@ def build_filtered_dataset_query(inner_query, column_config, params):
             if data_type == "boolean":
                 terms[0] = bool(int(terms[0]))
 
-            if data_type == "text" and filter_data["type"] == "contains":
+            # Arrays are a special case
+            elif data_type == "array":
+                if filter_data["type"] == "contains":
+                    query_params[field] = terms[0]
+                    where_clause.append(
+                        SQL(f"LOWER(%({field})s::TEXT) = ANY(LOWER({{}}::TEXT)::TEXT[])").format(
+                            Identifier(field)
+                        )
+                    )
+                if filter_data["type"] == "notContains":
+                    query_params[field] = terms[0]
+                    where_clause.append(
+                        SQL(
+                            f"NOT LOWER(%({field})s::TEXT) = ANY(LOWER({{}}::TEXT)::TEXT[]) or {{}} is NULL"
+                        ).format(Identifier(field), Identifier(field))
+                    )
+                if filter_data["type"] == "equals":
+                    query_params[field] = ",".join(
+                        [x.rstrip().lstrip() for x in terms[0].split(",")]
+                    )
+                    where_clause.append(
+                        SQL(
+                            f"LOWER(STRING_TO_ARRAY(%({field})s, ',')::text) = LOWER({{}}::TEXT)"
+                        ).format(Identifier(field))
+                    )
+                if filter_data["type"] == "notEqual":
+                    query_params[field] = ",".join(
+                        [x.rstrip().lstrip() for x in terms[0].split(",")]
+                    )
+                    where_clause.append(
+                        SQL(
+                            f"LOWER(STRING_TO_ARRAY(%({field})s, ',')::text) != LOWER({{}}::TEXT) or {{}} is NULL"
+                        ).format(Identifier(field), Identifier(field))
+                    )
+
+            elif data_type == "text" and filter_data["type"] == "contains":
                 query_params[field] = f"%{terms[0]}%"
                 where_clause.append(
                     SQL(f"lower({{}}) LIKE lower(%({field})s)").format(Identifier(field))
@@ -529,7 +564,6 @@ def build_filtered_dataset_query(inner_query, column_config, params):
 
     if where_clause:
         where_clause = SQL("WHERE") + SQL(" AND ").join(where_clause)
-
     query = SQL(
         f"""
         SELECT {{}}
@@ -545,6 +579,7 @@ def build_filtered_dataset_query(inner_query, column_config, params):
         SQL(" ").join(where_clause),
         SQL(",").join(map(Identifier, sort_fields)),
     )
+    # raise Exception(str(query), query_params)
 
     return query, query_params
 

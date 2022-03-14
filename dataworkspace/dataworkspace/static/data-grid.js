@@ -117,7 +117,12 @@ function initDataGrid(columnConfig, dataEndpoint, downloadSegment, records, expo
     }
     else if (column.dataType === 'uuid') {
       column.filterParams = {
-        filterOptions: ['equals', 'notEquals']
+        filterOptions: ['equals', 'notEqual']
+      };
+    }
+    else if (column.dataType === 'array') {
+      column.filterParams = {
+        filterOptions: ['contains', 'notContains', 'equals', 'notEqual']
       };
     }
 
