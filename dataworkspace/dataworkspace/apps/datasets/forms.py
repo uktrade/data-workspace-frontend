@@ -72,7 +72,6 @@ class AccordionFilterWidget(FilterWidget):
         return context
 
 
-
 class ScrollingFilterWidget(FilterWidget):
     template_name = "datasets/scrolling_filter.html"
     option_template_name = "datasets/scrolling_filter_option.html"
@@ -161,6 +160,7 @@ class EligibilityCriteriaForm(forms.Form):
 
 class SourceTagField(forms.ModelMultipleChoiceField):
     def label_from_instance(self, obj):
+        logger.debug(obj)
         return obj.name
 
 
@@ -356,7 +356,7 @@ class DatasetSearchForm(forms.Form):
         self.fields["my_datasets"].choices = [
             (
                 bookmarked_id,
-                SearchableChoice(value, counts['my_datasets'][bookmarked_id]),
+                SearchableChoice(value, counts["my_datasets"][bookmarked_id]),
             )
             for bookmarked_id, value in list(self.fields["my_datasets"].choices)
         ]
@@ -374,8 +374,6 @@ class DatasetSearchForm(forms.Form):
             (type_id, SearchableChoice(type_text, counts["data_type"][type_id]))
             for type_id, type_text in data_type_choices
         ]
-
-
 
         self.fields["source"].choices = [
             (

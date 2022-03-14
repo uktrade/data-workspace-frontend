@@ -97,7 +97,6 @@
 
             </div>
 
-
             {#            {{ form.use }}#}
 
           </div>
@@ -120,14 +119,19 @@
 
           <div class="govuk-body" style="clear:both;">
             <div class="govuk-button-group">
-              <a href="#" class="govuk-link govuk-link--no-visited-state">Reset filters</a>
+
+              <a href="{% url "datasets:find_datasets" %}" class="govuk-link govuk-link--no-visited-state">Reset
+                filters</a>
               &nbsp;
+
               {% for value, text in form.topic.field.choices %}
                 {# value is *not* a string but a ModelChoiceIteratorValue. Convert to string first!  #}
                 {% if value|stringformat:"s" in form.topic.value %}
-                  <button class="govuk-button govuk-button--secondary govuk-tag">{{ text }}
+
+                  <label for="id_topic_{{ forloop.counter0 }}"
+                         class="govuk-button govuk-button--secondary govuk-tag">{{ text }}
                     <span class="tag-target">&#x2716;</span>
-                  </button>
+                  </label>
                 {% endif %}
               {% endfor %}
 
@@ -160,11 +164,11 @@
                 <span style="margin-left:10rem;display:block;">{{ data_type|get_key:dataset.data_type }}</span>
                 <span style="float:left;">Source:</span>
                 <span style="margin-left:10rem;display:block;">
-                {% if dataset.source_tag_names|length > 1 %}
-                  {{ dataset.source_tag_names|join:", " }}
-                {% else %}
-                  {{ dataset.source_tag_names.0|default:"N/A" }}
-                {% endif %}
+                {% for source in dataset.source_tag_names %}
+                  <a href="{% url "datasets:find_tags" tag_name=source %}"
+                     class="govuk-link govuk-link--no-visited-state">{{ source }}</a>
+                {% endfor %}
+
               </span>
                 <span style="float:left;">Updated:</span>
                 <span style="margin-left:10rem;display:block;">
@@ -174,8 +178,10 @@
                 {% if dataset.topic_tag_names|length > 0 %}
                   <span style="float:left;">Topics:</span>
                   <span style="margin-left:10rem;display:block;">
-                  {% for tag_name in dataset.topic_tag_names %}
-                    <a href="#" class="govuk-link govuk-link--no-visited-state">#{{ tag_name }}</a>
+
+                  {% for topic in dataset.topic_tag_names %}
+                    <a href="{% url "datasets:find_tags" tag_name=topic %}"
+                       class="govuk-link govuk-link--no-visited-state">#{{ topic }}</a>
                   {% endfor %}
                   </span>
 

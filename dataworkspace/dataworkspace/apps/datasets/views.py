@@ -49,7 +49,7 @@ from django.http import (
     HttpResponseServerError,
     JsonResponse,
 )
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from django.views.decorators.http import (
     require_GET,
@@ -92,6 +92,7 @@ from dataworkspace.apps.datasets.models import (
     VisualisationCatalogueItem,
     SourceTable,
     ToolQueryAuditLogTable,
+    Tag,
 )
 from dataworkspace.apps.datasets.utils import (
     build_filtered_dataset_query,
@@ -499,6 +500,16 @@ def has_unpublished_dataset_access(user):
         )
 
     return access
+
+
+@require_GET
+def find_tags(request, tag_name: str):
+    tag: Tag = get_object_or_404(Tag, name=tag_name)
+
+    tag_type = tag.get_type_display().lower()
+
+    url = reverse("datasets:find_datasets") + f"?{tag_type}={tag.id}"
+    return redirect(url)
 
 
 @require_GET
