@@ -119,17 +119,19 @@
           </div>
 
           <div class="govuk-body" style="clear:both;">
-            <a href="#" class="govuk-link govuk-link--no-visited-state">Reset filters</a>
-            &nbsp;
-            {% for value, text in form.topic.field.choices  %}
-              {# value is *not* a string but a ModelChoiceIteratorValue. Convert to string first!  #}
-              {% if value|stringformat:"s" in form.topic.value %}
-                  <strong class="govuk-tag">{{ text }}
+            <div class="govuk-button-group">
+              <a href="#" class="govuk-link govuk-link--no-visited-state">Reset filters</a>
+              &nbsp;
+              {% for value, text in form.topic.field.choices %}
+                {# value is *not* a string but a ModelChoiceIteratorValue. Convert to string first!  #}
+                {% if value|stringformat:"s" in form.topic.value %}
+                  <button class="govuk-button govuk-button--secondary govuk-tag">{{ text }}
                     <span class="tag-target">&#x2716;</span>
-                  </strong>
-              {% endif %}
-            {% endfor %}
+                  </button>
+                {% endif %}
+              {% endfor %}
 
+            </div>
           </div>
 
           <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
