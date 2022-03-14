@@ -2,6 +2,7 @@ from collections import defaultdict
 from functools import partial
 import logging
 
+
 from django import forms
 
 from dataworkspace.apps.datasets.constants import DataSetType, TagType
@@ -17,6 +18,16 @@ from ...forms import (
 logger = logging.getLogger("app")
 
 
+class SearchableChoice:
+    def __init__(self, label, count=0):
+        self.label = label
+        self.count = count
+        self.search_text = str(label).lower()
+
+    def __str__(self):
+        return self.label
+
+
 class FilterWidget(forms.widgets.CheckboxSelectMultiple):
     template_name = "datasets/filter.html"
     option_template_name = "datasets/filter_option.html"
@@ -27,6 +38,7 @@ class FilterWidget(forms.widgets.CheckboxSelectMultiple):
         hint_text=None,
         limit_initial_options=0,
         show_more_label="Show more",
+        header_color=None,
         *args,
         **kwargs,  # pylint: disable=keyword-arg-before-vararg
     ):
@@ -35,6 +47,7 @@ class FilterWidget(forms.widgets.CheckboxSelectMultiple):
         self._hint_text = hint_text
         self._limit_initial_options = limit_initial_options
         self._show_more_label = show_more_label
+        self._header_color = header_color
 
     def get_context(self, name, value, attrs):
         context = super().get_context(name, value, attrs)
@@ -42,6 +55,7 @@ class FilterWidget(forms.widgets.CheckboxSelectMultiple):
         context["widget"]["hint_text"] = self._hint_text
         context["widget"]["limit_initial_options"] = self._limit_initial_options
         context["widget"]["show_more_label"] = self._show_more_label
+        context["widget"]["header_color"] = self._header_color
         return context
 
     class Media:
@@ -50,6 +64,13 @@ class FilterWidget(forms.widgets.CheckboxSelectMultiple):
 
 class AccordionFilterWidget(FilterWidget):
     template_name = "datasets/accordion_filter.html"
+    option_template_name = "datasets/accordion_filter_option.html"
+
+    def get_context(self, name, value, attrs):
+        context = super().get_context(name, value, attrs)
+
+        return context
+
 
 
 class ScrollingFilterWidget(FilterWidget):
@@ -155,7 +176,7 @@ class DatasetSearchForm(forms.Form):
             ("no", "Data I don't have access to"),
         ],
         required=False,
-        widget=FilterWidget("Choose data access", hint_text="Select all that apply"),
+        widget=AccordionFilterWidget("Data access"),
     )
 
     admin_filters = forms.TypedMultipleChoiceField(
@@ -166,7 +187,7 @@ class DatasetSearchForm(forms.Form):
         ],
         coerce=str,
         required=False,
-        widget=FilterWidget("Admin only options"),
+        widget=AccordionFilterWidget("Admin only options", header_color="#f47738"),
     )
 
     bookmarked = forms.MultipleChoiceField(
@@ -176,7 +197,10 @@ class DatasetSearchForm(forms.Form):
     )
 
     my_datasets = forms.TypedMultipleChoiceField(
-        choices=[(BOOKMARKED, "My bookmarks"), (SUBSCRIBED, "My dataset subscriptions")],
+        choices=[
+            (BOOKMARKED, "My bookmarks"),
+            (SUBSCRIBED, "My dataset subscriptions"),
+        ],
         required=False,
         widget=AccordionFilterWidget("My datasets"),
     )
@@ -200,23 +224,20 @@ class DatasetSearchForm(forms.Form):
         ],
         coerce=int,
         required=False,
-        widget=FilterWidget("Choose data type", hint_text="Select all that apply"),
+        widget=AccordionFilterWidget("Type"),
     )
 
     source = SourceTagField(
         queryset=Tag.objects.order_by("name").filter(type=TagType.SOURCE),
         required=False,
-        widget=ScrollingFilterWidget("Choose data source", hint_text="Select all that apply"),
+        widget=AccordionFilterWidget("Data source", hint_text="Select all that apply"),
     )
 
     topic = SourceTagField(
         queryset=Tag.objects.order_by("name").filter(type=TagType.TOPIC),
         required=False,
-        widget=ScrollingFilterWidget(
-            "Choose data topic",
-            limit_initial_options=10,
-            show_more_label="Show more topics",
-            hint_text="Select all that apply",
+        widget=AccordionFilterWidget(
+            "Topic",
         ),
     )
 
@@ -244,6 +265,7 @@ class DatasetSearchForm(forms.Form):
     def annotate_and_update_filters(self, datasets, matcher, number_of_matches):
         counts = {
             "bookmarked": defaultdict(int),
+            "my_datasets": defaultdict(int),
             "admin_filters": defaultdict(int),
             "use": defaultdict(int),
             "data_type": defaultdict(int),
@@ -296,6 +318,7 @@ class DatasetSearchForm(forms.Form):
 
             if dataset_matcher(bookmark=True):
                 counts["bookmarked"]["yes"] += 1
+                counts["my_datasets"][DatasetSearchForm.BOOKMARKED] += 1
 
             for admin_id, _ in admin_choices:
                 if dataset_matcher(**{admin_id: True}):
@@ -318,7 +341,7 @@ class DatasetSearchForm(forms.Form):
                     counts["topic"][topic_id.value] += 1
 
         self.fields["user_access"].choices = [
-            (access_id, access_text + f" ({counts['user_access'][access_id]})")
+            (access_id, SearchableChoice(access_text, counts["user_access"][access_id]))
             for access_id, access_text in user_access_choices
         ]
 
@@ -330,8 +353,16 @@ class DatasetSearchForm(forms.Form):
             for bookmarked_id, bookmarked_text in self.fields["bookmarked"].choices
         ]
 
+        self.fields["my_datasets"].choices = [
+            (
+                bookmarked_id,
+                SearchableChoice(value, counts['my_datasets'][bookmarked_id]),
+            )
+            for bookmarked_id, value in list(self.fields["my_datasets"].choices)
+        ]
+
         self.fields["admin_filters"].choices = [
-            (admin_id, admin_text + f" ({counts['admin_filters'][admin_id]})")
+            (admin_id, SearchableChoice(admin_text, counts["admin_filters"][admin_id]))
             for admin_id, admin_text in admin_choices
         ]
 
@@ -340,9 +371,11 @@ class DatasetSearchForm(forms.Form):
         ]
 
         self.fields["data_type"].choices = [
-            (type_id, type_text + f" ({counts['data_type'][type_id]})")
+            (type_id, SearchableChoice(type_text, counts["data_type"][type_id]))
             for type_id, type_text in data_type_choices
         ]
+
+
 
         self.fields["source"].choices = [
             (
@@ -376,16 +409,6 @@ class SearchDatasetsFilters:
     bookmarked: bool
     subscribed: bool
     query: str
-
-
-class SearchableChoice:
-    def __init__(self, label, count=0):
-        self.label = label
-        self.count = count
-        self.search_text = str(label).lower()
-
-    def __str__(self):
-        return self.label
 
 
 class RelatedMastersSortForm(forms.Form):

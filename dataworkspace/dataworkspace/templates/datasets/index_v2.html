@@ -74,9 +74,6 @@
 
         <div class="govuk-grid-column-one-third filters-container">
           <div>
-                      <div class="govuk-accordion" data-module="govuk-accordion" id="accordion-default">
-                      </div>
-
             <div class="govuk-accordion" data-module="govuk-accordion" id="accordion-filters">
               {{ form.my_datasets }}
 
@@ -84,22 +81,25 @@
                 {{ form.topic }}
               {% endif %}
 
+              {% if form.source.field.choices %}
+                {{ form.source }}
+              {% endif %}
+
+              {{ form.user_access }}
+
+              {{ form.data_type }}
+
+
+              {% if show_admin_filters %}
+                {{ form.admin_filters }}
+              {% endif %}
+
+
             </div>
 
 
-            {{ form.bookmarked }}
-            {% if show_admin_filters %}
-              {{ form.admin_filters }}
-            {% endif %}
-            {{ form.use }}
-            {{ form.user_access }}
-            {{ form.data_type }}
-            {% if form.topic.field.choices %}
-              {{ form.topic }}
-            {% endif %}
-            {% if form.source.field.choices %}
-              {{ form.source }}
-            {% endif %}
+            {#            {{ form.use }}#}
+
           </div>
 
         </div>
@@ -121,16 +121,15 @@
           <div class="govuk-body" style="clear:both;">
             <a href="#" class="govuk-link govuk-link--no-visited-state">Reset filters</a>
             &nbsp;
-            <strong class="govuk-tag">COVID
-              <span class="tag-target">&#x2716;</span>
-            </strong>
-            <strong class="govuk-tag ">2021
-              <span class="tag-target">&#x2716;</span>
-            </strong>
-            <strong class="govuk-tag govuk-tag--green">Transport
-              <span class="tag-target">&#x2716;</span>
+            {% for value, text in form.topic.field.choices  %}
+              {# value is *not* a string but a ModelChoiceIteratorValue. Convert to string first!  #}
+              {% if value|stringformat:"s" in form.topic.value %}
+                  <strong class="govuk-tag">{{ text }}
+                    <span class="tag-target">&#x2716;</span>
+                  </strong>
+              {% endif %}
+            {% endfor %}
 
-            </strong>
           </div>
 
           <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
@@ -155,24 +154,28 @@
 
               <p class="govuk-body">
 
-                <span
-                  style="min-width:10rem;display:inline-block">Data type:</span> {{ data_type|get_key:dataset.data_type }}
-                <br>
-                <span style="min-width:10rem;display:inline-block">Source:</span>
+                <span style="float:left;">Data type:</span>
+                <span style="margin-left:10rem;display:block;">{{ data_type|get_key:dataset.data_type }}</span>
+                <span style="float:left;">Source:</span>
+                <span style="margin-left:10rem;display:block;">
                 {% if dataset.source_tag_names|length > 1 %}
                   {{ dataset.source_tag_names|join:", " }}
                 {% else %}
                   {{ dataset.source_tag_names.0|default:"N/A" }}
                 {% endif %}
-                <br>
-                <span style="min-width:10rem;display:inline-block">Updated:</span> {{ dataset.published_at }}
-                <br>
+              </span>
+                <span style="float:left;">Updated:</span>
+                <span style="margin-left:10rem;display:block;">
+                {{ dataset.published_at }}
+                </span>
 
                 {% if dataset.topic_tag_names|length > 0 %}
-                  <span style="min-width:10rem;display:inline-block">Topics:</span>
+                  <span style="float:left;">Topics:</span>
+                  <span style="margin-left:10rem;display:block;">
                   {% for tag_name in dataset.topic_tag_names %}
                     <a href="#" class="govuk-link govuk-link--no-visited-state">#{{ tag_name }}</a>
                   {% endfor %}
+                  </span>
 
                 {% endif %}
               </p>

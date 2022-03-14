@@ -2,7 +2,7 @@ import sys
 
 from django.core.management.base import BaseCommand
 
-from dataworkspace.apps.datasets.constants import DataSetType
+from dataworkspace.apps.datasets.constants import DataSetType, TagType
 from dataworkspace.apps.datasets.management.commands._create_utils import (
     create_fake_dataset,
     create_fake_visualisation_dataset,
@@ -31,9 +31,16 @@ class Command(BaseCommand):
 
         parser.add_argument(
             "-t",
-            "--tag",
+            "--topic",
             action="store_true",
-            help="Assign the dataset to a random tag if any exist",
+            help="Assign the dataset to a random topic tag if any exist",
+        )
+
+        parser.add_argument(
+            "-s",
+            "--source",
+            action="store_true",
+            help="Assign the dataset to a random source tag if any exist",
         )
 
     def handle(self, *args, **options):
@@ -45,9 +52,23 @@ class Command(BaseCommand):
             self.print_help("manage.py", "create_fake_dataset")
             sys.exit(1)
 
+        should_add_topic = options["topic"]
+        should_add_source = options["source"]
+
+        if should_add_topic and should_add_source:
+            self.stderr.write(self.style.ERROR("Please choose either --topic or --source tags"))
+            self.print_help("manage.py", "create_fake_dataset")
+            sys.exit(1)
+
+        if should_add_topic:
+            tag_type = TagType.TOPIC
+        elif should_add_source:
+            tag_type = TagType.SOURCE
+        else:
+            tag_type = None
+
         dataset_type = DataSetType[dataset_type_text]
         count = options["count"]
-        should_add_tag = options["tag"]
 
         for x in range(count):
             if dataset_type is DataSetType.VISUALISATION:
@@ -59,8 +80,8 @@ class Command(BaseCommand):
 
             tag_msg = ""
 
-            if should_add_tag:
-                tag = get_random_tag()
+            if tag_type:
+                tag = get_random_tag(tag_type)
                 catalogue_item.tags.add(tag)
                 catalogue_item.save()
                 tag_msg = f" using tag {tag.name}"
