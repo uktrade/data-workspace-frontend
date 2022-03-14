@@ -194,7 +194,7 @@ parsedatetime==2.6
     # via apache-superset
 pgsanity==0.2.9
     # via apache-superset
-pillow==9.0.0
+pillow==9.0.1
     # via -r requirements.in
 polyline==1.4.0
     # via apache-superset
