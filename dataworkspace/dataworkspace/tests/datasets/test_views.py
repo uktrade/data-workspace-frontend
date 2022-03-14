@@ -4,6 +4,7 @@ import random
 from urllib.parse import quote_plus
 from uuid import uuid4
 
+from bs4 import BeautifulSoup
 import factory.fuzzy
 import faker
 import mock
@@ -25,6 +26,7 @@ from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType
 from dataworkspace.apps.datasets.models import (
     DataSet,
+    DataSetUserPermission,
     ReferenceDataset,
     VisualisationCatalogueItem,
 )
@@ -3912,3 +3914,192 @@ class TestChartBuilderChartView:
         )
         assert response.status_code == 200
         assert response.json() == {"data": {"id": [1]}, "duration": 1000.0, "total_rows": None}
+
+
+class TestDatasetEditView:
+    def test_only_iam_or_iao_can_edit_dataset(self, client, user):
+        dataset = factories.DataSetFactory.create(
+            published=True,
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+            type=DataSetType.MASTER,
+        )
+        response = client.get(
+            reverse(
+                "datasets:edit",
+                args=(dataset.pk,),
+            )
+        )
+        assert response.status_code == 403
+
+        dataset.information_asset_owner = user
+        dataset.save()
+        response = client.get(
+            reverse(
+                "datasets:edit",
+                args=(dataset.pk,),
+            )
+        )
+        assert response.status_code == 200
+
+    def test_edit_permissions_page_shows_existing_authorized_users(self, client, user):
+        user_1 = factories.UserFactory.create()
+        user_2 = factories.UserFactory.create()
+
+        dataset = factories.DataSetFactory.create(
+            published=True,
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+            type=DataSetType.MASTER,
+        )
+        dataset.information_asset_owner = user
+        dataset.save()
+        factories.DataSetUserPermissionFactory.create(dataset=dataset, user=user_1)
+
+        response = client.get(
+            reverse(
+                "datasets:edit_permissions",
+                args=(dataset.pk,),
+            ),
+            follow=True,
+        )
+        assert response.status_code == 200
+
+        assert user_1.email.encode() in response.content
+        assert user_2.email.encode() not in response.content
+
+    def test_add_user_search_shows_relevant_results(self, client, user):
+        user_1 = factories.UserFactory.create(email="john@example.com")
+        user_2 = factories.UserFactory.create(first_name="john")
+
+        dataset = factories.DataSetFactory.create(
+            published=True,
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+            type=DataSetType.MASTER,
+        )
+        dataset.information_asset_owner = user
+        dataset.save()
+        response = client.get(
+            reverse(
+                "datasets:edit_permissions",
+                args=(dataset.pk,),
+            ),
+            follow=True,
+        )
+        assert response.status_code == 200
+        assert b"There are currently no authorized users" in response.content
+
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        search_url = soup.findAll("a", href=True, text="Add another user")[0]["href"]
+        response = client.post(search_url, data={"search": "John"}, follow=True)
+        assert response.status_code == 200
+        assert b"Found 2 results for John" in response.content
+        assert user_1.email.encode() in response.content
+        assert user_1.first_name.encode() in response.content
+        assert user_2.email.encode() in response.content
+        assert user_2.first_name.encode() in response.content
+
+    def test_add_user_select_adds_user_to_authorized_users_summary(self, client, user):
+        user_1 = factories.UserFactory.create(email="john@example.com")
+
+        dataset = factories.DataSetFactory.create(
+            published=True,
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+            type=DataSetType.MASTER,
+        )
+        dataset.information_asset_owner = user
+        dataset.save()
+        response = client.get(
+            reverse(
+                "datasets:edit_permissions",
+                args=(dataset.pk,),
+            ),
+            follow=True,
+        )
+        assert response.status_code == 200
+        assert b"There are currently no authorized users" in response.content
+
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        search_url = soup.findAll("a", href=True, text="Add another user")[0]["href"]
+        response = client.post(search_url, data={"search": "John"}, follow=True)
+        assert response.status_code == 200
+        assert b"Found 1 result for John" in response.content
+        assert user_1.email.encode() in response.content
+        assert user_1.first_name.encode() in response.content
+
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        select_url = soup.findAll("a", href=True, text="Select")[0]["href"]
+        response = client.get(select_url, follow=True)
+        assert response.status_code == 200
+        assert user_1.email.encode() in response.content
+
+    def test_remove_removes_user_from_authorized_users_summary(self, client, user):
+        user_1 = factories.UserFactory.create(email="john@example.com")
+
+        dataset = factories.DataSetFactory.create(
+            published=True,
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+            type=DataSetType.MASTER,
+        )
+        dataset.information_asset_owner = user
+        dataset.save()
+        factories.DataSetUserPermissionFactory.create(dataset=dataset, user=user_1)
+
+        response = client.get(
+            reverse(
+                "datasets:edit_permissions",
+                args=(dataset.pk,),
+            ),
+            follow=True,
+        )
+        assert response.status_code == 200
+        assert user_1.email.encode() in response.content
+
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        remove_url = soup.findAll("a", href=True, text="Remove")[0]["href"]
+        response = client.get(remove_url, follow=True)
+        assert response.status_code == 200
+        assert b"There are currently no authorized users" in response.content
+
+    def test_add_user_save_and_continue_creates_dataset_permissions(self, client, user):
+        user_1 = factories.UserFactory.create(email="john@example.com")
+
+        dataset = factories.DataSetFactory.create(
+            published=True,
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+            type=DataSetType.MASTER,
+        )
+        dataset.information_asset_owner = user
+        dataset.save()
+        response = client.get(
+            reverse(
+                "datasets:edit_permissions",
+                args=(dataset.pk,),
+            )
+        )
+        assert response.status_code == 302
+
+        summary_page_url = response.get("location")
+
+        response = client.get(summary_page_url)
+        assert response.status_code == 200
+        assert b"There are currently no authorized users" in response.content
+
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        search_url = soup.findAll("a", href=True, text="Add another user")[0]["href"]
+        response = client.post(search_url, data={"search": "John"}, follow=True)
+        assert response.status_code == 200
+        assert b"Found 1 result for John" in response.content
+        assert user_1.email.encode() in response.content
+        assert user_1.first_name.encode() in response.content
+
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        select_url = soup.findAll("a", href=True, text="Select")[0]["href"]
+        response = client.get(select_url, follow=True)
+        assert response.status_code == 200
+        assert user_1.email.encode() in response.content
+
+        assert len(DataSetUserPermission.objects.all()) == 0
+        response = client.post(summary_page_url)
+        assert len(DataSetUserPermission.objects.all()) == 1
+
+        assert DataSetUserPermission.objects.all()[0].dataset == dataset
+        assert DataSetUserPermission.objects.all()[0].user == user_1

@@ -40,6 +40,12 @@
         </a>
       {% endif %}
     </div>
+
+    {% if request.user == model.information_asset_owner or request.user == model.information_asset_manager %}
+      <div class="govuk-grid-column-one-quarter govuk-!-margin-top-2" style="text-align: right;">
+          <a href="{% url 'datasets:edit' model.id %}" class="govuk-link govuk-!-margin-left-1">Manage this dataset</a>
+      </div>
+    {% endif %}
   </div>
 {% endblock %}
 
