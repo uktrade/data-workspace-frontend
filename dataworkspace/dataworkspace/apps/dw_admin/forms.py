@@ -15,6 +15,7 @@ from django_better_admin_arrayfield.forms.fields import DynamicArrayField
 
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import (
+    DataSetChartBuilderChart,
     SourceLink,
     DataSet,
     DataSetVisualisation,
@@ -600,6 +601,10 @@ class SourceViewForm(forms.ModelForm):
 
 class DataSetVisualisationForm(forms.ModelForm):
     model = DataSetVisualisation
+
+
+class DataSetChartBuilderChartForm(forms.ModelForm):
+    model = DataSetChartBuilderChart
 
 
 class SourceTableForm(forms.ModelForm):

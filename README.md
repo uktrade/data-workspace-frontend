@@ -133,6 +133,34 @@ We use [pip-tools](https://github.com/jazzband/pip-tools) to manage dependencies
 
 Add the new dependencies to those `.in` files, or update an existing dependency, then (with `pip-tools` already installed), run `make save-requirements`.
 
+## Running the chart builder react app locally
+
+We're set up to use django-webpack-loader for hotloading the react app while developing. 
+
+You can get it running by starting the dev server:
+
+```shell
+docker-compose -f docker-compose-dev.yml up
+```
+
+and in a separate terminal changing to the js app directory and running the webpack hotloader:
+
+```shell
+cd dataworkspace/dataworkspace/static/js/chart-builder/
+npm run dev
+```
+
+For production usage we use pre-built javascript bundles to reduce the pain of having to build npm modules at deployment.
+
+If you make any changes to the react apps you will need to rebuild and commit the bundles. 
+This will create the relevant js files in `/static/js/bundles/` directory.
+
+```shell
+cd dataworkspace/dataworkspace/static/js/chart-builder/
+npm run build
+git add ../bundles/*.js
+```
+
 
 # Infrastructure
 

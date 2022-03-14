@@ -19,8 +19,7 @@ GTMDatasetSearchSupport.prototype.pushSearchResultClick =
 GTMDatasetSearchSupport.prototype.pushSearchResultClickEvent =
   function pushSearchResultClickEvent(data) {
     if (typeof dataLayer == "undefined") return;
-    console.log("push to dataLayer", data);
-    var result = dataLayer.push(data);
+    dataLayer.push(data);
   };
 
 GTMDatasetSearchSupport.prototype.pushSearchEvent = function pushSearchEvent() {

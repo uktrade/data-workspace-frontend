@@ -197,6 +197,17 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   margin: 0 auto;
 }
 
+.loading-spinner-small {
+  border: 12px solid #ffffff;
+  border-radius: 50%;
+  border-top-color: #00703c;
+  width: 90px;
+  height: 90px;
+  -webkit-animation: spin 2s linear infinite;
+  animation: spin 2s linear infinite;
+  margin: 0 auto;
+}
+
 @-webkit-keyframes spin {
   0% {
     -webkit-transform: rotate(0deg);
@@ -309,7 +320,7 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   min-height: 300px;
 }
 
-.visualisation-preview-container {
+.visualisation-preview-container, .chart-preview-container {
   overflow: hidden;
   display: block;
 }
@@ -318,16 +329,19 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   width: 100%;
   height: auto;
 }
+.chart-preview-container img {
+  width: 100%;
+}
 
 /* @include govuk-media-query($from: desktop) ... */
 @media (min-width: 48.0625em) {
-  .visualisation-preview-container {
+  .visualisation-preview-container, .chart-preview-container {
     width: 280px;
     height: 175px;
     line-height: 175px;
   }
 
-  .visualisation-preview-container svg {
+  .visualisation-preview-container svg, .chart-preview-container img {
     width: 280px;
     height: 175px;
   }
@@ -369,9 +383,8 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
 
 .filter-widget .filter-container__scrolling {
   padding-top: 3px;
-  max-height: 14rem;
+  height: 14rem;
   overflow-y: scroll;
-  max-width:100%;
 }
 
 .search-input__container {

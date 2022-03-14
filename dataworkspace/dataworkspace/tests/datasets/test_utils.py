@@ -1688,6 +1688,7 @@ class TestStoreReferenceDatasetMetadata:
             return cursor.fetchall()
 
     @pytest.mark.django_db
+    @freeze_time("2022-01-01 15:00:00")
     def test_new_metadata_record(self, metadata_db):
         # If no metadata record exists, create one
         rds = ReferenceDatasetFactory.create(published=True)
