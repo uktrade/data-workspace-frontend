@@ -1,5 +1,9 @@
+import psqlparse
+
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
+from django.db import connections
 
 from dataworkspace.apps.datasets.models import Pipeline
 from dataworkspace.forms import (
@@ -53,16 +57,14 @@ class PipelineCreateForm(GOVUKDesignSystemModelForm):
     )
 
     def clean_sql_query(self):
-        import psqlparse
-
         try:
             statements = psqlparse.parse(self.cleaned_data["sql_query"])
         except psqlparse.exceptions.PSqlParseError as e:
-            raise ValidationError(e)
+            raise ValidationError(e) from e
         else:
             if len(statements) > 1:
                 raise ValidationError("Enter a single statement")
-            if type(statements[0]) == dict:
+            if isinstance(statements[0], dict):
                 if "CreateStmt" in statements[0]:
                     raise ValidationError("CREATE statements are not supported")
                 if "DropStmt" in statements[0]:
@@ -70,6 +72,16 @@ class PipelineCreateForm(GOVUKDesignSystemModelForm):
             columns = [t.name for t in statements[0].target_list]
             if len(columns) != len(set(columns)):
                 raise ValidationError("Duplicate column names found")
+
+        # Check that the query runs
+        with connections[list(settings.DATABASES_DATA.items())[0][0]].cursor() as cursor:
+            try:
+                cursor.execute(f"SELECT * FROM ({self.cleaned_data['sql_query']}) sq LIMIT 0")
+            except Exception as e:  # pylint: disable=broad-except
+                raise ValidationError(
+                    "Error running query. Please check the query runs successfully before saving."
+                ) from e
+
         return self.cleaned_data["sql_query"]
 
 
