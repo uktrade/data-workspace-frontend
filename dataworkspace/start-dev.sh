@@ -5,7 +5,7 @@ set -e
 (
     cd "$(dirname "$0")"
 
-    django-admin collectstatic --noinput
+    django-admin collectstatic --noinput -i node_modules -i chart-builder
 
     # Not suitable on a cluster of size > 1, but for our purposes,
     # no need for more

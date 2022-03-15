@@ -85,6 +85,7 @@ django==3.2.12
     #   django-admin-sortable2
     #   django-appconf
     #   django-csp
+    #   django-csp-helpers
     #   django-db-geventpool
     #   django-dynamic-models-readonly
     #   django-redis
@@ -102,6 +103,8 @@ django-compressor==2.4
     # via -r requirements.in
 django-csp==3.6
     # via -r requirements.in
+django-csp-helpers==0.6.2
+    # via -r requirements.in
 django-db-geventpool==3.2.3
     # via -r requirements.in
 django-dynamic-models-readonly==0.1.1
@@ -117,6 +120,8 @@ django-redis==4.12.1
 django-staff-sso-client==2.1.0
     # via -r requirements.in
 django-waffle==2.0.0
+    # via -r requirements.in
+django-webpack-loader==1.4.1
     # via -r requirements.in
 djangorestframework==3.11.2
     # via -r requirements.in
@@ -166,6 +171,8 @@ jsonlines==2.0.0
     # via tabulator
 jsonschema==3.2.0
     # via tableschema
+kaleido==0.2.1
+    # via -r requirements.in
 kombu==5.2.3
     # via celery
 linear-tsv==1.1.0
@@ -191,6 +198,8 @@ openpyxl==3.0.6
 packaging==20.4
     # via bleach
 paste==3.4.3
+    # via -r requirements.in
+plotly==5.6.0
     # via -r requirements.in
 prompt-toolkit==3.0.24
     # via click-repl
@@ -265,6 +274,7 @@ six==1.15.0
     #   mohawk
     #   packaging
     #   paste
+    #   plotly
     #   psqlparse
     #   python-dateutil
     #   tableschema
@@ -283,7 +293,9 @@ tableschema==1.20.0
 tabulator==1.53.1
     # via tableschema
 tenacity==6.2.0
-    # via celery-redbeat
+    # via
+    #   celery-redbeat
+    #   plotly
 typing-extensions==4.0.0
     # via
     #   aiohttp
@@ -322,9 +334,9 @@ zenpy==2.0.21
     # via -r requirements.in
 zipp==3.7.0
     # via importlib-metadata
-zope.event==4.5.0
+zope-event==4.5.0
     # via gevent
-zope.interface==5.1.0
+zope-interface==5.1.0
     # via gevent
 
 # The following packages are considered to be unsafe in a requirements file:

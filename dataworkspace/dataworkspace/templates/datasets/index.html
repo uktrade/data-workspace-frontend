@@ -96,7 +96,7 @@
       <div class="govuk-grid-row">
         <div class="govuk-grid-column-three-quarters">
           <h3 class="govuk-heading-m">
-            {% include "partials/gtm_dataset_link.html" with event_type="searchResultClick" search_page_number=datasets.number search_result_rank=forloop.counter search_type="search_bar" dataset=dataset %}
+            {% include "partials/gtm_dataset_link.html" with event_type="searchResultClick" search_page_number=datasets.number search_result_rank=forloop.counter search_type=search_type dataset=dataset %}
           </h3>
           {% if not dataset.published %}
             <div class="govuk-!-display-inline-block" style="float: right">

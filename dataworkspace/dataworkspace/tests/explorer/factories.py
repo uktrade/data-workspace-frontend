@@ -31,3 +31,14 @@ class PlaygroundSQLFactory(factory.django.DjangoModelFactory):
 
     sql = "SELECT 1+2 AS THREE"
     created_by_user = factory.SubFactory(UserFactory)
+
+
+class ChartBuilderChartFactory(factory.django.DjangoModelFactory):
+    query_log = factory.SubFactory(QueryLogFactory)
+    created_by = factory.SubFactory(UserFactory)
+    updated_by = factory.SubFactory(UserFactory)
+    title = factory.fuzzy.FuzzyText(length=20)
+    description = factory.fuzzy.FuzzyText(length=50)
+
+    class Meta:
+        model = models.ChartBuilderChart

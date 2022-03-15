@@ -230,7 +230,7 @@
     </div>
   </div>
 
-  {% if model.visualisations.all and not is_ie %}
+  {% if model.visualisations.live and not is_ie %}
     <div class="govuk-grid-row">
       <div class="govuk-grid-column-full">
         <hr class="govuk-section-break">
@@ -273,12 +273,10 @@
         </div>
       {% endif %}
     </div>
-
-
-
   {% endif %}
-
-
+  {% flag CHART_BUILDER_PUBLISH_CHARTS_FLAG %}
+    {% include "partials/chart_builder_charts.html" %}
+  {% endflag %}
 {% endblock %}
 
 {% block footer_scripts %}

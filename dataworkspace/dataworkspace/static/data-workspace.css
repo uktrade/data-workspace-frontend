@@ -1,90 +1,34 @@
-/* DO NOT EDIT THE CSS VERSION OF THIS FILE DIRECTLY */
-pre {
-  position: relative;
-  max-width: inherit;
-  margin-bottom: 0;
-  padding: 0;
-  border: 0;
-  outline: 1px solid transparent;
-  background-color: #f3f2f1;
-  font-size: inherit; }
-
-pre code {
-  display: block;
-  padding: 20px;
-  overflow-x: auto;
-  overflow-y: scroll;
-  max-height: 345px;
-  background-color: #f3f2f1 !important;
-  margin-bottom: -1em;
-  font-size: 19px; }
-
-/*
-Lifted from GOV.UK Design System
-
-https://github.com/alphagov/govuk-design-system/blob/019a80390f344b8470b29bd8411813daf4425964/src/stylesheets/main.scss
- */
-.app-copy-button {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-weight: 400;
-  font-size: 14px;
-  font-size: .875rem;
-  position: absolute;
-  z-index: 1;
-  top: 10px;
-  right: 10px;
-  min-width: 110px;
-  padding: 3px 10px;
-  border: 1px solid #00823b;
-  color: #00823b;
-  background-color: #fff;
-  -webkit-box-shadow: 0 2px 0 0 #00703c;
-  box-shadow: 0 2px 0 0 #00703c;
-  text-align: center;
-  text-decoration: none;
-  cursor: pointer; }
-
-.app-copy-button:focus:not(:hover) {
-  color: #0b0c0c;
-  background-color: #fd0;
-  -webkit-box-shadow: 0 2px 0 0 #0b0c0c;
-  box-shadow: 0 2px 0 0 #0b0c0c; }
-
-.app-copy-button:active, .app-copy-button:focus {
-  padding: 2px 10px;
-  border: 2px solid #fd0;
-  outline: 2px solid transparent;
-  -webkit-box-shadow: none;
-  box-shadow: none; }
-
-.app-copy-button:active {
-  margin-top: 2px;
-  -webkit-box-shadow: none;
-  box-shadow: none; }
+@import "app-tabs.css";
+@import "app-copy.css";
 
 .govuk-panel--confirmation--left {
-  text-align: left; }
+  text-align: left;
+}
 
 .govuk-panel--confirmation:focus {
-  outline: 5px solid #fd0; }
+  outline: 5px solid #fd0;
+}
 
 .unknown {
-  color: #bfc1c3; }
+  color: #bfc1c3;
+}
 
 .scrollable-table {
   width: 100%;
   overflow-x: auto;
   max-height: 560px;
-  padding: 3px; }
+  padding: 3px;
+}
 
 .scrollable-table:focus {
   border: 3px solid #0b0c0c;
   outline: 3px solid #fd0;
-  padding: 0; }
+  padding: 0;
+}
 
 .fixed-table-height {
-  max-height: 100% !important; }
+  max-height: 100% !important;
+}
 
 .scrollable-table table thead th {
   padding: 15px;
@@ -94,73 +38,91 @@ https://github.com/alphagov/govuk-design-system/blob/019a80390f344b8470b29bd8411
   font-weight: normal;
   min-width: 120px;
   position: relative;
-  vertical-align: middle; }
+  vertical-align: middle;
+}
 
 .scrollable-table table tbody td {
   padding: 15px;
   vertical-align: top;
-  border: none; }
+  border: none;
+}
 
 .scrollable-table table tbody tr:nth-child(even) td {
-  background-color: #f8f8f8; }
+  background-color: #f8f8f8;
+}
 
 .scrollable-table table thead th.ref-data-col-character-field,
 .scrollable-table table thead th.ref-datetime-field {
-  min-width: 280px; }
+  min-width: 280px;
+}
 
 .scrollable-table table thead th.ref-data-col-id {
-  min-width: 120px; }
+  min-width: 120px;
+}
 
 .scrollable-table table thead th.ref-data-boolean-field {
-  min-width: 80px; }
+  min-width: 80px;
+}
 
 .scrollable-table
-table
-thead
-th.ref-data-col-universal-unique-identifier-field {
-  min-width: 300px; }
+  table
+  thead
+  th.ref-data-col-universal-unique-identifier-field {
+  min-width: 300px;
+}
 
 .search-field {
-  position: relative; }
+  position: relative;
+}
 
 .search-field__label {
   font-size: 16px;
-  line-height: 2.5; }
+  line-height: 2.5;
+}
 
 @media (min-width: 40.0625em) {
   .search-field__label {
     font-size: 19px;
-    line-height: 2.1052631579; } }
+    line-height: 2.1052631579;
+  }
+}
 
 .js-enabled .search-field__label {
   position: absolute;
   left: 15px;
   top: 1px;
   z-index: 1;
-  color: #6f777b; }
+  color: #6f777b;
+}
 
 .search-field-wrapper {
   display: table;
   width: 100%;
-  background: #ffffff; }
+  background: #ffffff;
+}
 
 .search-field__item {
   position: relative;
   display: table-cell;
-  vertical-align: top; }
+  vertical-align: top;
+}
 
 .search-field__input[type="search"]:focus,
 .search-field__input[type="search"].focus {
-  z-index: 2; }
+  z-index: 2;
+}
 
 .search-field__input[type="search"] {
-  border-right-width: 0; }
+  border-right-width: 0;
+}
 
 .search-field__input[type="search"]:focus {
-  border-right-width: 2px; }
+  border-right-width: 2px;
+}
 
 .search-field-submit-wrapper {
-  width: 1%; }
+  width: 1%;
+}
 
 .search-field__submit {
   border: 0;
@@ -176,36 +138,48 @@ th.ref-data-col-universal-unique-identifier-field {
   text-indent: -5000px;
   overflow: hidden;
   background-color: #0b0c0c;
-  color: #ffffff; }
+  color: #ffffff;
+}
 
-@media only screen and (-webkit-min-device-pixel-ratio: 2), only screen and (min-device-pixel-ratio: 2), only screen and (min-resolution: 192dpi), only screen and (min-resolution: 2dppx) {
+@media only screen and (-webkit-min-device-pixel-ratio: 2),
+  only screen and (min-device-pixel-ratio: 2),
+  only screen and (min-resolution: 192dpi),
+  only screen and (min-resolution: 2dppx) {
   .search-field__submit {
     background-size: 52.5px auto;
-    background-position: 115% 50%; } }
+    background-position: 115% 50%;
+  }
+}
 
 .search-field__submit:focus {
   z-index: 2;
   outline: 3px solid #ffbf47;
   outline-offset: 0;
-  box-shadow: inset 0 0 0 4px #0b0c0c; }
+  box-shadow: inset 0 0 0 4px #0b0c0c;
+}
 
 .search-field__submit::-moz-focus-inner {
-  border: 0; }
+  border: 0;
+}
 
 .search-field__submit:hover {
-  background-color: #171719; }
+  background-color: #171719;
+}
 
 .search-result {
   padding: 0 0 15px;
   margin: 0 0 15px;
-  border-bottom: 1px solid #bfc1c3; }
+  border-bottom: 1px solid #bfc1c3;
+}
 
 .pagination {
-  float: right; }
+  float: right;
+}
 
 .pagination li {
   display: inline;
-  padding-left: 4px; }
+  padding-left: 4px;
+}
 
 /* Loading spinner CSS
 
@@ -220,19 +194,37 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   height: 90px;
   -webkit-animation: spin 2s linear infinite;
   animation: spin 2s linear infinite;
-  margin: 0 auto; }
+  margin: 0 auto;
+}
+
+.loading-spinner-small {
+  border: 12px solid #ffffff;
+  border-radius: 50%;
+  border-top-color: #00703c;
+  width: 90px;
+  height: 90px;
+  -webkit-animation: spin 2s linear infinite;
+  animation: spin 2s linear infinite;
+  margin: 0 auto;
+}
 
 @-webkit-keyframes spin {
   0% {
-    -webkit-transform: rotate(0deg); }
+    -webkit-transform: rotate(0deg);
+  }
   100% {
-    -webkit-transform: rotate(360deg); } }
+    -webkit-transform: rotate(360deg);
+  }
+}
 
 @keyframes spin {
   0% {
-    transform: rotate(0deg); }
+    transform: rotate(0deg);
+  }
   100% {
-    transform: rotate(360deg); } }
+    transform: rotate(360deg);
+  }
+}
 
 /* The GDS styles assume the presence of the GOV UK logo + crown, which we
    don't have, so without these tweaks the white Menu button on mobile is too
@@ -244,38 +236,47 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
    of the style on the larger sizes must be copied and pasted after the
    override in @media min-width blocks. */
 .govuk-header__menu-button {
-  top: 12px;
-  /* The original value is 20px */ }
+  top: 12px; /* The original value is 20px */
+}
 
 @media (min-width: 40.0625em) {
   .govuk-header__menu-button {
-    top: 15px;
-    /* The original GDS value */ } }
+    top: 15px; /* The original GDS value */
+  }
+}
 
 .app-\!-fill-width {
-  width: 100%; }
+  width: 100%;
+}
 
 .js-enabled .app-js-hidden {
-  display: none; }
+  display: none;
+}
 
 .hidden {
-  display: none; }
+  display: none;
+}
 
 .app-header--suggestion {
-  display: none; }
+  display: none;
+}
 
 @media (min-width: 48.05em) {
   .app-header--suggestion {
     display: block;
-    float: right; } }
+    float: right;
+  }
+}
 
 .app-table_cell--no-border {
-  border-bottom: none; }
+  border-bottom: none;
+}
 
 .app-taglist {
   list-style: none;
   display: inline-block;
-  padding-inline: 0; }
+  padding-inline: 0;
+}
 
 .app-taglist__item {
   display: inline;
@@ -283,89 +284,116 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   margin: 0;
   border: 2px solid rgba(11, 12, 12, 0.15);
   border-radius: 4px;
-  padding: 2px 4px; }
+  padding: 2px 4px;
+}
 
 #data-grid {
   width: 100%;
-  height: 560px; }
+  height: 560px;
+}
 
 .case-study-quote .quote-heading {
   overflow: hidden;
   margin-left: 32px;
-  margin-top: 16px; }
+  margin-top: 16px;
+}
 
 .case-study-quote .quote-content {
   overflow: hidden;
   margin-left: 32px;
   margin-right: 48px;
-  margin-bottom: 16px; }
+  margin-bottom: 16px;
+}
 
 .case-study-image {
-  width: 100%; }
+  width: 100%;
+}
 
 .case-study-quote .quote-text {
-  margin-bottom: 20px; }
+  margin-bottom: 20px;
+}
 
 .visualisation-container {
   padding: 1rem;
   display: block;
   width: 100%;
-  min-height: 300px; }
+  min-height: 300px;
+}
 
-.visualisation-preview-container {
+.visualisation-preview-container, .chart-preview-container {
   overflow: hidden;
-  display: block; }
+  display: block;
+}
 
 .visualisation-preview-container svg {
   width: 100%;
-  height: auto; }
+  height: auto;
+}
+.chart-preview-container img {
+  width: 100%;
+}
 
 /* @include govuk-media-query($from: desktop) ... */
 @media (min-width: 48.0625em) {
-  .visualisation-preview-container {
+  .visualisation-preview-container, .chart-preview-container {
     width: 280px;
     height: 175px;
-    line-height: 175px; }
-  .visualisation-preview-container svg {
+    line-height: 175px;
+  }
+
+  .visualisation-preview-container svg, .chart-preview-container img {
     width: 280px;
-    height: 175px; } }
+    height: 175px;
+  }
+}
 
 .app-related-items {
   border-top: 2px solid #1d70b8;
-  padding-top: 10px; }
+  padding-top: 10px;
+}
 
 /* force links from the rich text editor to use GDS colours */
 .dataset-description-richtext a {
-  color: #1d70b8; }
+  color: #1d70b8;
+}
 
 .dataset-description-richtext a:active {
-  color: #0b0c0c; }
+  color: #0b0c0c;
+}
 
 .dataset-description-richtext a:hover {
-  color: #003078; }
+  color: #003078;
+}
 
 .dataset-description-richtext a:visited {
-  color: #4c2c92; }
+  color: #4c2c92;
+}
 
 .training-screenshot {
-  content: url("/__django_static/assets/images/sdp-screenshot.png"); }
+  content: url("/__django_static/assets/images/sdp-screenshot.png");
+}
 
 .govuk-hint.currently-selected-file {
-  font-size: 1rem; }
+  font-size: 1rem;
+}
 
 .filter-widget .filter-container {
-  padding-left: 3px; }
+  padding-left: 3px;
+}
 
 .filter-widget .filter-container__scrolling {
   padding-top: 3px;
   height: 14rem;
-  overflow-y: scroll; }
+  overflow-y: scroll;
+}
 
 .search-input__container {
-  position: relative; }
+  position: relative;
+}
 
 .search-input__container .search-input__textbox {
-  padding-left: 25px; }
+  padding-left: 25px;
+}
 
 .search-input__container .search-input__icon {
   position: absolute;
@@ -376,4 +404,5 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   background-repeat: no-repeat;
   background-position: center center;
   background-size: 18px;
-  background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEwIDE4QzExLjc3NSAxNy45OTk2IDEzLjQ5ODggMTcuNDA1NCAxNC44OTcgMTYuMzEyTDE5LjI5MyAyMC43MDhMMjAuNzA3IDE5LjI5NEwxNi4zMTEgMTQuODk4QzE3LjQwNSAxMy40OTk3IDE3Ljk5OTYgMTEuNzc1NCAxOCAxMEMxOCA1LjU4OSAxNC40MTEgMiAxMCAyQzUuNTg5IDIgMiA1LjU4OSAyIDEwQzIgMTQuNDExIDUuNTg5IDE4IDEwIDE4Wk0xMCA0QzEzLjMwOSA0IDE2IDYuNjkxIDE2IDEwQzE2IDEzLjMwOSAxMy4zMDkgMTYgMTAgMTZDNi42OTEgMTYgNCAxMy4zMDkgNCAxMEM0IDYuNjkxIDYuNjkxIDQgMTAgNFoiIGZpbGw9ImJsYWNrIi8+Cjwvc3ZnPgo="); }
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEwIDE4QzExLjc3NSAxNy45OTk2IDEzLjQ5ODggMTcuNDA1NCAxNC44OTcgMTYuMzEyTDE5LjI5MyAyMC43MDhMMjAuNzA3IDE5LjI5NEwxNi4zMTEgMTQuODk4QzE3LjQwNSAxMy40OTk3IDE3Ljk5OTYgMTEuNzc1NCAxOCAxMEMxOCA1LjU4OSAxNC40MTEgMiAxMCAyQzUuNTg5IDIgMiA1LjU4OSAyIDEwQzIgMTQuNDExIDUuNTg5IDE4IDEwIDE4Wk0xMCA0QzEzLjMwOSA0IDE2IDYuNjkxIDE2IDEwQzE2IDEzLjMwOSAxMy4zMDkgMTYgMTAgMTZDNi42OTEgMTYgNCAxMy4zMDkgNCAxMEM0IDYuNjkxIDYuNjkxIDQgMTAgNFoiIGZpbGw9ImJsYWNrIi8+Cjwvc3ZnPgo=");
+}

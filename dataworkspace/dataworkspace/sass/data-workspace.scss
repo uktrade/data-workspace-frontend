@@ -199,6 +199,17 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   margin: 0 auto;
 }
 
+.loading-spinner-small {
+  border: 12px solid #ffffff;
+  border-radius: 50%;
+  border-top-color: #00703c;
+  width: 90px;
+  height: 90px;
+  -webkit-animation: spin 2s linear infinite;
+  animation: spin 2s linear infinite;
+  margin: 0 auto;
+}
+
 @-webkit-keyframes spin {
   0% {
     -webkit-transform: rotate(0deg);
@@ -311,7 +322,7 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   min-height: 300px;
 }
 
-.visualisation-preview-container {
+.visualisation-preview-container, .chart-preview-container {
   overflow: hidden;
   display: block;
 }
@@ -320,16 +331,19 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   width: 100%;
   height: auto;
 }
+.chart-preview-container img {
+  width: 100%;
+}
 
 /* @include govuk-media-query($from: desktop) ... */
 @media (min-width: 48.0625em) {
-  .visualisation-preview-container {
+  .visualisation-preview-container, .chart-preview-container {
     width: 280px;
     height: 175px;
     line-height: 175px;
   }
 
-  .visualisation-preview-container svg {
+  .visualisation-preview-container svg, .chart-preview-container img {
     width: 280px;
     height: 175px;
   }
@@ -394,4 +408,3 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   background-size: 18px;
   background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEwIDE4QzExLjc3NSAxNy45OTk2IDEzLjQ5ODggMTcuNDA1NCAxNC44OTcgMTYuMzEyTDE5LjI5MyAyMC43MDhMMjAuNzA3IDE5LjI5NEwxNi4zMTEgMTQuODk4QzE3LjQwNSAxMy40OTk3IDE3Ljk5OTYgMTEuNzc1NCAxOCAxMEMxOCA1LjU4OSAxNC40MTEgMiAxMCAyQzUuNTg5IDIgMiA1LjU4OSAyIDEwQzIgMTQuNDExIDUuNTg5IDE4IDEwIDE4Wk0xMCA0QzEzLjMwOSA0IDE2IDYuNjkxIDE2IDEwQzE2IDEzLjMwOSAxMy4zMDkgMTYgMTAgMTZDNi42OTEgMTYgNCAxMy4zMDkgNCAxMEM0IDYuNjkxIDYuNjkxIDQgMTAgNFoiIGZpbGw9ImJsYWNrIi8+Cjwvc3ZnPgo=");
 }
-

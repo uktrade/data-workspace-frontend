@@ -182,3 +182,14 @@ def test_pipeline_log_failure(staff_client, mocker):
         follow=True,
     )
     assert "There is a problem" in resp.content.decode(resp.charset)
+
+
+@mock.patch("dataworkspace.apps.datasets.pipelines.views.save_pipeline_to_dataflow")
+def test_query_fails_to_run(mock_sync, staff_client):
+    staff_client.post(reverse("admin:index"), follow=True)
+    resp = staff_client.post(
+        reverse("pipelines:create"),
+        data={"table_name": "test", "sql_query": "SELECT * from doesnt_exist;"},
+        follow=True,
+    )
+    assert b"Error running query" in resp.content

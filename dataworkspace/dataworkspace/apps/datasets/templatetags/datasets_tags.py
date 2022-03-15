@@ -103,3 +103,11 @@ def parse_date_string(date_string: Optional[str]) -> Optional[str]:
     if date_string is None:
         return None
     return datetime.strptime(date_string, "%Y-%m-%dT%H:%M:%SZ")
+
+
+@register.simple_tag()
+def chart_link_or_plain_text(text, condition, dataset_uuid, object_id):
+    if condition:
+        url = reverse("datasets:dataset_chart", args=[dataset_uuid, object_id])
+        return mark_safe(f"<a class='govuk-link' href='{url}'>{text}</a>")
+    return text

@@ -160,7 +160,10 @@ def get_datasets_data_for_user_matching_query(
     datasets = datasets.annotate(search_rank=SearchRank(F("search_vector"), query))
 
     if query:
-        datasets = datasets.filter(search_vector=query)
+        source_table_match = Q()
+        if datasets.model is DataSet:
+            source_table_match = Q(sourcetable__table=query)
+        datasets = datasets.filter(source_table_match | Q(search_vector=query))
 
     # Mark up whether the user can access the data in the dataset.
     access_filter = Q()
@@ -583,6 +586,7 @@ def find_datasets(request):
             "data_type": dict(data_types),
             "show_admin_filters": has_unpublished_dataset_access(request.user),
             "DATASET_FINDER_FLAG": settings.DATASET_FINDER_ADMIN_ONLY_FLAG,
+            "search_type": "searchBar" if query else "noSearch",
         },
     )
 
@@ -1637,4 +1641,46 @@ class SourceChangelogView(WaffleFlagMixin, DetailView):
             dataset__id=self.kwargs.get("dataset_uuid"),
             pk=self.kwargs["source_id"],
             **{"dataset__published": True} if not self.request.user.is_superuser else {},
+        )
+
+
+class DatasetChartView(WaffleFlagMixin, View):
+    waffle_flag = settings.CHART_BUILDER_PUBLISH_CHARTS_FLAG
+
+    def get_object(self):
+        dataset = get_object_or_404(
+            self.kwargs["model_class"],
+            id=self.kwargs["dataset_uuid"],
+            **{"published": True} if not self.request.user.is_superuser else {},
+        )
+        return dataset.charts.get(id=self.kwargs["object_id"])
+
+    @csp_update(SCRIPT_SRC=["'unsafe-eval'", "blob:"])
+    def get(self, request, **kwargs):
+        chart = self.get_object()
+        if not chart.dataset.user_has_access(request.user):
+            return HttpResponseForbidden()
+        return render(
+            request,
+            "datasets/chart.html",
+            context={
+                "chart": chart,
+            },
+        )
+
+
+class DatasetChartDataView(DatasetChartView):
+    waffle_flag = settings.CHART_BUILDER_PUBLISH_CHARTS_FLAG
+
+    def get(self, request, **kwargs):
+        dataset_chart = self.get_object()
+        if not dataset_chart.dataset.user_has_access(request.user):
+            return HttpResponseForbidden()
+        chart = dataset_chart.chart
+        return JsonResponse(
+            {
+                "total_rows": chart.query_log.rows,
+                "duration": chart.query_log.duration,
+                "data": chart.get_table_data(chart.get_required_columns()),
+            }
         )

@@ -1,0 +1,62 @@
+#chart-builder-app {
+  position: relative;
+}
+.chart-toolbar {
+  padding: 25px 10px 0 10px;
+}
+.chart-toolbar > div:last-child {
+  text-align: right;
+  padding: 10px;
+}
+.chart-toolbar > div:last-child .govuk-button {
+  font-size: 1rem;
+  margin-left: 10px;
+}
+.plotly_editor {
+  border-bottom: 1px solid lightgray;
+  border-left: 1px solid lightgray;
+  border-right: 1px solid lightgray;
+}
+.chart-builder-modal {
+  position:absolute;
+  background-color: rgba(0, 0, 0, 0.5);
+  left: 35px;
+  right: 33px;
+  height: 100%;
+  z-index: 20;
+}
+.chart-builder-modal > div {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-right: -50%;
+  transform: translate(-50%, -50%);
+}
+#error-modal .govuk-error-summary {
+  background-color: white;
+}
+#error-modal .govuk-error-summary .govuk-button {
+  margin-bottom: 10px;
+}
+#error-modal .govuk-error-summary .button-wrap {
+  text-align: right;
+}
+
+#loading-modal {
+  text-align: center;
+}
+#loading-modal p {
+  margin-bottom: 0;
+}
+#loading-modal > div > div {
+  padding: 20px;
+  border: 4px solid #b1b4b6;
+  background-color: white;
+}
+#loading-modal .loading-spinner {
+  width: 50px;
+  height: 50px;
+}
+.mapboxgl-ctrl-attrib {
+  display: none !important;
+}
