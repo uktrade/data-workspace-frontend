@@ -270,6 +270,58 @@ def test_find_datasets_combines_results(client):
     )
 
 
+def test_find_datasets_by_source_table_name(client):
+    ds = factories.DataSetFactory.create(
+        published=True, name="A search dataset", type=DataSetType.MASTER
+    )
+    factories.SourceTableFactory.create(
+        dataset=ds,
+        schema="public",
+        table="dataset_test",
+        database=factories.DatabaseFactory.create(memorable_name="my_database"),
+    )
+    response = client.get(reverse("datasets:find_datasets"), {"q": "dataset_test"})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(ds, has_access=False, purpose=DataSetType.MASTER),
+    ]
+
+
+def test_find_datasets_by_source_table_does_exact_match_only(client):
+    ds = factories.DataSetFactory.create(
+        published=True, name="A search dataset", type=DataSetType.MASTER
+    )
+    factories.SourceTableFactory.create(
+        dataset=ds,
+        schema="public",
+        table="dataset_test",
+        database=factories.DatabaseFactory.create(memorable_name="my_database"),
+    )
+    response = client.get(reverse("datasets:find_datasets"), {"q": "_test"})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == []
+
+
+def test_find_datasets_by_source_table_falls_back_to_normal_search(client):
+    ds = factories.DataSetFactory.create(
+        published=True, name="A search dataset", type=DataSetType.MASTER
+    )
+    factories.SourceTableFactory.create(
+        dataset=ds,
+        schema="public",
+        table="dataset_test",
+        database=factories.DatabaseFactory.create(memorable_name="my_database"),
+    )
+    response = client.get(reverse("datasets:find_datasets"), {"q": "dataset"})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(ds, has_access=False, purpose=DataSetType.MASTER),
+    ]
+
+
 def test_find_datasets_does_not_show_deleted_entries(client, staff_client):
     factories.DataSetFactory.create(
         deleted=True, published=True, name="Unpublished search dataset"

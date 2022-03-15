@@ -160,7 +160,10 @@ def get_datasets_data_for_user_matching_query(
     datasets = datasets.annotate(search_rank=SearchRank(F("search_vector"), query))
 
     if query:
-        datasets = datasets.filter(search_vector=query)
+        source_table_match = Q()
+        if datasets.model is DataSet:
+            source_table_match = Q(sourcetable__table=query)
+        datasets = datasets.filter(source_table_match | Q(search_vector=query))
 
     # Mark up whether the user can access the data in the dataset.
     access_filter = Q()
