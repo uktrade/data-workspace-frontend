@@ -177,8 +177,8 @@ LiveSearch.prototype.showErrorIndicator = function showErrorIndicator() {
 };
 
 LiveSearch.prototype.bindFilterButtons = function bindFilterButtons() {
-  console.log("bind filter buttons");
   var buttonSelector = "button[data-module=remove-tag]";
+  var self = this;
   this.$wrapper.on("click", buttonSelector, function (e) {
 
     var $button = $(e.target);
@@ -189,9 +189,8 @@ LiveSearch.prototype.bindFilterButtons = function bindFilterButtons() {
 
     // uncheck it - which will cause the form to postback circa 2004 asp.net webforms ftw
     $(checkboxSelector).prop("checked", false);
-
-    // We don't disable the button as this prevents the form being posted
-    $button.css("display", "none");
+    $button.prop("disabled", true);
+    self.$form.submit();
   })
 
 }
