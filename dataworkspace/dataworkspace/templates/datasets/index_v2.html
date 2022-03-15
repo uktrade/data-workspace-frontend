@@ -197,7 +197,7 @@
 
               {% if not dataset.has_access %}
                 <div class="govuk-inset-text govuk-!-margin-bottom-0">
-                  You need to <a href="#" class="govuk-link govuk-link--no-visited-state">request access</a> to use this
+                  You need to <a href="{% url 'request_access:dataset' dataset.id %}" class="govuk-link govuk-link--no-visited-state">request access</a> to use this
                   data
                 </div>
               {% endif %}
