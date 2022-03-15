@@ -1,3 +1,5 @@
+import psqlparse
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
@@ -55,8 +57,6 @@ class PipelineCreateForm(GOVUKDesignSystemModelForm):
     )
 
     def clean_sql_query(self):
-        import psqlparse  # pylint: disable=import-outside-toplevel
-
         try:
             statements = psqlparse.parse(self.cleaned_data["sql_query"])
         except psqlparse.exceptions.PSqlParseError as e:
