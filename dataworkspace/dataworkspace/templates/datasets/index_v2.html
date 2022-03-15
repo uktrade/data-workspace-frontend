@@ -69,11 +69,10 @@
     </div>
 
     <div id="live-search-wrapper">
-
       <div class="govuk-grid-row">
-
-        <div class="govuk-grid-column-one-third filters-container">
-          <div>
+        <div
+          class="govuk-grid-column-one-third filters-container{% flag SEARCH_FILTERS_STICKY %} sticky-filters-container{% endflag %}">
+          <div{% flag SEARCH_FILTERS_STICKY %} class="sticky-filters-contents"{% endflag %}>
             <div class="govuk-accordion" data-module="govuk-accordion" id="accordion-filters">
               {{ form.my_datasets }}
 
@@ -93,9 +92,9 @@
               {% endif %}
             </div>
           </div>
-
         </div>
         <div class="govuk-grid-column-two-thirds">
+
           <div id="search-summary-accessible-hint-wrapper" class="govuk-visually-hidden" aria-atomic="true"
                aria-live="polite" aria-relevant="additions text" role="status">
             {{ datasets.paginator.count }} dataset{{ datasets.paginator.count|pluralize }} found.
@@ -111,12 +110,10 @@
                 dataset{{ datasets.paginator.count|pluralize }} found.
               </label>
             </div>
-
           </div>
 
           <div class="govuk-body" style="clear:both;">
             <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
-
             <a href="{% url "datasets:find_datasets" %}" class="govuk-link govuk-link--no-visited-state">Reset
               filters</a>
             &nbsp;
@@ -133,7 +130,6 @@
                 {% include "datasets/filter_button.html" with id=value text=text tag_type=form.source.name %}
               {% endif %}
             {% endfor %}
-
           </div>
 
           <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
@@ -197,7 +193,8 @@
 
               {% if not dataset.has_access %}
                 <div class="govuk-inset-text govuk-!-margin-bottom-0">
-                  You need to <a href="{% url 'request_access:dataset' dataset.id %}" class="govuk-link govuk-link--no-visited-state">request access</a> to use this
+                  You need to <a href="{% url 'request_access:dataset' dataset.id %}"
+                                 class="govuk-link govuk-link--no-visited-state">request access</a> to use this
                   data
                 </div>
               {% endif %}
@@ -229,7 +226,8 @@
                   {% if datasets.number == i %}
                     <li class="active">{{ i }}</li>
                   {% elif i >= datasets.number|add:'-2' and i <= datasets.number|add:'2' %}
-                    <li><a class="govuk-link" href="{% url_replace page=i %}" aria-label="Page {{ i }}">{{ i }}</a></li>
+                    <li><a class="govuk-link" href="{% url_replace page=i %}" aria-label="Page {{ i }}">{{ i }}</a>
+                    </li>
                   {% endif %}
                 {% endfor %}
 
@@ -265,6 +263,7 @@
                 dataset</a></li>
             </ul>
           </div>
+        
         </div>
       </div>
     </div>

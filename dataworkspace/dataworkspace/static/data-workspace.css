@@ -436,7 +436,34 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   display: none;
 }
 
+.accordion-filter-checkboxes {
+  padding-left: 8px;
+}
+
+.sticky-filters-container {
+  position: sticky;
+  top: 10px;
+  border-right: solid 1px #b1b4b6;
+}
+
+.sticky-filters-contents {
+  height: 90vh;
+  overflow-y: scroll;
+}
+
+.sticky-filters-container .filters-container .govuk-checkboxes__item:hover .govuk-checkboxes__input:not(:disabled) + .govuk-checkboxes__label:before {
+  /*box-shadow: 0 0 0 $govuk-hover-width $govuk-hover-colour;*/
+  box-shadow: 0 0 0 6px #ccc;
+  /*box-shadow: none;*/
+}
+
+.sticky-filters-container .filters-container .accordion-filter-checkboxes, .filters-container .accordion-filter-header {
+  padding-left: 8px;
+}
+
+
 .filter-button {
   margin-bottom: 0;
 }
+
 
