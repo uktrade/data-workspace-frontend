@@ -65,9 +65,9 @@
 }
 
 .scrollable-table
-  table
-  thead
-  th.ref-data-col-universal-unique-identifier-field {
+table
+thead
+th.ref-data-col-universal-unique-identifier-field {
   min-width: 300px;
 }
 
@@ -141,10 +141,7 @@
   color: #ffffff;
 }
 
-@media only screen and (-webkit-min-device-pixel-ratio: 2),
-  only screen and (min-device-pixel-ratio: 2),
-  only screen and (min-resolution: 192dpi),
-  only screen and (min-resolution: 2dppx) {
+@media only screen and (-webkit-min-device-pixel-ratio: 2), only screen and (min-device-pixel-ratio: 2), only screen and (min-resolution: 192dpi), only screen and (min-resolution: 2dppx) {
   .search-field__submit {
     background-size: 52.5px auto;
     background-position: 115% 50%;
@@ -170,6 +167,33 @@
   /*padding: 0 0 15px;*/
   /*margin: 0 0 15px;*/
   border-bottom: 1px solid #bfc1c3;
+}
+
+.search-result dl {
+  clear-after: both;
+}
+
+.search-result dl dt {
+  display: block;
+}
+
+.search-result dl dd {
+  margin-left: 0;
+  margin-bottom: 1rem;
+}
+
+
+@media (min-width: 48.0625em) {
+  .search-result dl dt {
+    float: left;
+  }
+
+  .search-result dl dd {
+    margin-left: 10rem;
+    margin-bottom: 0;
+    display: block;
+  }
+
 }
 
 .pagination {
@@ -329,6 +353,7 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   width: 100%;
   height: auto;
 }
+
 .chart-preview-container img {
   width: 100%;
 }
@@ -408,5 +433,10 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
 }
 
 .filters-container .govuk-accordion__controls {
-  display:none;
+  display: none;
 }
+
+.filter-button {
+  margin-bottom: 0;
+}
+

@@ -61,7 +61,7 @@
           {% flag DATASET_FINDER_FLAG %}
             <p class="govuk-body">
               <a href="{% url 'finder:find_datasets' %}" class="govuk-link govuk-link--no-visited-state">Find
-                datasets</a> containing a specific record.
+                datasets</a> containing a specific word or phrase.
             </p>
           {% endflag %}
         </div>
@@ -105,37 +105,42 @@
         <div class="govuk-grid-column-two-thirds">
           <div id="search-summary-accessible-hint-wrapper" class="govuk-visually-hidden" aria-atomic="true"
                aria-live="polite" aria-relevant="additions text" role="status">
-            {{ datasets.paginator.count }} search results
+            {{ datasets.paginator.count }} dataset{{ datasets.paginator.count|pluralize }} found.
           </div>
 
-          <div class="govuk-body">
+          <div>
             <div style="float:right;">
               {{ form.sort }}
             </div>
-            <p class="govuk-body">
-              <span role="status" id="search-results-count">{{ datasets.paginator.count }}</span> search results
-            </p>
+            <div class="govuk-form-group govuk-!-margin-bottom-0">
+              <label class="govuk-label" style="display:inline;line-height: 2;">
+                <span role="status" id="search-results-count">{{ datasets.paginator.count }}</span>
+                dataset{{ datasets.paginator.count|pluralize }} found.
+              </label>
+            </div>
+
           </div>
 
           <div class="govuk-body" style="clear:both;">
-            <div class="govuk-button-group">
+            <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
 
-              <a href="{% url "datasets:find_datasets" %}" class="govuk-link govuk-link--no-visited-state">Reset
-                filters</a>
-              &nbsp;
+            <a href="{% url "datasets:find_datasets" %}" class="govuk-link govuk-link--no-visited-state">Reset
+              filters</a>
+            &nbsp;
 
-              {% for value, text in form.topic.field.choices %}
-                {# value is *not* a string but a ModelChoiceIteratorValue. Convert to string first!  #}
-                {% if value|stringformat:"s" in form.topic.value %}
+            {% for value, text in form.topic.field.choices %}
+              {# value is *not* a string but a ModelChoiceIteratorValue. Convert to string first!  #}
+              {% if value|stringformat:"s" in form.topic.value %}
+                {% include "datasets/filter_button.html" with id=value text=text tag_type=form.topic.name %}
+              {% endif %}
+            {% endfor %}
 
-                  <label for="id_topic_{{ forloop.counter0 }}"
-                         class="govuk-button govuk-button--secondary govuk-tag">{{ text }}
-                    <span class="tag-target">&#x2716;</span>
-                  </label>
-                {% endif %}
-              {% endfor %}
+            {% for value, text in form.source.field.choices %}
+              {% if value|stringformat:"s" in form.source.value %}
+                {% include "datasets/filter_button.html" with id=value text=text tag_type=form.source.name %}
+              {% endif %}
+            {% endfor %}
 
-            </div>
           </div>
 
           <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
@@ -158,37 +163,36 @@
 
               <p class="govuk-body">{{ dataset.short_description }}</p>
 
-              <p class="govuk-body">
-
-                <span style="float:left;">Data type:</span>
-                <span style="margin-left:10rem;display:block;">{{ data_type|get_key:dataset.data_type }}</span>
-                <span style="float:left;">Source:</span>
-                <span style="margin-left:10rem;display:block;">
-                {% for source in dataset.source_tag_names %}
-                  <a href="{% url "datasets:find_tags" tag_name=source %}"
-                     class="govuk-link govuk-link--no-visited-state">{{ source }}</a>
-                {% endfor %}
-
-              </span>
-                <span style="float:left;">Updated:</span>
-                <span style="margin-left:10rem;display:block;">
-                {{ dataset.published_at }}
-                </span>
-
-                {% if dataset.topic_tag_names|length > 0 %}
-                  <span style="float:left;">Topics:</span>
-                  <span style="margin-left:10rem;display:block;">
-
-                  {% for topic in dataset.topic_tag_names %}
-                    <a href="{% url "datasets:find_tags" tag_name=topic %}"
-                       class="govuk-link govuk-link--no-visited-state">#{{ topic }}</a>
-                  {% endfor %}
-                  </span>
-
-                {% endif %}
-              </p>
-
-
+              <div class="govuk-body">
+                <dl>
+                  <dt>Data type:</dt>
+                  <dd>{{ data_type|get_key:dataset.data_type }}</dd>
+                  <dt>Source:</dt>
+                  <dd>
+                    {% for source in dataset.source_tag_names %}
+                      <a href="{% url "datasets:find_tags" tag_name=source %}"
+                         class="govuk-link govuk-link--no-visited-state">{{ source }}</a>
+                    {% empty %}
+                      N/A
+                    {% endfor %}
+                  </dd>
+                  <dt>Updated:</dt>
+                  <dd>
+                    {{ dataset.published_at }}
+                  </dd>
+                  {% if dataset.topic_tag_names %}
+                    <dt>Topics:</dt>
+                    <dd>
+                      {% for topic in dataset.topic_tag_names %}
+                        <a href="{% url "datasets:find_tags" tag_name=topic %}"
+                           class="govuk-link govuk-link--no-visited-state">#{{ topic }}</a>
+                      {% empty %}
+                        &nbsp;
+                      {% endfor %}
+                    </dd>
+                  {% endif %}
+                </dl>
+              </div>
 
               {% if not dataset.has_access %}
                 <div class="govuk-inset-text govuk-!-margin-bottom-0">
@@ -201,7 +205,7 @@
           {% endfor %}
 
           <p class="govuk-body" style="display: inline">
-            Displaying datasets {{ datasets.start_index }}&ndash;{{ datasets.end_index }}
+            Displaying results {{ datasets.start_index }}&ndash;{{ datasets.end_index }}
             of {{ datasets.paginator.count }}
           </p>
 

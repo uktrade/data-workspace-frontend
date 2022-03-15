@@ -43,7 +43,7 @@ var LiveSearch = function (formSelector, wrapperSelector, GTM, linkSelector, GOV
 
   var self = this;
 
-  this.$wrapper.on("click", linkSelector, function(e){
+  this.$wrapper.on("click", linkSelector, function (e) {
     self.GTM.pushSearchResultClick(e.target);
   });
 
@@ -78,6 +78,8 @@ var LiveSearch = function (formSelector, wrapperSelector, GTM, linkSelector, GOV
       e.preventDefault();
     }.bind(this)
   );
+
+  this.bindFilterButtons();
 };
 
 LiveSearch.prototype.saveState = function saveState(state) {
@@ -174,6 +176,26 @@ LiveSearch.prototype.showErrorIndicator = function showErrorIndicator() {
   );
 };
 
+LiveSearch.prototype.bindFilterButtons = function bindFilterButtons() {
+  console.log("bind filter buttons");
+  var buttonSelector = "button[data-module=remove-tag]";
+  this.$wrapper.on("click", buttonSelector, function (e) {
+
+    var $button = $(e.target);
+    var data = $button.data();
+
+    // Find the checkbox corresponding to this button
+    var checkboxSelector = "input[type=checkbox][name=" + data.tagType + "][value=" + data.id + "]";
+
+    // uncheck it - which will cause the form to postback circa 2004 asp.net webforms ftw
+    $(checkboxSelector).prop("checked", false);
+
+    // We don't disable the button as this prevents the form being posted
+    $button.css("display", "none");
+  })
+
+}
+
 LiveSearch.prototype.displayFilterResults = function displayFilterResults(
   response,
   state
@@ -197,12 +219,15 @@ LiveSearch.prototype.displayFilterResults = function displayFilterResults(
   }
 
   // Rebind govuk events if we are connected
-  if(this.GOVUKFrontend) {
+  if (this.GOVUKFrontend) {
     var wrapperElement = $(this.wrapperSelector).get(0);
     this.GOVUKFrontend.initAll({scope: wrapperElement});
   }
 
+  this.bindFilterButtons();
+
 };
+
 
 LiveSearch.prototype.replaceBlock = function replaceBlock(selector, html) {
   var currentActiveElement = document.activeElement

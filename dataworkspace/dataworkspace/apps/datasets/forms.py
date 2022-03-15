@@ -2,7 +2,6 @@ from collections import defaultdict
 from functools import partial
 import logging
 
-
 from django import forms
 
 from dataworkspace.apps.datasets.constants import DataSetType, TagType
@@ -97,15 +96,18 @@ class SortSelectWidget(forms.widgets.Select):
     def __init__(
         self,
         label,
+        form_group_extra_css=None,
         *args,
         **kwargs,  # pylint: disable=keyword-arg-before-vararg
     ):
         super().__init__(*args, **kwargs)
         self._label = label
+        self._form_group_extra_css = form_group_extra_css
 
     def get_context(self, name, value, attrs):
         context = super().get_context(name, value, attrs)
         context["widget"]["label"] = self._label
+        context["widget"]["form_group_extra_css"] = self._form_group_extra_css
         return context
 
 
@@ -174,6 +176,8 @@ class DatasetSearchForm(forms.Form):
         choices=[
             ("yes", "Data I have access to"),
             ("no", "Data I don't have access to"),
+            ("own", "Data I own"),
+            ("manage", "Data I manage"),
         ],
         required=False,
         widget=AccordionFilterWidget("Data access"),
@@ -187,7 +191,7 @@ class DatasetSearchForm(forms.Form):
         ],
         coerce=str,
         required=False,
-        widget=AccordionFilterWidget("Admin only options", header_color="#f47738"),
+        widget=AccordionFilterWidget("Admin only options"),
     )
 
     bookmarked = forms.MultipleChoiceField(
@@ -249,7 +253,7 @@ class DatasetSearchForm(forms.Form):
             ("published_at", "Date published: oldest"),
             ("name", "Alphabetical (A-Z)"),
         ],
-        widget=SortSelectWidget(label="Sort by"),
+        widget=SortSelectWidget(label="Sort by", form_group_extra_css="govuk-!-margin-bottom-0"),
     )
 
     def clean_sort(self):
