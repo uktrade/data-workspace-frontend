@@ -199,6 +199,16 @@ def get_datasets_data_for_user_matching_query(
         else Value(True, BooleanField()),
     )
 
+    subscription_filter = Q(subscriptions__user=user)
+
+    datasets = datasets.annotate(
+        _is_subscribed=Case(
+            When(subscription_filter, then=True), default=False, output_field=BooleanField()
+        )
+        if subscription_filter and datasets.model is not ReferenceDataset
+        else Value(True, BooleanField())
+    )
+
     # Pull in the source tag IDs for the dataset
     datasets = datasets.annotate(
         source_tag_ids=ArrayAgg("tags", filter=Q(tags__type=TagType.SOURCE), distinct=True)
@@ -263,6 +273,7 @@ def get_datasets_data_for_user_matching_query(
         )
         .annotate(has_access=BoolOr("_has_access"))
         .annotate(is_bookmarked=BoolOr("_is_bookmarked"))
+        .annotate(is_subscribed=BoolOr("_is_subscribed"))
     )
 
     return datasets.values(
@@ -283,6 +294,7 @@ def get_datasets_data_for_user_matching_query(
         "has_visuals",
         "has_access",
         "is_bookmarked",
+        "is_subscribed",
     )
 
 
@@ -354,6 +366,8 @@ def get_visualisations_data_for_user_matching_query(visualisations: QuerySet, qu
         else Value(True, BooleanField()),
     )
 
+    visualisations = visualisations.annotate(_is_subscribed=Value(True, BooleanField()))
+
     # Pull in the source tag IDs for the dataset
     visualisations = visualisations.annotate(
         source_tag_ids=ArrayAgg("tags", filter=Q(tags__type=TagType.SOURCE), distinct=True)
@@ -384,6 +398,9 @@ def get_visualisations_data_for_user_matching_query(visualisations: QuerySet, qu
         has_visuals=Value(False, BooleanField()),
     )
 
+    if user:
+        visualisations = visualisations.annotate(is_subscribed=Value(True, BooleanField()))
+
     # We are joining on the user permissions table to determine `_has_access`` to the visualisation, so we need to
     # group them and remove duplicates. We aggregate all the `_has_access` fields together and return true if any
     # of the records say that access is available.
@@ -407,6 +424,7 @@ def get_visualisations_data_for_user_matching_query(visualisations: QuerySet, qu
         )
         .annotate(has_access=BoolOr("_has_access"))
         .annotate(is_bookmarked=BoolOr("_is_bookmarked"))
+        .annotate(is_subscribed=BoolOr("_is_subscribed"))
     )
 
     return visualisations.values(
@@ -427,6 +445,7 @@ def get_visualisations_data_for_user_matching_query(visualisations: QuerySet, qu
         "has_visuals",
         "has_access",
         "is_bookmarked",
+        "is_subscribed",
     )
 
 
@@ -536,6 +555,7 @@ def find_datasets(request):
     source_ids = set(source.id for source in form.cleaned_data.get("source"))
     topic_ids = set(topic.id for topic in form.cleaned_data.get("topic"))
     bookmarked = filters.bookmarked
+    subscriptions = filters.subscribed
     user_accessible = set(form.cleaned_data.get("user_access", [])) == {"yes"}
     user_inaccessible = set(form.cleaned_data.get("user_access", [])) == {"no"}
 
