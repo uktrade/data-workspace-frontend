@@ -86,19 +86,12 @@
               {% endif %}
 
               {{ form.user_access }}
-
               {{ form.data_type }}
-
 
               {% if show_admin_filters %}
                 {{ form.admin_filters }}
               {% endif %}
-
-
             </div>
-
-            {#            {{ form.use }}#}
-
           </div>
 
         </div>
@@ -148,11 +141,19 @@
             <div class="search-result govuk-!-padding-bottom-4 govuk-!-margin-bottom-4">
               <h3 class="govuk-heading-m">
 
-                {% if dataset.is_bookmarked %}
-                  <div style="float:right;">
+                <div style="float:right;">
+                  {% if dataset.is_subscribed %}
+                    <span title="You are subscribed to this dataset">
+                    {% include 'partials/subscription_icon.html' %}
+                    </span>
+                  {% endif %}
+                  {% if dataset.is_bookmarked %}
+                    <span title="You have bookmarked this dataset">
                     {% include 'partials/bookmark-yes.html' %}
-                  </div>
-                {% endif %}
+                    </span>
+                  {% endif %}
+
+                </div>
                 {% include "partials/gtm_dataset_link.html" with event_type="searchResultClick" search_page_number=datasets.number search_result_rank=forloop.counter search_type="search_bar" dataset=dataset %}
                 {% if not dataset.published %}
                   <strong class="govuk-tag govuk-tag--grey">
