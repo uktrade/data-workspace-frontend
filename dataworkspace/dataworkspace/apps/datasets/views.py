@@ -461,10 +461,17 @@ def _matches_filters(
     topic_ids: Set,
     user_accessible: bool = False,
     user_inaccessible: bool = False,
+    subscribed: bool = False,
 ):
-    return (
-        (not bookmark or data["is_bookmarked"])
-        and (unpublished or data["published"])
+
+    if bookmark and not data["is_bookmarked"]:
+        return False
+
+    if subscribed and not data["is_subscribed"]:
+        return False
+
+    result = (
+        (unpublished or data["published"])
         and (not opendata or data["is_open_data"])
         and (not withvisuals or data["has_visuals"])
         and (not use or use == [None] or data["purpose"] in use)
@@ -474,6 +481,8 @@ def _matches_filters(
         and (not user_accessible or data["has_access"])
         and (not user_inaccessible or not data["has_access"])
     )
+
+    return result
 
 
 def sorted_datasets_and_visualisations_matching_query_for_user(
@@ -524,7 +533,6 @@ def has_unpublished_dataset_access(user):
 @require_GET
 def find_tags(request, tag_name: str):
     tag: Tag = get_object_or_404(Tag, name=tag_name)
-
     tag_type = tag.get_type_display().lower()
 
     url = reverse("datasets:find_datasets") + f"?{tag_type}={tag.id}"
@@ -555,7 +563,7 @@ def find_datasets(request):
     source_ids = set(source.id for source in form.cleaned_data.get("source"))
     topic_ids = set(topic.id for topic in form.cleaned_data.get("topic"))
     bookmarked = filters.bookmarked
-    subscriptions = filters.subscribed
+    subscribed = filters.subscribed
     user_accessible = set(form.cleaned_data.get("user_access", [])) == {"yes"}
     user_inaccessible = set(form.cleaned_data.get("user_access", [])) == {"no"}
 
@@ -587,6 +595,7 @@ def find_datasets(request):
                 topic_ids,
                 user_accessible,
                 user_inaccessible,
+                subscribed,
             ),
             all_datasets_visible_to_user_matching_query,
         )

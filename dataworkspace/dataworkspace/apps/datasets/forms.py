@@ -194,12 +194,6 @@ class DatasetSearchForm(forms.Form):
         widget=AccordionFilterWidget("Admin only options"),
     )
 
-    bookmarked = forms.MultipleChoiceField(
-        choices=[("yes", "My bookmarks")],
-        required=False,
-        widget=FilterWidget("Bookmarks"),
-    )
-
     my_datasets = forms.TypedMultipleChoiceField(
         choices=[
             (BOOKMARKED, "My bookmarks"),
@@ -269,6 +263,7 @@ class DatasetSearchForm(forms.Form):
     def annotate_and_update_filters(self, datasets, matcher, number_of_matches):
         counts = {
             "bookmarked": defaultdict(int),
+            "subscribed": defaultdict(int),
             "my_datasets": defaultdict(int),
             "admin_filters": defaultdict(int),
             "use": defaultdict(int),
@@ -279,7 +274,8 @@ class DatasetSearchForm(forms.Form):
         }
 
         user_access = set(self.cleaned_data["user_access"])
-        selected_bookmark = bool(self.cleaned_data["bookmarked"])
+        selected_bookmark = DatasetSearchForm.BOOKMARKED in self.cleaned_data["my_datasets"]
+        selected_subscription = DatasetSearchForm.SUBSCRIBED in self.cleaned_data["my_datasets"]
         selected_admin = set(self.cleaned_data["admin_filters"])
         selected_unpublished = "unpublished" in selected_admin
         selected_opendata = "opendata" in selected_admin
@@ -312,6 +308,7 @@ class DatasetSearchForm(forms.Form):
                 topic_ids=selected_topic_ids,
                 user_accessible=user_access == {"yes"},
                 user_inaccessible=user_access == {"no"},
+                subscribed=selected_subscription,
             )
 
             if dataset_matcher(user_accessible=True, user_inaccessible=False):
@@ -321,8 +318,10 @@ class DatasetSearchForm(forms.Form):
                 counts["user_access"]["no"] += 1
 
             if dataset_matcher(bookmark=True):
-                counts["bookmarked"]["yes"] += 1
                 counts["my_datasets"][DatasetSearchForm.BOOKMARKED] += 1
+
+            if dataset_matcher(subscribed=True):
+                counts["my_datasets"][DatasetSearchForm.SUBSCRIBED] += 1
 
             for admin_id, _ in admin_choices:
                 if dataset_matcher(**{admin_id: True}):
@@ -347,14 +346,6 @@ class DatasetSearchForm(forms.Form):
         self.fields["user_access"].choices = [
             (access_id, SearchableChoice(access_text, counts["user_access"][access_id]))
             for access_id, access_text in user_access_choices
-        ]
-
-        self.fields["bookmarked"].choices = [
-            (
-                bookmarked_id,
-                bookmarked_text + f" ({counts['bookmarked'][bookmarked_id]})",
-            )
-            for bookmarked_id, bookmarked_text in self.fields["bookmarked"].choices
         ]
 
         self.fields["my_datasets"].choices = [
