@@ -59,7 +59,7 @@
       </div>
     </div>
     <div class="govuk-grid-column-one-quarter govuk-!-margin-top-2" style="text-align: right;">
-      {% include "partials/bookmark-link.html" with dataset_uuid=model.id is_bookmarked=is_bookmarked %}
+      {% include "partials/bookmark-link.html" with dataset_uuid=model.uuid is_bookmarked=is_bookmarked %}
     </div>
   </div>
 {% endblock %}
