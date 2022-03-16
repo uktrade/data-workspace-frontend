@@ -470,22 +470,18 @@ def _matches_filters(
     if bookmark and not data["is_bookmarked"]:
         return False
 
-    if subscribed and not data["is_subscribed"]:
-        return False
-
-    result = (
-        (unpublished or data["published"])
-        and (not opendata or data["is_open_data"])
-        and (not withvisuals or data["has_visuals"])
-        and (not use or use == [None] or data["purpose"] in use)
-        and (not data_type or data_type == [None] or data["data_type"] in data_type)
-        and (not source_ids or source_ids.intersection(set(data["source_tag_ids"])))
-        and (not topic_ids or topic_ids.intersection(set(data["topic_tag_ids"])))
-        and (not user_accessible or data["has_access"])
-        and (not user_inaccessible or not data["has_access"])
+    return (
+            (not bookmark or data["is_bookmarked"])
+            and (unpublished or data["published"])
+            and (not opendata or data["is_open_data"])
+            and (not withvisuals or data["has_visuals"])
+            and (not use or use == [None] or data["purpose"] in use)
+            and (not data_type or data_type == [None] or data["data_type"] in data_type)
+            and (not source_ids or source_ids.intersection(set(data["source_tag_ids"])))
+            and (not topic_ids or topic_ids.intersection(set(data["topic_tag_ids"])))
+            and (not user_accessible or data["has_access"])
+            and (not user_inaccessible or not data["has_access"])
     )
-
-    return result
 
 
 def sorted_datasets_and_visualisations_matching_query_for_user(
