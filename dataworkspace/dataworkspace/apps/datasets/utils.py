@@ -579,7 +579,6 @@ def build_filtered_dataset_query(inner_query, column_config, params):
         SQL(" ").join(where_clause),
         SQL(",").join(map(Identifier, sort_fields)),
     )
-    # raise Exception(str(query), query_params)
 
     return query, query_params
 
