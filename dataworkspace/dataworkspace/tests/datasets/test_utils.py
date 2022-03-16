@@ -22,7 +22,7 @@ from dataworkspace.apps.datasets.utils import (
     link_superset_visualisations_to_related_datasets,
     process_quicksight_dashboard_visualisations,
     send_notification_emails,
-    store_custom_dataset_query_table_structures,
+    store_custom_dataset_query_metadata,
     store_reference_dataset_metadata,
 )
 from dataworkspace.datasets_db import get_custom_dataset_query_changelog
@@ -675,9 +675,9 @@ class TestStoreCustomDatasetQueryMetadata:
                 query="SELECT * FROM foo", database__memorable_name="my_database"
             )
 
-        store_custom_dataset_query_table_structures()
+        store_custom_dataset_query_metadata()
 
-        records = get_custom_dataset_query_changelog("my_database", query)
+        records = get_custom_dataset_query_changelog(query)
 
         # change_date should be that of the query because it was created / modified more recently
         # than the underlying tables were last updated
@@ -687,6 +687,8 @@ class TestStoreCustomDatasetQueryMetadata:
                 "change_date": datetime.datetime.strptime(
                     "2021-01-01 15:00", "%Y-%m-%d %H:%M"
                 ).replace(tzinfo=pytz.UTC),
+                "table_name": None,
+                "previous_table_name": None,
                 "table_structure": [["a", "text"], ["b", "integer"]],
                 "previous_table_structure": None,
                 "data_hash": "abcdefghijklmnopqrstuvwxyz",
@@ -710,9 +712,9 @@ class TestStoreCustomDatasetQueryMetadata:
                 query="SELECT * FROM foo", database__memorable_name="my_database"
             )
 
-        store_custom_dataset_query_table_structures()
+        store_custom_dataset_query_metadata()
 
-        records = get_custom_dataset_query_changelog("my_database", query)
+        records = get_custom_dataset_query_changelog(query)
 
         # change_date should be that of the underlying table because it was updated more recently
         # than the query was created / modified
@@ -722,6 +724,8 @@ class TestStoreCustomDatasetQueryMetadata:
                 "change_date": datetime.datetime.strptime(
                     "2021-01-01 16:00", "%Y-%m-%d %H:%M"
                 ).replace(tzinfo=pytz.UTC),
+                "table_name": None,
+                "previous_table_name": None,
                 "table_structure": [["a", "text"], ["b", "integer"]],
                 "previous_table_structure": None,
                 "data_hash": "abcdefghijklmnopqrstuvwxyz",
@@ -745,11 +749,11 @@ class TestStoreCustomDatasetQueryMetadata:
                 query="SELECT * FROM foo", database__memorable_name="my_database"
             )
 
-        store_custom_dataset_query_table_structures()
-        store_custom_dataset_query_table_structures()
-        store_custom_dataset_query_table_structures()
+        store_custom_dataset_query_metadata()
+        store_custom_dataset_query_metadata()
+        store_custom_dataset_query_metadata()
 
-        records = get_custom_dataset_query_changelog("my_database", query)
+        records = get_custom_dataset_query_changelog(query)
 
         # There should only be one record record as the structure hasn't changed.
         assert (
@@ -758,6 +762,8 @@ class TestStoreCustomDatasetQueryMetadata:
                 "change_date": datetime.datetime.strptime(
                     "2021-01-01 15:00", "%Y-%m-%d %H:%M"
                 ).replace(tzinfo=pytz.UTC),
+                "table_name": None,
+                "previous_table_name": None,
                 "table_structure": [["a", "text"], ["b", "integer"]],
                 "previous_table_structure": None,
                 "data_hash": "abcdefghijklmnopqrstuvwxyz",
@@ -784,15 +790,15 @@ class TestStoreCustomDatasetQueryMetadata:
                 query="SELECT * FROM foo", database__memorable_name="my_database"
             )
 
-        store_custom_dataset_query_table_structures()
+        store_custom_dataset_query_metadata()
 
         with freeze_time("2021-01-01 16:00:00"):
             query.query = "SELECT * FROM foo WHERE b > 10"
             query.save()
 
-        store_custom_dataset_query_table_structures()
+        store_custom_dataset_query_metadata()
 
-        records = get_custom_dataset_query_changelog("my_database", query)
+        records = get_custom_dataset_query_changelog(query)
 
         # The current and previous table structure should be the same as only the
         # where clause has changed.
@@ -803,6 +809,8 @@ class TestStoreCustomDatasetQueryMetadata:
                 "change_date": datetime.datetime.strptime(
                     "2021-01-01 16:00", "%Y-%m-%d %H:%M"
                 ).replace(tzinfo=pytz.UTC),
+                "table_name": None,
+                "previous_table_name": None,
                 "table_structure": [["a", "text"], ["b", "integer"]],
                 "previous_table_structure": [["a", "text"], ["b", "integer"]],
                 "data_hash": "aaaadefghijklmnopqrstuvwxyz",
@@ -816,6 +824,8 @@ class TestStoreCustomDatasetQueryMetadata:
                 "change_date": datetime.datetime.strptime(
                     "2021-01-01 15:00", "%Y-%m-%d %H:%M"
                 ).replace(tzinfo=pytz.UTC),
+                "table_name": None,
+                "previous_table_name": None,
                 "table_structure": [["a", "text"], ["b", "integer"]],
                 "previous_table_structure": None,
                 "data_hash": "abcdefghijklmnopqrstuvwxyz",
@@ -842,15 +852,15 @@ class TestStoreCustomDatasetQueryMetadata:
                 query="SELECT * FROM foo", database__memorable_name="my_database"
             )
 
-        store_custom_dataset_query_table_structures()
+        store_custom_dataset_query_metadata()
 
         with freeze_time("2021-01-01 16:00:00"):
             query.query = "SELECT a FROM foo"
             query.save()
 
-        store_custom_dataset_query_table_structures()
+        store_custom_dataset_query_metadata()
 
-        records = get_custom_dataset_query_changelog("my_database", query)
+        records = get_custom_dataset_query_changelog(query)
 
         # Neither the current and previous table structure or the current and previous
         # data hash should be the same as the select clause has changed
@@ -861,6 +871,8 @@ class TestStoreCustomDatasetQueryMetadata:
                 "change_date": datetime.datetime.strptime(
                     "2021-01-01 16:00", "%Y-%m-%d %H:%M"
                 ).replace(tzinfo=pytz.UTC),
+                "table_name": None,
+                "previous_table_name": None,
                 "table_structure": [["a", "text"]],
                 "previous_table_structure": [["a", "text"], ["b", "integer"]],
                 "data_hash": "aaaadefghijklmnopqrstuvwxyz",
@@ -874,6 +886,8 @@ class TestStoreCustomDatasetQueryMetadata:
                 "change_date": datetime.datetime.strptime(
                     "2021-01-01 15:00", "%Y-%m-%d %H:%M"
                 ).replace(tzinfo=pytz.UTC),
+                "table_name": None,
+                "previous_table_name": None,
                 "table_structure": [["a", "text"], ["b", "integer"]],
                 "previous_table_structure": None,
                 "data_hash": "abcdefghijklmnopqrstuvwxyz",
@@ -901,21 +915,21 @@ class TestStoreCustomDatasetQueryMetadata:
                 query="SELECT * FROM foo", database__memorable_name="my_database"
             )
 
-        store_custom_dataset_query_table_structures()
+        store_custom_dataset_query_metadata()
 
         with freeze_time("2021-01-01 16:00:00"):
             query.query = "SELECT a FROM foo"
             query.save()
 
-        store_custom_dataset_query_table_structures()
+        store_custom_dataset_query_metadata()
 
         with freeze_time("2021-01-01 17:00:00"):
             query.query = "SELECT * FROM foo"
             query.save()
 
-        store_custom_dataset_query_table_structures()
+        store_custom_dataset_query_metadata()
 
-        records = get_custom_dataset_query_changelog("my_database", query)
+        records = get_custom_dataset_query_changelog(query)
 
         # Both the table structure and data hash should have changed and then changed back
         # as the select clause changed and then changed back
@@ -926,6 +940,8 @@ class TestStoreCustomDatasetQueryMetadata:
                 "change_date": datetime.datetime.strptime(
                     "2021-01-01 17:00", "%Y-%m-%d %H:%M"
                 ).replace(tzinfo=pytz.UTC),
+                "table_name": None,
+                "previous_table_name": None,
                 "table_structure": [["a", "text"], ["b", "integer"]],
                 "previous_table_structure": [["a", "text"]],
                 "data_hash": "abcdefghijklmnopqrstuvwxyz",
@@ -939,6 +955,8 @@ class TestStoreCustomDatasetQueryMetadata:
                 "change_date": datetime.datetime.strptime(
                     "2021-01-01 16:00", "%Y-%m-%d %H:%M"
                 ).replace(tzinfo=pytz.UTC),
+                "table_name": None,
+                "previous_table_name": None,
                 "table_structure": [["a", "text"]],
                 "previous_table_structure": [["a", "text"], ["b", "integer"]],
                 "data_hash": "aaaadefghijklmnopqrstuvwxyz",
@@ -952,6 +970,8 @@ class TestStoreCustomDatasetQueryMetadata:
                 "change_date": datetime.datetime.strptime(
                     "2021-01-01 15:00", "%Y-%m-%d %H:%M"
                 ).replace(tzinfo=pytz.UTC),
+                "table_name": None,
+                "previous_table_name": None,
                 "table_structure": [["a", "text"], ["b", "integer"]],
                 "previous_table_structure": None,
                 "data_hash": "abcdefghijklmnopqrstuvwxyz",
@@ -977,6 +997,8 @@ class TestSendNotificationEmails:
             {
                 "change_id": 1,
                 "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_name": "test_table",
+                "previous_table_name": "test_table",
                 "table_structure": [["id", "uuid"], ["name", "text"]],
                 "previous_table_structure": [["name", "text"]],
                 "data_hash": "abcdefghijklmnopqrstuvwxyz",
@@ -1028,6 +1050,66 @@ class TestSendNotificationEmails:
     )
     @patch("dataworkspace.apps.datasets.utils.send_email")
     @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
+    def test_table_rename_sends_notification_to_structure_change_subscriber(
+        self, mock_get_source_table_changelog, mock_send_email, user
+    ):
+        mock_get_source_table_changelog.return_value = [
+            {
+                "change_id": 1,
+                "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_name": "table",
+                "previous_table_name": "test_table",
+                "table_structure": [["id", "uuid"], ["name", "text"]],
+                "previous_table_structure": [["id", "uuid"], ["name", "text"]],
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "abcdefghijklmnopqrstuvwxyz",
+            }
+        ]
+        mock_send_email.return_value = "00000000-0000-0000-0000-000000000000"
+
+        ds = DataSetFactory.create(type=DataSetType.MASTER)
+        ds.subscriptions.create(
+            user=user, notify_on_schema_change=True, notify_on_data_change=False
+        )
+
+        SourceTableFactory.create(dataset=ds, database__memorable_name="my_database")
+
+        send_notification_emails()
+
+        assert mock_send_email.call_args_list == [
+            call(
+                "000000000000000000000000000",
+                "frank.exampleson@test.com",
+                personalisation={
+                    "change_date": "01/01/2021 - 00:00:00",
+                    "dataset_name": ds.name,
+                    "dataset_url": f"dataworkspace.test:8000{ds.get_absolute_url()}",
+                    "manage_subscriptions_url": "dataworkspace.test:8000/datasets/email_preferences",
+                    "summary": "Table renamed from test_table",
+                },
+            )
+        ]
+
+        notifications = Notification.objects.all()
+        user_notifications = UserNotification.objects.all()
+
+        assert len(notifications) == 1
+        assert len(user_notifications) == 1
+
+        assert user_notifications[0].notification == notifications[0]
+        assert user_notifications[0].subscription.dataset == ds
+        assert user_notifications[0].subscription.user.email == "frank.exampleson@test.com"
+        assert str(user_notifications[0].email_id) == "00000000-0000-0000-0000-000000000000"
+
+    @pytest.mark.django_db
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_COLUMNS_TEMPLATE_ID="000000000000000000000000000"
+    )
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_ALL_DATA_TEMPLATE_ID="000000000000000000000000001"
+    )
+    @patch("dataworkspace.apps.datasets.utils.send_email")
+    @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
     def test_data_change_doesnt_send_notification_to_structure_change_subscriber(
         self, mock_get_source_table_changelog, mock_send_email, user
     ):
@@ -1035,6 +1117,8 @@ class TestSendNotificationEmails:
             {
                 "change_id": 1,
                 "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_name": "test_table",
+                "previous_table_name": "test_table",
                 "table_structure": [["id", "uuid"], ["name", "text"]],
                 "previous_table_structure": [["id", "uuid"], ["name", "text"]],
                 "data_hash": "abcdefghijklmnopqrstuvwxyz",
@@ -1076,6 +1160,8 @@ class TestSendNotificationEmails:
             {
                 "change_id": 1,
                 "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_name": "test_table",
+                "previous_table_name": "test_table",
                 "table_structure": [["id", "uuid"], ["name", "text"]],
                 "previous_table_structure": [["id", "uuid"], ["name", "text"]],
                 "data_hash": "abcdefghijklmnopqrstuvwxyz",
@@ -1117,6 +1203,8 @@ class TestSendNotificationEmails:
             {
                 "change_id": 1,
                 "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_name": "test_table",
+                "previous_table_name": "test_table",
                 "table_structure": [["id", "uuid"], ["name", "text"]],
                 "previous_table_structure": [["name", "text"]],
                 "data_hash": "abcdefghijklmnopqrstuvwxyz",
@@ -1168,6 +1256,66 @@ class TestSendNotificationEmails:
     )
     @patch("dataworkspace.apps.datasets.utils.send_email")
     @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
+    def test_table_rename_sends_notification_to_all_changes_subscriber(
+        self, mock_get_source_table_changelog, mock_send_email, user
+    ):
+        mock_get_source_table_changelog.return_value = [
+            {
+                "change_id": 1,
+                "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_name": "table",
+                "previous_table_name": "test_table",
+                "table_structure": [["id", "uuid"], ["name", "text"]],
+                "previous_table_structure": [["id", "uuid"], ["name", "text"]],
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "abcdefghijklmnopqrstuvwxyz",
+            }
+        ]
+        mock_send_email.return_value = "00000000-0000-0000-0000-000000000000"
+
+        ds = DataSetFactory.create(type=DataSetType.MASTER)
+        ds.subscriptions.create(
+            user=user, notify_on_schema_change=True, notify_on_data_change=True
+        )
+
+        SourceTableFactory.create(dataset=ds, database__memorable_name="my_database")
+
+        send_notification_emails()
+
+        assert mock_send_email.call_args_list == [
+            call(
+                "000000000000000000000000000",
+                "frank.exampleson@test.com",
+                personalisation={
+                    "change_date": "01/01/2021 - 00:00:00",
+                    "dataset_name": ds.name,
+                    "dataset_url": f"dataworkspace.test:8000{ds.get_absolute_url()}",
+                    "manage_subscriptions_url": "dataworkspace.test:8000/datasets/email_preferences",
+                    "summary": "Table renamed from test_table",
+                },
+            )
+        ]
+
+        notifications = Notification.objects.all()
+        user_notifications = UserNotification.objects.all()
+
+        assert len(notifications) == 1
+        assert len(user_notifications) == 1
+
+        assert user_notifications[0].notification == notifications[0]
+        assert user_notifications[0].subscription.dataset == ds
+        assert user_notifications[0].subscription.user.email == "frank.exampleson@test.com"
+        assert str(user_notifications[0].email_id) == "00000000-0000-0000-0000-000000000000"
+
+    @pytest.mark.django_db
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_COLUMNS_TEMPLATE_ID="000000000000000000000000000"
+    )
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_ALL_DATA_TEMPLATE_ID="000000000000000000000000001"
+    )
+    @patch("dataworkspace.apps.datasets.utils.send_email")
+    @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
     def test_data_change_sends_notification_to_all_changes_subscriber(
         self, mock_get_source_table_changelog, mock_send_email, user
     ):
@@ -1175,6 +1323,8 @@ class TestSendNotificationEmails:
             {
                 "change_id": 1,
                 "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_name": "test_table",
+                "previous_table_name": "test_table",
                 "table_structure": [["id", "uuid"], ["name", "text"]],
                 "previous_table_structure": [["id", "uuid"], ["name", "text"]],
                 "data_hash": "abcdefghijklmnopqrstuvwxyz",
@@ -1233,6 +1383,8 @@ class TestSendNotificationEmails:
             {
                 "change_id": 1,
                 "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_name": "test_table",
+                "previous_table_name": "test_table",
                 "table_structure": [["id", "uuid"], ["name", "text"]],
                 "previous_table_structure": [["id", "uuid"], ["name", "text"]],
                 "data_hash": "abcdefghijklmnopqrstuvwxyz",
@@ -1274,8 +1426,53 @@ class TestSendNotificationEmails:
             {
                 "change_id": 1,
                 "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_name": "test_table",
+                "previous_table_name": "test_table",
                 "table_structure": [["id", "uuid"], ["name", "text"]],
                 "previous_table_structure": [["name", "text"]],
+                "data_hash": "abcdefghijklmnopqrstuvwxyz",
+                "previous_data_hash": "abcdefghijklmnopqrstuvwxyz",
+            }
+        ]
+        mock_send_email.return_value = "00000000-0000-0000-0000-000000000000"
+
+        ds = DataSetFactory.create(type=DataSetType.MASTER)
+        ds.subscriptions.create(
+            user=user, notify_on_schema_change=False, notify_on_data_change=False
+        )
+
+        SourceTableFactory.create(dataset=ds, database__memorable_name="my_database")
+
+        send_notification_emails()
+
+        assert not mock_send_email.called
+
+        notifications = Notification.objects.all()
+        user_notifications = UserNotification.objects.all()
+
+        assert len(notifications) == 1
+        assert len(user_notifications) == 0
+
+    @pytest.mark.django_db
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_COLUMNS_TEMPLATE_ID="000000000000000000000000000"
+    )
+    @override_settings(
+        NOTIFY_DATASET_NOTIFICATIONS_ALL_DATA_TEMPLATE_ID="000000000000000000000000001"
+    )
+    @patch("dataworkspace.apps.datasets.utils.send_email")
+    @patch("dataworkspace.apps.datasets.utils.get_source_table_changelog")
+    def test_table_rename_doesnt_send_notification_to_no_change_subscriber(
+        self, mock_get_source_table_changelog, mock_send_email, user
+    ):
+        mock_get_source_table_changelog.return_value = [
+            {
+                "change_id": 1,
+                "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_name": "table",
+                "previous_table_name": "test_table",
+                "table_structure": [["id", "uuid"], ["name", "text"]],
+                "previous_table_structure": [["id", "uuid"], ["name", "text"]],
                 "data_hash": "abcdefghijklmnopqrstuvwxyz",
                 "previous_data_hash": "abcdefghijklmnopqrstuvwxyz",
             }
@@ -1315,6 +1512,8 @@ class TestSendNotificationEmails:
             {
                 "change_id": 1,
                 "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_name": "test_table",
+                "previous_table_name": "test_table",
                 "table_structure": [["id", "uuid"], ["name", "text"]],
                 "previous_table_structure": [["id", "uuid"], ["name", "text"]],
                 "data_hash": "abcdefghijklmnopqrstuvwxyz",
@@ -1356,6 +1555,8 @@ class TestSendNotificationEmails:
             {
                 "change_id": 1,
                 "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_name": "test_table",
+                "previous_table_name": "test_table",
                 "table_structure": [["id", "uuid"], ["name", "text"]],
                 "previous_table_structure": [["id", "uuid"], ["name", "text"]],
                 "data_hash": "abcdefghijklmnopqrstuvwxyz",
@@ -1397,6 +1598,8 @@ class TestSendNotificationEmails:
             {
                 "change_id": 1,
                 "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_name": "test_table",
+                "previous_table_name": "test_table",
                 "table_structure": [["id", "uuid"], ["name", "text"]],
                 "previous_table_structure": [["name", "text"]],
                 "data_hash": "abcdefghijklmnopqrstuvwxyz",
@@ -1457,6 +1660,8 @@ class TestSendNotificationEmails:
             {
                 "change_id": 2,
                 "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_name": "test_table",
+                "previous_table_name": "test_table",
                 "table_structure": [["id", "uuid"], ["name", "text"]],
                 "previous_table_structure": [["name", "text"]],
                 "data_hash": "abcdefghijklmnopqrstuvwxyz",
@@ -1465,6 +1670,8 @@ class TestSendNotificationEmails:
             {
                 "change_id": 1,
                 "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_name": "test_table",
+                "previous_table_name": "test_table",
                 "table_structure": [["name", "text"]],
                 "previous_table_structure": [["name", "text"]],
                 "data_hash": "abcdefghijklmnopqrstuvwxyz",
@@ -1519,6 +1726,8 @@ class TestSendNotificationEmails:
             {
                 "change_id": 1,
                 "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_name": "test_table",
+                "previous_table_name": "test_table",
                 "table_structure": [["id", "uuid"], ["name", "text"]],
                 "previous_table_structure": [["name", "text"]],
                 "data_hash": "abcdefghijklmnopqrstuvwxyz",
@@ -1556,6 +1765,8 @@ class TestSendNotificationEmails:
             {
                 "change_id": 1,
                 "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_name": "test_table",
+                "previous_table_name": "test_table",
                 "table_structure": [["id", "uuid"], ["name", "text"]],
                 "previous_table_structure": [["name", "text"]],
                 "data_hash": "abcdefghijklmnopqrstuvwxyz",
@@ -1607,6 +1818,8 @@ class TestSendNotificationEmails:
             {
                 "change_id": 1,
                 "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_name": "test_table",
+                "previous_table_name": "test_table",
                 "table_structure": [["id", "uuid"], ["name", "text"]],
                 "previous_table_structure": [["name", "text"]],
                 "data_hash": "abcdefghijklmnopqrstuvwxyz",
@@ -1636,6 +1849,8 @@ class TestSendNotificationEmails:
             {
                 "change_id": 2,
                 "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_name": "test_table",
+                "previous_table_name": "test_table",
                 "table_structure": [["name", "text"]],
                 "previous_table_structure": [["id", "uuid"], ["name", "text"]],
                 "data_hash": "abcdefghijklmnopqrstuvwxyz",
@@ -1644,6 +1859,8 @@ class TestSendNotificationEmails:
             {
                 "change_id": 1,
                 "change_date": datetime.datetime(2021, 1, 1, 0, 0).replace(tzinfo=pytz.UTC),
+                "table_name": "test_table",
+                "previous_table_name": "test_table",
                 "table_structure": [["id", "uuid"], ["name", "text"]],
                 "previous_table_structure": [["name", "text"]],
                 "data_hash": "abcdefghijklmnopqrstuvwxyz",
