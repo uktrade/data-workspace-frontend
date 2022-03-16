@@ -467,7 +467,7 @@ def _matches_filters(
     subscribed: bool = False,
 ):
 
-    if bookmark and not data["is_bookmarked"]:
+    if subscribed and not data["is_subscribed"]:
         return False
 
     return (
