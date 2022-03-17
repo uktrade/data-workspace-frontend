@@ -2236,6 +2236,10 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     def get_usage_history_url(self):
         return reverse("datasets:visualisation_usage_history", args=(self.id,))
 
+    @staticmethod
+    def get_type_display():
+        return "Visualisation"
+
     def __str__(self):
         return self.name
 

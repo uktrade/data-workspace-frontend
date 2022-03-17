@@ -39,16 +39,24 @@ logger = logging.getLogger("app")
 
 
 def public_error_404_html_view(request, exception=None):
-    return render(request, "error_404.html", status=404)
+    return render(request, "errors/error_404.html", status=404)
 
 
 def public_error_403_html_view(request, exception=None):
-    return render(request, "error_403.html", status=403)
+    default_template = "errors/error_403.html"
+    if exception is None:
+        return render(request, default_template, status=403)
+    return render(
+        request,
+        getattr(exception, "template_name", default_template),
+        getattr(exception, "template_context", {}),
+        status=403,
+    )
 
 
 def public_error_500_html_view(request):
     message = request.GET.get("message", None)
-    return render(request, "error_500.html", {"message": message}, status=500)
+    return render(request, "errors/error_500.html", {"message": message}, status=500)
 
 
 def healthcheck_view(_):
