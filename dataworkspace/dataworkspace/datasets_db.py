@@ -5,8 +5,9 @@ from typing import Tuple
 
 import psqlparse
 import psycopg2
-from psycopg2.sql import SQL
+from psycopg2.sql import Literal, SQL
 import pytz
+from django.conf import settings
 from django.db import connections, transaction
 from django.db.utils import DatabaseError
 
@@ -88,35 +89,66 @@ def extract_queried_tables_from_sql_query(database_name, query):
         return tables
 
 
-def get_source_table_changelog(database_name: str, schema: str, table: str):
-    with connections[database_name].cursor() as cursor:
+def get_source_table_changelog(source_table):
+    with connections[source_table.database.memorable_name].cursor() as cursor:
         cursor.execute(
-            """
-            SELECT id, source_data_modified_utc, table_structure, data_hash_v1
-            FROM dataflow.metadata
-            WHERE table_schema = %s
-            AND table_name = %s
-            AND source_data_modified_utc IS NOT NULL
-            AND table_structure IS NOT NULL
-            ORDER BY id ASC;
-            """,
-            [schema, table],
+            SQL(
+                """
+                SELECT id, source_data_modified_utc, table_schema||'.'||table_name, table_structure, data_hash_v1
+                FROM dataflow.metadata
+                WHERE data_type = {}
+                AND {} = any(data_ids)
+                AND source_data_modified_utc IS NOT NULL
+                AND table_structure IS NOT NULL
+                ORDER BY id ASC;
+                """
+            ).format(
+                Literal(DataSetType.MASTER),
+                Literal(str(source_table.id)),
+            )
         )
         return get_changelog_from_metadata_rows(cursor.fetchall())
 
 
-def get_custom_dataset_query_changelog(database_name: str, query):
-    with connections[database_name].cursor() as cursor:
+def get_custom_dataset_query_changelog(query):
+    with connections[query.database.memorable_name].cursor() as cursor:
         cursor.execute(
-            """
-            SELECT id, source_data_modified_utc, table_structure, data_hash_v1
-            FROM dataflow.metadata
-            WHERE data_id = %s
-            AND source_data_modified_utc IS NOT NULL
-            AND table_structure IS NOT NULL
-            ORDER BY id ASC;
-            """,
-            [query.id],
+            SQL(
+                """
+                SELECT id, source_data_modified_utc, table_schema||'.'||table_name, table_structure, data_hash_v1
+                FROM dataflow.metadata
+                WHERE data_type = {}
+                AND {} = any(data_ids)
+                AND source_data_modified_utc IS NOT NULL
+                AND table_structure IS NOT NULL
+                ORDER BY id ASC;
+                """
+            ).format(
+                Literal(DataSetType.DATACUT),
+                Literal(str(query.id)),
+            )
+        )
+        return get_changelog_from_metadata_rows(cursor.fetchall())
+
+
+def get_reference_dataset_changelog(dataset):
+    db_name = list(settings.DATABASES_DATA.items())[0][0]
+    with connections[db_name].cursor() as cursor:
+        cursor.execute(
+            SQL(
+                """
+                SELECT id, source_data_modified_utc, table_schema||'.'||table_name, table_structure, data_hash_v1
+                FROM dataflow.metadata
+                WHERE data_type = {}
+                AND {} = any(data_ids)
+                AND source_data_modified_utc IS NOT NULL
+                AND table_structure IS NOT NULL
+                ORDER BY id ASC;
+                """
+            ).format(
+                Literal(DataSetType.REFERENCE),
+                Literal(str(dataset.id)),
+            )
         )
         return get_changelog_from_metadata_rows(cursor.fetchall())
 
@@ -141,22 +173,32 @@ def get_changelog_from_metadata_rows(rows):
         {
             "change_id": rows[0][0],
             "change_date": rows[0][1].replace(tzinfo=pytz.UTC),
-            "table_structure": json.loads(rows[0][2]) if rows[0][2] else None,
+            "table_name": rows[0][2],
+            "previous_table_name": None,
+            "table_structure": json.loads(rows[0][3]) if rows[0][3] else None,
             "previous_table_structure": None,
-            "data_hash": rows[0][3],
+            "data_hash": rows[0][4],
             "previous_data_hash": None,
         }
     ]
 
     #  zip(rows, rows[1:]): [1,2,3,4,5] --> [(1,2), (2,3), (3,4), (4,5)]
     for row, next_row in zip(rows, rows[1:]):
-        _, _, row_table_structure, row_data_hash = row
-        next_row_id, next_row_change_date, next_row_table_structure, next_row_data_hash = next_row
+        _, _, row_table_name, row_table_structure, row_data_hash = row
+        (
+            next_row_id,
+            next_row_change_date,
+            next_row_table_name,
+            next_row_table_structure,
+            next_row_data_hash,
+        ) = next_row
         if row_table_structure != next_row_table_structure or row_data_hash != next_row_data_hash:
             changelog.append(
                 {
                     "change_id": next_row_id,
                     "change_date": next_row_change_date.replace(tzinfo=pytz.UTC),
+                    "table_name": next_row_table_name,
+                    "previous_table_name": row_table_name,
                     "table_structure": json.loads(next_row_table_structure)
                     if next_row_table_structure
                     else None,

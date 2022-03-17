@@ -2997,13 +2997,14 @@ class TestGridDataView:
                     id UUID primary key,
                     name VARCHAR(255),
                     num NUMERIC,
-                    date DATE
+                    date DATE,
+                    an_array TEXT[]
                 );
                 TRUNCATE TABLE source_data_test;
                 INSERT INTO source_data_test
-                VALUES('896b4dde-f787-41be-a7bf-82be91805f24', 'the first record', 1, NULL);
+                VALUES('896b4dde-f787-41be-a7bf-82be91805f24', 'the first record', 1, NULL, '{abc, def}');
                 INSERT INTO source_data_test
-                VALUES('488d06b6-032b-467a-b2c5-2820610b0ca6', 'the second record', 2, '2019-01-01');
+                VALUES('488d06b6-032b-467a-b2c5-2820610b0ca6', 'the second record', 2, '2019-01-01', '{ghi, jkl}');
                 INSERT INTO source_data_test
                 VALUES('a41da88b-ffa3-4102-928c-b3937fa5b58f', 'the last record', NULL, '2020-01-01');
                 """
@@ -3093,6 +3094,7 @@ class TestGridDataView:
                     "num": None,
                     "date": "2020-01-01",
                     "id": "a41da88b-ffa3-4102-928c-b3937fa5b58f",
+                    "an_array": None,
                 }
             ]
         }
@@ -3128,12 +3130,14 @@ class TestGridDataView:
                     "id": "488d06b6-032b-467a-b2c5-2820610b0ca6",
                     "name": "the second record",
                     "num": "2",
+                    "an_array": ["ghi", "jkl"],
                 },
                 {
                     "date": None,
                     "id": "896b4dde-f787-41be-a7bf-82be91805f24",
                     "name": "the first record",
                     "num": "1",
+                    "an_array": ["abc", "def"],
                 },
             ]
         }
@@ -3169,6 +3173,7 @@ class TestGridDataView:
                     "id": "488d06b6-032b-467a-b2c5-2820610b0ca6",
                     "name": "the second record",
                     "num": "2",
+                    "an_array": ["ghi", "jkl"],
                 }
             ]
         }
@@ -3204,12 +3209,14 @@ class TestGridDataView:
                     "id": "896b4dde-f787-41be-a7bf-82be91805f24",
                     "name": "the first record",
                     "num": "1",
+                    "an_array": ["abc", "def"],
                 },
                 {
                     "date": "2020-01-01",
                     "id": "a41da88b-ffa3-4102-928c-b3937fa5b58f",
                     "name": "the last record",
                     "num": None,
+                    "an_array": None,
                 },
             ]
         }
@@ -3244,6 +3251,7 @@ class TestGridDataView:
                     "id": "a41da88b-ffa3-4102-928c-b3937fa5b58f",
                     "name": "the last record",
                     "num": None,
+                    "an_array": None,
                 }
             ]
         }
@@ -3278,6 +3286,7 @@ class TestGridDataView:
                     "id": "896b4dde-f787-41be-a7bf-82be91805f24",
                     "name": "the first record",
                     "num": "1",
+                    "an_array": ["abc", "def"],
                 }
             ]
         }
@@ -3313,6 +3322,7 @@ class TestGridDataView:
                     "id": "488d06b6-032b-467a-b2c5-2820610b0ca6",
                     "name": "the second record",
                     "num": "2",
+                    "an_array": ["ghi", "jkl"],
                 }
             ]
         }
@@ -3348,6 +3358,7 @@ class TestGridDataView:
                     "id": "488d06b6-032b-467a-b2c5-2820610b0ca6",
                     "name": "the second record",
                     "num": "2",
+                    "an_array": ["ghi", "jkl"],
                 }
             ]
         }
@@ -3383,7 +3394,166 @@ class TestGridDataView:
                     "id": "a41da88b-ffa3-4102-928c-b3937fa5b58f",
                     "name": "the last record",
                     "num": None,
+                    "an_array": None,
                 }
+            ]
+        }
+
+    @pytest.mark.django_db
+    @pytest.mark.parametrize(
+        "fixture_name, url_name",
+        (
+            ("source_table", "source_table_data"),
+            ("custom_query", "custom_dataset_query_data"),
+        ),
+    )
+    def test_array_contains_filter(self, client, fixture_name, url_name, request):
+        source = request.getfixturevalue(fixture_name)
+        response = client.post(
+            reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)),
+            {
+                "filters": {
+                    "an_array": {
+                        "filter": "ghi",
+                        "filterType": "array",
+                        "type": "contains",
+                    }
+                },
+            },
+            content_type="application/json",
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            "records": [
+                {
+                    "date": "2019-01-01",
+                    "id": "488d06b6-032b-467a-b2c5-2820610b0ca6",
+                    "name": "the second record",
+                    "num": "2",
+                    "an_array": ["ghi", "jkl"],
+                }
+            ]
+        }
+
+    @pytest.mark.django_db
+    @pytest.mark.parametrize(
+        "fixture_name, url_name",
+        (
+            ("source_table", "source_table_data"),
+            ("custom_query", "custom_dataset_query_data"),
+        ),
+    )
+    def test_array_not_contains_filter(self, client, fixture_name, url_name, request):
+        source = request.getfixturevalue(fixture_name)
+        response = client.post(
+            reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)),
+            {
+                "filters": {
+                    "an_array": {
+                        "filter": "ghi",
+                        "filterType": "array",
+                        "type": "notContains",
+                    }
+                },
+            },
+            content_type="application/json",
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            "records": [
+                {
+                    "date": None,
+                    "id": "896b4dde-f787-41be-a7bf-82be91805f24",
+                    "name": "the first record",
+                    "num": "1",
+                    "an_array": ["abc", "def"],
+                },
+                {
+                    "date": "2020-01-01",
+                    "id": "a41da88b-ffa3-4102-928c-b3937fa5b58f",
+                    "name": "the last record",
+                    "num": None,
+                    "an_array": None,
+                },
+            ]
+        }
+
+    @pytest.mark.django_db
+    @pytest.mark.parametrize(
+        "fixture_name, url_name",
+        (
+            ("source_table", "source_table_data"),
+            ("custom_query", "custom_dataset_query_data"),
+        ),
+    )
+    def test_array_equals_filter(self, client, fixture_name, url_name, request):
+        source = request.getfixturevalue(fixture_name)
+        response = client.post(
+            reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)),
+            {
+                "filters": {
+                    "an_array": {
+                        "filter": "ghi, jkl",
+                        "filterType": "array",
+                        "type": "equals",
+                    }
+                },
+            },
+            content_type="application/json",
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            "records": [
+                {
+                    "date": "2019-01-01",
+                    "id": "488d06b6-032b-467a-b2c5-2820610b0ca6",
+                    "name": "the second record",
+                    "num": "2",
+                    "an_array": ["ghi", "jkl"],
+                }
+            ]
+        }
+
+    @pytest.mark.django_db
+    @pytest.mark.parametrize(
+        "fixture_name, url_name",
+        (
+            ("source_table", "source_table_data"),
+            ("custom_query", "custom_dataset_query_data"),
+        ),
+    )
+    def test_array_not_equals_filter(self, client, fixture_name, url_name, request):
+        source = request.getfixturevalue(fixture_name)
+        response = client.post(
+            reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)),
+            {
+                "filters": {
+                    "an_array": {
+                        "filter": "abc, def",
+                        "filterType": "array",
+                        "type": "notEqual",
+                    }
+                },
+            },
+            content_type="application/json",
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            "records": [
+                {
+                    "date": "2019-01-01",
+                    "id": "488d06b6-032b-467a-b2c5-2820610b0ca6",
+                    "name": "the second record",
+                    "num": "2",
+                    "an_array": ["ghi", "jkl"],
+                },
+                {
+                    "date": "2020-01-01",
+                    "id": "a41da88b-ffa3-4102-928c-b3937fa5b58f",
+                    "name": "the last record",
+                    "num": None,
+                    "an_array": None,
+                },
             ]
         }
 

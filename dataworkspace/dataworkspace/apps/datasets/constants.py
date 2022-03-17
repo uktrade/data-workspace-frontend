@@ -18,6 +18,10 @@ GRID_DATA_TYPE_MAP = {
     "timestamp without time zone": "date",
     "date": "date",
     "boolean": "boolean",
+    "text[]": "array",
+    "varchar[]": "array",
+    "uuid[]": "array",
+    "integer[]": "array",
 }
 
 
