@@ -21,7 +21,7 @@ RUN apt-get update && \
         git=1:2.20.1-2+deb10u3 \
         nginx=1.14.2-2+deb10u4 \
         nginx-extras=1.14.2-2+deb10u4\
-        openssl=1.1.1d-0+deb10u7 \
+        openssl \
         build-essential=12.6 \
         procps=2:3.3.15-2 \
         python3=3.7.3-1 \

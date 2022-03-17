@@ -359,13 +359,13 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
             "schedule": 60 * 5,
             "args": (),
         },
-        "store-custom-dataset-query-table-structures": {
-            "task": "dataworkspace.apps.datasets.utils.store_custom_dataset_query_table_structures",
+        "update-metadata-with-source-table-id": {
+            "task": "dataworkspace.apps.datasets.utils.update_metadata_with_source_table_id",
             "schedule": 60 * 5,
             "args": (),
         },
-        "send-notification-emails": {
-            "task": "dataworkspace.apps.datasets.utils.send_notification_emails",
+        "store-custom-dataset-query-metadata": {
+            "task": "dataworkspace.apps.datasets.utils.store_custom_dataset_query_metadata",
             "schedule": 60 * 5,
             "args": (),
         },
@@ -377,6 +377,11 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
         "refresh-published-chart-data": {
             "task": "dataworkspace.apps.explorer.tasks.refresh_published_chart_data",
             "schedule": crontab(minute=0, hour=6),
+            "args": (),
+        },
+        "send-notification-emails": {
+            "task": "dataworkspace.apps.datasets.utils.send_notification_emails",
+            "schedule": 60 * 5,
             "args": (),
         },
     }
