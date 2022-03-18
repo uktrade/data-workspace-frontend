@@ -1,18 +1,12 @@
-{% extends '_main.html' %}
-{% block page_title %}You do not have access to this page{% endblock %}
-{% block content %}
-  <div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
-      <h1 class="govuk-heading-xl">You do not have access to this page</h1>
-      <p class="govuk-body">
-        This {{ dataset.get_type_display|lower }} has not been published.
-      </p>
-      <p class="govuk-body">
-        {% if dataset.enquiries_contact %}
-          <a class="govuk-link" href="mailto:{{ dataset.enquiries_contact.email }}">Email {{ dataset.enquiries_contact.email }}</a> or
-        {% endif %}
-        <a class="govuk-link" href="{% url 'support' %}">{% if dataset.enquiries_contact %}contact{% else %}Contact{% endif %} the Data Workspace Support Team</a> to find out it's status.
-      </p>
-    </div>
-  </div>
-{% endblock %}
+{% extends 'errors/base_error.html' %}
+{% block error_content %}
+  <p class="govuk-body">
+    This {{ dataset.get_type_display|lower }} has not been published.
+  </p>
+  <p class="govuk-body">
+    {% if dataset.enquiries_contact %}
+      <a class="govuk-link" href="mailto:{{ dataset.enquiries_contact.email }}">Email {{ dataset.enquiries_contact.email }}</a> or
+    {% endif %}
+    <a class="govuk-link" href="{% url 'support' %}">{% if dataset.enquiries_contact %}contact{% else %}Contact{% endif %} the Data Workspace Support Team</a> to find out it's status.
+  </p>
+{% endblock error_content %}

@@ -1,14 +1,8 @@
-{% extends '_main.html' %}
-{% block page_title %}You do not have access to this page{% endblock %}
-{% block content %}
-  <div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
-      <h1 class="govuk-heading-xl">You do not have access to this page</h1>
-      <p class="govuk-body">You do not have permission to access this dataset.</p>
-      <p class="govuk-body">You can <a class="govuk-link" href="{% url 'request_access:dataset' dataset_uuid=dataset.id %}">request access to this dataset</a>.</p>
-      <p class="govuk-body">
-        If you’re still having issues accessing the dataset, <a class="govuk-link" href="{% url 'support' %}">contact the Data Workspace Team</a> for help.
-      </p>
-    </div>
-  </div>
-{% endblock %}
+{% extends 'errors/base_error.html' %}
+{% block error_content %}
+  <p class="govuk-body">You do not have permission to access this dataset.</p>
+  <p class="govuk-body">You can <a class="govuk-link" href="{% url 'request_access:dataset' dataset_uuid=dataset.id %}">request access to this dataset</a>.</p>
+  <p class="govuk-body">
+    If you’re still having issues accessing the dataset, <a class="govuk-link" href="{% url 'support' %}">contact the Data Workspace Team</a> for help.
+  </p>
+{% endblock error_content %}

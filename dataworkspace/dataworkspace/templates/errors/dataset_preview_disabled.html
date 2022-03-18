@@ -1,13 +1,7 @@
-{% extends '_main.html' %}
-{% block page_title %}You do not have access to this page{% endblock %}
-{% block content %}
-  <div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
-      <h1 class="govuk-heading-xl">You do not have access to this page</h1>
-      <p class="govuk-body">Data preview is not enabled for this {{ dataset.get_type_display|lower }}.</p>
-      <p class="govuk-body">
-        <a class="govuk-link" href="{% url 'support' %}">Contact the Data Workspace Team</a> for access.
-      </p>
-    </div>
-  </div>
-{% endblock %}
+{% extends 'errors/base_error.html' %}
+{% block error_content %}
+  <p class="govuk-body">Data preview is not enabled for this {{ dataset.get_type_display|lower }}.</p>
+  <p class="govuk-body">
+    <a class="govuk-link" href="{% url 'support' %}">Contact the Data Workspace Team</a> for access.
+  </p>
+{% endblock error_content %}
