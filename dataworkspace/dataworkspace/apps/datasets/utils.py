@@ -643,6 +643,11 @@ def get_change_item(related_object, change_id):
     for change in changelog:
         if change["change_id"] == change_id:
             return change
+
+    logger.warning("No match for get_change_item %s type: %s", change_id, type(change_id))
+    logger.warning(related_object)
+    logger.warning(changelog)
+
     return None
 
 
@@ -922,6 +927,10 @@ def send_notification_emails():
                         user_notification.notification.related_object,
                         user_notification.notification.changelog_id,
                     )
+
+                    if not change:
+                        logger.error("get_change_item returned None")
+
                     change_date = change["change_date"]
 
                     if (change["previous_table_structure"] != change["table_structure"]) or (
