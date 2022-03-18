@@ -24,3 +24,11 @@ class DatasetPermissionDenied(BaseDatasetPermissionDeniedError):
 
 class DataExplorerQueryResultsPermissionError(PermissionDenied):
     template_name = "errors/query_results_permission_denied.html"
+
+
+class FeaturePermissionDeniedError(PermissionDenied):
+    template_name = "errors/feature_permission_denied.html"
+
+    def __init__(self, feature, *args):
+        super().__init__(*args)
+        self.template_context = {"feature": feature}
