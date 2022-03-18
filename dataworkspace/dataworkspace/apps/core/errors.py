@@ -20,3 +20,7 @@ class DatasetPreviewDisabledError(BaseDatasetPermissionDeniedError):
 
 class DatasetPermissionDenied(BaseDatasetPermissionDeniedError):
     template_name = "errors/dataset_permission_denied.html"
+
+
+class DataExplorerQueryResultsPermissionError(PermissionDenied):
+    template_name = "errors/query_results_permission_denied.html"

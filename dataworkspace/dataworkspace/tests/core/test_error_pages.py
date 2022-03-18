@@ -5,6 +5,7 @@ from django.urls import reverse
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data
+from dataworkspace.tests.explorer.factories import QueryLogFactory
 
 
 @pytest.mark.parametrize(
@@ -149,4 +150,15 @@ def test_dataset_preview_disabled(url_name, source_factory):
     assert (
         f"Data preview is not enabled for this {source.dataset.get_type_display().lower()}."
         in response.content.decode(response.charset)
+    )
+
+
+@pytest.mark.django_db
+def test_other_users_query_results(user):
+    client = Client(raise_request_exception=False, **get_http_sso_data(user))
+    ql = QueryLogFactory.create(run_by_user=factories.UserFactory.create())
+    response = client.get(reverse("explorer:running_query", args=(ql.id,)))
+    assert response.status_code == 403
+    assert "You can collaborate on Data Explorer queries" in response.content.decode(
+        response.charset
     )
