@@ -29,6 +29,6 @@ class DataExplorerQueryResultsPermissionError(PermissionDenied):
 class FeaturePermissionDeniedError(PermissionDenied):
     template_name = "errors/feature_permission_denied.html"
 
-    def __init__(self, feature, *args):
-        super().__init__(*args)
-        self.template_context = {"feature": feature}
+    def __init__(self, feature, call_to_action=None):
+        super().__init__()
+        self.template_context = {"feature": feature, "call_to_action": call_to_action}

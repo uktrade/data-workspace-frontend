@@ -172,3 +172,13 @@ def test_non_admin_pipeline_access(user):
     assert "You do not have permission to access the Pipeline builder" in response.content.decode(
         response.charset
     )
+
+
+@pytest.mark.django_db
+def test_visualisations_permission_denied(user):
+    client = Client(raise_request_exception=False, **get_http_sso_data(user))
+    response = client.get(reverse("visualisations:root"))
+    assert response.status_code == 403
+    assert "You do not have permission to manage visualisations" in response.content.decode(
+        response.charset
+    )
