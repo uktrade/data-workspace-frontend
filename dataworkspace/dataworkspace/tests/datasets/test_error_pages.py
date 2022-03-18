@@ -2,6 +2,7 @@ import pytest
 from django.test import Client
 from django.urls import reverse
 
+from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data
 
@@ -88,3 +89,64 @@ def test_dataset_unpublished(url_name, dataset_factories):
             f"This {ds.get_type_display().lower()} has not been published"
             in response.content.decode(response.charset)
         )
+
+
+@pytest.mark.parametrize(
+    "url_name,source_factory",
+    (
+        (
+            "datasets:source_table_detail",
+            factories.SourceTableFactory,
+        ),
+        (
+            "datasets:custom_dataset_query_detail",
+            factories.CustomDatasetQueryFactory,
+        ),
+    ),
+)
+@pytest.mark.django_db
+def test_dataset_preview_permission_denied(url_name, source_factory):
+    user = factories.UserFactory.create(is_superuser=False)
+    client = Client(raise_request_exception=False, **get_http_sso_data(user))
+    source = source_factory.create(
+        dataset=factories.DataSetFactory.create(
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION, published=True
+        ),
+        data_grid_enabled=True,
+    )
+    response = client.get(reverse(url_name, args=(source.dataset.id, source.id)))
+    assert response.status_code == 403
+    assert "You do not have permission to access this dataset" in response.content.decode(
+        response.charset
+    )
+
+
+@pytest.mark.parametrize(
+    "url_name,source_factory",
+    (
+        (
+            "datasets:source_table_detail",
+            factories.SourceTableFactory,
+        ),
+        (
+            "datasets:custom_dataset_query_detail",
+            factories.CustomDatasetQueryFactory,
+        ),
+    ),
+)
+@pytest.mark.django_db
+def test_dataset_preview_disabled(url_name, source_factory):
+    user = factories.UserFactory.create(is_superuser=False)
+    client = Client(raise_request_exception=False, **get_http_sso_data(user))
+    source = source_factory.create(
+        dataset=factories.DataSetFactory.create(
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION, published=True
+        ),
+        data_grid_enabled=False,
+    )
+    response = client.get(reverse(url_name, args=(source.dataset.id, source.id)))
+    assert response.status_code == 403
+    assert (
+        f"Data preview is not enabled for this {source.dataset.get_type_display().lower()}."
+        in response.content.decode(response.charset)
+    )

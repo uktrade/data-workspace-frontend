@@ -63,6 +63,7 @@ from waffle.mixins import WaffleFlagMixin
 from dataworkspace import datasets_db
 from dataworkspace.apps.api_v1.core.views import invalidate_superset_user_cached_credentials
 from dataworkspace.apps.applications.models import ApplicationInstance
+from dataworkspace.apps.core.errors import DatasetPermissionDenied, DatasetPreviewDisabledError
 from dataworkspace.apps.datasets.constants import (
     DataSetType,
     DataLinkType,
@@ -1376,24 +1377,22 @@ class DatasetUsageHistoryView(View):
 class DataCutSourceDetailView(DetailView):
     template_name = "datasets/data_cut_source_detail.html"
 
-    def _user_can_access(self):
-        source = self.get_object()
-        return source.dataset.user_has_access(self.request.user) and source.data_grid_enabled
-
     def dispatch(self, request, *args, **kwargs):
-        if not self._user_can_access():
-            dataset_uuid = self.kwargs.get("dataset_uuid")
-            dataset = find_dataset(dataset_uuid, self.request.user)
+        source = self.get_object()
+        if not source.data_grid_enabled:
+            raise DatasetPreviewDisabledError(source.dataset)
 
-            return HttpResponseRedirect(dataset.get_absolute_url())
+        if not source.dataset.user_has_access(self.request.user):
+            raise DatasetPermissionDenied(source.dataset)
+
         return super().dispatch(request, *args, **kwargs)
 
     def get_object(self, queryset=None):
+        dataset = find_dataset(self.kwargs["dataset_uuid"], self.request.user)
         return get_object_or_404(
             self.kwargs["model_class"],
-            dataset__id=self.kwargs.get("dataset_uuid"),
+            dataset=dataset,
             pk=self.kwargs["object_id"],
-            **{"dataset__published": True} if not self.request.user.is_superuser else {},
         )
 
 
