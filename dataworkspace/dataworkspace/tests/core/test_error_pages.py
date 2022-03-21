@@ -219,3 +219,13 @@ def test_visualisations_developer_permission_required(
     assert "You must be developer, maintainer or owner" in response.content.decode(
         response.charset
     )
+
+
+@pytest.mark.django_db
+def test_admin_permission_denied(user):
+    client = Client(raise_request_exception=False, **get_http_sso_data(user))
+    response = client.get(reverse("admin:index"), follow=True)
+    assert response.status_code == 403
+    assert "Ask the Data Infrastructure Team for access." in response.content.decode(
+        response.charset
+    )

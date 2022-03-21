@@ -40,3 +40,7 @@ class DeveloperPermissionRequiredError(PermissionDenied):
     def __init__(self, project_name):
         super().__init__()
         self.template_context = {"project_name": project_name}
+
+
+class DjangoAdminPermissionDeniedError(PermissionDenied):
+    template_name = "errors/django_admin_permission_denied.html"
