@@ -550,29 +550,14 @@ def find_datasets(request):
     ].choices  # Cache these now, as we annotate them with result numbers later which we don't want here.
 
     filters = form.get_filters()
-    logger.warning(filters.__dict__)
-
-    query = filters.query
-    unpublished = "unpublished" in form.cleaned_data.get("admin_filters")
-    open_data = "opendata" in form.cleaned_data.get("admin_filters")
-    with_visuals = "withvisuals" in form.cleaned_data.get("admin_filters")
-    use = set(form.cleaned_data.get("use"))
-    data_type = set(form.cleaned_data.get("data_type", []))
-    sort = form.cleaned_data.get("sort")
-    source_ids = set(source.id for source in form.cleaned_data.get("source"))
-    topic_ids = set(topic.id for topic in form.cleaned_data.get("topic"))
-    bookmarked = filters.bookmarked
-    subscribed = filters.subscribed
-    user_accessible = set(form.cleaned_data.get("user_access", [])) == {"yes"}
-    user_inaccessible = set(form.cleaned_data.get("user_access", [])) == {"no"}
 
     all_datasets_visible_to_user_matching_query = (
         sorted_datasets_and_visualisations_matching_query_for_user(
-            query=query,
-            use=use,
-            data_type=data_type,
+            query=filters.query,
+            use=filters.use,
+            data_type=filters.data_type,
             user=request.user,
-            sort_by=sort,
+            sort_by=filters.sort_type,
         )
     )
 
@@ -584,17 +569,17 @@ def find_datasets(request):
         filter(
             lambda d: _matches_filters(
                 d,
-                bookmarked,
-                bool(unpublished),
-                bool(open_data),
-                bool(with_visuals),
-                use,
-                data_type,
-                source_ids,
-                topic_ids,
-                user_accessible,
-                user_inaccessible,
-                subscribed,
+                filters.bookmarked,
+                bool(filters.unpublished),
+                bool(filters.open_data),
+                bool(filters.with_visuals),
+                filters.use,
+                filters.data_type,
+                filters.source_ids,
+                filters.topic_ids,
+                filters.user_accessible,
+                filters.user_inaccessible,
+                filters.subscribed,
             ),
             all_datasets_visible_to_user_matching_query,
         )
@@ -619,12 +604,13 @@ def find_datasets(request):
         "datasets/index_v2.html",
         {
             "form": form,
-            "query": query,
+            "query": filters.query,
             "datasets": paginator.get_page(request.GET.get("page")),
             "data_type": dict(data_types),
             "show_admin_filters": has_unpublished_dataset_access(request.user),
             "DATASET_FINDER_FLAG": settings.DATASET_FINDER_ADMIN_ONLY_FLAG,
-            "search_type": "searchBar" if query else "noSearch",
+            "search_type": "searchBar" if filters.query else "noSearch",
+            "has_filters": filters.has_filters(),
         },
     )
 

@@ -162,7 +162,6 @@ class EligibilityCriteriaForm(forms.Form):
 
 class SourceTagField(forms.ModelMultipleChoiceField):
     def label_from_instance(self, obj):
-        logger.debug(obj)
         return obj.name
 
 
@@ -176,8 +175,6 @@ class DatasetSearchForm(forms.Form):
         choices=[
             ("yes", "Data I have access to"),
             ("no", "Data I don't have access to"),
-            ("own", "Data I own"),
-            ("manage", "Data I manage"),
         ],
         required=False,
         widget=AccordionFilterWidget("Data access"),
@@ -395,13 +392,49 @@ class DatasetSearchForm(forms.Form):
         filters.subscribed = DatasetSearchForm.SUBSCRIBED in self.cleaned_data.get("my_datasets")
         filters.query = self.cleaned_data.get("q")
 
+        filters.unpublished = "unpublished" in self.cleaned_data.get("admin_filters")
+        filters.open_data = "opendata" in self.cleaned_data.get("admin_filters")
+        filters.with_visuals = "withvisuals" in self.cleaned_data.get("admin_filters")
+        filters.use = set(self.cleaned_data.get("use"))
+        filters.data_type = set(self.cleaned_data.get("data_type", []))
+        filters.sort_type = self.cleaned_data.get("sort")
+        filters.source_ids = set(source.id for source in self.cleaned_data.get("source"))
+        filters.topic_ids = set(topic.id for topic in self.cleaned_data.get("topic"))
+        filters.user_accessible = set(self.cleaned_data.get("user_access", [])) == {"yes"}
+        filters.user_inaccessible = set(self.cleaned_data.get("user_access", [])) == {"no"}
+
         return filters
 
 
 class SearchDatasetsFilters:
     bookmarked: bool
     subscribed: bool
+    unpublished: bool
+    open_data: bool
+    with_visuals: bool
+    use: set
+    data_type: set
+    sort_type: str
+    source_ids: set
+    topic_ids: set
+    user_accessible: set
+    user_inaccessible: set
     query: str
+
+    def has_filters(self):
+        return (
+            self.bookmarked
+            or self.subscribed
+            or self.unpublished
+            or self.open_data
+            or self.with_visuals
+            or bool(self.use)
+            or bool(self.data_type)
+            or bool(self.source_ids)
+            or bool(self.topic_ids)
+            or bool(self.user_accessible)
+            or bool(self.user_inaccessible)
+        )
 
 
 class RelatedMastersSortForm(forms.Form):

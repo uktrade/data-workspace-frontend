@@ -48,7 +48,7 @@
 
     <div class="govuk-grid-row">
       <div class="govuk-grid-column-full">
-        <div class="search-field govuk-!-margin-bottom-9">
+        <div class="search-field govuk-!-margin-bottom-2">
           <label class="govuk-label search-field__label" for="search">Search by dataset name or description</label>
           <div class="search-field-wrapper govuk-!-padding-bottom-6">
             <input type="search" name="q" id="search" title="Search"
@@ -76,13 +76,8 @@
             <div class="govuk-accordion" data-module="govuk-accordion" id="accordion-filters">
               {{ form.my_datasets }}
 
-              {% if form.topic.field.choices %}
-                {{ form.topic }}
-              {% endif %}
-
-              {% if form.source.field.choices %}
-                {{ form.source }}
-              {% endif %}
+              {{ form.topic }}
+              {{ form.source }}
 
               {{ form.user_access }}
               {{ form.data_type }}
@@ -100,36 +95,51 @@
             {{ datasets.paginator.count }} dataset{{ datasets.paginator.count|pluralize }} found.
           </div>
 
-          <div>
-            <div style="float:right;">
+          <div style="border-bottom: 5px solid rgb(11, 12, 12);">
+
+            <p class="govuk-body govuk-!-margin-top-0 govuk-!-margin-bottom-0">
+              <span class="govuk-!-font-size-36" role="status"
+                    id="search-results-count">{{ datasets.paginator.count }}</span>
+              dataset{{ datasets.paginator.count|pluralize }} found.
+
+              {% if  has_filters %}
+                <span style="float:right;">
+                  <span class="govuk-!-font-size-36">&nbsp;</span>
+                    <a href="{% url "datasets:find_datasets" %}" class="govuk-link govuk-link--no-visited-state">Remove all filters</a>
+                </span>
+              {% endif %}
+            </p>
+
+            <p class="govuk-body govuk-!-margin-top-4">
+              {% for value, text in form.topic.field.choices %}
+                {# value is *not* a string but a ModelChoiceIteratorValue. Convert to string first!  #}
+                {% if value|stringformat:"s" in form.topic.value %}
+                  {% include "datasets/filter_button.html" with id=value text=text tag_type=form.topic.name label="Topic" %}
+                {% endif %}
+              {% endfor %}
+
+              {% for value, text in form.source.field.choices %}
+                {% if value|stringformat:"s" in form.source.value %}
+                  {% include "datasets/filter_button.html" with id=value text=text tag_type=form.source.name label="Source" %}
+                {% endif %}
+              {% endfor %}
+
+            </p>
+
+          </div>
+          <div class="govuk-body govuk-!-margin-top-4">
+
+            <div style="float:right">
               {{ form.sort }}
             </div>
-            <div class="govuk-form-group govuk-!-margin-bottom-0">
-              <label class="govuk-label" style="display:inline;line-height: 2;">
-                <span role="status" id="search-results-count">{{ datasets.paginator.count }}</span>
-                dataset{{ datasets.paginator.count|pluralize }} found.
-              </label>
-            </div>
-          </div>
 
-          <div class="govuk-body" style="clear:both;">
-            <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
-            <a href="{% url "datasets:find_datasets" %}" class="govuk-link govuk-link--no-visited-state">Reset
-              filters</a>
-            &nbsp;
+            <div class="govuk-form-group">
+              <span style="color:#505a5f;dislay:inline;" >
+            Page {{ datasets.number }} of {{ datasets.paginator.num_pages }}
+                </span>
+              </div>
 
-            {% for value, text in form.topic.field.choices %}
-              {# value is *not* a string but a ModelChoiceIteratorValue. Convert to string first!  #}
-              {% if value|stringformat:"s" in form.topic.value %}
-                {% include "datasets/filter_button.html" with id=value text=text tag_type=form.topic.name %}
-              {% endif %}
-            {% endfor %}
 
-            {% for value, text in form.source.field.choices %}
-              {% if value|stringformat:"s" in form.source.value %}
-                {% include "datasets/filter_button.html" with id=value text=text tag_type=form.source.name %}
-              {% endif %}
-            {% endfor %}
           </div>
 
           <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
@@ -263,7 +273,7 @@
                 dataset</a></li>
             </ul>
           </div>
-        
+
         </div>
       </div>
     </div>
