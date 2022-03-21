@@ -44,3 +44,7 @@ class DeveloperPermissionRequiredError(PermissionDenied):
 
 class DjangoAdminPermissionDeniedError(PermissionDenied):
     template_name = "errors/django_admin_permission_denied.html"
+
+
+class ToolPermissionDeniedError(PermissionDenied):
+    template_name = "errors/tool_permission_denied.html"

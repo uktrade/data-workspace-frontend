@@ -65,6 +65,7 @@ from dataworkspace.apps.applications.utils import stop_spawner_and_application
 from dataworkspace.apps.core.errors import (
     DeveloperPermissionRequiredError,
     FeaturePermissionDeniedError,
+    ToolPermissionDeniedError,
 )
 from dataworkspace.apps.core.utils import (
     source_tables_for_app,
@@ -260,7 +261,7 @@ def _get_embedded_superset_dashboard(request, dashboard_id, catalogue_item):
 @require_GET
 def quicksight_start_polling_sync_and_redirect(request):
     if not request.user.has_perm("applications.access_quicksight"):
-        return HttpResponse(status=403)
+        raise ToolPermissionDeniedError()
 
     qs_client = boto3.client(
         "quicksight",

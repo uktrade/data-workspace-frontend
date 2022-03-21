@@ -1,0 +1,7 @@
+{% extends 'errors/base_error.html' %}
+{% block error_content %}
+  <p class="govuk-body">You can only use your instance of {{ tool_name }}.</p>
+  <p class="govuk-body">
+    For more information about how to share an analysis, <a class="govuk-link" href="https://data-services-help.trade.gov.uk/data-workspace">go to the Help Centre</a>.
+  </p>
+{% endblock error_content %}

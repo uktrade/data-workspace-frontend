@@ -58,6 +58,14 @@ def public_error_403_csrf_html_view(request, reason=None):
     return render(request, "errors/error_403_csrf.html", status=403)
 
 
+def public_error_403_tool_permission_denied_html_view(request):
+    return render(request, "errors/error_403_tool_permission_denied.html", status=403)
+
+
+def public_error_403_invalid_tool_user_html_view(request):
+    return render(request, "errors/error_403_invalid_tool_user.html", status=403)
+
+
 def public_error_500_html_view(request):
     message = request.GET.get("message", None)
     return render(request, "errors/error_500.html", {"message": message}, status=500)
