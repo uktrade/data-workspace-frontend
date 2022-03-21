@@ -54,6 +54,10 @@ def public_error_403_html_view(request, exception=None):
     )
 
 
+def public_error_403_csrf_html_view(request, reason=None):
+    return render(request, "errors/error_403_csrf.html", status=403)
+
+
 def public_error_500_html_view(request):
     message = request.GET.get("message", None)
     return render(request, "errors/error_500.html", {"message": message}, status=500)

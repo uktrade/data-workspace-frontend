@@ -8,6 +8,7 @@ from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.core.views import (
     TechnicalSupportView,
     about_page_view,
+    public_error_403_csrf_html_view,
     public_error_403_html_view,
     public_error_404_html_view,
     public_error_500_html_view,
@@ -35,6 +36,7 @@ urlpatterns = [
     path("", login_required(find_datasets), name="root"),
     path("about/", login_required(about_page_view), name="about"),
     path("error_403", public_error_403_html_view),
+    path("error_403_csrf", public_error_403_csrf_html_view),
     path("error_404", public_error_404_html_view),
     path("error_500", public_error_500_html_view),
     path("appstream/", login_required(appstream_view), name="appstream"),
