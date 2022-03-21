@@ -1,0 +1,9 @@
+{% extends 'errors/base_error.html' %}
+{% block error_content %}
+  <p class="govuk-body">
+    You must be developer, maintainer or owner of {{ project_name }} in GitLab to manage this visualisation.
+  </p>
+  <p class="govuk-body">
+    To request access, contact a member of {{ project_name }} or <a class="govuk-link" href="{% url 'support' %}">contact the Data Workspace Team</a>.
+  </p>
+{% endblock error_content %}

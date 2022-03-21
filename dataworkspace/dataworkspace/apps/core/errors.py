@@ -32,3 +32,11 @@ class FeaturePermissionDeniedError(PermissionDenied):
     def __init__(self, feature, call_to_action=None):
         super().__init__()
         self.template_context = {"feature": feature, "call_to_action": call_to_action}
+
+
+class DeveloperPermissionRequiredError(PermissionDenied):
+    template_name = "errors/developer_permission_required.html"
+
+    def __init__(self, project_name):
+        super().__init__()
+        self.template_context = {"project_name": project_name}

@@ -19,7 +19,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core import serializers
 from django.core.validators import EmailValidator
-from django.core.exceptions import ValidationError, PermissionDenied
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.http import HttpResponse, Http404
 from django.shortcuts import redirect, render
@@ -62,7 +62,10 @@ from dataworkspace.apps.applications.utils_tools import (
 
 from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils import stop_spawner_and_application
-from dataworkspace.apps.core.errors import FeaturePermissionDeniedError
+from dataworkspace.apps.core.errors import (
+    DeveloperPermissionRequiredError,
+    FeaturePermissionDeniedError,
+)
 from dataworkspace.apps.core.utils import (
     source_tables_for_app,
     source_tables_for_user,
@@ -413,7 +416,7 @@ def visualisation_branch_html_view(request, gitlab_project_id, branch_name):
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
-        raise PermissionDenied()
+        raise DeveloperPermissionRequiredError(gitlab_project["name"])
 
     if request.method == "GET":
         return visualisation_branch_html_GET(request, gitlab_project, branch_name)
@@ -540,7 +543,7 @@ def visualisation_users_with_access_html_view(request, gitlab_project_id):
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
-        raise PermissionDenied()
+        raise DeveloperPermissionRequiredError(gitlab_project["name"])
 
     if request.method == "GET":
         return visualisation_users_with_access_html_GET(request, gitlab_project)
@@ -624,7 +627,7 @@ def visualisation_users_give_access_html_view(request, gitlab_project_id):
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
-        raise PermissionDenied()
+        raise DeveloperPermissionRequiredError(gitlab_project["name"])
 
     token = request.GET.get("token")
     token_data = decrypt_token(token.encode("utf-8")) if token else {}
@@ -878,9 +881,8 @@ def visualisation_catalogue_item_html_view(request, gitlab_project_id):
         raise FeaturePermissionDeniedError("manage visualisations", "To request access")
 
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
-
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
-        raise PermissionDenied()
+        raise DeveloperPermissionRequiredError(gitlab_project["name"])
 
     if request.method == "GET":
         return visualisation_catalogue_item_html_GET(request, gitlab_project)
@@ -966,7 +968,7 @@ def visualisation_approvals_html_view(request, gitlab_project_id):
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
-        raise PermissionDenied()
+        raise DeveloperPermissionRequiredError(gitlab_project["name"])
 
     if request.method == "GET":
         return visualisation_approvals_html_GET(request, gitlab_project)
@@ -1051,7 +1053,7 @@ def visualisation_datasets_html_view(request, gitlab_project_id):
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
-        raise PermissionDenied()
+        raise DeveloperPermissionRequiredError(gitlab_project["name"])
 
     if request.method == "GET":
         return visualisation_datasets_html_GET(request, gitlab_project)
@@ -1248,7 +1250,7 @@ def visualisation_publish_html_view(request, gitlab_project_id):
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
-        raise PermissionDenied()
+        raise DeveloperPermissionRequiredError(gitlab_project["name"])
 
     if request.method == "GET":
         return visualisation_publish_html_GET(request, gitlab_project)
@@ -1499,10 +1501,11 @@ def _download_log(filename, events):
 
 
 def visualisation_latest_log_GET(request, gitlab_project_id, commit_id):
-    if not gitlab_has_developer_access(request.user, gitlab_project_id):
-        raise FeaturePermissionDeniedError("manage visualisations", "To request access")
-
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
+
+    if not gitlab_has_developer_access(request.user, gitlab_project_id):
+        raise DeveloperPermissionRequiredError(gitlab_project["name"])
+
     application_template = _application_template(gitlab_project)
     filename = f'{gitlab_project["name"]}-{commit_id}.log'
 

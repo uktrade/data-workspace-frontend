@@ -1,7 +1,11 @@
+import mock
 import pytest
+from django.contrib.auth.models import Permission
+from django.contrib.contenttypes.models import ContentType
 from django.test import Client
 from django.urls import reverse
 
+from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data
@@ -180,5 +184,38 @@ def test_visualisations_permission_denied(user):
     response = client.get(reverse("visualisations:root"))
     assert response.status_code == 403
     assert "You do not have permission to manage visualisations" in response.content.decode(
+        response.charset
+    )
+
+
+@pytest.mark.django_db
+@mock.patch("dataworkspace.apps.applications.views.gitlab_has_developer_access")
+@mock.patch("dataworkspace.apps.applications.views._visualisation_gitlab_project")
+def test_visualisations_developer_permission_required(
+    mock_get_gitlab_project, mock_has_access, user
+):
+    user.user_permissions.add(
+        Permission.objects.get(
+            codename="develop_visualisations",
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        )
+    )
+    client = Client(raise_request_exception=False, **get_http_sso_data(user))
+    visualisation = factories.VisualisationCatalogueItemFactory.create(
+        visualisation_template__gitlab_project_id=1,
+    )
+    mock_get_gitlab_project.return_value = {
+        "id": 1,
+        "default_branch": "master",
+        "name": "test-gitlab-project",
+    }
+    mock_has_access.return_value = False
+    response = client.get(
+        reverse(
+            "visualisations:catalogue-item",
+            args=(visualisation.visualisation_template.gitlab_project_id,),
+        )
+    )
+    assert "You must be developer, maintainer or owner" in response.content.decode(
         response.charset
     )
