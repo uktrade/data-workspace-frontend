@@ -18,7 +18,7 @@
   <link rel="apple-touch-icon" sizes="167x167" href="{% static 'assets/images/govuk-apple-touch-icon-167x167.png' %}">
   <link rel="apple-touch-icon" sizes="152x152" href="{% static 'assets/images/govuk-apple-touch-icon-152x152.png' %}">
   <link rel="apple-touch-icon" href="{% static 'assets/images/govuk-apple-touch-icon.png' %}">
-  <link rel="stylesheet" href="{% static 'govuk-frontend-3.14.0-without-gds-transport.min.css' %}">
+  <link rel="stylesheet" href="{% static 'govuk-frontend.css' %}">
   <link rel="stylesheet" href="{% static 'data-workspace.css' %}">
 
   
@@ -119,8 +119,7 @@
   </header>
 
   <div class="govuk-width-container">
-{#  TODO: Confirm that alpha banner is to be removed site wide #}
-{#    {% include 'partials/alpha_banner.html' %}#}
+    {% include 'partials/alpha_banner.html' %}
     {% block breadcrumbs %}{% endblock %}
     {% block go_back %}{% endblock %}
 
