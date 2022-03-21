@@ -71,22 +71,22 @@
     <div id="live-search-wrapper">
       <div class="govuk-grid-row">
         <div
-          class="govuk-grid-column-one-third filters-container{% flag SEARCH_FILTERS_STICKY %} sticky-filters-container{% endflag %}">
-          <div{% flag SEARCH_FILTERS_STICKY %} class="sticky-filters-contents"{% endflag %}>
-            <div class="govuk-accordion" data-module="govuk-accordion" id="accordion-filters">
-              {{ form.my_datasets }}
+          class="govuk-grid-column-one-third filters-container">
 
-              {{ form.topic }}
-              {{ form.source }}
+          <div class="govuk-accordion" data-module="govuk-accordion" id="accordion-filters">
+            {{ form.my_datasets }}
 
-              {{ form.user_access }}
-              {{ form.data_type }}
+            {{ form.topic }}
+            {{ form.source }}
 
-              {% if show_admin_filters %}
-                {{ form.admin_filters }}
-              {% endif %}
-            </div>
+            {{ form.user_access }}
+            {{ form.data_type }}
+
+            {% if show_admin_filters %}
+              {{ form.admin_filters }}
+            {% endif %}
           </div>
+
         </div>
         <div class="govuk-grid-column-two-thirds">
 
@@ -124,6 +124,18 @@
                 {% endif %}
               {% endfor %}
 
+              {% for value, text in form.data_type.field.choices %}
+                {% if value|stringformat:"s" in form.data_type.value %}
+                  {% include "datasets/filter_button.html" with id=value text=text tag_type=form.data_type.name label="Type" %}
+                {% endif %}
+              {% endfor %}
+
+              {% for value, text in form.user_access.field.choices %}
+                {% if value|stringformat:"s" in form.user_access.value %}
+                  {% include "datasets/filter_button.html" with id=value text=text tag_type=form.user_access.name label="Access" %}
+                {% endif %}
+              {% endfor %}
+
             </p>
 
           </div>
@@ -134,10 +146,10 @@
             </div>
 
             <div class="govuk-form-group">
-              <span style="color:#505a5f;dislay:inline;" >
+              <span class="label__desaturated">
             Page {{ datasets.number }} of {{ datasets.paginator.num_pages }}
                 </span>
-              </div>
+            </div>
 
 
           </div>
@@ -192,7 +204,7 @@
                     <dd>
                       {% for topic in dataset.topic_tag_names %}
                         <a href="{% url "datasets:find_tags" tag_name=topic %}"
-                           class="govuk-link govuk-link--no-visited-state">#{{ topic }}</a>
+                           class="govuk-link govuk-link--no-visited-state">{{ topic }}</a>
                       {% empty %}
                         &nbsp;
                       {% endfor %}
@@ -203,7 +215,7 @@
 
               {% if not dataset.has_access %}
                 <div class="govuk-inset-text govuk-!-margin-bottom-0">
-                  You need to <a href="{% url 'request_access:dataset' dataset.id %}"
+                  You need to <a href="{% url 'datasets:request_access_from_search_result' dataset.id %}"
                                  class="govuk-link govuk-link--no-visited-state">request access</a> to use this
                   data
                 </div>
@@ -212,7 +224,7 @@
             </div>
           {% endfor %}
 
-          <p class="govuk-body" style="display: inline">
+          <p class="govuk-body label__desaturated" style="display: inline">
             Displaying results {{ datasets.start_index }}&ndash;{{ datasets.end_index }}
             of {{ datasets.paginator.count }}
           </p>

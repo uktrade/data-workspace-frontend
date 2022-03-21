@@ -216,6 +216,7 @@ class DatasetSearchForm(forms.Form):
             (DataSetType.MASTER, "Master dataset"),
             (DataSetType.DATACUT, "Data cut"),
             (DataSetType.REFERENCE, "Reference dataset"),
+            (DataSetType.VISUALISATION, "Visualisation"),
         ],
         coerce=int,
         required=False,

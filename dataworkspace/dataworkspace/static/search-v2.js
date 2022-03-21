@@ -177,7 +177,7 @@ LiveSearch.prototype.showErrorIndicator = function showErrorIndicator() {
 };
 
 LiveSearch.prototype.bindFilterButtons = function bindFilterButtons() {
-  var buttonSelector = "button[data-module=remove-tag]";
+  var buttonSelector = "button[data-module=remove-filter]";
   var self = this;
   this.$wrapper.on("click", buttonSelector, function (e) {
 
@@ -185,7 +185,7 @@ LiveSearch.prototype.bindFilterButtons = function bindFilterButtons() {
     var data = $button.data();
 
     // Find the checkbox corresponding to this button
-    var checkboxSelector = "input[type=checkbox][name=" + data.tagType + "][value=" + data.id + "]";
+    var checkboxSelector = "input[type=checkbox][name=" + data.filterType + "][value=" + data.id + "]";
 
     // uncheck it - which will cause the form to postback circa 2004 asp.net webforms ftw
     $(checkboxSelector).prop("checked", false);
