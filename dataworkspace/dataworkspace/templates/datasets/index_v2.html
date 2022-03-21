@@ -213,6 +213,7 @@
                 </dl>
               </div>
 
+              {{ dataset.has_access }}
               {% if not dataset.has_access %}
                 <div class="govuk-inset-text govuk-!-margin-bottom-0">
                   You need to <a href="{% url 'datasets:request_access_from_search_result' dataset.id %}"

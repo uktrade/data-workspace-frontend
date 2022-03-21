@@ -213,7 +213,7 @@ class DatasetSearchForm(forms.Form):
 
     data_type = forms.TypedMultipleChoiceField(
         choices=[
-            (DataSetType.MASTER, "Master dataset"),
+            (DataSetType.MASTER, "Source dataset"),
             (DataSetType.DATACUT, "Data cut"),
             (DataSetType.REFERENCE, "Reference dataset"),
             (DataSetType.VISUALISATION, "Visualisation"),
