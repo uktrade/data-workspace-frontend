@@ -1,15 +1,12 @@
-{% extends '_main.html' %}
-
-{% block page_title %}You are not allowed to access this page - {{ block.super }}{% endblock %}
-
+{% extends 'errors/base_error.html' %}
 {% block content %}
-    <div class="govuk-grid-row">
-      <div class="govuk-grid-column-two-thirds">
-        <h1 class="govuk-heading-xl">You are not allowed to access this page</h1>
-
-        <p class="govuk-body">Ensure you are signed into ZScaler.</p>
-
-        <p class="govuk-body">If you continue to be unable to access this page, <a class="govuk-link" href="{% url 'support' %}">contact the Data Workspace Support Team</a>.</p>
-      </div>
-    </div>
+  <p class="govuk-body">
+    Check you're signed into ZScaler. If you use another VPN client, check you're signed into it.
+  </p>
+  <p class="govuk-body">
+    Find out how to <a href="" sign into ZScaler.
+  </p>
+  <p class="govuk-body">
+    If you're already signed into ZScaler or another VPN client, <a class="govuk-link" href="{% url 'support' %}">contact the Data Workspace Team</a> for help accessing this page.
+  </p>
 {% endblock %}
