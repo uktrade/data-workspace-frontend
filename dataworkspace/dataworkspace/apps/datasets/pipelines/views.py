@@ -11,7 +11,7 @@ from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.urls import reverse
 from requests import RequestException
 
-from dataworkspace.apps.core.errors import FeaturePermissionDeniedError
+from dataworkspace.apps.core.errors import PipelineBuilderPermissionDeniedError
 from dataworkspace.apps.datasets.models import Pipeline
 from dataworkspace.apps.datasets.pipelines.forms import PipelineCreateForm, PipelineEditForm
 from dataworkspace.apps.datasets.pipelines.utils import (
@@ -29,7 +29,7 @@ logger = logging.getLogger("app")
 class IsAdminMixin(UserPassesTestMixin):
     def test_func(self):
         if not self.request.user.is_superuser:
-            raise FeaturePermissionDeniedError("access the Pipeline builder")
+            raise PipelineBuilderPermissionDeniedError()
         return True
 
 

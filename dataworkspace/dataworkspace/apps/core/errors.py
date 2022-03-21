@@ -26,12 +26,12 @@ class DataExplorerQueryResultsPermissionError(PermissionDenied):
     template_name = "errors/query_results_permission_denied.html"
 
 
-class FeaturePermissionDeniedError(PermissionDenied):
-    template_name = "errors/feature_permission_denied.html"
+class ManageVisualisationsPermissionDeniedError(PermissionDenied):
+    template_name = "errors/manage_visualisations_permission_denied.html"
 
-    def __init__(self, feature, call_to_action=None):
-        super().__init__()
-        self.template_context = {"feature": feature, "call_to_action": call_to_action}
+
+class PipelineBuilderPermissionDeniedError(PermissionDenied):
+    template_name = "errors/pipeline_builder_permission_denied.html"
 
 
 class DeveloperPermissionRequiredError(PermissionDenied):

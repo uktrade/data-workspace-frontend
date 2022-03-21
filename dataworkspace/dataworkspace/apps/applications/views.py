@@ -64,7 +64,7 @@ from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils import stop_spawner_and_application
 from dataworkspace.apps.core.errors import (
     DeveloperPermissionRequiredError,
-    FeaturePermissionDeniedError,
+    ManageVisualisationsPermissionDeniedError,
     ToolPermissionDeniedError,
 )
 from dataworkspace.apps.core.utils import (
@@ -335,7 +335,9 @@ def visualisation_link_html_view(request, link_id):
 
 def visualisations_html_view(request):
     if not request.user.has_perm("applications.develop_visualisations"):
-        raise FeaturePermissionDeniedError("manage visualisations", "To request access")
+        raise ManageVisualisationsPermissionDeniedError(
+            "manage visualisations", "To request access"
+        )
 
     if not request.method == "GET":
         return HttpResponse(status=405)
@@ -412,7 +414,9 @@ def visualisations_html_GET(request):
 
 def visualisation_branch_html_view(request, gitlab_project_id, branch_name):
     if not request.user.has_perm("applications.develop_visualisations"):
-        raise FeaturePermissionDeniedError("manage visualisations", "To request access")
+        raise ManageVisualisationsPermissionDeniedError(
+            "manage visualisations", "To request access"
+        )
 
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
@@ -539,7 +543,9 @@ def visualisation_branch_html_POST(request, gitlab_project, branch_name):
 
 def visualisation_users_with_access_html_view(request, gitlab_project_id):
     if not request.user.has_perm("applications.develop_visualisations"):
-        raise FeaturePermissionDeniedError("manage visualisations", "To request access")
+        raise ManageVisualisationsPermissionDeniedError(
+            "manage visualisations", "To request access"
+        )
 
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
@@ -623,7 +629,9 @@ def visualisation_users_with_access_html_POST(request, gitlab_project):
 
 def visualisation_users_give_access_html_view(request, gitlab_project_id):
     if not request.user.has_perm("applications.develop_visualisations"):
-        raise FeaturePermissionDeniedError("manage visualisations", "To request access")
+        raise ManageVisualisationsPermissionDeniedError(
+            "manage visualisations", "To request access"
+        )
 
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
@@ -879,7 +887,9 @@ def _render_visualisation(
 
 def visualisation_catalogue_item_html_view(request, gitlab_project_id):
     if not request.user.has_perm("applications.develop_visualisations"):
-        raise FeaturePermissionDeniedError("manage visualisations", "To request access")
+        raise ManageVisualisationsPermissionDeniedError(
+            "manage visualisations", "To request access"
+        )
 
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
@@ -964,7 +974,9 @@ def visualisation_catalogue_item_html_POST(request, gitlab_project):
 
 def visualisation_approvals_html_view(request, gitlab_project_id):
     if not request.user.has_perm("applications.develop_visualisations"):
-        raise FeaturePermissionDeniedError("manage visualisations", "To request access")
+        raise ManageVisualisationsPermissionDeniedError(
+            "manage visualisations", "To request access"
+        )
 
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
@@ -1049,7 +1061,9 @@ def visualisation_approvals_html_POST(request, gitlab_project):
 
 def visualisation_datasets_html_view(request, gitlab_project_id):
     if not request.user.has_perm("applications.develop_visualisations"):
-        raise FeaturePermissionDeniedError("manage visualisations", "To request access")
+        raise ManageVisualisationsPermissionDeniedError(
+            "manage visualisations", "To request access"
+        )
 
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
@@ -1246,7 +1260,9 @@ def _datasets(user, application_template):
 
 def visualisation_publish_html_view(request, gitlab_project_id):
     if not request.user.has_perm("applications.develop_visualisations"):
-        raise FeaturePermissionDeniedError("manage visualisations", "To request access")
+        raise ManageVisualisationsPermissionDeniedError(
+            "manage visualisations", "To request access"
+        )
 
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
