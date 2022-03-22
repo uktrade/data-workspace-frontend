@@ -23,9 +23,11 @@
             <span class="govuk-caption-l">Eligibility criteria for</span>
             <h1 class="govuk-heading-l">{{ dataset.name }}</h1>
 
-            <div class="govuk-inset-text">
-              {{ dataset.restrictions_on_usage }}
-            </div>
+            {% if dataset.restrictions_on_usage %}
+              <div class="govuk-inset-text">
+                {{ dataset.restrictions_on_usage }}
+              </div>
+            {% endif %}
 
               <h2 class="govuk-heading-m">
                 Are you
