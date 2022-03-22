@@ -125,7 +125,7 @@ class PipelineRunView(View, IsAdminMixin):
     def post(self, request, pk, *args, **kwargs):
         pipeline = get_object_or_404(Pipeline, pk=pk)
         try:
-            run_pipeline(pipeline, request.user)
+            run_pipeline(pipeline)
         except RequestException as e:
             messages.error(
                 self.request,

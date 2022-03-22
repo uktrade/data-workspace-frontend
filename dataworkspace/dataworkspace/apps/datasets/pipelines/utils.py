@@ -67,16 +67,11 @@ def delete_pipeline_from_dataflow(pipeline):
     return response.json()
 
 
-def run_pipeline(pipeline, run_by_user):
-    url = (
-        f"{settings.DATAFLOW_API_CONFIG['DATAFLOW_BASE_URL']}/api/experimental/"
-        f"dags/{pipeline.dag_id}/dag_runs"
-    )
+def run_pipeline(pipeline):
+    url = f"{API_URL}/dag/{pipeline.dag_id}/run"
     method = "POST"
     content_type = "application/json"
-    body = json.dumps(
-        {"replace_microseconds": "false", "conf": {"run_by_user": run_by_user.get_full_name()}}
-    )
+    body = ""
     header = Sender(
         HAWK_CREDS,
         url,
