@@ -83,6 +83,9 @@ class PipelineListView(ListView, IsAdminMixin):
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
+        if not context["object_list"].exists():
+            return context
+
         derived_dags = {}
         try:
             derived_dags = list_pipelines()
