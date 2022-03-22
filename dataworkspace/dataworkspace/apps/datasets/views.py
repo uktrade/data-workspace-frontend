@@ -112,12 +112,12 @@ logger = logging.getLogger("app")
 
 
 def get_datasets_data_for_user_matching_query(
-        datasets: QuerySet,
-        query,
-        use=None,
-        data_type=None,
-        user=None,
-        id_field="id",
+    datasets: QuerySet,
+    query,
+    use=None,
+    data_type=None,
+    user=None,
+    id_field="id",
 ):
     """
     Filters the dataset queryset for:
@@ -274,9 +274,9 @@ def get_datasets_data_for_user_matching_query(
             "is_open_data",
             "has_visuals",
         )
-            .annotate(has_access=BoolOr("_has_access"))
-            .annotate(is_bookmarked=BoolOr("_is_bookmarked"))
-            .annotate(is_subscribed=BoolOr("_is_subscribed"))
+        .annotate(has_access=BoolOr("_has_access"))
+        .annotate(is_bookmarked=BoolOr("_is_bookmarked"))
+        .annotate(is_subscribed=BoolOr("_is_subscribed"))
     )
 
     return datasets.values(
@@ -312,10 +312,10 @@ def get_visualisations_data_for_user_matching_query(visualisations: QuerySet, qu
     """
     # Filter out visualisations that the user is not allowed to even know about.
     if not (
-            user
-            and user.has_perm(
-        dataset_type_to_manage_unpublished_permission_codename(DataSetType.VISUALISATION)
-    )
+        user
+        and user.has_perm(
+            dataset_type_to_manage_unpublished_permission_codename(DataSetType.VISUALISATION)
+        )
     ):
         visualisations = visualisations.filter(published=True)
 
@@ -329,19 +329,19 @@ def get_visualisations_data_for_user_matching_query(visualisations: QuerySet, qu
     # Mark up whether the user can access the visualisation.
     if user:
         access_filter = (
-                                (
-                                    Q(
-                                        user_access_type__in=[
-                                            UserAccessType.REQUIRES_AUTHENTICATION,
-                                            UserAccessType.OPEN,
-                                        ]
-                                    )
-                                )
-                                & (
-                                        Q(visualisationuserpermission__user=user)
-                                        | Q(visualisationuserpermission__isnull=True)
-                                )
-                        ) | Q(
+            (
+                Q(
+                    user_access_type__in=[
+                        UserAccessType.REQUIRES_AUTHENTICATION,
+                        UserAccessType.OPEN,
+                    ]
+                )
+            )
+            & (
+                Q(visualisationuserpermission__user=user)
+                | Q(visualisationuserpermission__isnull=True)
+            )
+        ) | Q(
             user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
             visualisationuserpermission__user=user,
         )
@@ -401,9 +401,6 @@ def get_visualisations_data_for_user_matching_query(visualisations: QuerySet, qu
         has_visuals=Value(False, BooleanField()),
     )
 
-    if user:
-        visualisations = visualisations.annotate(is_subscribed=Value(True, BooleanField()))
-
     # We are joining on the user permissions table to determine `_has_access`` to the visualisation, so we need to
     # group them and remove duplicates. We aggregate all the `_has_access` fields together and return true if any
     # of the records say that access is available.
@@ -425,9 +422,9 @@ def get_visualisations_data_for_user_matching_query(visualisations: QuerySet, qu
             "is_open_data",
             "has_visuals",
         )
-            .annotate(has_access=BoolOr("_has_access"))
-            .annotate(is_bookmarked=BoolOr("_is_bookmarked"))
-            .annotate(is_subscribed=BoolOr("_is_subscribed"))
+        .annotate(has_access=BoolOr("_has_access"))
+        .annotate(is_bookmarked=BoolOr("_is_bookmarked"))
+        .annotate(is_subscribed=BoolOr("_is_subscribed"))
     )
 
     return visualisations.values(
@@ -453,38 +450,38 @@ def get_visualisations_data_for_user_matching_query(visualisations: QuerySet, qu
 
 
 def _matches_filters(
-        data,
-        bookmark: bool,
-        unpublished: bool,
-        opendata: bool,
-        withvisuals: bool,
-        use: Set,
-        data_type: Set,
-        source_ids: Set,
-        topic_ids: Set,
-        user_accessible: bool = False,
-        user_inaccessible: bool = False,
-        subscribed: bool = False,
+    data,
+    bookmark: bool,
+    unpublished: bool,
+    opendata: bool,
+    withvisuals: bool,
+    use: Set,
+    data_type: Set,
+    source_ids: Set,
+    topic_ids: Set,
+    user_accessible: bool = False,
+    user_inaccessible: bool = False,
+    subscribed: bool = False,
 ):
     if subscribed and not data["is_subscribed"]:
         return False
 
     return (
-            (not bookmark or data["is_bookmarked"])
-            and (unpublished or data["published"])
-            and (not opendata or data["is_open_data"])
-            and (not withvisuals or data["has_visuals"])
-            and (not use or use == [None] or data["purpose"] in use)
-            and (not data_type or data_type == [None] or data["data_type"] in data_type)
-            and (not source_ids or source_ids.intersection(set(data["source_tag_ids"])))
-            and (not topic_ids or topic_ids.intersection(set(data["topic_tag_ids"])))
-            and (not user_accessible or data["has_access"])
-            and (not user_inaccessible or not data["has_access"])
+        (not bookmark or data["is_bookmarked"])
+        and (unpublished or data["published"])
+        and (not opendata or data["is_open_data"])
+        and (not withvisuals or data["has_visuals"])
+        and (not use or use == [None] or data["purpose"] in use)
+        and (not data_type or data_type == [None] or data["data_type"] in data_type)
+        and (not source_ids or source_ids.intersection(set(data["source_tag_ids"])))
+        and (not topic_ids or topic_ids.intersection(set(data["topic_tag_ids"])))
+        and (not user_accessible or data["has_access"])
+        and (not user_inaccessible or not data["has_access"])
     )
 
 
 def sorted_datasets_and_visualisations_matching_query_for_user(
-        query, use, data_type, user, sort_by
+    query, use, data_type, user, sort_by
 ):
     """
     Retrieves all master datasets, datacuts, reference datasets and visualisations (i.e. searchable items)
@@ -511,8 +508,8 @@ def sorted_datasets_and_visualisations_matching_query_for_user(
 
     all_datasets = (
         master_and_datacut_datasets.union(reference_datasets)
-            .union(visualisations)
-            .order_by(*sort_fields)
+        .union(visualisations)
+        .order_by(*sort_fields)
     )
 
     return all_datasets
@@ -539,7 +536,7 @@ def find_tags(request, tag_name: str):
 
 @require_GET
 def request_access_from_search_result(request, dataset_uuid):
-    dataset = get_object_or_404(DataSet, pk=dataset_uuid)
+    dataset = find_dataset_or_visualisation_for_bookmark(dataset_uuid)
 
     if dataset.eligibility_criteria:
         return redirect(reverse("datasets:eligibility_criteria", args=[dataset.id]))
@@ -715,7 +712,7 @@ class DatasetDetailView(DetailView):
                 ),
                 "subscription": {
                     "current_user_is_subscribed": subscription.exists()
-                                                  and subscription.first().is_active(),
+                    and subscription.first().is_active(),
                     "details": subscription.first(),
                 },
             }
@@ -783,7 +780,7 @@ class DatasetDetailView(DetailView):
                 "source_text": self._get_source_text(self.object),
                 "subscription": {
                     "current_user_is_subscribed": subscription.exists()
-                                                  and subscription.first().is_active(),
+                    and subscription.first().is_active(),
                     "details": subscription.first(),
                 },
             }
@@ -818,7 +815,7 @@ class DatasetDetailView(DetailView):
                 "columns": columns,
                 "subscription": {
                     "current_user_is_subscribed": subscription.exists()
-                                                  and subscription.first().is_active(),
+                    and subscription.first().is_active(),
                     "details": subscription.first(),
                 },
             }
@@ -1404,12 +1401,12 @@ class DatasetUsageHistoryView(View):
                     "dataset": dataset,
                     "event_description": "Queried",
                     "rows": ToolQueryAuditLogTable.objects.filter(table__in=tables)
-                                .annotate(day=TruncDay("audit_log__timestamp"))
-                                .annotate(email=F("audit_log__user__email"))
-                                .annotate(object=F("table"))
-                                .order_by("-day")
-                                .values("day", "email", "object")
-                                .annotate(count=Count("id"))[:100],
+                    .annotate(day=TruncDay("audit_log__timestamp"))
+                    .annotate(email=F("audit_log__user__email"))
+                    .annotate(object=F("table"))
+                    .order_by("-day")
+                    .values("day", "email", "object")
+                    .annotate(count=Count("id"))[:100],
                 },
             )
 
@@ -1430,9 +1427,9 @@ class DatasetUsageHistoryView(View):
                         EventLog.TYPE_VIEW_QUICKSIGHT_VISUALISATION,
                     ]
                 )
-                            .annotate(day=TruncDay("timestamp"))
-                            .annotate(email=F("user__email"))
-                            .annotate(
+                .annotate(day=TruncDay("timestamp"))
+                .annotate(email=F("user__email"))
+                .annotate(
                     object=Func(
                         F("extra"),
                         Value("fields"),
@@ -1441,9 +1438,9 @@ class DatasetUsageHistoryView(View):
                         output_field=CharField(),
                     ),
                 )
-                            .order_by("-day")
-                            .values("day", "email", "object")
-                            .annotate(count=Count("id"))[:100],
+                .order_by("-day")
+                .values("day", "email", "object")
+                .annotate(count=Count("id"))[:100],
             },
         )
 
@@ -1493,11 +1490,11 @@ class DataGridDataView(DetailView):
     @staticmethod
     def _get_rows(source, query, query_params):
         with psycopg2.connect(
-                database_dsn(settings.DATABASES_DATA[source.database.memorable_name])
+            database_dsn(settings.DATABASES_DATA[source.database.memorable_name])
         ) as connection:
             with connection.cursor(
-                    name="data-grid-data",
-                    cursor_factory=psycopg2.extras.RealDictCursor,
+                name="data-grid-data",
+                cursor_factory=psycopg2.extras.RealDictCursor,
             ) as cursor:
                 cursor.execute(query, query_params)
                 return cursor.fetchall()
@@ -1580,7 +1577,7 @@ class DatasetVisualisationPreview(View):
 
         if visualisation.query:
             with psycopg2.connect(
-                    database_dsn(settings.DATABASES_DATA[visualisation.database.memorable_name])
+                database_dsn(settings.DATABASES_DATA[visualisation.database.memorable_name])
             ) as connection:
                 with connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
                     cursor.execute(visualisation.query)
