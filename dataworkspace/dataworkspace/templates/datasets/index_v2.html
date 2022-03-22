@@ -102,7 +102,7 @@
                     id="search-results-count">{{ datasets.paginator.count }}</span>
               dataset{{ datasets.paginator.count|pluralize }} found.
 
-              {% if  has_filters %}
+              {% if has_filters %}
                 <span style="float:right;">
                   <span class="govuk-!-font-size-36">&nbsp;</span>
                     <a href="{% url "datasets:find_datasets" %}" class="govuk-link govuk-link--no-visited-state">Remove all filters</a>
@@ -213,7 +213,6 @@
                 </dl>
               </div>
 
-              {{ dataset.has_access }}
               {% if not dataset.has_access %}
                 <div class="govuk-inset-text govuk-!-margin-bottom-0">
                   You need to <a href="{% url 'datasets:request_access_from_search_result' dataset.id %}"
