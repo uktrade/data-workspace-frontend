@@ -1,14 +1,2 @@
-$govuk-font-family: arial, sans-serif;
+// govuk-frontend has been merged into data-workspace.scss
 
-$govuk-assets-path: "/__django_static/assets/";
-
-// Page widths:
-// Macbook Pro:         1440 x 900 @ 2x
-// Dell XPS Cirrus:     1280 x 533 @ 2x
-// GOVUK default width is 960px;
-
-// This value is used for max-width so it *can* be wider than available pixel space
-// $govuk-page-width: 1280px;
-
-// check your --include-path for node-sass if this fails to resolve
-@import "govuk-frontend/govuk/all";

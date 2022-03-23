@@ -1,3 +1,7 @@
+@import "govuk-frontend/govuk/settings/colours-applied";
+@import "govuk-frontend/govuk/helpers/typography";
+
+
 .filter-widget .filter-container {
   padding-left: 3px;
 }
@@ -44,6 +48,7 @@
 
   button.govuk-accordion__section-button {
     margin-left: 33px;
+    @include govuk-font(19);
 
     span.govuk-accordion__icon {
       left: 3px;
@@ -68,8 +73,8 @@
         -webkit-transform: rotate(-225deg);
         -ms-transform: rotate(-225deg);
         transform: rotate(-225deg);
-        border-top: 0.225rem solid black;
-        border-right: 0.225rem solid black;
+        border-top: 0.125rem solid $govuk-link-colour;
+        border-right: 0.125rem solid $govuk-link-colour;
       }
     }
   }
