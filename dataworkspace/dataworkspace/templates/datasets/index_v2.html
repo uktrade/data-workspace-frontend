@@ -121,6 +121,13 @@
             {% endif %}
 
             <p class="govuk-body govuk-!-margin-top-4">
+
+              {% for value, text in form.my_datasets.field.choices %}
+                {% if value|stringformat:"s" in form.my_datasets.value %}
+                  {% include "datasets/filter_button.html" with id=value text=text tag_type=form.my_datasets.name  %}
+                {% endif %}
+              {% endfor %}
+
               {% for value, text in form.topic.field.choices %}
                 {# value is *not* a string but a ModelChoiceIteratorValue. Convert to string first!  #}
                 {% if value|stringformat:"s" in form.topic.value %}
@@ -158,6 +165,7 @@
               <h3 class="govuk-heading-m">
 
                 <div style="float:right;">
+                  {% if dataset.is_subscribed %}Sub{% endif %}
                   {% if dataset.is_bookmarked %}
                     <span title="You have bookmarked this dataset">
                     {% include 'partials/bookmark-yes.html' %}
