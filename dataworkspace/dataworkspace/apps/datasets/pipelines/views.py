@@ -83,6 +83,9 @@ class PipelineListView(ListView, IsAdminMixin):
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
+        if not context["object_list"].exists():
+            return context
+
         derived_dags = {}
         try:
             derived_dags = list_pipelines()
@@ -122,7 +125,7 @@ class PipelineRunView(View, IsAdminMixin):
     def post(self, request, pk, *args, **kwargs):
         pipeline = get_object_or_404(Pipeline, pk=pk)
         try:
-            run_pipeline(pipeline, request.user)
+            run_pipeline(pipeline)
         except RequestException as e:
             messages.error(
                 self.request,
