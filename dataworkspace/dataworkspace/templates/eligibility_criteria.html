@@ -24,9 +24,10 @@
             <h1 class="govuk-heading-l">{{ dataset.name }}</h1>
 
             {% if dataset.restrictions_on_usage %}
-              <div class="govuk-inset-text">
+                <p class="govuk-body">
+                Restrictions on usage:<br>
                 {{ dataset.restrictions_on_usage }}
-              </div>
+              </p>
             {% endif %}
 
               <h2 class="govuk-heading-m">
