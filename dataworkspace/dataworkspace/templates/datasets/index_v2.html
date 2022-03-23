@@ -69,6 +69,29 @@
     </div>
 
     <div id="live-search-wrapper">
+
+      <div class="govuk-grid-row">
+        <div class="govuk-grid-column-one-third">&nbsp;
+        </div>
+        <div class="govuk-grid-column-two-thirds govuk-!-margin-bottom-4">
+          <div style="float:right">
+            {{ form.sort }}
+          </div>
+
+          <div id="search-summary-accessible-hint-wrapper" class="govuk-visually-hidden" aria-atomic="true"
+               aria-live="polite" aria-relevant="additions text" role="status">
+            {{ datasets.paginator.count }} dataset{{ datasets.paginator.count|pluralize }} found.
+          </div>
+          <p class="govuk-body govuk-!-margin-top-2 govuk-!-margin-bottom-0">
+              <span role="status"
+                    id="search-results-count">{{ datasets.paginator.count }}</span>
+            dataset{{ datasets.paginator.count|pluralize }} found.
+          </p>
+
+
+        </div>
+      </div>
+
       <div class="govuk-grid-row">
         <div
           class="govuk-grid-column-one-third filters-container">
@@ -89,26 +112,13 @@
 
         </div>
         <div class="govuk-grid-column-two-thirds">
-
-          <div id="search-summary-accessible-hint-wrapper" class="govuk-visually-hidden" aria-atomic="true"
-               aria-live="polite" aria-relevant="additions text" role="status">
-            {{ datasets.paginator.count }} dataset{{ datasets.paginator.count|pluralize }} found.
-          </div>
-
-          <div style="border-bottom: 5px solid rgb(11, 12, 12);">
-
-            <p class="govuk-body govuk-!-margin-top-0 govuk-!-margin-bottom-0">
-              <span class="govuk-!-font-size-36" role="status"
-                    id="search-results-count">{{ datasets.paginator.count }}</span>
-              dataset{{ datasets.paginator.count|pluralize }} found.
-
-              {% if has_filters %}
-                <span style="float:right;">
-                  <span class="govuk-!-font-size-36">&nbsp;</span>
+          <hr class="govuk-section-break govuk-section-break--s govuk-section-break--visible">
+          <div class="govuk-!-margin-top-4">
+            {% if has_filters %}
+              <span>
                     <a href="{% url "datasets:find_datasets" %}" class="govuk-link govuk-link--no-visited-state">Remove all filters</a>
                 </span>
-              {% endif %}
-            </p>
+            {% endif %}
 
             <p class="govuk-body govuk-!-margin-top-4">
               {% for value, text in form.topic.field.choices %}
@@ -139,22 +149,10 @@
             </p>
 
           </div>
-          <div class="govuk-body govuk-!-margin-top-4">
 
-            <div style="float:right">
-              {{ form.sort }}
-            </div>
-
-            <div class="govuk-form-group">
-              <span class="label__desaturated">
-            Page {{ datasets.number }} of {{ datasets.paginator.num_pages }}
-                </span>
-            </div>
-
-
-          </div>
-
-          <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+          {% if has_filters %}
+            <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+          {% endif %}
           {% for dataset in datasets %}
             <div class="search-result govuk-!-padding-bottom-4 govuk-!-margin-bottom-4">
               <h3 class="govuk-heading-m">
