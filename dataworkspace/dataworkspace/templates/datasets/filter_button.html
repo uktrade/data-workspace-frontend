@@ -1,4 +1,4 @@
 <button data-id="{{ id }}" data-module="remove-filter" data-filter-type="{{ tag_type }}"
-        class="govuk-button govuk-button--secondary govuk-tag filter-button">{% if label %}{{ label }}: {% endif %}{{ text }}&nbsp;<span
-  class="tag-target">&#x2716;</span>
+        class="filter-button"><span
+  class="tag-target">&#x2716;</span>&nbsp;{% if label %}{{ label }}: {% endif %}{{ text }}
 </button>

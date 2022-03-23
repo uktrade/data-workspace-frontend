@@ -165,7 +165,7 @@
               <h3 class="govuk-heading-m">
 
                 <div style="float:right;">
-                  {% if dataset.is_subscribed %}Sub{% endif %}
+                  {% if dataset.is_subscribed %}{% endif %}
                   {% if dataset.is_bookmarked %}
                     <span title="You have bookmarked this dataset">
                     {% include 'partials/bookmark-yes.html' %}
