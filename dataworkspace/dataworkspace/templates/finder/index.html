@@ -66,7 +66,7 @@
                 <p class="govuk-body govuk-!-margin-bottom-0">
                   <a
                     data-search-page-number="1"
-                    data-search-result-rank="{{ forloop.counter }}"
+                    data-search-result-rank="{{ forloop.parentloop.counter }}"
                     data-search-type="datasetFinder"
                     data-event="search"
                     class="govuk-link--no-visited-state results-link" href="{% url 'finder:show_results' schema=table.schema table=table.table %}?name={{ result.name }}&slug={{ result.slug }}&uuid={{ result.id }}&q={{ search_term }}">

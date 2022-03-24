@@ -20,7 +20,20 @@
 {% block content %}
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
-            <h1 class="govuk-heading-l">Are you:</h1>
+            <span class="govuk-caption-l">Eligibility criteria for</span>
+            <h1 class="govuk-heading-l">{{ dataset.name }}</h1>
+
+            {% if dataset.restrictions_on_usage %}
+                <p class="govuk-body">
+                Restrictions on usage:<br>
+                {{ dataset.restrictions_on_usage }}
+              </p>
+            {% endif %}
+
+              <h2 class="govuk-heading-m">
+                Are you
+              </h2>
+
             <ul class="govuk-list govuk-list--bullet">
               {% for criteria in dataset.eligibility_criteria %}
                 <li>{{ criteria }}</li>
@@ -31,6 +44,7 @@
                 {% csrf_token %}
 
                 <fieldset class="govuk-fieldset">
+
                     <div class="govuk-radios govuk-radios--inline">
                         <div class="govuk-radios__item">
                             <input class="govuk-radios__input" id="meet_criteria" name="meet_criteria" type="radio" value="yes">

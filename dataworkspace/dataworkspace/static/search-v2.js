@@ -25,7 +25,10 @@ var ToggleInputClassOnFocus = function ($el) {
   }
 };
 
-var LiveSearch = function (formSelector, wrapperSelector, GTM, linkSelector) {
+var LiveSearch = function (formSelector, wrapperSelector, GTM, linkSelector, GOVUKFrontend) {
+
+  this.GOVUKFrontend = GOVUKFrontend;
+
   this.wrapperSelector = wrapperSelector;
   this.$wrapper = $(wrapperSelector);
   this.$form = $(formSelector);
@@ -40,7 +43,7 @@ var LiveSearch = function (formSelector, wrapperSelector, GTM, linkSelector) {
 
   var self = this;
 
-  this.$wrapper.on("click", linkSelector, function(e){
+  this.$wrapper.on("click", linkSelector, function (e) {
     self.GTM.pushSearchResultClick(e.target);
   });
 
@@ -75,6 +78,8 @@ var LiveSearch = function (formSelector, wrapperSelector, GTM, linkSelector) {
       e.preventDefault();
     }.bind(this)
   );
+
+  this.bindFilterButtons();
 };
 
 LiveSearch.prototype.saveState = function saveState(state) {
@@ -171,6 +176,25 @@ LiveSearch.prototype.showErrorIndicator = function showErrorIndicator() {
   );
 };
 
+LiveSearch.prototype.bindFilterButtons = function bindFilterButtons() {
+  var buttonSelector = "button[data-module=remove-filter]";
+  var self = this;
+  this.$wrapper.on("click", buttonSelector, function (e) {
+
+    var $button = $(e.target);
+    var data = $button.data();
+
+    // Find the checkbox corresponding to this button
+    var checkboxSelector = "input[type=checkbox][name=" + data.filterType + "][value=" + data.id + "]";
+
+    // uncheck it - which will cause the form to postback circa 2004 asp.net webforms ftw
+    $(checkboxSelector).prop("checked", false);
+    $button.prop("disabled", true);
+    self.$form.submit();
+  })
+
+}
+
 LiveSearch.prototype.displayFilterResults = function displayFilterResults(
   response,
   state
@@ -192,7 +216,17 @@ LiveSearch.prototype.displayFilterResults = function displayFilterResults(
   if (typeof window.installFilterTextSearch === "function") {
     window.installFilterTextSearch();
   }
+
+  // Rebind govuk events if we are connected
+  if (this.GOVUKFrontend) {
+    var wrapperElement = $(this.wrapperSelector).get(0);
+    this.GOVUKFrontend.initAll({scope: wrapperElement});
+  }
+
+  this.bindFilterButtons();
+
 };
+
 
 LiveSearch.prototype.replaceBlock = function replaceBlock(selector, html) {
   var currentActiveElement = document.activeElement

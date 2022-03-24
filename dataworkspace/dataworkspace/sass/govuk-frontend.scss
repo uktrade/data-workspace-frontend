@@ -1,6 +1,2 @@
-$govuk-font-family: arial, sans-serif;
+// govuk-frontend has been merged into data-workspace.scss
 
-$govuk-assets-path: "/__django_static/assets/";
-
-// check your --include-path if this fails to resolve
-@import "govuk-frontend/govuk/all";

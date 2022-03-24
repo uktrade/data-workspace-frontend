@@ -49,7 +49,7 @@ from django.http import (
     HttpResponseServerError,
     JsonResponse,
 )
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from django.views.decorators.http import (
     require_GET,
@@ -92,6 +92,7 @@ from dataworkspace.apps.datasets.models import (
     VisualisationCatalogueItem,
     SourceTable,
     ToolQueryAuditLogTable,
+    Tag,
 )
 from dataworkspace.apps.datasets.utils import (
     build_filtered_dataset_query,
@@ -106,7 +107,6 @@ from dataworkspace.apps.datasets.utils import (
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
-
 
 logger = logging.getLogger("app")
 
@@ -202,6 +202,16 @@ def get_datasets_data_for_user_matching_query(
         else Value(True, BooleanField()),
     )
 
+    subscription_filter = Q(subscriptions__user=user)
+
+    datasets = datasets.annotate(
+        _is_subscribed=Case(
+            When(subscription_filter, then=True), default=False, output_field=BooleanField()
+        )
+        if subscription_filter and datasets.model is not ReferenceDataset
+        else Value(True, BooleanField())
+    )
+
     # Pull in the source tag IDs for the dataset
     datasets = datasets.annotate(
         source_tag_ids=ArrayAgg("tags", filter=Q(tags__type=TagType.SOURCE), distinct=True)
@@ -266,6 +276,7 @@ def get_datasets_data_for_user_matching_query(
         )
         .annotate(has_access=BoolOr("_has_access"))
         .annotate(is_bookmarked=BoolOr("_is_bookmarked"))
+        .annotate(is_subscribed=BoolOr("_is_subscribed"))
     )
 
     return datasets.values(
@@ -286,6 +297,7 @@ def get_datasets_data_for_user_matching_query(
         "has_visuals",
         "has_access",
         "is_bookmarked",
+        "is_subscribed",
     )
 
 
@@ -357,6 +369,8 @@ def get_visualisations_data_for_user_matching_query(visualisations: QuerySet, qu
         else Value(True, BooleanField()),
     )
 
+    visualisations = visualisations.annotate(_is_subscribed=Value(True, BooleanField()))
+
     # Pull in the source tag IDs for the dataset
     visualisations = visualisations.annotate(
         source_tag_ids=ArrayAgg("tags", filter=Q(tags__type=TagType.SOURCE), distinct=True)
@@ -410,6 +424,7 @@ def get_visualisations_data_for_user_matching_query(visualisations: QuerySet, qu
         )
         .annotate(has_access=BoolOr("_has_access"))
         .annotate(is_bookmarked=BoolOr("_is_bookmarked"))
+        .annotate(is_subscribed=BoolOr("_is_subscribed"))
     )
 
     return visualisations.values(
@@ -430,12 +445,12 @@ def get_visualisations_data_for_user_matching_query(visualisations: QuerySet, qu
         "has_visuals",
         "has_access",
         "is_bookmarked",
+        "is_subscribed",
     )
 
 
 def _matches_filters(
     data,
-    bookmark: bool,
     unpublished: bool,
     opendata: bool,
     withvisuals: bool,
@@ -445,9 +460,26 @@ def _matches_filters(
     topic_ids: Set,
     user_accessible: bool = False,
     user_inaccessible: bool = False,
+    selected_user_datasets: Set = None,
 ):
+
+    subscribed_or_bookmarked = set()
+    if data["is_bookmarked"]:
+        subscribed_or_bookmarked.add("bookmarked")
+    if data["is_subscribed"]:
+        subscribed_or_bookmarked.add("subscribed")
+
     return (
-        (not bookmark or data["is_bookmarked"])
+        (
+            not selected_user_datasets
+            or selected_user_datasets == [None]
+            or set(selected_user_datasets).intersection(subscribed_or_bookmarked)
+        )
+        and (
+            not selected_user_datasets
+            or selected_user_datasets == [None]
+            or set(selected_user_datasets).intersection(subscribed_or_bookmarked)
+        )
         and (unpublished or data["published"])
         and (not opendata or data["is_open_data"])
         and (not withvisuals or data["has_visuals"])
@@ -506,36 +538,45 @@ def has_unpublished_dataset_access(user):
 
 
 @require_GET
+def find_tags(request, tag_name: str):
+    tag: Tag = get_object_or_404(Tag, name=tag_name)
+    tag_type = tag.get_type_display().lower()
+
+    url = reverse("datasets:find_datasets") + f"?{tag_type}={tag.id}"
+    return redirect(url)
+
+
+@require_GET
+def request_access_from_search_result(request, dataset_uuid):
+    dataset = find_dataset_or_visualisation_for_bookmark(dataset_uuid)
+
+    if dataset.eligibility_criteria:
+        return redirect(reverse("datasets:eligibility_criteria", args=[dataset.id]))
+
+    return redirect(reverse("request_access:dataset", args=[dataset.id]))
+
+
+@require_GET
 def find_datasets(request):
     form = DatasetSearchForm(request.GET)
+
+    if not form.is_valid():
+        return HttpResponseRedirect(reverse("datasets:find_datasets"))
 
     data_types = form.fields[
         "data_type"
     ].choices  # Cache these now, as we annotate them with result numbers later which we don't want here.
 
-    if form.is_valid():
-        query = form.cleaned_data.get("q")
-        unpublished = "unpublished" in form.cleaned_data.get("admin_filters")
-        open_data = "opendata" in form.cleaned_data.get("admin_filters")
-        with_visuals = "withvisuals" in form.cleaned_data.get("admin_filters")
-        use = set(form.cleaned_data.get("use"))
-        data_type = set(form.cleaned_data.get("data_type", []))
-        sort = form.cleaned_data.get("sort")
-        source_ids = set(source.id for source in form.cleaned_data.get("source"))
-        topic_ids = set(topic.id for topic in form.cleaned_data.get("topic"))
-        bookmarked = form.cleaned_data.get("bookmarked")
-        user_accessible = set(form.cleaned_data.get("user_access", [])) == {"yes"}
-        user_inaccessible = set(form.cleaned_data.get("user_access", [])) == {"no"}
-    else:
-        return HttpResponseRedirect(reverse("datasets:find_datasets"))
+    filters = form.get_filters()
+    logger.info(filters.__dict__)
 
     all_datasets_visible_to_user_matching_query = (
         sorted_datasets_and_visualisations_matching_query_for_user(
-            query=query,
-            use=use,
-            data_type=data_type,
+            query=filters.query,
+            use=filters.use,
+            data_type=filters.data_type,
             user=request.user,
-            sort_by=sort,
+            sort_by=filters.sort_type,
         )
     )
 
@@ -547,16 +588,17 @@ def find_datasets(request):
         filter(
             lambda d: _matches_filters(
                 d,
-                bookmarked,
-                bool(unpublished),
-                bool(open_data),
-                bool(with_visuals),
-                use,
-                data_type,
-                source_ids,
-                topic_ids,
-                user_accessible,
-                user_inaccessible,
+                # filters.bookmarked,
+                bool(filters.unpublished),
+                bool(filters.open_data),
+                bool(filters.with_visuals),
+                filters.use,
+                filters.data_type,
+                filters.source_ids,
+                filters.topic_ids,
+                filters.user_accessible,
+                filters.user_inaccessible,
+                filters.my_datasets,
             ),
             all_datasets_visible_to_user_matching_query,
         )
@@ -578,15 +620,16 @@ def find_datasets(request):
     data_types.append((DataSetType.VISUALISATION, "Visualisation"))
     return render(
         request,
-        "datasets/index.html",
+        "datasets/index_v2.html",
         {
             "form": form,
-            "query": query,
+            "query": filters.query,
             "datasets": paginator.get_page(request.GET.get("page")),
             "data_type": dict(data_types),
             "show_admin_filters": has_unpublished_dataset_access(request.user),
             "DATASET_FINDER_FLAG": settings.DATASET_FINDER_ADMIN_ONLY_FLAG,
-            "search_type": "searchBar" if query else "noSearch",
+            "search_type": "searchBar" if filters.query else "noSearch",
+            "has_filters": filters.has_filters(),
         },
     )
 

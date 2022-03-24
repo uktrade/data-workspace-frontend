@@ -1,5 +1,5 @@
 {% with id=widget.attrs.id %}
-<div class="govuk-form-group">
+<div class="govuk-form-group {% if widget.form_group_extra_css %}{{ widget.form_group_extra_css }}{% endif %}">
   <label class="govuk-label" for="{{ id }}" style="display: inline">
     {{ widget.label }}
   </label>
