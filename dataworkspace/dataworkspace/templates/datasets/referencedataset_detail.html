@@ -59,17 +59,7 @@
       </div>
     </div>
     <div class="govuk-grid-column-one-quarter govuk-!-margin-top-2" style="text-align: right;">
-      {% if is_bookmarked %}
-        {% include 'partials/bookmark-yes.html' %}
-        <a class="govuk-link govuk-!-margin-left-1" href="{% url 'datasets:toggle_bookmark' dataset_uuid=model.uuid %}">
-          Bookmark
-        </a>
-      {% else %}
-        {% include 'partials/bookmark-no.html' %}
-        <a class="govuk-link govuk-!-margin-left-1" href="{% url 'datasets:toggle_bookmark' dataset_uuid=model.uuid %}">
-          Bookmark
-        </a>
-      {% endif %}
+      {% include "partials/bookmark-link.html" with dataset_uuid=model.uuid is_bookmarked=is_bookmarked %}
     </div>
   </div>
 {% endblock %}

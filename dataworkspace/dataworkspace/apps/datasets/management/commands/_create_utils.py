@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.utils.text import slugify
 from faker import Faker  # noqa
 
-from dataworkspace.apps.datasets.constants import DataSetType
+from dataworkspace.apps.datasets.constants import DataSetType, TagType
 from dataworkspace.apps.datasets.models import (
     MasterDataset,
     VisualisationCatalogueItem,
@@ -70,15 +70,15 @@ class TestData:
         return None
 
 
-def get_random_tag():
-    all_tags = Tag.objects.all()
+def get_random_tag(tag_type: TagType):
+    tags = Tag.objects.filter(type=tag_type)
 
-    if not all_tags.exists():
+    if not tags.exists():
         return None
 
-    offset = random.randint(0, all_tags.count() - 1)
+    offset = random.randint(0, tags.count() - 1)
 
-    return all_tags[offset]
+    return tags[offset]
 
 
 def create_fake_dataset(dataset_type=DataSetType.MASTER):

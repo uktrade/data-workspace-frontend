@@ -1,0 +1,54 @@
+@import "govuk-frontend/govuk/helpers/colour";
+
+@import "govuk-frontend/govuk/settings/media-queries";
+@import "govuk-frontend/govuk/helpers/media-queries";
+
+@import "govuk-frontend/govuk/settings/colours-applied";
+
+$light_label_color: govuk-colour("dark-grey");
+
+.search-result {
+  border-bottom: 1px solid $govuk-border-colour;
+}
+
+.search-result dl {
+
+  dt {
+    display: block;
+    color: $light_label_color;
+  }
+
+  dd {
+    margin-left: 0;
+    margin-bottom: 1rem;
+  }
+
+}
+
+@include govuk-media-query($from: desktop) {
+  .search-result dl dt {
+    float: left;
+  }
+
+  .search-result dl dd {
+    margin-left: 10rem;
+    margin-bottom: 0;
+    display: block;
+  }
+}
+
+
+.filter-button {
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  cursor: pointer;
+}
+
+.label__desaturated {
+  color: $light_label_color;
+}
+
+.dataset-icons-container {
+  color: $govuk-link-colour;
+}
+
