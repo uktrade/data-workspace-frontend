@@ -460,7 +460,7 @@ def _matches_filters(
     topic_ids: Set,
     user_accessible: bool = False,
     user_inaccessible: bool = False,
-    selected_user_datasets: Set = [None],
+    selected_user_datasets: Set = None,
 ):
 
     subscribed_or_bookmarked = set()
