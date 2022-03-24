@@ -568,7 +568,6 @@ def find_datasets(request):
     ].choices  # Cache these now, as we annotate them with result numbers later which we don't want here.
 
     filters = form.get_filters()
-    logger.info(filters.__dict__)
 
     all_datasets_visible_to_user_matching_query = (
         sorted_datasets_and_visualisations_matching_query_for_user(
