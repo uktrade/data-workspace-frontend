@@ -260,8 +260,6 @@ class DatasetSearchForm(forms.Form):
 
     def annotate_and_update_filters(self, datasets, matcher, number_of_matches):
         counts = {
-            "bookmarked": defaultdict(int),
-            "subscribed": defaultdict(int),
             "my_datasets": defaultdict(int),
             "admin_filters": defaultdict(int),
             "use": defaultdict(int),
@@ -272,8 +270,6 @@ class DatasetSearchForm(forms.Form):
         }
 
         user_access = set(self.cleaned_data["user_access"])
-        selected_bookmark = DatasetSearchForm.BOOKMARKED in self.cleaned_data["my_datasets"]
-        selected_subscription = DatasetSearchForm.SUBSCRIBED in self.cleaned_data["my_datasets"]
         selected_admin = set(self.cleaned_data["admin_filters"])
         selected_unpublished = "unpublished" in selected_admin
         selected_opendata = "opendata" in selected_admin
@@ -296,7 +292,6 @@ class DatasetSearchForm(forms.Form):
             dataset_matcher = partial(
                 matcher,
                 data=dataset,
-                bookmark=selected_bookmark,
                 unpublished=selected_unpublished,
                 opendata=selected_opendata,
                 withvisuals=selected_withvisuals,
@@ -306,7 +301,7 @@ class DatasetSearchForm(forms.Form):
                 topic_ids=selected_topic_ids,
                 user_accessible=user_access == {"yes"},
                 user_inaccessible=user_access == {"no"},
-                subscribed=selected_subscription,
+                selected_user_datasets=self.cleaned_data["my_datasets"],
             )
 
             if dataset_matcher(user_accessible=True, user_inaccessible=False):
@@ -315,11 +310,9 @@ class DatasetSearchForm(forms.Form):
             if dataset_matcher(user_inaccessible=True, user_accessible=False):
                 counts["user_access"]["no"] += 1
 
-            if dataset_matcher(bookmark=True):
-                counts["my_datasets"][DatasetSearchForm.BOOKMARKED] += 1
-
-            if dataset_matcher(subscribed=True):
-                counts["my_datasets"][DatasetSearchForm.SUBSCRIBED] += 1
+            for value, _ in self.fields["my_datasets"].choices:
+                if dataset_matcher(selected_user_datasets={value}):
+                    counts["my_datasets"][value] += 1
 
             for admin_id, _ in admin_choices:
                 if dataset_matcher(**{admin_id: True}):
@@ -389,8 +382,6 @@ class DatasetSearchForm(forms.Form):
     def get_filters(self):
         filters = SearchDatasetsFilters()
 
-        filters.bookmarked = DatasetSearchForm.BOOKMARKED in self.cleaned_data.get("my_datasets")
-        filters.subscribed = DatasetSearchForm.SUBSCRIBED in self.cleaned_data.get("my_datasets")
         filters.query = self.cleaned_data.get("q")
 
         filters.unpublished = "unpublished" in self.cleaned_data.get("admin_filters")
@@ -404,12 +395,12 @@ class DatasetSearchForm(forms.Form):
         filters.user_accessible = set(self.cleaned_data.get("user_access", [])) == {"yes"}
         filters.user_inaccessible = set(self.cleaned_data.get("user_access", [])) == {"no"}
 
+        filters.my_datasets = set(self.cleaned_data.get("my_datasets", []))
+
         return filters
 
 
 class SearchDatasetsFilters:
-    bookmarked: bool
-    subscribed: bool
     unpublished: bool
     open_data: bool
     with_visuals: bool
@@ -422,10 +413,11 @@ class SearchDatasetsFilters:
     user_inaccessible: set
     query: str
 
+    my_datasets: set
+
     def has_filters(self):
         return (
-            self.bookmarked
-            or self.subscribed
+            len(self.my_datasets)
             or self.unpublished
             or self.open_data
             or self.with_visuals

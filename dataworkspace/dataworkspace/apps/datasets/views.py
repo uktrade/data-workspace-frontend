@@ -451,7 +451,6 @@ def get_visualisations_data_for_user_matching_query(visualisations: QuerySet, qu
 
 def _matches_filters(
     data,
-    bookmark: bool,
     unpublished: bool,
     opendata: bool,
     withvisuals: bool,
@@ -461,13 +460,26 @@ def _matches_filters(
     topic_ids: Set,
     user_accessible: bool = False,
     user_inaccessible: bool = False,
-    subscribed: bool = False,
+    selected_user_datasets: Set = [None],
 ):
-    if subscribed and not data["is_subscribed"]:
-        return False
+
+    subscribed_or_bookmarked = set()
+    if data["is_bookmarked"]:
+        subscribed_or_bookmarked.add("bookmarked")
+    if data["is_subscribed"]:
+        subscribed_or_bookmarked.add("subscribed")
 
     return (
-        (not bookmark or data["is_bookmarked"])
+        (
+            not selected_user_datasets
+            or selected_user_datasets == [None]
+            or set(selected_user_datasets).intersection(subscribed_or_bookmarked)
+        )
+        and (
+            not selected_user_datasets
+            or selected_user_datasets == [None]
+            or set(selected_user_datasets).intersection(subscribed_or_bookmarked)
+        )
         and (unpublished or data["published"])
         and (not opendata or data["is_open_data"])
         and (not withvisuals or data["has_visuals"])
@@ -556,6 +568,7 @@ def find_datasets(request):
     ].choices  # Cache these now, as we annotate them with result numbers later which we don't want here.
 
     filters = form.get_filters()
+    logger.info(filters.__dict__)
 
     all_datasets_visible_to_user_matching_query = (
         sorted_datasets_and_visualisations_matching_query_for_user(
@@ -575,7 +588,7 @@ def find_datasets(request):
         filter(
             lambda d: _matches_filters(
                 d,
-                filters.bookmarked,
+                # filters.bookmarked,
                 bool(filters.unpublished),
                 bool(filters.open_data),
                 bool(filters.with_visuals),
@@ -585,7 +598,7 @@ def find_datasets(request):
                 filters.topic_ids,
                 filters.user_accessible,
                 filters.user_inaccessible,
-                filters.subscribed,
+                filters.my_datasets,
             ),
             all_datasets_visible_to_user_matching_query,
         )
