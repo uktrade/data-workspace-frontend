@@ -239,6 +239,7 @@ def expected_search_result(catalogue_item, **kwargs):
         "published": catalogue_item.published,
         "has_access": True,
         "is_bookmarked": False,
+        "is_subscribed": False,
         "has_visuals": mock.ANY,
         "is_open_data": getattr(catalogue_item, "user_access_type", None) == UserAccessType.OPEN,
     }
@@ -259,11 +260,19 @@ def test_find_datasets_combines_results(client):
     response = client.get(reverse("datasets:find_datasets"), {"q": "search"})
 
     assert response.status_code == 200
-    assert list(response.context["datasets"]) == [
+    assert len(list(response.context["datasets"])) == 3
+    datasets = list(response.context["datasets"])
+
+    expected_results = [
         expected_search_result(ds, has_access=False, purpose=DataSetType.DATACUT),
         expected_search_result(rds, purpose=DataSetType.DATACUT),
         expected_search_result(vis, purpose=DataSetType.VISUALISATION),
     ]
+
+    for x in range(0, len(datasets)):
+        ds = datasets[x]
+        expected = expected_results[x]
+        assert ds == expected
 
     assert "If you haven’t found what you’re looking for" in response.content.decode(
         response.charset
@@ -789,12 +798,48 @@ def test_find_datasets_filters_by_bookmark_single():
     )
     factories.DataSetBookmarkFactory.create(user=user, dataset=bookmarked_master)
 
-    response = client.get(reverse("datasets:find_datasets"), {"bookmarked": ["yes"]})
+    response = client.get(reverse("datasets:find_datasets"), {"my_datasets": "bookmarked"})
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
         expected_search_result(bookmarked_master, has_access=False, is_bookmarked=True)
     ]
+
+
+@pytest.mark.django_db
+def test_find_datasets_filter_by_subscription():
+    user = factories.UserFactory.create(is_superuser=False)
+    client = Client(**get_http_sso_data(user))
+
+    master_dataset = factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER,
+        name="Master subscribed",
+        user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
+    )
+
+    factories.DataSetSubscriptionFactory.create(user=user, dataset=master_dataset)
+
+    factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.DATACUT,
+        name="Datacut - access not granted",
+        user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
+    )
+
+    factories.ReferenceDatasetFactory.create(published=True, name="Reference - public")
+
+    factories.VisualisationCatalogueItemFactory.create(
+        published=True,
+        name="Visualisation - public",
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+    )
+
+    response = client.get(reverse("datasets:find_datasets") + "?my_datasets=subscribed")
+
+    assert response.status_code == 200
+    results = list(response.context["datasets"])
+    assert len(results) == 1
 
 
 @pytest.mark.django_db
@@ -825,12 +870,16 @@ def test_find_datasets_filters_by_bookmark_master():
         user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
     )
 
-    response = client.get(reverse("datasets:find_datasets"), {"bookmarked": ["yes"]})
+    response = client.get(reverse("datasets:find_datasets") + "?my_datasets=bookmarked")
 
     assert response.status_code == 200
-    assert list(response.context["datasets"]) == [
-        expected_search_result(bookmarked_master, has_access=False, is_bookmarked=True),
-    ]
+
+    results = list(response.context["datasets"])
+    # assert len(results) == 1
+
+    assert results[0] == expected_search_result(
+        bookmarked_master, has_access=False, is_bookmarked=True
+    )
 
 
 @pytest.mark.parametrize(
@@ -878,7 +927,7 @@ def test_find_datasets_filters_by_bookmark_reference(access_type):
         user_access_type=access_type,
     )
 
-    response = client.get(reverse("datasets:find_datasets"), {"bookmarked": ["yes"]})
+    response = client.get(reverse("datasets:find_datasets"), {"my_datasets": "bookmarked"})
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
@@ -935,7 +984,7 @@ def test_find_datasets_filters_by_bookmark_visualisation(access_type):
     factories.VisualisationBookmarkFactory.create(user=user, visualisation=public_vis)
 
     # response = client.get(reverse('datasets:find_datasets'), {"status": ["bookmark"]})
-    response = client.get(reverse("datasets:find_datasets"), {"bookmarked": ["yes"]})
+    response = client.get(reverse("datasets:find_datasets"), {"my_datasets": "bookmarked"})
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
@@ -987,7 +1036,7 @@ def test_find_datasets_filters_by_bookmark_datacut(access_type):
     )
 
     # response = client.get(reverse('datasets:find_datasets'), {"status": ["bookmark"]})
-    response = client.get(reverse("datasets:find_datasets"), {"bookmarked": ["yes"]})
+    response = client.get(reverse("datasets:find_datasets"), {"my_datasets": "bookmarked"})
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
@@ -3731,7 +3780,7 @@ def test_filter_bookmarked_search_v2(access_type):
     factories.DataSetBookmarkFactory.create(user=user, dataset=bookmarked)
 
     factories.ReferenceDatasetFactory.create(published=True, name="Reference")
-    response = client.get(reverse("datasets:find_datasets"), {"bookmarked": ["yes"]})
+    response = client.get(reverse("datasets:find_datasets"), {"my_datasets": "bookmarked"})
     assert response.status_code == 200
     assert len(response.context["datasets"]) == 1
 

@@ -80,6 +80,7 @@ from dataworkspace.apps.datasets.forms import (
     RelatedMastersSortForm,
     RelatedDataCutsSortForm,
     RelatedVisualisationsSortForm,
+    SearchDatasetsFilters,
 )
 from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
@@ -199,7 +200,7 @@ def get_datasets_data_for_user_matching_query(
             output_field=BooleanField(),
         )
         if bookmark_filter
-        else Value(True, BooleanField()),
+        else Value(False, BooleanField()),
     )
 
     subscription_filter = Q(subscriptions__user=user)
@@ -209,7 +210,7 @@ def get_datasets_data_for_user_matching_query(
             When(subscription_filter, then=True), default=False, output_field=BooleanField()
         )
         if subscription_filter and datasets.model is not ReferenceDataset
-        else Value(True, BooleanField())
+        else Value(False, BooleanField())
     )
 
     # Pull in the source tag IDs for the dataset
@@ -366,10 +367,11 @@ def get_visualisations_data_for_user_matching_query(visualisations: QuerySet, qu
             output_field=BooleanField(),
         )
         if bookmark_filter
-        else Value(True, BooleanField()),
+        else Value(False, BooleanField()),
     )
 
-    visualisations = visualisations.annotate(_is_subscribed=Value(True, BooleanField()))
+    # can't currently subscribe to visualisations
+    visualisations = visualisations.annotate(_is_subscribed=Value(False, BooleanField()))
 
     # Pull in the source tag IDs for the dataset
     visualisations = visualisations.annotate(
@@ -556,25 +558,13 @@ def request_access_from_search_result(request, dataset_uuid):
     return redirect(reverse("request_access:dataset", args=[dataset.id]))
 
 
-@require_GET
-def find_datasets(request):
-    form = DatasetSearchForm(request.GET)
-
-    if not form.is_valid():
-        return HttpResponseRedirect(reverse("datasets:find_datasets"))
-
-    data_types = form.fields[
-        "data_type"
-    ].choices  # Cache these now, as we annotate them with result numbers later which we don't want here.
-
-    filters = form.get_filters()
-
+def search_for_datasets(user, filters: SearchDatasetsFilters) -> tuple:
     all_datasets_visible_to_user_matching_query = (
         sorted_datasets_and_visualisations_matching_query_for_user(
             query=filters.query,
             use=filters.use,
             data_type=filters.data_type,
-            user=request.user,
+            user=user,
             sort_by=filters.sort_type,
         )
     )
@@ -587,7 +577,6 @@ def find_datasets(request):
         filter(
             lambda d: _matches_filters(
                 d,
-                # filters.bookmarked,
                 bool(filters.unpublished),
                 bool(filters.open_data),
                 bool(filters.with_visuals),
@@ -603,16 +592,31 @@ def find_datasets(request):
         )
     )
 
-    # Calculate counts of datasets that will match if users apply additional filters and apply these to the form
-    # labels.
+    return all_datasets_visible_to_user_matching_query, datasets_matching_query_and_filters
+
+
+@require_GET
+def find_datasets(request):
+    form = DatasetSearchForm(request.GET)
+
+    if not form.is_valid():
+        logger.warning(form.errors)
+        return HttpResponseRedirect(reverse("datasets:find_datasets"))
+
+    data_types = form.fields[
+        "data_type"
+    ].choices  # Cache these now, as we annotate them with result numbers later which we don't want here.
+
+    filters = form.get_filters()
+    all_visible_datasets, matched_datasets = search_for_datasets(request.user, filters)
+
     form.annotate_and_update_filters(
-        all_datasets_visible_to_user_matching_query,
+        all_visible_datasets,
         matcher=_matches_filters,
-        number_of_matches=len(datasets_matching_query_and_filters),
     )
 
     paginator = Paginator(
-        datasets_matching_query_and_filters,
+        matched_datasets,
         settings.SEARCH_RESULTS_DATASETS_PER_PAGE,
     )
 

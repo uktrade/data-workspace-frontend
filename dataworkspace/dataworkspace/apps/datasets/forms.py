@@ -258,7 +258,15 @@ class DatasetSearchForm(forms.Form):
     class Media:
         js = ("app-filter-show-more-v2.js",)
 
-    def annotate_and_update_filters(self, datasets, matcher, number_of_matches):
+    def annotate_and_update_filters(self, datasets, matcher):
+        """
+        Calculate counts of datasets that will match if users apply additional filters and apply these to the form
+        labels.
+        @param datasets: iterable of datasets
+        @param matcher: fn which returns true when the row is matched
+        @return: None
+        """
+
         counts = {
             "my_datasets": defaultdict(int),
             "admin_filters": defaultdict(int),
