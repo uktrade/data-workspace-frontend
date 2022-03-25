@@ -39,7 +39,7 @@ prepare-docker-cache: &prepare-docker-cache
 jobs:
   docker-test-unit:
     docker:
-      - image: cimg/python:3.7
+      - image: circleci/python:3.7
     steps:
       - checkout
       - setup_remote_docker:
@@ -62,7 +62,7 @@ jobs:
 
   docker-test-integration:
     docker:
-      - image: cimg/python:3.7
+      - image: circleci/python:3.7
     steps:
       - checkout
       - setup_remote_docker:
@@ -82,7 +82,7 @@ jobs:
 
   check-linting:
     docker:
-      - image: cimg/python:3.7
+      - image: circleci/python:3.7
     resource_class: small
     steps:
       - checkout
