@@ -192,7 +192,11 @@ def get_changelog_from_metadata_rows(rows):
             next_row_table_structure,
             next_row_data_hash,
         ) = next_row
-        if row_table_structure != next_row_table_structure or row_data_hash != next_row_data_hash:
+        if (
+            row_table_structure != next_row_table_structure
+            or row_data_hash != next_row_data_hash
+            or row_table_name != next_row_table_name
+        ):
             changelog.append(
                 {
                     "change_id": next_row_id,
