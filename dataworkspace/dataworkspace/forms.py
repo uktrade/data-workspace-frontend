@@ -1,5 +1,6 @@
 import copy
 
+import re
 from django import forms
 from django.core.validators import EmailValidator
 from django.forms import (
@@ -8,6 +9,7 @@ from django.forms import (
     EmailField,
     ModelChoiceField,
 )
+from django.utils.html import linebreaks
 
 
 class GOVUKDesignSystemWidgetMixin:
@@ -81,6 +83,17 @@ class GOVUKDesignSystemTextareaWidget(GOVUKDesignSystemWidgetMixin, forms.widget
     template_name = "design_system/textarea.html"
 
 
+class GOVUKDesignSystemPlainTextareaWidget(GOVUKDesignSystemTextareaWidget):
+    def format_value(self, value):
+        value = super().format_value(value)
+
+        # Strip out any html tags and allow the user to edit just the text
+        # Which means that any hyperlink targets will be lost!
+        # It isn't perfect, but it's a workaround until we include a
+        # rich text editor in the DW frontend
+        return re.sub("<[^<]+?>", "", value)
+
+
 class GOVUKDesignSystemRadiosWidget(GOVUKDesignSystemWidgetMixin, forms.widgets.RadioSelect):
     template_name = "design_system/radio.html"
     option_template_name = "design_system/radio_option.html"
@@ -119,6 +132,14 @@ class GOVUKDesignSystemEmailField(GOVUKDesignSystemFieldMixin, EmailField):
 
 class GOVUKDesignSystemTextareaField(GOVUKDesignSystemCharField):
     widget = GOVUKDesignSystemTextareaWidget
+
+
+class GOVUKDesignSystemPlainTextareaField(GOVUKDesignSystemTextareaField):
+    widget = GOVUKDesignSystemPlainTextareaWidget
+
+    def clean(self, value):
+        value = linebreaks(value)
+        return super().clean(value)
 
 
 class GOVUKDesignSystemRadioField(GOVUKDesignSystemFieldMixin, forms.ChoiceField):

@@ -14,6 +14,8 @@ from ...forms import (
     GOVUKDesignSystemTextWidget,
     GOVUKDesignSystemTextareaField,
     GOVUKDesignSystemTextareaWidget,
+    GOVUKDesignSystemPlainTextareaWidget,
+    GOVUKDesignSystemPlainTextareaField,
 )
 
 
@@ -426,9 +428,10 @@ class DatasetEditForm(GOVUKDesignSystemModelForm):
         ),
         error_messages={"required": "You must provide a short description for this dataset."},
     )
-    description = GOVUKDesignSystemTextareaField(
+
+    description = GOVUKDesignSystemPlainTextareaField(
         label="Description *",
-        widget=GOVUKDesignSystemTextareaWidget(
+        widget=GOVUKDesignSystemPlainTextareaWidget(
             label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
         ),
         error_messages={"required": "You must provide a description for this dataset."},
