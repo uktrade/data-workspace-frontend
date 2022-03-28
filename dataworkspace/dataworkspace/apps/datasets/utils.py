@@ -7,19 +7,22 @@ from uuid import UUID
 
 import boto3
 import botocore
+import requests
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.http import Http404
 from django.db import connections, IntegrityError, transaction
 from django.db.models import Q
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from psycopg2.sql import Identifier, Literal, SQL
-import requests
+
 from dataworkspace.apps.api_v1.core.views import (
     invalidate_superset_user_cached_credentials,
     remove_superset_user_cached_credentials,
 )
+from dataworkspace.apps.applications.utils import sync_quicksight_permissions
+from dataworkspace.apps.core.utils import close_all_connections_if_not_in_atomic_block
 from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
     CustomDatasetQueryTable,
@@ -38,7 +41,6 @@ from dataworkspace.apps.datasets.models import (
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_permission_change
-from dataworkspace.apps.core.utils import close_all_connections_if_not_in_atomic_block
 from dataworkspace.apps.explorer.schema import clear_schema_info_cache_for_user
 from dataworkspace.apps.explorer.utils import (
     invalidate_data_explorer_user_cached_credentials,
@@ -1058,7 +1060,6 @@ def process_authorized_users_change(
             remove_superset_user_cached_credentials(user)
 
     if is_master_dataset:
-        from dataworkspace.apps.applications.utils import sync_quicksight_permissions
 
         if changed_users:
             # If we're changing permissions for loads of users, let's just do a full quicksight re-sync.
