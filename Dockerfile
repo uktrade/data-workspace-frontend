@@ -17,7 +17,7 @@ RUN apt-get update && \
     cd / && \
     rm -rf parallel-20190522 parallel-20190522.tar.bz2 && \
     apt-get install -y --no-install-recommends \
-        locales=2.28-10 \
+        locales=2.28-10+deb10u1 \
         git=1:2.20.1-2+deb10u3 \
         nginx=1.14.2-2+deb10u4 \
         nginx-extras=1.14.2-2+deb10u4\
@@ -48,7 +48,7 @@ RUN apt-get update && \
         musl-dev=1.1.21-2 \
         chromium \
         chromium-driver \
-        libxml2-dev=2.9.4+dfsg1-7+deb10u2 \
+        libxml2-dev=2.9.4+dfsg1-7+deb10u3 \
         libxslt1-dev=1.1.32-2.2~deb10u1 && \
     echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && \
     locale-gen en_US.utf8 && \
