@@ -1696,6 +1696,9 @@ class DatasetChartDataView(DatasetChartView):
 
 
 class DatasetEditBaseView(View):
+    dataset = None
+    summary: str = None
+
     def dispatch(self, request, *args, **kwargs):
         self.dataset = get_object_or_404(DataSet.objects.live(), pk=self.kwargs.get("pk"))
         if "summary_id" in self.kwargs:
@@ -1714,9 +1717,6 @@ class DatasetEditView(DatasetEditBaseView, UpdateView):
     model = DataSet
     form_class = DatasetEditForm
     template_name = "datasets/edit.html"
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
 
     def get_success_url(self):
         return self.object.get_absolute_url()
@@ -1751,6 +1751,7 @@ class DatasetEditView(DatasetEditBaseView, UpdateView):
 
 class UserSearchFormView(DatasetEditBaseView, FormView):
     form_class = UserSearchForm
+    form: None
 
     def form_valid(self, form):
         self.form = form
