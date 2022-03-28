@@ -17,7 +17,7 @@ RUN apt-get update && \
     cd / && \
     rm -rf parallel-20190522 parallel-20190522.tar.bz2 && \
     apt-get install -y --no-install-recommends \
-        locales=2.28-10 \
+        locales=2.28-10+deb10u1 \
         git=1:2.20.1-2+deb10u3 \
         nginx=1.14.2-2+deb10u4 \
         nginx-extras=1.14.2-2+deb10u4\
