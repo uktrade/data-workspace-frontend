@@ -81,7 +81,7 @@
                     {% if object.user_access_type == 'REQUIRES_AUTHORIZATION' %}
                       {{ form.authorized_email_domains }}
                       <div class="govuk-body">
-                        <a class="govuk-link" href="{% url 'datasets:edit_permissions' object.id %}">Manage permsissions</a>
+                        <a class="govuk-link" href="{% url 'datasets:edit_permissions' object.id %}">Manage permissions</a>
                       </div>
                     {% endif %}
                     <button type="submit" class="govuk-button" data-prevent-double-click="true" >
