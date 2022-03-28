@@ -69,7 +69,7 @@ class PipelineCreateForm(GOVUKDesignSystemModelForm):
                     raise ValidationError("CREATE statements are not supported")
                 if "DropStmt" in statements[0]:
                     raise ValidationError("DROP statements are not supported")
-            columns = [t.name for t in statements[0].target_list]
+            columns = [t.name for t in statements[0].target_list if t.name is not None]
             if len(columns) != len(set(columns)):
                 raise ValidationError("Duplicate column names found")
 

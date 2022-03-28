@@ -1,0 +1,30 @@
+{
+  "name": "data-workspace-frontend",
+  "version": "1.0.0",
+  "description": "Builds the CSS for data-workspace",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:css": "node-sass dataworkspace/dataworkspace/sass --output dataworkspace/dataworkspace/static --include-path node_modules",
+    "debug:css": "node-sass dataworkspace/dataworkspace/sass --output dataworkspace/dataworkspace/static --source-map true --source-map-contents --include-path node_modules"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/uktrade/data-workspace.git"
+  },
+  "keywords": [],
+  "author": "Department for International Trade",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/uktrade/data-workspace/issues"
+  },
+  "homepage": "https://github.com/uktrade/data-workspace#readme",
+  "devDependencies": {
+    "govuk-frontend": "3.14",
+    "node-sass": "^7.0.1"
+  }
+}

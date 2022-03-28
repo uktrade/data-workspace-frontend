@@ -133,6 +133,20 @@ We use [pip-tools](https://github.com/jazzband/pip-tools) to manage dependencies
 
 Add the new dependencies to those `.in` files, or update an existing dependency, then (with `pip-tools` already installed), run `make save-requirements`.
 
+# Front end static assets
+
+We use [node-sass](https://github.com/sass/node-sass#command-line-interface) to build the front end css and include the GOVUK Front End styles.
+
+To build this locally requires NodeJS. Ideally installed via `nvm` https://github.com/nvm-sh/nvm
+
+
+```
+  # this will configure node from .nvmrc or prompt you to install
+  nvm use
+  npm install
+  npm run build:css
+```
+
 ## Running the chart builder react app locally
 
 We're set up to use django-webpack-loader for hotloading the react app while developing. 

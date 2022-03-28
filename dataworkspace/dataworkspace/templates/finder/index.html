@@ -64,7 +64,12 @@
             {% for table in result.table_matches %}
               {% if result.has_access %}
                 <p class="govuk-body govuk-!-margin-bottom-0">
-                  <a class="govuk-link--no-visited-state" href="{% url 'finder:show_results' schema=table.schema table=table.table %}?name={{ result.name }}&slug={{ result.slug }}&uuid={{ result.id }}&q={{ search_term }}">
+                  <a
+                    data-search-page-number="1"
+                    data-search-result-rank="{{ forloop.parentloop.counter }}"
+                    data-search-type="datasetFinder"
+                    data-event="search"
+                    class="govuk-link--no-visited-state results-link" href="{% url 'finder:show_results' schema=table.schema table=table.table %}?name={{ result.name }}&slug={{ result.slug }}&uuid={{ result.id }}&q={{ search_term }}">
                     {{ table.name }}
                   </a>
                 </p>
@@ -102,6 +107,13 @@
   <script nonce="{{ request.csp_nonce }}">
     $(document).ready(function() {
       new ToggleInputClassOnFocus($("#ds-finder-search-form"))
+
+      var gtm = new GTMDatasetSearchSupport();
+
+      $(".results-link").on("click", function(){
+        gtm.pushSearchResultClick(this);
+      });
+
     });
   </script>
 {% endblock %}
