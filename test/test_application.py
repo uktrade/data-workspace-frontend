@@ -2196,7 +2196,7 @@ class TestApplication(unittest.TestCase):
         home_page = await HomePage(browser=browser).open()
 
         with_no_filters = find_search_filter_labels(await home_page.get_html())
-        
+
         assert "Data I have access to (4)" in with_no_filters
         # assert "Download data (2)" in with_no_filters
         assert "Source dataset (2)" in with_no_filters
@@ -2216,7 +2216,6 @@ class TestApplication(unittest.TestCase):
         assert "DIT (1)" in with_master_filter
         assert not any(f.startswith("ONS") for f in with_master_filter)
         assert "HMRC (1)" in with_master_filter
-
 
         # Toggle the reference dataset data type filter on (filters: master, datacut)
         await home_page.toggle_filter("Data cut")
