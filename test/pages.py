@@ -42,7 +42,9 @@ class HomePage(_BasePage):
             await self.open()
 
         # Ensure that accordions are expanded
-        accordions = await self._page.xpath("//button[contains(@class, 'govuk-accordion__section-button') and contains(@aria-expanded, 'false')]")
+        accordions = await self._page.xpath(
+            "//button[contains(@class, 'govuk-accordion__section-button') and contains(@aria-expanded, 'false')]"
+        )
         for button in accordions:
             await button.click()
 
