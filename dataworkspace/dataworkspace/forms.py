@@ -138,6 +138,9 @@ class GOVUKDesignSystemPlainTextareaField(GOVUKDesignSystemTextareaField):
     widget = GOVUKDesignSystemPlainTextareaWidget
 
     def clean(self, value):
+        # We want to convert new lines to html <br> tags as the inverse to
+        # what happens in GOVUKDesignSystemPlainTextareaWidget.format_value
+        # which is a workaround until we add a rich html editor to the front end
         value = linebreaks(value)
         return super().clean(value)
 
