@@ -2196,76 +2196,77 @@ class TestApplication(unittest.TestCase):
         home_page = await HomePage(browser=browser).open()
 
         with_no_filters = find_search_filter_labels(await home_page.get_html())
+        
         assert "Data I have access to (4)" in with_no_filters
-        assert "Download data (2)" in with_no_filters
-        assert "Analyse data (2)" in with_no_filters
-        assert "View dashboard (1)" in with_no_filters
+        # assert "Download data (2)" in with_no_filters
+        assert "Source dataset (2)" in with_no_filters
+        assert "Visualisation (1)" in with_no_filters
         assert "DIT (1)" in with_no_filters
         assert "ONS (1)" in with_no_filters
         assert "HMRC (1)" in with_no_filters
 
         # Toggle the master dataset filter on (filters: master)
-        await home_page.toggle_filter("Analyse data")
+        await home_page.toggle_filter("Source dataset")
 
         with_master_filter = find_search_filter_labels(await home_page.get_html())
         assert "Data I have access to (1)" in with_master_filter
-        assert "Download data (2)" in with_master_filter
-        assert "Analyse data (2)" in with_master_filter
-        assert "View dashboard (1)" in with_master_filter
+        # assert "Download data (2)" in with_master_filter
+        assert "Source dataset (2)" in with_master_filter
+        assert "Visualisation (1)" in with_master_filter
         assert "DIT (1)" in with_master_filter
         assert not any(f.startswith("ONS") for f in with_master_filter)
         assert "HMRC (1)" in with_master_filter
 
+
         # Toggle the reference dataset data type filter on (filters: master, datacut)
-        await home_page.toggle_filter("Download data")
+        await home_page.toggle_filter("Data cut")
 
         with_master_and_datacut_filters = find_search_filter_labels(await home_page.get_html())
-        assert "Data I have access to (3)" in with_master_and_datacut_filters
-        assert "Download data (2)" in with_master_and_datacut_filters
-        assert "Analyse data (2)" in with_master_and_datacut_filters
+        assert "Data I have access to (2)" in with_master_and_datacut_filters
+        # assert "Download data (2)" in with_master_and_datacut_filters
+        assert "Visualisation (1)" in with_master_and_datacut_filters
         assert "Data cut (1)" in with_master_and_datacut_filters
-        assert "View dashboard (1)" in with_master_and_datacut_filters
         assert "DIT (1)" in with_master_and_datacut_filters
         assert "ONS (1)" in with_master_and_datacut_filters
         assert "HMRC (1)" in with_master_and_datacut_filters
 
-        # Toggle the master dataset filter back off (filters: reference)
-        await home_page.toggle_filter("Analyse data")
+        # Toggle the master dataset filter back off (filters: datacut)
+        await home_page.toggle_filter("Source dataset")
 
         with_reference_filter = find_search_filter_labels(await home_page.get_html())
-        assert "Data I have access to (2)" in with_reference_filter
-        assert "Download data (2)" in with_reference_filter
-        assert "Analyse data (2)" in with_reference_filter
+        assert "Data I have access to (1)" in with_reference_filter
+        # assert "Download data (2)" in with_reference_filter
+        assert "Visualisation (1)" in with_reference_filter
         assert "Data cut (1)" in with_master_and_datacut_filters
-        assert "View dashboard (1)" in with_reference_filter
+        # assert "View dashboard (1)" in with_reference_filter
         assert not any(f.startswith("DIT") for f in with_reference_filter)
         assert "ONS (1)" in with_master_and_datacut_filters
         assert "HMRC (1)" in with_master_and_datacut_filters
 
         # Toggle the authorization filter on (filters: authorization, reference)
-        await home_page.toggle_filter("Data I have access to")
+        await home_page.toggle_filter("Reference dataset")
 
         with_authorization_and_reference_filters = find_search_filter_labels(
             await home_page.get_html()
         )
         assert "Data I have access to (2)" in with_authorization_and_reference_filters
-        assert "Download data (2)" in with_authorization_and_reference_filters
-        assert "Analyse data (1)" in with_authorization_and_reference_filters
-        assert "View dashboard (1)" in with_authorization_and_reference_filters
+        # assert "Download data (2)" in with_authorization_and_reference_filters
+        assert "Visualisation (1)" in with_authorization_and_reference_filters
+        # assert "View dashboard (1)" in with_authorization_and_reference_filters
         assert not any(f.startswith("DIT") for f in with_authorization_and_reference_filters)
         assert "ONS (1)" in with_master_and_datacut_filters
         assert not any(f.startswith("HMRC") for f in with_authorization_and_reference_filters)
 
         # Toggle the authorization filter off, reference filter off, and the "DIT" source tag on (filters: DIT)
-        await home_page.toggle_filter("Download data")
-        await home_page.toggle_filter("Data I have access to")
+        await home_page.toggle_filter("Reference dataset")
+        await home_page.toggle_filter("Data cut")
         await home_page.toggle_filter("DIT")
 
         with_dit_filter = find_search_filter_labels(await home_page.get_html())
         assert "Data I have access to (1)" in with_dit_filter
-        assert "Download data (0)" in with_dit_filter
-        assert "Analyse data (1)" in with_dit_filter
-        assert "View dashboard (0)" in with_dit_filter
+        # assert "Download data (0)" in with_dit_filter
+        # assert "Analyse data (1)" in with_dit_filter
+        assert "Visualisation (0)" in with_dit_filter
         assert "DIT (1)" in with_dit_filter
         assert "ONS (1)" in with_dit_filter
         assert "HMRC (1)" in with_dit_filter
@@ -2275,9 +2276,9 @@ class TestApplication(unittest.TestCase):
 
         with_dit_and_ons_filters = find_search_filter_labels(await home_page.get_html())
         assert "Data I have access to (2)" in with_dit_and_ons_filters
-        assert "Download data (1)" in with_dit_and_ons_filters
-        assert "Analyse data (1)" in with_dit_and_ons_filters
-        assert "View dashboard (0)" in with_dit_and_ons_filters
+        # assert "Download data (1)" in with_dit_and_ons_filters
+        # assert "Analyse data (1)" in with_dit_and_ons_filters
+        assert "Visualisation (0)" in with_dit_and_ons_filters
         assert "DIT (1)" in with_dit_and_ons_filters
         assert "ONS (1)" in with_dit_and_ons_filters
         assert "HMRC (1)" in with_dit_and_ons_filters
