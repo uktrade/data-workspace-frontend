@@ -1695,7 +1695,7 @@ class DatasetChartDataView(DatasetChartView):
         )
 
 
-class DatasetEditBaseView:
+class DatasetEditBaseView(View):
     def dispatch(self, request, *args, **kwargs):
         self.dataset = get_object_or_404(DataSet.objects.live(), pk=self.kwargs.get("pk"))
         if "summary_id" in self.kwargs:

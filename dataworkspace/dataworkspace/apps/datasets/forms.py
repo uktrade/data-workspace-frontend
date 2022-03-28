@@ -490,8 +490,8 @@ class DatasetEditForm(GOVUKDesignSystemModelForm):
         if self.cleaned_data["enquiries_contact"]:
             try:
                 user = get_user_model().objects.get(email=self.cleaned_data["enquiries_contact"])
-            except get_user_model().DoesNotExist:
-                raise forms.ValidationError("User email address does not exist")
+            except get_user_model().DoesNotExist as e:
+                raise forms.ValidationError("User email address does not exist") from e
             else:
                 return user
         else:
