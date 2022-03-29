@@ -1062,7 +1062,7 @@ def process_authorized_users_change(
     if is_master_dataset:
         from dataworkspace.apps.applications.utils import (
             sync_quicksight_permissions,
-        )  # pylint-ignore: import-outside-toplevel
+        )  # pylint: disable=import-outside-toplevel
 
         if changed_users:
             # If we're changing permissions for loads of users, let's just do a full quicksight re-sync.
