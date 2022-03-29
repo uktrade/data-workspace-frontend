@@ -1060,9 +1060,9 @@ def process_authorized_users_change(
             remove_superset_user_cached_credentials(user)
 
     if is_master_dataset:
-        from dataworkspace.apps.applications.utils import (
+        from dataworkspace.apps.applications.utils import (  # pylint: disable=import-outside-toplevel
             sync_quicksight_permissions,
-        )  # pylint: disable=import-outside-toplevel
+        )
 
         if changed_users:
             # If we're changing permissions for loads of users, let's just do a full quicksight re-sync.
