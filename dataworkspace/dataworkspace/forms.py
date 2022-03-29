@@ -87,6 +87,9 @@ class GOVUKDesignSystemPlainTextareaWidget(GOVUKDesignSystemTextareaWidget):
     def format_value(self, value):
         value = super().format_value(value)
 
+        if not value:
+            return value
+
         # Strip out any html tags and allow the user to edit just the text
         # Which means that any hyperlink targets will be lost!
         # It isn't perfect, but it's a workaround until we include a

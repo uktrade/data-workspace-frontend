@@ -3923,6 +3923,7 @@ class TestDatasetEditView:
             user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
             type=DataSetType.MASTER,
         )
+
         response = client.get(
             reverse(
                 "datasets:edit",
@@ -3933,6 +3934,7 @@ class TestDatasetEditView:
 
         dataset.information_asset_owner = user
         dataset.save()
+
         response = client.get(
             reverse(
                 "datasets:edit",

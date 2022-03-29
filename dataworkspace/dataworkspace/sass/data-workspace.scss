@@ -322,7 +322,8 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   min-height: 300px;
 }
 
-.visualisation-preview-container, .chart-preview-container {
+.visualisation-preview-container,
+.chart-preview-container {
   overflow: hidden;
   display: block;
 }
@@ -331,27 +332,41 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   width: 100%;
   height: auto;
 }
+
 .chart-preview-container img {
   width: 100%;
 }
 
 /* @include govuk-media-query($from: desktop) ... */
 @media (min-width: 48.0625em) {
-  .visualisation-preview-container, .chart-preview-container {
+  .visualisation-preview-container,
+  .chart-preview-container {
     width: 280px;
     height: 175px;
     line-height: 175px;
   }
 
-  .visualisation-preview-container svg, .chart-preview-container img {
+  .visualisation-preview-container svg,
+  .chart-preview-container img {
     width: 280px;
     height: 175px;
   }
 }
 
-.app-related-items {
+@mixin sidebar-border {
   border-top: 2px solid #1d70b8;
+}
+
+.app-related-items {
+  @include sidebar-border;
   padding-top: 10px;
+}
+
+p.sidebar-section {
+  &:not(:first-child) {
+    @include sidebar-border;
+    padding-top: 20px;
+  }
 }
 
 /* force links from the rich text editor to use GDS colours */

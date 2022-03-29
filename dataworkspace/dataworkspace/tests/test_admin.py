@@ -3114,7 +3114,7 @@ class TestDatasetAdminPytest:
         assert CustomDatasetQuery.objects.get(id=sql.id).query == "select 2"
         assert CustomDatasetQuery.objects.get(id=sql.id).reviewed == expected_reviewed_status
 
-    @mock.patch("dataworkspace.apps.applications.utils.sync_quicksight_permissions")
+    @mock.patch("dataworkspace.apps.datasets.permissions.utils.sync_quicksight_permissions")
     @pytest.mark.django_db
     def test_master_dataset_permission_changes_calls_sync_job(self, mock_sync, staff_client):
         dataset = factories.MasterDataSetFactory.create(
@@ -3165,8 +3165,8 @@ class TestDatasetAdminPytest:
         assert response.status_code == 200
         assert mock_sync.delay.call_args_list == [mock.call()]
 
-    @mock.patch("dataworkspace.apps.applications.utils.sync_quicksight_permissions")
-    @mock.patch("dataworkspace.apps.datasets.utils.clear_schema_info_cache_for_user")
+    @mock.patch("dataworkspace.apps.datasets.permissions.utils.sync_quicksight_permissions")
+    @mock.patch("dataworkspace.apps.datasets.permissions.utils.clear_schema_info_cache_for_user")
     @pytest.mark.django_db
     def test_master_dataset_authorized_user_changes_calls_sync_job_and_clears_explorer_cache(
         self, mock_clear_cache, mock_sync, staff_client
@@ -3291,7 +3291,9 @@ class TestDatasetAdminPytest:
         assert response.status_code == 200
         assert original_connection != new_connection
 
-    @mock.patch("dataworkspace.apps.datasets.utils.remove_data_explorer_user_cached_credentials")
+    @mock.patch(
+        "dataworkspace.apps.datasets.permissions.utils.remove_data_explorer_user_cached_credentials"
+    )
     @pytest.mark.django_db
     def test_master_dataset_permission_changes_clears_authorized_users_cached_credentials(
         self, mock_remove_cached_credentials, staff_client

@@ -55,7 +55,7 @@ from dataworkspace.apps.datasets.models import (
     ToolQueryAuditLog,
     DataSetSubscription,
 )
-from dataworkspace.apps.datasets.utils import process_authorized_users_change
+from dataworkspace.apps.datasets.permissions.utils import process_authorized_users_change
 from dataworkspace.apps.dw_admin.forms import (
     CustomDatasetQueryForm,
     DataCutDatasetForm,

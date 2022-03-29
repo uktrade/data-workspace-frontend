@@ -38,10 +38,7 @@
             <li class="govuk-breadcrumbs__list-item">
               <a href="{{ model.get_admin_edit_url }}" class="govuk-breadcrumbs__link">[Edit]</a>
             </li>
-          {% elif request.user == model.information_asset_owner or request.user == model.information_asset_manager %}
-            <li class="govuk-breadcrumbs__list-item">
-              <a href="{{ model.get_admin_edit_url }}" class="govuk-breadcrumbs__link">[Edit]</a>
-            </li>
+
           {% endif %}
         </ol>
       </div>
@@ -86,10 +83,17 @@
     </div>
     <div class="govuk-grid-column-one-third">
       {% flag NOTIFY_ON_DATACUT_CHANGE_FLAG %}
-        <p class="govuk-body">
+        <p class="govuk-body sidebar-section">
           {% include "partials/subscription_link.html" with subscription=subscription dataset=dataset dataset_uuid=dataset.id %}
         </p>
       {% endflag %}
+
+      {% if request.user == model.information_asset_owner or request.user == model.information_asset_manager %}
+          <p class="govuk-body sidebar-section">
+            <a href="{% url 'datasets:edit' model.id %}" class="govuk-link">Manage this dataset</a>
+          </p>
+      {% endif %}
+
       {% if related_data or related_visualisations %}
         <aside class="app-related-items" role="complementary">
           {% if related_data %}

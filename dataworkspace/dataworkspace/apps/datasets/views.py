@@ -110,8 +110,8 @@ from dataworkspace.apps.datasets.utils import (
     get_code_snippets_for_query,
     get_code_snippets_for_reference_table,
     get_detailed_changelog,
-    process_authorized_users_change,
 )
+from dataworkspace.apps.datasets.permissions.utils import process_authorized_users_change
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event, log_permission_change
 from dataworkspace.apps.explorer.utils import invalidate_data_explorer_user_cached_credentials
