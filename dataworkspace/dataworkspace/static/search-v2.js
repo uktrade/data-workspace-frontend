@@ -187,7 +187,6 @@ LiveSearch.prototype.bindFilterButtons = function bindFilterButtons() {
     // Find the checkbox corresponding to this button
     var checkboxSelector = "input[type=checkbox][name=" + data.filterType + "][value=" + data.id + "]";
 
-    // uncheck it - which will cause the form to postback circa 2004 asp.net webforms ftw
     $(checkboxSelector).prop("checked", false);
     $button.prop("disabled", true);
     self.$form.submit();
@@ -217,11 +216,9 @@ LiveSearch.prototype.displayFilterResults = function displayFilterResults(
     window.installFilterTextSearch();
   }
 
-  // Rebind govuk events if we are connected
-  if (this.GOVUKFrontend) {
-    var wrapperElement = $(this.wrapperSelector).get(0);
-    this.GOVUKFrontend.initAll({scope: wrapperElement});
-  }
+  // Rebind govuk events
+  var wrapperElement = $(this.wrapperSelector).get(0);
+  this.GOVUKFrontend.initAll({scope: wrapperElement});
 
   this.bindFilterButtons();
 

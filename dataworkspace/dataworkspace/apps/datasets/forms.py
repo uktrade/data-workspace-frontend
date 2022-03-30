@@ -37,7 +37,6 @@ class FilterWidget(forms.widgets.CheckboxSelectMultiple):
         hint_text=None,
         limit_initial_options=0,
         show_more_label="Show more",
-        header_color=None,
         *args,
         **kwargs,  # pylint: disable=keyword-arg-before-vararg
     ):
@@ -46,7 +45,6 @@ class FilterWidget(forms.widgets.CheckboxSelectMultiple):
         self._hint_text = hint_text
         self._limit_initial_options = limit_initial_options
         self._show_more_label = show_more_label
-        self._header_color = header_color
 
     def get_context(self, name, value, attrs):
         context = super().get_context(name, value, attrs)
@@ -54,7 +52,6 @@ class FilterWidget(forms.widgets.CheckboxSelectMultiple):
         context["widget"]["hint_text"] = self._hint_text
         context["widget"]["limit_initial_options"] = self._limit_initial_options
         context["widget"]["show_more_label"] = self._show_more_label
-        context["widget"]["header_color"] = self._header_color
         return context
 
     class Media:
@@ -64,29 +61,6 @@ class FilterWidget(forms.widgets.CheckboxSelectMultiple):
 class AccordionFilterWidget(FilterWidget):
     template_name = "datasets/accordion_filter.html"
     option_template_name = "datasets/accordion_filter_option.html"
-
-    def get_context(self, name, value, attrs):
-        context = super().get_context(name, value, attrs)
-
-        return context
-
-
-class ScrollingFilterWidget(FilterWidget):
-    template_name = "datasets/scrolling_filter.html"
-    option_template_name = "datasets/scrolling_filter_option.html"
-
-    def get_context(self, name, value, attrs):
-        context = super().get_context(name, value, attrs)
-
-        selected_count = 0
-        for _, options, __ in context["widget"]["optgroups"]:
-            for option in options:
-                if option["attrs"].get("checked", False):
-                    selected_count += 1
-
-        context["widget"]["selected_count"] = selected_count
-
-        return context
 
 
 class SortSelectWidget(forms.widgets.Select):
@@ -194,7 +168,7 @@ class DatasetSearchForm(forms.Form):
     my_datasets = forms.TypedMultipleChoiceField(
         choices=[
             (BOOKMARKED, "My bookmarks"),
-            (SUBSCRIBED, "My dataset subscriptions"),
+            (SUBSCRIBED, "My subscriptions"),
         ],
         required=False,
         widget=AccordionFilterWidget("My datasets"),
