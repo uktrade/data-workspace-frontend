@@ -7,7 +7,6 @@
 // This value is used for max-width so it *can* be wider than available pixel space
 // $govuk-page-width: 1280px;
 
-
 // check your --include-path for node-sass if this fails to resolve
 @import "govuk-frontend/govuk/all";
 
@@ -78,9 +77,9 @@
 }
 
 .scrollable-table
-table
-thead
-th.ref-data-col-universal-unique-identifier-field {
+  table
+  thead
+  th.ref-data-col-universal-unique-identifier-field {
   min-width: 300px;
 }
 
@@ -155,9 +154,9 @@ th.ref-data-col-universal-unique-identifier-field {
 }
 
 @media only screen and (-webkit-min-device-pixel-ratio: 2),
-only screen and (min-device-pixel-ratio: 2),
-only screen and (min-resolution: 192dpi),
-only screen and (min-resolution: 2dppx) {
+  only screen and (min-device-pixel-ratio: 2),
+  only screen and (min-resolution: 192dpi),
+  only screen and (min-resolution: 2dppx) {
   .search-field__submit {
     background-size: 52.5px auto;
     background-position: 115% 50%;
@@ -178,7 +177,6 @@ only screen and (min-resolution: 2dppx) {
 .search-field__submit:hover {
   background-color: #171719;
 }
-
 
 .pagination {
   float: right;
@@ -328,7 +326,8 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   min-height: 300px;
 }
 
-.visualisation-preview-container, .chart-preview-container {
+.visualisation-preview-container,
+.chart-preview-container {
   overflow: hidden;
   display: block;
 }
@@ -344,13 +343,15 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
 
 /* @include govuk-media-query($from: desktop) ... */
 @media (min-width: 48.0625em) {
-  .visualisation-preview-container, .chart-preview-container {
+  .visualisation-preview-container,
+  .chart-preview-container {
     width: 280px;
     height: 175px;
     line-height: 175px;
   }
 
-  .visualisation-preview-container svg, .chart-preview-container img {
+  .visualisation-preview-container svg,
+  .chart-preview-container img {
     width: 280px;
     height: 175px;
   }
@@ -388,4 +389,3 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
 
 @import "filters";
 @import "search";
-
