@@ -26,10 +26,7 @@ from dataworkspace.apps.api_v1.core.views import (
     remove_superset_user_cached_credentials,
 )
 from dataworkspace.apps.applications.models import VisualisationTemplate
-from dataworkspace.apps.applications.utils import (
-    get_data_source_id,
-    sync_quicksight_permissions,
-)
+from dataworkspace.apps.applications.utils import get_data_source_id
 from dataworkspace.apps.core.admin import (
     DeletableTimeStampedUserAdmin,
     DeletableTimeStampedUserTabularInline,
@@ -40,7 +37,6 @@ from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
     DataCutDataset,
     DataSetChartBuilderChart,
-    DataSetUserPermission,
     DataSetVisualisation,
     DatasetReferenceCode,
     MasterDataset,
@@ -59,6 +55,7 @@ from dataworkspace.apps.datasets.models import (
     ToolQueryAuditLog,
     DataSetSubscription,
 )
+from dataworkspace.apps.datasets.permissions.utils import process_authorized_users_change
 from dataworkspace.apps.dw_admin.forms import (
     CustomDatasetQueryForm,
     DataCutDatasetForm,
@@ -77,11 +74,6 @@ from dataworkspace.apps.dw_admin.forms import (
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_permission_change
-from dataworkspace.apps.explorer.schema import clear_schema_info_cache_for_user
-from dataworkspace.apps.explorer.utils import (
-    invalidate_data_explorer_user_cached_credentials,
-    remove_data_explorer_user_cached_credentials,
-)
 
 logger = logging.getLogger("app")
 
@@ -315,79 +307,20 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
 
     @transaction.atomic
     def save_model(self, request, obj, form, change):
-        current_authorized_users = set(
-            get_user_model().objects.filter(datasetuserpermission__dataset=obj)
-        )
-
         authorized_users = set(
             form.cleaned_data.get("authorized_users", get_user_model().objects.none())
         )
 
-        access_type_changed = "user_access_type" in form.changed_data
-
         super().save_model(request, obj, form, change)
 
-        changed_users = set()
-
-        for user in authorized_users - current_authorized_users:
-            DataSetUserPermission.objects.create(dataset=obj, user=user)
-            log_permission_change(
-                request.user,
-                obj,
-                EventLog.TYPE_GRANTED_DATASET_PERMISSION,
-                {"for_user_id": user.id},
-                f"Added dataset {obj} permission",
-            )
-            changed_users.add(user)
-            clear_schema_info_cache_for_user(user)
-
-        for user in current_authorized_users - authorized_users:
-            DataSetUserPermission.objects.filter(dataset=obj, user=user).delete()
-            log_permission_change(
-                request.user,
-                obj,
-                EventLog.TYPE_REVOKED_DATASET_PERMISSION,
-                {"for_user_id": user.id},
-                f"Removed dataset {obj} permission",
-            )
-            changed_users.add(user)
-            clear_schema_info_cache_for_user(user)
-
-        if access_type_changed or "authorized_email_domains" in form.changed_data:
-            log_permission_change(
-                request.user,
-                obj,
-                EventLog.TYPE_SET_DATASET_USER_ACCESS_TYPE
-                if access_type_changed
-                else EventLog.TYPE_CHANGED_AUTHORIZED_EMAIL_DOMAIN,
-                {"access_type": obj.user_access_type},
-                f"user_access_type set to {obj.user_access_type}",
-            )
-
-            # As the dataset's access type has changed, clear cached credentials for all
-            # users to ensure they either:
-            #   - lose access if it went from REQUIRES_AUTHENTICATION/OPEN to REQUIRES_AUTHORIZATION
-            #   - get access if it went from REQUIRES_AUTHORIZATION to REQUIRES_AUTHENTICATION/OPEN
-            invalidate_data_explorer_user_cached_credentials()
-            invalidate_superset_user_cached_credentials()
-        else:
-            for user in changed_users:
-                remove_data_explorer_user_cached_credentials(user)
-                remove_superset_user_cached_credentials(user)
-
-        if isinstance(self, MasterDatasetAdmin):
-            if changed_users:
-                # If we're changing permissions for loads of users, let's just do a full quicksight re-sync.
-                # Makes fewer AWS calls and probably completes as quickly if not quicker.
-                if len(changed_users) >= 50:
-                    sync_quicksight_permissions.delay()
-                else:
-                    changed_user_sso_ids = [str(u.profile.sso_id) for u in changed_users]
-                    sync_quicksight_permissions.delay(
-                        user_sso_ids_to_update=tuple(changed_user_sso_ids)
-                    )
-            elif access_type_changed:
-                sync_quicksight_permissions.delay()
+        process_authorized_users_change(
+            authorized_users,
+            request.user,
+            obj,
+            "user_access_type" in form.changed_data,
+            "authorized_email_domains" in form.changed_data,
+            isinstance(self, MasterDatasetAdmin),
+        )
 
 
 @admin.register(MasterDataset)

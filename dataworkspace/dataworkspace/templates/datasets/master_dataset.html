@@ -40,6 +40,8 @@
         </a>
       {% endif %}
     </div>
+
+
   </div>
 {% endblock %}
 
@@ -53,6 +55,9 @@
     <div class="govuk-grid-column-two-thirds">
       <span class="govuk-caption-xl">Master dataset</span>
       <h1 class="govuk-heading-xl">{{ model.name }}</h1>
+    </div>
+    <div class="govuk-grid-column-one-third">
+
     </div>
   </div>
 
@@ -78,10 +83,16 @@
 
     <div class="govuk-grid-column-one-third">
       {% flag NOTIFY_ON_MASTER_DATASET_CHANGE_FLAG %}
-        <p class="govuk-body">
+        <p class="govuk-body sidebar-section">
           {% include "partials/subscription_link.html" with subscription=subscription dataset=dataset dataset_uuid=dataset.id %}
         </p>
       {% endflag %}
+      {% if request.user == model.information_asset_owner or request.user == model.information_asset_manager %}
+        <p class="govuk-body sidebar-section">
+          <a href="{% url 'datasets:edit' model.id %}" class="govuk-link govuk-link--no-visited-state">Manage this dataset</a>
+        </p>
+      {% endif %}
+
       {% if related_data %}
         <aside class="app-related-items" role="complementary">
           <h3 class="govuk-heading-s" id="subsection-title">

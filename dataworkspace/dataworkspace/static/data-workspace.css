@@ -347,6 +347,10 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   border-top: 2px solid #1d70b8;
   padding-top: 10px; }
 
+p.sidebar-section:not(:first-child) {
+  border-top: 2px solid #1d70b8;
+  padding-top: 20px; }
+
 /* force links from the rich text editor to use GDS colours */
 .dataset-description-richtext a {
   color: #1d70b8; }
