@@ -168,7 +168,7 @@ def _get_tags_as_dict():
     @return:
     """
     tags = Tag.objects.all()
-    tags_dict = dict()
+    tags_dict = {}
 
     for tag in tags:
         tags_dict[str(tag.id)] = model_to_dict(tag)
