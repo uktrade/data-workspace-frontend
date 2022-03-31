@@ -168,7 +168,6 @@
           {% for dataset in datasets %}
             <div class="search-result govuk-!-padding-bottom-4 govuk-!-margin-bottom-4">
               <h3 class="govuk-heading-m">
-
                 <div style="float:right;" class="dataset-icons-container">
                   {#                  {% if dataset.is_subscribed %}{% include 'partials/subscription_icon.html' %}{% endif %}#}
                   {% if dataset.is_bookmarked %}
@@ -180,7 +179,6 @@
                     {% include 'partials/bookmark-no.html' %}
                     </span>
                   {% endif %}
-
                 </div>
                 {% include "partials/gtm_dataset_link.html" with event_type="searchResultClick" search_page_number=datasets.number search_result_rank=forloop.counter search_type="search_bar" dataset=dataset %}
                 {% if not dataset.published %}
@@ -198,22 +196,20 @@
                   <dd>{{ data_type|get_key:dataset.data_type }}</dd>
                   <dt>Source:</dt>
                   <dd>
-                    {% for source in dataset.source_tag_names %}
-                      <a href="{% url "datasets:find_tags" tag_name=source %}"
-                         class="govuk-link govuk-link--no-visited-state">{{ source }}</a>
-                    {% empty %}
-                      N/A
-                    {% endfor %}
+                  {% for source in dataset.sources %}
+                    <a class="govuk-link" href="{% url "datasets:find_datasets" %}?source={{ source.id }}">{{ source.name }}</a>
+                  {% empty %}
+                    N/A
+                  {% endfor %}
                   </dd>
                   {% if dataset.topic_tag_names %}
                     <dt>Topics:</dt>
                     <dd>
-                      {% for topic in dataset.topic_tag_names %}
-                        <a href="{% url "datasets:find_tags" tag_name=topic %}"
-                           class="govuk-link govuk-link--no-visited-state">{{ topic }}</a>
-                      {% empty %}
-                        &nbsp;
-                      {% endfor %}
+                    {% for topic in dataset.topics %}
+                      <a class="govuk-link" href="{% url "datasets:find_datasets" %}?topic={{ topic.id }}">{{ topic.name }}</a>
+                    {% empty %}
+                      &nbsp;
+                    {% endfor %}
                     </dd>
                   {% endif %}
                 </dl>

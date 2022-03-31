@@ -40,6 +40,7 @@ from django.db.models import (
     Func,
 )
 from django.db.models.functions import TruncDay
+from django.forms.models import model_to_dict
 from django.http import (
     Http404,
     HttpResponse,
@@ -595,6 +596,16 @@ def search_for_datasets(user, filters: SearchDatasetsFilters) -> tuple:
     return all_datasets_visible_to_user_matching_query, datasets_matching_query_and_filters
 
 
+def get_tags_dict():
+    tags = Tag.objects.all()
+    tags_dict = dict()
+
+    for tag in tags:
+        tags_dict[str(tag.id)] = model_to_dict(tag)
+
+    return tags_dict
+
+
 @require_GET
 def find_datasets(request):
     form = DatasetSearchForm(request.GET)
@@ -606,6 +617,8 @@ def find_datasets(request):
     data_types = form.fields[
         "data_type"
     ].choices  # Cache these now, as we annotate them with result numbers later which we don't want here.
+
+    tags_dict = get_tags_dict()
 
     filters = form.get_filters()
     all_visible_datasets, matched_datasets = search_for_datasets(request.user, filters)
@@ -621,13 +634,30 @@ def find_datasets(request):
     )
 
     data_types.append((DataSetType.VISUALISATION, "Visualisation"))
+
+    datasets = paginator.get_page(request.GET.get("page"))
+
+    for dataset in datasets:
+        dataset["sources"] = []
+        for source_id in dataset["source_tag_ids"]:
+            logger.info(source_id)
+            tag = tags_dict.get(str(source_id))
+            dataset["sources"].append(tag)
+
+        dataset["topics"] = []
+        for topic_id in dataset["topic_tag_ids"]:
+            tag = tags_dict.get(str(topic_id))
+            dataset["topics"].append(tag)
+
+        logger.info(dataset["sources"])
+
     return render(
         request,
         "datasets/index.html",
         {
             "form": form,
             "query": filters.query,
-            "datasets": paginator.get_page(request.GET.get("page")),
+            "datasets": datasets,
             "data_type": dict(data_types),
             "show_admin_filters": has_unpublished_dataset_access(request.user),
             "DATASET_FINDER_FLAG": settings.DATASET_FINDER_ADMIN_ONLY_FLAG,
