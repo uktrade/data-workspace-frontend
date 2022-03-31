@@ -27,6 +27,7 @@ from django.db.models import (
     CharField,
     Value,
     Func,
+    Q,
 )
 from django.db.models.functions import TruncDay
 from django.forms.models import model_to_dict
