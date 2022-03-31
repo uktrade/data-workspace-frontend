@@ -2198,7 +2198,6 @@ class TestApplication(unittest.TestCase):
         with_no_filters = find_search_filter_labels(await home_page.get_html())
 
         assert "Data I have access to (4)" in with_no_filters
-        # assert "Download data (2)" in with_no_filters
         assert "Source dataset (2)" in with_no_filters
         assert "Visualisation (1)" in with_no_filters
         assert "DIT (1)" in with_no_filters
@@ -2210,7 +2209,6 @@ class TestApplication(unittest.TestCase):
 
         with_master_filter = find_search_filter_labels(await home_page.get_html())
         assert "Data I have access to (1)" in with_master_filter
-        # assert "Download data (2)" in with_master_filter
         assert "Source dataset (2)" in with_master_filter
         assert "Visualisation (1)" in with_master_filter
         assert "DIT (1)" in with_master_filter
@@ -2222,7 +2220,6 @@ class TestApplication(unittest.TestCase):
 
         with_master_and_datacut_filters = find_search_filter_labels(await home_page.get_html())
         assert "Data I have access to (2)" in with_master_and_datacut_filters
-        # assert "Download data (2)" in with_master_and_datacut_filters
         assert "Visualisation (1)" in with_master_and_datacut_filters
         assert "Data cut (1)" in with_master_and_datacut_filters
         assert "DIT (1)" in with_master_and_datacut_filters
@@ -2234,10 +2231,8 @@ class TestApplication(unittest.TestCase):
 
         with_reference_filter = find_search_filter_labels(await home_page.get_html())
         assert "Data I have access to (1)" in with_reference_filter
-        # assert "Download data (2)" in with_reference_filter
         assert "Visualisation (1)" in with_reference_filter
         assert "Data cut (1)" in with_master_and_datacut_filters
-        # assert "View dashboard (1)" in with_reference_filter
         assert not any(f.startswith("DIT") for f in with_reference_filter)
         assert "ONS (1)" in with_master_and_datacut_filters
         assert "HMRC (1)" in with_master_and_datacut_filters
@@ -2249,9 +2244,7 @@ class TestApplication(unittest.TestCase):
             await home_page.get_html()
         )
         assert "Data I have access to (2)" in with_authorization_and_reference_filters
-        # assert "Download data (2)" in with_authorization_and_reference_filters
         assert "Visualisation (1)" in with_authorization_and_reference_filters
-        # assert "View dashboard (1)" in with_authorization_and_reference_filters
         assert not any(f.startswith("DIT") for f in with_authorization_and_reference_filters)
         assert "ONS (1)" in with_master_and_datacut_filters
         assert not any(f.startswith("HMRC") for f in with_authorization_and_reference_filters)
@@ -2263,8 +2256,6 @@ class TestApplication(unittest.TestCase):
 
         with_dit_filter = find_search_filter_labels(await home_page.get_html())
         assert "Data I have access to (1)" in with_dit_filter
-        # assert "Download data (0)" in with_dit_filter
-        # assert "Analyse data (1)" in with_dit_filter
         assert "Visualisation (0)" in with_dit_filter
         assert "DIT (1)" in with_dit_filter
         assert "ONS (1)" in with_dit_filter
@@ -2275,8 +2266,6 @@ class TestApplication(unittest.TestCase):
 
         with_dit_and_ons_filters = find_search_filter_labels(await home_page.get_html())
         assert "Data I have access to (2)" in with_dit_and_ons_filters
-        # assert "Download data (1)" in with_dit_and_ons_filters
-        # assert "Analyse data (1)" in with_dit_and_ons_filters
         assert "Visualisation (0)" in with_dit_and_ons_filters
         assert "DIT (1)" in with_dit_and_ons_filters
         assert "ONS (1)" in with_dit_and_ons_filters
