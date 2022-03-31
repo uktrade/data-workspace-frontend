@@ -7,14 +7,16 @@ from uuid import UUID
 
 import boto3
 import botocore
+import requests
 from django.conf import settings
-from django.http import Http404
 from django.db import connections, IntegrityError, transaction
 from django.db.models import Q
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from psycopg2.sql import Identifier, Literal, SQL
-import requests
+
+from dataworkspace.apps.core.utils import close_all_connections_if_not_in_atomic_block
 from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
     CustomDatasetQueryTable,
@@ -39,7 +41,6 @@ from dataworkspace.datasets_db import (
     get_source_table_changelog,
     get_tables_last_updated_date,
 )
-from dataworkspace.apps.core.utils import close_all_connections_if_not_in_atomic_block
 from dataworkspace.notify import EmailSendFailureException, send_email
 from dataworkspace.utils import TYPE_CODES_REVERSED
 

@@ -2394,3 +2394,8 @@ class PipelineVersion(TimeStampedModel):
 
     def __str__(self):
         return f"{self.pipeline} backup {self.created_date}"
+
+
+class PendingAuthorizedUsers(models.Model):
+    created_by = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    users = models.JSONField(null=True)

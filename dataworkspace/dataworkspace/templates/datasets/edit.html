@@ -1,0 +1,94 @@
+{% extends '_main.html' %}
+{% load humanize static datasets_tags core_tags waffle_tags %}
+
+{% block head %}
+    {{ block.super }}
+    <script src="{% static "ckeditor/ckeditor-init.js" %}"></script>
+    <script src="{% static "ckeditor/ckeditor/ckeditor.js" %}"></script>
+    <link rel="stylesheet" href="{% static 'explorer.css' %}">
+{% endblock %}
+
+
+{% block page_title %}{{ object.name }} - {{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-three-quarters">
+      <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="/">Home</a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="{{ object.get_absolute_url }}">{{ object.name }}</a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            Manage this dataset
+          </li>
+        </ol>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block content %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            {% include 'design_system/error_summary.html' with form=form %}
+            <h1 class="govuk-heading-l">Edit {{ object.name }}</h1>
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                <fieldset class="govuk-fieldset">
+                    {{ form.name }}
+                    {{ form.short_description }}
+                    {{ form.description }}
+                    <div class="govuk-form-group {% if form.enquiries_contact.errors %}govuk-form-group--error{% endif %}">
+                        <label class="govuk-label  govuk-!-font-weight-bold" for="id_information_asset_owner">
+                            {{ form.enquiries_contact.label }}
+                        </label>
+                        {% if form.enquiries_contact.errors %}
+                          <span id="id_enquiries_contact-error" class="govuk-error-message">
+                            <span class="govuk-visually-hidden">Error: </span> {{ form.enquiries_contact.errors.0 }}
+                          </span>
+                        {% endif %}
+                        <input class="govuk-input" type="hidden" name="enquiries_contact" id="id_user_access_type" value="{% if request.GET.enquiries_contact %}{{ request.GET.enquiries_contact }}{% else %}{{ form.enquiries_contact.value }}{% endif %}">
+                        <input class="govuk-input" type="text" disabled value="{% if request.GET.enquiries_contact %}{{ request.GET.enquiries_contact }}{% else %}{{ form.enquiries_contact.value }}{% endif %}">
+                        <a class="govuk-link" href="{% url 'datasets:search_enquiries_contact' object.id %}">Add or change contact person</a>
+                    </div>
+                    {{ form.licence }}
+                    {{ form.licence_url }}
+                    {{ form.retention_policy }}
+                    {{ form.personal_data }}
+                    {{ form.restrictions_on_usage }}
+                    <div class="govuk-form-group ">
+                        <label class="govuk-label govuk-!-font-weight-bold" for="id_information_asset_manager">
+                          Information asset manager
+                        </label>
+                      <input class="govuk-input" type="text" disabled id="id_information_asset_manager" value="{{ object.information_asset_manager }}">
+                    </div>
+                    <div class="govuk-form-group ">
+                        <label class="govuk-label  govuk-!-font-weight-bold" for="id_information_asset_owner">
+                          Information asset owner
+                        </label>
+                      <input class="govuk-input" type="text" disabled id="id_information_asset_owner" value="{{ object.information_asset_owner }}">
+                    </div>
+                    <div class="govuk-form-group ">
+                        <label class="govuk-label  govuk-!-font-weight-bold" for="id_user_access_type">
+                          User access type
+                        </label>
+                      <input class="govuk-input" type="text" disabled id="id_user_access_type" value="{{ object.user_access_type }}">
+                    </div>
+                    {% if object.user_access_type == 'REQUIRES_AUTHORIZATION' %}
+                      {{ form.authorized_email_domains }}
+                      <div class="govuk-body">
+                        <a class="govuk-link" href="{% url 'datasets:edit_permissions' object.id %}">Manage permissions</a>
+                      </div>
+                    {% endif %}
+                    <button type="submit" class="govuk-button" data-prevent-double-click="true" >
+                      Save
+                    </button>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+{% endblock %}

@@ -206,4 +206,39 @@ urlpatterns = [
         {"model_class": models.DataSet},
         name="dataset_chart_data",
     ),
+    path(
+        "<uuid:pk>/edit",
+        login_required(views.DatasetEditView.as_view()),
+        name="edit",
+    ),
+    path(
+        "<uuid:pk>/search-enquiries-contact",
+        login_required(views.DatasetEnquiriesContactSearchView.as_view()),
+        name="search_enquiries_contact",
+    ),
+    path(
+        "<uuid:pk>/edit-permissions",
+        login_required(views.DatasetEditPermissionsView.as_view()),
+        name="edit_permissions",
+    ),
+    path(
+        "<uuid:pk>/edit-permissions-summary/<int:summary_id>",
+        login_required(views.DatasetEditPermissionsSummaryView.as_view()),
+        name="edit_permissions_summary",
+    ),
+    path(
+        "<uuid:pk>/search-authorized-users/<int:summary_id>",
+        login_required(views.DatasetAuthorisedUsersSearchView.as_view()),
+        name="search_authorized_users",
+    ),
+    path(
+        "<uuid:pk>/add-authorized-user/<int:summary_id>/<int:user_id>",
+        login_required(views.DatasetAddAuthorisedUserView.as_view()),
+        name="add_authorized_user",
+    ),
+    path(
+        "<uuid:pk>/remove-authorized-user/<int:summary_id>/<int:user_id>",
+        login_required(views.DatasetRemoveAuthorisedUserView.as_view()),
+        name="remove_authorized_user",
+    ),
 ]

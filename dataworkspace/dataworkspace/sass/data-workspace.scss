@@ -357,9 +357,20 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   }
 }
 
-.app-related-items {
+@mixin sidebar-border {
   border-top: 2px solid #1d70b8;
+}
+
+.app-related-items {
+  @include sidebar-border;
   padding-top: 10px;
+}
+
+p.sidebar-section {
+  &:not(:first-child) {
+    @include sidebar-border;
+    padding-top: 20px;
+  }
 }
 
 /* force links from the rich text editor to use GDS colours */

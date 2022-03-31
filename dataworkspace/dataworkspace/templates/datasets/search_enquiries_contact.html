@@ -1,0 +1,69 @@
+{% extends '_main.html' %}
+{% load humanize static datasets_tags core_tags waffle_tags %}
+
+{% block page_title %}{{ dataset.name }} - {{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-three-quarters">
+      <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="/">Home</a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="{{ dataset.get_absolute_url }}">{{ dataset.name }}</a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="{% url 'datasets:edit' dataset.pk %}">Manage this dataset</a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            Edit enquiries contact
+          </li>
+        </ol>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block content %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            {% include 'design_system/error_summary.html' with form=form %}
+            <h1 class="govuk-heading-l">Edit enquiries contact for {{ dataset.name }}</h1>
+            <form method="post" enctype="multipart/form-data" novalidate>
+              {% csrf_token %}
+              <fieldset class="govuk-fieldset">
+                  <div class="govuk-form-group ">
+                      <label class="govuk-label  govuk-!-font-weight-bold" for="id_search">
+                        {{ form.search.label }}
+                      </label>
+                    <input class="govuk-input" type="text" name="search" id="id_search" value="{{ search_query }}">
+                  </div>
+                  <div class="govuk-button-group">
+                      <button type="submit" class="govuk-button" data-prevent-double-click="true" >Search</button>
+                      <a class="govuk-link govuk-link--no-visited-state" href="{% url 'datasets:edit' dataset.pk %}">Cancel</a>
+                    </div>
+              </fieldset>
+            </form>
+            {% if search_results %}
+                <table class="govuk-table">
+                  <caption class="govuk-table__caption govuk-table__caption--m">Found {{ search_results.count }} result{% if search_results.count > 1 %}s{% endif %} for {{ search_query }}</caption>
+                    <tbody class="govuk-table__body">
+                        {% for result in search_results %}
+                        <tr class="govuk-table__row">
+                            <td class="govuk-table__cell">{{ result.first_name }} {{ result.last_name }}</td>
+                            <td class="govuk-table__cell">{{ result.email }}</td>
+                            <td class="govuk-table__cell"><a class="govuk-link" href="{% url 'datasets:edit' dataset.pk %}?enquiries_contact={{ result.email }}">Select</a></td>
+                          </tr>
+                        {% endfor %}
+                    </tbody>
+                  </table>
+            {% else %}
+              {% if search_query %}
+                <h2 class="govuk-heading-m">Found 0 results for {{ search_query }}</h2>
+              {% endif %}
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

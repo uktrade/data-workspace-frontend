@@ -14,6 +14,8 @@ import psycopg2
 from botocore.exceptions import ClientError
 from csp.decorators import csp_update
 from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core import serializers
 from django.core.exceptions import PermissionDenied
@@ -43,11 +45,11 @@ from django.views.decorators.http import (
     require_GET,
     require_http_methods,
 )
-from django.views.generic import DetailView, View
-from psycopg2 import sql
+from django.views.generic import DetailView, FormView, TemplateView, UpdateView, View
 from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace import datasets_db
+from dataworkspace.apps.api_v1.core.views import invalidate_superset_user_cached_credentials
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.core.utils import (
     StreamingHttpResponseWithoutDjangoDbConnection,
@@ -63,15 +65,20 @@ from dataworkspace.apps.datasets.constants import (
 )
 from dataworkspace.apps.datasets.constants import TagType
 from dataworkspace.apps.datasets.forms import (
+    DatasetEditForm,
     DatasetSearchForm,
     EligibilityCriteriaForm,
     RelatedMastersSortForm,
     RelatedDataCutsSortForm,
     RelatedVisualisationsSortForm,
+    UserSearchForm,
 )
 from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
     DataSet,
+    DataSetUserPermission,
+    DataSetVisualisation,
+    PendingAuthorizedUsers,
     ReferenceDataset,
     ReferenceDatasetField,
     SourceLink,
@@ -93,8 +100,10 @@ from dataworkspace.apps.datasets.utils import (
     get_code_snippets_for_reference_table,
     get_detailed_changelog,
 )
+from dataworkspace.apps.datasets.permissions.utils import process_authorized_users_change
 from dataworkspace.apps.eventlog.models import EventLog
-from dataworkspace.apps.eventlog.utils import log_event
+from dataworkspace.apps.eventlog.utils import log_event, log_permission_change
+from dataworkspace.apps.explorer.utils import invalidate_data_explorer_user_cached_credentials
 
 logger = logging.getLogger("app")
 
@@ -1326,4 +1335,196 @@ class DatasetChartDataView(DatasetChartView):
                 "duration": chart.query_log.duration,
                 "data": chart.get_table_data(chart.get_required_columns()),
             }
+        )
+
+
+class DatasetEditBaseView(View):
+    dataset = None
+    summary: str = None
+
+    def dispatch(self, request, *args, **kwargs):
+        self.dataset = get_object_or_404(DataSet.objects.live(), pk=self.kwargs.get("pk"))
+        if "summary_id" in self.kwargs:
+            self.summary = get_object_or_404(
+                PendingAuthorizedUsers.objects.all(), pk=self.kwargs.get("summary_id")
+            )
+        if request.user not in [
+            self.dataset.information_asset_owner,
+            self.dataset.information_asset_manager,
+        ]:
+            return HttpResponseForbidden()
+        return super().dispatch(request, *args, **kwargs)
+
+
+class DatasetEditView(DatasetEditBaseView, UpdateView):
+    model = DataSet
+    form_class = DatasetEditForm
+    template_name = "datasets/edit.html"
+
+    def get_success_url(self):
+        return self.object.get_absolute_url()
+
+    def get_initial(self):
+        return {
+            "enquiries_contact": self.object.enquiries_contact.email
+            if self.object.enquiries_contact
+            else "",
+            "authorized_email_domains": ",".join(self.object.authorized_email_domains),
+        }
+
+    def form_valid(self, form):
+        if "authorized_email_domains" in form.changed_data:
+            log_permission_change(
+                self.request.user,
+                self.object,
+                EventLog.TYPE_CHANGED_AUTHORIZED_EMAIL_DOMAIN,
+                {"authorized_email_domains": self.object.authorized_email_domains},
+                f"authorized_email_domains set to {self.object.authorized_email_domains}",
+            )
+
+            # As the dataset's access type has changed, clear cached credentials for all
+            # users to ensure they either:
+            #   - lose access if it went from REQUIRES_AUTHENTICATION/OPEN to REQUIRES_AUTHORIZATION
+            #   - get access if it went from REQUIRES_AUTHORIZATION to REQUIRES_AUTHENTICATION/OPEN
+            invalidate_data_explorer_user_cached_credentials()
+            invalidate_superset_user_cached_credentials()
+        messages.success(self.request, "Dataset updated")
+        return super().form_valid(form)
+
+
+class UserSearchFormView(DatasetEditBaseView, FormView):
+    form_class = UserSearchForm
+    form: None
+
+    def form_valid(self, form):
+        self.form = form
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        search_query = self.request.GET.get("search_query")
+        if search_query:
+            email_filter = Q(email__icontains=search_query)
+            name_filter = Q(first_name__icontains=search_query) | Q(
+                last_name__icontains=search_query
+            )
+            users = get_user_model().objects.filter(Q(email_filter | name_filter))
+            context["search_results"] = users
+            context["search_query"] = search_query
+        context["dataset"] = self.dataset
+        return context
+
+
+class DatasetEnquiriesContactSearchView(UserSearchFormView):
+    template_name = "datasets/search_enquiries_contact.html"
+
+    def get_success_url(self):
+        return (
+            reverse(
+                "datasets:search_enquiries_contact",
+                args=[
+                    self.dataset.pk,
+                ],
+            )
+            + "?search_query="
+            + self.form.cleaned_data["search"]
+        )
+
+
+class DatasetEditPermissionsView(DatasetEditBaseView, View):
+    def dispatch(self, request, *args, **kwargs):
+        super().dispatch(request, *args, **kwargs)
+        permissions = DataSetUserPermission.objects.filter(dataset=self.dataset)
+        users = json.dumps([p.user.id for p in permissions])
+        summary = PendingAuthorizedUsers.objects.create(created_by=request.user, users=users)
+        return HttpResponseRedirect(
+            reverse("datasets:edit_permissions_summary", args=[self.dataset.id, summary.id])
+        )
+
+
+class DatasetEditPermissionsSummaryView(DatasetEditBaseView, TemplateView):
+    template_name = "datasets/edit_permissions_summary.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["dataset"] = self.dataset
+        context["summary"] = self.summary
+        context["authorised_users"] = get_user_model().objects.filter(
+            id__in=json.loads(self.summary.users if self.summary.users else "[]")
+        )
+        return context
+
+    def post(self, request, *args, **kwargs):
+        authorized_users = set(
+            get_user_model().objects.filter(
+                id__in=json.loads(self.summary.users if self.summary.users else "[]")
+            )
+        )
+
+        process_authorized_users_change(
+            authorized_users, request.user, self.dataset, False, False, True
+        )
+        messages.success(request, "Dataset permissions updated")
+        return HttpResponseRedirect(reverse("datasets:edit", args=[self.dataset.id]))
+
+
+class DatasetAuthorisedUsersSearchView(UserSearchFormView):
+    template_name = "datasets/search_authorised_users.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["summary_id"] = self.kwargs.get("summary_id")
+        return context
+
+    def get_success_url(self):
+        return (
+            reverse(
+                "datasets:search_authorized_users",
+                args=[self.dataset.pk, self.kwargs.get("summary_id")],
+            )
+            + "?search_query="
+            + self.form.cleaned_data["search"]
+        )
+
+
+class DatasetAddAuthorisedUserView(DatasetEditBaseView, View):
+    def get(self, request, *args, **kwargs):
+        summary = PendingAuthorizedUsers.objects.get(id=self.kwargs.get("summary_id"))
+        user = get_user_model().objects.get(id=self.kwargs.get("user_id"))
+
+        users = json.loads(summary.users if summary.users else "[]")
+        if user.id not in users:
+            users.append(user.id)
+            summary.users = json.dumps(users)
+            summary.save()
+
+        return HttpResponseRedirect(
+            reverse(
+                "datasets:edit_permissions_summary",
+                args=[
+                    self.dataset.id,
+                    self.kwargs.get("summary_id"),
+                ],
+            )
+        )
+
+
+class DatasetRemoveAuthorisedUserView(DatasetEditBaseView, View):
+    def get(self, request, *args, **kwargs):
+        summary = PendingAuthorizedUsers.objects.get(id=self.kwargs.get("summary_id"))
+        user = get_user_model().objects.get(id=self.kwargs.get("user_id"))
+
+        users = json.loads(summary.users if summary.users else "[]")
+        if user.id in users:
+            summary.users = json.dumps([user_id for user_id in users if user_id != user.id])
+            summary.save()
+
+        return HttpResponseRedirect(
+            reverse(
+                "datasets:edit_permissions_summary",
+                args=[
+                    self.dataset.id,
+                    self.kwargs.get("summary_id"),
+                ],
+            )
         )
