@@ -1,4 +1,4 @@
-from django.contrib.postgres.aggregates.general import ArrayAgg, BoolOr, StringAgg
+from django.contrib.postgres.aggregates.general import ArrayAgg, BoolOr
 from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.search import SearchRank
 from django.db.models import (
@@ -12,7 +12,6 @@ from django.db.models import (
     BooleanField,
     OuterRef,
     CharField,
-    Empty,
 )
 from django.db.models import QuerySet
 

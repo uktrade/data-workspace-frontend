@@ -39,13 +39,14 @@ from django.http import (
     HttpResponseServerError,
     JsonResponse,
 )
-from django.shortcuts import get_object_or_404, render, redirect
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.decorators.http import (
     require_GET,
     require_http_methods,
 )
 from django.views.generic import DetailView, FormView, TemplateView, UpdateView, View
+from psycopg2 import sql
 from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace import datasets_db
@@ -77,7 +78,6 @@ from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
     DataSet,
     DataSetUserPermission,
-    DataSetVisualisation,
     PendingAuthorizedUsers,
     ReferenceDataset,
     ReferenceDatasetField,
@@ -88,6 +88,7 @@ from dataworkspace.apps.datasets.models import (
     ToolQueryAuditLogTable,
     Tag,
 )
+from dataworkspace.apps.datasets.permissions.utils import process_authorized_users_change
 from dataworkspace.apps.datasets.search import search_for_datasets
 from dataworkspace.apps.datasets.utils import (
     build_filtered_dataset_query,
@@ -100,7 +101,6 @@ from dataworkspace.apps.datasets.utils import (
     get_code_snippets_for_reference_table,
     get_detailed_changelog,
 )
-from dataworkspace.apps.datasets.permissions.utils import process_authorized_users_change
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event, log_permission_change
 from dataworkspace.apps.explorer.utils import invalidate_data_explorer_user_cached_credentials
