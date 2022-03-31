@@ -50,7 +50,7 @@
           </li>
           {% if perms.datasets_referencedataset.change %}
             <li class="govuk-breadcrumbs__list-item">
-              <a href="{% url 'admin:datasets_referencedataset_change' model.uuid %}" class="govuk-breadcrumbs__link">
+              <a href="{% url 'admin:datasets_referencedataset_change' model.id %}" class="govuk-breadcrumbs__link">
                 [Edit]
               </a>
             </li>

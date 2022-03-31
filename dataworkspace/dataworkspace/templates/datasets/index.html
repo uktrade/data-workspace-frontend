@@ -194,22 +194,28 @@
                 <dl>
                   <dt>Data type:</dt>
                   <dd>{{ data_type|get_key:dataset.data_type }}</dd>
+                  {% if dataset.last_updated %}
+                    <dt>Last updated:</dt>
+                    <dd>{{ dataset.last_updated }}</dd>
+                  {% endif %}
                   <dt>Source:</dt>
                   <dd>
-                  {% for source in dataset.sources %}
-                    <a class="govuk-link" href="{% url "datasets:find_datasets" %}?source={{ source.id }}">{{ source.name }}</a>
-                  {% empty %}
-                    N/A
-                  {% endfor %}
+                    {% for source in dataset.sources %}
+                      <a class="govuk-link"
+                         href="{% url "datasets:find_datasets" %}?source={{ source.id }}">{{ source.name }}</a>
+                    {% empty %}
+                      N/A
+                    {% endfor %}
                   </dd>
                   {% if dataset.topic_tag_names %}
                     <dt>Topics:</dt>
                     <dd>
-                    {% for topic in dataset.topics %}
-                      <a class="govuk-link" href="{% url "datasets:find_datasets" %}?topic={{ topic.id }}">{{ topic.name }}</a>
-                    {% empty %}
-                      &nbsp;
-                    {% endfor %}
+                      {% for topic in dataset.topics %}
+                        <a class="govuk-link"
+                           href="{% url "datasets:find_datasets" %}?topic={{ topic.id }}">{{ topic.name }}</a>
+                      {% empty %}
+                        &nbsp;
+                      {% endfor %}
                     </dd>
                   {% endif %}
                 </dl>
@@ -217,12 +223,9 @@
 
               {% if not dataset.has_access %}
                 <div class="govuk-inset-text govuk-!-margin-bottom-0">
-                  You need to <a href="{% url 'datasets:request_access_from_search_result' dataset.id %}"
-                                 class="govuk-link govuk-link--no-visited-state">request access</a> to use this
-                  data
+                  {% include "partials/request_access_link.html" with dataset=dataset %}
                 </div>
               {% endif %}
-
             </div>
           {% endfor %}
 

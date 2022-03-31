@@ -28,9 +28,9 @@ from dataworkspace.apps.datasets.models import (
     ReferenceDataset,
     VisualisationCatalogueItem,
 )
-from dataworkspace.apps.datasets.views import (
-    get_datasets_data_for_user_matching_query,
-    get_visualisations_data_for_user_matching_query,
+from dataworkspace.apps.datasets.search import (
+    _get_datasets_data_for_user_matching_query,
+    _get_visualisations_data_for_user_matching_query,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.tests import factories
@@ -242,6 +242,9 @@ def expected_search_result(catalogue_item, **kwargs):
         "is_subscribed": False,
         "has_visuals": mock.ANY,
         "is_open_data": getattr(catalogue_item, "user_access_type", None) == UserAccessType.OPEN,
+        "eligibility_criteria": mock.ANY,
+        "sources": mock.ANY,
+        "topics": mock.ANY,
     }
     result.update(**kwargs)
     return result
@@ -402,10 +405,19 @@ def test_find_datasets_filters_by_use(client):
     response = client.get(reverse("datasets:find_datasets"), {"use": [DataSetType.DATACUT]})
 
     assert response.status_code == 200
-    assert list(response.context["datasets"]) == [
+
+    expected_results = [
         expected_search_result(ds, has_access=False),
         expected_search_result(rds),
     ]
+
+    datasets = list(response.context["datasets"])
+
+    assert len(datasets) == 2
+
+    for i, ds in enumerate(datasets):
+        expected = expected_results[i]
+        assert ds == expected
 
 
 def test_find_datasets_filters_visualisations_by_use(client):
@@ -648,17 +660,17 @@ def test_datasets_and_visualisations_doesnt_return_duplicate_results(access_type
         factories.VisualisationUserPermissionFactory.create(visualisation=visualisation, user=user)
 
     for u in [normal_user, staff_user]:
-        datasets = get_datasets_data_for_user_matching_query(
+        datasets = _get_datasets_data_for_user_matching_query(
             DataSet.objects.live(), query="", use={}, user=u
         )
         assert len(datasets) == len(set(dataset["id"] for dataset in datasets))
 
-        references = get_datasets_data_for_user_matching_query(
+        references = _get_datasets_data_for_user_matching_query(
             ReferenceDataset.objects.live(), "", {}, user=u
         )
         assert len(references) == len(set(reference["id"] for reference in references))
 
-        visualisations = get_visualisations_data_for_user_matching_query(
+        visualisations = _get_visualisations_data_for_user_matching_query(
             VisualisationCatalogueItem.objects, query="", user=u
         )
         assert len(visualisations) == len(

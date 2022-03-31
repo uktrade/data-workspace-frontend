@@ -6,12 +6,6 @@ from dataworkspace.apps.datasets.subscriptions import views as subscription_view
 
 urlpatterns = [
     path("", login_required(views.find_datasets), name="find_datasets"),
-    path("topics/<str:tag_name>", login_required(views.find_tags), name="find_tags"),
-    path(
-        "request_access_from_search_result/<uuid:dataset_uuid>",
-        login_required(views.request_access_from_search_result),
-        name="request_access_from_search_result",
-    ),
     path(
         "<uuid:dataset_uuid>",
         login_required(views.DatasetDetailView.as_view()),
