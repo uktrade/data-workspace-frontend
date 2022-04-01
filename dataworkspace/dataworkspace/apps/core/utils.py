@@ -19,8 +19,7 @@ import psycopg2
 from psycopg2 import connect, sql
 from psycopg2.sql import SQL
 
-import boto3
-
+from boto3_utils import boto3_client_s3, boto3_client_iam
 
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
@@ -551,7 +550,7 @@ def write_credentials_to_bucket(user, creds):
     logger.info("settings.NOTEBOOKS_BUCKET %s", settings.NOTEBOOKS_BUCKET)
     if settings.NOTEBOOKS_BUCKET is not None:
         bucket = settings.NOTEBOOKS_BUCKET
-        s3_client = boto3.client("s3")
+        s3_client = boto3_client_s3()
         s3_prefix = (
             "user/federated/"
             + stable_identification_suffix(str(user.profile.sso_id), short=False)
@@ -1105,7 +1104,7 @@ def create_tools_access_iam_role(user_email_address, user_sso_id, access_point_i
     if user.profile.tools_access_role_arn:
         return user.profile.tools_access_role_arn, s3_prefix
 
-    iam_client = boto3.client("iam")
+    iam_client = boto3_client_iam()
 
     assume_role_policy_document = settings.S3_ASSUME_ROLE_POLICY_DOCUMENT
     policy_name = settings.S3_POLICY_NAME
