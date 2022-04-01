@@ -38,7 +38,7 @@ class TestCustomAdminSite(BaseAdminTestCase):
         self.user.save()
         response = self._authenticated_get(reverse("admin:login"))
         # pylint: disable=no-member
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 403)
 
     def test_admin_access(self):
         # Ensure admins are able to view the admin site
@@ -2775,7 +2775,7 @@ class TestDatasetAdminPytest:
     @pytest.mark.parametrize(
         "request_client, expected_response_code, can_review",
         (
-            ("client", 404, False),
+            ("client", 403, False),
             ("sme_client", 200, False),
             ("staff_client", 200, True),
         ),
@@ -2831,7 +2831,7 @@ class TestDatasetAdminPytest:
     @pytest.mark.parametrize(
         "request_client, expected_response_code, should_publish",
         (
-            ("client", 404, False),
+            ("client", 403, False),
             ("sme_client", 200, False),
             ("staff_client", 200, True),
         ),

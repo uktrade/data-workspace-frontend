@@ -381,14 +381,14 @@ async def async_main():
                 raise
 
             params = {"message": exception.args[0]} if user_exception else {}
-
             status = exception.args[1] if user_exception else 500
+            error_url = exception.args[2] if len(exception.args) > 2 else f"/error_{status}"
 
             return await handle_http(
                 downstream_request,
                 "GET",
                 CIMultiDict(admin_headers_request(downstream_request)),
-                URL(admin_root).with_path(f"/error_{status}"),
+                URL(admin_root).with_path(error_url),
                 params,
                 b"",
                 default_http_timeout,
@@ -418,7 +418,11 @@ async def async_main():
             application = await response.json()
 
         if response.status != 200 and response.status != 404:
-            raise UserException("Unable to start the application", response.status)
+            raise UserException(
+                "Unable to start the application",
+                response.status,
+                application.get("redirect_url", None),
+            )
 
         if host_exists and application["state"] not in ["SPAWNING", "RUNNING"]:
             if "x-data-workspace-no-modify-application-instance" not in downstream_request.headers:

@@ -1,0 +1,8 @@
+{% extends 'errors/base_error.html' %}
+{% block error_content %}
+  <p class="govuk-body">You do not have permission to access this dataset.</p>
+  <p class="govuk-body">You can <a class="govuk-link" href="{% url 'request_access:dataset' dataset_uuid=dataset.id %}">request access to this dataset</a>.</p>
+  <p class="govuk-body">
+    If you’re still having issues accessing the dataset, <a class="govuk-link" href="{% url 'support' %}">contact the Data Workspace Team</a> for help.
+  </p>
+{% endblock error_content %}

@@ -1,8 +1,10 @@
 from django.contrib import admin
 from django.contrib.admin.apps import AdminConfig
-from django.http import HttpResponseRedirect, Http404
+from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
+
+from dataworkspace.apps.core.errors import DjangoAdminPermissionDeniedError
 
 
 class DataWorkspaceAdminSite(admin.AdminSite):
@@ -15,7 +17,7 @@ class DataWorkspaceAdminSite(admin.AdminSite):
         if request.method == "GET" and self.has_permission(request):
             index_path = reverse("admin:index", current_app=self.name)
             return HttpResponseRedirect(index_path)
-        raise Http404
+        raise DjangoAdminPermissionDeniedError()
 
 
 class DataWorkspaceAdminConfig(AdminConfig):

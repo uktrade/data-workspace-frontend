@@ -419,7 +419,7 @@ class TestApplication(unittest.TestCase):
         ) as response:
             content = await response.text()
 
-        self.assertIn("You are not allowed to access this page", content)
+        self.assertIn("You do not have access to this page", content)
         self.assertEqual(response.status, 403)
 
         # Ensure that the user can't see a visualisation which is published if they don't have authorization
@@ -436,7 +436,7 @@ class TestApplication(unittest.TestCase):
         ) as response:
             content = await response.text()
 
-        self.assertIn("You are not allowed to access this page", content)
+        self.assertIn("You do not have access to this page", content)
         self.assertEqual(response.status, 403)
 
         # Ensure that the user can't see a visualisation which is unpublished, even if if they have authorization
@@ -457,7 +457,7 @@ class TestApplication(unittest.TestCase):
         ) as response:
             content = await response.text()
 
-        self.assertIn("You are not allowed to access this page", content)
+        self.assertIn("You do not have access to this page", content)
         self.assertEqual(response.status, 403)
 
         # Finally, if the visualisation is published *and* they have authorization, they can see it.
@@ -598,7 +598,7 @@ class TestApplication(unittest.TestCase):
         ) as response:
             content = await response.text()
 
-        self.assertIn("You are not allowed to access this page", content)
+        self.assertIn("You do not have access to this page", content)
         self.assertEqual(response.status, 403)
 
         access_level = 30
@@ -1192,7 +1192,7 @@ class TestApplication(unittest.TestCase):
         # ... and can make requests to the home page...
         async with session.request("GET", "http://dataworkspace.test:8000/") as response:
             content = await response.text()
-        self.assertNotIn("You are not allowed to access this page", content)
+        self.assertNotIn("You do not have access to this page", content)
         self.assertEqual(response.status, 200)
 
         # ... but not the application...
@@ -1200,7 +1200,7 @@ class TestApplication(unittest.TestCase):
             "GET", "http://testapplication-23b40dd9.dataworkspace.test:8000/http"
         ) as response:
             content = await response.text()
-        self.assertIn("You are not allowed to access this page", content)
+        self.assertIn("You do not have access to this page", content)
         self.assertEqual(response.status, 403)
 
         # ... and it can't be spoofed...
@@ -1210,7 +1210,7 @@ class TestApplication(unittest.TestCase):
             headers={"x-forwarded-for": "1.2.3.4"},
         ) as response:
             content = await response.text()
-        self.assertIn("You are not allowed to access this page", content)
+        self.assertIn("You do not have access to this page", content)
         self.assertEqual(response.status, 403)
 
         await cleanup_application()
@@ -1271,7 +1271,7 @@ class TestApplication(unittest.TestCase):
         ) as response:
             content = await response.text()
 
-        self.assertIn("You are not allowed to access this page", content)
+        self.assertIn("You do not have access to this page", content)
         self.assertEqual(response.status, 403)
 
         async with session.request(
@@ -1281,7 +1281,7 @@ class TestApplication(unittest.TestCase):
         ) as response:
             content = await response.text()
 
-        self.assertIn("You are not allowed to access this page", content)
+        self.assertIn("You do not have access to this page", content)
         self.assertEqual(response.status, 403)
 
         # The healthcheck is allowed from a private IP: simulates ALB
@@ -1328,7 +1328,7 @@ class TestApplication(unittest.TestCase):
         ) as response:
             content = await response.text()
 
-        self.assertIn("You are not allowed to access this page", content)
+        self.assertIn("You do not have access to this page", content)
         self.assertEqual(response.status, 403)
 
     @async_test
@@ -1382,7 +1382,7 @@ class TestApplication(unittest.TestCase):
         # ... and can make requests to the home page...
         async with session.request("GET", "http://dataworkspace.test:8000/") as response:
             content = await response.text()
-        self.assertNotIn("You are not allowed to access this page", content)
+        self.assertNotIn("You do not have access to this page", content)
         self.assertEqual(response.status, 200)
 
         # ... but not data explorer...
@@ -1390,7 +1390,7 @@ class TestApplication(unittest.TestCase):
             "GET", "http://dataworkspace.test:8000/data-explorer/"
         ) as response:
             content = await response.text()
-        self.assertIn("You are not allowed to access this page", content)
+        self.assertIn("You do not have access to this page", content)
         self.assertEqual(response.status, 403)
 
         # ... and it can't be spoofed...
@@ -1400,7 +1400,7 @@ class TestApplication(unittest.TestCase):
             headers={"x-forwarded-for": "1.2.3.4"},
         ) as response:
             content = await response.text()
-        self.assertIn("You are not allowed to access this page", content)
+        self.assertIn("You do not have access to this page", content)
         self.assertEqual(response.status, 403)
 
         await cleanup_application()
@@ -1452,7 +1452,7 @@ class TestApplication(unittest.TestCase):
         ) as response:
             content = await response.text()
 
-        self.assertIn("You are not allowed to access this page", content)
+        self.assertIn("You do not have access to this page", content)
         self.assertEqual(response.status, 403)
 
     @async_test

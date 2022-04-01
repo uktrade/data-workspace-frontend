@@ -432,7 +432,13 @@ class TestUserToolSizeConfigurationView:
 
 class TestVisualisationLogs:
     @pytest.mark.django_db
-    def test_not_developer(self):
+    @mock.patch("dataworkspace.apps.applications.views._visualisation_gitlab_project")
+    def test_not_developer(self, mock_get_gitlab_project):
+        mock_get_gitlab_project.return_value = {
+            "id": 1,
+            "default_branch": "master",
+            "name": "test-gitlab-project",
+        }
         develop_visualisations_permission = Permission.objects.get(
             codename="develop_visualisations",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),

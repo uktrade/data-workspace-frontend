@@ -23,6 +23,7 @@ from django.views.generic import ListView
 from django.views.generic.base import TemplateView, View
 from django.views.generic.edit import CreateView, DeleteView, FormView
 
+from dataworkspace.apps.core.errors import DataExplorerQueryResultsPermissionError
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.apps.explorer.constants import QueryLogState
@@ -634,7 +635,10 @@ class ShareQueryConfirmationView(TemplateView):
 
 class RunningQueryView(View):
     def get(self, request, query_log_id):
-        query_log = get_object_or_404(QueryLog, pk=query_log_id, run_by_user=self.request.user)
+        query_log = get_object_or_404(QueryLog, pk=query_log_id)
+        if query_log.run_by_user != self.request.user:
+            raise DataExplorerQueryResultsPermissionError()
+
         query_instance = None
         query_id = url_get_query_id(request)
         if query_id:

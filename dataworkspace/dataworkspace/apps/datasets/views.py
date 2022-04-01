@@ -53,6 +53,12 @@ from waffle.mixins import WaffleFlagMixin
 from dataworkspace import datasets_db
 from dataworkspace.apps.api_v1.core.views import invalidate_superset_user_cached_credentials
 from dataworkspace.apps.applications.models import ApplicationInstance
+from dataworkspace.apps.core.errors import DatasetPermissionDenied, DatasetPreviewDisabledError
+from dataworkspace.apps.datasets.constants import (
+    DataSetType,
+    DataLinkType,
+    UserAccessType,
+)
 from dataworkspace.apps.core.utils import (
     StreamingHttpResponseWithoutDjangoDbConnection,
     database_dsn,
@@ -77,9 +83,11 @@ from dataworkspace.apps.datasets.forms import (
 )
 from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
+    DataCutDataset,
     DataSet,
     DataSetUserPermission,
     PendingAuthorizedUsers,
+    MasterDataset,
     ReferenceDataset,
     ReferenceDatasetField,
     SourceLink,
@@ -95,8 +103,6 @@ from dataworkspace.apps.datasets.utils import (
     build_filtered_dataset_query,
     dataset_type_to_manage_unpublished_permission_codename,
     find_dataset,
-    find_dataset_or_visualisation,
-    find_dataset_or_visualisation_for_bookmark,
     get_code_snippets_for_table,
     get_code_snippets_for_query,
     get_code_snippets_for_reference_table,
@@ -252,29 +258,7 @@ class DatasetDetailView(DetailView):
         return isinstance(self.object, VisualisationCatalogueItem)
 
     def get_object(self, queryset=None):
-        dataset_uuid = self.kwargs["dataset_uuid"]
-        dataset = None
-        try:
-            dataset = ReferenceDataset.objects.live().get(uuid=dataset_uuid)
-        except ReferenceDataset.DoesNotExist:
-            try:
-                dataset = DataSet.objects.live().get(id=dataset_uuid)
-            except DataSet.DoesNotExist:
-                try:
-                    dataset = VisualisationCatalogueItem.objects.live().get(id=dataset_uuid)
-                except VisualisationCatalogueItem.DoesNotExist:
-                    pass
-
-        if dataset:
-            perm_codename = dataset_type_to_manage_unpublished_permission_codename(dataset.type)
-
-            if not dataset.published and not self.request.user.has_perm(perm_codename):
-                dataset = None
-
-        if not dataset:
-            raise Http404("No dataset matches the given query.")
-
-        return dataset
+        return find_dataset(self.kwargs["dataset_uuid"], self.request.user)
 
     @csp_update(frame_src=settings.QUICKSIGHT_DASHBOARD_HOST)
     def get(self, request, *args, **kwargs):
@@ -496,7 +480,7 @@ class DatasetDetailView(DetailView):
 
 @require_http_methods(["GET", "POST"])
 def eligibility_criteria_view(request, dataset_uuid):
-    dataset = find_dataset_or_visualisation(dataset_uuid, request.user)
+    dataset = find_dataset(dataset_uuid, request.user)
 
     if request.method == "POST":
         form = EligibilityCriteriaForm(request.POST)
@@ -523,7 +507,7 @@ def eligibility_criteria_view(request, dataset_uuid):
 
 @require_GET
 def eligibility_criteria_not_met_view(request, dataset_uuid):
-    dataset = find_dataset_or_visualisation(dataset_uuid, request.user)
+    dataset = find_dataset(dataset_uuid, request.user)
 
     return render(
         request,
@@ -537,7 +521,7 @@ def eligibility_criteria_not_met_view(request, dataset_uuid):
 
 @require_GET
 def toggle_bookmark(request, dataset_uuid):
-    dataset = find_dataset_or_visualisation_for_bookmark(dataset_uuid)
+    dataset = find_dataset(dataset_uuid, request.user)
     dataset.toggle_bookmark(request.user)
 
     return HttpResponseRedirect(dataset.get_absolute_url())
@@ -547,11 +531,7 @@ class ReferenceDatasetDownloadView(DetailView):
     model = ReferenceDataset
 
     def get_object(self, queryset=None):
-        return get_object_or_404(
-            ReferenceDataset.objects.live(),
-            uuid=self.kwargs.get("dataset_uuid"),
-            **{"published": True} if not self.request.user.is_superuser else {},
-        )
+        return find_dataset(self.kwargs["dataset_uuid"], self.request.user, ReferenceDataset)
 
     def get(self, request, *args, **kwargs):
         dl_format = self.kwargs.get("format")
@@ -849,12 +829,8 @@ class CustomDatasetQueryPreviewView(DatasetPreviewView):
 
 class SourceTableColumnDetails(View):
     def get(self, request, dataset_uuid, table_uuid):
-        try:
-            dataset = DataSet.objects.get(id=dataset_uuid, type=DataSetType.MASTER)
-            source_table = SourceTable.objects.get(id=table_uuid, dataset__id=dataset_uuid)
-        except (DataSet.DoesNotExist, SourceTable.DoesNotExist):
-            return HttpResponse(status=404)
-
+        dataset = find_dataset(dataset_uuid, request.user, MasterDataset)
+        source_table = get_object_or_404(SourceTable, id=table_uuid, dataset=dataset)
         columns = datasets_db.get_columns(
             source_table.database.memorable_name,
             schema=source_table.schema,
@@ -874,12 +850,7 @@ class SourceTableColumnDetails(View):
 
 class ReferenceDatasetColumnDetails(View):
     def get(self, request, dataset_uuid):
-        dataset = get_object_or_404(
-            ReferenceDataset.objects.live(),
-            uuid=dataset_uuid,
-            **{"published": True} if not self.request.user.is_superuser else {},
-        )
-
+        dataset = find_dataset(dataset_uuid, request.user, ReferenceDataset)
         columns = datasets_db.get_columns(
             dataset.external_database.memorable_name,
             schema="public",
@@ -895,12 +866,7 @@ class ReferenceDatasetColumnDetails(View):
 
 class ReferenceDatasetGridView(View):
     def get(self, request, dataset_uuid):
-        dataset = get_object_or_404(
-            ReferenceDataset.objects.live(),
-            uuid=dataset_uuid,
-            **{"published": True} if not self.request.user.is_superuser else {},
-        )
-
+        dataset = find_dataset(dataset_uuid, request.user, ReferenceDataset)
         return render(
             request,
             "datasets/reference_dataset_grid.html",
@@ -910,10 +876,7 @@ class ReferenceDatasetGridView(View):
 
 class RelatedDataView(View):
     def get(self, request, dataset_uuid):
-        try:
-            dataset = DataSet.objects.get(id=dataset_uuid)
-        except DataSet.DoesNotExist:
-            return HttpResponse(status=404)
+        dataset = find_dataset(dataset_uuid, request.user)
 
         if dataset.type == DataSetType.DATACUT:
             form = RelatedMastersSortForm(request.GET)
@@ -944,11 +907,7 @@ class RelatedDataView(View):
 
 class RelatedVisualisationsView(View):
     def get(self, request, dataset_uuid):
-        try:
-            dataset = DataSet.objects.get(id=dataset_uuid)
-        except DataSet.DoesNotExist:
-            return HttpResponse(status=404)
-
+        dataset = find_dataset(dataset_uuid, request.user)
         form = RelatedVisualisationsSortForm(request.GET)
 
         if form.is_valid():
@@ -1009,11 +968,7 @@ class DataCutPreviewView(WaffleFlagMixin, DetailView):
 
 class DatasetUsageHistoryView(View):
     def get(self, request, dataset_uuid, **kwargs):
-        model_class = kwargs["model_class"]
-        try:
-            dataset = model_class.objects.get(id=dataset_uuid)
-        except model_class.DoesNotExist:
-            return HttpResponse(status=404)
+        dataset = find_dataset(dataset_uuid, request.user, kwargs["model_class"])
 
         if dataset.type == DataSetType.MASTER:
             tables = list(dataset.sourcetable_set.values_list("table", flat=True))
@@ -1071,24 +1026,22 @@ class DatasetUsageHistoryView(View):
 class DataCutSourceDetailView(DetailView):
     template_name = "datasets/data_cut_source_detail.html"
 
-    def _user_can_access(self):
-        source = self.get_object()
-        return source.dataset.user_has_access(self.request.user) and source.data_grid_enabled
-
     def dispatch(self, request, *args, **kwargs):
-        if not self._user_can_access():
-            dataset_uuid = self.kwargs.get("dataset_uuid")
-            dataset = find_dataset(dataset_uuid, self.request.user)
+        source = self.get_object()
+        if not source.data_grid_enabled:
+            raise DatasetPreviewDisabledError(source.dataset)
 
-            return HttpResponseRedirect(dataset.get_absolute_url())
+        if not source.dataset.user_has_access(self.request.user):
+            raise DatasetPermissionDenied(source.dataset)
+
         return super().dispatch(request, *args, **kwargs)
 
     def get_object(self, queryset=None):
+        dataset = find_dataset(self.kwargs["dataset_uuid"], self.request.user)
         return get_object_or_404(
             self.kwargs["model_class"],
-            dataset__id=self.kwargs.get("dataset_uuid"),
+            dataset=dataset,
             pk=self.kwargs["object_id"],
-            **{"dataset__published": True} if not self.request.user.is_superuser else {},
         )
 
 
@@ -1098,11 +1051,11 @@ class DataGridDataView(DetailView):
         return source.dataset.user_has_access(self.request.user) and source.data_grid_enabled
 
     def get_object(self, queryset=None):
+        dataset = find_dataset(self.kwargs.get("dataset_uuid"), self.request.user)
         return get_object_or_404(
             self.kwargs["model_class"],
-            dataset__id=self.kwargs.get("dataset_uuid"),
+            dataset=dataset,
             pk=self.kwargs["object_id"],
-            **{"dataset__published": True} if not self.request.user.is_superuser else {},
         )
 
     def dispatch(self, request, *args, **kwargs):
@@ -1217,10 +1170,7 @@ class DatasetVisualisationPreview(View):
 
     def get(self, request, dataset_uuid, object_id, **kwargs):
         model_class = kwargs["model_class"]
-        try:
-            dataset = model_class.objects.get(id=dataset_uuid)
-        except model_class.DoesNotExist:
-            return HttpResponse(status=404)
+        dataset = find_dataset(dataset_uuid, request.user, model_class)
 
         if not dataset.user_has_access(request.user):
             return HttpResponseForbidden()
@@ -1234,10 +1184,7 @@ class DatasetVisualisationPreview(View):
 class DatasetVisualisationView(View):
     def get(self, request, dataset_uuid, object_id, **kwargs):
         model_class = kwargs["model_class"]
-        try:
-            dataset = model_class.objects.get(id=dataset_uuid)
-        except model_class.DoesNotExist:
-            return HttpResponse(status=404)
+        dataset = find_dataset(dataset_uuid, self.request.user, model_class)
 
         if not dataset.user_has_access(request.user):
             return HttpResponseForbidden()
@@ -1253,10 +1200,10 @@ class DatasetVisualisationView(View):
 
 class CustomQueryColumnDetails(View):
     def get(self, request, dataset_uuid, query_id):
+        dataset = find_dataset(dataset_uuid, self.request.user, DataCutDataset)
         try:
-            dataset = DataSet.objects.get(id=dataset_uuid, type=DataSetType.DATACUT)
             query = CustomDatasetQuery.objects.get(id=query_id, dataset__id=dataset_uuid)
-        except (DataSet.DoesNotExist, CustomDatasetQuery.DoesNotExist):
+        except CustomDatasetQuery.DoesNotExist:
             return HttpResponse(status=404)
 
         return render(
@@ -1283,17 +1230,13 @@ class SourceChangelogView(WaffleFlagMixin, DetailView):
         return ctx
 
     def get_object(self, queryset=None):
+        dataset = find_dataset(self.kwargs["dataset_uuid"], self.request.user)
         if self.kwargs["model_class"] == ReferenceDataset:
-            return get_object_or_404(
-                self.kwargs["model_class"],
-                uuid=self.kwargs.get("dataset_uuid"),
-                **{"published": True} if not self.request.user.is_superuser else {},
-            )
+            return dataset
         return get_object_or_404(
             self.kwargs["model_class"],
-            dataset__id=self.kwargs.get("dataset_uuid"),
+            dataset=dataset,
             pk=self.kwargs["source_id"],
-            **{"dataset__published": True} if not self.request.user.is_superuser else {},
         )
 
 
@@ -1301,10 +1244,8 @@ class DatasetChartView(WaffleFlagMixin, View):
     waffle_flag = settings.CHART_BUILDER_PUBLISH_CHARTS_FLAG
 
     def get_object(self):
-        dataset = get_object_or_404(
-            self.kwargs["model_class"],
-            id=self.kwargs["dataset_uuid"],
-            **{"published": True} if not self.request.user.is_superuser else {},
+        dataset = find_dataset(
+            self.kwargs["dataset_uuid"], self.request.user, self.kwargs["model_class"]
         )
         return dataset.charts.get(id=self.kwargs["object_id"])
 

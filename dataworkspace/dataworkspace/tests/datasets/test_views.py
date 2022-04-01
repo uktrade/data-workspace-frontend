@@ -3911,7 +3911,7 @@ class TestChartBuilderChartView:
                 ),
             )
         )
-        assert response.status_code == 404
+        assert response.status_code == 403
         response = client.get(
             reverse(
                 "datasets:dataset_chart_data",
@@ -3921,7 +3921,7 @@ class TestChartBuilderChartView:
                 ),
             )
         )
-        assert response.status_code == 404
+        assert response.status_code == 403
 
     @override_flag(settings.CHART_BUILDER_PUBLISH_CHARTS_FLAG, active=True)
     def test_user_without_permission(self, client, user):

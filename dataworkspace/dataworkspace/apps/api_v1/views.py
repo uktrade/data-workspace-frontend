@@ -6,6 +6,7 @@ import boto3
 import gevent
 
 from django.conf import settings
+from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError
 from django.http import JsonResponse
 
@@ -98,9 +99,16 @@ def applications_api_GET(request):
 
 
 def application_api_view(request, public_host):
+    # Check if a custom permission denied error was thrown. If it was return the context
+    # specific error page to the proxy. Otherwise, fall back to the standard 403 error page.
+    try:
+        is_allowed = application_api_is_allowed(request, public_host)
+    except PermissionDenied as e:
+        return JsonResponse({"redirect_url": getattr(e, "redirect_url", "/error_403")}, status=403)
+
     return (
-        JsonResponse({}, status=403)
-        if not application_api_is_allowed(request, public_host)
+        JsonResponse({"redirect_url": "/error_403"}, status=403)
+        if not is_allowed
         else application_api_GET(request, public_host)
         if request.method == "GET"
         else application_api_PUT(request, public_host)

@@ -1,0 +1,10 @@
+{% extends 'errors/base_error.html' %}
+{% block error_content %}
+  <p class="govuk-body">You need to request access to use this tool.</p>
+  <p class="govuk-body">
+    <a class="govuk-link" href="{% url 'request_access:index' %}">Request access to use tools</a>.
+  </p>
+  <p class="govuk-body">
+    If you've already been given use of this tool but cannot access it, <a class="govuk-link" href="{% url 'support' %}">contact the Data Workspace Team</a> for help.
+  </p>
+{% endblock error_content %}
