@@ -1,6 +1,3 @@
-$govuk-font-family: arial, sans-serif;
+@import "vars";
 
-$govuk-assets-path: "/__django_static/assets/";
-
-// check your --include-path if this fails to resolve
 @import "govuk-frontend/govuk/all";

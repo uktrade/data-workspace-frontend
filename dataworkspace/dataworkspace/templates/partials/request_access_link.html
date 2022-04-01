@@ -1,0 +1,9 @@
+{% if dataset.eligibility_criteria %}
+  You need to <a href="{% url 'datasets:eligibility_criteria' dataset.id %}"
+                 class="govuk-link govuk-link--no-visited-state">request access</a> to use this
+  data
+{% else %}
+  You need to <a href="{% url 'request_access:dataset' dataset.id %}"
+                 class="govuk-link govuk-link--no-visited-state">request access</a> to use this
+  data
+{% endif %}

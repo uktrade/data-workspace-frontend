@@ -1,5 +1,6 @@
 from collections import defaultdict
 from functools import partial
+import logging
 import json
 
 from django import forms
@@ -17,6 +18,18 @@ from ...forms import (
     GOVUKDesignSystemPlainTextareaWidget,
     GOVUKDesignSystemPlainTextareaField,
 )
+
+logger = logging.getLogger("app")
+
+
+class SearchableChoice:
+    def __init__(self, label, count=0):
+        self.label = label
+        self.count = count
+        self.search_text = str(label).lower()
+
+    def __str__(self):
+        return self.label
 
 
 class FilterWidget(forms.widgets.CheckboxSelectMultiple):
@@ -50,22 +63,9 @@ class FilterWidget(forms.widgets.CheckboxSelectMultiple):
         js = ("app-filter-show-more-v2.js",)
 
 
-class ScrollingFilterWidget(FilterWidget):
-    template_name = "datasets/scrolling_filter.html"
-    option_template_name = "datasets/scrolling_filter_option.html"
-
-    def get_context(self, name, value, attrs):
-        context = super().get_context(name, value, attrs)
-
-        selected_count = 0
-        for _, options, __ in context["widget"]["optgroups"]:
-            for option in options:
-                if option["attrs"].get("checked", False):
-                    selected_count += 1
-
-        context["widget"]["selected_count"] = selected_count
-
-        return context
+class AccordionFilterWidget(FilterWidget):
+    template_name = "datasets/accordion_filter.html"
+    option_template_name = "datasets/accordion_filter_option.html"
 
 
 class SortSelectWidget(forms.widgets.Select):
@@ -75,15 +75,18 @@ class SortSelectWidget(forms.widgets.Select):
     def __init__(
         self,
         label,
+        form_group_extra_css=None,
         *args,
         **kwargs,  # pylint: disable=keyword-arg-before-vararg
     ):
         super().__init__(*args, **kwargs)
         self._label = label
+        self._form_group_extra_css = form_group_extra_css
 
     def get_context(self, name, value, attrs):
         context = super().get_context(name, value, attrs)
         context["widget"]["label"] = self._label
+        context["widget"]["form_group_extra_css"] = self._form_group_extra_css
         return context
 
 
@@ -142,6 +145,9 @@ class SourceTagField(forms.ModelMultipleChoiceField):
 
 
 class DatasetSearchForm(forms.Form):
+    SUBSCRIBED = "subscribed"
+    BOOKMARKED = "bookmarked"
+
     q = forms.CharField(required=False)
 
     user_access = forms.TypedMultipleChoiceField(
@@ -150,7 +156,7 @@ class DatasetSearchForm(forms.Form):
             ("no", "Data I don't have access to"),
         ],
         required=False,
-        widget=FilterWidget("Choose data access", hint_text="Select all that apply"),
+        widget=AccordionFilterWidget("Data access"),
     )
 
     admin_filters = forms.TypedMultipleChoiceField(
@@ -161,13 +167,16 @@ class DatasetSearchForm(forms.Form):
         ],
         coerce=str,
         required=False,
-        widget=FilterWidget("Admin only options"),
+        widget=AccordionFilterWidget("Admin only options"),
     )
 
-    bookmarked = forms.MultipleChoiceField(
-        choices=[("yes", "My bookmarks")],
+    my_datasets = forms.TypedMultipleChoiceField(
+        choices=[
+            (BOOKMARKED, "My bookmarks"),
+            (SUBSCRIBED, "My subscriptions"),
+        ],
         required=False,
-        widget=FilterWidget("Bookmarks"),
+        widget=AccordionFilterWidget("My datasets"),
     )
 
     use = forms.TypedMultipleChoiceField(
@@ -183,29 +192,27 @@ class DatasetSearchForm(forms.Form):
 
     data_type = forms.TypedMultipleChoiceField(
         choices=[
-            (DataSetType.MASTER, "Master dataset"),
+            (DataSetType.MASTER, "Source dataset"),
             (DataSetType.DATACUT, "Data cut"),
             (DataSetType.REFERENCE, "Reference dataset"),
+            (DataSetType.VISUALISATION, "Visualisation"),
         ],
         coerce=int,
         required=False,
-        widget=FilterWidget("Choose data type", hint_text="Select all that apply"),
+        widget=AccordionFilterWidget("Type"),
     )
 
     source = SourceTagField(
         queryset=Tag.objects.order_by("name").filter(type=TagType.SOURCE),
         required=False,
-        widget=ScrollingFilterWidget("Choose data source", hint_text="Select all that apply"),
+        widget=AccordionFilterWidget("Data source", hint_text="Select all that apply"),
     )
 
     topic = SourceTagField(
         queryset=Tag.objects.order_by("name").filter(type=TagType.TOPIC),
         required=False,
-        widget=FilterWidget(
-            "Choose data topic",
-            limit_initial_options=10,
-            show_more_label="Show more topics",
-            hint_text="Select all that apply",
+        widget=AccordionFilterWidget(
+            "Topic",
         ),
     )
 
@@ -217,7 +224,7 @@ class DatasetSearchForm(forms.Form):
             ("published_at", "Date published: oldest"),
             ("name", "Alphabetical (A-Z)"),
         ],
-        widget=SortSelectWidget(label="Sort by"),
+        widget=SortSelectWidget(label="Sort by", form_group_extra_css="govuk-!-margin-bottom-0"),
     )
 
     def clean_sort(self):
@@ -230,9 +237,17 @@ class DatasetSearchForm(forms.Form):
     class Media:
         js = ("app-filter-show-more-v2.js",)
 
-    def annotate_and_update_filters(self, datasets, matcher, number_of_matches):
+    def annotate_and_update_filters(self, datasets, matcher):
+        """
+        Calculate counts of datasets that will match if users apply additional filters and apply these to the form
+        labels.
+        @param datasets: iterable of datasets
+        @param matcher: fn which returns true when the row is matched
+        @return: None
+        """
+
         counts = {
-            "bookmarked": defaultdict(int),
+            "my_datasets": defaultdict(int),
             "admin_filters": defaultdict(int),
             "use": defaultdict(int),
             "data_type": defaultdict(int),
@@ -242,7 +257,6 @@ class DatasetSearchForm(forms.Form):
         }
 
         user_access = set(self.cleaned_data["user_access"])
-        selected_bookmark = bool(self.cleaned_data["bookmarked"])
         selected_admin = set(self.cleaned_data["admin_filters"])
         selected_unpublished = "unpublished" in selected_admin
         selected_opendata = "opendata" in selected_admin
@@ -265,7 +279,6 @@ class DatasetSearchForm(forms.Form):
             dataset_matcher = partial(
                 matcher,
                 data=dataset,
-                bookmark=selected_bookmark,
                 unpublished=selected_unpublished,
                 opendata=selected_opendata,
                 withvisuals=selected_withvisuals,
@@ -275,6 +288,7 @@ class DatasetSearchForm(forms.Form):
                 topic_ids=selected_topic_ids,
                 user_accessible=user_access == {"yes"},
                 user_inaccessible=user_access == {"no"},
+                selected_user_datasets=self.cleaned_data["my_datasets"],
             )
 
             if dataset_matcher(user_accessible=True, user_inaccessible=False):
@@ -283,8 +297,9 @@ class DatasetSearchForm(forms.Form):
             if dataset_matcher(user_inaccessible=True, user_accessible=False):
                 counts["user_access"]["no"] += 1
 
-            if dataset_matcher(bookmark=True):
-                counts["bookmarked"]["yes"] += 1
+            for value, _ in self.fields["my_datasets"].choices:
+                if dataset_matcher(selected_user_datasets={value}):
+                    counts["my_datasets"][value] += 1
 
             for admin_id, _ in admin_choices:
                 if dataset_matcher(**{admin_id: True}):
@@ -307,20 +322,20 @@ class DatasetSearchForm(forms.Form):
                     counts["topic"][topic_id.value] += 1
 
         self.fields["user_access"].choices = [
-            (access_id, access_text + f" ({counts['user_access'][access_id]})")
+            (access_id, SearchableChoice(access_text, counts["user_access"][access_id]))
             for access_id, access_text in user_access_choices
         ]
 
-        self.fields["bookmarked"].choices = [
+        self.fields["my_datasets"].choices = [
             (
                 bookmarked_id,
-                bookmarked_text + f" ({counts['bookmarked'][bookmarked_id]})",
+                SearchableChoice(value, counts["my_datasets"][bookmarked_id]),
             )
-            for bookmarked_id, bookmarked_text in self.fields["bookmarked"].choices
+            for bookmarked_id, value in list(self.fields["my_datasets"].choices)
         ]
 
         self.fields["admin_filters"].choices = [
-            (admin_id, admin_text + f" ({counts['admin_filters'][admin_id]})")
+            (admin_id, SearchableChoice(admin_text, counts["admin_filters"][admin_id]))
             for admin_id, admin_text in admin_choices
         ]
 
@@ -329,7 +344,7 @@ class DatasetSearchForm(forms.Form):
         ]
 
         self.fields["data_type"].choices = [
-            (type_id, type_text + f" ({counts['data_type'][type_id]})")
+            (type_id, SearchableChoice(type_text, counts["data_type"][type_id]))
             for type_id, type_text in data_type_choices
         ]
 
@@ -343,20 +358,63 @@ class DatasetSearchForm(forms.Form):
         ]
 
         self.fields["topic"].choices = [
-            (topic_id, topic_text + f" ({counts['topic'][topic_id.value]})")
+            (
+                topic_id,
+                SearchableChoice(topic_text, counts["topic"][topic_id.value]),
+            )
             for topic_id, topic_text in topic_choices
             if topic_id.value in selected_topic_ids or counts["topic"][topic_id.value] != 0
         ]
 
+    def get_filters(self):
+        filters = SearchDatasetsFilters()
 
-class SearchableChoice:
-    def __init__(self, label, count=0):
-        self.label = label
-        self.count = count
-        self.search_text = str(label).lower()
+        filters.query = self.cleaned_data.get("q")
 
-    def __str__(self):
-        return self.label
+        filters.unpublished = "unpublished" in self.cleaned_data.get("admin_filters")
+        filters.open_data = "opendata" in self.cleaned_data.get("admin_filters")
+        filters.with_visuals = "withvisuals" in self.cleaned_data.get("admin_filters")
+        filters.use = set(self.cleaned_data.get("use"))
+        filters.data_type = set(self.cleaned_data.get("data_type", []))
+        filters.sort_type = self.cleaned_data.get("sort")
+        filters.source_ids = set(source.id for source in self.cleaned_data.get("source"))
+        filters.topic_ids = set(topic.id for topic in self.cleaned_data.get("topic"))
+        filters.user_accessible = set(self.cleaned_data.get("user_access", [])) == {"yes"}
+        filters.user_inaccessible = set(self.cleaned_data.get("user_access", [])) == {"no"}
+
+        filters.my_datasets = set(self.cleaned_data.get("my_datasets", []))
+
+        return filters
+
+
+class SearchDatasetsFilters:
+    unpublished: bool
+    open_data: bool
+    with_visuals: bool
+    use: set
+    data_type: set
+    sort_type: str
+    source_ids: set
+    topic_ids: set
+    user_accessible: set
+    user_inaccessible: set
+    query: str
+
+    my_datasets: set
+
+    def has_filters(self):
+        return (
+            len(self.my_datasets)
+            or self.unpublished
+            or self.open_data
+            or self.with_visuals
+            or bool(self.use)
+            or bool(self.data_type)
+            or bool(self.source_ids)
+            or bool(self.topic_ids)
+            or bool(self.user_accessible)
+            or bool(self.user_inaccessible)
+        )
 
 
 class RelatedMastersSortForm(forms.Form):
