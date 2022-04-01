@@ -54,11 +54,6 @@ from dataworkspace import datasets_db
 from dataworkspace.apps.api_v1.core.views import invalidate_superset_user_cached_credentials
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.core.errors import DatasetPermissionDenied, DatasetPreviewDisabledError
-from dataworkspace.apps.datasets.constants import (
-    DataSetType,
-    DataLinkType,
-    UserAccessType,
-)
 from dataworkspace.apps.core.utils import (
     StreamingHttpResponseWithoutDjangoDbConnection,
     database_dsn,
