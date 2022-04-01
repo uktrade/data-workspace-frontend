@@ -132,8 +132,8 @@ class TestDatasetViews:
         [
             ("client", factories.DataSetFactory, True, 200),
             ("client", factories.ReferenceDatasetFactory, True, 200),
-            ("client", factories.DataSetFactory, False, 404),
-            ("client", factories.ReferenceDatasetFactory, False, 404),
+            ("client", factories.DataSetFactory, False, 403),
+            ("client", factories.ReferenceDatasetFactory, False, 403),
             ("staff_client", factories.DataSetFactory, True, 200),
             ("staff_client", factories.ReferenceDatasetFactory, True, 200),
             ("staff_client", factories.DataSetFactory, False, 200),

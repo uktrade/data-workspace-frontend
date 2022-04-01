@@ -7,7 +7,7 @@ from django.views.generic import CreateView, UpdateView, DetailView
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
-from dataworkspace.apps.datasets.utils import find_dataset_or_visualisation
+from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.apps.request_access.forms import (  # pylint: disable=import-error
@@ -34,9 +34,7 @@ class DatasetAccessRequest(CreateView):
             codename="start_all_applications",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         ).exists()
-        catalogue_item = find_dataset_or_visualisation(
-            self.kwargs["dataset_uuid"], self.request.user
-        )
+        catalogue_item = find_dataset(self.kwargs["dataset_uuid"], self.request.user)
         context = super().get_context_data(**kwargs)
         context["catalogue_item"] = catalogue_item
         context["is_visualisation"] = isinstance(catalogue_item, VisualisationCatalogueItem)
@@ -50,9 +48,7 @@ class DatasetAccessRequest(CreateView):
         ).exists()
 
         if "dataset_uuid" in self.kwargs:
-            catalogue_item = find_dataset_or_visualisation(
-                self.kwargs["dataset_uuid"], request.user
-            )
+            catalogue_item = find_dataset(self.kwargs["dataset_uuid"], request.user)
             user_has_dataset_access = catalogue_item.user_has_access(self.request.user)
         else:
             catalogue_item = None
@@ -75,9 +71,7 @@ class DatasetAccessRequest(CreateView):
             codename="start_all_applications",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         ).exists()
-        catalogue_item = find_dataset_or_visualisation(
-            self.kwargs["dataset_uuid"], self.request.user
-        )
+        catalogue_item = find_dataset(self.kwargs["dataset_uuid"], self.request.user)
 
         access_request = models.AccessRequest.objects.create(
             requester=self.request.user,
@@ -154,7 +148,7 @@ class AccessRequestSummaryPage(RequestAccessMixin, DetailView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["catalogue_item"] = (
-            find_dataset_or_visualisation(ctx["object"].catalogue_item_id, self.request.user)
+            find_dataset(ctx["object"].catalogue_item_id, self.request.user)
             if ctx["object"].catalogue_item_id
             else None
         )
@@ -172,7 +166,7 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
         access_request = self.get_object()
         if not access_request.zendesk_reference_number:
             catalogue_item = (
-                find_dataset_or_visualisation(access_request.catalogue_item_id, self.request.user)
+                find_dataset(access_request.catalogue_item_id, self.request.user)
                 if access_request.catalogue_item_id
                 else None
             )
@@ -218,7 +212,7 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["catalogue_item"] = (
-            find_dataset_or_visualisation(self.object.catalogue_item_id, self.request.user)
+            find_dataset(self.object.catalogue_item_id, self.request.user)
             if self.object.catalogue_item_id
             else None
         )

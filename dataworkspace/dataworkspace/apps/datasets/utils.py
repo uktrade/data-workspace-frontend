@@ -12,11 +12,11 @@ from django.conf import settings
 from django.db import connections, IntegrityError, transaction
 from django.db.models import Q
 from django.http import Http404
-from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from psycopg2.sql import Identifier, Literal, SQL
 
 from dataworkspace.apps.core.utils import close_all_connections_if_not_in_atomic_block
+from dataworkspace.apps.core.errors import DatasetUnpublishedError
 from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
     CustomDatasetQueryTable,
@@ -47,49 +47,32 @@ from dataworkspace.utils import TYPE_CODES_REVERSED
 logger = logging.getLogger("app")
 
 
-def find_dataset(dataset_uuid, user):
-    dataset = get_object_or_404(DataSet.objects.live(), id=dataset_uuid)
+def find_dataset(dataset_uuid, user, model_class=None):
+    """
+    Attempts to return a dataset given an ID and an optional model class.
+    Raises the appropriate exception depending on if the dataset exists/is published
+    """
+    dataset_models = (
+        [ReferenceDataset, DataSet, VisualisationCatalogueItem]
+        if not model_class
+        else [model_class]
+    )
+    dataset = None
+    for dataset_model in dataset_models:
+        id_field = "id" if dataset_model != ReferenceDataset else "uuid"
+        try:
+            dataset = dataset_model.objects.live().get(**{id_field: dataset_uuid})
+        except dataset_model.DoesNotExist:
+            pass
 
-    if user.has_perm(dataset_type_to_manage_unpublished_permission_codename(dataset.type)):
-        return dataset
-
-    if not dataset.published:
+    if not dataset:
         raise Http404("No dataset matches the given query.")
 
+    perm = dataset_type_to_manage_unpublished_permission_codename(dataset.type)
+    if not dataset.published and not user.has_perm(perm):
+        raise DatasetUnpublishedError(dataset)
+
     return dataset
-
-
-def find_visualisation(visualisation_uuid, user):
-    visualisation = get_object_or_404(
-        VisualisationCatalogueItem.objects.live(), id=visualisation_uuid
-    )
-
-    if user.has_perm(
-        dataset_type_to_manage_unpublished_permission_codename(DataSetType.VISUALISATION)
-    ):
-        return visualisation
-
-    if not visualisation.published:
-        raise Http404("No visualisation matches the given query.")
-
-    return visualisation
-
-
-def find_dataset_or_visualisation(model_id, user):
-    if DataSet.objects.filter(pk=model_id).exists():
-        return find_dataset(model_id, user)
-
-    return find_visualisation(model_id, user)
-
-
-def find_dataset_or_visualisation_for_bookmark(model_id):
-    if DataSet.objects.filter(pk=model_id).exists():
-        return get_object_or_404(DataSet.objects.live(), id=model_id)
-
-    if ReferenceDataset.objects.filter(uuid=model_id).exists():
-        return get_object_or_404(ReferenceDataset.objects.live(), uuid=model_id)
-
-    return get_object_or_404(VisualisationCatalogueItem.objects.live(), id=model_id)
 
 
 def dataset_type_to_manage_unpublished_permission_codename(dataset_type: int):

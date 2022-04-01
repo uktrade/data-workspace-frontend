@@ -35,6 +35,12 @@ from dataworkspace.apps.applications.models import (
     ApplicationInstanceDbUsers,
     ApplicationTemplate,
 )
+from dataworkspace.apps.core.errors import (
+    DatasetPermissionDenied,
+    ManageVisualisationsPermissionDeniedError,
+    ToolInvalidUserError,
+    ToolPermissionDeniedError,
+)
 from dataworkspace.apps.core.models import Database, DatabaseUser
 from dataworkspace.apps.core.utils import (
     close_all_connections_if_not_in_atomic_block,
@@ -207,11 +213,13 @@ def application_api_is_allowed(request, public_host):
     is_preview = commit_id is not None
 
     def is_tool_and_correct_user_and_allowed_to_start():
-        return (
-            application_template.application_type == "TOOL"
-            and host_user == request_sso_id_hex_short
-            and request.user.has_perm("applications.start_all_applications")
-        )
+        if application_template.application_type != "TOOL":
+            return False
+        if host_user != request_sso_id_hex_short:
+            raise ToolInvalidUserError()
+        if not request.user.has_perm("applications.start_all_applications"):
+            raise ToolPermissionDeniedError()
+        return True
 
     def is_published_visualisation_and_requires_authentication():
         return (
@@ -223,23 +231,29 @@ def application_api_is_allowed(request, public_host):
         )
 
     def is_published_visualisation_and_requires_authorisation_and_has_authorisation():
-        return (
+        vis_requires_auth = (
             not is_preview
             and application_template.visible is True
             and visualisation_catalogue_item
             and visualisation_catalogue_item.user_access_type
             == UserAccessType.REQUIRES_AUTHORIZATION
-            and request.user.visualisationuserpermission_set.filter(
+        )
+        if (
+            vis_requires_auth
+            and not request.user.visualisationuserpermission_set.filter(
                 visualisation=visualisation_catalogue_item
             ).exists()
-        )
+        ):
+            raise DatasetPermissionDenied(visualisation_catalogue_item)
+        return vis_requires_auth
 
     def is_visualisation_preview_and_has_gitlab_developer():
-        return (
-            is_preview
-            and visualisation_catalogue_item
-            and gitlab_has_developer_access(request.user, application_template.gitlab_project_id)
-        )
+        is_vis_preview = is_preview and visualisation_catalogue_item
+        if is_vis_preview and not gitlab_has_developer_access(
+            request.user, application_template.gitlab_project_id
+        ):
+            raise ManageVisualisationsPermissionDeniedError()
+        return is_vis_preview
 
     return (
         is_tool_and_correct_user_and_allowed_to_start()

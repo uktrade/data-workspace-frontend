@@ -1,0 +1,7 @@
+{% extends 'errors/base_error.html' %}
+{% block error_content %}
+  <p class="govuk-body">Data preview is not enabled for this {{ dataset.get_type_display|lower }}.</p>
+  <p class="govuk-body">
+    <a class="govuk-link" href="{% url 'support' %}">Contact the Data Workspace Team</a> for access.
+  </p>
+{% endblock error_content %}
