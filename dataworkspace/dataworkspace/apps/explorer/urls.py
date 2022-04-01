@@ -60,13 +60,6 @@ urlpatterns = [
         login_required(ShareQueryConfirmationView.as_view()),
         name="share_query_confirmation",
     ),
-    path(
-        "charts/",
-        include(
-            ("dataworkspace.apps.explorer.charts.urls", "explorer_charts"),
-            namespace="explorer-charts",
-        ),
-    ),
 ]
 
 if settings.DEBUG:

@@ -65,7 +65,7 @@ from dataworkspace.apps.datasets.constants import (
 )
 from dataworkspace.apps.datasets.model_utils import external_model_class
 from dataworkspace.apps.eventlog.models import EventLog
-from dataworkspace.apps.explorer.models import ChartBuilderChart
+from dataworkspace.apps.core.charts.models import ChartBuilderChart
 from dataworkspace.datasets_db import (
     get_tables_last_updated_date,
 )

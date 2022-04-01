@@ -37,8 +37,8 @@ from dataworkspace.apps.datasets.search import (
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data, MatchUnorderedMembers
-from dataworkspace.tests.explorer.charts.test_views import create_temporary_results_table
-from dataworkspace.tests.explorer.factories import ChartBuilderChartFactory
+from dataworkspace.tests.core.charts.test_views import create_temporary_results_table
+from dataworkspace.tests.core.factories import ChartBuilderChartFactory
 from dataworkspace.tests.factories import (
     VisualisationCatalogueItemFactory,
     UserFactory,

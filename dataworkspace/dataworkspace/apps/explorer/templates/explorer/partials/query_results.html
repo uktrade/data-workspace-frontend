@@ -65,7 +65,7 @@
       {% flag CHART_BUILDER_BUILD_CHARTS_FLAG %}
         {% if total_rows > 0 %}
           <a class="govuk-button govuk-button--secondary govuk-!-margin-left-4"
-           href="{% url 'explorer:explorer-charts:create-chart' query_log.id %}">Create Chart</a>
+           href="{% url 'charts:create-chart' query_log.id %}">Create Chart</a>
         {% endif %}
       {% endflag %}
     </div>
