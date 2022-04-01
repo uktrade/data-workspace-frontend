@@ -84,3 +84,4 @@ ssl.crt
 
 node_modules
 dataworkspace/dataworkspace/static/*.css.map
+docker-compose-shared.yml

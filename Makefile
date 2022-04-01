@@ -14,7 +14,6 @@ help:
 	@echo -e "$(COLOUR_YELLOW)make docker-test-shell-local$(COLOUR_NONE) : bash shell for the unit tests in a container with your local volume mounted"
 	@echo -e "$(COLOUR_YELLOW)make docker-test-unit-local$(COLOUR_NONE) : runs the unit tests in a container with your local volume mounted"
 	@echo -e "$(COLOUR_YELLOW)make docker-test-integration$(COLOUR_NONE) : runs the integration tests in a container (10 minutes min)"
-	@echo -e "$(COLOUR_YELLOW)make logout$(COLOUR_NONE): logs out the current user"
 
 .PHONY: first-use
 first-use:
@@ -24,25 +23,20 @@ first-use:
 up: first-use
 	docker-compose -f docker-compose-dev.yml up
 
-
 .PHONY: docker-build
 docker-build:
 	docker-compose -f docker-compose-test.yml build
-
 
 .PHONY: docker-test-unit
 docker-test-unit: docker-build
 	docker-compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test pytest /dataworkspace/dataworkspace
 
-
 .PHONY: docker-test-integration
 docker-test-integration: docker-build
 	docker-compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test pytest test/
 
-
 .PHONY: docker-test
 docker-test: docker-test-integration docker-test-unit
-
 
 .PHONY: docker-clean
 docker-clean:
@@ -75,16 +69,13 @@ docker-check:
 docker-format: first-use
 	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash -c "cd /app && black ."
 
-
 .PHONY: format
 format:
 	black .
 
-
 .PHONY: dev-shell
 dev-shell:
 	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash
-
 
 .PHONY: save-requirements
 save-requirements:
@@ -114,29 +105,7 @@ docker-test-integration-local:
 .PHONY: docker-test-local
 docker-test-local: docker-test-unit-local docker-test-integration-local
 
-.PHONY: logout
-logout:
-	docker-compose exec data-workspace-redis bash -c "redis-cli --scan --pattern data_workspace* | xargs redis-cli unlink"
+.PHONY: create-super-user
+create-super-user:
+	docker-compose -f docker-compose-shared.yml run --rm data-workspace bash -c "cd dataworkspace && python3 manage.py createsuperuser --username admin --email admin.user@example.com --noinput"
 
-
-.PHONY: docker-test-sequential
-docker-test-sequential:
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test stop
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test rm -f
-
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test up -d
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test pytest /test/test_application.py -x -v
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test stop
-
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test up -d
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test pytest /test/test_utils.py -x -v
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test stop
-
-
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test up -d
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test pytest /test/selenium/test_explorer.py -x -v
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test stop
-
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test up -d
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test pytest /test/selenium/test_request_data.py -x -v
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test stop
