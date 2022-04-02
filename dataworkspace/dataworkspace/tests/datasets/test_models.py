@@ -239,7 +239,7 @@ def test_source_link_data_last_updated(mock_client):
 class TestSourceLinkPreview:
     @pytest.fixture
     def mock_client(self, mocker):
-        return mocker.patch("dataworkspace.apps.datasets.models.boto3.client")
+        return mocker.patch("dataworkspace.apps.core.boto3_client.boto3.client")
 
     def test_not_s3_link(self):
         link = factories.SourceLinkFactory(url="http://example.com/a-file.csv")
