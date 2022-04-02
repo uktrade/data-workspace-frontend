@@ -15,6 +15,7 @@ from typing import Optional, List
 
 from psycopg2 import sql
 
+import boto3
 from botocore.exceptions import ClientError
 from ckeditor.fields import RichTextField
 
@@ -43,7 +44,6 @@ from django.utils.text import slugify
 from django.utils import timezone
 
 from dataworkspace import datasets_db
-from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.models import (
     TimeStampedModel,
     DeletableTimestampedUserModel,
@@ -783,7 +783,7 @@ class SourceLink(ReferenceNumberedDatasetSource):
         Check whether we can access the file on s3
         :return:
         """
-        client = get_s3_client()
+        client = boto3.client("s3")
         try:
             client.head_object(Bucket=settings.AWS_UPLOADS_BUCKET, Key=self.url)
         except ClientError:
@@ -792,7 +792,7 @@ class SourceLink(ReferenceNumberedDatasetSource):
 
     def _delete_s3_file(self):
         if self.url.startswith("s3://sourcelink") and self.local_file_is_accessible():
-            client = get_s3_client()
+            client = boto3.client("s3")
             client.delete_object(Bucket=settings.AWS_UPLOADS_BUCKET, Key=self.url)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
@@ -839,7 +839,7 @@ class SourceLink(ReferenceNumberedDatasetSource):
     def get_data_last_updated_date(self):
         if self.link_type == self.TYPE_LOCAL:
             try:
-                metadata = get_s3_client().head_object(
+                metadata = boto3.client("s3").head_object(
                     Bucket=settings.AWS_UPLOADS_BUCKET, Key=self.url
                 )
                 return metadata.get("LastModified")
@@ -861,7 +861,7 @@ class SourceLink(ReferenceNumberedDatasetSource):
         ):
             return None, []
 
-        client = get_s3_client()
+        client = boto3.client("s3")
 
         # Only read a maximum of 100Kb in for preview purposes. This should stop us getting
         # denial-of-service'd by files with a massive amount of data in the first few columns

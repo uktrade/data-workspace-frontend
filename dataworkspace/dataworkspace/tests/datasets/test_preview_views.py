@@ -261,7 +261,7 @@ class TestDataCutPreviewDownloadView:
             dataset=dataset,
             url="s3://sourcelink/158776ec-5c40-4c58-ba7c-a3425905ec45/test.csv",
         )
-        mock_client = mocker.patch("dataworkspace.apps.core.boto3_client.boto3.client")
+        mock_client = mocker.patch("dataworkspace.apps.datasets.models.boto3.client")
         mock_client().head_object.return_value = {"ContentType": "text/csv"}
         csv_content = b"header1,header2\nrow1 col1, row1 col2\nrow2 col1, row2 col2\n"
         mock_client().get_object.return_value = {

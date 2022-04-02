@@ -19,6 +19,8 @@ import psycopg2
 from psycopg2 import connect, sql
 from psycopg2.sql import SQL
 
+import boto3
+
 
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
@@ -27,7 +29,6 @@ from django.db import connections, connection
 from django.db.models import Q
 from django.conf import settings
 
-from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.models import Database, DatabaseUser, Team
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import DataSet, SourceTable, ReferenceDataset
@@ -550,7 +551,7 @@ def write_credentials_to_bucket(user, creds):
     logger.info("settings.NOTEBOOKS_BUCKET %s", settings.NOTEBOOKS_BUCKET)
     if settings.NOTEBOOKS_BUCKET is not None:
         bucket = settings.NOTEBOOKS_BUCKET
-        s3_client = get_s3_client()
+        s3_client = boto3.client("s3")
         s3_prefix = (
             "user/federated/"
             + stable_identification_suffix(str(user.profile.sso_id), short=False)
