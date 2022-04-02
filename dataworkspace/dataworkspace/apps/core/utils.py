@@ -12,6 +12,8 @@ from typing import Tuple
 
 from timeit import default_timer as timer
 
+import boto3
+
 import gevent
 import gevent.queue
 
