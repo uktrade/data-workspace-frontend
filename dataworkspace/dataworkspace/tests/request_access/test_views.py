@@ -195,7 +195,7 @@ class TestToolsAccessOnly:
         "access_type", (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
     )
     @mock.patch("dataworkspace.apps.core.storage._upload_to_clamav")
-    @mock.patch("dataworkspace.apps.request_access.views.models.storage.boto3")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     def test_user_redirected_to_step_2_after_step_1_form_submission(
         self, mock_boto, _upload_to_clamav, access_type, client, metadata_db
     ):
@@ -287,7 +287,7 @@ class TestToolsAccessOnly:
     @pytest.mark.parametrize(
         "access_type", (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
     )
-    @mock.patch("dataworkspace.apps.request_access.views.models.storage.boto3")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.request_access.views.zendesk.Zenpy")
     @mock.patch("dataworkspace.apps.core.storage._upload_to_clamav")
     def test_zendesk_ticket_created_after_form_submission(
@@ -486,7 +486,7 @@ class TestEditAccessRequest:
         assert access_request.contact_email == "updated@example.com"
         assert access_request.reason_for_access == "I still need it"
 
-    @mock.patch("dataworkspace.apps.request_access.views.models.storage.boto3")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.core.storage._upload_to_clamav")
     def test_edit_training_screenshot(self, mock_upload_to_clamav, mock_boto, client, user):
         mock_upload_to_clamav.return_value = ClamAVResponse({"malware": False})
@@ -512,7 +512,7 @@ class TestEditAccessRequest:
         access_request.refresh_from_db()
         assert access_request.training_screenshot.name.split("!")[0] == "new-file.txt"
 
-    @mock.patch("dataworkspace.apps.request_access.views.models.storage.boto3")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.core.storage._upload_to_clamav")
     def test_cannot_access_other_users_access_request(
         self, mock_upload_to_clamav, mock_boto, client, user

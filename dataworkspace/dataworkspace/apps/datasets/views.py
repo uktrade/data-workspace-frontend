@@ -9,7 +9,6 @@ from contextlib import closing
 from itertools import chain
 from typing import Set
 
-import boto3
 import psycopg2
 from botocore.exceptions import ClientError
 from csp.decorators import csp_update
@@ -53,6 +52,7 @@ from waffle.mixins import WaffleFlagMixin
 from dataworkspace import datasets_db
 from dataworkspace.apps.api_v1.core.views import invalidate_superset_user_cached_credentials
 from dataworkspace.apps.applications.models import ApplicationInstance
+from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.errors import DatasetPermissionDenied, DatasetPreviewDisabledError
 from dataworkspace.apps.core.utils import (
     StreamingHttpResponseWithoutDjangoDbConnection,
@@ -614,7 +614,7 @@ class SourceLinkDownloadView(DetailView):
         if source_link.link_type == source_link.TYPE_EXTERNAL:
             return HttpResponseRedirect(source_link.url)
 
-        client = boto3.client("s3")
+        client = get_s3_client()
         try:
             file_object = client.get_object(
                 Bucket=settings.AWS_UPLOADS_BUCKET, Key=source_link.url

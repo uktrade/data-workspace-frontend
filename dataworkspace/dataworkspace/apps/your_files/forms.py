@@ -1,10 +1,10 @@
-import boto3
 from botocore.exceptions import ClientError
 from django import forms
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator, MaxLengthValidator
 
+from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.utils import get_all_schemas, get_s3_prefix
 from dataworkspace.apps.your_files.utils import SCHEMA_POSTGRES_DATA_TYPE_MAP
 from dataworkspace.forms import (
@@ -49,7 +49,7 @@ class CreateTableForm(GOVUKDesignSystemForm):
 
     def clean_path(self):
         path = self.cleaned_data["path"]
-        client = boto3.client("s3")
+        client = get_s3_client()
 
         if not path.startswith(get_s3_prefix(str(self.user.profile.sso_id))):
             raise ValidationError("You don't have permission to access this file")

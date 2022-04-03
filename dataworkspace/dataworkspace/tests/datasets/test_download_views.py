@@ -503,7 +503,7 @@ class TestSourceLinkDownloadView:
         indirect=["request_client"],
     )
     @pytest.mark.django_db
-    @mock.patch("dataworkspace.apps.datasets.views.boto3.client")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     def test_download_local_file(self, mock_client, request_client, published, access_type):
         dataset = factories.DataSetFactory.create(
             published=published, user_access_type=access_type

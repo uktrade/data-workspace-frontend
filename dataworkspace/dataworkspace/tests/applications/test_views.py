@@ -271,7 +271,7 @@ class TestDataVisualisationUIApprovalPage:
 class TestQuickSightPollAndRedirect:
     @pytest.mark.django_db
     @override_settings(QUICKSIGHT_SSO_URL="https://sso.quicksight")
-    @mock.patch("dataworkspace.apps.applications.views.boto3.client")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     def test_view_redirects_to_quicksight_sso_url(self, mock_boto_client):
         user = get_user_model().objects.create(is_staff=True, is_superuser=True)
 
@@ -285,7 +285,7 @@ class TestQuickSightPollAndRedirect:
         assert resp["Location"] == "https://sso.quicksight"
 
     @pytest.mark.django_db
-    @mock.patch("dataworkspace.apps.applications.views.boto3.client")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     def test_view_starts_celery_polling_job(self, mock_boto_client):
         user = get_user_model().objects.create(is_staff=True, is_superuser=True)
 
@@ -507,7 +507,7 @@ class TestVisualisationLogs:
             "dataworkspace.apps.applications.views._application_template"
         )
         mock_get_application_template.return_value = application_template
-        mock_boto = mocker.patch("dataworkspace.apps.applications.utils.boto3.client")
+        mock_boto = mocker.patch("dataworkspace.apps.core.boto3_client.boto3.client")
         mock_boto.return_value.get_log_events.side_effect = botocore.exceptions.ClientError(
             error_response={"Error": {"Code": "ResourceNotFoundException"}},
             operation_name="get_log_events",
@@ -544,7 +544,7 @@ class TestVisualisationLogs:
             "dataworkspace.apps.applications.views._application_template"
         )
         mock_get_application_template.return_value = application_template
-        mock_boto = mocker.patch("dataworkspace.apps.applications.utils.boto3.client")
+        mock_boto = mocker.patch("dataworkspace.apps.core.boto3_client.boto3.client")
         mock_boto.return_value.get_log_events.side_effect = [
             {
                 "nextForwardToken": "12345",

@@ -1,7 +1,6 @@
 import logging
 import os
 
-import boto3
 from botocore.exceptions import ClientError
 from django.http import (
     HttpResponse,
@@ -17,6 +16,7 @@ from django.urls import reverse
 from django.views import View
 from django.views.generic import FormView
 
+from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.forms import (
     SupportForm,
     TechnicalSupportForm,
@@ -196,7 +196,7 @@ class ServeS3UploadedFileView(View):
         if not path.startswith(file_storage.base_prefix):
             return HttpResponseNotFound()
 
-        client = boto3.client("s3")
+        client = get_s3_client()
         try:
             file_object = client.get_object(Bucket=file_storage.bucket, Key=path)
         except ClientError as ex:

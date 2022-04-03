@@ -1,6 +1,5 @@
 import csv
 import os
-import boto3
 
 from botocore.exceptions import ClientError
 
@@ -15,6 +14,7 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import FormView, CreateView
 
+from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.datasets.models import (
     ReferenceDataset,
     ReferenceDatasetField,
@@ -368,7 +368,7 @@ class SourceLinkUploadView(UserPassesTestMixin, CreateView):  # pylint: disable=
         source_link.url = os.path.join(
             "s3://", "sourcelink", str(source_link.id), form.cleaned_data["file"].name
         )
-        client = boto3.client("s3")
+        client = get_s3_client()
         try:
             client.put_object(
                 Body=form.cleaned_data["file"],

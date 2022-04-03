@@ -45,7 +45,7 @@ class TestCreateTableViews:
         )
         assert "We can’t process your CSV file" in response.content.decode("utf-8")
 
-    @mock.patch("dataworkspace.apps.datasets.views.boto3.client")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
     def test_non_existent_file(self, mock_get_s3_prefix, mock_boto_client, client):
         mock_boto_client().head_object.side_effect = [
@@ -64,7 +64,7 @@ class TestCreateTableViews:
 
     @mock.patch("dataworkspace.apps.your_files.views.copy_file_to_uploads_bucket")
     @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_column_types")
-    @mock.patch("dataworkspace.apps.your_files.utils.boto3.client")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
     @mock.patch("dataworkspace.apps.your_files.views.get_schema_for_user")
     def test_trigger_failed(
@@ -114,7 +114,7 @@ class TestCreateTableViews:
     @mock.patch("dataworkspace.apps.your_files.views.trigger_dataflow_dag")
     @mock.patch("dataworkspace.apps.your_files.views.copy_file_to_uploads_bucket")
     @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_column_types")
-    @mock.patch("dataworkspace.apps.your_files.utils.boto3.client")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
     @mock.patch("dataworkspace.apps.your_files.views.get_schema_for_user")
     def test_success(
@@ -180,7 +180,7 @@ class TestCreateTableViews:
     @mock.patch("dataworkspace.apps.your_files.forms.get_schema_for_user")
     @mock.patch("dataworkspace.apps.your_files.forms.get_team_schemas_for_user")
     @mock.patch("dataworkspace.apps.your_files.forms.get_all_schemas")
-    @mock.patch("dataworkspace.apps.your_files.utils.boto3.client")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
     def test_confirm_schema_with_teams(
         self,
@@ -224,7 +224,7 @@ class TestCreateTableViews:
     @mock.patch("dataworkspace.apps.your_files.forms.get_schema_for_user")
     @mock.patch("dataworkspace.apps.your_files.forms.get_team_schemas_for_user")
     @mock.patch("dataworkspace.apps.your_files.forms.get_all_schemas")
-    @mock.patch("dataworkspace.apps.your_files.utils.boto3.client")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
     def test_confirm_schema_without_teams(
         self,
@@ -264,7 +264,7 @@ class TestCreateTableViews:
     @mock.patch("dataworkspace.apps.your_files.forms.get_schema_for_user")
     @mock.patch("dataworkspace.apps.your_files.forms.get_team_schemas_for_user")
     @mock.patch("dataworkspace.apps.your_files.forms.get_all_schemas")
-    @mock.patch("dataworkspace.apps.your_files.utils.boto3.client")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
     def test_confirm_schema_staff_user(
         self,
@@ -306,7 +306,7 @@ class TestCreateTableViews:
     @mock.patch("dataworkspace.apps.your_files.forms.get_schema_for_user")
     @mock.patch("dataworkspace.apps.your_files.forms.get_team_schemas_for_user")
     @mock.patch("dataworkspace.apps.your_files.forms.get_all_schemas")
-    @mock.patch("dataworkspace.apps.your_files.utils.boto3.client")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
     def test_staff_user_create_new_schema(
         self,
@@ -342,7 +342,7 @@ class TestCreateTableViews:
     @mock.patch("dataworkspace.apps.your_files.forms.get_schema_for_user")
     @mock.patch("dataworkspace.apps.your_files.forms.get_team_schemas_for_user")
     @mock.patch("dataworkspace.apps.your_files.forms.get_all_schemas")
-    @mock.patch("dataworkspace.apps.your_files.utils.boto3.client")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
     def test_staff_user_create_new_schema_success(
         self,
@@ -384,7 +384,7 @@ class TestCreateTableViews:
     @mock.patch("dataworkspace.apps.your_files.forms.get_schema_for_user")
     @mock.patch("dataworkspace.apps.your_files.forms.get_team_schemas_for_user")
     @mock.patch("dataworkspace.apps.your_files.forms.get_all_schemas")
-    @mock.patch("dataworkspace.apps.your_files.utils.boto3.client")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
     def test_staff_user_create_new_schema_fail(
         self,
@@ -419,7 +419,7 @@ class TestCreateTableViews:
     @mock.patch("dataworkspace.apps.your_files.views.trigger_dataflow_dag")
     @mock.patch("dataworkspace.apps.your_files.views.copy_file_to_uploads_bucket")
     @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_column_types")
-    @mock.patch("dataworkspace.apps.your_files.utils.boto3.client")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
     def test_success_team_schema(
         self,
@@ -492,7 +492,7 @@ class TestCreateTableViews:
     @mock.patch("dataworkspace.apps.your_files.views.trigger_dataflow_dag")
     @mock.patch("dataworkspace.apps.your_files.views.copy_file_to_uploads_bucket")
     @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_column_types")
-    @mock.patch("dataworkspace.apps.your_files.utils.boto3.client")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
     def test_success_all_schemas(
         self,
@@ -585,7 +585,7 @@ class TestCreateTableViews:
 
     @freeze_time("2021-01-01 01:01:01")
     @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_column_types")
-    @mock.patch("dataworkspace.apps.your_files.utils.boto3.client")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
     def test_invalid_table_name(
         self, mock_get_s3_prefix, mock_boto_client, mock_get_column_types, client
@@ -605,7 +605,7 @@ class TestCreateTableViews:
 
     @freeze_time("2021-01-01 01:01:01")
     @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_column_types")
-    @mock.patch("dataworkspace.apps.your_files.utils.boto3.client")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
     def test_table_name_too_long(
         self, mock_get_s3_prefix, mock_boto_client, mock_get_column_types, client
@@ -627,7 +627,7 @@ class TestCreateTableViews:
     @mock.patch("dataworkspace.apps.your_files.views.trigger_dataflow_dag")
     @mock.patch("dataworkspace.apps.your_files.views.copy_file_to_uploads_bucket")
     @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_column_types")
-    @mock.patch("dataworkspace.apps.your_files.utils.boto3.client")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
     @mock.patch("dataworkspace.apps.your_files.views.get_schema_for_user")
     def test_table_exists_override(

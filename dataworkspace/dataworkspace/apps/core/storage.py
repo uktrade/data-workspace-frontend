@@ -2,7 +2,6 @@ import logging
 import os
 import uuid
 
-import boto3
 import requests
 from botocore.exceptions import ClientError
 from django.conf import settings
@@ -12,6 +11,8 @@ from django.core.files.storage import FileSystemStorage
 from django.core.files.uploadhandler import UploadFileException
 from django.db.models.fields.files import FieldFile
 from django.urls import reverse
+
+from dataworkspace.apps.core.boto3_client import get_s3_client
 
 logger = logging.getLogger("app")
 
@@ -44,14 +45,6 @@ class S3FileStorage(FileSystemStorage):
     bucket = settings.AWS_UPLOADS_BUCKET
     base_prefix = "uploaded-media"
 
-    @staticmethod
-    def _get_client():
-        if settings.S3_LOCAL_ENDPOINT_URL:
-            logger.info("using local S3 endpoint %s", settings.S3_LOCAL_ENDPOINT_URL)
-            return boto3.client("s3", endpoint_url=settings.S3_LOCAL_ENDPOINT_URL)
-
-        return boto3.client("s3")
-
     def _get_key(self, name):
         return os.path.join(self.base_prefix, self._location, name)
 
@@ -72,7 +65,7 @@ class S3FileStorage(FileSystemStorage):
 
     def _save_to_s3(self, name, content):
 
-        client = self._get_client()
+        client = get_s3_client()
         filename = f"{name}!{uuid.uuid4()}"
         key = self._get_key(filename)
 
@@ -94,7 +87,7 @@ class S3FileStorage(FileSystemStorage):
         return self._save_to_s3(name, content)
 
     def delete(self, name):
-        client = self._get_client()
+        client = get_s3_client()
         try:
             client.delete_object(Bucket=self.bucket, Key=self._get_key(name))
         except ClientError:

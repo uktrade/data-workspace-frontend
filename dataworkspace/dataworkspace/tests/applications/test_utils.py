@@ -68,7 +68,7 @@ class TestDeleteUnusedDatasetsUsers:
 class TestSyncQuickSightPermissions:
     @pytest.mark.django_db
     @mock.patch("dataworkspace.apps.core.utils.new_private_database_credentials")
-    @mock.patch("dataworkspace.apps.applications.utils.boto3.client")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.applications.utils.cache")
     def test_create_new_data_source(self, mock_cache, mock_boto3_client, mock_creds):
         # Arrange
@@ -157,7 +157,7 @@ class TestSyncQuickSightPermissions:
 
     @pytest.mark.django_db
     @mock.patch("dataworkspace.apps.core.utils.new_private_database_credentials")
-    @mock.patch("dataworkspace.apps.applications.utils.boto3.client")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.applications.utils.cache")
     def test_list_user_pagination(self, mock_cache, mock_boto3_client, mock_creds):
         # Arrange
@@ -227,7 +227,7 @@ class TestSyncQuickSightPermissions:
 
     @pytest.mark.django_db
     @mock.patch("dataworkspace.apps.core.utils.new_private_database_credentials")
-    @mock.patch("dataworkspace.apps.applications.utils.boto3.client")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.applications.utils.cache")
     def test_update_existing_data_source(self, mock_cache, mock_boto3_client, mock_creds):
         # Arrange
@@ -341,7 +341,7 @@ class TestSyncQuickSightPermissions:
 
     @pytest.mark.django_db
     @mock.patch("dataworkspace.apps.core.utils.new_private_database_credentials")
-    @mock.patch("dataworkspace.apps.applications.utils.boto3.client")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.applications.utils.cache")
     def test_missing_user_handled_gracefully(self, mock_cache, mock_boto3_client, mock_creds):
         # Arrange
@@ -1013,7 +1013,7 @@ class TestSyncToolQueryLogs:
 
     @pytest.mark.django_db(transaction=True)
     @freeze_time("2020-12-08 18:04:00")
-    @mock.patch("dataworkspace.apps.applications.utils.boto3.client")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @override_settings(
         PGAUDIT_LOG_TYPE="rds",
         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
