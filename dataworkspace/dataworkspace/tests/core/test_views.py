@@ -361,7 +361,7 @@ def test_appstream_link_only_shown_to_user_with_permission(
 
 
 def test_media_serve_unauthenticated(mocker, unauthenticated_client):
-    mock_client = mocker.patch("dataworkspace.apps.core.storage.boto3.client")
+    mock_client = mocker.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     mock_client().head_object.side_effect = [
         botocore.exceptions.ClientError(
             error_response={"Error": {"Message": "it failed"}},
@@ -373,7 +373,7 @@ def test_media_serve_unauthenticated(mocker, unauthenticated_client):
 
 
 def test_media_serve_no_path(mocker, client):
-    mock_client = mocker.patch("dataworkspace.apps.core.storage.boto3.client")
+    mock_client = mocker.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     mock_client().head_object.side_effect = [
         botocore.exceptions.ClientError(
             error_response={"Error": {"Message": "it failed"}},
@@ -385,7 +385,7 @@ def test_media_serve_no_path(mocker, client):
 
 
 def test_media_serve_invalid_path(mocker, client):
-    mock_client = mocker.patch("dataworkspace.apps.core.storage.boto3.client")
+    mock_client = mocker.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     mock_client().head_object.side_effect = [
         botocore.exceptions.ClientError(
             error_response={"Error": {"Message": "it failed"}},
@@ -397,7 +397,7 @@ def test_media_serve_invalid_path(mocker, client):
 
 
 def test_media_s3_error(mocker, client):
-    mock_client = mocker.patch("dataworkspace.apps.core.storage.boto3.client")
+    mock_client = mocker.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     mock_client().get_object.side_effect = [
         botocore.exceptions.ClientError(
             error_response={
@@ -412,7 +412,7 @@ def test_media_s3_error(mocker, client):
 
 
 def test_media_s3_valid_file(mocker, client):
-    mock_client = mocker.patch("dataworkspace.apps.core.storage.boto3.client")
+    mock_client = mocker.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     file_content = b"some file content stored on s3"
     mock_client().get_object.return_value = {
         "ContentType": "text/plain",

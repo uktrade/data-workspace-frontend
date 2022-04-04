@@ -4,13 +4,13 @@ import os
 import re
 from io import StringIO
 
-import boto3
 import requests
 
 from django.conf import settings
 from mohawk import Sender
 from tableschema import Schema
 
+from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.utils import (
     USER_SCHEMA_STEM,
     db_role_schema_suffix_for_user,
@@ -32,7 +32,7 @@ TABLESCHEMA_FIELD_TYPE_MAP = {
 
 
 def get_s3_csv_column_types(path):
-    client = boto3.client("s3")
+    client = get_s3_client()
 
     # Let's just read the first 100KiB of the file and assume that will give us enough lines to make reasonable
     # assumptions about data types. This is an alternative to reading the first ~10 lines, in which case the first line
@@ -115,7 +115,7 @@ def clean_db_identifier(identifier):
 
 
 def copy_file_to_uploads_bucket(from_path, to_path):
-    client = boto3.client("s3")
+    client = get_s3_client()
     client.copy_object(
         CopySource={"Bucket": settings.NOTEBOOKS_BUCKET, "Key": from_path},
         Bucket=settings.AWS_UPLOADS_BUCKET,

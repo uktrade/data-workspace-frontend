@@ -2390,7 +2390,7 @@ class TestSourceLinkAdmin(BaseAdminTestCase):
         )
         self.assertContains(response, "Upload source link")
 
-    @mock.patch("dataworkspace.apps.dw_admin.views.boto3.client")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     def test_source_link_upload_failure(self, mock_client):
         mock_client().put_object.side_effect = ClientError(
             error_response={"Error": {"Message": "it failed"}},
@@ -2412,7 +2412,7 @@ class TestSourceLinkAdmin(BaseAdminTestCase):
         self.assertEqual(response.status_code, 500)
         self.assertEqual(link_count, dataset.sourcelink_set.count())
 
-    @mock.patch("dataworkspace.apps.dw_admin.views.boto3.client")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     def test_source_link_upload(self, mock_client):
         dataset = factories.DataSetFactory.create()
         link_count = dataset.sourcelink_set.count()
@@ -2561,7 +2561,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
         self.assertContains(response, "was changed successfully")
         self.assertEqual(dataset.sourcelink_set.count(), link_count - 1)
 
-    @mock.patch("dataworkspace.apps.datasets.models.boto3.client")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     def test_delete_local_source_link_aws_failure(self, mock_client):
         dataset = factories.DataSetFactory.create()
         source_link = factories.SourceLinkFactory(link_type=SourceLink.TYPE_LOCAL, dataset=dataset)
@@ -2611,7 +2611,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(dataset.sourcelink_set.count(), link_count - 1)
 
-    @mock.patch("dataworkspace.apps.datasets.models.boto3.client")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     def test_delete_local_source_link(self, mock_client):
         dataset = factories.DataSetFactory.create()
         source_link = factories.SourceLinkFactory(link_type=SourceLink.TYPE_LOCAL, dataset=dataset)

@@ -11,7 +11,7 @@ from dataworkspace.apps.core.storage import (
 
 
 @mock.patch("dataworkspace.apps.core.storage.uuid.uuid4")
-@mock.patch("dataworkspace.apps.core.storage.boto3.client")
+@mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
 @mock.patch("dataworkspace.apps.core.storage._upload_to_clamav")
 def test_file_save(mock_upload_to_clamav, mock_client, mock_uuid):
     mock_upload_to_clamav.return_value = ClamAVResponse({"malware": False})
@@ -33,7 +33,7 @@ def test_file_save(mock_upload_to_clamav, mock_client, mock_uuid):
 
 @override_settings(LOCAL=False)
 @mock.patch("dataworkspace.apps.core.storage.uuid.uuid4")
-@mock.patch("dataworkspace.apps.core.storage.boto3.client")
+@mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
 @mock.patch("dataworkspace.apps.core.storage._upload_to_clamav")
 def test_file_save_throws_exception_when_virus_found(
     mock_upload_to_clamav, mock_client, mock_uuid

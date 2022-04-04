@@ -811,7 +811,7 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
 
 
 class TestSourceLinkModel(BaseTestCase):
-    @mock.patch("dataworkspace.apps.datasets.models.boto3.client")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     def test_delete_local_source_link(self, mock_client):
         dataset = factories.DataSetFactory.create(
             published=True, user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
@@ -831,7 +831,7 @@ class TestSourceLinkModel(BaseTestCase):
             Bucket=settings.AWS_UPLOADS_BUCKET, Key=link.url
         )
 
-    @mock.patch("dataworkspace.apps.datasets.models.boto3.client")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     def test_delete_external_source_link(self, mock_client):
         dataset = factories.DataSetFactory.create(
             published=True, user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
