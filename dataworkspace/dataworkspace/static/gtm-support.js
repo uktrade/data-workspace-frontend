@@ -32,7 +32,7 @@ GTMDatasetSearchSupport.prototype.pushSearchEvent = function pushSearchEvent() {
       ),
     };
 
-    $("#live-search-form fieldset").map(function () {
+    $("#live-search-form .accordion-filter").map(function () {
       var labels = [];
       var filterId = $(this).attr("id").replace(/^id_/, "");
       $(this)
