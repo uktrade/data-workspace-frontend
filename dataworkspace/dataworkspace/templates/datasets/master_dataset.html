@@ -136,6 +136,10 @@
     </div>
   </div>
 
+  {% flag CHART_BUILDER_PUBLISH_CHARTS_FLAG %}
+    {% include "partials/chart_builder_charts.html" %}
+  {% endflag %}
+
   <div class="govuk-grid-row" style="overflow-x: auto;">
     <div class="govuk-grid-column-full">
       <h2 class="govuk-heading-l">Data</h2>
@@ -275,9 +279,6 @@
       {% endif %}
     </div>
   {% endif %}
-  {% flag CHART_BUILDER_PUBLISH_CHARTS_FLAG %}
-    {% include "partials/chart_builder_charts.html" %}
-  {% endflag %}
 {% endblock %}
 
 {% block footer_scripts %}

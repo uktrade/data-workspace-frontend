@@ -3,6 +3,7 @@ from django.urls import include, path
 
 from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.explorer.views import (
+    CreateChartView,
     CreateQueryView,
     DeleteQueryView,
     DownloadFromQuerylogView,
@@ -59,6 +60,11 @@ urlpatterns = [
         "queries/share/confirmation/<int:recipient_id>",
         login_required(ShareQueryConfirmationView.as_view()),
         name="share_query_confirmation",
+    ),
+    path(
+        "query/<int:query_log_id>/create-chart/",
+        login_required(CreateChartView.as_view()),
+        name="create_chart",
     ),
 ]
 

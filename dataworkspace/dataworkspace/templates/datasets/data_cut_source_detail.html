@@ -1,5 +1,5 @@
 {% extends '_main.html' %}
-{% load static core_tags humanize %}
+{% load static core_tags humanize waffle_tags %}
 {% block page_title %}View {{ object.name }} - {{ block.super }}{% endblock %}
 {% block go_back %}
   <a class="govuk-back-link"
@@ -20,7 +20,12 @@
       '{{ object.get_grid_data_url }}',
       '?download=1',
       null,
-      '{{ object.name }}-custom-export.csv'
+      '{{ object.name }}-custom-export.csv',
+      {% flag CHART_BUILDER_BUILD_CHARTS_FLAG %}
+        '{% url 'datasets:create_chart_from_grid' object.dataset.id object.id %}'
+      {% else %}
+        null
+      {% endflag %}
     );
   </script>
 {% endblock footer_scripts %}
@@ -52,6 +57,10 @@
           </button>
           &nbsp;
         {% endif %}
+        {% flag CHART_BUILDER_PUBLISH_CHARTS_FLAG %}
+          <button class="govuk-button" id="data-grid-create-chart">Create a chart</button>
+          &nbsp;
+        {% endflag %}
         <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-filters">
           Reset filters
         </button>

@@ -20,6 +20,7 @@ from django.core import serializers
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.core.serializers.json import DjangoJSONEncoder
+from django.db import connections
 from django.db.models import (
     Count,
     F,
@@ -53,6 +54,8 @@ from dataworkspace import datasets_db
 from dataworkspace.apps.api_v1.core.views import invalidate_superset_user_cached_credentials
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.core.boto3_client import get_s3_client
+from dataworkspace.apps.core.charts.models import ChartBuilderChart
+
 from dataworkspace.apps.core.errors import DatasetPermissionDenied, DatasetPreviewDisabledError
 from dataworkspace.apps.core.utils import (
     StreamingHttpResponseWithoutDjangoDbConnection,
@@ -68,6 +71,7 @@ from dataworkspace.apps.datasets.constants import (
 )
 from dataworkspace.apps.datasets.constants import TagType
 from dataworkspace.apps.datasets.forms import (
+    ChartSourceSelectForm,
     DatasetEditForm,
     DatasetSearchForm,
     EligibilityCriteriaForm,
@@ -1251,7 +1255,7 @@ class DatasetChartView(WaffleFlagMixin, View):
             return HttpResponseForbidden()
         return render(
             request,
-            "datasets/chart.html",
+            "datasets/charts/chart.html",
             context={
                 "chart": chart,
             },
@@ -1464,4 +1468,93 @@ class DatasetRemoveAuthorisedUserView(DatasetEditBaseView, View):
                     self.kwargs.get("summary_id"),
                 ],
             )
+        )
+
+
+class SelectChartSourceView(WaffleFlagMixin, FormView):
+    waffle_flag = settings.CHART_BUILDER_BUILD_CHARTS_FLAG
+    form_class = ChartSourceSelectForm
+    template_name = "datasets/charts/select_chart_source.html"
+
+    def get_object(self, queryset=None):
+        return find_dataset(self.kwargs["pk"], self.request.user, DataSet)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["dataset"] = self.get_object()
+        return ctx
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["dataset"] = self.get_object()
+        return kwargs
+
+    def form_valid(self, form):
+        dataset = self.get_object()
+        source_id = form.cleaned_data["source"]
+        source = next(
+            (x for x in dataset.related_objects() if str(x.id) == source_id),
+            None,
+        )
+        if source is None:
+            raise Http404
+        chart = ChartBuilderChart.objects.create_from_source(source, self.request.user)
+        return HttpResponseRedirect(f"{chart.get_edit_url()}?prev={self.request.path}")
+
+
+class CreateGridChartView(WaffleFlagMixin, View):
+    waffle_flag = settings.CHART_BUILDER_BUILD_CHARTS_FLAG
+
+    def post(self, request, dataset_uuid, source_id, *args, **kwargs):
+        dataset = find_dataset(dataset_uuid, self.request.user)
+        source = next(
+            (x for x in dataset.related_objects() if str(x.id) == str(source_id)),
+            None,
+        )
+        if source is None:
+            raise Http404
+
+        filters = {}
+        for filter_data in [json.loads(x) for x in request.POST.getlist("filters")]:
+            filters.update(filter_data)
+        column_config = [
+            x
+            for x in source.get_column_config()
+            if x["field"] in request.POST.getlist("columns", [])
+        ]
+
+        post_data = {
+            "filters": filters,
+            "limit": source.data_grid_download_limit,
+            "sortDir": request.POST.get("sortDir", "ASC"),
+            "sortField": request.POST.get("sortField", column_config[0]["field"]),
+        }
+        original_query = source.get_data_grid_query()
+        query, params = build_filtered_dataset_query(
+            original_query,
+            column_config,
+            post_data,
+        )
+        db_name = list(settings.DATABASES_DATA.items())[0][0]
+        with connections[db_name].cursor() as cursor:
+            full_query = cursor.mogrify(query, params).decode()
+        chart = ChartBuilderChart.objects.create_from_sql(str(full_query), request.user, db_name)
+        return HttpResponseRedirect(
+            f"{chart.get_edit_url()}?prev={request.META.get('HTTP_REFERER')}"
+        )
+
+
+class DatasetChartsView(WaffleFlagMixin, View):
+    waffle_flag = settings.CHART_BUILDER_PUBLISH_CHARTS_FLAG
+
+    @csp_update(SCRIPT_SRC=["'unsafe-eval'", "blob:"])
+    def get(self, request, **kwargs):
+        dataset = find_dataset(self.kwargs["dataset_uuid"], self.request.user, DataSet)
+        if not dataset.user_has_access(self.request.user):
+            return HttpResponseForbidden()
+
+        return render(
+            self.request,
+            "datasets/charts/charts.html",
+            context={"charts": dataset.charts.all(), "dataset": dataset},
         )

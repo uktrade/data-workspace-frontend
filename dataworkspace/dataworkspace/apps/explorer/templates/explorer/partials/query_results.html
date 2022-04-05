@@ -64,9 +64,9 @@
          href="{% url 'explorer:download_querylog' query_log.id %}?format=json">Download JSON</a>
       {% flag CHART_BUILDER_BUILD_CHARTS_FLAG %}
         {% if total_rows > 0 %}
-          <a class="govuk-button govuk-button--secondary govuk-!-margin-left-4"
-           href="{% url 'charts:create-chart' query_log.id %}">Create Chart</a>
         {% endif %}
+        <a class="govuk-button govuk-button--secondary govuk-!-margin-left-4"
+           href="{% url 'explorer:create_chart' query_log.id %}">Create Chart</a>
       {% endflag %}
     </div>
   {% endif %}

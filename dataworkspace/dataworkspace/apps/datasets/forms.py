@@ -7,11 +7,13 @@ from django import forms
 from django.contrib.auth import get_user_model
 
 from dataworkspace.apps.datasets.constants import DataSetType, TagType
-from .models import DataSet, Tag
+from .models import DataSet, SourceLink, Tag
 from ...forms import (
     GOVUKDesignSystemForm,
     GOVUKDesignSystemCharField,
     GOVUKDesignSystemModelForm,
+    GOVUKDesignSystemRadioField,
+    GOVUKDesignSystemRadiosWidget,
     GOVUKDesignSystemTextWidget,
     GOVUKDesignSystemTextareaField,
     GOVUKDesignSystemTextareaWidget,
@@ -559,3 +561,18 @@ class UserSearchForm(GOVUKDesignSystemForm):
         ),
         error_messages={"required": "You must provide a search terms."},
     )
+
+
+class ChartSourceSelectForm(forms.Form):
+    source = GOVUKDesignSystemRadioField(
+        required=True,
+        label="Select the source data you want to create a chart from",
+        widget=GOVUKDesignSystemRadiosWidget(heading="p", extra_label_classes="govuk-body-l"),
+    )
+
+    def __init__(self, *args, **kwargs):
+        dataset = kwargs.pop("dataset")
+        super().__init__(*args, **kwargs)
+        self.fields["source"].choices = (
+            (x.id, x.name) for x in dataset.related_objects() if not isinstance(x, SourceLink)
+        )

@@ -726,6 +726,15 @@ class SourceTable(BaseSource):
             args=(self.dataset_id, self.id),
         )
 
+    def get_chart_builder_url(self):
+        return reverse(
+            "charts:create-chart-from-source-table",
+            args=(self.id,),
+        )
+
+    def get_chart_builder_query(self):
+        return f"SELECT * from {self.schema}.{self.table}"
+
 
 class SourceView(BaseSource):
     view = models.CharField(
@@ -1011,6 +1020,15 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
             "datasets:custom_query_column_details",
             args=(self.dataset_id, self.id),
         )
+
+    def get_chart_builder_url(self):
+        return reverse(
+            "charts:create-chart-from-data-cut-query",
+            args=(self.id,),
+        )
+
+    def get_chart_builder_query(self):
+        return self.query
 
 
 class CustomDatasetQueryTable(models.Model):

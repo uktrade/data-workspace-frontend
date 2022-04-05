@@ -30,7 +30,7 @@ def create_temporary_results_table(query_log):
 @override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
 def test_chart_creation_from_query_log_not_owner(client, staff_user):
     query_log = QueryLogFactory.create(run_by_user=staff_user)
-    response = client.get(reverse("charts:create-chart", args=(query_log.id,)))
+    response = client.get(reverse("charts:create-chart-from-query", args=(query_log.id,)))
     assert response.status_code == 404
 
 
@@ -40,7 +40,7 @@ def test_chart_creation_from_query_log(staff_client, staff_user):
     query_log = QueryLogFactory(run_by_user=staff_user)
     num_query_logs = models.QueryLog.objects.count()
     num_charts = models.ChartBuilderChart.objects.count()
-    response = staff_client.get(reverse("charts:create-chart", args=(query_log.id,)))
+    response = staff_client.get(reverse("charts:create-chart-from-query", args=(query_log.id,)))
     assert models.QueryLog.objects.count() == num_query_logs + 1
     assert models.ChartBuilderChart.objects.count() == num_charts + 1
     assert response.status_code == 302

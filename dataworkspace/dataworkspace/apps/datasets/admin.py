@@ -355,6 +355,7 @@ class DataCutDatasetAdmin(CSPRichTextEditorMixin, BaseDatasetAdmin):
         SourceLinkInline,
         SourceViewInline,
         CustomDatasetQueryInline,
+        DataSetChartBuilderChartInline,
     ]
     manage_unpublished_permission_codename = "datasets.manage_unpublished_datacut_datasets"
 
