@@ -5,10 +5,13 @@ import re
 from io import StringIO
 
 import requests
+import logging
 
 from django.conf import settings
 from mohawk import Sender
 from tableschema import Schema
+
+logger = logging.getLogger("app")
 
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.utils import (
@@ -34,6 +37,7 @@ TABLESCHEMA_FIELD_TYPE_MAP = {
 def get_s3_csv_column_types(path):
     client = get_s3_client()
 
+    logger.warning(path)
     # Let's just read the first 100KiB of the file and assume that will give us enough lines to make reasonable
     # assumptions about data types. This is an alternative to reading the first ~10 lines, in which case the first line
     # could be incredibly long and possibly even crash the server?
@@ -41,8 +45,15 @@ def get_s3_csv_column_types(path):
     # additional vector for denial-of-service.
     file = client.get_object(Bucket=settings.NOTEBOOKS_BUCKET, Key=path, Range="bytes=0-102400")
 
-    fh = StringIO(file["Body"].read().decode("utf-8-sig"))
-    rows = list(csv.reader(fh))
+    # encoding='cp1252'
+    raw = file["Body"].read().decode("cp1252")
+
+    split = raw.splitlines()
+
+    # fh = StringIO(split)
+
+    reader = csv.reader(split, dialect=csv.excel_tab, )
+    rows = list(reader)
 
     if len(rows) <= 2:
         raise ValueError("Unable to read enough lines of data from file", path)
@@ -55,6 +66,8 @@ def get_s3_csv_column_types(path):
 
     schema = Schema()
     schema.infer(rows, confidence=1, headers=1)
+
+    logger.warning(schema.descriptor["fields"])
 
     fields = []
     for idx, field in enumerate(schema.descriptor["fields"]):
