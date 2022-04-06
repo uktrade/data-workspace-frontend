@@ -7,19 +7,23 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contenttypes', '0002_remove_content_type_name'),
-        ('core', '0006_chartbuilderchart'),
+        ("contenttypes", "0002_remove_content_type_name"),
+        ("core", "0006_chartbuilderchart"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='chartbuilderchart',
-            name='source_content_type',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='contenttypes.contenttype'),
+            model_name="chartbuilderchart",
+            name="source_content_type",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to="contenttypes.contenttype",
+            ),
         ),
         migrations.AddField(
-            model_name='chartbuilderchart',
-            name='source_id',
+            model_name="chartbuilderchart",
+            name="source_id",
             field=models.CharField(max_length=255, null=True),
         ),
     ]
