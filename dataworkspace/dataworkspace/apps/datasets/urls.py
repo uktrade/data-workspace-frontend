@@ -247,7 +247,7 @@ urlpatterns = [
         name="select_chart_source",
     ),
     path(
-        "<uuid:dataset_uuid>/grid-chart/<int:source_id>/",
+        "<uuid:dataset_uuid>/grid-chart/<str:source_id>/",
         login_required(views.CreateGridChartView.as_view()),
         name="create_chart_from_grid",
     ),
