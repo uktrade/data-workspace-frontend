@@ -16,9 +16,10 @@ export const availableCharts = {
     }, {
       value: 'pie',
       label: 'Pie',
-    }, {
-      value: 'scattermapbox',
-      label: 'Map',
+    // Disable maps while we work on getting png tiles working
+    // }, {
+    //   value: 'scattermapbox',
+    //   label: 'Map',
     },
   ],
   complex: true,
