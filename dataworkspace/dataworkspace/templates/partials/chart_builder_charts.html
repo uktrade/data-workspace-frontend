@@ -5,19 +5,19 @@
   </div>
 </div>
 <div class="govuk-grid-row">
-  {% if model.charts.all %}
-    <div class="govuk-grid-column-full">
+  <div class="govuk-grid-column-full">
+    {% if model.charts.all %}
       {% if has_access %}
         {% for chart in model.charts.all|slice:"3" %}
           {% include 'datasets/charts/chart_card.html' with dataset=model %}
         {% endfor %}
       {% endif %}
-    </div>
-  {% else %}
-    <p class="govuk-body">
-      There are no charts based on data in this dataset currently.
-    </p>
-  {% endif %}
+    {% else %}
+      <p class="govuk-body">
+        There are no charts based on data in this dataset currently.
+      </p>
+    {% endif %}
+  </div>
 </div>
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-two-thirds">
