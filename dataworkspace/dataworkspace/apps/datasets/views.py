@@ -1525,7 +1525,6 @@ class CreateGridChartView(WaffleFlagMixin, View):
 
         post_data = {
             "filters": filters,
-            "limit": source.data_grid_download_limit,
             "sortDir": request.POST.get("sortDir", "ASC"),
             "sortField": request.POST.get("sortField", column_config[0]["field"]),
         }
