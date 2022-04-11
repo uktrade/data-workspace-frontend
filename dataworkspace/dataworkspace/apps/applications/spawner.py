@@ -135,31 +135,7 @@ class ProcessSpawner:
             gevent.sleep(1)
             cmd = json.loads(spawner_options)["CMD"]
 
-            database_env = dict(
-                list(
-                    {
-                        f'DATABASE_DSN__{database["memorable_name"]}': f'host={database["db_host"]} '
-                        f'port={database["db_port"]} sslmode=require dbname={database["db_name"]} '
-                        f'user={database["db_user"]} password={database["db_password"]}'
-                        for database in credentials
-                    }.items()
-                )
-                + (
-                    list(
-                        {
-                            # libpq-based libraries use these environment variables automatically
-                            "PGHOST": credentials[0]["db_host"],
-                            "PGPORT": credentials[0]["db_port"],
-                            "PGSSLMODE": "require",
-                            "PGDATABASE": credentials[0]["db_name"],
-                            "PGUSER": credentials[0]["db_user"],
-                            "PGPASSWORD": credentials[0]["db_password"],
-                        }.items()
-                    )
-                    if credentials
-                    else []
-                )
-            )
+            database_env = _creds_to_env_vars(credentials)
 
             logger.info("Starting %s", cmd)
             # pylint: disable=consider-using-with
@@ -277,12 +253,7 @@ class FargateSpawner:
                     db_persistent_role=creds["db_persistent_role"],
                 )
 
-            database_env = {
-                f'DATABASE_DSN__{database["memorable_name"]}': f'host={database["db_host"]} '
-                f'port={database["db_port"]} sslmode=require dbname={database["db_name"]} '
-                f'user={database["db_user"]} password={database["db_password"]}'
-                for database in credentials
-            }
+            database_env = _creds_to_env_vars(credentials)
 
             schema_env = {"APP_SCHEMA": app_schema}
 
@@ -525,6 +496,34 @@ class FargateSpawner:
     @staticmethod
     def retag(spawner_options, existing_tag, new_tag):
         return _ecr_retag(spawner_options["ECR_REPOSITORY_NAME"], existing_tag, new_tag)
+
+
+def _creds_to_env_vars(credentials):
+    return dict(
+        list(
+            {
+                f'DATABASE_DSN__{database["memorable_name"]}': f'host={database["db_host"]} '
+                f'port={database["db_port"]} sslmode=require dbname={database["db_name"]} '
+                f'user={database["db_user"]} password={database["db_password"]}'
+                for database in credentials
+            }.items()
+        )
+        + (
+            list(
+                {
+                    # libpq-based libraries use these environment variables automatically
+                    "PGHOST": credentials[0]["db_host"],
+                    "PGPORT": credentials[0]["db_port"],
+                    "PGSSLMODE": "require",
+                    "PGDATABASE": credentials[0]["db_name"],
+                    "PGUSER": credentials[0]["db_user"],
+                    "PGPASSWORD": credentials[0]["db_password"],
+                }.items()
+            )
+            if credentials
+            else []
+        )
+    )
 
 
 def _gitlab_ecr_pipeline_cancel(pipeline_id):
