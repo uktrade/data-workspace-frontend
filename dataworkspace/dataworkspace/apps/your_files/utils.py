@@ -76,8 +76,6 @@ def _get_csv_column_types(rows):
     schema = Schema()
     schema.infer(rows, confidence=1, headers=1)
 
-    logger.warning(schema.descriptor["fields"])
-
     fields = []
     for idx, field in enumerate(schema.descriptor["fields"]):
         fields.append(
@@ -92,7 +90,6 @@ def _get_csv_column_types(rows):
             }
         )
 
-    logger.info(fields)
     return fields
 
 
