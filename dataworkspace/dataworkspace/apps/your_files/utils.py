@@ -34,27 +34,42 @@ TABLESCHEMA_FIELD_TYPE_MAP = {
 }
 
 
+class DecodeCSVException(Exception):
+    pass
+
+
 def get_s3_csv_column_types(path):
     client = get_s3_client()
 
-    logger.warning(path)
-    # Let's just read the first 100KiB of the file and assume that will give us enough lines to make reasonable
-    # assumptions about data types. This is an alternative to reading the first ~10 lines, in which case the first line
-    # could be incredibly long and possibly even crash the server?
-    # Django's default permitted size for a request body is 2.5MiB, so reading 100KiB here doesn't feel like an
-    # additional vector for denial-of-service.
-    file = client.get_object(Bucket=settings.NOTEBOOKS_BUCKET, Key=path, Range="bytes=0-102400")
+    logger.debug(path)
+    try:
+        logger.debug("utf-8-sig decode")
+        file = client.get_object(
+            Bucket=settings.NOTEBOOKS_BUCKET, Key=path, Range="bytes=0-102400"
+        )
+        body = file["Body"]
+        fh = StringIO(body.read().decode("utf-8-sig"))
 
-    # encoding='cp1252'
-    raw = file["Body"].read().decode("cp1252")
+        rows = list(csv.reader(fh))
+        return _get_csv_column_types(rows)
+    except UnicodeDecodeError:
+        logger.debug("cp1252 decode")
 
-    split = raw.splitlines()
+        # We have to get the file again as there is no seek method on boto3 StreamingBody
+        file = client.get_object(
+            Bucket=settings.NOTEBOOKS_BUCKET, Key=path, Range="bytes=0-102400"
+        )
+        body = file["Body"]
+        raw = body.read().decode("cp1252")
+        split = raw.splitlines()
 
-    # fh = StringIO(split)
+        rows = list(csv.reader(split))
+        return _get_csv_column_types(rows)
 
-    reader = csv.reader(split, dialect=csv.excel_tab, )
-    rows = list(reader)
+    raise DecodeCSVException(f"Failed to decode {path}")
 
+
+def _get_csv_column_types(rows):
     if len(rows) <= 2:
         raise ValueError("Unable to read enough lines of data from file", path)
 
@@ -82,6 +97,8 @@ def get_s3_csv_column_types(path):
                 "sample_data": [row[idx] for row in rows][:6],
             }
         )
+
+    logger.info(fields)
     return fields
 
 
