@@ -7,14 +7,14 @@ from dataworkspace.apps.datasets.pipelines import views
 urlpatterns = [
     path("", login_required(views.PipelineListView.as_view()), name="index"),
     path(
-        "create",
-        login_required(views.PipelineCreateView.as_view()),
-        name="create",
+        "create/sql",
+        login_required(views.SQLPipelineCreateView.as_view()),
+        name="create-sql",
     ),
     path(
         "<int:pk>/edit",
-        login_required(views.PipelineUpdateView.as_view()),
-        name="edit",
+        login_required(views.SQLPipelineUpdateView.as_view()),
+        name="edit-sql",
     ),
     path(
         "<int:pk>/delete",

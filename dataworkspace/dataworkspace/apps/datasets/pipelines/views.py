@@ -13,7 +13,10 @@ from requests import RequestException
 
 from dataworkspace.apps.core.errors import PipelineBuilderPermissionDeniedError
 from dataworkspace.apps.datasets.models import Pipeline
-from dataworkspace.apps.datasets.pipelines.forms import PipelineCreateForm, PipelineEditForm
+from dataworkspace.apps.datasets.pipelines.forms import (
+    SQLPipelineEditForm,
+    SQLPipelineCreateForm,
+)
 from dataworkspace.apps.datasets.pipelines.utils import (
     delete_pipeline_from_dataflow,
     list_pipelines,
@@ -33,10 +36,12 @@ class IsAdminMixin(UserPassesTestMixin):
         return True
 
 
-class PipelineCreateView(IsAdminMixin, CreateView):
+class SQLPipelineCreateView(IsAdminMixin, CreateView):
     model = Pipeline
-    form_class = PipelineCreateForm
     template_name = "datasets/pipelines/pipeline_detail.html"
+
+    def get_form_class(self):
+        return SQLPipelineCreateForm
 
     def get_success_url(self):
         return reverse("pipelines:index")
@@ -56,10 +61,18 @@ class PipelineCreateView(IsAdminMixin, CreateView):
         return super().form_valid(form)
 
 
-class PipelineUpdateView(IsAdminMixin, UpdateView):
+class SQLPipelineUpdateView(IsAdminMixin, UpdateView):
     model = Pipeline
-    form_class = PipelineEditForm
+    form_class = SQLPipelineEditForm
     template_name = "datasets/pipelines/pipeline_detail.html"
+
+    def get_form_class(self):
+        return SQLPipelineEditForm
+
+    def get_initial(self):
+        initial = super().get_initial()
+        initial["sql_query"] = self.get_object().config.get("sql", "")
+        return initial
 
     def get_success_url(self):
         return reverse("pipelines:index")

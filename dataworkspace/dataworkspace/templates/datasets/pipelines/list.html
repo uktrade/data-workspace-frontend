@@ -19,7 +19,7 @@
             <dl class="govuk-summary-list">
                 <div class="govuk-summary-list__row">
                     <dt class="govuk-summary-list__value">
-                    <a class="govuk-link" href="{% url 'pipelines:create' %}">Add new pipeline</a>
+                    <a class="govuk-link" href="{% url 'pipelines:create-sql' %}">Add new pipeline</a>
                     </dt>
                     <dd class="govuk-summary-list__actions"></dd>
                 </div>
@@ -46,7 +46,7 @@
                             <p>This pipeline is currently running</p>
                           {% endif %}
                         {% endwith %}
-                        <a class="govuk-link" href="{% url 'pipelines:edit' object.id %}">Edit</a>&nbsp;
+                        <a class="govuk-link" href="{{ object.get_absolute_url }}">Edit</a>&nbsp;
                         <a class="govuk-link" href="{% url 'pipelines:delete' object.id %}">Delete</a>&nbsp;
                         <a class="govuk-link" href="{% url 'pipelines:logs' object.id %}">View logs</a>
                     </dt>

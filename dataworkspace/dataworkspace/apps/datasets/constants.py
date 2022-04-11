@@ -119,3 +119,8 @@ GRID_ACRONYM_MAP = (
 class NotificationType(models.TextChoices):
     COLUMNS = "columns", "Only when columns are added, removed, or renamed"
     ALL_CHANGES = "all_changes", "All changes"
+
+
+class PipelineType(models.TextChoices):
+    SQL = "sql", "SQL Pipeline"
+    SHAREPOINT = "sharepoint", "Sharepoint Pipeline"

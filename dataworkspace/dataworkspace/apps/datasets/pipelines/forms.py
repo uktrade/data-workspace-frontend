@@ -26,10 +26,10 @@ def validate_schema_and_table(value):
         raise ValidationError("Table name must be less than 42 characters")
 
 
-class PipelineCreateForm(GOVUKDesignSystemModelForm):
+class BasePipelineCreateForm(GOVUKDesignSystemModelForm):
     class Meta:
         model = Pipeline
-        fields = ["table_name", "sql_query"]
+        fields = ["table_name"]
 
     table_name = GOVUKDesignSystemCharField(
         label="Schema and table name the pipeline ingests into",
@@ -46,6 +46,9 @@ class PipelineCreateForm(GOVUKDesignSystemModelForm):
             validate_schema_and_table,
         ),
     )
+
+
+class SQLPipelineCreateForm(BasePipelineCreateForm):
     sql_query = GOVUKDesignSystemTextareaField(
         label="SQL Query",
         widget=GOVUKDesignSystemTextareaWidget(
@@ -55,6 +58,18 @@ class PipelineCreateForm(GOVUKDesignSystemModelForm):
         ),
         error_messages={"required": "Enter an SQL query."},
     )
+
+    class Meta:
+        model = Pipeline
+        fields = ["table_name", "sql_query"]
+
+    def save(self, commit=True):
+        query = self.cleaned_data.pop("sql_query")
+        pipeline = super().save(commit=False)
+        pipeline.config = {"sql": query}
+        if commit:
+            pipeline.save()
+        return pipeline
 
     def clean_sql_query(self):
         try:
@@ -85,7 +100,7 @@ class PipelineCreateForm(GOVUKDesignSystemModelForm):
         return self.cleaned_data["sql_query"]
 
 
-class PipelineEditForm(PipelineCreateForm):
+class SQLPipelineEditForm(SQLPipelineCreateForm):
     table_name = GOVUKDesignSystemCharField(
         label="Schema and table name the pipeline ingests into",
         widget=GOVUKDesignSystemTextWidget(

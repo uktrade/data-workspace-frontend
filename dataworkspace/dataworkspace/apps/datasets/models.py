@@ -60,6 +60,7 @@ from dataworkspace.apps.datasets.constants import (
     DataLinkType,
     GRID_DATA_TYPE_MAP,
     GRID_ACRONYM_MAP,
+    PipelineType,
     TagType,
     UserAccessType,
 )
@@ -2355,42 +2356,42 @@ class UserNotification(TimeStampedModel):
 
 class Pipeline(TimeStampedUserModel):
     table_name = models.CharField(max_length=256, unique=True)
-    sql_query = models.TextField()
+    type = models.CharField(max_length=255, choices=PipelineType.choices)
+    config = models.JSONField()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._original_table_name = self.table_name
-        self._original_sql_query = self.sql_query
+        self._original_config = self.config
 
     @property
     def dag_id(self):
         return f"DerivedPipeline-{self.table_name}"
 
     def get_absolute_url(self):
-        return reverse("pipelines:edit", args=(self.id,))
+        return reverse(f"pipelines:edit-{self.type}", args=(self.id,))
 
     def __str__(self):
         return self.dag_id
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if self.id is not None and (
-            self._original_table_name != self.table_name
-            or self._original_sql_query != self.sql_query
+            self._original_table_name != self.table_name or self._original_config != self.config
         ):
             PipelineVersion.objects.create(
                 pipeline=self,
                 table_name=self._original_table_name,
-                sql_query=self._original_sql_query,
+                config=self._original_config,
             )
             self._original_table_name = self.table_name
-            self._original_sql_query = self.sql_query
+            self._original_config = self.config
         super().save(force_insert, force_update, using, update_fields)
 
 
 class PipelineVersion(TimeStampedModel):
     pipeline = models.ForeignKey(Pipeline, on_delete=models.CASCADE)
     table_name = models.CharField(max_length=256)
-    sql_query = models.TextField()
+    config = models.JSONField()
 
     class Meta:
         get_latest_by = "created_date"
