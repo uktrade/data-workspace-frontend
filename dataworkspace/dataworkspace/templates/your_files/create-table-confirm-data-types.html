@@ -27,7 +27,11 @@
           <tbody class="govuk-table__body">
             {% for data_type_field, sample in form.get_data_type_fields %}
               <tr class="govuk-table__row">
-                <th scope="row" class="govuk-table__header">{{ data_type_field.label }}</th>
+                <th scope="row" class="govuk-table__header">
+                  <span style="word-break:break-all">
+                  {{ data_type_field.label }}
+                  </span>
+                </th>
                 <td class="govuk-table__cell">{{ data_type_field }}</td>
                 <td class="govuk-table__cell">{{ sample }}</td>
               </tr>

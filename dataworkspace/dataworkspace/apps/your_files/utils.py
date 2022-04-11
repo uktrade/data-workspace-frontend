@@ -1,17 +1,14 @@
 import csv
 import json
+import logging
 import os
 import re
 from io import StringIO
 
 import requests
-import logging
-
 from django.conf import settings
 from mohawk import Sender
 from tableschema import Schema
-
-logger = logging.getLogger("app")
 
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.utils import (
@@ -19,6 +16,9 @@ from dataworkspace.apps.core.utils import (
     db_role_schema_suffix_for_user,
 )
 from dataworkspace.apps.your_files.constants import PostgresDataTypes
+
+logger = logging.getLogger("app")
+
 
 SCHEMA_POSTGRES_DATA_TYPE_MAP = {
     "integer": PostgresDataTypes.INTEGER,
@@ -32,10 +32,6 @@ SCHEMA_POSTGRES_DATA_TYPE_MAP = {
 TABLESCHEMA_FIELD_TYPE_MAP = {
     "number": "numeric",
 }
-
-
-class DecodeCSVException(Exception):
-    pass
 
 
 def get_s3_csv_column_types(path):
@@ -66,12 +62,10 @@ def get_s3_csv_column_types(path):
         rows = list(csv.reader(split))
         return _get_csv_column_types(rows)
 
-    raise DecodeCSVException(f"Failed to decode {path}")
-
 
 def _get_csv_column_types(rows):
     if len(rows) <= 2:
-        raise ValueError("Unable to read enough lines of data from file", path)
+        raise ValueError("Unable to read enough lines of data from file")
 
     # Drop the last line, which might be incomplete
     del rows[-1]
