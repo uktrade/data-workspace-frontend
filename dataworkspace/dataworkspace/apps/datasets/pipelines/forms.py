@@ -4,11 +4,16 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import connections
+from django.forms import ChoiceField, widgets
 
+from dataworkspace.apps.datasets.constants import PipelineType
 from dataworkspace.apps.datasets.models import Pipeline
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
+    GOVUKDesignSystemForm,
     GOVUKDesignSystemModelForm,
+    GOVUKDesignSystemRadioField,
+    GOVUKDesignSystemRadiosWidget,
     GOVUKDesignSystemTextWidget,
     GOVUKDesignSystemTextareaField,
     GOVUKDesignSystemTextareaWidget,
@@ -27,10 +32,11 @@ def validate_schema_and_table(value):
 
 
 class BasePipelineCreateForm(GOVUKDesignSystemModelForm):
-    class Meta:
-        model = Pipeline
-        fields = ["table_name"]
-
+    pipeline_type = None
+    type = ChoiceField(
+        choices=PipelineType.choices,
+        widget=widgets.HiddenInput(),
+    )
     table_name = GOVUKDesignSystemCharField(
         label="Schema and table name the pipeline ingests into",
         help_text="This cannot be changed later",
@@ -47,9 +53,18 @@ class BasePipelineCreateForm(GOVUKDesignSystemModelForm):
         ),
     )
 
+    class Meta:
+        model = Pipeline
+        fields = ["table_name"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.initial["type"] = self.pipeline_type.value
+
 
 class SQLPipelineCreateForm(BasePipelineCreateForm):
-    sql_query = GOVUKDesignSystemTextareaField(
+    pipeline_type = PipelineType.SQL
+    sql = GOVUKDesignSystemTextareaField(
         label="SQL Query",
         widget=GOVUKDesignSystemTextareaWidget(
             label_is_heading=False,
@@ -61,19 +76,18 @@ class SQLPipelineCreateForm(BasePipelineCreateForm):
 
     class Meta:
         model = Pipeline
-        fields = ["table_name", "sql_query"]
+        fields = ["table_name", "sql", "type"]
 
     def save(self, commit=True):
-        query = self.cleaned_data.pop("sql_query")
         pipeline = super().save(commit=False)
-        pipeline.config = {"sql": query}
+        pipeline.config = {"sql": self.cleaned_data["sql"]}
         if commit:
             pipeline.save()
         return pipeline
 
-    def clean_sql_query(self):
+    def clean_sql(self):
         try:
-            statements = psqlparse.parse(self.cleaned_data["sql_query"])
+            statements = psqlparse.parse(self.cleaned_data["sql"])
         except psqlparse.exceptions.PSqlParseError as e:
             raise ValidationError(e) from e
         else:
@@ -91,13 +105,13 @@ class SQLPipelineCreateForm(BasePipelineCreateForm):
         # Check that the query runs
         with connections[list(settings.DATABASES_DATA.items())[0][0]].cursor() as cursor:
             try:
-                cursor.execute(f"SELECT * FROM ({self.cleaned_data['sql_query']}) sq LIMIT 0")
+                cursor.execute(f"SELECT * FROM ({self.cleaned_data['sql']}) sq LIMIT 0")
             except Exception as e:  # pylint: disable=broad-except
                 raise ValidationError(
                     "Error running query. Please check the query runs successfully before saving."
                 ) from e
 
-        return self.cleaned_data["sql_query"]
+        return self.cleaned_data["sql"]
 
 
 class SQLPipelineEditForm(SQLPipelineCreateForm):
@@ -107,4 +121,58 @@ class SQLPipelineEditForm(SQLPipelineCreateForm):
             label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
         ),
         disabled=True,
+    )
+
+
+class SharepointPipelineCreateForm(BasePipelineCreateForm):
+    pipeline_type = PipelineType.SHAREPOINT
+    site_name = GOVUKDesignSystemCharField(
+        label="The site name that the sharepoint list is published under",
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
+        ),
+        error_messages={"required": "Enter a valid site name."},
+    )
+    list_name = GOVUKDesignSystemCharField(
+        label="The name of the sharepoint list",
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
+        ),
+        error_messages={"required": "Enter a valid list name."},
+    )
+
+    class Meta:
+        model = Pipeline
+        fields = ["table_name", "site_name", "list_name", "type"]
+
+    def save(self, commit=True):
+        pipeline = super().save(commit=False)
+        pipeline.config = {
+            "site_name": self.cleaned_data["site_name"],
+            "list_name": self.cleaned_data["list_name"],
+        }
+        if commit:
+            pipeline.save()
+        return pipeline
+
+
+class SharepointPipelineEditForm(SharepointPipelineCreateForm):
+    table_name = GOVUKDesignSystemCharField(
+        label="Schema and table name the pipeline ingests into",
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
+        ),
+        disabled=True,
+    )
+
+
+class PipelineTypeForm(GOVUKDesignSystemForm):
+    pipeline_type = GOVUKDesignSystemRadioField(
+        required=True,
+        label="Select the type of derived pipeline you would like to create",
+        widget=GOVUKDesignSystemRadiosWidget(heading="p", extra_label_classes="govuk-body-l"),
+        choices=(
+            ("sql", "SQL Pipeline"),
+            ("sharepoint", "Sharepoint Pipeline"),
+        ),
     )

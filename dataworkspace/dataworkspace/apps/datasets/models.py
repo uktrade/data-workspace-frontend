@@ -2359,10 +2359,16 @@ class Pipeline(TimeStampedUserModel):
     type = models.CharField(max_length=255, choices=PipelineType.choices)
     config = models.JSONField()
 
+    class Meta:
+        ordering = ("table_name",)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._original_table_name = self.table_name
         self._original_config = self.config
+
+    def __str__(self):
+        return self.dag_id
 
     @property
     def dag_id(self):
@@ -2370,9 +2376,6 @@ class Pipeline(TimeStampedUserModel):
 
     def get_absolute_url(self):
         return reverse(f"pipelines:edit-{self.type}", args=(self.id,))
-
-    def __str__(self):
-        return self.dag_id
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if self.id is not None and (

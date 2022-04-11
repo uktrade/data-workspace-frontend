@@ -23,9 +23,9 @@ def save_pipeline_to_dataflow(pipeline, method):
             "schedule": "@daily",
             "schema_name": schema_name,
             "table_name": table_name,
-            "type": "sql",
+            "type": pipeline.type,
             "enabled": True,
-            "config": pipeline.sql_query,
+            "config": pipeline.config,
         }
     )
     header = Sender(

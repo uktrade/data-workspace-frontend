@@ -31,12 +31,14 @@ from dataworkspace.tests import factories
     ),
 )
 @mock.patch("dataworkspace.apps.datasets.pipelines.views.save_pipeline_to_dataflow")
-def test_create_pipeline(mock_sync, table_name, expected_output, added_pipelines, staff_client):
+def test_create_sql_pipeline(
+    mock_sync, table_name, expected_output, added_pipelines, staff_client
+):
     pipeline_count = Pipeline.objects.count()
     staff_client.post(reverse("admin:index"), follow=True)
     resp = staff_client.post(
-        reverse("pipelines:create"),
-        data={"table_name": table_name, "sql_query": "SELECT 1"},
+        reverse("pipelines:create-sql"),
+        data={"type": "sql", "table_name": table_name, "sql": "SELECT 1"},
         follow=True,
     )
     assert expected_output in resp.content.decode(resp.charset)
@@ -44,11 +46,29 @@ def test_create_pipeline(mock_sync, table_name, expected_output, added_pipelines
 
 
 @mock.patch("dataworkspace.apps.datasets.pipelines.views.save_pipeline_to_dataflow")
+def test_create_sharepoint_pipeline(mock_sync, staff_client):
+    pipeline_count = Pipeline.objects.count()
+    staff_client.post(reverse("admin:index"), follow=True)
+    resp = staff_client.post(
+        reverse("pipelines:create-sharepoint"),
+        data={
+            "type": "sharepoint",
+            "table_name": "test.sharepoint1",
+            "site_name": "A Site",
+            "list_name": "A List",
+        },
+        follow=True,
+    )
+    assert "Pipeline created successfully" in resp.content.decode(resp.charset)
+    assert pipeline_count + 1 == Pipeline.objects.count()
+
+
+@mock.patch("dataworkspace.apps.datasets.pipelines.views.save_pipeline_to_dataflow")
 def test_create_pipeline_validates_valid_sql(mock_sync, staff_client):
     staff_client.post(reverse("admin:index"), follow=True)
     resp = staff_client.post(
-        reverse("pipelines:create"),
-        data={"table_name": "test", "sql_query": "SELECT bar as 1;"},
+        reverse("pipelines:create-sql"),
+        data={"type": "sql", "table_name": "test", "sql": "SELECT bar as 1;"},
         follow=True,
     )
     assert b"syntax error" in resp.content
@@ -58,8 +78,8 @@ def test_create_pipeline_validates_valid_sql(mock_sync, staff_client):
 def test_create_pipeline_validates_single_statement(mock_sync, staff_client):
     staff_client.post(reverse("admin:index"), follow=True)
     resp = staff_client.post(
-        reverse("pipelines:create"),
-        data={"table_name": "test", "sql_query": "SELECT 1; SELECT 2;"},
+        reverse("pipelines:create-sql"),
+        data={"type": "sql", "table_name": "test", "sql": "SELECT 1; SELECT 2;"},
         follow=True,
     )
     assert b"Enter a single statement" in resp.content
@@ -69,8 +89,8 @@ def test_create_pipeline_validates_single_statement(mock_sync, staff_client):
 def test_create_pipeline_validates_drop_statement(mock_sync, staff_client):
     staff_client.post(reverse("admin:index"), follow=True)
     resp = staff_client.post(
-        reverse("pipelines:create"),
-        data={"table_name": "test", "sql_query": "DROP TABLE foo;"},
+        reverse("pipelines:create-sql"),
+        data={"type": "sql", "table_name": "test", "sql": "DROP TABLE foo;"},
         follow=True,
     )
     assert b"DROP statements are not supported" in resp.content
@@ -80,8 +100,8 @@ def test_create_pipeline_validates_drop_statement(mock_sync, staff_client):
 def test_create_pipeline_validates_create_statement(mock_sync, staff_client):
     staff_client.post(reverse("admin:index"), follow=True)
     resp = staff_client.post(
-        reverse("pipelines:create"),
-        data={"table_name": "test", "sql_query": "CREATE TABLE foo (f1 int);"},
+        reverse("pipelines:create-sql"),
+        data={"type": "sql", "table_name": "test", "sql": "CREATE TABLE foo (f1 int);"},
         follow=True,
     )
     assert b"CREATE statements are not supported" in resp.content
@@ -91,8 +111,8 @@ def test_create_pipeline_validates_create_statement(mock_sync, staff_client):
 def test_create_pipeline_validates_duplicate_column_names(mock_sync, staff_client):
     staff_client.post(reverse("admin:index"), follow=True)
     resp = staff_client.post(
-        reverse("pipelines:create"),
-        data={"table_name": "test", "sql_query": "SELECT 1 AS foo, 2 AS foo;"},
+        reverse("pipelines:create-sql"),
+        data={"type": "sql", "table_name": "test", "sql": "SELECT 1 AS foo, 2 AS foo;"},
         follow=True,
     )
     assert b"Duplicate column names found" in resp.content
@@ -100,17 +120,39 @@ def test_create_pipeline_validates_duplicate_column_names(mock_sync, staff_clien
 
 @pytest.mark.django_db
 @mock.patch("dataworkspace.apps.datasets.pipelines.views.save_pipeline_to_dataflow")
-def test_edit_pipeline(mock_sync, staff_client):
-    pipeline = factories.PipelineFactory.create()
+def test_edit_sql_pipeline(mock_sync, staff_client):
+    pipeline = factories.PipelineFactory.create(config={"sql": "SELECT 1"})
     staff_client.post(reverse("admin:index"), follow=True)
     resp = staff_client.post(
-        reverse("pipelines:edit", args=(pipeline.id,)),
-        data={"table_name": pipeline.table_name, "sql_query": "SELECT 2"},
+        reverse("pipelines:edit-sql", args=(pipeline.id,)),
+        data={"type": "sql", "table_name": pipeline.table_name, "sql": "SELECT 2"},
         follow=True,
     )
     assert "Pipeline updated successfully" in resp.content.decode(resp.charset)
     pipeline.refresh_from_db()
-    assert pipeline.sql_query == "SELECT 2"
+    assert pipeline.config["sql"] == "SELECT 2"
+
+
+@pytest.mark.django_db
+@mock.patch("dataworkspace.apps.datasets.pipelines.views.save_pipeline_to_dataflow")
+def test_edit_sharepoint_pipeline(mock_sync, staff_client):
+    pipeline = factories.PipelineFactory.create(
+        type="sharepoint", config={"site_name": "site1", "list_name": "list1"}
+    )
+    staff_client.post(reverse("admin:index"), follow=True)
+    resp = staff_client.post(
+        reverse("pipelines:edit-sharepoint", args=(pipeline.id,)),
+        data={
+            "type": "sql",
+            "table_name": pipeline.table_name,
+            "site_name": "site2",
+            "list_name": "list2",
+        },
+        follow=True,
+    )
+    assert "Pipeline updated successfully" in resp.content.decode(resp.charset)
+    pipeline.refresh_from_db()
+    assert pipeline.config == {"site_name": "site2", "list_name": "list2"}
 
 
 @pytest.mark.django_db
@@ -130,7 +172,7 @@ def test_delete_pipeline(mock_delete, staff_client):
 @pytest.mark.django_db
 @mock.patch("dataworkspace.apps.datasets.pipelines.views.run_pipeline")
 def test_run_pipeline(mock_run, staff_client):
-    pipeline = factories.PipelineFactory.create()
+    pipeline = factories.PipelineFactory.create(type="sql")
     staff_client.post(reverse("admin:index"), follow=True)
     resp = staff_client.post(
         reverse("pipelines:run", args=(pipeline.id,)),
@@ -142,7 +184,7 @@ def test_run_pipeline(mock_run, staff_client):
 @pytest.mark.django_db
 @mock.patch("dataworkspace.apps.datasets.pipelines.views.stop_pipeline")
 def test_stop_pipeline(mock_stop, staff_client):
-    pipeline = factories.PipelineFactory.create()
+    pipeline = factories.PipelineFactory.create(type="sharepoint")
     staff_client.post(reverse("admin:index"), follow=True)
     resp = staff_client.post(
         reverse("pipelines:stop", args=(pipeline.id,)),
@@ -153,7 +195,7 @@ def test_stop_pipeline(mock_stop, staff_client):
 
 @pytest.mark.django_db
 def test_pipeline_log_success(staff_client, mocker):
-    pipeline = factories.PipelineFactory.create()
+    pipeline = factories.PipelineFactory.create(type="sharepoint")
     _return_value = [
         {
             "task_1": "...",
@@ -188,8 +230,8 @@ def test_pipeline_log_failure(staff_client, mocker):
 def test_query_fails_to_run(mock_sync, staff_client):
     staff_client.post(reverse("admin:index"), follow=True)
     resp = staff_client.post(
-        reverse("pipelines:create"),
-        data={"table_name": "test", "sql_query": "SELECT * from doesnt_exist;"},
+        reverse("pipelines:create-sql"),
+        data={"table_name": "test", "sql": "SELECT * from doesnt_exist;"},
         follow=True,
     )
     assert b"Error running query" in resp.content
