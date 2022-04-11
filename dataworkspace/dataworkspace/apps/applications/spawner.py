@@ -135,12 +135,31 @@ class ProcessSpawner:
             gevent.sleep(1)
             cmd = json.loads(spawner_options)["CMD"]
 
-            database_env = {
-                f'DATABASE_DSN__{database["memorable_name"]}': f'host={database["db_host"]} '
-                f'port={database["db_port"]} sslmode=require dbname={database["db_name"]} '
-                f'user={database["db_user"]} password={database["db_password"]}'
-                for database in credentials
-            }
+            database_env = dict(
+                list(
+                    {
+                        f'DATABASE_DSN__{database["memorable_name"]}': f'host={database["db_host"]} '
+                        f'port={database["db_port"]} sslmode=require dbname={database["db_name"]} '
+                        f'user={database["db_user"]} password={database["db_password"]}'
+                        for database in credentials
+                    }.items()
+                )
+                + (
+                    list(
+                        {
+                            # libpq-based libraries use these environment variables automatically
+                            "PGHOST": credentials[0]["db_host"],
+                            "PGPORT": credentials[0]["db_port"],
+                            "PGSSLMODE": "require",
+                            "PGDATABASE": credentials[0]["db_name"],
+                            "PGUSER": credentials[0]["db_user"],
+                            "PGPASSWORD": credentials[0]["db_password"],
+                        }.items()
+                    )
+                    if credentials
+                    else []
+                )
+            )
 
             logger.info("Starting %s", cmd)
             # pylint: disable=consider-using-with
