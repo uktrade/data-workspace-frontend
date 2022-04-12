@@ -9,10 +9,6 @@ import django.db.models.deletion
 import dataworkspace.apps.core.storage
 
 
-def delete_old_charts(apps, _):
-    apps.get_model("datasets", "DataSetChartBuilderChart").objects.all().delete()
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -22,7 +18,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(delete_old_charts, reverse_code=migrations.RunPython.noop),
+        # migrations.RunSQL("TRUNCATE TABLE datasets_datasetchartbuilderchart"),
         migrations.CreateModel(
             name="ChartBuilderChart",
             fields=[

@@ -25,6 +25,7 @@ from django.views.generic.edit import CreateView, DeleteView, FormView
 from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace.apps.core.charts.models import ChartBuilderChart
+from dataworkspace.apps.core.charts.tasks import run_chart_builder_query
 from dataworkspace.apps.core.errors import DataExplorerQueryResultsPermissionError
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -674,4 +675,5 @@ class CreateChartView(WaffleFlagMixin, RedirectView):
         chart = ChartBuilderChart.objects.create_from_sql(
             query_log.sql, self.request.user, query_log.connection
         )
+        run_chart_builder_query.delay(chart.id)
         return f"{chart.get_edit_url()}?prev={self.request.META.get('HTTP_REFERER')}"

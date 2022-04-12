@@ -55,6 +55,7 @@ from dataworkspace.apps.api_v1.core.views import invalidate_superset_user_cached
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.charts.models import ChartBuilderChart
+from dataworkspace.apps.core.charts.tasks import run_chart_builder_query
 
 from dataworkspace.apps.core.errors import DatasetPermissionDenied, DatasetPreviewDisabledError
 from dataworkspace.apps.core.utils import (
@@ -1499,6 +1500,7 @@ class SelectChartSourceView(WaffleFlagMixin, FormView):
         if source is None:
             raise Http404
         chart = ChartBuilderChart.objects.create_from_source(source, self.request.user)
+        run_chart_builder_query.delay(chart.id)
         return HttpResponseRedirect(f"{chart.get_edit_url()}?prev={self.request.path}")
 
 
@@ -1538,6 +1540,7 @@ class CreateGridChartView(WaffleFlagMixin, View):
         with connections[db_name].cursor() as cursor:
             full_query = cursor.mogrify(query, params).decode()
         chart = ChartBuilderChart.objects.create_from_sql(str(full_query), request.user, db_name)
+        run_chart_builder_query.delay(chart.id)
         return HttpResponseRedirect(
             f"{chart.get_edit_url()}?prev={request.META.get('HTTP_REFERER')}"
         )
