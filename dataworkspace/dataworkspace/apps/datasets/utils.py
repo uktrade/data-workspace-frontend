@@ -122,13 +122,11 @@ def get_python_snippet(query):
     `backslash`, `"` and `'''` are also escaped
     """
     query = query.replace("\\", "\\\\").replace('"', '\\"')
-    return f"""import os
-import pandas
+    return f"""import pandas
 import psycopg2
 import sqlalchemy
 
-conn = psycopg2.connect(os.environ['DATABASE_DSN__datasets_1'])
-engine = sqlalchemy.create_engine('postgresql://', creator=lambda: conn, execution_options={{"stream_results": True}})
+engine = sqlalchemy.create_engine('postgresql://', execution_options={{"stream_results": True}})
 chunks = pandas.read_sql(sqlalchemy.text(\"""{query}\"""), engine, chunksize=10000)
 for chunk in chunks:
     display(chunk)"""
