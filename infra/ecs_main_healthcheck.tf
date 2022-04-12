@@ -1,9 +1,10 @@
 resource "aws_ecs_service" "healthcheck" {
-  name            = "${var.prefix}-healthcheck"
-  cluster         = "${aws_ecs_cluster.main_cluster.id}"
-  task_definition = "${aws_ecs_task_definition.healthcheck.arn}"
-  desired_count   = 1
-  launch_type     = "FARGATE"
+  name                       = "${var.prefix}-healthcheck"
+  cluster                    = "${aws_ecs_cluster.main_cluster.id}"
+  task_definition            = "${aws_ecs_task_definition.healthcheck.arn}"
+  desired_count              = 1
+  launch_type                = "FARGATE"
+  platform_version           = "1.4.0"
   deployment_maximum_percent = 600
 
   network_configuration {

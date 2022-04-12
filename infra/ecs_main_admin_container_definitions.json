@@ -200,6 +200,10 @@
       "value": "${notebooks_bucket}"
     },
     {
+      "name": "APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__PLATFORM_VERSION",
+      "value": "1.4.0"
+    },
+    {
       "name": "APPLICATION_TEMPLATES__2__HOST_BASENAME",
       "value": "rstudio"
     },
@@ -536,6 +540,10 @@
   "value": "${notebooks_bucket}"
 },
 {
+  "name": "APPLICATION_TEMPLATES__9__SPAWNER_OPTIONS__PLATFORM_VERSION",
+  "value": "1.4.0"
+},
+{
   "name": "APPLICATION_TEMPLATES__10__HOST_BASENAME",
   "value": "theia"
 },
@@ -698,6 +706,10 @@
 {
   "name": "APPLICATION_TEMPLATES__11__SPAWNER_OPTIONS__S3_BUCKET",
   "value": "${notebooks_bucket}"
+},
+{
+  "name": "APPLICATION_TEMPLATES__11__SPAWNER_OPTIONS__PLATFORM_VERSION",
+  "value": "1.4.0"
 },
 {
   "name": "APPLICATION_SPAWNER_OPTIONS__FARGATE__VISUALISATION__ECR_REPOSITORY_NAME",

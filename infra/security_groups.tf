@@ -548,6 +548,30 @@ resource "aws_security_group_rule" "ecr_api_ingress_https_from_dns_rewrite_proxy
   protocol    = "tcp"
 }
 
+resource "aws_security_group_rule" "ecr_api_ingress_https_from_prometheus" {
+  description = "ingress-https-from-prometheus-service"
+
+  security_group_id = "${aws_security_group.ecr_api.id}"
+  source_security_group_id = "${aws_security_group.prometheus_service.id}"
+
+  type      = "ingress"
+  from_port   = "443"
+  to_port     = "443"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "ecr_api_ingress_https_from_sentryproxy" {
+  description = "ingress-https-from-sentryproxy-service"
+
+  security_group_id = "${aws_security_group.ecr_api.id}"
+  source_security_group_id = "${aws_security_group.sentryproxy_service.id}"
+
+  type      = "ingress"
+  from_port   = "443"
+  to_port     = "443"
+  protocol    = "tcp"
+}
+
 resource "aws_security_group_rule" "ecr_api_ingress_https_from_admin-service" {
   description = "ingress-https-from-admin-service"
 
@@ -1271,6 +1295,32 @@ resource "aws_security_group_rule" "superset_service_egress_https_to_ecr_api" {
   to_port     = "443"
   protocol    = "tcp"
 }
+
+resource "aws_security_group_rule" "prometheus_service_egress_https_to_ecr_api" {
+  description = "egress-https-to-ecr-api"
+
+  security_group_id = "${aws_security_group.prometheus_service.id}"
+  source_security_group_id = "${aws_security_group.ecr_api.id}"
+
+  type        = "egress"
+  from_port   = "443"
+  to_port     = "443"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "sentryproxy_service_egress_https_to_ecr_api" {
+  description = "egress-https-to-ecr-api"
+
+  security_group_id = "${aws_security_group.sentryproxy_service.id}"
+  source_security_group_id = "${aws_security_group.ecr_api.id}"
+
+  type        = "egress"
+  from_port   = "443"
+  to_port     = "443"
+  protocol    = "tcp"
+}
+
+
 
 resource "aws_security_group_rule" "superset_service_egress_https_to_cloudwatch" {
   description = "egress-https-to-cloudwatch"
