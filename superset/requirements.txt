@@ -85,7 +85,7 @@ flask==1.1.2
     #   flask-sqlalchemy
     #   flask-wtf
     #   sentry-sdk
-flask-appbuilder==3.4.4
+flask-appbuilder==3.4.5
     # via apache-superset
 flask-babel==1.0.0
     # via flask-appbuilder
