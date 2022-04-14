@@ -1478,7 +1478,10 @@ class SelectChartSourceView(WaffleFlagMixin, FormView):
     template_name = "datasets/charts/select_chart_source.html"
 
     def get_object(self, queryset=None):
-        return find_dataset(self.kwargs["pk"], self.request.user, DataSet)
+        dataset = find_dataset(self.kwargs["pk"], self.request.user, DataSet)
+        if not dataset.user_has_access(self.request.user):
+            raise DatasetPermissionDenied(dataset)
+        return dataset
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -1501,7 +1504,27 @@ class SelectChartSourceView(WaffleFlagMixin, FormView):
             raise Http404
         chart = ChartBuilderChart.objects.create_from_source(source, self.request.user)
         run_chart_builder_query.delay(chart.id)
+        if source.data_grid_enabled:
+            return HttpResponseRedirect(
+                reverse("datasets:filter_chart_data", args=(dataset.id, source.id))
+            )
         return HttpResponseRedirect(f"{chart.get_edit_url()}?prev={self.request.path}")
+
+
+class FilterChartDataView(WaffleFlagMixin, DetailView):
+    waffle_flag = settings.CHART_BUILDER_BUILD_CHARTS_FLAG
+    form_class = ChartSourceSelectForm
+    template_name = "datasets/charts/filter_chart_data.html"
+    context_object_name = "source"
+
+    def get_object(self, queryset=None):
+        dataset = find_dataset(self.kwargs["pk"], self.request.user, DataSet)
+        if not dataset.user_has_access(self.request.user):
+            raise DatasetPermissionDenied(dataset)
+        source = dataset.get_related_source(self.kwargs["source_id"])
+        if source is None:
+            raise Http404
+        return source
 
 
 class CreateGridChartView(WaffleFlagMixin, View):
@@ -1509,10 +1532,7 @@ class CreateGridChartView(WaffleFlagMixin, View):
 
     def post(self, request, dataset_uuid, source_id, *args, **kwargs):
         dataset = find_dataset(dataset_uuid, self.request.user)
-        source = next(
-            (x for x in dataset.related_objects() if str(x.id) == str(source_id)),
-            None,
-        )
+        source = dataset.get_related_source(source_id)
         if source is None:
             raise Http404
 

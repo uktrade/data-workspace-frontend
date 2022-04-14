@@ -1,32 +1,32 @@
 {% load datasets_tags %}
-<div class="govuk-grid-row" style="overflow-x: auto;">
-  <div class="govuk-grid-column-two-thirds">
-    <h2 class="govuk-heading-l govuk-!-margin-top-8">Charts</h2>
+{% if has_access %}
+  <div class="govuk-grid-row" style="overflow-x: auto;">
+    <div class="govuk-grid-column-two-thirds">
+      <h2 class="govuk-heading-l govuk-!-margin-top-8">Charts</h2>
+    </div>
   </div>
-</div>
-<div class="govuk-grid-row">
-  <div class="govuk-grid-column-full">
-    {% if model.charts.all %}
-      {% if has_access %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      {% if model.charts.all %}
         {% for chart in model.charts.all|slice:"3" %}
           {% include 'datasets/charts/chart_card.html' with dataset=model %}
         {% endfor %}
-      {% endif %}
-    {% else %}
-      <p class="govuk-body">
-        There are no charts based on data in this dataset currently.
-      </p>
-    {% endif %}
-  </div>
-</div>
-<div class="govuk-grid-row">
-  <div class="govuk-grid-column-two-thirds">
-    <div class="govuk-button-group">
-      <a class="govuk-button" href="{% url 'datasets:select_chart_source' model.pk %}">Create a new chart</a>
-      {% if model.charts.count > 3 %}
-        &nbsp;
-        <a class="govuk-link govuk-link--no-visited-state govuk-!-display-inline-block" href="{% url 'datasets:dataset_charts' model.pk %}">See more charts</a>
+      {% else %}
+        <p class="govuk-body">
+          There are no charts based on data in this dataset currently.
+        </p>
       {% endif %}
     </div>
   </div>
-</div>
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <div class="govuk-button-group">
+        <a class="govuk-button" href="{% url 'datasets:select_chart_source' model.pk %}">Create a new chart</a>
+        {% if model.charts.count > 3 %}
+          &nbsp;
+          <a class="govuk-link govuk-link--no-visited-state govuk-!-display-inline-block" href="{% url 'datasets:dataset_charts' model.pk %}">See more charts</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endif %}

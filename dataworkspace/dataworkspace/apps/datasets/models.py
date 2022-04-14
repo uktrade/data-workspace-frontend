@@ -448,6 +448,12 @@ class DataSet(DeletableTimestampedUserModel):
     def get_usage_history_url(self):
         return reverse("datasets:usage_history", args=(self.id,))
 
+    def get_related_source(self, source_id):
+        return next(
+            (x for x in self.related_objects() if str(x.id) == str(source_id)),
+            None,
+        )
+
 
 class DataSetVisualisation(DeletableTimestampedUserModel):
     name = models.CharField(max_length=255)
