@@ -89,11 +89,12 @@ locals {
 }
 
 resource "aws_ecs_service" "admin" {
-  name            = "${var.prefix}-admin"
-  cluster         = "${aws_ecs_cluster.main_cluster.id}"
-  task_definition = "${aws_ecs_task_definition.admin.arn}"
-  desired_count   = 2
-  launch_type     = "FARGATE"
+  name                       = "${var.prefix}-admin"
+  cluster                    = "${aws_ecs_cluster.main_cluster.id}"
+  task_definition            = "${aws_ecs_task_definition.admin.arn}"
+  desired_count              = 2
+  launch_type                = "FARGATE"
+  platform_version           = "1.4.0"
   deployment_maximum_percent = 600
 
   network_configuration {
@@ -169,11 +170,12 @@ data "external" "admin_current_tag" {
 }
 
 resource "aws_ecs_service" "admin_celery" {
-  name            = "${var.prefix}-admin-celery"
-  cluster         = "${aws_ecs_cluster.main_cluster.id}"
-  task_definition = "${aws_ecs_task_definition.admin_celery.arn}"
-  desired_count   = 2
-  launch_type     = "FARGATE"
+  name                       = "${var.prefix}-admin-celery"
+  cluster                    = "${aws_ecs_cluster.main_cluster.id}"
+  task_definition            = "${aws_ecs_task_definition.admin_celery.arn}"
+  desired_count              = 2
+  launch_type                = "FARGATE"
+  platform_version           = "1.4.0"
   deployment_maximum_percent = 600
 
   network_configuration {

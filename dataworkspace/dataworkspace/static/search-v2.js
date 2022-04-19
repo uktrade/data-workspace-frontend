@@ -111,7 +111,11 @@ LiveSearch.prototype.formChange = function formChange(e) {
     pageUpdated.done(
       function () {
         if (typeof this.GTM !== "undefined") {
-          this.GTM.pushSearchEvent();
+          try {
+            this.GTM.pushSearchEvent();
+          } catch(e){
+            console.error(e);
+          }
         }
 
         var newPath =

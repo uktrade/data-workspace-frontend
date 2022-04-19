@@ -1,9 +1,10 @@
 resource "aws_ecs_service" "prometheus" {
-  name            = "${var.prefix}-prometheus"
-  cluster         = "${aws_ecs_cluster.main_cluster.id}"
-  task_definition = "${aws_ecs_task_definition.prometheus.arn}"
-  desired_count   = 1
-  launch_type     = "FARGATE"
+  name             = "${var.prefix}-prometheus"
+  cluster          = "${aws_ecs_cluster.main_cluster.id}"
+  task_definition  = "${aws_ecs_task_definition.prometheus.arn}"
+  desired_count    = 1
+  launch_type      = "FARGATE"
+  platform_version = "1.4.0"
 
   network_configuration {
     subnets         = "${aws_subnet.private_with_egress.*.id}"
