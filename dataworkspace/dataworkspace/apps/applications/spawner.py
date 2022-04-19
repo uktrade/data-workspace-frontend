@@ -411,22 +411,11 @@ class FargateSpawner:
 
             now = datetime.datetime.now()
             thirty_minutes_ago = now - datetime.timedelta(minutes=30)
-            three_minutes_ago = now - datetime.timedelta(minutes=3)
-            sixty_seconds_ago = now - datetime.timedelta(seconds=60)
+            two_minutes_ago = now - datetime.timedelta(minutes=2)
+            four_minutes_ago = now - datetime.timedelta(minutes=4)
 
             task_arn = spawner_application_id_parsed.get("task_arn")
             pipeline_id = spawner_application_id_parsed.get("pipeline_id")
-
-            # Give sixty seconds for something to start...
-            if not pipeline_id and not task_arn and created_date > sixty_seconds_ago:
-                return "RUNNING"
-            if not pipeline_id and not task_arn:
-                logger.exception(
-                    "Task not created within sixty seconds: %s %s",
-                    spawner_application_id_parsed,
-                    proxy_url,
-                )
-                return "STOPPED"
 
             # ... if started pipeline, but not yet the task, give 15 minutes to complete...
             if pipeline_id and not task_arn:
@@ -449,9 +438,9 @@ class FargateSpawner:
             else:
                 task_should_be_created = created_date
 
-            # ... give sixty seconds to create the task...
+            # ... give two minutes to create the task...
             if not task_arn:
-                if task_should_be_created > sixty_seconds_ago:
+                if task_should_be_created > two_minutes_ago:
                     return "RUNNING"
                 logger.exception(
                     "Task not created within sixty seconds: %s %s",
@@ -460,9 +449,9 @@ class FargateSpawner:
                 )
                 return "STOPPED"
 
-            # .... give three minutes to get the task itself (to mitigate eventual consistency)...
+            # .... give four minutes to get the task itself (to mitigate eventual consistency)...
             task = _fargate_task_describe(cluster_name, task_arn)
-            if task is None and task_should_be_created > three_minutes_ago:
+            if task is None and task_should_be_created > four_minutes_ago:
                 return "RUNNING"
             if task is None:
                 logger.exception(
