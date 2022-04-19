@@ -421,6 +421,11 @@ class FargateSpawner:
             if not pipeline_id and not task_arn and created_date > sixty_seconds_ago:
                 return "RUNNING"
             if not pipeline_id and not task_arn:
+                logger.exception(
+                    "Task not created within sixty seconds: %s %s",
+                    spawner_application_id_parsed,
+                    proxy_url,
+                )
                 return "STOPPED"
 
             # ... if started pipeline, but not yet the task, give 15 minutes to complete...
@@ -448,6 +453,11 @@ class FargateSpawner:
             if not task_arn:
                 if task_should_be_created > sixty_seconds_ago:
                     return "RUNNING"
+                logger.exception(
+                    "Task not created within sixty seconds: %s %s",
+                    spawner_application_id_parsed,
+                    proxy_url,
+                )
                 return "STOPPED"
 
             # .... give three minutes to get the task itself (to mitigate eventual consistency)...
@@ -455,6 +465,11 @@ class FargateSpawner:
             if task is None and task_should_be_created > three_minutes_ago:
                 return "RUNNING"
             if task is None:
+                logger.exception(
+                    "Task not running within 3 minute: %s %s",
+                    spawner_application_id_parsed,
+                    proxy_url,
+                )
                 return "STOPPED"
 
             # ... and the spawner is running if the task is running or starting...
