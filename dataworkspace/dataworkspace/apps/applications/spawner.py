@@ -442,6 +442,11 @@ class FargateSpawner:
             if not task_arn:
                 if task_should_be_created > two_minutes_ago:
                     return "RUNNING"
+                logger.exception(
+                    "Task not created within sixty seconds: %s %s",
+                    spawner_application_id_parsed,
+                    proxy_url,
+                )
                 return "STOPPED"
 
             # .... give four minutes to get the task itself (to mitigate eventual consistency)...
@@ -449,6 +454,11 @@ class FargateSpawner:
             if task is None and task_should_be_created > four_minutes_ago:
                 return "RUNNING"
             if task is None:
+                logger.exception(
+                    "Task not running within 3 minute: %s %s",
+                    spawner_application_id_parsed,
+                    proxy_url,
+                )
                 return "STOPPED"
 
             # ... and the spawner is running if the task is running or starting...
