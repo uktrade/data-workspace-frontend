@@ -33,34 +33,51 @@ TABLESCHEMA_FIELD_TYPE_MAP = {
     "number": "numeric",
 }
 
-
 def get_s3_csv_column_types(path):
+    file_info = get_s3_csv_file_info(path)
+    return file_info["column_definitions"]
+
+
+def get_s3_csv_file_info(path):
     client = get_s3_client()
 
     logger.debug(path)
+
+    file = client.get_object(
+            Bucket=settings.NOTEBOOKS_BUCKET, Key=path, Range="bytes=0-102400"
+        )
+    raw = file["Body"].read()
+    
+    encoding, decoded = _get_encoding_and_decoded_bytes(raw)
+
+    fh = StringIO(decoded, newline="")
+    rows = list(csv.reader(fh))
+    
+    return {
+        "encoding": encoding,
+        "column_definitions" : _get_csv_column_types(rows)
+    }
+
+def _get_encoding_and_decoded_bytes(raw: bytes):
+    encoding = "utf-8-sig"
+
     try:
-        logger.debug("utf-8-sig decode")
-        file = client.get_object(
-            Bucket=settings.NOTEBOOKS_BUCKET, Key=path, Range="bytes=0-102400"
-        )
-        body = file["Body"]
-        fh = StringIO(body.read().decode("utf-8-sig"))
-
-        rows = list(csv.reader(fh))
-        return _get_csv_column_types(rows)
+        decoded = raw.decode(encoding)
+        return encoding, decoded
     except UnicodeDecodeError:
-        logger.debug("cp1252 decode")
+        pass
 
-        # We have to get the file again as there is no seek method on boto3 StreamingBody
-        file = client.get_object(
-            Bucket=settings.NOTEBOOKS_BUCKET, Key=path, Range="bytes=0-102400"
-        )
-        body = file["Body"]
-        raw = body.read().decode("cp1252")
-        split = raw.splitlines()
+    try:
+        encoding = "cp1252"
+        decoded = raw.decode(encoding)
+        return encoding, decoded
+    except:
+        pass
+    
+    encoding = "latin1"
+    decoded = raw.decode(encoding)
 
-        rows = list(csv.reader(split))
-        return _get_csv_column_types(rows)
+    return encoding, decoded
 
 
 def _get_csv_column_types(rows):
@@ -96,11 +113,13 @@ def _get_csv_column_types(rows):
 def trigger_dataflow_dag(conf, dag, dag_run_id):
     config = settings.DATAFLOW_API_CONFIG
     trigger_url = f'{config["DATAFLOW_BASE_URL"]}/api/experimental/' f"dags/{dag}/dag_runs"
+    logger.debug("trigger_dataflow_dag %s", trigger_url)
     hawk_creds = {
         "id": config["DATAFLOW_HAWK_ID"],
         "key": config["DATAFLOW_HAWK_KEY"],
         "algorithm": "sha256",
     }
+    logger.info(hawk_creds)
     method = "POST"
     content_type = "application/json"
     body = json.dumps(
@@ -125,6 +144,8 @@ def trigger_dataflow_dag(conf, dag, dag_run_id):
         data=body,
         headers={"Authorization": header, "Content-Type": content_type},
     )
+
+    logger.debug(response.status_code)
     response.raise_for_status()
     return response.json()
 
@@ -137,11 +158,16 @@ def clean_db_identifier(identifier):
 
 def copy_file_to_uploads_bucket(from_path, to_path):
     client = get_s3_client()
-    client.copy_object(
-        CopySource={"Bucket": settings.NOTEBOOKS_BUCKET, "Key": from_path},
-        Bucket=settings.AWS_UPLOADS_BUCKET,
-        Key=to_path,
-    )
+
+    try:
+        client.copy_object(
+            CopySource={"Bucket": settings.NOTEBOOKS_BUCKET, "Key": from_path},
+            Bucket=settings.AWS_UPLOADS_BUCKET,
+            Key=to_path,
+        )
+    except e:
+        logger.error("failed to copy file to uploads bucket")
+        raise
 
 
 def get_dataflow_dag_status(dag, execution_date):
