@@ -441,7 +441,7 @@ class TestCreateTableViews:
             {"name": "TestTeam", "schema_name": "test_team_schema"},
         ]
         mock_get_s3_prefix.return_value = "user/federated/abc"
-        file_info_return_value= {
+        file_info_return_value = {
             "encoding": "utf-8-sig",
             "column_definitions": [
                 {
