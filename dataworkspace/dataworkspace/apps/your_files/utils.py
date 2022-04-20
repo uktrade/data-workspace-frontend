@@ -34,11 +34,6 @@ TABLESCHEMA_FIELD_TYPE_MAP = {
 }
 
 
-def get_s3_csv_column_types(path):
-    file_info = get_s3_csv_file_info(path)
-    return file_info["column_definitions"]
-
-
 def get_s3_csv_file_info(path):
     client = get_s3_client()
 

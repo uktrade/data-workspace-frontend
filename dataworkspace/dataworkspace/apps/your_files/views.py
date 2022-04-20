@@ -47,7 +47,6 @@ from dataworkspace.apps.your_files.utils import (
     get_dataflow_dag_status,
     get_dataflow_task_status,
     get_s3_csv_file_info,
-    get_s3_csv_column_types,
     get_schema_for_user,
     get_user_schema,
     trigger_dataflow_dag,
@@ -287,7 +286,9 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
         kwargs.update(
             {
                 "user": self.request.user,
-                "column_definitions": get_s3_csv_column_types(self.request.GET["path"]),
+                "column_definitions": get_s3_csv_file_info(self.request.GET["path"])[
+                    "column_definitions"
+                ],
             }
         )
         return kwargs
