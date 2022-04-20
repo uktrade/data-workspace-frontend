@@ -56,6 +56,7 @@ from dataworkspace.apps.your_files.utils import (
 
 logger = logging.getLogger("app")
 
+
 def file_browser_html_view(request):
     return file_browser_html_GET(request) if request.method == "GET" else HttpResponse(status=405)
 
@@ -319,13 +320,11 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
                 cleaned[field["column_name"]], PostgresDataTypes.TEXT
             )
 
-
         import_path = settings.DATAFLOW_IMPORTS_BUCKET_ROOT + "/" + cleaned["path"]
         logger.debug("import_path %s", import_path)
 
         copy_file_to_uploads_bucket(cleaned["path"], import_path)
-        
-        
+
         filename = cleaned["path"].split("/")[-1]
         logger.debug(filename)
         conf = {
@@ -333,7 +332,7 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
             "schema_name": cleaned["schema"],
             "table_name": cleaned["table_name"],
             "column_definitions": file_info["column_definitions"],
-            "encoding": file_info["encoding"]
+            "encoding": file_info["encoding"],
         }
         logger.debug(conf)
         if cleaned["schema"] not in self.all_schemas:
@@ -349,9 +348,6 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
             return HttpResponseRedirect(
                 f'{reverse("your-files:create-table-failed")}?' f"filename={filename}"
             )
-        except:
-            logger.error("failed to trigger_dataflow_dag", exc_info=True)
-            raise
 
         params = {
             "filename": filename,

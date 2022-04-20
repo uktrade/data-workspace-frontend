@@ -33,6 +33,7 @@ TABLESCHEMA_FIELD_TYPE_MAP = {
     "number": "numeric",
 }
 
+
 def get_s3_csv_column_types(path):
     file_info = get_s3_csv_file_info(path)
     return file_info["column_definitions"]
@@ -43,20 +44,16 @@ def get_s3_csv_file_info(path):
 
     logger.debug(path)
 
-    file = client.get_object(
-            Bucket=settings.NOTEBOOKS_BUCKET, Key=path, Range="bytes=0-102400"
-        )
+    file = client.get_object(Bucket=settings.NOTEBOOKS_BUCKET, Key=path, Range="bytes=0-102400")
     raw = file["Body"].read()
-    
+
     encoding, decoded = _get_encoding_and_decoded_bytes(raw)
 
     fh = StringIO(decoded, newline="")
     rows = list(csv.reader(fh))
-    
-    return {
-        "encoding": encoding,
-        "column_definitions" : _get_csv_column_types(rows)
-    }
+
+    return {"encoding": encoding, "column_definitions": _get_csv_column_types(rows)}
+
 
 def _get_encoding_and_decoded_bytes(raw: bytes):
     encoding = "utf-8-sig"
@@ -71,11 +68,13 @@ def _get_encoding_and_decoded_bytes(raw: bytes):
         encoding = "cp1252"
         decoded = raw.decode(encoding)
         return encoding, decoded
-    except:
+    except UnicodeDecodeError:
         pass
-    
+
+    # fall back of last resort will decode most things
+    # https://docs.python.org/3/library/codecs.html#error-handlers
     encoding = "latin1"
-    decoded = raw.decode(encoding)
+    decoded = raw.decode(encoding, errors="replace")
 
     return encoding, decoded
 
@@ -165,7 +164,7 @@ def copy_file_to_uploads_bucket(from_path, to_path):
             Bucket=settings.AWS_UPLOADS_BUCKET,
             Key=to_path,
         )
-    except e:
+    except Exception:
         logger.error("failed to copy file to uploads bucket")
         raise
 
