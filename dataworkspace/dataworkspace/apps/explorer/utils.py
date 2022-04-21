@@ -17,6 +17,7 @@ from django.shortcuts import get_object_or_404
 
 from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.core.utils import (
+    close_admin_db_connection_if_not_in_atomic_block,
     new_private_database_credentials,
     source_tables_for_user,
     db_role_schema_suffix_for_user,
@@ -151,8 +152,10 @@ def get_user_explorer_connection_settings(user, alias):
     def get_available_user_connections(_user_credentials):
         return {data["memorable_name"]: data for data in _user_credentials}
 
+    user_profile_sso_id = user.profile.sso_id
+    close_admin_db_connection_if_not_in_atomic_block()
     with cache.lock(
-        f"get-explorer-connection-{user.profile.sso_id}",
+        f"get-explorer-connection-{user_profile_sso_id}",
         blocking_timeout=30,
         timeout=180,
     ):
