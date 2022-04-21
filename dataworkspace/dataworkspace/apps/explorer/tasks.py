@@ -12,6 +12,7 @@ from pytz import utc
 
 from dataworkspace.apps.core.utils import (
     USER_SCHEMA_STEM,
+    close_admin_db_connection_if_not_in_atomic_block,
     close_all_connections_if_not_in_atomic_block,
     database_dsn,
     db_role_schema_suffix_for_user,
@@ -99,6 +100,7 @@ def _run_querylog_query(query_log_id, page, limit, timeout):
     user_connection_settings = get_user_explorer_connection_settings(
         query_log.run_by_user, query_log.connection
     )
+    close_admin_db_connection_if_not_in_atomic_block()
     with user_explorer_connection(user_connection_settings) as conn:
         _run_query(
             conn,
