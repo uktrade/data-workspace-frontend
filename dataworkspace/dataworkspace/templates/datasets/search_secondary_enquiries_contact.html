@@ -18,7 +18,7 @@
             <a class="govuk-breadcrumbs__link" href="{{ obj_edit_url }}">Manage this dataset</a>
           </li>
           <li class="govuk-breadcrumbs__list-item">
-            Manage permissions
+            Edit enquiries contact
           </li>
         </ol>
       </div>
@@ -30,8 +30,8 @@
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
             {% include 'design_system/error_summary.html' with form=form %}
-            <h1 class="govuk-heading-l">Edit permissions for {{ obj.name }}</h1>
-            <form method="post" enctype="multipart/form-data" novalidate>
+            <h1 class="govuk-heading-l">Edit enquiries contact for {{ obj.name }}</h1>
+            <form action="{{ request.get_full_path }}" method="post" enctype="multipart/form-data" novalidate>
               {% csrf_token %}
               <fieldset class="govuk-fieldset">
                   <div class="govuk-form-group ">
@@ -40,18 +40,21 @@
                       </label>
                     <input class="govuk-input" type="text" name="search" id="id_search" value="{{ search_query }}">
                   </div>
-                  <button type="submit" class="govuk-button" data-prevent-double-click="true" >Seach</button>
+                  <div class="govuk-button-group">
+                      <button type="submit" class="govuk-button" data-prevent-double-click="true" >Search</button>
+                      <a class="govuk-link govuk-link--no-visited-state" href="{{ obj_edit_url }}?enquiries_contact={{ request.GET.enquiries_contact }}">Cancel</a>
+                    </div>
               </fieldset>
-          </form>
+            </form>
             {% if search_results %}
                 <table class="govuk-table">
-                    <caption class="govuk-table__caption govuk-table__caption--m">Found {{ search_results.count }} result{% if search_results.count > 1 %}s{% endif %} for {{ search_query }}</caption>
+                  <caption class="govuk-table__caption govuk-table__caption--m">Found {{ search_results.count }} result{% if search_results.count > 1 %}s{% endif %} for {{ search_query }}</caption>
                     <tbody class="govuk-table__body">
                         {% for result in search_results %}
                         <tr class="govuk-table__row">
                             <td class="govuk-table__cell">{{ result.first_name }} {{ result.last_name }}</td>
                             <td class="govuk-table__cell">{{ result.email }}</td>
-                            <td class="govuk-table__cell"><a class="govuk-link" href="{% url 'datasets:add_authorized_user' obj.id summary_id result.id %}">Select</a></td>
+                            <td class="govuk-table__cell"><a class="govuk-link" href="{{ obj_edit_url }}?enquiries_contact={{ request.GET.enquiries_contact }}&secondary_enquiries_contact={{ result.email }}">Select</a></td>
                           </tr>
                         {% endfor %}
                     </tbody>

@@ -7,7 +7,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 
 from dataworkspace.apps.datasets.constants import DataSetType, TagType
-from .models import DataSet, SourceLink, Tag
+from .models import DataSet, SourceLink, Tag, VisualisationCatalogueItem
 from ...forms import (
     GOVUKDesignSystemForm,
     GOVUKDesignSystemCharField,
@@ -542,6 +542,122 @@ class DatasetEditForm(GOVUKDesignSystemModelForm):
         if self.cleaned_data["enquiries_contact"]:
             try:
                 user = get_user_model().objects.get(email=self.cleaned_data["enquiries_contact"])
+            except get_user_model().DoesNotExist as e:
+                raise forms.ValidationError("User email address does not exist") from e
+            else:
+                return user
+        else:
+            return None
+
+    def clean_authorized_email_domains(self):
+        return json.dumps(self.cleaned_data["authorized_email_domains"].split(","))
+
+
+class VisualisationCatalogueItemEditForm(GOVUKDesignSystemModelForm):
+    class Meta:
+        model = VisualisationCatalogueItem
+        fields = [
+            "name",
+            "short_description",
+            "description",
+            "enquiries_contact",
+            "secondary_enquiries_contact",
+            "licence",
+            "licence_url",
+            "retention_policy",
+            "personal_data",
+            "restrictions_on_usage",
+        ]
+
+    name = GOVUKDesignSystemCharField(
+        label="Dataset Name *",
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
+        ),
+        error_messages={"required": "You must provide a name for this dataset."},
+    )
+    short_description = GOVUKDesignSystemCharField(
+        label="Short description *",
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
+        ),
+        error_messages={"required": "You must provide a short description for this dataset."},
+    )
+
+    description = GOVUKDesignSystemPlainTextareaField(
+        label="Description *",
+        widget=GOVUKDesignSystemPlainTextareaWidget(
+            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
+        ),
+        error_messages={"required": "You must provide a description for this dataset."},
+    )
+    enquiries_contact = GOVUKDesignSystemCharField(
+        label="Enquiries contact",
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
+        ),
+        required=False,
+    )
+    secondary_enquiries_contact = GOVUKDesignSystemCharField(
+        label="Secondary enquiries contact",
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
+        ),
+        required=False,
+    )
+    licence = GOVUKDesignSystemCharField(
+        label="Licence",
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
+        ),
+        required=False,
+    )
+    licence_url = GOVUKDesignSystemCharField(
+        label="Licence url",
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
+        ),
+        required=False,
+    )
+    retention_policy = GOVUKDesignSystemTextareaField(
+        label="Retention policy",
+        widget=GOVUKDesignSystemTextareaWidget(
+            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
+        ),
+        required=False,
+    )
+    personal_data = GOVUKDesignSystemCharField(
+        label="Personal data",
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
+        ),
+        required=False,
+    )
+    restrictions_on_usage = GOVUKDesignSystemTextareaField(
+        label="Restrictions on usage",
+        widget=GOVUKDesignSystemTextareaWidget(
+            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
+        ),
+        required=False,
+    )
+
+    def clean_enquiries_contact(self):
+        if self.cleaned_data["enquiries_contact"]:
+            try:
+                user = get_user_model().objects.get(email=self.cleaned_data["enquiries_contact"])
+            except get_user_model().DoesNotExist as e:
+                raise forms.ValidationError("User email address does not exist") from e
+            else:
+                return user
+        else:
+            return None
+
+    def clean_secondary_enquiries_contact(self):
+        if self.cleaned_data["secondary_enquiries_contact"]:
+            try:
+                user = get_user_model().objects.get(
+                    email=self.cleaned_data["secondary_enquiries_contact"]
+                )
             except get_user_model().DoesNotExist as e:
                 raise forms.ValidationError("User email address does not exist") from e
             else:

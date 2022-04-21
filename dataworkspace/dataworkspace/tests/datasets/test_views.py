@@ -30,6 +30,7 @@ from dataworkspace.apps.datasets.models import (
     DataSetUserPermission,
     ReferenceDataset,
     VisualisationCatalogueItem,
+    VisualisationUserPermission,
 )
 from dataworkspace.apps.datasets.search import (
     _get_datasets_data_for_user_matching_query,
@@ -4073,7 +4074,7 @@ class TestDatasetEditView:
 
         response = client.get(
             reverse(
-                "datasets:edit",
+                "datasets:edit_dataset",
                 args=(dataset.pk,),
             )
         )
@@ -4084,7 +4085,7 @@ class TestDatasetEditView:
 
         response = client.get(
             reverse(
-                "datasets:edit",
+                "datasets:edit_dataset",
                 args=(dataset.pk,),
             )
         )
@@ -4252,3 +4253,103 @@ class TestDatasetEditView:
 
         assert DataSetUserPermission.objects.all()[0].dataset == dataset
         assert DataSetUserPermission.objects.all()[0].user == user_1
+
+
+class TestVisualisationCatalogueItemEditView:
+    def test_only_iam_or_iao_can_edit_visualisation(self, client, user):
+        visualisation_catalogue_item = factories.VisualisationCatalogueItemFactory.create(
+            published=True,
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+        )
+
+        response = client.get(
+            reverse(
+                "datasets:edit_visualisation_catalogue_item",
+                args=(visualisation_catalogue_item.pk,),
+            )
+        )
+        assert response.status_code == 403
+
+        visualisation_catalogue_item.information_asset_owner = user
+        visualisation_catalogue_item.save()
+
+        response = client.get(
+            reverse(
+                "datasets:edit_visualisation_catalogue_item",
+                args=(visualisation_catalogue_item.pk,),
+            )
+        )
+        assert response.status_code == 200
+
+    def test_edit_permissions_page_shows_existing_authorized_users(self, client, user):
+        user_1 = factories.UserFactory.create()
+        user_2 = factories.UserFactory.create()
+
+        visualisation_catalogue_item = factories.VisualisationCatalogueItemFactory.create(
+            published=True,
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+        )
+        visualisation_catalogue_item.information_asset_owner = user
+        visualisation_catalogue_item.save()
+        factories.VisualisationUserPermissionFactory.create(
+            visualisation=visualisation_catalogue_item, user=user_1
+        )
+
+        response = client.get(
+            reverse(
+                "datasets:edit_permissions",
+                args=(visualisation_catalogue_item.pk,),
+            ),
+            follow=True,
+        )
+        assert response.status_code == 200
+
+        assert user_1.email.encode() in response.content
+        assert user_2.email.encode() not in response.content
+
+    def test_add_user_save_and_continue_creates_visualisation_permissions(self, client, user):
+        user_1 = factories.UserFactory.create(email="john@example.com")
+
+        visualisation_catalogue_item = factories.VisualisationCatalogueItemFactory.create(
+            published=True,
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+        )
+        visualisation_catalogue_item.information_asset_owner = user
+        visualisation_catalogue_item.save()
+        response = client.get(
+            reverse(
+                "datasets:edit_permissions",
+                args=(visualisation_catalogue_item.pk,),
+            )
+        )
+        assert response.status_code == 302
+
+        summary_page_url = response.get("location")
+
+        response = client.get(summary_page_url)
+        assert response.status_code == 200
+        assert b"There are currently no authorized users" in response.content
+
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        search_url = soup.findAll("a", href=True, text="Add another user")[0]["href"]
+        response = client.post(search_url, data={"search": "John"}, follow=True)
+        assert response.status_code == 200
+        assert b"Found 1 result for John" in response.content
+        assert user_1.email.encode() in response.content
+        assert user_1.first_name.encode() in response.content
+
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        select_url = soup.findAll("a", href=True, text="Select")[0]["href"]
+        response = client.get(select_url, follow=True)
+        assert response.status_code == 200
+        assert user_1.email.encode() in response.content
+
+        assert len(VisualisationUserPermission.objects.all()) == 0
+        response = client.post(summary_page_url)
+        assert len(VisualisationUserPermission.objects.all()) == 1
+
+        assert (
+            VisualisationUserPermission.objects.all()[0].visualisation
+            == visualisation_catalogue_item
+        )
+        assert VisualisationUserPermission.objects.all()[0].user == user_1
