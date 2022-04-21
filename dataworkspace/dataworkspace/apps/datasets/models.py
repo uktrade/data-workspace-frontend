@@ -65,7 +65,7 @@ from dataworkspace.apps.datasets.constants import (
 )
 from dataworkspace.apps.datasets.model_utils import external_model_class
 from dataworkspace.apps.eventlog.models import EventLog
-from dataworkspace.apps.explorer.models import ChartBuilderChart
+from dataworkspace.apps.core.charts.models import ChartBuilderChart
 from dataworkspace.datasets_db import (
     get_tables_last_updated_date,
 )
@@ -448,6 +448,12 @@ class DataSet(DeletableTimestampedUserModel):
     def get_usage_history_url(self):
         return reverse("datasets:usage_history", args=(self.id,))
 
+    def get_related_source(self, source_id):
+        for related_object in self.related_objects():
+            if str(related_object.id) == str(source_id):
+                return related_object
+        return None
+
 
 class DataSetVisualisation(DeletableTimestampedUserModel):
     name = models.CharField(max_length=255)
@@ -725,6 +731,15 @@ class SourceTable(BaseSource):
             "datasets:source_table_column_details",
             args=(self.dataset_id, self.id),
         )
+
+    def get_chart_builder_url(self):
+        return reverse(
+            "charts:create-chart-from-source-table",
+            args=(self.id,),
+        )
+
+    def get_chart_builder_query(self):
+        return f"SELECT * from {self.schema}.{self.table}"
 
 
 class SourceView(BaseSource):
@@ -1011,6 +1026,15 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
             "datasets:custom_query_column_details",
             args=(self.dataset_id, self.id),
         )
+
+    def get_chart_builder_url(self):
+        return reverse(
+            "charts:create-chart-from-data-cut-query",
+            args=(self.id,),
+        )
+
+    def get_chart_builder_query(self):
+        return self.query
 
 
 class CustomDatasetQueryTable(models.Model):

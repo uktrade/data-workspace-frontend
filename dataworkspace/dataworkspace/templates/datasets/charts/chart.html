@@ -1,0 +1,55 @@
+{% extends '_main.html' %}
+{% load humanize static datasets_tags %}
+{% load render_bundle_csp %}
+{% block page_title %}{{ chart.name }} - {{ block.super }}{% endblock %}
+{% block breadcrumbs %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-three-quarters">
+    <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="/">Home</a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-link" href="{% url "datasets:dataset_detail" dataset_uuid=chart.dataset.id %}#{{ chart.dataset.slug }}">
+              {{ chart.dataset.name }}
+            </a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-link" href="{% url "datasets:dataset_charts" dataset_uuid=chart.dataset.id %}">
+              Charts
+            </a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            {{ chart.name }}
+          </li>
+        </ol>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block content%}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+        {% if chart.gds_phase_name %}
+            <strong class="govuk-!-margin-bottom-2 govuk-tag govuk-phase-banner__content__tag">
+              {{ chart.gds_phase_name }}
+            </strong>
+        {% endif %}
+      <h1 class="govuk-heading-xl">{{ chart.name }}</h1>
+       <p class="govuk-body">{{ chart.summary }}</p>
+    </div>
+  </div>
+  <div class="visualisation-container">
+    <div id="view">
+      <div
+        id="chart-viewer-app"
+        data-dataset-id="{{ chart.dataset.id }}"
+        data-chart-id="{{ chart.id }}"
+      ></div>
+    </div>
+  </div>
+  {{ chart.chart.chart_config|json_script:"chartConfig" }}
+  {% render_bundle_csp "viewer" "js" %}
+{% endblock %}

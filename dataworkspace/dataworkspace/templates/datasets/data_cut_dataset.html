@@ -125,6 +125,10 @@
     </div>
   </div>
 
+  {% flag CHART_BUILDER_PUBLISH_CHARTS_FLAG %}
+    {% include "partials/chart_builder_charts.html" %}
+  {% endflag %}
+
   <div class="govuk-grid-row" style="overflow-x: auto;">
     <div class="govuk-grid-column-two-thirds">
       <h2 class="govuk-heading-l govuk-!-margin-top-8">Data</h2>

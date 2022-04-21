@@ -241,4 +241,24 @@ urlpatterns = [
         login_required(views.DatasetRemoveAuthorisedUserView.as_view()),
         name="remove_authorized_user",
     ),
+    path(
+        "<uuid:pk>/select-chart-source",
+        login_required(views.SelectChartSourceView.as_view()),
+        name="select_chart_source",
+    ),
+    path(
+        "<uuid:pk>/filter-chart-data/<str:source_id>/",
+        login_required(views.FilterChartDataView.as_view()),
+        name="filter_chart_data",
+    ),
+    path(
+        "<uuid:dataset_uuid>/grid-chart/<str:source_id>/",
+        login_required(views.CreateGridChartView.as_view()),
+        name="create_chart_from_grid",
+    ),
+    path(
+        "<uuid:dataset_uuid>/charts/",
+        login_required(views.DatasetChartsView.as_view()),
+        name="dataset_charts",
+    ),
 ]

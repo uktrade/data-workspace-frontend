@@ -2,19 +2,21 @@ import time
 
 from mock import mock
 
-from django.conf import settings
-from django.core.cache import cache
-from django.db import connections
+from waffle.testutils import override_flag
 
 try:
     from django.urls import reverse
 except ImportError:
     from django.core.urlresolvers import reverse
+from django.conf import settings
+from django.core.cache import cache
+from django.db import connections
 from django.contrib.auth import get_user_model
 from django.forms.models import model_to_dict
 from lxml import html
 import pytest
 
+from dataworkspace.apps.core.charts.models import ChartBuilderChart
 from dataworkspace.apps.core.utils import USER_SCHEMA_STEM, stable_identification_suffix
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.explorer.constants import QueryLogState
@@ -733,3 +735,22 @@ class TestShareQuery:
             ],
             any_order=True,
         )
+
+
+@pytest.mark.django_db
+class TestCreateChart:
+    @override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
+    def test_create_chart_not_owner(self, staff_user, client):
+        query_log = QueryLogFactory.create(run_by_user=staff_user)
+        response = client.get(reverse("explorer:create_chart", args=(query_log.id,)))
+        assert response.status_code == 403
+
+    @override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
+    def test_create_chart(self, staff_user, staff_client):
+        query_log = QueryLogFactory(run_by_user=staff_user)
+        num_query_logs = QueryLog.objects.count()
+        num_charts = ChartBuilderChart.objects.count()
+        response = staff_client.get(reverse("explorer:create_chart", args=(query_log.id,)))
+        assert QueryLog.objects.count() == num_query_logs + 1
+        assert ChartBuilderChart.objects.count() == num_charts + 1
+        assert response.status_code == 302

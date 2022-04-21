@@ -22,6 +22,7 @@ from freezegun import freeze_time
 from lxml import html
 from waffle.testutils import override_flag
 
+from dataworkspace.apps.core.charts.models import ChartBuilderChart
 from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType
 from dataworkspace.apps.datasets.models import (
@@ -37,8 +38,8 @@ from dataworkspace.apps.datasets.search import (
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data, MatchUnorderedMembers
-from dataworkspace.tests.explorer.charts.test_views import create_temporary_results_table
-from dataworkspace.tests.explorer.factories import ChartBuilderChartFactory
+from dataworkspace.tests.core.charts.test_views import create_temporary_results_table
+from dataworkspace.tests.core.factories import ChartBuilderChartFactory
 from dataworkspace.tests.factories import (
     VisualisationCatalogueItemFactory,
     UserFactory,
@@ -3895,9 +3896,10 @@ def test_find_datasets_filters_show_datasets_with_visualisations():
     ]
 
 
-class TestChartBuilderChartView:
+@pytest.mark.django_db
+class TestChartViews:
     @override_flag(settings.CHART_BUILDER_PUBLISH_CHARTS_FLAG, active=True)
-    def test_unpublished(self, client, user):
+    def test_view_unpublished_chart(self, client, user):
         dataset_chart = factories.DataSetChartBuilderChartFactory(
             dataset=factories.DataSetFactory.create(published=False),
             chart=ChartBuilderChartFactory.create(),
@@ -3924,7 +3926,7 @@ class TestChartBuilderChartView:
         assert response.status_code == 403
 
     @override_flag(settings.CHART_BUILDER_PUBLISH_CHARTS_FLAG, active=True)
-    def test_user_without_permission(self, client, user):
+    def test_view_chart_without_permission(self, client, user):
         dataset_chart = factories.DataSetChartBuilderChartFactory(
             dataset=factories.DataSetFactory.create(
                 published=True, user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
@@ -3953,7 +3955,7 @@ class TestChartBuilderChartView:
         assert response.status_code == 403
 
     @override_flag(settings.CHART_BUILDER_PUBLISH_CHARTS_FLAG, active=True)
-    def test_user_with_permission(self, client, user):
+    def test_view_chart_with_permission(self, client, user):
         dataset_chart = factories.DataSetChartBuilderChartFactory(
             dataset=factories.DataSetFactory.create(
                 published=True, user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
@@ -3974,6 +3976,91 @@ class TestChartBuilderChartView:
         )
         assert response.status_code == 200
         assert response.json() == {"data": {"id": [1]}, "duration": 1000.0, "total_rows": None}
+
+    @override_flag(settings.CHART_BUILDER_PUBLISH_CHARTS_FLAG, active=True)
+    def test_view_dataset_chart_list(self, client):
+        dataset = factories.DataSetFactory.create(
+            published=True, user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
+        )
+        factories.DataSetChartBuilderChartFactory(
+            dataset=dataset,
+            chart=ChartBuilderChartFactory.create(),
+        )
+        factories.DataSetChartBuilderChartFactory(
+            dataset=dataset,
+            chart=ChartBuilderChartFactory.create(),
+        )
+        factories.DataSetChartBuilderChartFactory(
+            dataset=factories.DataSetFactory.create(
+                published=True, user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
+            ),
+            chart=ChartBuilderChartFactory.create(),
+        )
+        response = client.get(
+            reverse(
+                "datasets:dataset_charts",
+                args=(dataset.id,),
+            )
+        )
+        assert response.status_code == 200
+        assert response.context["charts"].count() == 2
+
+    @override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
+    def test_view_dataset_charts(self, client):
+        dataset = factories.DataSetFactory.create(
+            published=True, user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
+        )
+        factories.SourceTableFactory(dataset=dataset)
+        factories.CustomDatasetQueryFactory(dataset=dataset)
+        response = client.get(
+            reverse(
+                "datasets:select_chart_source",
+                args=(dataset.id,),
+            )
+        )
+        assert response.status_code == 200
+
+    @override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
+    def test_create_chart_from_source(self, client):
+        num_charts = ChartBuilderChart.objects.count()
+        dataset = factories.DataSetFactory.create(
+            published=True, user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
+        )
+        source = factories.SourceTableFactory(dataset=dataset)
+        response = client.post(
+            reverse("datasets:select_chart_source", args=(dataset.id,)), data={"source": source.id}
+        )
+        assert ChartBuilderChart.objects.count() == num_charts + 1
+        assert response.status_code == 302
+
+    @override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
+    def test_create_chart_from_grid(self, client, dataset_db):
+        num_charts = ChartBuilderChart.objects.count()
+        source = factories.SourceTableFactory(
+            schema="public",
+            table="dataset_test",
+            database=dataset_db,
+            dataset=factories.DataSetFactory.create(
+                published=True, user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
+            ),
+        )
+        response = client.post(
+            reverse("datasets:create_chart_from_grid", args=(source.dataset.id, str(source.id))),
+            {
+                "columns": ["id", "name"],
+                "filters": json.dumps(
+                    {
+                        "name": {
+                            "filter": "last",
+                            "filterType": "text",
+                            "type": "contains",
+                        }
+                    }
+                ),
+            },
+        )
+        assert response.status_code == 302
+        assert ChartBuilderChart.objects.count() == num_charts + 1
 
 
 class TestDatasetEditView:

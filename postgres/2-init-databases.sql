@@ -16,6 +16,7 @@ INSERT INTO test_dataset(id, data)
 SELECT i, concat('test data ', i::text)
 FROM generate_series(1, 20000) AS t(i);
 CREATE SCHEMA dataflow;
+CREATE SCHEMA _data_explorer_charts;
 
 \c testdb1;
 CREATE TABLE dataset_1 (id int primary key, data text);
