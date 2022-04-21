@@ -1496,10 +1496,7 @@ class SelectChartSourceView(WaffleFlagMixin, FormView):
     def form_valid(self, form):
         dataset = self.get_object()
         source_id = form.cleaned_data["source"]
-        source = next(
-            (x for x in dataset.related_objects() if str(x.id) == source_id),
-            None,
-        )
+        source = dataset.get_related_source(source_id)
         if source is None:
             raise Http404
         chart = ChartBuilderChart.objects.create_from_source(source, self.request.user)

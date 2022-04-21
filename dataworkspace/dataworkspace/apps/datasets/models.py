@@ -449,10 +449,10 @@ class DataSet(DeletableTimestampedUserModel):
         return reverse("datasets:usage_history", args=(self.id,))
 
     def get_related_source(self, source_id):
-        return next(
-            (x for x in self.related_objects() if str(x.id) == str(source_id)),
-            None,
-        )
+        for related_object in self.related_objects():
+            if str(related_object.id) == str(source_id):
+                return related_object
+        return None
 
 
 class DataSetVisualisation(DeletableTimestampedUserModel):
