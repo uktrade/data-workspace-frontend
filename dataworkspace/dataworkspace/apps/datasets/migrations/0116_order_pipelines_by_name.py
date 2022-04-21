@@ -6,12 +6,12 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0115_remove_pipeline_sql_query'),
+        ("datasets", "0115_remove_pipeline_sql_query"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='pipeline',
-            options={'ordering': ('table_name',)},
+            name="pipeline",
+            options={"ordering": ("table_name",)},
         ),
     ]
