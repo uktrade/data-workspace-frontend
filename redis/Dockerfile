@@ -1,3 +1,3 @@
-FROM redis:4.0.10
+FROM redis:6.2.6
 
 # Empty, but for consistency with Postgres
