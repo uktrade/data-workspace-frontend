@@ -80,6 +80,7 @@ from dataworkspace.apps.datasets.forms import (
     RelatedDataCutsSortForm,
     RelatedVisualisationsSortForm,
     UserSearchForm,
+    VisualisationCatalogueItemEditForm,
 )
 from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
@@ -96,8 +97,12 @@ from dataworkspace.apps.datasets.models import (
     SourceTable,
     ToolQueryAuditLogTable,
     Tag,
+    VisualisationUserPermission,
 )
-from dataworkspace.apps.datasets.permissions.utils import process_authorized_users_change
+from dataworkspace.apps.datasets.permissions.utils import (
+    process_dataset_authorized_users_change,
+    process_visualisation_catalogue_item_authorized_users_change,
+)
 from dataworkspace.apps.datasets.search import search_for_datasets
 from dataworkspace.apps.datasets.utils import (
     build_filtered_dataset_query,
@@ -1280,28 +1285,38 @@ class DatasetChartDataView(DatasetChartView):
         )
 
 
-class DatasetEditBaseView(View):
-    dataset = None
+class EditBaseView(View):
+    obj = None
     summary: str = None
 
     def dispatch(self, request, *args, **kwargs):
-        self.dataset = get_object_or_404(DataSet.objects.live(), pk=self.kwargs.get("pk"))
+        try:
+            dataset = DataSet.objects.live().get(pk=self.kwargs.get("pk"))
+        except DataSet.DoesNotExist:
+            dataset = None
+            try:
+                visualisation_catalogue_item = VisualisationCatalogueItem.objects.live().get(
+                    pk=self.kwargs.get("pk")
+                )
+            except VisualisationCatalogueItem.DoesNotExist:
+                raise Http404  # pylint: disable=W0707
         if "summary_id" in self.kwargs:
             self.summary = get_object_or_404(
                 PendingAuthorizedUsers.objects.all(), pk=self.kwargs.get("summary_id")
             )
+        self.obj = dataset or visualisation_catalogue_item
         if request.user not in [
-            self.dataset.information_asset_owner,
-            self.dataset.information_asset_manager,
+            self.obj.information_asset_owner,
+            self.obj.information_asset_manager,
         ]:
             return HttpResponseForbidden()
         return super().dispatch(request, *args, **kwargs)
 
 
-class DatasetEditView(DatasetEditBaseView, UpdateView):
+class DatasetEditView(EditBaseView, UpdateView):
     model = DataSet
     form_class = DatasetEditForm
-    template_name = "datasets/edit.html"
+    template_name = "datasets/edit_dataset.html"
 
     def get_success_url(self):
         return self.object.get_absolute_url()
@@ -1334,7 +1349,46 @@ class DatasetEditView(DatasetEditBaseView, UpdateView):
         return super().form_valid(form)
 
 
-class UserSearchFormView(DatasetEditBaseView, FormView):
+class VisualisationCatalogueItemEditView(EditBaseView, UpdateView):
+    model = VisualisationCatalogueItem
+    form_class = VisualisationCatalogueItemEditForm
+    template_name = "datasets/edit_visualisation_catalogue_item.html"
+
+    def get_success_url(self):
+        return self.object.get_absolute_url()
+
+    def get_initial(self):
+        return {
+            "enquiries_contact": self.object.enquiries_contact.email
+            if self.object.enquiries_contact
+            else "",
+            "secondary_enquiries_contact": self.object.secondary_enquiries_contact.email
+            if self.object.secondary_enquiries_contact
+            else "",
+            "authorized_email_domains": ",".join(self.object.authorized_email_domains),
+        }
+
+    def form_valid(self, form):
+        if "authorized_email_domains" in form.changed_data:
+            log_permission_change(
+                self.request.user,
+                self.object,
+                EventLog.TYPE_CHANGED_AUTHORIZED_EMAIL_DOMAIN,
+                {"authorized_email_domains": self.object.authorized_email_domains},
+                f"authorized_email_domains set to {self.object.authorized_email_domains}",
+            )
+
+            # As the dataset's access type has changed, clear cached credentials for all
+            # users to ensure they either:
+            #   - lose access if it went from REQUIRES_AUTHENTICATION/OPEN to REQUIRES_AUTHORIZATION
+            #   - get access if it went from REQUIRES_AUTHORIZATION to REQUIRES_AUTHENTICATION/OPEN
+            invalidate_data_explorer_user_cached_credentials()
+            invalidate_superset_user_cached_credentials()
+        messages.success(self.request, "Dataset updated")
+        return super().form_valid(form)
+
+
+class UserSearchFormView(EditBaseView, FormView):
     form_class = UserSearchForm
     form: None
 
@@ -1353,7 +1407,12 @@ class UserSearchFormView(DatasetEditBaseView, FormView):
             users = get_user_model().objects.filter(Q(email_filter | name_filter))
             context["search_results"] = users
             context["search_query"] = search_query
-        context["dataset"] = self.dataset
+        context["obj"] = self.obj
+        context["obj_edit_url"] = (
+            reverse("datasets:edit_dataset", args=[self.obj.pk])
+            if isinstance(self.obj, DataSet)
+            else reverse("datasets:edit_visualisation_catalogue_item", args=[self.obj.pk])
+        )
         return context
 
 
@@ -1361,35 +1420,71 @@ class DatasetEnquiriesContactSearchView(UserSearchFormView):
     template_name = "datasets/search_enquiries_contact.html"
 
     def get_success_url(self):
-        return (
+        url = (
             reverse(
                 "datasets:search_enquiries_contact",
                 args=[
-                    self.dataset.pk,
+                    self.obj.pk,
                 ],
             )
             + "?search_query="
             + self.form.cleaned_data["search"]
         )
+        if self.request.GET.get("secondary_enquiries_contact"):
+            url = (
+                url
+                + "&secondary_enquiries_contact="
+                + self.request.GET.get("secondary_enquiries_contact")
+            )
+        return url
 
 
-class DatasetEditPermissionsView(DatasetEditBaseView, View):
+class DatasetSecondaryEnquiriesContactSearchView(UserSearchFormView):
+    template_name = "datasets/search_secondary_enquiries_contact.html"
+
+    def get_success_url(self):
+        url = (
+            reverse(
+                "datasets:search_secondary_enquiries_contact",
+                args=[
+                    self.obj.pk,
+                ],
+            )
+            + "?search_query="
+            + self.form.cleaned_data["search"]
+        )
+        if self.request.GET.get("enquiries_contact"):
+            url = url + "&enquiries_contact=" + self.request.GET.get("enquiries_contact")
+        return url
+
+
+class DatasetEditPermissionsView(EditBaseView, View):
     def dispatch(self, request, *args, **kwargs):
         super().dispatch(request, *args, **kwargs)
-        permissions = DataSetUserPermission.objects.filter(dataset=self.dataset)
+        if isinstance(self.obj, DataSet):
+            permissions = DataSetUserPermission.objects.filter(dataset=self.obj)
+        else:
+            permissions = VisualisationUserPermission.objects.filter(visualisation=self.obj)
+
         users = json.dumps([p.user.id for p in permissions])
         summary = PendingAuthorizedUsers.objects.create(created_by=request.user, users=users)
         return HttpResponseRedirect(
-            reverse("datasets:edit_permissions_summary", args=[self.dataset.id, summary.id])
+            reverse("datasets:edit_permissions_summary", args=[self.obj.id, summary.id])
         )
 
 
-class DatasetEditPermissionsSummaryView(DatasetEditBaseView, TemplateView):
+class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
     template_name = "datasets/edit_permissions_summary.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["dataset"] = self.dataset
+        context["obj"] = self.obj
+        context["obj_edit_url"] = (
+            reverse("datasets:edit_dataset", args=[self.obj.pk])
+            if isinstance(self.obj, DataSet)
+            else reverse("datasets:edit_visualisation_catalogue_item", args=[self.obj.pk])
+        )
+
         context["summary"] = self.summary
         context["authorised_users"] = get_user_model().objects.filter(
             id__in=json.loads(self.summary.users if self.summary.users else "[]")
@@ -1402,12 +1497,20 @@ class DatasetEditPermissionsSummaryView(DatasetEditBaseView, TemplateView):
                 id__in=json.loads(self.summary.users if self.summary.users else "[]")
             )
         )
-
-        process_authorized_users_change(
-            authorized_users, request.user, self.dataset, False, False, True
-        )
-        messages.success(request, "Dataset permissions updated")
-        return HttpResponseRedirect(reverse("datasets:edit", args=[self.dataset.id]))
+        if isinstance(self.obj, DataSet):
+            process_dataset_authorized_users_change(
+                authorized_users, request.user, self.obj, False, False, True
+            )
+            messages.success(request, "Dataset permissions updated")
+            return HttpResponseRedirect(reverse("datasets:edit_dataset", args=[self.obj.id]))
+        else:
+            process_visualisation_catalogue_item_authorized_users_change(
+                authorized_users, request.user, self.obj, False, False
+            )
+            messages.success(request, "Visualisation permissions updated")
+            return HttpResponseRedirect(
+                reverse("datasets:edit_visualisation_catalogue_item", args=[self.obj.id])
+            )
 
 
 class DatasetAuthorisedUsersSearchView(UserSearchFormView):
@@ -1422,14 +1525,14 @@ class DatasetAuthorisedUsersSearchView(UserSearchFormView):
         return (
             reverse(
                 "datasets:search_authorized_users",
-                args=[self.dataset.pk, self.kwargs.get("summary_id")],
+                args=[self.obj.pk, self.kwargs.get("summary_id")],
             )
             + "?search_query="
             + self.form.cleaned_data["search"]
         )
 
 
-class DatasetAddAuthorisedUserView(DatasetEditBaseView, View):
+class DatasetAddAuthorisedUserView(EditBaseView, View):
     def get(self, request, *args, **kwargs):
         summary = PendingAuthorizedUsers.objects.get(id=self.kwargs.get("summary_id"))
         user = get_user_model().objects.get(id=self.kwargs.get("user_id"))
@@ -1444,14 +1547,14 @@ class DatasetAddAuthorisedUserView(DatasetEditBaseView, View):
             reverse(
                 "datasets:edit_permissions_summary",
                 args=[
-                    self.dataset.id,
+                    self.obj.id,
                     self.kwargs.get("summary_id"),
                 ],
             )
         )
 
 
-class DatasetRemoveAuthorisedUserView(DatasetEditBaseView, View):
+class DatasetRemoveAuthorisedUserView(EditBaseView, View):
     def get(self, request, *args, **kwargs):
         summary = PendingAuthorizedUsers.objects.get(id=self.kwargs.get("summary_id"))
         user = get_user_model().objects.get(id=self.kwargs.get("user_id"))
@@ -1465,7 +1568,7 @@ class DatasetRemoveAuthorisedUserView(DatasetEditBaseView, View):
             reverse(
                 "datasets:edit_permissions_summary",
                 args=[
-                    self.dataset.id,
+                    self.obj.id,
                     self.kwargs.get("summary_id"),
                 ],
             )

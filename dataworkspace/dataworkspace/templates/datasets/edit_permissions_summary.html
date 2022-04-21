@@ -1,7 +1,7 @@
 {% extends '_main.html' %}
 {% load humanize static datasets_tags core_tags waffle_tags %}
 
-{% block page_title %}{{ dataset.name }} - {{ block.super }}{% endblock %}
+{% block page_title %}{{ obj.name }} - {{ block.super }}{% endblock %}
 
 {% block breadcrumbs %}
   <div class="govuk-grid-row">
@@ -12,10 +12,10 @@
             <a class="govuk-breadcrumbs__link" href="/">Home</a>
           </li>
           <li class="govuk-breadcrumbs__list-item">
-            <a class="govuk-breadcrumbs__link" href="{{ dataset.get_absolute_url }}">{{ dataset.name }}</a>
+            <a class="govuk-breadcrumbs__link" href="{{ obj.get_absolute_url }}">{{ obj.name }}</a>
           </li>
           <li class="govuk-breadcrumbs__list-item">
-            <a class="govuk-breadcrumbs__link" href="{% url 'datasets:edit' dataset.pk %}">Manage this dataset</a>
+            <a class="govuk-breadcrumbs__link" href="{{ obj_edit_url }}">Manage this dataset</a>
           </li>
           <li class="govuk-breadcrumbs__list-item">
             Manage permissions
@@ -29,7 +29,7 @@
 {% block content %}
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
-            <h1 class="govuk-heading-l">Edit permissions for {{ dataset.name }}</h1>
+            <h1 class="govuk-heading-l">Edit permissions for {{ obj.name }}</h1>
             <table class="govuk-table">
               <caption class="govuk-table__caption govuk-table__caption--m">Users with access</caption>
               <tbody class="govuk-table__body">
@@ -40,16 +40,16 @@
                   <tr class="govuk-table__row">
                     <td class="govuk-table__cell">{{ user.first_name }} {{ user.last_name }}</td>
                     <td class="govuk-table__cell">{{ user.email }}</td>
-                    <td class="govuk-table__cell"><a class="govuk-link" href="{% url 'datasets:remove_authorized_user' dataset.id summary.id user.id %}">Remove</a></td>
+                    <td class="govuk-table__cell"><a class="govuk-link" href="{% url 'datasets:remove_authorized_user' obj.id summary.id user.id %}">Remove</a></td>
                   </tr>
                 {% endfor %}
               </tbody>
             </table>
             <div class="govuk-body">
-              <a class="govuk-link" href="{% url 'datasets:search_authorized_users' dataset.id summary.id %}">Add another user</a>
+              <a class="govuk-link" href="{% url 'datasets:search_authorized_users' obj.id summary.id %}">Add another user</a>
             </div>
             <div class="govuk-body">
-              <a class="govuk-link" href="{{ dataset.get_usage_history_url }}">View usage history</a>
+              <a class="govuk-link" href="{{ obj.get_usage_history_url }}">View usage history</a>
             </div>
             <form method="POST">
               {% csrf_token %}
@@ -57,7 +57,7 @@
                 <button class="govuk-button" data-module="govuk-button">
                     Save and continue
                 </button>
-                <a class="govuk-link" href="{% url 'datasets:edit' dataset.pk %}">Cancel</a>
+                <a class="govuk-link" href="{{ obj_edit_url }}">Cancel</a>
               </div>
             </form>
         </div>

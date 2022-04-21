@@ -207,14 +207,24 @@ urlpatterns = [
         name="dataset_chart_data",
     ),
     path(
-        "<uuid:pk>/edit",
+        "<uuid:pk>/edit-dataset",
         login_required(views.DatasetEditView.as_view()),
-        name="edit",
+        name="edit_dataset",
+    ),
+    path(
+        "<uuid:pk>/edit-visualisation-catalogue-item",
+        login_required(views.VisualisationCatalogueItemEditView.as_view()),
+        name="edit_visualisation_catalogue_item",
     ),
     path(
         "<uuid:pk>/search-enquiries-contact",
         login_required(views.DatasetEnquiriesContactSearchView.as_view()),
         name="search_enquiries_contact",
+    ),
+    path(
+        "<uuid:pk>/search-secondary-enquiries-contact",
+        login_required(views.DatasetSecondaryEnquiriesContactSearchView.as_view()),
+        name="search_secondary_enquiries_contact",
     ),
     path(
         "<uuid:pk>/edit-permissions",
