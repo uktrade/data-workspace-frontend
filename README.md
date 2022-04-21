@@ -18,6 +18,14 @@ and edit `dev.env`, specifically replacing `AUTHBROKER_*`. Start the application
 docker-compose -f docker-compose-dev.yml up --build
 ```
 
+### Issues running on Apple Silicon/M1 Chipset?
+
+If you have issues building the containers try the following
+
+```
+DOCKER_DEFAULT_PLATFORM=linux/amd64 docker-compose -f docker-compose-dev.yml up --build
+```
+
 With the default environment, you will need the below in your `/etc/hosts` file.
 
 ```
