@@ -58,6 +58,7 @@ class DatasetManageSourceTableView(WaffleFlagMixin, DatasetEditBaseView, FormVie
         client = get_s3_client()
         file_name = f"{csv_file.name}!{uuid.uuid4()}"
         key = self._get_file_upload_key(file_name, self.kwargs["source_uuid"])
+        csv_file.seek(0)
         try:
             client.put_object(
                 Body=csv_file,
