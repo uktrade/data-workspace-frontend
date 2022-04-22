@@ -1,0 +1,45 @@
+{% extends '_main.html' %}
+{% load static datasets_tags core_tags waffle_tags %}
+{% block page_title %}Update or restore table - {{ block.super }}{% endblock %}
+{% block breadcrumbs %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-three-quarters">
+      <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="/">Home</a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="{{ source.dataset.get_absolute_url }}">
+              {{ source.dataset.name }}
+            </a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">Update or restore table</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-l">"{{ source.schema }}"."{{ source.table }}"</h1>
+      <p class="govuk-body govuk-body-m">
+        We show 6 months of data. You can
+        <a href="{{ request.path }}#restore" class="govuk-link govuk-link--no-visited-state">restore to a previous version</a> or
+        <a href="{{ request.path }}#update" class="govuk-link govuk-link--no-visited-state">update the table</a> with a new CSV.
+        The table is <a href="{{ source.dataset.get_absolute_url }}" class="govuk-link govuk-link--no-visited-state">part of this dataset</a>.
+      </p>
+    </div>
+  </div>
+  <div class="govuk-grid-row govuk-!-margin-top-6" id="update">
+    <div class="govuk-grid-column-two-thirds">
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% include 'design_system/error_summary.html' %}
+        {{ form.csv_file }}
+        <button class="govuk-button" type="submit">Upload CSV</button>
+      </form>
+    </div>
+  </div>
+{% endblock content %}

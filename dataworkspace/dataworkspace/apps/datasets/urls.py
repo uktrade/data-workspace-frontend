@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import include, path
 
 from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.datasets import models, views
@@ -270,5 +270,12 @@ urlpatterns = [
         "<uuid:dataset_uuid>/charts/",
         login_required(views.DatasetChartsView.as_view()),
         name="dataset_charts",
+    ),
+    path(
+        "<uuid:pk>/manage",
+        include(
+            ("dataworkspace.apps.datasets.uploader.urls", "dataset_uploader"),
+            namespace="uploader",
+        ),
     ),
 ]
