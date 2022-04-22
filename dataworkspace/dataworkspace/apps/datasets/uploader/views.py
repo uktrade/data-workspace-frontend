@@ -9,12 +9,14 @@ from django.core.exceptions import BadRequest
 from django.http import HttpResponseRedirect, HttpResponseServerError
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from django.views.generic import FormView, TemplateView
+from django.views.generic import DetailView, FormView, TemplateView
+from psycopg2 import sql
 from requests import HTTPError
 from waffle.mixins import WaffleFlagMixin
 
+from dataworkspace import datasets_db
 from dataworkspace.apps.core.boto3_client import get_s3_client
-from dataworkspace.apps.core.utils import get_s3_prefix
+from dataworkspace.apps.core.utils import get_random_data_sample, get_s3_prefix
 from dataworkspace.apps.datasets.uploader.forms import (
     SourceTableUploadColumnConfigForm,
     SourceTableUploadForm,
@@ -52,7 +54,7 @@ class DatasetManageSourceTableView(WaffleFlagMixin, DatasetEditBaseView, FormVie
         return ctx
 
     def form_valid(self, form):
-        csv_file = form.files["csv_file"]
+        csv_file = form.cleaned_data["csv_file"]
         client = get_s3_client()
         file_name = f"{csv_file.name}!{uuid.uuid4()}"
         key = self._get_file_upload_key(file_name, self.kwargs["source_uuid"])
@@ -236,6 +238,7 @@ class SourceTableUploadSuccessView(BaseUploadSourceProcessingView, TemplateView)
         UploadedTable.objects.get_or_create(
             schema=request.GET.get("schema"),
             table_name=request.GET.get("table_name"),
+            created_by=self.request.user,
             data_flow_execution_date=datetime.strptime(
                 request.GET.get("execution_date").split(".")[0], "%Y-%m-%dT%H:%M:%S"
             ),
@@ -252,3 +255,61 @@ class SourceTableUploadFailedView(BaseUploadSourceProcessingView, TemplateView):
         ctx = super().get_context_data(**kwargs)
         ctx["filename"] = ctx["filename"].split("!")[0]
         return ctx
+
+
+class SourceTableRestoreView(DatasetManageSourceTableView, DetailView):
+    model = UploadedTable
+    template_name = "datasets/uploader/restore.html"
+    pk_url_kwarg = "version_id"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        table = self.get_object()
+        db_name = list(settings.DATABASES_DATA.items())[0][0]
+        table_name = (
+            f"{table.table_name}_{table.data_flow_execution_date.strftime('%Y%m%dt%H%M%S_swap')}"
+        )
+        schema_name = table.schema
+        ctx.update(
+            {
+                "source": self._get_source(),
+                "fields": datasets_db.get_columns(db_name, schema=schema_name, table=table_name),
+                "records": [],
+            }
+        )
+        if ctx["fields"]:
+            rows = get_random_data_sample(
+                db_name,
+                sql.SQL(f"select * from {schema_name}.{table_name}"),
+                settings.DATASET_PREVIEW_NUM_OF_ROWS,
+            )
+            ctx["records"] = [
+                {column: row[i] for i, column in enumerate(ctx["fields"])} for row in rows
+            ]
+
+        return ctx
+
+    # def post(self, request, *args, **kwargs):
+    #     table = self.get_object()
+    #     try:
+    #         response = trigger_dataflow_dag(
+    #             {
+    #                 "ts_nodash": table.data_flow_execution_date.strftime("%Y%m%dt%H%M%S"),
+    #                 "schema_name": table.schema,
+    #                 "table_name": table.table_name,
+    #             },
+    #             settings.DATAFLOW_API_CONFIG,
+    #             f"restore-{table.schema}-{table.table_name}-{datetime.now().isoformat()}",
+    #         )
+    #     except HTTPError:
+    #         return HttpResponseRedirect(
+    #             f'{reverse("your-files:restore-table-failed", kwargs={"pk": table.id})}'
+    #         )
+    #
+    #     params = {
+    #         "execution_date": response["execution_date"],
+    #         "task_name": "restore-swap-table-datasets_db",
+    #     }
+    #     return HttpResponseRedirect(
+    #         f'{reverse("your-files:restore-table-in-progress", kwargs={"pk": table.id})}?{urlencode(params)}'
+    #     )
