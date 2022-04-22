@@ -21,6 +21,7 @@ from dataworkspace.apps.datasets.uploader.forms import (
 )
 from dataworkspace.apps.datasets.views import DatasetEditBaseView
 from dataworkspace.apps.your_files.constants import PostgresDataTypes
+from dataworkspace.apps.your_files.models import UploadedTable
 from dataworkspace.apps.your_files.utils import (
     SCHEMA_POSTGRES_DATA_TYPE_MAP,
     copy_file_to_uploads_bucket,
@@ -230,6 +231,16 @@ class SourceTableUploadSuccessView(BaseUploadSourceProcessingView, TemplateView)
     next_step_url_name = "manage_source_table"
     template_name = "datasets/uploader/upload-success.html"
     step = 5
+
+    def get(self, request, *args, **kwargs):
+        UploadedTable.objects.get_or_create(
+            schema=request.GET.get("schema"),
+            table_name=request.GET.get("table_name"),
+            data_flow_execution_date=datetime.strptime(
+                request.GET.get("execution_date").split(".")[0], "%Y-%m-%dT%H:%M:%S"
+            ),
+        )
+        return super().get(request, *args, **kwargs)
 
 
 class SourceTableUploadFailedView(BaseUploadSourceProcessingView, TemplateView):
