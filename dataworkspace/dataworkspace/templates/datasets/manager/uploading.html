@@ -34,7 +34,7 @@
   <script nonce="{{ request.csp_nonce }}" src="{% static 'your-files-create-table.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}">
     window.pollForDagStateChange(
-        '{% url "your-files:create-table-task-status" execution_date task_name %}',
+        '{% url "create-table-task-status" execution_date task_name %}',
         '{{ next_step }}?{{ request.GET.urlencode }}',
         '{% url "datasets:manager:upload-failed" pk=source.dataset_id source_uuid=source.id %}?{{ request.GET.urlencode }}',
         500

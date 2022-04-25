@@ -16,7 +16,14 @@ from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace import datasets_db
 from dataworkspace.apps.core.boto3_client import get_s3_client
-from dataworkspace.apps.core.utils import get_random_data_sample, get_s3_prefix
+from dataworkspace.apps.core.constants import SCHEMA_POSTGRES_DATA_TYPE_MAP
+from dataworkspace.apps.core.utils import (
+    copy_file_to_uploads_bucket,
+    get_random_data_sample,
+    get_s3_csv_column_types,
+    get_s3_prefix,
+    trigger_dataflow_dag,
+)
 from dataworkspace.apps.datasets.manager.forms import (
     SourceTableUploadColumnConfigForm,
     SourceTableUploadForm,
@@ -24,16 +31,10 @@ from dataworkspace.apps.datasets.manager.forms import (
 from dataworkspace.apps.datasets.views import DatasetEditBaseView
 from dataworkspace.apps.your_files.constants import PostgresDataTypes
 from dataworkspace.apps.your_files.models import UploadedTable
-from dataworkspace.apps.your_files.utils import (
-    SCHEMA_POSTGRES_DATA_TYPE_MAP,
-    copy_file_to_uploads_bucket,
-    get_s3_csv_column_types,
-    trigger_dataflow_dag,
-)
 
 
 class DatasetManageSourceTableView(WaffleFlagMixin, DatasetEditBaseView, FormView):
-    template_name = "datasets/uploader/manage_source_table.html"
+    template_name = "datasets/manager/manage_source_table.html"
     waffle_flag = settings.DATA_UPLOADER_UI_FLAG
     form_class = SourceTableUploadForm
 
@@ -82,7 +83,7 @@ class DatasetManageSourceTableView(WaffleFlagMixin, DatasetEditBaseView, FormVie
 
 
 class DatasetManageSourceTableColumnConfigView(DatasetManageSourceTableView):
-    template_name = "datasets/uploader/manage_source_table_column_config.html"
+    template_name = "datasets/manager/manage_source_table_column_config.html"
     waffle_flag = settings.DATA_UPLOADER_UI_FLAG
     form_class = SourceTableUploadColumnConfigForm
 
@@ -147,7 +148,7 @@ class DatasetManageSourceTableColumnConfigView(DatasetManageSourceTableView):
 
 
 class BaseUploadSourceProcessingView(DatasetEditBaseView, TemplateView):
-    template_name = "datasets/uploader/uploading.html"
+    template_name = "datasets/manager/uploading.html"
     required_parameters = [
         "filename",
         "schema",
@@ -232,7 +233,7 @@ class SourceTableUploadRenamingTableView(BaseUploadSourceProcessingView):
 
 class SourceTableUploadSuccessView(BaseUploadSourceProcessingView, TemplateView):
     next_step_url_name = "manage_source_table"
-    template_name = "datasets/uploader/upload_success.html"
+    template_name = "datasets/manager/upload_success.html"
     step = 5
 
     def get(self, request, *args, **kwargs):
@@ -250,7 +251,7 @@ class SourceTableUploadSuccessView(BaseUploadSourceProcessingView, TemplateView)
 class SourceTableUploadFailedView(BaseUploadSourceProcessingView, TemplateView):
     next_step_url_name = "manage_source_table"
     step = 5
-    template_name = "datasets/uploader/upload_failed.html"
+    template_name = "datasets/manager/upload_failed.html"
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -260,7 +261,7 @@ class SourceTableUploadFailedView(BaseUploadSourceProcessingView, TemplateView):
 
 class SourceTableRestoreView(DatasetManageSourceTableView, DetailView):
     model = UploadedTable
-    template_name = "datasets/uploader/restore.html"
+    template_name = "datasets/manager/restore.html"
     pk_url_kwarg = "version_id"
 
     def get_context_data(self, **kwargs):
@@ -328,15 +329,15 @@ class BaseRestoreVersionView(DatasetManageSourceTableView, TemplateView):
 
 
 class SourceTableRestoringView(BaseRestoreVersionView):
-    template_name = "datasets/uploader/restoring.html"
+    template_name = "datasets/manager/restoring.html"
 
 
 class SourceTableRestoreFailedView(BaseRestoreVersionView):
-    template_name = "datasets/uploader/restore_failed.html"
+    template_name = "datasets/manager/restore_failed.html"
 
 
 class SourceTableRestoreSuccessView(BaseRestoreVersionView):
-    template_name = "datasets/uploader/restore_success.html"
+    template_name = "datasets/manager/restore_success.html"
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)

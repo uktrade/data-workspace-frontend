@@ -21,7 +21,7 @@
   <script nonce="{{ request.csp_nonce }}" src="{% static 'your-files-create-table.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}">
     window.pollForDagStateChange(
-        '{% url "your-files:restore-table-task-status" request.GET.execution_date request.GET.task_name %}',
+        '{% url "restore-table-task-status" request.GET.execution_date request.GET.task_name %}',
         '{% url "datasets:manager:restore-success" source.dataset_id source.id version.id %}',
         '{% url "datasets:manager:restore-failed" source.dataset_id source.id version.id %}',
         500

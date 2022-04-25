@@ -1,8 +1,8 @@
 from django.core.validators import FileExtensionValidator
 from django import forms
 
+from dataworkspace.apps.core.constants import SCHEMA_POSTGRES_DATA_TYPE_MAP
 from dataworkspace.apps.core.storage import malware_file_validator
-from dataworkspace.apps.your_files.utils import SCHEMA_POSTGRES_DATA_TYPE_MAP
 from dataworkspace.forms import (
     GOVUKDesignSystemChoiceField,
     GOVUKDesignSystemFileField,

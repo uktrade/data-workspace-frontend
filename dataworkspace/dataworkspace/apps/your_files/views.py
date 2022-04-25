@@ -12,26 +12,29 @@ from django.http import (
     HttpResponseForbidden,
     HttpResponseRedirect,
     HttpResponseBadRequest,
-    JsonResponse,
 )
 from django.shortcuts import render
 from django.urls import reverse
-from django.views import View
 from django.views.generic import DetailView, FormView, TemplateView, ListView
 from psycopg2 import sql
 from requests import HTTPError
 
 from dataworkspace import datasets_db
+from dataworkspace.apps.core.constants import SCHEMA_POSTGRES_DATA_TYPE_MAP
 from dataworkspace.apps.core.utils import (
+    clean_db_identifier,
+    copy_file_to_uploads_bucket,
     create_new_schema,
     db_role_schema_suffix_for_user,
     get_all_schemas,
     get_random_data_sample,
+    get_s3_csv_column_types,
     get_s3_prefix,
     get_team_schemas_for_user,
     new_private_database_credentials,
     postgres_user,
     source_tables_for_user,
+    trigger_dataflow_dag,
 )
 from dataworkspace.apps.your_files.constants import PostgresDataTypes
 from dataworkspace.apps.your_files.forms import (
@@ -49,8 +52,6 @@ from dataworkspace.apps.your_files.utils import (
     get_s3_csv_file_info,
     get_schema_for_user,
     get_user_schema,
-    trigger_dataflow_dag,
-    SCHEMA_POSTGRES_DATA_TYPE_MAP,
 )
 
 logger = logging.getLogger("app")
@@ -493,44 +494,6 @@ class CreateTableFailedView(RequiredParameterGetRequestMixin, TemplateView):
         return context
 
 
-class CreateTableDAGStatusView(View):
-    """
-    Check on the status of a DAG that has been run via the create table flow.
-
-    Airflow 1 requires calling with the execution date which is not ideal. Once
-    we have upgraded to Airflow 2 we can update this to call with the unique dag run id.
-
-    Airflow 2 will also return more info, including the config we called the API with
-    to trigger the DAG. Once we have this available we can then check if the file
-    path in the response matches the s3 path prefix for the current user - as an extra
-    step to check the current user actually created this dag run themselves.
-    """
-
-    def get(self, request, execution_date):
-        config = settings.DATAFLOW_API_CONFIG
-        try:
-            return JsonResponse(
-                get_dataflow_dag_status(config["DATAFLOW_S3_IMPORT_DAG"], execution_date)
-            )
-        except HTTPError as e:
-            return JsonResponse({}, status=e.response.status_code)
-
-
-class CreateTableDAGTaskStatusView(View):
-    def get(self, request, execution_date, task_id):
-        config = settings.DATAFLOW_API_CONFIG
-        try:
-            return JsonResponse(
-                {
-                    "state": get_dataflow_task_status(
-                        config["DATAFLOW_S3_IMPORT_DAG"], execution_date, task_id
-                    )
-                }
-            )
-        except HTTPError as e:
-            return JsonResponse({}, status=e.response.status_code)
-
-
 class ValidateUserIsStaffMixin:
     def dispatch(self, request, *args, **kwargs):
         if not self.request.user.is_staff:
@@ -622,18 +585,3 @@ class RestoreTableViewFailed(ValidateUserIsStaffMixin, DetailView):
 class RestoreTableViewSuccess(ValidateUserIsStaffMixin, DetailView):
     model = UploadedTable
     template_name = "your_files/restore-table-success.html"
-
-
-class RestoreTableDAGTaskStatusView(View):
-    def get(self, request, execution_date, task_id):
-        config = settings.DATAFLOW_API_CONFIG
-        try:
-            return JsonResponse(
-                {
-                    "state": get_dataflow_task_status(
-                        config["DATAFLOW_RESTORE_TABLE_DAG"], execution_date, task_id
-                    )
-                }
-            )
-        except HTTPError as e:
-            return JsonResponse({}, status=e.response.status_code)
