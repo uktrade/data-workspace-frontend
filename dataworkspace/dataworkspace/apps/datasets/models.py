@@ -512,18 +512,18 @@ class MasterDatasetManager(DeletableQuerySet):
 
 class MasterDataset(DataSet):
     """
-    Proxy model to allow to logically separate out "master" and "data cut" datasets in the admin.
+    Proxy model to allow to logically separate out "source" and "data cut" datasets in the admin.
     """
 
     objects = MasterDatasetManager()
 
     class Meta:
         proxy = True
-        verbose_name = "Master Dataset"
+        verbose_name = "Source Dataset"
         permissions = [
             (
                 "manage_unpublished_master_datasets",
-                "Manage (create, view, edit) unpublished master datasets",
+                "Manage (create, view, edit) unpublished source datasets",
             )
         ]
 
