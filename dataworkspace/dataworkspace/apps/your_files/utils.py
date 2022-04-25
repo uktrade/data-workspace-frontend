@@ -113,7 +113,6 @@ def trigger_dataflow_dag(conf, dag, dag_run_id):
         "key": config["DATAFLOW_HAWK_KEY"],
         "algorithm": "sha256",
     }
-    logger.info(hawk_creds)
     method = "POST"
     content_type = "application/json"
     body = json.dumps(

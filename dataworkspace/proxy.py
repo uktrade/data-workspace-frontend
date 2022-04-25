@@ -55,8 +55,8 @@ async def async_main():
     cookie_name = ("__Secure-" if not local else "") + "data_workspace_session"
     for logger_name in ["aiohttp.server", "aiohttp.web", "aiohttp.access", "proxy"]:
         logger = logging.getLogger(logger_name)
-        logger.setLevel(logging.ERROR)
-        # logger.addHandler(stdout_handler)
+        logger.setLevel(logging.INFO)
+        logger.addHandler(stdout_handler)
 
     port = int(env["PROXY_PORT"])
     admin_root = env["UPSTREAM_ROOT"]
