@@ -13,6 +13,7 @@
   </div>
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
+      <h2 class="govuk-heading-m">Dolore Magna</h2>
       <div class="govuk-panel govuk-panel--confirmation">
         <div class="govuk-panel__body govuk-!-font-size-24">
           Step {{ step }} of {{ steps }}
@@ -35,7 +36,7 @@
     window.pollForDagStateChange(
         '{% url "your-files:create-table-task-status" execution_date task_name %}',
         '{{ next_step }}?{{ request.GET.urlencode }}',
-        '{% url "datasets:uploader:upload-failed" pk=source.dataset_id source_uuid=source.id %}?{{ request.GET.urlencode }}',
+        '{% url "datasets:manager:upload-failed" pk=source.dataset_id source_uuid=source.id %}?{{ request.GET.urlencode }}',
         500
     );
   </script>

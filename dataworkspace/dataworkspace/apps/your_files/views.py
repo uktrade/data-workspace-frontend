@@ -478,6 +478,7 @@ class CreateTableSuccessView(BaseCreateTableTemplateView):
                 data_flow_execution_date=datetime.strptime(
                     request.GET.get("execution_date").split(".")[0], "%Y-%m-%dT%H:%M:%S"
                 ),
+                created_by=self.request.user,
             )
         return super().get(request, *args, **kwargs)
 

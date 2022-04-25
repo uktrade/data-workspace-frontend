@@ -32,6 +32,7 @@
       </p>
     </div>
   </div>
+  {% block success_banner %}{% endblock %}
   <div class="govuk-grid-row govuk-!-margin-top-6" id="update">
     <div class="govuk-grid-column-two-thirds">
       <form method="POST" enctype="multipart/form-data">
@@ -42,4 +43,35 @@
       </form>
     </div>
   </div>
+  <div class="govuk-grid-row govuk-!-margin-top-6" id="update">
+    <div class="govuk-grid-column-full" style="overflow-x: auto;">
+      <h1 class="govuk-heading-s">Restore from a previous version</h1>
+      <table class="govuk-table">
+        <thead>
+        <tr class="govuk-table__row">
+          <th class="govuk-table__header">Date</th>
+          <th class="govuk-table__header">Email Address</th>
+          <th class="govuk-table__header">Action</th>
+        </tr>
+        </thead>
+        <tbody>
+          {% for version in source.get_previous_uploads %}
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell">
+                {{ version.data_flow_execution_date|date_with_gmt_offset }}
+              </td>
+              <td class="govuk-table__cell">
+                {{ version.created_by.email }}
+              </td>
+              <td class="govuk-table__cell">
+                <a href="{% url 'datasets:manager:restore-table' pk=source.dataset_id source_uuid=source.id version_id=version.id %}" class="govuk-link">Restore</a>
+              </td>
+            </tr>
+          {% empty %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
 {% endblock content %}

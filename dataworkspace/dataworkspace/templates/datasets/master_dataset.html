@@ -192,7 +192,7 @@
                   {% if request.user|can_edit_dataset:model %}
                     <br>
                     <a class="govuk-link govuk-link--no-visited-state"
-                       href="{% url "datasets:uploader:manage_source_table" pk=dataset.id source_uuid=source_table.id %}">
+                       href="{% url "datasets:manager:manage_source_table" pk=dataset.id source_uuid=source_table.id %}">
                       Update or restore table
                     </a>
 

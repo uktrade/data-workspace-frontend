@@ -1,9 +1,13 @@
 from django.urls import path
 
 from dataworkspace.apps.accounts.utils import login_required
-from dataworkspace.apps.datasets.uploader.views import (
+from dataworkspace.apps.datasets.manager.views import (
     DatasetManageSourceTableColumnConfigView,
     DatasetManageSourceTableView,
+    SourceTableRestoreFailedView,
+    SourceTableRestoreSuccessView,
+    SourceTableRestoreView,
+    SourceTableRestoringView,
     SourceTableUploadCreatingTableView,
     SourceTableUploadFailedView,
     SourceTableUploadIngestingView,
@@ -53,5 +57,25 @@ urlpatterns = [
         "/<uuid:source_uuid>/upload/failed",
         login_required(SourceTableUploadFailedView.as_view()),
         name="upload-failed",
+    ),
+    path(
+        "/<uuid:source_uuid>/restore/<int:version_id>",
+        login_required(SourceTableRestoreView.as_view()),
+        name="restore-table",
+    ),
+    path(
+        "/<uuid:source_uuid>/restore-table/<int:version_id>/restoring",
+        login_required(SourceTableRestoringView.as_view()),
+        name="restoring-table",
+    ),
+    path(
+        "/<uuid:source_uuid>/restore-table/<int:version_id>/failed",
+        login_required(SourceTableRestoreFailedView.as_view()),
+        name="restore-failed",
+    ),
+    path(
+        "/<uuid:source_uuid>/restore-table/<int:version_id>/success",
+        login_required(SourceTableRestoreSuccessView.as_view()),
+        name="restore-success",
     ),
 ]

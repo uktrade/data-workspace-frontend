@@ -17,7 +17,7 @@ from waffle.mixins import WaffleFlagMixin
 from dataworkspace import datasets_db
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.utils import get_random_data_sample, get_s3_prefix
-from dataworkspace.apps.datasets.uploader.forms import (
+from dataworkspace.apps.datasets.manager.forms import (
     SourceTableUploadColumnConfigForm,
     SourceTableUploadForm,
 )
@@ -74,7 +74,7 @@ class DatasetManageSourceTableView(WaffleFlagMixin, DatasetEditBaseView, FormVie
         source = self._get_source()
         return HttpResponseRedirect(
             reverse(
-                "datasets:uploader:manage_source_table_column_config",
+                "datasets:manager:manage_source_table_column_config",
                 args=(source.dataset_id, source.id),
             )
             + f"?file={file_name}"
@@ -142,12 +142,12 @@ class DatasetManageSourceTableColumnConfigView(DatasetManageSourceTableView):
             "execution_date": response["execution_date"],
         }
         return HttpResponseRedirect(
-            f'{reverse("datasets:uploader:upload-validating", args=(source.dataset_id, source.id))}?{urlencode(params)}'
+            f'{reverse("datasets:manager:upload-validating", args=(source.dataset_id, source.id))}?{urlencode(params)}'
         )
 
 
 class BaseUploadSourceProcessingView(DatasetEditBaseView, TemplateView):
-    template_name = "datasets/uploader/processing.html"
+    template_name = "datasets/uploader/uploading.html"
     required_parameters = [
         "filename",
         "schema",
@@ -177,7 +177,7 @@ class BaseUploadSourceProcessingView(DatasetEditBaseView, TemplateView):
         context = super().get_context_data(**kwargs)
         source = self._get_source()
         next_url = reverse(
-            f"datasets:uploader:{self.next_step_url_name}", args=(source.dataset_id, source.id)
+            f"datasets:manager:{self.next_step_url_name}", args=(source.dataset_id, source.id)
         )
         query_params = {param: self.request.GET.get(param) for param in self.required_parameters}
         context.update(
@@ -232,7 +232,7 @@ class SourceTableUploadRenamingTableView(BaseUploadSourceProcessingView):
 
 class SourceTableUploadSuccessView(BaseUploadSourceProcessingView, TemplateView):
     next_step_url_name = "manage_source_table"
-    template_name = "datasets/uploader/upload-success.html"
+    template_name = "datasets/uploader/upload_success.html"
     step = 5
 
     def get(self, request, *args, **kwargs):
@@ -250,7 +250,7 @@ class SourceTableUploadSuccessView(BaseUploadSourceProcessingView, TemplateView)
 class SourceTableUploadFailedView(BaseUploadSourceProcessingView, TemplateView):
     next_step_url_name = "manage_source_table"
     step = 5
-    template_name = "datasets/uploader/upload-failed.html"
+    template_name = "datasets/uploader/upload_failed.html"
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -270,47 +270,75 @@ class SourceTableRestoreView(DatasetManageSourceTableView, DetailView):
         table_name = (
             f"{table.table_name}_{table.data_flow_execution_date.strftime('%Y%m%dt%H%M%S_swap')}"
         )
-        schema_name = table.schema
         ctx.update(
             {
-                "source": self._get_source(),
-                "fields": datasets_db.get_columns(db_name, schema=schema_name, table=table_name),
+                "fields": datasets_db.get_columns(db_name, schema=table.schema, table=table_name),
                 "records": [],
             }
         )
         if ctx["fields"]:
             rows = get_random_data_sample(
                 db_name,
-                sql.SQL(f"select * from {schema_name}.{table_name}"),
+                sql.SQL(f"select * from {table.schema}.{table_name}"),
                 settings.DATASET_PREVIEW_NUM_OF_ROWS,
             )
             ctx["records"] = [
                 {column: row[i] for i, column in enumerate(ctx["fields"])} for row in rows
             ]
-
         return ctx
 
-    # def post(self, request, *args, **kwargs):
-    #     table = self.get_object()
-    #     try:
-    #         response = trigger_dataflow_dag(
-    #             {
-    #                 "ts_nodash": table.data_flow_execution_date.strftime("%Y%m%dt%H%M%S"),
-    #                 "schema_name": table.schema,
-    #                 "table_name": table.table_name,
-    #             },
-    #             settings.DATAFLOW_API_CONFIG,
-    #             f"restore-{table.schema}-{table.table_name}-{datetime.now().isoformat()}",
-    #         )
-    #     except HTTPError:
-    #         return HttpResponseRedirect(
-    #             f'{reverse("your-files:restore-table-failed", kwargs={"pk": table.id})}'
-    #         )
-    #
-    #     params = {
-    #         "execution_date": response["execution_date"],
-    #         "task_name": "restore-swap-table-datasets_db",
-    #     }
-    #     return HttpResponseRedirect(
-    #         f'{reverse("your-files:restore-table-in-progress", kwargs={"pk": table.id})}?{urlencode(params)}'
-    #     )
+    def post(self, request, *args, **kwargs):
+        table = self.get_object()
+        source = self._get_source()
+        try:
+            response = trigger_dataflow_dag(
+                {
+                    "ts_nodash": table.data_flow_execution_date.strftime("%Y%m%dt%H%M%S"),
+                    "schema_name": table.schema,
+                    "table_name": table.table_name,
+                },
+                settings.DATAFLOW_API_CONFIG["DATAFLOW_RESTORE_TABLE_DAG"],
+                f"restore-{table.schema}-{table.table_name}-{datetime.now().isoformat()}",
+            )
+        except HTTPError:
+            return HttpResponseRedirect(
+                reverse(
+                    "datasets:manager:restore-failed",
+                    args=(source.dataset_id, source.id, table.id),
+                )
+            )
+
+        params = {
+            "execution_date": response["execution_date"],
+            "task_name": "restore-swap-table-datasets_db",
+        }
+        return HttpResponseRedirect(
+            reverse(
+                "datasets:manager:restoring-table", args=(source.dataset_id, source.id, table.id)
+            )
+            + f"?{urlencode(params)}"
+        )
+
+
+class BaseRestoreVersionView(DatasetManageSourceTableView, TemplateView):
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["version"] = get_object_or_404(UploadedTable, pk=self.kwargs["version_id"])
+        return ctx
+
+
+class SourceTableRestoringView(BaseRestoreVersionView):
+    template_name = "datasets/uploader/restoring.html"
+
+
+class SourceTableRestoreFailedView(BaseRestoreVersionView):
+    template_name = "datasets/uploader/restore_failed.html"
+
+
+class SourceTableRestoreSuccessView(BaseRestoreVersionView):
+    template_name = "datasets/uploader/restore_success.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["version"] = get_object_or_404(UploadedTable, pk=self.kwargs["version_id"])
+        return ctx

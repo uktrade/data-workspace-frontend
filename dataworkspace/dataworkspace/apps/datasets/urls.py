@@ -274,8 +274,8 @@ urlpatterns = [
     path(
         "<uuid:pk>/manage",
         include(
-            ("dataworkspace.apps.datasets.uploader.urls", "dataset_uploader"),
-            namespace="uploader",
+            ("dataworkspace.apps.datasets.manager.urls", "dataset_manager"),
+            namespace="manager",
         ),
     ),
 ]
