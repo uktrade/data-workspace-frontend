@@ -11,7 +11,7 @@
         Your table, created on {{ version.data_flow_execution_date }}, cannot be restored.
       </p>
       <p class="govuk-body">
-        <a href="{% url "datasets:manager:manage_source_table" pk=source.dataset_id source_uuid=source.id %}" class="govuk-link">
+        <a href="{% url "datasets:manager:manage-source-table" pk=source.dataset_id source_uuid=source.id %}" class="govuk-link">
           Return to dataset upload page
         </a>
       </p>

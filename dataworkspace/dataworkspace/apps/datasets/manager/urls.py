@@ -21,12 +21,12 @@ urlpatterns = [
     path(
         "/<uuid:source_uuid>",
         login_required(DatasetManageSourceTableView.as_view()),
-        name="manage_source_table",
+        name="manage-source-table",
     ),
     path(
         "/<uuid:source_uuid>/columns",
         login_required(DatasetManageSourceTableColumnConfigView.as_view()),
-        name="manage_source_table_column_config",
+        name="manage-source-table-column-config",
     ),
     path(
         "/<uuid:source_uuid>/upload/validating",

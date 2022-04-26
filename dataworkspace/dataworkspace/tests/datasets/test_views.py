@@ -4379,7 +4379,7 @@ class TestDatasetManagerViews:
             dataset=dataset, schema="test", table="table1"
         )
 
-        url = reverse("datasets:manager:manage_source_table", args=(dataset.id, source.id))
+        url = reverse("datasets:manager:manage-source-table", args=(dataset.id, source.id))
 
         # User is not IAM
         response = client.get(url)
@@ -4431,7 +4431,7 @@ class TestDatasetManagerViews:
 
         response = client.post(
             reverse(
-                "datasets:manager:manage_source_table",
+                "datasets:manager:manage-source-table",
                 args=(source.dataset.id, source.id),
             ),
             data={"csv_file": file1},
@@ -4440,7 +4440,7 @@ class TestDatasetManagerViews:
         assert (
             response["Location"]
             == reverse(
-                "datasets:manager:manage_source_table_column_config",
+                "datasets:manager:manage-source-table-column-config",
                 args=(source.dataset_id, source.id),
             )
             + f"?file={file_name}"
@@ -4495,7 +4495,7 @@ class TestDatasetManagerViews:
         )
         response = client.post(
             reverse(
-                "datasets:manager:manage_source_table_column_config",
+                "datasets:manager:manage-source-table-column-config",
                 args=(source.dataset.id, source.id),
             )
             + "?file=file1.csv",

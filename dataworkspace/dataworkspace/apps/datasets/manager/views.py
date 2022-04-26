@@ -75,7 +75,7 @@ class DatasetManageSourceTableView(WaffleFlagMixin, DatasetEditBaseView, FormVie
         source = self._get_source()
         return HttpResponseRedirect(
             reverse(
-                "datasets:manager:manage_source_table_column_config",
+                "datasets:manager:manage-source-table-column-config",
                 args=(source.dataset_id, source.id),
             )
             + f"?file={file_name}"
@@ -232,7 +232,7 @@ class SourceTableUploadRenamingTableView(BaseUploadSourceProcessingView):
 
 
 class SourceTableUploadSuccessView(BaseUploadSourceProcessingView, TemplateView):
-    next_step_url_name = "manage_source_table"
+    next_step_url_name = "manage-source-table"
     template_name = "datasets/manager/upload_success.html"
     step = 5
 
@@ -249,7 +249,7 @@ class SourceTableUploadSuccessView(BaseUploadSourceProcessingView, TemplateView)
 
 
 class SourceTableUploadFailedView(BaseUploadSourceProcessingView, TemplateView):
-    next_step_url_name = "manage_source_table"
+    next_step_url_name = "manage-source-table"
     step = 5
     template_name = "datasets/manager/upload_failed.html"
 
