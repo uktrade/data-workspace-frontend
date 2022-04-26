@@ -4545,7 +4545,8 @@ class TestDatasetManagerViews:
             dataset=factories.MasterDataSetFactory.create(
                 published=True,
                 user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
-                information_asset_manager=user,),
+                information_asset_manager=user,
+            ),
             schema="public",
             table="dataset_test",
         )
