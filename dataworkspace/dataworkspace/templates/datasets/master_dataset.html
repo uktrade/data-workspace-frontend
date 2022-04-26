@@ -79,7 +79,7 @@
       {% endflag %}
       {% if request.user == model.information_asset_owner or request.user == model.information_asset_manager %}
         <p class="govuk-body sidebar-section">
-          <a href="{% url 'datasets:edit' model.id %}" class="govuk-link govuk-link--no-visited-state">Manage this dataset</a>
+          <a href="{% url 'datasets:edit_dataset' model.id %}" class="govuk-link govuk-link--no-visited-state">Manage this dataset</a>
         </p>
       {% endif %}
 
