@@ -871,7 +871,11 @@
     }, {
       "name": "VISUALISATION_CLOUDWATCH_LOG_GROUP",
       "value": "${visualisation_cloudwatch_log_group}"
-    }],
+    }, {
+      "name": "FLOWER_ROOT",
+      "value": "${flower_root}"
+    }
+    ],
     "essential": true,
     "image": "${container_image}",
     "logConfiguration": {

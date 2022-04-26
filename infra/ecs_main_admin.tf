@@ -85,6 +85,8 @@ locals {
     efs_id = "${aws_efs_file_system.notebooks.id}"
 
     visualisation_cloudwatch_log_group = "${aws_cloudwatch_log_group.notebook.name}"
+    
+    flower_root = "http://${aws_lb.flower.dns_name}"
   }
 }
 

@@ -224,6 +224,18 @@ resource "aws_security_group_rule" "admin_service_egress_http_to_superset_lb" {
   protocol    = "tcp"
 }
 
+resource "aws_security_group_rule" "admin_service_egress_http_to_flower_lb" {
+  description = "egress-http-to-flower-lb"
+
+  security_group_id = "${aws_security_group.admin_service.id}"
+  source_security_group_id = "${aws_security_group.flower_lb.id}"
+
+  type        = "egress"
+  from_port   = "80"
+  to_port     = "80"
+  protocol    = "tcp"
+}
+
 resource "aws_security_group_rule" "admin_service_egress_http_to_gitlab_service" {
   description = "egress-http-to-gitlab-service"
 
@@ -1384,6 +1396,94 @@ resource "aws_security_group_rule" "superset_lb_egress_http_superset_service" {
   protocol    = "tcp"
 }
 
+resource "aws_security_group" "flower_lb" {
+  name        = "${var.prefix}-flower-lb"
+  description = "${var.prefix}-flower-lb"
+  vpc_id      = "${aws_vpc.notebooks.id}"
+
+  tags = {
+    Name = "${var.prefix}-flower-lb"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_security_group_rule" "flower_lb_inress_http_admin_service" {
+  description = "ingress-admin-service"
+
+  security_group_id = "${aws_security_group.flower_lb.id}"
+  source_security_group_id = "${aws_security_group.admin_service.id}"
+
+  type        = "ingress"
+  from_port   = "80"
+  to_port     = "80"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "flower_lb_egress_http_flower_service" {
+  description = "egress-http-flower-service"
+
+  security_group_id = "${aws_security_group.flower_lb.id}"
+  source_security_group_id = "${aws_security_group.flower_service.id}"
+
+  type        = "egress"
+  from_port   = "80"
+  to_port     = "80"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group" "flower_service" {
+  name        = "${var.prefix}-flower-service"
+  description = "${var.prefix}-flower-service"
+  vpc_id      = "${aws_vpc.notebooks.id}"
+
+  tags = {
+    Name = "${var.prefix}-flower-service"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_security_group_rule" "flower_service_ingress_http_flower_lb" {
+  description = "ingress-flower-lb"
+
+  security_group_id = "${aws_security_group.flower_service.id}"
+  source_security_group_id = "${aws_security_group.flower_lb.id}"
+
+  type        = "ingress"
+  from_port   = "80"
+  to_port     = "80"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "flower_service_ingress_admin_redis" {
+  description = "ingress-flower-service"
+
+  security_group_id = "${aws_security_group.admin_redis.id}"
+  source_security_group_id = "${aws_security_group.flower_service.id}"
+
+  type        = "ingress"
+  from_port   = "6379"
+  to_port     = "6379"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "flower_service_egress_admin_redis" {
+  description = "egress-redis-admin-redis"
+
+  security_group_id = "${aws_security_group.flower_service.id}"
+  source_security_group_id = "${aws_security_group.admin_redis.id}"
+
+  type        = "egress"
+  from_port   = "6379"
+  to_port     = "6379"
+  protocol    = "tcp"
+}
+
 resource "aws_security_group" "efs_notebooks" {
   name        = "${var.prefix}-efs-notebooks"
   description = "${var.prefix}-efs-notebooks"
@@ -1572,4 +1672,52 @@ resource "aws_security_group_rule" "elasticsearch_ingress_from_paas" {
   from_port   = "443"
   to_port     = "443"
   protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "ecr_api_ingress_https_from_flower" {
+  description = "ingress-https-from-flower-service"
+
+  security_group_id = "${aws_security_group.ecr_api.id}"
+  source_security_group_id = "${aws_security_group.flower_service.id}"
+
+  type      = "ingress"
+  from_port   = "443"
+  to_port     = "443"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "flower_service_egress_https_to_ecr_api" {
+  description = "egress-https-to-ecr-api"
+
+  security_group_id = "${aws_security_group.flower_service.id}"
+  source_security_group_id = "${aws_security_group.ecr_api.id}"
+
+  type        = "egress"
+  from_port   = "443"
+  to_port     = "443"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "flower_egress_https_all" {
+  description = "egress-https-to-all"
+
+  security_group_id = "${aws_security_group.flower_service.id}"
+  cidr_blocks = ["0.0.0.0/0"]
+
+  type        = "egress"
+  from_port   = "443"
+  to_port     = "443"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "flower_service_egress_dns_udp_to_dns_rewrite_proxy" {
+  description = "egress-dns-to-dns-rewrite-proxy"
+
+  security_group_id = "${aws_security_group.flower_service.id}"
+  cidr_blocks = ["${aws_subnet.private_with_egress.*.cidr_block[0]}"]
+
+  type        = "egress"
+  from_port   = "53"
+  to_port     = "53"
+  protocol    = "udp"
 }
