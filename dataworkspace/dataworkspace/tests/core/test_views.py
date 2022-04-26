@@ -14,8 +14,8 @@ from django.urls import reverse
 
 from dataworkspace.tests.common import (
     BaseTestCase,
-    get_response_csp_as_set,
     get_http_sso_data,
+    get_connect_src_from_csp,
 )
 from dataworkspace.tests.factories import UserFactory
 
@@ -171,12 +171,22 @@ def test_csp_on_files_endpoint_includes_s3(client):
     response = client.get(reverse("your-files:files"))
     assert response.status_code == 200
 
-    policies = get_response_csp_as_set(response)
-    assert (
-        "connect-src dataworkspace.test:8000 https://www.google-analytics.com "
-        "dataworkspace.test:3000 ws://dataworkspace.test:3000 "
-        "https://s3.eu-west-2.amazonaws.com" in policies
-    )
+    csp = get_connect_src_from_csp(response)
+
+    expected_elements = [
+        "dataworkspace.test:8000",
+        "https://www.google-analytics.com",
+        "dataworkspace.test:3000",
+        "ws://dataworkspace.test:3000",
+        "https://s3.eu-west-2.amazonaws.com",
+    ]
+
+    for element in expected_elements:
+        assert element in csp
+
+    # fail if there are any extra csp sites
+    difference = csp.difference(set(expected_elements))
+    assert len(difference) == 0
 
 
 @override_settings(DEBUG=False, GTM_CONTAINER_ID="test")

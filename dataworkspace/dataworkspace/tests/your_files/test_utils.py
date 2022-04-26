@@ -5,7 +5,7 @@ from botocore.response import StreamingBody
 from mock import mock
 
 from dataworkspace.apps.your_files.constants import PostgresDataTypes
-from dataworkspace.apps.your_files.utils import get_s3_csv_column_types
+from dataworkspace.apps.your_files.utils import get_s3_csv_file_info
 
 
 @pytest.mark.parametrize(
@@ -27,8 +27,11 @@ def test_s3_csv_column_types(mock_client, csv_content):
         "ContentLength": len(csv_content),
         "Body": StreamingBody(io.BytesIO(csv_content), len(csv_content)),
     }
-    response = get_s3_csv_column_types("/a/path.csv")
-    assert response == [
+    response = get_s3_csv_file_info("/a/path.csv")
+
+    assert response["encoding"] == "utf-8-sig"
+
+    assert response["column_definitions"] == [
         {
             "header_name": "col1",
             "column_name": "col1",

@@ -2,7 +2,6 @@ import json
 import logging
 import re
 
-import boto3
 import gevent
 
 from django.conf import settings
@@ -26,6 +25,7 @@ from dataworkspace.apps.applications.utils import (
     get_api_visible_application_instance_by_public_host,
     set_application_stopped,
 )
+from dataworkspace.apps.core.boto3_client import get_sts_client
 from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.apps.core.utils import create_tools_access_iam_role
 
@@ -231,7 +231,7 @@ def aws_credentials_api_view(request):
 
 
 def aws_credentials_api_GET(request):
-    client = boto3.client("sts")
+    client = get_sts_client()
     role_arn, _ = create_tools_access_iam_role(
         request.user.email,
         str(request.user.profile.sso_id),

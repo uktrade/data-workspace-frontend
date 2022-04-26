@@ -87,6 +87,18 @@ def get_response_csp_as_set(response):
     return policies
 
 
+def get_connect_src_from_csp(response):
+    policies = response["Content-Security-Policy"].split(";")
+    # find the connect-src policy and split out all elements
+    connect_src = "connect-src"
+    csp = list(filter(lambda p: connect_src in p, policies))[0].strip().split(" ")
+    csp.remove(connect_src)
+
+    csp_set = set(csp)
+
+    return csp_set
+
+
 def get_http_sso_data(user):
     return {
         "HTTP_SSO_PROFILE_EMAIL": user.email,
