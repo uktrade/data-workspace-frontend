@@ -4573,4 +4573,3 @@ class TestDatasetManagerViews:
             "DataWorkspaceRestoreTablePipeline",
             "restore-public-dataset_test-2021-01-01T01:01:01",
         )
-
