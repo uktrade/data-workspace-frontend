@@ -126,7 +126,9 @@
   </div>
 
   {% flag CHART_BUILDER_PUBLISH_CHARTS_FLAG %}
-    {% include "partials/chart_builder_charts.html" %}
+    {% if model.customdatasetquery_set.count %}
+      {% include "partials/chart_builder_charts.html" %}
+    {% endif %}
   {% endflag %}
 
   <div class="govuk-grid-row" style="overflow-x: auto;">
