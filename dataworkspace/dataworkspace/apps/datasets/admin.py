@@ -972,8 +972,8 @@ class ToolQueryAuditLogAdmin(admin.ModelAdmin):
 
 class PipelineVersionInline(admin.TabularInline):
     model = PipelineVersion
-    fields = ("table_name", "sql_query")
-    readonly_fields = ("table_name", "sql_query")
+    fields = ("table_name", "config")
+    readonly_fields = ("table_name", "config")
 
     def has_add_permission(self, request, obj=None):
         return False

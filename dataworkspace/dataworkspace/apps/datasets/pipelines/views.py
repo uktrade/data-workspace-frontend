@@ -7,13 +7,16 @@ from django.urls.base import reverse_lazy
 from django.views.generic import DetailView
 from django.views import View
 from django.views.generic.list import ListView
-from django.views.generic.edit import CreateView, DeleteView, UpdateView
+from django.views.generic.edit import CreateView, DeleteView, FormView, UpdateView
 from django.urls import reverse
 from requests import RequestException
 
 from dataworkspace.apps.core.errors import PipelineBuilderPermissionDeniedError
 from dataworkspace.apps.datasets.models import Pipeline
-from dataworkspace.apps.datasets.pipelines.forms import PipelineCreateForm, PipelineEditForm
+from dataworkspace.apps.datasets.pipelines.forms import (
+    PipelineTypeForm,
+    SQLPipelineEditForm,
+)
 from dataworkspace.apps.datasets.pipelines.utils import (
     delete_pipeline_from_dataflow,
     list_pipelines,
@@ -33,16 +36,29 @@ class IsAdminMixin(UserPassesTestMixin):
         return True
 
 
+class PipelineSelectTypeView(IsAdminMixin, FormView):
+    form_class = PipelineTypeForm
+    template_name = "datasets/pipelines/select_type.html"
+
+    def form_valid(self, form):
+        return HttpResponseRedirect(
+            reverse(f"pipelines:create-{form.cleaned_data['pipeline_type']}")
+        )
+
+
 class PipelineCreateView(IsAdminMixin, CreateView):
     model = Pipeline
-    form_class = PipelineCreateForm
     template_name = "datasets/pipelines/pipeline_detail.html"
+
+    def get_form_class(self):
+        return self.kwargs["form_class"]
 
     def get_success_url(self):
         return reverse("pipelines:index")
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user
+        form.save(commit=False)
         try:
             save_pipeline_to_dataflow(form.instance, "POST")
         except RequestException as e:
@@ -58,14 +74,23 @@ class PipelineCreateView(IsAdminMixin, CreateView):
 
 class PipelineUpdateView(IsAdminMixin, UpdateView):
     model = Pipeline
-    form_class = PipelineEditForm
+    form_class = SQLPipelineEditForm
     template_name = "datasets/pipelines/pipeline_detail.html"
+
+    def get_form_class(self):
+        return self.kwargs["form_class"]
+
+    def get_initial(self):
+        initial = super().get_initial()
+        initial.update(self.get_object().config)
+        return initial
 
     def get_success_url(self):
         return reverse("pipelines:index")
 
     def form_valid(self, form):
         form.instance.updated_by = self.request.user
+        form.save(commit=False)
         try:
             save_pipeline_to_dataflow(form.instance, "PUT")
         except RequestException as e:

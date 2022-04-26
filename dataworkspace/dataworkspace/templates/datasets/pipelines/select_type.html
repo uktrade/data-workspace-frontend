@@ -1,5 +1,5 @@
 {% extends '_main.html' %}
-{% block page_title %}{% if form.instance.id %}Edit{% else %}New{% endif %} pipeline - {{ block.super }}{% endblock page_title %}
+{% block page_title %}Select pipeline type - {{ block.super }}{% endblock page_title %}
 {% block breadcrumbs %}
   <div class="govuk-breadcrumbs">
     <ol class="govuk-breadcrumbs__list">
@@ -9,7 +9,7 @@
       <li class="govuk-breadcrumbs__list-item">
         <a class="govuk-breadcrumbs__link" href="{% url 'pipelines:index' %}">Pipelines</a>
       </li>
-      <li class="govuk-breadcrumbs__list-item">Edit pipeline
+      <li class="govuk-breadcrumbs__list-item">Select pipeline type
       </li>
     </ol>
   </div>
@@ -17,18 +17,14 @@
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-      <h1 class="govuk-heading-xl">
-        {% if form.instance.id %}Edit{% else %}New{% endif %} pipeline
+      <h1 class="govuk-heading-l">
+        Select pipeline type
       </h1>
-      <form method="post" novalidate>
-        {% include 'design_system/error_summary.html' with form=form %}
+      {% include 'design_system/error_summary.html' with form=form %}
+      <form method="post">
         {% csrf_token %}
-        {{ form.type }}
-        {{ form.table_name }}
-        {{ form.sql }}
-        {{ form.site_name }}
-        {{ form.list_name }}
-        <button class="govuk-button" data-module="govuk-button">Save</button>
+        {{ form.pipeline_type }}
+        <input class="govuk-button" type="submit" value="Create pipeline">
       </form>
     </div>
   </div>
