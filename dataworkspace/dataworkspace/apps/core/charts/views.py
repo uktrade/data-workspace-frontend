@@ -22,7 +22,7 @@ class ChartEditView(WaffleFlagMixin, View):
     waffle_flag = settings.CHART_BUILDER_BUILD_CHARTS_FLAG
     template_name = "core/charts/chart_builder.html"
 
-    @csp_update(SCRIPT_SRC=["'unsafe-eval'", "blob:"])
+    @csp_update(SCRIPT_SRC=["'unsafe-eval'", "blob:"], IMG_SRC=["blob:"])
     def get(self, request, chart_id):
         chart = get_object_or_404(ChartBuilderChart, created_by=request.user, pk=chart_id)
         return render(
