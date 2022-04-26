@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 from urllib.parse import urlencode
 
+import logging
+
 from csp.decorators import csp_update
 from django.db.utils import ProgrammingError
 from django.conf import settings
@@ -44,26 +46,32 @@ from dataworkspace.apps.your_files.utils import (
     copy_file_to_uploads_bucket,
     get_dataflow_dag_status,
     get_dataflow_task_status,
-    get_s3_csv_column_types,
+    get_s3_csv_file_info,
     get_schema_for_user,
     get_user_schema,
     trigger_dataflow_dag,
     SCHEMA_POSTGRES_DATA_TYPE_MAP,
 )
 
+logger = logging.getLogger("app")
+
 
 def file_browser_html_view(request):
     return file_browser_html_GET(request) if request.method == "GET" else HttpResponse(status=405)
 
 
-@csp_update(CONNECT_SRC=["https://s3.eu-west-2.amazonaws.com"])
+@csp_update(CONNECT_SRC=settings.YOUR_FILES_CONNECT_SRC)
 def file_browser_html_GET(request):
     prefix = get_s3_prefix(str(request.user.profile.sso_id))
 
     return render(
         request,
         "your_files/files.html",
-        {"prefix": prefix, "bucket": settings.NOTEBOOKS_BUCKET},
+        {
+            "prefix": prefix,
+            "bucket": settings.NOTEBOOKS_BUCKET,
+            "aws_endpoint": settings.S3_LOCAL_ENDPOINT_URL,
+        },
         status=200,
     )
 
@@ -278,7 +286,9 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
         kwargs.update(
             {
                 "user": self.request.user,
-                "column_definitions": get_s3_csv_column_types(self.request.GET["path"]),
+                "column_definitions": get_s3_csv_file_info(self.request.GET["path"])[
+                    "column_definitions"
+                ],
             }
         )
         return kwargs
@@ -302,21 +312,30 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
                 duration,
             )
 
-        column_definitions = get_s3_csv_column_types(cleaned["path"])
-        for field in column_definitions:
+        file_info = get_s3_csv_file_info(cleaned["path"])
+
+        logger.info(file_info)
+
+        for field in file_info["column_definitions"]:
             field["data_type"] = SCHEMA_POSTGRES_DATA_TYPE_MAP.get(
                 cleaned[field["column_name"]], PostgresDataTypes.TEXT
             )
 
         import_path = settings.DATAFLOW_IMPORTS_BUCKET_ROOT + "/" + cleaned["path"]
+        logger.debug("import_path %s", import_path)
+
         copy_file_to_uploads_bucket(cleaned["path"], import_path)
+
         filename = cleaned["path"].split("/")[-1]
+        logger.debug(filename)
         conf = {
             "file_path": import_path,
             "schema_name": cleaned["schema"],
             "table_name": cleaned["table_name"],
-            "column_definitions": column_definitions,
+            "column_definitions": file_info["column_definitions"],
+            "encoding": file_info["encoding"],
         }
+        logger.debug(conf)
         if cleaned["schema"] not in self.all_schemas:
             conf["db_role"] = cleaned["schema"]
 

@@ -60,6 +60,13 @@ angular.module('aws-js-s3-explorer').factory('s3', (Config) => {
         credentials: new Credentials(),
         region: Config.region
     });
+
+    if (Config.endpointUrl) {
+      AWS.config.update({
+        endpoint: Config.endpointUrl
+      });
+    }
+
     return new AWS.S3({s3ForcePathStyle: true });
 });
 

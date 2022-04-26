@@ -332,13 +332,15 @@ close(conn)</pre></code>
     <script nonce="{{ request.csp_nonce }}" src="{% static 'explorer-ie11-compat.js' %}"></script>
     <script nonce="{{ request.csp_nonce }}">
 {% verbatim %}
+
     angular.module('aws-js-s3-explorer').factory('Config', function() {
         return {
             region: 'eu-west-2',
             bucket: '{% endverbatim %}{{ bucket }}{% verbatim %}',
             prefix: '{% endverbatim %}{{ prefix }}{% verbatim %}',
             bigdataPrefix: 'bigdata/',
-            credentialsUrl: '{% endverbatim %}{% url 'api_v1:aws-credentials' %}{% verbatim %}'
+            credentialsUrl: '{% endverbatim %}{% url 'api_v1:aws-credentials' %}{% verbatim %}',
+            endpointUrl: '{% endverbatim %}{{ aws_endpoint }}{% verbatim %}'
         };
     });
     </script>

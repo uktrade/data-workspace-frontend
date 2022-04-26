@@ -63,7 +63,7 @@ class TestCreateTableViews:
         assert "We can’t process your CSV file" in response.content.decode("utf-8")
 
     @mock.patch("dataworkspace.apps.your_files.views.copy_file_to_uploads_bucket")
-    @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_column_types")
+    @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_file_info")
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
     @mock.patch("dataworkspace.apps.your_files.views.get_schema_for_user")
@@ -72,20 +72,23 @@ class TestCreateTableViews:
         mock_get_schema_for_user,
         mock_get_s3_prefix,
         mock_boto_client,
-        mock_get_column_types,
+        mock_get_file_info,
         mock_copy_file,
         client,
     ):
         mock_get_schema_for_user.return_value = "test_schema"
         mock_get_s3_prefix.return_value = "user/federated/abc"
-        mock_get_column_types.return_value = [
-            {
-                "header_name": "Field 1",
-                "column_name": "field1",
-                "data_type": "text",
-                "sample_data": ["a", "b", "c"],
-            }
-        ]
+        mock_get_file_info.return_value = {
+            "encoding": "utf-8-sig",
+            "column_definitions": [
+                {
+                    "header_name": "Field 1",
+                    "column_name": "field1",
+                    "data_type": "text",
+                    "sample_data": ["a", "b", "c"],
+                }
+            ],
+        }
 
         params = {
             "path": "user/federated/abc/a-csv.csv",
@@ -113,7 +116,7 @@ class TestCreateTableViews:
     @freeze_time("2021-01-01 01:01:01")
     @mock.patch("dataworkspace.apps.your_files.views.trigger_dataflow_dag")
     @mock.patch("dataworkspace.apps.your_files.views.copy_file_to_uploads_bucket")
-    @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_column_types")
+    @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_file_info")
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
     @mock.patch("dataworkspace.apps.your_files.views.get_schema_for_user")
@@ -122,21 +125,28 @@ class TestCreateTableViews:
         mock_get_schema_for_user,
         mock_get_s3_prefix,
         mock_boto_client,
-        mock_get_column_types,
+        mock_get_file_info,
         mock_copy_file,
         mock_trigger_dag,
         client,
     ):
         mock_get_schema_for_user.return_value = "test_schema"
         mock_get_s3_prefix.return_value = "user/federated/abc"
-        mock_get_column_types.return_value = [
-            {
-                "header_name": "Field 1",
-                "column_name": "field1",
-                "data_type": "text",
-                "sample_data": [1, 2, 3],
-            }
-        ]
+
+        file_info_return_value = {
+            "encoding": "utf-8-sig",
+            "column_definitions": [
+                {
+                    "header_name": "Field 1",
+                    "column_name": "field1",
+                    "data_type": "text",
+                    "sample_data": [1, 2, 3],
+                }
+            ],
+        }
+
+        mock_get_file_info.return_value = file_info_return_value
+
         params = {
             "path": "user/federated/abc/a-csv.csv",
             "table_name": "test_table",
@@ -153,7 +163,7 @@ class TestCreateTableViews:
             follow=True,
         )
         assert b"Validating" in response.content
-        mock_get_column_types.assert_called_with("user/federated/abc/a-csv.csv")
+        mock_get_file_info.assert_called_with("user/federated/abc/a-csv.csv")
         mock_copy_file.assert_called_with(
             "user/federated/abc/a-csv.csv",
             "data-flow-imports/user/federated/abc/a-csv.csv",
@@ -164,14 +174,8 @@ class TestCreateTableViews:
                 "file_path": "data-flow-imports/user/federated/abc/a-csv.csv",
                 "schema_name": "test_schema",
                 "table_name": "a_csv",
-                "column_definitions": [
-                    {
-                        "header_name": "Field 1",
-                        "column_name": "field1",
-                        "data_type": "integer",
-                        "sample_data": [1, 2, 3],
-                    }
-                ],
+                "encoding": file_info_return_value["encoding"],
+                "column_definitions": file_info_return_value["column_definitions"],
             },
             "DataWorkspaceS3ImportPipeline",
             "test_schema-a_csv-2021-01-01T01:01:01",
@@ -418,14 +422,14 @@ class TestCreateTableViews:
     @mock.patch("dataworkspace.apps.your_files.views.get_team_schemas_for_user")
     @mock.patch("dataworkspace.apps.your_files.views.trigger_dataflow_dag")
     @mock.patch("dataworkspace.apps.your_files.views.copy_file_to_uploads_bucket")
-    @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_column_types")
+    @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_file_info")
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
     def test_success_team_schema(
         self,
         mock_get_s3_prefix,
         mock_boto_client,
-        mock_get_column_types,
+        mock_get_file_info,
         mock_copy_file,
         mock_trigger_dag,
         mock_get_team_schemas_for_user,
@@ -437,14 +441,19 @@ class TestCreateTableViews:
             {"name": "TestTeam", "schema_name": "test_team_schema"},
         ]
         mock_get_s3_prefix.return_value = "user/federated/abc"
-        mock_get_column_types.return_value = [
-            {
-                "header_name": "Field 1",
-                "column_name": "field1",
-                "data_type": "text",
-                "sample_data": [1, 2, 3],
-            }
-        ]
+        file_info_return_value = {
+            "encoding": "utf-8-sig",
+            "column_definitions": [
+                {
+                    "header_name": "Field 1",
+                    "column_name": "field1",
+                    "data_type": "text",
+                    "sample_data": [1, 2, 3],
+                }
+            ],
+        }
+        mock_get_file_info.return_value = file_info_return_value
+
         params = {
             "path": "user/federated/abc/a-csv.csv",
             "table_name": "test_table",
@@ -461,7 +470,7 @@ class TestCreateTableViews:
             follow=True,
         )
         assert b"Validating" in response.content
-        mock_get_column_types.assert_called_with("user/federated/abc/a-csv.csv")
+        mock_get_file_info.assert_called_with("user/federated/abc/a-csv.csv")
         mock_copy_file.assert_called_with(
             "user/federated/abc/a-csv.csv",
             "data-flow-imports/user/federated/abc/a-csv.csv",
@@ -472,14 +481,8 @@ class TestCreateTableViews:
                 "file_path": "data-flow-imports/user/federated/abc/a-csv.csv",
                 "schema_name": "test_team_schema",
                 "table_name": "a_csv",
-                "column_definitions": [
-                    {
-                        "header_name": "Field 1",
-                        "column_name": "field1",
-                        "data_type": "integer",
-                        "sample_data": [1, 2, 3],
-                    }
-                ],
+                "encoding": file_info_return_value["encoding"],
+                "column_definitions": file_info_return_value["column_definitions"],
             },
             "DataWorkspaceS3ImportPipeline",
             "test_team_schema-a_csv-2021-01-01T01:01:01",
@@ -491,14 +494,14 @@ class TestCreateTableViews:
     @mock.patch("dataworkspace.apps.your_files.views.get_team_schemas_for_user")
     @mock.patch("dataworkspace.apps.your_files.views.trigger_dataflow_dag")
     @mock.patch("dataworkspace.apps.your_files.views.copy_file_to_uploads_bucket")
-    @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_column_types")
+    @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_file_info")
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
     def test_success_all_schemas(
         self,
         mock_get_s3_prefix,
         mock_boto_client,
-        mock_get_column_types,
+        mock_get_file_info,
         mock_copy_file,
         mock_trigger_dag,
         mock_get_team_schemas_for_user,
@@ -512,14 +515,19 @@ class TestCreateTableViews:
             {"name": "TestTeam", "schema_name": "test_team_schema"},
         ]
         mock_get_s3_prefix.return_value = "user/federated/abc"
-        mock_get_column_types.return_value = [
-            {
-                "header_name": "Field 1",
-                "column_name": "field1",
-                "data_type": "text",
-                "sample_data": [1, 2, 3],
-            }
-        ]
+        file_info_return_value = {
+            "encoding": "utf-8-sig",
+            "column_definitions": [
+                {
+                    "header_name": "Field 1",
+                    "column_name": "field1",
+                    "data_type": "text",
+                    "sample_data": [1, 2, 3],
+                }
+            ],
+        }
+        mock_get_file_info.return_value = file_info_return_value
+
         params = {
             "path": "user/federated/abc/a-csv.csv",
             "table_name": "test_table",
@@ -536,7 +544,7 @@ class TestCreateTableViews:
             follow=True,
         )
         assert b"Validating" in response.content
-        mock_get_column_types.assert_called_with("user/federated/abc/a-csv.csv")
+        mock_get_file_info.assert_called_with("user/federated/abc/a-csv.csv")
         mock_copy_file.assert_called_with(
             "user/federated/abc/a-csv.csv",
             "data-flow-imports/user/federated/abc/a-csv.csv",
@@ -546,14 +554,8 @@ class TestCreateTableViews:
                 "file_path": "data-flow-imports/user/federated/abc/a-csv.csv",
                 "schema_name": "public",
                 "table_name": "a_csv",
-                "column_definitions": [
-                    {
-                        "header_name": "Field 1",
-                        "column_name": "field1",
-                        "data_type": "integer",
-                        "sample_data": [1, 2, 3],
-                    }
-                ],
+                "encoding": file_info_return_value["encoding"],
+                "column_definitions": file_info_return_value["column_definitions"],
             },
             "DataWorkspaceS3ImportPipeline",
             "public-a_csv-2021-01-01T01:01:01",
@@ -584,14 +586,17 @@ class TestCreateTableViews:
         assert response.status_code == 404
 
     @freeze_time("2021-01-01 01:01:01")
-    @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_column_types")
+    @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_file_info")
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
     def test_invalid_table_name(
-        self, mock_get_s3_prefix, mock_boto_client, mock_get_column_types, client
+        self, mock_get_s3_prefix, mock_boto_client, mock_get_file_info, client
     ):
         mock_get_s3_prefix.return_value = "user/federated/abc"
-        mock_get_column_types.return_value = {"field1": "varchar"}
+        mock_get_file_info.return_value = {
+            "encoding": "utf-8-sig",
+            "column_definitions": [],
+        }
         response = client.post(
             reverse("your-files:create-table-confirm-name"),
             data={
@@ -604,14 +609,17 @@ class TestCreateTableViews:
         assert b"Table names can contain only letters, numbers and underscores" in response.content
 
     @freeze_time("2021-01-01 01:01:01")
-    @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_column_types")
+    @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_file_info")
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
     def test_table_name_too_long(
-        self, mock_get_s3_prefix, mock_boto_client, mock_get_column_types, client
+        self, mock_get_s3_prefix, mock_boto_client, mock_get_file_info, client
     ):
         mock_get_s3_prefix.return_value = "user/federated/abc"
-        mock_get_column_types.return_value = {"field1": "varchar"}
+        mock_get_file_info.return_value = {
+            "encoding": "utf-8-sig",
+            "column_definitions": [],
+        }
         response = client.post(
             reverse("your-files:create-table-confirm-name"),
             data={
@@ -626,7 +634,7 @@ class TestCreateTableViews:
     @freeze_time("2021-01-01 01:01:01")
     @mock.patch("dataworkspace.apps.your_files.views.trigger_dataflow_dag")
     @mock.patch("dataworkspace.apps.your_files.views.copy_file_to_uploads_bucket")
-    @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_column_types")
+    @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_file_info")
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
     @mock.patch("dataworkspace.apps.your_files.views.get_schema_for_user")
@@ -635,21 +643,24 @@ class TestCreateTableViews:
         mock_get_schema_for_user,
         mock_get_s3_prefix,
         mock_boto_client,
-        mock_get_column_types,
+        mock_get_file_info,
         mock_copy_file,
         mock_trigger_dag,
         client,
     ):
         mock_get_schema_for_user.return_value = "test_schema"
         mock_get_s3_prefix.return_value = "user/federated/abc"
-        mock_get_column_types.return_value = [
-            {
-                "header_name": "Field 1",
-                "column_name": "field1",
-                "data_type": "text",
-                "sample_data": ["a", "b", "c"],
-            }
-        ]
+        mock_get_file_info.return_value = {
+            "encoding": "utf-8-sig",
+            "column_definitions": [
+                {
+                    "header_name": "Field 1",
+                    "column_name": "field1",
+                    "data_type": "text",
+                    "sample_data": ["a", "b", "c"],
+                }
+            ],
+        }
         response = client.post(
             reverse("your-files:create-table-confirm-name"),
             data={

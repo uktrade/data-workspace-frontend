@@ -12,8 +12,6 @@ from typing import Tuple
 
 from timeit import default_timer as timer
 
-import boto3
-
 import gevent
 import gevent.queue
 
@@ -29,7 +27,7 @@ from django.db import connections, connection
 from django.db.models import Q
 from django.conf import settings
 
-from dataworkspace.apps.core.boto3_client import get_s3_client
+from dataworkspace.apps.core.boto3_client import get_s3_client, get_iam_client
 from dataworkspace.apps.core.models import Database, DatabaseUser, Team
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import DataSet, SourceTable, ReferenceDataset
@@ -1106,7 +1104,7 @@ def create_tools_access_iam_role(user_email_address, user_sso_id, access_point_i
     if user.profile.tools_access_role_arn:
         return user.profile.tools_access_role_arn, s3_prefix
 
-    iam_client = boto3.client("iam")
+    iam_client = get_iam_client()
 
     assume_role_policy_document = settings.S3_ASSUME_ROLE_POLICY_DOCUMENT
     policy_name = settings.S3_POLICY_NAME
