@@ -114,29 +114,7 @@ docker-test-integration-local:
 .PHONY: docker-test-local
 docker-test-local: docker-test-unit-local docker-test-integration-local
 
-.PHONY: logout
-logout:
-	docker-compose exec data-workspace-redis bash -c "redis-cli --scan --pattern data_workspace* | xargs redis-cli unlink"
 
-
-.PHONY: docker-test-sequential
-docker-test-sequential:
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test stop
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test rm -f
-
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test up -d
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test pytest /test/test_application.py -x -v
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test stop
-
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test up -d
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test pytest /test/test_utils.py -x -v
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test stop
-
-
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test up -d
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test pytest /test/selenium/test_explorer.py -x -v
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test stop
-
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test up -d
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test pytest /test/selenium/test_request_data.py -x -v
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test stop
+.PHONY: load-example-data
+load-example-data: first-use
+	docker-compose exec data-workspace bash -c "cd dataworkspace && DJANGO_SETTINGS_MODULE=example_data.settings python3 manage.py bootstrap"

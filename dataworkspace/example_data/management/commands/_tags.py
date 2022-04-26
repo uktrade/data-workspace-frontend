@@ -1,13 +1,23 @@
 from dataworkspace.apps.datasets.models import Tag
 from dataworkspace.apps.datasets.constants import TagType
 
-sources = ["local", "superset"]
+sources = ["dev", "Superset"]
 
-topics = ["example_data"]
+topics = ["Example Data"]
 
 
-def get_local_source_tag():
-    tag = Tag.objects.get(name="local")
+def get_dev_source_tag():
+    tag = Tag.objects.get(name="dev")
+    return tag
+
+
+def get_superset_tag():
+    tag = Tag.objects.get(name="Superset")
+    return tag
+
+
+def get_example_topic_tag():
+    tag = Tag.objects.get(name="Example Data")
     return tag
 
 
