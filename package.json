@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/uktrade/data-workspace#readme",
   "devDependencies": {
-    "govuk-frontend": "3.14",
+    "govuk-frontend": "4.0",
     "node-sass": "^7.0.1"
   }
 }

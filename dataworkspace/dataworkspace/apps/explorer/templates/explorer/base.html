@@ -179,7 +179,7 @@
         </footer>
 
         {% block javascript %}
-            <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}govuk-frontend-3.14.0.min.js"></script>
+            <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}govuk-frontend-4.0.1.min.js"></script>
 
             {% block init_govuk_frontend %}
               <script nonce="{{ request.csp_nonce }}">
