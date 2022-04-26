@@ -5,8 +5,9 @@
   "main": "webpack.config.js",
   "dependencies": {
     "react": "16.14.0",
-    "react-chart-editor": "^0.45.0",
-    "react-dom": "^17.0.2"
+    "react-chart-editor": "github:uktrade/react-chart-editor",
+    "react-dom": "16.4.0",
+    "react-resizable-rotatable-draggable": "^0.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.14.6",
