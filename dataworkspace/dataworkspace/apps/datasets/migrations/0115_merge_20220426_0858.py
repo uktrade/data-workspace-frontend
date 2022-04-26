@@ -6,9 +6,8 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0113_alter_masterdataset_options'),
-        ('datasets', '0114_datasetchartbuilderchart_chart'),
+        ("datasets", "0113_alter_masterdataset_options"),
+        ("datasets", "0114_datasetchartbuilderchart_chart"),
     ]
 
-    operations = [
-    ]
+    operations = []
