@@ -35,13 +35,13 @@ from tableschema import Schema
 
 from dataworkspace.apps.core.boto3_client import get_s3_client, get_iam_client
 from dataworkspace.apps.core.constants import (
+    PostgresDataTypes,
     SCHEMA_POSTGRES_DATA_TYPE_MAP,
     TABLESCHEMA_FIELD_TYPE_MAP,
 )
 from dataworkspace.apps.core.models import Database, DatabaseUser, Team
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import DataSet, SourceTable, ReferenceDataset
-from dataworkspace.apps.your_files.constants import PostgresDataTypes
 
 logger = logging.getLogger("app")
 

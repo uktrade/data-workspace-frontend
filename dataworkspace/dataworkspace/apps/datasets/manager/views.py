@@ -16,7 +16,7 @@ from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace import datasets_db
 from dataworkspace.apps.core.boto3_client import get_s3_client
-from dataworkspace.apps.core.constants import SCHEMA_POSTGRES_DATA_TYPE_MAP
+from dataworkspace.apps.core.constants import PostgresDataTypes, SCHEMA_POSTGRES_DATA_TYPE_MAP
 from dataworkspace.apps.core.utils import (
     copy_file_to_uploads_bucket,
     get_random_data_sample,
@@ -28,12 +28,11 @@ from dataworkspace.apps.datasets.manager.forms import (
     SourceTableUploadColumnConfigForm,
     SourceTableUploadForm,
 )
-from dataworkspace.apps.datasets.views import DatasetEditBaseView
-from dataworkspace.apps.your_files.constants import PostgresDataTypes
+from dataworkspace.apps.datasets.views import EditBaseView
 from dataworkspace.apps.your_files.models import UploadedTable
 
 
-class DatasetManageSourceTableView(WaffleFlagMixin, DatasetEditBaseView, FormView):
+class DatasetManageSourceTableView(WaffleFlagMixin, EditBaseView, FormView):
     template_name = "datasets/manager/manage_source_table.html"
     waffle_flag = settings.DATA_UPLOADER_UI_FLAG
     form_class = SourceTableUploadForm
@@ -47,7 +46,7 @@ class DatasetManageSourceTableView(WaffleFlagMixin, DatasetEditBaseView, FormVie
         )
 
     def _get_source(self):
-        return get_object_or_404(self.dataset.sourcetable_set.all(), pk=self.kwargs["source_uuid"])
+        return get_object_or_404(self.obj.sourcetable_set.all(), pk=self.kwargs["source_uuid"])
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -147,7 +146,7 @@ class DatasetManageSourceTableColumnConfigView(DatasetManageSourceTableView):
         )
 
 
-class BaseUploadSourceProcessingView(DatasetEditBaseView, TemplateView):
+class BaseUploadSourceProcessingView(EditBaseView, TemplateView):
     template_name = "datasets/manager/uploading.html"
     required_parameters = [
         "filename",
@@ -163,7 +162,7 @@ class BaseUploadSourceProcessingView(DatasetEditBaseView, TemplateView):
     page_info_text: str = None
 
     def _get_source(self):
-        return get_object_or_404(self.dataset.sourcetable_set.all(), pk=self.kwargs["source_uuid"])
+        return get_object_or_404(self.obj.sourcetable_set.all(), pk=self.kwargs["source_uuid"])
 
     def dispatch(self, request, *args, **kwargs):
         for param in self.required_parameters:

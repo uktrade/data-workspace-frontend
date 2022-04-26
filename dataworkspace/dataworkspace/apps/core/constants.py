@@ -1,4 +1,15 @@
-from dataworkspace.apps.your_files.constants import PostgresDataTypes
+from django.db import models
+
+
+class PostgresDataTypes(models.TextChoices):
+    INTEGER = "integer"
+    BOOLEAN = "boolean"
+    DATE = "date"
+    TIMESTAMP = "timestamp"
+    NUMERIC = "numeric"
+    TEXT = "text"
+    UUID = "uuid"
+
 
 SCHEMA_POSTGRES_DATA_TYPE_MAP = {
     "integer": PostgresDataTypes.INTEGER,

@@ -1305,11 +1305,12 @@ class EditBaseView(View):
             self.summary = get_object_or_404(
                 PendingAuthorizedUsers.objects.all(), pk=self.kwargs.get("summary_id")
             )
+        self.obj = dataset or visualisation_catalogue_item
         if (
             request.user
             not in [
-            self.obj.information_asset_owner,
-            self.obj.information_asset_manager,
+                self.obj.information_asset_owner,
+                self.obj.information_asset_manager,
             ]
             and not request.user.is_superuser
         ):

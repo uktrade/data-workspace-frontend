@@ -20,7 +20,7 @@ from psycopg2 import sql
 from requests import HTTPError
 
 from dataworkspace import datasets_db
-from dataworkspace.apps.core.constants import SCHEMA_POSTGRES_DATA_TYPE_MAP
+from dataworkspace.apps.core.constants import PostgresDataTypes, SCHEMA_POSTGRES_DATA_TYPE_MAP
 from dataworkspace.apps.core.utils import (
     clean_db_identifier,
     copy_file_to_uploads_bucket,
@@ -28,7 +28,6 @@ from dataworkspace.apps.core.utils import (
     db_role_schema_suffix_for_user,
     get_all_schemas,
     get_random_data_sample,
-    get_s3_csv_column_types,
     get_s3_prefix,
     get_team_schemas_for_user,
     new_private_database_credentials,
@@ -36,7 +35,6 @@ from dataworkspace.apps.core.utils import (
     source_tables_for_user,
     trigger_dataflow_dag,
 )
-from dataworkspace.apps.your_files.constants import PostgresDataTypes
 from dataworkspace.apps.your_files.forms import (
     CreateSchemaForm,
     CreateTableDataTypesForm,
@@ -45,10 +43,6 @@ from dataworkspace.apps.your_files.forms import (
 )
 from dataworkspace.apps.your_files.models import UploadedTable
 from dataworkspace.apps.your_files.utils import (
-    clean_db_identifier,
-    copy_file_to_uploads_bucket,
-    get_dataflow_dag_status,
-    get_dataflow_task_status,
     get_s3_csv_file_info,
     get_schema_for_user,
     get_user_schema,
