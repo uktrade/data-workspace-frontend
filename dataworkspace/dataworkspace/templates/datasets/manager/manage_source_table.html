@@ -25,10 +25,7 @@
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-l">"{{ source.schema }}"."{{ source.table }}"</h1>
       <p class="govuk-body govuk-body-m">
-        We show 6 months of data. You can
-        <a href="{{ request.path }}#restore" class="govuk-link govuk-link--no-visited-state">restore to a previous version</a> or
-        <a href="{{ request.path }}#update" class="govuk-link govuk-link--no-visited-state">update the table</a> with a new CSV.
-        The table is <a href="{{ source.dataset.get_absolute_url }}" class="govuk-link govuk-link--no-visited-state">part of this dataset</a>.
+        You can restore this table to a previous version from the last 6 months or update the table with a new CSV.
       </p>
     </div>
   </div>

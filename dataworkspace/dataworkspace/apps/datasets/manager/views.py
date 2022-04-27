@@ -173,18 +173,20 @@ class BaseUploadSourceProcessingView(EditBaseView, TemplateView):
     def _get_query_parameters(self):
         return {param: self.request.GET.get(param) for param in self.required_parameters}
 
+    def _get_next_url(self):
+        return reverse(
+            f"datasets:manager:{self.next_step_url_name}",
+            args=(self.kwargs["pk"], self.kwargs["source_uuid"]),
+        )
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        source = self._get_source()
-        next_url = reverse(
-            f"datasets:manager:{self.next_step_url_name}", args=(source.dataset_id, source.id)
-        )
         query_params = {param: self.request.GET.get(param) for param in self.required_parameters}
         context.update(
             {
-                "source": source,
+                "source": self._get_source(),
                 "task_name": self.task_name,
-                "next_step": f"{next_url}?{urlencode(query_params)}",
+                "next_step": f"{self._get_next_url()}?{urlencode(query_params)}",
                 "title": self.page_title,
                 "info_text": self.page_info_text,
                 **{"steps": self.steps, "step": self.step},
@@ -234,6 +236,9 @@ class SourceTableUploadSuccessView(BaseUploadSourceProcessingView, TemplateView)
     next_step_url_name = "manage-source-table"
     template_name = "datasets/manager/upload_success.html"
     step = 5
+
+    def _get_next_url(self):
+        return self.obj.get_absolute_url()
 
     def get(self, request, *args, **kwargs):
         UploadedTable.objects.get_or_create(
