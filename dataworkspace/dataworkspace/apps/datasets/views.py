@@ -1254,7 +1254,7 @@ class DatasetChartView(WaffleFlagMixin, View):
         )
         return dataset.charts.get(id=self.kwargs["object_id"])
 
-    @csp_update(SCRIPT_SRC=["'unsafe-eval'", "blob:"])
+    @csp_update(SCRIPT_SRC=["'unsafe-eval'", "blob:"], IMG_SRC=["blob:"])
     def get(self, request, **kwargs):
         chart = self.get_object()
         if not chart.dataset.user_has_access(request.user):
