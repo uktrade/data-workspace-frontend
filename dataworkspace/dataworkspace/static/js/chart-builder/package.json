@@ -6,7 +6,7 @@
   "dependencies": {
     "react": "16.14.0",
     "react-chart-editor": "github:uktrade/react-chart-editor",
-    "react-dom": "16.4.0",
+    "react-dom": "16.4.2",
     "react-resizable-rotatable-draggable": "^0.2.0"
   },
   "devDependencies": {
