@@ -336,7 +336,9 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   width: 100%;
   height: auto;
 }
-
+.chart-preview-container {
+  border: 1px solid $govuk-border-colour;
+}
 .chart-preview-container img {
   width: 100%;
 }

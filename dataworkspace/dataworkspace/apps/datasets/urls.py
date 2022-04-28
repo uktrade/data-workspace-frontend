@@ -207,14 +207,24 @@ urlpatterns = [
         name="dataset_chart_data",
     ),
     path(
-        "<uuid:pk>/edit",
+        "<uuid:pk>/edit-dataset",
         login_required(views.DatasetEditView.as_view()),
-        name="edit",
+        name="edit_dataset",
+    ),
+    path(
+        "<uuid:pk>/edit-visualisation-catalogue-item",
+        login_required(views.VisualisationCatalogueItemEditView.as_view()),
+        name="edit_visualisation_catalogue_item",
     ),
     path(
         "<uuid:pk>/search-enquiries-contact",
         login_required(views.DatasetEnquiriesContactSearchView.as_view()),
         name="search_enquiries_contact",
+    ),
+    path(
+        "<uuid:pk>/search-secondary-enquiries-contact",
+        login_required(views.DatasetSecondaryEnquiriesContactSearchView.as_view()),
+        name="search_secondary_enquiries_contact",
     ),
     path(
         "<uuid:pk>/edit-permissions",
@@ -240,5 +250,25 @@ urlpatterns = [
         "<uuid:pk>/remove-authorized-user/<int:summary_id>/<int:user_id>",
         login_required(views.DatasetRemoveAuthorisedUserView.as_view()),
         name="remove_authorized_user",
+    ),
+    path(
+        "<uuid:pk>/select-chart-source",
+        login_required(views.SelectChartSourceView.as_view()),
+        name="select_chart_source",
+    ),
+    path(
+        "<uuid:pk>/filter-chart-data/<str:source_id>/",
+        login_required(views.FilterChartDataView.as_view()),
+        name="filter_chart_data",
+    ),
+    path(
+        "<uuid:dataset_uuid>/grid-chart/<str:source_id>/",
+        login_required(views.CreateGridChartView.as_view()),
+        name="create_chart_from_grid",
+    ),
+    path(
+        "<uuid:dataset_uuid>/charts/",
+        login_required(views.DatasetChartsView.as_view()),
+        name="dataset_charts",
     ),
 ]

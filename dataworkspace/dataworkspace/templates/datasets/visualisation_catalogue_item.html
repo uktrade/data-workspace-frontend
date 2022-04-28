@@ -30,6 +30,11 @@
     </div>
     <div class="govuk-grid-column-one-quarter govuk-!-margin-top-2" style="text-align: right;">
       {% include "partials/bookmark-link.html" with dataset_uuid=model.id is_bookmarked=is_bookmarked %}
+      {% if request.user == model.information_asset_owner or request.user == model.information_asset_manager %}
+        <p class="govuk-body sidebar-section">
+          <a href="{% url 'datasets:edit_visualisation_catalogue_item' model.id %}" class="govuk-link govuk-link--no-visited-state">Manage this dataset</a>
+        </p>
+      {% endif %}
     </div>
   </div>
 {% endblock %}

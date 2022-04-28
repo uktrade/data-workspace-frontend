@@ -21,10 +21,6 @@ from django.urls import path, reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
-from dataworkspace.apps.api_v1.core.views import (
-    invalidate_superset_user_cached_credentials,
-    remove_superset_user_cached_credentials,
-)
 from dataworkspace.apps.applications.models import VisualisationTemplate
 from dataworkspace.apps.applications.utils import get_data_source_id
 from dataworkspace.apps.core.admin import (
@@ -49,13 +45,15 @@ from dataworkspace.apps.datasets.models import (
     SourceView,
     Tag,
     VisualisationCatalogueItem,
-    VisualisationUserPermission,
     VisualisationLink,
     VisualisationLinkSqlQuery,
     ToolQueryAuditLog,
     DataSetSubscription,
 )
-from dataworkspace.apps.datasets.permissions.utils import process_authorized_users_change
+from dataworkspace.apps.datasets.permissions.utils import (
+    process_dataset_authorized_users_change,
+    process_visualisation_catalogue_item_authorized_users_change,
+)
 from dataworkspace.apps.dw_admin.forms import (
     CustomDatasetQueryForm,
     DataCutDatasetForm,
@@ -72,8 +70,6 @@ from dataworkspace.apps.dw_admin.forms import (
     VisualisationCatalogueItemForm,
     VisualisationLinkForm,
 )
-from dataworkspace.apps.eventlog.models import EventLog
-from dataworkspace.apps.eventlog.utils import log_permission_change
 
 logger = logging.getLogger("app")
 
@@ -313,7 +309,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
 
         super().save_model(request, obj, form, change)
 
-        process_authorized_users_change(
+        process_dataset_authorized_users_change(
             authorized_users,
             request.user,
             obj,
@@ -355,6 +351,7 @@ class DataCutDatasetAdmin(CSPRichTextEditorMixin, BaseDatasetAdmin):
         SourceLinkInline,
         SourceViewInline,
         CustomDatasetQueryInline,
+        DataSetChartBuilderChartInline,
     ]
     manage_unpublished_permission_codename = "datasets.manage_unpublished_datacut_datasets"
 
@@ -845,63 +842,19 @@ class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStamp
         if obj.visualisation_template and not obj.name:
             obj.name = obj.visualisation_template.nice_name
 
-        current_authorized_users = set(
-            get_user_model().objects.filter(visualisationuserpermission__visualisation=obj)
-        )
-
         authorized_users = set(
             form.cleaned_data.get("authorized_users", get_user_model().objects.none())
         )
 
-        access_type_changed = "user_access_type" in form.changed_data
         super().save_model(request, obj, form, change)
 
-        changed_users = set()
-
-        for user in authorized_users - current_authorized_users:
-            VisualisationUserPermission.objects.create(visualisation=obj, user=user)
-            log_permission_change(
-                request.user,
-                obj,
-                EventLog.TYPE_GRANTED_VISUALISATION_PERMISSION,
-                {"for_user_id": user.id},
-                f"Added visualisation {obj} permission",
-            )
-            changed_users.add(user)
-
-        for user in current_authorized_users - authorized_users:
-            VisualisationUserPermission.objects.filter(visualisation=obj, user=user).delete()
-            log_permission_change(
-                request.user,
-                obj,
-                EventLog.TYPE_REVOKED_VISUALISATION_PERMISSION,
-                {"for_user_id": user.id},
-                f"Removed visualisation {obj} permission",
-            )
-            changed_users.add(user)
-
-        if (
-            access_type_changed != obj.user_access_type
-            or "authorized_email_domains" in form.changed_data
-        ):
-            log_permission_change(
-                request.user,
-                obj,
-                EventLog.TYPE_SET_DATASET_USER_ACCESS_TYPE
-                if access_type_changed != obj.user_access_type
-                else EventLog.TYPE_CHANGED_AUTHORIZED_EMAIL_DOMAIN,
-                {"access_type": obj.user_access_type},
-                f"user_access_type set to {obj.user_access_type}",
-            )
-
-            # As the visualisation's access type has changed, clear cached credentials for all
-            # users to ensure they either:
-            #   - lose access if it went from REQUIRES_AUTHENTICATION/OPEN to REQUIRES_AUTHORIZATION
-            #   - get access if it went from REQUIRES_AUTHORIZATION to REQUIRES_AUTHENTICATION/OPEN
-            invalidate_superset_user_cached_credentials()
-        else:
-            for user in changed_users:
-                remove_superset_user_cached_credentials(user)
+        process_visualisation_catalogue_item_authorized_users_change(
+            authorized_users,
+            request.user,
+            obj,
+            "user_access_type" in form.changed_data,
+            "authorized_email_domains" in form.changed_data,
+        )
 
 
 @admin.register(DatasetReferenceCode)
@@ -1019,8 +972,8 @@ class ToolQueryAuditLogAdmin(admin.ModelAdmin):
 
 class PipelineVersionInline(admin.TabularInline):
     model = PipelineVersion
-    fields = ("table_name", "sql_query")
-    readonly_fields = ("table_name", "sql_query")
+    fields = ("table_name", "config")
+    readonly_fields = ("table_name", "config")
 
     def has_add_permission(self, request, obj=None):
         return False

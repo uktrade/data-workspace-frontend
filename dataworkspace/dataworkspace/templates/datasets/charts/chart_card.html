@@ -1,0 +1,21 @@
+{% load datasets_tags %}
+<div class="govuk-grid-column-one-third govuk-!-margin-bottom-6">
+  <div class="govuk-!-margin-bottom-2">
+    <a href="{% url "datasets:dataset_chart" dataset_uuid=dataset.id object_id=chart.id %}"
+       class="govuk-link govuk-link--no-visited-state chart-preview-container"
+       id="chart-{{ chart.id }}"
+    >
+      {% if not chart.chart.thumbnail %}
+        <div style="text-align: center">No preview available</div>
+      {% else %}
+        <img src="{{ chart.chart.thumbnail.url }}" alt="{{ chart.name }}" />
+      {% endif %}
+    </a>
+  </div>
+  <p class="govuk-body govuk-!-margin-bottom-2">
+    {% chart_link_or_plain_text chart.name has_access dataset.id chart.id %}
+  </p>
+  <p class="govuk-body">
+    {{ chart.summary }}
+  </p>
+</div>

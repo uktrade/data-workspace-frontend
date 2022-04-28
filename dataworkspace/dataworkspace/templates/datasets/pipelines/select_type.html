@@ -1,0 +1,31 @@
+{% extends '_main.html' %}
+{% block page_title %}Select pipeline type - {{ block.super }}{% endblock page_title %}
+{% block breadcrumbs %}
+  <div class="govuk-breadcrumbs">
+    <ol class="govuk-breadcrumbs__list">
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="/">Home</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="{% url 'pipelines:index' %}">Pipelines</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">Select pipeline type
+      </li>
+    </ol>
+  </div>
+{% endblock breadcrumbs %}
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-l">
+        Select pipeline type
+      </h1>
+      {% include 'design_system/error_summary.html' with form=form %}
+      <form method="post">
+        {% csrf_token %}
+        {{ form.pipeline_type }}
+        <input class="govuk-button" type="submit" value="Create pipeline">
+      </form>
+    </div>
+  </div>
+{% endblock content %}

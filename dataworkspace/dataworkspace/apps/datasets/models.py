@@ -60,12 +60,13 @@ from dataworkspace.apps.datasets.constants import (
     DataLinkType,
     GRID_DATA_TYPE_MAP,
     GRID_ACRONYM_MAP,
+    PipelineType,
     TagType,
     UserAccessType,
 )
 from dataworkspace.apps.datasets.model_utils import external_model_class
 from dataworkspace.apps.eventlog.models import EventLog
-from dataworkspace.apps.explorer.models import ChartBuilderChart
+from dataworkspace.apps.core.charts.models import ChartBuilderChart
 from dataworkspace.datasets_db import (
     get_tables_last_updated_date,
 )
@@ -448,6 +449,12 @@ class DataSet(DeletableTimestampedUserModel):
     def get_usage_history_url(self):
         return reverse("datasets:usage_history", args=(self.id,))
 
+    def get_related_source(self, source_id):
+        for related_object in self.related_objects():
+            if str(related_object.id) == str(source_id):
+                return related_object
+        return None
+
 
 class DataSetVisualisation(DeletableTimestampedUserModel):
     name = models.CharField(max_length=255)
@@ -506,18 +513,18 @@ class MasterDatasetManager(DeletableQuerySet):
 
 class MasterDataset(DataSet):
     """
-    Proxy model to allow to logically separate out "master" and "data cut" datasets in the admin.
+    Proxy model to allow to logically separate out "source" and "data cut" datasets in the admin.
     """
 
     objects = MasterDatasetManager()
 
     class Meta:
         proxy = True
-        verbose_name = "Master Dataset"
+        verbose_name = "Source Dataset"
         permissions = [
             (
                 "manage_unpublished_master_datasets",
-                "Manage (create, view, edit) unpublished master datasets",
+                "Manage (create, view, edit) unpublished source datasets",
             )
         ]
 
@@ -725,6 +732,15 @@ class SourceTable(BaseSource):
             "datasets:source_table_column_details",
             args=(self.dataset_id, self.id),
         )
+
+    def get_chart_builder_url(self):
+        return reverse(
+            "charts:create-chart-from-source-table",
+            args=(self.id,),
+        )
+
+    def get_chart_builder_query(self):
+        return f"SELECT * from {self.schema}.{self.table}"
 
 
 class SourceView(BaseSource):
@@ -1011,6 +1027,15 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
             "datasets:custom_query_column_details",
             args=(self.dataset_id, self.id),
         )
+
+    def get_chart_builder_url(self):
+        return reverse(
+            "charts:create-chart-from-data-cut-query",
+            args=(self.id,),
+        )
+
+    def get_chart_builder_query(self):
+        return self.query
 
 
 class CustomDatasetQueryTable(models.Model):
@@ -2355,42 +2380,45 @@ class UserNotification(TimeStampedModel):
 
 class Pipeline(TimeStampedUserModel):
     table_name = models.CharField(max_length=256, unique=True)
-    sql_query = models.TextField()
+    type = models.CharField(max_length=255, choices=PipelineType.choices)
+    config = models.JSONField()
+
+    class Meta:
+        ordering = ("table_name",)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._original_table_name = self.table_name
-        self._original_sql_query = self.sql_query
+        self._original_config = self.config
+
+    def __str__(self):
+        return self.dag_id
 
     @property
     def dag_id(self):
         return f"DerivedPipeline-{self.table_name}"
 
     def get_absolute_url(self):
-        return reverse("pipelines:edit", args=(self.id,))
-
-    def __str__(self):
-        return self.dag_id
+        return reverse(f"pipelines:edit-{self.type}", args=(self.id,))
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if self.id is not None and (
-            self._original_table_name != self.table_name
-            or self._original_sql_query != self.sql_query
+            self._original_table_name != self.table_name or self._original_config != self.config
         ):
             PipelineVersion.objects.create(
                 pipeline=self,
                 table_name=self._original_table_name,
-                sql_query=self._original_sql_query,
+                config=self._original_config,
             )
             self._original_table_name = self.table_name
-            self._original_sql_query = self.sql_query
+            self._original_config = self.config
         super().save(force_insert, force_update, using, update_fields)
 
 
 class PipelineVersion(TimeStampedModel):
     pipeline = models.ForeignKey(Pipeline, on_delete=models.CASCADE)
     table_name = models.CharField(max_length=256)
-    sql_query = models.TextField()
+    config = models.JSONField()
 
     class Meta:
         get_latest_by = "created_date"

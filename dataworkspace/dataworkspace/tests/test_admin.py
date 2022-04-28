@@ -2472,6 +2472,10 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 "customdatasetquery_set-MAX_NUM_FORMS": "1000",
                 "authorized_users": user2.id,
                 "_continue": "Save and continue editing",
+                "charts-TOTAL_FORMS": "1",
+                "charts-INITIAL_FORMS": "0",
+                "charts-MIN_NUM_FORMS": "0",
+                "charts-MAX_NUM_FORMS": "1000",
             },
         )
         self.assertContains(response, "was changed successfully")
@@ -2508,6 +2512,10 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 "customdatasetquery_set-MAX_NUM_FORMS": "1000",
                 "authorized_email_domains": ["example.com"],
                 "_continue": "Save and continue editing",
+                "charts-TOTAL_FORMS": "1",
+                "charts-INITIAL_FORMS": "0",
+                "charts-MIN_NUM_FORMS": "0",
+                "charts-MAX_NUM_FORMS": "1000",
             },
         )
         dataset.refresh_from_db()
@@ -2556,6 +2564,10 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 "customdatasetquery_set-MIN_NUM_FORMS": "0",
                 "customdatasetquery_set-MAX_NUM_FORMS": "1000",
                 "_continue": "Save and continue editing",
+                "charts-TOTAL_FORMS": "1",
+                "charts-INITIAL_FORMS": "0",
+                "charts-MIN_NUM_FORMS": "0",
+                "charts-MAX_NUM_FORMS": "1000",
             },
         )
         self.assertContains(response, "was changed successfully")
@@ -2606,6 +2618,10 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 "customdatasetquery_set-MIN_NUM_FORMS": "0",
                 "customdatasetquery_set-MAX_NUM_FORMS": "1000",
                 "_continue": "Save and continue editing",
+                "charts-TOTAL_FORMS": "1",
+                "charts-INITIAL_FORMS": "0",
+                "charts-MIN_NUM_FORMS": "0",
+                "charts-MAX_NUM_FORMS": "1000",
             },
         )
         self.assertEqual(response.status_code, 200)
@@ -2652,6 +2668,10 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 "customdatasetquery_set-MIN_NUM_FORMS": "0",
                 "customdatasetquery_set-MAX_NUM_FORMS": "1000",
                 "_continue": "Save and continue editing",
+                "charts-TOTAL_FORMS": "1",
+                "charts-INITIAL_FORMS": "0",
+                "charts-MIN_NUM_FORMS": "0",
+                "charts-MAX_NUM_FORMS": "1000",
             },
         )
         self.assertContains(response, "was changed successfully")
@@ -2697,6 +2717,10 @@ class TestDatasetAdminPytest:
                 "customdatasetquery_set-0-query": "select 1",
                 "customdatasetquery_set-0-frequency": 1,
                 "_continue": "Save and continue editing",
+                "charts-TOTAL_FORMS": "1",
+                "charts-INITIAL_FORMS": "0",
+                "charts-MIN_NUM_FORMS": "0",
+                "charts-MAX_NUM_FORMS": "1000",
             },
             follow=True,
         )
@@ -2764,6 +2788,10 @@ class TestDatasetAdminPytest:
                 "customdatasetquery_set-0-frequency": 1,
                 "customdatasetquery_set-0-reviewed": True,
                 "_continue": "Save and continue editing",
+                "charts-TOTAL_FORMS": "1",
+                "charts-INITIAL_FORMS": "0",
+                "charts-MIN_NUM_FORMS": "0",
+                "charts-MAX_NUM_FORMS": "1000",
             },
             follow=True,
         )
@@ -2821,6 +2849,10 @@ class TestDatasetAdminPytest:
                 "customdatasetquery_set-0-frequency": 1,
                 "customdatasetquery_set-0-reviewed": True,
                 "_continue": "Save and continue editing",
+                "charts-TOTAL_FORMS": "1",
+                "charts-INITIAL_FORMS": "0",
+                "charts-MIN_NUM_FORMS": "0",
+                "charts-MAX_NUM_FORMS": "1000",
             },
             follow=True,
         )
@@ -2869,6 +2901,10 @@ class TestDatasetAdminPytest:
                 "customdatasetquery_set-MIN_NUM_FORMS": "0",
                 "customdatasetquery_set-MAX_NUM_FORMS": "1000",
                 "_continue": "Save and continue editing",
+                "charts-TOTAL_FORMS": "1",
+                "charts-INITIAL_FORMS": "0",
+                "charts-MIN_NUM_FORMS": "0",
+                "charts-MAX_NUM_FORMS": "1000",
             },
             follow=True,
         )
@@ -2952,6 +2988,10 @@ class TestDatasetAdminPytest:
                 "sourcetable_set-MIN_NUM_FORMS": "0",
                 "sourcetable_set-MAX_NUM_FORMS": "1000",
                 "_continue": "Save and continue editing",
+                "charts-TOTAL_FORMS": "1",
+                "charts-INITIAL_FORMS": "0",
+                "charts-MIN_NUM_FORMS": "0",
+                "charts-MAX_NUM_FORMS": "1000",
             },
             follow=True,
         )
@@ -2999,6 +3039,10 @@ class TestDatasetAdminPytest:
                 "customdatasetquery_set-MIN_NUM_FORMS": "0",
                 "customdatasetquery_set-MAX_NUM_FORMS": "1000",
                 "_continue": "Save and continue editing",
+                "charts-TOTAL_FORMS": "1",
+                "charts-INITIAL_FORMS": "0",
+                "charts-MIN_NUM_FORMS": "0",
+                "charts-MAX_NUM_FORMS": "1000",
             },
             follow=True,
         )
@@ -3106,6 +3150,10 @@ class TestDatasetAdminPytest:
                 "customdatasetquery_set-0-frequency": 1,
                 "customdatasetquery_set-0-reviewed": True,
                 "_continue": "Save and continue editing",
+                "charts-TOTAL_FORMS": "1",
+                "charts-INITIAL_FORMS": "0",
+                "charts-MIN_NUM_FORMS": "0",
+                "charts-MAX_NUM_FORMS": "1000",
             },
             follow=True,
         )
