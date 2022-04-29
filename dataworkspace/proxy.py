@@ -61,6 +61,7 @@ async def async_main():
     port = int(env["PROXY_PORT"])
     admin_root = env["UPSTREAM_ROOT"]
     superset_root = env["SUPERSET_ROOT"]
+    flower_root = env["FLOWER_ROOT"]
     hawk_senders = env["HAWK_SENDERS"]
     sso_base_url = env["AUTHBROKER_URL"]
     sso_host = URL(sso_base_url).host
@@ -187,6 +188,17 @@ async def async_main():
             + downstream_request["sso_profile_headers"]
         )
 
+    def flower_headers_proxy(downstream_request):
+        return (
+            tuple(
+                (key, value)
+                for key, value in downstream_request.headers.items()
+                if key.lower()
+                in required_admin_headers + ("content-length", "content-type", "authorization")
+            )
+            + downstream_request["sso_profile_headers"]
+        )
+
     def mirror_headers(downstream_request):
         return tuple(
             (key, value)
@@ -255,6 +267,9 @@ async def async_main():
             or request.url.host == f"superset-admin.{root_domain_no_port}"
         )
 
+    def is_flower_requested(request):
+        return request.url.host == f"flower.{root_domain_no_port}"
+
     def is_data_explorer_requested(request):
         return (
             request.url.path.startswith("/data-explorer/")
@@ -266,6 +281,7 @@ async def async_main():
             request.url.host.endswith(f".{root_domain_no_port}")
             and not request.url.path.startswith(mirror_local_root)
             and not is_superset_requested(request)
+            and not is_flower_requested(request)
         )
 
     def is_mirror_requested(request):
@@ -341,6 +357,7 @@ async def async_main():
         app_requested = is_app_requested(downstream_request)
         mirror_requested = is_mirror_requested(downstream_request)
         superset_requested = is_superset_requested(downstream_request)
+        flower_requested = is_flower_requested(downstream_request)
 
         # Websocket connections
         # - tend to close unexpectedly, both from the client and app
@@ -359,6 +376,8 @@ async def async_main():
                 return await handle_mirror(downstream_request, method, path)
             if superset_requested:
                 return await handle_superset(downstream_request, method, path, query)
+            if flower_requested:
+                return await handle_flower(downstream_request, method, path, query)
             return await handle_admin(
                 downstream_request,
                 method,
@@ -655,6 +674,18 @@ async def async_main():
                     csp_application_running_direct(host, "superset"),
                 ),
             ),
+        )
+
+    async def handle_flower(downstream_request, method, path, query):
+        upstream_url = URL(flower_root).with_path(path)
+        return await handle_http(
+            downstream_request,
+            method,
+            CIMultiDict(flower_headers_proxy(downstream_request)),
+            upstream_url,
+            query,
+            await get_data(downstream_request),
+            default_http_timeout,
         )
 
     async def handle_admin(downstream_request, method, headers, path, query, data):
