@@ -6,9 +6,10 @@ from django.db import connections
 from django.urls import reverse
 from waffle.testutils import override_flag
 
-from dataworkspace.apps.explorer import models
-from dataworkspace.apps.explorer.constants import CHART_BUILDER_SCHEMA
-from dataworkspace.tests.explorer import factories
+from dataworkspace.apps.core.charts import models
+from dataworkspace.apps.core.charts.constants import CHART_BUILDER_SCHEMA
+from dataworkspace.tests.core.factories import ChartBuilderChartFactory
+from dataworkspace.tests.explorer.factories import QueryLogFactory
 from dataworkspace.tests.factories import DataSetChartBuilderChartFactory
 
 
@@ -27,34 +28,12 @@ def create_temporary_results_table(query_log):
 
 @pytest.mark.django_db(transaction=True)
 @override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
-def test_chart_creation_from_query_log_not_owner(client, staff_user):
-    query_log = factories.QueryLogFactory.create(run_by_user=staff_user)
-    response = client.get(reverse("explorer:explorer-charts:create-chart", args=(query_log.id,)))
-    assert response.status_code == 404
-
-
-@pytest.mark.django_db(transaction=True)
-@override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
-def test_chart_creation_from_query_log(staff_client, staff_user):
-    query_log = factories.QueryLogFactory(run_by_user=staff_user)
-    num_query_logs = models.QueryLog.objects.count()
-    num_charts = models.ChartBuilderChart.objects.count()
-    response = staff_client.get(
-        reverse("explorer:explorer-charts:create-chart", args=(query_log.id,))
-    )
-    assert models.QueryLog.objects.count() == num_query_logs + 1
-    assert models.ChartBuilderChart.objects.count() == num_charts + 1
-    assert response.status_code == 302
-
-
-@pytest.mark.django_db(transaction=True)
-@override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
 def test_chart_edit_not_owner(staff_client):
-    chart = factories.ChartBuilderChartFactory.create()
-    response = staff_client.get(reverse("explorer:explorer-charts:edit-chart", args=(chart.id,)))
+    chart = ChartBuilderChartFactory.create()
+    response = staff_client.get(reverse("charts:edit-chart", args=(chart.id,)))
     assert response.status_code == 404
     response = staff_client.post(
-        reverse("explorer:explorer-charts:edit-chart", args=(chart.id,)),
+        reverse("charts:edit-chart", args=(chart.id,)),
         json.dumps({"config": {"updated": "config"}}),
         content_type="application/json",
     )
@@ -64,12 +43,12 @@ def test_chart_edit_not_owner(staff_client):
 @pytest.mark.django_db(transaction=True)
 @override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
 def test_chart_edit(staff_client, staff_user):
-    query_log = factories.QueryLogFactory(run_by_user=staff_user)
-    chart = factories.ChartBuilderChartFactory.create(
+    query_log = QueryLogFactory(run_by_user=staff_user)
+    chart = ChartBuilderChartFactory.create(
         created_by=staff_user, query_log=query_log, chart_config={"some": "config"}
     )
     response = staff_client.post(
-        reverse("explorer:explorer-charts:edit-chart", args=(chart.id,)),
+        reverse("charts:edit-chart", args=(chart.id,)),
         json.dumps({"config": {"updated": "config"}}),
         content_type="application/json",
     )
@@ -81,28 +60,24 @@ def test_chart_edit(staff_client, staff_user):
 @pytest.mark.django_db(transaction=True)
 @override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
 def test_chart_query_status_not_owner(staff_client, user):
-    chart = factories.ChartBuilderChartFactory.create(
+    chart = ChartBuilderChartFactory.create(
         created_by=user,
-        query_log=factories.QueryLogFactory(run_by_user=user),
+        query_log=QueryLogFactory(run_by_user=user),
         chart_config={"some": "config"},
     )
-    response = staff_client.get(
-        reverse("explorer:explorer-charts:chart-query-status", args=(chart.id,))
-    )
+    response = staff_client.get(reverse("charts:chart-query-status", args=(chart.id,)))
     assert response.status_code == 404
 
 
 @pytest.mark.django_db(transaction=True)
 @override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
 def test_chart_query_status(staff_client, staff_user):
-    chart = factories.ChartBuilderChartFactory.create(
+    chart = ChartBuilderChartFactory.create(
         created_by=staff_user,
-        query_log=factories.QueryLogFactory(run_by_user=staff_user),
+        query_log=QueryLogFactory(run_by_user=staff_user),
         chart_config={"some": "config"},
     )
-    response = staff_client.get(
-        reverse("explorer:explorer-charts:chart-query-status", args=(chart.id,))
-    )
+    response = staff_client.get(reverse("charts:chart-query-status", args=(chart.id,)))
     assert response.status_code == 200
     assert response.json() == {"columns": [], "error": None, "state": 0}
 
@@ -110,29 +85,25 @@ def test_chart_query_status(staff_client, staff_user):
 @pytest.mark.django_db(transaction=True)
 @override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
 def test_chart_query_results_not_owner(staff_client, user):
-    chart = factories.ChartBuilderChartFactory.create(
+    chart = ChartBuilderChartFactory.create(
         created_by=user,
-        query_log=factories.QueryLogFactory(run_by_user=user),
+        query_log=QueryLogFactory(run_by_user=user),
         chart_config={"some": "config"},
     )
-    response = staff_client.get(
-        reverse("explorer:explorer-charts:chart-query-results", args=(chart.id,))
-    )
+    response = staff_client.get(reverse("charts:chart-query-results", args=(chart.id,)))
     assert response.status_code == 404
 
 
 @pytest.mark.django_db(transaction=True)
 @override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
 def test_chart_query_results(staff_client, staff_user):
-    chart = factories.ChartBuilderChartFactory.create(
+    chart = ChartBuilderChartFactory.create(
         created_by=staff_user,
-        query_log=factories.QueryLogFactory(run_by_user=staff_user, rows=10),
+        query_log=QueryLogFactory(run_by_user=staff_user, rows=10),
         chart_config={"some": "config"},
     )
     create_temporary_results_table(chart.query_log)
-    response = staff_client.get(
-        reverse("explorer:explorer-charts:chart-query-results", args=(chart.id,))
-    )
+    response = staff_client.get(reverse("charts:chart-query-results", args=(chart.id,)))
     assert response.status_code == 200
     assert response.json() == {
         "data": {"data": ["2"], "id": [1]},
@@ -144,23 +115,19 @@ def test_chart_query_results(staff_client, staff_user):
 @pytest.mark.django_db(transaction=True)
 @override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
 def test_chart_delete_not_owner(staff_client, user):
-    query_log = factories.QueryLogFactory(run_by_user=user)
-    chart = factories.ChartBuilderChartFactory.create(created_by=user, query_log=query_log)
-    response = staff_client.post(
-        reverse("explorer:explorer-charts:delete-chart", args=(chart.id,))
-    )
+    query_log = QueryLogFactory(run_by_user=user)
+    chart = ChartBuilderChartFactory.create(created_by=user, query_log=query_log)
+    response = staff_client.post(reverse("charts:delete-chart", args=(chart.id,)))
     assert response.status_code == 404
 
 
 @pytest.mark.django_db(transaction=True)
 @override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
 def test_chart_delete_view(staff_client, staff_user):
-    query_log = factories.QueryLogFactory(run_by_user=staff_user)
-    chart = factories.ChartBuilderChartFactory.create(created_by=staff_user, query_log=query_log)
+    query_log = QueryLogFactory(run_by_user=staff_user)
+    chart = ChartBuilderChartFactory.create(created_by=staff_user, query_log=query_log)
     num_charts = models.ChartBuilderChart.objects.count()
-    response = staff_client.post(
-        reverse("explorer:explorer-charts:delete-chart", args=(chart.id,))
-    )
+    response = staff_client.post(reverse("charts:delete-chart", args=(chart.id,)))
     assert response.status_code == 302
     assert models.ChartBuilderChart.objects.count() == num_charts - 1
 
@@ -168,13 +135,11 @@ def test_chart_delete_view(staff_client, staff_user):
 @pytest.mark.django_db(transaction=True)
 @override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
 def test_chart_delete_published_chart(staff_client, staff_user):
-    query_log = factories.QueryLogFactory(run_by_user=staff_user)
-    chart = factories.ChartBuilderChartFactory.create(created_by=staff_user, query_log=query_log)
+    query_log = QueryLogFactory(run_by_user=staff_user)
+    chart = ChartBuilderChartFactory.create(created_by=staff_user, query_log=query_log)
     DataSetChartBuilderChartFactory.create(chart=chart)
     num_charts = models.ChartBuilderChart.objects.count()
-    response = staff_client.post(
-        reverse("explorer:explorer-charts:delete-chart", args=(chart.id,))
-    )
+    response = staff_client.post(reverse("charts:delete-chart", args=(chart.id,)))
     assert response.status_code == 302
     assert models.ChartBuilderChart.objects.count() == num_charts
 
@@ -182,12 +147,10 @@ def test_chart_delete_published_chart(staff_client, staff_user):
 @pytest.mark.django_db(transaction=True)
 @override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
 def test_chart_list_view(staff_user, staff_client, user):
-    factories.ChartBuilderChartFactory.create(
-        created_by=staff_user, query_log=factories.QueryLogFactory(run_by_user=staff_user)
+    ChartBuilderChartFactory.create(
+        created_by=staff_user, query_log=QueryLogFactory(run_by_user=staff_user)
     )
-    factories.ChartBuilderChartFactory.create(
-        created_by=user, query_log=factories.QueryLogFactory(run_by_user=user)
-    )
-    response = staff_client.get(reverse("explorer:explorer-charts:list-charts"))
+    ChartBuilderChartFactory.create(created_by=user, query_log=QueryLogFactory(run_by_user=user))
+    response = staff_client.get(reverse("charts:list-charts"))
     assert response.status_code == 200
     assert response.context_data["charts"].count() == 1

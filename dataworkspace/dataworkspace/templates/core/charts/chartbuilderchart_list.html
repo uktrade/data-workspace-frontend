@@ -33,7 +33,7 @@
                 {% if chart.is_published %}Yes{% else %}No{% endif %}
               </td>
               <td class="name govuk-table__cell">
-                <a href="{% url 'explorer:explorer-charts:delete-chart' chart.id %}" class="govuk-link govuk-link--no-visited-state">
+                <a href="{% url 'charts:delete-chart' chart.id %}" class="govuk-link govuk-link--no-visited-state">
                   Delete
                 </a>
               </td>

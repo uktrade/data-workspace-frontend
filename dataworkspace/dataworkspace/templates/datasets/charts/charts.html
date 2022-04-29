@@ -1,0 +1,44 @@
+{% extends '_main.html' %}
+{% load render_bundle_csp %}
+{% block page_title %}{{ chart.name }} - {{ block.super }}{% endblock %}
+{% block breadcrumbs %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-three-quarters">
+    <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="/">Home</a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-link" href="{% url "datasets:dataset_detail" dataset_uuid=dataset.id %}#{{ dataset.slug }}">
+              {{ dataset.name }}
+            </a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            Charts
+          </li>
+        </ol>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block content%}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      <h1 class="govuk-heading-l">{{ dataset.name }}</h1>
+       <p class="govuk-body govuk-!-margin-bottom-6">
+         There are {{ charts|length }} charts in this dataset. <a class="govuk-link govuk-link--no-visited-state" href="{{ dataset.get_absolute_url }}">Go back</a> to the dataset catalogue page.
+       </p>
+    </div>
+  </div>
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      {% for chart in charts %}
+        {% include 'datasets/charts/chart_card.html' with has_access=True %}
+      {% empty %}
+        <p class="govuk-body">There are no charts based on data in this dataset currently.</p>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}

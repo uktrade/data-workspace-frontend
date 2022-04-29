@@ -16,6 +16,11 @@
             </a>
           </li>
           <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-link" href="{% url "datasets:dataset_charts" dataset_uuid=chart.dataset.id %}">
+              Charts
+            </a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
             {{ chart.name }}
           </li>
         </ol>

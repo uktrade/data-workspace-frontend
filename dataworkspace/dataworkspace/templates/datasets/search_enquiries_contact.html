@@ -1,7 +1,7 @@
 {% extends '_main.html' %}
 {% load humanize static datasets_tags core_tags waffle_tags %}
 
-{% block page_title %}{{ dataset.name }} - {{ block.super }}{% endblock %}
+{% block page_title %}{{ obj.name }} - {{ block.super }}{% endblock %}
 
 {% block breadcrumbs %}
   <div class="govuk-grid-row">
@@ -12,10 +12,10 @@
             <a class="govuk-breadcrumbs__link" href="/">Home</a>
           </li>
           <li class="govuk-breadcrumbs__list-item">
-            <a class="govuk-breadcrumbs__link" href="{{ dataset.get_absolute_url }}">{{ dataset.name }}</a>
+            <a class="govuk-breadcrumbs__link" href="{{ obj.get_absolute_url }}">{{ obj.name }}</a>
           </li>
           <li class="govuk-breadcrumbs__list-item">
-            <a class="govuk-breadcrumbs__link" href="{% url 'datasets:edit' dataset.pk %}">Manage this dataset</a>
+            <a class="govuk-breadcrumbs__link" href="{{ obj_edit_url }}">Manage this dataset</a>
           </li>
           <li class="govuk-breadcrumbs__list-item">
             Edit enquiries contact
@@ -30,8 +30,8 @@
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
             {% include 'design_system/error_summary.html' with form=form %}
-            <h1 class="govuk-heading-l">Edit enquiries contact for {{ dataset.name }}</h1>
-            <form method="post" enctype="multipart/form-data" novalidate>
+            <h1 class="govuk-heading-l">Edit enquiries contact for {{ obj.name }}</h1>
+            <form action="{{ request.get_full_path }}" method="post" enctype="multipart/form-data" novalidate>
               {% csrf_token %}
               <fieldset class="govuk-fieldset">
                   <div class="govuk-form-group ">
@@ -42,7 +42,7 @@
                   </div>
                   <div class="govuk-button-group">
                       <button type="submit" class="govuk-button" data-prevent-double-click="true" >Search</button>
-                      <a class="govuk-link govuk-link--no-visited-state" href="{% url 'datasets:edit' dataset.pk %}">Cancel</a>
+                      <a class="govuk-link govuk-link--no-visited-state" href="{{ obj_edit_url }}?secondary_enquiries_contact={{ request.GET.secondary_enquiries_contact }}">Cancel</a>
                     </div>
               </fieldset>
             </form>
@@ -54,7 +54,7 @@
                         <tr class="govuk-table__row">
                             <td class="govuk-table__cell">{{ result.first_name }} {{ result.last_name }}</td>
                             <td class="govuk-table__cell">{{ result.email }}</td>
-                            <td class="govuk-table__cell"><a class="govuk-link" href="{% url 'datasets:edit' dataset.pk %}?enquiries_contact={{ result.email }}">Select</a></td>
+                            <td class="govuk-table__cell"><a class="govuk-link" href="{{ obj_edit_url }}?enquiries_contact={{ result.email }}&secondary_enquiries_contact={{ request.GET.secondary_enquiries_contact }}">Select</a></td>
                           </tr>
                         {% endfor %}
                     </tbody>

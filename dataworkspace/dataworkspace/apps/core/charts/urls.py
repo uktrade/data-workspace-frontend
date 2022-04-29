@@ -1,8 +1,7 @@
 from django.urls import path
 
 from dataworkspace.apps.accounts.utils import login_required
-from dataworkspace.apps.explorer.charts.views import (
-    ChartCreateView,
+from dataworkspace.apps.core.charts.views import (
     ChartDeleteView,
     ChartEditView,
     ChartListView,
@@ -10,13 +9,7 @@ from dataworkspace.apps.explorer.charts.views import (
     ChartQueryStatusView,
 )
 
-
 urlpatterns = [
-    path(
-        "create/<int:query_log_id>/",
-        login_required(ChartCreateView.as_view()),
-        name="create-chart",
-    ),
     path(
         "edit/<uuid:chart_id>/",
         login_required(ChartEditView.as_view()),

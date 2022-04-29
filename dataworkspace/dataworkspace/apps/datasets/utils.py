@@ -134,24 +134,18 @@ for chunk in chunks:
 
 def get_r_snippet(query):
     query = query.replace("\\", "\\\\").replace('"', '\\"')
-    return f"""library(stringr)
-library(DBI)
-getConn <- function(dsn) {{
-    user <- str_match(dsn, "user=([a-z0-9_]+)")[2]
-    password <- str_match(dsn, "password=([a-zA-Z0-9_]+)")[2]
-    port <- str_match(dsn, "port=(\\\\d+)")[2]
-    dbname <- str_match(dsn, "dbname=([a-z0-9_\\\\-]+)")[2]
-    host <- str_match(dsn, "host=([a-z0-9_\\\\-\\\\.]+)")[2]
-    con <- dbConnect(RPostgres::Postgres(), user = user, password = password, host = host, port = port, dbname = dbname)
-    return(con)
-}}
-conn <- getConn(Sys.getenv('DATABASE_DSN__datasets_1'))
-
-res <- dbSendQuery(conn, \"{query}\")
-while (!dbHasCompleted(res)) {{
-    chunk <- dbFetch(res, n = 50)
-    print(chunk)
-}}"""
+    return f"""library(DBI)
+conn <- dbConnect(RPostgres::Postgres())
+tryCatch({{
+    res <- dbSendQuery(conn, \"{query}\")
+    while (!dbHasCompleted(res)) {{
+        chunk <- dbFetch(res, n = 50)
+        print(chunk)
+    }}
+    dbClearResult(res)
+}}, finally={{
+    dbDisconnect(conn)
+}})"""
 
 
 @celery_app.task()

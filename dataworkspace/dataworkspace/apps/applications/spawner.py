@@ -28,6 +28,7 @@ from dataworkspace.apps.applications.gitlab import (
     gitlab_api_v4_ecr_pipeline_trigger,
 )
 from dataworkspace.apps.core.utils import (
+    close_admin_db_connection_if_not_in_atomic_block,
     close_all_connections_if_not_in_atomic_block,
     create_tools_access_iam_role,
     stable_identification_suffix,
@@ -132,6 +133,7 @@ class ProcessSpawner:
                     db_persistent_role=creds["db_persistent_role"],
                 )
 
+            close_admin_db_connection_if_not_in_atomic_block()
             gevent.sleep(1)
             cmd = json.loads(spawner_options)["CMD"]
 
@@ -145,10 +147,12 @@ class ProcessSpawner:
                 {"process_id": proc.pid}
             )
             application_instance.save(update_fields=["spawner_application_instance_id"])
+            close_admin_db_connection_if_not_in_atomic_block()
 
             gevent.sleep(1)
             application_instance.proxy_url = "http://localhost:8888/"
             application_instance.save(update_fields=["proxy_url"])
+            close_admin_db_connection_if_not_in_atomic_block()
         except Exception:  # pylint: disable=broad-except
             logger.exception("PROCESS %s %s", application_instance.id, spawner_options)
             if proc:
@@ -265,8 +269,12 @@ class FargateSpawner:
 
             logger.info("Starting %s", cmd)
 
+            user_email = user.email
+            user_profile_sso_id = user.profile.sso_id
+            close_admin_db_connection_if_not_in_atomic_block()
+
             role_arn, s3_prefix = create_tools_access_iam_role(
-                user.email, str(user.profile.sso_id), user_efs_access_point_id
+                user_email, str(user_profile_sso_id), user_efs_access_point_id
             )
 
             s3_env = {
@@ -284,10 +292,14 @@ class FargateSpawner:
                 and application_instance.application_template.gitlab_project_id
                 and not _ecr_tag_exists(ecr_repository_name, tag)
             ):
+                gitlab_project_id = application_instance.application_template.gitlab_project_id
+                commit_id = application_instance.commit_id
+                close_admin_db_connection_if_not_in_atomic_block()
+
                 pipeline = gitlab_api_v4_ecr_pipeline_trigger(
                     ECR_PROJECT_ID,
-                    application_instance.application_template.gitlab_project_id,
-                    application_instance.commit_id,
+                    gitlab_project_id,
+                    commit_id,
                     ecr_repository_name,
                     tag,
                 )
@@ -298,6 +310,7 @@ class FargateSpawner:
                     {"pipeline_id": pipeline_id, "task_arn": None}
                 )
                 application_instance.save(update_fields=["spawner_application_instance_id"])
+                close_admin_db_connection_if_not_in_atomic_block()
 
                 for _ in range(0, 900):
                     gevent.sleep(3)
@@ -328,6 +341,10 @@ class FargateSpawner:
                 user_efs_access_point_id,
             )
 
+            cpu = application_instance.cpu
+            memory = application_instance.memory
+            close_admin_db_connection_if_not_in_atomic_block()
+
             for i in range(0, 10):
                 # Sometimes there is an error assuming the new role: both IAM  and ECS are
                 # eventually consistent
@@ -339,8 +356,8 @@ class FargateSpawner:
                         definition_arn_with_image,
                         security_groups,
                         subnets,
-                        application_instance.cpu,
-                        application_instance.memory,
+                        cpu,
+                        memory,
                         cmd,
                         {**s3_env, **database_env, **schema_env, **env},
                         s3_sync,
@@ -378,6 +395,8 @@ class FargateSpawner:
             if application_instance.state == "STOPPED":
                 raise Exception("Application set to stopped before spawning complete")
 
+            close_admin_db_connection_if_not_in_atomic_block()
+
             for _ in range(0, 60):
                 ip_address = _fargate_task_ip(options["CLUSTER_NAME"], task_arn)
                 if ip_address:
@@ -411,22 +430,11 @@ class FargateSpawner:
 
             now = datetime.datetime.now()
             thirty_minutes_ago = now - datetime.timedelta(minutes=30)
-            three_minutes_ago = now - datetime.timedelta(minutes=3)
-            sixty_seconds_ago = now - datetime.timedelta(seconds=60)
+            two_minutes_ago = now - datetime.timedelta(minutes=2)
+            four_minutes_ago = now - datetime.timedelta(minutes=4)
 
             task_arn = spawner_application_id_parsed.get("task_arn")
             pipeline_id = spawner_application_id_parsed.get("pipeline_id")
-
-            # Give sixty seconds for something to start...
-            if not pipeline_id and not task_arn and created_date > sixty_seconds_ago:
-                return "RUNNING"
-            if not pipeline_id and not task_arn:
-                logger.exception(
-                    "Task not created within sixty seconds: %s %s",
-                    spawner_application_id_parsed,
-                    proxy_url,
-                )
-                return "STOPPED"
 
             # ... if started pipeline, but not yet the task, give 15 minutes to complete...
             if pipeline_id and not task_arn:
@@ -449,9 +457,9 @@ class FargateSpawner:
             else:
                 task_should_be_created = created_date
 
-            # ... give sixty seconds to create the task...
+            # ... give two minutes to create the task...
             if not task_arn:
-                if task_should_be_created > sixty_seconds_ago:
+                if task_should_be_created > two_minutes_ago:
                     return "RUNNING"
                 logger.exception(
                     "Task not created within sixty seconds: %s %s",
@@ -460,9 +468,9 @@ class FargateSpawner:
                 )
                 return "STOPPED"
 
-            # .... give three minutes to get the task itself (to mitigate eventual consistency)...
+            # .... give four minutes to get the task itself (to mitigate eventual consistency)...
             task = _fargate_task_describe(cluster_name, task_arn)
-            if task is None and task_should_be_created > three_minutes_ago:
+            if task is None and task_should_be_created > four_minutes_ago:
                 return "RUNNING"
             if task is None:
                 logger.exception(

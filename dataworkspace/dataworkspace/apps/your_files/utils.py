@@ -1,11 +1,11 @@
 import csv
 import json
+import logging
 import os
 import re
 from io import StringIO
 
 import requests
-
 from django.conf import settings
 from mohawk import Sender
 from tableschema import Schema
@@ -16,6 +16,9 @@ from dataworkspace.apps.core.utils import (
     db_role_schema_suffix_for_user,
 )
 from dataworkspace.apps.your_files.constants import PostgresDataTypes
+
+logger = logging.getLogger("app")
+
 
 SCHEMA_POSTGRES_DATA_TYPE_MAP = {
     "integer": PostgresDataTypes.INTEGER,
@@ -31,21 +34,49 @@ TABLESCHEMA_FIELD_TYPE_MAP = {
 }
 
 
-def get_s3_csv_column_types(path):
+def get_s3_csv_file_info(path):
     client = get_s3_client()
 
-    # Let's just read the first 100KiB of the file and assume that will give us enough lines to make reasonable
-    # assumptions about data types. This is an alternative to reading the first ~10 lines, in which case the first line
-    # could be incredibly long and possibly even crash the server?
-    # Django's default permitted size for a request body is 2.5MiB, so reading 100KiB here doesn't feel like an
-    # additional vector for denial-of-service.
-    file = client.get_object(Bucket=settings.NOTEBOOKS_BUCKET, Key=path, Range="bytes=0-102400")
+    logger.debug(path)
 
-    fh = StringIO(file["Body"].read().decode("utf-8-sig"))
+    file = client.get_object(Bucket=settings.NOTEBOOKS_BUCKET, Key=path, Range="bytes=0-102400")
+    raw = file["Body"].read()
+
+    encoding, decoded = _get_encoding_and_decoded_bytes(raw)
+
+    fh = StringIO(decoded, newline="")
     rows = list(csv.reader(fh))
 
+    return {"encoding": encoding, "column_definitions": _get_csv_column_types(rows)}
+
+
+def _get_encoding_and_decoded_bytes(raw: bytes):
+    encoding = "utf-8-sig"
+
+    try:
+        decoded = raw.decode(encoding)
+        return encoding, decoded
+    except UnicodeDecodeError:
+        pass
+
+    try:
+        encoding = "cp1252"
+        decoded = raw.decode(encoding)
+        return encoding, decoded
+    except UnicodeDecodeError:
+        pass
+
+    # fall back of last resort will decode most things
+    # https://docs.python.org/3/library/codecs.html#error-handlers
+    encoding = "latin1"
+    decoded = raw.decode(encoding, errors="replace")
+
+    return encoding, decoded
+
+
+def _get_csv_column_types(rows):
     if len(rows) <= 2:
-        raise ValueError("Unable to read enough lines of data from file", path)
+        raise ValueError("Unable to read enough lines of data from file")
 
     # Drop the last line, which might be incomplete
     del rows[-1]
@@ -69,12 +100,14 @@ def get_s3_csv_column_types(path):
                 "sample_data": [row[idx] for row in rows][:6],
             }
         )
+
     return fields
 
 
 def trigger_dataflow_dag(conf, dag, dag_run_id):
     config = settings.DATAFLOW_API_CONFIG
     trigger_url = f'{config["DATAFLOW_BASE_URL"]}/api/experimental/' f"dags/{dag}/dag_runs"
+    logger.debug("trigger_dataflow_dag %s", trigger_url)
     hawk_creds = {
         "id": config["DATAFLOW_HAWK_ID"],
         "key": config["DATAFLOW_HAWK_KEY"],
@@ -104,6 +137,8 @@ def trigger_dataflow_dag(conf, dag, dag_run_id):
         data=body,
         headers={"Authorization": header, "Content-Type": content_type},
     )
+
+    logger.debug(response.status_code)
     response.raise_for_status()
     return response.json()
 
@@ -116,11 +151,16 @@ def clean_db_identifier(identifier):
 
 def copy_file_to_uploads_bucket(from_path, to_path):
     client = get_s3_client()
-    client.copy_object(
-        CopySource={"Bucket": settings.NOTEBOOKS_BUCKET, "Key": from_path},
-        Bucket=settings.AWS_UPLOADS_BUCKET,
-        Key=to_path,
-    )
+
+    try:
+        client.copy_object(
+            CopySource={"Bucket": settings.NOTEBOOKS_BUCKET, "Key": from_path},
+            Bucket=settings.AWS_UPLOADS_BUCKET,
+            Key=to_path,
+        )
+    except Exception:
+        logger.error("failed to copy file to uploads bucket")
+        raise
 
 
 def get_dataflow_dag_status(dag, execution_date):

@@ -5,7 +5,7 @@ from dataworkspace.apps.api_v1.core.views import (
     remove_superset_user_cached_credentials,
 )
 from dataworkspace.apps.applications.utils import sync_quicksight_permissions
-from dataworkspace.apps.datasets.models import DataSetUserPermission
+from dataworkspace.apps.datasets.models import DataSetUserPermission, VisualisationUserPermission
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_permission_change
 from dataworkspace.apps.explorer.schema import clear_schema_info_cache_for_user
@@ -15,7 +15,7 @@ from dataworkspace.apps.explorer.utils import (
 )
 
 
-def process_authorized_users_change(
+def process_dataset_authorized_users_change(
     authorized_users,
     request_user,
     dataset,
@@ -89,3 +89,65 @@ def process_authorized_users_change(
                 )
         elif access_type_changed:
             sync_quicksight_permissions.delay()
+
+
+def process_visualisation_catalogue_item_authorized_users_change(
+    authorized_users,
+    request_user,
+    visualisation_catalogue_item,
+    access_type_changed,
+    authorized_email_domains_changed,
+):
+    current_authorized_users = set(
+        get_user_model().objects.filter(
+            visualisationuserpermission__visualisation=visualisation_catalogue_item
+        )
+    )
+
+    changed_users = set()
+
+    for user in authorized_users - current_authorized_users:
+        VisualisationUserPermission.objects.create(
+            visualisation=visualisation_catalogue_item, user=user
+        )
+        log_permission_change(
+            request_user,
+            visualisation_catalogue_item,
+            EventLog.TYPE_GRANTED_VISUALISATION_PERMISSION,
+            {"for_user_id": user.id},
+            f"Added visualisation {visualisation_catalogue_item} permission",
+        )
+        changed_users.add(user)
+
+    for user in current_authorized_users - authorized_users:
+        VisualisationUserPermission.objects.filter(
+            visualisation=visualisation_catalogue_item, user=user
+        ).delete()
+        log_permission_change(
+            request_user,
+            visualisation_catalogue_item,
+            EventLog.TYPE_REVOKED_VISUALISATION_PERMISSION,
+            {"for_user_id": user.id},
+            f"Removed visualisation {visualisation_catalogue_item} permission",
+        )
+        changed_users.add(user)
+
+    if access_type_changed or authorized_email_domains_changed:
+        log_permission_change(
+            request_user,
+            visualisation_catalogue_item,
+            EventLog.TYPE_SET_DATASET_USER_ACCESS_TYPE
+            if access_type_changed
+            else EventLog.TYPE_CHANGED_AUTHORIZED_EMAIL_DOMAIN,
+            {"access_type": visualisation_catalogue_item.user_access_type},
+            f"user_access_type set to {visualisation_catalogue_item.user_access_type}",
+        )
+
+        # As the visualisation's access type has changed, clear cached credentials for all
+        # users to ensure they either:
+        #   - lose access if it went from REQUIRES_AUTHENTICATION/OPEN to REQUIRES_AUTHORIZATION
+        #   - get access if it went from REQUIRES_AUTHORIZATION to REQUIRES_AUTHENTICATION/OPEN
+        invalidate_superset_user_cached_credentials()
+    else:
+        for user in changed_users:
+            remove_superset_user_cached_credentials(user)

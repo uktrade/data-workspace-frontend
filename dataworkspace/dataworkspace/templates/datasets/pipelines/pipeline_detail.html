@@ -23,8 +23,11 @@
       <form method="post" novalidate>
         {% include 'design_system/error_summary.html' with form=form %}
         {% csrf_token %}
+        {{ form.type }}
         {{ form.table_name }}
-        {{ form.sql_query }}
+        {{ form.sql }}
+        {{ form.site_name }}
+        {{ form.list_name }}
         <button class="govuk-button" data-module="govuk-button">Save</button>
       </form>
     </div>

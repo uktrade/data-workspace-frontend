@@ -1,5 +1,4 @@
 import json
-from datetime import datetime
 
 from csp.decorators import csp_update
 from django.conf import settings
@@ -7,50 +6,23 @@ from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
 from django.views import View
-from django.views.generic import DeleteView, ListView, RedirectView
+from django.views.generic import DeleteView, ListView
 from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace import datasets_db
-from dataworkspace.apps.datasets.templatetags.datasets_tags import date_with_gmt_offset
+from dataworkspace.apps.core.charts.models import ChartBuilderChart
+
+from dataworkspace.apps.core.charts.tasks import refresh_chart_thumbnail
+
 from dataworkspace.apps.explorer.constants import QueryLogState
-from dataworkspace.apps.explorer.models import ChartBuilderChart, QueryLog
-from dataworkspace.apps.explorer.tasks import refresh_chart_thumbnail, run_chart_builder_query
-
-
-class ChartCreateView(WaffleFlagMixin, RedirectView):
-    waffle_flag = settings.CHART_BUILDER_BUILD_CHARTS_FLAG
-
-    def get_redirect_url(self, *args, **kwargs):
-        # Given a data explorer query log we need to save the results
-        # of the full query to a database table to allow us to query
-        # it directly from the chart builder ui.
-        original_query_log = get_object_or_404(
-            QueryLog, pk=kwargs["query_log_id"], run_by_user=self.request.user
-        )
-        query_log = QueryLog.objects.create(
-            sql=original_query_log.sql,
-            query_id=original_query_log.query_id,
-            run_by_user=self.request.user,
-            connection=original_query_log.connection,
-            page=1,
-            page_size=None,
-        )
-        title = f"New chart ({date_with_gmt_offset(datetime.now())})"
-        chart = ChartBuilderChart.objects.create(
-            title=title,
-            created_by=self.request.user,
-            query_log=query_log,
-            chart_config={"layout": {"title": {"text": title}}},
-        )
-        run_chart_builder_query.delay(chart.id)
-        return chart.get_edit_url() + f"?ql={original_query_log.id}"
+from dataworkspace.apps.explorer.models import QueryLog
 
 
 class ChartEditView(WaffleFlagMixin, View):
     waffle_flag = settings.CHART_BUILDER_BUILD_CHARTS_FLAG
-    template_name = "explorer/charts/chart_builder.html"
+    template_name = "core/charts/chart_builder.html"
 
-    @csp_update(SCRIPT_SRC=["'unsafe-eval'", "blob:"])
+    @csp_update(SCRIPT_SRC=["'unsafe-eval'", "blob:"], IMG_SRC=["blob:"])
     def get(self, request, chart_id):
         chart = get_object_or_404(ChartBuilderChart, created_by=request.user, pk=chart_id)
         return render(
@@ -58,9 +30,7 @@ class ChartEditView(WaffleFlagMixin, View):
             self.template_name,
             context={
                 "chart": chart,
-                "back_link": reverse("explorer:running_query", args=(request.GET.get("ql"),))
-                if "ql" in request.GET
-                else reverse("explorer:explorer-charts:list-charts"),
+                "back_link": request.GET.get("prev", reverse("charts:list-charts")),
             },
         )
 
@@ -118,7 +88,7 @@ class ChartListView(WaffleFlagMixin, ListView):
     waffle_flag = settings.CHART_BUILDER_BUILD_CHARTS_FLAG
     model = QueryLog
     context_object_name = "charts"
-    template_name = "explorer/charts/chartbuilderchart_list.html"
+    template_name = "core/charts/chartbuilderchart_list.html"
 
     def get_queryset(self):
         return ChartBuilderChart.objects.filter(created_by=self.request.user)
@@ -127,9 +97,9 @@ class ChartListView(WaffleFlagMixin, ListView):
 class ChartDeleteView(WaffleFlagMixin, DeleteView):
     waffle_flag = settings.CHART_BUILDER_BUILD_CHARTS_FLAG
     model = QueryLog
-    success_url = reverse_lazy("explorer:explorer-charts:list-charts")
+    success_url = reverse_lazy("charts:list-charts")
     pk_url_kwarg = "chart_id"
-    template_name = "explorer/charts/chartbuilderchart_confirm_delete.html"
+    template_name = "core/charts/chartbuilderchart_confirm_delete.html"
 
     def get_queryset(self):
         return ChartBuilderChart.objects.filter(created_by=self.request.user)

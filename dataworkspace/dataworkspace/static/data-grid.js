@@ -98,7 +98,44 @@ function createInputFormField(name, value) {
   field.setAttribute('value', value);
   return field;
 }
-function initDataGrid(columnConfig, dataEndpoint, downloadSegment, records, exportFileName) {
+
+function submitFilterForm(action, fileName, gridOptions, columnDataTypeMap) {
+  var form = document.createElement('form');
+    form.action = action
+    form.method = 'POST';
+    form.enctype = 'application/x-www-form-urlencoded';
+
+    form.append(createInputFormField('csrfmiddlewaretoken', getCsrfToken()));
+    if (fileName) {
+      form.append(createInputFormField('export_file_name', fileName));
+    }
+
+    // Define the columns to include in the csv
+    var displayedColumns = gridOptions.columnApi.getAllDisplayedColumns();
+    for (var i = 0; i < displayedColumns.length; i++) {
+      form.append(createInputFormField('columns', displayedColumns[i].colDef.field));
+    }
+
+    // Add current filters to the form
+    var filters = cleanFilters(gridOptions.api.getFilterModel(), columnDataTypeMap);
+    for (var key in filters) {
+      form.append(createInputFormField('filters', JSON.stringify({[key]: filters[key]})));
+    }
+
+    // Add the current sort config to the form
+    var sortModel = gridOptions.api.getSortModel()[0];
+    if (sortModel) {
+      form.append(createInputFormField('sortDir', sortModel.sort));
+      form.append(createInputFormField('sortField', sortModel.colId));
+    }
+
+    // Add the form to the page, submit it and then remove it
+    document.body.append(form);
+    form.submit();
+    form.remove();
+}
+
+function initDataGrid(columnConfig, dataEndpoint, downloadSegment, records, exportFileName, createChartEndpoint) {
   for (var i=0; i<columnConfig.length; i++) {
     var column = columnConfig[i];
     // Try to determine filter types from the column config.
@@ -239,37 +276,7 @@ function initDataGrid(columnConfig, dataEndpoint, downloadSegment, records, expo
     csvDownloadButton.addEventListener('click', function (e) {
       if (dataEndpoint) {
         // Download a csv via the backend using current sort/filter options.
-        var form = document.createElement('form');
-        form.action = dataEndpoint + downloadSegment;
-        form.method = 'POST';
-        form.enctype = 'application/x-www-form-urlencoded';
-
-        form.append(createInputFormField('csrfmiddlewaretoken', getCsrfToken()));
-        form.append(createInputFormField('export_file_name', exportFileName));
-
-        // Define the columns to include in the csv
-        var displayedColumns = gridOptions.columnApi.getAllDisplayedColumns();
-        for (var i = 0; i < displayedColumns.length; i++) {
-          form.append(createInputFormField('columns', displayedColumns[i].colDef.field));
-        }
-
-        // Add current filters to the form
-        var filters = cleanFilters(gridOptions.api.getFilterModel(), columnDataTypeMap);
-        for (var key in filters) {
-          form.append(createInputFormField('filters', JSON.stringify({[key]: filters[key]})));
-        }
-
-        // Add the current sort config to the form
-        var sortModel = gridOptions.api.getSortModel()[0];
-        if (sortModel) {
-          form.append(createInputFormField('sortDir', sortModel.sort));
-          form.append(createInputFormField('sortField', sortModel.colId));
-        }
-
-        // Add the form to the page, submit it and then remove it
-        document.body.append(form);
-        form.submit();
-        form.remove();
+        submitFilterForm(dataEndpoint + downloadSegment, exportFileName, gridOptions, columnDataTypeMap)
       } else {
         // Download a csv locally using javascript
         gridOptions.api.exportDataAsCsv({
@@ -300,6 +307,13 @@ function initDataGrid(columnConfig, dataEndpoint, downloadSegment, records, expo
         return;
       });
     }
+  }
+
+  var createChartButton = document.querySelector('#data-grid-create-chart');
+  if (createChartButton !== null && createChartEndpoint) {
+    createChartButton.addEventListener('click', function (e) {
+      submitFilterForm(createChartEndpoint, null, gridOptions, columnDataTypeMap)
+    });
   }
 
   document.querySelector('#data-grid-reset-filters').addEventListener('click', function(e){

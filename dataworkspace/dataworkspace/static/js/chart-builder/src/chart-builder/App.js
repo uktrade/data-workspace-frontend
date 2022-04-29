@@ -36,7 +36,7 @@ class App extends React.Component {
   }
 
   pollForQueryResults = () => {
-    fetch(`/data-explorer/charts/query-status/${this.props.chartId}/`)
+    fetch(`/charts/query-status/${this.props.chartId}/`)
       .then((resp) => resp.json())
       .then((data) => {
         this.setState({
@@ -60,7 +60,7 @@ class App extends React.Component {
 
   fetchQueryResults = () => {
     this.setState({ loadingData: true });
-    fetch(`/data-explorer/charts/query-results/${this.props.chartId}/`)
+    fetch(`/charts/query-results/${this.props.chartId}/`)
       .then((resp) => resp.json())
       .then((data) => {
         console.log(`Fetched ${data.total_rows} rows in ${data.duration} seconds`);
@@ -126,7 +126,7 @@ class App extends React.Component {
   saveChart = () => {
     const that = this;
     this.setState({ savingChart: true });
-    fetch(`/data-explorer/charts/edit/${this.props.chartId}/`, {
+    fetch(`/charts/edit/${this.props.chartId}/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -201,7 +201,7 @@ class App extends React.Component {
                   </a>
                 </div>
                 <div className="govuk-grid-column-two-thirds">
-                  <a href={`/data-explorer/charts/delete/${this.props.chartId}`} role="button" draggable="false" className="govuk-button govuk-button--warning">
+                  <a href={`/charts/delete/${this.props.chartId}`} role="button" draggable="false" className="govuk-button govuk-button--warning">
                     Delete Chart
                   </a>
                   <button className="govuk-button govuk-button--secondary" onClick={() => this.resetChart()}>
