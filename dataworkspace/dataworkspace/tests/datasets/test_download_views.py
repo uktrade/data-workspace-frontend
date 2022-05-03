@@ -63,7 +63,6 @@ def test_master_dataset_no_access_preview(client, dataset_db):
         f'href="/datasets/{ds.id}/table/{source_table.id}/preview"'
         not in response.rendered_content
     )
-    assert "Preview" not in response.rendered_content
 
 
 @pytest.mark.parametrize(
@@ -102,7 +101,6 @@ def test_query_data_cut_preview_staff_user_no_access(staff_client, dataset_db):
 
     # staff user with no access should not have a preview link
     assert f'href="/datasets/{ds.id}/query/{cut.id}/preview"' not in response.rendered_content
-    assert "Preview" not in response.rendered_content
 
 
 @pytest.mark.parametrize(
