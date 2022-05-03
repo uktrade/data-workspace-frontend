@@ -30,6 +30,12 @@
   display: none;
 }
 
+.ways-to-use-our-data-container {
+  button.govuk-accordion__open-all{
+    display:none;
+  }
+}
+
 .accordion-filter, .ways-to-use-our-data-container {
 
   .accordion-filter-checkboxes {
