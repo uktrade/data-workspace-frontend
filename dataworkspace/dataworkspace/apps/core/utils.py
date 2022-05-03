@@ -356,6 +356,11 @@ def new_private_database_credentials(
                         sql.Literal(settings.PGAUDIT_LOG_SCOPES),
                     )
                 )
+                cur.execute(
+                    sql.SQL("ALTER USER {} WITH CONNECTION LIMIT 10;").format(
+                        sql.Identifier(_db_user),
+                    )
+                )
 
         # PostgreSQL doesn't handle concurrent GRANT/REVOKEs on the same objects well, so we lock
         with cache.lock(
