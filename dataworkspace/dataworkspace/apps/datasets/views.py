@@ -239,7 +239,7 @@ def find_datasets(request):
     for dataset in datasets:
         _enrich_tags(dataset, tags_dict)
 
-        dataset_object = DataSet.objects.get(id=str(dataset["id"]))
+        dataset_object = DataSet.objects.get(id=dataset["id"])
         last_sourcetable_update = (
             dataset_object.sourcetable_set.first().get_data_last_updated_date()
         )
