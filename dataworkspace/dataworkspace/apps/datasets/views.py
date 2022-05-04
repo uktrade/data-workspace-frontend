@@ -239,6 +239,15 @@ def find_datasets(request):
     for dataset in datasets:
         _enrich_tags(dataset, tags_dict)
 
+        dataset_object = DataSet.objects.get(id=str(dataset["id"]))
+        last_sourcetable_update = (
+            dataset_object.sourcetable_set.first().get_data_last_updated_date()
+        )
+
+        for table in dataset_object.sourcetable_set.all():
+            if table.get_data_last_updated_date() > last_sourcetable_update:
+                last_sourcetable_update = table.get_data_last_updated_date()
+
     return render(
         request,
         "datasets/index.html",
@@ -246,6 +255,7 @@ def find_datasets(request):
             "form": form,
             "query": filters.query,
             "datasets": datasets,
+            "latest_sourcetable_update": last_sourcetable_update,
             "data_type": dict(data_types),
             "show_admin_filters": has_unpublished_dataset_access(request.user),
             "DATASET_FINDER_FLAG": settings.DATASET_FINDER_ADMIN_ONLY_FLAG,
