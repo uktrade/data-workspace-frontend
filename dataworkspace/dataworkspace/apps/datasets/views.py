@@ -255,7 +255,7 @@ def find_datasets(request):
             "form": form,
             "query": filters.query,
             "datasets": datasets,
-            "latest_sourcetable_update": last_sourcetable_update,
+            "last_sourcetable_update": last_sourcetable_update,
             "data_type": dict(data_types),
             "show_admin_filters": has_unpublished_dataset_access(request.user),
             "DATASET_FINDER_FLAG": settings.DATASET_FINDER_ADMIN_ONLY_FLAG,
