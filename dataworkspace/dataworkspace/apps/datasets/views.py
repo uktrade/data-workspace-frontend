@@ -240,13 +240,13 @@ def find_datasets(request):
         _enrich_tags(dataset, tags_dict)
 
         dataset_object = DataSet.objects.get(id=dataset["id"])
-        last_sourcetable_update = (
+        dataset["last_sourcetable_update"] = (
             dataset_object.sourcetable_set.first().get_data_last_updated_date()
         )
 
         for table in dataset_object.sourcetable_set.all():
-            if table.get_data_last_updated_date() > last_sourcetable_update:
-                last_sourcetable_update = table.get_data_last_updated_date()
+            if table.get_data_last_updated_date() > dataset["last_sourcetable_update"]:
+                dataset["last_sourcetable_update"] = table.get_data_last_updated_date()
 
     return render(
         request,
@@ -255,7 +255,6 @@ def find_datasets(request):
             "form": form,
             "query": filters.query,
             "datasets": datasets,
-            "last_sourcetable_update": last_sourcetable_update,
             "data_type": dict(data_types),
             "show_admin_filters": has_unpublished_dataset_access(request.user),
             "DATASET_FINDER_FLAG": settings.DATASET_FINDER_ADMIN_ONLY_FLAG,
