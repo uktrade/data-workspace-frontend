@@ -30,11 +30,6 @@
     </div>
     <div class="govuk-grid-column-one-quarter govuk-!-margin-top-2" style="text-align: right;">
       {% include "partials/bookmark-link.html" with dataset_uuid=model.id is_bookmarked=is_bookmarked %}
-      {% if request.user == model.information_asset_owner or request.user == model.information_asset_manager %}
-        <p class="govuk-body sidebar-section">
-          <a href="{% url 'datasets:edit_visualisation_catalogue_item' model.id %}" class="govuk-link govuk-link--no-visited-state">Manage this dataset</a>
-        </p>
-      {% endif %}
     </div>
   </div>
 {% endblock %}
@@ -47,7 +42,14 @@
     <div class="govuk-grid-column-two-thirds">
       <span class="govuk-caption-xl">Dashboard</span>
       <h1 class="govuk-heading-xl">{{ model.name }}</h1>
+    </div>
+    <div class="govuk-grid-column-one-third">
 
+    </div>
+  </div>
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
       {% with dataset_type='visualisation' %}
 
         {% include "partials/dataset_info.html" with model=model type=dataset_type %}
@@ -63,6 +65,13 @@
         {% endif %}
 
       {% endwith %}
+    </div>
+    <div class="govuk-grid-column-one-third">
+      {% if request.user == model.information_asset_owner or request.user == model.information_asset_manager %}
+        <p class="govuk-body sidebar-section">
+          <a href="{% url 'datasets:edit_visualisation_catalogue_item' model.id %}" class="govuk-link govuk-link--no-visited-state">Manage this page</a>
+        </p>
+      {% endif %}
     </div>
   </div>
 
