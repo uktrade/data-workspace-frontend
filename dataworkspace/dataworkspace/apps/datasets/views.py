@@ -240,13 +240,14 @@ def find_datasets(request):
         _enrich_tags(dataset, tags_dict)
 
         dataset_object = DataSet.objects.get(id=dataset["id"])
-        dataset["last_sourcetable_update"] = (
-            dataset_object.sourcetable_set.first().get_data_last_updated_date()
-        )
+        if dataset_object.sourcetable_set.exists():
+            dataset[
+                "last_sourcetable_update"
+            ] = dataset_object.sourcetable_set.first().get_data_last_updated_date()
 
-        for table in dataset_object.sourcetable_set.all():
-            if table.get_data_last_updated_date() > dataset["last_sourcetable_update"]:
-                dataset["last_sourcetable_update"] = table.get_data_last_updated_date()
+            for table in dataset_object.sourcetable_set.all():
+                if table.get_data_last_updated_date() > dataset["last_sourcetable_update"]:
+                    dataset["last_sourcetable_update"] = table.get_data_last_updated_date()
 
     return render(
         request,
