@@ -749,34 +749,34 @@ def test_finding_datasets_doesnt_query_database_excessively(
         response = client.get(reverse("datasets:find_datasets"), follow=True)
         assert response.status_code == 200
 
-    # with django_assert_num_queries(expected_num_queries, exact=False):
-    #     response = client.get(reverse("datasets:find_datasets"), {"q": "potato"})
-    #     assert response.status_code == 200
-    #
-    # with django_assert_num_queries(expected_num_queries + 1, exact=False):
-    #     response = client.get(
-    #         reverse("datasets:find_datasets"),
-    #         {"source": [str(tag.id) for tag in random.sample(source_tags, random.randint(1, 5))]},
-    #     )
-    #     assert response.status_code == 200
-    #
-    # with django_assert_num_queries(expected_num_queries + 1, exact=False):
-    #     response = client.get(
-    #         reverse("datasets:find_datasets"),
-    #         {"topic": [str(tag.id) for tag in random.sample(topic_tags, random.randint(1, 5))]},
-    #     )
-    #     assert response.status_code == 200
-    #
-    # with django_assert_num_queries(expected_num_queries, exact=False):
-    #     response = client.get(
-    #         reverse("datasets:find_datasets"),
-    #         {"purpose": str(DataSetType.MASTER)},
-    #     )
-    #     assert response.status_code == 200
-    #
-    # with django_assert_num_queries(expected_num_queries, exact=False):
-    #     response = client.get(reverse("datasets:find_datasets"), {"access": "yes"})
-    #     assert response.status_code == 200
+    with django_assert_num_queries(expected_num_queries, exact=False):
+        response = client.get(reverse("datasets:find_datasets"), {"q": "potato"})
+        assert response.status_code == 200
+
+    with django_assert_num_queries(expected_num_queries + 1, exact=False):
+        response = client.get(
+            reverse("datasets:find_datasets"),
+            {"source": [str(tag.id) for tag in random.sample(source_tags, random.randint(1, 5))]},
+        )
+        assert response.status_code == 200
+
+    with django_assert_num_queries(expected_num_queries + 1, exact=False):
+        response = client.get(
+            reverse("datasets:find_datasets"),
+            {"topic": [str(tag.id) for tag in random.sample(topic_tags, random.randint(1, 5))]},
+        )
+        assert response.status_code == 200
+
+    with django_assert_num_queries(expected_num_queries, exact=False):
+        response = client.get(
+            reverse("datasets:find_datasets"),
+            {"purpose": str(DataSetType.MASTER)},
+        )
+        assert response.status_code == 200
+
+    with django_assert_num_queries(expected_num_queries, exact=False):
+        response = client.get(reverse("datasets:find_datasets"), {"access": "yes"})
+        assert response.status_code == 200
 
 
 @pytest.mark.parametrize(
