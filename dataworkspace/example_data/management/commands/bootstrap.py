@@ -9,7 +9,7 @@ IAO_EMAIL = "iao.user@example.com"
 
 
 class Command(BaseCommand):
-    help = "Creates or reset a django superuser for admin.user@example.com"
+    help = "Creates users, tags and datasets for local development"
 
     def write_success(self, msg):
         self.stdout.write(self.style.SUCCESS(msg))
