@@ -203,6 +203,38 @@ def find_datasets(request):
 
         logger.info(dataset["sources"])
 
+    def _get_last_updated_date(dataset):
+        model = None
+
+        if dataset["data_type"] == DataSetType.REFERENCE:
+            model = ReferenceDataset.objects.get(uuid=dataset["id"])
+            return model.data_last_updated
+
+        if dataset["data_type"] == DataSetType.MASTER:
+            model = MasterDataset.objects.get(id=dataset["id"]).sourcetable_set.all()
+        if dataset["data_type"] == DataSetType.DATACUT:
+            model = DataCutDataset.objects.get(id=dataset["id"]).customdatasetquery_set.all()
+
+        if (
+            dataset["data_type"] == DataSetType.MASTER
+            or dataset["data_type"] == DataSetType.DATACUT
+        ):
+            if not model:
+                return None
+            date = model.first().get_data_last_updated_date()
+            for table in model:
+                last_updated = table.get_data_last_updated_date()
+                if last_updated and date:
+                    if last_updated > date:
+                        date = last_updated
+            return date
+
+        if dataset["data_type"] == DataSetType.VISUALISATION:
+            date = VisualisationCatalogueItem.objects.get(id=dataset["id"]).updated_at
+            return date
+
+        return None
+
     form = DatasetSearchForm(request.GET)
 
     if not form.is_valid():
@@ -238,16 +270,7 @@ def find_datasets(request):
     # This is a workaround until we refactor search
     for dataset in datasets:
         _enrich_tags(dataset, tags_dict)
-
-        dataset_object = DataSet.objects.get(id=dataset["id"])
-        if dataset_object.sourcetable_set.exists():
-            dataset[
-                "last_sourcetable_update"
-            ] = dataset_object.sourcetable_set.first().get_data_last_updated_date()
-
-            for table in dataset_object.sourcetable_set.all():
-                if table.get_data_last_updated_date() > dataset["last_sourcetable_update"]:
-                    dataset["last_sourcetable_update"] = table.get_data_last_updated_date()
+        dataset["last_updated"] = _get_last_updated_date(dataset)
 
     return render(
         request,
