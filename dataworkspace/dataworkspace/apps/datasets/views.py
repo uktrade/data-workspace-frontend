@@ -206,32 +206,39 @@ def find_datasets(request):
     def _get_last_updated_date(dataset):
         model = None
 
-        if dataset["data_type"] == DataSetType.REFERENCE:
-            model = ReferenceDataset.objects.get(uuid=dataset["id"])
-            return model.data_last_updated
+        # it is possible that there is no metadata record for the dataset
+        # so we catch and ignore exceptions and return None
+        # sub-optimal but we won't bring down the data-workspace homepage in that scenario
+        try:
+            if dataset["data_type"] == DataSetType.REFERENCE:
+                model = ReferenceDataset.objects.get(uuid=dataset["id"])
+                return model.data_last_updated
 
-        if dataset["data_type"] == DataSetType.MASTER:
-            model = MasterDataset.objects.get(id=dataset["id"]).sourcetable_set.all()
-        if dataset["data_type"] == DataSetType.DATACUT:
-            model = DataCutDataset.objects.get(id=dataset["id"]).customdatasetquery_set.all()
+            if dataset["data_type"] == DataSetType.MASTER:
+                model = MasterDataset.objects.get(id=dataset["id"]).sourcetable_set.all()
+            if dataset["data_type"] == DataSetType.DATACUT:
+                model = DataCutDataset.objects.get(id=dataset["id"]).customdatasetquery_set.all()
 
-        if (
-            dataset["data_type"] == DataSetType.MASTER
-            or dataset["data_type"] == DataSetType.DATACUT
-        ):
-            if not model:
-                return None
-            date = model.first().get_data_last_updated_date()
-            for table in model:
-                last_updated = table.get_data_last_updated_date()
-                if last_updated and date:
-                    if last_updated > date:
-                        date = last_updated
-            return date
+            if (
+                dataset["data_type"] == DataSetType.MASTER
+                or dataset["data_type"] == DataSetType.DATACUT
+            ):
+                if not model:
+                    return None
+                date = model.first().get_data_last_updated_date()
+                for table in model:
+                    last_updated = table.get_data_last_updated_date()
+                    if last_updated and date:
+                        if last_updated > date:
+                            date = last_updated
+                return date
 
-        if dataset["data_type"] == DataSetType.VISUALISATION:
-            date = VisualisationCatalogueItem.objects.get(id=dataset["id"]).updated_at
-            return date
+            if dataset["data_type"] == DataSetType.VISUALISATION:
+                date = VisualisationCatalogueItem.objects.get(id=dataset["id"]).updated_at
+                return date
+
+        except Exception as e:
+            logger.error(e)
 
         return None
 
