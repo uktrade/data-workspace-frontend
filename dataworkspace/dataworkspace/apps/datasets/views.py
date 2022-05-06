@@ -237,7 +237,7 @@ def find_datasets(request):
                 date = VisualisationCatalogueItem.objects.get(id=dataset["id"]).updated_at
                 return date
 
-        except Exception as e:
+        except Exception as e:  # pylint: disable=W0703
             logger.error(e)
 
         return None
