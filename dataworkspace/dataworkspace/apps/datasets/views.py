@@ -234,7 +234,17 @@ def find_datasets(request):
                 return date
 
             if dataset["data_type"] == DataSetType.VISUALISATION:
-                date = VisualisationCatalogueItem.objects.get(id=dataset["id"]).updated_at
+                model = VisualisationCatalogueItem.objects.get(
+                    id=dataset["id"]
+                ).visualisationlink_set.all()
+                if not model:
+                    return None
+                date = model.first().data_source_last_updated
+                for table in model:
+                    last_updated = table.data_source_last_updated
+                    if last_updated and date:
+                        if last_updated > date:
+                            date = last_updated
                 return date
 
         except Exception as e:  # pylint: disable=W0703
