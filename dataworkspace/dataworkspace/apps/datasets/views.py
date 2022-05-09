@@ -17,7 +17,7 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core import serializers
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from django.core.paginator import Paginator
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import connections
@@ -204,50 +204,30 @@ def find_datasets(request):
         logger.info(dataset["sources"])
 
     def _get_last_updated_date(dataset):
-        model = None
 
         # it is possible that there is no metadata record for the dataset
         # so we catch and ignore exceptions and return None
         # sub-optimal but we won't bring down the data-workspace homepage in that scenario
         try:
             if dataset["data_type"] == DataSetType.REFERENCE:
-                model = ReferenceDataset.objects.get(uuid=dataset["id"])
-                return model.data_last_updated
+                last_updated_dates = (ReferenceDataset.objects.get(uuid=dataset["id"]).data_last_updated,)
+            elif dataset["data_type"] == DataSetType.MASTER:
+                last_updated_dates = (table.get_data_last_updated_date() for table in
+                                      MasterDataset.objects.get(id=dataset["id"]).sourcetable_set.all())
+            elif dataset["data_type"] == DataSetType.DATACUT:
+                last_updated_dates = (query.get_data_last_updated_date() for query in
+                                      DataCutDataset.objects.get(id=dataset["id"]).customdatasetquery_set.all())
+            elif dataset["data_type"] == DataSetType.VISUALISATION:
+                last_updated_dates = (link.data_source_last_updated for link in
+                                      VisualisationCatalogueItem.objects.get(id=dataset["id"]).visualisationlink_set.all())
+            else:
+                last_updated_dates = ()
 
-            if dataset["data_type"] == DataSetType.MASTER:
-                model = MasterDataset.objects.get(id=dataset["id"]).sourcetable_set.all()
-            if dataset["data_type"] == DataSetType.DATACUT:
-                model = DataCutDataset.objects.get(id=dataset["id"]).customdatasetquery_set.all()
+            last_update_dates_no_null = (last_updated_date for last_updated_date in last_updated_dates if last_updated_dates is not None)
 
-            if (
-                dataset["data_type"] == DataSetType.MASTER
-                or dataset["data_type"] == DataSetType.DATACUT
-            ):
-                if not model:
-                    return None
-                date = model.first().get_data_last_updated_date()
-                for table in model:
-                    last_updated = table.get_data_last_updated_date()
-                    if last_updated and date:
-                        if last_updated > date:
-                            date = last_updated
-                return date
+            return max(last_update_dates_no_null, default=None)
 
-            if dataset["data_type"] == DataSetType.VISUALISATION:
-                model = VisualisationCatalogueItem.objects.get(
-                    id=dataset["id"]
-                ).visualisationlink_set.all()
-                if not model:
-                    return None
-                date = model.first().data_source_last_updated
-                for table in model:
-                    last_updated = table.data_source_last_updated
-                    if last_updated and date:
-                        if last_updated > date:
-                            date = last_updated
-                return date
-
-        except Exception as e:  # pylint: disable=W0703
+        except ObjectDoesNotExist as e:
             logger.error(e)
 
         return None
