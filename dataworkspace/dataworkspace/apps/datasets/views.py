@@ -20,7 +20,7 @@ from django.core import serializers
 from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from django.core.paginator import Paginator
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db import connections
+from django.db import connections, ProgrammingError
 from django.db.models import (
     Count,
     F,
@@ -203,50 +203,66 @@ def find_datasets(request):
 
         logger.info(dataset["sources"])
 
-    def _get_last_updated_date(dataset):
+    def _get_reference_dataset_last_updated(id):
+        datasets = ReferenceDataset.objects.filter(uuid=id)
+        if not datasets.exists():
+            return []
 
-        # it is possible that there is no metadata record for the dataset
-        # so we catch and ignore exceptions and return None
-        # sub-optimal but we won't bring down the data-workspace homepage in that scenario
         try:
-            if dataset["data_type"] == DataSetType.REFERENCE:
-                last_updated_dates = (
-                    ReferenceDataset.objects.get(uuid=dataset["id"]).data_last_updated,
-                )
-            elif dataset["data_type"] == DataSetType.MASTER:
-                last_updated_dates = (
-                    table.get_data_last_updated_date()
-                    for table in MasterDataset.objects.get(id=dataset["id"]).sourcetable_set.all()
-                )
-            elif dataset["data_type"] == DataSetType.DATACUT:
-                last_updated_dates = (
-                    query.get_data_last_updated_date()
-                    for query in DataCutDataset.objects.get(
-                        id=dataset["id"]
-                    ).customdatasetquery_set.all()
-                )
-            elif dataset["data_type"] == DataSetType.VISUALISATION:
-                last_updated_dates = (
-                    link.data_source_last_updated
-                    for link in VisualisationCatalogueItem.objects.get(
-                        id=dataset["id"]
-                    ).visualisationlink_set.all()
-                )
-            else:
-                last_updated_dates = ()
-
-            last_update_dates_no_null = (
-                last_updated_date
-                for last_updated_date in last_updated_dates
-                if last_updated_dates is not None
-            )
-
-            return max(last_update_dates_no_null, default=None)
-
-        except ObjectDoesNotExist as e:
+            # If the reference dataset csv table doesn't exist we
+            # get an unhandled relation does not exist error
+            # this is currently only a problem with integration tests
+            return [datasets.first().data_last_updated]
+        except ProgrammingError as e:
             logger.error(e)
+            return []
 
-        return None
+    def _get_master_dataset_last_updated(id):
+        datasets = MasterDataset.objects.filter(id=id)
+        if not datasets.exists():
+            return []
+
+        return [
+            table.get_data_last_updated_date() for table in datasets.first().sourcetable_set.all()
+        ]
+
+    def _get_datacut_query_last_updated(id):
+        datasets = DataCutDataset.objects.filter(id=id)
+        if not datasets.exists():
+            return []
+
+        return [
+            query.get_data_last_updated_date()
+            for query in datasets.first().customdatasetquery_set.all()
+        ]
+
+    def _get_visualisationcatalogue_link_last_updated(id):
+        datasets = VisualisationCatalogueItem.objects.filter(id=id)
+        if not datasets.exists():
+            return []
+
+        return [
+            link.data_source_last_updated for link in datasets.first().visualisationlink_set.all()
+        ]
+
+    def _get_last_updated_date(dataset):
+        last_updated_dates = []
+
+        if dataset["data_type"] == DataSetType.REFERENCE:
+            last_updated_dates = _get_reference_dataset_last_updated(dataset["id"])
+
+        elif dataset["data_type"] == DataSetType.MASTER:
+            last_updated_dates = _get_master_dataset_last_updated(dataset["id"])
+
+        elif dataset["data_type"] == DataSetType.DATACUT:
+            last_updated_dates = _get_datacut_query_last_updated(dataset["id"])
+
+        elif dataset["data_type"] == DataSetType.VISUALISATION:
+            last_updated_dates = _get_visualisationcatalogue_link_last_updated(dataset["id"])
+
+        last_update_dates_no_null = [d for d in last_updated_dates if d is not None]
+
+        return max(last_update_dates_no_null, default=None)
 
     form = DatasetSearchForm(request.GET)
 
