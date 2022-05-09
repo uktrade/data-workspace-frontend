@@ -210,20 +210,36 @@ def find_datasets(request):
         # sub-optimal but we won't bring down the data-workspace homepage in that scenario
         try:
             if dataset["data_type"] == DataSetType.REFERENCE:
-                last_updated_dates = (ReferenceDataset.objects.get(uuid=dataset["id"]).data_last_updated,)
+                last_updated_dates = (
+                    ReferenceDataset.objects.get(uuid=dataset["id"]).data_last_updated,
+                )
             elif dataset["data_type"] == DataSetType.MASTER:
-                last_updated_dates = (table.get_data_last_updated_date() for table in
-                                      MasterDataset.objects.get(id=dataset["id"]).sourcetable_set.all())
+                last_updated_dates = (
+                    table.get_data_last_updated_date()
+                    for table in MasterDataset.objects.get(id=dataset["id"]).sourcetable_set.all()
+                )
             elif dataset["data_type"] == DataSetType.DATACUT:
-                last_updated_dates = (query.get_data_last_updated_date() for query in
-                                      DataCutDataset.objects.get(id=dataset["id"]).customdatasetquery_set.all())
+                last_updated_dates = (
+                    query.get_data_last_updated_date()
+                    for query in DataCutDataset.objects.get(
+                        id=dataset["id"]
+                    ).customdatasetquery_set.all()
+                )
             elif dataset["data_type"] == DataSetType.VISUALISATION:
-                last_updated_dates = (link.data_source_last_updated for link in
-                                      VisualisationCatalogueItem.objects.get(id=dataset["id"]).visualisationlink_set.all())
+                last_updated_dates = (
+                    link.data_source_last_updated
+                    for link in VisualisationCatalogueItem.objects.get(
+                        id=dataset["id"]
+                    ).visualisationlink_set.all()
+                )
             else:
                 last_updated_dates = ()
 
-            last_update_dates_no_null = (last_updated_date for last_updated_date in last_updated_dates if last_updated_dates is not None)
+            last_update_dates_no_null = (
+                last_updated_date
+                for last_updated_date in last_updated_dates
+                if last_updated_dates is not None
+            )
 
             return max(last_update_dates_no_null, default=None)
 
