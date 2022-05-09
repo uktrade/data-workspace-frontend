@@ -203,8 +203,8 @@ def find_datasets(request):
 
         logger.info(dataset["sources"])
 
-    def _get_reference_dataset_last_updated(id):
-        datasets = ReferenceDataset.objects.filter(uuid=id)
+    def _get_reference_dataset_last_updated(dataset_id):
+        datasets = ReferenceDataset.objects.filter(uuid=dataset_id)
         if not datasets.exists():
             return []
 
@@ -217,8 +217,8 @@ def find_datasets(request):
             logger.error(e)
             return []
 
-    def _get_master_dataset_last_updated(id):
-        datasets = MasterDataset.objects.filter(id=id)
+    def _get_master_dataset_last_updated(dataset_id):
+        datasets = MasterDataset.objects.filter(id=dataset_id)
         if not datasets.exists():
             return []
 
@@ -226,8 +226,8 @@ def find_datasets(request):
             table.get_data_last_updated_date() for table in datasets.first().sourcetable_set.all()
         ]
 
-    def _get_datacut_query_last_updated(id):
-        datasets = DataCutDataset.objects.filter(id=id)
+    def _get_datacut_query_last_updated(dataset_id):
+        datasets = DataCutDataset.objects.filter(id=dataset_id)
         if not datasets.exists():
             return []
 
@@ -236,8 +236,8 @@ def find_datasets(request):
             for query in datasets.first().customdatasetquery_set.all()
         ]
 
-    def _get_visualisationcatalogue_link_last_updated(id):
-        datasets = VisualisationCatalogueItem.objects.filter(id=id)
+    def _get_visualisationcatalogue_link_last_updated(dataset_id):
+        datasets = VisualisationCatalogueItem.objects.filter(id=dataset_id)
         if not datasets.exists():
             return []
 
