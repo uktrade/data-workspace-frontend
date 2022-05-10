@@ -4,7 +4,7 @@ import pytest
 from botocore.response import StreamingBody
 from mock import mock
 
-from dataworkspace.apps.your_files.constants import PostgresDataTypes
+from dataworkspace.apps.core.constants import PostgresDataTypes
 from dataworkspace.apps.your_files.utils import get_s3_csv_file_info
 
 

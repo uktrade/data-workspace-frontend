@@ -6,6 +6,9 @@ from django.urls import path, include
 
 from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.core.views import (
+    CreateTableDAGStatusView,
+    CreateTableDAGTaskStatusView,
+    RestoreTableDAGTaskStatusView,
     TechnicalSupportView,
     about_page_view,
     public_error_403_csrf_html_view,
@@ -156,6 +159,21 @@ urlpatterns = [
     path(
         "charts/",
         include(("dataworkspace.apps.core.charts.urls", "charts"), namespace="charts"),
+    ),
+    path(
+        "dataflow/dag-status/<str:execution_date>",
+        login_required(CreateTableDAGStatusView.as_view()),
+        name="create-table-dag-status",
+    ),
+    path(
+        "create-table/status/<str:execution_date>/<str:task_id>",
+        login_required(CreateTableDAGTaskStatusView.as_view()),
+        name="create-table-task-status",
+    ),
+    path(
+        "restore-table/status/<str:execution_date>/<str:task_id>",
+        login_required(RestoreTableDAGTaskStatusView.as_view()),
+        name="restore-table-task-status",
     ),
 ]
 

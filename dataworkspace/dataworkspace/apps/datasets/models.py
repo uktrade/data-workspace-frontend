@@ -67,6 +67,7 @@ from dataworkspace.apps.datasets.constants import (
 from dataworkspace.apps.datasets.model_utils import external_model_class
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.core.charts.models import ChartBuilderChart
+from dataworkspace.apps.your_files.models import UploadedTable
 from dataworkspace.datasets_db import (
     get_tables_last_updated_date,
 )
@@ -741,6 +742,11 @@ class SourceTable(BaseSource):
 
     def get_chart_builder_query(self):
         return f"SELECT * from {self.schema}.{self.table}"
+
+    def get_previous_uploads(self):
+        return UploadedTable.objects.filter(schema=self.schema, table_name=self.table).order_by(
+            "-data_flow_execution_date"
+        )
 
 
 class SourceView(BaseSource):

@@ -1,0 +1,57 @@
+{% extends '_main.html' %}
+{% load static datasets_tags core_tags waffle_tags %}
+{% block page_title %}Update or restore table - {{ block.super }}{% endblock %}
+{% block breadcrumbs %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-three-quarters">
+      <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="/">Home</a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="{{ source.dataset.get_absolute_url }}">
+              {{ source.dataset.name }}
+            </a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="{% url "datasets:manager:manage-source-table" pk=source.dataset_id source_uuid=source.id %}">Update or restore table</a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">Choose data types</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      <h1 class="govuk-heading-xl">Choose data types for {{ form.table_name.value }}</h1>
+      {% include 'design_system/error_summary.html' with form=form %}
+      <form method="POST" novalidate>
+        {% csrf_token %}
+        {{ form.path }}
+        <table class="govuk-table">
+          <thead class="govuk-table__head">
+            <tr class="govuk-table__row">
+              <th scope="col" class="govuk-table__header govuk-!-width-one-quarter">Column</th>
+              <th scope="col" class="govuk-table__header govuk-!-width-one-quarter">Data type</th>
+              <th scope="col" class="govuk-table__header">Sample data from first few rows</th>
+            </tr>
+          </thead>
+          <tbody class="govuk-table__body">
+            {% for data_type_field, sample in form.get_data_type_fields %}
+              <tr class="govuk-table__row">
+                <th scope="row" class="govuk-table__header">{{ data_type_field.label }}</th>
+                <td class="govuk-table__cell">{{ data_type_field }}</td>
+                <td class="govuk-table__cell">{{ sample }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <button type="submit" class="govuk-button">Continue</button>
+      </form>
+    </div>
+  </div>
+
+{% endblock content %}

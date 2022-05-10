@@ -20,7 +20,7 @@
   {{ block.super }}
   <script nonce="{{ request.csp_nonce }}">
     window.pollForDagStateChange(
-        '{% url "your-files:restore-table-task-status" request.GET.execution_date request.GET.task_name %}',
+        '{% url "restore-table-task-status" request.GET.execution_date request.GET.task_name %}',
         '{% url "your-files:restore-table-success" object.id %}',
         '{% url "your-files:restore-table-failed" object.id %}',
         500

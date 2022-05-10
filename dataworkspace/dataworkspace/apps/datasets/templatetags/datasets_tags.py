@@ -113,3 +113,12 @@ def chart_link_or_plain_text(text, condition, dataset_uuid, object_id):
             f"<a class='govuk-link govuk-link--no-visited-state' href='{url}'>{text}</a>"
         )
     return text
+
+
+@register.filter
+def can_edit_dataset(user, dataset):
+    return (
+        user == dataset.information_asset_owner
+        or user == dataset.information_asset_manager
+        or user.is_superuser
+    )

@@ -513,6 +513,7 @@ class DatasetDetailView(DetailView):
         ctx["model"] = self.object
         ctx["DATA_CUT_ENHANCED_PREVIEW_FLAG"] = settings.DATA_CUT_ENHANCED_PREVIEW_FLAG
         ctx["DATASET_CHANGELOG_PAGE_FLAG"] = settings.DATASET_CHANGELOG_PAGE_FLAG
+        ctx["DATA_UPLOADER_UI_FLAG"] = settings.DATA_UPLOADER_UI_FLAG
 
         if self._is_reference_dataset():
             return self._get_context_data_for_reference_dataset(ctx, **kwargs)
@@ -1367,10 +1368,14 @@ class EditBaseView(View):
                 PendingAuthorizedUsers.objects.all(), pk=self.kwargs.get("summary_id")
             )
         self.obj = dataset or visualisation_catalogue_item
-        if request.user not in [
-            self.obj.information_asset_owner,
-            self.obj.information_asset_manager,
-        ]:
+        if (
+            request.user
+            not in [
+                self.obj.information_asset_owner,
+                self.obj.information_asset_manager,
+            ]
+            and not request.user.is_superuser
+        ):
             return HttpResponseForbidden()
         return super().dispatch(request, *args, **kwargs)
 

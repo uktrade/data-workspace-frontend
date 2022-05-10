@@ -1,0 +1,58 @@
+{% extends '_main.html' %}
+{% load static core_tags %}
+{% block page_title %}restore table - {{ block.super }}{% endblock page_title %}
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-l">Restore table version created on {{ object.data_flow_execution_date }}</h1>
+      <h2 class="govuk-heading-m">Preview of data to restore:</h2>
+    </div>
+  </div>
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      <div class="scrollable-table {% if records|length <= 10 %}fixed-table-height{% endif %}" tabindex="0">
+        <table class="govuk-table govuk-!-font-size-16">
+          <thead>
+            <tr class="govuk-table__row">
+            {% for field in fields %}
+              <th class="govuk-table__header ref-data-col-{{ field.get_data_type_display|slugify }}{% if field.is_identifier %} ref-data-col-id{% endif %}">
+                {{ field }}
+              </th>
+            {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+          {% for record in records %}
+            <tr class="govuk-table__row">
+              {% for field in fields %}
+                {% with record|get_key:field as value %}
+                  <td class="govuk-table__cell">
+                    {{ value|not_set_if_none|truncatechars:100 }}
+                  </td>
+                {% endwith %}
+              {% endfor %}
+            </tr>
+          {% empty %}
+            <tr class="govuk-table__row">
+              <td colspan="{{ fields|length }}">
+                This dataset doesn't have any data yet.
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <br/>
+    </div>
+  </div>
+  <div class="govuk-button-group">
+    <form method="POST">
+      {% csrf_token %}
+      <button type="submit" class="govuk-button" data-module="govuk-button">
+        Restore to this version
+      </button>
+      <a class="govuk-link" href="{% url 'datasets:manager:manage-source-table' pk=source.dataset_id source_uuid=source.id %}">Cancel restoration</a>
+    </form>
+
+  </div>
+{% endblock content %}

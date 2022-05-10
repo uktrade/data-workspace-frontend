@@ -1,5 +1,6 @@
-{% extends 'your_files/create-table-base.html' %}
-{% block page_title %}Processing CSV - {{ block.super }}{% endblock page_title %}
+{% extends '_main.html' %}
+{% load static %}
+{% block page_title %}Updating table - {{ block.super }}{% endblock page_title %}
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
@@ -20,11 +21,12 @@
 {% endblock content %}
 {% block footer_scripts %}
   {{ block.super }}
+  <script nonce="{{ request.csp_nonce }}" src="{% static 'your-files-create-table.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}">
     window.pollForDagStateChange(
         '{% url "create-table-task-status" execution_date task_name %}',
         '{{ next_step }}?{{ request.GET.urlencode }}',
-        '{% url "your-files:create-table-failed" %}?{{ request.GET.urlencode }}',
+        '{% url "datasets:manager:upload-failed" pk=source.dataset_id source_uuid=source.id %}?{{ request.GET.urlencode }}',
         500
     );
   </script>

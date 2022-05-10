@@ -1,4 +1,6 @@
 import datetime
+import json
+import os
 from functools import wraps
 import hashlib
 import itertools
@@ -8,6 +10,7 @@ import re
 import secrets
 import string
 import csv
+from io import StringIO
 from typing import Tuple
 
 from timeit import default_timer as timer
@@ -16,6 +19,8 @@ import gevent
 import gevent.queue
 
 import psycopg2
+import requests
+from mohawk import Sender
 from psycopg2 import connect, sql
 from psycopg2.sql import SQL
 
@@ -26,8 +31,14 @@ from django.http import StreamingHttpResponse
 from django.db import connections, connection
 from django.db.models import Q
 from django.conf import settings
+from tableschema import Schema
 
 from dataworkspace.apps.core.boto3_client import get_s3_client, get_iam_client
+from dataworkspace.apps.core.constants import (
+    PostgresDataTypes,
+    SCHEMA_POSTGRES_DATA_TYPE_MAP,
+    TABLESCHEMA_FIELD_TYPE_MAP,
+)
 from dataworkspace.apps.core.models import Database, DatabaseUser, Team
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import DataSet, SourceTable, ReferenceDataset
@@ -1227,3 +1238,139 @@ def close_admin_db_connection_if_not_in_atomic_block():
     # the middle of a transaction.
     if not connection.in_atomic_block:
         connection.close()
+
+
+def clean_db_identifier(identifier):
+    identifier = os.path.splitext(os.path.split(identifier)[-1])[0]
+    identifier = re.sub(r"[^\w\s-]", "", identifier).strip().lower()
+    return re.sub(r"[-\s]+", "_", identifier)
+
+
+def get_s3_csv_column_types(path):
+    client = get_s3_client()
+
+    # Let's just read the first 100KiB of the file and assume that will give us enough lines to make reasonable
+    # assumptions about data types. This is an alternative to reading the first ~10 lines, in which case the first line
+    # could be incredibly long and possibly even crash the server?
+    # Django's default permitted size for a request body is 2.5MiB, so reading 100KiB here doesn't feel like an
+    # additional vector for denial-of-service.
+    file = client.get_object(Bucket=settings.NOTEBOOKS_BUCKET, Key=path, Range="bytes=0-102400")
+
+    fh = StringIO(file["Body"].read().decode("utf-8-sig"))
+    rows = list(csv.reader(fh))
+
+    if len(rows) <= 2:
+        raise ValueError("Unable to read enough lines of data from file", path)
+
+    # Drop the last line, which might be incomplete
+    del rows[-1]
+
+    # Pare down to a max of 10 lines so that inferring datatypes is quicker
+    del rows[10:]
+
+    schema = Schema()
+    schema.infer(rows, confidence=1, headers=1)
+
+    fields = []
+    for idx, field in enumerate(schema.descriptor["fields"]):
+        fields.append(
+            {
+                "header_name": field["name"],
+                "column_name": clean_db_identifier(field["name"]),
+                "data_type": SCHEMA_POSTGRES_DATA_TYPE_MAP.get(
+                    TABLESCHEMA_FIELD_TYPE_MAP.get(field["type"], field["type"]),
+                    PostgresDataTypes.TEXT,
+                ),
+                "sample_data": [row[idx] for row in rows][:6],
+            }
+        )
+    return fields
+
+
+def trigger_dataflow_dag(conf, dag, dag_run_id):
+    config = settings.DATAFLOW_API_CONFIG
+    trigger_url = f'{config["DATAFLOW_BASE_URL"]}/api/experimental/' f"dags/{dag}/dag_runs"
+    hawk_creds = {
+        "id": config["DATAFLOW_HAWK_ID"],
+        "key": config["DATAFLOW_HAWK_KEY"],
+        "algorithm": "sha256",
+    }
+    method = "POST"
+    content_type = "application/json"
+    body = json.dumps(
+        {
+            "run_id": dag_run_id,
+            "replace_microseconds": "false",
+            "conf": conf,
+        }
+    )
+
+    header = Sender(
+        hawk_creds,
+        trigger_url,
+        method.lower(),
+        content=body,
+        content_type=content_type,
+    ).request_header
+
+    response = requests.request(
+        method,
+        trigger_url,
+        data=body,
+        headers={"Authorization": header, "Content-Type": content_type},
+    )
+    response.raise_for_status()
+    return response.json()
+
+
+def copy_file_to_uploads_bucket(from_path, to_path):
+    client = get_s3_client()
+    client.copy_object(
+        CopySource={"Bucket": settings.NOTEBOOKS_BUCKET, "Key": from_path},
+        Bucket=settings.AWS_UPLOADS_BUCKET,
+        Key=to_path,
+    )
+
+
+def get_dataflow_dag_status(dag, execution_date):
+    config = settings.DATAFLOW_API_CONFIG
+    url = (
+        f'{config["DATAFLOW_BASE_URL"]}/api/experimental/'
+        f'dags/{dag}/dag_runs/{execution_date.split("+")[0]}'
+    )
+    hawk_creds = {
+        "id": config["DATAFLOW_HAWK_ID"],
+        "key": config["DATAFLOW_HAWK_KEY"],
+        "algorithm": "sha256",
+    }
+    header = Sender(
+        hawk_creds,
+        url,
+        "get",
+        content="",
+        content_type="",
+    ).request_header
+    response = requests.get(
+        url,
+        headers={"Authorization": header, "Content-Type": ""},
+    )
+    response.raise_for_status()
+    return response.json()
+
+
+def get_dataflow_task_status(dag, execution_date, task_id):
+    config = settings.DATAFLOW_API_CONFIG
+    url = (
+        f'{config["DATAFLOW_BASE_URL"]}/api/experimental/'
+        f"dags/{dag}/dag_runs/"
+        f'{execution_date.split("+")[0]}/tasks/{task_id}'
+    )
+    hawk_creds = {
+        "id": config["DATAFLOW_HAWK_ID"],
+        "key": config["DATAFLOW_HAWK_KEY"],
+        "algorithm": "sha256",
+    }
+    header = Sender(hawk_creds, url, "get", content="", content_type="").request_header
+    response = requests.get(url, headers={"Authorization": header, "Content-Type": ""})
+    response.raise_for_status()
+    return response.json().get("state")
