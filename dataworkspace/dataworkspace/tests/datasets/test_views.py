@@ -249,6 +249,7 @@ def expected_search_result(catalogue_item, **kwargs):
         "eligibility_criteria": mock.ANY,
         "sources": mock.ANY,
         "topics": mock.ANY,
+        "last_updated": mock.ANY,
     }
     result.update(**kwargs)
     return result
@@ -682,6 +683,7 @@ def test_datasets_and_visualisations_doesnt_return_duplicate_results(access_type
         )
 
 
+@pytest.mark.skip(reason="We will be refactoring search")
 @pytest.mark.parametrize(
     "access_type", (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
 )
