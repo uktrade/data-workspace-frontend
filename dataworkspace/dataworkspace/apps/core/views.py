@@ -2,6 +2,7 @@ import logging
 import os
 
 from botocore.exceptions import ClientError
+from django.conf import settings
 from django.http import (
     HttpResponse,
     HttpResponseBadRequest,
@@ -10,11 +11,13 @@ from django.http import (
     HttpResponseNotAllowed,
     HttpResponseNotFound,
     HttpResponseServerError,
+    JsonResponse,
 )
 from django.shortcuts import render
 from django.urls import reverse
 from django.views import View
 from django.views.generic import FormView
+from requests import HTTPError
 
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.forms import (
@@ -27,6 +30,8 @@ from dataworkspace.apps.core.storage import S3FileStorage
 from dataworkspace.apps.core.utils import (
     StreamingHttpResponseWithoutDjangoDbConnection,
     can_access_schema_table,
+    get_dataflow_dag_status,
+    get_dataflow_task_status,
     table_data,
     table_exists,
     view_exists,
@@ -214,3 +219,56 @@ class ServeS3UploadedFileView(View):
         ] = f'attachment; filename="{os.path.split(path)[-1].rpartition("!")[0]}"'
         response["Content-Length"] = file_object["ContentLength"]
         return response
+
+
+class CreateTableDAGStatusView(View):
+    """
+    Check on the status of a DAG that has been run via the create table flow.
+
+    Airflow 1 requires calling with the execution date which is not ideal. Once
+    we have upgraded to Airflow 2 we can update this to call with the unique dag run id.
+
+    Airflow 2 will also return more info, including the config we called the API with
+    to trigger the DAG. Once we have this available we can then check if the file
+    path in the response matches the s3 path prefix for the current user - as an extra
+    step to check the current user actually created this dag run themselves.
+    """
+
+    def get(self, request, execution_date):
+        config = settings.DATAFLOW_API_CONFIG
+        try:
+            return JsonResponse(
+                get_dataflow_dag_status(config["DATAFLOW_S3_IMPORT_DAG"], execution_date)
+            )
+        except HTTPError as e:
+            return JsonResponse({}, status=e.response.status_code)
+
+
+class CreateTableDAGTaskStatusView(View):
+    def get(self, request, execution_date, task_id):
+        config = settings.DATAFLOW_API_CONFIG
+        try:
+            return JsonResponse(
+                {
+                    "state": get_dataflow_task_status(
+                        config["DATAFLOW_S3_IMPORT_DAG"], execution_date, task_id
+                    )
+                }
+            )
+        except HTTPError as e:
+            return JsonResponse({}, status=e.response.status_code)
+
+
+class RestoreTableDAGTaskStatusView(View):
+    def get(self, request, execution_date, task_id):
+        config = settings.DATAFLOW_API_CONFIG
+        try:
+            return JsonResponse(
+                {
+                    "state": get_dataflow_task_status(
+                        config["DATAFLOW_RESTORE_TABLE_DAG"], execution_date, task_id
+                    )
+                }
+            )
+        except HTTPError as e:
+            return JsonResponse({}, status=e.response.status_code)

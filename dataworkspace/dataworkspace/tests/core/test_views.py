@@ -5,6 +5,7 @@ import botocore
 import mock
 
 import pytest
+import requests_mock
 from botocore.response import StreamingBody
 from bs4 import BeautifulSoup
 
@@ -433,3 +434,69 @@ def test_media_s3_valid_file(mocker, client):
     assert response.status_code == 200
     assert list(response.streaming_content)[0] == b"some file content stored on s3"
     assert response["content-length"] == str(len(b"some file content stored on s3"))
+
+
+class TestDAGTaskStatus:
+    @pytest.mark.parametrize("status_code", (500, 404))
+    def test_dag_status_invalid(self, status_code, client):
+        execution_date = "02-05T13:33:49.266040+00:00"
+        with requests_mock.Mocker() as rmock:
+            # pylint: disable=use-maxsplit-arg
+            rmock.get(
+                "https://data-flow/api/experimental/dags/DataWorkspaceS3ImportPipeline"
+                f'/dag_runs/{execution_date.split("+")[0]}',
+                status_code=status_code,
+            )
+            response = client.get(reverse("create-table-dag-status", args=(execution_date,)))
+            assert response.status_code == status_code
+
+    def test_dag_status(self, client):
+        execution_date = "02-05T13:33:49.266040+00:00"
+        with requests_mock.Mocker() as rmock:
+            # pylint: disable=use-maxsplit-arg
+            rmock.get(
+                "https://data-flow/api/experimental/dags/DataWorkspaceS3ImportPipeline"
+                f'/dag_runs/{execution_date.split("+")[0]}',
+                json={"state": "success"},
+            )
+            response = client.get(reverse("create-table-dag-status", args=(execution_date,)))
+            assert response.status_code == 200
+            assert response.json() == {"state": "success"}
+
+    @pytest.mark.parametrize("status_code", (500, 404))
+    def test_task_status_invalid(self, status_code, client):
+        execution_date = "02-05T13:33:49.266040+00:00"
+        task_id = "task-id"
+        with requests_mock.Mocker() as rmock:
+            # pylint: disable=use-maxsplit-arg
+            rmock.get(
+                "https://data-flow/api/experimental/dags/DataWorkspaceS3ImportPipeline"
+                f'/dag_runs/{execution_date.split("+")[0]}/tasks/{task_id}',
+                status_code=status_code,
+            )
+            response = client.get(
+                reverse(
+                    "create-table-task-status",
+                    args=(execution_date, task_id),
+                )
+            )
+            assert response.status_code == status_code
+
+    def test_task_status(self, client):
+        execution_date = "02-05T13:33:49.266040+00:00"
+        task_id = "task-id"
+        with requests_mock.Mocker() as rmock:
+            # pylint: disable=use-maxsplit-arg
+            rmock.get(
+                "https://data-flow/api/experimental/dags/DataWorkspaceS3ImportPipeline"
+                f'/dag_runs/{execution_date.split("+")[0]}/tasks/{task_id}',
+                json={"state": "success"},
+            )
+            response = client.get(
+                reverse(
+                    "create-table-task-status",
+                    args=(execution_date, task_id),
+                )
+            )
+            assert response.status_code == 200
+            assert response.json() == {"state": "success"}

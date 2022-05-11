@@ -77,12 +77,18 @@
           {% include "partials/subscription_link.html" with subscription=subscription dataset=dataset dataset_uuid=dataset.id %}
         </p>
       {% endflag %}
-      {% if request.user == model.information_asset_owner or request.user == model.information_asset_manager %}
+      {% if request.user|can_edit_dataset:model %}
         <p class="govuk-body sidebar-section">
           <a href="{% url 'datasets:edit_dataset' model.id %}" class="govuk-link govuk-link--no-visited-state">Manage this dataset</a>
         </p>
+        {% flag DATA_UPLOADER_UI_FLAG %}
+          <p class="govuk-body sidebar-section">
+            <a href="{{ request.path }}#data" class="govuk-link govuk-link--no-visited-state">
+              View and update data tables
+            </a>
+          </p>
+        {% endflag %}
       {% endif %}
-
       {% if related_data %}
         <aside class="app-related-items" role="complementary">
           <h3 class="govuk-heading-s" id="subsection-title">
@@ -133,6 +139,7 @@
             </ul>
           </nav>
       {% endif %}
+      {% include 'partials/using_data_dropdown.html' %}
     </div>
   </div>
 
@@ -140,7 +147,7 @@
     {% include "partials/chart_builder_charts.html" %}
   {% endflag %}
 
-  <div class="govuk-grid-row" style="overflow-x: auto;">
+  <div class="govuk-grid-row" style="overflow-x: auto;" id="data">
     <div class="govuk-grid-column-full">
       <h2 class="govuk-heading-l">Data</h2>
       <table class="govuk-table">
@@ -182,6 +189,14 @@
                        href="{% url "datasets:dataset_table_preview" dataset_uuid=dataset.id table_uuid=source_table.id %}">
                       Preview
                     </a>
+                  {% endif %}
+                  {% if request.user|can_edit_dataset:model %}
+                    <br>
+                    <a class="govuk-link govuk-link--no-visited-state"
+                       href="{% url "datasets:manager:manage-source-table" pk=dataset.id source_uuid=source_table.id %}">
+                      Update or restore table
+                    </a>
+
                   {% endif %}
                 {% else %}
                   <p class="govuk-body">No preview available</p>

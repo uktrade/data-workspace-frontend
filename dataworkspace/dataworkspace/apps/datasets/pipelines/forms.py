@@ -86,8 +86,9 @@ class SQLPipelineCreateForm(BasePipelineCreateForm):
         return pipeline
 
     def clean_sql(self):
+        query = self.cleaned_data["sql"].strip().rstrip(";")
         try:
-            statements = psqlparse.parse(self.cleaned_data["sql"])
+            statements = psqlparse.parse(query)
         except psqlparse.exceptions.PSqlParseError as e:
             raise ValidationError(e) from e
         else:
@@ -105,7 +106,7 @@ class SQLPipelineCreateForm(BasePipelineCreateForm):
         # Check that the query runs
         with connections[list(settings.DATABASES_DATA.items())[0][0]].cursor() as cursor:
             try:
-                cursor.execute(f"SELECT * FROM ({self.cleaned_data['sql']}) sq LIMIT 0")
+                cursor.execute(f"SELECT * FROM ({query}) sq LIMIT 0")
             except Exception as e:  # pylint: disable=broad-except
                 raise ValidationError(
                     "Error running query. Please check the query runs successfully before saving."
@@ -169,7 +170,7 @@ class SharepointPipelineEditForm(SharepointPipelineCreateForm):
 class PipelineTypeForm(GOVUKDesignSystemForm):
     pipeline_type = GOVUKDesignSystemRadioField(
         required=True,
-        label="Select the type of derived pipeline you would like to create",
+        label="Select the type of pipeline you would like to create",
         widget=GOVUKDesignSystemRadiosWidget(heading="p", extra_label_classes="govuk-body-l"),
         choices=(
             ("sql", "SQL Pipeline"),

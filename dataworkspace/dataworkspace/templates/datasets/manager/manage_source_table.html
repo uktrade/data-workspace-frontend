@@ -1,0 +1,74 @@
+{% extends '_main.html' %}
+{% load static datasets_tags core_tags waffle_tags %}
+{% block page_title %}Update or restore table - {{ block.super }}{% endblock %}
+{% block breadcrumbs %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-three-quarters">
+      <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="/">Home</a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="{{ source.dataset.get_absolute_url }}">
+              {{ source.dataset.name }}
+            </a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">Update or restore table</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-l">"{{ source.schema }}"."{{ source.table }}"</h1>
+      <p class="govuk-body govuk-body-m">
+        You can restore this table to a previous version from the last 6 months or update the table with a new CSV.
+      </p>
+    </div>
+  </div>
+  {% block success_banner %}{% endblock %}
+  <div class="govuk-grid-row govuk-!-margin-top-6" id="update">
+    <div class="govuk-grid-column-two-thirds">
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% include 'design_system/error_summary.html' %}
+        {{ form.csv_file }}
+        <button class="govuk-button" type="submit">Upload CSV</button>
+      </form>
+    </div>
+  </div>
+  <div class="govuk-grid-row govuk-!-margin-top-6" id="update">
+    <div class="govuk-grid-column-full" style="overflow-x: auto;">
+      <h1 class="govuk-heading-s">Restore from a previous version</h1>
+      <table class="govuk-table">
+        <thead>
+        <tr class="govuk-table__row">
+          <th class="govuk-table__header">Date</th>
+          <th class="govuk-table__header">Email Address</th>
+          <th class="govuk-table__header">Action</th>
+        </tr>
+        </thead>
+        <tbody>
+          {% for version in source.get_previous_uploads %}
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell">
+                {{ version.data_flow_execution_date|date_with_gmt_offset }}
+              </td>
+              <td class="govuk-table__cell">
+                {{ version.created_by.email }}
+              </td>
+              <td class="govuk-table__cell">
+                <a href="{% url 'datasets:manager:restore-table' pk=source.dataset_id source_uuid=source.id version_id=version.id %}" class="govuk-link">Restore</a>
+              </td>
+            </tr>
+          {% empty %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+{% endblock content %}

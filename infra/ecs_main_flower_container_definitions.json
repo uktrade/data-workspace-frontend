@@ -1,0 +1,38 @@
+[
+  {
+    "environment": [
+      {
+        "name": "REDIS_URL",
+        "value": "${redis_url}"
+      },
+      {
+        "name": "FLOWER_USERNAME",
+        "value": "${flower_username}"
+      },
+      {
+        "name": "FLOWER_PASSWORD",
+        "value": "${flower_password}"
+      }
+    ],
+    "essential": true,
+    "image": "${container_image}",
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "${log_group}",
+        "awslogs-region": "${log_region}",
+        "awslogs-stream-prefix": "${container_name}"
+      }
+    },
+    "networkMode": "awsvpc",
+    "memoryReservation": ${memory},
+    "cpu": ${cpu},
+    "mountPoints" : [],
+    "name": "${container_name}",
+    "portMappings": [{
+        "containerPort": 80,
+        "hostPort": 80,
+        "protocol": "tcp"
+    }]
+  }
+]

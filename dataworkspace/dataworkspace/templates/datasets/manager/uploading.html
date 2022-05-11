@@ -1,0 +1,33 @@
+{% extends '_main.html' %}
+{% load static %}
+{% block page_title %}Updating table - {{ block.super }}{% endblock page_title %}
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      <div class="govuk-panel govuk-panel--confirmation">
+        <div class="govuk-panel__body govuk-!-font-size-24">
+          Step {{ step }} of {{ steps }}
+        </div>
+        <h1 id="pipeline_header" class="govuk-panel__title">
+          {{ title }}
+        </h1>
+        <div id="spinner" class="govuk-!-margin-bottom-7 loading-spinner"></div>
+        <div id="pipeline_info" class="govuk-panel__body govuk-!-font-size-24">
+          {{ info_text }}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
+{% block footer_scripts %}
+  {{ block.super }}
+  <script nonce="{{ request.csp_nonce }}" src="{% static 'your-files-create-table.js' %}"></script>
+  <script nonce="{{ request.csp_nonce }}">
+    window.pollForDagStateChange(
+        '{% url "create-table-task-status" execution_date task_name %}',
+        '{{ next_step }}?{{ request.GET.urlencode }}',
+        '{% url "datasets:manager:upload-failed" pk=source.dataset_id source_uuid=source.id %}?{{ request.GET.urlencode }}',
+        500
+    );
+  </script>
+{% endblock %}

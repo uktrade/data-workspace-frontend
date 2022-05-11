@@ -20,7 +20,7 @@ from django.core import serializers
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db import connections
+from django.db import connections, ProgrammingError
 from django.db.models import (
     Count,
     F,
@@ -203,6 +203,67 @@ def find_datasets(request):
 
         logger.info(dataset["sources"])
 
+    def _get_reference_dataset_last_updated(dataset_id):
+        datasets = ReferenceDataset.objects.filter(uuid=dataset_id)
+        if not datasets.exists():
+            return []
+
+        try:
+            # If the reference dataset csv table doesn't exist we
+            # get an unhandled relation does not exist error
+            # this is currently only a problem with integration tests
+            return [datasets.first().data_last_updated]
+        except ProgrammingError as e:
+            logger.error(e)
+            return []
+
+    def _get_master_dataset_last_updated(dataset_id):
+        datasets = MasterDataset.objects.filter(id=dataset_id)
+        if not datasets.exists():
+            return []
+
+        return [
+            table.get_data_last_updated_date() for table in datasets.first().sourcetable_set.all()
+        ]
+
+    def _get_datacut_query_last_updated(dataset_id):
+        datasets = DataCutDataset.objects.filter(id=dataset_id)
+        if not datasets.exists():
+            return []
+
+        return [
+            query.get_data_last_updated_date()
+            for query in datasets.first().customdatasetquery_set.all()
+        ]
+
+    def _get_visualisationcatalogue_link_last_updated(dataset_id):
+        datasets = VisualisationCatalogueItem.objects.filter(id=dataset_id)
+        if not datasets.exists():
+            return []
+
+        return [
+            link.data_source_last_updated for link in datasets.first().visualisationlink_set.all()
+        ]
+
+    def _get_last_updated_date(dataset):
+        last_updated_dates = []
+
+        if dataset["data_type"] == DataSetType.REFERENCE:
+            last_updated_dates = _get_reference_dataset_last_updated(dataset["id"])
+
+        elif dataset["data_type"] == DataSetType.MASTER:
+            last_updated_dates = _get_master_dataset_last_updated(dataset["id"])
+
+        elif dataset["data_type"] == DataSetType.DATACUT:
+            last_updated_dates = _get_datacut_query_last_updated(dataset["id"])
+
+        elif dataset["data_type"] == DataSetType.VISUALISATION:
+            last_updated_dates = _get_visualisationcatalogue_link_last_updated(dataset["id"])
+
+        last_update_dates_no_null = [d for d in last_updated_dates if d is not None]
+
+        return max(last_update_dates_no_null, default=None)
+
     form = DatasetSearchForm(request.GET)
 
     if not form.is_valid():
@@ -238,6 +299,7 @@ def find_datasets(request):
     # This is a workaround until we refactor search
     for dataset in datasets:
         _enrich_tags(dataset, tags_dict)
+        dataset["last_updated"] = _get_last_updated_date(dataset)
 
     return render(
         request,
@@ -451,6 +513,7 @@ class DatasetDetailView(DetailView):
         ctx["model"] = self.object
         ctx["DATA_CUT_ENHANCED_PREVIEW_FLAG"] = settings.DATA_CUT_ENHANCED_PREVIEW_FLAG
         ctx["DATASET_CHANGELOG_PAGE_FLAG"] = settings.DATASET_CHANGELOG_PAGE_FLAG
+        ctx["DATA_UPLOADER_UI_FLAG"] = settings.DATA_UPLOADER_UI_FLAG
 
         if self._is_reference_dataset():
             return self._get_context_data_for_reference_dataset(ctx, **kwargs)
@@ -1254,7 +1317,7 @@ class DatasetChartView(WaffleFlagMixin, View):
         )
         return dataset.charts.get(id=self.kwargs["object_id"])
 
-    @csp_update(SCRIPT_SRC=["'unsafe-eval'", "blob:"])
+    @csp_update(SCRIPT_SRC=["'unsafe-eval'", "blob:"], IMG_SRC=["blob:"])
     def get(self, request, **kwargs):
         chart = self.get_object()
         if not chart.dataset.user_has_access(request.user):
@@ -1305,10 +1368,14 @@ class EditBaseView(View):
                 PendingAuthorizedUsers.objects.all(), pk=self.kwargs.get("summary_id")
             )
         self.obj = dataset or visualisation_catalogue_item
-        if request.user not in [
-            self.obj.information_asset_owner,
-            self.obj.information_asset_manager,
-        ]:
+        if (
+            request.user
+            not in [
+                self.obj.information_asset_owner,
+                self.obj.information_asset_manager,
+            ]
+            and not request.user.is_superuser
+        ):
             return HttpResponseForbidden()
         return super().dispatch(request, *args, **kwargs)
 

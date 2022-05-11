@@ -15,6 +15,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 from django.urls import reverse
 from django.test import Client
@@ -23,6 +24,7 @@ from lxml import html
 from waffle.testutils import override_flag
 
 from dataworkspace.apps.core.charts.models import ChartBuilderChart
+from dataworkspace.apps.core.storage import ClamAVResponse
 from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType
 from dataworkspace.apps.datasets.models import (
@@ -37,6 +39,7 @@ from dataworkspace.apps.datasets.search import (
     _get_visualisations_data_for_user_matching_query,
 )
 from dataworkspace.apps.eventlog.models import EventLog
+from dataworkspace.apps.your_files.models import UploadedTable
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data, MatchUnorderedMembers
 from dataworkspace.tests.core.charts.test_views import create_temporary_results_table
@@ -249,6 +252,7 @@ def expected_search_result(catalogue_item, **kwargs):
         "eligibility_criteria": mock.ANY,
         "sources": mock.ANY,
         "topics": mock.ANY,
+        "last_updated": mock.ANY,
     }
     result.update(**kwargs)
     return result
@@ -682,6 +686,7 @@ def test_datasets_and_visualisations_doesnt_return_duplicate_results(access_type
         )
 
 
+@pytest.mark.skip(reason="We will be refactoring search")
 @pytest.mark.parametrize(
     "access_type", (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
 )
@@ -4353,3 +4358,221 @@ class TestVisualisationCatalogueItemEditView:
             == visualisation_catalogue_item
         )
         assert VisualisationUserPermission.objects.all()[0].user == user_1
+
+
+class TestDatasetManagerViews:
+    @override_flag(settings.DATA_UPLOADER_UI_FLAG, active=True)
+    @pytest.mark.django_db
+    def test_update_restore_page(self, client, user):
+        UploadedTable.objects.create(
+            schema="test",
+            table_name="table1",
+            data_flow_execution_date=datetime(2022, 1, 1),
+        )
+        UploadedTable.objects.create(
+            schema="test",
+            table_name="table2",
+            data_flow_execution_date=datetime(2022, 1, 1),
+        )
+        dataset = factories.MasterDataSetFactory.create(
+            published=True, user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
+        )
+        source = factories.SourceTableFactory.create(
+            dataset=dataset, schema="test", table="table1"
+        )
+
+        url = reverse("datasets:manager:manage-source-table", args=(dataset.id, source.id))
+
+        # User is not IAM
+        response = client.get(url)
+        assert response.status_code == 403
+
+        # User is IAM
+        dataset.information_asset_manager = user
+        dataset.save()
+        response = client.get(url)
+        response.status_code = 200
+        assert "Upload a new CSV to this table" in response.content.decode(response.charset)
+        assert len(response.context["source"].get_previous_uploads()) == 1
+
+    @freeze_time("2021-01-01 01:01:01")
+    @override_flag(settings.DATA_UPLOADER_UI_FLAG, active=True)
+    @pytest.mark.django_db
+    @mock.patch("dataworkspace.apps.datasets.manager.views.uuid.uuid4")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
+    @mock.patch("dataworkspace.apps.core.storage._upload_to_clamav")
+    @mock.patch("dataworkspace.apps.datasets.manager.views.get_s3_prefix")
+    def test_csv_upload(
+        self,
+        mock_get_s3_prefix,
+        mock_upload_to_clamav,
+        mock_boto_client,
+        mock_uuid,
+        client,
+        user,
+    ):
+        file_uuid = "39dde835-6551-47c0-863f-7600a1ef93a3"
+        file_name = f"file1.csv!{file_uuid}"
+        mock_uuid.return_value = file_uuid
+        mock_get_s3_prefix.return_value = "user/federated/abc"
+        mock_upload_to_clamav.return_value = ClamAVResponse({"malware": False})
+        source = factories.SourceTableFactory.create(
+            dataset=factories.MasterDataSetFactory.create(
+                published=True,
+                user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+                information_asset_manager=user,
+            ),
+            schema="test",
+            table="table1",
+        )
+        file1 = SimpleUploadedFile(
+            "file1.csv",
+            b"id,name\r\nA1,test1\r\nA2,test2\r\n",
+            content_type="text/csv",
+        )
+
+        response = client.post(
+            reverse(
+                "datasets:manager:manage-source-table",
+                args=(source.dataset.id, source.id),
+            ),
+            data={"csv_file": file1},
+        )
+        assert response.status_code == 302
+        assert (
+            response["Location"]
+            == reverse(
+                "datasets:manager:manage-source-table-column-config",
+                args=(source.dataset_id, source.id),
+            )
+            + f"?file={file_name}"
+        )
+        mock_boto_client().put_object.assert_called_once_with(
+            Body=mock.ANY,
+            Bucket="notebooks-bucket",
+            Key=f"user/federated/abc/_source_table_uploads/{source.id}/{file_name}",
+        )
+
+    @freeze_time("2021-01-01 01:01:01")
+    @override_flag(settings.DATA_UPLOADER_UI_FLAG, active=True)
+    @pytest.mark.django_db
+    @mock.patch("dataworkspace.apps.datasets.manager.views.trigger_dataflow_dag")
+    @mock.patch("dataworkspace.apps.datasets.manager.views.copy_file_to_uploads_bucket")
+    @mock.patch("dataworkspace.apps.datasets.manager.views.get_s3_csv_column_types")
+    @mock.patch("dataworkspace.apps.datasets.manager.views.get_s3_prefix")
+    def test_column_config(
+        self,
+        mock_get_s3_prefix,
+        mock_get_column_types,
+        mock_copy_file,
+        mock_trigger_dag,
+        client,
+        user,
+    ):
+        mock_get_s3_prefix.return_value = "user/federated/abc"
+        mock_trigger_dag.return_value = {"execution_date": datetime.now()}
+        mock_get_column_types.return_value = [
+            {
+                "header_name": "ID",
+                "column_name": "id",
+                "data_type": "text",
+                "sample_data": ["a", "b", "c"],
+            },
+            {
+                "header_name": "name",
+                "column_name": "name",
+                "data_type": "text",
+                "sample_data": ["d", "e", "f"],
+            },
+        ]
+
+        source = factories.SourceTableFactory.create(
+            dataset=factories.MasterDataSetFactory.create(
+                published=True,
+                user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+                information_asset_manager=user,
+            ),
+            schema="test",
+            table="table1",
+        )
+        response = client.post(
+            reverse(
+                "datasets:manager:manage-source-table-column-config",
+                args=(source.dataset.id, source.id),
+            )
+            + "?file=file1.csv",
+            data={
+                "path": "user/federated/abc/file1.csv",
+                "id": "text",
+                "name": "text",
+            },
+        )
+        assert response.status_code == 302
+        assert (
+            response["Location"]
+            == reverse(
+                "datasets:manager:upload-validating",
+                args=(source.dataset_id, source.id),
+            )
+            + f"?filename=file1.csv&schema={source.schema}&table_name={source.table}&"
+            f"execution_date=2021-01-01+01%3A01%3A01"
+        )
+        mock_copy_file.assert_called_with(
+            "user/federated/abc/file1.csv",
+            "data-flow-imports/user/federated/abc/file1.csv",
+        )
+        mock_trigger_dag.assert_called_with(
+            {
+                "file_path": "data-flow-imports/user/federated/abc/file1.csv",
+                "schema_name": source.schema,
+                "table_name": source.table,
+                "column_definitions": mock_get_column_types.return_value,
+            },
+            "DataWorkspaceS3ImportPipeline",
+            "test-table1-2021-01-01T01:01:01",
+        )
+
+    @override_flag(settings.DATA_UPLOADER_UI_FLAG, active=True)
+    @pytest.mark.django_db
+    @freeze_time("2021-01-01 01:01:01")
+    @mock.patch("dataworkspace.apps.datasets.manager.views.trigger_dataflow_dag")
+    def test_restore_table(self, mock_trigger_dag, dataset_db_with_swap_table, user, client):
+        mock_trigger_dag.return_value = {"execution_date": "2022-01-01"}
+        version = UploadedTable.objects.create(
+            schema="public",
+            table_name="dataset_test",
+            data_flow_execution_date=datetime(2022, 1, 1),
+        )
+        source = factories.SourceTableFactory.create(
+            dataset=factories.MasterDataSetFactory.create(
+                published=True,
+                user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+                information_asset_manager=user,
+            ),
+            schema="public",
+            table="dataset_test",
+        )
+        response = client.post(
+            reverse(
+                "datasets:manager:restore-table",
+                args=(source.dataset.id, source.id, version.id),
+            )
+        )
+        assert response.status_code == 302
+        assert (
+            response["Location"]
+            == reverse(
+                "datasets:manager:restoring-table",
+                args=(source.dataset_id, source.id, version.id),
+            )
+            + "?execution_date=2022-01-01&task_name=restore-swap-table-datasets_db"
+        )
+        mock_trigger_dag.assert_called_with(
+            {
+                "ts_nodash": "20220101t000000",
+                "schema_name": "public",
+                "table_name": "dataset_test",
+            },
+            "DataWorkspaceRestoreTablePipeline",
+            "restore-public-dataset_test-2021-01-01T01:01:01",
+        )

@@ -149,6 +149,9 @@ variable datasets_finder_ebs_size {
   type = number
   default = 100
 }
+variable flower_username {}
+variable flower_password {}
+
 
 locals {
   admin_container_name    = "jupyterhub-admin"
@@ -207,4 +210,7 @@ locals {
 
   superset_container_memory = 8192
   superset_container_cpu    = 1024
+
+  flower_container_memory = 8192
+  flower_container_cpu    = 1024
 }
