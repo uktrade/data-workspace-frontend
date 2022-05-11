@@ -18,7 +18,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from django.urls import reverse
-from django.test import Client
+from django.test import Client, override_settings
 from freezegun import freeze_time
 from lxml import html
 from waffle.testutils import override_flag
@@ -4398,6 +4398,7 @@ class TestDatasetManagerViews:
 
     @freeze_time("2021-01-01 01:01:01")
     @override_flag(settings.DATA_UPLOADER_UI_FLAG, active=True)
+    @override_settings(NOTEBOOKS_BUCKET="notebooks-bucket")
     @pytest.mark.django_db
     @mock.patch("dataworkspace.apps.datasets.manager.views.uuid.uuid4")
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
