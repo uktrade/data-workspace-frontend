@@ -55,23 +55,29 @@ def _get_visualisations_data_for_user_matching_query(visualisations: QuerySet, q
 
     # Mark up whether the user can access the visualisation.
     if user:
+        user_email_domain = user.email.split("@")[1]
         access_filter = (
             (
-                Q(
-                    user_access_type__in=[
-                        UserAccessType.REQUIRES_AUTHENTICATION,
-                        UserAccessType.OPEN,
-                    ]
+                (
+                    Q(
+                        user_access_type__in=[
+                            UserAccessType.REQUIRES_AUTHENTICATION,
+                            UserAccessType.OPEN,
+                        ]
+                    )
+                )
+                & (
+                    Q(visualisationuserpermission__user=user)
+                    | Q(visualisationuserpermission__isnull=True)
                 )
             )
-            & (
-                Q(visualisationuserpermission__user=user)
-                | Q(visualisationuserpermission__isnull=True)
+            | Q(
+                user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
+                visualisationuserpermission__user=user,
             )
-        ) | Q(
-            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
-            visualisationuserpermission__user=user,
+            | Q(authorized_email_domains__contains=[user_email_domain])
         )
+
     else:
         access_filter = Q()
 
@@ -233,14 +239,19 @@ def _get_datasets_data_for_user_matching_query(
     bookmark_filter = Q(referencedatasetbookmark__user=user)
 
     if user and datasets.model is not ReferenceDataset:
-        access_filter &= Q(
-            user_access_type__in=[
-                UserAccessType.REQUIRES_AUTHENTICATION,
-                UserAccessType.OPEN,
-            ]
-        ) | Q(
-            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
-            datasetuserpermission__user=user,
+        user_email_domain = user.email.split("@")[1]
+        access_filter &= (
+            Q(
+                user_access_type__in=[
+                    UserAccessType.REQUIRES_AUTHENTICATION,
+                    UserAccessType.OPEN,
+                ]
+            )
+            | Q(
+                user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
+                datasetuserpermission__user=user,
+            )
+            | Q(authorized_email_domains__contains=[user_email_domain])
         )
 
         bookmark_filter = Q(datasetbookmark__user=user)

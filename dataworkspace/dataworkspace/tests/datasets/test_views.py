@@ -18,7 +18,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from django.urls import reverse
-from django.test import Client
+from django.test import Client, override_settings
 from freezegun import freeze_time
 from lxml import html
 from waffle.testutils import override_flag
@@ -615,10 +615,10 @@ def test_find_datasets_order_by_oldest_first(client):
 )
 def test_datasets_and_visualisations_doesnt_return_duplicate_results(access_type, staff_client):
     normal_user = get_user_model().objects.create(
-        username="bob.user@test.com", is_staff=False, is_superuser=False
+        username="bob.user@test.com", is_staff=False, is_superuser=False, email="bob.user@test.com"
     )
     staff_user = get_user_model().objects.create(
-        username="bob.staff@test.com", is_staff=True, is_superuser=True
+        username="bob.staff@test.com", is_staff=True, is_superuser=True, email="bob.staff@test.com"
     )
 
     users = [factories.UserFactory.create() for _ in range(3)]
@@ -1181,7 +1181,8 @@ def test_find_datasets_filters_by_access_and_use_only_returns_the_dataset_once(
 def test_find_datasets_includes_unpublished_results_based_on_permissions(
     permissions, result_dataset_names
 ):
-    user = get_user_model().objects.create(is_staff=True)
+    email = "test.user@example.com"
+    user = get_user_model().objects.create(is_staff=True, email=email, username=email)
     perms = Permission.objects.filter(codename__in=permissions).all()
     user.user_permissions.add(*perms)
     user.save()
@@ -4397,6 +4398,7 @@ class TestDatasetManagerViews:
 
     @freeze_time("2021-01-01 01:01:01")
     @override_flag(settings.DATA_UPLOADER_UI_FLAG, active=True)
+    @override_settings(NOTEBOOKS_BUCKET="notebooks-bucket")
     @pytest.mark.django_db
     @mock.patch("dataworkspace.apps.datasets.manager.views.uuid.uuid4")
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
