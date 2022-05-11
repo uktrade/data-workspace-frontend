@@ -9,10 +9,10 @@
   "private": true,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build:css": "node-sass dataworkspace/dataworkspace/sass --output dataworkspace/dataworkspace/static --include-path node_modules --output-style compressed",
-    "debug:css": "node-sass dataworkspace/dataworkspace/sass --output dataworkspace/dataworkspace/static --source-map true --source-map-contents --include-path node_modules",
+    "build:css": "sass dataworkspace/dataworkspace/sass:dataworkspace/dataworkspace/static --load-path node_modules --style compressed -q --no-source-map",
+    "debug:css": "sass dataworkspace/dataworkspace/sass:dataworkspace/dataworkspace/static --load-path node_modules --style compressed -q",
     "copy:govuk-js": "cp node_modules/govuk-frontend/govuk/all.js dataworkspace/dataworkspace/static/govuk-frontend.js",
-    "build:frontend" : "npm run build:css && npm run copy:govuk-js"
+    "build": "npm run build:css && npm run copy:govuk-js"
   },
   "repository": {
     "type": "git",
@@ -27,6 +27,6 @@
   "homepage": "https://github.com/uktrade/data-workspace#readme",
   "devDependencies": {
     "govuk-frontend": "4.0.1",
-    "node-sass": "^7.0.1"
+    "sass": "^1.51.0"
   }
 }
