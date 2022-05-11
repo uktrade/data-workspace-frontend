@@ -74,14 +74,14 @@
         <header class="govuk-header " role="banner" data-module="govuk-header">
             <div class="govuk-header__container govuk-width-container">
                 <div class="govuk-header__logotype" style="width: 100%">
-                  <a href="{% url 'explorer:index' %}" class="govuk-header__link govuk-header__link--service-name">Data Explorer </a>
+                  <a href="{% url 'explorer:index' %}" class="govuk-header__link govuk-header__link--service-name">Data Explorer</a>
                   <p style="float: right" class="govuk-!-font-size-19 govuk-!-display-inline-block govuk-!-margin-top-0">
                     Uses data on <a class="govuk-header__link" style="text-decoration: underline" href="https://data.trade.gov.uk" target="_blank" rel="noopener noreferrer">Data Workspace</a>
                   </p>
                 </div>
-                <button type="button" class="govuk-header__menu-button govuk-js-header-toggle" aria-controls="navigation" aria-label="Show or hide Top Level Navigation">Menu</button>
-                <nav aria-label="Top Level Navigation">
-                    <ul id="navigation" class="govuk-header__navigation">
+                <nav aria-label="Top Level Navigation" class="govuk-header__navigation">
+                    <button type="button" class="govuk-header__menu-button govuk-js-header-toggle" aria-controls="navigation" aria-label="Show or hide Top Level Navigation">Menu</button>
+                    <ul id="navigation" class="govuk-header__navigation-list">
                         <li class="govuk-header__navigation-item{% if active_menu == 'home' %} govuk-header__navigation-item--active{% endif %}">
                             <a class="govuk-header__link" href="{% url 'explorer:index' %}">Home</a>
                         </li>
