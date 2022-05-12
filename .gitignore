@@ -85,3 +85,4 @@ ssl.crt
 node_modules
 dataworkspace/dataworkspace/static/*.css.map
 .local
+.vscode
