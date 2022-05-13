@@ -4003,6 +4003,7 @@ class TestChartViews:
             ),
             chart=ChartBuilderChartFactory.create(),
         )
+        factories.VisualisationDatasetFactory(dataset=dataset)
         response = client.get(
             reverse(
                 "datasets:dataset_charts",
@@ -4010,7 +4011,7 @@ class TestChartViews:
             )
         )
         assert response.status_code == 200
-        assert response.context["charts"].count() == 2
+        assert response.context["charts"].count() == 3
 
     @override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
     def test_view_dataset_charts(self, client):
