@@ -6,5 +6,5 @@ set -e
     cd "$(dirname "$0")"
 
     echo "starting celery..."
-    celery --app dataworkspace.cel.celery_app worker --pool gevent --prefetch-multiplier=1 --concurrency 150
+    celery --app dataworkspace.cel.celery_app worker --pool gevent --prefetch-multiplier=1 --concurrency 150 -X explorer.tasks,applications.spawner.spawn
 )
