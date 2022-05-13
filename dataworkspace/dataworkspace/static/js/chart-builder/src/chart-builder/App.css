@@ -18,12 +18,14 @@
   border-right: 1px solid lightgray;
 }
 .chart-builder-modal {
-  position:absolute;
+  position: absolute;
   background-color: rgba(0, 0, 0, 0.5);
-  left: 35px;
-  right: 33px;
+  left: 0;
+  right: 0;
   height: 100%;
   z-index: 20;
+  top: -10px;
+  padding-bottom: 10px;
 }
 .chart-builder-modal > div {
   position: absolute;
@@ -59,4 +61,39 @@
 }
 .mapboxgl-ctrl-attrib {
   display: none !important;
+}
+@media only screen and (min-width: 1020px) {
+    /* Tablet and mobile displays already use full width */
+    .govuk-width-container {
+        max-width: 95%;
+    }
+}
+#plotly-editor > .plotly-wrap {
+  height: calc(80vh - 50px);
+  max-height: calc(80vh - 50px);
+}
+
+.plotly-notifier {
+  font-family: arial, sans-serif;
+  position: fixed;
+  top: 105px;
+  right: 40px;
+  z-index: 10000;
+  font-size: 1rem;
+  max-width: 500px;
+}
+.plotly-notifier .notifier-note {
+  min-width: 200px;
+  max-width: 500px;
+  z-index: 3000;
+  margin: 0px;
+  background-color: #00703c;
+  padding: 10px;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  color: #fff;
+}
+.plotly-notifier .notifier-note p {
+  font-size: 18px;
+  line-height: 24px;
 }
