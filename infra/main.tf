@@ -158,6 +158,8 @@ locals {
   admin_container_port    = "8000"
   admin_container_memory  = 2048
   admin_container_cpu     = 1024
+  celery_container_cpu    = 4096
+  celery_container_memory = 8192
   admin_alb_port          = "443"
   admin_api_path          = "/api/v1/databases"
 

@@ -140,7 +140,7 @@ resource "aws_service_discovery_service" "admin" {
 
 resource "aws_ecs_task_definition" "admin" {
   family                   = "${var.prefix}-admin"
-  container_definitions    = "${data.template_file.admin_container_definitions.rendered}"
+  container_definitions    = "[${data.template_file.admin_container_definitions.rendered}]"
   execution_role_arn       = "${aws_iam_role.admin_task_execution.arn}"
   task_role_arn            = "${aws_iam_role.admin_task.arn}"
   network_mode             = "awsvpc"
@@ -192,8 +192,8 @@ resource "aws_ecs_task_definition" "admin_celery" {
   execution_role_arn       = "${aws_iam_role.admin_task_execution.arn}"
   task_role_arn            = "${aws_iam_role.admin_task.arn}"
   network_mode             = "awsvpc"
-  cpu                      = "${local.admin_container_cpu}"
-  memory                   = "${local.admin_container_memory}"
+  cpu                      = "${local.celery_container_cpu}"
+  memory                   = "${local.celery_container_memory}"
   requires_compatibilities = ["FARGATE"]
 
   lifecycle {
@@ -206,19 +206,19 @@ resource "aws_ecs_task_definition" "admin_celery" {
 data "template_file" "admin_celery_container_definitions" {
   template = "${file("${path.module}/ecs_main_admin_container_definitions.json")}"
 
-  vars = "${merge(local.admin_container_vars, map("container_command", "[\"/dataworkspace/start-celery.sh\"]"))}"
+  vars = "${merge(local.admin_container_vars, map("container_command", "[\"/dataworkspace/start-celery.sh\"]"), map("container_name", "${local.admin_container_name}"))}"
 }
 
 data "template_file" "admin_celery_container_definitions_explorer_tasks" {
   template = "${file("${path.module}/ecs_main_admin_container_definitions.json")}"
 
-  vars = "${merge(local.admin_container_vars, map("container_command", "[\"/dataworkspace/start-celery-explorer-tasks.sh\"]"))}"
+  vars = "${merge(local.admin_container_vars, map("container_command", "[\"/dataworkspace/start-celery-explorer-tasks.sh\"]"), map("container_name", "${local.admin_container_name}_explorer_tasks"), map("container_port", "18000"))}"
 }
 
 data "template_file" "admin_celery_container_definitions_spawner_tasks" {
   template = "${file("${path.module}/ecs_main_admin_container_definitions.json")}"
 
-  vars = "${merge(local.admin_container_vars, map("container_command", "[\"/dataworkspace/start-celery-spawner-tasks.sh\"]"))}"
+  vars = "${merge(local.admin_container_vars, map("container_command", "[\"/dataworkspace/start-celery-spawner-tasks.sh\"]"), map("container_name", "${local.admin_container_name}_spawner_tasks"), map("container_port", "18001"))}"
 }
 
 resource "random_string" "admin_secret_key" {

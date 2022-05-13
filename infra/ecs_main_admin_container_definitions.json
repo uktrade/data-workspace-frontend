@@ -1,4 +1,4 @@
-[
+
   {
     "command": ${container_command},
     "cpu": ${container_cpu},
@@ -901,4 +901,4 @@
     }],
     "volumesFrom": []
   }
-]
+
