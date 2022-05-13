@@ -134,18 +134,18 @@ async def async_main():
     # concern because we run the least-trusted code
     def csp_application_running_direct(host, public_host):
         return csp_common + (
-            "default-src 'self';"
-            "base-uri 'self';"
+            "default-src 'self' https://sso.trade.gov.uk;"
+            "base-uri 'self' https://sso.trade.gov.uk;"
             # Safari does not have a 'self' for WebSockets
-            f"connect-src 'self' wss://{host};"
-            "font-src 'self' data:;"
-            "form-action 'self';"
-            f"frame-ancestors 'self' {root_domain} {public_host}.{root_domain};"
-            "img-src 'self' data: blob:;"
+            f"connect-src 'self' wss://{host} https://sso.trade.gov.uk;"
+            "font-src 'self' data: https://sso.trade.gov.uk;"
+            "form-action 'self' https://sso.trade.gov.uk;"
+            f"frame-ancestors 'self' {root_domain} {public_host}.{root_domain} https://sso.trade.gov.uk;"
+            "img-src 'self' data: blob: https://sso.trade.gov.uk;"
             # Both JupyterLab and RStudio need `unsafe-eval`
-            "script-src 'unsafe-inline' 'unsafe-eval' 'self' data:;"
-            "style-src 'unsafe-inline' 'self' data:;"
-            "worker-src 'self' blob:;"
+            "script-src 'unsafe-inline' 'unsafe-eval' 'self' data: https://sso.trade.gov.uk;"
+            "style-src 'unsafe-inline' 'self' data: https://sso.trade.gov.uk;"
+            "worker-src 'self' blob: https://sso.trade.gov.uk;"
         )
 
     redis_pool = await aioredis.create_redis_pool(redis_url)
