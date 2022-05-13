@@ -1162,8 +1162,8 @@ class TestApplication(unittest.TestCase):
         self.add_async_cleanup(cleanup_application)
 
         is_logged_in = True
-        codes = iter(["some-code"])
-        tokens = iter(["token-1"])
+        codes = iter(["some-code-1", "some-code-2", "some-code-3", "some-code-4", "some-code-5"])
+        tokens = iter(["token-1", "token-1", "token-1", "token-1", "token-1"])
         auth_to_me = {
             "Bearer token-1": {
                 "email": "test@test.com",
@@ -1352,8 +1352,8 @@ class TestApplication(unittest.TestCase):
         self.add_async_cleanup(cleanup_application)
 
         is_logged_in = True
-        codes = iter(["some-code"])
-        tokens = iter(["token-1"])
+        codes = iter(["some-code-1", "some-code-2", "some-code-3", "some-code-4", "some-code-5"])
+        tokens = iter(["token-1", "token-1", "token-1", "token-1", "token-1"])
         auth_to_me = {
             "Bearer token-1": {
                 "email": "test@test.com",
@@ -1495,7 +1495,9 @@ class TestApplication(unittest.TestCase):
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
         # Ensure user created
-        async with session.request("GET", "http://dataworkspace.test:8000/") as response:
+        async with session.request(
+            "GET", "http://dataworkspace.test:8000/", headers={"x-forwarded-for": "1.2.3.4"}
+        ) as response:
             await response.text()
 
         stdout, stderr, code = await give_user_app_perms()
@@ -1588,7 +1590,9 @@ class TestApplication(unittest.TestCase):
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
         # Ensure user created
-        async with session.request("GET", "http://dataworkspace.test:8000/") as response:
+        async with session.request(
+            "GET", "http://dataworkspace.test:8000/", headers={"x-forwarded-for": "1.2.3.4"}
+        ) as response:
             await response.text()
 
         stdout, stderr, code = await give_user_app_perms()
