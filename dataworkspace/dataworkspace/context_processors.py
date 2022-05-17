@@ -1,3 +1,4 @@
+import os
 from django.conf import settings
 
 
@@ -16,7 +17,17 @@ def common(request):
     # which makes it easier to debug locally
     gtm_enabled = settings.GTM_CONTAINER_ID and not settings.DEBUG
 
+    try:
+        ip_address = (
+            request.headers["x-forwarded-for"]
+            .split(",")[-int(os.environ["X_FORWARDED_FOR_TRUSTED_HOPS"])]
+            .strip()
+        )
+    except KeyError:
+        ip_address = None
+
     return {
+        "ip_address": ip_address,
         "root_href": f"{request.scheme}://{settings.APPLICATION_ROOT_DOMAIN}/",
         "can_see_visualisations_tab": can_see_visualisations_tab,
         "gtm_container_id": settings.GTM_CONTAINER_ID,

@@ -82,6 +82,7 @@ async def async_main():
         "x-csrftoken",
         "x-data-workspace-no-modify-application-instance",
         "x-scheme",
+        "x-forwarded-for",
         "x-forwarded-proto",
         "referer",
         "user-agent",
