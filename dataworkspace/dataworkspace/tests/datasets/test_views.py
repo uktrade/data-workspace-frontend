@@ -1310,7 +1310,7 @@ class TestDatasetVisualisations:
         response = client.get(master_dataset.get_absolute_url())
 
         assert response.status_code == 200
-        assert "Request access to the data to view these visuals" in response.content.decode(
+        assert "Request access to the data to view these charts" in response.content.decode(
             response.charset
         )
 
