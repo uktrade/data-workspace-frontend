@@ -74,7 +74,8 @@ def get_groups(request):
                 ),
             ],
             "group_description": "create dashboards",
-            "group_link": "https://data-services-help.trade.gov.uk/data-workspace/how-to/see-tools-specific-guidance/quicksight/create-a-dashboard/",
+            "group_link": "https://data-services-help.trade.gov.uk/data-workspace/how-to/"
+            "see-tools-specific-guidance/quicksight/create-a-dashboard/",
         },
         "Data Analysis Tools": {
             "group_name": "Data Analysis Tools",
