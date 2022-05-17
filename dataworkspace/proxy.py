@@ -323,10 +323,6 @@ async def async_main():
             and request.method == "POST"
         )
 
-    def is_peer_ip_required(request):
-        # The healthcheck comes from the ALB, which doesn't send x-forwarded-for
-        return not is_healthcheck_requested(request)
-
     def is_sso_auth_required(request):
         return (
             not is_healthcheck_requested(request)
@@ -336,14 +332,9 @@ async def async_main():
         )
 
     def get_peer_ip(request):
-        try:
-            peer_ip = (
-                request.headers["x-forwarded-for"]
-                .split(",")[-x_forwarded_for_trusted_hops]
-                .strip()
-            )
-        except (KeyError, IndexError):
-            peer_ip = None
+        peer_ip = (
+            request.headers["x-forwarded-for"].split(",")[-x_forwarded_for_trusted_hops].strip()
+        )
 
         is_private = True
         try:
@@ -901,22 +892,6 @@ async def async_main():
 
         return _server_logger
 
-    def require_peer_ip():
-        @web.middleware
-        async def _authenticate_by_peer_ip(request, handler):
-            if not is_peer_ip_required(request):
-                return await handler(request)
-
-            peer_ip, _ = get_peer_ip(request)
-
-            if peer_ip is None:
-                request["logger"].exception("No peer IP")
-                return web.Response(status=500)
-
-            return await handler(request)
-
-        return _authenticate_by_peer_ip
-
     def authenticate_by_staff_sso():
 
         auth_path = "o/authorize/"
@@ -1231,10 +1206,7 @@ async def async_main():
         app = web.Application(
             middlewares=[
                 server_logger(),
-                require_peer_ip(),
-                redis_session_middleware(
-                    get_peer_ip, cookie_name, redis_pool, root_domain_no_port, embed_path
-                ),
+                redis_session_middleware(cookie_name, redis_pool, root_domain_no_port, embed_path),
                 authenticate_by_staff_sso(),
                 authenticate_by_basic_auth(),
                 authenticate_by_hawk_auth(),
