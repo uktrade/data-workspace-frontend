@@ -17,6 +17,7 @@ class UserSerializer(serializers.ModelSerializer):
             "is_staff",
             "user_permissions_subset",
             "user_sso",
+            "date_joined",
         )
 
     def get_user_permissions_subset(self, user):

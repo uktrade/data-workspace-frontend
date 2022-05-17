@@ -1,5 +1,6 @@
 import pytest
 from django.urls import reverse
+from freezegun import freeze_time
 from rest_framework import status
 
 from dataworkspace.tests import factories
@@ -27,8 +28,10 @@ class TestUserAPIView(BaseAPIViewTest):
                 "start_all_applications": False,
             },
             "user_sso": str(user.profile.sso_id),
+            "date_joined": "2022-01-01T10:02:03Z",
         }
 
+    @freeze_time("2022-01-01 10:02:03")
     def test_success(self, unauthenticated_client):
         user1 = self.factory()
         user2 = self.factory()
