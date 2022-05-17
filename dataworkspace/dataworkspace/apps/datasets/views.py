@@ -1745,5 +1745,5 @@ class DatasetChartsView(WaffleFlagMixin, View):
         return render(
             self.request,
             "datasets/charts/charts.html",
-            context={"charts": dataset.charts.all(), "dataset": dataset},
+            context={"charts": dataset.related_charts(), "dataset": dataset},
         )

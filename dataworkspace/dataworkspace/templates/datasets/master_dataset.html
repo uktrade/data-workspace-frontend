@@ -143,9 +143,7 @@
     </div>
   </div>
 
-  {% flag CHART_BUILDER_PUBLISH_CHARTS_FLAG %}
-    {% include "partials/chart_builder_charts.html" %}
-  {% endflag %}
+  {% include "partials/dataset_charts.html" %}
 
   <div class="govuk-grid-row" style="overflow-x: auto;" id="data">
     <div class="govuk-grid-column-full">
@@ -249,51 +247,6 @@
       </table>
     </div>
   </div>
-
-  {% if model.visualisations.live and not is_ie %}
-    <div class="govuk-grid-row">
-      <div class="govuk-grid-column-full">
-        <hr class="govuk-section-break">
-        <h2 class="govuk-heading-l">Visuals</h2>
-        <p class="govuk-body">These show the data visually, allowing you to identify basic trends.</p>
-      </div>
-    </div>
-
-    <div class="govuk-grid-row">
-      {% if has_access %}
-        {% for visualisation in model.visualisations.live|slice:"3" %}
-
-          <div class="govuk-grid-column-one-third">
-            {% if has_access %}
-              <div style="overflow:hidden;">
-                <a href="{% url "datasets:dataset_visualisation" dataset_uuid=model.id object_id=visualisation.id %}"
-                   class="govuk-link govuk-link--no-visited-state visualisation-preview-container"
-                   id="vis-{{ visualisation.id }}">
-                  <div style="text-align: center">Loading preview ...</div>
-                </a>
-              </div>
-            {% endif %}
-
-            <h3 class="govuk-heading-s">
-              {% visualisation_link_or_plain_text visualisation.name has_access model.id visualisation.id %}
-            </h3>
-            <p class="govuk-body">
-              {{ visualisation.summary }}
-              {% if visualisation.gds_phase_name %}
-                <br>
-                <strong class="govuk-tag govuk-phase-banner__content__tag govuk-!-margin-top-2">{{ visualisation.gds_phase_name }}</strong>
-              {% endif %}
-            </p>
-
-          </div>
-        {% endfor %}
-      {% else %}
-        <div class="govuk-grid-column-full">
-          {% include 'partials/request_access_visuals.html' %}
-        </div>
-      {% endif %}
-    </div>
-  {% endif %}
 {% endblock %}
 
 {% block footer_scripts %}
