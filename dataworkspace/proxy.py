@@ -332,17 +332,7 @@ async def async_main():
         )
 
     def get_peer_ip(request):
-        peer_ip = (
-            request.headers["x-forwarded-for"].split(",")[-x_forwarded_for_trusted_hops].strip()
-        )
-
-        is_private = True
-        try:
-            is_private = ipaddress.ip_address(peer_ip).is_private
-        except ValueError:
-            is_private = False
-
-        return peer_ip, is_private
+        return request.headers["x-forwarded-for"].split(",")[-x_forwarded_for_trusted_hops].strip()
 
     def request_scheme(request):
         return request.headers.get("x-forwarded-proto", request.url.scheme)
@@ -785,7 +775,7 @@ async def async_main():
 
         async def _send():
             logger.info("Sending to Google Analytics %s...", downstream_request.url)
-            peer_ip, _ = get_peer_ip(downstream_request)
+            peer_ip = get_peer_ip(downstream_request)
 
             response = await client_session.request(
                 "POST",
@@ -1176,7 +1166,7 @@ async def async_main():
             if not ip_whitelist_required:
                 return await handler(request)
 
-            peer_ip, _ = get_peer_ip(request)
+            peer_ip = get_peer_ip(request)
             peer_ip_in_whitelist = any(
                 ipaddress.IPv4Address(peer_ip) in ipaddress.IPv4Network(address_or_subnet)
                 for address_or_subnet in application_ip_whitelist
