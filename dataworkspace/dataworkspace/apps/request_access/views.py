@@ -1,7 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponseRedirect, Http404
 from django.shortcuts import render
-from django.urls import reverse
+from django.urls import reverse, resolve
 from django.views.generic import CreateView, UpdateView, DetailView
 
 from dataworkspace.apps.applications.models import ApplicationInstance
@@ -39,6 +39,7 @@ class DatasetAccessRequest(CreateView):
         context["catalogue_item"] = catalogue_item
         context["is_visualisation"] = isinstance(catalogue_item, VisualisationCatalogueItem)
         context["user_has_tools_access"] = user_has_tools_access
+        context["eligibility_criteria_not_met"] = resolve(self.request.path_info).url_name == "eligibility_criteria_not_met"
         return context
 
     def dispatch(self, request, *args, **kwargs):
