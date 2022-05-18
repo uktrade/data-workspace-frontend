@@ -5,6 +5,7 @@ from rest_framework import serializers
 class UserSerializer(serializers.ModelSerializer):
     user_permissions_subset = serializers.SerializerMethodField()
     user_sso = serializers.SerializerMethodField("get_user_sso")
+    first_login = serializers.SerializerMethodField()
 
     class Meta:
         model = get_user_model()
@@ -17,7 +18,7 @@ class UserSerializer(serializers.ModelSerializer):
             "is_staff",
             "user_permissions_subset",
             "user_sso",
-            "date_joined",
+            "first_login",
         )
 
     def get_user_permissions_subset(self, user):
@@ -37,3 +38,6 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_user_sso(self, user):
         return user.profile.sso_id
+
+    def get_first_login(self, user):
+        return user.profile.first_login
