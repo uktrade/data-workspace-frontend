@@ -52,7 +52,11 @@ class DatasetAccessRequest(CreateView):
 
         if "dataset_uuid" in self.kwargs:
             catalogue_item = find_dataset(self.kwargs["dataset_uuid"], request.user)
-            user_has_dataset_access = catalogue_item.user_has_access(self.request.user) if catalogue_item.type != DataSetType.REFERENCE else None
+            user_has_dataset_access = (
+                catalogue_item.user_has_access(self.request.user)
+                if catalogue_item.type != DataSetType.REFERENCE
+                else None
+            )
         else:
             catalogue_item = None
             user_has_dataset_access = True
