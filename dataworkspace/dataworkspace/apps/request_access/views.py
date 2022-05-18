@@ -39,7 +39,9 @@ class DatasetAccessRequest(CreateView):
         context["catalogue_item"] = catalogue_item
         context["is_visualisation"] = isinstance(catalogue_item, VisualisationCatalogueItem)
         context["user_has_tools_access"] = user_has_tools_access
-        context["eligibility_criteria_not_met"] = resolve(self.request.path_info).url_name == "eligibility_criteria_not_met"
+        context["eligibility_criteria_not_met"] = (
+            resolve(self.request.path_info).url_name == "eligibility_criteria_not_met"
+        )
         return context
 
     def dispatch(self, request, *args, **kwargs):
@@ -50,7 +52,7 @@ class DatasetAccessRequest(CreateView):
 
         if "dataset_uuid" in self.kwargs:
             catalogue_item = find_dataset(self.kwargs["dataset_uuid"], request.user)
-            user_has_dataset_access = catalogue_item.user_has_access(self.request.user)
+            user_has_dataset_access = catalogue_item.user_has_access(self.request.user) if catalogue_item.type != DataSetType.REFERENCE else None
         else:
             catalogue_item = None
             user_has_dataset_access = True
