@@ -27,6 +27,7 @@ class TestUserAPIView(BaseAPIViewTest):
                 "start_all_applications": False,
             },
             "user_sso": str(user.profile.sso_id),
+            "first_login": user.profile.first_login,
         }
 
     def test_success(self, unauthenticated_client):

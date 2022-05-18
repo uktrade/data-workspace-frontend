@@ -15,6 +15,8 @@ class Profile(models.Model):
     # which all requests come from: effectively overriding anything sent by the client
     home_directory_efs_access_point_id = models.CharField(unique=True, null=True, max_length=128)
 
+    first_login = models.DateTimeField(null=True)
+
     class Meta:
         db_table = "app_profile"
 
