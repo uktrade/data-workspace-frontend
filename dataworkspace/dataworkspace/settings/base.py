@@ -298,13 +298,10 @@ NOTIFY_DATASET_NOTIFICATIONS_ALL_DATA_TEMPLATE_ID = "daca1854-a2b3-4020-9c19-59b
 CELERY_BROKER_URL = env["REDIS_URL"]
 CELERY_RESULT_BACKEND = env["REDIS_URL"]
 
-USE_DEDICATED_CELERY_ROUTES = strtobool(env.get("USE_DEDICATED_CELERY_ROUTES", False))
-
-if USE_DEDICATED_CELERY_ROUTES:
-    CELERY_ROUTES = {
-        "dataworkspace.apps.explorer.tasks._run_querylog_query": {"queue": "explorer.tasks"},
-        "dataworkspace.apps.applications.spawner.spawn": {"queue": "applications.spawner.spawn"},
-    }
+CELERY_ROUTES = {
+    "dataworkspace.apps.explorer.tasks._run_querylog_query": {"queue": "explorer.tasks"},
+    "dataworkspace.apps.applications.spawner.spawn": {"queue": "applications.spawner.spawn"},
+}
 
 if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
     CELERY_BEAT_SCHEDULE = {

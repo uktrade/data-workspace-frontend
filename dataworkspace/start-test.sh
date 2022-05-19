@@ -20,9 +20,8 @@ set -e
     mkdir -p /home/django/logs
 
     # Start nginx, proxy and application
-    echo "Starting celery, nginx, proxy and django application..."
-    parallel --will-cite --line-buffer --jobs 5 --halt now,done=1 ::: \
-        "celery --app dataworkspace.cel.celery_app worker --pool gevent --concurrency 150" \
+    echo "Starting celerybeat, nginx, proxy and django application..."
+    parallel --will-cite --line-buffer --jobs 4 --halt now,done=1 ::: \
         "celery --app dataworkspace.cel.celery_app beat --pidfile= -S redbeat.RedBeatScheduler" \
         "python3 -m start" \
         "PROXY_PORT='8001' UPSTREAM_ROOT='http://localhost:8002' python3 -m proxy" \
