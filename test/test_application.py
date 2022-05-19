@@ -1157,13 +1157,25 @@ class TestApplication(unittest.TestCase):
 
         # Create application with a non-open whitelist
         cleanup_application = await create_application(
-            env=lambda: {"APPLICATION_IP_WHITELIST__1": "1.2.3.4/32"}
+            env=lambda: {
+                "APPLICATION_IP_WHITELIST__1": "1.2.3.4/32",
+                "APPLICATION_IP_ALLOWLIST_GROUPS__my_group__1": "4.3.1.1/32",
+            }
         )
         self.add_async_cleanup(cleanup_application)
 
         is_logged_in = True
-        codes = iter(["some-code"])
-        tokens = iter(["token-1"])
+        codes = iter(
+            [
+                "some-code-1",
+                "some-code-2",
+                "some-code-3",
+                "some-code-4",
+                "some-code-5",
+                "some-code-6",
+            ]
+        )
+        tokens = iter(["token-1", "token-1", "token-1", "token-1", "token-1", "token-1"])
         auth_to_me = {
             "Bearer token-1": {
                 "email": "test@test.com",
@@ -1212,6 +1224,14 @@ class TestApplication(unittest.TestCase):
             content = await response.text()
         self.assertIn("You do not have access to this page", content)
         self.assertEqual(response.status, 403)
+        async with session.request(
+            "GET",
+            "http://testapplication-23b40dd9.dataworkspace.test:8000/http",
+            headers={"x-forwarded-for": "4.3.1.1"},
+        ) as response:
+            content = await response.text()
+        self.assertIn("You do not have access to this page", content)
+        self.assertEqual(response.status, 403)
 
         await cleanup_application()
 
@@ -1220,6 +1240,8 @@ class TestApplication(unittest.TestCase):
             env=lambda: {
                 "APPLICATION_IP_WHITELIST__1": "1.2.3.4/32",
                 "APPLICATION_IP_WHITELIST__2": "5.0.0.0/8",
+                "APPLICATION_IP_ALLOWLIST_GROUPS__my_group__1": "4.3.1.1/32",
+                "APPLICATION_IP_ALLOWLIST_GROUPS__my_group__2": "3.0.0.0/8",
                 "X_FORWARDED_FOR_TRUSTED_HOPS": "2",
                 "SENTRY_DSN": "http://foobar@localhost:8009/123",
                 "SENTRY_ENVIRONMENT": "Test",
@@ -1259,6 +1281,15 @@ class TestApplication(unittest.TestCase):
             "GET",
             "http://testapplication-23b40dd9.dataworkspace.test:8000/http",
             headers={"x-forwarded-for": "5.1.1.1"},
+        ) as response:
+            content = await response.text()
+        self.assertIn("Test Application is loading...", content)
+        self.assertEqual(response.status, 202)
+
+        async with session.request(
+            "GET",
+            "http://testapplication-23b40dd9.dataworkspace.test:8000/http",
+            headers={"x-forwarded-for": "3.1.1.1"},
         ) as response:
             content = await response.text()
         self.assertIn("Test Application is loading...", content)
@@ -1346,14 +1377,37 @@ class TestApplication(unittest.TestCase):
         cleanup_application = await create_application(
             env=lambda: {
                 "APPLICATION_IP_WHITELIST__1": "1.2.3.4/32",
+                "APPLICATION_IP_ALLOWLIST_GROUPS__my_group__1": "4.3.1.1/32",
                 "EXPLORER_CONNECTIONS": '{"Postgres": "my_database"}',
             }
         )
         self.add_async_cleanup(cleanup_application)
 
         is_logged_in = True
-        codes = iter(["some-code"])
-        tokens = iter(["token-1"])
+        codes = iter(
+            [
+                "some-code-1",
+                "some-code-2",
+                "some-code-3",
+                "some-code-4",
+                "some-code-5",
+                "some-code-6",
+                "some-code-7",
+                "some-code-8",
+            ]
+        )
+        tokens = iter(
+            [
+                "token-1",
+                "token-1",
+                "token-1",
+                "token-1",
+                "token-1",
+                "token-1",
+                "token-1",
+                "token-1",
+            ]
+        )
         auth_to_me = {
             "Bearer token-1": {
                 "email": "test@test.com",
@@ -1402,6 +1456,14 @@ class TestApplication(unittest.TestCase):
             content = await response.text()
         self.assertIn("You do not have access to this page", content)
         self.assertEqual(response.status, 403)
+        async with session.request(
+            "GET",
+            "http://dataworkspace.test:8000/data-explorer/",
+            headers={"x-forwarded-for": "4.3.1.1"},
+        ) as response:
+            content = await response.text()
+        self.assertIn("You do not have access to this page", content)
+        self.assertEqual(response.status, 403)
 
         await cleanup_application()
 
@@ -1410,6 +1472,8 @@ class TestApplication(unittest.TestCase):
             env=lambda: {
                 "APPLICATION_IP_WHITELIST__1": "1.2.3.4/32",
                 "APPLICATION_IP_WHITELIST__2": "5.0.0.0/8",
+                "APPLICATION_IP_ALLOWLIST_GROUPS__my_group__1": "4.3.1.1/32",
+                "APPLICATION_IP_ALLOWLIST_GROUPS__my_group__2": "3.0.0.0/8",
                 "X_FORWARDED_FOR_TRUSTED_HOPS": "2",
                 "EXPLORER_CONNECTIONS": '{"Postgres": "my_database"}',
             }
@@ -1426,6 +1490,14 @@ class TestApplication(unittest.TestCase):
             content = await response.text()
         self.assertIn("Welcome to Data Explorer", content)
         self.assertEqual(response.status, 200)
+        async with session.request(
+            "GET",
+            "http://dataworkspace.test:8000/data-explorer/",
+            headers={"x-forwarded-for": "4.3.1.1"},
+        ) as response:
+            content = await response.text()
+        self.assertIn("Welcome to Data Explorer", content)
+        self.assertEqual(response.status, 200)
 
         async with session.request(
             "GET",
@@ -1435,11 +1507,27 @@ class TestApplication(unittest.TestCase):
             content = await response.text()
         self.assertIn("Welcome to Data Explorer", content)
         self.assertEqual(response.status, 200)
+        async with session.request(
+            "GET",
+            "http://dataworkspace.test:8000/data-explorer/",
+            headers={"x-forwarded-for": "6.5.4.3, 4.3.1.1"},
+        ) as response:
+            content = await response.text()
+        self.assertIn("Welcome to Data Explorer", content)
+        self.assertEqual(response.status, 200)
 
         async with session.request(
             "GET",
             "http://dataworkspace.test:8000/data-explorer/",
             headers={"x-forwarded-for": "5.1.1.1"},
+        ) as response:
+            content = await response.text()
+        self.assertIn("Welcome to Data Explorer", content)
+        self.assertEqual(response.status, 200)
+        async with session.request(
+            "GET",
+            "http://dataworkspace.test:8000/data-explorer/",
+            headers={"x-forwarded-for": "3.1.1.1"},
         ) as response:
             content = await response.text()
         self.assertIn("Welcome to Data Explorer", content)
@@ -1495,7 +1583,9 @@ class TestApplication(unittest.TestCase):
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
         # Ensure user created
-        async with session.request("GET", "http://dataworkspace.test:8000/") as response:
+        async with session.request(
+            "GET", "http://dataworkspace.test:8000/", headers={"x-forwarded-for": "1.2.3.4"}
+        ) as response:
             await response.text()
 
         stdout, stderr, code = await give_user_app_perms()
@@ -1588,7 +1678,9 @@ class TestApplication(unittest.TestCase):
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
         # Ensure user created
-        async with session.request("GET", "http://dataworkspace.test:8000/") as response:
+        async with session.request(
+            "GET", "http://dataworkspace.test:8000/", headers={"x-forwarded-for": "1.2.3.4"}
+        ) as response:
             await response.text()
 
         stdout, stderr, code = await give_user_app_perms()
@@ -1673,6 +1765,99 @@ class TestApplication(unittest.TestCase):
         async with session.request("GET", "http://dataworkspace.test:8000/") as response:
             self.assertEqual(number_of_times_at_sso(), 2)
             self.assertEqual(200, response.status)
+
+    @async_test
+    async def test_application_redirects_to_sso_if_different_ip_group(self):
+        await flush_database()
+        await flush_redis()
+
+        session, cleanup_session = client_session()
+        self.add_async_cleanup(cleanup_session)
+
+        cleanup_application = await create_application(
+            env=lambda: {
+                "APPLICATION_IP_ALLOWLIST_GROUPS__my_group_a__1": "4.3.1.1/32",
+                "APPLICATION_IP_ALLOWLIST_GROUPS__my_group_a__2": "4.3.1.2/32",
+                "APPLICATION_IP_ALLOWLIST_GROUPS__my_group_b__1": "5.3.1.1/32",
+                "X_FORWARDED_FOR_TRUSTED_HOPS": "2",
+            }
+        )
+        self.add_async_cleanup(cleanup_application)
+
+        is_logged_in = True
+        codes = iter(["some-code-1", "some-code-2", "some-code-3"])
+        tokens = iter(["token-1", "token-1", "token-1"])
+        auth_to_me = {
+            "Bearer token-1": {
+                "email": "test@test.com",
+                "contact_email": "test@test.com",
+                "related_emails": [],
+                "first_name": "Peter",
+                "last_name": "Piper",
+                "user_id": "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2",
+            }
+        }
+        sso_cleanup, number_of_times_at_sso = await create_sso(
+            is_logged_in, codes, tokens, auth_to_me
+        )
+        self.add_async_cleanup(sso_cleanup)
+
+        await until_succeeds("http://dataworkspace.test:8000/healthcheck")
+
+        # In first IP group
+        async with session.request(
+            "GET",
+            "http://dataworkspace.test:8000/data-explorer/",
+            headers={"x-forwarded-for": "4.3.1.1"},
+        ) as response:
+            self.assertEqual(200, response.status)
+            self.assertEqual(number_of_times_at_sso(), 1)
+        async with session.request(
+            "GET",
+            "http://dataworkspace.test:8000/data-explorer/",
+            headers={"x-forwarded-for": "4.3.1.1"},
+        ) as response:
+            self.assertEqual(200, response.status)
+            self.assertEqual(number_of_times_at_sso(), 1)
+        async with session.request(
+            "GET",
+            "http://dataworkspace.test:8000/data-explorer/",
+            headers={"x-forwarded-for": "4.3.1.2"},
+        ) as response:
+            self.assertEqual(200, response.status)
+            self.assertEqual(number_of_times_at_sso(), 1)
+
+        # In second IP group
+        async with session.request(
+            "GET",
+            "http://dataworkspace.test:8000/data-explorer/",
+            headers={"x-forwarded-for": "5.3.1.1"},
+        ) as response:
+            self.assertEqual(200, response.status)
+            self.assertEqual(number_of_times_at_sso(), 2)
+        async with session.request(
+            "GET",
+            "http://dataworkspace.test:8000/data-explorer/",
+            headers={"x-forwarded-for": "5.3.1.1"},
+        ) as response:
+            self.assertEqual(200, response.status)
+            self.assertEqual(number_of_times_at_sso(), 2)
+
+        # Not in any IP group, but still fine to home page is not behind filter
+        async with session.request(
+            "GET",
+            "http://dataworkspace.test:8000/",
+            headers={"x-forwarded-for": "1.1.1.1"},
+        ) as response:
+            self.assertEqual(200, response.status)
+            self.assertEqual(number_of_times_at_sso(), 3)
+        async with session.request(
+            "GET",
+            "http://dataworkspace.test:8000/",
+            headers={"x-forwarded-for": "1.1.1.1"},
+        ) as response:
+            self.assertEqual(200, response.status)
+            self.assertEqual(number_of_times_at_sso(), 3)
 
     @async_test
     async def test_application_download(self):
