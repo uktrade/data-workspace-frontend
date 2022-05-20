@@ -72,7 +72,10 @@ async def async_main():
     basic_auth_user = env["METRICS_SERVICE_DISCOVERY_BASIC_AUTH_USER"]
     basic_auth_password = env["METRICS_SERVICE_DISCOVERY_BASIC_AUTH_PASSWORD"]
     x_forwarded_for_trusted_hops = int(env["X_FORWARDED_FOR_TRUSTED_HOPS"])
-    application_ip_whitelist = env["APPLICATION_IP_WHITELIST"]
+    ip_allowlist_groups = env.get("APPLICATION_IP_ALLOWLIST_GROUPS", {})
+    ip_allowlist = [
+        ip_address for ip_addresses in ip_allowlist_groups.values() for ip_address in ip_addresses
+    ] + env.get("APPLICATION_IP_WHITELIST", [])
     ga_tracking_id = env.get("GA_TRACKING_ID")
     mirror_remote_root = env["MIRROR_REMOTE_ROOT"]
     mirror_local_root = "/__mirror/"
@@ -323,6 +326,10 @@ async def async_main():
             and request.method == "POST"
         )
 
+    def is_peer_ip_required(request):
+        # The healthcheck comes from the ALB, which doesn't send x-forwarded-for
+        return not is_healthcheck_requested(request)
+
     def is_sso_auth_required(request):
         return (
             not is_healthcheck_requested(request)
@@ -332,7 +339,27 @@ async def async_main():
         )
 
     def get_peer_ip(request):
-        return request.headers["x-forwarded-for"].split(",")[-x_forwarded_for_trusted_hops].strip()
+        try:
+            return (
+                request.headers["x-forwarded-for"]
+                .split(",")[-x_forwarded_for_trusted_hops]
+                .strip()
+            )
+        except (KeyError, IndexError):
+            return None
+
+    def get_peer_ip_group(request):
+        peer_ip = get_peer_ip(request)
+
+        if peer_ip is None:
+            return None
+
+        for group, ip_addresses in ip_allowlist_groups.items():
+            for address_or_subnet in ip_addresses:
+                if ipaddress.IPv4Address(peer_ip) in ipaddress.IPv4Network(address_or_subnet):
+                    return group
+
+        return peer_ip
 
     def request_scheme(request):
         return request.headers.get("x-forwarded-proto", request.url.scheme)
@@ -882,6 +909,22 @@ async def async_main():
 
         return _server_logger
 
+    def require_peer_ip():
+        @web.middleware
+        async def _authenticate_by_peer_ip(request, handler):
+            if not is_peer_ip_required(request):
+                return await handler(request)
+
+            peer_ip = get_peer_ip(request)
+
+            if peer_ip is None:
+                request["logger"].exception("No peer IP")
+                return web.Response(status=500)
+
+            return await handler(request)
+
+        return _authenticate_by_peer_ip
+
     def authenticate_by_staff_sso():
 
         auth_path = "o/authorize/"
@@ -1169,7 +1212,7 @@ async def async_main():
             peer_ip = get_peer_ip(request)
             peer_ip_in_whitelist = any(
                 ipaddress.IPv4Address(peer_ip) in ipaddress.IPv4Network(address_or_subnet)
-                for address_or_subnet in application_ip_whitelist
+                for address_or_subnet in ip_allowlist
             )
 
             if not peer_ip_in_whitelist:
@@ -1196,7 +1239,10 @@ async def async_main():
         app = web.Application(
             middlewares=[
                 server_logger(),
-                redis_session_middleware(cookie_name, redis_pool, root_domain_no_port, embed_path),
+                require_peer_ip(),
+                redis_session_middleware(
+                    get_peer_ip_group, cookie_name, redis_pool, root_domain_no_port, embed_path
+                ),
                 authenticate_by_staff_sso(),
                 authenticate_by_basic_auth(),
                 authenticate_by_hawk_auth(),

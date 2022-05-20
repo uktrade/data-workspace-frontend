@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth import get_user_model
@@ -32,6 +33,11 @@ class AuthbrokerBackendUsernameIsEmail(ModelBackend):
             check_tools_access_if_user_exists=False,
         )
         set_user({"id": str(user.profile.sso_id), "email": user.email})
+
+        if user.profile.first_login is None:
+            user.profile.first_login = datetime.now()
+            user.profile.save()
+
         return user
 
     def get_user(self, user_id):
