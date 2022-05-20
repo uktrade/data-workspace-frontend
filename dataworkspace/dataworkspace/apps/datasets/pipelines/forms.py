@@ -1,4 +1,4 @@
-import psqlparse
+import pglast
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -88,17 +88,20 @@ class SQLPipelineCreateForm(BasePipelineCreateForm):
     def clean_sql(self):
         query = self.cleaned_data["sql"].strip().rstrip(";")
         try:
-            statements = psqlparse.parse(query)
-        except psqlparse.exceptions.PSqlParseError as e:
+            statements = pglast.parse_sql(query)
+        except pglast.parser.ParseError as e:
             raise ValidationError(e) from e
         else:
             if len(statements) > 1:
                 raise ValidationError("Enter a single statement")
-            if isinstance(statements[0], dict):
-                if "CreateStmt" in statements[0]:
-                    raise ValidationError("CREATE statements are not supported")
-                if "DropStmt" in statements[0]:
-                    raise ValidationError("DROP statements are not supported")
+            statement_dict = statements[0].stmt()
+            if statement_dict["@"] != "SelectStmt":
+                raise ValidationError("Only SELECT statements are supported")
+            # This isn't a perfect check, but we can't in all cases know what the column names will
+            # be by just parsing the query
+            columns = [t["name"] for t in statement_dict["targetList"] if t["name"] is not None]
+            if len(columns) != len(set(columns)):
+                raise ValidationError("Duplicate column names found")
 
         # Check that the query runs
         with connections[list(settings.DATABASES_DATA.items())[0][0]].cursor() as cursor:
