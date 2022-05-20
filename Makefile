@@ -105,7 +105,6 @@ docker-test-shell-local:
 
 .PHONY: docker-test-integration-local
 docker-test-integration-local:
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test rm -f
 	TEST_DIR="$(TARGET)" ; \
 	if [ -z "$$TEST_DIR" ]; \
 		then TEST_DIR="/test"; \
