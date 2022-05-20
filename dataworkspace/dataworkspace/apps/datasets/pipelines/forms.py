@@ -99,9 +99,6 @@ class SQLPipelineCreateForm(BasePipelineCreateForm):
                     raise ValidationError("CREATE statements are not supported")
                 if "DropStmt" in statements[0]:
                     raise ValidationError("DROP statements are not supported")
-            columns = [t.name for t in statements[0].target_list if t.name is not None]
-            if len(columns) != len(set(columns)):
-                raise ValidationError("Duplicate column names found")
 
         # Check that the query runs
         with connections[list(settings.DATABASES_DATA.items())[0][0]].cursor() as cursor:
@@ -111,6 +108,10 @@ class SQLPipelineCreateForm(BasePipelineCreateForm):
                 raise ValidationError(
                     "Error running query. Please check the query runs successfully before saving."
                 ) from e
+
+        columns = [x.name for x in cursor.description if x.name is not None]
+        if len(set(columns)) != len(columns):
+            raise ValidationError("Duplicate column names found")
 
         return self.cleaned_data["sql"]
 
