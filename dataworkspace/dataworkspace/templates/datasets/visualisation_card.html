@@ -1,0 +1,26 @@
+{% load datasets_tags %}
+<div class="govuk-grid-column-one-third govuk-!-margin-bottom-6">
+  <div class="govuk-!-margin-bottom-2">
+    {% if has_access %}
+      <a href="{% url "datasets:dataset_visualisation" dataset_uuid=dataset.id object_id=chart.id %}"
+         class="govuk-link govuk-link--no-visited-state visualisation-preview-container chart-preview-container"
+         id="vis-{{ chart.id }}">
+        <div style="text-align: center">Loading preview ...</div>
+      </a>
+    {% else %}
+      <div class="visualisation-preview-container chart-preview-container">
+        <div>No preview available</div>
+      </div>
+    {% endif %}
+  </div>
+  <p class="govuk-body govuk-!-margin-bottom-2">
+    {% visualisation_link_or_plain_text chart.name has_access model.id chart.id %}
+  </p>
+  <p class="govuk-body">
+    {{ chart.summary }}
+    {% if chart.gds_phase_name %}
+      <br>
+      <strong class="govuk-tag govuk-phase-banner__content__tag govuk-!-margin-top-2">{{ chart.gds_phase_name }}</strong>
+    {% endif %}
+  </p>
+</div>

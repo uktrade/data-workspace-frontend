@@ -574,20 +574,6 @@ def eligibility_criteria_view(request, dataset_uuid):
 
 
 @require_GET
-def eligibility_criteria_not_met_view(request, dataset_uuid):
-    dataset = find_dataset(dataset_uuid, request.user)
-
-    return render(
-        request,
-        "eligibility_criteria_not_met.html",
-        {
-            "dataset": dataset,
-            "is_visualisation": isinstance(dataset, VisualisationCatalogueItem),
-        },
-    )
-
-
-@require_GET
 def toggle_bookmark(request, dataset_uuid):
     dataset = find_dataset(dataset_uuid, request.user)
     dataset.toggle_bookmark(request.user)
@@ -1745,5 +1731,5 @@ class DatasetChartsView(WaffleFlagMixin, View):
         return render(
             self.request,
             "datasets/charts/charts.html",
-            context={"charts": dataset.charts.all(), "dataset": dataset},
+            context={"charts": dataset.related_charts(), "dataset": dataset},
         )

@@ -1,4 +1,4 @@
-FROM debian:buster-slim AS base
+FROM debian:bullseye-20220509-slim AS base
 
 ENV \
 	LC_ALL=en_US.UTF-8 \
@@ -17,17 +17,17 @@ RUN apt-get update && \
     cd / && \
     rm -rf parallel-20190522 parallel-20190522.tar.bz2 && \
     apt-get install -y --no-install-recommends \
-        locales=2.28-10+deb10u1 \
-        git=1:2.20.1-2+deb10u3 \
-        nginx=1.14.2-2+deb10u4 \
-        nginx-extras=1.14.2-2+deb10u4\
+        locales \
+        git \
+        nginx \
+        nginx-extras \
         openssl \
-        build-essential=12.6 \
-        procps=2:3.3.15-2 \
-        python3=3.7.3-1 \
-        python3-dev=3.7.3-1 \
-        python3-pip=18.1-5 \
-        python3-setuptools=40.8.0-1 && \
+        build-essential \
+        procps \
+        python3 \
+        python3-dev \
+        python3-pip \
+        python3-setuptools && \
     echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && \
     locale-gen en_US.utf8 && \
     rm /etc/nginx/nginx.conf && \
@@ -44,12 +44,12 @@ FROM base AS test
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        gcc=4:8.3.0-1 \
-        musl-dev=1.1.21-2 \
+        gcc \
+        musl-dev \
         chromium \
         chromium-driver \
-        libxml2-dev=2.9.4+dfsg1-7+deb10u3 \
-        libxslt1-dev=1.1.32-2.2~deb10u1 && \
+        libxml2-dev \
+        libxslt1-dev && \
     echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && \
     locale-gen en_US.utf8 && \
     rm -rf /tmp/* && \
