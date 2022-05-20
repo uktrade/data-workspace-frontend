@@ -129,8 +129,8 @@ urlpatterns = [
     ),
     path(
         "newsletter_subscription/",
-         login_required(NewsletterSubscriptionView.as_view()),
-         name="newsletter_subscription",
+        login_required(NewsletterSubscriptionView.as_view()),
+        name="newsletter_subscription",
     ),
     path(
         "case-studies/",

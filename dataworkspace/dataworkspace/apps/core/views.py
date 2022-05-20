@@ -119,7 +119,9 @@ class SupportView(FormView):
 class NewsletterSubscriptionView(View):
     def get(self, request):
         try:
-            subscription_status = not NewsletterSubscription.objects.get(user=self.request.user).is_active
+            subscription_status = not NewsletterSubscription.objects.get(
+                user=self.request.user
+            ).is_active
         except NewsletterSubscription.DoesNotExist:
             subscription_status = False
 
@@ -133,15 +135,14 @@ class NewsletterSubscriptionView(View):
 
     def post(self, request):
         if NewsletterSubscription.objects.filter(user=self.request.user).exists():
-            NewsletterSubscription.objects.filter(user=self.request.user).update(is_active=Case(
-                When(is_active=True, then=Value(False)),
-                When(is_active=False, then=Value(True)),
-            ))
-        else:
-            NewsletterSubscription.objects.create(
-                user=self.request.user,
-                is_active=True
+            NewsletterSubscription.objects.filter(user=self.request.user).update(
+                is_active=Case(
+                    When(is_active=True, then=Value(False)),
+                    When(is_active=False, then=Value(True)),
+                )
             )
+        else:
+            NewsletterSubscription.objects.create(user=self.request.user, is_active=True)
         return HttpResponseRedirect(f'{reverse("newsletter_subscription")}?success=1')
 
 
