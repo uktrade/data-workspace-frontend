@@ -2810,7 +2810,7 @@ async def create_superset():
     return superset_runner.cleanup, superset_requests
 
 
-# Run the application proper in a way that is as possible to production
+# Run the application as close as possible to production
 # The environment must be the same as in the Dockerfile
 async def create_application(env=lambda: {}):
     proc = await asyncio.create_subprocess_exec(
