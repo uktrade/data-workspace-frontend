@@ -3,7 +3,7 @@ import json
 import logging
 from typing import Tuple
 
-import psqlparse
+import pglast
 import psycopg2
 from psycopg2.sql import Literal, SQL
 import pytz
@@ -154,8 +154,8 @@ def get_reference_dataset_changelog(dataset):
 
 
 def get_data_hash(cursor, sql):
-    statements = psqlparse.parse(sql)
-    if statements[0].sort_clause:
+    statements = pglast.parse_sql(sql)
+    if statements[0].stmt()["sortClause"]:
         hashed_data = hashlib.md5()
         cursor.execute(SQL(f"SELECT t.*::TEXT FROM ({sql}) as t"))
         for row in cursor:
