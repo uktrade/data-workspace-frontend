@@ -18,14 +18,14 @@ from django.urls import reverse
 from django.views import View
 from django.views.generic import FormView
 from requests import HTTPError
-
+from django.db.models import Case, Value, When
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.forms import (
     SupportForm,
     TechnicalSupportForm,
     UserSatisfactionSurveyForm,
 )
-from dataworkspace.apps.core.models import UserSatisfactionSurvey
+from dataworkspace.apps.core.models import UserSatisfactionSurvey, NewsletterSubscription
 from dataworkspace.apps.core.storage import S3FileStorage
 from dataworkspace.apps.core.utils import (
     StreamingHttpResponseWithoutDjangoDbConnection,
@@ -114,6 +114,35 @@ class SupportView(FormView):
             self.request.user, cleaned["email"], cleaned["message"], tag=tag
         )
         return HttpResponseRedirect(reverse("support-success", kwargs={"ticket_id": ticket_id}))
+
+
+class NewsletterSubscriptionView(View):
+    def get(self, request):
+        try:
+            subscription_status = not NewsletterSubscription.objects.get(user=self.request.user).is_active
+        except NewsletterSubscription.DoesNotExist:
+            subscription_status = False
+
+        return render(
+            request,
+            "core/newsletter_subscription.html",
+            context={
+                "subscription_status": subscription_status,
+            },
+        )
+
+    def post(self, request):
+        if NewsletterSubscription.objects.filter(user=self.request.user).exists():
+            NewsletterSubscription.objects.filter(user=self.request.user).update(is_active=Case(
+                When(is_active=True, then=Value(False)),
+                When(is_active=False, then=Value(True)),
+            ))
+        else:
+            NewsletterSubscription.objects.create(
+                user=self.request.user,
+                is_active=True
+            )
+        return HttpResponseRedirect(f'{reverse("newsletter_subscription")}?success=1')
 
 
 class UserSatisfactionSurveyView(FormView):

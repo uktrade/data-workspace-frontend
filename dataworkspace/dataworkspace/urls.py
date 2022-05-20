@@ -19,6 +19,7 @@ from dataworkspace.apps.core.views import (
     public_error_500_html_view,
     healthcheck_view,
     SupportView,
+    NewsletterSubscriptionView,
     table_data_view,
     UserSatisfactionSurveyView,
     ServeS3UploadedFileView,
@@ -125,6 +126,11 @@ urlpatterns = [
         "feedback/",
         login_required(UserSatisfactionSurveyView.as_view()),
         name="feedback",
+    ),
+    path(
+        "newsletter_subscription/",
+         login_required(NewsletterSubscriptionView.as_view()),
+         name="newsletter_subscription",
     ),
     path(
         "case-studies/",

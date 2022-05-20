@@ -4,6 +4,7 @@ from django.contrib import admin
 from dataworkspace.apps.core.models import (
     Team,
     TeamMembership,
+    NewsletterSubscription,
 )
 
 
@@ -63,3 +64,9 @@ class CSPRichTextEditorMixin:
     @csp_update(SCRIPT_SRC="'unsafe-inline'")
     def change_view(self, request, object_id, form_url="", extra_context=None):
         return super().change_view(request, object_id, form_url, extra_context)
+
+
+class NewsletterSubscriptionAdmin(admin.ModelAdmin):
+    list_display = ("user", "is_active")
+
+admin.site.register(NewsletterSubscription, NewsletterSubscriptionAdmin)
