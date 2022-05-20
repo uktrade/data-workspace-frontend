@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('request_access', '0002_alter_accessrequest_training_screenshot'),
+        ("request_access", "0002_alter_accessrequest_training_screenshot"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='accessrequest',
-            name='eligibility_criteria_met',
+            model_name="accessrequest",
+            name="eligibility_criteria_met",
             field=models.BooleanField(blank=True, null=True),
         ),
     ]

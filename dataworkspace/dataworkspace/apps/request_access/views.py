@@ -85,7 +85,8 @@ class DatasetAccessRequest(CreateView):
             catalogue_item_id=catalogue_item.id,
             contact_email=form.cleaned_data["contact_email"],
             reason_for_access=form.cleaned_data["reason_for_access"],
-            eligibility_criteria_met=resolve(self.request.path_info).url_name != "eligibility_criteria_not_met"
+            eligibility_criteria_met=resolve(self.request.path_info).url_name
+            != "eligibility_criteria_not_met",
         )
 
         if user_has_tools_access or catalogue_item.type in [
