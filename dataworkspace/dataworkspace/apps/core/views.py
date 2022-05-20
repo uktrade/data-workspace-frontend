@@ -3,6 +3,7 @@ import os
 
 from botocore.exceptions import ClientError
 from django.conf import settings
+from django.db.models import Case, Value, When
 from django.http import (
     HttpResponse,
     HttpResponseBadRequest,
@@ -18,7 +19,6 @@ from django.urls import reverse
 from django.views import View
 from django.views.generic import FormView
 from requests import HTTPError
-from django.db.models import Case, Value, When
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.forms import (
     SupportForm,
