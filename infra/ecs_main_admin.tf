@@ -192,8 +192,8 @@ resource "aws_ecs_task_definition" "admin_celery" {
   execution_role_arn       = "${aws_iam_role.admin_task_execution.arn}"
   task_role_arn            = "${aws_iam_role.admin_task.arn}"
   network_mode             = "awsvpc"
-  cpu                      = "${local.admin_container_cpu}"
-  memory                   = "${local.admin_container_memory}"
+  cpu                      = "${local.celery_container_cpu}"
+  memory                   = "${local.celery_container_memory}"
   requires_compatibilities = ["FARGATE"]
 
   lifecycle {
