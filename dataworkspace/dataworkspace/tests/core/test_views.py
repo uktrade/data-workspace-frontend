@@ -257,6 +257,10 @@ def test_footer_links(request_client):
             "https://data-services-help.trade.gov.uk/data-workspace",
         ),
         (
+            "Subscribe/Unsubscribe to Newsletter",
+            "/newsletter_subscription/",
+        ),
+        (
             "Accessibility statement",
             (
                 "https://data-services-help.trade.gov.uk/data-workspace/how-articles/data-workspace-basics/"
