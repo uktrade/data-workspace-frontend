@@ -20,10 +20,6 @@ def migrate_query_download_events(apps, _):
         event.object_id = source.dataset_id
         event.extra.update(**serializers.serialize("python", [source])[0])
         event.save()
-        # try:
-        #     source_model.objects.get()
-        # dataset.uuid = uuid.uuid4()
-        # dataset.save()
 
 
 class Migration(migrations.Migration):
