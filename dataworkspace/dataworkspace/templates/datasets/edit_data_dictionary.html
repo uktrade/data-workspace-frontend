@@ -1,0 +1,71 @@
+{% extends '_main.html' %}
+{% load static datasets_tags core_tags waffle_tags %}
+{% block page_title %}Update or restore table - {{ block.super }}{% endblock %}
+{% block breadcrumbs %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-three-quarters">
+      <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="/">Home</a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="{{ source.dataset.get_absolute_url }}">
+              {{ source.dataset.name }}
+            </a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">Data dictionary</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-l">Data dictionary</h1>
+      <p class="govuk-body govuk-body-m">
+        "{{ source_table.schema }}"."{{ source_table.table }}"
+      </p>
+      <p class="govuk-body govuk-body-m">
+            <a href="{% url "datasets:edit_data_dictionary" dataset_uuid=model.id %}"
+            class="govuk-link govuk-link--no-visited-state">
+            Edit dictionary
+            </a>
+      </p> 
+    </div>
+  </div>
+  {% block success_banner %}{% endblock %}
+  {% for source_table, columns in master_datasets_info %}
+  <div class="govuk-grid-row govuk-!-margin-top-6" id="update">
+    <div class="govuk-grid-column-full" style="overflow-x: auto;">
+      <table class="govuk-table">
+        <thead>
+        <tr class="govuk-table__row">
+          <th class="govuk-table__header">Name</th>
+          <th class="govuk-table__header">Format</th>
+          <th class="govuk-table__header">Definition</th>
+        </tr>
+        </thead>
+        <tbody>
+            {% for column, data_type in columns %}
+            <tr class="govuk-table__row">
+                    <th scope="row" class="govuk-table__header js-schema-column-{{ forloop.counter }}">{{ column }}Extract column name</th>
+                <td class="govuk-table__cell">
+                    {{ data_type }}Extract data type
+                </td>
+                <td class="govuk-table__cell">
+                    <div class="govuk-form-group">
+                        <textarea class="govuk-textarea" id="more-detail" name="more-detail" rows="5" aria-describedby="more-detail-hint></textarea">
+                    </div>
+                    {{ form.definition }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endfor %}
+
+{% endblock content %}

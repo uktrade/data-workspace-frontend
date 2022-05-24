@@ -1747,3 +1747,19 @@ class DatasetChartsView(WaffleFlagMixin, View):
             "datasets/charts/charts.html",
             context={"charts": dataset.related_charts(), "dataset": dataset},
         )
+class DataDictionaryView(View):
+    def get(self, request, source_uuid):
+        dataset = find_dataset(source_uuid, request.user)
+
+
+        return render(
+            request,
+            "datasets/data_dictionary.html",
+            context={
+                "dataset": dataset,
+            },
+        )
+
+class DataDictionaryEditView(EditBaseView, FormView):
+   template_name = "datasets/edit_data_dictionary.html"
+   pass

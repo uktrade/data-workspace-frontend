@@ -1,0 +1,66 @@
+{% extends '_main.html' %}
+{% load static core_tags datasets_tags explorer_tags humanize %}
+{% block page_title %}Data dictionary - {{ block.super }}{% endblock %}
+{% block breadcrumbs %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-three-quarters">
+      <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="/">Home</a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="{{ dataset.get_absolute_url }}">
+              {{ dataset.name }}
+            </a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">Data dictionary</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-l">Data dictionary</h1>
+      <p class="govuk-body govuk-body-m">
+        "{{ dataset.source_table.schema }}"."{{ dataset.source_table.table }}"
+      </p>
+      <p class="govuk-body govuk-body-m">
+        <a href="https://data-services-help.trade.gov.uk"
+            class="govuk-link govuk-link--no-visited-state">
+            Edit dictionary
+        </a>
+      </p> 
+    </div>
+  </div>
+  {% block success_banner %}{% endblock %}
+  <div class="govuk-grid-row govuk-!-margin-top-6" id="update">
+    <div class="govuk-grid-column-full" style="overflow-x: auto;">
+      <table class="govuk-table" data-module="moj-sortable-table">
+        <thead>
+        <tr class="govuk-table__row">
+          <th scope="col" class="govuk-table__header" aria-sort="ascending">Name</th>
+          <th scope="col" class="govuk-table__header" aria-sort="none">Format</th>
+          <th scope="col" class="govuk-table__header" aria-sort="none">Definition</th>
+        </tr>
+        </thead>
+        <tbody>
+            {% for column, data_type in columns %}
+            <tr class="govuk-table__row">
+                    <th scope="row" class="govuk-table__header js-schema-column-{{ forloop.counter }}">{{ column }}Extract column name</th>
+                <td class="govuk-table__cell">
+                    {{ data_type }}Extract data type
+                </td>
+                <td class="govuk-table__cell">
+                {{ field_definition }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+{% endblock content %}

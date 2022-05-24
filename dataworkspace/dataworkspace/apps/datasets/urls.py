@@ -278,4 +278,14 @@ urlpatterns = [
             namespace="manager",
         ),
     ),
+    path(
+        "<uuid:source_uuid>/data-dictionary",
+        login_required(views.DataDictionaryView.as_view()),
+        name="data_dictionary",
+    ),
+    path(
+        "<uuid:dataset_uuid>/edit-data-dictionary",
+        login_required(views.DataDictionaryEditView.as_view()),
+        name="edit_data_dictionary",
+    ),
 ]

@@ -194,8 +194,13 @@
                        href="{% url "datasets:manager:manage-source-table" pk=dataset.id source_uuid=source_table.id %}">
                       Update or restore table
                     </a>
-
                   {% endif %}
+                  <td class="govuk-table__cell app-table_cell--no-border">
+                    <a href="{% url "datasets:data_dictionary" source_uuid=source_table.id %}"
+                    class="govuk-link govuk-link--no-visited-state">
+                    Data dictionary
+                    </a>
+                  </td>
                 {% else %}
                   <p class="govuk-body">No preview available</p>
                 {% endif %}
