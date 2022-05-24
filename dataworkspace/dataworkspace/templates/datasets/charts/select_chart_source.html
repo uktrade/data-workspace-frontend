@@ -28,7 +28,7 @@
       <form method="post">
         {% csrf_token %}
         {{ form.source }}
-        <input class="govuk-button" type="submit" value="Use data cut">
+        <input class="govuk-button" type="submit" value="Use {% if dataset.type == 1 %}source table{% else %}data cut{% endif %}">
       </form>
     </div>
   </div>

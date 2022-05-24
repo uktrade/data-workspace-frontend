@@ -1,0 +1,66 @@
+{% extends '_main.html' %}
+{% block breadcrumbs %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-three-quarters">
+      <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="/">Home</a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="{{ source.dataset.get_absolute_url }}">
+              {{ source.dataset.name }}
+            </a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            {% if source.dataset.type == 1 %}Source table{% else %}Data cut{% endif %} for chart
+          </li>
+        </ol>
+      </div>
+    </div>
+  </div>
+{% endblock breadcrumbs %}
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-l">Aggregate {% if source.dataset.type == 1 %}source table{% else %}data cut{% endif %} data</h1>
+      {% include 'design_system/error_summary.html' with form=form %}
+      <form method="post" action="{% url 'datasets:create_chart_from_grid' source.dataset_id source.id %}">
+        {% csrf_token %}
+        {{ form.filters }}
+        {{ form.sort_direction }}
+        {{ form.sort_field }}
+        {{ form.columns }}
+        {{ form.aggregate }}
+        {{ form.aggregate_field }}
+        {{ form.group_by }}
+        <input class="govuk-button" type="submit" value="Create chart">
+      </form>
+    </div>
+  </div>
+{% endblock content %}
+{% block footer_scripts %}
+  <script nonce="{{ request.csp_nonce }}">
+    function initFormFields() {
+      var aggregateType = document.getElementById("id_aggregate");
+      var aggregateField = document.getElementById("id_aggregate_field");
+      var groupByField = document.getElementById("id_group_by");
+      var selected = aggregateType.options[aggregateType.selectedIndex].value;
+      if (selected === "none") {
+        aggregateField.setAttribute("disabled", "disabled");
+        groupByField.setAttribute("disabled", "disabled");
+      }
+      else {
+        aggregateField.removeAttribute("disabled");
+        groupByField.removeAttribute("disabled");
+        if (selected === "count") {
+          aggregateField.setAttribute("disabled", "disabled");
+        }
+      }
+    }
+    document.getElementById("id_aggregate").addEventListener('change', function (e) {
+      initFormFields();
+    });
+    initFormFields();
+  </script>
+{% endblock footer_scripts %}

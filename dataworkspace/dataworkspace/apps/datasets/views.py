@@ -73,9 +73,11 @@ from dataworkspace.apps.core.models import (
 from dataworkspace.apps.datasets.constants import (
     DataSetType,
     DataLinkType,
+    AggregationType,
 )
 from dataworkspace.apps.datasets.constants import TagType
 from dataworkspace.apps.datasets.forms import (
+    ChartAggregateForm,
     ChartSourceSelectForm,
     DatasetEditForm,
     DatasetSearchForm,
@@ -1743,7 +1745,7 @@ class FilterChartDataView(WaffleFlagMixin, DetailView):
         return source
 
 
-class CreateGridChartView(WaffleFlagMixin, View):
+class AggregateChartDataViewView(WaffleFlagMixin, View):
     waffle_flag = settings.CHART_BUILDER_BUILD_CHARTS_FLAG
 
     def post(self, request, dataset_uuid, source_id, *args, **kwargs):
@@ -1755,30 +1757,124 @@ class CreateGridChartView(WaffleFlagMixin, View):
         filters = {}
         for filter_data in [json.loads(x) for x in request.POST.getlist("filters")]:
             filters.update(filter_data)
-        column_config = [
+
+        columns = [
             x
             for x in source.get_column_config()
             if x["field"] in request.POST.getlist("columns", [])
         ]
 
-        post_data = {
-            "filters": filters,
-            "sortDir": request.POST.get("sortDir", "ASC"),
-            "sortField": request.POST.get("sortField", column_config[0]["field"]),
-        }
+        return render(
+            request,
+            "datasets/charts/aggregate.html",
+            context={
+                "dataset": dataset,
+                "source": source,
+                "form": ChartAggregateForm(
+                    columns=columns,
+                    initial={
+                        "columns": columns,
+                        "filters": filters,
+                        "sort_direction": request.POST.get("sortDir", "ASC"),
+                        "sort_field": request.POST.get("sortField", "1"),
+                    },
+                ),
+            },
+        )
+
+
+class CreateGridChartView(WaffleFlagMixin, View):
+    waffle_flag = settings.CHART_BUILDER_BUILD_CHARTS_FLAG
+
+    def post(self, request, dataset_uuid, source_id, *args, **kwargs):
+        dataset = find_dataset(dataset_uuid, self.request.user)
+        source = dataset.get_related_source(source_id)
+        if source is None:
+            raise Http404
+
+        columns = json.loads(request.POST.get("columns"))
+        form = ChartAggregateForm(
+            request.POST,
+            columns=columns,
+            initial={
+                "columns": columns,
+            },
+        )
+
+        if not form.is_valid():
+            # Ideally we would redirect here but we need to keep the json
+            # post data from the grid and so we just re-display the form
+            # to let the user correct errors
+            return render(
+                request,
+                "datasets/charts/aggregate.html",
+                context={
+                    "dataset": dataset,
+                    "source": source,
+                    "form": form,
+                },
+            )
+
+        chart_data = form.cleaned_data
+
         original_query = source.get_data_grid_query()
         query, params = build_filtered_dataset_query(
             original_query,
-            column_config,
-            post_data,
+            json.loads(request.POST.get("columns", "[]")),
+            {
+                "filters": chart_data["filters"],
+                "sortDir": chart_data["sort_direction"],
+                "sortField": chart_data["sort_field"],
+            },
         )
+
+        if chart_data["aggregate"] != AggregationType.NONE.value:
+            query = (
+                sql.SQL("SELECT {{}}, {{}}({{}}) FROM (").format(
+                    sql.Identifier(chart_data["group_by"]),
+                    sql.Identifier(chart_data["aggregate"]),
+                    sql.Literal("*")
+                    if chart_data["aggregate"] == "count"
+                    else sql.Identifier(chart_data["aggregate_field"]),
+                )
+                + query
+                + sql.SQL(") a ")
+                + sql.SQL("GROUP by 1;")
+            )
+
         db_name = list(settings.DATABASES_DATA.items())[0][0]
         with connections[db_name].cursor() as cursor:
             full_query = cursor.mogrify(query, params).decode()
+
         chart = ChartBuilderChart.objects.create_from_sql(str(full_query), request.user, db_name)
+        chart.chart_config.update(
+            {
+                "xaxis": {"type": "category", "autorange": True},
+                "yaxis": {"type": "linear", "autorange": True},
+                "traces": [
+                    {
+                        "meta": {
+                            "columnNames": {
+                                "x": chart_data["group_by"],
+                                "y": chart_data["aggregate"],
+                            }
+                        },
+                        "mode": "markers",
+                        "name": "Plot 0",
+                        "type": "bar",
+                        "xsrc": chart_data["group_by"],
+                        "ysrc": chart_data["aggregate"],
+                        "labelsrc": chart_data["group_by"],
+                        "valuesrc": chart_data["aggregate"],
+                    }
+                ],
+            }
+        )
+        chart.save()
         run_chart_builder_query.delay(chart.id)
         return HttpResponseRedirect(
-            f"{chart.get_edit_url()}?prev={request.META.get('HTTP_REFERER')}"
+            f"{chart.get_edit_url()}?prev="
+            + reverse("datasets:filter_chart_data", args=(dataset.id, source.id))
         )
 
 
