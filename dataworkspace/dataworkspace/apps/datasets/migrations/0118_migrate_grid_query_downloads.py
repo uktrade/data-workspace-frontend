@@ -26,6 +26,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("datasets", "0117_merge_20220426_1142"),
+        ("eventlog", "0015_add_notification_event_types"),
     ]
 
     operations = [
