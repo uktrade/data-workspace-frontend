@@ -124,18 +124,3 @@ class TechnicalSupportForm(GOVUKDesignSystemForm):
             and not cleaned["what_should_have_happened"]
         ):
             raise forms.ValidationError("Please add some detail to the support request")
-
-
-class DataDictionaryForm(GOVUKDesignSystemForm):
-    definition = GOVUKDesignSystemCharField(
-        required=False,
-        widget=GOVUKDesignSystemTextWidget(
-            label_is_heading=False,
-            attrs={"rows": 5},
-        ),
-    )
-
-    def clean(self):
-        cleaned = super().clean()
-        if not cleaned["definition"]:
-            raise forms.ValidationError("Please enter a definition")
