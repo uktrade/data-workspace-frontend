@@ -153,7 +153,7 @@
                     <input aria-label="Title" type="govuk-visually-hidden" value="{{ form.title.value|default_if_none:"Playground Query" }}" name="title" hidden/>
                   </div>
                 </fieldset>
-                <div id="query-results">
+                <div id="query-results-wrapper">
                   {% if query_log.state == 0 %}
                     {% include 'explorer/partials/query_executing.html' %}
                   {% endif %}

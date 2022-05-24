@@ -192,7 +192,6 @@ def find_datasets(request):
     def _enrich_tags(dataset, tags_dict):
         dataset["sources"] = []
         for source_id in dataset["source_tag_ids"]:
-            logger.info(source_id)
             tag = tags_dict.get(str(source_id))
             dataset["sources"].append(tag)
 
@@ -200,8 +199,6 @@ def find_datasets(request):
         for topic_id in dataset["topic_tag_ids"]:
             tag = tags_dict.get(str(topic_id))
             dataset["topics"].append(tag)
-
-        logger.info(dataset["sources"])
 
     def _get_reference_dataset_last_updated(dataset_id):
         datasets = ReferenceDataset.objects.filter(uuid=dataset_id)
@@ -570,20 +567,6 @@ def eligibility_criteria_view(request, dataset_uuid):
         request,
         "eligibility_criteria.html",
         {"dataset": dataset, "access_request": request.GET.get("access_request")},
-    )
-
-
-@require_GET
-def eligibility_criteria_not_met_view(request, dataset_uuid):
-    dataset = find_dataset(dataset_uuid, request.user)
-
-    return render(
-        request,
-        "eligibility_criteria_not_met.html",
-        {
-            "dataset": dataset,
-            "is_visualisation": isinstance(dataset, VisualisationCatalogueItem),
-        },
     )
 
 

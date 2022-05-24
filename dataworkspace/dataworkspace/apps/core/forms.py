@@ -54,14 +54,10 @@ class SupportForm(GOVUKDesignSystemForm):
     def clean(self):
         cleaned = super().clean()
 
-        if (
-            cleaned["support_type"]
-            in [
-                self.SupportTypes.TECH_SUPPORT,
-                self.SupportTypes.OTHER,
-            ]
-            and not cleaned.get("email")
-        ):
+        if cleaned["support_type"] in [
+            self.SupportTypes.TECH_SUPPORT,
+            self.SupportTypes.OTHER,
+        ] and not cleaned.get("email"):
             raise forms.ValidationError({"email": "Please enter your email address"})
 
         if cleaned["support_type"] == self.SupportTypes.OTHER and not cleaned["message"]:

@@ -3,50 +3,66 @@
 {% block page_title %}Request access - {{ catalogue_item.name }} - {{ block.super }}{% endblock %}
 
 {% block breadcrumbs %}
-    <div class="govuk-breadcrumbs">
-        <ol class="govuk-breadcrumbs__list">
-            <li class="govuk-breadcrumbs__list-item">
-                <a class="govuk-breadcrumbs__link" href="/">Home</a>
-            </li>
-            <li class="govuk-breadcrumbs__list-item">
-              <a class="govuk-breadcrumbs__link" href="{{ catalogue_item.get_absolute_url }}">{{ catalogue_item.name }}</a>
-            </li>
-            <li class="govuk-breadcrumbs__list-item">Request access
-            </li>
-        </ol>
-    </div>
+  <div class="govuk-breadcrumbs">
+    <ol class="govuk-breadcrumbs__list">
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="/">Home</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="{{ catalogue_item.get_absolute_url }}">{{ catalogue_item.name }}</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">Request access
+      </li>
+    </ol>
+  </div>
 {% endblock %}
 
 {% block content %}
-    <div class="govuk-grid-row">
-        <div class="govuk-grid-column-two-thirds">
-            {% include 'design_system/error_summary.html' with form=form %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      {% include 'design_system/error_summary.html' with form=form %}
+      {% if eligibility_criteria_not_met %}
+        <h1 class="govuk-heading-xl">Sorry, we can't give you access to this dataset</h1>
+        <p class="govuk-body">
+          Unfortunately you don't meet the initial eligibility criteria to access this {% if is_visualisation %}data
+          visualisation{% else %}dataset{% endif %}.
+        </p>
+        <p class="govuk-body">
+          If you think you should be able to access it, please complete the form below.
+        </p>
+      {% else %}
+        <h1 class="govuk-heading-xl">Request access to data</h1>
+        <p class="govuk-body">
+          Complete the form below if you need to access this {% if is_visualisation %}data visualisation{% else %}
+          dataset{% endif %} in order to do your job.
+        </p>
+      {% endif %}
+      <p class="govuk-body">
+        Access will be provided on an individual basis and in line with the <a href="https://www.gov.uk/data-protection"
+                                                                               class="govuk-link govuk-link--no-visited-state">Data
+        Protection Act</a>.
+      </p>
+      <br/>
+      <p class="govuk-body">
+        <span class="govuk-label govuk-!-font-weight-bold">{% if is_visualisation %}Data visualisation{% else %}
+          Dataset{% endif %}</span>
+        <a href="{{ catalogue_item.get_absolute_url }}" class="govuk-link govuk-link--no-visited-state">
+          {{ catalogue_item.name }}
+        </a>
+      </p>
 
-            <h1 class="govuk-heading-xl">Request access to data</h1>
-            <p class="govuk-body">
-              Complete the form below if you need to access this {% if is_visualisation %}data visualisation{% else %}dataset{%endif%} in order to do your job.
-            </p>
-            <p class="govuk-body">
-              Access will be provided on an individual basis and in line with the <a href="https://www.gov.uk/data-protection" class="govuk-link govuk-link--no-visited-state">Data Protection Act</a>.
-            </p>
-          <br />
-            <p class="govuk-body">
-              <span class="govuk-label govuk-!-font-weight-bold">{% if is_visualisation %}Data visualisation{% else %}Dataset{%endif%}</span>
-              <a href="{{ catalogue_item.get_absolute_url }}" class="govuk-link govuk-link--no-visited-state">
-                  {{ catalogue_item.name }}
-              </a>
-            </p>
+      <form method="post" novalidate
+        {% if form.instance.id %} action="{% url 'request_access:dataset-request-update' form.instance.id %}{% endif %}">
+        {% csrf_token %}
+        <fieldset class="govuk-fieldset">
+          {{ form.id }}
+          {{ form.contact_email }}
+          {{ form.reason_for_access }}
 
-            <form method="post" novalidate{% if form.instance.id %} action="{% url 'request_access:dataset-request-update' form.instance.id %}{% endif %}">
-                {% csrf_token %}
-                <fieldset class="govuk-fieldset">
-                    {{ form.id }}
-                    {{ form.contact_email }}
-                    {{ form.reason_for_access }}
-
-                    <button type="submit" class="govuk-button" data-prevent-double-click="true" >{% if user_has_tools_access or is_visualisation %} Submit {% else %} Continue {% endif %}</button>
-                </fieldset>
-            </form>
-        </div>
+          <button type="submit" class="govuk-button" data-prevent-double-click="true">
+            {% if user_has_tools_access or is_visualisation %} Submit {% else %} Continue {% endif %}</button>
+        </fieldset>
+      </form>
     </div>
+  </div>
 {% endblock %}
