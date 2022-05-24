@@ -77,7 +77,8 @@ def extract_queried_tables_from_sql_query(database_name, query):
                 cursor.execute(
                     f"create temporary view get_tables as (select 1 from ({query.strip().rstrip(';')}) sq)"
                 )
-        except DatabaseError:
+        except DatabaseError as e:
+            logger.error(e)
             tables = []
         else:
             cursor.execute(
