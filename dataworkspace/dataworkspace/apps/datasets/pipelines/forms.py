@@ -97,11 +97,6 @@ class SQLPipelineCreateForm(BasePipelineCreateForm):
             statement_dict = statements[0].stmt()
             if statement_dict["@"] != "SelectStmt":
                 raise ValidationError("Only SELECT statements are supported")
-            # This isn't a perfect check, but we can't in all cases know what the column names will
-            # be by just parsing the query
-            columns = [t["name"] for t in statement_dict["targetList"] if t["name"] is not None]
-            if len(columns) != len(set(columns)):
-                raise ValidationError("Duplicate column names found")
 
         # Check that the query runs
         with connections[list(settings.DATABASES_DATA.items())[0][0]].cursor() as cursor:
