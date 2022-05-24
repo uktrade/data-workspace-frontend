@@ -49,6 +49,7 @@ from dataworkspace.apps.datasets.models import (
     VisualisationLinkSqlQuery,
     ToolQueryAuditLog,
     DataSetSubscription,
+    SourceTableFieldDefinition,
 )
 from dataworkspace.apps.datasets.permissions.utils import (
     process_dataset_authorized_users_change,
@@ -195,6 +196,12 @@ class CustomDatasetQueryInline(admin.TabularInline, SourceReferenceInlineMixin):
         readonly_fields = readonly_fields + tuple(extra_readonly)
 
         return readonly_fields
+
+
+class FieldDefinitionInline(admin.TabularInline):
+    model = SourceTableFieldDefinition
+    extra = 1
+    manage_unpublished_permission_codename = "datasets.manage_unpublished_master_datasets"
 
 
 def clone_dataset(modeladmin, request, queryset):
@@ -575,6 +582,8 @@ class SourceTableAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         return self.model.objects.filter(dataset__deleted=False)
+
+    inlines = [FieldDefinitionInline]
 
 
 @admin.register(VisualisationLinkSqlQuery)

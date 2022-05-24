@@ -1,6 +1,6 @@
 {% extends '_main.html' %}
 {% load static datasets_tags core_tags waffle_tags %}
-{% block page_title %}Update or restore table - {{ block.super }}{% endblock %}
+{% block page_title %}Edit data dictionary - {{ block.super }}{% endblock %}
 {% block breadcrumbs %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-three-quarters">
@@ -11,10 +11,16 @@
           </li>
           <li class="govuk-breadcrumbs__list-item">
             <a class="govuk-breadcrumbs__link" href="{{ source.dataset.get_absolute_url }}">
-              {{ source.dataset.name }}
+              {{ dataset.name }}
             </a>
           </li>
-          <li class="govuk-breadcrumbs__list-item">Data dictionary</li>
+          <li class="govuk-breadcrumbs__list-item">
+            <a href="{% url "datasets:data_dictionary" dataset_uuid=dataset.id source_uuid=source_table.id %}"
+            class="govuk-link govuk-link--no-visited-state">
+            Data dictionary
+            </a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">Edit data dictionary</li>
         </ol>
       </div>
     </div>
@@ -23,22 +29,28 @@
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-      <h1 class="govuk-heading-l">Data dictionary</h1>
-      <p class="govuk-body govuk-body-m">
-        "{{ source_table.schema }}"."{{ source_table.table }}"
-      </p>
-      <p class="govuk-body govuk-body-m">
-            <a href="{% url "datasets:edit_data_dictionary" dataset_uuid=model.id %}"
-            class="govuk-link govuk-link--no-visited-state">
-            Edit dictionary
-            </a>
-      </p> 
+      <h1 class="govuk-heading-l">Edit data dictionary</h1>
     </div>
   </div>
   {% block success_banner %}{% endblock %}
-  {% for source_table, columns in master_datasets_info %}
   <div class="govuk-grid-row govuk-!-margin-top-6" id="update">
-    <div class="govuk-grid-column-full" style="overflow-x: auto;">
+    <div class="govuk-grid-column-full">
+        <form method="post">
+            <div style="position:sticky;background-color:white;overflow:hidden;top:30px" class="govuk-!-padding-top-4">
+                <p class="govuk-body govuk-body-m" style="float:left">
+                    "{{ source_table.schema }}"."{{ source_table.table }}"
+                  </p>
+            <div class="govuk-button-group" style="float:right">
+                <a href="{% url "datasets:data_dictionary" dataset_uuid=dataset.id source_uuid=source_table.id %}"
+                class="govuk-link govuk-link--no-visited-state">
+                Cancel changes
+                </a>
+                <button class="govuk-button" type="submit">
+                    Save changes
+                </button>
+            </div>
+            </div>
+        {% csrf_token %}
       <table class="govuk-table">
         <thead>
         <tr class="govuk-table__row">
@@ -48,15 +60,15 @@
         </tr>
         </thead>
         <tbody>
-            {% for column, data_type in columns %}
+            {% for name, data_type, definition in dictionary %}
             <tr class="govuk-table__row">
-                    <th scope="row" class="govuk-table__header js-schema-column-{{ forloop.counter }}">{{ column }}Extract column name</th>
+                    <th scope="row" class="govuk-table__header js-schema-column-{{ forloop.counter }}">{{ name }}</th>
                 <td class="govuk-table__cell">
-                    {{ data_type }}Extract data type
+                    {{ data_type }}
                 </td>
                 <td class="govuk-table__cell">
                     <div class="govuk-form-group">
-                        <textarea class="govuk-textarea" id="more-detail" name="more-detail" rows="5" aria-describedby="more-detail-hint></textarea">
+                        <textarea class="govuk-textarea" id="field_{{ name }}" name="{{ name }}" rows="5" maxlength="1024" aria-describedby="more-detail-hint">{{ definition.description }}</textarea>
                     </div>
                     {{ form.definition }}
                 </td>
@@ -64,8 +76,8 @@
             {% endfor %}
         </tbody>
       </table>
+    </form>
     </div>
   </div>
-  {% endfor %}
 
 {% endblock content %}

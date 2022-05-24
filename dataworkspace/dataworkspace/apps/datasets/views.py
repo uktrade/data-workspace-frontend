@@ -40,7 +40,7 @@ from django.http import (
     HttpResponseServerError,
     JsonResponse,
 )
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from django.views.decorators.http import (
     require_GET,
@@ -98,6 +98,7 @@ from dataworkspace.apps.datasets.models import (
     ToolQueryAuditLogTable,
     Tag,
     VisualisationUserPermission,
+    SourceTableFieldDefinition,
 )
 from dataworkspace.apps.datasets.permissions.utils import (
     process_dataset_authorized_users_change,
@@ -1730,19 +1731,107 @@ class DatasetChartsView(WaffleFlagMixin, View):
             "datasets/charts/charts.html",
             context={"charts": dataset.related_charts(), "dataset": dataset},
         )
-class DataDictionaryView(View):
-    def get(self, request, source_uuid):
-        dataset = find_dataset(source_uuid, request.user)
 
+
+class DataDictionaryView(View):
+    def get(self, request, dataset_uuid, source_uuid):
+        source_table = get_object_or_404(SourceTable, pk=source_uuid)
+        dataset = find_dataset(dataset_uuid, self.request.user, DataSet)
+        columns = datasets_db.get_columns(
+            source_table.database.memorable_name,
+            schema=source_table.schema,
+            table=source_table.table,
+            include_types=True,
+        )
+        fields = source_table.field_definitions.all()
+        dictionary = []
+        for name, data_type in columns:
+            definition = ""
+            if fields.filter(field=name).exists():
+                definition = fields.filter(field=name).first()
+            dictionary.append(
+                (
+                    name,
+                    data_type,
+                    definition,
+                )
+            )
 
         return render(
             request,
             "datasets/data_dictionary.html",
             context={
+                "source_table": source_table,
                 "dataset": dataset,
+                "columns": columns,
+                "fields": fields,
+                "dictionary": dictionary,
             },
         )
 
-class DataDictionaryEditView(EditBaseView, FormView):
-   template_name = "datasets/edit_data_dictionary.html"
-   pass
+
+class DataDictionaryEditView(View):
+    def dispatch(self, request, *args, **kwargs):
+
+        dataset = DataSet.objects.live().get(pk=self.kwargs.get("dataset_uuid"))
+        if (
+            request.user
+            not in [
+                dataset.information_asset_owner,
+                dataset.information_asset_manager,
+            ]
+            and not request.user.is_superuser
+        ):
+            return HttpResponseForbidden()
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request, dataset_uuid, source_uuid):
+        source_table = get_object_or_404(SourceTable, pk=source_uuid)
+        dataset = find_dataset(dataset_uuid, self.request.user, DataSet)
+        columns = datasets_db.get_columns(
+            source_table.database.memorable_name,
+            schema=source_table.schema,
+            table=source_table.table,
+            include_types=True,
+        )
+        fields = source_table.field_definitions.all()
+        dictionary = []
+        for name, data_type in columns:
+            definition = ""
+            if fields.filter(field=name).exists():
+                definition = fields.filter(field=name).first()
+            dictionary.append(
+                (
+                    name,
+                    data_type,
+                    definition,
+                )
+            )
+
+        return render(
+            request,
+            "datasets/edit_data_dictionary.html",
+            context={
+                "source_table": source_table,
+                "dataset": dataset,
+                "columns": columns,
+                "fields": fields,
+                "dictionary": dictionary,
+            },
+        )
+
+    def post(self, request, dataset_uuid, source_uuid):
+        source_table = get_object_or_404(SourceTable, pk=source_uuid)
+        dataset = find_dataset(dataset_uuid, self.request.user, DataSet)
+
+        for name, value in request.POST.items():
+            if name == "csrfmiddlewaretoken":
+                continue
+            field, created = SourceTableFieldDefinition.objects.get_or_create(
+                source_table=source_table, field=name
+            )
+            field.description = value[:1024]
+            field.save()
+
+        messages.success(self.request, "Changes saved successfully")
+        return redirect("datasets:data_dictionary", dataset.id, source_table.id)

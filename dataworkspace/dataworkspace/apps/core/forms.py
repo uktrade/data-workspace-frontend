@@ -54,10 +54,14 @@ class SupportForm(GOVUKDesignSystemForm):
     def clean(self):
         cleaned = super().clean()
 
-        if cleaned["support_type"] in [
-            self.SupportTypes.TECH_SUPPORT,
-            self.SupportTypes.OTHER,
-        ] and not cleaned.get("email"):
+        if (
+            cleaned["support_type"]
+            in [
+                self.SupportTypes.TECH_SUPPORT,
+                self.SupportTypes.OTHER,
+            ]
+            and not cleaned.get("email")
+        ):
             raise forms.ValidationError({"email": "Please enter your email address"})
 
         if cleaned["support_type"] == self.SupportTypes.OTHER and not cleaned["message"]:
@@ -121,19 +125,17 @@ class TechnicalSupportForm(GOVUKDesignSystemForm):
         ):
             raise forms.ValidationError("Please add some detail to the support request")
 
+
 class DataDictionaryForm(GOVUKDesignSystemForm):
     definition = GOVUKDesignSystemCharField(
         required=False,
         widget=GOVUKDesignSystemTextWidget(
-            label_is_heading=False, 
+            label_is_heading=False,
             attrs={"rows": 5},
         ),
     )
 
     def clean(self):
         cleaned = super().clean()
-        if (
-            not cleaned["definition"]
-        ):
+        if not cleaned["definition"]:
             raise forms.ValidationError("Please enter a definition")
-
