@@ -380,6 +380,18 @@ class DataSet(DeletableTimestampedUserModel):
         else:
             raise ValueError(f"Not implemented for {self.type}")
 
+    def related_charts(self):
+        # Group dataset visualisations and chart builder charts so they
+        # can be shown on the same page
+        fields = ["id", "name", "summary", "gds_phase_name", "type"]
+        # pylint: disable=no-member
+        return (
+            self.charts.all()
+            .annotate(type=models.Value("chart"))
+            .values(*fields)
+            .union(self.visualisations.live().annotate(type=models.Value("vega")).values(*fields))
+        )
+
     def update_published_timestamp(self):
         if not self.published:
             return

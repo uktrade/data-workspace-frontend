@@ -8,6 +8,8 @@ import './utils/maps';
 import {availableCharts, axisMap, queryStates} from "./constants";
 import LoadingModal from "./components/LoadingModal";
 import ErrorModal from "./components/ErrorModal";
+import {notifier} from "plotly.js/src/lib";
+import QueryErrorModal from "./components/QueryErrorModal";
 
 // Hide unused parts of the UI
 DefaultEditor.prototype.hasTransforms = () => false;
@@ -85,7 +87,7 @@ class App extends React.Component {
         console.error(e);
         this.setState({
           loadingData: false,
-          queryError: 'An error occurred while running your query'
+          queryError: true
         });
     });
   }
@@ -105,9 +107,7 @@ class App extends React.Component {
     if (this.state.savingChart) return <LoadingModal message="Saving chart" />;
     if (this.state.queryError) {
       return (
-        <ErrorModal
-          title="Failed to run your query"
-          message={this.state.queryError}
+        <QueryErrorModal
           backLink={this.props.backLink}
         />
       );
@@ -161,6 +161,9 @@ class App extends React.Component {
         that.setState({ saveError: "Error saving your chart, please try again."})
         throw new Error('Failed to save chart');
       }
+      else {
+        notifier('Your chart has been saved. If you would like to publish this to the catalogue page, please contact the Data Workspace team via the support form.', 5000);
+      }
     })
     .catch((error) => {
       that.setState({ saveError: "Error saving your chart, please try again."})
@@ -171,29 +174,31 @@ class App extends React.Component {
   render() {
     return (
       <div className="app">
-        {this.showStatusModal()}
         <div className="govuk-width-container">
           <div className="govuk-grid-row">
+            {this.showStatusModal()}
             <div className="govuk-grid-column-full" id="plotly-editor">
-              <PlotlyEditor
-                data={this.state.traces}
-                layout={this.state.layout}
-                config={{ editable: true, mapboxAccessToken: '-' }}
-                frames={this.state.frames}
-                dataSources={this.state.dataSources}
-                dataSourceOptions={this.state.dataSourceOptions}
-                plotly={plotly}
-                onUpdate={(traces, layout, frames) => {
-                  this.setState({traces, layout, frames});
-                }}
-                useResizeHandler
-                debug
-                advancedTraceTypeSelector
-                traceTypesConfig={availableCharts}
-                revision={this.state.editorRevision}
-              >
-                <DefaultEditor />
-              </PlotlyEditor>
+              <div className="plotly-wrap">
+                <PlotlyEditor
+                  data={this.state.traces}
+                  layout={this.state.layout}
+                  config={{ editable: true, mapboxAccessToken: '-' }}
+                  frames={this.state.frames}
+                  dataSources={this.state.dataSources}
+                  dataSourceOptions={this.state.dataSourceOptions}
+                  plotly={plotly}
+                  onUpdate={(traces, layout, frames) => {
+                    this.setState({traces, layout, frames});
+                  }}
+                  useResizeHandler
+                  debug
+                  advancedTraceTypeSelector
+                  traceTypesConfig={availableCharts}
+                  revision={this.state.editorRevision}
+                >
+                  <DefaultEditor />
+                </PlotlyEditor>
+                </div>
               <div className="govuk-grid-row chart-toolbar">
                 <div className="govuk-grid-column-one-third">
                   <a className="govuk-button govuk-button--secondary" href={this.props.backLink}>

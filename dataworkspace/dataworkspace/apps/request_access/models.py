@@ -19,6 +19,7 @@ class AccessRequest(TimeStampedModel):
     )
     catalogue_item_id = models.UUIDField(null=True)
     contact_email = models.CharField(max_length=256, null=True, blank=False)
+    eligibility_criteria_met = models.BooleanField(null=True, blank=True)
     reason_for_access = models.TextField(null=True, blank=False)
     training_screenshot = models.FileField(
         storage=storage.S3FileStorage(location="training_screenshots"),

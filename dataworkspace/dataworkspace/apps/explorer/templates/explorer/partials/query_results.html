@@ -1,5 +1,5 @@
 {% load explorer_tags waffle_tags %}
-<div class="govuk-grid-row" id="query-results">
+<div class="govuk-grid-row">
   {% if headers %}
     <div class="govuk-grid-column-full">
       <h3 class="govuk-heading-m govuk-!-margin-bottom-2">
@@ -11,7 +11,7 @@
       <p class="govuk-body">
         Execution time: {{ duration|format_duration }}
       </p>
-      <div class="scrollable-table" tabindex="0">
+      <div class="scrollable-table" tabindex="0" id="query-results">
         <table class="govuk-table">
           <thead class="govuk-table">
           <tr class="govuk-table__row">

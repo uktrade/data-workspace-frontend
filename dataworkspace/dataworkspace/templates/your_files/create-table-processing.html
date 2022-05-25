@@ -22,9 +22,9 @@
   {{ block.super }}
   <script nonce="{{ request.csp_nonce }}">
     window.pollForDagStateChange(
-        '{% url "create-table-task-status" execution_date task_name %}',
-        '{{ next_step }}?{{ request.GET.urlencode }}',
-        '{% url "your-files:create-table-failed" %}?{{ request.GET.urlencode }}',
+        '{% url "create-table-task-status" execution_date task_name as status_url %}{{ status_url|escapejs }}',
+        '{{ next_step|escapejs }}',
+        '{% url "your-files:create-table-failed" as failure_url %}{{ failure_url|escapejs }}?{{ request.GET.urlencode|escapejs }}',
         500
     );
   </script>

@@ -3,6 +3,7 @@ from django.urls import include, path
 from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.datasets import models, views
 from dataworkspace.apps.datasets.subscriptions import views as subscription_views
+from dataworkspace.apps.request_access.views import DatasetAccessRequest
 
 urlpatterns = [
     path("", login_required(views.find_datasets), name="find_datasets"),
@@ -63,7 +64,7 @@ urlpatterns = [
     ),
     path(
         "<uuid:dataset_uuid>/eligibility-criteria-not-met",
-        login_required(views.eligibility_criteria_not_met_view),
+        login_required(DatasetAccessRequest.as_view()),
         name="eligibility_criteria_not_met",
     ),
     path(

@@ -5,7 +5,7 @@ I thought you might find this SQL query useful.
 
 If you already have access to the data, you can access the query in Data Explorer here https://{{ request.get_host }}{% open_query_in_explorer_link query %}.
 
-You may need to request access to Data Explorer before you can use it: https://data-services-help.trade.gov.uk/data-workspace/how-articles/data-workspace-basics/how-do-i-request-access-tool/.
+You may need to request access to Data Explorer before you can use it: https://data-services-help.trade.gov.uk/data-workspace/how-to/use-tools/access-tools/.
 
 {{ query }}
 
