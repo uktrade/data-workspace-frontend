@@ -1284,12 +1284,12 @@ class SourceChangelogView(WaffleFlagMixin, DetailView):
         return ctx
 
     def get_object(self, queryset=None):
-        dataset = find_dataset(self.kwargs["dataset_uuid"], self.request.user)
         if self.kwargs["model_class"] == ReferenceDataset:
-            return dataset
+            return get_object_or_404(ReferenceDataset, uuid=self.kwargs["dataset_uuid"])
+
         return get_object_or_404(
             self.kwargs["model_class"],
-            dataset=dataset,
+            dataset_id=self.kwargs["dataset_uuid"],
             pk=self.kwargs["source_id"],
         )
 
