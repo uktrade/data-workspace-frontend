@@ -9,10 +9,10 @@
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-xl">{{ is_currently_subscribed|yesno:"Unsubscribe from,Subscribe to" }} newsletter</h1>
       {% if is_currently_subscribed %}
-      <p class="govuk-body-m">Please unsubscribe below if you no longer wish to receive Data Workspace emails.</p>
-        
+        <p class="govuk-body-m">Please unsubscribe below if you no longer wish to receive Data Workspace emails.</p>
+
       {% else %}
-      <p class="govuk-body-m">Please subscribe below if you would like to receive Data Workspace emails</p>
+        <p class="govuk-body-m">Please subscribe below if you would like to receive Data Workspace emails</p>
       {% endif %}
       <p class="govuk-body-m">We strongly recommend you receive these emails.</p>
       <p class="govuk-body-m">UKEF and Trade Remedies Authority (TRA) colleagues - please note that not all content
@@ -21,7 +21,7 @@
 
       <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        <input type="hidden" name="action" value="{{ is_currently_subscribed|yesno:"unsubscribe,subscribe" }}" />
+        <input type="hidden" name="action" value="{{ is_currently_subscribed|yesno:"unsubscribe,subscribe" }}"/>
         <button type="submit" class="govuk-button">{{ is_currently_subscribed|yesno:"Unsubscribe,Subscribe" }}</button>
       </form>
 
