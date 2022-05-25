@@ -1163,23 +1163,26 @@ class DataGridDataView(DetailView):
         )
 
         if request.GET.get("download"):
-            correlation_id = {"correlation_id": str(uuid.uuid4())}
+            extra = {
+                "correlation_id": str(uuid.uuid4()),
+                **serializers.serialize("python", [source])[0],
+            }
 
             log_event(
                 request.user,
                 EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
-                source,
-                extra=correlation_id,
+                source.dataset,
+                extra=extra,
             )
 
             def write_metrics_to_eventlog(log_data):
                 logger.debug("write_metrics_to_eventlog %s", log_data)
 
-                log_data.update(correlation_id)
+                log_data.update(extra)
                 log_event(
                     request.user,
                     EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD_COMPLETE,
-                    source,
+                    source.dataset,
                     extra=log_data,
                 )
 
