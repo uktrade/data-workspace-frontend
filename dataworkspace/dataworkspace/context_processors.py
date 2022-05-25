@@ -16,7 +16,11 @@ def common(request):
     # which makes it easier to debug locally
     gtm_enabled = settings.GTM_CONTAINER_ID and not settings.DEBUG
 
-    is_subscribed_to_newsletter = request.user.newsletter_signups.filter(is_active=True).exists()
+    is_subscribed_to_newsletter = (
+        request.user.newsletter_signups.filter(is_active=True).exists()
+        if not request.user.is_anonymous
+        else False
+    )
 
     return {
         "root_href": f"{request.scheme}://{settings.APPLICATION_ROOT_DOMAIN}/",
