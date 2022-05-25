@@ -165,7 +165,12 @@
             </li>
             <li class="govuk-footer__list-item">
               <a class="govuk-footer__link"  href="{% url 'newsletter_subscription' %}">
-                Subscribe/Unsubscribe to Newsletter
+                {% if IS_SUBSCRIBED_TO_NEWSLETTER %}
+                  Unsubscribe from
+                  {% else %}
+                  Subscribe to
+                {% endif %}
+                newsletter
               </a>
             </li>
           </ul>

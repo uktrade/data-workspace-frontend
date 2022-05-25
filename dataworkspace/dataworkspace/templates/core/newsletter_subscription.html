@@ -2,36 +2,29 @@
 
 {% load waffle_tags %}
 
-{% block page_title %}Subscription to {{ block.super }} newsletter{% endblock page_title %}
-{% block go_back %}
-  {% if 'success' not in request.GET %}
-    <a href="{{ referer }}" class="govuk-back-link">Back</a>
-  {% endif %}
-{% endblock %}
+{% block page_title %}Subscription to newsletter{% endblock page_title %}
+
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-      {% if 'success' in request.GET %}
-        <h1 class="govuk-heading-l">You have {{ subscription_status|yesno:"unsubscribed from,subscribed to" }} the
-          newsletter</h1>
-        <a class="govuk-button" href="{% url 'root' %}">Return home</a>
+      <h1 class="govuk-heading-xl">{{ is_currently_subscribed|yesno:"Unsubscribe from,Subscribe to" }} newsletter</h1>
+      {% if is_currently_subscribed %}
+      <p class="govuk-body-m">Please unsubscribe below if you no longer wish to receive Data Workspace emails.</p>
+        
       {% else %}
-        <h1 class="govuk-heading-xl">{{ subscription_status|yesno:"Subscribe to,Unsubscribe from" }} newsletter</h1>
-        {% if subscription_status %}
-          <p class="govuk-body-m">Please subscribe below if you would like to receive Data Workspace emails</p>
-        {% else %}
-          <p class="govuk-body-m">Please unsubscribe below if you no longer wish to receive Data Workspace emails.</p>
-        {% endif %}
-        <p class="govuk-body-m">We strongly recommend you receive these emails.</p>
-        <p class="govuk-body-m">UKEF and Trade Remedies Authority (TRA) colleagues - please note that not all content
-          may be relevant to you. If you are unsure whether content is applicable to you, please email your Internal
-          Communications Team.</p>
-
-        <form method="post" enctype="multipart/form-data">
-          {% csrf_token %}
-          <button type="submit" class="govuk-button">{{ subscription_status|yesno:"Subscribe,Unsubscribe" }}</button>
-        </form>
+      <p class="govuk-body-m">Please subscribe below if you would like to receive Data Workspace emails</p>
       {% endif %}
+      <p class="govuk-body-m">We strongly recommend you receive these emails.</p>
+      <p class="govuk-body-m">UKEF and Trade Remedies Authority (TRA) colleagues - please note that not all content
+        may be relevant to you. If you are unsure whether content is applicable to you, please email your Internal
+        Communications Team.</p>
+
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="{{ is_currently_subscribed|yesno:"unsubscribe,subscribe" }}" />
+        <button type="submit" class="govuk-button">{{ is_currently_subscribed|yesno:"Unsubscribe,Subscribe" }}</button>
+      </form>
+
     </div>
   </div>
 {% endblock %}

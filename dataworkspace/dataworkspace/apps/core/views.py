@@ -3,6 +3,7 @@ import os
 
 from botocore.exceptions import ClientError
 from django.conf import settings
+from django.contrib import messages
 from django.db.models import Case, Value, When
 from django.http import (
     HttpResponse,
@@ -25,7 +26,10 @@ from dataworkspace.apps.core.forms import (
     TechnicalSupportForm,
     UserSatisfactionSurveyForm,
 )
-from dataworkspace.apps.core.models import UserSatisfactionSurvey, NewsletterSubscription
+from dataworkspace.apps.core.models import (
+    UserSatisfactionSurvey,
+    NewsletterSubscription,
+)
 from dataworkspace.apps.core.storage import S3FileStorage
 from dataworkspace.apps.core.utils import (
     StreamingHttpResponseWithoutDjangoDbConnection,
@@ -107,43 +111,46 @@ class SupportView(FormView):
             return HttpResponseRedirect(reverse("request_data:index"))
 
         if cleaned["support_type"] == form.SupportTypes.TECH_SUPPORT:
-            return HttpResponseRedirect(f'{reverse("technical-support")}?email={cleaned["email"]}')
+            return HttpResponseRedirect(
+                f'{reverse("technical-support")}?email={cleaned["email"]}'
+            )
 
         tag = self.ZENDESK_TAGS.get(self.request.GET.get("tag"))
         ticket_id = create_support_request(
             self.request.user, cleaned["email"], cleaned["message"], tag=tag
         )
-        return HttpResponseRedirect(reverse("support-success", kwargs={"ticket_id": ticket_id}))
+        return HttpResponseRedirect(
+            reverse("support-success", kwargs={"ticket_id": ticket_id})
+        )
 
 
 class NewsletterSubscriptionView(View):
     def get(self, request):
-        try:
-            subscription_status = not NewsletterSubscription.objects.get(
-                user=self.request.user
-            ).is_active
-        except NewsletterSubscription.DoesNotExist:
-            subscription_status = False
-
+        subscribed = NewsletterSubscription.objects.filter(
+            user=self.request.user, is_active=True
+        ).exists()
         return render(
             request,
             "core/newsletter_subscription.html",
             context={
-                "subscription_status": subscription_status,
+                "is_currently_subscribed": subscribed,
             },
         )
 
     def post(self, request):
-        if NewsletterSubscription.objects.filter(user=self.request.user).exists():
-            NewsletterSubscription.objects.filter(user=self.request.user).update(
-                is_active=Case(
-                    When(is_active=True, then=Value(False)),
-                    When(is_active=False, then=Value(True)),
-                )
-            )
-        else:
-            NewsletterSubscription.objects.create(user=self.request.user, is_active=True)
-        return HttpResponseRedirect(f'{reverse("newsletter_subscription")}?success=1')
+        should_subscribe = request.POST.get("action") == "subscribe"
+        subscription, created = NewsletterSubscription.objects.get_or_create(
+            user=self.request.user
+        )
+        subscription.is_active = should_subscribe
+        subscription.save()
+
+        messages.success(
+            request,
+            "You have %s the newsletter"
+            % ("subscribed to" if should_subscribe else "unsubscribed from"),
+        )
+        return HttpResponseRedirect(reverse("root"))
 
 
 class UserSatisfactionSurveyView(FormView):
@@ -190,7 +197,9 @@ def table_data_view(request, database, schema, table):
         return HttpResponseNotAllowed(["GET"])
     elif not can_access_schema_table(request.user, database, schema, table):
         return HttpResponseForbidden()
-    elif not (view_exists(database, schema, table) or table_exists(database, schema, table)):
+    elif not (
+        view_exists(database, schema, table) or table_exists(database, schema, table)
+    ):
         return HttpResponseNotFound()
     else:
         return table_data(request.user.email, database, schema, table)
@@ -218,7 +227,9 @@ class TechnicalSupportView(FormView):
             f'What should have happened?\n{cleaned["what_should_have_happened"]}'
         )
         ticket_id = create_support_request(self.request.user, cleaned["email"], message)
-        return HttpResponseRedirect(reverse("support-success", kwargs={"ticket_id": ticket_id}))
+        return HttpResponseRedirect(
+            reverse("support-success", kwargs={"ticket_id": ticket_id})
+        )
 
 
 class ServeS3UploadedFileView(View):
@@ -236,7 +247,9 @@ class ServeS3UploadedFileView(View):
             file_object = client.get_object(Bucket=file_storage.bucket, Key=path)
         except ClientError as ex:
             try:
-                return HttpResponse(status=ex.response["ResponseMetadata"]["HTTPStatusCode"])
+                return HttpResponse(
+                    status=ex.response["ResponseMetadata"]["HTTPStatusCode"]
+                )
             except KeyError:
                 return HttpResponseServerError()
 
@@ -268,7 +281,9 @@ class CreateTableDAGStatusView(View):
         config = settings.DATAFLOW_API_CONFIG
         try:
             return JsonResponse(
-                get_dataflow_dag_status(config["DATAFLOW_S3_IMPORT_DAG"], execution_date)
+                get_dataflow_dag_status(
+                    config["DATAFLOW_S3_IMPORT_DAG"], execution_date
+                )
             )
         except HTTPError as e:
             return JsonResponse({}, status=e.response.status_code)
