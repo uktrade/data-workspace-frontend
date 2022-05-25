@@ -134,9 +134,7 @@ class NewsletterSubscriptionView(View):
 
     def post(self, request):
         should_subscribe = request.POST.get("action") == "subscribe"
-        subscription, created = NewsletterSubscription.objects.get_or_create(
-            user=self.request.user
-        )
+        subscription, _ = NewsletterSubscription.objects.get_or_create(user=self.request.user)
         subscription.is_active = should_subscribe
         subscription.save()
 

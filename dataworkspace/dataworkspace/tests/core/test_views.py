@@ -26,6 +26,7 @@ class TestNewsletterViews(BaseTestCase):
     def test_newsletter_defaults_to_subscribe(self):
         response = self._authenticated_get(reverse("newsletter_subscription"))
 
+        # pylint: disable=no-member
         assert response.status_code == 200
         self.assertContains(response, "Subscribe to newsletter")
 
