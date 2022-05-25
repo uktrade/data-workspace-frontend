@@ -4,7 +4,6 @@ import os
 from botocore.exceptions import ClientError
 from django.conf import settings
 from django.contrib import messages
-from django.db.models import Case, Value, When
 from django.http import (
     HttpResponse,
     HttpResponseBadRequest,
