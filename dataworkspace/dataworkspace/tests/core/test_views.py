@@ -13,12 +13,37 @@ from django.contrib.auth.models import Permission
 from django.test import override_settings, Client
 from django.urls import reverse
 
+from dataworkspace.apps.core.models import NewsletterSubscription
 from dataworkspace.tests.common import (
     BaseTestCase,
     get_http_sso_data,
     get_connect_src_from_csp,
 )
 from dataworkspace.tests.factories import UserFactory
+
+
+class TestNewsletterViews(BaseTestCase):
+    def test_newsletter_defaults_to_subscribe(self):
+        response = self._authenticated_get(reverse("newsletter_subscription"))
+
+        assert response.status_code == 200
+        self.assertContains(response, "Subscribe to newsletter")
+
+    def test_subscribe(self):
+        data = {"action": "subscribe"}
+        self._authenticated_post(reverse("newsletter_subscription"), data)
+
+        subscription = NewsletterSubscription.objects.filter(user=self.user)
+        assert subscription.exists()
+        assert subscription.first().is_active
+
+    def test_unsubscribe(self):
+        data = {"action": "unsubscribe"}
+        self._authenticated_post(reverse("newsletter_subscription"), data)
+
+        subscription = NewsletterSubscription.objects.filter(user=self.user)
+        assert subscription.exists()
+        assert not subscription.first().is_active
 
 
 class TestSupportViews(BaseTestCase):
@@ -200,7 +225,6 @@ def test_csp_on_files_endpoint_includes_s3(client):
     ),
 )
 def test_sso_user_id_in_gtm_datalayer(client, path_name):
-
     sso_id = uuid.uuid4()
     headers = {
         "HTTP_SSO_PROFILE_USER_ID": sso_id,
@@ -210,7 +234,7 @@ def test_sso_user_id_in_gtm_datalayer(client, path_name):
 
     assert response.status_code == 200
     assert "dataLayer.push({" in response.content.decode(response.charset)
-    assert f'"id": "{ sso_id }"' in response.content.decode(response.charset)
+    assert f'"id": "{sso_id}"' in response.content.decode(response.charset)
 
 
 @pytest.mark.parametrize("request_client", ("client", "staff_client"), indirect=["request_client"])
