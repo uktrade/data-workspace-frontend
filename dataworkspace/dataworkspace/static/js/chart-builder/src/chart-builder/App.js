@@ -9,6 +9,7 @@ import {availableCharts, axisMap, queryStates} from "./constants";
 import LoadingModal from "./components/LoadingModal";
 import ErrorModal from "./components/ErrorModal";
 import {notifier} from "plotly.js/src/lib";
+import QueryErrorModal from "./components/QueryErrorModal";
 
 // Hide unused parts of the UI
 DefaultEditor.prototype.hasTransforms = () => false;
@@ -86,7 +87,7 @@ class App extends React.Component {
         console.error(e);
         this.setState({
           loadingData: false,
-          queryError: 'An error occurred while running your query'
+          queryError: true
         });
     });
   }
@@ -106,9 +107,7 @@ class App extends React.Component {
     if (this.state.savingChart) return <LoadingModal message="Saving chart" />;
     if (this.state.queryError) {
       return (
-        <ErrorModal
-          title="Failed to run your query"
-          message={this.state.queryError}
+        <QueryErrorModal
           backLink={this.props.backLink}
         />
       );

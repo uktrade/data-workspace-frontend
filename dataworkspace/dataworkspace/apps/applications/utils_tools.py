@@ -64,7 +64,7 @@ def get_groups(request):
                 ToolsViewModel(
                     name="Superset",
                     host_basename="superset",
-                    summary="Use Superset to create advanced visuals and dashbaords using data from Data Workspace. "
+                    summary="Use Superset to create advanced visuals and dashboards using data from Data Workspace. "
                     "Requires SQL knowledge.",
                     help_link=None,
                     link=settings.SUPERSET_DOMAINS["edit"],

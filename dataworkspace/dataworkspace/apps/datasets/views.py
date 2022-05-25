@@ -192,7 +192,6 @@ def find_datasets(request):
     def _enrich_tags(dataset, tags_dict):
         dataset["sources"] = []
         for source_id in dataset["source_tag_ids"]:
-            logger.info(source_id)
             tag = tags_dict.get(str(source_id))
             dataset["sources"].append(tag)
 
@@ -200,8 +199,6 @@ def find_datasets(request):
         for topic_id in dataset["topic_tag_ids"]:
             tag = tags_dict.get(str(topic_id))
             dataset["topics"].append(tag)
-
-        logger.info(dataset["sources"])
 
     def _get_reference_dataset_last_updated(dataset_id):
         datasets = ReferenceDataset.objects.filter(uuid=dataset_id)
@@ -1166,23 +1163,26 @@ class DataGridDataView(DetailView):
         )
 
         if request.GET.get("download"):
-            correlation_id = {"correlation_id": str(uuid.uuid4())}
+            extra = {
+                "correlation_id": str(uuid.uuid4()),
+                **serializers.serialize("python", [source])[0],
+            }
 
             log_event(
                 request.user,
                 EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
-                source,
-                extra=correlation_id,
+                source.dataset,
+                extra=extra,
             )
 
             def write_metrics_to_eventlog(log_data):
                 logger.debug("write_metrics_to_eventlog %s", log_data)
 
-                log_data.update(correlation_id)
+                log_data.update(extra)
                 log_event(
                     request.user,
                     EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD_COMPLETE,
-                    source,
+                    source.dataset,
                     extra=log_data,
                 )
 

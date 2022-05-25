@@ -22,7 +22,7 @@ function pollForQueryResults(queryLogId, delay, delayStep, maxDelay) {
         document.getElementById('async-query-submitting').classList.add('govuk-!-display-none');
       }
       else {
-        document.getElementById('query-results').innerHTML = resp.html;
+        document.getElementById('query-results-wrapper').innerHTML = resp.html;
       }
     }
   }

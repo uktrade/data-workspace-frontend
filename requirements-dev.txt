@@ -24,6 +24,10 @@ asgiref==3.3.4
     #   django
 astroid==2.8.6
     # via pylint
+async-generator==1.10
+    # via
+    #   trio
+    #   trio-websocket
 async-timeout==3.0.1
     # via
     #   -r requirements.txt
@@ -36,7 +40,9 @@ attrs==20.2.0
     #   aiohttp
     #   flake8-bugbear
     #   jsonschema
+    #   outcome
     #   pytest
+    #   trio
 aws-requests-auth==0.4.3
     # via -r requirements.txt
 backcall==0.2.0
@@ -63,6 +69,7 @@ botocore==1.20.44
 cached-property==1.5.2
     # via
     #   -r requirements.txt
+    #   kombu
     #   tableschema
 cachetools==4.1.1
     # via
@@ -81,6 +88,7 @@ certifi==2020.6.20
     #   elasticsearch
     #   requests
     #   sentry-sdk
+    #   urllib3
 cffi==1.15.0
     # via
     #   -r requirements.txt
@@ -116,8 +124,11 @@ click-repl==0.2.0
     #   celery
 coverage==5.4
     # via pytest-cov
-cryptography==3.4.8
-    # via -r requirements.txt
+cryptography==37.0.2
+    # via
+    #   -r requirements.txt
+    #   pyopenssl
+    #   urllib3
 debugpy==1.2.1
     # via -r requirements-dev.in
 decorator==4.4.2
@@ -215,6 +226,8 @@ greenlet==0.4.16
     # via
     #   -r requirements.txt
     #   gevent
+h11==0.13.0
+    # via wsproto
 hawk-server-asyncio==0.0.13
     # via -r requirements.txt
 hiredis==1.1.0
@@ -225,13 +238,25 @@ idna==2.10
     # via
     #   -r requirements.txt
     #   requests
+    #   trio
+    #   urllib3
     #   yarl
 ijson==3.1.3
     # via
     #   -r requirements.txt
     #   tabulator
-importlib-metadata==4.10.1
-    # via pyppeteer
+importlib-metadata==4.11.3
+    # via
+    #   -r requirements.txt
+    #   click
+    #   flake8
+    #   jsonschema
+    #   kombu
+    #   markdown
+    #   pep517
+    #   pluggy
+    #   pyppeteer
+    #   pytest
 iniconfig==1.1.1
     # via pytest
 ipdb==0.13.7
@@ -316,6 +341,8 @@ openpyxl==3.0.6
     # via
     #   -r requirements.txt
     #   tabulator
+outcome==1.1.0
+    # via trio
 packaging==20.4
     # via
     #   -r requirements.txt
@@ -331,6 +358,8 @@ pep517==0.10.0
     # via pip-tools
 pexpect==4.8.0
     # via ipython
+pglast==3.10
+    # via -r requirements.txt
 pickleshare==0.7.5
     # via ipython
 pip-tools==6.1.0
@@ -349,8 +378,6 @@ prompt-toolkit==3.0.24
     #   click-repl
     #   ipython
     #   remote-pdb-client
-psqlparse==1.0rc7
-    # via -r requirements.txt
 psutil==5.7.2
     # via -r requirements.txt
 psycogreen==1.0.2
@@ -392,6 +419,8 @@ pylint-django==2.3.0
     # via -r requirements-dev.in
 pylint-plugin-utils==0.6
     # via pylint-django
+pyopenssl==22.0.0
+    # via urllib3
 pyparsing==2.4.7
     # via
     #   -r requirements.txt
@@ -402,6 +431,8 @@ pyrsistent==0.17.3
     # via
     #   -r requirements.txt
     #   jsonschema
+pysocks==1.7.1
+    # via urllib3
 pytest==6.2.4
     # via
     #   -r requirements-dev.in
@@ -443,8 +474,6 @@ redis==3.5.3
     #   -r requirements.txt
     #   celery-redbeat
     #   django-redis
-regex==2021.11.10
-    # via black
 remote-pdb==2.1.0
     # via -r requirements-dev.in
 remote-pdb-client==1.0.4
@@ -495,13 +524,16 @@ six==1.15.0
     #   packaging
     #   paste
     #   plotly
-    #   psqlparse
     #   python-dateutil
     #   requests-mock
     #   tableschema
     #   tabulator
     #   tenacity
     #   zenpy
+sniffio==1.2.0
+    # via trio
+sortedcontainers==2.4.0
+    # via trio
 soupsieve==2.1
     # via beautifulsoup4
 sqlalchemy==1.3.19
@@ -541,17 +573,32 @@ traitlets==5.0.5
     # via
     #   ipython
     #   matplotlib-inline
+trio==0.20.0
+    # via
+    #   selenium
+    #   trio-websocket
+trio-websocket==0.9.2
+    # via selenium
+typed-ast==1.5.3
+    # via
+    #   astroid
+    #   black
 typing-extensions==4.0.0
     # via
     #   -r requirements.txt
     #   aiohttp
+    #   asgiref
+    #   astroid
     #   black
+    #   importlib-metadata
+    #   pylint
+    #   yarl
 unicodecsv==0.14.1
     # via
     #   -r requirements.txt
     #   tableschema
     #   tabulator
-urllib3==1.26.5
+urllib3[secure,socks]==1.26.5
     # via
     #   -r requirements.txt
     #   botocore
@@ -581,6 +628,8 @@ werkzeug==1.0.1
     # via -r requirements.txt
 wrapt==1.12.1
     # via astroid
+wsproto==1.1.0
+    # via trio-websocket
 xlrd==2.0.1
     # via
     #   -r requirements.txt
@@ -593,8 +642,11 @@ yarl==1.5.1
     #   aiohttp
 zenpy==2.0.21
     # via -r requirements.txt
-zipp==3.7.0
-    # via importlib-metadata
+zipp==3.8.0
+    # via
+    #   -r requirements.txt
+    #   importlib-metadata
+    #   pep517
 zope-event==4.5.0
     # via
     #   -r requirements.txt
