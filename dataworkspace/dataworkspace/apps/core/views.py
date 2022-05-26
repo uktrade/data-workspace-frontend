@@ -1,4 +1,3 @@
-from contextlib import redirect_stderr
 import logging
 import os
 
