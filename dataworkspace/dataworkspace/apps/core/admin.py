@@ -67,7 +67,11 @@ class CSPRichTextEditorMixin:
 
 
 class NewsletterSubscriptionAdmin(admin.ModelAdmin):
-    list_display = ("user", "is_active")
+    list_display = (
+        "user",
+        "email_address",
+        "is_active",
+    )
 
 
 admin.site.register(NewsletterSubscription, NewsletterSubscriptionAdmin)

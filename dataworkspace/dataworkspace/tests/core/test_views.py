@@ -22,31 +22,6 @@ from dataworkspace.tests.common import (
 from dataworkspace.tests.factories import UserFactory
 
 
-class TestNewsletterViews(BaseTestCase):
-    def test_newsletter_defaults_to_subscribe(self):
-        response = self._authenticated_get(reverse("newsletter_subscription"))
-
-        # pylint: disable=no-member
-        assert response.status_code == 200
-        self.assertContains(response, "Subscribe to newsletter")
-
-    def test_subscribe(self):
-        data = {"action": "subscribe"}
-        self._authenticated_post(reverse("newsletter_subscription"), data)
-
-        subscription = NewsletterSubscription.objects.filter(user=self.user)
-        assert subscription.exists()
-        assert subscription.first().is_active
-
-    def test_unsubscribe(self):
-        data = {"action": "unsubscribe"}
-        self._authenticated_post(reverse("newsletter_subscription"), data)
-
-        subscription = NewsletterSubscription.objects.filter(user=self.user)
-        assert subscription.exists()
-        assert not subscription.first().is_active
-
-
 class TestSupportViews(BaseTestCase):
     def test_landing_page(self):
         response = self._authenticated_get(reverse("support"))
@@ -529,3 +504,30 @@ class TestDAGTaskStatus:
             )
             assert response.status_code == 200
             assert response.json() == {"state": "success"}
+
+
+class TestNewsletterViews(BaseTestCase):
+    def test_newsletter_defaults_to_subscribe(self):
+        response = self._authenticated_get(reverse("newsletter_subscription"))
+
+        # pylint: disable=no-member
+        assert response.status_code == 200
+        self.assertContains(response, "Subscribe to newsletter")
+
+    def test_subscribe(self):
+        email_address = "email@example.com"
+        data = {"submit_action": "subscribe", "email": email_address}
+        self._authenticated_post(reverse("newsletter_subscription"), data)
+
+        subscription = NewsletterSubscription.objects.filter(user=self.user)
+        assert subscription.exists()
+        assert subscription.first().is_active
+        assert subscription.first().email_address == email_address
+
+    def test_unsubscribe(self):
+        data = {"submit_action": "unsubscribe", "email": ""}
+        self._authenticated_post(reverse("newsletter_subscription"), data)
+
+        subscription = NewsletterSubscription.objects.filter(user=self.user)
+        assert subscription.exists()
+        assert not subscription.first().is_active

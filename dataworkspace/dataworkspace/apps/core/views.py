@@ -1,3 +1,4 @@
+from contextlib import redirect_stderr
 import logging
 import os
 
@@ -21,6 +22,7 @@ from django.views.generic import FormView
 from requests import HTTPError
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.forms import (
+    NewsletterSubscriptionForm,
     SupportForm,
     TechnicalSupportForm,
     UserSatisfactionSurveyForm,
@@ -121,21 +123,43 @@ class SupportView(FormView):
 
 class NewsletterSubscriptionView(View):
     def get(self, request):
-        subscribed = NewsletterSubscription.objects.filter(
-            user=self.request.user, is_active=True
-        ).exists()
+        subscribed = False
+        email = self.request.user.email
+
+        query = NewsletterSubscription.objects.filter(user=self.request.user)
+
+        if query.exists():
+            subscription = query.first()
+            subscribed = subscription.is_active
+            email = (
+                subscription.email_address if subscription.is_active else self.request.user.email
+            )
+
         return render(
             request,
             "core/newsletter_subscription.html",
             context={
                 "is_currently_subscribed": subscribed,
+                "form": NewsletterSubscriptionForm(initial={"email": email}),
             },
         )
 
     def post(self, request):
-        should_subscribe = request.POST.get("action") == "subscribe"
-        subscription, _ = NewsletterSubscription.objects.get_or_create(user=self.request.user)
+        form = NewsletterSubscriptionForm(data=request.POST)
+
+        if not form.is_valid():
+            messages.error(request, "Form not valid")
+            return self.get(request)
+
+        subscription, _ = NewsletterSubscription.objects.get_or_create(user=request.user)
+
+        should_subscribe = form.cleaned_data.get("submit_action") == "subscribe"
+        logger.info(form.cleaned_data["submit_action"])
         subscription.is_active = should_subscribe
+
+        if should_subscribe:
+            subscription.email_address = form.cleaned_data.get("email")
+
         subscription.save()
 
         messages.success(

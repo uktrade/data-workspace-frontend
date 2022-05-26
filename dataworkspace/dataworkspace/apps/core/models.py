@@ -149,6 +149,7 @@ class NewsletterSubscription(TimeStampedModel):
         related_name="newsletter_signups",
     )
     is_active = models.BooleanField(default=False)
+    email_address = models.CharField(max_length=256)
 
 
 class Team(TimeStampedModel):

@@ -7,22 +7,42 @@
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-      <h1 class="govuk-heading-xl">{{ is_currently_subscribed|yesno:"Unsubscribe from,Subscribe to" }} newsletter</h1>
       {% if is_currently_subscribed %}
-        <p class="govuk-body-m">Please unsubscribe below if you no longer wish to receive Data Workspace emails.</p>
-
+        <h1 class="govuk-heading-xl">Unsubscribe from our newsletter</h1>
+        <p class="govuk-body">
+          Please unsubscribe below if you no longer wish to receive the Data Workspace newsletter. You can re-subscribe at any time.
+        </p>
       {% else %}
-        <p class="govuk-body-m">Please subscribe below if you would like to receive Data Workspace emails</p>
+        <h1 class="govuk-heading-xl">Subscribe to our newsletter</h1>
+        <p class="govuk-body">
+      Please confirm your email address below if you would like to receive monthly updates on Data Workspace. These include:
+      <ul class="govuk-list govuk-list--bullet">
+        <li>New and upcoming features</li>
+        <li>New datasets and dashboards</li>
+        <li>Training and events</li>
+      </ul>
+    </p>
       {% endif %}
-      <p class="govuk-body-m">We strongly recommend you receive these emails.</p>
-      <p class="govuk-body-m">UKEF and Trade Remedies Authority (TRA) colleagues - please note that not all content
-        may be relevant to you. If you are unsure whether content is applicable to you, please email your Internal
-        Communications Team.</p>
 
       <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        <input type="hidden" name="action" value="{{ is_currently_subscribed|yesno:"unsubscribe,subscribe" }}"/>
-        <button type="submit" class="govuk-button">{{ is_currently_subscribed|yesno:"Unsubscribe,Subscribe" }}</button>
+        <div class="govuk-form-group">
+    
+          {% if is_currently_subscribed %}
+          <label class="govuk-label" for="email">
+            Your subscription email address
+        </label>
+          <input class="govuk-input" id="{{ form.email.id_for_label }}" name="{{ form.email.name }}" type="email" value="{{ form.email.value }}" disabled />
+          {% else %}
+          <label class="govuk-label" for="email">
+            Your email address
+        </label>
+          <input class="govuk-input" id="{{ form.email.id_for_label }}" name="{{ form.email.name }}" type="email" value="{{ form.email.value }}" required />
+          {% endif %}
+        </div> 
+        
+        <input type="hidden" id="{{ form.submit_action.id_for_label }}" name="{{ form.submit_action.name }}" value="{{ is_currently_subscribed|yesno:"unsubscribe,subscribe" }}"/>
+        <button data-module="govuk-button" data-prevent-double-click="true" type="submit" class="govuk-button">{{ is_currently_subscribed|yesno:"Unsubscribe,Subscribe" }}</button>
       </form>
 
     </div>
