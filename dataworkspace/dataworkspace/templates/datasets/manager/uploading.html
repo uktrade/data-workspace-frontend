@@ -26,7 +26,7 @@
     window.pollForDagStateChange(
         '{% url "create-table-task-status" execution_date task_name as status_url %}{{ status_url|escapejs }}',
         '{{ next_step|escapejs }}',
-        '{% url "datasets:manager:upload-failed" pk=source.dataset_id source_uuid=source.id as failure_url %}{{ failure_url|escapejs %}?{{ request.GET.urlencode|escapejs }}',
+        '{% url "datasets:manager:upload-failed" pk=source.dataset_id source_uuid=source.id as failure_url %}{{ failure_url|escapejs }}?{{ request.GET.urlencode|escapejs }}',
         500
     );
   </script>
