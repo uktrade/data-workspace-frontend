@@ -1734,8 +1734,11 @@ class DatasetChartsView(WaffleFlagMixin, View):
 
 
 def find_data_dictionary_view(request, schema_name, table_name):
-    source_table = get_object_or_404(SourceTable, schema=schema_name, table=table_name)
-    return redirect("datasets:data_dictionary", source_uuid=source_table.id)
+    query = SourceTable.objects.filter(schema=schema_name, table=table_name)
+    if not query.exists():
+        raise Http404
+
+    return redirect("datasets:data_dictionary", source_uuid=query.first().id)
 
 
 class DataDictionaryView(View):
