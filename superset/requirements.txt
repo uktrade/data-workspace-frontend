@@ -10,7 +10,7 @@ alembic==1.6.2
     # via flask-migrate
 amqp==2.6.1
     # via kombu
-apache-superset==1.4.1
+apache-superset==1.4.2
     # via -r requirements.in
 apispec[yaml]==3.3.2
     # via flask-appbuilder
