@@ -1733,10 +1733,17 @@ class DatasetChartsView(WaffleFlagMixin, View):
         )
 
 
+def find_data_dictionary_view(request, schema_name, table_name):
+    source_table = get_object_or_404(SourceTable, schema=schema_name, table=table_name)
+    return redirect("datasets:data_dictionary", source_uuid=source_table.id)
+
+
 class DataDictionaryView(View):
-    def get(self, request, dataset_uuid, source_uuid):
+    def get(self, request, source_uuid):
         source_table = get_object_or_404(SourceTable, pk=source_uuid)
-        dataset = find_dataset(dataset_uuid, self.request.user, DataSet)
+        dataset = None
+        if request.GET.get("dataset_uuid"):
+            dataset = find_dataset(request.GET.get("dataset_uuid"), self.request.user, DataSet)
         columns = datasets_db.get_columns(
             source_table.database.memorable_name,
             schema=source_table.schema,
@@ -1827,11 +1834,16 @@ class DataDictionaryEditView(View):
         for name, value in request.POST.items():
             if name == "csrfmiddlewaretoken":
                 continue
-            field, created = SourceTableFieldDefinition.objects.get_or_create(
+            field, _ = SourceTableFieldDefinition.objects.get_or_create(
                 source_table=source_table, field=name
             )
             field.description = value[:1024]
             field.save()
 
         messages.success(self.request, "Changes saved successfully")
-        return redirect("datasets:data_dictionary", dataset.id, source_table.id)
+        redirect_url = (
+            reverse("datasets:data_dictionary", args=[source_table.id])
+            + "?dataset_uuid="
+            + str(dataset.id)
+        )
+        return redirect(redirect_url)

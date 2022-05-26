@@ -15,7 +15,7 @@
             </a>
           </li>
           <li class="govuk-breadcrumbs__list-item">
-            <a href="{% url "datasets:data_dictionary" dataset_uuid=dataset.id source_uuid=source_table.id %}"
+            <a href="{% url "datasets:data_dictionary" source_uuid=source_table.id %}"
             class="govuk-link govuk-link--no-visited-state">
             Data dictionary
             </a>
@@ -30,26 +30,15 @@
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-l">Edit data dictionary</h1>
+      <p class="govuk-body govuk-body-m" style="float:left">
+        "{{ source_table.schema }}"."{{ source_table.table }}"
+        </p>
     </div>
   </div>
   {% block success_banner %}{% endblock %}
   <div class="govuk-grid-row govuk-!-margin-top-6" id="update">
     <div class="govuk-grid-column-full">
         <form method="post">
-            <div style="position:sticky;background-color:white;overflow:hidden;top:30px" class="govuk-!-padding-top-4">
-                <p class="govuk-body govuk-body-m" style="float:left">
-                    "{{ source_table.schema }}"."{{ source_table.table }}"
-                  </p>
-            <div class="govuk-button-group" style="float:right">
-                <a href="{% url "datasets:data_dictionary" dataset_uuid=dataset.id source_uuid=source_table.id %}"
-                class="govuk-link govuk-link--no-visited-state">
-                Cancel changes
-                </a>
-                <button class="govuk-button" type="submit">
-                    Save changes
-                </button>
-            </div>
-            </div>
         {% csrf_token %}
       <table class="govuk-table">
         <thead>
@@ -76,8 +65,27 @@
             {% endfor %}
         </tbody>
       </table>
+      <div style="overflow:hidden;top:30px" class="govuk-!-padding-top-4">
+        <div class="govuk-button-group" style="float:right">
+            <a href="{% url "datasets:data_dictionary" source_uuid=source_table.id %}"
+            class="govuk-link govuk-link--no-visited-state">
+            Cancel changes
+            </a>
+            <button class="govuk-button" type="submit">
+                Save changes
+            </button>
+        </div>
+      </div>
     </form>
     </div>
+  </div>
+  <div class="govuk-!-padding-top-2">
+    <a class="govuk-link govuk-link--no-visited-state app-back-to-top__link" href="{{ request.path }}#body" style="float:left">
+        <svg role="presentation" focusable="false" class="app-back-to-top__icon" xmlns="http://www.w3.org/2000/svg" width="13" height="17" viewBox="0 0 13 17">
+        <path fill="currentColor" d="M6.5 0L0 6.5 1.4 8l4-4v12.7h2V4l4.3 4L13 6.4z"></path>
+        </svg>
+        Back to top
+    </a>
   </div>
 
 {% endblock content %}

@@ -49,7 +49,7 @@
         Data preview
       </h2>
       <p class="govuk-body govuk-body-m">
-        <a href="{% url "datasets:data_dictionary" dataset_uuid=object.dataset.id source_uuid=object.id %}"
+        <a href="{% url "datasets:data_dictionary" source_uuid=object.id %}?dataset_uuid={{object.dataset.id}}"
         class="govuk-link govuk-link--no-visited-state">
         Data dictionary
         </a>
