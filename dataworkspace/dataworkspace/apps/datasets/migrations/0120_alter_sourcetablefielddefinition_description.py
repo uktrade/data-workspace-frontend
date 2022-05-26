@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0119_alter_sourcetablefielddefinition_source_table'),
+        ("datasets", "0119_alter_sourcetablefielddefinition_source_table"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='sourcetablefielddefinition',
-            name='description',
+            model_name="sourcetablefielddefinition",
+            name="description",
             field=models.CharField(blank=True, max_length=1024, null=True),
         ),
     ]
