@@ -3,7 +3,7 @@ FROM debian:buster-slim
 RUN \
 	apt-get update && \
 	apt-get install -y --no-install-recommends \
-		locales=2.28-10 && \
+		locales=2.28-10+deb10u1 && \
 	echo "en_GB.UTF-8 UTF-8" >> /etc/locale.gen && \
 	locale-gen en_GB.utf8 && \
 	rm -rf /var/lib/apt/lists/*
@@ -25,7 +25,7 @@ RUN \
 	echo "deb http://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster-updates main" >> /etc/apt/sources.list && \
 	echo "deb http://cran.ma.imperial.ac.uk/bin/linux/debian buster-cran35/" >> /etc/apt/sources.list && \
 	echo "Acquire{Check-Valid-Until false; Retries 10;}" >> /etc/apt/apt.conf && \
-	until apt-key adv --keyserver keys.gnupg.net --recv-key 'E19F5F87128899B192B1A2C2AD5F960A256A04AF'; do sleep 10; done && \
+	until apt-key adv --keyserver keyserver.ubuntu.com --recv-key '95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7'; do sleep 10; done && \
 	rm -rf /var/lib/apt/lists/* && \
 	apt-get update && \
 	apt-get install -y --no-install-recommends \
@@ -37,8 +37,8 @@ RUN \
 		libfontconfig1-dev=2.13.1-2 \
 		libgit2-dev=0.27.7+dfsg.1-0.2 \
 		libgsl-dev=2.5+dfsg-6 \
-		libxml2-dev=2.9.4+dfsg1-7+deb10u1 \
-		libpq-dev=11.10-0+deb10u1 \
+		libxml2-dev=2.9.4+dfsg1-7+deb10u4 \
+		libpq-dev=11.16-0+deb10u1 \
 		libgdal-dev=2.4.0+dfsg-1+b1 \
 		libudunits2-dev=2.2.26-5 \
 		libjq-dev=1.5+dfsg-2+b1 \
