@@ -151,6 +151,9 @@ class NewsletterSubscription(TimeStampedModel):
     is_active = models.BooleanField(default=False)
     email_address = models.CharField(max_length=256)
 
+    def __str__(self):
+        return str(self.user)
+
 
 class Team(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
