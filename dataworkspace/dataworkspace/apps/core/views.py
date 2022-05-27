@@ -122,11 +122,11 @@ class SupportView(FormView):
 
 
 class NewsletterSubscriptionView(View):
-    def get(self, request):
+    def _get_subscription_info(self, user):
         subscribed = False
-        email = self.request.user.email
+        email = user.email
 
-        query = NewsletterSubscription.objects.filter(user=self.request.user)
+        query = NewsletterSubscription.objects.filter(user=user)
 
         if query.exists():
             subscription = query.first()
@@ -135,6 +135,10 @@ class NewsletterSubscriptionView(View):
                 subscription.email_address if subscription.is_active else self.request.user.email
             )
 
+        return subscribed, email
+
+    def get(self, request):
+        subscribed, email = self._get_subscription_info(request.user)
         return render(
             request,
             "core/newsletter_subscription.html",
@@ -148,8 +152,16 @@ class NewsletterSubscriptionView(View):
         form = NewsletterSubscriptionForm(data=request.POST)
 
         if not form.is_valid():
+            subscribed, _ = self._get_subscription_info(self.request.user)
             messages.error(request, "Form not valid")
-            return self.get(request)
+            return render(
+                request,
+                "core/newsletter_subscription.html",
+                context={
+                    "is_currently_subscribed": subscribed,
+                    "form": form,
+                },
+            )
 
         subscription, _ = NewsletterSubscription.objects.get_or_create(user=request.user)
 

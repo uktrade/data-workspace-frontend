@@ -5,6 +5,7 @@
 {% block page_title %}Subscription to newsletter{% endblock page_title %}
 
 {% block content %}
+{{errors}}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       {% if is_currently_subscribed %}
@@ -26,13 +27,19 @@
 
       <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        <div class="govuk-form-group">
-    
+        <div class="govuk-form-group {% if form.errors %}govuk-form-group--error{% endif %}">
+          {% for error, msgs in form.errors.items %}
+            <p id="passport-issued-error" class="govuk-error-message">
+              <span class="govuk-visually-hidden">Error:</span> {% for msg in msgs %}{{ msg }} {% endfor %}
+            </p>
+          {% endfor %}
           {% if is_currently_subscribed %}
-          <label class="govuk-label" for="email">
+          <label class="govuk-label" for="{{ form.email.id_for_label }}">
             Your subscription email address
         </label>
-          <input class="govuk-input" id="{{ form.email.id_for_label }}" name="{{ form.email.name }}" type="email" value="{{ form.email.value }}" disabled />
+          
+          <input name="{{ form.email.name }}" type="hidden" value="{{ form.email.value }}"/>
+          <input class="govuk-input" id="{{ form.email.id_for_label }}" value="{{ form.email.value }}" disabled />
           {% else %}
           <label class="govuk-label" for="email">
             Your email address

@@ -90,7 +90,7 @@ class UserSatisfactionSurveyForm(GOVUKDesignSystemForm):
 
 class NewsletterSubscriptionForm(forms.Form):
     submit_action = forms.CharField()
-    email = forms.EmailField(required=False)
+    email = forms.CharField(required=True)
 
 
 class TechnicalSupportForm(GOVUKDesignSystemForm):

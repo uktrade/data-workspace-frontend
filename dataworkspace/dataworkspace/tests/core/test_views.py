@@ -525,7 +525,7 @@ class TestNewsletterViews(BaseTestCase):
         assert subscription.first().email_address == email_address
 
     def test_unsubscribe(self):
-        data = {"submit_action": "unsubscribe", "email": ""}
+        data = {"submit_action": "unsubscribe", "email": "emailis@mandatory.com"}
         self._authenticated_post(reverse("newsletter_subscription"), data)
 
         subscription = NewsletterSubscription.objects.filter(user=self.user)
