@@ -4,6 +4,7 @@ from rest_framework import serializers
 from dataworkspace.apps.datasets.models import (
     DataSet,
     ReferenceDataset,
+    VisualisationCatalogueItem,
     VisualisationLink,
 )
 from dataworkspace.apps.eventlog.models import EventLog
@@ -91,7 +92,7 @@ class EventLogDataUserSerializer(serializers.ModelSerializer):
 
 class EventLogRelatedObjectField(serializers.RelatedField):
     def to_representation(self, value):  # pylint: disable=inconsistent-return-statements
-        if isinstance(value, DataSet):
+        if isinstance(value, (DataSet, VisualisationCatalogueItem)):
             return EventLogDatasetSerializer(value).data
         if isinstance(value, ReferenceDataset):
             return EventLogReferenceDatasetSerializer(value).data
