@@ -185,6 +185,9 @@ def _get_datasets_data_for_user_matching_query(
             datasets, query, id_field, user=user
         )
 
+    #####################################################################
+    # Filter out datasets that the user is not allowed to even know about
+
     visibility_filter = Q(published=True)
 
     if datasets.model is ReferenceDataset:
@@ -206,7 +209,9 @@ def _get_datasets_data_for_user_matching_query(
 
     datasets = datasets.filter(visibility_filter)
 
+    #######################################################
     # Filter out datasets that don't match the search terms
+
     datasets = datasets.annotate(search_rank=SearchRank(F("search_vector"), query))
 
     if query:
@@ -215,7 +220,9 @@ def _get_datasets_data_for_user_matching_query(
             source_table_match = Q(sourcetable__table=query)
         datasets = datasets.filter(source_table_match | Q(search_vector=query))
 
-    # Mark up whether the user can access the data in the dataset.
+    #########################################################################
+    # Annotate datasets for filtering in Python and showing totals in filters
+
     access_filter = Q()
     bookmark_filter = Q(referencedatasetbookmark__user=user)
 
