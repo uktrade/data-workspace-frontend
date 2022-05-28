@@ -36,7 +36,6 @@ from dataworkspace.apps.datasets.models import (
 )
 from dataworkspace.apps.datasets.search import (
     _get_datasets_data_for_user_matching_query,
-    _get_visualisations_data_for_user_matching_query,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.your_files.models import UploadedTable
@@ -669,7 +668,7 @@ def test_datasets_and_visualisations_doesnt_return_duplicate_results(access_type
         )
         assert len(references) == len(set(reference["uuid"] for reference in references))
 
-        visualisations = _get_visualisations_data_for_user_matching_query(
+        visualisations = _get_datasets_data_for_user_matching_query(
             VisualisationCatalogueItem.objects, query="", id_field="id", user=u
         )
         assert len(visualisations) == len(

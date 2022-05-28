@@ -184,6 +184,11 @@ def _get_datasets_data_for_user_matching_query(
     id_field,
     user,
 ):
+    if datasets.model is VisualisationCatalogueItem:
+        return _get_visualisations_data_for_user_matching_query(
+            datasets, query, id_field, user=user
+        )
+
     is_reference_query = datasets.model is ReferenceDataset
 
     visibility_filter = Q(published=True)
@@ -381,7 +386,7 @@ def _sorted_datasets_and_visualisations_matching_query_for_user(query, user, sor
         user=user,
     )
 
-    visualisations = _get_visualisations_data_for_user_matching_query(
+    visualisations = _get_datasets_data_for_user_matching_query(
         VisualisationCatalogueItem.objects.live(), query, id_field="id", user=user
     )
 
