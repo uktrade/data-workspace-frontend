@@ -77,28 +77,32 @@ def _get_visualisations_data_for_user_matching_query(
     )
 
     visualisations = visualisations.annotate(
-        _has_access=Case(
-            When(access_filter, then=True),
-            default=False,
-            output_field=BooleanField(),
-        )
-        if access_filter
-        else Value(True, BooleanField()),
+        has_access=BoolOr(
+            Case(
+                When(access_filter, then=True),
+                default=False,
+                output_field=BooleanField(),
+            )
+            if access_filter
+            else Value(True, BooleanField())
+        ),
     )
 
     bookmark_filter = Q(visualisationbookmark__user=user)
     visualisations = visualisations.annotate(
-        _is_bookmarked=Case(
-            When(bookmark_filter, then=True),
-            default=False,
-            output_field=BooleanField(),
-        )
-        if bookmark_filter
-        else Value(False, BooleanField()),
+        is_bookmarked=BoolOr(
+            Case(
+                When(bookmark_filter, then=True),
+                default=False,
+                output_field=BooleanField(),
+            )
+            if bookmark_filter
+            else Value(False, BooleanField())
+        ),
     )
 
     # can't currently subscribe to visualisations
-    visualisations = visualisations.annotate(_is_subscribed=Value(False, BooleanField()))
+    visualisations = visualisations.annotate(is_subscribed=Value(False, BooleanField()))
 
     # Pull in the source tag IDs for the dataset
     visualisations = visualisations.annotate(
@@ -126,31 +130,6 @@ def _get_visualisations_data_for_user_matching_query(
             output_field=BooleanField(),
         ),
         has_visuals=Value(False, BooleanField()),
-    )
-
-    # We are joining on the user permissions table to determine `_has_access`` to the visualisation, so we need to
-    # group them and remove duplicates. We aggregate all the `_has_access` fields together and return true if any
-    # of the records say that access is available.
-    visualisations = (
-        visualisations.values(
-            id_field,
-            "name",
-            "slug",
-            "short_description",
-            "search_rank",
-            "source_tag_names",
-            "source_tag_ids",
-            "topic_tag_names",
-            "topic_tag_ids",
-            "data_type",
-            "published",
-            "published_at",
-            "is_open_data",
-            "has_visuals",
-        )
-        .annotate(has_access=BoolOr("_has_access"))
-        .annotate(is_bookmarked=BoolOr("_is_bookmarked"))
-        .annotate(is_subscribed=BoolOr("_is_subscribed"))
     )
 
     return visualisations.values(
@@ -250,33 +229,37 @@ def _get_datasets_data_for_user_matching_query(
         bookmark_filter = Q(datasetbookmark__user=user)
 
     datasets = datasets.annotate(
-        _has_access=Case(
-            When(access_filter, then=True),
-            default=False,
-            output_field=BooleanField(),
-        )
-        if access_filter
-        else Value(True, BooleanField()),
+        has_access=BoolOr(
+            Case(
+                When(access_filter, then=True),
+                default=False,
+                output_field=BooleanField(),
+            )
+            if access_filter
+            else Value(True, BooleanField())
+        ),
     )
 
     datasets = datasets.annotate(
-        _is_bookmarked=Case(
-            When(bookmark_filter, then=True),
-            default=False,
-            output_field=BooleanField(),
-        )
-        if bookmark_filter
-        else Value(False, BooleanField()),
+        is_bookmarked=BoolOr(
+            Case(
+                When(bookmark_filter, then=True),
+                default=False,
+                output_field=BooleanField(),
+            )
+            if bookmark_filter
+            else Value(False, BooleanField())
+        ),
     )
 
     subscription_filter = Q(subscriptions__user=user)
 
     datasets = datasets.annotate(
-        _is_subscribed=Case(
-            When(subscription_filter, then=True), default=False, output_field=BooleanField()
+        is_subscribed=BoolOr(
+            Case(When(subscription_filter, then=True), default=False, output_field=BooleanField())
+            if subscription_filter and datasets.model is DataSet
+            else Value(False, BooleanField())
         )
-        if subscription_filter and datasets.model is DataSet
-        else Value(False, BooleanField())
     )
 
     # Pull in the source tag IDs for the dataset
@@ -317,31 +300,6 @@ def _get_datasets_data_for_user_matching_query(
                 output_field=BooleanField(),
             ),
         )
-
-    # We are joining on the user permissions table to determine `_has_access`` to the dataset, so we need to
-    # group them and remove duplicates. We aggregate all the `_has_access` fields together and return true if any
-    # of the records say that access is available.
-    datasets = (
-        datasets.values(
-            id_field,
-            "name",
-            "slug",
-            "short_description",
-            "search_rank",
-            "source_tag_names",
-            "source_tag_ids",
-            "topic_tag_names",
-            "topic_tag_ids",
-            "data_type",
-            "published",
-            "published_at",
-            "is_open_data",
-            "has_visuals",
-        )
-        .annotate(has_access=BoolOr("_has_access"))
-        .annotate(is_bookmarked=BoolOr("_is_bookmarked"))
-        .annotate(is_subscribed=BoolOr("_is_subscribed"))
-    )
 
     return datasets.values(
         id_field,
