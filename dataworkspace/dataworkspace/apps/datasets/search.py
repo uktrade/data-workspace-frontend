@@ -188,25 +188,21 @@ def _get_datasets_data_for_user_matching_query(
     visibility_filter = Q(published=True)
 
     if datasets.model is ReferenceDataset:
-        reference_type = DataSetType.REFERENCE
-        reference_perm = dataset_type_to_manage_unpublished_permission_codename(reference_type)
-
-        if user.has_perm(reference_perm):
+        if user.has_perm(
+            dataset_type_to_manage_unpublished_permission_codename(DataSetType.REFERENCE)
+        ):
             visibility_filter |= Q(published=False)
 
     if datasets.model is DataSet:
-        master_type, datacut_type = (
-            DataSetType.MASTER,
-            DataSetType.DATACUT,
-        )
-        master_perm = dataset_type_to_manage_unpublished_permission_codename(master_type)
-        datacut_perm = dataset_type_to_manage_unpublished_permission_codename(datacut_type)
+        if user.has_perm(
+            dataset_type_to_manage_unpublished_permission_codename(DataSetType.MASTER)
+        ):
+            visibility_filter |= Q(published=False, type=DataSetType.MASTER)
 
-        if user.has_perm(master_perm):
-            visibility_filter |= Q(published=False, type=master_type)
-
-        if user.has_perm(datacut_perm):
-            visibility_filter |= Q(published=False, type=datacut_type)
+        if user.has_perm(
+            dataset_type_to_manage_unpublished_permission_codename(DataSetType.DATACUT)
+        ):
+            visibility_filter |= Q(published=False, type=DataSetType.DATACUT)
 
     datasets = datasets.filter(visibility_filter)
 
