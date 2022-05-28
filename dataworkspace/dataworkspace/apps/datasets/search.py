@@ -1,5 +1,4 @@
 from django.contrib.postgres.aggregates.general import ArrayAgg, BoolOr
-from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.search import SearchRank
 from django.db.models import (
     Exists,
@@ -11,7 +10,6 @@ from django.db.models import (
     When,
     BooleanField,
     OuterRef,
-    CharField,
 )
 from django.db.models import QuerySet
 
@@ -149,7 +147,6 @@ def _get_visualisations_data_for_user_matching_query(
             "published_at",
             "is_open_data",
             "has_visuals",
-            "eligibility_criteria",
         )
         .annotate(has_access=BoolOr("_has_access"))
         .annotate(is_bookmarked=BoolOr("_is_bookmarked"))
@@ -171,7 +168,6 @@ def _get_visualisations_data_for_user_matching_query(
         "published_at",
         "is_open_data",
         "has_visuals",
-        "eligibility_criteria",
         "has_access",
         "is_bookmarked",
         "is_subscribed",
@@ -197,10 +193,6 @@ def _get_datasets_data_for_user_matching_query(
 
         if user.has_perm(reference_perm):
             visibility_filter |= Q(published=False)
-
-        datasets = datasets.annotate(
-            eligibility_criteria=Value(None, ArrayField(CharField(max_length=20)))
-        )
 
     if datasets.model is DataSet:
         master_type, datacut_type = (
@@ -336,7 +328,6 @@ def _get_datasets_data_for_user_matching_query(
             "published_at",
             "is_open_data",
             "has_visuals",
-            "eligibility_criteria",
         )
         .annotate(has_access=BoolOr("_has_access"))
         .annotate(is_bookmarked=BoolOr("_is_bookmarked"))
@@ -358,7 +349,6 @@ def _get_datasets_data_for_user_matching_query(
         "published_at",
         "is_open_data",
         "has_visuals",
-        "eligibility_criteria",
         "has_access",
         "is_bookmarked",
         "is_subscribed",

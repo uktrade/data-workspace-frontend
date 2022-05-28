@@ -247,7 +247,6 @@ def expected_search_result(catalogue_item, **kwargs):
         "is_subscribed": False,
         "has_visuals": mock.ANY,
         "is_open_data": getattr(catalogue_item, "user_access_type", None) == UserAccessType.OPEN,
-        "eligibility_criteria": mock.ANY,
         "sources": mock.ANY,
         "topics": mock.ANY,
         "last_updated": mock.ANY,
