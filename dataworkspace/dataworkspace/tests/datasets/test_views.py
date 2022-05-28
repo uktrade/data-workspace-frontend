@@ -669,7 +669,7 @@ def test_datasets_and_visualisations_doesnt_return_duplicate_results(access_type
 
     for u in [normal_user, staff_user]:
         datasets = _get_datasets_data_for_user_matching_query(
-            DataSet.objects.live(), query="", use={}, user=u
+            DataSet.objects.live(), query="", user=u
         )
         assert len(datasets) == len(set(dataset["id"] for dataset in datasets))
 
