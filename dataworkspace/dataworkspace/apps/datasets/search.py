@@ -188,7 +188,6 @@ def _get_visualisations_data_for_user_matching_query(visualisations: QuerySet, q
 def _get_datasets_data_for_user_matching_query(
     datasets: QuerySet,
     query,
-    data_type=None,
     user=None,
     id_field="id",
 ):
@@ -376,13 +375,13 @@ def _get_datasets_data_for_user_matching_query(
     )
 
 
-def _sorted_datasets_and_visualisations_matching_query_for_user(query, data_type, user, sort_by):
+def _sorted_datasets_and_visualisations_matching_query_for_user(query, user, sort_by):
     """
     Retrieves all master datasets, datacuts, reference datasets and visualisations (i.e. searchable items)
     and returns them, sorted by incoming sort field, default is desc(search_rank).
     """
     master_and_datacut_datasets = _get_datasets_data_for_user_matching_query(
-        DataSet.objects.live(), query, data_type, user=user, id_field="id"
+        DataSet.objects.live(), query, user=user, id_field="id"
     )
 
     reference_datasets = _get_datasets_data_for_user_matching_query(
@@ -413,7 +412,6 @@ def search_for_datasets(user, filters: SearchDatasetsFilters, matcher) -> tuple:
     all_datasets_visible_to_user_matching_query = (
         _sorted_datasets_and_visualisations_matching_query_for_user(
             query=filters.query,
-            data_type=filters.data_type,
             user=user,
             sort_by=filters.sort_type,
         )
