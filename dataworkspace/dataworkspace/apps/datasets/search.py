@@ -219,7 +219,7 @@ def _get_datasets_data_for_user_matching_query(
     access_filter = Q()
     bookmark_filter = Q(referencedatasetbookmark__user=user)
 
-    if datasets.model is not ReferenceDataset:
+    if datasets.model is DataSet:
         user_email_domain = user.email.split("@")[1]
         access_filter &= (
             Q(
@@ -263,7 +263,7 @@ def _get_datasets_data_for_user_matching_query(
         _is_subscribed=Case(
             When(subscription_filter, then=True), default=False, output_field=BooleanField()
         )
-        if subscription_filter and datasets.model is not ReferenceDataset
+        if subscription_filter and datasets.model is DataSet
         else Value(False, BooleanField())
     )
 
@@ -289,7 +289,8 @@ def _get_datasets_data_for_user_matching_query(
             is_open_data=Value(False, BooleanField()),
             has_visuals=Value(False, BooleanField()),
         )
-    else:
+
+    if datasets.model is DataSet:
         dataset_visual_filter = DataSetVisualisation.objects.filter(dataset_id=OuterRef("id"))
         datasets = datasets.annotate(
             data_type=F("type"),
