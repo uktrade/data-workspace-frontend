@@ -188,8 +188,8 @@ def _get_visualisations_data_for_user_matching_query(visualisations: QuerySet, q
 def _get_datasets_data_for_user_matching_query(
     datasets: QuerySet,
     query,
+    id_field,
     user=None,
-    id_field="id",
 ):
     is_reference_query = datasets.model is ReferenceDataset
 
@@ -381,14 +381,17 @@ def _sorted_datasets_and_visualisations_matching_query_for_user(query, user, sor
     and returns them, sorted by incoming sort field, default is desc(search_rank).
     """
     master_and_datacut_datasets = _get_datasets_data_for_user_matching_query(
-        DataSet.objects.live(), query, user=user, id_field="id"
+        DataSet.objects.live(),
+        query,
+        id_field="id",
+        user=user,
     )
 
     reference_datasets = _get_datasets_data_for_user_matching_query(
         ReferenceDataset.objects.live(),
         query,
-        user=user,
         id_field="uuid",
+        user=user,
     )
 
     visualisations = _get_visualisations_data_for_user_matching_query(
