@@ -36,6 +36,9 @@ variable appstream_domain {}
 variable support_domain {}
 
 variable admin_db_instance_class {}
+variable admin_db_instance_parameter_group_family {
+  default = "postgres10"
+}
 variable admin_db_instance_version {
   default = "10.15"
 }

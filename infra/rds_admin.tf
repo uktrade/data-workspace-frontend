@@ -6,6 +6,7 @@ resource "aws_db_instance" "admin" {
   engine = "postgres"
   engine_version = var.admin_db_instance_version
   instance_class = "${var.admin_db_instance_class}"
+  parameter_group_name = "${aws_db_parameter_group.admin.name}"
 
   apply_immediately = true
 
@@ -21,12 +22,24 @@ resource "aws_db_instance" "admin" {
   vpc_security_group_ids = ["${aws_security_group.admin_db.id}"]
   db_subnet_group_name = "${aws_db_subnet_group.admin.name}"
 
+  enabled_cloudwatch_logs_exports = ["postgresql"]
+
   lifecycle {
     ignore_changes = [
       "snapshot_identifier",
       "final_snapshot_identifier",
       "engine_version",
     ]
+  }
+}
+
+resource "aws_db_parameter_group" "admin" {
+  name   = "${var.prefix}-admin-${var.admin_db_instance_parameter_group_family}"
+  family = "${var.admin_db_instance_parameter_group_family}"
+
+  parameter {
+    name  = "log_min_duration_statement"
+    value = "500"
   }
 }
 
