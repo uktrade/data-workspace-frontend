@@ -10,6 +10,7 @@ from django.db.models import (
     When,
     BooleanField,
     OuterRef,
+    FilteredRelation,
 )
 from django.db.models import QuerySet
 
@@ -88,10 +89,18 @@ def _get_datasets_data_for_user_matching_query(
 
     if datasets.model is DataSet or datasets.model is VisualisationCatalogueItem:
         if datasets.model is DataSet:
-            user_permission_filter = Q(datasetuserpermission__user=user)
+            datasets = datasets.annotate(
+                user_permission=FilteredRelation(
+                    "datasetuserpermission", condition=Q(datasetuserpermission__user=user)
+                ),
+            )
         if datasets.model is VisualisationCatalogueItem:
-            user_permission_filter = Q(visualisationuserpermission__user=user)
-
+            datasets = datasets.annotate(
+                user_permission=FilteredRelation(
+                    "visualisationuserpermission",
+                    condition=Q(visualisationuserpermission__user=user),
+                ),
+            )
         datasets = datasets.annotate(
             has_access=BoolOr(
                 Case(
@@ -105,8 +114,8 @@ def _get_datasets_data_for_user_matching_query(
                         | (
                             Q(
                                 user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
+                                user_permission__user__isnull=False,
                             )
-                            & user_permission_filter
                         )
                         | Q(authorized_email_domains__contains=[user.email.split("@")[1]]),
                         then=True,
@@ -120,18 +129,28 @@ def _get_datasets_data_for_user_matching_query(
     # is_bookmarked
 
     if datasets.model is ReferenceDataset:
-        bookmark_filter = Q(referencedatasetbookmark__user=user)
-
+        datasets = datasets.annotate(
+            user_bookmark=FilteredRelation(
+                "referencedatasetbookmark", condition=Q(referencedatasetbookmark__user=user)
+            )
+        )
     if datasets.model is DataSet:
-        bookmark_filter = Q(datasetbookmark__user=user)
-
+        datasets = datasets.annotate(
+            user_bookmark=FilteredRelation(
+                "datasetbookmark", condition=Q(datasetbookmark__user=user)
+            )
+        )
     if datasets.model is VisualisationCatalogueItem:
-        bookmark_filter = Q(visualisationbookmark__user=user)
+        datasets = datasets.annotate(
+            user_bookmark=FilteredRelation(
+                "visualisationbookmark", condition=Q(visualisationbookmark__user=user)
+            )
+        )
 
     datasets = datasets.annotate(
         is_bookmarked=BoolOr(
             Case(
-                When(bookmark_filter, then=True),
+                When(user_bookmark__user__isnull=False, then=True),
                 default=False,
                 output_field=BooleanField(),
             )
@@ -145,9 +164,14 @@ def _get_datasets_data_for_user_matching_query(
 
     if datasets.model is DataSet:
         datasets = datasets.annotate(
+            user_subscription=FilteredRelation(
+                "subscriptions", condition=Q(subscriptions__user=user)
+            ),
+        )
+        datasets = datasets.annotate(
             is_subscribed=BoolOr(
                 Case(
-                    When(Q(subscriptions__user=user), then=True),
+                    When(user_subscription__user__isnull=False, then=True),
                     default=False,
                     output_field=BooleanField(),
                 )
