@@ -189,11 +189,9 @@ def _get_datasets_data_for_user_matching_query(
             datasets, query, id_field, user=user
         )
 
-    is_reference_query = datasets.model is ReferenceDataset
-
     visibility_filter = Q(published=True)
 
-    if is_reference_query:
+    if datasets.model is ReferenceDataset:
         reference_type = DataSetType.REFERENCE
         reference_perm = dataset_type_to_manage_unpublished_permission_codename(reference_type)
 
@@ -297,7 +295,7 @@ def _get_datasets_data_for_user_matching_query(
         topic_tag_names=ArrayAgg("tags__name", filter=Q(tags__type=TagType.TOPIC), distinct=True)
     )
 
-    if is_reference_query:
+    if datasets.model is ReferenceDataset:
         datasets = datasets.annotate(
             data_type=Value(DataSetType.REFERENCE, IntegerField()),
             is_open_data=Value(False, BooleanField()),
