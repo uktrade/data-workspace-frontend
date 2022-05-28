@@ -207,38 +207,42 @@ def _get_datasets_data_for_user_matching_query(
     #########################################################################
     # Annotate datasets for filtering in Python and showing totals in filters
 
-    access_filter = Q()
-    bookmark_filter = Q(referencedatasetbookmark__user=user)
+    # has_access
+
+    if datasets.model is ReferenceDataset:
+        datasets = datasets.annotate(has_access=Value(True, BooleanField()))
 
     if datasets.model is DataSet:
-        user_email_domain = user.email.split("@")[1]
-        access_filter &= (
-            Q(
-                user_access_type__in=[
-                    UserAccessType.REQUIRES_AUTHENTICATION,
-                    UserAccessType.OPEN,
-                ]
-            )
-            | Q(
-                user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
-                datasetuserpermission__user=user,
-            )
-            | Q(authorized_email_domains__contains=[user_email_domain])
+        datasets = datasets.annotate(
+            has_access=BoolOr(
+                Case(
+                    When(
+                        Q(
+                            user_access_type__in=[
+                                UserAccessType.REQUIRES_AUTHENTICATION,
+                                UserAccessType.OPEN,
+                            ]
+                        )
+                        | Q(
+                            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
+                            datasetuserpermission__user=user,
+                        )
+                        | Q(authorized_email_domains__contains=[user.email.split("@")[1]]),
+                        then=True,
+                    ),
+                    default=False,
+                    output_field=BooleanField(),
+                )
+            ),
         )
 
-        bookmark_filter = Q(datasetbookmark__user=user)
+    # is_bookmarked
 
-    datasets = datasets.annotate(
-        has_access=BoolOr(
-            Case(
-                When(access_filter, then=True),
-                default=False,
-                output_field=BooleanField(),
-            )
-            if access_filter
-            else Value(True, BooleanField())
-        ),
-    )
+    if datasets.model is ReferenceDataset:
+        bookmark_filter = Q(referencedatasetbookmark__user=user)
+
+    if datasets.model is DataSet:
+        bookmark_filter = Q(datasetbookmark__user=user)
 
     datasets = datasets.annotate(
         is_bookmarked=BoolOr(
@@ -247,22 +251,27 @@ def _get_datasets_data_for_user_matching_query(
                 default=False,
                 output_field=BooleanField(),
             )
-            if bookmark_filter
-            else Value(False, BooleanField())
         ),
     )
 
-    subscription_filter = Q(subscriptions__user=user)
+    # is_subscribed
 
-    datasets = datasets.annotate(
-        is_subscribed=BoolOr(
-            Case(When(subscription_filter, then=True), default=False, output_field=BooleanField())
-            if subscription_filter and datasets.model is DataSet
-            else Value(False, BooleanField())
+    if datasets.model is ReferenceDataset:
+        datasets = datasets.annotate(is_subscribed=Value(False, BooleanField()))
+
+    if datasets.model is DataSet:
+        datasets = datasets.annotate(
+            is_subscribed=BoolOr(
+                Case(
+                    When(Q(subscriptions__user=user), then=True),
+                    default=False,
+                    output_field=BooleanField(),
+                )
+            )
         )
-    )
 
-    # Pull in the source tag IDs for the dataset
+    # source_tag_ids and source_tag_names
+
     datasets = datasets.annotate(
         source_tag_ids=ArrayAgg("tags", filter=Q(tags__type=TagType.SOURCE), distinct=True)
     )
@@ -270,7 +279,8 @@ def _get_datasets_data_for_user_matching_query(
         source_tag_names=ArrayAgg("tags__name", filter=Q(tags__type=TagType.SOURCE), distinct=True)
     )
 
-    # Pull in the topic tag IDs for the dataset
+    # topic_tag_ids and topic_tag_names
+
     datasets = datasets.annotate(
         topic_tag_ids=ArrayAgg("tags", filter=Q(tags__type=TagType.TOPIC), distinct=True)
     )
@@ -278,27 +288,43 @@ def _get_datasets_data_for_user_matching_query(
         topic_tag_names=ArrayAgg("tags__name", filter=Q(tags__type=TagType.TOPIC), distinct=True)
     )
 
+    # data_type
+
     if datasets.model is ReferenceDataset:
-        datasets = datasets.annotate(
-            data_type=Value(DataSetType.REFERENCE, IntegerField()),
-            is_open_data=Value(False, BooleanField()),
-            has_visuals=Value(False, BooleanField()),
-        )
+        datasets = datasets.annotate(data_type=Value(DataSetType.REFERENCE, IntegerField()))
 
     if datasets.model is DataSet:
-        dataset_visual_filter = DataSetVisualisation.objects.filter(dataset_id=OuterRef("id"))
+        datasets = datasets.annotate(data_type=F("type"))
+
+    # is_open_data
+
+    if datasets.model is ReferenceDataset:
+        datasets = datasets.annotate(is_open_data=Value(False, BooleanField()))
+
+    if datasets.model is DataSet:
         datasets = datasets.annotate(
-            data_type=F("type"),
             is_open_data=Case(
                 When(user_access_type=UserAccessType.OPEN, then=True),
                 default=False,
                 output_field=BooleanField(),
-            ),
+            )
+        )
+
+    # has_visuals
+
+    if datasets.model is ReferenceDataset:
+        datasets = datasets.annotate(has_visuals=Value(False, BooleanField()))
+
+    if datasets.model is DataSet:
+        datasets = datasets.annotate(
             has_visuals=Case(
-                When(Exists(dataset_visual_filter), then=True),
+                When(
+                    Exists(DataSetVisualisation.objects.filter(dataset_id=OuterRef("id"))),
+                    then=True,
+                ),
                 default=False,
                 output_field=BooleanField(),
-            ),
+            )
         )
 
     return datasets.values(
