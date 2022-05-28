@@ -212,13 +212,18 @@ def _get_datasets_data_for_user_matching_query(
     #######################################################
     # Filter out datasets that don't match the search terms
 
-    datasets = datasets.annotate(search_rank=SearchRank(F("search_vector"), query))
+    search_filter = Q()
+
+    if datasets.model is DataSet and query:
+        search_filter |= Q(sourcetable__table=query)
 
     if query:
-        source_table_match = Q()
-        if datasets.model is DataSet:
-            source_table_match = Q(sourcetable__table=query)
-        datasets = datasets.filter(source_table_match | Q(search_vector=query))
+        search_filter |= Q(search_vector=query)
+
+    datasets = datasets.filter(search_filter)
+
+    # Annotate with rank so we can order by this
+    datasets = datasets.annotate(search_rank=SearchRank(F("search_vector"), query))
 
     #########################################################################
     # Annotate datasets for filtering in Python and showing totals in filters
