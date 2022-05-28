@@ -241,7 +241,6 @@ def expected_search_result(catalogue_item, **kwargs):
         "source_tag_ids": mock.ANY,
         "topic_tag_names": mock.ANY,
         "topic_tag_ids": mock.ANY,
-        "purpose": mock.ANY,
         "data_type": mock.ANY,
         "published": catalogue_item.published,
         "has_access": True,
@@ -275,9 +274,9 @@ def test_find_datasets_combines_results(client):
     datasets = list(response.context["datasets"])
 
     expected_results = [
-        expected_search_result(ds, has_access=False, purpose=DataSetType.DATACUT),
-        expected_search_result(rds, purpose=DataSetType.DATACUT),
-        expected_search_result(vis, purpose=DataSetType.VISUALISATION),
+        expected_search_result(ds, has_access=False, data_type=DataSetType.DATACUT),
+        expected_search_result(rds, data_type=DataSetType.REFERENCE),
+        expected_search_result(vis, data_type=DataSetType.VISUALISATION),
     ]
 
     for i, ds in enumerate(datasets):
@@ -303,7 +302,7 @@ def test_find_datasets_by_source_table_name(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ds, has_access=False, purpose=DataSetType.MASTER),
+        expected_search_result(ds, has_access=False, data_type=DataSetType.MASTER),
     ]
 
 
@@ -337,7 +336,7 @@ def test_find_datasets_by_source_table_falls_back_to_normal_search(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ds, has_access=False, purpose=DataSetType.MASTER),
+        expected_search_result(ds, has_access=False, data_type=DataSetType.MASTER),
     ]
 
 
@@ -378,13 +377,12 @@ def test_find_datasets_filters_by_query(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ds, purpose=ds.type, has_access=False),
+        expected_search_result(ds, data_type=ds.type, has_access=False),
         expected_search_result(
             rds,
-            purpose=DataSetType.DATACUT,
             data_type=DataSetType.REFERENCE,
         ),
-        expected_search_result(vis, purpose=DataSetType.VISUALISATION),
+        expected_search_result(vis, data_type=DataSetType.VISUALISATION),
     ]
 
 
@@ -401,52 +399,46 @@ def test_find_datasets_filters_by_query_acronym(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ds, purpose=ds.type, has_access=False),
+        expected_search_result(ds, data_type=ds.type, has_access=False),
     ]
 
 
-def test_find_datasets_filters_by_use(client):
+def test_find_datasets_filters_by_data_type(client):
     factories.DataSetFactory.create(published=True, type=1, name="A dataset")
     ds = factories.DataSetFactory.create(published=True, type=2, name="A new dataset")
-    rds = factories.ReferenceDatasetFactory.create(published=True, name="A new reference dataset")
+    factories.ReferenceDatasetFactory.create(published=True, name="A new reference dataset")
 
-    response = client.get(reverse("datasets:find_datasets"), {"use": [DataSetType.DATACUT]})
+    response = client.get(reverse("datasets:find_datasets"), {"data_type": [DataSetType.DATACUT]})
 
     assert response.status_code == 200
 
     expected_results = [
         expected_search_result(ds, has_access=False),
-        expected_search_result(rds),
     ]
 
     datasets = list(response.context["datasets"])
 
-    assert len(datasets) == 2
+    assert len(datasets) == 1
 
     for i, ds in enumerate(datasets):
         expected = expected_results[i]
         assert ds == expected
 
 
-def test_find_datasets_filters_visualisations_by_use(client):
+def test_find_datasets_filters_visualisations_by_data_type(client):
     factories.DataSetFactory.create(published=True, type=1, name="A dataset")
     ds = factories.DataSetFactory.create(published=True, type=2, name="A new dataset")
-    rds = factories.ReferenceDatasetFactory.create(published=True, name="A new reference dataset")
+    factories.ReferenceDatasetFactory.create(published=True, name="A new reference dataset")
     vis = factories.VisualisationCatalogueItemFactory.create(
         published=True, name="A new visualisation"
     )
 
-    response = client.get(reverse("datasets:find_datasets"), {"use": [2, 3]})
+    response = client.get(reverse("datasets:find_datasets"), {"data_type": [2, 3]})
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
         expected_search_result(ds, has_access=False),
-        expected_search_result(
-            rds,
-            purpose=DataSetType.DATACUT,
-            data_type=DataSetType.REFERENCE,
-        ),
-        expected_search_result(vis, purpose=DataSetType.VISUALISATION),
+        expected_search_result(vis, data_type=DataSetType.VISUALISATION),
     ]
 
 
@@ -497,7 +489,7 @@ def test_find_datasets_filters_by_source(client):
             vis,
             source_tag_names=[source.name],
             source_tag_ids=[source.id],
-            purpose=DataSetType.VISUALISATION,
+            data_type=DataSetType.VISUALISATION,
         ),
     ]
 
@@ -551,14 +543,13 @@ def test_find_datasets_filters_by_topic(client):
             rds,
             topic_tag_names=[topic.name],
             topic_tag_ids=[topic.id],
-            purpose=DataSetType.DATACUT,
             data_type=DataSetType.REFERENCE,
         ),
         expected_search_result(
             vis,
             topic_tag_names=[topic.name],
             topic_tag_ids=[topic.id],
-            purpose=DataSetType.VISUALISATION,
+            data_type=DataSetType.VISUALISATION,
         ),
     ]
 
@@ -575,8 +566,8 @@ def test_find_datasets_order_by_name_asc(client):
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
         expected_search_result(ds1, has_access=False),
-        expected_search_result(rds, purpose=DataSetType.DATACUT, data_type=DataSetType.REFERENCE),
-        expected_search_result(vis, purpose=DataSetType.VISUALISATION),
+        expected_search_result(rds, data_type=DataSetType.REFERENCE),
+        expected_search_result(vis, data_type=DataSetType.VISUALISATION),
     ]
 
 
@@ -589,7 +580,7 @@ def test_find_datasets_order_by_newest_first(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ads1, purpose=ads1.type, has_access=False),
+        expected_search_result(ads1, data_type=ads1.type, has_access=False),
         expected_search_result(ads2, has_access=False),
         expected_search_result(ads3, has_access=False),
     ]
@@ -604,9 +595,9 @@ def test_find_datasets_order_by_oldest_first(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ads3, has_access=False, purpose=ads3.type),
-        expected_search_result(ads2, has_access=False, purpose=ads2.type),
-        expected_search_result(ads1, has_access=False, purpose=ads1.type),
+        expected_search_result(ads3, has_access=False, data_type=ads3.type),
+        expected_search_result(ads2, has_access=False, data_type=ads2.type),
+        expected_search_result(ads1, has_access=False, data_type=ads1.type),
     ]
 
 
@@ -773,7 +764,7 @@ def test_finding_datasets_doesnt_query_database_excessively(
     with django_assert_num_queries(expected_num_queries, exact=False):
         response = client.get(
             reverse("datasets:find_datasets"),
-            {"purpose": str(DataSetType.MASTER)},
+            {"data_type": str(DataSetType.MASTER)},
         )
         assert response.status_code == 200
 
@@ -954,7 +945,6 @@ def test_find_datasets_filters_by_bookmark_reference(access_type):
         expected_search_result(
             public_reference,
             is_bookmarked=True,
-            purpose=DataSetType.DATACUT,
             data_type=DataSetType.REFERENCE,
         )
     ]
@@ -1008,7 +998,7 @@ def test_find_datasets_filters_by_bookmark_visualisation(access_type):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(public_vis, is_bookmarked=True, purpose=DataSetType.VISUALISATION)
+        expected_search_result(public_vis, is_bookmarked=True, data_type=DataSetType.VISUALISATION)
     ]
 
 
@@ -1062,7 +1052,7 @@ def test_find_datasets_filters_by_bookmark_datacut(access_type):
     assert list(response.context["datasets"]) == [
         expected_search_result(
             public_datacut,
-            purpose=DataSetType.DATACUT,
+            data_type=DataSetType.DATACUT,
             is_bookmarked=True,
             has_access=False,
         )
@@ -2050,7 +2040,6 @@ def test_find_datasets_search_by_source_name(client):
         expected_search_result(
             rds,
             search_rank=0.12158542,
-            purpose=DataSetType.DATACUT,
             data_type=DataSetType.REFERENCE,
         ),
     ]
@@ -3774,9 +3763,11 @@ def test_filter_reference_datasets_search_v2(access_type):
         user_access_type=access_type,
     )
     factories.ReferenceDatasetFactory.create(published=True, name="Reference")
-    response = client.get(reverse("datasets:find_datasets"), {"use": [DataSetType.DATACUT]})
+    response = client.get(
+        reverse("datasets:find_datasets"), {"data_type": [DataSetType.REFERENCE]}
+    )
     assert response.status_code == 200
-    assert len(response.context["datasets"]) == 2
+    assert len(response.context["datasets"]) == 1
 
 
 @pytest.mark.parametrize(

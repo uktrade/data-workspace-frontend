@@ -124,8 +124,6 @@ def _get_visualisations_data_for_user_matching_query(visualisations: QuerySet, q
     )
 
     visualisations = visualisations.annotate(
-        # Define a `purpose` column denoting the dataset type
-        purpose=Value(DataSetType.VISUALISATION, IntegerField()),
         data_type=Value(DataSetType.VISUALISATION, IntegerField()),
         is_open_data=Case(
             When(user_access_type=UserAccessType.OPEN, then=True),
@@ -149,7 +147,6 @@ def _get_visualisations_data_for_user_matching_query(visualisations: QuerySet, q
             "source_tag_ids",
             "topic_tag_names",
             "topic_tag_ids",
-            "purpose",
             "data_type",
             "published",
             "published_at",
@@ -172,7 +169,6 @@ def _get_visualisations_data_for_user_matching_query(visualisations: QuerySet, q
         "source_tag_ids",
         "topic_tag_names",
         "topic_tag_ids",
-        "purpose",
         "data_type",
         "published",
         "published_at",
@@ -300,10 +296,8 @@ def _get_datasets_data_for_user_matching_query(
         topic_tag_names=ArrayAgg("tags__name", filter=Q(tags__type=TagType.TOPIC), distinct=True)
     )
 
-    # Define a `purpose` column denoting the dataset type.
     if is_reference_query:
         datasets = datasets.annotate(
-            purpose=Value(DataSetType.DATACUT, IntegerField()),
             data_type=Value(DataSetType.REFERENCE, IntegerField()),
             is_open_data=Value(False, BooleanField()),
             has_visuals=Value(False, BooleanField()),
@@ -311,7 +305,6 @@ def _get_datasets_data_for_user_matching_query(
     else:
         dataset_visual_filter = DataSetVisualisation.objects.filter(dataset_id=OuterRef("id"))
         datasets = datasets.annotate(
-            purpose=F("type"),
             data_type=F("type"),
             is_open_data=Case(
                 When(user_access_type=UserAccessType.OPEN, then=True),
@@ -339,7 +332,6 @@ def _get_datasets_data_for_user_matching_query(
             "source_tag_ids",
             "topic_tag_names",
             "topic_tag_ids",
-            "purpose",
             "data_type",
             "published",
             "published_at",
@@ -362,7 +354,6 @@ def _get_datasets_data_for_user_matching_query(
         "source_tag_ids",
         "topic_tag_names",
         "topic_tag_ids",
-        "purpose",
         "data_type",
         "published",
         "published_at",
