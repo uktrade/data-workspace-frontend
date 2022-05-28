@@ -28,7 +28,9 @@ from dataworkspace.apps.datasets.utils import (
 )
 
 
-def _get_visualisations_data_for_user_matching_query(visualisations: QuerySet, query, user):
+def _get_visualisations_data_for_user_matching_query(
+    visualisations: QuerySet, query, id_field, user
+):
     """
     Filters the visualisation queryset for:
         1) visibility (whether the user can know if the visualisation exists)
@@ -133,7 +135,7 @@ def _get_visualisations_data_for_user_matching_query(visualisations: QuerySet, q
     # of the records say that access is available.
     visualisations = (
         visualisations.values(
-            "id",
+            id_field,
             "name",
             "slug",
             "short_description",
@@ -155,7 +157,7 @@ def _get_visualisations_data_for_user_matching_query(visualisations: QuerySet, q
     )
 
     return visualisations.values(
-        "id",
+        id_field,
         "name",
         "slug",
         "short_description",
@@ -380,7 +382,7 @@ def _sorted_datasets_and_visualisations_matching_query_for_user(query, user, sor
     )
 
     visualisations = _get_visualisations_data_for_user_matching_query(
-        VisualisationCatalogueItem.objects.live(), query, user=user
+        VisualisationCatalogueItem.objects.live(), query, id_field="id", user=user
     )
 
     # Combine all datasets and visualisations and order them.
