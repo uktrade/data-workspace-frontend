@@ -1,0 +1,79 @@
+{% extends '_main.html' %}
+{% load static core_tags datasets_tags explorer_tags humanize %}
+{% block page_title %}Data dictionary - {{ block.super }}{% endblock %}
+{% block breadcrumbs %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-three-quarters">
+      <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="/">Home</a>
+          </li>
+          {% if dataset %}
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="{{ dataset.get_absolute_url }}">
+              {{ dataset.name }}
+            </a>
+          </li>
+          {% endif %}
+          <li class="govuk-breadcrumbs__list-item">Data dictionary</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-l">Data dictionary</h1>
+      <p class="govuk-body govuk-body-m">
+        "{{ source_table.schema }}"."{{ source_table.table }}"
+      </p>
+      {% if dataset %}
+      <p class="govuk-body govuk-body-m">
+        {% if request.user|can_edit_dataset:dataset %}
+        <a href="{% url "datasets:edit_data_dictionary" dataset_uuid=dataset.id source_uuid=source_table.id %}"
+        class="govuk-link govuk-link--no-visited-state">
+        Edit dictionary
+        </a>
+        {% endif %}
+      </p> 
+      {% endif %}
+    </div>
+  </div>
+  {% block success_banner %}{% endblock %}
+  <div class="govuk-grid-row govuk-!-margin-top-6" id="update">
+    <div class="govuk-grid-column-full" style="overflow-x: auto;">
+      <table class="govuk-table" data-module="moj-sortable-table">
+        <thead>
+        <tr class="govuk-table__row">
+          <th scope="col" class="govuk-table__header govuk-!-width-one-quarter" aria-sort="ascending">Name</th>
+          <th scope="col" class="govuk-table__header govuk-!-width-one-quarter" aria-sort="none">Format</th>
+          <th scope="col" class="govuk-table__header" aria-sort="none">Definition</th>
+        </tr>
+        </thead>
+        <tbody>
+            {% for name, data_type, definition in dictionary %}
+            <tr class="govuk-table__row">
+                    <th scope="row" class="govuk-table__header js-schema-column-{{ forloop.counter }}">{{ name }}</th>
+                <td class="govuk-table__cell">
+                    {{ data_type }}
+                </td>
+                <td class="govuk-table__cell">
+                {{ definition.description }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="govuk-!-padding-top-2">
+    <a class="govuk-link govuk-link--no-visited-state app-back-to-top__link" href="{{ request.path }}#body" style="float:left">
+        <svg role="presentation" focusable="false" class="app-back-to-top__icon" xmlns="http://www.w3.org/2000/svg" width="13" height="17" viewBox="0 0 13 17">
+        <path fill="currentColor" d="M6.5 0L0 6.5 1.4 8l4-4v12.7h2V4l4.3 4L13 6.4z"></path>
+        </svg>
+        Back to top
+    </a>
+  </div>
+{% endblock content %}
