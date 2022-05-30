@@ -165,7 +165,6 @@ class NewsletterSubscriptionView(View):
         subscription, _ = NewsletterSubscription.objects.get_or_create(user=request.user)
 
         should_subscribe = form.cleaned_data.get("submit_action") == "subscribe"
-        logger.info(form.cleaned_data["submit_action"])
         subscription.is_active = should_subscribe
 
         if should_subscribe:
