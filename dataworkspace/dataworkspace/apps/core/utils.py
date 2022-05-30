@@ -14,6 +14,7 @@ from io import StringIO
 from typing import Tuple
 
 from timeit import default_timer as timer
+from urllib.parse import unquote
 
 import gevent
 import gevent.queue
@@ -35,6 +36,7 @@ from tableschema import Schema
 
 from dataworkspace.apps.core.boto3_client import get_s3_client, get_iam_client
 from dataworkspace.apps.core.constants import (
+    DATA_FLOW_TASK_ERROR_MAP,
     PostgresDataTypes,
     SCHEMA_POSTGRES_DATA_TYPE_MAP,
     TABLESCHEMA_FIELD_TYPE_MAP,
@@ -1374,3 +1376,37 @@ def get_dataflow_task_status(dag, execution_date, task_id):
     response = requests.get(url, headers={"Authorization": header, "Content-Type": ""})
     response.raise_for_status()
     return response.json().get("state")
+
+
+def get_dataflow_task_log(dag, execution_date, task_id):
+    config = settings.DATAFLOW_API_CONFIG
+    url = (
+        f'{config["DATAFLOW_BASE_URL"]}/api/experimental/derived-dags/'
+        f"dag/{dag}/{execution_date.split('+')[0]}/{task_id}/log"
+    )
+    header = Sender(
+        {
+            "id": config["DATAFLOW_HAWK_ID"],
+            "key": config["DATAFLOW_HAWK_KEY"],
+            "algorithm": "sha256",
+        },
+        url,
+        "get",
+        content="",
+        content_type="",
+    ).request_header
+    response = requests.get(url, headers={"Authorization": header, "Content-Type": ""})
+    response.raise_for_status()
+    return response.json().get("log")
+
+
+def get_task_error_message_template(execution_date, task_name):
+    logs = get_dataflow_task_log(
+        settings.DATAFLOW_API_CONFIG["DATAFLOW_S3_IMPORT_DAG"],
+        unquote(execution_date).replace(" ", "+"),
+        task_name,
+    )
+    for error_re, template_name in DATA_FLOW_TASK_ERROR_MAP.items():
+        if re.match(error_re, logs, re.DOTALL | re.IGNORECASE):
+            return template_name
+    return None

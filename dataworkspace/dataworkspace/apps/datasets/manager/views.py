@@ -22,6 +22,7 @@ from dataworkspace.apps.core.utils import (
     get_random_data_sample,
     get_s3_csv_column_types,
     get_s3_prefix,
+    get_task_error_message_template,
     trigger_dataflow_dag,
 )
 from dataworkspace.apps.datasets.manager.forms import (
@@ -132,7 +133,7 @@ class DatasetManageSourceTableColumnConfigView(DatasetManageSourceTableView):
             )
         except HTTPError:
             return HttpResponseRedirect(
-                f'{reverse("your-files:create-table-failed")}?' f"filename={filename}"
+                f"{reverse('datasets:manager:upload-failed')}?filename={filename}&schema="
             )
 
         params = {
@@ -148,12 +149,7 @@ class DatasetManageSourceTableColumnConfigView(DatasetManageSourceTableView):
 
 class BaseUploadSourceProcessingView(EditBaseView, TemplateView):
     template_name = "datasets/manager/uploading.html"
-    required_parameters = [
-        "filename",
-        "schema",
-        "table_name",
-        "execution_date",
-    ]
+    required_parameters = ["filename", "execution_date"]
     steps = 5
     step: int
     next_step_url_name: str
@@ -171,7 +167,10 @@ class BaseUploadSourceProcessingView(EditBaseView, TemplateView):
         return super().dispatch(request, *args, **kwargs)
 
     def _get_query_parameters(self):
-        return {param: self.request.GET.get(param) for param in self.required_parameters}
+        return {
+            "task_name": self.task_name,
+            **{param: self.request.GET.get(param) for param in self.required_parameters},
+        }
 
     def _get_next_url(self):
         return reverse(
@@ -241,9 +240,10 @@ class SourceTableUploadSuccessView(BaseUploadSourceProcessingView, TemplateView)
         return self.obj.get_absolute_url()
 
     def get(self, request, *args, **kwargs):
+        source = self._get_source()
         UploadedTable.objects.get_or_create(
-            schema=request.GET.get("schema"),
-            table_name=request.GET.get("table_name"),
+            schema=source.schema,
+            table_name=source.table,
             created_by=self.request.user,
             data_flow_execution_date=datetime.strptime(
                 request.GET.get("execution_date").split(".")[0], "%Y-%m-%dT%H:%M:%S"
@@ -254,12 +254,17 @@ class SourceTableUploadSuccessView(BaseUploadSourceProcessingView, TemplateView)
 
 class SourceTableUploadFailedView(BaseUploadSourceProcessingView, TemplateView):
     next_step_url_name = "manage-source-table"
+    required_parameters = ["filename"]
     step = 5
     template_name = "datasets/manager/upload_failed.html"
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["filename"] = ctx["filename"].split("!")[0]
+        if "execution_date" in self.request.GET and "task_name" in self.request.GET:
+            ctx["error_message_template"] = get_task_error_message_template(
+                self.request.GET["execution_date"], self.request.GET["task_name"]
+            )
         return ctx
 
 
