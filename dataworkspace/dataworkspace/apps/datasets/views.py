@@ -1741,12 +1741,8 @@ def find_data_dictionary_view(request, schema_name, table_name):
     return redirect("datasets:data_dictionary", source_uuid=query.first().id)
 
 
-class DataDictionaryView(View):
-    def get(self, request, source_uuid):
-        source_table = get_object_or_404(SourceTable, pk=source_uuid)
-        dataset = None
-        if request.GET.get("dataset_uuid"):
-            dataset = find_dataset(request.GET.get("dataset_uuid"), self.request.user, DataSet)
+class DataDictionaryBaseView(View):
+    def get_dictionary(self, source_table):
         columns = datasets_db.get_columns(
             source_table.database.memorable_name,
             schema=source_table.schema,
@@ -1766,6 +1762,17 @@ class DataDictionaryView(View):
                     definition,
                 )
             )
+        return columns, fields, dictionary
+
+
+class DataDictionaryView(DataDictionaryBaseView):
+    def get(self, request, source_uuid):
+        source_table = get_object_or_404(SourceTable, pk=source_uuid)
+        dataset = None
+        if request.GET.get("dataset_uuid"):
+            dataset = find_dataset(request.GET.get("dataset_uuid"), self.request.user, DataSet)
+
+        columns, fields, dictionary = self.get_dictionary(source_table)
 
         return render(
             request,
@@ -1780,7 +1787,7 @@ class DataDictionaryView(View):
         )
 
 
-class DataDictionaryEditView(View):
+class DataDictionaryEditView(DataDictionaryBaseView):
     def dispatch(self, request, *args, **kwargs):
 
         dataset = DataSet.objects.live().get(pk=self.kwargs.get("dataset_uuid"))
@@ -1798,25 +1805,8 @@ class DataDictionaryEditView(View):
     def get(self, request, dataset_uuid, source_uuid):
         source_table = get_object_or_404(SourceTable, pk=source_uuid)
         dataset = find_dataset(dataset_uuid, self.request.user, DataSet)
-        columns = datasets_db.get_columns(
-            source_table.database.memorable_name,
-            schema=source_table.schema,
-            table=source_table.table,
-            include_types=True,
-        )
-        fields = source_table.field_definitions.all()
-        dictionary = []
-        for name, data_type in columns:
-            definition = ""
-            if fields.filter(field=name).exists():
-                definition = fields.filter(field=name).first()
-            dictionary.append(
-                (
-                    name,
-                    data_type,
-                    definition,
-                )
-            )
+
+        columns, fields, dictionary = self.get_dictionary(source_table)
 
         return render(
             request,
