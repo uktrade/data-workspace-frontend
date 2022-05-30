@@ -48,12 +48,15 @@
       <h2 class="govuk-heading-m govuk-!-margin-top-4">
         Data preview
       </h2>
+      {# We only support data dictionaries for master datasets currently #}
+      {% if object.type == 1 %}
       <p class="govuk-body govuk-body-m">
         <a href="{% url "datasets:data_dictionary" source_uuid=object.id %}?dataset_uuid={{object.dataset.id}}"
         class="govuk-link govuk-link--no-visited-state">
         Data dictionary
         </a>
       </p> 
+      {% endif %}
       <div id="data-grid" class="ag-theme-alpine"></div>
       <div class="govuk-!-margin-top-4">
         {% if object.data_grid_download_enabled %}
