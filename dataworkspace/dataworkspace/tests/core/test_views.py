@@ -180,6 +180,9 @@ def test_csp_on_files_endpoint_includes_s3(client):
         "dataworkspace.test:3000",
         "ws://dataworkspace.test:3000",
         "https://s3.eu-west-2.amazonaws.com",
+        "*.google-analytics.com",
+        "*.analytics.google.com",
+        "*.googletagmanager.com",
     ]
 
     for element in expected_elements:

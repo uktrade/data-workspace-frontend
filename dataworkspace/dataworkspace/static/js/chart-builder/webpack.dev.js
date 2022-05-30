@@ -30,12 +30,11 @@ module.exports = merge(common, {
     new webpack.HotModuleReplacementPlugin(),
   ],
   devServer: {
-    inline: true,
     hot: true,
     historyApiFallback: true,
     host: '0.0.0.0',
     port: 3000,
-    disableHostCheck: true,
+    allowedHosts: "all",
     headers: { 'Access-Control-Allow-Origin': '*' }
   }
  });

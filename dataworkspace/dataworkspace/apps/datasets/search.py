@@ -1,5 +1,4 @@
 from django.contrib.postgres.aggregates.general import ArrayAgg, BoolOr
-from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.search import SearchRank
 from django.db.models import (
     Exists,
@@ -11,7 +10,7 @@ from django.db.models import (
     When,
     BooleanField,
     OuterRef,
-    CharField,
+    FilteredRelation,
 )
 from django.db.models import QuerySet
 
@@ -28,265 +27,159 @@ from dataworkspace.apps.datasets.utils import (
 )
 
 
-def _get_visualisations_data_for_user_matching_query(visualisations: QuerySet, query, user=None):
-    """
-    Filters the visualisation queryset for:
-        1) visibility (whether the user can know if the visualisation exists)
-        2) matches the search terms
-
-    Annotates the visualisation queryset with:
-        1) `has_access`, if the user can use the visualisation.
-    """
-    # Filter out visualisations that the user is not allowed to even know about.
-    if not (
-        user
-        and user.has_perm(
-            dataset_type_to_manage_unpublished_permission_codename(DataSetType.VISUALISATION)
-        )
-    ):
-        visualisations = visualisations.filter(published=True)
-
-    # Filter out visualisations that don't match the search terms
-
-    visualisations = visualisations.annotate(search_rank=SearchRank(F("search_vector"), query))
-
-    if query:
-        visualisations = visualisations.filter(search_vector=query)
-
-    # Mark up whether the user can access the visualisation.
-    if user:
-        user_email_domain = user.email.split("@")[1]
-        access_filter = (
-            (
-                (
-                    Q(
-                        user_access_type__in=[
-                            UserAccessType.REQUIRES_AUTHENTICATION,
-                            UserAccessType.OPEN,
-                        ]
-                    )
-                )
-                & (
-                    Q(visualisationuserpermission__user=user)
-                    | Q(visualisationuserpermission__isnull=True)
-                )
-            )
-            | Q(
-                user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
-                visualisationuserpermission__user=user,
-            )
-            | Q(authorized_email_domains__contains=[user_email_domain])
-        )
-
-    else:
-        access_filter = Q()
-
-    visualisations = visualisations.annotate(
-        _has_access=Case(
-            When(access_filter, then=True),
-            default=False,
-            output_field=BooleanField(),
-        )
-        if access_filter
-        else Value(True, BooleanField()),
-    )
-
-    bookmark_filter = Q(visualisationbookmark__user=user)
-    visualisations = visualisations.annotate(
-        _is_bookmarked=Case(
-            When(bookmark_filter, then=True),
-            default=False,
-            output_field=BooleanField(),
-        )
-        if bookmark_filter
-        else Value(False, BooleanField()),
-    )
-
-    # can't currently subscribe to visualisations
-    visualisations = visualisations.annotate(_is_subscribed=Value(False, BooleanField()))
-
-    # Pull in the source tag IDs for the dataset
-    visualisations = visualisations.annotate(
-        source_tag_ids=ArrayAgg("tags", filter=Q(tags__type=TagType.SOURCE), distinct=True)
-    )
-
-    visualisations = visualisations.annotate(
-        source_tag_names=ArrayAgg("tags__name", filter=Q(tags__type=TagType.SOURCE), distinct=True)
-    )
-
-    # Pull in the topic tag IDs for the dataset
-    visualisations = visualisations.annotate(
-        topic_tag_ids=ArrayAgg("tags", filter=Q(tags__type=TagType.TOPIC), distinct=True)
-    )
-
-    visualisations = visualisations.annotate(
-        topic_tag_names=ArrayAgg("tags__name", filter=Q(tags__type=TagType.TOPIC), distinct=True)
-    )
-
-    visualisations = visualisations.annotate(
-        # Define a `purpose` column denoting the dataset type
-        purpose=Value(DataSetType.VISUALISATION, IntegerField()),
-        data_type=Value(DataSetType.VISUALISATION, IntegerField()),
-        is_open_data=Case(
-            When(user_access_type=UserAccessType.OPEN, then=True),
-            default=False,
-            output_field=BooleanField(),
-        ),
-        has_visuals=Value(False, BooleanField()),
-    )
-
-    # We are joining on the user permissions table to determine `_has_access`` to the visualisation, so we need to
-    # group them and remove duplicates. We aggregate all the `_has_access` fields together and return true if any
-    # of the records say that access is available.
-    visualisations = (
-        visualisations.values(
-            "id",
-            "name",
-            "slug",
-            "short_description",
-            "search_rank",
-            "source_tag_names",
-            "source_tag_ids",
-            "topic_tag_names",
-            "topic_tag_ids",
-            "purpose",
-            "data_type",
-            "published",
-            "published_at",
-            "is_open_data",
-            "has_visuals",
-            "eligibility_criteria",
-        )
-        .annotate(has_access=BoolOr("_has_access"))
-        .annotate(is_bookmarked=BoolOr("_is_bookmarked"))
-        .annotate(is_subscribed=BoolOr("_is_subscribed"))
-    )
-
-    return visualisations.values(
-        "id",
-        "name",
-        "slug",
-        "short_description",
-        "search_rank",
-        "source_tag_names",
-        "source_tag_ids",
-        "topic_tag_names",
-        "topic_tag_ids",
-        "purpose",
-        "data_type",
-        "published",
-        "published_at",
-        "is_open_data",
-        "has_visuals",
-        "eligibility_criteria",
-        "has_access",
-        "is_bookmarked",
-        "is_subscribed",
-    )
-
-
 def _get_datasets_data_for_user_matching_query(
     datasets: QuerySet,
     query,
-    use=None,
-    data_type=None,
-    user=None,
-    id_field="id",
+    id_field,
+    user,
 ):
-    is_reference_query = datasets.model is ReferenceDataset
+    #####################################################################
+    # Filter out datasets that the user is not allowed to even know about
 
     visibility_filter = Q(published=True)
 
-    if user:
-        if is_reference_query:
-            reference_type = DataSetType.REFERENCE
-            reference_perm = dataset_type_to_manage_unpublished_permission_codename(reference_type)
+    if datasets.model is ReferenceDataset:
+        if user.has_perm(
+            dataset_type_to_manage_unpublished_permission_codename(DataSetType.REFERENCE)
+        ):
+            visibility_filter |= Q(published=False)
 
-            if user.has_perm(reference_perm):
-                visibility_filter |= Q(published=False)
+    if datasets.model is DataSet:
+        if user.has_perm(
+            dataset_type_to_manage_unpublished_permission_codename(DataSetType.MASTER)
+        ):
+            visibility_filter |= Q(published=False, type=DataSetType.MASTER)
 
-            datasets = datasets.annotate(
-                eligibility_criteria=Value(None, ArrayField(CharField(max_length=20)))
-            )
+        if user.has_perm(
+            dataset_type_to_manage_unpublished_permission_codename(DataSetType.DATACUT)
+        ):
+            visibility_filter |= Q(published=False, type=DataSetType.DATACUT)
 
-        if datasets.model is DataSet:
-            master_type, datacut_type = (
-                DataSetType.MASTER,
-                DataSetType.DATACUT,
-            )
-            master_perm = dataset_type_to_manage_unpublished_permission_codename(master_type)
-            datacut_perm = dataset_type_to_manage_unpublished_permission_codename(datacut_type)
-
-            if user.has_perm(master_perm):
-                visibility_filter |= Q(published=False, type=master_type)
-
-            if user.has_perm(datacut_perm):
-                visibility_filter |= Q(published=False, type=datacut_type)
+    if datasets.model is VisualisationCatalogueItem:
+        if user.has_perm(
+            dataset_type_to_manage_unpublished_permission_codename(DataSetType.VISUALISATION)
+        ):
+            visibility_filter |= Q(published=False)
 
     datasets = datasets.filter(visibility_filter)
 
+    #######################################################
     # Filter out datasets that don't match the search terms
-    datasets = datasets.annotate(search_rank=SearchRank(F("search_vector"), query))
+
+    search_filter = Q()
+
+    if datasets.model is DataSet and query:
+        search_filter |= Q(sourcetable__table=query)
 
     if query:
-        source_table_match = Q()
+        search_filter |= Q(search_vector=query)
+
+    datasets = datasets.filter(search_filter)
+
+    # Annotate with rank so we can order by this
+    datasets = datasets.annotate(search_rank=SearchRank(F("search_vector"), query))
+
+    #########################################################################
+    # Annotate datasets for filtering in Python and showing totals in filters
+
+    # has_access
+
+    if datasets.model is ReferenceDataset:
+        datasets = datasets.annotate(has_access=Value(True, BooleanField()))
+
+    if datasets.model is DataSet or datasets.model is VisualisationCatalogueItem:
         if datasets.model is DataSet:
-            source_table_match = Q(sourcetable__table=query)
-        datasets = datasets.filter(source_table_match | Q(search_vector=query))
-
-    # Mark up whether the user can access the data in the dataset.
-    access_filter = Q()
-    bookmark_filter = Q(referencedatasetbookmark__user=user)
-
-    if user and datasets.model is not ReferenceDataset:
-        user_email_domain = user.email.split("@")[1]
-        access_filter &= (
-            Q(
-                user_access_type__in=[
-                    UserAccessType.REQUIRES_AUTHENTICATION,
-                    UserAccessType.OPEN,
-                ]
+            datasets = datasets.annotate(
+                user_permission=FilteredRelation(
+                    "datasetuserpermission", condition=Q(datasetuserpermission__user=user)
+                ),
             )
-            | Q(
-                user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
-                datasetuserpermission__user=user,
+        if datasets.model is VisualisationCatalogueItem:
+            datasets = datasets.annotate(
+                user_permission=FilteredRelation(
+                    "visualisationuserpermission",
+                    condition=Q(visualisationuserpermission__user=user),
+                ),
             )
-            | Q(authorized_email_domains__contains=[user_email_domain])
+        datasets = datasets.annotate(
+            has_access=BoolOr(
+                Case(
+                    When(
+                        Q(
+                            user_access_type__in=[
+                                UserAccessType.REQUIRES_AUTHENTICATION,
+                                UserAccessType.OPEN,
+                            ]
+                        )
+                        | (
+                            Q(
+                                user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
+                                user_permission__user__isnull=False,
+                            )
+                        )
+                        | Q(authorized_email_domains__contains=[user.email.split("@")[1]]),
+                        then=True,
+                    ),
+                    default=False,
+                    output_field=BooleanField(),
+                )
+            ),
         )
 
-        bookmark_filter = Q(datasetbookmark__user=user)
+    # is_bookmarked
+
+    if datasets.model is ReferenceDataset:
+        datasets = datasets.annotate(
+            user_bookmark=FilteredRelation(
+                "referencedatasetbookmark", condition=Q(referencedatasetbookmark__user=user)
+            )
+        )
+    if datasets.model is DataSet:
+        datasets = datasets.annotate(
+            user_bookmark=FilteredRelation(
+                "datasetbookmark", condition=Q(datasetbookmark__user=user)
+            )
+        )
+    if datasets.model is VisualisationCatalogueItem:
+        datasets = datasets.annotate(
+            user_bookmark=FilteredRelation(
+                "visualisationbookmark", condition=Q(visualisationbookmark__user=user)
+            )
+        )
 
     datasets = datasets.annotate(
-        _has_access=Case(
-            When(access_filter, then=True),
-            default=False,
-            output_field=BooleanField(),
-        )
-        if access_filter
-        else Value(True, BooleanField()),
+        is_bookmarked=BoolOr(
+            Case(
+                When(user_bookmark__user__isnull=False, then=True),
+                default=False,
+                output_field=BooleanField(),
+            )
+        ),
     )
 
-    datasets = datasets.annotate(
-        _is_bookmarked=Case(
-            When(bookmark_filter, then=True),
-            default=False,
-            output_field=BooleanField(),
+    # is_subscribed
+
+    if datasets.model is ReferenceDataset or datasets.model is VisualisationCatalogueItem:
+        datasets = datasets.annotate(is_subscribed=Value(False, BooleanField()))
+
+    if datasets.model is DataSet:
+        datasets = datasets.annotate(
+            user_subscription=FilteredRelation(
+                "subscriptions", condition=Q(subscriptions__user=user)
+            ),
         )
-        if bookmark_filter
-        else Value(False, BooleanField()),
-    )
-
-    subscription_filter = Q(subscriptions__user=user)
-
-    datasets = datasets.annotate(
-        _is_subscribed=Case(
-            When(subscription_filter, then=True), default=False, output_field=BooleanField()
+        datasets = datasets.annotate(
+            is_subscribed=BoolOr(
+                Case(
+                    When(user_subscription__user__isnull=False, then=True),
+                    default=False,
+                    output_field=BooleanField(),
+                )
+            )
         )
-        if subscription_filter and datasets.model is not ReferenceDataset
-        else Value(False, BooleanField())
-    )
 
-    # Pull in the source tag IDs for the dataset
+    # source_tag_ids and source_tag_names
+
     datasets = datasets.annotate(
         source_tag_ids=ArrayAgg("tags", filter=Q(tags__type=TagType.SOURCE), distinct=True)
     )
@@ -294,7 +187,8 @@ def _get_datasets_data_for_user_matching_query(
         source_tag_names=ArrayAgg("tags__name", filter=Q(tags__type=TagType.SOURCE), distinct=True)
     )
 
-    # Pull in the topic tag IDs for the dataset
+    # topic_tag_ids and topic_tag_names
+
     datasets = datasets.annotate(
         topic_tag_ids=ArrayAgg("tags", filter=Q(tags__type=TagType.TOPIC), distinct=True)
     )
@@ -302,57 +196,47 @@ def _get_datasets_data_for_user_matching_query(
         topic_tag_names=ArrayAgg("tags__name", filter=Q(tags__type=TagType.TOPIC), distinct=True)
     )
 
-    # Define a `purpose` column denoting the dataset type.
-    if is_reference_query:
+    # data_type
+
+    if datasets.model is ReferenceDataset:
+        datasets = datasets.annotate(data_type=Value(DataSetType.REFERENCE, IntegerField()))
+
+    if datasets.model is DataSet:
+        datasets = datasets.annotate(data_type=F("type"))
+
+    if datasets.model is VisualisationCatalogueItem:
+        datasets = datasets.annotate(data_type=Value(DataSetType.VISUALISATION, IntegerField()))
+
+    # is_open_data
+
+    if datasets.model is ReferenceDataset:
+        datasets = datasets.annotate(is_open_data=Value(False, BooleanField()))
+
+    if datasets.model is DataSet or datasets.model is VisualisationCatalogueItem:
         datasets = datasets.annotate(
-            purpose=Value(DataSetType.DATACUT, IntegerField()),
-            data_type=Value(DataSetType.REFERENCE, IntegerField()),
-            is_open_data=Value(False, BooleanField()),
-            has_visuals=Value(False, BooleanField()),
-        )
-    else:
-        dataset_visual_filter = DataSetVisualisation.objects.filter(dataset_id=OuterRef("id"))
-        datasets = datasets.annotate(
-            purpose=F("type"),
-            data_type=F("type"),
             is_open_data=Case(
                 When(user_access_type=UserAccessType.OPEN, then=True),
                 default=False,
                 output_field=BooleanField(),
-            ),
-            has_visuals=Case(
-                When(Exists(dataset_visual_filter), then=True),
-                default=False,
-                output_field=BooleanField(),
-            ),
+            )
         )
 
-    # We are joining on the user permissions table to determine `_has_access`` to the dataset, so we need to
-    # group them and remove duplicates. We aggregate all the `_has_access` fields together and return true if any
-    # of the records say that access is available.
-    datasets = (
-        datasets.values(
-            id_field,
-            "name",
-            "slug",
-            "short_description",
-            "search_rank",
-            "source_tag_names",
-            "source_tag_ids",
-            "topic_tag_names",
-            "topic_tag_ids",
-            "purpose",
-            "data_type",
-            "published",
-            "published_at",
-            "is_open_data",
-            "has_visuals",
-            "eligibility_criteria",
+    # has_visuals
+
+    if datasets.model is ReferenceDataset or datasets.model is VisualisationCatalogueItem:
+        datasets = datasets.annotate(has_visuals=Value(False, BooleanField()))
+
+    if datasets.model is DataSet:
+        datasets = datasets.annotate(
+            has_visuals=Case(
+                When(
+                    Exists(DataSetVisualisation.objects.filter(dataset_id=OuterRef("id"))),
+                    then=True,
+                ),
+                default=False,
+                output_field=BooleanField(),
+            )
         )
-        .annotate(has_access=BoolOr("_has_access"))
-        .annotate(is_bookmarked=BoolOr("_is_bookmarked"))
-        .annotate(is_subscribed=BoolOr("_is_subscribed"))
-    )
 
     return datasets.values(
         id_field,
@@ -364,39 +248,38 @@ def _get_datasets_data_for_user_matching_query(
         "source_tag_ids",
         "topic_tag_names",
         "topic_tag_ids",
-        "purpose",
         "data_type",
         "published",
         "published_at",
         "is_open_data",
         "has_visuals",
-        "eligibility_criteria",
         "has_access",
         "is_bookmarked",
         "is_subscribed",
     )
 
 
-def _sorted_datasets_and_visualisations_matching_query_for_user(
-    query, use, data_type, user, sort_by
-):
+def _sorted_datasets_and_visualisations_matching_query_for_user(query, user, sort_by):
     """
     Retrieves all master datasets, datacuts, reference datasets and visualisations (i.e. searchable items)
     and returns them, sorted by incoming sort field, default is desc(search_rank).
     """
     master_and_datacut_datasets = _get_datasets_data_for_user_matching_query(
-        DataSet.objects.live(), query, use, data_type, user=user, id_field="id"
+        DataSet.objects.live(),
+        query,
+        id_field="id",
+        user=user,
     )
 
     reference_datasets = _get_datasets_data_for_user_matching_query(
         ReferenceDataset.objects.live(),
         query,
-        user=user,
         id_field="uuid",
+        user=user,
     )
 
-    visualisations = _get_visualisations_data_for_user_matching_query(
-        VisualisationCatalogueItem.objects.live(), query, user=user
+    visualisations = _get_datasets_data_for_user_matching_query(
+        VisualisationCatalogueItem.objects.live(), query, id_field="id", user=user
     )
 
     # Combine all datasets and visualisations and order them.
@@ -416,8 +299,6 @@ def search_for_datasets(user, filters: SearchDatasetsFilters, matcher) -> tuple:
     all_datasets_visible_to_user_matching_query = (
         _sorted_datasets_and_visualisations_matching_query_for_user(
             query=filters.query,
-            use=filters.use,
-            data_type=filters.data_type,
             user=user,
             sort_by=filters.sort_type,
         )

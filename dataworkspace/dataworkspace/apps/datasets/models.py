@@ -761,6 +761,22 @@ class SourceTable(BaseSource):
         )
 
 
+class SourceTableFieldDefinition(models.Model):
+    field = models.CharField(
+        max_length=63,
+        blank=False,
+        validators=[RegexValidator(regex=r"^[a-zA-Z][a-zA-Z0-9_\.]*$")],
+    )
+    description = models.CharField(
+        max_length=1024,
+        blank=True,
+        null=True,
+    )
+    source_table = models.ForeignKey(
+        SourceTable, on_delete=models.CASCADE, related_name="field_definitions"
+    )
+
+
 class SourceView(BaseSource):
     view = models.CharField(
         max_length=1024,

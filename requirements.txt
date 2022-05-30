@@ -215,7 +215,7 @@ psycopg2-binary==2.9.2
     # via -r requirements.in
 pycparser==2.20
     # via cffi
-pyjwt==1.7.1
+pyjwt==2.4.0
     # via
     #   -r requirements.in
     #   notifications-python-client
