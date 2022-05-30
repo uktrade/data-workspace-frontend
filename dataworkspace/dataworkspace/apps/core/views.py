@@ -111,13 +111,17 @@ class SupportView(FormView):
             return HttpResponseRedirect(reverse("request_data:index"))
 
         if cleaned["support_type"] == form.SupportTypes.TECH_SUPPORT:
-            return HttpResponseRedirect(f'{reverse("technical-support")}?email={cleaned["email"]}')
+            return HttpResponseRedirect(
+                f'{reverse("technical-support")}?email={cleaned["email"]}'
+            )
 
         tag = self.ZENDESK_TAGS.get(self.request.GET.get("tag"))
         ticket_id = create_support_request(
             self.request.user, cleaned["email"], cleaned["message"], tag=tag
         )
-        return HttpResponseRedirect(reverse("support-success", kwargs={"ticket_id": ticket_id}))
+        return HttpResponseRedirect(
+            reverse("support-success", kwargs={"ticket_id": ticket_id})
+        )
 
 
 class NewsletterSubscriptionView(View):
@@ -125,14 +129,17 @@ class NewsletterSubscriptionView(View):
         subscribed = False
         email = user.email
 
-        query = NewsletterSubscription.objects.filter(user=user)
+        try:
+            subscription = NewsletterSubscription.objects.get(user=user)
 
-        if query.exists():
-            subscription = query.first()
             subscribed = subscription.is_active
             email = (
-                subscription.email_address if subscription.is_active else self.request.user.email
+                subscription.email_address
+                if subscription.is_active
+                else self.request.user.email
             )
+        except NewsletterSubscription.DoesNotExist:
+            pass
 
         return subscribed, email
 
@@ -162,7 +169,9 @@ class NewsletterSubscriptionView(View):
                 },
             )
 
-        subscription, _ = NewsletterSubscription.objects.get_or_create(user=request.user)
+        subscription, _ = NewsletterSubscription.objects.get_or_create(
+            user=request.user
+        )
 
         should_subscribe = form.cleaned_data.get("submit_action") == "subscribe"
         subscription.is_active = should_subscribe
@@ -224,7 +233,9 @@ def table_data_view(request, database, schema, table):
         return HttpResponseNotAllowed(["GET"])
     elif not can_access_schema_table(request.user, database, schema, table):
         return HttpResponseForbidden()
-    elif not (view_exists(database, schema, table) or table_exists(database, schema, table)):
+    elif not (
+        view_exists(database, schema, table) or table_exists(database, schema, table)
+    ):
         return HttpResponseNotFound()
     else:
         return table_data(request.user.email, database, schema, table)
@@ -252,7 +263,9 @@ class TechnicalSupportView(FormView):
             f'What should have happened?\n{cleaned["what_should_have_happened"]}'
         )
         ticket_id = create_support_request(self.request.user, cleaned["email"], message)
-        return HttpResponseRedirect(reverse("support-success", kwargs={"ticket_id": ticket_id}))
+        return HttpResponseRedirect(
+            reverse("support-success", kwargs={"ticket_id": ticket_id})
+        )
 
 
 class ServeS3UploadedFileView(View):
@@ -270,7 +283,9 @@ class ServeS3UploadedFileView(View):
             file_object = client.get_object(Bucket=file_storage.bucket, Key=path)
         except ClientError as ex:
             try:
-                return HttpResponse(status=ex.response["ResponseMetadata"]["HTTPStatusCode"])
+                return HttpResponse(
+                    status=ex.response["ResponseMetadata"]["HTTPStatusCode"]
+                )
             except KeyError:
                 return HttpResponseServerError()
 
@@ -302,7 +317,9 @@ class CreateTableDAGStatusView(View):
         config = settings.DATAFLOW_API_CONFIG
         try:
             return JsonResponse(
-                get_dataflow_dag_status(config["DATAFLOW_S3_IMPORT_DAG"], execution_date)
+                get_dataflow_dag_status(
+                    config["DATAFLOW_S3_IMPORT_DAG"], execution_date
+                )
             )
         except HTTPError as e:
             return JsonResponse({}, status=e.response.status_code)
