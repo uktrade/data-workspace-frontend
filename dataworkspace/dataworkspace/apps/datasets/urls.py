@@ -273,7 +273,7 @@ urlpatterns = [
         name="dataset_charts",
     ),
     path(
-        "<uuid:pk>/manage",
+        "<uuid:pk>/manage/",
         include(
             ("dataworkspace.apps.datasets.manager.urls", "dataset_manager"),
             namespace="manager",
