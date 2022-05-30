@@ -3,7 +3,7 @@ from dataworkspace.apps.datasets.constants import TagType
 
 sources = ["dev", "Superset"]
 
-topics = ["Example Data"]
+topics = ["Example Data", "Open Data"]
 
 
 def get_dev_source_tag():
