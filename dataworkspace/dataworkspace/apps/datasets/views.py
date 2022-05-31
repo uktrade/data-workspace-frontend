@@ -4,7 +4,7 @@ import json
 import logging
 import uuid
 from abc import ABCMeta, abstractmethod
-from collections import namedtuple
+from collections import defaultdict, namedtuple
 from contextlib import closing
 from itertools import chain
 from typing import Set
@@ -281,6 +281,21 @@ def find_datasets(request):
 
     for dataset in datasets:
         _enrich_tags(dataset, tags_dict)
+
+    datasets_by_type = defaultdict(list)
+    for dataset in datasets:
+        datasets_by_type[dataset["data_type"]].append(dataset)
+
+    for dataset in datasets_by_type[DataSetType.REFERENCE.value]:
+        dataset["last_updated"] = _get_last_updated_date(dataset)
+
+    for dataset in datasets_by_type[DataSetType.MASTER.value]:
+        dataset["last_updated"] = _get_last_updated_date(dataset)
+
+    for dataset in datasets_by_type[DataSetType.DATACUT.value]:
+        dataset["last_updated"] = _get_last_updated_date(dataset)
+
+    for dataset in datasets_by_type[DataSetType.VISUALISATION.value]:
         dataset["last_updated"] = _get_last_updated_date(dataset)
 
     return render(
