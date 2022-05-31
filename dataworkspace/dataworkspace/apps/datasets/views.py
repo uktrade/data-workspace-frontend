@@ -228,25 +228,6 @@ def find_datasets(request):
 
         return [link.data_source_last_updated for link in dataset.visualisationlink_set.all()]
 
-    def _get_last_updated_date(dataset):
-        last_updated_dates = []
-
-        if dataset["data_type"] == DataSetType.REFERENCE:
-            last_updated_dates = _get_reference_dataset_last_updated(dataset["id"])
-
-        elif dataset["data_type"] == DataSetType.MASTER:
-            last_updated_dates = _get_master_dataset_last_updated(dataset["id"])
-
-        elif dataset["data_type"] == DataSetType.DATACUT:
-            last_updated_dates = _get_datacut_query_last_updated(dataset["id"])
-
-        elif dataset["data_type"] == DataSetType.VISUALISATION:
-            last_updated_dates = _get_visualisationcatalogue_link_last_updated(dataset["id"])
-
-        last_update_dates_no_null = [d for d in last_updated_dates if d is not None]
-
-        return max(last_update_dates_no_null, default=None)
-
     form = DatasetSearchForm(request.GET)
 
     if not form.is_valid():
@@ -287,16 +268,32 @@ def find_datasets(request):
         datasets_by_type[dataset["data_type"]].append(dataset)
 
     for dataset in datasets_by_type[DataSetType.REFERENCE.value]:
-        dataset["last_updated"] = _get_last_updated_date(dataset)
+        dataset["last_updated"] = max(
+            (d for d in _get_reference_dataset_last_updated(dataset["id"]) if d is not None),
+            default=None,
+        )
 
     for dataset in datasets_by_type[DataSetType.MASTER.value]:
-        dataset["last_updated"] = _get_last_updated_date(dataset)
+        dataset["last_updated"] = max(
+            (d for d in _get_master_dataset_last_updated(dataset["id"]) if d is not None),
+            default=None,
+        )
 
     for dataset in datasets_by_type[DataSetType.DATACUT.value]:
-        dataset["last_updated"] = _get_last_updated_date(dataset)
+        dataset["last_updated"] = max(
+            (d for d in _get_datacut_query_last_updated(dataset["id"]) if d is not None),
+            default=None,
+        )
 
     for dataset in datasets_by_type[DataSetType.VISUALISATION.value]:
-        dataset["last_updated"] = _get_last_updated_date(dataset)
+        dataset["last_updated"] = max(
+            (
+                d
+                for d in _get_visualisationcatalogue_link_last_updated(dataset["id"])
+                if d is not None
+            ),
+            default=None,
+        )
 
     return render(
         request,
