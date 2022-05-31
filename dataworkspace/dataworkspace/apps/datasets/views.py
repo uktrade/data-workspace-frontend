@@ -201,38 +201,33 @@ def find_datasets(request):
             dataset["topics"].append(tag)
 
     def _get_reference_dataset_last_updated(dataset_id):
-        datasets = ReferenceDataset.objects.filter(uuid=dataset_id)
+        dataset = ReferenceDataset.objects.get(uuid=dataset_id)
 
         try:
             # If the reference dataset csv table doesn't exist we
             # get an unhandled relation does not exist error
             # this is currently only a problem with integration tests
-            return [datasets.first().data_last_updated]
+            return [dataset.data_last_updated]
         except ProgrammingError as e:
             logger.error(e)
             return []
 
     def _get_master_dataset_last_updated(dataset_id):
-        datasets = MasterDataset.objects.filter(id=dataset_id)
+        dataset = MasterDataset.objects.get(id=dataset_id)
 
-        return [
-            table.get_data_last_updated_date() for table in datasets.first().sourcetable_set.all()
-        ]
+        return [table.get_data_last_updated_date() for table in dataset.sourcetable_set.all()]
 
     def _get_datacut_query_last_updated(dataset_id):
-        datasets = DataCutDataset.objects.filter(id=dataset_id)
+        dataset = DataCutDataset.objects.get(id=dataset_id)
 
         return [
-            query.get_data_last_updated_date()
-            for query in datasets.first().customdatasetquery_set.all()
+            query.get_data_last_updated_date() for query in dataset.customdatasetquery_set.all()
         ]
 
     def _get_visualisationcatalogue_link_last_updated(dataset_id):
-        datasets = VisualisationCatalogueItem.objects.filter(id=dataset_id)
+        dataset = VisualisationCatalogueItem.objects.get(id=dataset_id)
 
-        return [
-            link.data_source_last_updated for link in datasets.first().visualisationlink_set.all()
-        ]
+        return [link.data_source_last_updated for link in dataset.visualisationlink_set.all()]
 
     def _get_last_updated_date(dataset):
         last_updated_dates = []
