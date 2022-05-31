@@ -202,8 +202,6 @@ def find_datasets(request):
 
     def _get_reference_dataset_last_updated(dataset_id):
         datasets = ReferenceDataset.objects.filter(uuid=dataset_id)
-        if not datasets.exists():
-            return []
 
         try:
             # If the reference dataset csv table doesn't exist we
@@ -216,8 +214,6 @@ def find_datasets(request):
 
     def _get_master_dataset_last_updated(dataset_id):
         datasets = MasterDataset.objects.filter(id=dataset_id)
-        if not datasets.exists():
-            return []
 
         return [
             table.get_data_last_updated_date() for table in datasets.first().sourcetable_set.all()
@@ -225,8 +221,6 @@ def find_datasets(request):
 
     def _get_datacut_query_last_updated(dataset_id):
         datasets = DataCutDataset.objects.filter(id=dataset_id)
-        if not datasets.exists():
-            return []
 
         return [
             query.get_data_last_updated_date()
@@ -235,8 +229,6 @@ def find_datasets(request):
 
     def _get_visualisationcatalogue_link_last_updated(dataset_id):
         datasets = VisualisationCatalogueItem.objects.filter(id=dataset_id)
-        if not datasets.exists():
-            return []
 
         return [
             link.data_source_last_updated for link in datasets.first().visualisationlink_set.all()
