@@ -45,9 +45,7 @@ open_datasets = [
         "name": "GDACS global disaster data",
         "short_description": "This dataset contains geographical risk information on natural disasters held by GDACS.",
         "description": '<div>This dataset contains geographical risk information on natural disasters held by the Global Disaster Alert and Coordination System (GDACS). This includes the most recent geographical alerts for events categorised as orange and red in the previous 12 months.</div>  <div>&nbsp;</div>  <div>This data has been collected by GDACS to facilitate international exchange and decision making, and the dataset will be used by the Global Supply Chains teams for the purposes of coordinating geographical risk information.&nbsp;</div>  <div>&nbsp;</div>  <h2>About GDACS&nbsp;</h2>  <div><a href="https://www.gdacs.org/">The Global Disaster Alert and Coordination System (GDACS)</a> is a cooperation framework between the United Nations, the European Commission and disaster managers worldwide to improve alerts, information exchange and coordination in the first phase after major sudden-onset disasters.&nbsp;&nbsp;The objective of GDACS is to assess the overall impact of natural hazards on affected countries.</div>  <div>&nbsp;</div>  <div>GDACS alert levels aim at drawing attention to events&nbsp;that might turn out to be serious enough to require international intervention, or, that could overwhelm national authorities\' response capacity.&nbsp;GDCAS alerts are issued&nbsp;for earthquakes and possibly subsequent tsunamis, tropical cyclones, floods and volcanoes.</div>  <div>&nbsp;</div>  <div>The selection and alert level of natural hazards in GDACS is based on automatic impact assessment models, without human intervention. Information about the location, strength and other characteristics is then used to calculate&nbsp;the affected area and the expected impact. Detailed information on how these levels are calculated for various events can be found <a href="https://www.gdacs.org/Knowledge/overview.aspx">here</a>.&nbsp;</div>  <h2>How to use this Data&nbsp;</h2>  <div>There is one table available: major_events.<br> <br> This dataset is an open dataset collected and published by&nbsp;GDACS.&nbsp;</div> ',
-        "source_tables": [
-            {"database": "datasets", "schema": "gdacs", "table": "major_events"}
-        ],
+        "source_tables": [{"database": "datasets", "schema": "gdacs", "table": "major_events"}],
     },
     {
         "name": "COVID-19 Johns Hopkins University data",
@@ -68,9 +66,7 @@ master_datasets = [
         "name": "Trivial Example",
         "short_description": "A trivial dataset based on the DIT readme example",
         "description": '<div>A trivially simple dataset based on the example airflow DAG from DIT <a href="#">developer manual</a></div>\r\n\r\n<div>&nbsp;</div>\r\n\r\n<div>&nbsp;</div>\r\n\r\n<div>&nbsp;</div>\r\n\r\n<div>&nbsp;</div>',
-        "source_tables": [
-            {"database": "datasets", "schema": "example", "table": "local__spoons"}
-        ],
+        "source_tables": [{"database": "datasets", "schema": "example", "table": "local__spoons"}],
     },
     {
         "name": "Superset Video Game Sales",
@@ -129,9 +125,7 @@ def create_opendata_datasets(iam_user, iao_user, stdout):
 def create_example_datasets(iam_user, iao_user, stdout):
     for dataset in master_datasets:
         dataset["restrictons_on_usage"] = "No restrictions - this is example data"
-    return _create_datasets(
-        iam_user, iao_user, master_datasets, "REQUIRES_AUTHORIZATION", stdout
-    )
+    return _create_datasets(iam_user, iao_user, master_datasets, "REQUIRES_AUTHORIZATION", stdout)
 
 
 def _create_datasets(iam_user, iao_user, datasets, access_type, stdout):
@@ -148,8 +142,7 @@ def _create_datasets(iam_user, iao_user, datasets, access_type, stdout):
         )
 
         stdout.write(
-            "MasterDataset %s was %s"
-            % (dataset["name"], "created" if created else "updated")
+            "MasterDataset %s was %s" % (dataset["name"], "created" if created else "updated")
         )
 
         catalogue_item.users_access_type = access_type
@@ -179,6 +172,5 @@ def _create_datasets(iam_user, iao_user, datasets, access_type, stdout):
             )
 
             stdout.write(
-                "  SourceTable %s was %s"
-                % (source["table"], "created" if created else "updated")
+                "  SourceTable %s was %s" % (source["table"], "created" if created else "updated")
             )

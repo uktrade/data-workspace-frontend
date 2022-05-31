@@ -15,9 +15,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(msg))
 
     def handle(self, *args, **options):
-        admin, created = create_or_update_admin_user(
-            ADMIN_EMAIL, ADMIN_EMAIL, self.stdout
-        )
+        admin, created = create_or_update_admin_user(ADMIN_EMAIL, ADMIN_EMAIL, self.stdout)
         self.stdout.write(
             "Admin user: %s was %s"
             % (
@@ -26,9 +24,7 @@ class Command(BaseCommand):
             )
         )
 
-        iam, created = create_or_update_user(
-            IAM_EMAIL, IAM_EMAIL, "Information Asset", "Manager"
-        )
+        iam, created = create_or_update_user(IAM_EMAIL, IAM_EMAIL, "Information Asset", "Manager")
         self.stdout.write(
             "IAM: %s was %s"
             % (
@@ -37,9 +33,7 @@ class Command(BaseCommand):
             )
         )
 
-        iao, created = create_or_update_user(
-            IAO_EMAIL, IAO_EMAIL, "Information Asset", "Owner"
-        )
+        iao, created = create_or_update_user(IAO_EMAIL, IAO_EMAIL, "Information Asset", "Owner")
         self.stdout.write(
             "IAO: %s was %s"
             % (
