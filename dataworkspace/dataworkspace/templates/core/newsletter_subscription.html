@@ -1,0 +1,57 @@
+{% extends '_main.html' %}
+
+{% load waffle_tags %}
+
+{% block page_title %}Subscription to newsletter{% endblock page_title %}
+
+{% block content %}
+{{errors}}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      {% if is_currently_subscribed %}
+        <h1 class="govuk-heading-xl">Unsubscribe from our newsletter</h1>
+        <p class="govuk-body">
+          Please unsubscribe below if you no longer wish to receive the Data Workspace newsletter. You can re-subscribe at any time.
+        </p>
+      {% else %}
+        <h1 class="govuk-heading-xl">Subscribe to our newsletter</h1>
+        <p class="govuk-body">
+      Please confirm your email address below if you would like to receive monthly updates on Data Workspace. These include:
+      <ul class="govuk-list govuk-list--bullet">
+        <li>New and upcoming features</li>
+        <li>New datasets and dashboards</li>
+        <li>Training and events</li>
+      </ul>
+    </p>
+      {% endif %}
+
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="govuk-form-group {% if form.errors %}govuk-form-group--error{% endif %}">
+          {% for error, msgs in form.errors.items %}
+            <p id="passport-issued-error" class="govuk-error-message">
+              <span class="govuk-visually-hidden">Error:</span> {% for msg in msgs %}{{ msg }} {% endfor %}
+            </p>
+          {% endfor %}
+          {% if is_currently_subscribed %}
+          <label class="govuk-label" for="{{ form.email.id_for_label }}">
+            Your subscription email address
+        </label>
+          
+          <input name="{{ form.email.name }}" type="hidden" value="{{ form.email.value }}"/>
+          <input class="govuk-input" id="{{ form.email.id_for_label }}" value="{{ form.email.value }}" disabled />
+          {% else %}
+          <label class="govuk-label" for="email">
+            Your email address
+        </label>
+          <input class="govuk-input" id="{{ form.email.id_for_label }}" name="{{ form.email.name }}" type="email" value="{{ form.email.value }}" required />
+          {% endif %}
+        </div> 
+        
+        <input type="hidden" id="{{ form.submit_action.id_for_label }}" name="{{ form.submit_action.name }}" value="{{ is_currently_subscribed|yesno:"unsubscribe,subscribe" }}"/>
+        <button data-module="govuk-button" data-prevent-double-click="true" type="submit" class="govuk-button">{{ is_currently_subscribed|yesno:"Unsubscribe,Subscribe" }}</button>
+      </form>
+
+    </div>
+  </div>
+{% endblock %}

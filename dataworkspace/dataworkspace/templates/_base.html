@@ -163,6 +163,11 @@
                 Help centre <span class="govuk-visually-hidden">(opens in a new tab)</span>
               </a>
             </li>
+            <li class="govuk-footer__list-item">
+              <a class="govuk-footer__link"  href="{% url 'newsletter_subscription' %}">
+                {% if IS_SUBSCRIBED_TO_NEWSLETTER %}Unsubscribe from{% else %}Subscribe to{% endif %} newsletter
+              </a>
+            </li>
           </ul>
         </div>
       </div>
