@@ -273,15 +273,17 @@ def find_datasets(request):
             default=None,
         )
 
-    for dataset in datasets_by_type[DataSetType.DATACUT.value]:
+    datacut_datasets = DataCutDataset.objects.filter(
+        id__in=tuple(dataset["id"] for dataset in datasets_by_type[DataSetType.DATACUT.value])
+    )
+    for datacut_dataset in datacut_datasets:
+        dataset = datasets_by_type_id[(DataSetType.DATACUT.value, datacut_dataset.id)]
         dataset["last_updated"] = max(
             (
                 d
                 for d in (
                     query.get_data_last_updated_date()
-                    for query in DataCutDataset.objects.get(
-                        id=dataset["id"]
-                    ).customdatasetquery_set.all()
+                    for query in datacut_dataset.customdatasetquery_set.all()
                 )
                 if d is not None
             ),
