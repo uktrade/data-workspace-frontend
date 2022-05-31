@@ -142,6 +142,20 @@ class UserSatisfactionSurvey(TimeStampedModel):
     improve_service = models.TextField(null=True, blank=True)
 
 
+class NewsletterSubscription(TimeStampedModel):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="newsletter_signups",
+        unique=True,
+    )
+    is_active = models.BooleanField(default=False)
+    email_address = models.CharField(max_length=256)
+
+    def __str__(self):
+        return str(self.user)
+
+
 class Team(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=256, unique=True)

@@ -661,6 +661,12 @@ def store_custom_dataset_query_metadata():
         sql = query.query.rstrip().rstrip(";")
 
         tables = extract_queried_tables_from_sql_query(query.database.memorable_name, sql)
+        if not tables:
+            logger.info(
+                "Not adding metadata for query %s as no tables could be extracted", query.name
+            )
+            continue
+
         tables_last_updated_date = get_tables_last_updated_date(
             query.database.memorable_name, tuple(tables)
         )

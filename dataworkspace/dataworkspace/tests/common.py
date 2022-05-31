@@ -12,9 +12,11 @@ from dataworkspace.apps.datasets.models import ReferenceDataset
 
 class BaseTestCaseMixin:
     def setUp(self):
+        username = "bob.testerson@test.com"
         self.user = get_user_model().objects.create(
-            username="bob.testerson@test.com", is_staff=True, is_superuser=True
+            username=username, is_staff=True, is_superuser=True, email=username
         )
+
         self.user.user_permissions.add(
             Permission.objects.get(
                 codename="start_all_applications",
@@ -22,6 +24,7 @@ class BaseTestCaseMixin:
             )
         )
         self.user.profile.sso_id = uuid.uuid4()
+
         self.user.profile.save()
 
         self.user_data = {
