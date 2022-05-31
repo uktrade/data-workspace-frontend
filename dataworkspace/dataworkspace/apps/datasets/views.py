@@ -175,7 +175,6 @@ def has_unpublished_dataset_access(user):
 def _get_tags_as_dict():
     """
     Gets all tags and returns them as a dictionary keyed by the tag.id as a string
-    This is a workaround until we refactor dataset search
     @return:
     """
     tags = Tag.objects.all()
@@ -280,7 +279,6 @@ def find_datasets(request):
 
     datasets = paginator.get_page(request.GET.get("page"))
 
-    # This is a workaround until we refactor search
     for dataset in datasets:
         _enrich_tags(dataset, tags_dict)
         dataset["last_updated"] = _get_last_updated_date(dataset)
