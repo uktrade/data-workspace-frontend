@@ -234,18 +234,24 @@ def find_datasets(request):
     for dataset in datasets:
         _enrich_tags(dataset, tags_dict)
 
+    # Data structures so can easily loop over datasets dicts for a type, and
+    # find a dataset dict by type and ID
     datasets_by_type = defaultdict(list)
+    datasets_by_type_id = {}
     for dataset in datasets:
         datasets_by_type[dataset["data_type"]].append(dataset)
+        datasets_by_type_id[(dataset["data_type"], dataset["id"])] = dataset
 
-    for dataset in datasets_by_type[DataSetType.REFERENCE.value]:
+    reference_datasets = ReferenceDataset.objects.filter(
+        uuid__in=tuple(dataset["id"] for dataset in datasets_by_type[DataSetType.REFERENCE.value])
+    )
+    for reference_dataset in reference_datasets:
+        dataset = datasets_by_type_id[(DataSetType.REFERENCE.value, reference_dataset.uuid)]
         try:
             # If the reference dataset csv table doesn't exist we
             # get an unhandled relation does not exist error
             # this is currently only a problem with integration tests
-            dataset["last_updated"] = ReferenceDataset.objects.get(
-                uuid=dataset["id"]
-            ).data_last_updated
+            dataset["last_updated"] = reference_dataset.data_last_updated
         except ProgrammingError as e:
             logger.error(e)
             dataset["last_updated"] = None
