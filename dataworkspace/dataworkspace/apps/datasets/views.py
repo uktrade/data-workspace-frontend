@@ -256,13 +256,17 @@ def find_datasets(request):
             logger.error(e)
             dataset["last_updated"] = None
 
-    for dataset in datasets_by_type[DataSetType.MASTER.value]:
+    master_datasets = MasterDataset.objects.filter(
+        id__in=tuple(dataset["id"] for dataset in datasets_by_type[DataSetType.MASTER.value])
+    )
+    for master_dataset in master_datasets:
+        dataset = datasets_by_type_id[(DataSetType.MASTER.value, master_dataset.id)]
         dataset["last_updated"] = max(
             (
                 d
                 for d in (
                     table.get_data_last_updated_date()
-                    for table in MasterDataset.objects.get(id=dataset["id"]).sourcetable_set.all()
+                    for table in master_dataset.sourcetable_set.all()
                 )
                 if d is not None
             ),
