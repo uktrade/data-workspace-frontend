@@ -58,6 +58,7 @@ docker-check-migrations:
 
 .PHONY: check-black
 check-black:
+	@black --version
 	black --check .
 
 .PHONY: check-pylint
