@@ -178,22 +178,13 @@ def _get_datasets_data_for_user_matching_query(
             )
         )
 
-    # source_tag_ids and source_tag_names
+    # tags
 
     datasets = datasets.annotate(
         source_tag_ids=ArrayAgg("tags", filter=Q(tags__type=TagType.SOURCE), distinct=True)
     )
     datasets = datasets.annotate(
-        source_tag_names=ArrayAgg("tags__name", filter=Q(tags__type=TagType.SOURCE), distinct=True)
-    )
-
-    # topic_tag_ids and topic_tag_names
-
-    datasets = datasets.annotate(
         topic_tag_ids=ArrayAgg("tags", filter=Q(tags__type=TagType.TOPIC), distinct=True)
-    )
-    datasets = datasets.annotate(
-        topic_tag_names=ArrayAgg("tags__name", filter=Q(tags__type=TagType.TOPIC), distinct=True)
     )
 
     # data_type
@@ -244,9 +235,7 @@ def _get_datasets_data_for_user_matching_query(
         "slug",
         "short_description",
         "search_rank",
-        "source_tag_names",
         "source_tag_ids",
-        "topic_tag_names",
         "topic_tag_ids",
         "data_type",
         "published",
