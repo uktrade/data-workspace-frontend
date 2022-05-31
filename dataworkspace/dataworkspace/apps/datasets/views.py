@@ -199,35 +199,6 @@ def find_datasets(request):
             tag = tags_dict.get(str(topic_id))
             dataset["topics"].append(tag)
 
-    def _get_reference_dataset_last_updated(dataset_id):
-        dataset = ReferenceDataset.objects.get(uuid=dataset_id)
-
-        try:
-            # If the reference dataset csv table doesn't exist we
-            # get an unhandled relation does not exist error
-            # this is currently only a problem with integration tests
-            return [dataset.data_last_updated]
-        except ProgrammingError as e:
-            logger.error(e)
-            return []
-
-    def _get_master_dataset_last_updated(dataset_id):
-        dataset = MasterDataset.objects.get(id=dataset_id)
-
-        return [table.get_data_last_updated_date() for table in dataset.sourcetable_set.all()]
-
-    def _get_datacut_query_last_updated(dataset_id):
-        dataset = DataCutDataset.objects.get(id=dataset_id)
-
-        return [
-            query.get_data_last_updated_date() for query in dataset.customdatasetquery_set.all()
-        ]
-
-    def _get_visualisationcatalogue_link_last_updated(dataset_id):
-        dataset = VisualisationCatalogueItem.objects.get(id=dataset_id)
-
-        return [link.data_source_last_updated for link in dataset.visualisationlink_set.all()]
-
     form = DatasetSearchForm(request.GET)
 
     if not form.is_valid():
@@ -268,29 +239,53 @@ def find_datasets(request):
         datasets_by_type[dataset["data_type"]].append(dataset)
 
     for dataset in datasets_by_type[DataSetType.REFERENCE.value]:
-        dataset["last_updated"] = max(
-            (d for d in _get_reference_dataset_last_updated(dataset["id"]) if d is not None),
-            default=None,
-        )
+        try:
+            # If the reference dataset csv table doesn't exist we
+            # get an unhandled relation does not exist error
+            # this is currently only a problem with integration tests
+            dataset["last_updated"] = ReferenceDataset.objects.get(
+                uuid=dataset["id"]
+            ).data_last_updated
+        except ProgrammingError as e:
+            logger.error(e)
+            dataset["last_updated"] = None
 
     for dataset in datasets_by_type[DataSetType.MASTER.value]:
         dataset["last_updated"] = max(
-            (d for d in _get_master_dataset_last_updated(dataset["id"]) if d is not None),
+            (
+                d
+                for d in (
+                    table.get_data_last_updated_date()
+                    for table in MasterDataset.objects.get(id=dataset["id"]).sourcetable_set.all()
+                )
+                if d is not None
+            ),
             default=None,
         )
 
     for dataset in datasets_by_type[DataSetType.DATACUT.value]:
         dataset["last_updated"] = max(
-            (d for d in _get_datacut_query_last_updated(dataset["id"]) if d is not None),
+            (
+                d
+                for d in (
+                    query.get_data_last_updated_date()
+                    for query in DataCutDataset.objects.get(
+                        id=dataset["id"]
+                    ).customdatasetquery_set.all()
+                )
+                if d is not None
+            ),
             default=None,
         )
 
     for dataset in datasets_by_type[DataSetType.VISUALISATION.value]:
         dataset["last_updated"] = max(
             (
-                d
-                for d in _get_visualisationcatalogue_link_last_updated(dataset["id"])
-                if d is not None
+                link.data_source_last_updated
+                for link in VisualisationCatalogueItem.objects.get(
+                    id=dataset["id"]
+                ).visualisationlink_set.all()
+                if link.data_source_last_updated is not None
             ),
             default=None,
         )
