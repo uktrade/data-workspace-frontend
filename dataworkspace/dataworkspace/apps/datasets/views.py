@@ -296,24 +296,22 @@ def find_datasets(request):
         ]
     )
 
+    def _without_none(it):
+        return (val for val in it if val is not None)
+
     for master_dataset in master_datasets:
         dataset = datasets_by_type_id[(DataSetType.MASTER.value, master_dataset.id)]
         dataset["last_updated"] = max(
-            (
-                d
-                for d in (
+            _without_none(
+                (
                     tables_and_last_updated_dates[databases[table.database_id].memorable_name].get(
                         (table.schema, table.table)
                     )
                     for table in master_dataset.sourcetable_set.all()
                 )
-                if d is not None
             ),
             default=None,
         )
-
-    def _without_none(it):
-        return (val for val in it if val is not None)
 
     for datacut_dataset in datacut_datasets:
         dataset = datasets_by_type_id[(DataSetType.DATACUT.value, datacut_dataset.id)]
