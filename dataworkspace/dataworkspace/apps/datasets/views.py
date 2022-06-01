@@ -188,11 +188,6 @@ def _get_tags_as_dict():
 
 @require_GET
 def find_datasets(request):
-    def _enrich_tags(dataset, tags_dict):
-        dataset["sources"] = [
-            tags_dict.get(str(source_id)) for source_id in dataset["source_tag_ids"]
-        ]
-        dataset["topics"] = [tags_dict.get(str(topic_id)) for topic_id in dataset["topic_tag_ids"]]
 
     form = DatasetSearchForm(request.GET)
 
@@ -225,7 +220,10 @@ def find_datasets(request):
     datasets = paginator.get_page(request.GET.get("page"))
 
     for dataset in datasets:
-        _enrich_tags(dataset, tags_dict)
+        dataset["sources"] = [
+            tags_dict.get(str(source_id)) for source_id in dataset["source_tag_ids"]
+        ]
+        dataset["topics"] = [tags_dict.get(str(topic_id)) for topic_id in dataset["topic_tag_ids"]]
 
     # Data structures so can easily loop over datasets dicts for a type, and
     # find a dataset dict by type and ID
