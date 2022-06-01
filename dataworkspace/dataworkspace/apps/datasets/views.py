@@ -199,8 +199,6 @@ def find_datasets(request):
         "data_type"
     ].choices  # Cache these now, as we annotate them with result numbers later which we don't want here.
 
-    tags_dict = _get_tags_as_dict()
-
     filters = form.get_filters()
 
     all_visible_datasets, matched_datasets = search_for_datasets(
@@ -219,6 +217,7 @@ def find_datasets(request):
 
     datasets = paginator.get_page(request.GET.get("page"))
 
+    tags_dict = _get_tags_as_dict()
     for dataset in datasets:
         dataset["sources"] = [
             tags_dict.get(str(source_id)) for source_id in dataset["source_tag_ids"]
