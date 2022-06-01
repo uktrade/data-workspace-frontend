@@ -227,8 +227,6 @@ def find_datasets(request):
         settings.SEARCH_RESULTS_DATASETS_PER_PAGE,
     )
 
-    data_types.append((DataSetType.VISUALISATION, "Visualisation"))
-
     datasets = paginator.get_page(request.GET.get("page"))
 
     for dataset in datasets:
