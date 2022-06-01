@@ -189,15 +189,10 @@ def _get_tags_as_dict():
 @require_GET
 def find_datasets(request):
     def _enrich_tags(dataset, tags_dict):
-        dataset["sources"] = []
-        for source_id in dataset["source_tag_ids"]:
-            tag = tags_dict.get(str(source_id))
-            dataset["sources"].append(tag)
-
-        dataset["topics"] = []
-        for topic_id in dataset["topic_tag_ids"]:
-            tag = tags_dict.get(str(topic_id))
-            dataset["topics"].append(tag)
+        dataset["sources"] = [
+            tags_dict.get(str(source_id)) for source_id in dataset["source_tag_ids"]
+        ]
+        dataset["topics"] = [tags_dict.get(str(topic_id)) for topic_id in dataset["topic_tag_ids"]]
 
     form = DatasetSearchForm(request.GET)
 
