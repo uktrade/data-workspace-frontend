@@ -294,7 +294,7 @@ def find_datasets(request):
         id__in=tuple(
             dataset["id"] for dataset in datasets_by_type[DataSetType.VISUALISATION.value]
         )
-    )
+    ).prefetch_related("visualisationlink_set")
     for visualisation_dataset in visualisation_datasets:
         dataset = datasets_by_type_id[(DataSetType.VISUALISATION.value, visualisation_dataset.id)]
         dataset["last_updated"] = max(
