@@ -1,3 +1,4 @@
+from collections import defaultdict
 import hashlib
 import json
 import logging
@@ -67,6 +68,43 @@ def get_earliest_tables_last_updated_date(database_name: str, tables: Tuple[Tupl
         modified_date, swap_table_date = cursor.fetchone()
         dt = modified_date or swap_table_date
         return dt.replace(tzinfo=pytz.UTC) if dt else None
+
+
+def get_all_tables_last_updated_date(tables: Tuple[Tuple[str, str, str]]):
+    """
+    Return the last updated dates in UTC for each table in a list of tables
+    """
+
+    def last_updated_date_for_database(database_name, tables_for_database: Tuple[Tuple[str, str]]):
+        with connections[database_name].cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT
+                    table_schema,
+                    table_name,
+                    MAX(source_data_modified_utc) AS modified_date,
+                    MAX(dataflow_swapped_tables_utc) AS swap_table_date
+                FROM dataflow.metadata
+                WHERE (table_schema, table_name) IN %s
+                GROUP BY (1, 2)
+                """,
+                [tuple(tables_for_database)],
+            )
+            return dict(
+                (
+                    (((table_schema, table_name), modified_date or swap_table_date))
+                    for table_schema, table_name, modified_date, swap_table_date in cursor.fetchall()
+                )
+            )
+
+    tables_by_database = defaultdict(list)
+    for database_name, table_schema, table_name in tables:
+        tables_by_database[database_name].append((table_schema, table_name))
+
+    return {
+        database_name: last_updated_date_for_database(database_name, tables_for_database)
+        for database_name, tables_for_database in tables_by_database.items()
+    }
 
 
 def extract_queried_tables_from_sql_query(database_name, query):

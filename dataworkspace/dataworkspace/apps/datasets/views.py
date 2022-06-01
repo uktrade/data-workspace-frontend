@@ -252,13 +252,23 @@ def find_datasets(request):
     datacut_datasets = DataCutDataset.objects.filter(
         id__in=tuple(dataset["id"] for dataset in datasets_by_type[DataSetType.DATACUT.value])
     ).prefetch_related("customdatasetquery_set")
+    tables_and_last_updated_dates = datasets_db.get_all_tables_last_updated_date(
+        [
+            (table.database.memorable_name, table.schema, table.table)
+            for master_dataset in master_datasets
+            for table in master_dataset.sourcetable_set.all()
+        ]
+    )
+
     for master_dataset in master_datasets:
         dataset = datasets_by_type_id[(DataSetType.MASTER.value, master_dataset.id)]
         dataset["last_updated"] = max(
             (
                 d
                 for d in (
-                    table.get_data_last_updated_date()
+                    tables_and_last_updated_dates[table.database.memorable_name].get(
+                        (table.schema, table.table)
+                    )
                     for table in master_dataset.sourcetable_set.all()
                 )
                 if d is not None
