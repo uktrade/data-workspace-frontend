@@ -174,14 +174,8 @@
               {{ source_table.get_data_last_updated_date|time_with_gmt_offset|default_if_none:"N/A" }}
             </td>
             <td class="govuk-table__cell app-table_cell--no-border">
-
               {% if source_table.type == source_table_type %}
                 {% if has_access %}
-                  <a href="{% url "datasets:data_dictionary" source_uuid=source_table.id %}?dataset_uuid={{dataset.id}}"
-                  class="govuk-link">
-                  Data dictionary
-                  </a>
-                  <br>
                   {% if source_table.data_grid_enabled %}
                     <a class="govuk-link"
                        href="{% url "datasets:source_table_detail" dataset_uuid=dataset.id object_id=source_table.id %}">
@@ -192,6 +186,13 @@
                        href="{% url "datasets:dataset_table_preview" dataset_uuid=dataset.id table_uuid=source_table.id %}">
                       Preview
                     </a>
+                  {% endif %}
+                  <br>
+                  {% if model.dictionary_published or request.user|can_edit_dataset:model %}
+                  <a href="{% url "datasets:data_dictionary" source_uuid=source_table.id %}?dataset_uuid={{dataset.id}}"
+                  class="govuk-link">
+                  Data dictionary
+                  </a>
                   {% endif %}
                   {% if request.user|can_edit_dataset:model %}
                     <br>
