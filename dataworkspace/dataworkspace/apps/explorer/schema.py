@@ -10,6 +10,7 @@ from django.core.cache import cache
 
 from dataworkspace.apps.explorer.connections import connections
 from dataworkspace.apps.explorer.utils import get_user_explorer_connection_settings
+from dataworkspace.apps.datasets.models import SourceTable
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +57,8 @@ Table = namedtuple("Table", ["name", "columns"])
 
 
 class TableName(namedtuple("TableName", ["schema", "name"])):
-    __slots__ = ()
+
+    dictionary_published = False
 
     def __str__(self):
         return f"{self.schema}.{self.name}"
@@ -128,3 +130,13 @@ def get_user_schema_info(request):
     schema = schema_info(user=request.user, connection_alias=settings.EXPLORER_DEFAULT_CONNECTION)
     tables_columns = [".".join(schema_table) for schema_table, _ in schema]
     return schema, tables_columns
+
+
+def match_datasets_with_schema_info(schema):
+    for s in schema:
+        logger.info(s.name.schema)
+        logger.info(s.name.name)
+        query = SourceTable.objects.filter(schema=s.name.schema, table=s.name.name)
+        if query.exists():
+            s.name.dictionary_published = query.first().dataset.dictionary_published
+    return schema
