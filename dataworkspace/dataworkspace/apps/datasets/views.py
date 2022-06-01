@@ -66,6 +66,9 @@ from dataworkspace.apps.core.utils import (
     view_exists,
     get_random_data_sample,
 )
+from dataworkspace.apps.core.models import (
+    Database,
+)
 from dataworkspace.apps.datasets.constants import (
     DataSetType,
     DataLinkType,
@@ -252,9 +255,11 @@ def find_datasets(request):
     datacut_datasets = DataCutDataset.objects.filter(
         id__in=tuple(dataset["id"] for dataset in datasets_by_type[DataSetType.DATACUT.value])
     ).prefetch_related("customdatasetquery_set")
+    databases = {database.id: database for database in Database.objects.all()}
+
     tables_and_last_updated_dates = datasets_db.get_all_tables_last_updated_date(
         [
-            (table.database.memorable_name, table.schema, table.table)
+            (databases[table.database_id].memorable_name, table.schema, table.table)
             for master_dataset in master_datasets
             for table in master_dataset.sourcetable_set.all()
         ]
@@ -266,7 +271,7 @@ def find_datasets(request):
             (
                 d
                 for d in (
-                    tables_and_last_updated_dates[table.database.memorable_name].get(
+                    tables_and_last_updated_dates[databases[table.database_id].memorable_name].get(
                         (table.schema, table.table)
                     )
                     for table in master_dataset.sourcetable_set.all()
