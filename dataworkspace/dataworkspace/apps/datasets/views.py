@@ -258,10 +258,10 @@ def find_datasets(request):
 
     master_datasets = MasterDataset.objects.filter(
         id__in=tuple(dataset["id"] for dataset in datasets_by_type[DataSetType.MASTER.value])
-    )
+    ).prefetch_related("sourcetable_set")
     datacut_datasets = DataCutDataset.objects.filter(
         id__in=tuple(dataset["id"] for dataset in datasets_by_type[DataSetType.DATACUT.value])
-    )
+    ).prefetch_related("customdatasetquery_set")
     for master_dataset in master_datasets:
         dataset = datasets_by_type_id[(DataSetType.MASTER.value, master_dataset.id)]
         dataset["last_updated"] = max(
