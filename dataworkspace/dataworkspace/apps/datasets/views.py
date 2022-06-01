@@ -192,6 +192,9 @@ def _get_tags_as_dict():
 @require_GET
 def find_datasets(request):
 
+    ###############
+    # Validate form
+
     form = DatasetSearchForm(request.GET)
 
     if not form.is_valid():
@@ -201,6 +204,9 @@ def find_datasets(request):
     data_types = form.fields[
         "data_type"
     ].choices  # Cache these now, as we annotate them with result numbers later which we don't want here.
+
+    ###############################################
+    # Find all results, and matching filter numbers
 
     filters = form.get_filters()
 
@@ -213,12 +219,18 @@ def find_datasets(request):
         matcher=_matches_filters,
     )
 
+    ####################################
+    # Select the current page of results
+
     paginator = Paginator(
         matched_datasets,
         settings.SEARCH_RESULTS_DATASETS_PER_PAGE,
     )
 
     datasets = paginator.get_page(request.GET.get("page"))
+
+    ########################################################
+    # Augment results with tags, avoiding queries-per-result
 
     tags_dict = _get_tags_as_dict()
     for dataset in datasets:
@@ -227,13 +239,18 @@ def find_datasets(request):
         ]
         dataset["topics"] = [tags_dict.get(str(topic_id)) for topic_id in dataset["topic_tag_ids"]]
 
-    # Data structures so can easily loop over datasets dicts for a type, and
-    # find a dataset dict by type and ID
+    ######################################################################
+    # Augment results with last updated dates, avoiding queries-per-result
+
+    # Data structures to quickly look up datasets as needed further down
+
     datasets_by_type = defaultdict(list)
     datasets_by_type_id = {}
     for dataset in datasets:
         datasets_by_type[dataset["data_type"]].append(dataset)
         datasets_by_type_id[(dataset["data_type"], dataset["id"])] = dataset
+
+    # Reference datasets
 
     reference_datasets = ReferenceDataset.objects.filter(
         uuid__in=tuple(dataset["id"] for dataset in datasets_by_type[DataSetType.REFERENCE.value])
@@ -248,6 +265,8 @@ def find_datasets(request):
         except ProgrammingError as e:
             logger.error(e)
             dataset["last_updated"] = None
+
+    # Master datasets and datacuts together to minimise metadata table queries
 
     master_datasets = MasterDataset.objects.filter(
         id__in=tuple(dataset["id"] for dataset in datasets_by_type[DataSetType.MASTER.value])
@@ -312,6 +331,8 @@ def find_datasets(request):
             ),
             default=None,
         )
+
+    # Visualisations
 
     visualisation_datasets = VisualisationCatalogueItem.objects.filter(
         id__in=tuple(
