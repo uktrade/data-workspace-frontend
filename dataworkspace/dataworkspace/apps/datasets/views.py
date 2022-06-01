@@ -28,6 +28,7 @@ from django.db.models import (
     Value,
     Func,
     Q,
+    Prefetch,
 )
 from django.db.models.functions import TruncDay
 from django.forms.models import model_to_dict
@@ -273,7 +274,12 @@ def find_datasets(request):
     ).prefetch_related("sourcetable_set")
     datacut_datasets = DataCutDataset.objects.filter(
         id__in=tuple(dataset["id"] for dataset in datasets_by_type[DataSetType.DATACUT.value])
-    ).prefetch_related("customdatasetquery_set")
+    ).prefetch_related(
+        Prefetch(
+            "customdatasetquery_set",
+            queryset=CustomDatasetQuery.objects.prefetch_related("tables"),
+        )
+    )
     databases = {database.id: database for database in Database.objects.all()}
 
     tables_and_last_updated_dates = datasets_db.get_all_tables_last_updated_date(
@@ -286,7 +292,7 @@ def find_datasets(request):
             (databases[query.database_id].memorable_name, table.schema, table.table)
             for datacut_dataset in datacut_datasets
             for query in datacut_dataset.customdatasetquery_set.all()
-            for table in query.customdatasetquerytable_set.all()
+            for table in query.tables.all()
         ]
     )
 
@@ -319,7 +325,7 @@ def find_datasets(request):
                                 tables_and_last_updated_dates[
                                     databases[query.database_id].memorable_name
                                 ].get((table.schema, table.table))
-                                for table in query.customdatasetquerytable_set.all()
+                                for table in query.tables.all()
                             )
                             if table_updated_date is not None
                         ),
