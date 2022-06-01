@@ -344,10 +344,11 @@ def find_datasets(request):
     for visualisation_dataset in visualisation_datasets:
         dataset = datasets_by_type_id[(DataSetType.VISUALISATION.value, visualisation_dataset.id)]
         dataset["last_updated"] = max(
-            (
-                link.data_source_last_updated
-                for link in visualisation_dataset.visualisationlink_set.all()
-                if link.data_source_last_updated is not None
+            _without_none(
+                (
+                    link.data_source_last_updated
+                    for link in visualisation_dataset.visualisationlink_set.all()
+                )
             ),
             default=None,
         )
