@@ -259,6 +259,9 @@ def find_datasets(request):
     master_datasets = MasterDataset.objects.filter(
         id__in=tuple(dataset["id"] for dataset in datasets_by_type[DataSetType.MASTER.value])
     )
+    datacut_datasets = DataCutDataset.objects.filter(
+        id__in=tuple(dataset["id"] for dataset in datasets_by_type[DataSetType.DATACUT.value])
+    )
     for master_dataset in master_datasets:
         dataset = datasets_by_type_id[(DataSetType.MASTER.value, master_dataset.id)]
         dataset["last_updated"] = max(
@@ -273,9 +276,6 @@ def find_datasets(request):
             default=None,
         )
 
-    datacut_datasets = DataCutDataset.objects.filter(
-        id__in=tuple(dataset["id"] for dataset in datasets_by_type[DataSetType.DATACUT.value])
-    )
     for datacut_dataset in datacut_datasets:
         dataset = datasets_by_type_id[(DataSetType.DATACUT.value, datacut_dataset.id)]
         dataset["last_updated"] = max(
