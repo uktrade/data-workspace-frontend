@@ -296,44 +296,40 @@ def find_datasets(request):
         ]
     )
 
+    def _without_none(it):
+        return (val for val in it if val is not None)
+
     for master_dataset in master_datasets:
         dataset = datasets_by_type_id[(DataSetType.MASTER.value, master_dataset.id)]
         dataset["last_updated"] = max(
-            (
-                d
-                for d in (
+            _without_none(
+                (
                     tables_and_last_updated_dates[databases[table.database_id].memorable_name].get(
                         (table.schema, table.table)
                     )
                     for table in master_dataset.sourcetable_set.all()
                 )
-                if d is not None
             ),
             default=None,
         )
 
     for datacut_dataset in datacut_datasets:
         dataset = datasets_by_type_id[(DataSetType.DATACUT.value, datacut_dataset.id)]
-        dataset["last_updated"] = max(
+        last_updated_dates_for_queries = (
             (
-                query_updated_date
-                for query_updated_date in (
-                    min(
-                        (
-                            table_updated_date
-                            for table_updated_date in (
-                                tables_and_last_updated_dates[
-                                    databases[query.database_id].memorable_name
-                                ].get((table.schema, table.table))
-                                for table in query.tables.all()
-                            )
-                            if table_updated_date is not None
-                        ),
-                        default=None,
-                    )
-                    for query in datacut_dataset.customdatasetquery_set.all()
+                tables_and_last_updated_dates[databases[query.database_id].memorable_name].get(
+                    (table.schema, table.table)
                 )
-                if query_updated_date is not None
+                for table in query.tables.all()
+            )
+            for query in datacut_dataset.customdatasetquery_set.all()
+        )
+        dataset["last_updated"] = max(
+            _without_none(
+                (
+                    min(_without_none(last_updated_dates_for_query), default=None)
+                    for last_updated_dates_for_query in last_updated_dates_for_queries
+                )
             ),
             default=None,
         )
@@ -348,10 +344,11 @@ def find_datasets(request):
     for visualisation_dataset in visualisation_datasets:
         dataset = datasets_by_type_id[(DataSetType.VISUALISATION.value, visualisation_dataset.id)]
         dataset["last_updated"] = max(
-            (
-                link.data_source_last_updated
-                for link in visualisation_dataset.visualisationlink_set.all()
-                if link.data_source_last_updated is not None
+            _without_none(
+                (
+                    link.data_source_last_updated
+                    for link in visualisation_dataset.visualisationlink_set.all()
+                )
             ),
             default=None,
         )
