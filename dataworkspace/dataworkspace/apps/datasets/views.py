@@ -4,7 +4,7 @@ import json
 import logging
 import uuid
 from abc import ABCMeta, abstractmethod
-from collections import namedtuple
+from collections import defaultdict, namedtuple
 from contextlib import closing
 from itertools import chain
 from typing import Set
@@ -28,6 +28,7 @@ from django.db.models import (
     Value,
     Func,
     Q,
+    Prefetch,
 )
 from django.db.models.functions import TruncDay
 from django.forms.models import model_to_dict
@@ -65,6 +66,9 @@ from dataworkspace.apps.core.utils import (
     table_data,
     view_exists,
     get_random_data_sample,
+)
+from dataworkspace.apps.core.models import (
+    Database,
 )
 from dataworkspace.apps.datasets.constants import (
     DataSetType,
@@ -175,7 +179,6 @@ def has_unpublished_dataset_access(user):
 def _get_tags_as_dict():
     """
     Gets all tags and returns them as a dictionary keyed by the tag.id as a string
-    This is a workaround until we refactor dataset search
     @return:
     """
     tags = Tag.objects.all()
@@ -189,77 +192,9 @@ def _get_tags_as_dict():
 
 @require_GET
 def find_datasets(request):
-    def _enrich_tags(dataset, tags_dict):
-        dataset["sources"] = []
-        for source_id in dataset["source_tag_ids"]:
-            tag = tags_dict.get(str(source_id))
-            dataset["sources"].append(tag)
 
-        dataset["topics"] = []
-        for topic_id in dataset["topic_tag_ids"]:
-            tag = tags_dict.get(str(topic_id))
-            dataset["topics"].append(tag)
-
-    def _get_reference_dataset_last_updated(dataset_id):
-        datasets = ReferenceDataset.objects.filter(uuid=dataset_id)
-        if not datasets.exists():
-            return []
-
-        try:
-            # If the reference dataset csv table doesn't exist we
-            # get an unhandled relation does not exist error
-            # this is currently only a problem with integration tests
-            return [datasets.first().data_last_updated]
-        except ProgrammingError as e:
-            logger.error(e)
-            return []
-
-    def _get_master_dataset_last_updated(dataset_id):
-        datasets = MasterDataset.objects.filter(id=dataset_id)
-        if not datasets.exists():
-            return []
-
-        return [
-            table.get_data_last_updated_date() for table in datasets.first().sourcetable_set.all()
-        ]
-
-    def _get_datacut_query_last_updated(dataset_id):
-        datasets = DataCutDataset.objects.filter(id=dataset_id)
-        if not datasets.exists():
-            return []
-
-        return [
-            query.get_data_last_updated_date()
-            for query in datasets.first().customdatasetquery_set.all()
-        ]
-
-    def _get_visualisationcatalogue_link_last_updated(dataset_id):
-        datasets = VisualisationCatalogueItem.objects.filter(id=dataset_id)
-        if not datasets.exists():
-            return []
-
-        return [
-            link.data_source_last_updated for link in datasets.first().visualisationlink_set.all()
-        ]
-
-    def _get_last_updated_date(dataset):
-        last_updated_dates = []
-
-        if dataset["data_type"] == DataSetType.REFERENCE:
-            last_updated_dates = _get_reference_dataset_last_updated(dataset["id"])
-
-        elif dataset["data_type"] == DataSetType.MASTER:
-            last_updated_dates = _get_master_dataset_last_updated(dataset["id"])
-
-        elif dataset["data_type"] == DataSetType.DATACUT:
-            last_updated_dates = _get_datacut_query_last_updated(dataset["id"])
-
-        elif dataset["data_type"] == DataSetType.VISUALISATION:
-            last_updated_dates = _get_visualisationcatalogue_link_last_updated(dataset["id"])
-
-        last_update_dates_no_null = [d for d in last_updated_dates if d is not None]
-
-        return max(last_update_dates_no_null, default=None)
+    ###############
+    # Validate form
 
     form = DatasetSearchForm(request.GET)
 
@@ -271,7 +206,8 @@ def find_datasets(request):
         "data_type"
     ].choices  # Cache these now, as we annotate them with result numbers later which we don't want here.
 
-    tags_dict = _get_tags_as_dict()
+    ###############################################
+    # Find all results, and matching filter numbers
 
     filters = form.get_filters()
 
@@ -284,19 +220,141 @@ def find_datasets(request):
         matcher=_matches_filters,
     )
 
+    ####################################
+    # Select the current page of results
+
     paginator = Paginator(
         matched_datasets,
         settings.SEARCH_RESULTS_DATASETS_PER_PAGE,
     )
 
-    data_types.append((DataSetType.VISUALISATION, "Visualisation"))
-
     datasets = paginator.get_page(request.GET.get("page"))
 
-    # This is a workaround until we refactor search
+    ########################################################
+    # Augment results with tags, avoiding queries-per-result
+
+    tags_dict = _get_tags_as_dict()
     for dataset in datasets:
-        _enrich_tags(dataset, tags_dict)
-        dataset["last_updated"] = _get_last_updated_date(dataset)
+        dataset["sources"] = [
+            tags_dict.get(str(source_id)) for source_id in dataset["source_tag_ids"]
+        ]
+        dataset["topics"] = [tags_dict.get(str(topic_id)) for topic_id in dataset["topic_tag_ids"]]
+
+    ######################################################################
+    # Augment results with last updated dates, avoiding queries-per-result
+
+    # Data structures to quickly look up datasets as needed further down
+
+    datasets_by_type = defaultdict(list)
+    datasets_by_type_id = {}
+    for dataset in datasets:
+        datasets_by_type[dataset["data_type"]].append(dataset)
+        datasets_by_type_id[(dataset["data_type"], dataset["id"])] = dataset
+
+    # Reference datasets
+
+    reference_datasets = ReferenceDataset.objects.filter(
+        uuid__in=tuple(dataset["id"] for dataset in datasets_by_type[DataSetType.REFERENCE.value])
+    )
+    for reference_dataset in reference_datasets:
+        dataset = datasets_by_type_id[(DataSetType.REFERENCE.value, reference_dataset.uuid)]
+        try:
+            # If the reference dataset csv table doesn't exist we
+            # get an unhandled relation does not exist error
+            # this is currently only a problem with integration tests
+            dataset["last_updated"] = reference_dataset.data_last_updated
+        except ProgrammingError as e:
+            logger.error(e)
+            dataset["last_updated"] = None
+
+    # Master datasets and datacuts together to minimise metadata table queries
+
+    master_datasets = MasterDataset.objects.filter(
+        id__in=tuple(dataset["id"] for dataset in datasets_by_type[DataSetType.MASTER.value])
+    ).prefetch_related("sourcetable_set")
+    datacut_datasets = DataCutDataset.objects.filter(
+        id__in=tuple(dataset["id"] for dataset in datasets_by_type[DataSetType.DATACUT.value])
+    ).prefetch_related(
+        Prefetch(
+            "customdatasetquery_set",
+            queryset=CustomDatasetQuery.objects.prefetch_related("tables"),
+        )
+    )
+    databases = {database.id: database for database in Database.objects.all()}
+
+    tables_and_last_updated_dates = datasets_db.get_all_tables_last_updated_date(
+        [
+            (databases[table.database_id].memorable_name, table.schema, table.table)
+            for master_dataset in master_datasets
+            for table in master_dataset.sourcetable_set.all()
+        ]
+        + [
+            (databases[query.database_id].memorable_name, table.schema, table.table)
+            for datacut_dataset in datacut_datasets
+            for query in datacut_dataset.customdatasetquery_set.all()
+            for table in query.tables.all()
+        ]
+    )
+
+    for master_dataset in master_datasets:
+        dataset = datasets_by_type_id[(DataSetType.MASTER.value, master_dataset.id)]
+        dataset["last_updated"] = max(
+            (
+                d
+                for d in (
+                    tables_and_last_updated_dates[databases[table.database_id].memorable_name].get(
+                        (table.schema, table.table)
+                    )
+                    for table in master_dataset.sourcetable_set.all()
+                )
+                if d is not None
+            ),
+            default=None,
+        )
+
+    for datacut_dataset in datacut_datasets:
+        dataset = datasets_by_type_id[(DataSetType.DATACUT.value, datacut_dataset.id)]
+        dataset["last_updated"] = max(
+            (
+                query_updated_date
+                for query_updated_date in (
+                    min(
+                        (
+                            table_updated_date
+                            for table_updated_date in (
+                                tables_and_last_updated_dates[
+                                    databases[query.database_id].memorable_name
+                                ].get((table.schema, table.table))
+                                for table in query.tables.all()
+                            )
+                            if table_updated_date is not None
+                        ),
+                        default=None,
+                    )
+                    for query in datacut_dataset.customdatasetquery_set.all()
+                )
+                if query_updated_date is not None
+            ),
+            default=None,
+        )
+
+    # Visualisations
+
+    visualisation_datasets = VisualisationCatalogueItem.objects.filter(
+        id__in=tuple(
+            dataset["id"] for dataset in datasets_by_type[DataSetType.VISUALISATION.value]
+        )
+    ).prefetch_related("visualisationlink_set")
+    for visualisation_dataset in visualisation_datasets:
+        dataset = datasets_by_type_id[(DataSetType.VISUALISATION.value, visualisation_dataset.id)]
+        dataset["last_updated"] = max(
+            (
+                link.data_source_last_updated
+                for link in visualisation_dataset.visualisationlink_set.all()
+                if link.data_source_last_updated is not None
+            ),
+            default=None,
+        )
 
     return render(
         request,
