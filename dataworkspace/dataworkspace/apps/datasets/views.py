@@ -263,6 +263,12 @@ def find_datasets(request):
             for master_dataset in master_datasets
             for table in master_dataset.sourcetable_set.all()
         ]
+        + [
+            (databases[query.database_id].memorable_name, table.schema, table.table)
+            for datacut_dataset in datacut_datasets
+            for query in datacut_dataset.customdatasetquery_set.all()
+            for table in query.customdatasetquerytable_set.all()
+        ]
     )
 
     for master_dataset in master_datasets:
@@ -285,12 +291,24 @@ def find_datasets(request):
         dataset = datasets_by_type_id[(DataSetType.DATACUT.value, datacut_dataset.id)]
         dataset["last_updated"] = max(
             (
-                d
-                for d in (
-                    query.get_data_last_updated_date()
+                query_updated_date
+                for query_updated_date in (
+                    min(
+                        (
+                            table_updated_date
+                            for table_updated_date in (
+                                tables_and_last_updated_dates[
+                                    databases[query.database_id].memorable_name
+                                ].get((table.schema, table.table))
+                                for table in query.customdatasetquerytable_set.all()
+                            )
+                            if table_updated_date is not None
+                        ),
+                        default=None,
+                    )
                     for query in datacut_dataset.customdatasetquery_set.all()
                 )
-                if d is not None
+                if query_updated_date is not None
             ),
             default=None,
         )
