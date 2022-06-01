@@ -42,7 +42,7 @@ def get_columns(database_name, schema=None, table=None, query=None, include_type
             return []
 
 
-def get_tables_last_updated_date(database_name: str, tables: Tuple[Tuple[str, str]]):
+def get_earliest_tables_last_updated_date(database_name: str, tables: Tuple[Tuple[str, str]]):
     """
     Return the earliest of the last updated dates for a list of tables in UTC.
     """
