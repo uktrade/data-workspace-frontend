@@ -275,8 +275,8 @@ def test_find_datasets_combines_results(client):
         expected_search_result(vis, data_type=DataSetType.VISUALISATION),
     ]
 
-    for i, ds in enumerate(datasets):
-        assert ds in expected_results
+    for expected in expected_results:
+        assert expected in datasets
 
     assert "If you haven’t found what you’re looking for" in response.content.decode(
         response.charset
