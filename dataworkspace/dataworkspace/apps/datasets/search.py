@@ -26,9 +26,6 @@ from dataworkspace.apps.datasets.utils import (
 )
 
 SORT_CHOICES = [
-    # published_at is date (no time) so add ',name' in choices
-    # which makes ordering consistent in the UI
-    # also makes unit tests simpler!
     ("-published_date,name", "Date published: newest"),
     ("published_date,name", "Date published: oldest"),
     ("-search_rank,name", "Relevance"),
