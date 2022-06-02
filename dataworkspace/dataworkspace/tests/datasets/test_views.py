@@ -3886,6 +3886,9 @@ def test_find_datasets_filters_show_open_data():
     ]
 
     results = list(response.context["datasets"])
+    for expected in expected_results:
+        assert expected in results
+
     assert len(results) == 3
 
     response = client.get(reverse("datasets:find_datasets"), {"admin_filters": "opendata"})
