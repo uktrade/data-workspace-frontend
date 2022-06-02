@@ -149,6 +149,15 @@ class SourceTagField(forms.ModelMultipleChoiceField):
 class DatasetSearchForm(forms.Form):
     SUBSCRIBED = "subscribed"
     BOOKMARKED = "bookmarked"
+    SORT_CHOICES = [
+        # published_at is date (no time) so add ',name' in choices
+        # which makes ordering consistent in the UI
+        # also makes unit tests simpler!
+        ("-published_at,name", "Date published: newest"),
+        ("-search_rank,name", "Relevance"),
+        ("published_at,name", "Date published: oldest"),
+        ("name", "Alphabetical (A-Z)"),
+    ]
 
     q = forms.CharField(required=False)
 
@@ -220,19 +229,14 @@ class DatasetSearchForm(forms.Form):
 
     sort = forms.ChoiceField(
         required=False,
-        choices=[
-            ("-search_rank,name", "Relevance"),
-            ("-published_at", "Date published: newest"),
-            ("published_at", "Date published: oldest"),
-            ("name", "Alphabetical (A-Z)"),
-        ],
+        choices=SORT_CHOICES,
         widget=SortSelectWidget(label="Sort by", form_group_extra_css="govuk-!-margin-bottom-0"),
     )
 
     def clean_sort(self):
         data = self.cleaned_data["sort"]
         if not data:
-            data = "-search_rank,name"
+            data, _ = DatasetSearchForm.SORT_CHOICES[0]
 
         return data
 
