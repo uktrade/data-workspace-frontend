@@ -8,6 +8,7 @@ from django.contrib.auth import get_user_model
 
 from dataworkspace.apps.datasets.constants import DataSetType, TagType
 from .models import DataSet, SourceLink, Tag, VisualisationCatalogueItem
+from .search import SORT_CHOICES, DEFAULT_SORT, SearchDatasetsFilters
 from ...forms import (
     GOVUKDesignSystemForm,
     GOVUKDesignSystemCharField,
@@ -149,15 +150,6 @@ class SourceTagField(forms.ModelMultipleChoiceField):
 class DatasetSearchForm(forms.Form):
     SUBSCRIBED = "subscribed"
     BOOKMARKED = "bookmarked"
-    SORT_CHOICES = [
-        # published_at is date (no time) so add ',name' in choices
-        # which makes ordering consistent in the UI
-        # also makes unit tests simpler!
-        ("-published_at,name", "Date published: newest"),
-        ("-search_rank,name", "Relevance"),
-        ("published_at,name", "Date published: oldest"),
-        ("name", "Alphabetical (A-Z)"),
-    ]
 
     q = forms.CharField(required=False)
 
@@ -236,7 +228,7 @@ class DatasetSearchForm(forms.Form):
     def clean_sort(self):
         data = self.cleaned_data["sort"]
         if not data:
-            data, _ = DatasetSearchForm.SORT_CHOICES[0]
+            data = DEFAULT_SORT
 
         return data
 
@@ -391,36 +383,6 @@ class DatasetSearchForm(forms.Form):
         filters.my_datasets = set(self.cleaned_data.get("my_datasets", []))
 
         return filters
-
-
-class SearchDatasetsFilters:
-    unpublished: bool
-    open_data: bool
-    with_visuals: bool
-    use: set
-    data_type: set
-    sort_type: str
-    source_ids: set
-    topic_ids: set
-    user_accessible: set
-    user_inaccessible: set
-    query: str
-
-    my_datasets: set
-
-    def has_filters(self):
-        return (
-            len(self.my_datasets)
-            or self.unpublished
-            or self.open_data
-            or self.with_visuals
-            or bool(self.use)
-            or bool(self.data_type)
-            or bool(self.source_ids)
-            or bool(self.topic_ids)
-            or bool(self.user_accessible)
-            or bool(self.user_inaccessible)
-        )
 
 
 class RelatedMastersSortForm(forms.Form):

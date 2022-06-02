@@ -191,7 +191,7 @@
                 {% endif %}
               </h3>
 
-              <p class="govuk-body">{{ dataset.short_description }}</p>
+              <p class="govuk-body">{{ dataset.short_description }} {{ dataset.published_date }}</p>
 
               <div class="govuk-body">
                 <dl>
@@ -200,6 +200,10 @@
                   <dt>Last updated:</dt>
                   <dd>
                   {{ dataset.last_updated|date_with_gmt_offset|default_if_none:"N/A" }}
+                  </dd>
+                  <dt>Published:</dt>
+                  <dd>
+                  {{ dataset.published_date|default_if_none:"N/A" }}
                   </dd>
                   <dt>Source:</dt>
                   <dd>

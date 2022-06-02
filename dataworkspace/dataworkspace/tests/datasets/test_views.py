@@ -236,6 +236,7 @@ def expected_search_result(catalogue_item, **kwargs):
         "search_rank": mock.ANY,
         "short_description": catalogue_item.short_description,
         "published_at": mock.ANY,
+        "published_date": mock.ANY,
         "source_tag_ids": mock.ANY,
         "topic_tag_ids": mock.ANY,
         "data_type": mock.ANY,
@@ -587,7 +588,7 @@ def test_find_datasets_order_by_newest_first(client):
     ads2 = factories.DataSetFactory.create(published_at=date.today() - timedelta(days=3))
     ads3 = factories.DataSetFactory.create(published_at=date.today() - timedelta(days=4))
 
-    response = client.get(reverse("datasets:find_datasets"), {"sort": "-published_at,name"})
+    response = client.get(reverse("datasets:find_datasets"), {"sort": "-published_date,name"})
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
@@ -602,7 +603,7 @@ def test_find_datasets_order_by_oldest_first(client):
     ads2 = factories.DataSetFactory.create(published_at=date.today() - timedelta(days=2))
     ads3 = factories.DataSetFactory.create(published_at=date.today() - timedelta(days=3))
 
-    response = client.get(reverse("datasets:find_datasets"), {"sort": "published_at,name"})
+    response = client.get(reverse("datasets:find_datasets"), {"sort": "published_date,name"})
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
