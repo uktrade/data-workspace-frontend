@@ -39,7 +39,7 @@ from dataworkspace.datasets_db import (
     get_data_hash,
     get_reference_dataset_changelog,
     get_source_table_changelog,
-    get_tables_last_updated_date,
+    get_earliest_tables_last_updated_date,
 )
 from dataworkspace.notify import EmailSendFailureException, send_email
 from dataworkspace.utils import TYPE_CODES_REVERSED
@@ -182,7 +182,7 @@ def process_quicksight_dashboard_visualisations():
 
     def get_last_updated_date_by_table_name(schema, table):
         for connection_alias, _ in settings.DATABASES_DATA.items():
-            date = get_tables_last_updated_date(connection_alias, ((schema, table),))
+            date = get_earliest_tables_last_updated_date(connection_alias, ((schema, table),))
             if date:
                 return date
         return None
@@ -667,7 +667,7 @@ def store_custom_dataset_query_metadata():
             )
             continue
 
-        tables_last_updated_date = get_tables_last_updated_date(
+        tables_last_updated_date = get_earliest_tables_last_updated_date(
             query.database.memorable_name, tuple(tables)
         )
         query_last_updated_date = query.modified_date

@@ -5,7 +5,7 @@ import pytz
 
 from dataworkspace.datasets_db import (
     extract_queried_tables_from_sql_query,
-    get_tables_last_updated_date,
+    get_earliest_tables_last_updated_date,
 )
 
 
@@ -35,13 +35,13 @@ def test_sql_query_tables_extracted_correctly(query, expected_tables):
 
 @pytest.mark.django_db
 def test_get_table_last_updated_date_with_source_data_modified_metadata(metadata_db):
-    assert get_tables_last_updated_date(
+    assert get_earliest_tables_last_updated_date(
         "my_database", (("public", "table2"),)
     ) == datetime.datetime(2020, 9, 1, 0, 1).replace(tzinfo=pytz.UTC)
 
 
 @pytest.mark.django_db
 def test_get_table_last_updated_date_with_dataflow_swapped_table_metadata(metadata_db):
-    assert get_tables_last_updated_date(
+    assert get_earliest_tables_last_updated_date(
         "my_database", (("public", "table4"),)
     ) == datetime.datetime(2021, 12, 1, 0, 0).replace(tzinfo=pytz.UTC)

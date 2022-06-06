@@ -122,9 +122,9 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
         ).replace(tzinfo=pytz.UTC)
 
     @pytest.mark.django_db
-    @patch("dataworkspace.apps.datasets.utils.get_tables_last_updated_date")
+    @patch("dataworkspace.apps.datasets.utils.get_earliest_tables_last_updated_date")
     def test_direct_query_visualisation_with_relational_table(
-        self, mock_get_tables_last_updated_date
+        self, mock_get_earliest_tables_last_updated_date
     ):
         self.mock_quicksight_client.describe_data_set.return_value = {
             "DataSet": {
@@ -138,12 +138,12 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
                 },
             }
         }
-        mock_get_tables_last_updated_date.return_value = datetime.date(2021, 1, 2)
+        mock_get_earliest_tables_last_updated_date.return_value = datetime.date(2021, 1, 2)
 
         visualisation_link = VisualisationLinkFactory(visualisation_type="QUICKSIGHT")
         process_quicksight_dashboard_visualisations()
 
-        assert mock_get_tables_last_updated_date.call_args_list == [
+        assert mock_get_earliest_tables_last_updated_date.call_args_list == [
             call("my_database", (("public", "bar"),))
         ]
 
@@ -247,9 +247,9 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
         ).replace(tzinfo=pytz.UTC)
 
     @pytest.mark.django_db
-    @patch("dataworkspace.apps.datasets.utils.get_tables_last_updated_date")
+    @patch("dataworkspace.apps.datasets.utils.get_earliest_tables_last_updated_date")
     def test_visualisation_data_set_with_multiple_mappings(
-        self, mock_get_tables_last_updated_date
+        self, mock_get_earliest_tables_last_updated_date
     ):
         self.mock_quicksight_client.describe_data_set.return_value = {
             "DataSet": {
@@ -266,14 +266,14 @@ class TestUpdateQuickSightVisualisationsLastUpdatedDate:
                 },
             }
         }
-        mock_get_tables_last_updated_date.side_effect = [
+        mock_get_earliest_tables_last_updated_date.side_effect = [
             datetime.date(2021, 1, 2),
             datetime.date(2021, 1, 3),
         ]
 
         visualisation_link = VisualisationLinkFactory(visualisation_type="QUICKSIGHT")
         process_quicksight_dashboard_visualisations()
-        assert mock_get_tables_last_updated_date.call_args_list == [
+        assert mock_get_earliest_tables_last_updated_date.call_args_list == [
             call("my_database", (("public", "bar"),)),
             call("my_database", (("public", "baz"),)),
         ]
@@ -304,9 +304,9 @@ class TestUpdateQuickSightVisualisationsRelatedDatasets:
         boto3_patcher.stop()
 
     @pytest.mark.django_db
-    @patch("dataworkspace.apps.datasets.utils.get_tables_last_updated_date")
+    @patch("dataworkspace.apps.datasets.utils.get_earliest_tables_last_updated_date")
     def test_direct_query_visualisation_with_relational_table(
-        self, mock_get_tables_last_updated_date
+        self, mock_get_earliest_tables_last_updated_date
     ):
         self.mock_quicksight_client.describe_data_set.return_value = {
             "DataSet": {
@@ -320,7 +320,7 @@ class TestUpdateQuickSightVisualisationsRelatedDatasets:
                 },
             }
         }
-        mock_get_tables_last_updated_date.return_value = datetime.date(2021, 1, 2)
+        mock_get_earliest_tables_last_updated_date.return_value = datetime.date(2021, 1, 2)
         ds = DataSetFactory.create(type=DataSetType.MASTER)
         SourceTableFactory.create(dataset=ds, schema="public", table="bar")
 
@@ -660,12 +660,12 @@ def get_dsn():
 
 class TestStoreCustomDatasetQueryMetadata:
     @pytest.mark.django_db
-    @patch("dataworkspace.apps.datasets.utils.get_tables_last_updated_date")
+    @patch("dataworkspace.apps.datasets.utils.get_earliest_tables_last_updated_date")
     @patch("dataworkspace.apps.datasets.utils.get_data_hash")
     def test_stores_table_structure_first_run_query_updated_after_table(
-        self, mock_get_data_hash, mock_get_tables_last_updated_date, test_dataset
+        self, mock_get_data_hash, mock_get_earliest_tables_last_updated_date, test_dataset
     ):
-        mock_get_tables_last_updated_date.return_value = datetime.datetime.strptime(
+        mock_get_earliest_tables_last_updated_date.return_value = datetime.datetime.strptime(
             "2021-01-01 14:00", "%Y-%m-%d %H:%M"
         ).replace(tzinfo=pytz.UTC)
         mock_get_data_hash.return_value = "abcdefghijklmnopqrstuvwxyz"
@@ -697,12 +697,12 @@ class TestStoreCustomDatasetQueryMetadata:
         )
 
     @pytest.mark.django_db
-    @patch("dataworkspace.apps.datasets.utils.get_tables_last_updated_date")
+    @patch("dataworkspace.apps.datasets.utils.get_earliest_tables_last_updated_date")
     @patch("dataworkspace.apps.datasets.utils.get_data_hash")
     def test_stores_table_structure_first_run_table_updated_after_query(
-        self, mock_get_data_hash, mock_get_tables_last_updated_date, test_dataset
+        self, mock_get_data_hash, mock_get_earliest_tables_last_updated_date, test_dataset
     ):
-        mock_get_tables_last_updated_date.return_value = datetime.datetime.strptime(
+        mock_get_earliest_tables_last_updated_date.return_value = datetime.datetime.strptime(
             "2021-01-01 16:00", "%Y-%m-%d %H:%M"
         ).replace(tzinfo=pytz.UTC)
         mock_get_data_hash.return_value = "abcdefghijklmnopqrstuvwxyz"
@@ -734,12 +734,12 @@ class TestStoreCustomDatasetQueryMetadata:
         )
 
     @pytest.mark.django_db
-    @patch("dataworkspace.apps.datasets.utils.get_tables_last_updated_date")
+    @patch("dataworkspace.apps.datasets.utils.get_earliest_tables_last_updated_date")
     @patch("dataworkspace.apps.datasets.utils.get_data_hash")
     def test_multiple_runs_without_change_doesnt_result_in_new_changelog_records(
-        self, mock_get_data_hash, mock_get_tables_last_updated_date, test_dataset
+        self, mock_get_data_hash, mock_get_earliest_tables_last_updated_date, test_dataset
     ):
-        mock_get_tables_last_updated_date.return_value = datetime.datetime.strptime(
+        mock_get_earliest_tables_last_updated_date.return_value = datetime.datetime.strptime(
             "2021-01-01 14:00", "%Y-%m-%d %H:%M"
         ).replace(tzinfo=pytz.UTC)
         mock_get_data_hash.return_value = "abcdefghijklmnopqrstuvwxyz"
@@ -772,12 +772,12 @@ class TestStoreCustomDatasetQueryMetadata:
         )
 
     @pytest.mark.django_db
-    @patch("dataworkspace.apps.datasets.utils.get_tables_last_updated_date")
+    @patch("dataworkspace.apps.datasets.utils.get_earliest_tables_last_updated_date")
     @patch("dataworkspace.apps.datasets.utils.get_data_hash")
     def test_update_query_where_clause_results_in_data_change_not_structure_change(
-        self, mock_get_data_hash, mock_get_tables_last_updated_date, test_dataset
+        self, mock_get_data_hash, mock_get_earliest_tables_last_updated_date, test_dataset
     ):
-        mock_get_tables_last_updated_date.return_value = datetime.datetime.strptime(
+        mock_get_earliest_tables_last_updated_date.return_value = datetime.datetime.strptime(
             "2021-01-01 14:00", "%Y-%m-%d %H:%M"
         ).replace(tzinfo=pytz.UTC)
         mock_get_data_hash.side_effect = [
@@ -834,12 +834,12 @@ class TestStoreCustomDatasetQueryMetadata:
         )
 
     @pytest.mark.django_db
-    @patch("dataworkspace.apps.datasets.utils.get_tables_last_updated_date")
+    @patch("dataworkspace.apps.datasets.utils.get_earliest_tables_last_updated_date")
     @patch("dataworkspace.apps.datasets.utils.get_data_hash")
     def test_update_query_select_clause_results_in_data_change_and_structure_change(
-        self, mock_get_data_hash, mock_get_tables_last_updated_date, test_dataset
+        self, mock_get_data_hash, mock_get_earliest_tables_last_updated_date, test_dataset
     ):
-        mock_get_tables_last_updated_date.return_value = datetime.datetime.strptime(
+        mock_get_earliest_tables_last_updated_date.return_value = datetime.datetime.strptime(
             "2021-01-01 14:00", "%Y-%m-%d %H:%M"
         ).replace(tzinfo=pytz.UTC)
         mock_get_data_hash.side_effect = [
@@ -896,12 +896,12 @@ class TestStoreCustomDatasetQueryMetadata:
         )
 
     @pytest.mark.django_db
-    @patch("dataworkspace.apps.datasets.utils.get_tables_last_updated_date")
+    @patch("dataworkspace.apps.datasets.utils.get_earliest_tables_last_updated_date")
     @patch("dataworkspace.apps.datasets.utils.get_data_hash")
     def test_update_query_select_clause_and_change_back_results_in_new_changelog_records(
-        self, mock_get_data_hash, mock_get_tables_last_updated_date, test_dataset
+        self, mock_get_data_hash, mock_get_earliest_tables_last_updated_date, test_dataset
     ):
-        mock_get_tables_last_updated_date.return_value = datetime.datetime.strptime(
+        mock_get_earliest_tables_last_updated_date.return_value = datetime.datetime.strptime(
             "2021-01-01 14:00", "%Y-%m-%d %H:%M"
         ).replace(tzinfo=pytz.UTC)
         mock_get_data_hash.side_effect = [

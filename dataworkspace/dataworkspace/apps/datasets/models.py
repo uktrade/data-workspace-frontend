@@ -69,7 +69,7 @@ from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.core.charts.models import ChartBuilderChart
 from dataworkspace.apps.your_files.models import UploadedTable
 from dataworkspace.datasets_db import (
-    get_tables_last_updated_date,
+    get_earliest_tables_last_updated_date,
 )
 
 
@@ -707,7 +707,7 @@ class SourceTable(BaseSource):
         return DataLinkType.SOURCE_TABLE
 
     def get_data_last_updated_date(self):
-        return get_tables_last_updated_date(
+        return get_earliest_tables_last_updated_date(
             self.database.memorable_name, ((self.schema, self.table),)
         )
 
@@ -986,7 +986,7 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
     def get_data_last_updated_date(self):
         tables = CustomDatasetQueryTable.objects.filter(query=self)
         if tables:
-            return get_tables_last_updated_date(
+            return get_earliest_tables_last_updated_date(
                 self.database.memorable_name,
                 tuple((table.schema, table.table) for table in tables),
             )

@@ -236,9 +236,7 @@ def expected_search_result(catalogue_item, **kwargs):
         "search_rank": mock.ANY,
         "short_description": catalogue_item.short_description,
         "published_at": mock.ANY,
-        "source_tag_names": mock.ANY,
         "source_tag_ids": mock.ANY,
-        "topic_tag_names": mock.ANY,
         "topic_tag_ids": mock.ANY,
         "data_type": mock.ANY,
         "published": catalogue_item.published,
@@ -479,13 +477,11 @@ def test_find_datasets_filters_by_source(client):
         expected_search_result(
             ds,
             has_access=False,
-            source_tag_names=MatchUnorderedMembers([source.name, source_2.name]),
             source_tag_ids=MatchUnorderedMembers([source.id, source_2.id]),
         ),
-        expected_search_result(rds, source_tag_names=[source.name], source_tag_ids=[source.id]),
+        expected_search_result(rds, source_tag_ids=[source.id]),
         expected_search_result(
             vis,
-            source_tag_names=[source.name],
             source_tag_ids=[source.id],
             data_type=DataSetType.VISUALISATION,
         ),
@@ -533,19 +529,16 @@ def test_find_datasets_filters_by_topic(client):
         expected_search_result(
             ds,
             has_access=False,
-            topic_tag_names=MatchUnorderedMembers([topic.name, topic_2.name]),
             topic_tag_ids=MatchUnorderedMembers([topic.id, topic_2.id]),
             search_rank=0.0,
         ),
         expected_search_result(
             rds,
-            topic_tag_names=[topic.name],
             topic_tag_ids=[topic.id],
             data_type=DataSetType.REFERENCE,
         ),
         expected_search_result(
             vis,
-            topic_tag_names=[topic.name],
             topic_tag_ids=[topic.id],
             data_type=DataSetType.VISUALISATION,
         ),
@@ -2031,7 +2024,6 @@ def test_find_datasets_search_by_source_name(client):
         expected_search_result(
             ds1,
             search_rank=0.12158542,
-            source_tag_names=[source.name, source_2.name],
             source_tag_ids=MatchUnorderedMembers([source.id, source_2.id]),
             has_access=False,
         ),
@@ -2065,14 +2057,12 @@ def test_find_datasets_search_by_topic_name(client):
         expected_search_result(
             ds1,
             search_rank=0.12158542,
-            topic_tag_names=MatchUnorderedMembers([topic.name, topic_2.name]),
             topic_tag_ids=MatchUnorderedMembers([topic.id, topic_2.id]),
             has_access=False,
         ),
         expected_search_result(
             rds,
             search_rank=0.12158542,
-            topic_tag_names=[topic.name],
             topic_tag_ids=[topic.id],
         ),
     ]
@@ -2121,7 +2111,6 @@ def test_find_datasets_matches_both_source_and_name(client):
     assert list(response.context["datasets"]) == [
         expected_search_result(
             ds1,
-            source_tag_names=MatchUnorderedMembers([source_1.name, source_2.name]),
             source_tag_ids=MatchUnorderedMembers([source_1.id, source_2.id]),
             has_access=False,
         )
