@@ -1205,6 +1205,7 @@ async def async_main():
                 or is_requesting_credentials(request)
                 or is_requesting_files(request)
                 or is_data_explorer_requested(request)
+                or is_flower_requested(request)
             )
 
             if not ip_whitelist_required:
