@@ -337,6 +337,7 @@ async def async_main():
             and not is_service_discovery(request)
             and not is_table_requested(request)
             and not is_dataset_requested(request)
+            or is_flower_requested(request)
         )
 
     def get_peer_ip(request):
