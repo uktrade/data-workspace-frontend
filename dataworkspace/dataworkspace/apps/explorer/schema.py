@@ -7,7 +7,7 @@ from psycopg2.extras import RealDictCursor
 
 from django.conf import settings
 from django.core.cache import cache
-from django.db.models import F, Func, TextField
+from django.db.models import F, Func, Value
 
 from dataworkspace.apps.explorer.connections import connections
 from dataworkspace.apps.explorer.utils import get_user_explorer_connection_settings
@@ -136,18 +136,18 @@ def get_user_schema_info(request):
 def match_datasets_with_schema_info(schema):
     # For each table in schema, find if the corresponding SourceTable has its dictionary_published
     schema_table_names = [
-      (s.name.schema, s.name.name)
-      for s in schema
+        Func(Value(s.name.schema), Value(s.name.name), function="Row") for s in schema
     ]
-    source_tables = SourceTable.objects.alias(
-        schema_table=Func(F('schema'), F('table'), function='Row', output_field=TextField())
-    ).filter(
-        schema_table__in=schema_table_names
-    ).select_related('dataset').only('schema', 'table', 'dataset__dictionary_published')
+    source_tables = (
+        SourceTable.objects.alias(schema_table=Func(F("schema"), F("table"), function="Row"))
+        .filter(schema_table__in=schema_table_names)
+        .select_related("dataset")
+        .only("schema", "table", "dataset__dictionary_published")
+    )
 
     # Attach the dictionary_published to each table in schema
     dictionary_published = {
-        (source_table.schema, source_table.table): s.dataset.dictionary_published
+        (source_table.schema, source_table.table): source_table.dataset.dictionary_published
         for source_table in source_tables
     }
     for s in schema:
