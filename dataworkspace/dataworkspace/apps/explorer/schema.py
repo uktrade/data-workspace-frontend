@@ -134,8 +134,6 @@ def get_user_schema_info(request):
 
 def match_datasets_with_schema_info(schema):
     for s in schema:
-        logger.info(s.name.schema)
-        logger.info(s.name.name)
         query = SourceTable.objects.filter(schema=s.name.schema, table=s.name.name)
         if query.exists():
             s.name.dictionary_published = query.first().dataset.dictionary_published
