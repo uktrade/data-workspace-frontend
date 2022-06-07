@@ -88,9 +88,7 @@ def _get_datasets_data_for_user_matching_query(
 
     datasets = _annotate_has_visuals(datasets)
 
-    datasets, published_date_field_name = _annotate_combined_published_date(
-        datasets, annotation_name="published_date"
-    )
+    datasets = _annotate_combined_published_date(datasets)
 
     return datasets.values(
         id_field,
@@ -108,7 +106,7 @@ def _get_datasets_data_for_user_matching_query(
         "has_access",
         "is_bookmarked",
         "is_subscribed",
-        published_date_field_name,
+        "published_date",
     )
 
 
@@ -164,13 +162,11 @@ def _filter_datasets_by_permissions(datasets, user):
     return datasets
 
 
-def _annotate_combined_published_date(
-    datasets: QuerySet, annotation_name="published_date"
-) -> tuple:
+def _annotate_combined_published_date(datasets: QuerySet) -> tuple:
     if datasets.model is ReferenceDataset:
-        return datasets.annotate(**{annotation_name: F("initial_published_at")}), annotation_name
+        return datasets.annotate(published_date=F("initial_published_at"))
 
-    return datasets.annotate(**{annotation_name: F("published_at")}), annotation_name
+    return datasets.annotate(published_date=F("published_at"))
 
 
 def _annotate_has_visuals(datasets):
