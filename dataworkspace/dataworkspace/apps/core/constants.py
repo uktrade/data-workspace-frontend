@@ -2,7 +2,7 @@ from django.db import models
 
 
 class PostgresDataTypes(models.TextChoices):
-    INTEGER = "integer"
+    BIGINT = "bigint"
     BOOLEAN = "boolean"
     DATE = "date"
     TIMESTAMP = "timestamp"
@@ -12,7 +12,7 @@ class PostgresDataTypes(models.TextChoices):
 
 
 SCHEMA_POSTGRES_DATA_TYPE_MAP = {
-    "integer": PostgresDataTypes.INTEGER,
+    "integer": PostgresDataTypes.BIGINT,
     "boolean": PostgresDataTypes.BOOLEAN,
     "date": PostgresDataTypes.DATE,
     "datetime": PostgresDataTypes.TIMESTAMP,
