@@ -213,10 +213,6 @@ flake8-bugbear==21.4.3
     # via -r requirements-dev.in
 freezegun==1.1.0
     # via -r requirements-dev.in
-future==0.18.2
-    # via
-    #   -r requirements.txt
-    #   notifications-python-client
 geoalchemy2==0.8.4
     # via -r requirements.txt
 gevent==20.6.2
@@ -309,10 +305,6 @@ mohawk==1.1.0
     # via
     #   -r requirements-dev.in
     #   -r requirements.txt
-monotonic==1.5
-    # via
-    #   -r requirements.txt
-    #   notifications-python-client
 multidict==4.7.6
     # via
     #   -r requirements.txt
@@ -320,7 +312,7 @@ multidict==4.7.6
     #   yarl
 mypy-extensions==0.4.3
     # via black
-notifications-python-client==5.7.0
+notifications-python-client==6.3.0
     # via -r requirements.txt
 oauthlib==3.1.0
     # via

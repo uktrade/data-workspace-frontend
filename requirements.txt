@@ -133,8 +133,6 @@ elasticsearch[async]==7.11.0
     # via -r requirements.in
 et-xmlfile==1.0.1
     # via openpyxl
-future==0.18.2
-    # via notifications-python-client
 geoalchemy2==0.8.4
     # via -r requirements.in
 gevent==20.6.2
@@ -175,13 +173,11 @@ markupsafe==1.1.1
     # via -r requirements.in
 mohawk==1.1.0
     # via -r requirements.in
-monotonic==1.5
-    # via notifications-python-client
 multidict==4.7.6
     # via
     #   aiohttp
     #   yarl
-notifications-python-client==5.7.0
+notifications-python-client==6.3.0
     # via -r requirements.in
 oauthlib==3.1.0
     # via requests-oauthlib
