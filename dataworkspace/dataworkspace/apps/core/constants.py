@@ -12,7 +12,7 @@ class PostgresDataTypes(models.TextChoices):
 
 
 SCHEMA_POSTGRES_DATA_TYPE_MAP = {
-    "integer": PostgresDataTypes.BIGINT,
+    "bigint": PostgresDataTypes.BIGINT,
     "boolean": PostgresDataTypes.BOOLEAN,
     "date": PostgresDataTypes.DATE,
     "datetime": PostgresDataTypes.TIMESTAMP,
