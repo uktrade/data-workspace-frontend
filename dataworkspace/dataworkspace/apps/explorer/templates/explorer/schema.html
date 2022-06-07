@@ -19,12 +19,14 @@
           <div class="govuk-accordion__section-content" aria-labelledby="accordion-heading-{{ forloop.counter }}">
             <table class="govuk-table">
               <caption class="govuk-table__caption">Columns in {{ table.schema }}.{{ table.name }}</caption>
+              {% if table.dictionary_published %}
               <p class="govuk-body govuk-body-m">
                 <a class="govuk-link govuk-link--no-visited-state"
                 href="{% url "datasets:find_data_dictionary" schema_name=table.schema table_name=table.name %}">
                 Data dictionary
               </a>
               </p> 
+              {% endif %}
               <thead class="govuk-table__head">
                 <tr class="govuk-table__row">
                   <th scope="col" class="govuk-table__header">Name</th>
