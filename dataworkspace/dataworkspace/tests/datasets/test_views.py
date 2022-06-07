@@ -235,7 +235,6 @@ def expected_search_result(catalogue_item, **kwargs):
         "slug": catalogue_item.slug,
         "search_rank": mock.ANY,
         "short_description": catalogue_item.short_description,
-        "published_at": mock.ANY,
         "published_date": mock.ANY,
         "source_tag_ids": mock.ANY,
         "topic_tag_ids": mock.ANY,

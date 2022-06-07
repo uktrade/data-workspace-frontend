@@ -100,7 +100,6 @@ def _get_datasets_data_for_user_matching_query(
         "topic_tag_ids",
         "data_type",
         "published",
-        "published_at",
         "is_open_data",
         "has_visuals",
         "has_access",
