@@ -910,6 +910,7 @@ def streaming_query_response(
 
     # maxsize of 1 means memory use will be 1 * batch_size * bytes per row
     q = gevent.queue.Queue(maxsize=1)
+    should_run_query_metrics = unfiltered_query and query_metrics_callback
 
     def stream_query_as_csv_to_queue(conn):
         class PseudoBuffer:
@@ -982,7 +983,6 @@ def streaming_query_response(
         return counts[0]
 
     def run_queries():
-        should_run_query_metrics = unfiltered_query and query_metrics_callback
 
         with connect(
             database_dsn(settings.DATABASES_DATA[database]),
@@ -1012,18 +1012,15 @@ def streaming_query_response(
                 # being open at the same time
                 all_columns = get_all_columns_from_unfiltered(conn)
                 all_rows_count = get_row_count_from_unfiltered(conn)
-
-        if should_run_query_metrics:
-            metrics = {
-                "bytes_downloaded": total_bytes,
-                "column_count": len(all_columns),
-                "column_count_filtered": len(filtered_columns),
-                "download_time_in_seconds": seconds_elapsed,
-                "row_count": all_rows_count,
-                "row_count_filtered": filtered_rows_count,
-            }
-
-            query_metrics_callback(metrics)
+                metrics = {
+                    "bytes_downloaded": total_bytes,
+                    "column_count": len(all_columns),
+                    "column_count_filtered": len(filtered_columns),
+                    "download_time_in_seconds": seconds_elapsed,
+                    "row_count": all_rows_count,
+                    "row_count_filtered": filtered_rows_count,
+                }
+                q.put(metrics)
 
     def csv_iterator():
         # Listen for all data on the queue until we receive the done object
@@ -1041,6 +1038,10 @@ def streaming_query_response(
 
             if data:
                 yield data
+
+        if should_run_query_metrics:
+            metrics = q.get(block=True, timeout=query_timeout)
+            query_metrics_callback(metrics)
 
     def exception_callback(g):
         try:
