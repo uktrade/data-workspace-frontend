@@ -201,10 +201,6 @@
                   <dd>
                   {{ dataset.last_updated|date_with_gmt_offset|default_if_none:"N/A" }}
                   </dd>
-                  <dt>Published:</dt>
-                  <dd>
-                  {{ dataset.published_date|default_if_none:"N/A" }}
-                  </dd>
                   <dt>Source:</dt>
                   <dd>
                     {% for source in dataset.sources %}
