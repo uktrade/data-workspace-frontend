@@ -235,7 +235,7 @@ def expected_search_result(catalogue_item, **kwargs):
         "slug": catalogue_item.slug,
         "search_rank": mock.ANY,
         "short_description": catalogue_item.short_description,
-        "published_at": mock.ANY,
+        "published_date": mock.ANY,
         "source_tag_ids": mock.ANY,
         "topic_tag_ids": mock.ANY,
         "data_type": mock.ANY,
@@ -275,9 +275,8 @@ def test_find_datasets_combines_results(client):
         expected_search_result(vis, data_type=DataSetType.VISUALISATION),
     ]
 
-    for i, ds in enumerate(datasets):
-        expected = expected_results[i]
-        assert ds == expected
+    for expected in expected_results:
+        assert expected in datasets
 
     assert "If you haven’t found what you’re looking for" in response.content.decode(
         response.charset
@@ -372,7 +371,9 @@ def test_find_datasets_filters_by_query(client):
     response = client.get(reverse("datasets:find_datasets"), {"q": "new"})
 
     assert response.status_code == 200
-    assert list(response.context["datasets"]) == [
+
+    results = list(response.context["datasets"])
+    expected_search_results = [
         expected_search_result(ds, data_type=ds.type, has_access=False),
         expected_search_result(
             rds,
@@ -380,6 +381,10 @@ def test_find_datasets_filters_by_query(client):
         ),
         expected_search_result(vis, data_type=DataSetType.VISUALISATION),
     ]
+
+    assert len(results) == 3
+    for expected in expected_search_results:
+        assert expected in results
 
 
 def test_find_datasets_filters_by_query_acronym(client):
@@ -432,10 +437,16 @@ def test_find_datasets_filters_visualisations_by_data_type(client):
     response = client.get(reverse("datasets:find_datasets"), {"data_type": [2, 3]})
 
     assert response.status_code == 200
-    assert list(response.context["datasets"]) == [
+    expected_results = [
         expected_search_result(ds, has_access=False),
         expected_search_result(vis, data_type=DataSetType.VISUALISATION),
     ]
+
+    results = list(response.context["datasets"])
+    assert len(results) == 2
+
+    for expected in expected_results:
+        assert expected in results
 
 
 def test_find_datasets_filters_by_source(client):
@@ -473,7 +484,8 @@ def test_find_datasets_filters_by_source(client):
     response = client.get(reverse("datasets:find_datasets"), {"source": [source.id]})
 
     assert response.status_code == 200
-    assert list(response.context["datasets"]) == [
+    results = list(response.context["datasets"])
+    expected_results = [
         expected_search_result(
             ds,
             has_access=False,
@@ -487,7 +499,11 @@ def test_find_datasets_filters_by_source(client):
         ),
     ]
 
+    assert len(results) == 3
     assert len(list(response.context["form"].fields["source"].choices)) == 3
+
+    for expected in expected_results:
+        assert expected in results
 
 
 def test_find_datasets_filters_by_topic(client):
@@ -525,7 +541,8 @@ def test_find_datasets_filters_by_topic(client):
     response = client.get(reverse("datasets:find_datasets"), {"topic": [topic.id]})
 
     assert response.status_code == 200
-    assert list(response.context["datasets"]) == [
+    results = list(response.context["datasets"])
+    expected_results = [
         expected_search_result(
             ds,
             has_access=False,
@@ -545,6 +562,9 @@ def test_find_datasets_filters_by_topic(client):
     ]
 
     assert len(list(response.context["form"].fields["topic"].choices)) == 2
+    assert len(results) == 3
+    for expected in expected_results:
+        assert expected in results
 
 
 def test_find_datasets_order_by_name_asc(client):
@@ -567,7 +587,7 @@ def test_find_datasets_order_by_newest_first(client):
     ads2 = factories.DataSetFactory.create(published_at=date.today() - timedelta(days=3))
     ads3 = factories.DataSetFactory.create(published_at=date.today() - timedelta(days=4))
 
-    response = client.get(reverse("datasets:find_datasets"), {"sort": "-published_at"})
+    response = client.get(reverse("datasets:find_datasets"), {"sort": "-published_date,name"})
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
@@ -582,7 +602,7 @@ def test_find_datasets_order_by_oldest_first(client):
     ads2 = factories.DataSetFactory.create(published_at=date.today() - timedelta(days=2))
     ads3 = factories.DataSetFactory.create(published_at=date.today() - timedelta(days=3))
 
-    response = client.get(reverse("datasets:find_datasets"), {"sort": "published_at"})
+    response = client.get(reverse("datasets:find_datasets"), {"sort": "published_date,name"})
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
@@ -1070,10 +1090,16 @@ def test_find_datasets_filters_by_show_unpublished():
     response = client.get(reverse("datasets:find_datasets"), {"admin_filters": "unpublished"})
 
     assert response.status_code == 200
-    assert list(response.context["datasets"]) == [
+    expected_results = [
         expected_search_result(published_master, has_access=mock.ANY),
         expected_search_result(unpublished_master, has_access=mock.ANY),
     ]
+
+    results = list(response.context["datasets"])
+
+    assert len(results) == 2
+    for expected in expected_results:
+        assert expected in results
 
 
 @pytest.mark.parametrize(
@@ -2020,7 +2046,7 @@ def test_find_datasets_search_by_source_name(client):
     response = client.get(reverse("datasets:find_datasets"), {"q": "source1"})
 
     assert response.status_code == 200
-    assert list(response.context["datasets"]) == [
+    expected_results = [
         expected_search_result(
             ds1,
             search_rank=0.12158542,
@@ -2033,6 +2059,12 @@ def test_find_datasets_search_by_source_name(client):
             data_type=DataSetType.REFERENCE,
         ),
     ]
+
+    results = list(response.context["datasets"])
+    assert len(results) == 2
+
+    for expected in expected_results:
+        assert expected in results
 
 
 def test_find_datasets_search_by_topic_name(client):
@@ -2053,7 +2085,7 @@ def test_find_datasets_search_by_topic_name(client):
     response = client.get(reverse("datasets:find_datasets"), {"q": "topic1"})
 
     assert response.status_code == 200
-    assert list(response.context["datasets"]) == [
+    expected_results = [
         expected_search_result(
             ds1,
             search_rank=0.12158542,
@@ -2066,6 +2098,12 @@ def test_find_datasets_search_by_topic_name(client):
             topic_tag_ids=[topic.id],
         ),
     ]
+
+    results = list(response.context["datasets"])
+    assert len(results) == 2
+
+    for expected in expected_results:
+        assert expected in results
 
 
 def test_find_datasets_name_weighting(client):
@@ -2086,7 +2124,7 @@ def test_find_datasets_name_weighting(client):
     response = client.get(reverse("datasets:find_datasets"), {"q": "keyword"})
 
     assert response.status_code == 200
-    assert list(response.context["datasets"]) == [
+    expected_results = [
         expected_search_result(
             ds4,
             has_access=False,
@@ -2095,6 +2133,12 @@ def test_find_datasets_name_weighting(client):
         expected_search_result(ds1, has_access=False, search_rank=0.6079271),
         expected_search_result(ds2, has_access=False, search_rank=0.24317084),
     ]
+
+    results = list(response.context["datasets"])
+    assert len(results) == 3
+
+    for expected in expected_results:
+        assert expected in results
 
 
 def test_find_datasets_matches_both_source_and_name(client):
@@ -3835,11 +3879,17 @@ def test_find_datasets_filters_show_open_data():
     response = client.get(reverse("datasets:find_datasets"))
 
     assert response.status_code == 200
-    assert list(response.context["datasets"]) == [
+    expected_results = [
         expected_search_result(is_open, has_access=mock.ANY),
         expected_search_result(requires_authentication, has_access=mock.ANY),
         expected_search_result(requires_authorization, has_access=mock.ANY),
     ]
+
+    results = list(response.context["datasets"])
+    for expected in expected_results:
+        assert expected in results
+
+    assert len(results) == 3
 
     response = client.get(reverse("datasets:find_datasets"), {"admin_filters": "opendata"})
 
@@ -3855,10 +3905,10 @@ def test_find_datasets_filters_show_datasets_with_visualisations():
     client = Client(**get_http_sso_data(user))
 
     without_visuals = factories.DataSetFactory.create(
-        name="without visuals", user_access_type=UserAccessType.OPEN
+        name="1-without visuals", user_access_type=UserAccessType.OPEN
     )
     with_visuals = factories.DataSetFactory.create(
-        name="with visuals",
+        name="2-with visuals",
         user_access_type=UserAccessType.OPEN,
         type=DataSetType.MASTER,
         published=True,
@@ -3868,6 +3918,7 @@ def test_find_datasets_filters_show_datasets_with_visualisations():
     response = client.get(reverse("datasets:find_datasets"))
 
     assert response.status_code == 200
+
     assert list(response.context["datasets"]) == [
         expected_search_result(without_visuals, has_visuals=False),
         expected_search_result(with_visuals, has_visuals=True),

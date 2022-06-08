@@ -8,6 +8,7 @@ from django.contrib.auth import get_user_model
 
 from dataworkspace.apps.datasets.constants import DataSetType, TagType
 from .models import DataSet, SourceLink, Tag, VisualisationCatalogueItem
+from .search import SORT_CHOICES, DEFAULT_SORT, SearchDatasetsFilters
 from ...forms import (
     GOVUKDesignSystemForm,
     GOVUKDesignSystemCharField,
@@ -220,19 +221,14 @@ class DatasetSearchForm(forms.Form):
 
     sort = forms.ChoiceField(
         required=False,
-        choices=[
-            ("-search_rank,name", "Relevance"),
-            ("-published_at", "Date published: newest"),
-            ("published_at", "Date published: oldest"),
-            ("name", "Alphabetical (A-Z)"),
-        ],
+        choices=SORT_CHOICES,
         widget=SortSelectWidget(label="Sort by", form_group_extra_css="govuk-!-margin-bottom-0"),
     )
 
     def clean_sort(self):
         data = self.cleaned_data["sort"]
         if not data:
-            data = "-search_rank,name"
+            data = DEFAULT_SORT
 
         return data
 
@@ -387,36 +383,6 @@ class DatasetSearchForm(forms.Form):
         filters.my_datasets = set(self.cleaned_data.get("my_datasets", []))
 
         return filters
-
-
-class SearchDatasetsFilters:
-    unpublished: bool
-    open_data: bool
-    with_visuals: bool
-    use: set
-    data_type: set
-    sort_type: str
-    source_ids: set
-    topic_ids: set
-    user_accessible: set
-    user_inaccessible: set
-    query: str
-
-    my_datasets: set
-
-    def has_filters(self):
-        return (
-            len(self.my_datasets)
-            or self.unpublished
-            or self.open_data
-            or self.with_visuals
-            or bool(self.use)
-            or bool(self.data_type)
-            or bool(self.source_ids)
-            or bool(self.topic_ids)
-            or bool(self.user_accessible)
-            or bool(self.user_inaccessible)
-        )
 
 
 class RelatedMastersSortForm(forms.Form):
