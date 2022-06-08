@@ -12,13 +12,13 @@ class PostgresDataTypes(models.TextChoices):
 
 
 SCHEMA_POSTGRES_DATA_TYPE_MAP = {
-    "bigint": PostgresDataTypes.BIGINT,
-    "boolean": PostgresDataTypes.BOOLEAN,
-    "date": PostgresDataTypes.DATE,
-    "datetime": PostgresDataTypes.TIMESTAMP,
-    "numeric": PostgresDataTypes.NUMERIC,
-    "text": PostgresDataTypes.TEXT,
-    "uuid": PostgresDataTypes.UUID,
+    "Integer": PostgresDataTypes.BIGINT,
+    "Boolean": PostgresDataTypes.BOOLEAN,
+    "Date": PostgresDataTypes.DATE,
+    "Date time": PostgresDataTypes.TIMESTAMP,
+    "Numeric": PostgresDataTypes.NUMERIC,
+    "Text": PostgresDataTypes.TEXT,
+    "UUID": PostgresDataTypes.UUID,
 }
 TABLESCHEMA_FIELD_TYPE_MAP = {
     "number": "numeric",
