@@ -12,6 +12,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django.db import connections, IntegrityError, transaction
 from django.db.models import Q
+from django.db.utils import DatabaseError
 from django.http import Http404
 from django.urls import reverse
 from psycopg2.sql import Identifier, Literal, SQL
@@ -704,7 +705,15 @@ def do_store_custom_dataset_query_metadata():
             )
             metadata = cursor.fetchone()
             if not metadata or last_updated_date != metadata[0]:
-                data_hash = get_data_hash(cursor, sql)
+                try:
+                    data_hash = get_data_hash(cursor, sql)
+                except DatabaseError as e:
+                    logger.error(
+                        "Not adding metadata for query %s as get_data_hash failed with %s",
+                        query.name,
+                        e,
+                    )
+                    continue
                 cursor.execute(f"SELECT * FROM ({sql}) sq LIMIT 0")
                 columns = [(col[0], TYPE_CODES_REVERSED[col[1]]) for col in cursor.description]
 
