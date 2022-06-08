@@ -106,7 +106,7 @@ class TestCreateTableViews:
                     "path": "user/federated/abc/a-csv.csv",
                     "table_name": "test_table",
                     "schema": "test_schema",
-                    "field1": "bigint",
+                    "field1": "Integer",
                 },
                 follow=True,
             )
@@ -158,7 +158,7 @@ class TestCreateTableViews:
                 "path": "user/federated/abc/a-csv.csv",
                 "schema": "test_schema",
                 "table_name": "a_csv",
-                "field1": "bigint",
+                "field1": "Integer",
             },
             follow=True,
         )
@@ -214,7 +214,7 @@ class TestCreateTableViews:
                 "path": "user/federated/abc/a-csv.csv",
                 "schema": "test_schema",
                 "table_name": "a_csv",
-                "field1": "bigint",
+                "field1": "Integer",
             },
             follow=True,
         )
@@ -255,7 +255,7 @@ class TestCreateTableViews:
                 "path": "user/federated/abc/a-csv.csv",
                 "schema": "test_schema",
                 "table_name": "a_csv",
-                "field1": "bigint",
+                "field1": "Integer",
             },
             follow=True,
         )
@@ -295,7 +295,7 @@ class TestCreateTableViews:
                 "path": "user/federated/abc/a-csv.csv",
                 "schema": "test_schema",
                 "table_name": "a_csv",
-                "field1": "bigint",
+                "field1": "Integer",
             },
             follow=True,
         )
@@ -337,7 +337,7 @@ class TestCreateTableViews:
                 "path": "user/federated/abc/a-csv.csv",
                 "schema": "new",
                 "table_name": "a_csv",
-                "field1": "bigint",
+                "field1": "Integer",
             },
         )
         assert response.status_code == 302
@@ -465,7 +465,7 @@ class TestCreateTableViews:
                 "path": "user/federated/abc/a-csv.csv",
                 "schema": "test_team_schema",
                 "table_name": "a_csv",
-                "field1": "bigint",
+                "field1": "Integer",
             },
             follow=True,
         )
@@ -539,7 +539,7 @@ class TestCreateTableViews:
                 "path": "user/federated/abc/a-csv.csv",
                 "schema": "public",
                 "table_name": "a_csv",
-                "field1": "bigint",
+                "field1": "Integer",
             },
             follow=True,
         )
