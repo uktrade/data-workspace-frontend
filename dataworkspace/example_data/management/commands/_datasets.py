@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from django.utils.text import slugify
 
 from dataworkspace.apps.core.models import Database
@@ -129,8 +130,10 @@ def create_example_datasets(iam_user, iao_user, stdout):
 
 
 def _create_datasets(iam_user, iao_user, datasets, access_type, stdout):
-    for dataset in datasets:
 
+    published_date = datetime.today()
+
+    for dataset in datasets:
         catalogue_item, created = MasterDataset.objects.get_or_create(
             name=dataset["name"],
             defaults={
@@ -152,6 +155,10 @@ def _create_datasets(iam_user, iao_user, datasets, access_type, stdout):
         catalogue_item.description = dataset["description"]
         catalogue_item.tags.add(get_dev_source_tag())
         catalogue_item.tags.add(get_example_topic_tag())
+        catalogue_item.published_at = published_date
+
+        # adjust published date to influence the sort order
+        published_date = published_date - timedelta(days=13)
 
         catalogue_item.restrictions_on_usage = dataset.get("restrictons_on_usage", "")
 
