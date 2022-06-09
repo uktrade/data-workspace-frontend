@@ -32,7 +32,7 @@ from dataworkspace.cel import celery_app
 logger = logging.getLogger("app")
 
 SORT_CHOICES = [
-    ("-average_unique_users_daily,-published_date,name","Popularity"),
+    ("-average_unique_users_daily,-published_date,name", "Popularity"),
     ("-search_rank,-published_date,name", "Relevance"),
     ("-published_date,-search_rank,name", "Date published: newest"),
     ("published_date,-search_rank,name", "Date published: oldest"),
@@ -453,14 +453,12 @@ def search_for_datasets(user, filters: SearchDatasetsFilters, matcher) -> tuple:
 
 @celery_app.task()
 def update_datasets_average_daily_users():
-    
     def _update_datasets(datasets, calculate_value):
         for dataset in datasets:
             value = calculate_value(dataset)
             logger.info("%s %s", dataset, value)
             dataset.average_unique_users_daily = value
-            dataset.save()    
-        
+            dataset.save()
 
     _update_datasets(DataSet.objects.live(), lambda x: 0)
     _update_datasets(ReferenceDataset.objects.live(), lambda x: 0)

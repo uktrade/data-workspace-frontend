@@ -6,23 +6,23 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0120_dataset_dictionary_published'),
+        ("datasets", "0120_dataset_dictionary_published"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='dataset',
-            name='average_unique_users_daily',
+            model_name="dataset",
+            name="average_unique_users_daily",
             field=models.IntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='referencedataset',
-            name='average_unique_users_daily',
+            model_name="referencedataset",
+            name="average_unique_users_daily",
             field=models.IntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='visualisationcatalogueitem',
-            name='average_unique_users_daily',
+            model_name="visualisationcatalogueitem",
+            name="average_unique_users_daily",
             field=models.IntegerField(default=0),
         ),
     ]

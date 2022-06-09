@@ -396,9 +396,9 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
             "schedule": 60 * 5,
             "args": (),
         },
-        "update-search-popularity" : {
+        "update-search-popularity": {
             "task": "dataworkspace.apps.datasets.search.update_datasets_average_daily_users",
-            "schedule" : crontab(minute=0, hour=5),
+            "schedule": crontab(minute=0, hour=5),
             "args": (),
         },
     }

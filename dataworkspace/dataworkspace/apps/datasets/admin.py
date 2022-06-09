@@ -283,7 +283,6 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
         ),
     ]
 
-
     class Media:
         js = ("js/min/django_better_admin_arrayfield.min.js",)
         css = {
