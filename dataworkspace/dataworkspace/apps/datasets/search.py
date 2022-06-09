@@ -1,4 +1,5 @@
 import logging
+import waffle
 
 from django.contrib.postgres.aggregates.general import ArrayAgg, BoolOr
 from django.contrib.postgres.search import SearchRank
@@ -32,12 +33,17 @@ from dataworkspace.cel import celery_app
 logger = logging.getLogger("app")
 
 SORT_CHOICES = [
-    ("-average_unique_users_daily,-published_date,name", "Popularity"),
     ("-search_rank,-published_date,name", "Relevance"),
     ("-published_date,-search_rank,name", "Date published: newest"),
     ("published_date,-search_rank,name", "Date published: oldest"),
     ("name", "Alphabetical (A-Z)"),
 ]
+
+if waffle.switch_is_active("enable_sort_by_popularity"):
+    SORT_CHOICES.insert(
+        0,
+        ("-average_unique_users_daily,-published_date,name", "Popularity"),
+    )
 
 DEFAULT_SORT = SORT_CHOICES[0][0]
 
