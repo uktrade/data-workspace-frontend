@@ -26,13 +26,13 @@ from dataworkspace.apps.datasets.utils import (
 )
 
 SORT_CHOICES = [
-    ("-published_date,name", "Date published: newest"),
-    ("published_date,name", "Date published: oldest"),
-    ("-search_rank,name", "Relevance"),
+    ("-search_rank,-published_date,name", "Relevance"),
+    ("-published_date,-search_rank,name", "Date published: newest"),
+    ("published_date,-search_rank,name", "Date published: oldest"),
     ("name", "Alphabetical (A-Z)"),
 ]
 
-DEFAULT_SORT, _ = SORT_CHOICES[0]
+DEFAULT_SORT = SORT_CHOICES[0][0]
 
 
 class SearchDatasetsFilters:

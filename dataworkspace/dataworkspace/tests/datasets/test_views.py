@@ -587,7 +587,9 @@ def test_find_datasets_order_by_newest_first(client):
     ads2 = factories.DataSetFactory.create(published_at=date.today() - timedelta(days=3))
     ads3 = factories.DataSetFactory.create(published_at=date.today() - timedelta(days=4))
 
-    response = client.get(reverse("datasets:find_datasets"), {"sort": "-published_date,name"})
+    response = client.get(
+        reverse("datasets:find_datasets"), {"sort": "-published_date,-search_rank,name"}
+    )
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
@@ -602,7 +604,9 @@ def test_find_datasets_order_by_oldest_first(client):
     ads2 = factories.DataSetFactory.create(published_at=date.today() - timedelta(days=2))
     ads3 = factories.DataSetFactory.create(published_at=date.today() - timedelta(days=3))
 
-    response = client.get(reverse("datasets:find_datasets"), {"sort": "published_date,name"})
+    response = client.get(
+        reverse("datasets:find_datasets"), {"sort": "published_date,-search_rank,name"}
+    )
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
