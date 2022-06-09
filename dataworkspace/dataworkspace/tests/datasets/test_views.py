@@ -248,6 +248,7 @@ def expected_search_result(catalogue_item, **kwargs):
         "sources": mock.ANY,
         "topics": mock.ANY,
         "last_updated": mock.ANY,
+        "average_unique_users_daily": mock.ANY,
     }
     result.update(**kwargs)
     return result

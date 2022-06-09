@@ -273,6 +273,8 @@ class DataSet(DeletableTimestampedUserModel):
     search_vector = SearchVectorField(null=True, blank=True)
     subscriptions = GenericRelation(DataSetSubscription)
 
+    average_unique_users_daily = models.IntegerField(default=0)
+
     class Meta:
         db_table = "app_dataset"
         indexes = (GinIndex(fields=["search_vector"]),)
@@ -1177,6 +1179,8 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     type = DataSetType.REFERENCE
     search_vector = SearchVectorField(null=True, blank=True)
     subscriptions = GenericRelation(DataSetSubscription)
+
+    average_unique_users_daily = models.IntegerField(default=0)
 
     class Meta:
         db_table = "app_referencedataset"
@@ -2210,6 +2214,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         null=True, blank=True, max_length=1024, help_text="Link to license (optional)"
     )
     search_vector = SearchVectorField(null=True, blank=True)
+    average_unique_users_daily = models.IntegerField(default=0)
 
     class Meta:
         permissions = [
