@@ -451,20 +451,17 @@ def search_for_datasets(user, filters: SearchDatasetsFilters, matcher) -> tuple:
     )
 
 
-# from dataworkspace.apps.datasets.models import (
-#     MasterDataset,
-#     DataCutDataset,
-#     ReferenceDataset,
-#     VisualisationCatalogueItem,
-# )
-
 @celery_app.task()
 def update_datasets_average_daily_users():
     
-    def _update_datasets():
-        datasets = DataSet.objects.live()
+    def _update_datasets(datasets, calculate_value):
         for dataset in datasets:
-            logger.info(dataset)
+            value = calculate_value(dataset)
+            logger.info("%s %s", dataset, value)
+            dataset.average_unique_users_daily = value
+            dataset.save()    
+        
 
-    
-    _update_datasets()
+    _update_datasets(DataSet.objects.live(), lambda x: 1)
+    _update_datasets(ReferenceDataset.objects.live(), lambda x: 2)
+    _update_datasets(VisualisationCatalogueItem.objects.live(), lambda x: 3)
