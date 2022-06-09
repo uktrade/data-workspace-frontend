@@ -235,7 +235,6 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
         "published",
         "number_of_downloads",
         "get_bookmarks",
-        "average_unique_users_daily",
     )
     list_filter = ("tags",)
     search_fields = ["name"]
@@ -281,14 +280,6 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
                     "authorized_users",
                 ]
             },
-        ),
-        (
-            "Search",
-            {
-                "fields": [
-                    "average_unique_users_daily"
-                ]
-            }
         ),
     ]
 
@@ -447,7 +438,6 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
         "published_at",
         "published",
         "get_bookmarks",
-        "average_unique_users_daily",
     )
     inlines = [ReferenceDataFieldInline]
     autocomplete_fields = (
@@ -483,14 +473,6 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
                     "is_draft",
                 ]
             },
-        ),
-        (
-            "Search",
-            {
-                "fields": [
-                    "average_unique_users_daily"
-                ]
-            }
         ),
     ]
     readonly_fields = ("get_published_version",)
@@ -791,7 +773,6 @@ class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStamp
         "published",
         "get_tags",
         "get_bookmarks",
-        "average_unique_users_daily",
     )
     list_filter = ("tags",)
     search_fields = ["name"]
@@ -831,14 +812,6 @@ class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStamp
             },
         ),
         ("GitLab visualisation", {"fields": ["visualisation_template"]}),
-        (
-            "Search",
-            {
-                "fields": [
-                    "average_unique_users_daily"
-                ]
-            }
-        ),
     ]
     inlines = [VisualisationLinkInline]
 
