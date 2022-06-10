@@ -23,7 +23,7 @@
         '{% url "restore-table-task-status" request.GET.execution_date request.GET.task_name as status_url %}{{ status_url|escapejs }}',
         '{% url "your-files:restore-table-success" object.id as success_url %}{{ success_url|escapejs }}',
         '{% url "your-files:restore-table-failed" object.id as failure_url %}{{ failure_url|escapejs }}',
-        500
+        '{{ task_name }}'
     );
   </script>  
 {% endblock %}

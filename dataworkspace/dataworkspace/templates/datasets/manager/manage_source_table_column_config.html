@@ -26,7 +26,30 @@
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
-      <h1 class="govuk-heading-xl">Choose data types for {{ form.table_name.value }}</h1>
+      <h1 class="govuk-heading-xl">Choose data types for {{ source.name }}</h1>
+
+      {% if form.column_definitions|length != source.get_column_config|length %}
+        <div class="govuk-grid-column-full">
+          <div class="govuk-error-summary">
+            <div class="govuk-warning-text">
+              <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+              <strong class="govuk-warning-text__text">
+                <span class="govuk-warning-text__assistive">Warning</span>
+                Column number mismatch
+              </strong>
+            </div>
+            <p class="govuk-body">
+              The number of columns in the uploaded file ({{ form.column_definitions|length }}) does not match the number
+              of columns in the table "{{ source.schema }}"."{{ source.table }}" ({{ source.get_column_config|length }}).
+            </p>
+            <div class="button-wrap">
+              <a class="govuk-button govuk-button--secondary" href="{% url 'datasets:manager:manage-source-table' source.dataset_id source.id %}">
+              Back
+            </a>
+            </div>
+          </div>
+        </div>
+      {% endif %}
       {% include 'design_system/error_summary.html' with form=form %}
       <form method="POST" novalidate>
         {% csrf_token %}
