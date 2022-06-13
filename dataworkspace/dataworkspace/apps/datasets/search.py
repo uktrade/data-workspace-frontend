@@ -75,7 +75,9 @@ def _get_datasets_data_for_user_matching_query(
     datasets = _filter_by_query(datasets, query)
 
     # Annotate with rank so we can order by this
-    datasets = datasets.annotate(search_rank=SearchRank(F("search_vector_english"), query))
+    datasets = datasets.annotate(
+        search_rank=SearchRank(F("search_vector_english"), SearchQuery(query, config="english"))
+    )
 
     datasets = _annotate_has_access(datasets, user)
     datasets = _annotate_is_bookmarked(datasets, user)
