@@ -23,13 +23,73 @@ from dataworkspace.datasets_db import (
             [("public", "auth_user")],
         ),
         ("SELECT 1", []),
-        ("SELECT * FROM test", []),
+        ("SELECT * FROM test", [("public", "test")]),
         ("SELECT * FROM", []),
+        (
+            'SELECT * FROM "schema.with.dots"."table.with.dots"',
+            [("schema.with.dots", "table.with.dots")],
+        ),
+        (
+            "WITH my_cte AS (SELECT * FROM my_real) SELECT * FROM my_cte",
+            [("public", "my_real")],
+        ),
+        (
+            "WITH my_cte AS (SELECT * FROM my_schema.my_real) SELECT * FROM my_cte",
+            [("my_schema", "my_real")],
+        ),
+        (
+            "WITH my_real AS (SELECT * FROM my_real) SELECT * FROM my_real",
+            [("public", "my_real")],
+        ),
+        (
+            "WITH my_real AS (SELECT * FROM my_schema.my_real) SELECT * FROM my_real",
+            [("my_schema", "my_real")],
+        ),
+        (
+            "SELECT (SELECT * FROM my_inner)",
+            [("public", "my_inner")],
+        ),
+        (
+            "SELECT (WITH my_cte AS (SELECT * FROM my_inner) SELECT * FROM my_cte)",
+            [("public", "my_inner")],
+        ),
+        (
+            """
+                SELECT (
+                    WITH
+                        my_cte_1 AS (SELECT * FROM my_inner),
+                        my_cte_2 AS (SELECT * FROM my_cte_1)
+                    SELECT * FROM my_cte_1
+                )
+            """,
+            [("public", "my_inner")],
+        ),
+        (
+            """
+                SELECT (
+                    WITH
+                        my_cte_1 AS (SELECT * FROM my_inner_1),
+                        my_cte_2 AS (SELECT * FROM my_inner_2)
+                    SELECT * FROM my_cte_1
+                )
+            """,
+            [("public", "my_inner_1"), ("public", "my_inner_2")],
+        ),
+        (
+            """
+                SELECT (
+                    WITH
+                        my_cte_1 AS (SELECT * FROM my_inner_1),
+                        my_inner_2 AS (SELECT * FROM my_inner_2)
+                    SELECT * FROM my_cte_1
+                )
+            """,
+            [("public", "my_inner_1"), ("public", "my_inner_2")],
+        ),
     ),
 )
-@pytest.mark.django_db
 def test_sql_query_tables_extracted_correctly(query, expected_tables):
-    tables = extract_queried_tables_from_sql_query("test_external_db", query)
+    tables = extract_queried_tables_from_sql_query(query)
     assert tables == expected_tables
 
 

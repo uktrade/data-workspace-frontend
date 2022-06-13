@@ -217,7 +217,6 @@ def process_quicksight_dashboard_visualisations():
             )
             last_updated_dates = []
             tables = []
-            database_name = list(settings.DATABASES_DATA.items())[0][0]
 
             for data_set_arn in data_set_arns:
                 try:
@@ -250,7 +249,6 @@ def process_quicksight_dashboard_visualisations():
                                 )
                                 tables.extend(
                                     extract_queried_tables_from_sql_query(
-                                        database_name,
                                         table_map["CustomSql"]["SqlQuery"],
                                     )
                                 )
@@ -285,7 +283,6 @@ def process_quicksight_dashboard_visualisations():
                                 )
                                 tables.extend(
                                     extract_queried_tables_from_sql_query(
-                                        database_name,
                                         table_map["CustomSql"]["SqlQuery"],
                                     )
                                 )
@@ -351,8 +348,6 @@ def link_superset_visualisations_to_related_datasets():
 
     jwt_access_token = login_response.json()["access_token"]
 
-    database_name = list(settings.DATABASES_DATA.items())[0][0]
-
     for visualisation_link in VisualisationLink.objects.filter(
         visualisation_type="SUPERSET", visualisation_catalogue_item__deleted=False
     ):
@@ -386,7 +381,7 @@ def link_superset_visualisations_to_related_datasets():
                 dataset["id"],
             )
 
-            tables.extend(extract_queried_tables_from_sql_query(database_name, dataset["sql"]))
+            tables.extend(extract_queried_tables_from_sql_query(dataset["sql"]))
 
         if tables:
             set_dataset_related_visualisation_catalogue_items(visualisation_link, tables)
@@ -669,9 +664,7 @@ def do_store_custom_dataset_query_metadata():
     for query in CustomDatasetQuery.objects.filter(dataset__published=True):
         sql = query.query.rstrip().rstrip(";")
 
-        tables = extract_queried_tables_from_sql_query(
-            query.database.memorable_name, sql, statement_timeout=statement_timeout
-        )
+        tables = extract_queried_tables_from_sql_query(sql)
         if not tables:
             logger.info(
                 "Not adding metadata for query %s as no tables could be extracted", query.name
