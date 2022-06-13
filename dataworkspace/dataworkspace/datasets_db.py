@@ -6,11 +6,11 @@ from typing import Tuple
 
 import pglast
 import psycopg2
+from pglast.visitors import RelationNames
 from psycopg2.sql import Literal, SQL
 import pytz
 from django.conf import settings
-from django.db import connections, transaction
-from django.db.utils import DatabaseError
+from django.db import connections
 
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.utils import TYPE_CODES_REVERSED
@@ -107,27 +107,40 @@ def get_all_tables_last_updated_date(tables: Tuple[Tuple[str, str, str]]):
     }
 
 
-def extract_queried_tables_from_sql_query(database_name, query, statement_timeout=None):
-    # Extract the queried tables from the FROM clause using temporary views
-    with connections[database_name].cursor() as cursor:
-        if statement_timeout:
-            cursor.execute(f"SET statement_timeout = {statement_timeout}")
-        try:
-            with transaction.atomic():
-                cursor.execute(
-                    f"create temporary view get_tables as (select 1 from ({query.strip().rstrip(';')}) sq)"
-                )
-        except DatabaseError as e:
-            logger.error(e)
-            tables = []
-        else:
-            cursor.execute(
-                "select table_schema, table_name from information_schema.view_table_usage where view_name = 'get_tables'"
-            )
-            tables = cursor.fetchall()
-            cursor.execute("drop view get_tables")
+class CustomRelationNames(RelationNames):
+    """
+    Custom implementation of pglast RelationNames that returns schema/table tuples
+    (as opposed to `.` joined strings).
+    """
 
-        return tables
+    def __call__(self, node):
+        # Replace `None` schemas with "public"
+        return set(
+            sorted(
+                [(x[0] if x[0] is not None else "public", x[1]) for x in super().__call__(node)],
+                key=lambda x: x[1],
+            )
+        )
+
+    def visit_CommonTableExpr(self, ancestors, node):
+        # Add CTEs to be removed from the returned relations
+        self.ctenames.add((None, node.ctename))
+
+    def visit_RangeVar(self, ancestors, node):
+        # Add relations to be returned
+        rname = (None, node.relname)
+        if node.schemaname:
+            rname = (node.schemaname, node.relname)
+        if node.catalogname:
+            rname = (node.catalogname, node.relname)
+        self.rnames.add(rname)
+
+
+def extract_queried_tables_from_sql_query(query):
+    try:
+        return list(CustomRelationNames()(pglast.parse_sql(query)))
+    except pglast.parser.ParseError:
+        return []
 
 
 def get_source_table_changelog(source_table):

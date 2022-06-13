@@ -580,9 +580,7 @@ class CustomDatasetQueryInlineForm(forms.ModelForm):
 
         instance = super().save(commit)
 
-        tables = extract_queried_tables_from_sql_query(
-            instance.database.memorable_name, instance.query
-        )
+        tables = extract_queried_tables_from_sql_query(instance.query)
 
         # Save the extracted tables in a seperate model for later user
         instance.tables.all().delete()

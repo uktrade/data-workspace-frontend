@@ -23,13 +23,17 @@ from dataworkspace.datasets_db import (
             [("public", "auth_user")],
         ),
         ("SELECT 1", []),
-        ("SELECT * FROM test", []),
+        ("SELECT * FROM test", [("public", "test")]),
         ("SELECT * FROM", []),
+        (
+            'SELECT * FROM "schema.with.dots"."table.with.dots"',
+            [("schema.with.dots", "table.with.dots")],
+        ),
     ),
 )
 @pytest.mark.django_db
 def test_sql_query_tables_extracted_correctly(query, expected_tables):
-    tables = extract_queried_tables_from_sql_query("test_external_db", query)
+    tables = extract_queried_tables_from_sql_query(query)
     assert tables == expected_tables
 
 
