@@ -6,7 +6,7 @@ from typing import Tuple
 
 import pglast
 import psycopg2
-from pglast.visitors import RelationNames
+from pglast.visitors import Visitor
 from psycopg2.sql import Literal, SQL
 import pytz
 from django.conf import settings
@@ -107,38 +107,38 @@ def get_all_tables_last_updated_date(tables: Tuple[Tuple[str, str, str]]):
     }
 
 
-class CustomRelationNames(RelationNames):
+class CustomRelationNames(Visitor):
     """
-    Custom implementation of pglast RelationNames that returns schema/table tuples
-    (as opposed to `.` joined strings).
+    Custom implementation of pglast's Visitor class that returns a schema/table tuple
+    for a query
     """
 
+    cte_names = set()
+    relation_names = set()
+
     def __call__(self, node):
-        # Replace `None` schemas with "public"
-        return set(
-            sorted(
-                [(x[0] if x[0] is not None else "public", x[1]) for x in super().__call__(node)],
-                key=lambda x: x[1],
-            )
+        super().__call__(node)
+        relations = self.relation_names - self.cte_names
+        return sorted(
+            [(x[0] if x[0] is not None else "public", x[1]) for x in relations],
+            key=lambda x: x[1],
         )
 
     def visit_CommonTableExpr(self, ancestors, node):
         # Add CTEs to be removed from the returned relations
-        self.ctenames.add((None, node.ctename))
+        self.cte_names.add((None, node.ctename))
 
     def visit_RangeVar(self, ancestors, node):
         # Add relations to be returned
-        rname = (None, node.relname)
+        relation_name = (None, node.relname)
         if node.schemaname:
-            rname = (node.schemaname, node.relname)
-        if node.catalogname:
-            rname = (node.catalogname, node.relname)
-        self.rnames.add(rname)
+            relation_name = (node.schemaname, node.relname)
+        self.relation_names.add(relation_name)
 
 
 def extract_queried_tables_from_sql_query(query):
     try:
-        return list(CustomRelationNames()(pglast.parse_sql(query)))
+        return CustomRelationNames()(pglast.parse_sql(query))
     except pglast.parser.ParseError:
         return []
 
