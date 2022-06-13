@@ -113,10 +113,12 @@ class CustomRelationNames(Visitor):
     for a query
     """
 
-    cte_names = set()
-    relation_names = set()
+    cte_names: set
+    relation_names: set
 
     def __call__(self, node):
+        self.cte_names = set()
+        self.relation_names = set()
         super().__call__(node)
         relations = self.relation_names - self.cte_names
         return sorted(
