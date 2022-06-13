@@ -42,6 +42,22 @@
               The number of columns in the uploaded file ({{ form.column_definitions|length }}) does not match the number
               of columns in the table "{{ source.schema }}"."{{ source.table }}" ({{ source.get_column_config|length }}).
             </p>
+            <div class="govuk-error-summary__body">
+              <ul class="govuk-list govuk-error-message">
+                {% for column in table_columns %}
+                  {% if column not in file_columns %} 
+                    {{ column.field }} ({{ column.data_type }}) has been removed 
+                    <br>
+                  {% endif %}
+                {% endfor %}
+                {% for column in file_columns %}
+                  {% if column not in table_columns %} 
+                    {{ column.field }} ({{ column.data_type }}) has been added
+                    <br>
+                  {% endif %}
+                {% endfor %}
+              </ul>
+            </div>
             <div class="button-wrap">
               <a class="govuk-button govuk-button--secondary" href="{% url 'datasets:manager:manage-source-table' source.dataset_id source.id %}">
               Back
