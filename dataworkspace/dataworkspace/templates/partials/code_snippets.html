@@ -6,22 +6,21 @@
   <link rel="stylesheet" href="{% static 'assets/vendor/highlight/styles/a11y-light.css' %}">
 
   <p><a class="govuk-link--no-visited-state" href="https://data-services-help.trade.gov.uk/data-workspace/how-to/use-tools/use-tools/">Use code snippets in our tools</a> to analyse this data.</p>
-  {% with source_table.schema|slugify|add:"-"|add:source_table.table|slugify as table_name%}
     <div class="govuk-tabs" data-module="govuk-tabs">
       <h2 class="govuk-tabs__title">Contents</h2>
       <ul class="govuk-tabs__list">
         <li class="govuk-tabs__list-item govuk-tabs__list-item--selected">
-          <a class="govuk-tabs__tab" href="#code-snippet-sql-{{ table_name }}">SQL</a>
+          <a class="govuk-tabs__tab" href="#code-snippet-sql-{{ source_table.name|slugify }}">SQL</a>
         </li>
         <li class="govuk-tabs__list-item">
-          <a class="govuk-tabs__tab" href="#code-snippet-python-{{ table_name }}">Python</a>
+          <a class="govuk-tabs__tab" href="#code-snippet-python-{{ source_table.name|slugify }}">Python</a>
         </li>
         <li class="govuk-tabs__list-item">
-          <a class="govuk-tabs__tab" href="#code-snippet-r-{{ table_name }}">R</a>
+          <a class="govuk-tabs__tab" href="#code-snippet-r-{{ source_table.name|slugify }}">R</a>
         </li>
       </ul>
 
-      <div class="govuk-tabs__panel" id="code-snippet-sql-{{ table_name }}">
+      <div class="govuk-tabs__panel" id="code-snippet-sql-{{ source_table.name|slugify }}">
         <h3 class="govuk-heading-m">SQL</h3>
         <div class="app-example__code">
           <pre data-module="app-copy" style="white-space: pre-wrap;">
@@ -32,7 +31,7 @@
         <a id="launch-data-explorer" class="govuk-button govuk-!-margin-top-5" href="{% url 'explorer:index' %}?sql={{ code_snippets.sql|quote_plus }}" target="_blank">Open <span class="govuk-visually-hidden">first 50 rows of "{{ source_table.schema }}"."{{ source_table.table }}" </span>in Data Explorer</a>
       </div>
 
-      <div class="govuk-tabs__panel govuk-tabs__panel--hidden" id="code-snippet-python-{{ table_name }}">
+      <div class="govuk-tabs__panel govuk-tabs__panel--hidden" id="code-snippet-python-{{ source_table.name|slugify }}">
         <h3 class="govuk-heading-m">Python</h3>
         <div class="app-example__code">
           <pre data-module="app-copy" style="white-space: pre-wrap;">
@@ -41,7 +40,7 @@
         </div>
       </div>
 
-      <div class="govuk-tabs__panel govuk-tabs__panel--hidden" id="code-snippet-r-{{ table_name }}">
+      <div class="govuk-tabs__panel govuk-tabs__panel--hidden" id="code-snippet-r-{{ source_table.name|slugify }}">
         <h3 class="govuk-heading-m">R</h3>
         <div class="app-example__code">
           <pre data-module="app-copy" style="white-space: pre-wrap;">
@@ -50,6 +49,5 @@
         </div>
       </div>
     </div>
-    {% endwith %}
   {% endif %}
 {% endif %}
