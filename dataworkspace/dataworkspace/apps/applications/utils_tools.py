@@ -114,7 +114,7 @@ def get_groups(request):
                     "JupyterLab, RStudio, and Theia. You can use 'Your files' to upload files "
                     "to this folder, and download files from this folder.",
                     link=reverse("your-files:files"),
-                    has_access=request.user.has_perm("applications.start_all_applications"),
+                    has_access=True,
                     help_link=None,
                 ),
                 ToolsViewModel(
@@ -123,7 +123,7 @@ def get_groups(request):
                     summary="Collaborate on and store analysis, projects and "
                     "code with your colleagues",
                     link=settings.GITLAB_URL_FOR_TOOLS,
-                    has_access=request.user.has_perm("applications.start_all_applications"),
+                    has_access=True,
                 ),
             ],
             "group_description": "upload data and share data",
