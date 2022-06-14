@@ -472,7 +472,7 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
                     "is_draft",
                 ]
             },
-        )
+        ),
     ]
     readonly_fields = ("get_published_version",)
     manage_unpublished_permission_codename = "datasets.manage_unpublished_reference_datasets"

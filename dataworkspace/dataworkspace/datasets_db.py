@@ -107,9 +107,11 @@ def get_all_tables_last_updated_date(tables: Tuple[Tuple[str, str, str]]):
     }
 
 
-def extract_queried_tables_from_sql_query(database_name, query):
+def extract_queried_tables_from_sql_query(database_name, query, statement_timeout=None):
     # Extract the queried tables from the FROM clause using temporary views
     with connections[database_name].cursor() as cursor:
+        if statement_timeout:
+            cursor.execute(f"SET statement_timeout = {statement_timeout}")
         try:
             with transaction.atomic():
                 cursor.execute(

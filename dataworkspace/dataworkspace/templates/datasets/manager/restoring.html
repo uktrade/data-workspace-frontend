@@ -24,7 +24,7 @@
         '{% url "restore-table-task-status" request.GET.execution_date request.GET.task_name as status_url %}{{ status_url|escapejs }}',
         '{% url "datasets:manager:restore-success" source.dataset_id source.id version.id as success_url %}{{ success_url|escapejs }}',
         '{% url "datasets:manager:restore-failed" source.dataset_id source.id version.id as failure_url %}{{ failure_url|escapejs }}',
-        500
+        '{{ request.GET.task_name }}',
     );
   </script>
 {% endblock %}

@@ -14,6 +14,7 @@ from io import StringIO
 from typing import Tuple
 
 from timeit import default_timer as timer
+from urllib.parse import unquote
 
 import gevent
 import gevent.queue
@@ -35,6 +36,7 @@ from tableschema import Schema
 
 from dataworkspace.apps.core.boto3_client import get_s3_client, get_iam_client
 from dataworkspace.apps.core.constants import (
+    DATA_FLOW_TASK_ERROR_MAP,
     PostgresDataTypes,
     SCHEMA_POSTGRES_DATA_TYPE_MAP,
     TABLESCHEMA_FIELD_TYPE_MAP,
@@ -910,6 +912,7 @@ def streaming_query_response(
 
     # maxsize of 1 means memory use will be 1 * batch_size * bytes per row
     q = gevent.queue.Queue(maxsize=1)
+    should_run_query_metrics = unfiltered_query and query_metrics_callback
 
     def stream_query_as_csv_to_queue(conn):
         class PseudoBuffer:
@@ -982,7 +985,6 @@ def streaming_query_response(
         return counts[0]
 
     def run_queries():
-        should_run_query_metrics = unfiltered_query and query_metrics_callback
 
         with connect(
             database_dsn(settings.DATABASES_DATA[database]),
@@ -1012,18 +1014,15 @@ def streaming_query_response(
                 # being open at the same time
                 all_columns = get_all_columns_from_unfiltered(conn)
                 all_rows_count = get_row_count_from_unfiltered(conn)
-
-        if should_run_query_metrics:
-            metrics = {
-                "bytes_downloaded": total_bytes,
-                "column_count": len(all_columns),
-                "column_count_filtered": len(filtered_columns),
-                "download_time_in_seconds": seconds_elapsed,
-                "row_count": all_rows_count,
-                "row_count_filtered": filtered_rows_count,
-            }
-
-            query_metrics_callback(metrics)
+                metrics = {
+                    "bytes_downloaded": total_bytes,
+                    "column_count": len(all_columns),
+                    "column_count_filtered": len(filtered_columns),
+                    "download_time_in_seconds": seconds_elapsed,
+                    "row_count": all_rows_count,
+                    "row_count_filtered": filtered_rows_count,
+                }
+                q.put(metrics)
 
     def csv_iterator():
         # Listen for all data on the queue until we receive the done object
@@ -1041,6 +1040,10 @@ def streaming_query_response(
 
             if data:
                 yield data
+
+        if should_run_query_metrics:
+            metrics = q.get(block=True, timeout=query_timeout)
+            query_metrics_callback(metrics)
 
     def exception_callback(g):
         try:
@@ -1374,3 +1377,37 @@ def get_dataflow_task_status(dag, execution_date, task_id):
     response = requests.get(url, headers={"Authorization": header, "Content-Type": ""})
     response.raise_for_status()
     return response.json().get("state")
+
+
+def get_dataflow_task_log(dag, execution_date, task_id):
+    config = settings.DATAFLOW_API_CONFIG
+    url = (
+        f'{config["DATAFLOW_BASE_URL"]}/api/experimental/derived-dags/'
+        f"dag/{dag}/{execution_date.split('+')[0]}/{task_id}/log"
+    )
+    header = Sender(
+        {
+            "id": config["DATAFLOW_HAWK_ID"],
+            "key": config["DATAFLOW_HAWK_KEY"],
+            "algorithm": "sha256",
+        },
+        url,
+        "get",
+        content="",
+        content_type="",
+    ).request_header
+    response = requests.get(url, headers={"Authorization": header, "Content-Type": ""})
+    response.raise_for_status()
+    return response.json().get("log")
+
+
+def get_task_error_message_template(execution_date, task_name):
+    logs = get_dataflow_task_log(
+        settings.DATAFLOW_API_CONFIG["DATAFLOW_S3_IMPORT_DAG"],
+        unquote(execution_date).replace(" ", "+"),
+        task_name,
+    )
+    for error_re, template_name in DATA_FLOW_TASK_ERROR_MAP.items():
+        if re.match(error_re, logs, re.DOTALL | re.IGNORECASE):
+            return template_name
+    return None

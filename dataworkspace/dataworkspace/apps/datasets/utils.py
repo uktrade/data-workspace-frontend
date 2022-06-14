@@ -9,8 +9,10 @@ import boto3
 import botocore
 import requests
 from django.conf import settings
+from django.core.cache import cache
 from django.db import connections, IntegrityError, transaction
 from django.db.models import Q
+from django.db.utils import DatabaseError
 from django.http import Http404
 from django.urls import reverse
 from psycopg2.sql import Identifier, Literal, SQL
@@ -656,11 +658,20 @@ def update_metadata_with_source_table_id():
 
 
 @celery_app.task()
+@close_all_connections_if_not_in_atomic_block
 def store_custom_dataset_query_metadata():
+    with cache.lock("store_custom_dataset_query_metadata_lock", blocking_timeout=0, timeout=86400):
+        do_store_custom_dataset_query_metadata()
+
+
+def do_store_custom_dataset_query_metadata():
+    statement_timeout = 60
     for query in CustomDatasetQuery.objects.filter(dataset__published=True):
         sql = query.query.rstrip().rstrip(";")
 
-        tables = extract_queried_tables_from_sql_query(query.database.memorable_name, sql)
+        tables = extract_queried_tables_from_sql_query(
+            query.database.memorable_name, sql, statement_timeout=statement_timeout
+        )
         if not tables:
             logger.info(
                 "Not adding metadata for query %s as no tables could be extracted", query.name
@@ -678,6 +689,7 @@ def store_custom_dataset_query_metadata():
             else query_last_updated_date
         )
         with connections[query.database.memorable_name].cursor() as cursor:
+            cursor.execute(f"SET statement_timeout = {statement_timeout}")
             cursor.execute(
                 SQL(
                     "SELECT DISTINCT ON(source_data_modified_utc) "
@@ -693,7 +705,15 @@ def store_custom_dataset_query_metadata():
             )
             metadata = cursor.fetchone()
             if not metadata or last_updated_date != metadata[0]:
-                data_hash = get_data_hash(cursor, sql)
+                try:
+                    data_hash = get_data_hash(cursor, sql)
+                except DatabaseError as e:
+                    logger.error(
+                        "Not adding metadata for query %s as get_data_hash failed with %s",
+                        query.name,
+                        e,
+                    )
+                    continue
                 cursor.execute(f"SELECT * FROM ({sql}) sq LIMIT 0")
                 columns = [(col[0], TYPE_CODES_REVERSED[col[1]]) for col in cursor.description]
 

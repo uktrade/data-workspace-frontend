@@ -1,3 +1,10 @@
+# Monkey-patching should happen as early as possible ...
+# pylint: disable=multiple-statements,wrong-import-position,wrong-import-order
+
+# fmt: off
+from psycogreen.gevent import patch_psycopg; patch_psycopg()  # noqa: E402,E702
+# fmt: on
+
 import logging
 
 from celery import Celery
