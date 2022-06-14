@@ -660,7 +660,7 @@ def store_custom_dataset_query_metadata():
 
 
 def do_store_custom_dataset_query_metadata():
-    statement_timeout = 60
+    statement_timeout = 60 * 1000
     for query in CustomDatasetQuery.objects.filter(dataset__published=True):
         sql = query.query.rstrip().rstrip(";")
 
