@@ -158,9 +158,6 @@ class DatasetSearchForm(forms.Form):
     SUBSCRIBED = "subscribed"
     BOOKMARKED = "bookmarked"
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     q = forms.CharField(required=False)
 
     user_access = forms.TypedMultipleChoiceField(
