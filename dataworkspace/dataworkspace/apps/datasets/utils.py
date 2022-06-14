@@ -707,7 +707,17 @@ def do_store_custom_dataset_query_metadata():
                         e,
                     )
                     continue
-                cursor.execute(f"SELECT * FROM ({sql}) sq LIMIT 0")
+
+                try:
+                    cursor.execute(f"SELECT * FROM ({sql}) sq LIMIT 0")
+                except DatabaseError as e:
+                    logger.error(
+                        "Not adding metadata for query %s as querying for columns failed with %s",
+                        query.name,
+                        e,
+                    )
+                    continue
+
                 columns = [(col[0], TYPE_CODES_REVERSED[col[1]]) for col in cursor.description]
 
                 cursor.execute(
