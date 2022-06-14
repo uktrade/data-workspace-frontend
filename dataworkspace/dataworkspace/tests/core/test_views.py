@@ -289,17 +289,6 @@ def test_footer_links(request_client):
 
 
 @pytest.mark.parametrize(
-    "has_tools_access, expected_href, expected_text",
-    (
-        (False, "/request-access/", "Request access to GitLab"),
-        (
-            True,
-            "https://gitlab",
-            "Open GitLab",
-        ),
-    ),
-)
-@pytest.mark.parametrize(
     "has_quicksight_access, expected_href, expected_text",
     (
         (True, "/tools/quicksight/redirect", "Open QuickSight"),
