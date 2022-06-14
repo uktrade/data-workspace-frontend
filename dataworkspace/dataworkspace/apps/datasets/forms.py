@@ -148,12 +148,6 @@ class SourceTagField(forms.ModelMultipleChoiceField):
         return obj.name
 
 
-def get_sort_choices():
-    if waffle.switch_is_active("enable_sort_by_popularity"):
-        return [("-average_unique_users_daily,-published_date,name", "Popularity")] + SORT_CHOICES
-    return SORT_CHOICES
-
-
 class DatasetSearchForm(forms.Form):
     SUBSCRIBED = "subscribed"
     BOOKMARKED = "bookmarked"
@@ -226,12 +220,6 @@ class DatasetSearchForm(forms.Form):
         ),
     )
 
-    sort = forms.ChoiceField(
-        required=False,
-        choices=get_sort_choices,
-        widget=SortSelectWidget(label="Sort by", form_group_extra_css="govuk-!-margin-bottom-0"),
-    )
-
     def clean_sort(self):
         data = self.cleaned_data["sort"]
         if not data:
@@ -241,6 +229,25 @@ class DatasetSearchForm(forms.Form):
 
     class Media:
         js = ("app-filter-show-more-v2.js",)
+
+    def __init__(self, request, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Use a custom mechanism of constructing the sort field to only show the
+        # search by popularity item if a flag is enabled for the current user. When
+        # this gets rolled out to all users, this can be made standard
+        self.fields["sort"] = forms.ChoiceField(
+            required=False,
+            choices=SORT_CHOICES
+            + (
+                [("-average_unique_users_daily,-published_date,name", "Popularity")]
+                if waffle.flag_is_active(request, "SEARCH_RESULTS_SORT_BY_POPULARITY")
+                else []
+            ),
+            widget=SortSelectWidget(
+                label="Sort by", form_group_extra_css="govuk-!-margin-bottom-0"
+            ),
+        )
 
     def annotate_and_update_filters(self, datasets, matcher):
         """
