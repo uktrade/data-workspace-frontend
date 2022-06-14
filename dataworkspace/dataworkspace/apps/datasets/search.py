@@ -1,7 +1,7 @@
 import logging
 
 from django.contrib.postgres.aggregates.general import ArrayAgg, BoolOr
-from django.contrib.postgres.search import SearchRank
+from django.contrib.postgres.search import SearchRank, SearchQuery
 from django.db.models import (
     Exists,
     F,
@@ -79,7 +79,9 @@ def _get_datasets_data_for_user_matching_query(
     datasets = _filter_by_query(datasets, query)
 
     # Annotate with rank so we can order by this
-    datasets = datasets.annotate(search_rank=SearchRank(F("search_vector"), query))
+    datasets = datasets.annotate(
+        search_rank=SearchRank(F("search_vector_english"), SearchQuery(query, config="english"))
+    )
 
     datasets = _annotate_has_access(datasets, user)
     datasets = _annotate_is_bookmarked(datasets, user)
@@ -125,7 +127,7 @@ def _filter_by_query(datasets, query):
     if datasets.model is DataSet and query:
         search_filter |= Q(sourcetable__table=query)
     if query:
-        search_filter |= Q(search_vector=query)
+        search_filter |= Q(search_vector_english=SearchQuery(query, config="english"))
     datasets = datasets.filter(search_filter)
     return datasets
 

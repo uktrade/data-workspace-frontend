@@ -23,6 +23,7 @@ class SourceTableUploadForm(GOVUKDesignSystemForm):
             heading_class="govuk-heading-s",
             extra_label_classes="govuk-!-font-weight-bold",
             show_selected_file=True,
+            attrs={"accept": "text/csv"},
         ),
         validators=[
             FileExtensionValidator(allowed_extensions=["csv"]),

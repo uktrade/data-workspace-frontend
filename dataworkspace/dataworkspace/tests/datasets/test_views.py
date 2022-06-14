@@ -4613,3 +4613,51 @@ class TestDatasetManagerViews:
             "DataWorkspaceRestoreTablePipeline",
             "restore-public-dataset_test-2021-01-01T01:01:01",
         )
+
+    @override_flag(settings.DATA_UPLOADER_UI_FLAG, active=True)
+    @pytest.mark.django_db
+    @freeze_time("2021-01-01 01:01:01")
+    @pytest.mark.parametrize(
+        "log_message,expected_text",
+        [
+            ("Generic Error", b"Please check the following before you try again"),
+            ("UnicodeDecodeError", b"character encoding error"),
+            ("Invalid input syntax for type Numeric", b"error parsing a numeric field"),
+            ("NumericValueOutOfRange", b"out of range error"),
+            ("DatetimeFieldOverflow", b"error parsing a date field"),
+        ],
+    )
+    @mock.patch("dataworkspace.apps.core.utils.get_dataflow_task_log")
+    def test_upload_failed_view(
+        self,
+        mock_get_task_log,
+        log_message,
+        expected_text,
+        dataset_db_with_swap_table,
+        user,
+        client,
+    ):
+        mock_get_task_log.return_value = (
+            f"Dummy logging output...\n{log_message}\nmore log output\nEND"
+        )
+        source = factories.SourceTableFactory.create(
+            dataset=factories.MasterDataSetFactory.create(
+                published=True,
+                user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+                information_asset_manager=user,
+            ),
+            schema="public",
+            table="dataset_test",
+        )
+        response = client.get(
+            reverse(
+                "datasets:manager:upload-failed",
+                args=(
+                    source.dataset.id,
+                    source.id,
+                ),
+            )
+            + "?filename=test.csv&execution_date=2022-01-01&task_name=dummy"
+        )
+        assert response.status_code == 200
+        assert expected_text in response.content

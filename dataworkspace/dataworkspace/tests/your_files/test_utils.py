@@ -41,7 +41,7 @@ def test_s3_csv_column_types(mock_client, csv_content):
         {
             "header_name": "col2",
             "column_name": "col2",
-            "data_type": PostgresDataTypes.TEXT,
+            "data_type": PostgresDataTypes.BIGINT,
             "sample_data": ["1", "2"],
         },
     ]

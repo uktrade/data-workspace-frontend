@@ -29,6 +29,7 @@ from dataworkspace.apps.core.utils import (
     get_all_schemas,
     get_random_data_sample,
     get_s3_prefix,
+    get_task_error_message_template,
     get_team_schemas_for_user,
     new_private_database_credentials,
     postgres_user,
@@ -382,10 +383,12 @@ class BaseCreateTableStepView(BaseCreateTableTemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data()
+        query_params = self._get_query_parameters()
+        query_params["task_name"] = self.task_name
         context.update(
             {
                 "task_name": self.task_name,
-                "next_step": f"{reverse(self.next_step_url_name)}?{urlencode(self._get_query_parameters())}",
+                "next_step": f"{reverse(self.next_step_url_name)}?{urlencode(query_params)}",
             }
         )
         return context
@@ -485,6 +488,10 @@ class CreateTableFailedView(RequiredParameterGetRequestMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["filename"] = self.request.GET["filename"]
+        if "execution_date" in self.request.GET and "task_name" in self.request.GET:
+            context["error_message_template"] = get_task_error_message_template(
+                self.request.GET["execution_date"], self.request.GET["task_name"]
+            )
         return context
 
 
