@@ -9,8 +9,7 @@ import psycopg2
 from psycopg2.sql import Literal, SQL
 import pytz
 from django.conf import settings
-from django.db import connections, transaction
-from django.db.utils import DatabaseError
+from django.db import connections
 
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.utils import TYPE_CODES_REVERSED
@@ -107,27 +106,43 @@ def get_all_tables_last_updated_date(tables: Tuple[Tuple[str, str, str]]):
     }
 
 
-def extract_queried_tables_from_sql_query(database_name, query, statement_timeout=None):
-    # Extract the queried tables from the FROM clause using temporary views
-    with connections[database_name].cursor() as cursor:
-        if statement_timeout:
-            cursor.execute(f"SET statement_timeout = {statement_timeout}")
-        try:
-            with transaction.atomic():
-                cursor.execute(
-                    f"create temporary view get_tables as (select 1 from ({query.strip().rstrip(';')}) sq)"
-                )
-        except DatabaseError as e:
-            logger.error(e)
-            tables = []
-        else:
-            cursor.execute(
-                "select table_schema, table_name from information_schema.view_table_usage where view_name = 'get_tables'"
-            )
-            tables = cursor.fetchall()
-            cursor.execute("drop view get_tables")
+def extract_queried_tables_from_sql_query(query):
+    """
+    Returns a list of (schema, table) tuples extracted from the passed PostgreSQL query
+
+    This does not communicate with a database, and instead uses pglast to parse the
+    query. However, it does not use pglast's built-in functions to extract tables -
+    they're buggy in the cases where CTEs have the same names as tables in the
+    default/public schema.
+    """
+
+    def _get_tables(node, ctenames=()):
+        tables = set()
+
+        if node.get("withClause", None) is not None:
+            for cte in node["withClause"]["ctes"]:
+                tables = tables.union(_get_tables(cte, ctenames))
+                ctenames += (cte["ctename"],)
+
+        if node.get("@", None) == "RangeVar" and (
+            node["schemaname"] is not None or node["relname"] not in ctenames
+        ):
+            tables.add((node["schemaname"] or "public", node["relname"]))
+
+        for node_type, node_value in node.items():
+            if node_type == "withClause":
+                continue
+            for nested_node in node_value if isinstance(node_value, tuple) else (node_value,):
+                if isinstance(nested_node, dict):
+                    tables = tables.union(_get_tables(nested_node, ctenames))
 
         return tables
+
+    try:
+        return sorted(list(_get_tables(pglast.parse_sql(query)[0]())))
+    except pglast.parser.ParseError as e:
+        logger.error(e)
+        return []
 
 
 def get_source_table_changelog(source_table):
