@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib.postgres.aggregates.general import ArrayAgg, BoolOr
 from django.contrib.postgres.search import SearchRank, SearchQuery
 from django.db.models import (
@@ -25,14 +27,16 @@ from dataworkspace.apps.datasets.utils import (
     dataset_type_to_manage_unpublished_permission_codename,
 )
 
+from dataworkspace.cel import celery_app
+
+logger = logging.getLogger("app")
+
 SORT_CHOICES = [
     ("-search_rank,-published_date,name", "Relevance"),
     ("-published_date,-search_rank,name", "Date published: newest"),
     ("published_date,-search_rank,name", "Date published: oldest"),
     ("name", "Alphabetical (A-Z)"),
 ]
-
-DEFAULT_SORT = SORT_CHOICES[0][0]
 
 
 class SearchDatasetsFilters:
@@ -108,6 +112,7 @@ def _get_datasets_data_for_user_matching_query(
         "is_bookmarked",
         "is_subscribed",
         "published_date",
+        "average_unique_users_daily",
     )
 
 
@@ -443,3 +448,17 @@ def search_for_datasets(user, filters: SearchDatasetsFilters, matcher) -> tuple:
         all_datasets_visible_to_user_matching_query,
         datasets_matching_query_and_filters,
     )
+
+
+@celery_app.task()
+def update_datasets_average_daily_users():
+    def _update_datasets(datasets, calculate_value):
+        for dataset in datasets:
+            value = calculate_value(dataset)
+            logger.info("%s %s", dataset, value)
+            dataset.average_unique_users_daily = value
+            dataset.save()
+
+    _update_datasets(DataSet.objects.live(), lambda x: 0)
+    _update_datasets(ReferenceDataset.objects.live(), lambda x: 0)
+    _update_datasets(VisualisationCatalogueItem.objects.live(), lambda x: 0)
