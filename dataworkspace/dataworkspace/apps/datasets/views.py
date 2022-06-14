@@ -196,7 +196,7 @@ def find_datasets(request):
     ###############
     # Validate form
 
-    form = DatasetSearchForm(request.GET)
+    form = DatasetSearchForm(request, request.GET)
 
     if not form.is_valid():
         logger.warning(form.errors)
