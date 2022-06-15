@@ -31,13 +31,6 @@ from dataworkspace.cel import celery_app
 
 logger = logging.getLogger("app")
 
-SORT_CHOICES = [
-    ("-search_rank,-published_date,name", "Relevance"),
-    ("-published_date,-search_rank,name", "Date published: newest"),
-    ("published_date,-search_rank,name", "Date published: oldest"),
-    ("name", "Alphabetical (A-Z)"),
-]
-
 
 class SearchDatasetsFilters:
     unpublished: bool
@@ -78,13 +71,41 @@ def _get_datasets_data_for_user_matching_query(
     datasets = _filter_datasets_by_permissions(datasets, user)
     datasets = _filter_by_query(datasets, query)
 
-    # Annotate with rank so we can order by this
+    # Annotate with ranks for name, short_description, tags and description, as well as the
+    # concatenation of these to support sorting by relevance. Normalization for tags is set
+    # to 0 which ignores the document length. This is to prevent datasets that have multiple
+    # tags ranking lower than those that have fewer tags.
     datasets = datasets.annotate(
-        search_rank=SearchRank(F("search_vector_english"), SearchQuery(query, config="english"))
+        search_rank=SearchRank(F("search_vector_english"), SearchQuery(query, config="english")),
+        search_rank_name=SearchRank(
+            F("search_vector_english_name"),
+            SearchQuery(query, config="english"),
+            cover_density=True,
+            normalization=Value(1),
+        ),
+        search_rank_short_description=SearchRank(
+            F("search_vector_english_short_description"),
+            SearchQuery(query, config="english"),
+            cover_density=True,
+            normalization=Value(1),
+        ),
+        search_rank_tags=SearchRank(
+            F("search_vector_english_tags"),
+            SearchQuery(query, config="english"),
+            cover_density=True,
+            normalization=Value(0),
+        ),
+        search_rank_description=SearchRank(
+            F("search_vector_english_description"),
+            SearchQuery(query, config="english"),
+            cover_density=True,
+            normalization=Value(1),
+        ),
     )
 
     datasets = _annotate_has_access(datasets, user)
     datasets = _annotate_is_bookmarked(datasets, user)
+    datasets = _annotate_source_table_match(datasets, query)
 
     datasets = _annotate_is_subscribed(datasets, user)
     datasets = _annotate_tags(datasets)
@@ -102,6 +123,10 @@ def _get_datasets_data_for_user_matching_query(
         "slug",
         "short_description",
         "search_rank",
+        "search_rank_name",
+        "search_rank_short_description",
+        "search_rank_tags",
+        "search_rank_description",
         "source_tag_ids",
         "topic_tag_ids",
         "data_type",
@@ -110,6 +135,7 @@ def _get_datasets_data_for_user_matching_query(
         "has_visuals",
         "has_access",
         "is_bookmarked",
+        "table_match",
         "is_subscribed",
         "published_date",
         "average_unique_users_daily",
@@ -317,6 +343,22 @@ def _annotate_is_bookmarked(datasets, user):
             )
         ),
     )
+    return datasets
+
+
+def _annotate_source_table_match(datasets, query):
+    if datasets.model is ReferenceDataset or datasets.model is VisualisationCatalogueItem:
+        datasets = datasets.annotate(table_match=Value(False, BooleanField()))
+    if datasets.model is DataSet:
+        datasets = datasets.annotate(
+            table_match=BoolOr(
+                Case(
+                    When(sourcetable__table=query, then=True),
+                    default=False,
+                    output_field=BooleanField(),
+                )
+            )
+        )
     return datasets
 
 

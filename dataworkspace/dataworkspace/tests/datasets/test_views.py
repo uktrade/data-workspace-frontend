@@ -234,6 +234,10 @@ def expected_search_result(catalogue_item, **kwargs):
         "name": catalogue_item.name,
         "slug": catalogue_item.slug,
         "search_rank": mock.ANY,
+        "search_rank_name": mock.ANY,
+        "search_rank_short_description": mock.ANY,
+        "search_rank_tags": mock.ANY,
+        "search_rank_description": mock.ANY,
         "short_description": catalogue_item.short_description,
         "published_date": mock.ANY,
         "source_tag_ids": mock.ANY,
@@ -242,6 +246,7 @@ def expected_search_result(catalogue_item, **kwargs):
         "published": catalogue_item.published,
         "has_access": True,
         "is_bookmarked": False,
+        "table_match": False,
         "is_subscribed": False,
         "has_visuals": mock.ANY,
         "is_open_data": getattr(catalogue_item, "user_access_type", None) == UserAccessType.OPEN,
@@ -298,7 +303,9 @@ def test_find_datasets_by_source_table_name(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ds, has_access=False, data_type=DataSetType.MASTER),
+        expected_search_result(
+            ds, has_access=False, table_match=True, data_type=DataSetType.MASTER
+        ),
     ]
 
 
@@ -614,6 +621,36 @@ def test_find_datasets_order_by_oldest_first(client):
         expected_search_result(ads3, has_access=False, data_type=ads3.type),
         expected_search_result(ads2, has_access=False, data_type=ads2.type),
         expected_search_result(ads1, has_access=False, data_type=ads1.type),
+    ]
+
+
+@pytest.mark.django_db
+@override_flag("SEARCH_RESULTS_SORT_BY_RELEVANCE", active=True)
+def test_find_datasets_order_by_relevance_prioritises_bookmarked_datasets():
+    user = factories.UserFactory.create(is_superuser=False)
+    client = Client(**get_http_sso_data(user))
+    bookmarked_master = factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER,
+        name="Master bookmarked",
+    )
+    factories.DataSetBookmarkFactory.create(user=user, dataset=bookmarked_master)
+    unbookmarked_master = factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER,
+        name="Master Master Master unbookmarked",
+    )
+
+    sort = (
+        "-is_bookmarked,-table_match,-search_rank_name,-search_rank_short_description"
+        ",-search_rank_tags,-search_rank_description,-search_rank,-published_date,name"
+    )
+    response = client.get(reverse("datasets:find_datasets"), {"sort": sort, "q": "master"})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(bookmarked_master, has_access=False, is_bookmarked=True),
+        expected_search_result(unbookmarked_master, has_access=False),
     ]
 
 
