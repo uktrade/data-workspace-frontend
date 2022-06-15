@@ -8,6 +8,7 @@ from uuid import UUID
 import boto3
 import botocore
 import requests
+from datetime import datetime, timedelta, date, time
 from django.conf import settings
 from django.core.cache import cache
 from django.db import connections, IntegrityError, transaction
@@ -33,6 +34,7 @@ from dataworkspace.apps.datasets.models import (
     VisualisationCatalogueItem,
     VisualisationLink,
     VisualisationLinkSqlQuery,
+    ToolQueryAuditLog,
 )
 from dataworkspace.cel import celery_app
 from dataworkspace.datasets_db import (
@@ -987,3 +989,45 @@ def send_notification_emails():
         logger.error("Exception when creating notifications: %s", e)
     else:
         send_notifications()
+
+
+def get_dataset_table(obj):
+    datasets = set()
+    for table in obj.tables.all():
+        for source_table in SourceTable.objects.filter(dataset__deleted=False).filter(
+            schema=table.schema, table=table.table
+        ):
+            datasets.add(source_table.dataset)
+        if table.schema == "public":
+            for ref_dataset in ReferenceDataset.objects.live().filter(table_name=table.table):
+                datasets.add(ref_dataset)
+    return datasets
+
+
+def calculate_popularity_of_datasets():
+    latest_audit_logs = ToolQueryAuditLog.objects.filter(
+        timestamp__gte=datetime.combine(date.today(), time()) - timedelta(days=28)
+    )
+
+    dataset_dict = {}
+
+    # establish dataset dictionary
+    for log in latest_audit_logs:
+        for dataset in get_dataset_table(log):
+            if dataset.id not in dataset_dict:
+                dataset_dict[dataset.id] = 0
+
+    # append the total number of users per dataset over the last 28 days to dict
+    for log in latest_audit_logs:
+        for dataset in get_dataset_table(log):
+            dataset_dict[dataset.id] += 1
+
+    # calculate the popularity of a dataset
+    for log in latest_audit_logs:
+        for dataset in get_dataset_table(log):
+            dataset_dict[dataset.id] = dataset_dict[dataset.id] / 28
+
+    # update average_unique_users_daily in DataSet
+    for d in dataset_dict:
+        dataset = DataSet.objects.get(id=d).average_unique_users_daily = dataset_dict[d]
+        dataset.save(update_fields=["average_unique_users_daily"])
