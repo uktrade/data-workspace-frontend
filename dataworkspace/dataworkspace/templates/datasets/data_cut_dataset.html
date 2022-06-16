@@ -78,7 +78,7 @@
         </p>
       {% endflag %}
       <p class="govuk-body sidebar-section">
-        <a href="mailto:{{ model.enquiries_contact.email }}" class="govuk-link govuk-link--no-visited-state">
+        <a href="mailto:{{ model.enquiries_contact.email }}?subject=Reporting an issue - {{ model.name }}" class="govuk-link govuk-link--no-visited-state">
           {% include "partials/report_an_issue_icon.html" %}
         </a>
       </p>
