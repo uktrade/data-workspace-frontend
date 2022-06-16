@@ -147,6 +147,11 @@
           {% include "partials/subscription_link.html" with subscription=subscription dataset=model dataset_uuid=model.uuid %}
         </p>
       {% endflag %}
+      <p class="govuk-body sidebar-section">
+        <a href="mailto:{{ model.enquiries_contact.email }}" class="govuk-link govuk-link--no-visited-state">
+          {% include "partials/report_an_issue_icon.html" %}
+        </a>
+      </p>
       {% include 'partials/using_data_dropdown.html' %}
     </div>
   </div>

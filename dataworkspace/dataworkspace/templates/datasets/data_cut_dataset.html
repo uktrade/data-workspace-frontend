@@ -77,7 +77,11 @@
           {% include "partials/subscription_link.html" with subscription=subscription dataset=dataset dataset_uuid=dataset.id %}
         </p>
       {% endflag %}
-
+      <p class="govuk-body sidebar-section">
+        <a href="mailto:{{ model.enquiries_contact.email }}" class="govuk-link govuk-link--no-visited-state">
+          {% include "partials/report_an_issue_icon.html" %}
+        </a>
+      </p>
       {% if request.user == model.information_asset_owner or request.user == model.information_asset_manager %}
           <p class="govuk-body sidebar-section">
             <a href="{% url 'datasets:edit_dataset' model.id %}" class="govuk-link">Manage this dataset</a>

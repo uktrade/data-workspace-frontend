@@ -79,6 +79,10 @@
         <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-columns">
           Reset columns
         </button>
+        <p class="govuk-button govuk-button--secondary">
+          <a href="mailto:{{ model.enquiries_contact.email }}" class="govuk-link govuk-link--no-visited-state">
+            {% include "partials/report_an_issue_icon.html" %}</a>
+        </p>
       </div>
     </div>
   </div>
