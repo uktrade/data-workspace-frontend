@@ -86,6 +86,17 @@ from dataworkspace.datasets_db import (
             """,
             [("public", "my_inner_1"), ("public", "my_inner_2")],
         ),
+        (
+            """
+                WITH RECURSIVE t(n) AS (
+                    VALUES (1)
+                  UNION ALL
+                    SELECT n+1 FROM t INNER JOIN a ON 1=1 WHERE n < 100
+                )
+                SELECT sum(n) FROM t;
+            """,
+            [("public", "a")],
+        ),
     ),
 )
 def test_sql_query_tables_extracted_correctly(query, expected_tables):
