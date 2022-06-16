@@ -1294,6 +1294,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                 SearchVector("name", weight="A", config="english")
                 + SearchVector("short_description", weight="B", config="english")
                 + SearchVector(models.Value(tag_names), weight="C", config="english")
+                + SearchVector("description", weight="D", config="english")
                 + SearchVector("acronyms", weight="D", config="english")
             ),
             search_vector_english_name=SearchVector("name", config="english"),
