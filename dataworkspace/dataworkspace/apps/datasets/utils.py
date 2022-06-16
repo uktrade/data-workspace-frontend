@@ -449,7 +449,7 @@ def build_filtered_dataset_query(inner_query, column_config, params):
                 terms[0] = bool(int(terms[0]))
 
             # Arrays are a special case
-            elif data_type == "array":
+            if data_type == "array":
                 if filter_data["type"] == "contains":
                     query_params[field] = terms[0]
                     where_clause.append(
