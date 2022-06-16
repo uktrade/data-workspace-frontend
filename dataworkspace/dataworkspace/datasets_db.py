@@ -126,9 +126,14 @@ def extract_queried_tables_from_sql_query(query):
         tables = set()
 
         if node.get("withClause", None) is not None:
-            for cte in node["withClause"]["ctes"]:
-                tables = tables.union(_get_tables(cte, ctenames))
-                ctenames += (cte["ctename"],)
+            if node["withClause"]["recursive"]:
+                for cte in node["withClause"]["ctes"]:
+                    ctenames += (cte["ctename"],)
+                    tables = tables.union(_get_tables(cte, ctenames))
+            else:
+                for cte in node["withClause"]["ctes"]:
+                    tables = tables.union(_get_tables(cte, ctenames))
+                    ctenames += (cte["ctename"],)
 
         if node.get("@", None) == "RangeVar" and (
             node["schemaname"] is not None or node["relname"] not in ctenames
