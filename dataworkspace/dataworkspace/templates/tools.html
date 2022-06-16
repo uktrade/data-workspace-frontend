@@ -24,7 +24,8 @@
       <h1 class="govuk-heading-xl">Tools</h1>
     </div>
   </div>
-  {% if not perms.applications.start_all_applications %}
+  {# removed until new designs are ready for tools access warning message  #}
+  <!-- {% if not perms.applications.start_all_applications %}
     <div class="govuk-grid-row govuk-!-margin-bottom-6">
       <div class="govuk-grid-column-two-thirds">
         <div class="govuk-warning-text">
@@ -39,7 +40,7 @@
         <a class="govuk-button govuk-button--primary" href="{% url 'request_access:index' %}">Request access</a>
       </div>
     </div>
-  {% endif %}
+  {% endif %} -->
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
       <p class="govuk-body govuk-!-margin-bottom-8">
