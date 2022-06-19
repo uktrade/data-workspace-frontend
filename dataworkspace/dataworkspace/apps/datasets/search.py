@@ -26,9 +26,11 @@ from dataworkspace.apps.datasets.models import (
     DataSet,
     DataSetVisualisation,
     VisualisationCatalogueItem,
+    ToolQueryAuditLog,
 )
 from dataworkspace.apps.datasets.utils import (
     dataset_type_to_manage_unpublished_permission_codename,
+    get_dataset_table,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 
@@ -514,6 +516,34 @@ def calculate_visualisation_average(visualisation):
     return total_users / total_days
 
 
+def calculate_dataset_average(dataset):
+    period_start, period_end = _get_popularity_calculation_period(dataset)
+    total_days = (period_end - period_start).days
+
+    logger.info(
+        "Calculating average usage for dataset '%s' for the period %s - %s (%s days)",
+        dataset.name,
+        period_start,
+        period_end,
+        total_days,
+    )
+
+    if total_days < 1:
+        return 0
+
+    latest_audit_logs = ToolQueryAuditLog.objects.filter(
+        timestamp__gt=period_start.replace(tzinfo=utc),
+        timestamp__lt=period_end.replace(tzinfo=utc),
+    )
+
+    total_users = 0
+    for log in latest_audit_logs:
+        if list(get_dataset_table(log))[0] == dataset:
+            total_users += 1
+
+    return total_users / total_days
+
+
 @celery_app.task()
 def update_datasets_average_daily_users():
     def _update_datasets(datasets, calculate_value):
@@ -523,6 +553,6 @@ def update_datasets_average_daily_users():
             dataset.average_unique_users_daily = value
             dataset.save()
 
-    _update_datasets(DataSet.objects.live(), lambda x: 0)
+    _update_datasets(DataSet.objects.live(), calculate_dataset_average)
     _update_datasets(ReferenceDataset.objects.live(), lambda x: 0)
     _update_datasets(VisualisationCatalogueItem.objects.live(), calculate_visualisation_average)
