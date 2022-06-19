@@ -138,8 +138,8 @@ def extract_queried_tables_from_sql_query(query):
 
         if node.get("withClause", None) is not None:
             if node["withClause"]["recursive"]:
+                ctenames += tuple((cte["ctename"] for cte in node["withClause"]["ctes"]))
                 for cte in node["withClause"]["ctes"]:
-                    ctenames += (cte["ctename"],)
                     node_ctenames.append((cte, ctenames))
             else:
                 for cte in node["withClause"]["ctes"]:
