@@ -1,12 +1,15 @@
 import logging
+from datetime import datetime, time, timedelta
 
 from django.contrib.postgres.aggregates.general import ArrayAgg, BoolOr
 from django.contrib.postgres.search import SearchRank, SearchQuery
 from django.db.models import (
+    Count,
     Exists,
     F,
     IntegerField,
     Q,
+    Sum,
     Value,
     Case,
     When,
@@ -15,6 +18,7 @@ from django.db.models import (
     FilteredRelation,
 )
 from django.db.models import QuerySet
+from pytz import utc
 
 from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType, TagType
 from dataworkspace.apps.datasets.models import (
@@ -26,6 +30,7 @@ from dataworkspace.apps.datasets.models import (
 from dataworkspace.apps.datasets.utils import (
     dataset_type_to_manage_unpublished_permission_codename,
 )
+from dataworkspace.apps.eventlog.models import EventLog
 
 from dataworkspace.cel import celery_app
 
@@ -450,15 +455,74 @@ def search_for_datasets(user, filters: SearchDatasetsFilters, matcher) -> tuple:
     )
 
 
+def _get_popularity_calculation_period(dataset):
+    """
+    Returns the start and end datetimes for a valid period to calculate dataset usage on.
+    The calculation period is:
+
+    From: Midnight 28 days should before the calculation is done
+    To: Midnight of the day the calculation is done
+
+    If the dataset was published less than 28 days ago start the period at midnight the day
+    after it was published.
+    """
+    # The farthest we go back is 00:00 28 days ago
+    period_end = datetime.combine(datetime.utcnow(), time.min)
+    min_start_date = datetime.combine(datetime.utcnow(), time.min) - timedelta(days=28)
+
+    # If the vis was published < 28 days ago, start the count
+    # from the end of the day it was first published
+    published_date = datetime.combine(dataset.published_at, time.max)
+    period_start = published_date if published_date > min_start_date else min_start_date
+
+    return period_start, period_end
+
+
+def calculate_visualisation_average(visualisation):
+    period_start, period_end = _get_popularity_calculation_period(visualisation)
+    total_days = (period_end - period_start).days
+
+    logger.info(
+        "Calculating average usage for visualisation '%s' for the period %s - %s (%s days)",
+        visualisation.name,
+        period_start,
+        period_end,
+        total_days,
+    )
+
+    if total_days < 1:
+        return 0
+
+    total_users = (
+        visualisation.events.filter(
+            event_type__in=[
+                EventLog.TYPE_VIEW_QUICKSIGHT_VISUALISATION,
+                EventLog.TYPE_VIEW_SUPERSET_VISUALISATION,
+                EventLog.TYPE_VIEW_VISUALISATION_TEMPLATE,
+            ],
+            timestamp__gt=period_start.replace(tzinfo=utc),
+            timestamp__lt=period_end.replace(tzinfo=utc),
+        )
+        .values("timestamp__date")
+        .annotate(user_count=Count("user", distinct=True))
+        .aggregate(total_users=Sum("user_count"))["total_users"]
+    )
+
+    if total_users is None:
+        return 0
+
+    return total_users / total_days
+
+
 @celery_app.task()
 def update_datasets_average_daily_users():
     def _update_datasets(datasets, calculate_value):
         for dataset in datasets:
             value = calculate_value(dataset)
-            logger.info("%s %s", dataset, value)
+            logger.info("%s average unique users: %s", dataset, value)
             dataset.average_unique_users_daily = value
             dataset.save()
 
     _update_datasets(DataSet.objects.live(), lambda x: 0)
     _update_datasets(ReferenceDataset.objects.live(), lambda x: 0)
-    _update_datasets(VisualisationCatalogueItem.objects.live(), lambda x: 0)
+    _update_datasets(VisualisationCatalogueItem.objects.live(), calculate_visualisation_average)
