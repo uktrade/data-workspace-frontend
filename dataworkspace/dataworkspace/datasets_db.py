@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import defaultdict, deque
 import hashlib
 import json
 import logging
@@ -122,17 +122,28 @@ def extract_queried_tables_from_sql_query(query):
     our queries are indeed in the public schema - typically only reference dataset tables.
     """
 
-    def _get_tables(node, ctenames=()):
-        tables = set()
+    try:
+        statements = pglast.parse_sql(query)
+    except pglast.parser.ParseError as e:
+        logger.error(e)
+        return []
+
+    tables = set()
+
+    node_ctenames = deque()
+    node_ctenames.append((statements[0](), ()))
+
+    while node_ctenames:
+        node, ctenames = node_ctenames.popleft()
 
         if node.get("withClause", None) is not None:
             if node["withClause"]["recursive"]:
                 for cte in node["withClause"]["ctes"]:
                     ctenames += (cte["ctename"],)
-                    tables = tables.union(_get_tables(cte, ctenames))
+                    node_ctenames.append((cte, ctenames))
             else:
                 for cte in node["withClause"]["ctes"]:
-                    tables = tables.union(_get_tables(cte, ctenames))
+                    node_ctenames.append((cte, ctenames))
                     ctenames += (cte["ctename"],)
 
         if node.get("@", None) == "RangeVar" and (
@@ -145,15 +156,9 @@ def extract_queried_tables_from_sql_query(query):
                 continue
             for nested_node in node_value if isinstance(node_value, tuple) else (node_value,):
                 if isinstance(nested_node, dict):
-                    tables = tables.union(_get_tables(nested_node, ctenames))
+                    node_ctenames.append((nested_node, ctenames))
 
-        return tables
-
-    try:
-        return sorted(list(_get_tables(pglast.parse_sql(query)[0]())))
-    except pglast.parser.ParseError as e:
-        logger.error(e)
-        return []
+    return sorted(list(tables))
 
 
 def get_source_table_changelog(source_table):
