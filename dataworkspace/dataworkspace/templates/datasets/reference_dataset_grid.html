@@ -90,10 +90,8 @@
           <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-columns">
             Reset columns
           </button>
-          <p class="govuk-button govuk-button--secondary">
-            <a href="mailto:{{ model.enquiries_contact.email }}?subject=Reporting an issue - {{ model.name }}" class="govuk-link govuk-link--no-visited-state">
+            <a href="mailto:{{ model.enquiries_contact.email }}?subject=Reporting an issue - {{ model.name }}" class="govuk-link govuk-link--no-visited-state" style="float: right;">
               {% include "partials/report_an_issue_icon.html" %}</a>
-          </p>
         </div>
       </div>
     </div>

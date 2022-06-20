@@ -67,10 +67,15 @@
       {% endwith %}
     </div>
     <div class="govuk-grid-column-one-third">
+      <p class="govuk-body sidebar-section">
+        <a href="mailto:{{ model.enquiries_contact.email }}?subject=Reporting an issue - {{ model.name }}" class="govuk-link govuk-link--no-visited-state">
+          {% include "partials/report_an_issue_icon.html" %}
+        </a>
+      </p>
       {% if request.user == model.information_asset_owner or request.user == model.information_asset_manager %}
-        <p class="govuk-body sidebar-section">
-          <a href="{% url 'datasets:edit_visualisation_catalogue_item' model.id %}" class="govuk-link govuk-link--no-visited-state">Manage this page</a>
-        </p>
+      <p class="govuk-body sidebar-section">
+        <a href="{% url 'datasets:edit_visualisation_catalogue_item' model.id %}" class="govuk-link govuk-link--no-visited-state">Manage this page</a>
+      </p>
       {% endif %}
     </div>
   </div>
