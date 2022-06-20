@@ -460,10 +460,10 @@ def _get_popularity_calculation_period(dataset):
     Returns the start and end datetimes for a valid period to calculate dataset usage on.
     The calculation period is:
 
-    From: Midnight 28 days should before the calculation is done
+    From: Midnight 28 days before the calculation is done
     To: Midnight of the day the calculation is done
 
-    If the dataset was published less than 28 days ago start the period at midnight the day
+    If the dataset was published less than 28 days ago, start the period at midnight the day
     after it was published.
     """
     # The farthest we go back is 00:00 28 days ago
