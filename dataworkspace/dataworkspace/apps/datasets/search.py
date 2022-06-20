@@ -582,8 +582,8 @@ def calculate_dataset_average(dataset):
             timestamp__lt=period_end.replace(tzinfo=utc),
         )
         .filter(q)
-        .distinct()
         .values_list("timestamp__date", "user")
+        .distinct()
     )
 
     event_user_days = (
@@ -597,8 +597,8 @@ def calculate_dataset_average(dataset):
             timestamp__gt=period_start.replace(tzinfo=utc),
             timestamp__lt=period_end.replace(tzinfo=utc),
         )
-        .distinct()
         .values_list("timestamp__date", "user")
+        .distinct()
     )
 
     total_users = set(query_user_days) | set(event_user_days)

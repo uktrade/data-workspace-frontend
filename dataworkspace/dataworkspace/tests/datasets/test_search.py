@@ -154,6 +154,9 @@ def test_update_dataset_averages(metadata_db):
     log_2 = factories.ToolQueryAuditLogFactory(
         user=user, timestamp=datetime.now() - timedelta(days=20)
     )
+    log_3 = factories.ToolQueryAuditLogFactory(
+        user=user, timestamp=datetime.now() - timedelta(days=15)
+    )
     with freeze_time(datetime.now() - timedelta(days=28)):
         factories.ToolQueryAuditLogTableFactory(
             table=table.table, schema=table.schema, audit_log=log_1
@@ -164,3 +167,10 @@ def test_update_dataset_averages(metadata_db):
         )
 
     assert calculate_dataset_average(dataset) == 0.03571428571428571
+
+    with freeze_time(datetime.now() - timedelta(days=1)):
+        factories.ToolQueryAuditLogTableFactory(
+            table=table.table, schema=table.schema, audit_log=log_3
+        )
+
+    assert calculate_dataset_average(dataset) == 0.07142857142857142
