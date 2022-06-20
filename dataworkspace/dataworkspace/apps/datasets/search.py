@@ -40,6 +40,42 @@ from dataworkspace.cel import celery_app
 logger = logging.getLogger("app")
 
 
+SORT_FIELD_MAP = {
+    "-published": {
+        "display_name": "Date published: newest",
+        "fields": ("-published_date", "-search_rank", "name"),
+    },
+    "published": {
+        "display_name": "Date published: oldest",
+        "fields": ("published_date", "-search_rank", "name"),
+    },
+    "alphabetical": {
+        "display_name": "Alphabetical (A-Z)",
+        "fields": ("name",),
+    },
+    "relevance": {
+        "display_name": "Relevance",
+        "fields": (
+            "-is_bookmarked",
+            "-table_match",
+            "-search_rank_name",
+            "-search_rank_short_description",
+            "-search_rank_tags",
+            "-search_rank_description",
+            "-search_rank",
+            "-published_date",
+            "name",
+        ),
+    },
+    "popularity": {
+        "display_name": "Popularity",
+        "fields": ("-average_unique_users_daily", "-published_date", "name"),
+    },
+}
+# Legacy fields to be deleted
+LEGACY_SORT_FIELD_MAP = {",".join(v["fields"]): k for k, v in SORT_FIELD_MAP.items()}
+
+
 class SearchDatasetsFilters:
     unpublished: bool
     open_data: bool
@@ -451,7 +487,7 @@ def _sorted_datasets_and_visualisations_matching_query_for_user(query, user, sor
     )
 
     # Combine all datasets and visualisations and order them.
-    sort_fields = sort_by.split(",")
+    sort_fields = sort_by["fields"]
 
     # If there is a query, ignore bookmarks for the purposes of sort, since
     # if someone is searching for something, likely it's not something they

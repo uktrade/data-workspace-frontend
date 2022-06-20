@@ -575,12 +575,19 @@ def test_find_datasets_filters_by_topic(client):
         assert expected in results
 
 
-def test_find_datasets_order_by_name_asc(client):
+@pytest.mark.parametrize(
+    "sort_field",
+    (
+        "name",
+        "alphabetical",
+    ),
+)
+def test_find_datasets_order_by_name_asc(sort_field, client):
     ds1 = factories.DataSetFactory.create(name="a dataset")
     rds = factories.ReferenceDatasetFactory.create(name="b reference dataset")
     vis = factories.VisualisationCatalogueItemFactory.create(name="c visualisation")
 
-    response = client.get(reverse("datasets:find_datasets"), {"sort": "name"})
+    response = client.get(reverse("datasets:find_datasets"), {"sort": sort_field})
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
@@ -590,14 +597,19 @@ def test_find_datasets_order_by_name_asc(client):
     ]
 
 
-def test_find_datasets_order_by_newest_first(client):
+@pytest.mark.parametrize(
+    "sort_field",
+    (
+        "-published_date,-search_rank,name",
+        "-published",
+    ),
+)
+def test_find_datasets_order_by_newest_first(sort_field, client):
     ads1 = factories.DataSetFactory.create(published_at=date.today())
     ads2 = factories.DataSetFactory.create(published_at=date.today() - timedelta(days=3))
     ads3 = factories.DataSetFactory.create(published_at=date.today() - timedelta(days=4))
 
-    response = client.get(
-        reverse("datasets:find_datasets"), {"sort": "-published_date,-search_rank,name"}
-    )
+    response = client.get(reverse("datasets:find_datasets"), {"sort": sort_field})
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
@@ -607,14 +619,19 @@ def test_find_datasets_order_by_newest_first(client):
     ]
 
 
-def test_find_datasets_order_by_oldest_first(client):
+@pytest.mark.parametrize(
+    "sort_field",
+    (
+        "published_date,-search_rank,name",
+        "published",
+    ),
+)
+def test_find_datasets_order_by_oldest_first(sort_field, client):
     ads1 = factories.DataSetFactory.create(published_at=date.today() - timedelta(days=1))
     ads2 = factories.DataSetFactory.create(published_at=date.today() - timedelta(days=2))
     ads3 = factories.DataSetFactory.create(published_at=date.today() - timedelta(days=3))
 
-    response = client.get(
-        reverse("datasets:find_datasets"), {"sort": "published_date,-search_rank,name"}
-    )
+    response = client.get(reverse("datasets:find_datasets"), {"sort": sort_field})
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
@@ -626,7 +643,15 @@ def test_find_datasets_order_by_oldest_first(client):
 
 @pytest.mark.django_db
 @override_flag("SEARCH_RESULTS_SORT_BY_RELEVANCE", active=True)
-def test_find_datasets_order_by_relevance_prioritises_bookmarked_datasets():
+@pytest.mark.parametrize(
+    "sort_field",
+    (
+        "-is_bookmarked,-table_match,-search_rank_name,-search_rank_short_description"
+        ",-search_rank_tags,-search_rank_description,-search_rank,-published_date,name",
+        "relevance",
+    ),
+)
+def test_find_datasets_order_by_relevance_prioritises_bookmarked_datasets(sort_field):
     user = factories.UserFactory.create(is_superuser=False)
     client = Client(**get_http_sso_data(user))
     bookmarked_master = factories.DataSetFactory.create(

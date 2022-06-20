@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 
 from dataworkspace.apps.datasets.constants import DataSetType, TagType
 from .models import DataSet, SourceLink, Tag, VisualisationCatalogueItem
-from .search import SearchDatasetsFilters
+from .search import LEGACY_SORT_FIELD_MAP, SORT_FIELD_MAP, SearchDatasetsFilters
 from ...forms import (
     GOVUKDesignSystemForm,
     GOVUKDesignSystemCharField,
@@ -221,31 +221,14 @@ class DatasetSearchForm(forms.Form):
     )
 
     def _get_sort_choices(self):
-        return (
-            (
-                [
-                    (
-                        (
-                            "-is_bookmarked,-table_match,-search_rank_name,-search_rank_short_description"
-                            ",-search_rank_tags,-search_rank_description,-search_rank,-published_date,name"
-                        ),
-                        "Relevance",
-                    )
-                ]
-                if waffle.flag_is_active(self.request, "SEARCH_RESULTS_SORT_BY_RELEVANCE")
-                else [("-search_rank,-published_date,name", "Relevance")]
+        return [
+            (k, v["display_name"])
+            for k, v in SORT_FIELD_MAP.items()
+            if (
+                k != "popularity"
+                or waffle.flag_is_active(self.request, "SEARCH_RESULTS_SORT_BY_POPULARITY")
             )
-            + [
-                ("-published_date,-search_rank,name", "Date published: newest"),
-                ("published_date,-search_rank,name", "Date published: oldest"),
-                ("name", "Alphabetical (A-Z)"),
-            ]
-            + (
-                [("-average_unique_users_daily,-published_date,name", "Popularity")]
-                if waffle.flag_is_active(self.request, "SEARCH_RESULTS_SORT_BY_POPULARITY")
-                else []
-            )
-        )
+        ]
 
     def clean_sort(self):
         data = self.cleaned_data["sort"]
@@ -256,8 +239,15 @@ class DatasetSearchForm(forms.Form):
     class Media:
         js = ("app-filter-show-more-v2.js",)
 
-    def __init__(self, request, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, request, data, *args, **kwargs):
+        # This translation can be removed 1-2 days after rollout
+        # Ensure legacy search field names work with new field names by
+        # translating old field name -> new field name
+        if data.get("sort") in LEGACY_SORT_FIELD_MAP:
+            data = data.copy()
+            data["sort"] = LEGACY_SORT_FIELD_MAP[data["sort"]]
+
+        super().__init__(data, *args, **kwargs)
 
         # Use a custom mechanism of constructing the sort field to only show the
         # search by popularity item if a flag is enabled for the current user. When
@@ -410,7 +400,7 @@ class DatasetSearchForm(forms.Form):
         filters.with_visuals = "withvisuals" in self.cleaned_data.get("admin_filters")
         filters.use = set(self.cleaned_data.get("use"))
         filters.data_type = set(self.cleaned_data.get("data_type", []))
-        filters.sort_type = self.cleaned_data.get("sort")
+        filters.sort_type = SORT_FIELD_MAP.get(self.cleaned_data["sort"])
         filters.source_ids = set(source.id for source in self.cleaned_data.get("source"))
         filters.topic_ids = set(topic.id for topic in self.cleaned_data.get("topic"))
         filters.user_accessible = set(self.cleaned_data.get("user_access", [])) == {"yes"}
