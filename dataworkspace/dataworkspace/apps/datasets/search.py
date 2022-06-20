@@ -576,40 +576,38 @@ def calculate_dataset_average(dataset):
     for table in dataset.sourcetable_set.all():
         q = q | Q(tables__schema=table.schema, tables__table=table.table)
 
-    total_users = (
+    query_user_days = (
         ToolQueryAuditLog.objects.filter(
             timestamp__gt=period_start.replace(tzinfo=utc),
             timestamp__lt=period_end.replace(tzinfo=utc),
         )
         .filter(q)
-        .values("timestamp__date")
-        .annotate(user_count=Count("user", distinct=True))
-        .aggregate(total_users=Sum("user_count"))["total_users"]
+        .values("timestamp__date", "user")
     )
 
-    if not total_users:
-        total_users = 0
+    query_user_set = set()
+    for user_day in query_user_days:
+        query_user_set.add((user_day["timestamp__date"], user_day["user"]))
 
-    dataset_event_logs_count = (
-        dataset.events.filter(
-            event_type__in=[
-                EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
-                EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD_COMPLETE,
-                EventLog.TYPE_DATASET_SOURCE_VIEW_DOWNLOAD,
-                EventLog.TYPE_DATASET_TABLE_DATA_DOWNLOAD,
-            ],
-            timestamp__gt=period_start.replace(tzinfo=utc),
-            timestamp__lt=period_end.replace(tzinfo=utc),
-        )
-        .values("timestamp__date")
-        .annotate(user_count=Count("user", distinct=True))
-        .aggregate(total_users=Sum("user_count"))["total_users"]
-    )
+    event_user_days = dataset.events.filter(
+        event_type__in=[
+            EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
+            EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD_COMPLETE,
+            EventLog.TYPE_DATASET_SOURCE_VIEW_DOWNLOAD,
+            EventLog.TYPE_DATASET_TABLE_DATA_DOWNLOAD,
+        ],
+        timestamp__gt=period_start.replace(tzinfo=utc),
+        timestamp__lt=period_end.replace(tzinfo=utc),
+    ).values("timestamp__date", "user")
 
-    if dataset_event_logs_count is not None:
-        total_users += dataset_event_logs_count
+    event_user_set = set()
+    for user_day in event_user_days:
+        event_user_set.add((user_day["timestamp__date"], user_day["user"]))
 
-    return total_users / total_days
+    total_users = query_user_set | event_user_set
+
+    return len(total_users) / total_days
+
 
 @celery_app.task()
 def update_datasets_average_daily_users():
