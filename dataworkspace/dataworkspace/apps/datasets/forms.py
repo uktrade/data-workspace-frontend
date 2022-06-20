@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 
 from dataworkspace.apps.datasets.constants import DataSetType, TagType
 from .models import DataSet, SourceLink, Tag, VisualisationCatalogueItem
-from .search import SORT_CHOICES, SearchDatasetsFilters
+from .search import SearchDatasetsFilters
 from ...forms import (
     GOVUKDesignSystemForm,
     GOVUKDesignSystemCharField,
@@ -220,11 +220,37 @@ class DatasetSearchForm(forms.Form):
         ),
     )
 
+    def _get_sort_choices(self):
+        return (
+            (
+                [
+                    (
+                        (
+                            "-is_bookmarked,-table_match,-search_rank_name,-search_rank_short_description"
+                            ",-search_rank_tags,-search_rank_description,-search_rank,-published_date,name"
+                        ),
+                        "Relevance",
+                    )
+                ]
+                if waffle.flag_is_active(self.request, "SEARCH_RESULTS_SORT_BY_RELEVANCE")
+                else [("-search_rank,-published_date,name", "Relevance")]
+            )
+            + [
+                ("-published_date,-search_rank,name", "Date published: newest"),
+                ("published_date,-search_rank,name", "Date published: oldest"),
+                ("name", "Alphabetical (A-Z)"),
+            ]
+            + (
+                [("-average_unique_users_daily,-published_date,name", "Popularity")]
+                if waffle.flag_is_active(self.request, "SEARCH_RESULTS_SORT_BY_POPULARITY")
+                else []
+            )
+        )
+
     def clean_sort(self):
         data = self.cleaned_data["sort"]
         if not data:
-            data = SORT_CHOICES[0][0]
-
+            data = self._get_sort_choices()[0][0]
         return data
 
     class Media:
@@ -236,14 +262,10 @@ class DatasetSearchForm(forms.Form):
         # Use a custom mechanism of constructing the sort field to only show the
         # search by popularity item if a flag is enabled for the current user. When
         # this gets rolled out to all users, this can be made standard
+        self.request = request
         self.fields["sort"] = forms.ChoiceField(
             required=False,
-            choices=SORT_CHOICES
-            + (
-                [("-average_unique_users_daily,-published_date,name", "Popularity")]
-                if waffle.flag_is_active(request, "SEARCH_RESULTS_SORT_BY_POPULARITY")
-                else []
-            ),
+            choices=self._get_sort_choices(),
             widget=SortSelectWidget(
                 label="Sort by", form_group_extra_css="govuk-!-margin-bottom-0"
             ),

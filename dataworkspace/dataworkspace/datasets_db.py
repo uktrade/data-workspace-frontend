@@ -113,16 +113,27 @@ def extract_queried_tables_from_sql_query(query):
     This does not communicate with a database, and instead uses pglast to parse the
     query. However, it does not use pglast's built-in functions to extract tables -
     they're buggy in the cases where CTEs have the same names as tables in the
-    default/public schema.
+    search path.
+
+    This isn't perfect though - it assumes tables without a schema are in the "public"
+    schema, but "public" might not be in the search path, or it might not be the only
+    schema in the search path. However, it's probably fine for our usage where "public"
+    _is_ in the search path, and the only tables without a schema that we care about in
+    our queries are indeed in the public schema - typically only reference dataset tables.
     """
 
     def _get_tables(node, ctenames=()):
         tables = set()
 
         if node.get("withClause", None) is not None:
-            for cte in node["withClause"]["ctes"]:
-                tables = tables.union(_get_tables(cte, ctenames))
-                ctenames += (cte["ctename"],)
+            if node["withClause"]["recursive"]:
+                for cte in node["withClause"]["ctes"]:
+                    ctenames += (cte["ctename"],)
+                    tables = tables.union(_get_tables(cte, ctenames))
+            else:
+                for cte in node["withClause"]["ctes"]:
+                    tables = tables.union(_get_tables(cte, ctenames))
+                    ctenames += (cte["ctename"],)
 
         if node.get("@", None) == "RangeVar" and (
             node["schemaname"] is not None or node["relname"] not in ctenames

@@ -271,6 +271,11 @@ class DataSet(DeletableTimestampedUserModel):
         help_text="Comma-separated list of domain names without spaces, e.g trade.gov.uk,fco.gov.uk",
     )
     search_vector_english = SearchVectorField(null=True, blank=True)
+    search_vector_english_name = SearchVectorField(null=True, blank=True)
+    search_vector_english_short_description = SearchVectorField(null=True, blank=True)
+    search_vector_english_tags = SearchVectorField(null=True, blank=True)
+    search_vector_english_description = SearchVectorField(null=True, blank=True)
+
     subscriptions = GenericRelation(DataSetSubscription)
 
     average_unique_users_daily = models.FloatField(default=0)
@@ -318,7 +323,14 @@ class DataSet(DeletableTimestampedUserModel):
                 + SearchVector(models.Value(tag_names), weight="C", config="english")
                 + SearchVector("description", weight="D", config="english")
                 + SearchVector("acronyms", weight="D", config="english")
-            )
+            ),
+            search_vector_english_name=SearchVector("name", config="english"),
+            search_vector_english_short_description=SearchVector(
+                "short_description", config="english"
+            ),
+            search_vector_english_tags=SearchVector(models.Value(tag_names), config="english"),
+            search_vector_english_description=SearchVector("description", config="english")
+            + SearchVector("acronyms", config="english"),
         )
 
     def related_objects(self):
@@ -1178,6 +1190,11 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     # easily distinguish between reference datasets, datacuts, master datasets and visualisations.
     type = DataSetType.REFERENCE
     search_vector_english = SearchVectorField(null=True, blank=True)
+    search_vector_english_name = SearchVectorField(null=True, blank=True)
+    search_vector_english_short_description = SearchVectorField(null=True, blank=True)
+    search_vector_english_tags = SearchVectorField(null=True, blank=True)
+    search_vector_english_description = SearchVectorField(null=True, blank=True)
+
     subscriptions = GenericRelation(DataSetSubscription)
 
     average_unique_users_daily = models.FloatField(default=0)
@@ -1276,9 +1293,17 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             search_vector_english=(
                 SearchVector("name", weight="A", config="english")
                 + SearchVector("short_description", weight="B", config="english")
-                + SearchVector("acronyms", weight="D", config="english")
                 + SearchVector(models.Value(tag_names), weight="C", config="english")
-            )
+                + SearchVector("description", weight="D", config="english")
+                + SearchVector("acronyms", weight="D", config="english")
+            ),
+            search_vector_english_name=SearchVector("name", config="english"),
+            search_vector_english_short_description=SearchVector(
+                "short_description", config="english"
+            ),
+            search_vector_english_tags=SearchVector(models.Value(tag_names), config="english"),
+            search_vector_english_description=SearchVector("description", config="english")
+            + SearchVector("acronyms", config="english"),
         )
 
     @transaction.atomic
@@ -2215,6 +2240,10 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     )
     average_unique_users_daily = models.FloatField(default=0)
     search_vector_english = SearchVectorField(null=True, blank=True)
+    search_vector_english_name = SearchVectorField(null=True, blank=True)
+    search_vector_english_short_description = SearchVectorField(null=True, blank=True)
+    search_vector_english_tags = SearchVectorField(null=True, blank=True)
+    search_vector_english_description = SearchVectorField(null=True, blank=True)
 
     class Meta:
         permissions = [
@@ -2252,7 +2281,13 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
                 + SearchVector("short_description", weight="B", config="english")
                 + SearchVector(models.Value(tag_names), weight="C", config="english")
                 + SearchVector("description", weight="D", config="english")
-            )
+            ),
+            search_vector_english_name=SearchVector("name", config="english"),
+            search_vector_english_short_description=SearchVector(
+                "short_description", config="english"
+            ),
+            search_vector_english_tags=SearchVector(models.Value(tag_names), config="english"),
+            search_vector_english_description=SearchVector("description", config="english"),
         )
 
     def get_visualisation_links(self, request):
