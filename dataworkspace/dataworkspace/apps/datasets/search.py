@@ -582,29 +582,26 @@ def calculate_dataset_average(dataset):
             timestamp__lt=period_end.replace(tzinfo=utc),
         )
         .filter(q)
-        .values("timestamp__date", "user")
+        .distinct()
+        .values_list("timestamp__date", "user")
     )
 
-    query_user_set = set()
-    for user_day in query_user_days:
-        query_user_set.add((user_day["timestamp__date"], user_day["user"]))
+    event_user_days = (
+        dataset.events.filter(
+            event_type__in=[
+                EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
+                EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD_COMPLETE,
+                EventLog.TYPE_DATASET_SOURCE_VIEW_DOWNLOAD,
+                EventLog.TYPE_DATASET_TABLE_DATA_DOWNLOAD,
+            ],
+            timestamp__gt=period_start.replace(tzinfo=utc),
+            timestamp__lt=period_end.replace(tzinfo=utc),
+        )
+        .distinct()
+        .values_list("timestamp__date", "user")
+    )
 
-    event_user_days = dataset.events.filter(
-        event_type__in=[
-            EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
-            EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD_COMPLETE,
-            EventLog.TYPE_DATASET_SOURCE_VIEW_DOWNLOAD,
-            EventLog.TYPE_DATASET_TABLE_DATA_DOWNLOAD,
-        ],
-        timestamp__gt=period_start.replace(tzinfo=utc),
-        timestamp__lt=period_end.replace(tzinfo=utc),
-    ).values("timestamp__date", "user")
-
-    event_user_set = set()
-    for user_day in event_user_days:
-        event_user_set.add((user_day["timestamp__date"], user_day["user"]))
-
-    total_users = query_user_set | event_user_set
+    total_users = set(query_user_days) | set(event_user_days)
 
     return len(total_users) / total_days
 
