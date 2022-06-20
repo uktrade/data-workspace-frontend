@@ -1899,7 +1899,7 @@ class TestVisualisationsDetailView:
         assert response.status_code == 200
         assert vis.name in response_content
 
-        assert "to ask any questions or report problems with this dashboard." in response_content
+        assert "to ask any questions about this dashboard." in response_content
 
         assert get_govuk_summary_list_value(doc, "Update frequency") == "N/A"
         assert get_govuk_summary_list_value(doc, "Summary") == vis.short_description
