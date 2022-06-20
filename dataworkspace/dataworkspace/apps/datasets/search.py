@@ -25,8 +25,10 @@ from dataworkspace.apps.datasets.models import (
     ReferenceDataset,
     DataSet,
     DataSetVisualisation,
+    SourceTable,
     VisualisationCatalogueItem,
     ToolQueryAuditLog,
+    ToolQueryAuditLogTable,
 )
 from dataworkspace.apps.datasets.utils import (
     dataset_type_to_manage_unpublished_permission_codename,
@@ -531,15 +533,45 @@ def calculate_dataset_average(dataset):
     if total_days < 1:
         return 0
 
-    latest_audit_logs = ToolQueryAuditLog.objects.filter(
+    # Map to convert from schema,table to dataset
+    table_schema_to_datasets = {
+        (source_table.schema, source_table.table): source_table.dataset
+        for source_table in SourceTable.objects.all()
+    }
+
+    # Fetch all date,schema,table,user combinations in the date range
+    date_schema__table__users = ToolQueryAuditLog.objects.filter(
         timestamp__gt=period_start.replace(tzinfo=utc),
         timestamp__lt=period_end.replace(tzinfo=utc),
+    ).values("timestamp__date", "tables__schema", "tables__table", "user").annotate(user_count=Count("user"))
+
+    # Count 1 for each date,dataset,user combination
+    counts = set()
+    for log in date_schema__table__users:
+        dataset = table_schema_to_datasets[(log["tables__schema"], log["tables__table"])]
+        counts.add((log["timestamp__date"], dataset, log["user"]))
+
+    # Sum
+    total_users = len(counts)
+
+    dataset_event_logs_count = (
+        dataset.events.filter(
+            event_type__in=[
+                EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
+                EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD_COMPLETE,
+                EventLog.TYPE_DATASET_SOURCE_VIEW_DOWNLOAD,
+                EventLog.TYPE_DATASET_TABLE_DATA_DOWNLOAD,
+            ],
+            timestamp__gt=period_start.replace(tzinfo=utc),
+            timestamp__lt=period_end.replace(tzinfo=utc),
+        )
+        .values("timestamp__date")
+        .annotate(user_count=Count("user", distinct=True))
+        .aggregate(total_users=Sum("user_count"))["total_users"]
     )
 
-    total_users = 0
-    for log in latest_audit_logs:
-        if list(get_dataset_table(log))[0] == dataset:
-            total_users += 1
+    if dataset_event_logs_count is not None:
+        total_users += dataset_event_logs_count
 
     return total_users / total_days
 
