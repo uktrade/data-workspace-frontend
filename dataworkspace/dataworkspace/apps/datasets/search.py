@@ -25,14 +25,11 @@ from dataworkspace.apps.datasets.models import (
     ReferenceDataset,
     DataSet,
     DataSetVisualisation,
-    SourceTable,
     VisualisationCatalogueItem,
     ToolQueryAuditLog,
-    ToolQueryAuditLogTable,
 )
 from dataworkspace.apps.datasets.utils import (
     dataset_type_to_manage_unpublished_permission_codename,
-    get_dataset_table,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 
@@ -533,26 +530,23 @@ def calculate_dataset_average(dataset):
     if total_days < 1:
         return 0
 
-    # Map to convert from schema,table to dataset
-    table_schema_to_datasets = {
-        (source_table.schema, source_table.table): source_table.dataset
-        for source_table in SourceTable.objects.all()
-    }
+    q = Q()
+    for table in dataset.sourcetable_set.all():
+        q = q | Q(tables__schema=table.schema, tables__table=table.table)
 
-    # Fetch all date,schema,table,user combinations in the date range
-    date_schema__table__users = ToolQueryAuditLog.objects.filter(
-        timestamp__gt=period_start.replace(tzinfo=utc),
-        timestamp__lt=period_end.replace(tzinfo=utc),
-    ).values("timestamp__date", "tables__schema", "tables__table", "user").annotate(user_count=Count("user"))
+    total_users = (
+        ToolQueryAuditLog.objects.filter(
+            timestamp__gt=period_start.replace(tzinfo=utc),
+            timestamp__lt=period_end.replace(tzinfo=utc),
+        )
+        .filter(q)
+        .values("timestamp__date")
+        .annotate(user_count=Count("user", distinct=True))
+        .aggregate(total_users=Sum("user_count"))["total_users"]
+    )
 
-    # Count 1 for each date,dataset,user combination
-    counts = set()
-    for log in date_schema__table__users:
-        dataset = table_schema_to_datasets[(log["tables__schema"], log["tables__table"])]
-        counts.add((log["timestamp__date"], dataset, log["user"]))
-
-    # Sum
-    total_users = len(counts)
+    if not total_users:
+        total_users = 0
 
     dataset_event_logs_count = (
         dataset.events.filter(

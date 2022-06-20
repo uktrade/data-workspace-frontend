@@ -164,4 +164,4 @@ def test_update_dataset_averages(metadata_db):
             table=table.table, schema=table.schema, audit_log=log_2
         )
 
-    assert calculate_dataset_average(dataset) == 0.07142857142857142
+    assert calculate_dataset_average(dataset) == 0.03571428571428571
