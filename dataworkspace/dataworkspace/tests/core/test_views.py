@@ -229,7 +229,8 @@ def test_header_links(request_client):
         ("Data Workspace", "http://dataworkspace.test:8000/"),
         (
             "Switch to Data Hub",
-            "https://www.datahub.trade.gov.uk/?utm_source=Data%20Workspace&utm_medium=referral&utm_campaign=dataflow&utm_content=Switch%20to%20Data%20Hub",
+            "https://www.datahub.trade.gov.uk/?utm_source=Data%20Workspace"
+            "&utm_medium=referral&utm_campaign=dataflow&utm_content=Switch%20to%20Data%20Hub",
         ),
         ("Home", "http://dataworkspace.test:8000/"),
         ("Tools", "/tools/"),
