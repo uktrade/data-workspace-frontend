@@ -987,3 +987,16 @@ def send_notification_emails():
         logger.error("Exception when creating notifications: %s", e)
     else:
         send_notifications()
+
+
+def get_dataset_table(obj):
+    datasets = set()
+    for table in obj.tables.all():
+        for source_table in SourceTable.objects.filter(dataset__deleted=False).filter(
+            schema=table.schema, table=table.table
+        ):
+            datasets.add(source_table.dataset)
+        if table.schema == "public":
+            for ref_dataset in ReferenceDataset.objects.live().filter(table_name=table.table):
+                datasets.add(ref_dataset)
+    return datasets

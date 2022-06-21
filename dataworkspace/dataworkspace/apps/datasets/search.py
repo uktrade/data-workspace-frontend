@@ -26,6 +26,7 @@ from dataworkspace.apps.datasets.models import (
     DataSet,
     DataSetVisualisation,
     VisualisationCatalogueItem,
+    ToolQueryAuditLog,
 )
 from dataworkspace.apps.datasets.utils import (
     dataset_type_to_manage_unpublished_permission_codename,
@@ -556,6 +557,55 @@ def calculate_visualisation_average(visualisation):
     return total_users / total_days
 
 
+def calculate_dataset_average(dataset):
+    period_start, period_end = _get_popularity_calculation_period(dataset)
+    total_days = (period_end - period_start).days
+
+    logger.info(
+        "Calculating average usage for dataset '%s' for the period %s - %s (%s days)",
+        dataset.name,
+        period_start,
+        period_end,
+        total_days,
+    )
+
+    if total_days < 1:
+        return 0
+
+    q = Q()
+    for table in dataset.sourcetable_set.all():
+        q = q | Q(tables__schema=table.schema, tables__table=table.table)
+
+    query_user_days = (
+        ToolQueryAuditLog.objects.filter(
+            timestamp__gt=period_start.replace(tzinfo=utc),
+            timestamp__lt=period_end.replace(tzinfo=utc),
+        )
+        .filter(q)
+        .values_list("timestamp__date", "user")
+        .distinct()
+    )
+
+    event_user_days = (
+        dataset.events.filter(
+            event_type__in=[
+                EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
+                EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD_COMPLETE,
+                EventLog.TYPE_DATASET_SOURCE_VIEW_DOWNLOAD,
+                EventLog.TYPE_DATASET_TABLE_DATA_DOWNLOAD,
+            ],
+            timestamp__gt=period_start.replace(tzinfo=utc),
+            timestamp__lt=period_end.replace(tzinfo=utc),
+        )
+        .values_list("timestamp__date", "user")
+        .distinct()
+    )
+
+    total_users = set(query_user_days) | set(event_user_days)
+
+    return len(total_users) / total_days
+
+
 @celery_app.task()
 def update_datasets_average_daily_users():
     def _update_datasets(datasets, calculate_value):
@@ -565,6 +615,6 @@ def update_datasets_average_daily_users():
             dataset.average_unique_users_daily = value
             dataset.save()
 
-    _update_datasets(DataSet.objects.live(), lambda x: 0)
+    _update_datasets(DataSet.objects.live(), calculate_dataset_average)
     _update_datasets(ReferenceDataset.objects.live(), lambda x: 0)
     _update_datasets(VisualisationCatalogueItem.objects.live(), calculate_visualisation_average)

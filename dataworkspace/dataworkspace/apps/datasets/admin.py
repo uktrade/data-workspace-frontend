@@ -51,6 +51,7 @@ from dataworkspace.apps.datasets.models import (
     DataSetSubscription,
     SourceTableFieldDefinition,
 )
+from dataworkspace.apps.datasets.utils import get_dataset_table
 from dataworkspace.apps.datasets.permissions.utils import (
     process_dataset_authorized_users_change,
     process_visualisation_catalogue_item_authorized_users_change,
@@ -907,11 +908,6 @@ class ToolQueryAuditLogAdmin(admin.ModelAdmin):
         "get_list_related_datasets",
     ]
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.source_tables = SourceTable.objects.filter(dataset__deleted=False)
-        self.reference_datasets = ReferenceDataset.objects.live()
-
     def has_add_permission(self, request):
         return False
 
@@ -952,13 +948,7 @@ class ToolQueryAuditLogAdmin(admin.ModelAdmin):
     get_user_name_link.short_description = "User"
 
     def _get_related_datasets(self, obj, separator):
-        datasets = set()
-        for table in obj.tables.all():
-            for source_table in self.source_tables.filter(schema=table.schema, table=table.table):
-                datasets.add(source_table.dataset)
-            if table.schema == "public":
-                for ref_dataset in self.reference_datasets.filter(table_name=table.table):
-                    datasets.add(ref_dataset)
+        datasets = get_dataset_table(obj)
         return (
             format_html(
                 separator.join(
