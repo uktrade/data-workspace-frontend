@@ -3,6 +3,7 @@ from datetime import datetime, time, timedelta
 
 from django.contrib.postgres.aggregates.general import ArrayAgg, BoolOr
 from django.contrib.postgres.search import SearchRank, SearchQuery
+from django.core.cache import cache
 from django.db.models import (
     Count,
     Exists,
@@ -19,6 +20,7 @@ from django.db.models import (
 )
 from django.db.models import QuerySet
 from pytz import utc
+import redis
 
 from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType, TagType
 from dataworkspace.apps.datasets.models import (
@@ -606,8 +608,7 @@ def calculate_dataset_average(dataset):
     return len(total_users) / total_days
 
 
-@celery_app.task()
-def update_datasets_average_daily_users():
+def _update_datasets_average_daily_users():
     def _update_datasets(datasets, calculate_value):
         for dataset in datasets:
             value = calculate_value(dataset)
@@ -621,3 +622,14 @@ def update_datasets_average_daily_users():
         VisualisationCatalogueItem.objects.live().filter(published=True),
         calculate_visualisation_average,
     )
+
+
+@celery_app.task()
+def update_datasets_average_daily_users():
+    try:
+        with cache.lock(
+            "update_datasets_average_daily_users_lock", blocking_timeout=0, timeout=1800
+        ):
+            _update_datasets_average_daily_users()
+    except redis.exceptions.LockError:
+        logger.info("Unable to acquire lock to update dataset averages")
