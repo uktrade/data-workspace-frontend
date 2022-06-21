@@ -615,6 +615,9 @@ def update_datasets_average_daily_users():
             dataset.average_unique_users_daily = value
             dataset.save()
 
-    _update_datasets(DataSet.objects.live(), calculate_dataset_average)
-    _update_datasets(ReferenceDataset.objects.live(), lambda x: 0)
-    _update_datasets(VisualisationCatalogueItem.objects.live(), calculate_visualisation_average)
+    _update_datasets(DataSet.objects.live().filter(published=True), calculate_dataset_average)
+    _update_datasets(ReferenceDataset.objects.live().filter(published=True), lambda x: 0)
+    _update_datasets(
+        VisualisationCatalogueItem.objects.live().filter(published=True),
+        calculate_visualisation_average,
+    )
