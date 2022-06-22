@@ -631,26 +631,22 @@ def calculate_ref_dataset_average(ref_dataset):
         .distinct()
     )
 
-    # event_user_days = (
-    #     ref_dataset.events.filter(
-    #         event_type__in=[
-    #             EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
-    #             EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD_COMPLETE,
-    #             EventLog.TYPE_DATASET_SOURCE_VIEW_DOWNLOAD,
-    #             EventLog.TYPE_DATASET_TABLE_DATA_DOWNLOAD,
-    #         ],
-    #         timestamp__gt=period_start.replace(tzinfo=utc),
-    #         timestamp__lt=period_end.replace(tzinfo=utc),
-    #     )
-    #     .values_list("timestamp__date", "user")
-    #     .distinct()
-    # )
+    event_user_days = (
+        ref_dataset.events.filter(
+            event_type__in=[
+                EventLog.TYPE_REFERENCE_DATASET_VIEW_OR_DOWNLOAD,
+                EventLog.TYPE_REFERENCE_DATASET_DOWNLOAD,
+            ],
+            timestamp__gt=period_start.replace(tzinfo=utc),
+            timestamp__lt=period_end.replace(tzinfo=utc),
+        )
+        .values_list("timestamp__date", "user")
+        .distinct()
+    )
 
-    # total_users = set(query_user_days) | set(event_user_days)
+    total_users = set(query_user_days) | set(event_user_days)
+    return len(total_users) / total_days
 
-    # return "fesfsd"
-
-    return len(query_user_days) / total_days
 
 @celery_app.task()
 def update_datasets_average_daily_users():

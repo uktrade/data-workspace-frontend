@@ -108,7 +108,7 @@ from dataworkspace.apps.datasets.permissions.utils import (
     process_dataset_authorized_users_change,
     process_visualisation_catalogue_item_authorized_users_change,
 )
-from dataworkspace.apps.datasets.search import search_for_datasets, calculate_ref_dataset_average
+from dataworkspace.apps.datasets.search import search_for_datasets
 from dataworkspace.apps.datasets.utils import (
     build_filtered_dataset_query,
     dataset_type_to_manage_unpublished_permission_codename,
@@ -192,7 +192,6 @@ def _get_tags_as_dict():
 
 @require_GET
 def find_datasets(request):
-
     ###############
     # Validate form
 
@@ -365,7 +364,6 @@ def find_datasets(request):
             "DATASET_FINDER_FLAG": settings.DATASET_FINDER_ADMIN_ONLY_FLAG,
             "search_type": "searchBar" if filters.query else "noSearch",
             "has_filters": filters.has_filters(),
-            "dataset_calculation": calculate_ref_dataset_average(ReferenceDataset.objects.first()),
         },
     )
 
@@ -635,163 +633,67 @@ def toggle_bookmark(request, dataset_uuid):
 
 
 class ReferenceDatasetDownloadView(DetailView):
-    def _user_can_access(self):
-        source = self.get_object()
-        return source.dataset.user_has_access(self.request.user) and source.data_grid_enabled
+    model = ReferenceDataset
 
     def get_object(self, queryset=None):
-        dataset = find_dataset(self.kwargs.get("dataset_uuid"), self.request.user)
-        return get_object_or_404(
-            self.kwargs["model_class"],
-            dataset=dataset,
-            pk=self.kwargs["object_id"],
+        return find_dataset(self.kwargs["dataset_uuid"], self.request.user, ReferenceDataset)
+
+    def get(self, request, *args, **kwargs):
+        dl_format = self.kwargs.get("format")
+        if dl_format not in ["json", "csv"]:
+            raise Http404
+        ref_dataset = self.get_object()
+        records = []
+        for record in ref_dataset.get_records():
+            record_data = {}
+            for field in ref_dataset.fields.all():
+                if field.data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
+                    relationship = getattr(record, field.relationship_name)
+                    record_data[field.name] = (
+                        getattr(
+                            relationship,
+                            field.linked_reference_dataset_field.column_name,
+                        )
+                        if relationship
+                        else None
+                    )
+                else:
+                    record_data[field.name] = getattr(record, field.column_name)
+            records.append(record_data)
+
+        response = HttpResponse()
+        response["Content-Disposition"] = "attachment; filename={}-{}.{}".format(
+            ref_dataset.slug, ref_dataset.published_version, dl_format
         )
 
-    def dispatch(self, request, *args, **kwargs):
-        if not self._user_can_access():
-            return HttpResponseForbidden()
-        return super().dispatch(request, *args, **kwargs)
+        log_event(
+            request.user,
+            EventLog.TYPE_REFERENCE_DATASET_DOWNLOAD,
+            ref_dataset,
+            extra={
+                "path": request.get_full_path(),
+                "reference_dataset_version": ref_dataset.published_version,
+                "download_format": dl_format,
+            },
+        )
+        ref_dataset.number_of_downloads = F("number_of_downloads") + 1
+        ref_dataset.save(update_fields=["number_of_downloads"])
 
-    @staticmethod
-    def _get_rows(source, query, query_params):
-        with psycopg2.connect(
-            database_dsn(settings.DATABASES_DATA[source.database.memorable_name])
-        ) as connection:
-            with connection.cursor(
-                name="data-grid-data",
-                cursor_factory=psycopg2.extras.RealDictCursor,
-            ) as cursor:
-                cursor.execute(query, query_params)
-                return cursor.fetchall()
-
-    def post(self, request, *args, **kwargs):
-        source = self.get_object()
-
-        if request.GET.get("download"):
-            if not source.data_grid_download_enabled:
-                return JsonResponse({}, status=403)
-
-            filters = {}
-            for filter_data in [json.loads(x) for x in request.POST.getlist("filters")]:
-                filters.update(filter_data)
-            column_config = [
-                x
-                for x in source.get_column_config()
-                if x["field"] in request.POST.getlist("columns", [])
-            ]
-            if not column_config:
-                return JsonResponse({}, status=400)
-
-            post_data = {
-                "filters": filters,
-                "limit": source.data_grid_download_limit,
-                "sortDir": request.POST.get("sortDir", "ASC"),
-                "sortField": request.POST.get("sortField", column_config[0]["field"]),
-            }
+        if dl_format == "json":
+            response["Content-Type"] = "application/json"
+            response.write(json.dumps(list(records), cls=DjangoJSONEncoder))
         else:
-            post_data = json.loads(request.body.decode("utf-8"))
-            post_data["limit"] = min(post_data.get("limit", 100), 100)
-            column_config = source.get_column_config()
-
-        original_query = source.get_data_grid_query()
-        query, params = build_filtered_dataset_query(
-            original_query,
-            column_config,
-            post_data,
-        )
-
-        if request.GET.get("download"):
-            extra = {
-                "correlation_id": str(uuid.uuid4()),
-                **serializers.serialize("python", [source])[0],
-            }
-
-            log_event(
-                request.user,
-                EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
-                source.dataset,
-                extra=extra,
-            )
-
-            def write_metrics_to_eventlog(log_data):
-                logger.debug("write_metrics_to_eventlog %s", log_data)
-
-                log_data.update(extra)
-                log_event(
-                    request.user,
-                    EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD_COMPLETE,
-                    source.dataset,
-                    extra=log_data,
+            response["Content-Type"] = "text/csv"
+            with closing(io.StringIO()) as outfile:
+                writer = csv.DictWriter(
+                    outfile,
+                    fieldnames=ref_dataset.export_field_names,
+                    quoting=csv.QUOTE_NONNUMERIC,
                 )
-
-            return streaming_query_response(
-                request.user.email,
-                source.database.memorable_name,
-                query,
-                request.POST.get("export_file_name", f"custom-{source.dataset.slug}-export.csv"),
-                params,
-                original_query,
-                write_metrics_to_eventlog,
-                cursor_name=f'data-grid--{self.kwargs["model_class"].__name__}--{source.id}',
-            )
-
-        records = self._get_rows(source, query, params)
-        return JsonResponse({"records": records})
-        # dl_format = self.kwargs.get("format")
-        # if dl_format not in ["json", "csv"]:
-        #     raise Http404
-        # ref_dataset = self.get_object()
-        # records = []
-        # for record in ref_dataset.get_records():
-        #     record_data = {}
-        #     for field in ref_dataset.fields.all():
-        #         if field.data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
-        #             relationship = getattr(record, field.relationship_name)
-        #             record_data[field.name] = (
-        #                 getattr(
-        #                     relationship,
-        #                     field.linked_reference_dataset_field.column_name,
-        #                 )
-        #                 if relationship
-        #                 else None
-        #             )
-        #         else:
-        #             record_data[field.name] = getattr(record, field.column_name)
-        #     records.append(record_data)
-        #
-        # response = HttpResponse()
-        # response["Content-Disposition"] = "attachment; filename={}-{}.{}".format(
-        #     ref_dataset.slug, ref_dataset.published_version, dl_format
-        # )
-        #
-        # log_event(
-        #     request.user,
-        #     EventLog.TYPE_REFERENCE_DATASET_DOWNLOAD,
-        #     ref_dataset,
-        #     extra={
-        #         "path": request.get_full_path(),
-        #         "reference_dataset_version": ref_dataset.published_version,
-        #         "download_format": dl_format,
-        #     },
-        # )
-        # ref_dataset.number_of_downloads = F("number_of_downloads") + 1
-        # ref_dataset.save(update_fields=["number_of_downloads"])
-        #
-        # if dl_format == "json":
-        #     response["Content-Type"] = "application/json"
-        #     response.write(json.dumps(list(records), cls=DjangoJSONEncoder))
-        # else:
-        #     response["Content-Type"] = "text/csv"
-        #     with closing(io.StringIO()) as outfile:
-        #         writer = csv.DictWriter(
-        #             outfile,
-        #             fieldnames=ref_dataset.export_field_names,
-        #             quoting=csv.QUOTE_NONNUMERIC,
-        #         )
-        #         writer.writeheader()
-        #         writer.writerows(records)
-        #         response.write(outfile.getvalue())  # pylint: disable=no-member
-        # return response
+                writer.writeheader()
+                writer.writerows(records)
+                response.write(outfile.getvalue())  # pylint: disable=no-member
+        return response
 
 
 class SourceLinkDownloadView(DetailView):
@@ -1070,6 +972,15 @@ class ReferenceDatasetColumnDetails(View):
 class ReferenceDatasetGridView(View):
     def get(self, request, dataset_uuid):
         dataset = find_dataset(dataset_uuid, request.user, ReferenceDataset)
+        log_event(
+            request.user,
+            EventLog.TYPE_REFERENCE_DATASET_VIEW_OR_DOWNLOAD,
+            dataset,
+            extra={
+                "path": request.get_full_path(),
+                "reference_dataset_version": dataset.published_version,
+            },
+        )
         return render(
             request,
             "datasets/reference_dataset_grid.html",
