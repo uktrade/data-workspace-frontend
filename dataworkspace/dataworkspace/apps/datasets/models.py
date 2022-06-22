@@ -1249,6 +1249,9 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             self.major_version = self.published_major_version
             self.minor_version = self.published_minor_version
 
+    def get_grid_data_url(self):
+        return reverse("datasets:reference_dataset_download", args=(self.uuid, "csv"))
+
     @transaction.atomic
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         create = self.pk is None

@@ -606,6 +606,52 @@ def calculate_dataset_average(dataset):
     return len(total_users) / total_days
 
 
+def calculate_ref_dataset_average(ref_dataset):
+    period_start, period_end = _get_popularity_calculation_period(ref_dataset)
+    total_days = (period_end - period_start).days
+
+    logger.info(
+        "Calculating average usage for reference dataset '%s' for the period %s - %s (%s days)",
+        ref_dataset.name,
+        period_start,
+        period_end,
+        total_days,
+    )
+
+    if total_days < 1:
+        return 0
+
+    query_user_days = (
+        ToolQueryAuditLog.objects.filter(
+            timestamp__gt=period_start.replace(tzinfo=utc),
+            timestamp__lt=period_end.replace(tzinfo=utc),
+        )
+        .filter(tables__schema="public", tables__table=ref_dataset.table_name)
+        .values_list("timestamp__date", "user")
+        .distinct()
+    )
+
+    # event_user_days = (
+    #     ref_dataset.events.filter(
+    #         event_type__in=[
+    #             EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
+    #             EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD_COMPLETE,
+    #             EventLog.TYPE_DATASET_SOURCE_VIEW_DOWNLOAD,
+    #             EventLog.TYPE_DATASET_TABLE_DATA_DOWNLOAD,
+    #         ],
+    #         timestamp__gt=period_start.replace(tzinfo=utc),
+    #         timestamp__lt=period_end.replace(tzinfo=utc),
+    #     )
+    #     .values_list("timestamp__date", "user")
+    #     .distinct()
+    # )
+
+    # total_users = set(query_user_days) | set(event_user_days)
+
+    # return "fesfsd"
+
+    return len(query_user_days) / total_days
+
 @celery_app.task()
 def update_datasets_average_daily_users():
     def _update_datasets(datasets, calculate_value):

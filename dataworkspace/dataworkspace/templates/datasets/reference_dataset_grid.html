@@ -17,14 +17,16 @@
   <script nonce="{{ request.csp_nonce }}">
     window.initDataGrid(
         JSON.parse(document.getElementById('column_data').textContent),
-        null,
-        null,
+        '{{ model.get_grid_data_url }}',
+        '?download=1',
         JSON.parse(document.getElementById('grid_data').textContent),
-        '{{ model.slug }}-{{ model.published_version }}-custom-export.csv'
+        '{{ model.slug }}-{{ model.published_version }}-custom-export.csv',
+        null,
     );
   </script>
 {% endblock footer_scripts %}
 {% block content %}
+    {{ model.get_grid_data_url }}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-xl">{{ model.name }}</h1>
