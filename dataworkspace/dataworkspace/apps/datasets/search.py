@@ -607,6 +607,49 @@ def calculate_dataset_average(dataset):
     return len(total_users) / total_days
 
 
+def calculate_ref_dataset_average(ref_dataset):
+    period_start, period_end = _get_popularity_calculation_period(ref_dataset)
+    total_days = (period_end - period_start).days
+
+    logger.info(
+        "Calculating average usage for reference dataset '%s' for the period %s - %s (%s days)",
+        ref_dataset.name,
+        period_start,
+        period_end,
+        total_days,
+    )
+
+    if total_days < 1:
+        return 0
+
+    query_user_days = (
+        ToolQueryAuditLog.objects.filter(
+            timestamp__gt=period_start.replace(tzinfo=utc),
+            timestamp__lt=period_end.replace(tzinfo=utc),
+        )
+        .filter(tables__schema="public", tables__table=ref_dataset.table_name)
+        .values_list("timestamp__date", "user")
+        .distinct()
+    )
+
+    event_user_days = (
+        ref_dataset.events.filter(
+            event_type__in=[
+                EventLog.TYPE_REFERENCE_DATASET_VIEW,
+                EventLog.TYPE_REFERENCE_DATASET_DOWNLOAD,
+            ],
+            timestamp__gt=period_start.replace(tzinfo=utc),
+            timestamp__lt=period_end.replace(tzinfo=utc),
+        )
+        .values_list("timestamp__date", "user")
+        .distinct()
+    )
+
+    total_users = set(query_user_days) | set(event_user_days)
+    return len(total_users) / total_days
+
+
+@celery_app.task()
 def _update_datasets_average_daily_users():
     def _update_datasets(datasets, calculate_value):
         for dataset in datasets:
@@ -616,7 +659,9 @@ def _update_datasets_average_daily_users():
             dataset.save()
 
     _update_datasets(DataSet.objects.live().filter(published=True), calculate_dataset_average)
-    _update_datasets(ReferenceDataset.objects.live().filter(published=True), lambda x: 0)
+    _update_datasets(
+        ReferenceDataset.objects.live().filter(published=True), calculate_ref_dataset_average
+    )
     _update_datasets(
         VisualisationCatalogueItem.objects.live().filter(published=True),
         calculate_visualisation_average,

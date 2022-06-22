@@ -192,7 +192,6 @@ def _get_tags_as_dict():
 
 @require_GET
 def find_datasets(request):
-
     ###############
     # Validate form
 
@@ -973,6 +972,15 @@ class ReferenceDatasetColumnDetails(View):
 class ReferenceDatasetGridView(View):
     def get(self, request, dataset_uuid):
         dataset = find_dataset(dataset_uuid, request.user, ReferenceDataset)
+        log_event(
+            request.user,
+            EventLog.TYPE_REFERENCE_DATASET_VIEW,
+            dataset,
+            extra={
+                "path": request.get_full_path(),
+                "reference_dataset_version": dataset.published_version,
+            },
+        )
         return render(
             request,
             "datasets/reference_dataset_grid.html",

@@ -1199,6 +1199,8 @@ class ReferenceDataset(DeletableTimestampedUserModel):
 
     average_unique_users_daily = models.FloatField(default=0)
 
+    events = GenericRelation(EventLog)
+
     class Meta:
         db_table = "app_referencedataset"
         verbose_name = "Reference dataset"

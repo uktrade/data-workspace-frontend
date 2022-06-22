@@ -31,6 +31,7 @@ class EventLog(models.Model):
     TYPE_TOOLS_ACCESS_REQUEST = 24
     TYPE_DATASET_NOTIFICATIONS_SUBSCRIBED = 25
     TYPE_DATASET_NOTIFICATIONS_UNSUBSCRIBED = 26
+    TYPE_REFERENCE_DATASET_VIEW = 27
 
     _TYPE_CHOICES = (
         (TYPE_DATASET_SOURCE_LINK_DOWNLOAD, "Dataset source link download"),
@@ -61,6 +62,7 @@ class EventLog(models.Model):
         (TYPE_TOOLS_ACCESS_REQUEST, "Tools access request"),
         (TYPE_DATASET_NOTIFICATIONS_SUBSCRIBED, "Subscribed to dataset notification"),
         (TYPE_DATASET_NOTIFICATIONS_UNSUBSCRIBED, "Unsubscribed from dataset notification"),
+        (TYPE_REFERENCE_DATASET_VIEW, "Reference dataset view"),
     )
     user = models.ForeignKey(get_user_model(), on_delete=models.DO_NOTHING, related_name="events")
     id = models.BigAutoField(primary_key=True)
