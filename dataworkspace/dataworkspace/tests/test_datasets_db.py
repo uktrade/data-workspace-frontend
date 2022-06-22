@@ -97,6 +97,15 @@ from dataworkspace.datasets_db import (
             """,
             [("public", "a")],
         ),
+        (
+            """
+                WITH RECURSIVE
+                  a AS (SELECT * FROM t),
+                  t AS (SELECT * FROM b)
+                SELECT * FROM a;
+            """,
+            [("public", "b")],
+        ),
     ),
 )
 def test_sql_query_tables_extracted_correctly(query, expected_tables):
