@@ -88,8 +88,7 @@ def _get_datasets_data_for_user_matching_query(
         search_rank_name=SearchRank(
             F("search_vector_english_name"),
             SearchQuery(query, config="english"),
-            cover_density=True,
-            normalization=Value(1),
+            normalization=Value(2),
         ),
         search_rank_short_description=SearchRank(
             F("search_vector_english_short_description"),
