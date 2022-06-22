@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 
 from dataworkspace.apps.datasets.constants import DataSetType, TagType
 from .models import DataSet, SourceLink, Tag, VisualisationCatalogueItem
-from .search import SORT_FIELD_MAP, SearchDatasetsFilters
+from .search import LEGACY_SORT_FIELD_MAP, SORT_FIELD_MAP, SearchDatasetsFilters
 from ...forms import (
     GOVUKDesignSystemForm,
     GOVUKDesignSystemCharField,
@@ -240,6 +240,13 @@ class DatasetSearchForm(forms.Form):
         js = ("app-filter-show-more-v2.js",)
 
     def __init__(self, request, data, *args, **kwargs):
+        # This translation can be removed 1-2 days after rollout
+        # Ensure legacy search field names work with new field names by
+        # translating old field name -> new field name
+        if data.get("sort") in LEGACY_SORT_FIELD_MAP:
+            data = data.copy()
+            data["sort"] = LEGACY_SORT_FIELD_MAP[data["sort"]]
+
         super().__init__(data, *args, **kwargs)
 
         # Use a custom mechanism of constructing the sort field to only show the
