@@ -452,6 +452,15 @@ def _sorted_datasets_and_visualisations_matching_query_for_user(query, user, sor
 
     # Combine all datasets and visualisations and order them.
     sort_fields = sort_by.split(",")
+
+    # If there is a query, ignore bookmarks for the purposes of sort, since
+    # if someone is searching for something, likely it's not something they
+    # bookmarked since that would have already been high on the front page
+    if query:
+        sort_fields = [
+            field for field in sort_fields if field not in ("is_bookmarked", "-is_bookmarked")
+        ]
+
     all_datasets = (
         master_and_datacut_datasets.union(reference_datasets)
         .union(visualisations)

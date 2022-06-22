@@ -638,8 +638,20 @@ def test_find_datasets_order_by_relevance_prioritises_bookmarked_datasets():
     unbookmarked_master = factories.DataSetFactory.create(
         published=True,
         type=DataSetType.MASTER,
-        name="Master Master Master unbookmarked",
+        name="Master",
     )
+
+    sort = (
+        "-is_bookmarked,-table_match,-search_rank_name,-search_rank_short_description"
+        ",-search_rank_tags,-search_rank_description,-search_rank,-published_date,name"
+    )
+    response = client.get(reverse("datasets:find_datasets"), {"sort": sort})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(bookmarked_master, has_access=False, is_bookmarked=True),
+        expected_search_result(unbookmarked_master, has_access=False),
+    ]
 
     sort = (
         "-is_bookmarked,-table_match,-search_rank_name,-search_rank_short_description"
@@ -649,8 +661,8 @@ def test_find_datasets_order_by_relevance_prioritises_bookmarked_datasets():
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(bookmarked_master, has_access=False, is_bookmarked=True),
         expected_search_result(unbookmarked_master, has_access=False),
+        expected_search_result(bookmarked_master, has_access=False, is_bookmarked=True),
     ]
 
 
