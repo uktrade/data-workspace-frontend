@@ -236,6 +236,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
         "published",
         "number_of_downloads",
         "get_bookmarks",
+        "get_average_unique_users_daily",
     )
     list_filter = ("tags",)
     search_fields = ["name"]
@@ -309,6 +310,12 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
 
     get_bookmarks.admin_order_field = "datasetbookmark"
     get_bookmarks.short_description = "Bookmarks"
+
+    def get_average_unique_users_daily(self, obj):
+        return f"{obj.average_unique_users_daily:.3f}"
+
+    get_average_unique_users_daily.admin_order_field = "average_unique_users_daily"
+    get_average_unique_users_daily.short_description = "Average unique daily users"
 
     @transaction.atomic
     def save_model(self, request, obj, form, change):
@@ -438,6 +445,7 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
         "published_at",
         "published",
         "get_bookmarks",
+        "get_average_unique_users_daily",
     )
     inlines = [ReferenceDataFieldInline]
     autocomplete_fields = (
@@ -490,6 +498,12 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
 
     get_bookmarks.admin_order_field = "referencedatasetbookmark"
     get_bookmarks.short_description = "Bookmarks"
+
+    def get_average_unique_users_daily(self, obj):
+        return f"{obj.average_unique_users_daily:.3f}"
+
+    get_average_unique_users_daily.admin_order_field = "average_unique_users_daily"
+    get_average_unique_users_daily.short_description = "Average unique daily users"
 
     class Media:
         js = ("admin/js/vendor/jquery/jquery.js", "data-workspace-admin.js")
@@ -773,6 +787,7 @@ class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStamp
         "published",
         "get_tags",
         "get_bookmarks",
+        "get_average_unique_users_daily",
     )
     list_filter = ("tags",)
     search_fields = ["name"]
@@ -840,6 +855,12 @@ class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStamp
 
     get_bookmarks.admin_order_field = "visualisationbookmark"
     get_bookmarks.short_description = "Bookmarks"
+
+    def get_average_unique_users_daily(self, obj):
+        return f"{obj.average_unique_users_daily:.3f}"
+
+    get_average_unique_users_daily.admin_order_field = "average_unique_users_daily"
+    get_average_unique_users_daily.short_description = "Average unique daily users"
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "visualisation_template":
