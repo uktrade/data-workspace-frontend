@@ -40,7 +40,7 @@ class Migration(migrations.Migration):
                     (24, "Tools access request"),
                     (25, "Subscribed to dataset notification"),
                     (26, "Unsubscribed from dataset notification"),
-                    (27, "Reference dataset view/download"),
+                    (27, "Reference dataset view"),
                 ]
             ),
         ),

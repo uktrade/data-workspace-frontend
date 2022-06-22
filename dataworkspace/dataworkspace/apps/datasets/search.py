@@ -636,7 +636,7 @@ def calculate_ref_dataset_average(ref_dataset):
     event_user_days = (
         ref_dataset.events.filter(
             event_type__in=[
-                EventLog.TYPE_REFERENCE_DATASET_VIEW_OR_DOWNLOAD,
+                EventLog.TYPE_REFERENCE_DATASET_VIEW,
                 EventLog.TYPE_REFERENCE_DATASET_DOWNLOAD,
             ],
             timestamp__gt=period_start.replace(tzinfo=utc),
