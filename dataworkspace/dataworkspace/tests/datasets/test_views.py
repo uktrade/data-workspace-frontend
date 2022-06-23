@@ -641,6 +641,9 @@ def test_find_datasets_order_by_relevance_prioritises_bookmarked_datasets():
         name="Master",
     )
 
+    # If there is no search query, then if sorting by relevance, the default, datasets
+    # bookmarked by the current user are most likely to be relevant, and so should be
+    # at the top
     sort = (
         "-is_bookmarked,-table_match,-search_rank_name,-search_rank_short_description"
         ",-search_rank_tags,-search_rank_description,-search_rank,-published_date,name"
@@ -653,6 +656,11 @@ def test_find_datasets_order_by_relevance_prioritises_bookmarked_datasets():
         expected_search_result(unbookmarked_master, has_access=False),
     ]
 
+    # If there is a search query, and sorting by relevance, the bookmarked state of
+    # datasets should not be taken into account, since the user has probably just seen
+    # their bookmarks on the front page and they weren't helpful. In this case both
+    # dataset names match the search query, but the extra word in bookmarked_master
+    # means the normalisation on length makes it treated as less relevant
     sort = (
         "-is_bookmarked,-table_match,-search_rank_name,-search_rank_short_description"
         ",-search_rank_tags,-search_rank_description,-search_rank,-published_date,name"
