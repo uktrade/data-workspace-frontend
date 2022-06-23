@@ -31,6 +31,7 @@ from dataworkspace.apps.core.utils import (
     close_admin_db_connection_if_not_in_atomic_block,
     close_all_connections_if_not_in_atomic_block,
     create_tools_access_iam_role,
+    generate_jwt_token,
     stable_identification_suffix,
     source_tables_for_user,
     db_role_schema_suffix_for_user,
@@ -83,6 +84,8 @@ def spawn(
         valid_for=datetime.timedelta(days=31),
     )
 
+    jwt_token = generate_jwt_token(user)
+
     if application_instance.application_template.application_type == "TOOL":
         # For AppStream to access credentials
         write_credentials_to_bucket(user, credentials)
@@ -95,6 +98,7 @@ def spawn(
         application_instance,
         spawner_options,
         credentials,
+        jwt_token,
         app_schema,
     )
 
@@ -119,6 +123,7 @@ class ProcessSpawner:
         application_instance,
         spawner_options,
         credentials,
+        jwt_token,
         ___,
     ):
 
@@ -223,6 +228,7 @@ class FargateSpawner:
         application_instance,
         spawner_options,
         credentials,
+        jwt_token,
         app_schema,
     ):
         try:
@@ -283,6 +289,16 @@ class FargateSpawner:
                 "S3_HOST": s3_host,
                 "S3_BUCKET": s3_bucket,
             }
+
+            authorised_hosts = list(
+                user.authorised_mlflow_instances.all().values_list("instance__hostname", flat=True)
+            )
+            mlflow_env = {}
+            if authorised_hosts:
+                mlflow_env = {
+                    "MLFLOW_TRACKING_TOKEN": jwt_token,
+                    "MLFLOW_TRACKING_URI": f"{authorised_hosts[0]}:{settings.MLFLOW_PORT}",
+                }
 
             # Build tag if we can and it doesn't already exist
             if (
@@ -359,7 +375,7 @@ class FargateSpawner:
                         cpu,
                         memory,
                         cmd,
-                        {**s3_env, **database_env, **schema_env, **env},
+                        {**s3_env, **database_env, **schema_env, **env, **mlflow_env},
                         s3_sync,
                         platform_version,
                     )

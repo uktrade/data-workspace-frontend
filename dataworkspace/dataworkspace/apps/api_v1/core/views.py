@@ -13,6 +13,7 @@ from dataworkspace.apps.api_v1.core.serializers import UserSatisfactionSurveySer
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.core.models import UserSatisfactionSurvey
 from dataworkspace.apps.core.utils import (
+    generate_jwt_token,
     new_private_database_credentials,
     postgres_user,
     source_tables_for_user,
@@ -119,3 +120,9 @@ def invalidate_superset_user_cached_credentials():
     credentials_version = cache.get(credentials_version_key, None)
     if credentials_version:
         cache.incr(credentials_version_key)
+
+
+def generate_mlflow_jwt(request):
+    user = get_user_model().objects.get(profile__sso_id=request.headers["sso-profile-user-id"])
+    jwt = generate_jwt_token(user)
+    return JsonResponse({"jwt": jwt})
