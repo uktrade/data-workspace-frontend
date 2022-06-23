@@ -5,6 +5,7 @@ from django.contrib.postgres.aggregates.general import ArrayAgg, BoolOr
 from django.contrib.postgres.search import SearchRank, SearchQuery
 from django.core.cache import cache
 from django.db.models import (
+    CharField,
     Count,
     Exists,
     F,
@@ -20,6 +21,7 @@ from django.db.models import (
     FilteredRelation,
 )
 from django.db.models import QuerySet
+from django.db.models.functions import Concat
 from pytz import utc
 import redis
 
@@ -115,6 +117,7 @@ def _get_datasets_data_for_user_matching_query(
     user,
 ):
     datasets = _filter_datasets_by_permissions(datasets, user)
+    datasets = _annotate_schema_and_table(datasets)
     datasets = _filter_by_query(datasets, query)
 
     # Annotate with ranks for name, short_description, tags and description, as well as the
@@ -222,12 +225,29 @@ def _filter_by_query(datasets, query):
     @return:
     """
     search_filter = Q()
-    if datasets.model is DataSet and query:
-        search_filter |= Q(sourcetable__table=query)
     if query:
+        if datasets.model is DataSet or datasets.model is ReferenceDataset:
+            search_filter |= Q(schema_and_table=query)
+        if datasets.model is DataSet:
+            search_filter |= Q(sourcetable__table=query)
+        if datasets.model is ReferenceDataset:
+            search_filter |= Q(table_name=query)
         search_filter |= Q(search_vector_english=SearchQuery(query, config="english"))
-    datasets = datasets.filter(search_filter)
-    return datasets
+    return datasets.filter(search_filter)
+
+
+def _annotate_schema_and_table(datasets):
+    if datasets.model is DataSet:
+        return datasets.annotate(
+            schema_and_table=Concat(
+                "sourcetable__schema", Value("."), "sourcetable__table", output_field=CharField()
+            )
+        )
+    if datasets.model is ReferenceDataset:
+        return datasets.annotate(
+            schema_and_table=Concat(Value("public."), "table_name", output_field=CharField())
+        )
+    return datasets.annotate(schema_and_table=Value(None, output_field=CharField()))
 
 
 def _filter_datasets_by_permissions(datasets, user):
@@ -419,19 +439,31 @@ def _annotate_is_bookmarked(datasets, user):
 
 
 def _annotate_source_table_match(datasets, query):
-    if datasets.model is ReferenceDataset or datasets.model is VisualisationCatalogueItem:
-        datasets = datasets.annotate(table_match=Value(False, BooleanField()))
-    if datasets.model is DataSet:
-        datasets = datasets.annotate(
+    if datasets.model is ReferenceDataset:
+        return datasets.annotate(
             table_match=BoolOr(
                 Case(
-                    When(sourcetable__table=query, then=True),
+                    When(Q(table_name=query) | Q(schema_and_table=query), then=True),
                     default=False,
                     output_field=BooleanField(),
-                )
-            )
+                ),
+            ),
         )
-    return datasets
+
+    if datasets.model is DataSet:
+        return datasets.annotate(
+            table_match=BoolOr(
+                Case(
+                    When(Q(sourcetable__table=query) | Q(schema_and_table=query), then=True),
+                    default=False,
+                    output_field=BooleanField(),
+                ),
+            ),
+        )
+
+    return datasets.annotate(
+        table_match=Value(False, BooleanField()),
+    )
 
 
 def _annotate_has_access(datasets, user):
