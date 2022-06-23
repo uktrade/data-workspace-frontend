@@ -91,7 +91,7 @@
             Reset columns
           </button>
           {% if model.enquiries_contact %}
-            <a href="mailto:{{ model.enquiries_contact.email }}?subject=Reporting an issue - {{ model.name }}" class="govuk-link govuk-link--no-visited-state">
+            <a href="mailto:{{ model.enquiries_contact.email }}?subject=Reporting an issue - {{ model.name }}" class="govuk-link govuk-link--no-visited-state govuk-!-padding-left-2">
               {% include "partials/report_an_issue_icon.html" %}</a>
           {% endif %}
         </div>

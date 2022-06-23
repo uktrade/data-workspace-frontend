@@ -80,7 +80,7 @@
           Reset columns
         </button>
         {% if object.dataset.enquiries_contact %}
-          <a class="govuk-link govuk-link--no-visited-state" href="mailto:{{ object.dataset.enquiries_contact.email }}?subject=Reporting an issue - {{ object.name }}">
+          <a class="govuk-link govuk-link--no-visited-state govuk-!-padding-left-2"href="mailto:{{ object.dataset.enquiries_contact.email }}?subject=Reporting an issue - {{ object.name }}">
             {% include "partials/report_an_issue_icon.html" %}</a>
         {% endif %}
       </div>
