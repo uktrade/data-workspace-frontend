@@ -203,8 +203,8 @@ function initDataGrid(columnConfig, dataEndpoint, downloadSegment, records, expo
     columnDefs: columnConfig,
     components: {
       loadingRenderer: function (params) {
-        if (params.value != null) {
-          return params.valueFormatted != null ? params.valueFormatted : params.value;
+        if (params.value !== null && params.value !== undefined) {
+          return (params.valueFormatted != null && params.valueFormatted !== undefined) ? params.valueFormatted : params.value;
         }
         return '<img src="/__django_static/assets/images/loading.gif">';
       },
