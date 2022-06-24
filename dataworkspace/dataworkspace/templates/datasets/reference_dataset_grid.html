@@ -74,7 +74,7 @@
     <div class="govuk-grid-row">
       <div class="govuk-grid-column-full">
         <div id="data-grid" class="ag-theme-alpine"></div>
-        <div class="govuk-!-margin-top-4">
+        <div class="govuk-!-margin-top-4 govuk-button-group">
           <button class="govuk-button" data-module="govuk-button" id="data-grid-download">
             Download data as CSV
           </button>
@@ -91,7 +91,7 @@
             Reset columns
           </button>
           {% if model.enquiries_contact %}
-            <a href="mailto:{{ model.enquiries_contact.email }}?subject=Reporting an issue - {{ model.name }}" class="govuk-link govuk-link--no-visited-state" style="float: right;">
+            <a href="mailto:{{ model.enquiries_contact.email }}?subject=Reporting an issue - {{ model.name }}" class="govuk-link govuk-link--no-visited-state govuk-!-padding-left-2">
               {% include "partials/report_an_issue_icon.html" %}</a>
           {% endif %}
         </div>
