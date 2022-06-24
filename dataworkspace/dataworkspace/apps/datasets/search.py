@@ -9,6 +9,7 @@ from django.db.models import (
     Exists,
     F,
     IntegerField,
+    FloatField,
     Q,
     Sum,
     Value,
@@ -119,12 +120,39 @@ def _get_datasets_data_for_user_matching_query(
     # concatenation of these to support sorting by relevance. Normalization for tags is set
     # to 0 which ignores the document length. This is to prevent datasets that have multiple
     # tags ranking lower than those that have fewer tags.
+    #
+    # On ranking name: if we used a plain SearchRank, this would prioritise duplicate words
+    # too much, e.g. when searching for "data workspace" results that have an unrelated
+    # "data" term in the name would be above those without, even if using normalisation.
+    #
+    # A rank of
+    #
+    # 0                   - if no query match on the name
+    # 1/(document length) - if a query match on the name
+    #
+    # seems to work better in this respect. However, this is tricky to do directly in Django,
+    # since "there being a match" via tha match operator @@ is abstracted away, and since
+    # finding the document length of a search vector is not directly exposed. However, we can
+    # extract the above by two different calls to SearchRank, each with a different
+    # normalization value, and dividing them.
     datasets = datasets.annotate(
         search_rank=SearchRank(F("search_vector_english"), SearchQuery(query, config="english")),
-        search_rank_name=SearchRank(
-            F("search_vector_english_name"),
-            SearchQuery(query, config="english"),
-            normalization=Value(2),
+        search_rank_name=Case(
+            When(
+                search_vector_english_name=SearchQuery(query, config="english"),
+                then=SearchRank(
+                    F("search_vector_english_name"),
+                    SearchQuery(query, config="english"),
+                    normalization=Value(2),
+                )
+                / SearchRank(
+                    F("search_vector_english_name"),
+                    SearchQuery(query, config="english"),
+                    normalization=Value(0),
+                ),
+            ),
+            default=0.0,
+            output_field=FloatField(),
         ),
         search_rank_short_description=SearchRank(
             F("search_vector_english_short_description"),
