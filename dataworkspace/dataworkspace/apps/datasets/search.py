@@ -5,7 +5,6 @@ from django.contrib.postgres.aggregates.general import ArrayAgg, BoolOr
 from django.contrib.postgres.search import SearchRank, SearchQuery
 from django.core.cache import cache
 from django.db.models import (
-    CharField,
     Count,
     Exists,
     F,
@@ -21,7 +20,6 @@ from django.db.models import (
     FilteredRelation,
 )
 from django.db.models import QuerySet
-from django.db.models.functions import Concat
 from pytz import utc
 import redis
 
