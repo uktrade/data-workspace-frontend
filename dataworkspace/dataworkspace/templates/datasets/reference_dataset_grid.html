@@ -11,16 +11,18 @@
   <script src="{% static 'dayjs.min.js' %}"></script>
   <script src="{% static 'data-grid.js' %}"></script>
   {# We *have* to include the stylesheet after the ag-grid js as it overrides the default styles #}
-  <link rel="stylesheet" type="text/css" href="{% static 'data-grid.css' %}" />
+  <link rel="stylesheet" type="text/css" href="{% static 'data-grid.css' %}"/>
   {{ model.get_column_config|json_script:"column_data" }}
   {{ model.get_grid_data|json_script:"grid_data" }}
   <script nonce="{{ request.csp_nonce }}">
     window.initDataGrid(
-        JSON.parse(document.getElementById('column_data').textContent),
-        null,
-        null,
-        JSON.parse(document.getElementById('grid_data').textContent),
-        '{{ model.slug }}-{{ model.published_version }}-custom-export.csv',
+      JSON.parse(document.getElementById('column_data').textContent),
+      null,
+      null,
+      JSON.parse(document.getElementById('grid_data').textContent),
+      '{{ model.slug }}-{{ model.published_version }}-custom-export.csv',
+      null,
+      '{{ model.send_post_data_url}}',
     );
   </script>
 {% endblock footer_scripts %}
@@ -29,46 +31,48 @@
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-xl">{{ model.name }}</h1>
       <p class="govuk-body">
-        Use this data grid to <a class="govuk-link" href="https://data-services-help.trade.gov.uk/data-workspace/how-to/start-using-data-workspace/filter-and-sort-data/">filter, sort and download data</a>. You can:
+        Use this data grid to <a class="govuk-link"
+                                 href="https://data-services-help.trade.gov.uk/data-workspace/how-to/start-using-data-workspace/filter-and-sort-data/">filter,
+        sort and download data</a>. You can:
 
-        <ul class="govuk-list govuk-list--bullet">
-          <li>reorder columns by dragging and dropping them</li>
-          <li>remove columns you do not need by dragging them off the grid</li>
-          <li>filter rows by entering text into the box above each column</li>
-        </ul>
+      <ul class="govuk-list govuk-list--bullet">
+        <li>reorder columns by dragging and dropping them</li>
+        <li>remove columns you do not need by dragging them off the grid</li>
+        <li>filter rows by entering text into the box above each column</li>
+      </ul>
       </p>
     </div>
   </div>
   {% with model.fields.all as fields %}
     {% if fields %}
-    <div class="govuk-grid-row">
-      <div class="govuk-grid-column-full">
-        <h2 class="govuk-heading-m govuk-!-margin-top-4">
-          Data preview
-        </h2>
-        <details class="govuk-details" data-module="govuk-details">
-          <summary class="govuk-details__summary">
+      <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+          <h2 class="govuk-heading-m govuk-!-margin-top-4">
+            Data preview
+          </h2>
+          <details class="govuk-details" data-module="govuk-details">
+            <summary class="govuk-details__summary">
             <span class="govuk-details__summary-text">
               Field definitions
             </span>
-          </summary>
-          <div class="govuk-details__text">
-            <dl class="govuk-summary-list">
-              {% for field in fields %}
+            </summary>
+            <div class="govuk-details__text">
+              <dl class="govuk-summary-list">
+                {% for field in fields %}
                   <div class="govuk-summary-list__row">
                     <dt class="govuk-summary-list__key">{{ field.name }}</dt>
                     <dd class="govuk-summary-list__value">{{ field.description }}</dd>
                   </div>
-              {% empty %}
-                <div class="govuk-summary-list__row">
-                  <p>No fields have been defined for this reference dataset yet.</p>
-                </div>
-              {% endfor %}
-            </dl>
-          </div>
-        </details>
+                  {% empty %}
+                  <div class="govuk-summary-list__row">
+                    <p>No fields have been defined for this reference dataset yet.</p>
+                  </div>
+                {% endfor %}
+              </dl>
+            </div>
+          </details>
+        </div>
       </div>
-    </div>
     {% endif %}
 
     <div class="govuk-grid-row">
@@ -91,7 +95,8 @@
             Reset columns
           </button>
           {% if model.enquiries_contact %}
-            <a href="mailto:{{ model.enquiries_contact.email }}?subject=Reporting an issue - {{ model.name }}" class="govuk-link govuk-link--no-visited-state govuk-!-padding-left-2">
+            <a href="mailto:{{ model.enquiries_contact.email }}?subject=Reporting an issue - {{ model.name }}"
+               class="govuk-link govuk-link--no-visited-state govuk-!-padding-left-2">
               {% include "partials/report_an_issue_icon.html" %}</a>
           {% endif %}
         </div>

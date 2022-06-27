@@ -695,6 +695,20 @@ class ReferenceDatasetDownloadView(DetailView):
                 response.write(outfile.getvalue())  # pylint: disable=no-member
         return response
 
+    def post(self, request, *args, **kwargs):
+        dataset = find_dataset(self.kwargs.get("dataset_uuid"), request.user, ReferenceDataset)
+        log_event(
+            request.user,
+            EventLog.TYPE_REFERENCE_DATASET_DOWNLOAD,
+            dataset,
+            extra={
+                "path": request.get_full_path(),
+                "reference_dataset_version": dataset.published_version,
+                "format": self.kwargs.get("format")
+            },
+        )
+        return HttpResponse(status=200)
+
 
 class SourceLinkDownloadView(DetailView):
     model = SourceLink
