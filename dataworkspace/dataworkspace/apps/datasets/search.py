@@ -590,7 +590,11 @@ def _get_popularity_calculation_period(dataset):
 
     # If the vis was published < 28 days ago, start the count
     # from the end of the day it was first published
-    published_date = datetime.combine(dataset.published_at, time.max)
+    published_date = (
+        datetime.combine(dataset.published_at, time.max)
+        if dataset.published_at is not None
+        else min_start_date
+    )
     period_start = max(min_start_date, published_date)
 
     return period_start, period_end
