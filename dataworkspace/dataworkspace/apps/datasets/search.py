@@ -117,7 +117,6 @@ def _get_datasets_data_for_user_matching_query(
     user,
 ):
     datasets = _filter_datasets_by_permissions(datasets, user)
-    datasets = _annotate_schema_and_table(datasets)
     datasets = _filter_by_query(datasets, query)
 
     # Annotate with ranks for name, short_description, tags and description, as well as the
@@ -217,6 +216,18 @@ def _get_datasets_data_for_user_matching_query(
     )
 
 
+def _schema_table_from_search_term(search_term):
+    # If a search term contains dots we take everything after the last `.` as
+    # the table name and everything before the last `.` as the schema
+    table = search_term
+    schema = None
+    split_term = search_term.split(".")
+    if len(split_term) > 1:
+        schema = "".join(split_term[:-1])
+        table = split_term[-1]
+    return schema, table
+
+
 def _filter_by_query(datasets, query):
     """
     Filter out datasets that don't match the search terms
@@ -226,28 +237,16 @@ def _filter_by_query(datasets, query):
     """
     search_filter = Q()
     if query:
-        if datasets.model is DataSet or datasets.model is ReferenceDataset:
-            search_filter |= Q(schema_and_table=query)
+        schema, table = _schema_table_from_search_term(query)
         if datasets.model is DataSet:
-            search_filter |= Q(sourcetable__table=query)
+            table_match = Q(sourcetable__table=table)
+            if schema:
+                table_match &= Q(sourcetable__schema=schema)
+            search_filter |= table_match
         if datasets.model is ReferenceDataset:
-            search_filter |= Q(table_name=query)
+            search_filter |= Q(table_name=table)
         search_filter |= Q(search_vector_english=SearchQuery(query, config="english"))
     return datasets.filter(search_filter)
-
-
-def _annotate_schema_and_table(datasets):
-    if datasets.model is DataSet:
-        return datasets.annotate(
-            schema_and_table=Concat(
-                "sourcetable__schema", Value("."), "sourcetable__table", output_field=CharField()
-            )
-        )
-    if datasets.model is ReferenceDataset:
-        return datasets.annotate(
-            schema_and_table=Concat(Value("public."), "table_name", output_field=CharField())
-        )
-    return datasets.annotate(schema_and_table=Value(None, output_field=CharField()))
 
 
 def _filter_datasets_by_permissions(datasets, user):
@@ -443,7 +442,7 @@ def _annotate_source_table_match(datasets, query):
         return datasets.annotate(
             table_match=BoolOr(
                 Case(
-                    When(Q(table_name=query) | Q(schema_and_table=query), then=True),
+                    When(Q(table_name=query), then=True),
                     default=False,
                     output_field=BooleanField(),
                 ),
@@ -451,10 +450,15 @@ def _annotate_source_table_match(datasets, query):
         )
 
     if datasets.model is DataSet:
+        schema, table = _schema_table_from_search_term(query)
         return datasets.annotate(
             table_match=BoolOr(
                 Case(
-                    When(Q(sourcetable__table=query) | Q(schema_and_table=query), then=True),
+                    When(
+                        Q(sourcetable__table=query)
+                        | Q(Q(sourcetable__table=table) & Q(sourcetable__schema=schema)),
+                        then=True,
+                    ),
                     default=False,
                     output_field=BooleanField(),
                 ),

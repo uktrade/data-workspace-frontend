@@ -324,13 +324,6 @@ def test_find_datasets_by_source_table_name(client, dataset_db):
         expected_search_result(ref_ds, table_match=True, data_type=DataSetType.REFERENCE),
     ]
 
-    # Reference dataset: schema and table
-    response = client.get(reverse("datasets:find_datasets"), {"q": f"public.{ref_ds.table_name}"})
-    assert response.status_code == 200
-    assert list(response.context["datasets"]) == [
-        expected_search_result(ref_ds, table_match=True, data_type=DataSetType.REFERENCE),
-    ]
-
 
 def test_find_datasets_by_source_table_does_exact_match_only(client):
     ds = factories.DataSetFactory.create(
