@@ -704,7 +704,7 @@ class ReferenceDatasetDownloadView(DetailView):
             extra={
                 "path": request.get_full_path(),
                 "reference_dataset_version": dataset.published_version,
-                "format": self.kwargs.get("format")
+                "format": self.kwargs.get("format"),
             },
         )
         return HttpResponse(status=200)

@@ -250,19 +250,20 @@ function initDataGrid(columnConfig, dataEndpoint, downloadSegment, records, expo
         xhr.open('POST', dataEndpoint, true);
         xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         xhr.setRequestHeader("X-CSRFToken", getCsrfToken());
-        xhr.onreadystatechange = function () {
+        xhr.onreadystatechange = function() {
           if (this.readyState === XMLHttpRequest.DONE) {
             if (this.status === 200) {
               var response = JSON.parse(xhr.responseText);
               params.successCallback(
-                response.records,
-                response.records.length < (params.endRow - params.startRow) ? (params.startRow + response.records.length) : -1
+                  response.records,
+                  response.records.length < (params.endRow - params.startRow) ? (params.startRow + response.records.length) : -1
               );
               if (!initialDataLoaded) {
                 autoSizeColumns(gridOptions.columnApi);
                 initialDataLoaded = true;
               }
-            } else {
+            }
+            else {
               params.failCallback();
             }
           }
