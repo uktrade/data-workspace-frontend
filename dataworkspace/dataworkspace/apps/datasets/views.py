@@ -1,11 +1,8 @@
-import csv
-import io
 import json
 import logging
 import uuid
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict, namedtuple
-from contextlib import closing
 from itertools import chain
 from typing import Set
 
@@ -19,7 +16,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.core import serializers
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
-from django.core.serializers.json import DjangoJSONEncoder
 from django.db import connections, ProgrammingError
 from django.db.models import (
     Count,
@@ -94,7 +90,6 @@ from dataworkspace.apps.datasets.models import (
     PendingAuthorizedUsers,
     MasterDataset,
     ReferenceDataset,
-    ReferenceDatasetField,
     SourceLink,
     SourceView,
     VisualisationCatalogueItem,
