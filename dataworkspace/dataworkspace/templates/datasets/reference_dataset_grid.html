@@ -21,6 +21,8 @@
         null,
         JSON.parse(document.getElementById('grid_data').textContent),
         '{{ model.slug }}-{{ model.published_version }}-custom-export.csv',
+        null,
+        '{{ model.send_post_data_url}}',
     );
   </script>
 {% endblock footer_scripts %}
@@ -30,7 +32,6 @@
       <h1 class="govuk-heading-xl">{{ model.name }}</h1>
       <p class="govuk-body">
         Use this data grid to <a class="govuk-link" href="https://data-services-help.trade.gov.uk/data-workspace/how-to/start-using-data-workspace/filter-and-sort-data/">filter, sort and download data</a>. You can:
-
         <ul class="govuk-list govuk-list--bullet">
           <li>reorder columns by dragging and dropping them</li>
           <li>remove columns you do not need by dragging them off the grid</li>
@@ -59,7 +60,7 @@
                     <dt class="govuk-summary-list__key">{{ field.name }}</dt>
                     <dd class="govuk-summary-list__value">{{ field.description }}</dd>
                   </div>
-              {% empty %}
+                {% empty %}
                 <div class="govuk-summary-list__row">
                   <p>No fields have been defined for this reference dataset yet.</p>
                 </div>
