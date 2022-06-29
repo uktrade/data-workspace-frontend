@@ -170,3 +170,9 @@ def test_update_dataset_averages(metadata_db):
     )
 
     assert calculate_dataset_average(dataset) == 0.07142857142857142
+
+    unrelated_dataset = factories.DataSetFactory.create(
+        published_at=datetime.now() - timedelta(days=30), name="test_table"
+    )
+
+    assert calculate_dataset_average(unrelated_dataset) == 0
