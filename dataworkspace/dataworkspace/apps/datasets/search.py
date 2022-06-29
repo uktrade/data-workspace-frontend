@@ -651,7 +651,7 @@ def calculate_dataset_average(dataset):
     if total_days < 1:
         return 0
 
-    q = Q()
+    q = Q(pk__in=[])  # If there are no tables, match no ToolQueryAuditLog instances
     for table in dataset.sourcetable_set.all():
         q = q | Q(tables__schema=table.schema, tables__table=table.table)
 
