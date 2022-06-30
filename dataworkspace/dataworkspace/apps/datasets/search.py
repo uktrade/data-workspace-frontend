@@ -436,27 +436,21 @@ def _annotate_is_bookmarked(datasets, user):
 
 
 def _annotate_source_table_match(datasets, query):
-    if datasets.model is ReferenceDataset:
-        return datasets.annotate(
-            table_match=BoolOr(
-                Case(
-                    When(Q(table_name=query), then=True),
-                    default=False,
-                    output_field=BooleanField(),
-                ),
-            ),
-        )
-
-    if datasets.model is DataSet:
+    if datasets.model is DataSet or datasets.model is ReferenceDataset:
         schema, table = _schema_table_from_search_term(query)
+        search_filter = Q()
+        if datasets.model is ReferenceDataset:
+            search_filter |= Q(table_name=table)
+        else:
+            table_match = Q(sourcetable__table=table)
+            if schema:
+                table_match &= Q(sourcetable__schema=schema)
+            search_filter |= table_match
+
         return datasets.annotate(
             table_match=BoolOr(
                 Case(
-                    When(
-                        Q(sourcetable__table=query)
-                        | Q(Q(sourcetable__table=table) & Q(sourcetable__schema=schema)),
-                        then=True,
-                    ),
+                    When(search_filter, then=True),
                     default=False,
                     output_field=BooleanField(),
                 ),
