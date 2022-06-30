@@ -1103,14 +1103,56 @@ class CustomDatasetQueryTable(models.Model):
 
 
 class ReferenceDataset(DeletableTimestampedUserModel):
+    id = models.UUIDField(default=uuid.uuid4, editable=False)
+    type = DataSetType.REFERENCE
+    name = models.CharField(max_length=255)
+    slug = models.SlugField()
+    short_description = models.CharField(max_length=255)
+    grouping = models.ForeignKey(DataGrouping, null=True, on_delete=models.CASCADE)
+    description = RichTextField(null=True, blank=True)
+    acronyms = models.CharField(blank=True, default="", max_length=255)
+    enquiries_contact = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
+    )
+    licence = models.CharField(null=False, blank=True, max_length=256)
+    licence_url = models.CharField(
+        null=True, blank=True, max_length=1024, help_text="Link to license (optional)"
+    )
+    restrictions_on_usage = models.TextField(null=True, blank=True)
+    published = models.BooleanField(default=False)
+    published_at = models.DateField(null=True, blank=True)
+    number_of_downloads = models.PositiveIntegerField(default=0)
+    tags = models.ManyToManyField(Tag, related_name="+", blank=True)
+    information_asset_owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="info_asset_owned_reference_datasets",
+        null=True,
+        blank=True,
+    )
+    information_asset_manager = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="info_asset_managed_reference_datasets",
+        null=True,
+        blank=True,
+    )
+    events = GenericRelation(EventLog)
+    # Used as a parallel to DataSet.type, which will help other parts of the codebase
+    # easily distinguish between reference datasets, datacuts, master datasets and visualisations.
+    search_vector_english = SearchVectorField(null=True, blank=True)
+    search_vector_english_name = SearchVectorField(null=True, blank=True)
+    search_vector_english_short_description = SearchVectorField(null=True, blank=True)
+    search_vector_english_tags = SearchVectorField(null=True, blank=True)
+    search_vector_english_description = SearchVectorField(null=True, blank=True)
+    subscriptions = GenericRelation(DataSetSubscription)
+    average_unique_users_daily = models.FloatField(default=0)
+
     SORT_DIR_ASC = 1
     SORT_DIR_DESC = 2
     _SORT_DIR_CHOICES = ((SORT_DIR_ASC, "Ascending"), (SORT_DIR_DESC, "Descending"))
-    uuid = models.UUIDField(default=uuid.uuid4, editable=False)
     is_joint_dataset = models.BooleanField(default=False)  # No longer used
     is_draft = models.BooleanField(default=False)
-    group = models.ForeignKey(DataGrouping, null=True, on_delete=models.CASCADE)
-    name = models.CharField(max_length=255)
     table_name = models.CharField(
         verbose_name="Table name",
         max_length=255,
@@ -1125,21 +1167,10 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             )
         ],
     )
-    slug = models.SlugField()
-    short_description = models.CharField(max_length=255)
-    description = RichTextField(null=True, blank=True)
-    acronyms = models.CharField(blank=True, default="", max_length=255)
-    enquiries_contact = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
-    )
-    licence = models.CharField(null=False, blank=True, max_length=256)
-    restrictions_on_usage = models.TextField(null=True, blank=True)
     valid_from = models.DateField(null=True, blank=True)
     valid_to = models.DateField(null=True, blank=True)
-    published = models.BooleanField(default=False)
 
     initial_published_at = models.DateField(null=True, blank=True)
-    published_at = models.DateField(null=True, blank=True)
 
     schema_version = models.IntegerField(default=0)
 
@@ -1165,41 +1196,6 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         "If not set records will be sorted by last updated date.",
     )
     sort_direction = models.IntegerField(default=SORT_DIR_ASC, choices=_SORT_DIR_CHOICES)
-    number_of_downloads = models.PositiveIntegerField(default=0)
-    tags = models.ManyToManyField(Tag, related_name="+", blank=True)
-    information_asset_owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="info_asset_owned_reference_datasets",
-        null=True,
-        blank=True,
-    )
-    information_asset_manager = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="info_asset_managed_reference_datasets",
-        null=True,
-        blank=True,
-    )
-
-    licence_url = models.CharField(
-        null=True, blank=True, max_length=1024, help_text="Link to license (optional)"
-    )
-
-    # Used as a parallel to DataSet.type, which will help other parts of the codebase
-    # easily distinguish between reference datasets, datacuts, master datasets and visualisations.
-    type = DataSetType.REFERENCE
-    search_vector_english = SearchVectorField(null=True, blank=True)
-    search_vector_english_name = SearchVectorField(null=True, blank=True)
-    search_vector_english_short_description = SearchVectorField(null=True, blank=True)
-    search_vector_english_tags = SearchVectorField(null=True, blank=True)
-    search_vector_english_description = SearchVectorField(null=True, blank=True)
-
-    subscriptions = GenericRelation(DataSetSubscription)
-
-    average_unique_users_daily = models.FloatField(default=0)
-
-    events = GenericRelation(EventLog)
 
     class Meta:
         db_table = "app_referencedataset"
@@ -2176,12 +2172,9 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     objects = DeletableQuerySet()
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    visualisation_template = models.OneToOneField(
-        VisualisationTemplate, on_delete=models.CASCADE, null=True, blank=True
-    )
+    type = DataSetType.VISUALISATION
     name = models.CharField(max_length=255, null=False, blank=False)
     slug = models.SlugField(max_length=50, db_index=True, unique=True, null=False, blank=False)
-    tags = models.ManyToManyField(Tag, related_name="+", blank=True)
     short_description = models.CharField(max_length=255)
     description = RichTextField(null=True, blank=True)
     enquiries_contact = models.ForeignKey(
@@ -2191,22 +2184,22 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         blank=True,
         related_name="+",
     )
-    secondary_enquiries_contact = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name="+",
-    )
     licence = models.CharField(null=False, blank=True, max_length=256)
+    licence_url = models.CharField(
+        null=True, blank=True, max_length=1024, help_text="Link to license (optional)"
+    )
     retention_policy = models.TextField(null=True, blank=True)
     personal_data = models.CharField(null=True, blank=True, max_length=128)
     restrictions_on_usage = models.TextField(null=True, blank=True)
+    user_access_type = models.CharField(
+        max_length=64,
+        choices=UserAccessType.choices,
+        default=UserAccessType.REQUIRES_AUTHENTICATION,
+    )
     published = models.BooleanField(default=False)
-
     published_at = models.DateField(null=True, blank=True)
-    updated_at = models.DateField(null=True, blank=True)
-
+    eligibility_criteria = ArrayField(models.CharField(max_length=256), null=True)
+    tags = models.ManyToManyField(Tag, related_name="+", blank=True)
     information_asset_owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -2221,34 +2214,36 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         null=True,
         blank=True,
     )
-    eligibility_criteria = ArrayField(models.CharField(max_length=256), null=True)
-    user_access_type = models.CharField(
-        max_length=64,
-        choices=UserAccessType.choices,
-        default=UserAccessType.REQUIRES_AUTHENTICATION,
-    )
     events = GenericRelation(EventLog)
-    datasets = models.ManyToManyField(DataSet, related_name="related_visualisations", blank=True)
-
     # Used as a parallel to DataSet.type, which will help other parts of the codebase
     # easily distinguish between reference datasets, datacuts, master datasets and visualisations.
-    type = DataSetType.VISUALISATION
     authorized_email_domains = ArrayField(
         models.CharField(max_length=256),
         blank=True,
         default=list,
         help_text="Comma-separated list of domain names without spaces, e.g trade.gov.uk,fco.gov.uk",
     )
-
-    licence_url = models.CharField(
-        null=True, blank=True, max_length=1024, help_text="Link to license (optional)"
-    )
-    average_unique_users_daily = models.FloatField(default=0)
     search_vector_english = SearchVectorField(null=True, blank=True)
     search_vector_english_name = SearchVectorField(null=True, blank=True)
     search_vector_english_short_description = SearchVectorField(null=True, blank=True)
     search_vector_english_tags = SearchVectorField(null=True, blank=True)
     search_vector_english_description = SearchVectorField(null=True, blank=True)
+    average_unique_users_daily = models.FloatField(default=0)
+
+    visualisation_template = models.OneToOneField(
+        VisualisationTemplate, on_delete=models.CASCADE, null=True, blank=True
+    )
+
+    secondary_enquiries_contact = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="+",
+    )
+    updated_at = models.DateField(null=True, blank=True)
+
+    datasets = models.ManyToManyField(DataSet, related_name="related_visualisations", blank=True)
 
     class Meta:
         permissions = [
