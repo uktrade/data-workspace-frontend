@@ -214,6 +214,18 @@ def _get_datasets_data_for_user_matching_query(
     )
 
 
+def _schema_table_from_search_term(search_term):
+    # If a search term contains dots we take everything after the last `.` as
+    # the table name and everything before the last `.` as the schema
+    table = search_term
+    schema = None
+    split_term = search_term.split(".")
+    if len(split_term) > 1:
+        schema = "".join(split_term[:-1])
+        table = split_term[-1]
+    return schema, table
+
+
 def _filter_by_query(datasets, query):
     """
     Filter out datasets that don't match the search terms
@@ -222,12 +234,17 @@ def _filter_by_query(datasets, query):
     @return:
     """
     search_filter = Q()
-    if datasets.model is DataSet and query:
-        search_filter |= Q(sourcetable__table=query)
     if query:
+        schema, table = _schema_table_from_search_term(query)
+        if datasets.model is DataSet:
+            table_match = Q(sourcetable__table=table)
+            if schema:
+                table_match &= Q(sourcetable__schema=schema)
+            search_filter |= table_match
+        if datasets.model is ReferenceDataset:
+            search_filter |= Q(table_name=table)
         search_filter |= Q(search_vector_english=SearchQuery(query, config="english"))
-    datasets = datasets.filter(search_filter)
-    return datasets
+    return datasets.filter(search_filter)
 
 
 def _filter_datasets_by_permissions(datasets, user):
@@ -419,19 +436,30 @@ def _annotate_is_bookmarked(datasets, user):
 
 
 def _annotate_source_table_match(datasets, query):
-    if datasets.model is ReferenceDataset or datasets.model is VisualisationCatalogueItem:
-        datasets = datasets.annotate(table_match=Value(False, BooleanField()))
-    if datasets.model is DataSet:
-        datasets = datasets.annotate(
+    if datasets.model is DataSet or datasets.model is ReferenceDataset:
+        schema, table = _schema_table_from_search_term(query)
+        search_filter = Q()
+        if datasets.model is ReferenceDataset:
+            search_filter |= Q(table_name=table)
+        else:
+            table_match = Q(sourcetable__table=table)
+            if schema:
+                table_match &= Q(sourcetable__schema=schema)
+            search_filter |= table_match
+
+        return datasets.annotate(
             table_match=BoolOr(
                 Case(
-                    When(sourcetable__table=query, then=True),
+                    When(search_filter, then=True),
                     default=False,
                     output_field=BooleanField(),
-                )
-            )
+                ),
+            ),
         )
-    return datasets
+
+    return datasets.annotate(
+        table_match=Value(False, BooleanField()),
+    )
 
 
 def _annotate_has_access(datasets, user):

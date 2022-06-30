@@ -289,7 +289,7 @@ def test_find_datasets_combines_results(client):
     )
 
 
-def test_find_datasets_by_source_table_name(client):
+def test_find_datasets_by_source_table_name(client, dataset_db):
     ds = factories.DataSetFactory.create(
         published=True, name="A search dataset", type=DataSetType.MASTER
     )
@@ -299,13 +299,29 @@ def test_find_datasets_by_source_table_name(client):
         table="dataset_test",
         database=factories.DatabaseFactory.create(memorable_name="my_database"),
     )
-    response = client.get(reverse("datasets:find_datasets"), {"q": "dataset_test"})
+    ref_ds = factories.ReferenceDatasetFactory()
 
+    # Source dataset: table name only
+    response = client.get(reverse("datasets:find_datasets"), {"q": "dataset_test"})
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
         expected_search_result(
             ds, has_access=False, table_match=True, data_type=DataSetType.MASTER
         ),
+    ]
+    # Source dataset: schema and table
+    response = client.get(reverse("datasets:find_datasets"), {"q": "public.dataset_test"})
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(
+            ds, has_access=False, table_match=True, data_type=DataSetType.MASTER
+        ),
+    ]
+    # Reference dataset: table
+    response = client.get(reverse("datasets:find_datasets"), {"q": ref_ds.table_name})
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(ref_ds, table_match=True, data_type=DataSetType.REFERENCE),
     ]
 
 
