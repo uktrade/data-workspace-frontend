@@ -88,6 +88,10 @@ def about_page_view(request):
     return render(request, "about.html", {}, status=200)
 
 
+def welcome_page_view(request):
+    return render(request, "welcome.html", {}, status=200)
+
+
 class SupportView(FormView):
     form_class = SupportForm
     template_name = "core/support.html"
