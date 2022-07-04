@@ -1103,7 +1103,7 @@ class CustomDatasetQueryTable(models.Model):
 
 
 class ReferenceDataset(DeletableTimestampedUserModel):
-    id = models.UUIDField(default=uuid.uuid4, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     type = DataSetType.REFERENCE
     name = models.CharField(max_length=255)
     slug = models.SlugField()

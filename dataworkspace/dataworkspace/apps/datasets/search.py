@@ -507,7 +507,7 @@ def _sorted_datasets_and_visualisations_matching_query_for_user(query, user, sor
     reference_datasets = _get_datasets_data_for_user_matching_query(
         ReferenceDataset.objects.live(),
         query,
-        id_field="uuid",
+        id_field="id",
         user=user,
     )
 

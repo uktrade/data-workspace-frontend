@@ -354,7 +354,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
                 )
             )
             .annotate(draft=F("is_draft"))
-            .values(*_replace(fields, "id", "uuid"))
+            .values()
         )
         .union(
             VisualisationCatalogueItem.objects.live()

@@ -763,9 +763,9 @@ def test_datasets_and_visualisations_doesnt_return_duplicate_results(access_type
         assert len(datasets) == len(set(dataset["id"] for dataset in datasets))
 
         references = _get_datasets_data_for_user_matching_query(
-            ReferenceDataset.objects.live(), "", id_field="uuid", user=u
+            ReferenceDataset.objects.live(), "", id_field="id", user=u
         )
-        assert len(references) == len(set(reference["uuid"] for reference in references))
+        assert len(references) == len(set(reference["id"] for reference in references))
 
         visualisations = _get_datasets_data_for_user_matching_query(
             VisualisationCatalogueItem.objects, query="", id_field="id", user=u
