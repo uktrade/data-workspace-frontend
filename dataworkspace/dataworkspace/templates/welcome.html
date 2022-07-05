@@ -189,31 +189,52 @@
         </div>
       </div>
 
-    <footer class="govuk-footer " role="contentinfo">
-      <div class="govuk-width-container ">
-        <div class="govuk-footer__navigation">
-          <div class="govuk-footer__section">
-            <h2 class="govuk-footer__heading govuk-heading-m">Services and information</h2>
-
-            <ul class="govuk-footer__list govuk-footer__list">
-              <li class="govuk-footer__list-item">
-                <a class="govuk-footer__link" href="{% url 'explorer:index' %}">
-                  Home
-                </a>
-              </li>
-              <li class="govuk-footer__list-item">
-                <a class="govuk-footer__link" href="{% url 'explorer:list_queries' %}">
-                  Saved queries
-                </a>
-              </li>
-              <li class="govuk-footer__list-item">
-                <a class="govuk-footer__link" href="{% url 'explorer:explorer_logs' %}">
-                  Logs
-                </a>
-              </li>
-            </ul>
+      <footer class="govuk-footer " role="contentinfo">
+        <div class="govuk-width-container ">
+          <div class="govuk-footer__navigation">
+            <div class="govuk-footer__section">
+              <h2 class="govuk-footer__heading govuk-heading-m">Services and information</h2>
+              <ul class="govuk-footer__list govuk-footer__list--columns-2">
+                <li class="govuk-footer__list-item">
+                  <a class="govuk-footer__link" href="{{ root_href }}">
+                    Home
+                  </a>
+                </li>
+                <li class="govuk-footer__list-item">
+                  <a class="govuk-footer__link" href="{{ tools_url  }}">
+                    Tools
+                  </a>
+                </li>
+                {% if can_see_visualisations_tab %}
+                <li class="govuk-footer__list-item">
+                  <a class="govuk-footer__link" href="{{ visualisations_root_url  }}">
+                    Visualisations
+                  </a>
+                </li>
+                {% endif %}
+                <li class="govuk-footer__list-item">
+                  <a class="govuk-footer__link" href="{{ about_url  }}">
+                    About
+                  </a>
+                </li>
+                <li class="govuk-footer__list-item">
+                  <a class="govuk-footer__link"  href="{% url 'support' %}">
+                    Support
+                  </a>
+                </li>
+                <li class="govuk-footer__list-item">
+                  <a class="govuk-footer__link"  href="https://data-services-help.trade.gov.uk/data-workspace" target="_blank" rel="noopener noreferrer">
+                    Help centre <span class="govuk-visually-hidden">(opens in a new tab)</span>
+                  </a>
+                </li>
+                <li class="govuk-footer__list-item">
+                  <a class="govuk-footer__link"  href="{% url 'newsletter_subscription' %}">
+                    {% if IS_SUBSCRIBED_TO_NEWSLETTER %}Unsubscribe from{% else %}Subscribe to{% endif %} newsletter
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
-        </div>
         <hr class="govuk-footer__section-break">
         <div class="govuk-footer__meta">
           <div class="govuk-footer__meta-item govuk-footer__meta-item--grow">
