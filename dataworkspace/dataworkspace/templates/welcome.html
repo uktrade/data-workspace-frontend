@@ -200,8 +200,9 @@
                     Home
                   </a>
                 </li>
+                {% url 'applications:tools' as tools_url %}
                 <li class="govuk-footer__list-item">
-                  <a class="govuk-footer__link" href="{{ tools_url  }}">
+                  <a class="govuk-footer__link" href="{{ tools_url }}">
                     Tools
                   </a>
                 </li>
@@ -212,8 +213,9 @@
                   </a>
                 </li>
                 {% endif %}
+                {% url 'about' as about_url %}
                 <li class="govuk-footer__list-item">
-                  <a class="govuk-footer__link" href="{{ about_url  }}">
+                  <a class="govuk-footer__link" href="{{ about_url }}">
                     About
                   </a>
                 </li>
