@@ -402,22 +402,5 @@ p.sidebar-section {
   font-size: 1rem;
 }
 
-.visualise-data-landing-page {
-  content: url("/__django_static/assets/images/visualise_data_lp.png");
-}
-
-.automate-reporting-landing-page {
-  content: url("/__django_static/assets/images/automate_reporting.png");
-}
-
-.upload-and-analyse-data-landing-page {
-  content: url("/__django_static/assets/images/upload_and_analyse_data.png");
-}
-
-.access-data-landing-page {
-  content: url("/__django_static/assets/images/easily_access_data.png");
-}
-
-
 @import "filters";
 @import "search";
