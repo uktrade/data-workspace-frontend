@@ -1721,3 +1721,204 @@ resource "aws_security_group_rule" "flower_service_egress_dns_udp_to_dns_rewrite
   to_port     = "53"
   protocol    = "udp"
 }
+
+resource "aws_security_group" "mlflow_lb" {
+  count  = "${length(var.mlflow_instances)}"
+  name        = "${var.prefix}-mlflow-${var.mlflow_instances[count.index]}-lb"
+  description = "${var.prefix}-mlflow-${var.mlflow_instances[count.index]}-lb"
+  vpc_id      = "${aws_vpc.notebooks.id}"
+
+  tags = {
+    Name = "${var.prefix}-mlflow-${var.mlflow_instances[count.index]}-lb"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_security_group" "mlflow_service" {
+  count  = "${length(var.mlflow_instances)}"
+  name        = "${var.prefix}-mlflow-${var.mlflow_instances[count.index]}-service"
+  description = "${var.prefix}-mlflow-${var.mlflow_instances[count.index]}-service"
+  vpc_id      = "${aws_vpc.notebooks.id}"
+
+  tags = {
+    Name = "${var.prefix}-mlflow-${var.mlflow_instances[count.index]}-service"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_security_group_rule" "admin_service_egress_http_to_mlflow_lb" {
+  count  = "${length(var.mlflow_instances)}"
+  description = "egress-http-to-mlflow-${var.mlflow_instances[count.index]}-lb"
+
+  security_group_id = "${aws_security_group.admin_service.id}"
+  source_security_group_id = "${aws_security_group.mlflow_lb[count.index].id}"
+
+  type        = "egress"
+  from_port   = "${local.mlflow_port}"
+  to_port     = "${local.mlflow_port}"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "mlflow_lb_inress_http_admin_service" {
+  count  = "${length(var.mlflow_instances)}"
+  description = "ingress-admin-service"
+
+  security_group_id = "${aws_security_group.mlflow_lb[count.index].id}"
+  source_security_group_id = "${aws_security_group.admin_service.id}"
+
+  type        = "ingress"
+  from_port   = "${local.mlflow_port}"
+  to_port     = "${local.mlflow_port}"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "mlflow_lb_egress_http_mlflow_service" {
+  count  = "${length(var.mlflow_instances)}"
+  description = "egress-http-mlflow-service"
+
+  security_group_id = "${aws_security_group.mlflow_lb[count.index].id}"
+  source_security_group_id = "${aws_security_group.mlflow_service[count.index].id}"
+
+  type        = "egress"
+  from_port   = "${local.mlflow_port}"
+  to_port     = "${local.mlflow_port}"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "mlflow_service_ingress_http_mlflow_lb" {
+  count  = "${length(var.mlflow_instances)}"
+  description = "ingress-mlflow-lb"
+
+  security_group_id = "${aws_security_group.mlflow_service[count.index].id}"
+  source_security_group_id = "${aws_security_group.mlflow_lb[count.index].id}"
+
+  type        = "ingress"
+  from_port   = "${local.mlflow_port}"
+  to_port     = "${local.mlflow_port}"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "mlflow_service_ingress_notebooks" {
+  count  = "${length(var.mlflow_instances)}"
+  description = "ingress-notebooks"
+
+  security_group_id = "${aws_security_group.mlflow_service[count.index].id}"
+  source_security_group_id = "${aws_security_group.notebooks.id}"
+
+  type        = "ingress"
+  from_port   = "${local.mlflow_port}"
+  to_port     = "${local.mlflow_port}"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "ecr_api_ingress_https_from_mlflow" {
+  count  = "${length(var.mlflow_instances)}"
+  description = "ingress-https-from-mlflow-${var.mlflow_instances[count.index]}-service"
+
+  security_group_id = "${aws_security_group.ecr_api.id}"
+  source_security_group_id = "${aws_security_group.mlflow_service[count.index].id}"
+
+  type      = "ingress"
+  from_port   = "443"
+  to_port     = "443"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "mlflow_service_egress_https_to_ecr_api" {
+  count  = "${length(var.mlflow_instances)}"
+  description = "egress-https-to-ecr-api"
+
+  security_group_id = "${aws_security_group.mlflow_service[count.index].id}"
+  source_security_group_id = "${aws_security_group.ecr_api.id}"
+
+  type        = "egress"
+  from_port   = "443"
+  to_port     = "443"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "mlflow_egress_https_all" {
+  count  = "${length(var.mlflow_instances)}"
+  description = "egress-https-to-all"
+
+  security_group_id = "${aws_security_group.mlflow_service[count.index].id}"
+  cidr_blocks = ["0.0.0.0/0"]
+
+  type        = "egress"
+  from_port   = "443"
+  to_port     = "443"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "mlflow_service_egress_dns_udp_to_dns_rewrite_proxy" {
+  count  = "${length(var.mlflow_instances)}"
+  description = "egress-dns-to-dns-rewrite-proxy"
+
+  security_group_id = "${aws_security_group.mlflow_service[count.index].id}"
+  cidr_blocks = ["${aws_subnet.private_with_egress.*.cidr_block[0]}"]
+
+  type        = "egress"
+  from_port   = "53"
+  to_port     = "53"
+  protocol    = "udp"
+}
+
+resource "aws_security_group" "mlflow_db" {
+  count       = "${length(var.mlflow_instances)}"
+  name        = "${var.prefix}-mlflow-${var.mlflow_instances[count.index]}-db"
+  description = "${var.prefix}-mlflow-${var.mlflow_instances[count.index]}-db"
+  vpc_id      = "${aws_vpc.notebooks.id}"
+
+  tags = {
+    Name = "${var.prefix}-mlflow-${var.mlflow_instances[count.index]}-db"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_security_group_rule" "mlflow_db_ingress_postgres_mlflow_service" {
+  count  = "${length(var.mlflow_instances)}"
+  description = "ingress-postgress-mlflow-service-${var.mlflow_instances[count.index]}"
+
+  security_group_id = "${aws_security_group.mlflow_db[count.index].id}"
+  source_security_group_id = "${aws_security_group.mlflow_service[count.index].id}"
+
+  type        = "ingress"
+  from_port   = "5432"
+  to_port     = "5432"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "mlflow_service_egress_postgres_mlflow_db" {
+  count  = "${length(var.mlflow_instances)}"
+  description = "egress-postgres-mlflow-db"
+
+  security_group_id = "${aws_security_group.mlflow_service[count.index].id}"
+  source_security_group_id = "${aws_security_group.mlflow_db[count.index].id}"
+
+  type        = "egress"
+  from_port   = "5432"
+  to_port     = "5432"
+  protocol    = "tcp"
+}
+
+resource "aws_security_group_rule" "notebooks_egress_http_to_mlflow_service" {
+  count  = "${length(var.mlflow_instances)}"
+  description = "egress-http-to-mlflow-service-${var.mlflow_instances[count.index]}"
+
+  security_group_id = "${aws_security_group.notebooks.id}"
+  source_security_group_id = "${aws_security_group.mlflow_service[count.index].id}"
+
+  type      = "egress"
+  from_port = "${local.mlflow_port}"
+  to_port   = "${local.mlflow_port}"
+  protocol  = "tcp"
+}

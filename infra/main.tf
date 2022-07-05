@@ -153,6 +153,14 @@ variable flower_username {}
 variable flower_password {}
 
 
+variable mlflow_artifacts_bucket {}
+variable mlflow_instances {}
+variable mlflow_instances_long {}
+variable mlflow_db_instance_class {}
+
+variable jwt_public_key {}
+variable jwt_private_key {}
+
 locals {
   admin_container_name    = "jupyterhub-admin"
   admin_container_port    = "8000"
@@ -216,4 +224,8 @@ locals {
 
   flower_container_memory = 8192
   flower_container_cpu    = 1024
+
+  mlflow_container_memory = 8192
+  mlflow_container_cpu    = 1024
+  mlflow_port = 8004
 }
