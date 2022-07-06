@@ -1,13 +1,14 @@
 import pglast
 
 from django.conf import settings
+from django.contrib.humanize.templatetags.humanize import ordinal
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import connections
 from django.forms import ChoiceField, widgets
 
-from dataworkspace.apps.datasets.constants import PipelineType
-from dataworkspace.apps.datasets.models import Pipeline
+from dataworkspace.apps.datasets.constants import PipelineType, PipelineRefreshType
+from dataworkspace.apps.datasets.models import Pipeline, DataCutDataset
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
     GOVUKDesignSystemForm,
@@ -17,6 +18,8 @@ from dataworkspace.forms import (
     GOVUKDesignSystemTextWidget,
     GOVUKDesignSystemTextareaField,
     GOVUKDesignSystemTextareaWidget,
+    GOVUKDesignSystemChoiceField,
+    GOVUKDesignSystemSelectWidget,
 )
 
 
@@ -156,6 +159,84 @@ class SharepointPipelineCreateForm(BasePipelineCreateForm):
         return pipeline
 
 
+class ScheduledReportPipelineCreateForm(SQLPipelineCreateForm):
+    pipeline_type = PipelineType.SCHEDULED_REPORT
+    table_name = GOVUKDesignSystemCharField(
+        label="Name for the report",
+        help_text="The downloaded file name will include the base file name and the run date, "
+        "e.g. <base-file-name>-yyyy-mm-dd.csv",
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
+        ),
+        error_messages={"required": "Enter a name for the report."},
+    )
+    sql = GOVUKDesignSystemTextareaField(
+        label="SQL Query",
+        help_text="TODO: inform user they can use {{run_date}}",
+        widget=GOVUKDesignSystemTextareaWidget(
+            label_is_heading=False,
+            extra_label_classes="govuk-!-font-weight-bold",
+            attrs={"rows": 5},
+        ),
+        error_messages={"required": "Enter an SQL query."},
+    )
+    day_of_month = GOVUKDesignSystemChoiceField(
+        label="Day of month to run the report",
+        help_text="Pipeline will start at midnight but will wait for any dependent pipelines to run first",
+        choices=[(str(x), ordinal(x)) for x in range(1, 32)] + [("L", "Last day")],
+        widget=GOVUKDesignSystemSelectWidget(
+            label_is_heading=False,
+            extra_label_classes="govuk-!-font-weight-bold",
+        ),
+    )
+    refresh_type = GOVUKDesignSystemRadioField(
+        label="When to refresh the report",
+        initial=PipelineRefreshType.NEVER,
+        choices=PipelineRefreshType.choices,
+        widget=GOVUKDesignSystemRadiosWidget(heading="h2", label_size="s", small=True),
+    )
+    dataset = GOVUKDesignSystemChoiceField(
+        label="Data cut to add the report to",
+        help_text="On pipeline completion, the report will be automatically added to this dataset.",
+        required=False,
+        choices=[("", "-")],
+        widget=GOVUKDesignSystemSelectWidget(
+            label_is_heading=False,
+            extra_label_classes="govuk-!-font-weight-bold",
+        ),
+    )
+
+    class Meta:
+        model = Pipeline
+        fields = ["table_name", "type", "sql", "day_of_month", "refresh_type", "dataset"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["dataset"].choices = self.fields["dataset"].choices + +[
+            (str(x.id), x.name) for x in DataCutDataset.objects.live()
+        ]
+
+    def save(self, commit=True):
+        pipeline = super().save(commit=False)
+        pipeline.config = {
+            "sql": self.cleaned_data["sql"],
+            "day_of_month": self.cleaned_data["day_of_month"],
+            "refresh_type": self.cleaned_data["refresh_type"],
+            "dataset": self.cleaned_data["dataset"],
+        }
+        if commit:
+            pipeline.save()
+        return pipeline
+
+
+class ScheduledReportPipelineEditForm(ScheduledReportPipelineCreateForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        disabled_fields = ["table_name", "day_of_month", "refresh_type"]
+        for field in disabled_fields:
+            self.fields[field].disabled = True
+
+
 class SharepointPipelineEditForm(SharepointPipelineCreateForm):
     table_name = GOVUKDesignSystemCharField(
         label="Schema and table name the pipeline ingests into",
@@ -171,8 +252,5 @@ class PipelineTypeForm(GOVUKDesignSystemForm):
         required=True,
         label="Select the type of pipeline you would like to create",
         widget=GOVUKDesignSystemRadiosWidget(heading="p", extra_label_classes="govuk-body-l"),
-        choices=(
-            ("sql", "SQL Pipeline"),
-            ("sharepoint", "Sharepoint Pipeline"),
-        ),
+        choices=PipelineType.choices,
     )

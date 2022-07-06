@@ -122,5 +122,11 @@ class NotificationType(models.TextChoices):
 
 
 class PipelineType(models.TextChoices):
-    SQL = "sql", "SQL Pipeline"
-    SHAREPOINT = "sharepoint", "Sharepoint Pipeline"
+    SQL = "sql", "SQL derived table pipeline"
+    SHAREPOINT = "sharepoint", "Sharepoint pipeline"
+    SCHEDULED_REPORT = "scheduled-report", "Scheduled SQL report pipeline"
+
+
+class PipelineRefreshType(models.TextChoices):
+    NEVER = "never", "Never, report is run once only"
+    DAILY = "daily", "Daily, report is refreshed every morning"

@@ -7,6 +7,7 @@ from dataworkspace.apps.datasets.pipelines.forms import (
     SQLPipelineEditForm,
     SharepointPipelineCreateForm,
     SharepointPipelineEditForm,
+    ScheduledReportPipelineCreateForm, ScheduledReportPipelineEditForm,
 )
 
 urlpatterns = [
@@ -29,6 +30,12 @@ urlpatterns = [
         name="create-sharepoint",
     ),
     path(
+        "create/scheduled-report",
+        login_required(views.PipelineCreateView.as_view()),
+        {"form_class": ScheduledReportPipelineCreateForm},
+        name="create-scheduled-report",
+    ),
+    path(
         "<int:pk>/sql/edit",
         login_required(views.PipelineUpdateView.as_view()),
         {"form_class": SQLPipelineEditForm},
@@ -39,6 +46,12 @@ urlpatterns = [
         login_required(views.PipelineUpdateView.as_view()),
         {"form_class": SharepointPipelineEditForm},
         name="edit-sharepoint",
+    ),
+    path(
+        "<int:pk>/scheduled-report/edit",
+        login_required(views.PipelineUpdateView.as_view()),
+        {"form_class": ScheduledReportPipelineEditForm},
+        name="edit-scheduled-report",
     ),
     path(
         "<int:pk>/delete",

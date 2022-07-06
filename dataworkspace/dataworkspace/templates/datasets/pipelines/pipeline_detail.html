@@ -25,9 +25,12 @@
         {% csrf_token %}
         {{ form.type }}
         {{ form.table_name }}
+        {{ form.day_of_month }}
+        {{ form.refresh_type }}
+        {{ form.dataset }}
         {{ form.sql }}
-        {{ form.site_name }}
         {{ form.list_name }}
+        {{ form.site_name }}
         <button class="govuk-button" data-module="govuk-button">Save</button>
       </form>
     </div>
