@@ -6,6 +6,7 @@ from dataworkspace.apps.datasets.models import (
     SourceTable,
     ToolQueryAuditLog,
     ToolQueryAuditLogTable,
+    SourceLink,
 )
 
 _PURPOSES = {
@@ -92,3 +93,28 @@ class ToolQueryAuditLogSerializer(serializers.ModelSerializer):
             "timestamp",
             "tables",
         ]
+
+
+class DataCutSourceLinkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SourceLink
+        fields = [
+            "dataset",
+            "link_type",
+            "name",
+            "url",
+            "format",
+            "frequency",
+        ]
+
+    def validate_dataset(self, dataset):
+        if dataset.type != DataSetType.DATACUT:
+            raise serializers.ValidationError("Links can only be added to data cut datasets")
+        return dataset
+
+    def validate(self, data):
+        if data["dataset"].sourcelink_set.filter(url=data["url"]).exists():
+            raise serializers.ValidationError(
+                {"url": "A source link with this URL already exists for the given dataset"}
+            )
+        return data

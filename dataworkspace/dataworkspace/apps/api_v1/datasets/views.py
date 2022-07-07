@@ -7,10 +7,12 @@ from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.db import models
 from django.db.models import F
 from django.db.models.functions import Substr
-from django.http import StreamingHttpResponse
+from django.http import StreamingHttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.parsers import JSONParser
 
 from dataworkspace.apps.api_v1.pagination import TimestampCursorPagination
 from dataworkspace.apps.core.utils import (
@@ -29,6 +31,7 @@ from dataworkspace.apps.datasets.models import (
 from dataworkspace.apps.api_v1.datasets.serializers import (
     CatalogueItemSerializer,
     ToolQueryAuditLogSerializer,
+    DataCutSourceLinkSerializer,
 )
 
 
@@ -395,3 +398,13 @@ class ToolQueryAuditLogViewSet(viewsets.ModelViewSet):
     )
     serializer_class = ToolQueryAuditLogSerializer
     pagination_class = TimestampCursorPagination
+
+
+@csrf_exempt
+def dataset_source_link_api_view_POST(request):
+    data = JSONParser().parse(request)
+    serializer = DataCutSourceLinkSerializer(data=data)
+    if serializer.is_valid():
+        serializer.save()
+        return JsonResponse(serializer.data)
+    return JsonResponse(serializer.errors, status=400)
