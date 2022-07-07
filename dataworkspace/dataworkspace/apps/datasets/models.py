@@ -2476,10 +2476,22 @@ class Pipeline(TimeStampedUserModel):
 
     @property
     def dag_id(self):
-        return f"DerivedPipeline-{self.table_name}"
+        return f"DerivedPipeline-{self.config.get('base_file_name', self.table_name)}"
 
     def get_absolute_url(self):
-        return reverse(f"pipelines:edit-{self.type}", args=(self.id,))
+        return reverse(f"pipelines:edit-{self.type.replace('_', '-')}", args=(self.id,))
+
+    def get_delete_url(self):
+        return reverse("pipelines:delete", args=(self.id,))
+
+    def get_log_url(self):
+        return reverse("pipelines:logs", args=(self.id,))
+
+    def get_stop_url(self):
+        return reverse("pipelines:stop", args=(self.id,))
+
+    def get_run_url(self):
+        return reverse("pipelines:run", args=(self.id,))
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if self.id is not None and (
@@ -2493,6 +2505,14 @@ class Pipeline(TimeStampedUserModel):
             self._original_table_name = self.table_name
             self._original_config = self.config
         super().save(force_insert, force_update, using, update_fields)
+
+    def get_schedule(self):
+        return f"0 0 {self.config.get('day_of_month', '*')} * *"
+
+    def get_schema_and_table(self):
+        if len(self.table_name.split(".")) > 1:
+            return self.table_name.split(".")
+        return None, self.table_name
 
 
 class PipelineVersion(TimeStampedModel):

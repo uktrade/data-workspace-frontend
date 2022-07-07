@@ -122,9 +122,9 @@ class NotificationType(models.TextChoices):
 
 
 class PipelineType(models.TextChoices):
-    SQL = "sql", "SQL derived table pipeline"
-    SHAREPOINT = "sharepoint", "Sharepoint pipeline"
-    SCHEDULED_REPORT = "scheduled-report", "Scheduled SQL report pipeline"
+    SQL = "sql", "SQL derived table"
+    SHAREPOINT = "sharepoint", "Sharepoint list"
+    SCHEDULED_REPORT = "scheduled_report", "Scheduled SQL report"
 
 
 class PipelineRefreshType(models.TextChoices):

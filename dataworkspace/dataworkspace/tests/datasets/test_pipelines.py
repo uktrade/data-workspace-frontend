@@ -247,6 +247,7 @@ def test_create_scheduled_report_pipeline(mock_sync, staff_client):
         data={
             "type": "scheduled-report",
             "table_name": "The name of the report",
+            "base_file_name": "base-file-name",
             "sql": "SELECT 1 a",
             "day_of_month": "L",
             "refresh_type": "never",
@@ -265,6 +266,7 @@ def test_edit_scheduled_report_pipeline(mock_sync, staff_client):
         config={
             "sql": "SELECT 1 a",
             "table_name": "a test report",
+            "base_file_name": "base-file-name",
             "day_of_month": "L",
             "refresh_type": "never",
         },

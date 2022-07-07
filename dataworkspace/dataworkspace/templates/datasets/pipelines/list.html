@@ -1,5 +1,5 @@
 {% extends '_main.html' %}
-{% load datasets_tags %}
+{% load datasets_tags static %}
 {% block page_title %}Pipelines - {{ block.super }}{% endblock page_title %}
 {% block breadcrumbs %}
   <div class="govuk-breadcrumbs">
@@ -13,61 +13,46 @@
   </div>
 {% endblock breadcrumbs %}
 {% block content %}
-    <div class="govuk-grid-row">
-        <div class="govuk-grid-column-full">
-            <h1 class="govuk-heading-xl">Pipelines</h1>
-            <dl class="govuk-summary-list">
-                <div class="govuk-summary-list__row">
-                    <dt class="govuk-summary-list__value">
-                    <a class="govuk-link" href="{% url 'pipelines:create' %}">Add new pipeline</a>
-                    </dt>
-                    <dd class="govuk-summary-list__actions"></dd>
-                </div>
-                {% for object in object_list %}
-                <div class="govuk-summary-list__row">
-                    <dt class="govuk-summary-list__value">
-                        <h2>{{ object.table_name }}</h2>
-                        {% with object.dag_details as dag %}
-                          {% if dag is None %}
-                            <p>Error fetching information for this pipeline</p>
-                          {% elif not dag.enabled %}
-                            <p>This pipeline has been paused</p>
-                          {% elif dag.last_run is None %}
-                            <p>This pipeline has not yet run</p>
-                          {% elif dag.last_run.state == "failed" %}
-                            {% with dag.last_run.end_date|parse_date_string as end_date %}
-                              <p>The most recent run of this pipeline failed at {{ end_date|time_with_gmt_offset }}, {{ end_date|format_date_uk }}</p>
-                            {% endwith %}
-                          {% elif dag.last_run.state == "success" %}
-                            {% with dag.last_run.end_date|parse_date_string as end_date %}
-                              <p>The most recent run of this pipeline succeeded at {{ end_date|time_with_gmt_offset }}, {{ end_date|format_date_uk }}</p>
-                            {% endwith %}
-                          {% else %}
-                            <p>This pipeline is currently running</p>
-                          {% endif %}
-                        {% endwith %}
-                        <a class="govuk-link" href="{{ object.get_absolute_url }}">Edit</a>&nbsp;
-                        <a class="govuk-link" href="{% url 'pipelines:delete' object.id %}">Delete</a>&nbsp;
-                        <a class="govuk-link" href="{% url 'pipelines:logs' object.id %}">View logs</a>
-                    </dt>
-                    <dd class="govuk-summary-list__actions">
-                      {% with object.dag_details.last_run.state as state %}
-                        {% if state == "queued" or state == "running" %}
-                          <form action="{% url 'pipelines:stop' object.id %}" method="POST">
-                            {% csrf_token %}
-                            <button class="govuk-button govuk-button--warning" data-module="govuk-button" type="submit">Stop</button>
-                          </form>
-                        {% else %}
-                          <form action="{% url 'pipelines:run' object.id %}" method="POST">
-                            {% csrf_token %}
-                            <button class="govuk-button" data-module="govuk-button" type="submit">Run</button>
-                          </form>
-                        {% endif %}
-                      {% endwith %}
-                    </dd>
-                </div>
-                {% endfor %}
-            </dl>
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      <h1 class="govuk-heading-xl">Pipelines</h1>
+      <dl class="govuk-summary-list">
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__value">
+          <a class="govuk-link" href="{% url 'pipelines:create' %}">Add new pipeline</a>
+          </dt>
+          <dd class="govuk-summary-list__actions"></dd>
         </div>
+      </dl>
+      <div id="pipeline-grid" class="ag-theme-alpine dw-data-grid"></div>
     </div>
+  </div>
+  {% csrf_token %}
 {% endblock %}
+{% block footer_scripts %}
+  <script src="{% static 'ag-grid-community.min.js' %}"></script>
+  <script src="{% static 'data-grid.js' %}"></script>
+  <script src="{% static 'js/pipeline-grid.js' %}"></script>
+  <link rel="stylesheet" type="text/css" href="{% static 'data-grid.css' %}"/>
+  <script nonce="{{ request.csp_nonce }}">
+    var rowData = [
+      {% for object in object_list %}
+        {
+          table_name: "{{ object.table_name }}",
+          type: "{{ object.get_type_display }}",
+          created_by: "{{ object.created_by.get_full_name }}",
+          created_at: "{{ object.created_date }}",
+          actions: {{ object.id }},
+          edit_url: "{{ object.get_absolute_url }}",
+          delete_url: "{{ object.get_delete_url }}",
+          log_url: "{{ object.get_log_url }}",
+          stop_url: "{{ object.get_stop_url }}",
+          run_url: "{{ object.get_run_url }}",
+          dag: {% if object.dag_details %}{{ object.dag_details|safe }}{% else %}null{% endif %},
+          config: {{ object.config|safe }},
+        },
+      {% endfor %}
+    ];
+    initPipelineGrid(rowData);
+  </script>
+{% endblock footer_scripts %}

@@ -163,16 +163,34 @@ class ScheduledReportPipelineCreateForm(SQLPipelineCreateForm):
     pipeline_type = PipelineType.SCHEDULED_REPORT
     table_name = GOVUKDesignSystemCharField(
         label="Name for the report",
+        help_text=(
+            "This is the name of the download link on the data cut page. "
+            "The report's run date will be appended."
+        ),
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
+        ),
+        error_messages={"required": "Enter a name for the report."},
+        validators=[],
+    )
+    base_file_name = GOVUKDesignSystemCharField(
+        label="Base name for the downloaded CSV file",
         help_text="The downloaded file name will include the base file name and the run date, "
         "e.g. <base-file-name>-yyyy-mm-dd.csv",
         widget=GOVUKDesignSystemTextWidget(
             label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
         ),
-        error_messages={"required": "Enter a name for the report."},
+        error_messages={"required": "Enter a base name for the CSV file."},
+        validators=(
+            RegexValidator(
+                message="Base file name can only contain alphanumeric characters hyphens and underscores",
+                regex=r"^[a-zA-Z_][a-zA-Z0-9_-]*$",
+            ),
+        ),
     )
     sql = GOVUKDesignSystemTextareaField(
         label="SQL Query",
-        help_text="TODO: inform user they can use {{run_date}}",
+        help_text="Enter your SQL. To make use the the run date of the pipeline insert {{run_date}}",
         widget=GOVUKDesignSystemTextareaWidget(
             label_is_heading=False,
             extra_label_classes="govuk-!-font-weight-bold",
@@ -199,7 +217,6 @@ class ScheduledReportPipelineCreateForm(SQLPipelineCreateForm):
         label="Data cut to add the report to",
         help_text="On pipeline completion, the report will be automatically added to this dataset.",
         required=False,
-        choices=[("", "-")],
         widget=GOVUKDesignSystemSelectWidget(
             label_is_heading=False,
             extra_label_classes="govuk-!-font-weight-bold",
@@ -208,11 +225,19 @@ class ScheduledReportPipelineCreateForm(SQLPipelineCreateForm):
 
     class Meta:
         model = Pipeline
-        fields = ["table_name", "type", "sql", "day_of_month", "refresh_type", "dataset"]
+        fields = [
+            "table_name",
+            "base_file_name",
+            "type",
+            "sql",
+            "day_of_month",
+            "refresh_type",
+            "dataset",
+        ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["dataset"].choices = self.fields["dataset"].choices + +[
+        self.fields["dataset"].choices = [("", "-")] + [
             (str(x.id), x.name) for x in DataCutDataset.objects.live()
         ]
 
@@ -223,6 +248,8 @@ class ScheduledReportPipelineCreateForm(SQLPipelineCreateForm):
             "day_of_month": self.cleaned_data["day_of_month"],
             "refresh_type": self.cleaned_data["refresh_type"],
             "dataset": self.cleaned_data["dataset"],
+            "base_file_name": self.cleaned_data["base_file_name"],
+            "schedule": self.cleaned_data["day_of_month"],
         }
         if commit:
             pipeline.save()
@@ -232,7 +259,7 @@ class ScheduledReportPipelineCreateForm(SQLPipelineCreateForm):
 class ScheduledReportPipelineEditForm(ScheduledReportPipelineCreateForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        disabled_fields = ["table_name", "day_of_month", "refresh_type"]
+        disabled_fields = ["table_name", "base_file_name", "day_of_month", "refresh_type"]
         for field in disabled_fields:
             self.fields[field].disabled = True
 
