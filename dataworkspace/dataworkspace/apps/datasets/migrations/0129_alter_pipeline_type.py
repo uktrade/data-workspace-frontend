@@ -6,13 +6,20 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('datasets', '0128_auto_20220616_1649'),
+        ("datasets", "0128_auto_20220616_1649"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='pipeline',
-            name='type',
-            field=models.CharField(choices=[('sql', 'SQL derived table'), ('sharepoint', 'Sharepoint list'), ('scheduled-report', 'Scheduled SQL report')], max_length=255),
+            model_name="pipeline",
+            name="type",
+            field=models.CharField(
+                choices=[
+                    ("sql", "SQL derived table"),
+                    ("sharepoint", "Sharepoint list"),
+                    ("scheduled-report", "Scheduled SQL report"),
+                ],
+                max_length=255,
+            ),
         ),
     ]

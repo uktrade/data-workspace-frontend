@@ -7,7 +7,8 @@ from dataworkspace.apps.datasets.pipelines.forms import (
     SQLPipelineEditForm,
     SharepointPipelineCreateForm,
     SharepointPipelineEditForm,
-    ScheduledReportPipelineCreateForm, ScheduledReportPipelineEditForm,
+    ScheduledReportPipelineCreateForm,
+    ScheduledReportPipelineEditForm,
 )
 
 urlpatterns = [
