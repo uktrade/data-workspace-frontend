@@ -245,12 +245,13 @@ def test_create_scheduled_report_pipeline(mock_sync, staff_client):
     resp = staff_client.post(
         reverse("pipelines:create-scheduled-report"),
         data={
-            "type": "scheduled-report",
+            "type": "scheduled_report",
             "table_name": "The name of the report",
             "base_file_name": "base-file-name",
             "sql": "SELECT 1 a",
             "day_of_month": "L",
             "refresh_type": "never",
+            "dataset": "",
         },
         follow=True,
     )
@@ -262,7 +263,7 @@ def test_create_scheduled_report_pipeline(mock_sync, staff_client):
 @mock.patch("dataworkspace.apps.datasets.pipelines.views.save_pipeline_to_dataflow")
 def test_edit_scheduled_report_pipeline(mock_sync, staff_client):
     pipeline = factories.PipelineFactory.create(
-        type="scheduled-report",
+        type="scheduled_report",
         config={
             "sql": "SELECT 1 a",
             "table_name": "a test report",
@@ -275,11 +276,13 @@ def test_edit_scheduled_report_pipeline(mock_sync, staff_client):
     resp = staff_client.post(
         reverse("pipelines:edit-scheduled-report", args=(pipeline.id,)),
         data={
-            "type": "scheduled-report",
+            "type": "scheduled_report",
             "table_name": pipeline.table_name,
+            "base_file_name": "a-file-name",
             "day_of_month": "L",
             "refresh_type": "never",
             "sql": "SELECT 2 b",
+            "dataset": "",
         },
         follow=True,
     )
