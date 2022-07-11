@@ -235,3 +235,57 @@ def test_query_fails_to_run(mock_sync, staff_client):
         follow=True,
     )
     assert b"Error running query" in resp.content
+
+
+@pytest.mark.django_db
+@mock.patch("dataworkspace.apps.datasets.pipelines.views.save_pipeline_to_dataflow")
+def test_create_scheduled_report_pipeline(mock_sync, staff_client):
+    pipeline_count = Pipeline.objects.count()
+    staff_client.post(reverse("admin:index"), follow=True)
+    resp = staff_client.post(
+        reverse("pipelines:create-scheduled-report"),
+        data={
+            "type": "scheduled_report",
+            "table_name": "The name of the report",
+            "base_file_name": "base-file-name",
+            "sql": "SELECT 1 a",
+            "day_of_month": "L",
+            "refresh_type": "never",
+            "dataset": "",
+        },
+        follow=True,
+    )
+    assert "Pipeline created successfully" in resp.content.decode(resp.charset)
+    assert pipeline_count + 1 == Pipeline.objects.count()
+
+
+@pytest.mark.django_db
+@mock.patch("dataworkspace.apps.datasets.pipelines.views.save_pipeline_to_dataflow")
+def test_edit_scheduled_report_pipeline(mock_sync, staff_client):
+    pipeline = factories.PipelineFactory.create(
+        type="scheduled_report",
+        config={
+            "sql": "SELECT 1 a",
+            "table_name": "a test report",
+            "base_file_name": "base-file-name",
+            "day_of_month": "L",
+            "refresh_type": "never",
+        },
+    )
+    staff_client.post(reverse("admin:index"), follow=True)
+    resp = staff_client.post(
+        reverse("pipelines:edit-scheduled-report", args=(pipeline.id,)),
+        data={
+            "type": "scheduled_report",
+            "table_name": pipeline.table_name,
+            "base_file_name": "a-file-name",
+            "day_of_month": "L",
+            "refresh_type": "never",
+            "sql": "SELECT 2 b",
+            "dataset": "",
+        },
+        follow=True,
+    )
+    assert "Pipeline updated successfully" in resp.content.decode(resp.charset)
+    pipeline.refresh_from_db()
+    assert pipeline.config["sql"] == "SELECT 2 b"

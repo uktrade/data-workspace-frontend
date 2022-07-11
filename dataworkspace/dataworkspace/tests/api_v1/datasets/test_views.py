@@ -14,6 +14,7 @@ from dataworkspace.apps.datasets.models import (
     DataSet,
     ReferenceDataset,
     SourceTable,
+    SourceLink,
 )
 from dataworkspace.tests import factories
 from dataworkspace.tests.api_v1.base import BaseAPIViewTest
@@ -564,3 +565,66 @@ class TestToolQueryAuditLogAPIView(BaseAPIViewTest):
         response = unauthenticated_client.get(self.url)
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["results"] == [self.expected_response(log)]
+
+
+@pytest.mark.django_db
+class TestDataCutSourceLinkCreateAPIView:
+    url = reverse("api-v1:dataset:api-dataset-source-link")
+    post_data = {
+        "name": "my link name",
+        "dataset": "928a863f-be61-4a20-a4c4-7193c6a628af",
+        "link_type": 2,
+        "format": "CSV",
+        "frequency": "Monthly",
+        "url": "s3://this/is/a/test.csv",
+    }
+
+    def test_dataset_does_not_exist(self, unauthenticated_client):
+        response = unauthenticated_client.post(
+            self.url,
+            self.post_data,
+            content_type="application/json",
+        )
+        assert response.status_code == 400
+        assert response.json() == {
+            "dataset": [
+                'Invalid pk "928a863f-be61-4a20-a4c4-7193c6a628af" - object does not exist.'
+            ]
+        }
+
+    def test_non_data_cut_dataset(self, unauthenticated_client):
+        ds = factories.MasterDataSetFactory()
+        data = {**self.post_data, "dataset": ds.id}
+        response = unauthenticated_client.post(
+            self.url,
+            data,
+            content_type="application/json",
+        )
+        assert response.status_code == 400
+        assert response.json() == {"dataset": ["Links can only be added to data cut datasets"]}
+
+    def test_link_already_exists(self, unauthenticated_client):
+        ds = factories.DatacutDataSetFactory()
+        data = {**self.post_data, "dataset": ds.id}
+        factories.SourceLinkFactory.create(dataset=ds, url=data["url"])
+        response = unauthenticated_client.post(
+            self.url,
+            data,
+            content_type="application/json",
+        )
+        assert response.status_code == 400
+        assert response.json() == {
+            "url": ["A source link with this URL already exists for the given dataset"]
+        }
+
+    def test_valid(self, unauthenticated_client):
+        link_count = SourceLink.objects.all().count()
+        ds = factories.DatacutDataSetFactory()
+        data = {**self.post_data, "dataset": ds.id}
+        response = unauthenticated_client.post(
+            self.url,
+            data,
+            content_type="application/json",
+        )
+        assert response.status_code == 200
+        assert link_count + 1 == SourceLink.objects.all().count()

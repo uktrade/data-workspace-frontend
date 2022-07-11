@@ -17,10 +17,10 @@ HAWK_CREDS = {
 def save_pipeline_to_dataflow(pipeline, method):
     url = f"{API_URL}/dag/{pipeline.dag_id}"
     content_type = "application/json"
-    schema_name, table_name = pipeline.table_name.split(".")
+    schema_name, table_name = pipeline.get_schema_and_table()
     body = json.dumps(
         {
-            "schedule": "@daily",
+            "schedule": pipeline.get_schedule(),
             "schema_name": schema_name,
             "table_name": table_name,
             "type": pipeline.type,
@@ -41,7 +41,11 @@ def save_pipeline_to_dataflow(pipeline, method):
         data=body,
         headers={"Authorization": header, "Content-Type": content_type},
     )
-    response.raise_for_status()
+    try:
+        response.raise_for_status()
+    except requests.exceptions.HTTPError:
+        print("Request failed: %s", response.text)
+        raise
     return response.json()
 
 

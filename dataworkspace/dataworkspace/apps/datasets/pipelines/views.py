@@ -42,7 +42,7 @@ class PipelineSelectTypeView(IsAdminMixin, FormView):
 
     def form_valid(self, form):
         return HttpResponseRedirect(
-            reverse(f"pipelines:create-{form.cleaned_data['pipeline_type']}")
+            reverse(f"pipelines:create-{form.cleaned_data['pipeline_type'].replace('_', '-')}")
         )
 
 
@@ -107,6 +107,7 @@ class PipelineUpdateView(IsAdminMixin, UpdateView):
 class PipelineListView(IsAdminMixin, ListView):
     model = Pipeline
     template_name = "datasets/pipelines/list.html"
+    ordering = "-created_date"
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
