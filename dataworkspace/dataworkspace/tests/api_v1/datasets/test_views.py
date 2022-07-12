@@ -451,6 +451,9 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             if dataset.enquiries_contact
             else None,
             "is_draft": dataset.is_draft if dataset.type == DataSetType.REFERENCE else None,
+            "dictionary_published": dataset.dictionary_published
+            if dataset.type == DataSetType.MASTER
+            else None,
             "licence": dataset.licence or None,
             "purpose": purpose,
             "source_tags": [t.name for t in dataset.tags.all()] if dataset.tags.all() else None,
