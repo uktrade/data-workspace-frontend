@@ -102,32 +102,41 @@
                 {% endfor %}
               </ul>
             </nav>
+          </aside> 
           {% endif %}
-
+          <h3 class="govuk-heading-s {% if related_data %}govuk-!-margin-top-8{% endif %}">Related dashboards</h3>
           {% if related_visualisations %}
-            <h3 class="govuk-heading-s {% if related_data %}govuk-!-margin-top-8{% endif %}">Related dashboards</h3>
             <nav role="navigation">
               <ul class="govuk-list">
                 {% for master in related_visualisations|slice:":4" %}
                   <li>
-                  {% include "partials/related_data_link.html" with dataset=master css_classname="related-dashboard" %}
+                    {% include "partials/related_data_link.html" with dataset=master css_classname="related-dashboard" %}
+                  </lusingi>
                 {% endfor %}
-                </li>
+
                 {% if related_visualiations|length > 4 %}
-                <li class="govuk-!-margin-top-4">
-                  <a href="{% url "datasets:related_visualisations" dataset_uuid=model.id %}"
-                     class="govuk-link govuk-link--no-visited-state">
-                    Show all related dashboards
-                  </a>
-                </li>
+                  <li class="govuk-!-margin-top-4">
+                    <a href="{% url "datasets:related_visualisations" dataset_uuid=model.id %}"
+                      class="govuk-link govuk-link--no-visited-state">
+                      Show all related dashboards
+                    </a>
+                  </li>
                 {% endif %}
               </ul>
             </nav>
+            {% else %}
+            <p class="govuk-body">
+              This data currently has no related dashboards.
+            </p>
           {% endif %}
-
-        </aside>
-      {% endif %}
-      {% include 'partials/using_data_dropdown.html' %}
+          <p class="govuk-body">
+            <small>If you'd like to create a dashboard using this data then you can see                   
+            <a href="https://data-services-help.trade.gov.uk/data-workspace/how-to/see-tools-specific-guidance/quicksight/create-a-dashboard/"
+            class="govuk-link govuk-link--no-visited-state">
+            how to create a dashboard with Quicksight.</a></small>
+          </p>
+        {% endif %}
+        <p class="govuk-body sidebar-section">
     </div>
   </div>
 
