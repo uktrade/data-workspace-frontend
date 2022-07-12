@@ -485,6 +485,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             information_asset_manager=factories.UserFactory(),
             personal_data="personal",
             retention_policy="retention",
+            dictionary_publihsed="dictionary",
         )
         factories.SourceTableFactory(dataset=master_dataset, schema="public", table="test_table1")
         factories.SourceTableFactory(dataset=master_dataset, schema="public", table="test_table1")
@@ -513,6 +514,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
                 "Master dataset",
                 master_dataset.personal_data,
                 master_dataset.retention_policy,
+                master_dataset.dictionary_published,
             ),
             self.expected_response(
                 reference_dataset,
