@@ -39,7 +39,7 @@
 {% endblock footer_scripts %}
 {% block breadcrumbs %}
   <div class="govuk-grid-row">
-    <div class="govuk-grid-column-three-quarters">
+    <div class="govuk-grid-column-one-half">
       <div class="govuk-breadcrumbs">
         <ol class="govuk-breadcrumbs__list">
           <li class="govuk-breadcrumbs__list-item">
@@ -58,7 +58,11 @@
         </ol>
       </div>
     </div>
-    <div class="govuk-grid-column-one-quarter govuk-!-margin-top-2" style="text-align: right;">
+    <div class="govuk-grid-column-one-half govuk-!-margin-top-2" style="text-align: right;">
+      {% flag NOTIFY_ON_REFERENCE_DATASET_CHANGE_FLAG %}
+      {% include "partials/subscription_link.html" with subscription=subscription dataset=model dataset_uuid=model.uuid %}
+      &nbsp;&nbsp;&nbsp;
+      {% endflag %}
       {% include "partials/bookmark-link.html" with dataset_uuid=model.uuid is_bookmarked=is_bookmarked %}
     </div>
   </div>
@@ -142,11 +146,6 @@
     </div>
 
     <div class="govuk-grid-column-one-third">
-      {% flag NOTIFY_ON_REFERENCE_DATASET_CHANGE_FLAG %}
-        <p class="govuk-body">
-          {% include "partials/subscription_link.html" with subscription=subscription dataset=model dataset_uuid=model.uuid %}
-        </p>
-      {% endflag %}
       {% if model.enquiries_contact %}
       <p class="govuk-body sidebar-section">
         <a href="mailto:{{ model.enquiries_contact.email }}?subject=Reporting an issue - {{ model.name }}" class="govuk-link govuk-link--no-visited-state">
