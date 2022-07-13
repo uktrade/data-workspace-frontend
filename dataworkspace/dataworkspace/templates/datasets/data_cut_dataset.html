@@ -44,7 +44,7 @@
       </div>
     </div>
     <div class="govuk-grid-column-one-half govuk-!-margin-top-2" style="text-align: right;">
-      {% flag NOTIFY_ON_MASTER_DATASET_CHANGE_FLAG %}
+      {% flag NOTIFY_ON_DATACUT_CHANGE_FLAG %}
       {% include "partials/subscription_link.html" with subscription=subscription dataset=dataset dataset_uuid=dataset.id %}
       &nbsp;&nbsp;&nbsp;
       {% endflag %}
