@@ -4174,20 +4174,96 @@ class TestChartViews:
         assert response.status_code == 302
 
     @override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
-    def test_create_chart_from_grid(self, client, dataset_db):
-        num_charts = ChartBuilderChart.objects.count()
+    def test_aggregation_from_grid(self, client, dataset_db):
         source = factories.SourceTableFactory(
             schema="public",
             table="dataset_test",
             database=dataset_db,
-            dataset=factories.DataSetFactory.create(
+            dataset=factories.MasterDataSetFactory.create(
+                published=True, user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
+            ),
+        )
+        response = client.post(
+            reverse("datasets:aggregate_chart_data", args=(source.dataset.id, str(source.id))),
+            {
+                "columns": ["id", "name"],
+                "filters": json.dumps(
+                    {
+                        "name": {
+                            "filter": "last",
+                            "filterType": "text",
+                            "type": "contains",
+                        }
+                    }
+                ),
+            },
+        )
+        assert response.status_code == 200
+        assert b"Aggregate source table" in response.content
+
+    @override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
+    def test_aggregation_invalid_field(self, client, dataset_db):
+        source = factories.SourceTableFactory(
+            schema="public",
+            table="dataset_test",
+            database=dataset_db,
+            dataset=factories.MasterDataSetFactory.create(
                 published=True, user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
             ),
         )
         response = client.post(
             reverse("datasets:create_chart_from_grid", args=(source.dataset.id, str(source.id))),
             {
-                "columns": ["id", "name"],
+                "aggregate": "sum",
+                "aggregate_field": "name",
+                "group_by": "id",
+                "sort_direction": "ASC",
+                "sort_field": "name",
+                "columns": json.dumps(
+                    [
+                        {"field": "id", "dataType": "numeric"},
+                        {"field": "name", "dataType": "text"},
+                    ]
+                ),
+                "filters": json.dumps(
+                    {
+                        "name": {
+                            "filter": "last",
+                            "filterType": "text",
+                            "type": "contains",
+                        }
+                    }
+                ),
+            },
+        )
+        assert response.status_code == 200
+        assert b"Unable to sum text fields" in response.content
+
+    @override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
+    def test_aggregation(self, client, dataset_db):
+        num_charts = ChartBuilderChart.objects.count()
+        source = factories.SourceTableFactory(
+            schema="public",
+            table="dataset_test",
+            database=dataset_db,
+            dataset=factories.MasterDataSetFactory.create(
+                published=True, user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
+            ),
+        )
+        response = client.post(
+            reverse("datasets:create_chart_from_grid", args=(source.dataset.id, str(source.id))),
+            {
+                "aggregate": "count",
+                "aggregate_field": "",
+                "group_by": "id",
+                "sort_direction": "ASC",
+                "sort_field": "name",
+                "columns": json.dumps(
+                    [
+                        {"field": "id", "dataType": "numeric"},
+                        {"field": "name", "dataType": "text"},
+                    ]
+                ),
                 "filters": json.dumps(
                     {
                         "name": {
