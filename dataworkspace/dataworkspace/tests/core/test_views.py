@@ -227,7 +227,11 @@ def test_header_links(request_client):
 
     expected_links = [
         ("Data Workspace", "http://dataworkspace.test:8000/"),
-        ("Switch to Data Hub", "https://www.datahub.trade.gov.uk/"),
+        (
+            "Switch to Data Hub",
+            "https://www.datahub.trade.gov.uk/?utm_source=Data%20Workspace"
+            "&utm_medium=referral&utm_campaign=dataflow&utm_content=Switch%20to%20Data%20Hub",
+        ),
         ("Home", "http://dataworkspace.test:8000/"),
         ("Tools", "/tools/"),
         ("About", "/about/"),
@@ -286,34 +290,6 @@ def test_footer_links(request_client):
     ]
 
     assert link_labels == expected_links
-
-
-@pytest.mark.parametrize(
-    "has_tools_access, expected_href, expected_text",
-    (
-        (False, "/request-access/", "Request access to GitLab"),
-        (
-            True,
-            "https://gitlab",
-            "Open GitLab",
-        ),
-    ),
-)
-@override_settings(GITLAB_URL_FOR_TOOLS="https://gitlab")
-@pytest.mark.django_db
-def test_gitlab_access(has_tools_access, expected_href, expected_text):
-    user = UserFactory.create(is_staff=False, is_superuser=False)
-    if has_tools_access:
-        perm = Permission.objects.get(codename="start_all_applications")
-        user.user_permissions.add(perm)
-        user.save()
-
-    client = Client(**get_http_sso_data(user))
-    response = client.get(reverse("applications:tools"))
-
-    soup = BeautifulSoup(response.content.decode(response.charset))
-    gitlab_link = soup.find("a", href=True, text=expected_text)
-    assert gitlab_link.get("href") == expected_href
 
 
 @pytest.mark.parametrize(

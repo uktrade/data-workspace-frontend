@@ -124,3 +124,12 @@ class NotificationType(models.TextChoices):
 class PipelineType(models.TextChoices):
     SQL = "sql", "SQL Pipeline"
     SHAREPOINT = "sharepoint", "Sharepoint Pipeline"
+
+
+class AggregationType(models.TextChoices):
+    NONE = "none", "No aggregation"
+    COUNT = "count", "Count"
+    SUM = "sum", "Sum"
+    AVG = "avg", "Average"
+    MIN = "min", "Minimum"
+    MAX = "max", "Maximum"

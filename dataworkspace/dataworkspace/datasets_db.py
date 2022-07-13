@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import defaultdict, deque
 import hashlib
 import json
 import logging
@@ -9,8 +9,7 @@ import psycopg2
 from psycopg2.sql import Literal, SQL
 import pytz
 from django.conf import settings
-from django.db import connections, transaction
-from django.db.utils import DatabaseError
+from django.db import connections
 
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.utils import TYPE_CODES_REVERSED
@@ -107,27 +106,59 @@ def get_all_tables_last_updated_date(tables: Tuple[Tuple[str, str, str]]):
     }
 
 
-def extract_queried_tables_from_sql_query(database_name, query, statement_timeout=None):
-    # Extract the queried tables from the FROM clause using temporary views
-    with connections[database_name].cursor() as cursor:
-        if statement_timeout:
-            cursor.execute(f"SET statement_timeout = {statement_timeout}")
-        try:
-            with transaction.atomic():
-                cursor.execute(
-                    f"create temporary view get_tables as (select 1 from ({query.strip().rstrip(';')}) sq)"
-                )
-        except DatabaseError as e:
-            logger.error(e)
-            tables = []
-        else:
-            cursor.execute(
-                "select table_schema, table_name from information_schema.view_table_usage where view_name = 'get_tables'"
-            )
-            tables = cursor.fetchall()
-            cursor.execute("drop view get_tables")
+def extract_queried_tables_from_sql_query(query):
+    """
+    Returns a list of (schema, table) tuples extracted from the passed PostgreSQL query
 
-        return tables
+    This does not communicate with a database, and instead uses pglast to parse the
+    query. However, it does not use pglast's built-in functions to extract tables -
+    they're buggy in the cases where CTEs have the same names as tables in the
+    search path.
+
+    This isn't perfect though - it assumes tables without a schema are in the "public"
+    schema, but "public" might not be in the search path, or it might not be the only
+    schema in the search path. However, it's probably fine for our usage where "public"
+    _is_ in the search path, and the only tables without a schema that we care about in
+    our queries are indeed in the public schema - typically only reference dataset tables.
+    """
+
+    try:
+        statements = pglast.parse_sql(query)
+    except pglast.parser.ParseError as e:
+        logger.error(e)
+        return []
+
+    tables = set()
+
+    node_ctenames = deque()
+    node_ctenames.append((statements[0](), ()))
+
+    while node_ctenames:
+        node, ctenames = node_ctenames.popleft()
+
+        if node.get("withClause", None) is not None:
+            if node["withClause"]["recursive"]:
+                ctenames += tuple((cte["ctename"] for cte in node["withClause"]["ctes"]))
+                for cte in node["withClause"]["ctes"]:
+                    node_ctenames.append((cte, ctenames))
+            else:
+                for cte in node["withClause"]["ctes"]:
+                    node_ctenames.append((cte, ctenames))
+                    ctenames += (cte["ctename"],)
+
+        if node.get("@", None) == "RangeVar" and (
+            node["schemaname"] is not None or node["relname"] not in ctenames
+        ):
+            tables.add((node["schemaname"] or "public", node["relname"]))
+
+        for node_type, node_value in node.items():
+            if node_type == "withClause":
+                continue
+            for nested_node in node_value if isinstance(node_value, tuple) else (node_value,):
+                if isinstance(nested_node, dict):
+                    node_ctenames.append((nested_node, ctenames))
+
+    return sorted(list(tables))
 
 
 def get_source_table_changelog(source_table):

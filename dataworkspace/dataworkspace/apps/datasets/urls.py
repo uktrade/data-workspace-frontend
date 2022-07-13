@@ -263,6 +263,11 @@ urlpatterns = [
         name="filter_chart_data",
     ),
     path(
+        "<uuid:dataset_uuid>/aggregate-chart-data/<str:source_id>/",
+        login_required(views.AggregateChartDataViewView.as_view()),
+        name="aggregate_chart_data",
+    ),
+    path(
         "<uuid:dataset_uuid>/grid-chart/<str:source_id>/",
         login_required(views.CreateGridChartView.as_view()),
         name="create_chart_from_grid",

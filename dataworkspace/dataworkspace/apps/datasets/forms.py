@@ -7,15 +7,17 @@ import waffle
 from django import forms
 from django.contrib.auth import get_user_model
 
-from dataworkspace.apps.datasets.constants import DataSetType, TagType
+from dataworkspace.apps.datasets.constants import AggregationType, DataSetType, TagType
 from .models import DataSet, SourceLink, Tag, VisualisationCatalogueItem
-from .search import SORT_CHOICES, SearchDatasetsFilters
+from .search import LEGACY_SORT_FIELD_MAP, SORT_FIELD_MAP, SearchDatasetsFilters
 from ...forms import (
+    GOVUKDesignSystemChoiceField,
     GOVUKDesignSystemForm,
     GOVUKDesignSystemCharField,
     GOVUKDesignSystemModelForm,
     GOVUKDesignSystemRadioField,
     GOVUKDesignSystemRadiosWidget,
+    GOVUKDesignSystemSelectWidget,
     GOVUKDesignSystemTextWidget,
     GOVUKDesignSystemTextareaField,
     GOVUKDesignSystemTextareaWidget,
@@ -148,12 +150,6 @@ class SourceTagField(forms.ModelMultipleChoiceField):
         return obj.name
 
 
-def get_sort_choices():
-    if waffle.switch_is_active("enable_sort_by_popularity"):
-        return [("-average_unique_users_daily,-published_date,name", "Popularity")] + SORT_CHOICES
-    return SORT_CHOICES
-
-
 class DatasetSearchForm(forms.Form):
     SUBSCRIBED = "subscribed"
     BOOKMARKED = "bookmarked"
@@ -226,21 +222,46 @@ class DatasetSearchForm(forms.Form):
         ),
     )
 
-    sort = forms.ChoiceField(
-        required=False,
-        choices=get_sort_choices,
-        widget=SortSelectWidget(label="Sort by", form_group_extra_css="govuk-!-margin-bottom-0"),
-    )
+    def _get_sort_choices(self):
+        return [
+            (k, v["display_name"])
+            for k, v in SORT_FIELD_MAP.items()
+            if (
+                k != "popularity"
+                or waffle.flag_is_active(self.request, "SEARCH_RESULTS_SORT_BY_POPULARITY")
+            )
+        ]
 
     def clean_sort(self):
         data = self.cleaned_data["sort"]
         if not data:
-            data = SORT_CHOICES[0][0]
-
+            data = self._get_sort_choices()[0][0]
         return data
 
     class Media:
         js = ("app-filter-show-more-v2.js",)
+
+    def __init__(self, request, data, *args, **kwargs):
+        # This translation can be removed 1-2 days after rollout
+        # Ensure legacy search field names work with new field names by
+        # translating old field name -> new field name
+        if data.get("sort") in LEGACY_SORT_FIELD_MAP:
+            data = data.copy()
+            data["sort"] = LEGACY_SORT_FIELD_MAP[data["sort"]]
+
+        super().__init__(data, *args, **kwargs)
+
+        # Use a custom mechanism of constructing the sort field to only show the
+        # search by popularity item if a flag is enabled for the current user. When
+        # this gets rolled out to all users, this can be made standard
+        self.request = request
+        self.fields["sort"] = forms.ChoiceField(
+            required=False,
+            choices=self._get_sort_choices(),
+            widget=SortSelectWidget(
+                label="Sort by", form_group_extra_css="govuk-!-margin-bottom-0"
+            ),
+        )
 
     def annotate_and_update_filters(self, datasets, matcher):
         """
@@ -381,7 +402,7 @@ class DatasetSearchForm(forms.Form):
         filters.with_visuals = "withvisuals" in self.cleaned_data.get("admin_filters")
         filters.use = set(self.cleaned_data.get("use"))
         filters.data_type = set(self.cleaned_data.get("data_type", []))
-        filters.sort_type = self.cleaned_data.get("sort")
+        filters.sort_type = SORT_FIELD_MAP.get(self.cleaned_data["sort"])
         filters.source_ids = set(source.id for source in self.cleaned_data.get("source"))
         filters.topic_ids = set(topic.id for topic in self.cleaned_data.get("topic"))
         filters.user_accessible = set(self.cleaned_data.get("user_access", [])) == {"yes"}
@@ -665,3 +686,55 @@ class ChartSourceSelectForm(forms.Form):
         self.fields["source"].choices = (
             (x.id, x.name) for x in dataset.related_objects() if not isinstance(x, SourceLink)
         )
+
+
+class ChartAggregateForm(GOVUKDesignSystemForm):
+    filters = forms.JSONField(widget=forms.HiddenInput(), required=False)
+    sort_direction = forms.CharField(widget=forms.HiddenInput())
+    sort_field = forms.CharField(widget=forms.HiddenInput())
+    columns = forms.JSONField(widget=forms.HiddenInput())
+    aggregate = GOVUKDesignSystemChoiceField(
+        choices=AggregationType.choices,
+        label="Aggregate type",
+        widget=GOVUKDesignSystemSelectWidget(label_is_heading=False),
+    )
+    aggregate_field = GOVUKDesignSystemChoiceField(
+        required=False,
+        label="Aggregate field",
+        widget=GOVUKDesignSystemSelectWidget(
+            label_is_heading=False, attrs={"disabled": "disabled"}
+        ),
+    )
+    group_by = GOVUKDesignSystemChoiceField(
+        required=False,
+        label="Group by",
+        widget=GOVUKDesignSystemSelectWidget(
+            label_is_heading=False, attrs={"disabled": "disabled"}
+        ),
+    )
+
+    def __init__(self, *args, **kwargs):
+        self.column_config = {x["field"]: x["dataType"] for x in kwargs.pop("columns")}
+        super().__init__(*args, **kwargs)
+        self.fields["group_by"].choices = ((x, x) for x in self.column_config.keys())
+        self.fields["aggregate_field"].choices = (
+            (k, f"{k} ({v})") for k, v in self.column_config.items()
+        )
+
+    def clean(self):
+        # Only allow sum/avg/min/max on numeric fields
+        cleaned_data = super().clean()
+        aggregate_type = cleaned_data["aggregate"]
+        aggregate_data_type = self.column_config.get(cleaned_data["aggregate_field"])
+        if (
+            aggregate_type
+            not in [
+                AggregationType.NONE.value,
+                AggregationType.COUNT.value,
+            ]
+            and aggregate_data_type != "numeric"
+        ):
+            err = f"Unable to {aggregate_type} {aggregate_data_type} fields. Select a numeric field to continue"
+            self.fields["aggregate_field"].widget.custom_context["errors"] = [err]
+            raise forms.ValidationError({"aggregate_field": err})
+        return cleaned_data

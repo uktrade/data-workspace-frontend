@@ -1,0 +1,285 @@
+{% load static useful waffle_tags %}
+<!doctype html>
+<html lang="en" class="govuk-template">
+    <head>
+        <meta charset="utf-8">
+        <title>{% block page_title %}Data Workspace{% endblock %}</title>
+        <base href="{{ root_href }}">
+
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+        <meta name="theme-color" content="#0b0c0c">
+        <meta property="og:image" content="{% static 'assets/images/govuk-opengraph-image.png' %}">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+
+        <link rel="shortcut icon" sizes="16x16 32x32 48x48" href="{% static 'assets/images/favicon.ico' %}" type="image/x-icon">
+        <link rel="mask-icon" href="{% static 'assets/images/govuk-mask-icon.svg' %}" color="#0b0c0c">
+        <link rel="apple-touch-icon" sizes="180x180" href="{% static 'assets/images/govuk-apple-touch-icon-180x180.png' %}">
+        <link rel="apple-touch-icon" sizes="167x167" href="{% static 'assets/images/govuk-apple-touch-icon-167x167.png' %}">
+        <link rel="apple-touch-icon" sizes="152x152" href="{% static 'assets/images/govuk-apple-touch-icon-152x152.png' %}">
+        <link rel="apple-touch-icon" href="{% static 'assets/images/govuk-apple-touch-icon.png' %}">
+        <link rel="stylesheet" href="{% static 'data-workspace.css' %}">
+
+        {% if GTM_ENABLED %}
+          {% block initialGTMDataLayer %}
+            <script nonce="{{ request.csp_nonce }}">
+              window.dataLayer = window.dataLayer || [];
+            </script>
+          {% endblock %}
+        {% endif %}
+        {% include 'partials/gtm_head.html' %}
+    </head>
+
+  <body id="body" class="govuk-template__body ">
+      {% include 'partials/gtm_body.html' %}
+        <script nonce="{{ request.csp_nonce }}">
+               document.body.className = document.body.className + ' js-enabled';
+        </script>
+
+    <a href="#main-content" class="govuk-skip-link" data-module="govuk-skip-link">Skip to main content</a>
+      <header class="govuk-header " role="banner" data-module="govuk-header">
+        <div class="govuk-width-container">
+          <div class="govuk-header__logotype">
+            <a href="{{ root_href }}" class="govuk-header__link govuk-header__link--service-name" style="padding-top: 10px;">
+              Data Workspace
+            </a>
+          </div>
+        </div>
+        <div class="govuk-!-padding-top-8 govuk-!-padding-bottom-4" style="background-color:#3370B3;"" id="discover-data">
+          <div class="govuk-width-container">
+            <div class="govuk-grid-row govuk-!-padding-top-4">
+            <div class="govuk-grid-column-one-half govuk-!-padding-right-8">
+              <h2 class="govuk-heading-xl" style="color:white; margin-bottom: 30px">Get started on Data Workspace</h2>
+              <p class="govuk-body" style="color:white; font-size: 24px; line-height: 36px;">Find out more about how you can use Data Workspace to discover, access and analyse data.</p>
+            </div>
+            <div class="govuk-grid-column-one-half govuk-!-padding-bottom-8">
+              <center><video width=100% height=auto max-width=100% controls="controls" type="video/mp4">
+                <source src="/__mirror/data-workspace-assets/Data_Workspace_Intro_Video.mp4">
+              </video></center>
+              <p class="govuk-body govuk-!-padding-top-4" style="color:white;">Watch this short video to find out about the benefits of Data Workspace.</p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="govuk-!-padding-top-8 govuk-!-padding-bottom-8" id="discover-data">
+        <div class="govuk-width-container">
+          <div class="govuk-grid-row">
+            <form id="live-search-form" action="{% url 'datasets:find_datasets' %}" method="get">
+            <div class="govuk-grid-column-full">
+              <h2 class="govuk-heading-l">Discover Data</h2>
+              <div class="govuk-body">Use our searchable data catalogue to explore the 800+ (and growing)
+                datasets we have available. Get started by <a class="govuk-link"
+                href="https://data.trade.gov.uk/datasets/?q=&sort=relevance&user_access=yes" target="_blank">viewing some of our open datasets</a> or search 
+                the data catalogue below. 
+              </div>
+              <div>
+                <p class="govuk-body">Search by dataset name or description</p>
+              </div> 
+              <div class="search-field govuk-!-margin-bottom-2">
+                <br/>
+                  <div class="search-field-wrapper govuk-!-padding-bottom-6">
+                    <input type="search" name="q" id="search" title="Search"
+                      class="govuk-input search-field__item search-field__input js-class-toggle" value="{{ query }}"
+                      aria-controls="search-summary-accessible-hint-wrapper">
+                    <div class="search-field-submit-wrapper search-field__item">
+                      <input class="search-field__submit" type="submit" value="Search">
+                    </div>
+                  </div>
+              </div>
+            </div>
+          </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="govuk-!-padding-top-8 govuk-!-padding-bottom-8" style="background-color:#F6F6F6;" id="easily-access-data">
+        <div class="govuk-width-container">
+          <div class="govuk-grid-row">
+            <div class="govuk-grid-column-one-half">
+                <img width=100% height=auto max-width=100% alt="Access data illustration" src="{% static 'assets/images/easily_access_data.png' %}">
+            </div>
+            <div class="govuk-grid-column-one-half">
+              <h2 class="govuk-heading-l govuk-!-margin-top-8">Easily access data</h2>
+              <p class="govuk-body">You can preview, filter and download data using our enhanced
+                  preview feature, available on all our data catalogue pages.
+              </p>
+              <p class="govuk-body">
+                <a class="govuk-link" href="https://data-services-help.trade.gov.uk/data-workspace/how-to/start-using-data-workspace/filter-and-sort-data/" target="_blank">Watch our video about previewing data.</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="govuk-!-padding-top-8 govuk-!-padding-bottom-8" id="visualise-data">
+        <div class="govuk-width-container">
+          <div class="govuk-grid-row">
+            <div class="govuk-grid-column-one-half">
+              <h2 class="govuk-heading-l">Visualise Data</h2>
+              <p class="govuk-body">Easily visualise data by <a class="govuk-link"
+                href="https://data.trade.gov.uk/charts/" target="_blank">creating your own charts</a>, or view others made by our users.
+              </p> 
+            </div>
+            <div class="govuk-grid-column-one-half">
+                <img width=100% height=auto max-width=100% alt="Visualise data illustration" src="{% static 'assets/images/visualise_data_lp.png' %}">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="govuk-!-padding-top-8 govuk-!-padding-bottom-8" style="background-color:#F6F6F6;" id="automate-reporting">
+        <div class="govuk-width-container">
+          <div class="govuk-grid-row">
+            <div class="govuk-grid-column-one-half">
+              <img width=100% height=auto max-width=100% alt="Automate reporting illustration" src="{% static 'assets/images/automate_reporting.png' %}">
+            </div>
+            <div class="govuk-grid-column-one-half">
+              <h2 class="govuk-heading-l">Automate your reporting</h2>
+              <p class="govuk-body">Design your own dashboards using our data visualisation tools or 
+                <a class="govuk-link" href="https://data.trade.gov.uk/datasets/?q=&sort=relevance&data_type=3" target="_blank">browse existing reports and analyses.</a>
+              </p>
+              <p class="govuk-body">
+                <a class="govuk-link" href="https://data-services-help.trade.gov.uk/data-workspace/how-to/share-and-collaborate/" target="_blank">Share your analysis</a> to collaborate with colleagues.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="govuk-!-padding-top-8 govuk-!-padding-bottom-8" id="upload-and-analyse-data">
+        <div class="govuk-width-container">
+          <div class="govuk-grid-row">
+            <div class="govuk-grid-column-one-half">
+              <h2 class="govuk-heading-l">Upload and analyse data</h2>
+              <p class="govuk-body"><a class="govuk-link"
+                  href="https://data-services-help.trade.gov.uk/data-workspace/how-to/see-tools-specific-guidance/your-files/start-using-your-files/" target="_blank">
+                  Upload your data</a> securely to Data Workspace or 
+                  <a class="govuk-link"
+                  href="https://data-services-help.trade.gov.uk/data-workspace/how-to/use-tools/use-tools/" target="_blank">
+                  use data in the catalogue</a> to do analysis in our tools, such as RStudio, JupyterLab or Theia.
+              </p>
+              <p class="govuk-body">
+                <a class="govuk-link" href="https://data.trade.gov.uk/tools/" target="_blank">Learn more about our tools.</a>
+              </p>
+            </div>
+            <div class="govuk-grid-column-one-half">
+              <center><img alt="Upload and analyse data illustration" src="{% static 'assets/images/upload_and_analyse_data.png' %}" width=auto height=auto max-width="100%"></center>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="govuk-!-padding-top-8 govuk-!-padding-bottom-8" id="find-out-more">
+        <div class="govuk-width-container">
+          <div class="govuk-grid-row">
+            <div class="govuk-grid-column-full">
+              <h2 class="govuk-heading-l">Find out more</h2>
+              <p class="govuk-body">{% include "partials/sideways_arrow.html" %}<a class="govuk-link"
+                href="https://www.learninghub.trade.gov.uk/mod/facetoface/view.php?id=9594" target="_blank">Sign up to one of our intro sessions.</a>
+              </p>
+              <p class="govuk-body">{% include "partials/sideways_arrow.html" %}<a class="govuk-link"
+                href="https://data-services-help.trade.gov.uk/data-workspace/updates/data-workspace-bootcamp/" target="_blank">Register for a Data Workspace Bootcamp.</a>
+              </p>
+              <p class="govuk-body">{% include "partials/sideways_arrow.html" %}<a class="govuk-link"
+                href="{{ TEAMS_DATA_WORKSPACE_COMMUNITY_URL }}" target="_blank">Engage with the Data Workspace Community on Teams.</a>
+              </p>
+              <p class="govuk-body">{% include "partials/sideways_arrow.html" %}<a class="govuk-link"
+                href="https://data.trade.gov.uk/newsletter_subscription/" target="_blank">Subscribe to our newsletter to recieve regular updates on new features and datasets.</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="govuk-footer " role="contentinfo">
+        <div class="govuk-width-container ">
+          <div class="govuk-footer__navigation">
+            <div class="govuk-footer__section">
+              <h2 class="govuk-footer__heading govuk-heading-m">Services and information</h2>
+              <ul class="govuk-footer__list govuk-footer__list--columns-2">
+                <li class="govuk-footer__list-item">
+                  <a class="govuk-footer__link" href="{{ root_href }}">
+                    Home
+                  </a>
+                </li>
+                {% url 'applications:tools' as tools_url %}
+                <li class="govuk-footer__list-item">
+                  <a class="govuk-footer__link" href="{{ tools_url }}">
+                    Tools
+                  </a>
+                </li>
+                {% if can_see_visualisations_tab %}
+                <li class="govuk-footer__list-item">
+                  <a class="govuk-footer__link" href="{{ visualisations_root_url  }}">
+                    Visualisations
+                  </a>
+                </li>
+                {% endif %}
+                {% url 'about' as about_url %}
+                <li class="govuk-footer__list-item">
+                  <a class="govuk-footer__link" href="{{ about_url }}">
+                    About
+                  </a>
+                </li>
+                <li class="govuk-footer__list-item">
+                  <a class="govuk-footer__link"  href="{% url 'support' %}">
+                    Support
+                  </a>
+                </li>
+                <li class="govuk-footer__list-item">
+                  <a class="govuk-footer__link"  href="https://data-services-help.trade.gov.uk/data-workspace" target="_blank" rel="noopener noreferrer">
+                    Help centre <span class="govuk-visually-hidden">(opens in a new tab)</span>
+                  </a>
+                </li>
+                <li class="govuk-footer__list-item">
+                  <a class="govuk-footer__link"  href="{% url 'newsletter_subscription' %}">
+                    {% if IS_SUBSCRIBED_TO_NEWSLETTER %}Unsubscribe from{% else %}Subscribe to{% endif %} newsletter
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        <hr class="govuk-footer__section-break">
+        <div class="govuk-footer__meta">
+          <div class="govuk-footer__meta-item govuk-footer__meta-item--grow">
+            <h2 class="govuk-visually-hidden">Support links</h2>
+            <ul class="govuk-footer__inline-list">
+              <li class="govuk-footer__inline-list-item">
+                <a target="_blank" class="govuk-footer__link" href="https://data-services-help.trade.gov.uk/data-workspace/how-articles/data-workspace-basics/data-workspace-accessibility-statement/">
+                  Accessibility statement
+                </a>
+              </li>
+              <li class="govuk-footer__inline-list-item">
+                <a target="_blank" class="govuk-footer__link" href="https://workspace.trade.gov.uk/working-at-dit/policies-and-guidance/data-workspace-privacy-policy">
+                  Privacy Policy
+                </a>
+              </li>
+            </ul>
+            <svg aria-hidden="true" focusable="false" class="govuk-footer__licence-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 483.2 195.7" height="17" width="41">
+              <path fill="currentColor" d="M421.5 142.8V.1l-50.7 32.3v161.1h112.4v-50.7zm-122.3-9.6A47.12 47.12 0 0 1 221 97.8c0-26 21.1-47.1 47.1-47.1 16.7 0 31.4 8.7 39.7 21.8l42.7-27.2A97.63 97.63 0 0 0 268.1 0c-36.5 0-68.3 20.1-85.1 49.7A98 98 0 0 0 97.8 0C43.9 0 0 43.9 0 97.8s43.9 97.8 97.8 97.8c36.5 0 68.3-20.1 85.1-49.7a97.76 97.76 0 0 0 149.6 25.4l19.4 22.2h3v-87.8h-80l24.3 27.5zM97.8 145c-26 0-47.1-21.1-47.1-47.1s21.1-47.1 47.1-47.1 47.2 21 47.2 47S123.8 145 97.8 145" />
+            </svg>
+            <span class="govuk-footer__licence-description">
+              All content is available under the
+              <a class="govuk-footer__link" href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="license">Open Government Licence v3.0</a>, except where otherwise stated
+            </span>
+          </div>
+          <div class="govuk-footer__meta-item">
+            <a class="govuk-footer__link govuk-footer__copyright-logo" href="https://www.nationalarchives.gov.uk/information-management/re-using-public-sector-information/uk-government-licensing-framework/crown-copyright/">© Crown copyright</a>
+          </div>
+      </div>
+    </footer>
+
+    {% block javascript %}
+      <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}govuk-frontend-3.14.0.min.js"></script>
+      <script nonce="{{ request.csp_nonce }}" src="{% static 'search-v2.js' %}"></script>
+
+    {% block init_govuk_frontend %}
+      <script nonce="{{ request.csp_nonce }}">
+        window.GOVUKFrontend.initAll();
+      </script>
+    {% endblock %}
+
+      {% block footer_additions %} {% endblock footer_additions %}
+    {% endblock %}
+  </body>
+</html>

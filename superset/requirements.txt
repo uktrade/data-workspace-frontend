@@ -180,7 +180,7 @@ multidict==5.1.0
     # via
     #   aiohttp
     #   yarl
-numpy==1.21.0
+numpy==1.22.0
     # via
     #   pandas
     #   pyarrow

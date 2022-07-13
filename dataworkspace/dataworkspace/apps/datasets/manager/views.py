@@ -146,6 +146,27 @@ class DatasetManageSourceTableColumnConfigView(DatasetManageSourceTableView):
             f'{reverse("datasets:manager:upload-validating", args=(source.dataset_id, source.id))}?{urlencode(params)}'
         )
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+
+        ctx["table_columns"] = []
+        for x in ctx["source"].get_column_config():
+            ctx["table_columns"].append(
+                {
+                    "field": x["field"],
+                    "data_type": x["dataType"],
+                }
+            )
+        ctx["file_columns"] = []
+        for x in ctx["form"].column_definitions:
+            ctx["file_columns"].append(
+                {
+                    "field": x["header_name"],
+                    "data_type": x["data_type"],
+                }
+            )
+        return ctx
+
 
 class BaseUploadSourceProcessingView(EditBaseView, TemplateView):
     template_name = "datasets/manager/uploading.html"

@@ -217,7 +217,6 @@ def process_quicksight_dashboard_visualisations():
             )
             last_updated_dates = []
             tables = []
-            database_name = list(settings.DATABASES_DATA.items())[0][0]
 
             for data_set_arn in data_set_arns:
                 try:
@@ -250,7 +249,6 @@ def process_quicksight_dashboard_visualisations():
                                 )
                                 tables.extend(
                                     extract_queried_tables_from_sql_query(
-                                        database_name,
                                         table_map["CustomSql"]["SqlQuery"],
                                     )
                                 )
@@ -285,7 +283,6 @@ def process_quicksight_dashboard_visualisations():
                                 )
                                 tables.extend(
                                     extract_queried_tables_from_sql_query(
-                                        database_name,
                                         table_map["CustomSql"]["SqlQuery"],
                                     )
                                 )
@@ -351,8 +348,6 @@ def link_superset_visualisations_to_related_datasets():
 
     jwt_access_token = login_response.json()["access_token"]
 
-    database_name = list(settings.DATABASES_DATA.items())[0][0]
-
     for visualisation_link in VisualisationLink.objects.filter(
         visualisation_type="SUPERSET", visualisation_catalogue_item__deleted=False
     ):
@@ -386,7 +381,7 @@ def link_superset_visualisations_to_related_datasets():
                 dataset["id"],
             )
 
-            tables.extend(extract_queried_tables_from_sql_query(database_name, dataset["sql"]))
+            tables.extend(extract_queried_tables_from_sql_query(dataset["sql"]))
 
         if tables:
             set_dataset_related_visualisation_catalogue_items(visualisation_link, tables)
@@ -454,7 +449,7 @@ def build_filtered_dataset_query(inner_query, column_config, params):
                 terms[0] = bool(int(terms[0]))
 
             # Arrays are a special case
-            elif data_type == "array":
+            if data_type == "array":
                 if filter_data["type"] == "contains":
                     query_params[field] = terms[0]
                     where_clause.append(
@@ -665,13 +660,11 @@ def store_custom_dataset_query_metadata():
 
 
 def do_store_custom_dataset_query_metadata():
-    statement_timeout = 60
+    statement_timeout = 60 * 1000
     for query in CustomDatasetQuery.objects.filter(dataset__published=True):
         sql = query.query.rstrip().rstrip(";")
 
-        tables = extract_queried_tables_from_sql_query(
-            query.database.memorable_name, sql, statement_timeout=statement_timeout
-        )
+        tables = extract_queried_tables_from_sql_query(sql)
         if not tables:
             logger.info(
                 "Not adding metadata for query %s as no tables could be extracted", query.name
@@ -714,7 +707,17 @@ def do_store_custom_dataset_query_metadata():
                         e,
                     )
                     continue
-                cursor.execute(f"SELECT * FROM ({sql}) sq LIMIT 0")
+
+                try:
+                    cursor.execute(f"SELECT * FROM ({sql}) sq LIMIT 0")
+                except DatabaseError as e:
+                    logger.error(
+                        "Not adding metadata for query %s as querying for columns failed with %s",
+                        query.name,
+                        e,
+                    )
+                    continue
+
                 columns = [(col[0], TYPE_CODES_REVERSED[col[1]]) for col in cursor.description]
 
                 cursor.execute(
@@ -984,3 +987,16 @@ def send_notification_emails():
         logger.error("Exception when creating notifications: %s", e)
     else:
         send_notifications()
+
+
+def get_dataset_table(obj):
+    datasets = set()
+    for table in obj.tables.all():
+        for source_table in SourceTable.objects.filter(dataset__deleted=False).filter(
+            schema=table.schema, table=table.table
+        ):
+            datasets.add(source_table.dataset)
+        if table.schema == "public":
+            for ref_dataset in ReferenceDataset.objects.live().filter(table_name=table.table):
+                datasets.add(ref_dataset)
+    return datasets

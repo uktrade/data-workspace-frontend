@@ -234,6 +234,10 @@ def expected_search_result(catalogue_item, **kwargs):
         "name": catalogue_item.name,
         "slug": catalogue_item.slug,
         "search_rank": mock.ANY,
+        "search_rank_name": mock.ANY,
+        "search_rank_short_description": mock.ANY,
+        "search_rank_tags": mock.ANY,
+        "search_rank_description": mock.ANY,
         "short_description": catalogue_item.short_description,
         "published_date": mock.ANY,
         "source_tag_ids": mock.ANY,
@@ -242,6 +246,7 @@ def expected_search_result(catalogue_item, **kwargs):
         "published": catalogue_item.published,
         "has_access": True,
         "is_bookmarked": False,
+        "table_match": False,
         "is_subscribed": False,
         "has_visuals": mock.ANY,
         "is_open_data": getattr(catalogue_item, "user_access_type", None) == UserAccessType.OPEN,
@@ -284,7 +289,7 @@ def test_find_datasets_combines_results(client):
     )
 
 
-def test_find_datasets_by_source_table_name(client):
+def test_find_datasets_by_source_table_name(client, dataset_db):
     ds = factories.DataSetFactory.create(
         published=True, name="A search dataset", type=DataSetType.MASTER
     )
@@ -294,11 +299,29 @@ def test_find_datasets_by_source_table_name(client):
         table="dataset_test",
         database=factories.DatabaseFactory.create(memorable_name="my_database"),
     )
-    response = client.get(reverse("datasets:find_datasets"), {"q": "dataset_test"})
+    ref_ds = factories.ReferenceDatasetFactory()
 
+    # Source dataset: table name only
+    response = client.get(reverse("datasets:find_datasets"), {"q": "dataset_test"})
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ds, has_access=False, data_type=DataSetType.MASTER),
+        expected_search_result(
+            ds, has_access=False, table_match=True, data_type=DataSetType.MASTER
+        ),
+    ]
+    # Source dataset: schema and table
+    response = client.get(reverse("datasets:find_datasets"), {"q": "public.dataset_test"})
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(
+            ds, has_access=False, table_match=True, data_type=DataSetType.MASTER
+        ),
+    ]
+    # Reference dataset: table
+    response = client.get(reverse("datasets:find_datasets"), {"q": ref_ds.table_name})
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(ref_ds, table_match=True, data_type=DataSetType.REFERENCE),
     ]
 
 
@@ -568,12 +591,19 @@ def test_find_datasets_filters_by_topic(client):
         assert expected in results
 
 
-def test_find_datasets_order_by_name_asc(client):
+@pytest.mark.parametrize(
+    "sort_field",
+    (
+        "name",
+        "alphabetical",
+    ),
+)
+def test_find_datasets_order_by_name_asc(sort_field, client):
     ds1 = factories.DataSetFactory.create(name="a dataset")
     rds = factories.ReferenceDatasetFactory.create(name="b reference dataset")
     vis = factories.VisualisationCatalogueItemFactory.create(name="c visualisation")
 
-    response = client.get(reverse("datasets:find_datasets"), {"sort": "name"})
+    response = client.get(reverse("datasets:find_datasets"), {"sort": sort_field})
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
@@ -583,14 +613,19 @@ def test_find_datasets_order_by_name_asc(client):
     ]
 
 
-def test_find_datasets_order_by_newest_first(client):
+@pytest.mark.parametrize(
+    "sort_field",
+    (
+        "-published_date,-search_rank,name",
+        "-published",
+    ),
+)
+def test_find_datasets_order_by_newest_first(sort_field, client):
     ads1 = factories.DataSetFactory.create(published_at=date.today())
     ads2 = factories.DataSetFactory.create(published_at=date.today() - timedelta(days=3))
     ads3 = factories.DataSetFactory.create(published_at=date.today() - timedelta(days=4))
 
-    response = client.get(
-        reverse("datasets:find_datasets"), {"sort": "-published_date,-search_rank,name"}
-    )
+    response = client.get(reverse("datasets:find_datasets"), {"sort": sort_field})
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
@@ -600,20 +635,83 @@ def test_find_datasets_order_by_newest_first(client):
     ]
 
 
-def test_find_datasets_order_by_oldest_first(client):
+@pytest.mark.parametrize(
+    "sort_field",
+    (
+        "published_date,-search_rank,name",
+        "published",
+    ),
+)
+def test_find_datasets_order_by_oldest_first(sort_field, client):
     ads1 = factories.DataSetFactory.create(published_at=date.today() - timedelta(days=1))
     ads2 = factories.DataSetFactory.create(published_at=date.today() - timedelta(days=2))
     ads3 = factories.DataSetFactory.create(published_at=date.today() - timedelta(days=3))
 
-    response = client.get(
-        reverse("datasets:find_datasets"), {"sort": "published_date,-search_rank,name"}
-    )
+    response = client.get(reverse("datasets:find_datasets"), {"sort": sort_field})
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
         expected_search_result(ads3, has_access=False, data_type=ads3.type),
         expected_search_result(ads2, has_access=False, data_type=ads2.type),
         expected_search_result(ads1, has_access=False, data_type=ads1.type),
+    ]
+
+
+@pytest.mark.django_db
+@override_flag("SEARCH_RESULTS_SORT_BY_RELEVANCE", active=True)
+@pytest.mark.parametrize(
+    "sort_field",
+    (
+        "-is_bookmarked,-table_match,-search_rank_name,-search_rank_short_description"
+        ",-search_rank_tags,-search_rank_description,-search_rank,-published_date,name",
+        "relevance",
+    ),
+)
+def test_find_datasets_order_by_relevance_prioritises_bookmarked_datasets(sort_field):
+    user = factories.UserFactory.create(is_superuser=False)
+    client = Client(**get_http_sso_data(user))
+    bookmarked_master = factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER,
+        name="Master bookmarked",
+    )
+    factories.DataSetBookmarkFactory.create(user=user, dataset=bookmarked_master)
+    unbookmarked_master = factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER,
+        name="Master",
+    )
+
+    # If there is no search query, then if sorting by relevance, the default, datasets
+    # bookmarked by the current user are most likely to be relevant, and so should be
+    # at the top
+    sort = (
+        "-is_bookmarked,-table_match,-search_rank_name,-search_rank_short_description"
+        ",-search_rank_tags,-search_rank_description,-search_rank,-published_date,name"
+    )
+    response = client.get(reverse("datasets:find_datasets"), {"sort": sort})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(bookmarked_master, has_access=False, is_bookmarked=True),
+        expected_search_result(unbookmarked_master, has_access=False),
+    ]
+
+    # If there is a search query, and sorting by relevance, the bookmarked state of
+    # datasets should not be taken into account, since the user has probably just seen
+    # their bookmarks on the front page and they weren't helpful. In this case both
+    # dataset names match the search query, but the extra word in bookmarked_master
+    # means the normalisation on length makes it treated as less relevant
+    sort = (
+        "-is_bookmarked,-table_match,-search_rank_name,-search_rank_short_description"
+        ",-search_rank_tags,-search_rank_description,-search_rank,-published_date,name"
+    )
+    response = client.get(reverse("datasets:find_datasets"), {"sort": sort, "q": "master"})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(unbookmarked_master, has_access=False),
+        expected_search_result(bookmarked_master, has_access=False, is_bookmarked=True),
     ]
 
 
@@ -1899,7 +1997,7 @@ class TestVisualisationsDetailView:
         assert response.status_code == 200
         assert vis.name in response_content
 
-        assert "to ask any questions or report problems with this dashboard." in response_content
+        assert "to ask any questions about this dashboard." in response_content
 
         assert get_govuk_summary_list_value(doc, "Update frequency") == "N/A"
         assert get_govuk_summary_list_value(doc, "Summary") == vis.short_description
@@ -4076,20 +4174,96 @@ class TestChartViews:
         assert response.status_code == 302
 
     @override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
-    def test_create_chart_from_grid(self, client, dataset_db):
-        num_charts = ChartBuilderChart.objects.count()
+    def test_aggregation_from_grid(self, client, dataset_db):
         source = factories.SourceTableFactory(
             schema="public",
             table="dataset_test",
             database=dataset_db,
-            dataset=factories.DataSetFactory.create(
+            dataset=factories.MasterDataSetFactory.create(
+                published=True, user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
+            ),
+        )
+        response = client.post(
+            reverse("datasets:aggregate_chart_data", args=(source.dataset.id, str(source.id))),
+            {
+                "columns": ["id", "name"],
+                "filters": json.dumps(
+                    {
+                        "name": {
+                            "filter": "last",
+                            "filterType": "text",
+                            "type": "contains",
+                        }
+                    }
+                ),
+            },
+        )
+        assert response.status_code == 200
+        assert b"Aggregate source table" in response.content
+
+    @override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
+    def test_aggregation_invalid_field(self, client, dataset_db):
+        source = factories.SourceTableFactory(
+            schema="public",
+            table="dataset_test",
+            database=dataset_db,
+            dataset=factories.MasterDataSetFactory.create(
                 published=True, user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
             ),
         )
         response = client.post(
             reverse("datasets:create_chart_from_grid", args=(source.dataset.id, str(source.id))),
             {
-                "columns": ["id", "name"],
+                "aggregate": "sum",
+                "aggregate_field": "name",
+                "group_by": "id",
+                "sort_direction": "ASC",
+                "sort_field": "name",
+                "columns": json.dumps(
+                    [
+                        {"field": "id", "dataType": "numeric"},
+                        {"field": "name", "dataType": "text"},
+                    ]
+                ),
+                "filters": json.dumps(
+                    {
+                        "name": {
+                            "filter": "last",
+                            "filterType": "text",
+                            "type": "contains",
+                        }
+                    }
+                ),
+            },
+        )
+        assert response.status_code == 200
+        assert b"Unable to sum text fields" in response.content
+
+    @override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
+    def test_aggregation(self, client, dataset_db):
+        num_charts = ChartBuilderChart.objects.count()
+        source = factories.SourceTableFactory(
+            schema="public",
+            table="dataset_test",
+            database=dataset_db,
+            dataset=factories.MasterDataSetFactory.create(
+                published=True, user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
+            ),
+        )
+        response = client.post(
+            reverse("datasets:create_chart_from_grid", args=(source.dataset.id, str(source.id))),
+            {
+                "aggregate": "count",
+                "aggregate_field": "",
+                "group_by": "id",
+                "sort_direction": "ASC",
+                "sort_field": "name",
+                "columns": json.dumps(
+                    [
+                        {"field": "id", "dataType": "numeric"},
+                        {"field": "name", "dataType": "text"},
+                    ]
+                ),
                 "filters": json.dumps(
                     {
                         "name": {

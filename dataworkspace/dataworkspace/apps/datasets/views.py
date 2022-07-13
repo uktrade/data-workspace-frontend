@@ -1,11 +1,8 @@
-import csv
-import io
 import json
 import logging
 import uuid
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict, namedtuple
-from contextlib import closing
 from itertools import chain
 from typing import Set
 
@@ -19,7 +16,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.core import serializers
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
-from django.core.serializers.json import DjangoJSONEncoder
 from django.db import connections, ProgrammingError
 from django.db.models import (
     Count,
@@ -73,9 +69,11 @@ from dataworkspace.apps.core.models import (
 from dataworkspace.apps.datasets.constants import (
     DataSetType,
     DataLinkType,
+    AggregationType,
 )
 from dataworkspace.apps.datasets.constants import TagType
 from dataworkspace.apps.datasets.forms import (
+    ChartAggregateForm,
     ChartSourceSelectForm,
     DatasetEditForm,
     DatasetSearchForm,
@@ -94,7 +92,6 @@ from dataworkspace.apps.datasets.models import (
     PendingAuthorizedUsers,
     MasterDataset,
     ReferenceDataset,
-    ReferenceDatasetField,
     SourceLink,
     SourceView,
     VisualisationCatalogueItem,
@@ -192,11 +189,10 @@ def _get_tags_as_dict():
 
 @require_GET
 def find_datasets(request):
-
     ###############
     # Validate form
 
-    form = DatasetSearchForm(request.GET)
+    form = DatasetSearchForm(request, request.GET)
 
     if not form.is_valid():
         logger.warning(form.errors)
@@ -381,6 +377,15 @@ class DatasetDetailView(DetailView):
 
     @csp_update(frame_src=settings.QUICKSIGHT_DASHBOARD_HOST)
     def get(self, request, *args, **kwargs):
+        log_event(
+            request.user,
+            EventLog.TYPE_DATASET_VIEW,
+            self.get_object(),
+            extra={
+                "path": request.get_full_path(),
+                "reference_dataset_version": self.get_object().published_at,
+            },
+        )
         return super().get(request, *args, **kwargs)
 
     def _get_source_text(self, model):
@@ -634,67 +639,19 @@ def toggle_bookmark(request, dataset_uuid):
 
 
 class ReferenceDatasetDownloadView(DetailView):
-    model = ReferenceDataset
-
-    def get_object(self, queryset=None):
-        return find_dataset(self.kwargs["dataset_uuid"], self.request.user, ReferenceDataset)
-
-    def get(self, request, *args, **kwargs):
-        dl_format = self.kwargs.get("format")
-        if dl_format not in ["json", "csv"]:
-            raise Http404
-        ref_dataset = self.get_object()
-        records = []
-        for record in ref_dataset.get_records():
-            record_data = {}
-            for field in ref_dataset.fields.all():
-                if field.data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
-                    relationship = getattr(record, field.relationship_name)
-                    record_data[field.name] = (
-                        getattr(
-                            relationship,
-                            field.linked_reference_dataset_field.column_name,
-                        )
-                        if relationship
-                        else None
-                    )
-                else:
-                    record_data[field.name] = getattr(record, field.column_name)
-            records.append(record_data)
-
-        response = HttpResponse()
-        response["Content-Disposition"] = "attachment; filename={}-{}.{}".format(
-            ref_dataset.slug, ref_dataset.published_version, dl_format
-        )
-
+    def post(self, request, *args, **kwargs):
+        dataset = find_dataset(self.kwargs.get("dataset_uuid"), request.user, ReferenceDataset)
         log_event(
             request.user,
             EventLog.TYPE_REFERENCE_DATASET_DOWNLOAD,
-            ref_dataset,
+            dataset,
             extra={
                 "path": request.get_full_path(),
-                "reference_dataset_version": ref_dataset.published_version,
-                "download_format": dl_format,
+                "reference_dataset_version": dataset.published_version,
+                "format": self.kwargs.get("format"),
             },
         )
-        ref_dataset.number_of_downloads = F("number_of_downloads") + 1
-        ref_dataset.save(update_fields=["number_of_downloads"])
-
-        if dl_format == "json":
-            response["Content-Type"] = "application/json"
-            response.write(json.dumps(list(records), cls=DjangoJSONEncoder))
-        else:
-            response["Content-Type"] = "text/csv"
-            with closing(io.StringIO()) as outfile:
-                writer = csv.DictWriter(
-                    outfile,
-                    fieldnames=ref_dataset.export_field_names,
-                    quoting=csv.QUOTE_NONNUMERIC,
-                )
-                writer.writeheader()
-                writer.writerows(records)
-                response.write(outfile.getvalue())  # pylint: disable=no-member
-        return response
+        return HttpResponse(status=200)
 
 
 class SourceLinkDownloadView(DetailView):
@@ -973,6 +930,15 @@ class ReferenceDatasetColumnDetails(View):
 class ReferenceDatasetGridView(View):
     def get(self, request, dataset_uuid):
         dataset = find_dataset(dataset_uuid, request.user, ReferenceDataset)
+        log_event(
+            request.user,
+            EventLog.TYPE_REFERENCE_DATASET_VIEW,
+            dataset,
+            extra={
+                "path": request.get_full_path(),
+                "reference_dataset_version": dataset.published_version,
+            },
+        )
         return render(
             request,
             "datasets/reference_dataset_grid.html",
@@ -1735,7 +1701,7 @@ class FilterChartDataView(WaffleFlagMixin, DetailView):
         return source
 
 
-class CreateGridChartView(WaffleFlagMixin, View):
+class AggregateChartDataViewView(WaffleFlagMixin, View):
     waffle_flag = settings.CHART_BUILDER_BUILD_CHARTS_FLAG
 
     def post(self, request, dataset_uuid, source_id, *args, **kwargs):
@@ -1747,30 +1713,124 @@ class CreateGridChartView(WaffleFlagMixin, View):
         filters = {}
         for filter_data in [json.loads(x) for x in request.POST.getlist("filters")]:
             filters.update(filter_data)
-        column_config = [
+
+        columns = [
             x
             for x in source.get_column_config()
             if x["field"] in request.POST.getlist("columns", [])
         ]
 
-        post_data = {
-            "filters": filters,
-            "sortDir": request.POST.get("sortDir", "ASC"),
-            "sortField": request.POST.get("sortField", column_config[0]["field"]),
-        }
+        return render(
+            request,
+            "datasets/charts/aggregate.html",
+            context={
+                "dataset": dataset,
+                "source": source,
+                "form": ChartAggregateForm(
+                    columns=columns,
+                    initial={
+                        "columns": columns,
+                        "filters": filters,
+                        "sort_direction": request.POST.get("sortDir", "ASC"),
+                        "sort_field": request.POST.get("sortField", "1"),
+                    },
+                ),
+            },
+        )
+
+
+class CreateGridChartView(WaffleFlagMixin, View):
+    waffle_flag = settings.CHART_BUILDER_BUILD_CHARTS_FLAG
+
+    def post(self, request, dataset_uuid, source_id, *args, **kwargs):
+        dataset = find_dataset(dataset_uuid, self.request.user)
+        source = dataset.get_related_source(source_id)
+        if source is None:
+            raise Http404
+
+        columns = json.loads(request.POST.get("columns"))
+        form = ChartAggregateForm(
+            request.POST,
+            columns=columns,
+            initial={
+                "columns": columns,
+            },
+        )
+
+        if not form.is_valid():
+            # Ideally we would redirect here but we need to keep the json
+            # post data from the grid and so we just re-display the form
+            # to let the user correct errors
+            return render(
+                request,
+                "datasets/charts/aggregate.html",
+                context={
+                    "dataset": dataset,
+                    "source": source,
+                    "form": form,
+                },
+            )
+
+        chart_data = form.cleaned_data
+
         original_query = source.get_data_grid_query()
         query, params = build_filtered_dataset_query(
             original_query,
-            column_config,
-            post_data,
+            json.loads(request.POST.get("columns", "[]")),
+            {
+                "filters": chart_data["filters"],
+                "sortDir": chart_data["sort_direction"],
+                "sortField": chart_data["sort_field"],
+            },
         )
+
+        if chart_data["aggregate"] != AggregationType.NONE.value:
+            query = (
+                sql.SQL("SELECT {{}}, {{}}({{}}) FROM (").format(
+                    sql.Identifier(chart_data["group_by"]),
+                    sql.Identifier(chart_data["aggregate"]),
+                    sql.Literal("*")
+                    if chart_data["aggregate"] == "count"
+                    else sql.Identifier(chart_data["aggregate_field"]),
+                )
+                + query
+                + sql.SQL(") a ")
+                + sql.SQL("GROUP by 1;")
+            )
+
         db_name = list(settings.DATABASES_DATA.items())[0][0]
         with connections[db_name].cursor() as cursor:
             full_query = cursor.mogrify(query, params).decode()
+
         chart = ChartBuilderChart.objects.create_from_sql(str(full_query), request.user, db_name)
+        chart.chart_config.update(
+            {
+                "xaxis": {"type": "category", "autorange": True},
+                "yaxis": {"type": "linear", "autorange": True},
+                "traces": [
+                    {
+                        "meta": {
+                            "columnNames": {
+                                "x": chart_data["group_by"],
+                                "y": chart_data["aggregate"],
+                            }
+                        },
+                        "mode": "markers",
+                        "name": "Plot 0",
+                        "type": "bar",
+                        "xsrc": chart_data["group_by"],
+                        "ysrc": chart_data["aggregate"],
+                        "labelsrc": chart_data["group_by"],
+                        "valuesrc": chart_data["aggregate"],
+                    }
+                ],
+            }
+        )
+        chart.save()
         run_chart_builder_query.delay(chart.id)
         return HttpResponseRedirect(
-            f"{chart.get_edit_url()}?prev={request.META.get('HTTP_REFERER')}"
+            f"{chart.get_edit_url()}?prev="
+            + reverse("datasets:filter_chart_data", args=(dataset.id, source.id))
         )
 
 
