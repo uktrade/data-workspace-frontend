@@ -95,8 +95,11 @@
           </p>
         {% endflag %}
       {% endif %}
+
       {% if related_data %}
-        <aside class="app-related-items" role="complementary">
+      <aside class="app-related-items" role="complementary">
+        <p class="govuk-body sidebar-section">
+
           <h3 class="govuk-heading-s" id="subsection-title">
             Related Data
           </h3>
@@ -118,43 +121,42 @@
               {% endif %}
             </ul>
           </nav>
-        </aside>
+      </aside>
       {% endif %}
-        <aside class="govuk-!-margin-top-8" role="complementary">
-          <h3 class="govuk-heading-s" id="subsection-title">
-            Related dashboards
-          </h3>
-          {% if related_visualisations %}
-            <nav role="navigation" aria-labelledby="subsection-title">
-              <ul class="govuk-list">
-                {% for dataset in related_visualisations|slice:":4" %}
-                  <li>
-                    {% include "partials/related_data_link.html" with dataset=dataset css_classname="related-dashboard" %}
-                  </li>
-                {% endfor %}
 
-                {% if related_visualisations|length > 4 %}
-                  <li class="govuk-!-margin-top-4">
-                    <a href="{% url "datasets:related_visualisations" dataset_uuid=model.id %}"
-                      class="govuk-link govuk-link--no-visited-state">
-                      Show all related dashboards
-                    </a>
-                  </li>
-                  {% endif %}
-              </ul>
-            </nav>
-          {% else %}
-            <p class="govuk-body">
-              This data currently has no related dashboards.
-            </p>
-          {% endif %}
-          <p class="govuk-body">
-            <small>If you'd like to create a dashboard using this data then you can see                   
-            <a href="https://data-services-help.trade.gov.uk/data-workspace/how-to/see-tools-specific-guidance/quicksight/create-a-dashboard/"
-            class="govuk-link govuk-link--no-visited-state">
-            how to create a dashboard with Quicksight.</a></small>
-          </p>
-          <p class="govuk-body sidebar-section">
+      <aside class="app-related-items" role="complementary">
+      <h3 class="govuk-heading-s govuk-!-margin-top-2" id="subsection-title">Related dashboards</h3>
+      {% if related_visualisations %}
+        <nav role="navigation" aria-labelledby="subsection-title">
+          <ul class="govuk-list">
+            {% for dataset in related_visualisations|slice:":4" %}
+              <li>
+                {% include "partials/related_data_link.html" with dataset=dataset css_classname="related-dashboard" %}
+              </li>
+            {% endfor %}
+
+            {% if related_visualisations|length > 4 %}
+              <li class="govuk-!-margin-top-4">
+                <a href="{% url "datasets:related_visualisations" dataset_uuid=model.id %}"
+                  class="govuk-link govuk-link--no-visited-state">
+                  Show all related dashboards
+                </a>
+              </li>
+              {% endif %}
+          </ul>
+        </nav>
+      {% else %}
+        <p class="govuk-body">
+          This data currently has no related dashboards.
+        </p>
+      {% endif %}
+      <p class="govuk-body">
+        <small>If you'd like to create a dashboard using this data then you can see                   
+        <a href="https://data-services-help.trade.gov.uk/data-workspace/how-to/see-tools-specific-guidance/quicksight/create-a-dashboard/"
+        class="govuk-link govuk-link--no-visited-state">
+        how to create a dashboard with Quicksight.</a></small>
+      </p>
+      <p class="govuk-body sidebar-section"></p>
     </div>
   </div>
 
