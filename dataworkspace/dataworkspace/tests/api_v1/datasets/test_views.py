@@ -485,7 +485,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             information_asset_manager=factories.UserFactory(),
             personal_data="personal",
             retention_policy="retention",
-            dictionary_published="dictionary",
+            dictionary_published=True
         )
         factories.SourceTableFactory(dataset=master_dataset, schema="public", table="test_table1")
         factories.SourceTableFactory(dataset=master_dataset, schema="public", table="test_table1")
