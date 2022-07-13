@@ -135,22 +135,24 @@ def _matches_filters(
     user_inaccessible: bool = False,
     selected_user_datasets: Set = None,
 ):
-    subscribed_or_bookmarked = set()
+    users_datasets = set()
     if data["is_bookmarked"]:
-        subscribed_or_bookmarked.add("bookmarked")
+        users_datasets.add("bookmarked")
     if data["is_subscribed"]:
-        subscribed_or_bookmarked.add("subscribed")
+        users_datasets.add("subscribed")
+    if data["is_owner"]:
+        users_datasets.add("owned")
 
     return (
         (
             not selected_user_datasets
             or selected_user_datasets == [None]
-            or set(selected_user_datasets).intersection(subscribed_or_bookmarked)
+            or set(selected_user_datasets).intersection(users_datasets)
         )
         and (
             not selected_user_datasets
             or selected_user_datasets == [None]
-            or set(selected_user_datasets).intersection(subscribed_or_bookmarked)
+            or set(selected_user_datasets).intersection(users_datasets)
         )
         and (unpublished or data["published"])
         and (not opendata or data["is_open_data"])

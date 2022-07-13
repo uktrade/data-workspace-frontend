@@ -254,6 +254,7 @@ def expected_search_result(catalogue_item, **kwargs):
         "topics": mock.ANY,
         "last_updated": mock.ANY,
         "average_unique_users_daily": mock.ANY,
+        "is_owner": False,
     }
     result.update(**kwargs)
     return result
@@ -1235,6 +1236,55 @@ def test_find_datasets_filters_by_access_and_use_only_returns_the_dataset_once(
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [expected_search_result(access_granted_master)]
+
+
+@pytest.mark.django_db
+def test_find_datasets_filters_by_asset_ownership(user, client):
+    ds1 = factories.DataSetFactory.create(
+        name="Dataset",
+        information_asset_manager=user,
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+    )
+    ds2 = factories.ReferenceDatasetFactory.create(name="Reference")
+    ds3 = factories.VisualisationCatalogueItemFactory.create(
+        name="Visualisation", user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
+    )
+
+    # All available datasets
+    response = client.get(reverse("datasets:find_datasets"))
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(ds1, is_owner=True),
+        expected_search_result(ds2),
+        expected_search_result(ds3),
+    ]
+
+    # User is IAM
+    response = client.get(reverse("datasets:find_datasets"), {"my_datasets": "owned"})
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(ds1, is_owner=True),
+    ]
+
+    # User is IAO
+    ds3.information_asset_owner = user
+    ds3.save()
+    response = client.get(reverse("datasets:find_datasets"), {"my_datasets": "owned"})
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(ds1, is_owner=True),
+        expected_search_result(ds3, is_owner=True),
+    ]
+
+    # User is IAM and IAO
+    ds1.information_asset_owner = user
+    ds1.save()
+    response = client.get(reverse("datasets:find_datasets"), {"my_datasets": "owned"})
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(ds1, is_owner=True),
+        expected_search_result(ds3, is_owner=True),
+    ]
 
 
 @pytest.mark.parametrize(

@@ -153,6 +153,7 @@ class SourceTagField(forms.ModelMultipleChoiceField):
 class DatasetSearchForm(forms.Form):
     SUBSCRIBED = "subscribed"
     BOOKMARKED = "bookmarked"
+    OWNED = "owned"
 
     q = forms.CharField(required=False)
 
@@ -180,6 +181,7 @@ class DatasetSearchForm(forms.Form):
         choices=[
             (BOOKMARKED, "My bookmarks"),
             (SUBSCRIBED, "My subscriptions"),
+            (OWNED, "Data I own or manage"),
         ],
         required=False,
         widget=AccordionFilterWidget("My datasets"),
