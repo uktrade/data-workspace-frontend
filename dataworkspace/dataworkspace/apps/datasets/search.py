@@ -74,9 +74,6 @@ SORT_FIELD_MAP = {
     },
 }
 
-# Legacy fields to be deleted
-LEGACY_SORT_FIELD_MAP = {",".join(v["fields"]): k for k, v in SORT_FIELD_MAP.items()}
-
 
 class SearchDatasetsFilters:
     unpublished: bool

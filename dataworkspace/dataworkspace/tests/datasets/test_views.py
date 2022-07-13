@@ -593,10 +593,7 @@ def test_find_datasets_filters_by_topic(client):
 
 @pytest.mark.parametrize(
     "sort_field",
-    (
-        "name",
-        "alphabetical",
-    ),
+    ("alphabetical",),
 )
 def test_find_datasets_order_by_name_asc(sort_field, client):
     ds1 = factories.DataSetFactory.create(name="a dataset")
@@ -615,10 +612,7 @@ def test_find_datasets_order_by_name_asc(sort_field, client):
 
 @pytest.mark.parametrize(
     "sort_field",
-    (
-        "-published_date,-search_rank,name",
-        "-published",
-    ),
+    ("-published",),
 )
 def test_find_datasets_order_by_newest_first(sort_field, client):
     ads1 = factories.DataSetFactory.create(published_at=date.today())
@@ -637,10 +631,7 @@ def test_find_datasets_order_by_newest_first(sort_field, client):
 
 @pytest.mark.parametrize(
     "sort_field",
-    (
-        "published_date,-search_rank,name",
-        "published",
-    ),
+    ("published",),
 )
 def test_find_datasets_order_by_oldest_first(sort_field, client):
     ads1 = factories.DataSetFactory.create(published_at=date.today() - timedelta(days=1))
@@ -658,14 +649,9 @@ def test_find_datasets_order_by_oldest_first(sort_field, client):
 
 
 @pytest.mark.django_db
-@override_flag("SEARCH_RESULTS_SORT_BY_RELEVANCE", active=True)
 @pytest.mark.parametrize(
     "sort_field",
-    (
-        "-is_bookmarked,-table_match,-search_rank_name,-search_rank_short_description"
-        ",-search_rank_tags,-search_rank_description,-search_rank,-published_date,name",
-        "relevance",
-    ),
+    ("relevance",),
 )
 def test_find_datasets_order_by_relevance_prioritises_bookmarked_datasets(sort_field):
     user = factories.UserFactory.create(is_superuser=False)
@@ -685,10 +671,7 @@ def test_find_datasets_order_by_relevance_prioritises_bookmarked_datasets(sort_f
     # If there is no search query, then if sorting by relevance, the default, datasets
     # bookmarked by the current user are most likely to be relevant, and so should be
     # at the top
-    sort = (
-        "-is_bookmarked,-table_match,-search_rank_name,-search_rank_short_description"
-        ",-search_rank_tags,-search_rank_description,-search_rank,-published_date,name"
-    )
+    sort = ("relevance",)
     response = client.get(reverse("datasets:find_datasets"), {"sort": sort})
 
     assert response.status_code == 200
@@ -702,10 +685,7 @@ def test_find_datasets_order_by_relevance_prioritises_bookmarked_datasets(sort_f
     # their bookmarks on the front page and they weren't helpful. In this case both
     # dataset names match the search query, but the extra word in bookmarked_master
     # means the normalisation on length makes it treated as less relevant
-    sort = (
-        "-is_bookmarked,-table_match,-search_rank_name,-search_rank_short_description"
-        ",-search_rank_tags,-search_rank_description,-search_rank,-published_date,name"
-    )
+    sort = ("relevance",)
     response = client.get(reverse("datasets:find_datasets"), {"sort": sort, "q": "master"})
 
     assert response.status_code == 200
