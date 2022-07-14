@@ -451,9 +451,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             if dataset.enquiries_contact
             else None,
             "is_draft": dataset.is_draft if dataset.type == DataSetType.REFERENCE else None,
-            "dictionary_published": dataset.dictionary_published
-            if dataset.type == DataSetType.MASTER
-            else None,
+            "dictionary_published": getattr(dataset, "dictionary_published", None),
             "licence": dataset.licence or None,
             "purpose": purpose,
             "source_tags": [t.name for t in dataset.tags.all()] if dataset.tags.all() else None,
@@ -485,6 +483,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             information_asset_manager=factories.UserFactory(),
             personal_data="personal",
             retention_policy="retention",
+            dictionary_published=True,
         )
         factories.SourceTableFactory(dataset=master_dataset, schema="public", table="test_table1")
         factories.SourceTableFactory(dataset=master_dataset, schema="public", table="test_table1")
