@@ -43,9 +43,7 @@
       </div>
 
       <div class="govuk-button-group govuk-!-margin-top-5" id="launch-jupyter-lab">
-          <form action="{{ application_url where nice_name == 'Jupyter Lab' }}" method="GET" style="display: inline-block" target="_blank">
-            <button class="govuk-button">Open <span class="govuk-visually-hidden"></span>Jupyter Lab</button>
-          </form>
+          <a class="govuk-button" href="{{ application_url }}" target="_blank" >Open <span class="govuk-visually-hidden"></span>JupyterLab</a>
           <a href="{{ tools_url }}" class="govuk-link govuk-link--no-visited-state">View all tools</a>
       </div>
     </div>
@@ -59,9 +57,7 @@
       </div>
 
       <div class="govuk-button-group govuk-!-margin-top-5"" id="launch-r-studio">
-        <form action="{{ application_url where nice_name == 'Rstudio' }}" method="GET" style="display: inline-block" target="_blank">
-          <button class="govuk-button">Open <span class="govuk-visually-hidden"></span>R Studio</button>
-        </form>
+        <a class="govuk-button" href="{{ application_url }}" target="_blank" >Open <span class="govuk-visually-hidden"></span>R Studio</a>
         <a href="{{ tools_url }}" class="govuk-link govuk-link--no-visited-state">View all tools</a>
       </div>
     </div>
