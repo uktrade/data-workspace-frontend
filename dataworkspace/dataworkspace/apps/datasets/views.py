@@ -409,7 +409,7 @@ class DatasetDetailView(DetailView):
         master_datasets_info = [
             MasterDatasetInfo(
                 source_table=source_table,
-                code_snippets=get_code_snippets_for_table(source_table),
+                code_snippets=get_code_snippets_for_table(self.request, source_table),
                 columns=datasets_db.get_columns(
                     source_table.database.memorable_name,
                     schema=source_table.schema,
@@ -472,7 +472,7 @@ class DatasetDetailView(DetailView):
                 datacut_link=datacut_link,
                 can_show_link=datacut_link.can_show_link_for_user(self.request.user),
                 code_snippets=(
-                    get_code_snippets_for_query(datacut_link.query)
+                    get_code_snippets_for_query(self.request, datacut_link.query)
                     if hasattr(datacut_link, "query")
                     else None
                 ),
