@@ -1,81 +1,96 @@
 {% extends 'explorer/base.html' %}
-
+{% load static %}
 {% block title %}Data Explorer - Queries{% endblock %}
 {% block content %}
-<h1 class="govuk-heading-xl govuk-!-margin-bottom-6">Saved queries</h1>
-
-<p class="govuk-body govuk-!-margin-bottom-7">You can see your saved and recently run queries on this page.</p>
-    
-<div class="govuk-grid-row">
-  <div class="govuk-grid-column-full-from-desktop">
-    {% if recent_queries|length > 0 %}
-    <h2 class="govuk-heading-l">
-      Your most recently run queries
-    </h2>
-
-    <table class="govuk-table">
-      <thead class="govuk-table__head">
-	<tr class="govuk-table__row">
-	  <th scope="col" class="govuk-table__header">Query title</th>
-	  <th scope="col" class="govuk-table__header" style="width: 25%">Date and time run</th>
-	</tr>
-      </thead>
-      <tbody class="govuk-table__body">
-	{% for object in recent_queries %}
-	<tr class="govuk-table__row">
-	  <td class="govuk-table__cell">
-	    <a class="govuk-link" href="{% url 'explorer:query_detail' object.query_id %}">
-	      {{ object.query.title }}
-	    </a>
-	  </td>
-	  <td class="govuk-table__cell">{{ object.run_at|date:"SHORT_DATETIME_FORMAT" }}</td>
-	</tr>
-	{% endfor %}
-      </tbody>
-    </table>
-    
-    {% endif %}
+  <h1 class="govuk-heading-xl govuk-!-margin-bottom-6">Saved queries</h1>
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full-from-desktop">
+      <table class="govuk-table enhanced-table" data-size-to-fit>
+        <thead class="govuk-table__head">
+          <tr class="govuk-table__row">
+            <th
+              scope="col"
+              class="govuk-table__header"
+              data-sortable
+              data-renderer="htmlRenderer"
+            >
+              Query title
+            </th>
+            <th
+              scope="col"
+              class="govuk-table__header"
+              data-sortable
+              data-renderer="dateRenderer"
+            >
+              Date created
+            </th>
+            <th
+              scope="col"
+              class="govuk-table__header"
+              data-sortable
+              data-renderer="datetimeRenderer"
+            >
+              Date and time last run
+            </th>
+            <th
+              scope="col"
+              class="govuk-table__header"
+              data-sortable
+              data-column-type="numericColumn"
+              data-max-width="150"
+            >
+              Run count
+            </th>
+            <th
+              scope="col"
+              class="govuk-table__header"
+              data-renderer="htmlRenderer"
+            >
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody class="govuk-table__body">
+          {% for object in object_list %}
+            <tr>
+              <td class="name govuk-table__cell">
+                <a class="govuk-link" href="{% url 'explorer:query_detail' object.id %}">
+                  {{ object.title }}
+                </a>
+              </td>
+              <td class="govuk-table__cell">
+                {{ object.created_at|date:"Y-m-d" }}
+              </td>
+              <td class="govuk-table__cell">
+                {{ object.last_run_at|date:"Y-m-d H:i" }}
+              </td>
+              <td class="govuk-table__cell">
+                {{ object.run_count }}
+              </td>
+              <td class="govuk-table__cell">
+                <a class="govuk-link govuk-!-margin-right-2 govuk-!-display-inline-block" href="{% url 'explorer:index' %}?query_id={{ object.id }}">Run</a>
+                <a class="govuk-link govuk-!-margin-right-2 govuk-!-display-inline-block" href="{% url 'explorer:query_detail' object.id %}">Edit</a>
+                <a class="govuk-link govuk-!-margin-right-2 govuk-!-display-inline-block" href="{% url 'explorer:share_query' %}?query_id={{ object.id }}">Share</a>
+                <a class="govuk-link govuk-!-margin-right-2 govuk-!-display-inline-block" href="{% url 'explorer:query_delete' object.id %}">Delete</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
-  
-  <div class="govuk-grid-column-full-from-desktop">
-    <h2 class="govuk-heading-l govuk-!-margin-top-9">Your queries</h2>
-
-    <table class="govuk-table">
-      <thead class="govuk-table__head">
-	<tr class="govuk-table__row">
-	  <th scope="col" class="govuk-table__header" style="width: 30%">Query title</th>
-	  <th scope="col" class="govuk-table__header" style="width: 20%">Date created</th>
-	  <th scope="col" class="govuk-table__header" style="width: 20%">Run count</th>
-	  <th scope="col" class="govuk-table__header">Actions</th>
-	</tr>
-      </thead>
-      <tbody class="govuk-table__body">
-	{% for object in object_list %}
-	<tr>
-        <td class="name govuk-table__cell">
-          <a class="govuk-link" href="{% url 'explorer:query_detail' object.id %}">
-            {{ object.title }}
-          </a>
-        </td>
-        <td class="govuk-table__cell">
-          {{ object.created_at|date:"SHORT_DATE_FORMAT" }}
-        </td>
-        <td class="govuk-table__cell">
-          {{ object.run_count }}
-        </td>
-        <td class="govuk-table__cell">
-          <a class="govuk-link govuk-!-margin-right-4 govuk-!-display-inline-block" href="{% url 'explorer:index' %}?query_id={{ object.id }}">Run</a>
-          <a class="govuk-link govuk-!-margin-right-4 govuk-!-display-inline-block" href="{% url 'explorer:share_query' %}?query_id={{ object.id }}">Share</a>
-          <a class="govuk-link govuk-!-margin-right-4 govuk-!-display-inline-block" href="{% url 'explorer:query_delete' object.id %}">Delete</a>
-        </td>
-	</tr>
-	{% endfor %}
-	
-      </tbody>
-    </table>
-    
-  </div>
-  
-</div>
 
 {% endblock content %}
+{% block javascript %}
+  {{ block.super }}
+  <script src="{% static 'ag-grid-community.min.js' %}"></script>
+  <script src="{% static 'dayjs.min.js' %}"></script>
+  <script src="{% static 'js/grid-utils.js' %}"></script>
+  <script src="{% static 'js/enhanced-table.js' %}"></script>
+  <link rel="stylesheet" type="text/css" href="{% static 'data-grid.css' %}"/>
+  <script nonce="{{ request.csp_nonce }}">
+    document.addEventListener('DOMContentLoaded', () => {
+      initEnhancedTable("enhanced-table");
+    });
+  </script>
+{% endblock javascript %}
