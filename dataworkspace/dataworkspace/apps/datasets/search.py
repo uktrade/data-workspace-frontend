@@ -186,6 +186,8 @@ def _get_datasets_data_for_user_matching_query(
 
     datasets = _annotate_combined_published_date(datasets)
 
+    datasets = _annotate_is_owner(datasets, user)
+
     return datasets.values(
         id_field,
         "name",
@@ -208,6 +210,7 @@ def _get_datasets_data_for_user_matching_query(
         "is_subscribed",
         "published_date",
         "average_unique_users_daily",
+        "is_owner",
     )
 
 
@@ -509,6 +512,28 @@ def _annotate_has_access(datasets, user):
                 )
             ),
         )
+    return datasets
+
+
+def _annotate_is_owner(datasets, user):
+    """
+    Adds a boolean annotation to queryset which is set to True if the user
+    is an IAO or IAM of a dataset
+    @param datasets: django querysey
+    @param user: request.user
+    @return:
+    """
+    datasets = datasets.annotate(
+        is_owner=BoolOr(
+            Case(
+                When(
+                    Q(information_asset_owner=user) | Q(information_asset_manager=user), then=True
+                ),
+                default=False,
+                output_field=BooleanField(),
+            )
+        ),
+    )
     return datasets
 
 
