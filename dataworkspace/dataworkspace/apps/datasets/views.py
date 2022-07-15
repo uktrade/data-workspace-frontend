@@ -149,11 +149,6 @@ def _matches_filters(
             or selected_user_datasets == [None]
             or set(selected_user_datasets).intersection(users_datasets)
         )
-        and (
-            not selected_user_datasets
-            or selected_user_datasets == [None]
-            or set(selected_user_datasets).intersection(users_datasets)
-        )
         and (unpublished or data["published"])
         and (not opendata or data["is_open_data"])
         and (not withvisuals or data["has_visuals"])
