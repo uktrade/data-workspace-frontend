@@ -47,6 +47,7 @@ class CatalogueItemSerializer(serializers.Serializer):
     source_tables = serializers.SerializerMethodField()
     slug = serializers.CharField()
     is_draft = serializers.BooleanField(source="draft")
+    dictionary_published = serializers.BooleanField(source="dictionary")
 
     def to_representation(self, instance):
         instance = super().to_representation(instance)
