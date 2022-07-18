@@ -402,5 +402,15 @@ p.sidebar-section {
   font-size: 1rem;
 }
 
+.sticky-button-container {
+  position:sticky;
+  bottom:0;
+  background-color:#efefef;
+  overflow:hidden;
+  top:30px;
+  padding: 0 1rem;
+
+}
+
 @import "filters";
 @import "search";

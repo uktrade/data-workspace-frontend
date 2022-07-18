@@ -15,7 +15,7 @@
             </a>
           </li>
           <li class="govuk-breadcrumbs__list-item">
-            <a href="{% url "datasets:data_dictionary" source_uuid=source_object.id %}?dataset_uuid={{ dataset.id  }}"
+            <a href="{% url "datasets:data_dictionary" source_uuid=dictionary.source_object_id %}?dataset_uuid={{ dataset.id  }}"
             class="govuk-link govuk-link--no-visited-state">
             Data dictionary
             </a>
@@ -31,7 +31,7 @@
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-l">Edit data dictionary</h1>
       <p class="govuk-body govuk-body-m" style="float:left">
-        "{{ source_object.schema }}"."{{ source_object.table }}"
+        "{{ dictionary.schema_name }}"."{{ dictionary.table_name }}"
         </p>
     </div>
   </div>
@@ -49,15 +49,15 @@
         </tr>
         </thead>
         <tbody>
-            {% for name, data_type, definition in dictionary %}
+            {% for item in dictionary.items %}
             <tr class="govuk-table__row">
-                    <th scope="row" class="govuk-table__header js-schema-column-{{ forloop.counter }}">{{ name }}</th>
+                    <th scope="row" class="govuk-table__header js-schema-column-{{ forloop.counter }}">{{ item.name }}</th>
                 <td class="govuk-table__cell">
-                    {{ data_type }}
+                    {{ item.data_type }}
                 </td>
                 <td class="govuk-table__cell">
                     <div class="govuk-form-group">
-                        <textarea class="govuk-textarea" id="field_{{ name }}" name="{{ name }}" rows="5" maxlength="1024" aria-describedby="more-detail-hint">{{ definition.description }}</textarea>
+                        <textarea class="govuk-textarea" id="field_{{ item.name }}" name="{{ item.name }}" rows="5" maxlength="1024" aria-describedby="more-detail-hint">{{ item.definition }}</textarea>
                     </div>
                     {{ form.definition }}
                 </td>
@@ -65,9 +65,9 @@
             {% endfor %}
         </tbody>
       </table>
-      <div style="position:sticky;bottom:0;background-color:white;overflow:hidden;top:30px;overflow:hidden;top:30px" class="govuk-!-padding-top-4">
+      <div class="sticky-button-container govuk-!-padding-top-4">
         <div class="govuk-button-group" style="float:right">
-            <a href="{% url "datasets:data_dictionary" source_uuid=source_object.id %}?dataset_uuid={{ dataset.id }}"
+            <a href="{% url "datasets:data_dictionary" source_uuid=dictionary.source_object_id %}?dataset_uuid={{ dataset.id }}"
             class="govuk-link govuk-link--no-visited-state">
             Cancel changes
             </a>

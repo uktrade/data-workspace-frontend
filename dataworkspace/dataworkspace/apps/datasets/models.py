@@ -1229,6 +1229,10 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             or self.record_sort_order != self._original_sort_order
         )
 
+    @property
+    def dictionary_published(self):
+        return True
+
     def manage_published(self, create):
         if not self.published:
             return

@@ -3,7 +3,9 @@ from django.urls import include, path
 from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.datasets import models, views
 from dataworkspace.apps.datasets.subscriptions import views as subscription_views
+from dataworkspace.apps.datasets.data_dictionary import views as data_dictionary_views
 from dataworkspace.apps.request_access.views import DatasetAccessRequest
+
 
 urlpatterns = [
     path("", login_required(views.find_datasets), name="find_datasets"),
@@ -286,17 +288,17 @@ urlpatterns = [
     ),
     path(
         "data-dictionary/<uuid:source_uuid>",
-        login_required(views.DataDictionaryView.as_view()),
+        login_required(data_dictionary_views.DataDictionaryView.as_view()),
         name="data_dictionary",
     ),
     path(
         "<uuid:dataset_uuid>/edit-data-dictionary/<uuid:source_uuid>",
-        login_required(views.DataDictionaryEditView.as_view()),
+        login_required(data_dictionary_views.DataDictionaryEditView.as_view()),
         name="edit_data_dictionary",
     ),
     path(
         "<str:schema_name>/find-data-dictionary/<str:table_name>",
-        login_required(views.find_data_dictionary_view),
+        login_required(data_dictionary_views.find_data_dictionary_view),
         name="find_data_dictionary",
     ),
 ]

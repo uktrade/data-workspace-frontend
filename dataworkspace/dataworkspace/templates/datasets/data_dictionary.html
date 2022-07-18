@@ -27,12 +27,12 @@
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-l">Data dictionary</h1>
       <p class="govuk-body govuk-body-m">
-        "{{ source_object.schema }}"."{{ source_object.table }}"
+        "{{ dictionary.schema_name }}"."{{ dictionary.table_name }}"
       </p>
       {% if dataset %}
       <p class="govuk-body govuk-body-m">
         {% if request.user|can_edit_dataset:dataset %}
-        <a href="{% url "datasets:edit_data_dictionary" dataset_uuid=dataset.id source_uuid=source_object.id %}"
+        <a href="{% url "datasets:edit_data_dictionary" dataset_uuid=dataset.id source_uuid=dictionary.source_object_id %}"
         class="govuk-link govuk-link--no-visited-state">
         Edit dictionary
         </a>
@@ -53,14 +53,14 @@
         </tr>
         </thead>
         <tbody>
-            {% for name, data_type, definition in dictionary %}
+            {% for item in dictionary.items %}
             <tr class="govuk-table__row">
-                    <th scope="row" class="govuk-table__header js-schema-column-{{ forloop.counter }}">{{ name }}</th>
+                    <th scope="row" class="govuk-table__header js-schema-column-{{ forloop.counter }}">{{ item.name }}</th>
                 <td class="govuk-table__cell">
-                    {{ data_type }}
+                    {{ item.data_type }}
                 </td>
                 <td class="govuk-table__cell">
-                {{ definition.description }}
+                {{ item.definition }}
                 </td>
             </tr>
             {% endfor %}

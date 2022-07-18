@@ -186,8 +186,16 @@
           <td class="govuk-table__cell app-table_cell--no-border">
             <a class="govuk-link"
                href="{% url "datasets:reference_dataset_grid" dataset_uuid=model.uuid %}">
-              View/Download
+              View table
             </a>
+            <br>
+
+            <a href="{% url "datasets:data_dictionary" source_uuid=model.uuid %}?dataset_uuid={{model.uuid}}"
+              class="govuk-link">
+              Data dictionary
+            </a>
+
+
           </td>
           {% flag DATASET_CHANGELOG_PAGE_FLAG %}
             <td class="govuk-table__cell app-table_cell--no-border">
