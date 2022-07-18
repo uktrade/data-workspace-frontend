@@ -1889,13 +1889,13 @@ class DataDictionaryView(DataDictionaryBaseView):
         if request.GET.get("dataset_uuid"):
             dataset = find_dataset(request.GET.get("dataset_uuid"), self.request.user, DataSet)
 
-        columns, fields, dictionary = self.get_dictionary(source_table)
+        _, _, dictionary = self.get_dictionary(source_table)
 
         return render(
             request,
             "datasets/data_dictionary.html",
             context={
-                "source_table": source_table,
+                "source_object": source_table,
                 "dataset": dataset,
                 "dictionary": dictionary,
             },
@@ -1921,13 +1921,13 @@ class DataDictionaryEditView(DataDictionaryBaseView):
         source_table = get_object_or_404(SourceTable, pk=source_uuid)
         dataset = find_dataset(dataset_uuid, self.request.user, DataSet)
 
-        columns, fields, dictionary = self.get_dictionary(source_table)
+        _, _, dictionary = self.get_dictionary(source_table)
 
         return render(
             request,
             "datasets/edit_data_dictionary.html",
             context={
-                "source_table": source_table,
+                "source_object": source_table,
                 "dataset": dataset,
                 "dictionary": dictionary,
             },

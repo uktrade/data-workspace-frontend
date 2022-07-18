@@ -27,12 +27,12 @@
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-l">Data dictionary</h1>
       <p class="govuk-body govuk-body-m">
-        "{{ source_table.schema }}"."{{ source_table.table }}"
+        "{{ source_object.schema }}"."{{ source_object.table }}"
       </p>
       {% if dataset %}
       <p class="govuk-body govuk-body-m">
         {% if request.user|can_edit_dataset:dataset %}
-        <a href="{% url "datasets:edit_data_dictionary" dataset_uuid=dataset.id source_uuid=source_table.id %}"
+        <a href="{% url "datasets:edit_data_dictionary" dataset_uuid=dataset.id source_uuid=source_object.id %}"
         class="govuk-link govuk-link--no-visited-state">
         Edit dictionary
         </a>
