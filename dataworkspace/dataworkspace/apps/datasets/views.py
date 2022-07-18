@@ -1897,8 +1897,6 @@ class DataDictionaryView(DataDictionaryBaseView):
             context={
                 "source_table": source_table,
                 "dataset": dataset,
-                "columns": columns,
-                "fields": fields,
                 "dictionary": dictionary,
             },
         )
@@ -1931,8 +1929,6 @@ class DataDictionaryEditView(DataDictionaryBaseView):
             context={
                 "source_table": source_table,
                 "dataset": dataset,
-                "columns": columns,
-                "fields": fields,
                 "dictionary": dictionary,
             },
         )
