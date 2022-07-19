@@ -410,8 +410,8 @@ p.sidebar-section {
     padding: 1rem 1rem 0 1rem;
     //set a negative horizontal margin to widen the container
     //margin:0 -4rem;
-    background-color:#f3f2f1;
-    border: solid 1px #b1b4b6;
+    background-color:govuk-colour("light-grey");
+    border: solid 1px $govuk-border-colour;
     overflow:hidden;
   }
 

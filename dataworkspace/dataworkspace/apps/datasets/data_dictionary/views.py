@@ -61,7 +61,6 @@ class DataDictionaryView(View):
 
 class DataDictionaryEditView(View):
     def dispatch(self, request, *args, **kwargs):
-
         dataset_uuid = self.kwargs.get("dataset_uuid")
         dataset = find_dataset(dataset_uuid, self.request.user)
         if (
@@ -76,7 +75,6 @@ class DataDictionaryEditView(View):
         return super().dispatch(request, *args, **kwargs)
 
     def get(self, request, dataset_uuid, source_uuid):
-        # source_table = get_object_or_404(SourceTable, pk=source_uuid)
         logger.info("Looking for a dataset with id = %s", dataset_uuid)
         dataset = find_dataset(dataset_uuid, self.request.user)
 
