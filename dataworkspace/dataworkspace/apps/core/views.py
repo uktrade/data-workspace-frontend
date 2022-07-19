@@ -3,6 +3,7 @@ import os
 
 from botocore.exceptions import ClientError
 from django.conf import settings
+from django.contrib import messages
 from django.http import (
     HttpResponse,
     HttpResponseBadRequest,
@@ -18,14 +19,17 @@ from django.urls import reverse
 from django.views import View
 from django.views.generic import FormView
 from requests import HTTPError
-
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.forms import (
+    NewsletterSubscriptionForm,
     SupportForm,
     TechnicalSupportForm,
     UserSatisfactionSurveyForm,
 )
-from dataworkspace.apps.core.models import UserSatisfactionSurvey
+from dataworkspace.apps.core.models import (
+    UserSatisfactionSurvey,
+    NewsletterSubscription,
+)
 from dataworkspace.apps.core.storage import S3FileStorage
 from dataworkspace.apps.core.utils import (
     StreamingHttpResponseWithoutDjangoDbConnection,
@@ -84,6 +88,10 @@ def about_page_view(request):
     return render(request, "about.html", {}, status=200)
 
 
+def welcome_page_view(request):
+    return render(request, "welcome.html", {}, status=200)
+
+
 class SupportView(FormView):
     form_class = SupportForm
     template_name = "core/support.html"
@@ -114,6 +122,67 @@ class SupportView(FormView):
             self.request.user, cleaned["email"], cleaned["message"], tag=tag
         )
         return HttpResponseRedirect(reverse("support-success", kwargs={"ticket_id": ticket_id}))
+
+
+class NewsletterSubscriptionView(View):
+    def _get_subscription_info(self, user):
+        subscribed = False
+        email = user.email
+
+        try:
+            subscription = NewsletterSubscription.objects.get(user=user)
+
+            subscribed = subscription.is_active
+            email = (
+                subscription.email_address if subscription.is_active else self.request.user.email
+            )
+        except NewsletterSubscription.DoesNotExist:
+            pass
+
+        return subscribed, email
+
+    def get(self, request):
+        subscribed, email = self._get_subscription_info(request.user)
+        return render(
+            request,
+            "core/newsletter_subscription.html",
+            context={
+                "is_currently_subscribed": subscribed,
+                "form": NewsletterSubscriptionForm(initial={"email": email}),
+            },
+        )
+
+    def post(self, request):
+        form = NewsletterSubscriptionForm(data=request.POST)
+
+        if not form.is_valid():
+            subscribed, _ = self._get_subscription_info(self.request.user)
+            messages.error(request, "Form not valid")
+            return render(
+                request,
+                "core/newsletter_subscription.html",
+                context={
+                    "is_currently_subscribed": subscribed,
+                    "form": form,
+                },
+            )
+
+        subscription, _ = NewsletterSubscription.objects.get_or_create(user=request.user)
+
+        should_subscribe = form.cleaned_data.get("submit_action") == "subscribe"
+        subscription.is_active = should_subscribe
+
+        if should_subscribe:
+            subscription.email_address = form.cleaned_data.get("email")
+
+        subscription.save()
+
+        messages.success(
+            request,
+            "You have %s the newsletter"
+            % ("subscribed to" if should_subscribe else "unsubscribed from"),
+        )
+        return HttpResponseRedirect(reverse("root"))
 
 
 class UserSatisfactionSurveyView(FormView):

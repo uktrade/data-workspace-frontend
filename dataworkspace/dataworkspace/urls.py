@@ -11,6 +11,7 @@ from dataworkspace.apps.core.views import (
     RestoreTableDAGTaskStatusView,
     TechnicalSupportView,
     about_page_view,
+    welcome_page_view,
     public_error_403_csrf_html_view,
     public_error_403_html_view,
     public_error_403_invalid_tool_user_html_view,
@@ -19,6 +20,7 @@ from dataworkspace.apps.core.views import (
     public_error_500_html_view,
     healthcheck_view,
     SupportView,
+    NewsletterSubscriptionView,
     table_data_view,
     UserSatisfactionSurveyView,
     ServeS3UploadedFileView,
@@ -40,6 +42,7 @@ admin.site.login = login_required(admin.site.login)
 urlpatterns = [
     path("", login_required(find_datasets), name="root"),
     path("about/", login_required(about_page_view), name="about"),
+    path("welcome/", login_required(welcome_page_view), name="welcome"),
     path("error_403", public_error_403_html_view),
     path("error_403_csrf", public_error_403_csrf_html_view),
     path("error_403_tool_access", public_error_403_tool_permission_denied_html_view),
@@ -125,6 +128,11 @@ urlpatterns = [
         "feedback/",
         login_required(UserSatisfactionSurveyView.as_view()),
         name="feedback",
+    ),
+    path(
+        "newsletter_subscription/",
+        login_required(NewsletterSubscriptionView.as_view()),
+        name="newsletter_subscription",
     ),
     path(
         "case-studies/",

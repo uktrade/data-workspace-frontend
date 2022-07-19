@@ -58,6 +58,7 @@ docker-check-migrations:
 
 .PHONY: check-black
 check-black:
+	@black --version
 	black --check .
 
 .PHONY: check-pylint
@@ -109,7 +110,7 @@ docker-test-integration-local:
 	if [ -z "$$TEST_DIR" ]; \
 		then TEST_DIR="/test"; \
  	fi; \
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run data-workspace-test bash -c "DJANGO_SETTINGS_MODULE=dataworkspace.settings.integration_tests pytest -x -v $$TEST_DIR --disable-warnings"
+	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test bash -c "DJANGO_SETTINGS_MODULE=dataworkspace.settings.integration_tests pytest -x -v $$TEST_DIR --disable-warnings"
 
 .PHONY: docker-test-local
 docker-test-local: docker-test-unit-local docker-test-integration-local

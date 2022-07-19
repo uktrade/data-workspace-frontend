@@ -26,7 +26,40 @@
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
-      <h1 class="govuk-heading-xl">Choose data types for {{ form.table_name.value }}</h1>
+      <h1 class="govuk-heading-xl">Choose data types for {{ source.name }}</h1>
+
+      {% if form.column_definitions|length != source.get_column_config|length %}
+      <div class="govuk-grid-column-full">
+        <h4 class="govuk-heading-s">Column number mismatch</h4>
+        <p class="govuk-body">
+          Your CSV upload contains a different number of columns to the existing table.
+          <br>
+          This may break associated datacuts and dashboards.
+        </p>
+            <div class="govuk-error-summary__body">
+              <ul class="govuk-list govuk-error-message">
+                {% for column in table_columns %}
+                  {% if column not in file_columns %} 
+                    {{ column.field }} ({{ column.data_type }}) has been removed 
+                    <br>
+                  {% endif %}
+                {% endfor %}
+                {% for column in file_columns %}
+                  {% if column not in table_columns %} 
+                    {{ column.field }} ({{ column.data_type }}) has been added
+                    <br>
+                  {% endif %}
+                {% endfor %}
+              </ul>
+            </div>
+            <div class="button-wrap">
+              <a class="govuk-button govuk-button--secondary" href="{% url 'datasets:manager:manage-source-table' source.dataset_id source.id %}">
+              Back
+            </a>
+            </div>
+          </div>
+        </div>
+      {% endif %}
       {% include 'design_system/error_summary.html' with form=form %}
       <form method="POST" novalidate>
         {% csrf_token %}

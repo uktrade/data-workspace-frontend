@@ -93,7 +93,7 @@ def test_create_pipeline_validates_drop_statement(mock_sync, staff_client):
         data={"type": "sql", "table_name": "test", "sql": "DROP TABLE foo;"},
         follow=True,
     )
-    assert b"DROP statements are not supported" in resp.content
+    assert b"Only SELECT statements are supported" in resp.content
 
 
 @mock.patch("dataworkspace.apps.datasets.pipelines.views.save_pipeline_to_dataflow")
@@ -104,7 +104,7 @@ def test_create_pipeline_validates_create_statement(mock_sync, staff_client):
         data={"type": "sql", "table_name": "test", "sql": "CREATE TABLE foo (f1 int);"},
         follow=True,
     )
-    assert b"CREATE statements are not supported" in resp.content
+    assert b"Only SELECT statements are supported" in resp.content
 
 
 @mock.patch("dataworkspace.apps.datasets.pipelines.views.save_pipeline_to_dataflow")

@@ -69,7 +69,7 @@ from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.core.charts.models import ChartBuilderChart
 from dataworkspace.apps.your_files.models import UploadedTable
 from dataworkspace.datasets_db import (
-    get_tables_last_updated_date,
+    get_earliest_tables_last_updated_date,
 )
 
 
@@ -242,6 +242,7 @@ class DataSet(DeletableTimestampedUserModel):
     )
     published = models.BooleanField(default=False)
     published_at = models.DateField(null=True, blank=True)
+    dictionary_published = models.BooleanField(default=False)
     eligibility_criteria = ArrayField(models.CharField(max_length=256), null=True)
     number_of_downloads = models.PositiveIntegerField(default=0)
     tags = models.ManyToManyField(Tag, related_name="+", blank=True)
@@ -269,12 +270,19 @@ class DataSet(DeletableTimestampedUserModel):
         default=list,
         help_text="Comma-separated list of domain names without spaces, e.g trade.gov.uk,fco.gov.uk",
     )
-    search_vector = SearchVectorField(null=True, blank=True)
+    search_vector_english = SearchVectorField(null=True, blank=True)
+    search_vector_english_name = SearchVectorField(null=True, blank=True)
+    search_vector_english_short_description = SearchVectorField(null=True, blank=True)
+    search_vector_english_tags = SearchVectorField(null=True, blank=True)
+    search_vector_english_description = SearchVectorField(null=True, blank=True)
+
     subscriptions = GenericRelation(DataSetSubscription)
+
+    average_unique_users_daily = models.FloatField(default=0)
 
     class Meta:
         db_table = "app_dataset"
-        indexes = (GinIndex(fields=["search_vector"]),)
+        indexes = (GinIndex(fields=["search_vector_english"]),)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -309,13 +317,20 @@ class DataSet(DeletableTimestampedUserModel):
 
         tag_names = " ".join([x.name for x in self.tags.all()])
         DataSet.objects.filter(id=self.id).update(
-            search_vector=(
-                SearchVector("name", weight="A")
-                + SearchVector("short_description", weight="B")
-                + SearchVector(models.Value(tag_names), weight="C")
-                + SearchVector("description", weight="D")
-                + SearchVector("acronyms", weight="D")
-            )
+            search_vector_english=(
+                SearchVector("name", weight="A", config="english")
+                + SearchVector("short_description", weight="B", config="english")
+                + SearchVector(models.Value(tag_names), weight="C", config="english")
+                + SearchVector("description", weight="D", config="english")
+                + SearchVector("acronyms", weight="D", config="english")
+            ),
+            search_vector_english_name=SearchVector("name", config="english"),
+            search_vector_english_short_description=SearchVector(
+                "short_description", config="english"
+            ),
+            search_vector_english_tags=SearchVector(models.Value(tag_names), config="english"),
+            search_vector_english_description=SearchVector("description", config="english")
+            + SearchVector("acronyms", config="english"),
         )
 
     def related_objects(self):
@@ -707,7 +722,7 @@ class SourceTable(BaseSource):
         return DataLinkType.SOURCE_TABLE
 
     def get_data_last_updated_date(self):
-        return get_tables_last_updated_date(
+        return get_earliest_tables_last_updated_date(
             self.database.memorable_name, ((self.schema, self.table),)
         )
 
@@ -759,6 +774,22 @@ class SourceTable(BaseSource):
         return UploadedTable.objects.filter(schema=self.schema, table_name=self.table).order_by(
             "-data_flow_execution_date"
         )
+
+
+class SourceTableFieldDefinition(models.Model):
+    field = models.CharField(
+        max_length=63,
+        blank=False,
+        validators=[RegexValidator(regex=r"^[a-zA-Z][a-zA-Z0-9_\.]*$")],
+    )
+    description = models.CharField(
+        max_length=1024,
+        blank=True,
+        null=True,
+    )
+    source_table = models.ForeignKey(
+        SourceTable, on_delete=models.CASCADE, related_name="field_definitions"
+    )
 
 
 class SourceView(BaseSource):
@@ -970,7 +1001,7 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
     def get_data_last_updated_date(self):
         tables = CustomDatasetQueryTable.objects.filter(query=self)
         if tables:
-            return get_tables_last_updated_date(
+            return get_earliest_tables_last_updated_date(
                 self.database.memorable_name,
                 tuple((table.schema, table.table) for table in tables),
             )
@@ -1158,8 +1189,17 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     # Used as a parallel to DataSet.type, which will help other parts of the codebase
     # easily distinguish between reference datasets, datacuts, master datasets and visualisations.
     type = DataSetType.REFERENCE
-    search_vector = SearchVectorField(null=True, blank=True)
+    search_vector_english = SearchVectorField(null=True, blank=True)
+    search_vector_english_name = SearchVectorField(null=True, blank=True)
+    search_vector_english_short_description = SearchVectorField(null=True, blank=True)
+    search_vector_english_tags = SearchVectorField(null=True, blank=True)
+    search_vector_english_description = SearchVectorField(null=True, blank=True)
+
     subscriptions = GenericRelation(DataSetSubscription)
+
+    average_unique_users_daily = models.FloatField(default=0)
+
+    events = GenericRelation(EventLog)
 
     class Meta:
         db_table = "app_referencedataset"
@@ -1170,7 +1210,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                 "Manage (create, view, edit) unpublished reference datasets",
             )
         ]
-        indexes = (GinIndex(fields=["search_vector"]),)
+        indexes = (GinIndex(fields=["search_vector_english"]),)
 
     def __str__(self):
         return self.name
@@ -1210,6 +1250,9 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                 self.published_minor_version += 1
             self.major_version = self.published_major_version
             self.minor_version = self.published_minor_version
+
+    def send_post_data_url(self):
+        return reverse("datasets:reference_dataset_download", args=(self.uuid, "csv"))
 
     @transaction.atomic
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
@@ -1252,12 +1295,20 @@ class ReferenceDataset(DeletableTimestampedUserModel):
 
         tag_names = " ".join([x.name for x in self.tags.all()])
         ReferenceDataset.objects.filter(id=self.id).update(
-            search_vector=(
-                SearchVector("name", weight="A")
-                + SearchVector("short_description", weight="B")
-                + SearchVector("acronyms", weight="D")
-                + SearchVector(models.Value(tag_names), weight="C")
-            )
+            search_vector_english=(
+                SearchVector("name", weight="A", config="english")
+                + SearchVector("short_description", weight="B", config="english")
+                + SearchVector(models.Value(tag_names), weight="C", config="english")
+                + SearchVector("description", weight="D", config="english")
+                + SearchVector("acronyms", weight="D", config="english")
+            ),
+            search_vector_english_name=SearchVector("name", config="english"),
+            search_vector_english_short_description=SearchVector(
+                "short_description", config="english"
+            ),
+            search_vector_english_tags=SearchVector(models.Value(tag_names), config="english"),
+            search_vector_english_description=SearchVector("description", config="english")
+            + SearchVector("acronyms", config="english"),
         )
 
     @transaction.atomic
@@ -2192,7 +2243,12 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     licence_url = models.CharField(
         null=True, blank=True, max_length=1024, help_text="Link to license (optional)"
     )
-    search_vector = SearchVectorField(null=True, blank=True)
+    average_unique_users_daily = models.FloatField(default=0)
+    search_vector_english = SearchVectorField(null=True, blank=True)
+    search_vector_english_name = SearchVectorField(null=True, blank=True)
+    search_vector_english_short_description = SearchVectorField(null=True, blank=True)
+    search_vector_english_tags = SearchVectorField(null=True, blank=True)
+    search_vector_english_description = SearchVectorField(null=True, blank=True)
 
     class Meta:
         permissions = [
@@ -2201,7 +2257,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
                 "Manage (create, view, edit) unpublished visualisations",
             )
         ]
-        indexes = (GinIndex(fields=["search_vector"]),)
+        indexes = (GinIndex(fields=["search_vector_english"]),)
 
     def get_admin_edit_url(self):
         return reverse("admin:datasets_visualisationcatalogueitem_change", args=(self.id,))
@@ -2225,12 +2281,18 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
 
         tag_names = " ".join([x.name for x in self.tags.all()])
         VisualisationCatalogueItem.objects.filter(id=self.id).update(
-            search_vector=(
-                SearchVector("name", weight="A")
-                + SearchVector("short_description", weight="B")
-                + SearchVector(models.Value(tag_names), weight="C")
-                + SearchVector("description", weight="D")
-            )
+            search_vector_english=(
+                SearchVector("name", weight="A", config="english")
+                + SearchVector("short_description", weight="B", config="english")
+                + SearchVector(models.Value(tag_names), weight="C", config="english")
+                + SearchVector("description", weight="D", config="english")
+            ),
+            search_vector_english_name=SearchVector("name", config="english"),
+            search_vector_english_short_description=SearchVector(
+                "short_description", config="english"
+            ),
+            search_vector_english_tags=SearchVector(models.Value(tag_names), config="english"),
+            search_vector_english_description=SearchVector("description", config="english"),
         )
 
     def get_visualisation_links(self, request):

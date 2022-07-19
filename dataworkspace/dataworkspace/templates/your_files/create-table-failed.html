@@ -6,16 +6,20 @@
       <h1 class="govuk-heading-l">
         We can’t process your CSV file
       </h1>
-      <p class="govuk-body">
-        Your file, {{ filename }}, cannot be processed. Please check the following before you try again.
-      </p>
-      <div class="govuk-inset-text">
-        <ul class="govuk-list govuk-list--bullet">
-          <li>Make sure the file uploaded is a CSV file</li>
-          <li>All rows in your file must have the same number of columns</li>
-          <li>Column names must be unique</li>
-        </ul>
-      </div>
+      {% if error_message_template %}
+        {% include error_message_template %}
+      {% else %}
+        <p class="govuk-body">
+          Your file, {{ filename }}, cannot be processed. Please check the following before you try again.
+        </p>
+        <div class="govuk-inset-text">
+          <ul class="govuk-list govuk-list--bullet">
+            <li>Make sure the file uploaded is a CSV file</li>
+            <li>All rows in your file must have the same number of columns</li>
+            <li>Column names must be unique</li>
+          </ul>
+        </div>
+      {% endif %}
       <p class="govuk-body">
         <a href="{% url 'your_files:files' %}" class="govuk-link">Return to your files</a>
       </p>

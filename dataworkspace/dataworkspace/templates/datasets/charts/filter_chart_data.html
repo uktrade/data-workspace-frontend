@@ -18,13 +18,21 @@
           <li>filter rows by entering text into the box above each column</li>
         </ul>
       </p>
+      <br>
+      <p class="govuk-body">
+        To speed up the loading of your chart we recommend that you:
+        <ul class="govuk-list govuk-list--bullet">
+          <li>remove any columns that won't be used in the chart</li>
+          <li>only include the data needed for the chart by applying filters</li>
+        </ul>
+      </p>
     </div>
   </div>
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
       <div id="data-grid" class="ag-theme-alpine"></div>
       <div class="govuk-!-margin-top-4">
-        <button class="govuk-button" id="data-grid-create-chart">Create a chart</button>
+        <button class="govuk-button" id="data-grid-create-chart">Aggregate data</button>
         &nbsp;
         <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-filters">
           Reset filters
@@ -54,7 +62,7 @@
         null,
         null,
         null,
-        '{% url 'datasets:create_chart_from_grid' source.dataset.id source.id %}'
+        '{% url 'datasets:aggregate_chart_data' source.dataset.id source.id %}'
     );
   </script>
 {% endblock footer_scripts %}

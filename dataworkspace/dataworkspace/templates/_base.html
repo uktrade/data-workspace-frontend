@@ -61,7 +61,7 @@
       </div>
       <div class="app-header--suggestion">
         <div class="govuk-header__navigation-item">
-          <a class="govuk-header__link" href="https://www.datahub.trade.gov.uk/">Switch to Data Hub</a>
+          <a class="govuk-header__link" href="https://www.datahub.trade.gov.uk/?utm_source=Data%20Workspace&utm_medium=referral&utm_campaign=dataflow&utm_content=Switch%20to%20Data%20Hub">Switch to Data Hub</a>
         </div>
       </div>
      
@@ -119,7 +119,7 @@
   </header>
 
   <div class="govuk-width-container">
-    {% include 'partials/alpha_banner.html' %}
+    {% include 'partials/beta_banner.html' %}
     {% block breadcrumbs %}{% endblock %}
     {% block go_back %}{% endblock %}
 
@@ -162,6 +162,11 @@
             <li class="govuk-footer__list-item">
               <a class="govuk-footer__link"  href="https://data-services-help.trade.gov.uk/data-workspace" target="_blank" rel="noopener noreferrer">
                 Help centre <span class="govuk-visually-hidden">(opens in a new tab)</span>
+              </a>
+            </li>
+            <li class="govuk-footer__list-item">
+              <a class="govuk-footer__link"  href="{% url 'newsletter_subscription' %}">
+                {% if IS_SUBSCRIBED_TO_NEWSLETTER %}Unsubscribe from{% else %}Subscribe to{% endif %} newsletter
               </a>
             </li>
           </ul>

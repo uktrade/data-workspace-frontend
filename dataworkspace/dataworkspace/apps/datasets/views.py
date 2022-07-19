@@ -1,11 +1,8 @@
-import csv
-import io
 import json
 import logging
 import uuid
 from abc import ABCMeta, abstractmethod
-from collections import namedtuple
-from contextlib import closing
+from collections import defaultdict, namedtuple
 from itertools import chain
 from typing import Set
 
@@ -19,7 +16,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.core import serializers
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
-from django.core.serializers.json import DjangoJSONEncoder
 from django.db import connections, ProgrammingError
 from django.db.models import (
     Count,
@@ -28,6 +24,7 @@ from django.db.models import (
     Value,
     Func,
     Q,
+    Prefetch,
 )
 from django.db.models.functions import TruncDay
 from django.forms.models import model_to_dict
@@ -40,7 +37,7 @@ from django.http import (
     HttpResponseServerError,
     JsonResponse,
 )
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from django.views.decorators.http import (
     require_GET,
@@ -66,12 +63,17 @@ from dataworkspace.apps.core.utils import (
     view_exists,
     get_random_data_sample,
 )
+from dataworkspace.apps.core.models import (
+    Database,
+)
 from dataworkspace.apps.datasets.constants import (
     DataSetType,
     DataLinkType,
+    AggregationType,
 )
 from dataworkspace.apps.datasets.constants import TagType
 from dataworkspace.apps.datasets.forms import (
+    ChartAggregateForm,
     ChartSourceSelectForm,
     DatasetEditForm,
     DatasetSearchForm,
@@ -90,7 +92,6 @@ from dataworkspace.apps.datasets.models import (
     PendingAuthorizedUsers,
     MasterDataset,
     ReferenceDataset,
-    ReferenceDatasetField,
     SourceLink,
     SourceView,
     VisualisationCatalogueItem,
@@ -98,6 +99,7 @@ from dataworkspace.apps.datasets.models import (
     ToolQueryAuditLogTable,
     Tag,
     VisualisationUserPermission,
+    SourceTableFieldDefinition,
 )
 from dataworkspace.apps.datasets.permissions.utils import (
     process_dataset_authorized_users_change,
@@ -133,27 +135,23 @@ def _matches_filters(
     user_inaccessible: bool = False,
     selected_user_datasets: Set = None,
 ):
-    subscribed_or_bookmarked = set()
+    users_datasets = set()
     if data["is_bookmarked"]:
-        subscribed_or_bookmarked.add("bookmarked")
+        users_datasets.add("bookmarked")
     if data["is_subscribed"]:
-        subscribed_or_bookmarked.add("subscribed")
+        users_datasets.add("subscribed")
+    if data["is_owner"]:
+        users_datasets.add("owned")
 
     return (
         (
             not selected_user_datasets
             or selected_user_datasets == [None]
-            or set(selected_user_datasets).intersection(subscribed_or_bookmarked)
-        )
-        and (
-            not selected_user_datasets
-            or selected_user_datasets == [None]
-            or set(selected_user_datasets).intersection(subscribed_or_bookmarked)
+            or set(selected_user_datasets).intersection(users_datasets)
         )
         and (unpublished or data["published"])
         and (not opendata or data["is_open_data"])
         and (not withvisuals or data["has_visuals"])
-        and (not use or use == [None] or data["purpose"] in use)
         and (not data_type or data_type == [None] or data["data_type"] in data_type)
         and (not source_ids or source_ids.intersection(set(data["source_tag_ids"])))
         and (not topic_ids or topic_ids.intersection(set(data["topic_tag_ids"])))
@@ -175,7 +173,6 @@ def has_unpublished_dataset_access(user):
 def _get_tags_as_dict():
     """
     Gets all tags and returns them as a dictionary keyed by the tag.id as a string
-    This is a workaround until we refactor dataset search
     @return:
     """
     tags = Tag.objects.all()
@@ -189,82 +186,10 @@ def _get_tags_as_dict():
 
 @require_GET
 def find_datasets(request):
-    def _enrich_tags(dataset, tags_dict):
-        dataset["sources"] = []
-        for source_id in dataset["source_tag_ids"]:
-            logger.info(source_id)
-            tag = tags_dict.get(str(source_id))
-            dataset["sources"].append(tag)
+    ###############
+    # Validate form
 
-        dataset["topics"] = []
-        for topic_id in dataset["topic_tag_ids"]:
-            tag = tags_dict.get(str(topic_id))
-            dataset["topics"].append(tag)
-
-        logger.info(dataset["sources"])
-
-    def _get_reference_dataset_last_updated(dataset_id):
-        datasets = ReferenceDataset.objects.filter(uuid=dataset_id)
-        if not datasets.exists():
-            return []
-
-        try:
-            # If the reference dataset csv table doesn't exist we
-            # get an unhandled relation does not exist error
-            # this is currently only a problem with integration tests
-            return [datasets.first().data_last_updated]
-        except ProgrammingError as e:
-            logger.error(e)
-            return []
-
-    def _get_master_dataset_last_updated(dataset_id):
-        datasets = MasterDataset.objects.filter(id=dataset_id)
-        if not datasets.exists():
-            return []
-
-        return [
-            table.get_data_last_updated_date() for table in datasets.first().sourcetable_set.all()
-        ]
-
-    def _get_datacut_query_last_updated(dataset_id):
-        datasets = DataCutDataset.objects.filter(id=dataset_id)
-        if not datasets.exists():
-            return []
-
-        return [
-            query.get_data_last_updated_date()
-            for query in datasets.first().customdatasetquery_set.all()
-        ]
-
-    def _get_visualisationcatalogue_link_last_updated(dataset_id):
-        datasets = VisualisationCatalogueItem.objects.filter(id=dataset_id)
-        if not datasets.exists():
-            return []
-
-        return [
-            link.data_source_last_updated for link in datasets.first().visualisationlink_set.all()
-        ]
-
-    def _get_last_updated_date(dataset):
-        last_updated_dates = []
-
-        if dataset["data_type"] == DataSetType.REFERENCE:
-            last_updated_dates = _get_reference_dataset_last_updated(dataset["id"])
-
-        elif dataset["data_type"] == DataSetType.MASTER:
-            last_updated_dates = _get_master_dataset_last_updated(dataset["id"])
-
-        elif dataset["data_type"] == DataSetType.DATACUT:
-            last_updated_dates = _get_datacut_query_last_updated(dataset["id"])
-
-        elif dataset["data_type"] == DataSetType.VISUALISATION:
-            last_updated_dates = _get_visualisationcatalogue_link_last_updated(dataset["id"])
-
-        last_update_dates_no_null = [d for d in last_updated_dates if d is not None]
-
-        return max(last_update_dates_no_null, default=None)
-
-    form = DatasetSearchForm(request.GET)
+    form = DatasetSearchForm(request, request.GET)
 
     if not form.is_valid():
         logger.warning(form.errors)
@@ -274,7 +199,8 @@ def find_datasets(request):
         "data_type"
     ].choices  # Cache these now, as we annotate them with result numbers later which we don't want here.
 
-    tags_dict = _get_tags_as_dict()
+    ###############################################
+    # Find all results, and matching filter numbers
 
     filters = form.get_filters()
 
@@ -287,19 +213,138 @@ def find_datasets(request):
         matcher=_matches_filters,
     )
 
+    ####################################
+    # Select the current page of results
+
     paginator = Paginator(
         matched_datasets,
         settings.SEARCH_RESULTS_DATASETS_PER_PAGE,
     )
 
-    data_types.append((DataSetType.VISUALISATION, "Visualisation"))
-
     datasets = paginator.get_page(request.GET.get("page"))
 
-    # This is a workaround until we refactor search
+    ########################################################
+    # Augment results with tags, avoiding queries-per-result
+
+    tags_dict = _get_tags_as_dict()
     for dataset in datasets:
-        _enrich_tags(dataset, tags_dict)
-        dataset["last_updated"] = _get_last_updated_date(dataset)
+        dataset["sources"] = [
+            tags_dict.get(str(source_id)) for source_id in dataset["source_tag_ids"]
+        ]
+        dataset["topics"] = [tags_dict.get(str(topic_id)) for topic_id in dataset["topic_tag_ids"]]
+
+    ######################################################################
+    # Augment results with last updated dates, avoiding queries-per-result
+
+    # Data structures to quickly look up datasets as needed further down
+
+    datasets_by_type = defaultdict(list)
+    datasets_by_type_id = {}
+    for dataset in datasets:
+        datasets_by_type[dataset["data_type"]].append(dataset)
+        datasets_by_type_id[(dataset["data_type"], dataset["id"])] = dataset
+
+    # Reference datasets
+
+    reference_datasets = ReferenceDataset.objects.filter(
+        uuid__in=tuple(dataset["id"] for dataset in datasets_by_type[DataSetType.REFERENCE.value])
+    )
+    for reference_dataset in reference_datasets:
+        dataset = datasets_by_type_id[(DataSetType.REFERENCE.value, reference_dataset.uuid)]
+        try:
+            # If the reference dataset csv table doesn't exist we
+            # get an unhandled relation does not exist error
+            # this is currently only a problem with integration tests
+            dataset["last_updated"] = reference_dataset.data_last_updated
+        except ProgrammingError as e:
+            logger.error(e)
+            dataset["last_updated"] = None
+
+    # Master datasets and datacuts together to minimise metadata table queries
+
+    master_datasets = MasterDataset.objects.filter(
+        id__in=tuple(dataset["id"] for dataset in datasets_by_type[DataSetType.MASTER.value])
+    ).prefetch_related("sourcetable_set")
+    datacut_datasets = DataCutDataset.objects.filter(
+        id__in=tuple(dataset["id"] for dataset in datasets_by_type[DataSetType.DATACUT.value])
+    ).prefetch_related(
+        Prefetch(
+            "customdatasetquery_set",
+            queryset=CustomDatasetQuery.objects.prefetch_related("tables"),
+        )
+    )
+    databases = {database.id: database for database in Database.objects.all()}
+
+    tables_and_last_updated_dates = datasets_db.get_all_tables_last_updated_date(
+        [
+            (databases[table.database_id].memorable_name, table.schema, table.table)
+            for master_dataset in master_datasets
+            for table in master_dataset.sourcetable_set.all()
+        ]
+        + [
+            (databases[query.database_id].memorable_name, table.schema, table.table)
+            for datacut_dataset in datacut_datasets
+            for query in datacut_dataset.customdatasetquery_set.all()
+            for table in query.tables.all()
+        ]
+    )
+
+    def _without_none(it):
+        return (val for val in it if val is not None)
+
+    for master_dataset in master_datasets:
+        dataset = datasets_by_type_id[(DataSetType.MASTER.value, master_dataset.id)]
+        dataset["last_updated"] = max(
+            _without_none(
+                (
+                    tables_and_last_updated_dates[databases[table.database_id].memorable_name].get(
+                        (table.schema, table.table)
+                    )
+                    for table in master_dataset.sourcetable_set.all()
+                )
+            ),
+            default=None,
+        )
+
+    for datacut_dataset in datacut_datasets:
+        dataset = datasets_by_type_id[(DataSetType.DATACUT.value, datacut_dataset.id)]
+        last_updated_dates_for_queries = (
+            (
+                tables_and_last_updated_dates[databases[query.database_id].memorable_name].get(
+                    (table.schema, table.table)
+                )
+                for table in query.tables.all()
+            )
+            for query in datacut_dataset.customdatasetquery_set.all()
+        )
+        dataset["last_updated"] = max(
+            _without_none(
+                (
+                    min(_without_none(last_updated_dates_for_query), default=None)
+                    for last_updated_dates_for_query in last_updated_dates_for_queries
+                )
+            ),
+            default=None,
+        )
+
+    # Visualisations
+
+    visualisation_datasets = VisualisationCatalogueItem.objects.filter(
+        id__in=tuple(
+            dataset["id"] for dataset in datasets_by_type[DataSetType.VISUALISATION.value]
+        )
+    ).prefetch_related("visualisationlink_set")
+    for visualisation_dataset in visualisation_datasets:
+        dataset = datasets_by_type_id[(DataSetType.VISUALISATION.value, visualisation_dataset.id)]
+        dataset["last_updated"] = max(
+            _without_none(
+                (
+                    link.data_source_last_updated
+                    for link in visualisation_dataset.visualisationlink_set.all()
+                )
+            ),
+            default=None,
+        )
 
     return render(
         request,
@@ -329,6 +374,15 @@ class DatasetDetailView(DetailView):
 
     @csp_update(frame_src=settings.QUICKSIGHT_DASHBOARD_HOST)
     def get(self, request, *args, **kwargs):
+        log_event(
+            request.user,
+            EventLog.TYPE_DATASET_VIEW,
+            self.get_object(),
+            extra={
+                "path": request.get_full_path(),
+                "reference_dataset_version": self.get_object().published_at,
+            },
+        )
         return super().get(request, *args, **kwargs)
 
     def _get_source_text(self, model):
@@ -582,67 +636,19 @@ def toggle_bookmark(request, dataset_uuid):
 
 
 class ReferenceDatasetDownloadView(DetailView):
-    model = ReferenceDataset
-
-    def get_object(self, queryset=None):
-        return find_dataset(self.kwargs["dataset_uuid"], self.request.user, ReferenceDataset)
-
-    def get(self, request, *args, **kwargs):
-        dl_format = self.kwargs.get("format")
-        if dl_format not in ["json", "csv"]:
-            raise Http404
-        ref_dataset = self.get_object()
-        records = []
-        for record in ref_dataset.get_records():
-            record_data = {}
-            for field in ref_dataset.fields.all():
-                if field.data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
-                    relationship = getattr(record, field.relationship_name)
-                    record_data[field.name] = (
-                        getattr(
-                            relationship,
-                            field.linked_reference_dataset_field.column_name,
-                        )
-                        if relationship
-                        else None
-                    )
-                else:
-                    record_data[field.name] = getattr(record, field.column_name)
-            records.append(record_data)
-
-        response = HttpResponse()
-        response["Content-Disposition"] = "attachment; filename={}-{}.{}".format(
-            ref_dataset.slug, ref_dataset.published_version, dl_format
-        )
-
+    def post(self, request, *args, **kwargs):
+        dataset = find_dataset(self.kwargs.get("dataset_uuid"), request.user, ReferenceDataset)
         log_event(
             request.user,
             EventLog.TYPE_REFERENCE_DATASET_DOWNLOAD,
-            ref_dataset,
+            dataset,
             extra={
                 "path": request.get_full_path(),
-                "reference_dataset_version": ref_dataset.published_version,
-                "download_format": dl_format,
+                "reference_dataset_version": dataset.published_version,
+                "format": self.kwargs.get("format"),
             },
         )
-        ref_dataset.number_of_downloads = F("number_of_downloads") + 1
-        ref_dataset.save(update_fields=["number_of_downloads"])
-
-        if dl_format == "json":
-            response["Content-Type"] = "application/json"
-            response.write(json.dumps(list(records), cls=DjangoJSONEncoder))
-        else:
-            response["Content-Type"] = "text/csv"
-            with closing(io.StringIO()) as outfile:
-                writer = csv.DictWriter(
-                    outfile,
-                    fieldnames=ref_dataset.export_field_names,
-                    quoting=csv.QUOTE_NONNUMERIC,
-                )
-                writer.writeheader()
-                writer.writerows(records)
-                response.write(outfile.getvalue())  # pylint: disable=no-member
-        return response
+        return HttpResponse(status=200)
 
 
 class SourceLinkDownloadView(DetailView):
@@ -921,6 +927,15 @@ class ReferenceDatasetColumnDetails(View):
 class ReferenceDatasetGridView(View):
     def get(self, request, dataset_uuid):
         dataset = find_dataset(dataset_uuid, request.user, ReferenceDataset)
+        log_event(
+            request.user,
+            EventLog.TYPE_REFERENCE_DATASET_VIEW,
+            dataset,
+            extra={
+                "path": request.get_full_path(),
+                "reference_dataset_version": dataset.published_version,
+            },
+        )
         return render(
             request,
             "datasets/reference_dataset_grid.html",
@@ -1166,23 +1181,26 @@ class DataGridDataView(DetailView):
         )
 
         if request.GET.get("download"):
-            correlation_id = {"correlation_id": str(uuid.uuid4())}
+            extra = {
+                "correlation_id": str(uuid.uuid4()),
+                **serializers.serialize("python", [source])[0],
+            }
 
             log_event(
                 request.user,
                 EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
-                source,
-                extra=correlation_id,
+                source.dataset,
+                extra=extra,
             )
 
             def write_metrics_to_eventlog(log_data):
                 logger.debug("write_metrics_to_eventlog %s", log_data)
 
-                log_data.update(correlation_id)
+                log_data.update(extra)
                 log_event(
                     request.user,
                     EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD_COMPLETE,
-                    source,
+                    source.dataset,
                     extra=log_data,
                 )
 
@@ -1680,7 +1698,7 @@ class FilterChartDataView(WaffleFlagMixin, DetailView):
         return source
 
 
-class CreateGridChartView(WaffleFlagMixin, View):
+class AggregateChartDataViewView(WaffleFlagMixin, View):
     waffle_flag = settings.CHART_BUILDER_BUILD_CHARTS_FLAG
 
     def post(self, request, dataset_uuid, source_id, *args, **kwargs):
@@ -1692,30 +1710,124 @@ class CreateGridChartView(WaffleFlagMixin, View):
         filters = {}
         for filter_data in [json.loads(x) for x in request.POST.getlist("filters")]:
             filters.update(filter_data)
-        column_config = [
+
+        columns = [
             x
             for x in source.get_column_config()
             if x["field"] in request.POST.getlist("columns", [])
         ]
 
-        post_data = {
-            "filters": filters,
-            "sortDir": request.POST.get("sortDir", "ASC"),
-            "sortField": request.POST.get("sortField", column_config[0]["field"]),
-        }
+        return render(
+            request,
+            "datasets/charts/aggregate.html",
+            context={
+                "dataset": dataset,
+                "source": source,
+                "form": ChartAggregateForm(
+                    columns=columns,
+                    initial={
+                        "columns": columns,
+                        "filters": filters,
+                        "sort_direction": request.POST.get("sortDir", "ASC"),
+                        "sort_field": request.POST.get("sortField", "1"),
+                    },
+                ),
+            },
+        )
+
+
+class CreateGridChartView(WaffleFlagMixin, View):
+    waffle_flag = settings.CHART_BUILDER_BUILD_CHARTS_FLAG
+
+    def post(self, request, dataset_uuid, source_id, *args, **kwargs):
+        dataset = find_dataset(dataset_uuid, self.request.user)
+        source = dataset.get_related_source(source_id)
+        if source is None:
+            raise Http404
+
+        columns = json.loads(request.POST.get("columns"))
+        form = ChartAggregateForm(
+            request.POST,
+            columns=columns,
+            initial={
+                "columns": columns,
+            },
+        )
+
+        if not form.is_valid():
+            # Ideally we would redirect here but we need to keep the json
+            # post data from the grid and so we just re-display the form
+            # to let the user correct errors
+            return render(
+                request,
+                "datasets/charts/aggregate.html",
+                context={
+                    "dataset": dataset,
+                    "source": source,
+                    "form": form,
+                },
+            )
+
+        chart_data = form.cleaned_data
+
         original_query = source.get_data_grid_query()
         query, params = build_filtered_dataset_query(
             original_query,
-            column_config,
-            post_data,
+            json.loads(request.POST.get("columns", "[]")),
+            {
+                "filters": chart_data["filters"],
+                "sortDir": chart_data["sort_direction"],
+                "sortField": chart_data["sort_field"],
+            },
         )
+
+        if chart_data["aggregate"] != AggregationType.NONE.value:
+            query = (
+                sql.SQL("SELECT {{}}, {{}}({{}}) FROM (").format(
+                    sql.Identifier(chart_data["group_by"]),
+                    sql.Identifier(chart_data["aggregate"]),
+                    sql.Literal("*")
+                    if chart_data["aggregate"] == "count"
+                    else sql.Identifier(chart_data["aggregate_field"]),
+                )
+                + query
+                + sql.SQL(") a ")
+                + sql.SQL("GROUP by 1;")
+            )
+
         db_name = list(settings.DATABASES_DATA.items())[0][0]
         with connections[db_name].cursor() as cursor:
             full_query = cursor.mogrify(query, params).decode()
+
         chart = ChartBuilderChart.objects.create_from_sql(str(full_query), request.user, db_name)
+        chart.chart_config.update(
+            {
+                "xaxis": {"type": "category", "autorange": True},
+                "yaxis": {"type": "linear", "autorange": True},
+                "traces": [
+                    {
+                        "meta": {
+                            "columnNames": {
+                                "x": chart_data["group_by"],
+                                "y": chart_data["aggregate"],
+                            }
+                        },
+                        "mode": "markers",
+                        "name": "Plot 0",
+                        "type": "bar",
+                        "xsrc": chart_data["group_by"],
+                        "ysrc": chart_data["aggregate"],
+                        "labelsrc": chart_data["group_by"],
+                        "valuesrc": chart_data["aggregate"],
+                    }
+                ],
+            }
+        )
+        chart.save()
         run_chart_builder_query.delay(chart.id)
         return HttpResponseRedirect(
-            f"{chart.get_edit_url()}?prev={request.META.get('HTTP_REFERER')}"
+            f"{chart.get_edit_url()}?prev="
+            + reverse("datasets:filter_chart_data", args=(dataset.id, source.id))
         )
 
 
@@ -1733,3 +1845,112 @@ class DatasetChartsView(WaffleFlagMixin, View):
             "datasets/charts/charts.html",
             context={"charts": dataset.related_charts(), "dataset": dataset},
         )
+
+
+def find_data_dictionary_view(request, schema_name, table_name):
+    query = SourceTable.objects.filter(schema=schema_name, table=table_name)
+    if not query.exists():
+        raise Http404
+
+    return redirect("datasets:data_dictionary", source_uuid=query.first().id)
+
+
+class DataDictionaryBaseView(View):
+    def get_dictionary(self, source_table):
+        columns = datasets_db.get_columns(
+            source_table.database.memorable_name,
+            schema=source_table.schema,
+            table=source_table.table,
+            include_types=True,
+        )
+        fields = source_table.field_definitions.all()
+        dictionary = []
+        for name, data_type in columns:
+            definition = ""
+            if fields.filter(field=name).exists():
+                definition = fields.filter(field=name).first()
+            dictionary.append(
+                (
+                    name,
+                    data_type,
+                    definition,
+                )
+            )
+        return columns, fields, dictionary
+
+
+class DataDictionaryView(DataDictionaryBaseView):
+    def get(self, request, source_uuid):
+        source_table = get_object_or_404(SourceTable, pk=source_uuid)
+        dataset = None
+        if request.GET.get("dataset_uuid"):
+            dataset = find_dataset(request.GET.get("dataset_uuid"), self.request.user, DataSet)
+
+        columns, fields, dictionary = self.get_dictionary(source_table)
+
+        return render(
+            request,
+            "datasets/data_dictionary.html",
+            context={
+                "source_table": source_table,
+                "dataset": dataset,
+                "columns": columns,
+                "fields": fields,
+                "dictionary": dictionary,
+            },
+        )
+
+
+class DataDictionaryEditView(DataDictionaryBaseView):
+    def dispatch(self, request, *args, **kwargs):
+
+        dataset = DataSet.objects.live().get(pk=self.kwargs.get("dataset_uuid"))
+        if (
+            request.user
+            not in [
+                dataset.information_asset_owner,
+                dataset.information_asset_manager,
+            ]
+            and not request.user.is_superuser
+        ):
+            return HttpResponseForbidden()
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request, dataset_uuid, source_uuid):
+        source_table = get_object_or_404(SourceTable, pk=source_uuid)
+        dataset = find_dataset(dataset_uuid, self.request.user, DataSet)
+
+        columns, fields, dictionary = self.get_dictionary(source_table)
+
+        return render(
+            request,
+            "datasets/edit_data_dictionary.html",
+            context={
+                "source_table": source_table,
+                "dataset": dataset,
+                "columns": columns,
+                "fields": fields,
+                "dictionary": dictionary,
+            },
+        )
+
+    def post(self, request, dataset_uuid, source_uuid):
+        source_table = get_object_or_404(SourceTable, pk=source_uuid)
+        dataset = find_dataset(dataset_uuid, self.request.user, DataSet)
+
+        for name, value in request.POST.items():
+            if name == "csrfmiddlewaretoken":
+                continue
+            field, _ = SourceTableFieldDefinition.objects.get_or_create(
+                source_table=source_table, field=name
+            )
+            field.description = value[:1024]
+            field.save()
+
+        messages.success(self.request, "Changes saved successfully")
+        redirect_url = (
+            reverse("datasets:data_dictionary", args=[source_table.id])
+            + "?dataset_uuid="
+            + str(dataset.id)
+        )
+        return redirect(redirect_url)

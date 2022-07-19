@@ -36,7 +36,6 @@ from dataworkspace.apps.datasets.models import (
 )
 from dataworkspace.apps.datasets.search import (
     _get_datasets_data_for_user_matching_query,
-    _get_visualisations_data_for_user_matching_query,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.your_files.models import UploadedTable
@@ -235,24 +234,27 @@ def expected_search_result(catalogue_item, **kwargs):
         "name": catalogue_item.name,
         "slug": catalogue_item.slug,
         "search_rank": mock.ANY,
+        "search_rank_name": mock.ANY,
+        "search_rank_short_description": mock.ANY,
+        "search_rank_tags": mock.ANY,
+        "search_rank_description": mock.ANY,
         "short_description": catalogue_item.short_description,
-        "published_at": mock.ANY,
-        "source_tag_names": mock.ANY,
+        "published_date": mock.ANY,
         "source_tag_ids": mock.ANY,
-        "topic_tag_names": mock.ANY,
         "topic_tag_ids": mock.ANY,
-        "purpose": mock.ANY,
         "data_type": mock.ANY,
         "published": catalogue_item.published,
         "has_access": True,
         "is_bookmarked": False,
+        "table_match": False,
         "is_subscribed": False,
         "has_visuals": mock.ANY,
         "is_open_data": getattr(catalogue_item, "user_access_type", None) == UserAccessType.OPEN,
-        "eligibility_criteria": mock.ANY,
         "sources": mock.ANY,
         "topics": mock.ANY,
         "last_updated": mock.ANY,
+        "average_unique_users_daily": mock.ANY,
+        "is_owner": False,
     }
     result.update(**kwargs)
     return result
@@ -275,21 +277,20 @@ def test_find_datasets_combines_results(client):
     datasets = list(response.context["datasets"])
 
     expected_results = [
-        expected_search_result(ds, has_access=False, purpose=DataSetType.DATACUT),
-        expected_search_result(rds, purpose=DataSetType.DATACUT),
-        expected_search_result(vis, purpose=DataSetType.VISUALISATION),
+        expected_search_result(ds, has_access=False, data_type=DataSetType.DATACUT),
+        expected_search_result(rds, data_type=DataSetType.REFERENCE),
+        expected_search_result(vis, data_type=DataSetType.VISUALISATION),
     ]
 
-    for i, ds in enumerate(datasets):
-        expected = expected_results[i]
-        assert ds == expected
+    for expected in expected_results:
+        assert expected in datasets
 
     assert "If you haven’t found what you’re looking for" in response.content.decode(
         response.charset
     )
 
 
-def test_find_datasets_by_source_table_name(client):
+def test_find_datasets_by_source_table_name(client, dataset_db):
     ds = factories.DataSetFactory.create(
         published=True, name="A search dataset", type=DataSetType.MASTER
     )
@@ -299,11 +300,29 @@ def test_find_datasets_by_source_table_name(client):
         table="dataset_test",
         database=factories.DatabaseFactory.create(memorable_name="my_database"),
     )
-    response = client.get(reverse("datasets:find_datasets"), {"q": "dataset_test"})
+    ref_ds = factories.ReferenceDatasetFactory()
 
+    # Source dataset: table name only
+    response = client.get(reverse("datasets:find_datasets"), {"q": "dataset_test"})
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ds, has_access=False, purpose=DataSetType.MASTER),
+        expected_search_result(
+            ds, has_access=False, table_match=True, data_type=DataSetType.MASTER
+        ),
+    ]
+    # Source dataset: schema and table
+    response = client.get(reverse("datasets:find_datasets"), {"q": "public.dataset_test"})
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(
+            ds, has_access=False, table_match=True, data_type=DataSetType.MASTER
+        ),
+    ]
+    # Reference dataset: table
+    response = client.get(reverse("datasets:find_datasets"), {"q": ref_ds.table_name})
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(ref_ds, table_match=True, data_type=DataSetType.REFERENCE),
     ]
 
 
@@ -337,7 +356,7 @@ def test_find_datasets_by_source_table_falls_back_to_normal_search(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ds, has_access=False, purpose=DataSetType.MASTER),
+        expected_search_result(ds, has_access=False, data_type=DataSetType.MASTER),
     ]
 
 
@@ -377,15 +396,20 @@ def test_find_datasets_filters_by_query(client):
     response = client.get(reverse("datasets:find_datasets"), {"q": "new"})
 
     assert response.status_code == 200
-    assert list(response.context["datasets"]) == [
-        expected_search_result(ds, purpose=ds.type, has_access=False),
+
+    results = list(response.context["datasets"])
+    expected_search_results = [
+        expected_search_result(ds, data_type=ds.type, has_access=False),
         expected_search_result(
             rds,
-            purpose=DataSetType.DATACUT,
             data_type=DataSetType.REFERENCE,
         ),
-        expected_search_result(vis, purpose=DataSetType.VISUALISATION),
+        expected_search_result(vis, data_type=DataSetType.VISUALISATION),
     ]
+
+    assert len(results) == 3
+    for expected in expected_search_results:
+        assert expected in results
 
 
 def test_find_datasets_filters_by_query_acronym(client):
@@ -401,53 +425,53 @@ def test_find_datasets_filters_by_query_acronym(client):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ds, purpose=ds.type, has_access=False),
+        expected_search_result(ds, data_type=ds.type, has_access=False),
     ]
 
 
-def test_find_datasets_filters_by_use(client):
+def test_find_datasets_filters_by_data_type(client):
     factories.DataSetFactory.create(published=True, type=1, name="A dataset")
     ds = factories.DataSetFactory.create(published=True, type=2, name="A new dataset")
-    rds = factories.ReferenceDatasetFactory.create(published=True, name="A new reference dataset")
+    factories.ReferenceDatasetFactory.create(published=True, name="A new reference dataset")
 
-    response = client.get(reverse("datasets:find_datasets"), {"use": [DataSetType.DATACUT]})
+    response = client.get(reverse("datasets:find_datasets"), {"data_type": [DataSetType.DATACUT]})
 
     assert response.status_code == 200
 
     expected_results = [
         expected_search_result(ds, has_access=False),
-        expected_search_result(rds),
     ]
 
     datasets = list(response.context["datasets"])
 
-    assert len(datasets) == 2
+    assert len(datasets) == 1
 
     for i, ds in enumerate(datasets):
         expected = expected_results[i]
         assert ds == expected
 
 
-def test_find_datasets_filters_visualisations_by_use(client):
+def test_find_datasets_filters_visualisations_by_data_type(client):
     factories.DataSetFactory.create(published=True, type=1, name="A dataset")
     ds = factories.DataSetFactory.create(published=True, type=2, name="A new dataset")
-    rds = factories.ReferenceDatasetFactory.create(published=True, name="A new reference dataset")
+    factories.ReferenceDatasetFactory.create(published=True, name="A new reference dataset")
     vis = factories.VisualisationCatalogueItemFactory.create(
         published=True, name="A new visualisation"
     )
 
-    response = client.get(reverse("datasets:find_datasets"), {"use": [2, 3]})
+    response = client.get(reverse("datasets:find_datasets"), {"data_type": [2, 3]})
 
     assert response.status_code == 200
-    assert list(response.context["datasets"]) == [
+    expected_results = [
         expected_search_result(ds, has_access=False),
-        expected_search_result(
-            rds,
-            purpose=DataSetType.DATACUT,
-            data_type=DataSetType.REFERENCE,
-        ),
-        expected_search_result(vis, purpose=DataSetType.VISUALISATION),
+        expected_search_result(vis, data_type=DataSetType.VISUALISATION),
     ]
+
+    results = list(response.context["datasets"])
+    assert len(results) == 2
+
+    for expected in expected_results:
+        assert expected in results
 
 
 def test_find_datasets_filters_by_source(client):
@@ -485,23 +509,26 @@ def test_find_datasets_filters_by_source(client):
     response = client.get(reverse("datasets:find_datasets"), {"source": [source.id]})
 
     assert response.status_code == 200
-    assert list(response.context["datasets"]) == [
+    results = list(response.context["datasets"])
+    expected_results = [
         expected_search_result(
             ds,
             has_access=False,
-            source_tag_names=MatchUnorderedMembers([source.name, source_2.name]),
             source_tag_ids=MatchUnorderedMembers([source.id, source_2.id]),
         ),
-        expected_search_result(rds, source_tag_names=[source.name], source_tag_ids=[source.id]),
+        expected_search_result(rds, source_tag_ids=[source.id]),
         expected_search_result(
             vis,
-            source_tag_names=[source.name],
             source_tag_ids=[source.id],
-            purpose=DataSetType.VISUALISATION,
+            data_type=DataSetType.VISUALISATION,
         ),
     ]
 
+    assert len(results) == 3
     assert len(list(response.context["form"].fields["source"].choices)) == 3
+
+    for expected in expected_results:
+        assert expected in results
 
 
 def test_find_datasets_filters_by_topic(client):
@@ -539,74 +566,133 @@ def test_find_datasets_filters_by_topic(client):
     response = client.get(reverse("datasets:find_datasets"), {"topic": [topic.id]})
 
     assert response.status_code == 200
-    assert list(response.context["datasets"]) == [
+    results = list(response.context["datasets"])
+    expected_results = [
         expected_search_result(
             ds,
             has_access=False,
-            topic_tag_names=MatchUnorderedMembers([topic.name, topic_2.name]),
             topic_tag_ids=MatchUnorderedMembers([topic.id, topic_2.id]),
             search_rank=0.0,
         ),
         expected_search_result(
             rds,
-            topic_tag_names=[topic.name],
             topic_tag_ids=[topic.id],
-            purpose=DataSetType.DATACUT,
             data_type=DataSetType.REFERENCE,
         ),
         expected_search_result(
             vis,
-            topic_tag_names=[topic.name],
             topic_tag_ids=[topic.id],
-            purpose=DataSetType.VISUALISATION,
+            data_type=DataSetType.VISUALISATION,
         ),
     ]
 
     assert len(list(response.context["form"].fields["topic"].choices)) == 2
+    assert len(results) == 3
+    for expected in expected_results:
+        assert expected in results
 
 
-def test_find_datasets_order_by_name_asc(client):
+@pytest.mark.parametrize(
+    "sort_field",
+    ("alphabetical",),
+)
+def test_find_datasets_order_by_name_asc(sort_field, client):
     ds1 = factories.DataSetFactory.create(name="a dataset")
     rds = factories.ReferenceDatasetFactory.create(name="b reference dataset")
     vis = factories.VisualisationCatalogueItemFactory.create(name="c visualisation")
 
-    response = client.get(reverse("datasets:find_datasets"), {"sort": "name"})
+    response = client.get(reverse("datasets:find_datasets"), {"sort": sort_field})
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
         expected_search_result(ds1, has_access=False),
-        expected_search_result(rds, purpose=DataSetType.DATACUT, data_type=DataSetType.REFERENCE),
-        expected_search_result(vis, purpose=DataSetType.VISUALISATION),
+        expected_search_result(rds, data_type=DataSetType.REFERENCE),
+        expected_search_result(vis, data_type=DataSetType.VISUALISATION),
     ]
 
 
-def test_find_datasets_order_by_newest_first(client):
+@pytest.mark.parametrize(
+    "sort_field",
+    ("-published",),
+)
+def test_find_datasets_order_by_newest_first(sort_field, client):
     ads1 = factories.DataSetFactory.create(published_at=date.today())
     ads2 = factories.DataSetFactory.create(published_at=date.today() - timedelta(days=3))
     ads3 = factories.DataSetFactory.create(published_at=date.today() - timedelta(days=4))
 
-    response = client.get(reverse("datasets:find_datasets"), {"sort": "-published_at"})
+    response = client.get(reverse("datasets:find_datasets"), {"sort": sort_field})
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ads1, purpose=ads1.type, has_access=False),
+        expected_search_result(ads1, data_type=ads1.type, has_access=False),
         expected_search_result(ads2, has_access=False),
         expected_search_result(ads3, has_access=False),
     ]
 
 
-def test_find_datasets_order_by_oldest_first(client):
+@pytest.mark.parametrize(
+    "sort_field",
+    ("published",),
+)
+def test_find_datasets_order_by_oldest_first(sort_field, client):
     ads1 = factories.DataSetFactory.create(published_at=date.today() - timedelta(days=1))
     ads2 = factories.DataSetFactory.create(published_at=date.today() - timedelta(days=2))
     ads3 = factories.DataSetFactory.create(published_at=date.today() - timedelta(days=3))
 
-    response = client.get(reverse("datasets:find_datasets"), {"sort": "published_at"})
+    response = client.get(reverse("datasets:find_datasets"), {"sort": sort_field})
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ads3, has_access=False, purpose=ads3.type),
-        expected_search_result(ads2, has_access=False, purpose=ads2.type),
-        expected_search_result(ads1, has_access=False, purpose=ads1.type),
+        expected_search_result(ads3, has_access=False, data_type=ads3.type),
+        expected_search_result(ads2, has_access=False, data_type=ads2.type),
+        expected_search_result(ads1, has_access=False, data_type=ads1.type),
+    ]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "sort_field",
+    ("relevance",),
+)
+def test_find_datasets_order_by_relevance_prioritises_bookmarked_datasets(sort_field):
+    user = factories.UserFactory.create(is_superuser=False)
+    client = Client(**get_http_sso_data(user))
+    bookmarked_master = factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER,
+        name="Master bookmarked",
+    )
+    factories.DataSetBookmarkFactory.create(user=user, dataset=bookmarked_master)
+    unbookmarked_master = factories.DataSetFactory.create(
+        published=True,
+        type=DataSetType.MASTER,
+        name="Master",
+    )
+
+    # If there is no search query, then if sorting by relevance, the default, datasets
+    # bookmarked by the current user are most likely to be relevant, and so should be
+    # at the top
+    sort = ("relevance",)
+    response = client.get(reverse("datasets:find_datasets"), {"sort": sort})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(bookmarked_master, has_access=False, is_bookmarked=True),
+        expected_search_result(unbookmarked_master, has_access=False),
+    ]
+
+    # If there is a search query, and sorting by relevance, the bookmarked state of
+    # datasets should not be taken into account, since the user has probably just seen
+    # their bookmarks on the front page and they weren't helpful. In this case both
+    # dataset names match the search query, but the extra word in bookmarked_master
+    # means the normalisation on length makes it treated as less relevant
+    sort = ("relevance",)
+    response = client.get(reverse("datasets:find_datasets"), {"sort": sort, "q": "master"})
+
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(unbookmarked_master, has_access=False),
+        expected_search_result(bookmarked_master, has_access=False, is_bookmarked=True),
     ]
 
 
@@ -669,17 +755,17 @@ def test_datasets_and_visualisations_doesnt_return_duplicate_results(access_type
 
     for u in [normal_user, staff_user]:
         datasets = _get_datasets_data_for_user_matching_query(
-            DataSet.objects.live(), query="", use={}, user=u
+            DataSet.objects.live(), query="", id_field="id", user=u
         )
         assert len(datasets) == len(set(dataset["id"] for dataset in datasets))
 
         references = _get_datasets_data_for_user_matching_query(
-            ReferenceDataset.objects.live(), "", {}, user=u
+            ReferenceDataset.objects.live(), "", id_field="uuid", user=u
         )
-        assert len(references) == len(set(reference["id"] for reference in references))
+        assert len(references) == len(set(reference["uuid"] for reference in references))
 
-        visualisations = _get_visualisations_data_for_user_matching_query(
-            VisualisationCatalogueItem.objects, query="", user=u
+        visualisations = _get_datasets_data_for_user_matching_query(
+            VisualisationCatalogueItem.objects, query="", id_field="id", user=u
         )
         assert len(visualisations) == len(
             set(visualisation["id"] for visualisation in visualisations)
@@ -773,7 +859,7 @@ def test_finding_datasets_doesnt_query_database_excessively(
     with django_assert_num_queries(expected_num_queries, exact=False):
         response = client.get(
             reverse("datasets:find_datasets"),
-            {"purpose": str(DataSetType.MASTER)},
+            {"data_type": str(DataSetType.MASTER)},
         )
         assert response.status_code == 200
 
@@ -954,7 +1040,6 @@ def test_find_datasets_filters_by_bookmark_reference(access_type):
         expected_search_result(
             public_reference,
             is_bookmarked=True,
-            purpose=DataSetType.DATACUT,
             data_type=DataSetType.REFERENCE,
         )
     ]
@@ -1008,7 +1093,7 @@ def test_find_datasets_filters_by_bookmark_visualisation(access_type):
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(public_vis, is_bookmarked=True, purpose=DataSetType.VISUALISATION)
+        expected_search_result(public_vis, is_bookmarked=True, data_type=DataSetType.VISUALISATION)
     ]
 
 
@@ -1062,7 +1147,7 @@ def test_find_datasets_filters_by_bookmark_datacut(access_type):
     assert list(response.context["datasets"]) == [
         expected_search_result(
             public_datacut,
-            purpose=DataSetType.DATACUT,
+            data_type=DataSetType.DATACUT,
             is_bookmarked=True,
             has_access=False,
         )
@@ -1089,10 +1174,16 @@ def test_find_datasets_filters_by_show_unpublished():
     response = client.get(reverse("datasets:find_datasets"), {"admin_filters": "unpublished"})
 
     assert response.status_code == 200
-    assert list(response.context["datasets"]) == [
+    expected_results = [
         expected_search_result(published_master, has_access=mock.ANY),
         expected_search_result(unpublished_master, has_access=mock.ANY),
     ]
+
+    results = list(response.context["datasets"])
+
+    assert len(results) == 2
+    for expected in expected_results:
+        assert expected in results
 
 
 @pytest.mark.parametrize(
@@ -1125,6 +1216,55 @@ def test_find_datasets_filters_by_access_and_use_only_returns_the_dataset_once(
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [expected_search_result(access_granted_master)]
+
+
+@pytest.mark.django_db
+def test_find_datasets_filters_by_asset_ownership(user, client):
+    ds1 = factories.DataSetFactory.create(
+        name="Dataset",
+        information_asset_manager=user,
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+    )
+    ds2 = factories.ReferenceDatasetFactory.create(name="Reference")
+    ds3 = factories.VisualisationCatalogueItemFactory.create(
+        name="Visualisation", user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
+    )
+
+    # All available datasets
+    response = client.get(reverse("datasets:find_datasets"))
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(ds1, is_owner=True),
+        expected_search_result(ds2),
+        expected_search_result(ds3),
+    ]
+
+    # User is IAM
+    response = client.get(reverse("datasets:find_datasets"), {"my_datasets": "owned"})
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(ds1, is_owner=True),
+    ]
+
+    # User is IAO
+    ds3.information_asset_owner = user
+    ds3.save()
+    response = client.get(reverse("datasets:find_datasets"), {"my_datasets": "owned"})
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(ds1, is_owner=True),
+        expected_search_result(ds3, is_owner=True),
+    ]
+
+    # User is IAM and IAO
+    ds1.information_asset_owner = user
+    ds1.save()
+    response = client.get(reverse("datasets:find_datasets"), {"my_datasets": "owned"})
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(ds1, is_owner=True),
+        expected_search_result(ds3, is_owner=True),
+    ]
 
 
 @pytest.mark.parametrize(
@@ -1887,7 +2027,7 @@ class TestVisualisationsDetailView:
         assert response.status_code == 200
         assert vis.name in response_content
 
-        assert "to ask any questions or report problems with this dashboard." in response_content
+        assert "to ask any questions about this dashboard." in response_content
 
         assert get_govuk_summary_list_value(doc, "Update frequency") == "N/A"
         assert get_govuk_summary_list_value(doc, "Summary") == vis.short_description
@@ -2039,21 +2179,25 @@ def test_find_datasets_search_by_source_name(client):
     response = client.get(reverse("datasets:find_datasets"), {"q": "source1"})
 
     assert response.status_code == 200
-    assert list(response.context["datasets"]) == [
+    expected_results = [
         expected_search_result(
             ds1,
             search_rank=0.12158542,
-            source_tag_names=[source.name, source_2.name],
             source_tag_ids=MatchUnorderedMembers([source.id, source_2.id]),
             has_access=False,
         ),
         expected_search_result(
             rds,
             search_rank=0.12158542,
-            purpose=DataSetType.DATACUT,
             data_type=DataSetType.REFERENCE,
         ),
     ]
+
+    results = list(response.context["datasets"])
+    assert len(results) == 2
+
+    for expected in expected_results:
+        assert expected in results
 
 
 def test_find_datasets_search_by_topic_name(client):
@@ -2074,21 +2218,25 @@ def test_find_datasets_search_by_topic_name(client):
     response = client.get(reverse("datasets:find_datasets"), {"q": "topic1"})
 
     assert response.status_code == 200
-    assert list(response.context["datasets"]) == [
+    expected_results = [
         expected_search_result(
             ds1,
             search_rank=0.12158542,
-            topic_tag_names=MatchUnorderedMembers([topic.name, topic_2.name]),
             topic_tag_ids=MatchUnorderedMembers([topic.id, topic_2.id]),
             has_access=False,
         ),
         expected_search_result(
             rds,
             search_rank=0.12158542,
-            topic_tag_names=[topic.name],
             topic_tag_ids=[topic.id],
         ),
     ]
+
+    results = list(response.context["datasets"])
+    assert len(results) == 2
+
+    for expected in expected_results:
+        assert expected in results
 
 
 def test_find_datasets_name_weighting(client):
@@ -2109,7 +2257,7 @@ def test_find_datasets_name_weighting(client):
     response = client.get(reverse("datasets:find_datasets"), {"q": "keyword"})
 
     assert response.status_code == 200
-    assert list(response.context["datasets"]) == [
+    expected_results = [
         expected_search_result(
             ds4,
             has_access=False,
@@ -2118,6 +2266,12 @@ def test_find_datasets_name_weighting(client):
         expected_search_result(ds1, has_access=False, search_rank=0.6079271),
         expected_search_result(ds2, has_access=False, search_rank=0.24317084),
     ]
+
+    results = list(response.context["datasets"])
+    assert len(results) == 3
+
+    for expected in expected_results:
+        assert expected in results
 
 
 def test_find_datasets_matches_both_source_and_name(client):
@@ -2134,7 +2288,6 @@ def test_find_datasets_matches_both_source_and_name(client):
     assert list(response.context["datasets"]) == [
         expected_search_result(
             ds1,
-            source_tag_names=MatchUnorderedMembers([source_1.name, source_2.name]),
             source_tag_ids=MatchUnorderedMembers([source_1.id, source_2.id]),
             has_access=False,
         )
@@ -3774,9 +3927,11 @@ def test_filter_reference_datasets_search_v2(access_type):
         user_access_type=access_type,
     )
     factories.ReferenceDatasetFactory.create(published=True, name="Reference")
-    response = client.get(reverse("datasets:find_datasets"), {"use": [DataSetType.DATACUT]})
+    response = client.get(
+        reverse("datasets:find_datasets"), {"data_type": [DataSetType.REFERENCE]}
+    )
     assert response.status_code == 200
-    assert len(response.context["datasets"]) == 2
+    assert len(response.context["datasets"]) == 1
 
 
 @pytest.mark.parametrize(
@@ -3857,11 +4012,17 @@ def test_find_datasets_filters_show_open_data():
     response = client.get(reverse("datasets:find_datasets"))
 
     assert response.status_code == 200
-    assert list(response.context["datasets"]) == [
+    expected_results = [
         expected_search_result(is_open, has_access=mock.ANY),
         expected_search_result(requires_authentication, has_access=mock.ANY),
         expected_search_result(requires_authorization, has_access=mock.ANY),
     ]
+
+    results = list(response.context["datasets"])
+    for expected in expected_results:
+        assert expected in results
+
+    assert len(results) == 3
 
     response = client.get(reverse("datasets:find_datasets"), {"admin_filters": "opendata"})
 
@@ -3877,10 +4038,10 @@ def test_find_datasets_filters_show_datasets_with_visualisations():
     client = Client(**get_http_sso_data(user))
 
     without_visuals = factories.DataSetFactory.create(
-        name="without visuals", user_access_type=UserAccessType.OPEN
+        name="1-without visuals", user_access_type=UserAccessType.OPEN
     )
     with_visuals = factories.DataSetFactory.create(
-        name="with visuals",
+        name="2-with visuals",
         user_access_type=UserAccessType.OPEN,
         type=DataSetType.MASTER,
         published=True,
@@ -3890,6 +4051,7 @@ def test_find_datasets_filters_show_datasets_with_visualisations():
     response = client.get(reverse("datasets:find_datasets"))
 
     assert response.status_code == 200
+
     assert list(response.context["datasets"]) == [
         expected_search_result(without_visuals, has_visuals=False),
         expected_search_result(with_visuals, has_visuals=True),
@@ -4042,20 +4204,96 @@ class TestChartViews:
         assert response.status_code == 302
 
     @override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
-    def test_create_chart_from_grid(self, client, dataset_db):
-        num_charts = ChartBuilderChart.objects.count()
+    def test_aggregation_from_grid(self, client, dataset_db):
         source = factories.SourceTableFactory(
             schema="public",
             table="dataset_test",
             database=dataset_db,
-            dataset=factories.DataSetFactory.create(
+            dataset=factories.MasterDataSetFactory.create(
+                published=True, user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
+            ),
+        )
+        response = client.post(
+            reverse("datasets:aggregate_chart_data", args=(source.dataset.id, str(source.id))),
+            {
+                "columns": ["id", "name"],
+                "filters": json.dumps(
+                    {
+                        "name": {
+                            "filter": "last",
+                            "filterType": "text",
+                            "type": "contains",
+                        }
+                    }
+                ),
+            },
+        )
+        assert response.status_code == 200
+        assert b"Aggregate source table" in response.content
+
+    @override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
+    def test_aggregation_invalid_field(self, client, dataset_db):
+        source = factories.SourceTableFactory(
+            schema="public",
+            table="dataset_test",
+            database=dataset_db,
+            dataset=factories.MasterDataSetFactory.create(
                 published=True, user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
             ),
         )
         response = client.post(
             reverse("datasets:create_chart_from_grid", args=(source.dataset.id, str(source.id))),
             {
-                "columns": ["id", "name"],
+                "aggregate": "sum",
+                "aggregate_field": "name",
+                "group_by": "id",
+                "sort_direction": "ASC",
+                "sort_field": "name",
+                "columns": json.dumps(
+                    [
+                        {"field": "id", "dataType": "numeric"},
+                        {"field": "name", "dataType": "text"},
+                    ]
+                ),
+                "filters": json.dumps(
+                    {
+                        "name": {
+                            "filter": "last",
+                            "filterType": "text",
+                            "type": "contains",
+                        }
+                    }
+                ),
+            },
+        )
+        assert response.status_code == 200
+        assert b"Unable to sum text fields" in response.content
+
+    @override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
+    def test_aggregation(self, client, dataset_db):
+        num_charts = ChartBuilderChart.objects.count()
+        source = factories.SourceTableFactory(
+            schema="public",
+            table="dataset_test",
+            database=dataset_db,
+            dataset=factories.MasterDataSetFactory.create(
+                published=True, user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
+            ),
+        )
+        response = client.post(
+            reverse("datasets:create_chart_from_grid", args=(source.dataset.id, str(source.id))),
+            {
+                "aggregate": "count",
+                "aggregate_field": "",
+                "group_by": "id",
+                "sort_direction": "ASC",
+                "sort_field": "name",
+                "columns": json.dumps(
+                    [
+                        {"field": "id", "dataType": "numeric"},
+                        {"field": "name", "dataType": "text"},
+                    ]
+                ),
                 "filters": json.dumps(
                     {
                         "name": {
@@ -4579,3 +4817,51 @@ class TestDatasetManagerViews:
             "DataWorkspaceRestoreTablePipeline",
             "restore-public-dataset_test-2021-01-01T01:01:01",
         )
+
+    @override_flag(settings.DATA_UPLOADER_UI_FLAG, active=True)
+    @pytest.mark.django_db
+    @freeze_time("2021-01-01 01:01:01")
+    @pytest.mark.parametrize(
+        "log_message,expected_text",
+        [
+            ("Generic Error", b"Please check the following before you try again"),
+            ("UnicodeDecodeError", b"character encoding error"),
+            ("Invalid input syntax for type Numeric", b"error parsing a numeric field"),
+            ("NumericValueOutOfRange", b"out of range error"),
+            ("DatetimeFieldOverflow", b"error parsing a date field"),
+        ],
+    )
+    @mock.patch("dataworkspace.apps.core.utils.get_dataflow_task_log")
+    def test_upload_failed_view(
+        self,
+        mock_get_task_log,
+        log_message,
+        expected_text,
+        dataset_db_with_swap_table,
+        user,
+        client,
+    ):
+        mock_get_task_log.return_value = (
+            f"Dummy logging output...\n{log_message}\nmore log output\nEND"
+        )
+        source = factories.SourceTableFactory.create(
+            dataset=factories.MasterDataSetFactory.create(
+                published=True,
+                user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+                information_asset_manager=user,
+            ),
+            schema="public",
+            table="dataset_test",
+        )
+        response = client.get(
+            reverse(
+                "datasets:manager:upload-failed",
+                args=(
+                    source.dataset.id,
+                    source.id,
+                ),
+            )
+            + "?filename=test.csv&execution_date=2022-01-01&task_name=dummy"
+        )
+        assert response.status_code == 200
+        assert expected_text in response.content

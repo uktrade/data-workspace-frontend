@@ -1,358 +1,192 @@
+import logging
+from datetime import datetime, time, timedelta
+
 from django.contrib.postgres.aggregates.general import ArrayAgg, BoolOr
-from django.contrib.postgres.fields import ArrayField
-from django.contrib.postgres.search import SearchRank
+from django.contrib.postgres.search import SearchRank, SearchQuery
+from django.core.cache import cache
 from django.db.models import (
+    Count,
     Exists,
     F,
     IntegerField,
+    FloatField,
     Q,
+    Sum,
     Value,
     Case,
     When,
     BooleanField,
     OuterRef,
-    CharField,
+    FilteredRelation,
 )
 from django.db.models import QuerySet
+from pytz import utc
+import redis
 
 from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType, TagType
-from dataworkspace.apps.datasets.forms import SearchDatasetsFilters
 from dataworkspace.apps.datasets.models import (
     ReferenceDataset,
     DataSet,
     DataSetVisualisation,
     VisualisationCatalogueItem,
+    ToolQueryAuditLog,
 )
 from dataworkspace.apps.datasets.utils import (
     dataset_type_to_manage_unpublished_permission_codename,
 )
+from dataworkspace.apps.eventlog.models import EventLog
+
+from dataworkspace.cel import celery_app
+
+logger = logging.getLogger("app")
 
 
-def _get_visualisations_data_for_user_matching_query(visualisations: QuerySet, query, user=None):
-    """
-    Filters the visualisation queryset for:
-        1) visibility (whether the user can know if the visualisation exists)
-        2) matches the search terms
-
-    Annotates the visualisation queryset with:
-        1) `has_access`, if the user can use the visualisation.
-    """
-    # Filter out visualisations that the user is not allowed to even know about.
-    if not (
-        user
-        and user.has_perm(
-            dataset_type_to_manage_unpublished_permission_codename(DataSetType.VISUALISATION)
-        )
-    ):
-        visualisations = visualisations.filter(published=True)
-
-    # Filter out visualisations that don't match the search terms
-
-    visualisations = visualisations.annotate(search_rank=SearchRank(F("search_vector"), query))
-
-    if query:
-        visualisations = visualisations.filter(search_vector=query)
-
-    # Mark up whether the user can access the visualisation.
-    if user:
-        user_email_domain = user.email.split("@")[1]
-        access_filter = (
-            (
-                (
-                    Q(
-                        user_access_type__in=[
-                            UserAccessType.REQUIRES_AUTHENTICATION,
-                            UserAccessType.OPEN,
-                        ]
-                    )
-                )
-                & (
-                    Q(visualisationuserpermission__user=user)
-                    | Q(visualisationuserpermission__isnull=True)
-                )
-            )
-            | Q(
-                user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
-                visualisationuserpermission__user=user,
-            )
-            | Q(authorized_email_domains__contains=[user_email_domain])
-        )
-
-    else:
-        access_filter = Q()
-
-    visualisations = visualisations.annotate(
-        _has_access=Case(
-            When(access_filter, then=True),
-            default=False,
-            output_field=BooleanField(),
-        )
-        if access_filter
-        else Value(True, BooleanField()),
-    )
-
-    bookmark_filter = Q(visualisationbookmark__user=user)
-    visualisations = visualisations.annotate(
-        _is_bookmarked=Case(
-            When(bookmark_filter, then=True),
-            default=False,
-            output_field=BooleanField(),
-        )
-        if bookmark_filter
-        else Value(False, BooleanField()),
-    )
-
-    # can't currently subscribe to visualisations
-    visualisations = visualisations.annotate(_is_subscribed=Value(False, BooleanField()))
-
-    # Pull in the source tag IDs for the dataset
-    visualisations = visualisations.annotate(
-        source_tag_ids=ArrayAgg("tags", filter=Q(tags__type=TagType.SOURCE), distinct=True)
-    )
-
-    visualisations = visualisations.annotate(
-        source_tag_names=ArrayAgg("tags__name", filter=Q(tags__type=TagType.SOURCE), distinct=True)
-    )
-
-    # Pull in the topic tag IDs for the dataset
-    visualisations = visualisations.annotate(
-        topic_tag_ids=ArrayAgg("tags", filter=Q(tags__type=TagType.TOPIC), distinct=True)
-    )
-
-    visualisations = visualisations.annotate(
-        topic_tag_names=ArrayAgg("tags__name", filter=Q(tags__type=TagType.TOPIC), distinct=True)
-    )
-
-    visualisations = visualisations.annotate(
-        # Define a `purpose` column denoting the dataset type
-        purpose=Value(DataSetType.VISUALISATION, IntegerField()),
-        data_type=Value(DataSetType.VISUALISATION, IntegerField()),
-        is_open_data=Case(
-            When(user_access_type=UserAccessType.OPEN, then=True),
-            default=False,
-            output_field=BooleanField(),
-        ),
-        has_visuals=Value(False, BooleanField()),
-    )
-
-    # We are joining on the user permissions table to determine `_has_access`` to the visualisation, so we need to
-    # group them and remove duplicates. We aggregate all the `_has_access` fields together and return true if any
-    # of the records say that access is available.
-    visualisations = (
-        visualisations.values(
-            "id",
+SORT_FIELD_MAP = {
+    "relevance": {
+        "display_name": "Relevance",
+        "fields": (
+            "-is_bookmarked",
+            "-table_match",
+            "-search_rank_name",
+            "-search_rank_short_description",
+            "-search_rank_tags",
+            "-search_rank_description",
+            "-search_rank",
+            "-published_date",
             "name",
-            "slug",
-            "short_description",
-            "search_rank",
-            "source_tag_names",
-            "source_tag_ids",
-            "topic_tag_names",
-            "topic_tag_ids",
-            "purpose",
-            "data_type",
-            "published",
-            "published_at",
-            "is_open_data",
-            "has_visuals",
-            "eligibility_criteria",
-        )
-        .annotate(has_access=BoolOr("_has_access"))
-        .annotate(is_bookmarked=BoolOr("_is_bookmarked"))
-        .annotate(is_subscribed=BoolOr("_is_subscribed"))
-    )
+        ),
+    },
+    "-published": {
+        "display_name": "Date published: newest",
+        "fields": ("-published_date", "-search_rank", "name"),
+    },
+    "published": {
+        "display_name": "Date published: oldest",
+        "fields": ("published_date", "-search_rank", "name"),
+    },
+    "alphabetical": {
+        "display_name": "Alphabetical (A-Z)",
+        "fields": ("name",),
+    },
+    "popularity": {
+        "display_name": "Popularity",
+        "fields": ("-average_unique_users_daily", "-published_date", "name"),
+    },
+}
 
-    return visualisations.values(
-        "id",
-        "name",
-        "slug",
-        "short_description",
-        "search_rank",
-        "source_tag_names",
-        "source_tag_ids",
-        "topic_tag_names",
-        "topic_tag_ids",
-        "purpose",
-        "data_type",
-        "published",
-        "published_at",
-        "is_open_data",
-        "has_visuals",
-        "eligibility_criteria",
-        "has_access",
-        "is_bookmarked",
-        "is_subscribed",
-    )
+
+class SearchDatasetsFilters:
+    unpublished: bool
+    open_data: bool
+    with_visuals: bool
+    use: set
+    data_type: set
+    sort_type: str
+    source_ids: set
+    topic_ids: set
+    user_accessible: set
+    user_inaccessible: set
+    query: str
+
+    my_datasets: set
+
+    def has_filters(self):
+        return (
+            len(self.my_datasets)
+            or self.unpublished
+            or self.open_data
+            or self.with_visuals
+            or bool(self.use)
+            or bool(self.data_type)
+            or bool(self.source_ids)
+            or bool(self.topic_ids)
+            or bool(self.user_accessible)
+            or bool(self.user_inaccessible)
+        )
 
 
 def _get_datasets_data_for_user_matching_query(
     datasets: QuerySet,
-    query,
-    use=None,
-    data_type=None,
-    user=None,
-    id_field="id",
+    query: str,
+    id_field,
+    user,
 ):
-    is_reference_query = datasets.model is ReferenceDataset
+    datasets = _filter_datasets_by_permissions(datasets, user)
+    datasets = _filter_by_query(datasets, query)
 
-    visibility_filter = Q(published=True)
-
-    if user:
-        if is_reference_query:
-            reference_type = DataSetType.REFERENCE
-            reference_perm = dataset_type_to_manage_unpublished_permission_codename(reference_type)
-
-            if user.has_perm(reference_perm):
-                visibility_filter |= Q(published=False)
-
-            datasets = datasets.annotate(
-                eligibility_criteria=Value(None, ArrayField(CharField(max_length=20)))
-            )
-
-        if datasets.model is DataSet:
-            master_type, datacut_type = (
-                DataSetType.MASTER,
-                DataSetType.DATACUT,
-            )
-            master_perm = dataset_type_to_manage_unpublished_permission_codename(master_type)
-            datacut_perm = dataset_type_to_manage_unpublished_permission_codename(datacut_type)
-
-            if user.has_perm(master_perm):
-                visibility_filter |= Q(published=False, type=master_type)
-
-            if user.has_perm(datacut_perm):
-                visibility_filter |= Q(published=False, type=datacut_type)
-
-    datasets = datasets.filter(visibility_filter)
-
-    # Filter out datasets that don't match the search terms
-    datasets = datasets.annotate(search_rank=SearchRank(F("search_vector"), query))
-
-    if query:
-        source_table_match = Q()
-        if datasets.model is DataSet:
-            source_table_match = Q(sourcetable__table=query)
-        datasets = datasets.filter(source_table_match | Q(search_vector=query))
-
-    # Mark up whether the user can access the data in the dataset.
-    access_filter = Q()
-    bookmark_filter = Q(referencedatasetbookmark__user=user)
-
-    if user and datasets.model is not ReferenceDataset:
-        user_email_domain = user.email.split("@")[1]
-        access_filter &= (
-            Q(
-                user_access_type__in=[
-                    UserAccessType.REQUIRES_AUTHENTICATION,
-                    UserAccessType.OPEN,
-                ]
-            )
-            | Q(
-                user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
-                datasetuserpermission__user=user,
-            )
-            | Q(authorized_email_domains__contains=[user_email_domain])
-        )
-
-        bookmark_filter = Q(datasetbookmark__user=user)
-
+    # Annotate with ranks for name, short_description, tags and description, as well as the
+    # concatenation of these to support sorting by relevance. Normalization for tags is set
+    # to 0 which ignores the document length. This is to prevent datasets that have multiple
+    # tags ranking lower than those that have fewer tags.
+    #
+    # On ranking name: if we used a plain SearchRank, this would prioritise duplicate words
+    # too much, e.g. when searching for "data workspace" results that have an unrelated
+    # "data" term in the name would be above those without, even if using normalisation.
+    #
+    # A rank of
+    #
+    # 0                   - if no query match on the name
+    # 1/(document length) - if a query match on the name
+    #
+    # seems to work better in this respect. However, this is tricky to do directly in Django,
+    # since "there being a match" via tha match operator @@ is abstracted away, and since
+    # finding the document length of a search vector is not directly exposed. However, we can
+    # extract the above by two different calls to SearchRank, each with a different
+    # normalization value, and dividing them.
     datasets = datasets.annotate(
-        _has_access=Case(
-            When(access_filter, then=True),
-            default=False,
-            output_field=BooleanField(),
-        )
-        if access_filter
-        else Value(True, BooleanField()),
-    )
-
-    datasets = datasets.annotate(
-        _is_bookmarked=Case(
-            When(bookmark_filter, then=True),
-            default=False,
-            output_field=BooleanField(),
-        )
-        if bookmark_filter
-        else Value(False, BooleanField()),
-    )
-
-    subscription_filter = Q(subscriptions__user=user)
-
-    datasets = datasets.annotate(
-        _is_subscribed=Case(
-            When(subscription_filter, then=True), default=False, output_field=BooleanField()
-        )
-        if subscription_filter and datasets.model is not ReferenceDataset
-        else Value(False, BooleanField())
-    )
-
-    # Pull in the source tag IDs for the dataset
-    datasets = datasets.annotate(
-        source_tag_ids=ArrayAgg("tags", filter=Q(tags__type=TagType.SOURCE), distinct=True)
-    )
-    datasets = datasets.annotate(
-        source_tag_names=ArrayAgg("tags__name", filter=Q(tags__type=TagType.SOURCE), distinct=True)
-    )
-
-    # Pull in the topic tag IDs for the dataset
-    datasets = datasets.annotate(
-        topic_tag_ids=ArrayAgg("tags", filter=Q(tags__type=TagType.TOPIC), distinct=True)
-    )
-    datasets = datasets.annotate(
-        topic_tag_names=ArrayAgg("tags__name", filter=Q(tags__type=TagType.TOPIC), distinct=True)
-    )
-
-    # Define a `purpose` column denoting the dataset type.
-    if is_reference_query:
-        datasets = datasets.annotate(
-            purpose=Value(DataSetType.DATACUT, IntegerField()),
-            data_type=Value(DataSetType.REFERENCE, IntegerField()),
-            is_open_data=Value(False, BooleanField()),
-            has_visuals=Value(False, BooleanField()),
-        )
-    else:
-        dataset_visual_filter = DataSetVisualisation.objects.filter(dataset_id=OuterRef("id"))
-        datasets = datasets.annotate(
-            purpose=F("type"),
-            data_type=F("type"),
-            is_open_data=Case(
-                When(user_access_type=UserAccessType.OPEN, then=True),
-                default=False,
-                output_field=BooleanField(),
+        search_rank=SearchRank(F("search_vector_english"), SearchQuery(query, config="english")),
+        search_rank_name=Case(
+            When(
+                search_vector_english_name=SearchQuery(query, config="english"),
+                then=SearchRank(
+                    F("search_vector_english_name"),
+                    SearchQuery(query, config="english"),
+                    normalization=Value(2),
+                )
+                / SearchRank(
+                    F("search_vector_english_name"),
+                    SearchQuery(query, config="english"),
+                    normalization=Value(0),
+                ),
             ),
-            has_visuals=Case(
-                When(Exists(dataset_visual_filter), then=True),
-                default=False,
-                output_field=BooleanField(),
-            ),
-        )
-
-    # We are joining on the user permissions table to determine `_has_access`` to the dataset, so we need to
-    # group them and remove duplicates. We aggregate all the `_has_access` fields together and return true if any
-    # of the records say that access is available.
-    datasets = (
-        datasets.values(
-            id_field,
-            "name",
-            "slug",
-            "short_description",
-            "search_rank",
-            "source_tag_names",
-            "source_tag_ids",
-            "topic_tag_names",
-            "topic_tag_ids",
-            "purpose",
-            "data_type",
-            "published",
-            "published_at",
-            "is_open_data",
-            "has_visuals",
-            "eligibility_criteria",
-        )
-        .annotate(has_access=BoolOr("_has_access"))
-        .annotate(is_bookmarked=BoolOr("_is_bookmarked"))
-        .annotate(is_subscribed=BoolOr("_is_subscribed"))
+            default=0.0,
+            output_field=FloatField(),
+        ),
+        search_rank_short_description=SearchRank(
+            F("search_vector_english_short_description"),
+            SearchQuery(query, config="english"),
+            cover_density=True,
+            normalization=Value(1),
+        ),
+        search_rank_tags=SearchRank(
+            F("search_vector_english_tags"),
+            SearchQuery(query, config="english"),
+            cover_density=True,
+            normalization=Value(0),
+        ),
+        search_rank_description=SearchRank(
+            F("search_vector_english_description"),
+            SearchQuery(query, config="english"),
+            cover_density=True,
+            normalization=Value(1),
+        ),
     )
+
+    datasets = _annotate_has_access(datasets, user)
+    datasets = _annotate_is_bookmarked(datasets, user)
+    datasets = _annotate_source_table_match(datasets, query)
+
+    datasets = _annotate_is_subscribed(datasets, user)
+    datasets = _annotate_tags(datasets)
+
+    datasets = _annotate_data_type(datasets)
+    datasets = _annotate_is_open_data(datasets)
+
+    datasets = _annotate_has_visuals(datasets)
+
+    datasets = _annotate_combined_published_date(datasets)
+
+    datasets = _annotate_is_owner(datasets, user)
 
     return datasets.values(
         id_field,
@@ -360,48 +194,387 @@ def _get_datasets_data_for_user_matching_query(
         "slug",
         "short_description",
         "search_rank",
-        "source_tag_names",
+        "search_rank_name",
+        "search_rank_short_description",
+        "search_rank_tags",
+        "search_rank_description",
         "source_tag_ids",
-        "topic_tag_names",
         "topic_tag_ids",
-        "purpose",
         "data_type",
         "published",
-        "published_at",
         "is_open_data",
         "has_visuals",
-        "eligibility_criteria",
         "has_access",
         "is_bookmarked",
+        "table_match",
         "is_subscribed",
+        "published_date",
+        "average_unique_users_daily",
+        "is_owner",
     )
 
 
-def _sorted_datasets_and_visualisations_matching_query_for_user(
-    query, use, data_type, user, sort_by
-):
+def _schema_table_from_search_term(search_term):
+    # If a search term contains dots we take everything after the last `.` as
+    # the table name and everything before the last `.` as the schema
+    table = search_term
+    schema = None
+    split_term = search_term.split(".")
+    if len(split_term) > 1:
+        schema = "".join(split_term[:-1])
+        table = split_term[-1]
+    return schema, table
+
+
+def _filter_by_query(datasets, query):
+    """
+    Filter out datasets that don't match the search terms
+    @param datasets: django queryset
+    @param query: query text from web
+    @return:
+    """
+    search_filter = Q()
+    if query:
+        schema, table = _schema_table_from_search_term(query)
+        if datasets.model is DataSet:
+            table_match = Q(sourcetable__table=table)
+            if schema:
+                table_match &= Q(sourcetable__schema=schema)
+            search_filter |= table_match
+        if datasets.model is ReferenceDataset:
+            search_filter |= Q(table_name=table)
+        search_filter |= Q(search_vector_english=SearchQuery(query, config="english"))
+    return datasets.filter(search_filter)
+
+
+def _filter_datasets_by_permissions(datasets, user):
+    """
+    Filter out datasets that the user is not allowed to even know about
+    @param datasets: django queryset
+    @param user: request.user
+    @return: queryset with filter applied
+    """
+    visibility_filter = Q(published=True)
+
+    if datasets.model is ReferenceDataset:
+        if user.has_perm(
+            dataset_type_to_manage_unpublished_permission_codename(DataSetType.REFERENCE)
+        ):
+            visibility_filter |= Q(published=False)
+
+    if datasets.model is DataSet:
+        if user.has_perm(
+            dataset_type_to_manage_unpublished_permission_codename(DataSetType.MASTER)
+        ):
+            visibility_filter |= Q(published=False, type=DataSetType.MASTER)
+
+        if user.has_perm(
+            dataset_type_to_manage_unpublished_permission_codename(DataSetType.DATACUT)
+        ):
+            visibility_filter |= Q(published=False, type=DataSetType.DATACUT)
+
+    if datasets.model is VisualisationCatalogueItem:
+        if user.has_perm(
+            dataset_type_to_manage_unpublished_permission_codename(DataSetType.VISUALISATION)
+        ):
+            visibility_filter |= Q(published=False)
+
+    datasets = datasets.filter(visibility_filter)
+    return datasets
+
+
+def _annotate_combined_published_date(datasets: QuerySet) -> tuple:
+    if datasets.model is ReferenceDataset:
+        return datasets.annotate(published_date=F("initial_published_at"))
+
+    return datasets.annotate(published_date=F("published_at"))
+
+
+def _annotate_has_visuals(datasets):
+    """
+    Adds a bool annotation to queryset if the dataset has visuals
+    @param datasets: django queryset
+    @return: the annotated dataset
+    """
+    if datasets.model is ReferenceDataset or datasets.model is VisualisationCatalogueItem:
+        datasets = datasets.annotate(has_visuals=Value(False, BooleanField()))
+    if datasets.model is DataSet:
+        datasets = datasets.annotate(
+            has_visuals=Case(
+                When(
+                    Exists(DataSetVisualisation.objects.filter(dataset_id=OuterRef("id"))),
+                    then=True,
+                ),
+                default=False,
+                output_field=BooleanField(),
+            )
+        )
+    return datasets
+
+
+def _annotate_is_open_data(datasets):
+    """
+    Adds boolean annotation which is True if the dataset is opendata.
+    All reference datasets are open otherwise they are open when the user access type is OPEN
+    @param datasets: django queryset
+    @return:
+    """
+    if datasets.model is ReferenceDataset:
+        return datasets.annotate(is_open_data=Value(False, BooleanField()))
+
+    if datasets.model is DataSet or datasets.model is VisualisationCatalogueItem:
+        datasets = datasets.annotate(
+            is_open_data=Case(
+                When(user_access_type=UserAccessType.OPEN, then=True),
+                default=False,
+                output_field=BooleanField(),
+            )
+        )
+    return datasets
+
+
+def _annotate_data_type(datasets):
+    """
+    Adds an integer field annotation to queryset corresponding to the dataset type
+    @param datasets:
+    @return:
+    """
+    if datasets.model is ReferenceDataset:
+        return datasets.annotate(data_type=Value(DataSetType.REFERENCE, IntegerField()))
+
+    if datasets.model is DataSet:
+        return datasets.annotate(data_type=F("type"))
+
+    if datasets.model is VisualisationCatalogueItem:
+        return datasets.annotate(data_type=Value(DataSetType.VISUALISATION, IntegerField()))
+
+    return datasets
+
+
+def _annotate_tags(datasets):
+    """
+    Adds annotation for source and topic tags
+    @param datasets: django queryset
+    @return:
+    """
+    datasets = datasets.annotate(
+        source_tag_ids=ArrayAgg("tags", filter=Q(tags__type=TagType.SOURCE), distinct=True)
+    )
+    datasets = datasets.annotate(
+        topic_tag_ids=ArrayAgg("tags", filter=Q(tags__type=TagType.TOPIC), distinct=True)
+    )
+    return datasets
+
+
+def _annotate_is_subscribed(datasets, user):
+    """
+    Adds a bool annotation which is True if the user has a subscription to the dataset
+    @param datasets: django queryset
+    @param user: request.user
+    @return:
+    """
+    if datasets.model is ReferenceDataset or datasets.model is VisualisationCatalogueItem:
+        return datasets.annotate(is_subscribed=Value(False, BooleanField()))
+
+    if datasets.model is DataSet:
+        datasets = datasets.annotate(
+            user_subscription=FilteredRelation(
+                "subscriptions", condition=Q(subscriptions__user=user)
+            ),
+        )
+        datasets = datasets.annotate(
+            is_subscribed=BoolOr(
+                Case(
+                    When(user_subscription__user__isnull=False, then=True),
+                    default=False,
+                    output_field=BooleanField(),
+                )
+            )
+        )
+    return datasets
+
+
+def _annotate_is_bookmarked(datasets, user):
+    """
+    Adds a boolean annotation to queryset from *dataset bookmarks
+    @param datasets: django querysey
+    @param user: request.user
+    @return:
+    """
+    if datasets.model is ReferenceDataset:
+        datasets = datasets.annotate(
+            user_bookmark=FilteredRelation(
+                "referencedatasetbookmark",
+                condition=Q(referencedatasetbookmark__user=user),
+            )
+        )
+
+    if datasets.model is DataSet:
+        datasets = datasets.annotate(
+            user_bookmark=FilteredRelation(
+                "datasetbookmark", condition=Q(datasetbookmark__user=user)
+            )
+        )
+
+    if datasets.model is VisualisationCatalogueItem:
+        datasets = datasets.annotate(
+            user_bookmark=FilteredRelation(
+                "visualisationbookmark", condition=Q(visualisationbookmark__user=user)
+            )
+        )
+
+    datasets = datasets.annotate(
+        is_bookmarked=BoolOr(
+            Case(
+                When(user_bookmark__user__isnull=False, then=True),
+                default=False,
+                output_field=BooleanField(),
+            )
+        ),
+    )
+    return datasets
+
+
+def _annotate_source_table_match(datasets, query):
+    if datasets.model is DataSet or datasets.model is ReferenceDataset:
+        schema, table = _schema_table_from_search_term(query)
+        search_filter = Q()
+        if datasets.model is ReferenceDataset:
+            search_filter |= Q(table_name=table)
+        else:
+            table_match = Q(sourcetable__table=table)
+            if schema:
+                table_match &= Q(sourcetable__schema=schema)
+            search_filter |= table_match
+
+        return datasets.annotate(
+            table_match=BoolOr(
+                Case(
+                    When(search_filter, then=True),
+                    default=False,
+                    output_field=BooleanField(),
+                ),
+            ),
+        )
+
+    return datasets.annotate(
+        table_match=Value(False, BooleanField()),
+    )
+
+
+def _annotate_has_access(datasets, user):
+    """
+    Adds a bool annotation to queryset if user has access to the dataset
+    @param datasets: django queryset
+    @param user: request.user
+    @return: queryset
+    """
+    if datasets.model is ReferenceDataset:
+        datasets = datasets.annotate(has_access=Value(True, BooleanField()))
+
+    if datasets.model is DataSet or datasets.model is VisualisationCatalogueItem:
+        if datasets.model is DataSet:
+            datasets = datasets.annotate(
+                user_permission=FilteredRelation(
+                    "datasetuserpermission",
+                    condition=Q(datasetuserpermission__user=user),
+                ),
+            )
+
+        if datasets.model is VisualisationCatalogueItem:
+            datasets = datasets.annotate(
+                user_permission=FilteredRelation(
+                    "visualisationuserpermission",
+                    condition=Q(visualisationuserpermission__user=user),
+                ),
+            )
+        datasets = datasets.annotate(
+            has_access=BoolOr(
+                Case(
+                    When(
+                        Q(
+                            user_access_type__in=[
+                                UserAccessType.REQUIRES_AUTHENTICATION,
+                                UserAccessType.OPEN,
+                            ]
+                        )
+                        | (
+                            Q(
+                                user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
+                                user_permission__user__isnull=False,
+                            )
+                        )
+                        | Q(authorized_email_domains__contains=[user.email.split("@")[1]]),
+                        then=True,
+                    ),
+                    default=False,
+                    output_field=BooleanField(),
+                )
+            ),
+        )
+    return datasets
+
+
+def _annotate_is_owner(datasets, user):
+    """
+    Adds a boolean annotation to queryset which is set to True if the user
+    is an IAO or IAM of a dataset
+    @param datasets: django querysey
+    @param user: request.user
+    @return:
+    """
+    datasets = datasets.annotate(
+        is_owner=BoolOr(
+            Case(
+                When(
+                    Q(information_asset_owner=user) | Q(information_asset_manager=user), then=True
+                ),
+                default=False,
+                output_field=BooleanField(),
+            )
+        ),
+    )
+    return datasets
+
+
+def _sorted_datasets_and_visualisations_matching_query_for_user(query, user, sort_by):
     """
     Retrieves all master datasets, datacuts, reference datasets and visualisations (i.e. searchable items)
-    and returns them, sorted by incoming sort field, default is desc(search_rank).
+    and returns them, sorted by incoming sort field
+    @param query: django queryset
+    @param user: request.user
+    @param sort_by: str one or many sort fields in django queryset order_by. i.e '-name' or 'name' or '-name,-dob'
+
+    @return:
     """
     master_and_datacut_datasets = _get_datasets_data_for_user_matching_query(
-        DataSet.objects.live(), query, use, data_type, user=user, id_field="id"
+        DataSet.objects.live(),
+        query,
+        id_field="id",
+        user=user,
     )
 
     reference_datasets = _get_datasets_data_for_user_matching_query(
         ReferenceDataset.objects.live(),
         query,
-        user=user,
         id_field="uuid",
+        user=user,
     )
 
-    visualisations = _get_visualisations_data_for_user_matching_query(
-        VisualisationCatalogueItem.objects.live(), query, user=user
+    visualisations = _get_datasets_data_for_user_matching_query(
+        VisualisationCatalogueItem.objects.live(), query, id_field="id", user=user
     )
 
     # Combine all datasets and visualisations and order them.
+    sort_fields = sort_by["fields"]
 
-    sort_fields = sort_by.split(",")
+    # If there is a query, ignore bookmarks for the purposes of sort, since
+    # if someone is searching for something, likely it's not something they
+    # bookmarked since that would have already been high on the front page
+    if query:
+        sort_fields = [
+            field for field in sort_fields if field not in ("is_bookmarked", "-is_bookmarked")
+        ]
 
     all_datasets = (
         master_and_datacut_datasets.union(reference_datasets)
@@ -416,8 +589,6 @@ def search_for_datasets(user, filters: SearchDatasetsFilters, matcher) -> tuple:
     all_datasets_visible_to_user_matching_query = (
         _sorted_datasets_and_visualisations_matching_query_for_user(
             query=filters.query,
-            use=filters.use,
-            data_type=filters.data_type,
             user=user,
             sort_by=filters.sort_type,
         )
@@ -446,4 +617,191 @@ def search_for_datasets(user, filters: SearchDatasetsFilters, matcher) -> tuple:
         )
     )
 
-    return all_datasets_visible_to_user_matching_query, datasets_matching_query_and_filters
+    return (
+        all_datasets_visible_to_user_matching_query,
+        datasets_matching_query_and_filters,
+    )
+
+
+def _get_popularity_calculation_period(dataset):
+    """
+    Returns the start and end datetimes for a valid period to calculate dataset usage on.
+    The calculation period is:
+
+    From: Midnight 28 days before the calculation is done
+    To: Midnight of the day the calculation is done
+
+    If the dataset was published less than 28 days ago, start the period at midnight the day
+    after it was published.
+    """
+    # The farthest we go back is 00:00 28 days ago
+    period_end = datetime.combine(datetime.utcnow(), time.min)
+    min_start_date = datetime.combine(datetime.utcnow(), time.min) - timedelta(days=28)
+
+    # If the vis was published < 28 days ago, start the count
+    # from the end of the day it was first published
+    published_date = (
+        datetime.combine(dataset.published_at, time.max)
+        if dataset.published_at is not None
+        else min_start_date
+    )
+    period_start = max(min_start_date, published_date)
+
+    return period_start, period_end
+
+
+def calculate_visualisation_average(visualisation):
+    period_start, period_end = _get_popularity_calculation_period(visualisation)
+    total_days = (period_end - period_start).days
+
+    logger.info(
+        "Calculating average usage for visualisation '%s' for the period %s - %s (%s days)",
+        visualisation.name,
+        period_start,
+        period_end,
+        total_days,
+    )
+
+    if total_days < 1:
+        return 0
+
+    total_users = (
+        visualisation.events.filter(
+            event_type__in=[
+                EventLog.TYPE_VIEW_QUICKSIGHT_VISUALISATION,
+                EventLog.TYPE_VIEW_SUPERSET_VISUALISATION,
+                EventLog.TYPE_VIEW_VISUALISATION_TEMPLATE,
+            ],
+            timestamp__gt=period_start.replace(tzinfo=utc),
+            timestamp__lt=period_end.replace(tzinfo=utc),
+        )
+        .values("timestamp__date")
+        .annotate(user_count=Count("user", distinct=True))
+        .aggregate(total_users=Sum("user_count"))["total_users"]
+    )
+
+    if total_users is None:
+        return 0
+
+    return total_users / total_days
+
+
+def calculate_dataset_average(dataset):
+    period_start, period_end = _get_popularity_calculation_period(dataset)
+    total_days = (period_end - period_start).days
+
+    logger.info(
+        "Calculating average usage for dataset '%s' for the period %s - %s (%s days)",
+        dataset.name,
+        period_start,
+        period_end,
+        total_days,
+    )
+
+    if total_days < 1:
+        return 0
+
+    q = Q(pk__in=[])  # If there are no tables, match no ToolQueryAuditLog instances
+    for table in dataset.sourcetable_set.all():
+        q = q | Q(tables__schema=table.schema, tables__table=table.table)
+
+    query_user_days = (
+        ToolQueryAuditLog.objects.filter(
+            timestamp__gt=period_start.replace(tzinfo=utc),
+            timestamp__lt=period_end.replace(tzinfo=utc),
+        )
+        .filter(q)
+        .values_list("timestamp__date", "user")
+        .distinct()
+    )
+
+    event_user_days = (
+        dataset.events.filter(
+            event_type__in=[
+                EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
+                EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD_COMPLETE,
+                EventLog.TYPE_DATASET_SOURCE_VIEW_DOWNLOAD,
+                EventLog.TYPE_DATASET_TABLE_DATA_DOWNLOAD,
+            ],
+            timestamp__gt=period_start.replace(tzinfo=utc),
+            timestamp__lt=period_end.replace(tzinfo=utc),
+        )
+        .values_list("timestamp__date", "user")
+        .distinct()
+    )
+
+    total_users = set(query_user_days) | set(event_user_days)
+
+    return len(total_users) / total_days
+
+
+def calculate_ref_dataset_average(ref_dataset):
+    period_start, period_end = _get_popularity_calculation_period(ref_dataset)
+    total_days = (period_end - period_start).days
+
+    logger.info(
+        "Calculating average usage for reference dataset '%s' for the period %s - %s (%s days)",
+        ref_dataset.name,
+        period_start,
+        period_end,
+        total_days,
+    )
+
+    if total_days < 1:
+        return 0
+
+    query_user_days = (
+        ToolQueryAuditLog.objects.filter(
+            timestamp__gt=period_start.replace(tzinfo=utc),
+            timestamp__lt=period_end.replace(tzinfo=utc),
+        )
+        .filter(tables__schema="public", tables__table=ref_dataset.table_name)
+        .values_list("timestamp__date", "user")
+        .distinct()
+    )
+
+    event_user_days = (
+        ref_dataset.events.filter(
+            event_type__in=[
+                EventLog.TYPE_REFERENCE_DATASET_VIEW,
+                EventLog.TYPE_REFERENCE_DATASET_DOWNLOAD,
+            ],
+            timestamp__gt=period_start.replace(tzinfo=utc),
+            timestamp__lt=period_end.replace(tzinfo=utc),
+        )
+        .values_list("timestamp__date", "user")
+        .distinct()
+    )
+
+    total_users = set(query_user_days) | set(event_user_days)
+    return len(total_users) / total_days
+
+
+@celery_app.task()
+def _update_datasets_average_daily_users():
+    def _update_datasets(datasets, calculate_value):
+        for dataset in datasets:
+            value = calculate_value(dataset)
+            logger.info("%s average unique users: %s", dataset, value)
+            dataset.average_unique_users_daily = value
+            dataset.save()
+
+    _update_datasets(DataSet.objects.live().filter(published=True), calculate_dataset_average)
+    _update_datasets(
+        ReferenceDataset.objects.live().filter(published=True), calculate_ref_dataset_average
+    )
+    _update_datasets(
+        VisualisationCatalogueItem.objects.live().filter(published=True),
+        calculate_visualisation_average,
+    )
+
+
+@celery_app.task()
+def update_datasets_average_daily_users():
+    try:
+        with cache.lock(
+            "update_datasets_average_daily_users_lock", blocking_timeout=0, timeout=1800
+        ):
+            _update_datasets_average_daily_users()
+    except redis.exceptions.LockError:
+        logger.info("Unable to acquire lock to update dataset averages")

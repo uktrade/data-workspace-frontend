@@ -119,8 +119,7 @@ class CreateTableDataTypesForm(CreateTableForm):
                 label=col_def["column_name"],
                 initial=col_def["data_type"],
                 choices=(
-                    (value, name.capitalize())
-                    for name, value in SCHEMA_POSTGRES_DATA_TYPE_MAP.items()
+                    (name, name.capitalize()) for name, _ in SCHEMA_POSTGRES_DATA_TYPE_MAP.items()
                 ),
                 widget=GOVUKDesignSystemSelectWidget(
                     label_is_heading=False,

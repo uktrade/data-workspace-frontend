@@ -1,15 +1,15 @@
+from collections import defaultdict, deque
 import hashlib
 import json
 import logging
 from typing import Tuple
 
-import psqlparse
+import pglast
 import psycopg2
 from psycopg2.sql import Literal, SQL
 import pytz
 from django.conf import settings
-from django.db import connections, transaction
-from django.db.utils import DatabaseError
+from django.db import connections
 
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.utils import TYPE_CODES_REVERSED
@@ -42,7 +42,7 @@ def get_columns(database_name, schema=None, table=None, query=None, include_type
             return []
 
 
-def get_tables_last_updated_date(database_name: str, tables: Tuple[Tuple[str, str]]):
+def get_earliest_tables_last_updated_date(database_name: str, tables: Tuple[Tuple[str, str]]):
     """
     Return the earliest of the last updated dates for a list of tables in UTC.
     """
@@ -69,24 +69,96 @@ def get_tables_last_updated_date(database_name: str, tables: Tuple[Tuple[str, st
         return dt.replace(tzinfo=pytz.UTC) if dt else None
 
 
-def extract_queried_tables_from_sql_query(database_name, query):
-    # Extract the queried tables from the FROM clause using temporary views
-    with connections[database_name].cursor() as cursor:
-        try:
-            with transaction.atomic():
-                cursor.execute(
-                    f"create temporary view get_tables as (select 1 from ({query.strip().rstrip(';')}) sq)"
-                )
-        except DatabaseError:
-            tables = []
-        else:
-            cursor.execute(
-                "select table_schema, table_name from information_schema.view_table_usage where view_name = 'get_tables'"
-            )
-            tables = cursor.fetchall()
-            cursor.execute("drop view get_tables")
+def get_all_tables_last_updated_date(tables: Tuple[Tuple[str, str, str]]):
+    """
+    Return the last updated dates in UTC for each table in a list of tables
+    """
 
-        return tables
+    def last_updated_date_for_database(database_name, tables_for_database: Tuple[Tuple[str, str]]):
+        with connections[database_name].cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT
+                    table_schema,
+                    table_name,
+                    MAX(source_data_modified_utc) AS modified_date,
+                    MAX(dataflow_swapped_tables_utc) AS swap_table_date
+                FROM dataflow.metadata
+                WHERE (table_schema, table_name) IN %s
+                GROUP BY (1, 2)
+                """,
+                [tuple(tables_for_database)],
+            )
+            return dict(
+                (
+                    (((table_schema, table_name), modified_date or swap_table_date))
+                    for table_schema, table_name, modified_date, swap_table_date in cursor.fetchall()
+                )
+            )
+
+    tables_by_database = defaultdict(list)
+    for database_name, table_schema, table_name in tables:
+        tables_by_database[database_name].append((table_schema, table_name))
+
+    return {
+        database_name: last_updated_date_for_database(database_name, tables_for_database)
+        for database_name, tables_for_database in tables_by_database.items()
+    }
+
+
+def extract_queried_tables_from_sql_query(query):
+    """
+    Returns a list of (schema, table) tuples extracted from the passed PostgreSQL query
+
+    This does not communicate with a database, and instead uses pglast to parse the
+    query. However, it does not use pglast's built-in functions to extract tables -
+    they're buggy in the cases where CTEs have the same names as tables in the
+    search path.
+
+    This isn't perfect though - it assumes tables without a schema are in the "public"
+    schema, but "public" might not be in the search path, or it might not be the only
+    schema in the search path. However, it's probably fine for our usage where "public"
+    _is_ in the search path, and the only tables without a schema that we care about in
+    our queries are indeed in the public schema - typically only reference dataset tables.
+    """
+
+    try:
+        statements = pglast.parse_sql(query)
+    except pglast.parser.ParseError as e:
+        logger.error(e)
+        return []
+
+    tables = set()
+
+    node_ctenames = deque()
+    node_ctenames.append((statements[0](), ()))
+
+    while node_ctenames:
+        node, ctenames = node_ctenames.popleft()
+
+        if node.get("withClause", None) is not None:
+            if node["withClause"]["recursive"]:
+                ctenames += tuple((cte["ctename"] for cte in node["withClause"]["ctes"]))
+                for cte in node["withClause"]["ctes"]:
+                    node_ctenames.append((cte, ctenames))
+            else:
+                for cte in node["withClause"]["ctes"]:
+                    node_ctenames.append((cte, ctenames))
+                    ctenames += (cte["ctename"],)
+
+        if node.get("@", None) == "RangeVar" and (
+            node["schemaname"] is not None or node["relname"] not in ctenames
+        ):
+            tables.add((node["schemaname"] or "public", node["relname"]))
+
+        for node_type, node_value in node.items():
+            if node_type == "withClause":
+                continue
+            for nested_node in node_value if isinstance(node_value, tuple) else (node_value,):
+                if isinstance(nested_node, dict):
+                    node_ctenames.append((nested_node, ctenames))
+
+    return sorted(list(tables))
 
 
 def get_source_table_changelog(source_table):
@@ -154,8 +226,8 @@ def get_reference_dataset_changelog(dataset):
 
 
 def get_data_hash(cursor, sql):
-    statements = psqlparse.parse(sql)
-    if statements[0].sort_clause:
+    statements = pglast.parse_sql(sql)
+    if statements[0].stmt()["sortClause"]:
         hashed_data = hashlib.md5()
         cursor.execute(SQL(f"SELECT t.*::TEXT FROM ({sql}) as t"))
         for row in cursor:

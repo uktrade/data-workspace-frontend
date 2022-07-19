@@ -49,7 +49,9 @@ from dataworkspace.apps.datasets.models import (
     VisualisationLinkSqlQuery,
     ToolQueryAuditLog,
     DataSetSubscription,
+    SourceTableFieldDefinition,
 )
+from dataworkspace.apps.datasets.utils import get_dataset_table
 from dataworkspace.apps.datasets.permissions.utils import (
     process_dataset_authorized_users_change,
     process_visualisation_catalogue_item_authorized_users_change,
@@ -197,6 +199,12 @@ class CustomDatasetQueryInline(admin.TabularInline, SourceReferenceInlineMixin):
         return readonly_fields
 
 
+class FieldDefinitionInline(admin.TabularInline):
+    model = SourceTableFieldDefinition
+    extra = 1
+    manage_unpublished_permission_codename = "datasets.manage_unpublished_master_datasets"
+
+
 def clone_dataset(modeladmin, request, queryset):
     for dataset in queryset:
         dataset.clone()
@@ -228,6 +236,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
         "published",
         "number_of_downloads",
         "get_bookmarks",
+        "get_average_unique_users_daily",
     )
     list_filter = ("tags",)
     search_fields = ["name"]
@@ -259,6 +268,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
                     "personal_data",
                     "restrictions_on_usage",
                     "type",
+                    "dictionary_published",
                 ]
             },
         ),
@@ -300,6 +310,12 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
 
     get_bookmarks.admin_order_field = "datasetbookmark"
     get_bookmarks.short_description = "Bookmarks"
+
+    def get_average_unique_users_daily(self, obj):
+        return f"{obj.average_unique_users_daily:.3f}"
+
+    get_average_unique_users_daily.admin_order_field = "average_unique_users_daily"
+    get_average_unique_users_daily.short_description = "Average unique daily users"
 
     @transaction.atomic
     def save_model(self, request, obj, form, change):
@@ -429,6 +445,7 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
         "published_at",
         "published",
         "get_bookmarks",
+        "get_average_unique_users_daily",
     )
     inlines = [ReferenceDataFieldInline]
     autocomplete_fields = (
@@ -464,7 +481,7 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
                     "is_draft",
                 ]
             },
-        )
+        ),
     ]
     readonly_fields = ("get_published_version",)
     manage_unpublished_permission_codename = "datasets.manage_unpublished_reference_datasets"
@@ -481,6 +498,12 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
 
     get_bookmarks.admin_order_field = "referencedatasetbookmark"
     get_bookmarks.short_description = "Bookmarks"
+
+    def get_average_unique_users_daily(self, obj):
+        return f"{obj.average_unique_users_daily:.3f}"
+
+    get_average_unique_users_daily.admin_order_field = "average_unique_users_daily"
+    get_average_unique_users_daily.short_description = "Average unique daily users"
 
     class Media:
         js = ("admin/js/vendor/jquery/jquery.js", "data-workspace-admin.js")
@@ -575,6 +598,8 @@ class SourceTableAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         return self.model.objects.filter(dataset__deleted=False)
+
+    inlines = [FieldDefinitionInline]
 
 
 @admin.register(VisualisationLinkSqlQuery)
@@ -762,6 +787,7 @@ class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStamp
         "published",
         "get_tags",
         "get_bookmarks",
+        "get_average_unique_users_daily",
     )
     list_filter = ("tags",)
     search_fields = ["name"]
@@ -830,6 +856,12 @@ class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStamp
     get_bookmarks.admin_order_field = "visualisationbookmark"
     get_bookmarks.short_description = "Bookmarks"
 
+    def get_average_unique_users_daily(self, obj):
+        return f"{obj.average_unique_users_daily:.3f}"
+
+    get_average_unique_users_daily.admin_order_field = "average_unique_users_daily"
+    get_average_unique_users_daily.short_description = "Average unique daily users"
+
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "visualisation_template":
             kwargs["queryset"] = VisualisationTemplate.objects.filter(
@@ -897,11 +929,6 @@ class ToolQueryAuditLogAdmin(admin.ModelAdmin):
         "get_list_related_datasets",
     ]
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.source_tables = SourceTable.objects.filter(dataset__deleted=False)
-        self.reference_datasets = ReferenceDataset.objects.live()
-
     def has_add_permission(self, request):
         return False
 
@@ -942,13 +969,7 @@ class ToolQueryAuditLogAdmin(admin.ModelAdmin):
     get_user_name_link.short_description = "User"
 
     def _get_related_datasets(self, obj, separator):
-        datasets = set()
-        for table in obj.tables.all():
-            for source_table in self.source_tables.filter(schema=table.schema, table=table.table):
-                datasets.add(source_table.dataset)
-            if table.schema == "public":
-                for ref_dataset in self.reference_datasets.filter(table_name=table.table):
-                    datasets.add(ref_dataset)
+        datasets = get_dataset_table(obj)
         return (
             format_html(
                 separator.join(

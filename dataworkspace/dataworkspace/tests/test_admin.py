@@ -2746,7 +2746,7 @@ class TestDatasetAdminPytest:
                 ["public.auth_user"],
             ),
             ("SELECT 1", []),
-            ("SELECT * FROM test", []),
+            ("SELECT * FROM test", ["public.test"]),
             ("SELECT * FROM", []),
         ),
     )

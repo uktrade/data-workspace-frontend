@@ -34,7 +34,6 @@
 {% block page_title %}Search - {{ block.super }}{% endblock %}
 
 {% block content %}
-
   <form id="live-search-form" action="{% url 'datasets:find_datasets' %}" method="get">
 
     <div class="govuk-grid-row">
@@ -210,7 +209,7 @@
                       N/A
                     {% endfor %}
                   </dd>
-                  {% if dataset.topic_tag_names %}
+                  {% if dataset.topics %}
                     <dt>Topics:</dt>
                     <dd>
                       {% for topic in dataset.topics %}

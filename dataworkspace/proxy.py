@@ -112,10 +112,10 @@ async def async_main():
         f"font-src {root_domain} data:  https://fonts.gstatic.com;"
         f"form-action {root_domain} *.{root_domain};"
         f"frame-ancestors {root_domain};"
-        f"img-src {root_domain} data: https://www.googletagmanager.com https://www.google-analytics.com https://ssl.gstatic.com https://www.gstatic.com;"  # pylint: disable=line-too-long
-        f"script-src 'unsafe-inline' {root_domain} https://www.googletagmanager.com https://www.google-analytics.com https://tagmanager.google.com;"  # pylint: disable=line-too-long
+        f"img-src {root_domain} data: https://www.googletagmanager.com https://www.google-analytics.com https://ssl.gstatic.com https://www.gstatic.com *.google-analytics.com *.googletagmanager.com;"  # pylint: disable=line-too-long
+        f"script-src 'unsafe-inline' {root_domain} https://www.googletagmanager.com https://www.google-analytics.com https://tagmanager.google.com *.googletagmanager.com;"  # pylint: disable=line-too-long
         f"style-src 'unsafe-inline' {root_domain} https://tagmanager.google.com https://fonts.googleapis.com;"
-        f"connect-src {root_domain} 'self';"
+        f"connect-src {root_domain} 'self' *.google-analytics.com *.analytics.google.com *.googletagmanager.com;"
     )
 
     # A running wrapped application on <my-application>.<root_domain>  has an
@@ -127,10 +127,11 @@ async def async_main():
             f"form-action 'none';"
             f"frame-ancestors 'none';"
             f"frame-src {direct_host} {sso_host} https://www.googletagmanager.com;"
-            f"img-src {root_domain} https://www.googletagmanager.com https://www.google-analytics.com https://ssl.gstatic.com https://www.gstatic.com;"  # pylint: disable=line-too-long
+            f"img-src {root_domain} https://www.googletagmanager.com https://www.google-analytics.com https://ssl.gstatic.com https://www.gstatic.com *.google-analytics.com *.googletagmanager.com;"  # pylint: disable=line-too-long
             f"font-src {root_domain} data: https://fonts.gstatic.com;"
-            f"script-src 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://tagmanager.google.com;"  # pylint: disable=line-too-long
+            f"script-src 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://tagmanager.google.com *.googletagmanager.com;"  # pylint: disable=line-too-long
             f"style-src 'unsafe-inline' {root_domain} https://tagmanager.google.com https://fonts.googleapis.com;"
+            f"connect-src *.google-analytics.com *.analytics.google.com *.googletagmanager.com;"
         )
 
     # A running application should only connect to self: this is where we have the most
@@ -1204,6 +1205,7 @@ async def async_main():
                 or is_requesting_credentials(request)
                 or is_requesting_files(request)
                 or is_data_explorer_requested(request)
+                or is_flower_requested(request)
             )
 
             if not ip_whitelist_required:

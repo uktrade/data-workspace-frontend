@@ -9,8 +9,10 @@ import boto3
 import botocore
 import requests
 from django.conf import settings
+from django.core.cache import cache
 from django.db import connections, IntegrityError, transaction
 from django.db.models import Q
+from django.db.utils import DatabaseError
 from django.http import Http404
 from django.urls import reverse
 from psycopg2.sql import Identifier, Literal, SQL
@@ -39,7 +41,7 @@ from dataworkspace.datasets_db import (
     get_data_hash,
     get_reference_dataset_changelog,
     get_source_table_changelog,
-    get_tables_last_updated_date,
+    get_earliest_tables_last_updated_date,
 )
 from dataworkspace.notify import EmailSendFailureException, send_email
 from dataworkspace.utils import TYPE_CODES_REVERSED
@@ -182,7 +184,7 @@ def process_quicksight_dashboard_visualisations():
 
     def get_last_updated_date_by_table_name(schema, table):
         for connection_alias, _ in settings.DATABASES_DATA.items():
-            date = get_tables_last_updated_date(connection_alias, ((schema, table),))
+            date = get_earliest_tables_last_updated_date(connection_alias, ((schema, table),))
             if date:
                 return date
         return None
@@ -215,7 +217,6 @@ def process_quicksight_dashboard_visualisations():
             )
             last_updated_dates = []
             tables = []
-            database_name = list(settings.DATABASES_DATA.items())[0][0]
 
             for data_set_arn in data_set_arns:
                 try:
@@ -248,7 +249,6 @@ def process_quicksight_dashboard_visualisations():
                                 )
                                 tables.extend(
                                     extract_queried_tables_from_sql_query(
-                                        database_name,
                                         table_map["CustomSql"]["SqlQuery"],
                                     )
                                 )
@@ -283,7 +283,6 @@ def process_quicksight_dashboard_visualisations():
                                 )
                                 tables.extend(
                                     extract_queried_tables_from_sql_query(
-                                        database_name,
                                         table_map["CustomSql"]["SqlQuery"],
                                     )
                                 )
@@ -349,8 +348,6 @@ def link_superset_visualisations_to_related_datasets():
 
     jwt_access_token = login_response.json()["access_token"]
 
-    database_name = list(settings.DATABASES_DATA.items())[0][0]
-
     for visualisation_link in VisualisationLink.objects.filter(
         visualisation_type="SUPERSET", visualisation_catalogue_item__deleted=False
     ):
@@ -384,7 +381,7 @@ def link_superset_visualisations_to_related_datasets():
                 dataset["id"],
             )
 
-            tables.extend(extract_queried_tables_from_sql_query(database_name, dataset["sql"]))
+            tables.extend(extract_queried_tables_from_sql_query(dataset["sql"]))
 
         if tables:
             set_dataset_related_visualisation_catalogue_items(visualisation_link, tables)
@@ -452,7 +449,7 @@ def build_filtered_dataset_query(inner_query, column_config, params):
                 terms[0] = bool(int(terms[0]))
 
             # Arrays are a special case
-            elif data_type == "array":
+            if data_type == "array":
                 if filter_data["type"] == "contains":
                     query_params[field] = terms[0]
                     where_clause.append(
@@ -656,12 +653,25 @@ def update_metadata_with_source_table_id():
 
 
 @celery_app.task()
+@close_all_connections_if_not_in_atomic_block
 def store_custom_dataset_query_metadata():
+    with cache.lock("store_custom_dataset_query_metadata_lock", blocking_timeout=0, timeout=86400):
+        do_store_custom_dataset_query_metadata()
+
+
+def do_store_custom_dataset_query_metadata():
+    statement_timeout = 60 * 1000
     for query in CustomDatasetQuery.objects.filter(dataset__published=True):
         sql = query.query.rstrip().rstrip(";")
 
-        tables = extract_queried_tables_from_sql_query(query.database.memorable_name, sql)
-        tables_last_updated_date = get_tables_last_updated_date(
+        tables = extract_queried_tables_from_sql_query(sql)
+        if not tables:
+            logger.info(
+                "Not adding metadata for query %s as no tables could be extracted", query.name
+            )
+            continue
+
+        tables_last_updated_date = get_earliest_tables_last_updated_date(
             query.database.memorable_name, tuple(tables)
         )
         query_last_updated_date = query.modified_date
@@ -672,6 +682,7 @@ def store_custom_dataset_query_metadata():
             else query_last_updated_date
         )
         with connections[query.database.memorable_name].cursor() as cursor:
+            cursor.execute(f"SET statement_timeout = {statement_timeout}")
             cursor.execute(
                 SQL(
                     "SELECT DISTINCT ON(source_data_modified_utc) "
@@ -687,8 +698,26 @@ def store_custom_dataset_query_metadata():
             )
             metadata = cursor.fetchone()
             if not metadata or last_updated_date != metadata[0]:
-                data_hash = get_data_hash(cursor, sql)
-                cursor.execute(f"SELECT * FROM ({sql}) sq LIMIT 0")
+                try:
+                    data_hash = get_data_hash(cursor, sql)
+                except DatabaseError as e:
+                    logger.error(
+                        "Not adding metadata for query %s as get_data_hash failed with %s",
+                        query.name,
+                        e,
+                    )
+                    continue
+
+                try:
+                    cursor.execute(f"SELECT * FROM ({sql}) sq LIMIT 0")
+                except DatabaseError as e:
+                    logger.error(
+                        "Not adding metadata for query %s as querying for columns failed with %s",
+                        query.name,
+                        e,
+                    )
+                    continue
+
                 columns = [(col[0], TYPE_CODES_REVERSED[col[1]]) for col in cursor.description]
 
                 cursor.execute(
@@ -958,3 +987,16 @@ def send_notification_emails():
         logger.error("Exception when creating notifications: %s", e)
     else:
         send_notifications()
+
+
+def get_dataset_table(obj):
+    datasets = set()
+    for table in obj.tables.all():
+        for source_table in SourceTable.objects.filter(dataset__deleted=False).filter(
+            schema=table.schema, table=table.table
+        ):
+            datasets.add(source_table.dataset)
+        if table.schema == "public":
+            for ref_dataset in ReferenceDataset.objects.live().filter(table_name=table.table):
+                datasets.add(ref_dataset)
+    return datasets

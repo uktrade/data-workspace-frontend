@@ -245,6 +245,9 @@ CSP_FRAME_ANCESTORS = [APPLICATION_ROOT_DOMAIN]
 CSP_CONNECT_SRC = [
     APPLICATION_ROOT_DOMAIN,
     "https://www.google-analytics.com",
+    "*.google-analytics.com",
+    "*.analytics.google.com",
+    "*.googletagmanager.com",
 ]
 CSP_IMG_SRC = [
     APPLICATION_ROOT_DOMAIN,
@@ -254,12 +257,15 @@ CSP_IMG_SRC = [
     "https://www.google-analytics.com",
     "https://ssl.gstatic.com",
     "https://www.gstatic.com",
+    "*.google-analytics.com",
+    "*.googletagmanager.com",
 ]
 CSP_SCRIPT_SRC = [
     APPLICATION_ROOT_DOMAIN,
     "https://www.googletagmanager.com",
     "https://www.google-analytics.com",
     "https://tagmanager.google.com",
+    "*.googletagmanager.com",
 ]
 CSP_STYLE_SRC = [
     APPLICATION_ROOT_DOMAIN,
@@ -297,6 +303,11 @@ NOTIFY_DATASET_NOTIFICATIONS_ALL_DATA_TEMPLATE_ID = "daca1854-a2b3-4020-9c19-59b
 
 CELERY_BROKER_URL = env["REDIS_URL"]
 CELERY_RESULT_BACKEND = env["REDIS_URL"]
+
+CELERY_ROUTES = {
+    "dataworkspace.apps.explorer.tasks._run_querylog_query": {"queue": "explorer.tasks"},
+    "dataworkspace.apps.applications.spawner.spawn": {"queue": "applications.spawner.spawn"},
+}
 
 if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
     CELERY_BEAT_SCHEDULE = {
@@ -383,6 +394,11 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
         "send-notification-emails": {
             "task": "dataworkspace.apps.datasets.utils.send_notification_emails",
             "schedule": 60 * 5,
+            "args": (),
+        },
+        "update-search-popularity": {
+            "task": "dataworkspace.apps.datasets.search.update_datasets_average_daily_users",
+            "schedule": crontab(minute=30),
             "args": (),
         },
     }

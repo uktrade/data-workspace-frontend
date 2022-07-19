@@ -3,6 +3,7 @@ import multiprocessing
 import os
 import signal
 import subprocess
+import sys
 import textwrap
 from contextlib import contextmanager
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -244,8 +245,17 @@ class SSOServer(multiprocessing.Process):
                 else:
                     raise ValueError(f"Unknown path: {self.path}")
 
+        def sys_exit(_, __):
+            sys.exit(0)
+
+        signal.signal(signal.SIGTERM, sys_exit)
+
         httpd = HTTPServer(("0.0.0.0", 8005), SSOHandler)
-        httpd.serve_forever()
+
+        try:
+            httpd.serve_forever()
+        finally:
+            httpd.shutdown()
 
 
 @contextmanager
@@ -255,7 +265,8 @@ def create_sso(is_logged_in, codes, tokens, auth_to_me):
 
     yield proc
 
-    proc.kill()
+    proc.terminate()
+    proc.join()
 
 
 class ZendeskServer(multiprocessing.Process):
@@ -301,8 +312,16 @@ class ZendeskServer(multiprocessing.Process):
                 self.send_response(500)
                 self.end_headers()
 
+        def sys_exit(_, __):
+            sys.exit(0)
+
+        signal.signal(signal.SIGTERM, sys_exit)
+
         httpd = HTTPServer(("0.0.0.0", 8006), ZendeskHandler)
-        httpd.serve_forever()
+        try:
+            httpd.serve_forever()
+        finally:
+            httpd.shutdown()
 
 
 @contextmanager
@@ -312,4 +331,5 @@ def create_zendesk():
 
     yield proc
 
-    proc.kill()
+    proc.terminate()
+    proc.join()

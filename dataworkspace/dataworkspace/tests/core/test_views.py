@@ -13,6 +13,7 @@ from django.contrib.auth.models import Permission
 from django.test import override_settings, Client
 from django.urls import reverse
 
+from dataworkspace.apps.core.models import NewsletterSubscription
 from dataworkspace.tests.common import (
     BaseTestCase,
     get_http_sso_data,
@@ -180,6 +181,9 @@ def test_csp_on_files_endpoint_includes_s3(client):
         "dataworkspace.test:3000",
         "ws://dataworkspace.test:3000",
         "https://s3.eu-west-2.amazonaws.com",
+        "*.google-analytics.com",
+        "*.analytics.google.com",
+        "*.googletagmanager.com",
     ]
 
     for element in expected_elements:
@@ -200,7 +204,6 @@ def test_csp_on_files_endpoint_includes_s3(client):
     ),
 )
 def test_sso_user_id_in_gtm_datalayer(client, path_name):
-
     sso_id = uuid.uuid4()
     headers = {
         "HTTP_SSO_PROFILE_USER_ID": sso_id,
@@ -210,7 +213,7 @@ def test_sso_user_id_in_gtm_datalayer(client, path_name):
 
     assert response.status_code == 200
     assert "dataLayer.push({" in response.content.decode(response.charset)
-    assert f'"id": "{ sso_id }"' in response.content.decode(response.charset)
+    assert f'"id": "{sso_id}"' in response.content.decode(response.charset)
 
 
 @pytest.mark.parametrize("request_client", ("client", "staff_client"), indirect=["request_client"])
@@ -224,7 +227,11 @@ def test_header_links(request_client):
 
     expected_links = [
         ("Data Workspace", "http://dataworkspace.test:8000/"),
-        ("Switch to Data Hub", "https://www.datahub.trade.gov.uk/"),
+        (
+            "Switch to Data Hub",
+            "https://www.datahub.trade.gov.uk/?utm_source=Data%20Workspace"
+            "&utm_medium=referral&utm_campaign=dataflow&utm_content=Switch%20to%20Data%20Hub",
+        ),
         ("Home", "http://dataworkspace.test:8000/"),
         ("Tools", "/tools/"),
         ("About", "/about/"),
@@ -257,6 +264,10 @@ def test_footer_links(request_client):
             "https://data-services-help.trade.gov.uk/data-workspace",
         ),
         (
+            "Subscribe to newsletter",
+            "/newsletter_subscription/",
+        ),
+        (
             "Accessibility statement",
             (
                 "https://data-services-help.trade.gov.uk/data-workspace/how-articles/data-workspace-basics/"
@@ -279,34 +290,6 @@ def test_footer_links(request_client):
     ]
 
     assert link_labels == expected_links
-
-
-@pytest.mark.parametrize(
-    "has_tools_access, expected_href, expected_text",
-    (
-        (False, "/request-access/", "Request access to GitLab"),
-        (
-            True,
-            "https://gitlab",
-            "Open GitLab",
-        ),
-    ),
-)
-@override_settings(GITLAB_URL_FOR_TOOLS="https://gitlab")
-@pytest.mark.django_db
-def test_gitlab_access(has_tools_access, expected_href, expected_text):
-    user = UserFactory.create(is_staff=False, is_superuser=False)
-    if has_tools_access:
-        perm = Permission.objects.get(codename="start_all_applications")
-        user.user_permissions.add(perm)
-        user.save()
-
-    client = Client(**get_http_sso_data(user))
-    response = client.get(reverse("applications:tools"))
-
-    soup = BeautifulSoup(response.content.decode(response.charset))
-    gitlab_link = soup.find("a", href=True, text=expected_text)
-    assert gitlab_link.get("href") == expected_href
 
 
 @pytest.mark.parametrize(
@@ -500,3 +483,30 @@ class TestDAGTaskStatus:
             )
             assert response.status_code == 200
             assert response.json() == {"state": "success"}
+
+
+class TestNewsletterViews(BaseTestCase):
+    def test_newsletter_defaults_to_subscribe(self):
+        response = self._authenticated_get(reverse("newsletter_subscription"))
+
+        # pylint: disable=no-member
+        assert response.status_code == 200
+        self.assertContains(response, "Subscribe to newsletter")
+
+    def test_subscribe(self):
+        email_address = "email@example.com"
+        data = {"submit_action": "subscribe", "email": email_address}
+        self._authenticated_post(reverse("newsletter_subscription"), data)
+
+        subscription = NewsletterSubscription.objects.filter(user=self.user)
+        assert subscription.exists()
+        assert subscription.first().is_active
+        assert subscription.first().email_address == email_address
+
+    def test_unsubscribe(self):
+        data = {"submit_action": "unsubscribe", "email": "emailis@mandatory.com"}
+        self._authenticated_post(reverse("newsletter_subscription"), data)
+
+        subscription = NewsletterSubscription.objects.filter(user=self.user)
+        assert subscription.exists()
+        assert not subscription.first().is_active

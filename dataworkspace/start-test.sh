@@ -13,6 +13,7 @@ set -e
 
     django-admin ensure_databases_configured
     django-admin ensure_application_template_models
+    django-admin delete_temporary_tables
 
     # nginx is configured to log to stdout/stderr, _except_ before
     # it manages to read its config file. To avoid errors on startup,
@@ -22,7 +23,7 @@ set -e
     # Start nginx, proxy and application
     echo "Starting celery, nginx, proxy and django application..."
     parallel --will-cite --line-buffer --jobs 5 --halt now,done=1 ::: \
-        "celery --app dataworkspace.cel.celery_app worker --pool gevent --concurrency 150" \
+        "celery --app dataworkspace.cel.celery_app worker --pool gevent --concurrency 150 -Q applications.spawner.spawn,explorer.tasks,celery" \
         "celery --app dataworkspace.cel.celery_app beat --pidfile= -S redbeat.RedBeatScheduler" \
         "python3 -m start" \
         "PROXY_PORT='8001' UPSTREAM_ROOT='http://localhost:8002' python3 -m proxy" \

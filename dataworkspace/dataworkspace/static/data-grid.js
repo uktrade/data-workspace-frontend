@@ -135,7 +135,7 @@ function submitFilterForm(action, fileName, gridOptions, columnDataTypeMap) {
     form.remove();
 }
 
-function initDataGrid(columnConfig, dataEndpoint, downloadSegment, records, exportFileName, createChartEndpoint) {
+function initDataGrid(columnConfig, dataEndpoint, downloadSegment, records, exportFileName, createChartEndpoint, referenceDataEndpoint) {
   for (var i=0; i<columnConfig.length; i++) {
     var column = columnConfig[i];
     // Try to determine filter types from the column config.
@@ -203,7 +203,10 @@ function initDataGrid(columnConfig, dataEndpoint, downloadSegment, records, expo
     columnDefs: columnConfig,
     components: {
       loadingRenderer: function (params) {
-        return params.value !== undefined ? params.value : '<img src="/__django_static/assets/images/loading.gif">';
+        if (params.value !== null && params.value !== undefined) {
+          return (params.valueFormatted !== null && params.valueFormatted !== undefined) ? params.valueFormatted : params.value;
+        }
+        return '<img src="/__django_static/assets/images/loading.gif">';
       },
       booleanFloatingFilter: getBooleanFilterComponent(),
     }
@@ -307,6 +310,14 @@ function initDataGrid(columnConfig, dataEndpoint, downloadSegment, records, expo
         return;
       });
     }
+  }
+
+  if (referenceDataEndpoint) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', referenceDataEndpoint, true);
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    xhr.setRequestHeader("X-CSRFToken", getCsrfToken());
+    xhr.send();
   }
 
   var createChartButton = document.querySelector('#data-grid-create-chart');

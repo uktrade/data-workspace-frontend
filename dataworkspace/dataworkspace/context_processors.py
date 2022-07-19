@@ -16,6 +16,12 @@ def common(request):
     # which makes it easier to debug locally
     gtm_enabled = settings.GTM_CONTAINER_ID and not settings.DEBUG
 
+    is_subscribed_to_newsletter = (
+        request.user.newsletter_signups.filter(is_active=True).exists()
+        if not request.user.is_anonymous
+        else False
+    )
+
     return {
         "root_href": f"{request.scheme}://{settings.APPLICATION_ROOT_DOMAIN}/",
         "can_see_visualisations_tab": can_see_visualisations_tab,
@@ -32,4 +38,5 @@ def common(request):
         "SSO_USER_ID": request.META.get("HTTP_SSO_PROFILE_USER_ID", ""),
         "CHART_BUILDER_BUILD_CHARTS_FLAG": settings.CHART_BUILDER_BUILD_CHARTS_FLAG,
         "CHART_BUILDER_PUBLISH_CHARTS_FLAG": settings.CHART_BUILDER_PUBLISH_CHARTS_FLAG,
+        "IS_SUBSCRIBED_TO_NEWSLETTER": is_subscribed_to_newsletter,
     }

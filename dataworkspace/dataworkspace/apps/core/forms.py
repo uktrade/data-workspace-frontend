@@ -88,6 +88,11 @@ class UserSatisfactionSurveyForm(GOVUKDesignSystemForm):
     )
 
 
+class NewsletterSubscriptionForm(forms.Form):
+    submit_action = forms.CharField()
+    email = forms.CharField(required=True)
+
+
 class TechnicalSupportForm(GOVUKDesignSystemForm):
     email = forms.EmailField(widget=forms.HiddenInput())
     what_were_you_doing = GOVUKDesignSystemCharField(

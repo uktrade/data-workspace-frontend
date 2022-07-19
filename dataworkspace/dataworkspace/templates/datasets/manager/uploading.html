@@ -24,10 +24,10 @@
   <script nonce="{{ request.csp_nonce }}" src="{% static 'your-files-create-table.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}">
     window.pollForDagStateChange(
-        '{% url "create-table-task-status" execution_date task_name %}',
-        '{{ next_step }}?{{ request.GET.urlencode }}',
-        '{% url "datasets:manager:upload-failed" pk=source.dataset_id source_uuid=source.id %}?{{ request.GET.urlencode }}',
-        500
+        '{% url "create-table-task-status" execution_date task_name as status_url %}{{ status_url|escapejs }}',
+        '{{ next_step|escapejs }}',
+        '{% url "datasets:manager:upload-failed" pk=source.dataset_id source_uuid=source.id as failure_url %}{{ failure_url|escapejs }}',
+        '{{ task_name }}'
     );
   </script>
 {% endblock %}

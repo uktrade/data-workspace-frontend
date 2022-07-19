@@ -263,6 +263,11 @@ urlpatterns = [
         name="filter_chart_data",
     ),
     path(
+        "<uuid:dataset_uuid>/aggregate-chart-data/<str:source_id>/",
+        login_required(views.AggregateChartDataViewView.as_view()),
+        name="aggregate_chart_data",
+    ),
+    path(
         "<uuid:dataset_uuid>/grid-chart/<str:source_id>/",
         login_required(views.CreateGridChartView.as_view()),
         name="create_chart_from_grid",
@@ -273,10 +278,25 @@ urlpatterns = [
         name="dataset_charts",
     ),
     path(
-        "<uuid:pk>/manage",
+        "<uuid:pk>/manage/",
         include(
             ("dataworkspace.apps.datasets.manager.urls", "dataset_manager"),
             namespace="manager",
         ),
+    ),
+    path(
+        "data-dictionary/<uuid:source_uuid>",
+        login_required(views.DataDictionaryView.as_view()),
+        name="data_dictionary",
+    ),
+    path(
+        "<uuid:dataset_uuid>/edit-data-dictionary/<uuid:source_uuid>",
+        login_required(views.DataDictionaryEditView.as_view()),
+        name="edit_data_dictionary",
+    ),
+    path(
+        "<str:schema_name>/find-data-dictionary/<str:table_name>",
+        login_required(views.find_data_dictionary_view),
+        name="find_data_dictionary",
     ),
 ]
