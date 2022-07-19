@@ -189,3 +189,21 @@ class TeamMembership(TimeStampedModel):
 
     class Meta:
         unique_together = ("team_id", "user_id")
+
+
+class MLFlowInstance(TimeStampedModel):
+    name = models.CharField(max_length=256)
+    hostname = models.CharField(max_length=256, unique=True)
+
+    def __str__(self):
+        return str(self.name)
+
+
+class MLFlowAuthorisedUser(TimeStampedModel):
+    instance = models.ForeignKey(MLFlowInstance, on_delete=models.CASCADE, related_name="users")
+    user = models.ForeignKey(
+        get_user_model(), on_delete=models.CASCADE, related_name="authorised_mlflow_instances"
+    )
+
+    def __str__(self):
+        return str(self.user)
