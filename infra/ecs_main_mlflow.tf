@@ -14,20 +14,6 @@ locals {
         database_uri         = "postgresql://${aws_rds_cluster.mlflow[0].master_username}:${random_string.aws_db_instance_mlflow_password[0].result}@${aws_rds_cluster.mlflow[0].endpoint}:5432/${aws_rds_cluster.mlflow[0].database_name}"
         proxy_port           = "${local.mlflow_port}"
     }
-    "1" = {
-        container_image      = "${aws_ecr_repository.mlflow.repository_url}:master"
-        container_name       = "mlflow"
-        log_group            = "${aws_cloudwatch_log_group.mlflow[1].name}"
-        log_region           = "${data.aws_region.aws_region.name}"
-        cpu                  = "${local.mlflow_container_cpu}"
-        memory               = "${local.mlflow_container_memory}"
-        artifact_bucket_name = "${aws_s3_bucket.mlflow[1].bucket}"
-        jwt_public_key       = "${var.jwt_public_key}"
-        mlflow_hostname      = "http://mlflow--${var.mlflow_instances_long[1]}.${var.admin_domain}"
-        tracking_server_host = "http://mlflow--${var.mlflow_instances_long[1]}.${var.admin_domain}"
-        database_uri         = "postgresql://${aws_rds_cluster.mlflow[1].master_username}:${random_string.aws_db_instance_mlflow_password[1].result}@${aws_rds_cluster.mlflow[1].endpoint}:5432/${aws_rds_cluster.mlflow[1].database_name}"
-        proxy_port           = "${local.mlflow_port}"
-      }
   }
 }
 
