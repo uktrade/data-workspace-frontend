@@ -1,38 +1,39 @@
+from base64 import urlsafe_b64encode
+import csv
 import datetime
 import json
-import os
 from functools import wraps
 import hashlib
+from io import StringIO
 import itertools
 import logging
+import os
 import random
 import re
 import secrets
 import string
-import csv
-from io import StringIO
-from typing import Tuple
-
+import time
 from timeit import default_timer as timer
+from typing import Tuple
 from urllib.parse import unquote
 
-import gevent
-import gevent.queue
 
-import psycopg2
-import requests
-from mohawk import Sender
-from psycopg2 import connect, sql
-from psycopg2.sql import SQL
-
-
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
-from django.http import StreamingHttpResponse
 from django.db import connections, connection
 from django.db.models import Q
-from django.conf import settings
+from django.http import StreamingHttpResponse
+import gevent
+import gevent.queue
+from mohawk import Sender
+import psycopg2
+from psycopg2 import connect, sql
+from psycopg2.sql import SQL
+import requests
 from tableschema import Schema
+
 
 from dataworkspace.apps.core.boto3_client import get_s3_client, get_iam_client
 from dataworkspace.apps.core.constants import (
@@ -1411,3 +1412,31 @@ def get_task_error_message_template(execution_date, task_name):
         if re.match(error_re, logs, re.DOTALL | re.IGNORECASE):
             return template_name
     return None
+
+
+def b64encode_nopadding(to_encode):
+    return urlsafe_b64encode(to_encode).rstrip(b"=")
+
+
+def generate_jwt_token(user):
+    private_key = load_pem_private_key(settings.JWT_PRIVATE_KEY.encode(), password=None)
+    header = {
+        "typ": "JWT",
+        "alg": "EdDSA",
+        "crv": "Ed25519",
+    }
+    payload = {
+        "sub": user.email,
+        "exp": int(time.time() + 60 * 60 * 24),
+        "authorised_hosts": list(
+            user.authorised_mlflow_instances.all().values_list("instance__hostname", flat=True)
+        ),
+    }
+    to_sign = (
+        b64encode_nopadding(json.dumps(header).encode("utf-8"))
+        + b"."
+        + b64encode_nopadding(json.dumps(payload).encode("utf-8"))
+    )
+    signature = b64encode_nopadding(private_key.sign(to_sign))
+    jwt = (to_sign + b"." + signature).decode()
+    return jwt

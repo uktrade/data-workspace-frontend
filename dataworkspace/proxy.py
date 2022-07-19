@@ -89,6 +89,7 @@ async def async_main():
         "referer",
         "user-agent",
     )
+    mlflow_port = int(env["MLFLOW_PORT"])
 
     # Cookies on the embed path must be allowed to be SameSite=None, so they
     # will be sent when the site is embedded in an iframe
@@ -203,6 +204,11 @@ async def async_main():
             + downstream_request["sso_profile_headers"]
         )
 
+    def mlflow_headers_proxy(downstream_request, jwt):
+        return tuple((key, value) for key, value in downstream_request.headers.items()) + (
+            ("Authorization", f"Bearer {jwt}"),
+        )
+
     def mirror_headers(downstream_request):
         return tuple(
             (key, value)
@@ -257,6 +263,20 @@ async def async_main():
             + downstream_request["sso_profile_headers"]
         )
 
+    async def mlflow_jwt(downstream_request):
+        host_api_url = admin_root + "/api/v1/core/generate-mlflow-jwt"
+        async with client_session.request(
+            "GET",
+            host_api_url,
+            headers=CIMultiDict(admin_headers_request(downstream_request)),
+        ) as response:
+            if response.status == 200:
+                response_json = await response.json()
+                jwt = response_json["jwt"]
+            else:
+                raise UserException("Unable to generate jwt for user", response.status)
+        return jwt
+
     def is_service_discovery(request):
         return (
             request.url.path == "/api/v1/application"
@@ -274,6 +294,9 @@ async def async_main():
     def is_flower_requested(request):
         return request.url.host == f"flower.{root_domain_no_port}"
 
+    def is_mlflow_requested(request):
+        return request.url.host.split("--")[0] == "mlflow"
+
     def is_data_explorer_requested(request):
         return (
             request.url.path.startswith("/data-explorer/")
@@ -286,6 +309,7 @@ async def async_main():
             and not request.url.path.startswith(mirror_local_root)
             and not is_superset_requested(request)
             and not is_flower_requested(request)
+            and not is_mlflow_requested(request)
         )
 
     def is_mirror_requested(request):
@@ -376,6 +400,7 @@ async def async_main():
         mirror_requested = is_mirror_requested(downstream_request)
         superset_requested = is_superset_requested(downstream_request)
         flower_requested = is_flower_requested(downstream_request)
+        mlflow_requested = is_mlflow_requested(downstream_request)
 
         # Websocket connections
         # - tend to close unexpectedly, both from the client and app
@@ -396,6 +421,8 @@ async def async_main():
                 return await handle_superset(downstream_request, method, path, query)
             if flower_requested:
                 return await handle_flower(downstream_request, method, path, query)
+            if mlflow_requested:
+                return await handle_mlflow(downstream_request, method, path, query)
             return await handle_admin(
                 downstream_request,
                 method,
@@ -700,6 +727,25 @@ async def async_main():
             downstream_request,
             method,
             CIMultiDict(flower_headers_proxy(downstream_request)),
+            upstream_url,
+            query,
+            await get_data(downstream_request),
+            default_http_timeout,
+        )
+
+    async def handle_mlflow(downstream_request, method, path, query):
+        jwt = await mlflow_jwt(downstream_request)
+        internal_root = downstream_request.url.host.replace(
+            f".{root_domain}", f"--internal.{root_domain}"
+        )
+        upstream_url = URL(
+            f"{downstream_request.scheme}://{internal_root}:{mlflow_port}"
+        ).with_path(path)
+
+        return await handle_http(
+            downstream_request,
+            method,
+            CIMultiDict(mlflow_headers_proxy(downstream_request, jwt)),
             upstream_url,
             query,
             await get_data(downstream_request),

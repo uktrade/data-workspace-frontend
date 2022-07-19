@@ -30,6 +30,7 @@ services:
       - "testvisualisation-a.dataworkspace.test:127.0.0.1"
       - "testvisualisation-b.dataworkspace.test:127.0.0.1"
       - "api.ecr.my-region-1.amazonaws.com:127.0.0.1"
+      - "mlflow--data-science.dataworkspace.test:127.0.0.1"
     volumes:
       - db-logs-dev:/var/log/postgres
   data-workspace-postgres:
