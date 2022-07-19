@@ -874,6 +874,12 @@
     }, {
       "name": "FLOWER_ROOT",
       "value": "${flower_root}"
+    }, {
+      "name": "JWT_PRIVATE_KEY",
+      "value": "${jwt_private_key}"
+    }, {
+      "name": "MLFLOW_PORT",
+      "value": "${mlflow_port}"
     }
     ],
     "essential": true,
