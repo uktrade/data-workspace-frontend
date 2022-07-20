@@ -62,6 +62,8 @@
           {% endblock %}
         {% endif %}
         {% include 'partials/gtm_head.html' %}
+        {# Fallback to standard tables if javascript is disabled#}
+        <noscript><style>.enhanced-table { display: table }</style></noscript>
     </head>
     <body class="govuk-template__body">
       {% include 'partials/gtm_body.html' %}
