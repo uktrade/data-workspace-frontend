@@ -48,12 +48,13 @@
       <h2 class="govuk-heading-m govuk-!-margin-top-4">
         Data preview
       </h2>
-      {# We only support data dictionaries for master datasets currently #}
+      {# We only support data dictionaries for master and reference datasets currently #}
+      {# reference datagrid uses reference_dataset_grid.html btw   #}
       {% if object.type == 1 %}
       {% if object.dataset.dictionary_published %}
       <p class="govuk-body govuk-body-m">
         <a href="{% url "datasets:data_dictionary" source_uuid=object.id %}?dataset_uuid={{object.dataset.id}}"
-        class="govuk-link govuk-link--no-visited-state">
+        class="govuk-link">
         Data dictionary
         </a>
       </p> 
