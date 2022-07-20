@@ -44,30 +44,9 @@
     {% if fields %}
     <div class="govuk-grid-row">
       <div class="govuk-grid-column-full">
-        <h2 class="govuk-heading-m govuk-!-margin-top-4">
-          Data preview
-        </h2>
-        <details class="govuk-details" data-module="govuk-details">
-          <summary class="govuk-details__summary">
-            <span class="govuk-details__summary-text">
-              Field definitions
-            </span>
-          </summary>
-          <div class="govuk-details__text">
-            <dl class="govuk-summary-list">
-              {% for field in fields %}
-                  <div class="govuk-summary-list__row">
-                    <dt class="govuk-summary-list__key">{{ field.name }}</dt>
-                    <dd class="govuk-summary-list__value">{{ field.description }}</dd>
-                  </div>
-                {% empty %}
-                <div class="govuk-summary-list__row">
-                  <p>No fields have been defined for this reference dataset yet.</p>
-                </div>
-              {% endfor %}
-            </dl>
-          </div>
-        </details>
+      <p class="govuk-body">
+        <a href="{% url "datasets:data_dictionary" source_uuid=model.uuid %}?dataset_uuid={{model.uuid}}" class="govuk-link">Data Dictionary</a>
+      </p>
       </div>
     </div>
     {% endif %}
