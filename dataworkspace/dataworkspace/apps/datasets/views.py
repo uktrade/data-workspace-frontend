@@ -1783,7 +1783,7 @@ class CreateGridChartView(WaffleFlagMixin, View):
 
         if chart_data["aggregate"] != AggregationType.NONE.value:
             query = (
-                sql.SQL("SELECT {{}}, {{}}({{}}) FROM (").format(
+                sql.SQL("SELECT {}, {}({}) FROM (").format(
                     sql.Identifier(chart_data["group_by"]),
                     sql.Identifier(chart_data["aggregate"]),
                     sql.Literal("*")

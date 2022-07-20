@@ -387,7 +387,7 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
             "args": (),
         },
         "refresh-published-chart-data": {
-            "task": "dataworkspace.apps.explorer.tasks.refresh_published_chart_data",
+            "task": "dataworkspace.apps.core.charts.tasks.refresh_published_chart_data",
             "schedule": crontab(minute=0, hour=6),
             "args": (),
         },
