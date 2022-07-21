@@ -1,7 +1,6 @@
 import json
 import logging
 import operator
-import hashlib
 import os
 from functools import reduce
 from uuid import UUID
@@ -18,7 +17,10 @@ from django.http import Http404
 from django.urls import reverse
 from psycopg2.sql import Identifier, Literal, SQL
 
-from dataworkspace.apps.core.utils import close_all_connections_if_not_in_atomic_block
+from dataworkspace.apps.core.utils import (
+    close_all_connections_if_not_in_atomic_block,
+    stable_identification_suffix,
+)
 from dataworkspace.apps.core.errors import DatasetUnpublishedError
 from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
@@ -87,25 +89,22 @@ def dataset_type_to_manage_unpublished_permission_codename(dataset_type: int):
     }[dataset_type]
 
 
-# Todo: use the version of this function in core.utils.py and fix circular reference issues.
-def _stable_identification_suffix(identifier, short):
-    digest = hashlib.sha256(identifier.encode("utf-8")).hexdigest()
-    if short:
-        return digest[:8]
-    return digest
+def get_tools_links_for_user(user, scheme="https"):
+    sso_id_hex_short = stable_identification_suffix(str(user.profile.sso_id), short=True)
+    return {
+        "jupyterlab_link": f"{scheme}://jupyterlab-{sso_id_hex_short}.{settings.APPLICATION_ROOT_DOMAIN}/",
+        "rstudio_link": f"{scheme}://rstudio-{sso_id_hex_short}.{settings.APPLICATION_ROOT_DOMAIN}/",
+    }
 
 
-def get_code_snippets_for_table(request, source_table):
+def get_code_snippets_for_table(source_table):
     if not hasattr(source_table, "schema") or not hasattr(source_table, "table"):
         return {"python": "", "r": "", "sql": ""}
     query = get_sql_snippet(source_table.schema, source_table.table, 50)
-    sso_id_hex_short = _stable_identification_suffix(str(request.user.profile.sso_id), short=True)
     return {
         "python": get_python_snippet(query),
         "r": get_r_snippet(query),
         "sql": query,
-        "jupyterlab_link": f"{request.scheme}://jupyterlabpython-{sso_id_hex_short}.{settings.APPLICATION_ROOT_DOMAIN}/",
-        "rstudio_link": f"{request.scheme}://rstudio-{sso_id_hex_short}.{settings.APPLICATION_ROOT_DOMAIN}/",
     }
 
 
@@ -119,13 +118,10 @@ def get_code_snippets_for_reference_table(table):
 
 
 def get_code_snippets_for_query(request, query):
-    sso_id_hex_short = _stable_identification_suffix(str(request.user.profile.sso_id), short=True)
     return {
         "python": get_python_snippet(query),
         "r": get_r_snippet(query),
         "sql": query,
-        "jupyterlab_link": f"{request.scheme}://jupyterlab-{sso_id_hex_short}.{settings.APPLICATION_ROOT_DOMAIN}/",
-        "rstudio_link": f"{request.scheme}://rstudio-{sso_id_hex_short}.{settings.APPLICATION_ROOT_DOMAIN}/",
     }
 
 
