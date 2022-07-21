@@ -87,6 +87,10 @@ def _prefix_column(index, column):
 def _mark_query_log_failed(query_log, exc):
     # Remove the select statement wrapper used for getting the query fields
     query_log.error = str(exc).replace("SELECT * FROM (", "").replace(") sq LIMIT 0", "")
+
+    if "cross-database references are not implemented" in query_log.error:
+        query_log.error = "Did you type the schema twice... "
+
     query_log.state = QueryLogState.FAILED
     query_log.save()
 
