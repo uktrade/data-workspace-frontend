@@ -1,7 +1,6 @@
 import json
 import logging
 import operator
-import hashlib
 import os
 from functools import reduce
 from uuid import UUID
