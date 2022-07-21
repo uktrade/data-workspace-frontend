@@ -1,5 +1,5 @@
 {% extends '_main.html' %}
-{% load static core_tags humanize waffle_tags %}
+{% load static core_tags humanize waffle_tags datasets_tags %}
 {% block page_title %}View {{ object.name }} - {{ block.super }}{% endblock %}
 {% block go_back %}
   <a class="govuk-back-link"
@@ -51,7 +51,7 @@
       {# We only support data dictionaries for master and reference datasets currently #}
       {# reference datagrid uses reference_dataset_grid.html btw   #}
       {% if object.type == 1 %}
-      {% if object.dataset.dictionary_published %}
+      {% if object.dataset.dictionary_published or request.user|can_edit_dataset:object.dataset %}
       <p class="govuk-body govuk-body-m">
         <a href="{% url "datasets:data_dictionary" source_uuid=object.id %}?dataset_uuid={{object.dataset.id}}"
         class="govuk-link">
