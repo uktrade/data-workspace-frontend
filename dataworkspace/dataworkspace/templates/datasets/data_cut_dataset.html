@@ -180,7 +180,7 @@
         </thead>
         <tbody>
 
-        {% for datacut_link, can_show_link, code_snippets, columns in datacut_links_info %}
+        {% for datacut_link, can_show_link, code_snippets, columns, tools_links in datacut_links_info %}
           <tr class="govuk-table__row">
             <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
               {{ datacut_link.name }}
@@ -242,7 +242,7 @@
                                   </span>
                       </summary>
                       <div class="govuk-details__text">
-                        {% include 'partials/code_snippets.html' with code_snippets=code_snippets source_table=datacut_link %}
+                        {% include 'partials/code_snippets.html' with code_snippets=code_snippets source_table=datacut_link tools_links=tools_links %}
 
                       </div>
                     </details>
