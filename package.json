@@ -10,8 +10,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build:css": "node-sass dataworkspace/dataworkspace/sass --output dataworkspace/dataworkspace/static --include-path node_modules --output-style compressed",
-    "debug:css": "node-sass dataworkspace/dataworkspace/sass --output dataworkspace/dataworkspace/static --source-map true --source-map-contents --include-path node_modules",
-    "format:scss": "prettier dataworkspace/dataworkspace/sass --check"
+    "debug:css": "node-sass dataworkspace/dataworkspace/sass --output dataworkspace/dataworkspace/static --source-map true --source-map-contents --include-path node_modules"
   },
   "repository": {
     "type": "git",
@@ -26,7 +25,6 @@
   "homepage": "https://github.com/uktrade/data-workspace#readme",
   "devDependencies": {
     "govuk-frontend": "3.14",
-    "node-sass": "^7.0.1",
-    "prettier": "^2.7.1"
+    "node-sass": "^7.0.1"
   }
 }
