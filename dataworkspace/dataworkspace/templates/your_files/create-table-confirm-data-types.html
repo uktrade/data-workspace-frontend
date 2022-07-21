@@ -12,7 +12,7 @@
       {% include 'design_system/error_summary.html' with form=form %}
       <form method="POST" novalidate>
         {% csrf_token %}
-        {{ form.table_name }}
+        {{ form.table_name.as_hidden }}
         {{ form.path }}
         {{ form.schema }}
         {{ form.force_overwrite }}
