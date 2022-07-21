@@ -254,6 +254,7 @@ def expected_search_result(catalogue_item, **kwargs):
         "topics": mock.ANY,
         "last_updated": mock.ANY,
         "average_unique_users_daily": mock.ANY,
+        "is_owner": False,
     }
     result.update(**kwargs)
     return result
@@ -593,10 +594,7 @@ def test_find_datasets_filters_by_topic(client):
 
 @pytest.mark.parametrize(
     "sort_field",
-    (
-        "name",
-        "alphabetical",
-    ),
+    ("alphabetical",),
 )
 def test_find_datasets_order_by_name_asc(sort_field, client):
     ds1 = factories.DataSetFactory.create(name="a dataset")
@@ -615,10 +613,7 @@ def test_find_datasets_order_by_name_asc(sort_field, client):
 
 @pytest.mark.parametrize(
     "sort_field",
-    (
-        "-published_date,-search_rank,name",
-        "-published",
-    ),
+    ("-published",),
 )
 def test_find_datasets_order_by_newest_first(sort_field, client):
     ads1 = factories.DataSetFactory.create(published_at=date.today())
@@ -637,10 +632,7 @@ def test_find_datasets_order_by_newest_first(sort_field, client):
 
 @pytest.mark.parametrize(
     "sort_field",
-    (
-        "published_date,-search_rank,name",
-        "published",
-    ),
+    ("published",),
 )
 def test_find_datasets_order_by_oldest_first(sort_field, client):
     ads1 = factories.DataSetFactory.create(published_at=date.today() - timedelta(days=1))
@@ -658,14 +650,9 @@ def test_find_datasets_order_by_oldest_first(sort_field, client):
 
 
 @pytest.mark.django_db
-@override_flag("SEARCH_RESULTS_SORT_BY_RELEVANCE", active=True)
 @pytest.mark.parametrize(
     "sort_field",
-    (
-        "-is_bookmarked,-table_match,-search_rank_name,-search_rank_short_description"
-        ",-search_rank_tags,-search_rank_description,-search_rank,-published_date,name",
-        "relevance",
-    ),
+    ("relevance",),
 )
 def test_find_datasets_order_by_relevance_prioritises_bookmarked_datasets(sort_field):
     user = factories.UserFactory.create(is_superuser=False)
@@ -685,10 +672,7 @@ def test_find_datasets_order_by_relevance_prioritises_bookmarked_datasets(sort_f
     # If there is no search query, then if sorting by relevance, the default, datasets
     # bookmarked by the current user are most likely to be relevant, and so should be
     # at the top
-    sort = (
-        "-is_bookmarked,-table_match,-search_rank_name,-search_rank_short_description"
-        ",-search_rank_tags,-search_rank_description,-search_rank,-published_date,name"
-    )
+    sort = ("relevance",)
     response = client.get(reverse("datasets:find_datasets"), {"sort": sort})
 
     assert response.status_code == 200
@@ -702,10 +686,7 @@ def test_find_datasets_order_by_relevance_prioritises_bookmarked_datasets(sort_f
     # their bookmarks on the front page and they weren't helpful. In this case both
     # dataset names match the search query, but the extra word in bookmarked_master
     # means the normalisation on length makes it treated as less relevant
-    sort = (
-        "-is_bookmarked,-table_match,-search_rank_name,-search_rank_short_description"
-        ",-search_rank_tags,-search_rank_description,-search_rank,-published_date,name"
-    )
+    sort = ("relevance",)
     response = client.get(reverse("datasets:find_datasets"), {"sort": sort, "q": "master"})
 
     assert response.status_code == 200
@@ -1235,6 +1216,55 @@ def test_find_datasets_filters_by_access_and_use_only_returns_the_dataset_once(
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [expected_search_result(access_granted_master)]
+
+
+@pytest.mark.django_db
+def test_find_datasets_filters_by_asset_ownership(user, client):
+    ds1 = factories.DataSetFactory.create(
+        name="Dataset",
+        information_asset_manager=user,
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+    )
+    ds2 = factories.ReferenceDatasetFactory.create(name="Reference")
+    ds3 = factories.VisualisationCatalogueItemFactory.create(
+        name="Visualisation", user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
+    )
+
+    # All available datasets
+    response = client.get(reverse("datasets:find_datasets"))
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(ds1, is_owner=True),
+        expected_search_result(ds2),
+        expected_search_result(ds3),
+    ]
+
+    # User is IAM
+    response = client.get(reverse("datasets:find_datasets"), {"my_datasets": "owned"})
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(ds1, is_owner=True),
+    ]
+
+    # User is IAO
+    ds3.information_asset_owner = user
+    ds3.save()
+    response = client.get(reverse("datasets:find_datasets"), {"my_datasets": "owned"})
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(ds1, is_owner=True),
+        expected_search_result(ds3, is_owner=True),
+    ]
+
+    # User is IAM and IAO
+    ds1.information_asset_owner = user
+    ds1.save()
+    response = client.get(reverse("datasets:find_datasets"), {"my_datasets": "owned"})
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(ds1, is_owner=True),
+        expected_search_result(ds3, is_owner=True),
+    ]
 
 
 @pytest.mark.parametrize(
@@ -4174,20 +4204,96 @@ class TestChartViews:
         assert response.status_code == 302
 
     @override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
-    def test_create_chart_from_grid(self, client, dataset_db):
-        num_charts = ChartBuilderChart.objects.count()
+    def test_aggregation_from_grid(self, client, dataset_db):
         source = factories.SourceTableFactory(
             schema="public",
             table="dataset_test",
             database=dataset_db,
-            dataset=factories.DataSetFactory.create(
+            dataset=factories.MasterDataSetFactory.create(
+                published=True, user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
+            ),
+        )
+        response = client.post(
+            reverse("datasets:aggregate_chart_data", args=(source.dataset.id, str(source.id))),
+            {
+                "columns": ["id", "name"],
+                "filters": json.dumps(
+                    {
+                        "name": {
+                            "filter": "last",
+                            "filterType": "text",
+                            "type": "contains",
+                        }
+                    }
+                ),
+            },
+        )
+        assert response.status_code == 200
+        assert b"Aggregate source table" in response.content
+
+    @override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
+    def test_aggregation_invalid_field(self, client, dataset_db):
+        source = factories.SourceTableFactory(
+            schema="public",
+            table="dataset_test",
+            database=dataset_db,
+            dataset=factories.MasterDataSetFactory.create(
                 published=True, user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
             ),
         )
         response = client.post(
             reverse("datasets:create_chart_from_grid", args=(source.dataset.id, str(source.id))),
             {
-                "columns": ["id", "name"],
+                "aggregate": "sum",
+                "aggregate_field": "name",
+                "group_by": "id",
+                "sort_direction": "ASC",
+                "sort_field": "name",
+                "columns": json.dumps(
+                    [
+                        {"field": "id", "dataType": "numeric"},
+                        {"field": "name", "dataType": "text"},
+                    ]
+                ),
+                "filters": json.dumps(
+                    {
+                        "name": {
+                            "filter": "last",
+                            "filterType": "text",
+                            "type": "contains",
+                        }
+                    }
+                ),
+            },
+        )
+        assert response.status_code == 200
+        assert b"Unable to sum text fields" in response.content
+
+    @override_flag(settings.CHART_BUILDER_BUILD_CHARTS_FLAG, active=True)
+    def test_aggregation(self, client, dataset_db):
+        num_charts = ChartBuilderChart.objects.count()
+        source = factories.SourceTableFactory(
+            schema="public",
+            table="dataset_test",
+            database=dataset_db,
+            dataset=factories.MasterDataSetFactory.create(
+                published=True, user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
+            ),
+        )
+        response = client.post(
+            reverse("datasets:create_chart_from_grid", args=(source.dataset.id, str(source.id))),
+            {
+                "aggregate": "count",
+                "aggregate_field": "",
+                "group_by": "id",
+                "sort_direction": "ASC",
+                "sort_field": "name",
+                "columns": json.dumps(
+                    [
+                        {"field": "id", "dataType": "numeric"},
+                        {"field": "name", "dataType": "text"},
+                    ]
+                ),
                 "filters": json.dumps(
                     {
                         "name": {

@@ -145,6 +145,24 @@ resource "aws_route53_record" "superset_internal" {
   }
 }
 
+resource "aws_route53_record" "mlflow_internal" {
+  count  = "${length(var.mlflow_instances)}"
+  provider = "aws.route53"
+  zone_id = "${data.aws_route53_zone.aws_route53_zone.zone_id}"
+  name    = "mlflow--${var.mlflow_instances_long[count.index]}--internal.${var.admin_domain}"
+  type    = "A"
+
+  alias {
+    name                   = "${aws_lb.mlflow[count.index].dns_name}"
+    zone_id                = "${aws_lb.mlflow[count.index].zone_id}"
+    evaluate_target_health = false
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
 resource "aws_acm_certificate" "superset_internal" {
   domain_name       = "${aws_route53_record.superset_internal.name}"
   validation_method = "DNS"

@@ -14,4 +14,9 @@ urlpatterns = [
         views.get_superset_credentials,
         name="get-superset-role-credentials",
     ),
+    path(
+        "generate-mlflow-jwt",
+        views.generate_mlflow_jwt,
+        name="generate-mlflow-jwt",
+    ),
 ]

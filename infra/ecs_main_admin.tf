@@ -87,6 +87,9 @@ locals {
     visualisation_cloudwatch_log_group = "${aws_cloudwatch_log_group.notebook.name}"
     
     flower_root = "http://${aws_lb.flower.dns_name}"
+
+    jwt_private_key = "${var.jwt_private_key}"
+    mlflow_port = "${local.mlflow_port}"
   }
 }
 

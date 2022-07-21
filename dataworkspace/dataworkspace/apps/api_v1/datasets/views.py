@@ -324,6 +324,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         "purpose",
         "source_tags",
         "draft",
+        "dictionary",
         "personal_data",
         "retention_policy",
         "eligibility_criteria",
@@ -339,6 +340,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
             )
         )
         .annotate(draft=_static_bool(None))
+        .annotate(dictionary=F("dictionary_published"))
         .values(*fields)
         .union(
             ReferenceDataset.objects.live()
@@ -354,6 +356,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
                 )
             )
             .annotate(draft=F("is_draft"))
+            .annotate(dictionary=_static_bool(None))
             .values(*_replace(fields, "id", "uuid"))
         )
         .union(
@@ -367,6 +370,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
                 )
             )
             .annotate(draft=_static_bool(None))
+            .annotate(dictionary=_static_bool(None))
             .values(*fields)
         )
     ).order_by("created_date")

@@ -116,6 +116,9 @@ class Query(models.Model):
     def params_for_url(self):
         return get_params_for_url(self)
 
+    def last_run_at(self):
+        return self.querylog_set.latest("run_at").run_at
+
 
 class QueryLog(models.Model):
     sql = models.TextField(null=True, blank=True)

@@ -401,6 +401,9 @@ p.sidebar-section {
 .govuk-hint.currently-selected-file {
   font-size: 1rem;
 }
+.enhanced-table {
+  display: none;
+}
 
 @import "filters";
 @import "search";

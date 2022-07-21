@@ -1,0 +1,7 @@
+mlflow
+psycopg2
+boto3
+sklearn
+aiohttp
+cryptography
+ecs-logging
