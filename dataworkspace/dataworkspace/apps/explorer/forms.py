@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.forms import CharField, Field, ModelForm, ValidationError
 from django.forms.widgets import HiddenInput, Select
 
-from pglast import parse_sql
+from pglast import parser
 
 from dataworkspace.apps.explorer.models import Query
 from dataworkspace.forms import (
@@ -20,8 +20,8 @@ class SqlField(Field):
     def validate(self, value):
         query = value.strip()
         try:
-            sql = parse_sql(query)[0]()
-        except Exception as ex:
+            sql = parser.parse_sql(query)[0]()
+        except parser.ParseError as ex:
             raise ValidationError(f"Invalid SQL: {ex}", code="InvalidSql") from ex
         stmt = sql["stmt"]["@"]
         if stmt == "ExplainStmt":
