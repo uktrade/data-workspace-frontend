@@ -19,6 +19,8 @@ from dataworkspace.forms import (
 class SqlField(Field):
     def validate(self, value):
         query = value.strip()
+        if not query:
+            return
         try:
             sql = parser.parse_sql(query)[0]()
         except parser.ParseError as ex:
