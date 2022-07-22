@@ -20,9 +20,17 @@ class SqlField(Field):
     def validate(self, value):
         query = value.strip()
         try:
-            parse_sql(query)
+            sql = parse_sql(query)[0]()
         except Exception as ex:
             raise ValidationError(f"Invalid SQL: {ex}", code="InvalidSql") from ex
+        stmt = sql['stmt']['@']
+        if stmt == 'ExplainStmt':
+            stmt = sql['stmt']['query']['@']
+        if stmt != 'SelectStmt':
+            raise ValidationError(
+                "Enter a SELECT SQL statement starting with SELECT, WITH or EXPLAIN",
+                code="InvalidSql",
+            )
 
 
 class QueryForm(ModelForm):
