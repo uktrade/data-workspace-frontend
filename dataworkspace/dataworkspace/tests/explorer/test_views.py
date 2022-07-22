@@ -123,7 +123,7 @@ class TestQueryDetailView:
         )
 
         assert (
-            "Enter a SQL statement starting with SELECT, WITH or EXPLAIN"
+            "Invalid SQL"
             in resp.content.decode(resp.charset)
         )
 
