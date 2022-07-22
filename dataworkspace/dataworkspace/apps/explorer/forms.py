@@ -22,7 +22,7 @@ class SqlField(Field):
         try:
             parse_sql(query)
         except Exception as ex:
-            raise ValidationError(f"Invalid SQL: {ex}", code="InvalidSql")
+            raise ValidationError(f"Invalid SQL: {ex}", code="InvalidSql") from ex
 
 
 class QueryForm(ModelForm):
