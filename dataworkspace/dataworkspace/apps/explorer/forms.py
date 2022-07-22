@@ -3,6 +3,8 @@ from django.contrib.auth import get_user_model
 from django.forms import CharField, Field, ModelForm, ValidationError
 from django.forms.widgets import HiddenInput, Select
 
+from pglast import parse_sql
+
 from dataworkspace.apps.explorer.models import Query
 from dataworkspace.forms import (
     GOVUKDesignSystemBooleanField,
@@ -16,18 +18,11 @@ from dataworkspace.forms import (
 
 class SqlField(Field):
     def validate(self, value):
-        query = value.strip().upper()
-        if not any(
-            [
-                query.startswith("SELECT"),
-                query.startswith("WITH"),
-                query.startswith("EXPLAIN"),
-            ]
-        ):
-            raise ValidationError(
-                "Enter a SQL statement starting with SELECT, WITH or EXPLAIN",
-                code="InvalidSql",
-            )
+        query = value.strip()
+        try:
+            parse_sql(query)
+        except Exception as ex:
+            raise ValidationError(f"Invalid SQL: {ex}", code="InvalidSql")
 
 
 class QueryForm(ModelForm):
