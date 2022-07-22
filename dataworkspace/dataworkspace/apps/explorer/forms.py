@@ -19,12 +19,17 @@ from dataworkspace.forms import (
 class SqlField(Field):
     def validate(self, value):
         query = value.strip()
-        if not query:
-            return
         try:
+            # parse nodes are callable, to serialize it into dictionaries
             sql = parser.parse_sql(query)[0]()
+        except IndexError:
+            raise ValidationError(
+                "Enter a SELECT SQL statement starting with SELECT, WITH or EXPLAIN",
+                code="InvalidSql",
+            )
         except parser.ParseError as ex:
             raise ValidationError(f"Invalid SQL: {ex}", code="InvalidSql") from ex
+
         stmt = sql["stmt"]["@"]
         if stmt == "ExplainStmt":
             stmt = sql["stmt"]["query"]["@"]
