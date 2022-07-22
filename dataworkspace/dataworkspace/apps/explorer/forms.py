@@ -22,11 +22,11 @@ class SqlField(Field):
         try:
             # parse nodes are callable, to serialize it into dictionaries
             sql = parser.parse_sql(query)[0]()
-        except IndexError:
+        except IndexError as ex:
             raise ValidationError(
                 "Enter a SELECT SQL statement starting with SELECT, WITH or EXPLAIN",
                 code="InvalidSql",
-            )
+            ) from ex
         except parser.ParseError as ex:
             raise ValidationError(f"Invalid SQL: {ex}", code="InvalidSql") from ex
 
