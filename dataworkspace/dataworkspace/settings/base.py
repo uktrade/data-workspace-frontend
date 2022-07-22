@@ -387,7 +387,7 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
             "args": (),
         },
         "refresh-published-chart-data": {
-            "task": "dataworkspace.apps.explorer.tasks.refresh_published_chart_data",
+            "task": "dataworkspace.apps.core.charts.tasks.refresh_published_chart_data",
             "schedule": crontab(minute=0, hour=6),
             "args": (),
         },
@@ -760,3 +760,6 @@ WEBPACK_LOADER = {
         "IGNORE": [r".+\.hot-update.js", r".+\.map"],
     }
 }
+
+JWT_PRIVATE_KEY = env.get("JWT_PRIVATE_KEY", "")
+MLFLOW_PORT = env.get("MLFLOW_PORT", "")

@@ -19,8 +19,9 @@
   <link rel="apple-touch-icon" sizes="152x152" href="{% static 'assets/images/govuk-apple-touch-icon-152x152.png' %}">
   <link rel="apple-touch-icon" href="{% static 'assets/images/govuk-apple-touch-icon.png' %}">
   <link rel="stylesheet" href="{% static 'data-workspace.css' %}">
+  {# Fallback to standard tables if javascript is disabled#}
+  <noscript><style>.enhanced-table { display: table }</style></noscript>
 
-  
   {% if GTM_ENABLED %}
     {% block initialGTMDataLayer %}
       <script nonce="{{ request.csp_nonce }}">

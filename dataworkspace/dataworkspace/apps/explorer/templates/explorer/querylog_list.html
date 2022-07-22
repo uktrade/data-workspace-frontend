@@ -13,13 +13,14 @@
         <th scope="col" class="govuk-table__header">Query title</th>
         <th scope="col" class="govuk-table__header">SQL</th>
         <th scope="col" class="govuk-table__header">Run duration</th>
-        <th scope="col" class="govuk-table__header">Actions</th>
+        <th scope="col" class="govuk-table__header">Date and time run</th>
+        <th scope="col" class="govuk-table__header">Action</th>
     </tr>
     </thead>
     <tbody class="govuk-table__body">
     {% for object in recent_logs %}
     <tr class="govuk-table__row">
-        <td class="govuk-table__cell" style="width: 25%">
+        <td class="govuk-table__cell">
             {% if object.query_id %}
               <a class="govuk-link" href="{% url 'explorer:query_detail' object.query_id %}">{{ object.query.title }}</a>
             {% else %}
@@ -27,11 +28,39 @@
             {% endif %}
         </td>
         <td class="govuk-table__cell log-sql">
-          <textarea class="govuk-textarea app-readonly-sql govuk-!-margin-bottom-0 govuk-!-font-size-16" rows="2" readonly style="width: 100%">{{ object.sql }}</textarea>
+          <form action="{% url 'explorer:index' %}" id="query-form--{{ object.id }}" method="POST">
+            {% csrf_token %}
+            <textarea name="sql" class="govuk-textarea app-readonly-sql govuk-!-margin-bottom-0 govuk-!-font-size-16" rows="2" readonly style="width: 100%">{{ object.sql }}</textarea>
+          </form>
         </td>
-        <td class="govuk-table__cell" style="width: 15%">{% if object.duration %}{{ object.duration|format_duration_short }}{% else %}N/A{% endif %}</td>
-        <td class="govuk-table__cell" style="width: 10%">
-            <a class="govuk-link" href="{% url 'explorer:index' %}?querylog_id={{ object.id }}">Run</a>
+        <td class="govuk-table__cell">{% if object.duration %}{{ object.duration|format_duration_short }}{% else %}N/A{% endif %}</td>
+        <td class="govuk-table__cell">{% if object.run_at %}{{ object.run_at|date:"SHORT_DATETIME_FORMAT" }}{% else %}N/A{% endif %}</td>
+        <td class="govuk-table__cell">
+          <div class="govuk-button-group">
+            <a class="govuk-link govuk-link--no-visited-state" href="{% url 'explorer:index' %}?querylog_id={{ object.id }}">Run</a>
+            {% if object.query_id %}
+              <a class="govuk-link govuk-link--no-visited-state" href="{% url 'explorer:query_detail' object.query_id %}">Save</a>
+            {% else %}
+              <button
+                form="query-form--{{ object.id }}"
+                class="button-link govuk-!-margin-left-3"
+                name="action"
+                value="save"
+                role="button"
+              >
+                Save
+              </button>
+            {% endif %}
+            <button
+              form="query-form--{{ object.id }}"
+              class="button-link govuk-!-margin-left-3"
+              name="action"
+              value="share"
+              role="button"
+            >
+              Share
+            </button>
+          </div>
         </td>
     </tr>
     {% endfor %}

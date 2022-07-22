@@ -1,5 +1,6 @@
 import asyncio
 
+from base64 import urlsafe_b64decode
 import csv
 import io
 import json
@@ -2684,6 +2685,104 @@ class TestApplication(unittest.TestCase):
             content = await response.text()
         self.assertIn("There are no matches for the phrase “new”.", content)
 
+    @async_test
+    async def test_mlflow(self):
+        await flush_database()
+        await flush_redis()
+
+        session, cleanup_session = client_session()
+        self.add_async_cleanup(cleanup_session)
+
+        cleanup_mlflow, mlflow_requests = await create_mlflow()
+        self.add_async_cleanup(cleanup_mlflow)
+
+        cleanup_application = await create_application(
+            env=lambda: {
+                "APPLICATION_IP_WHITELIST__1": "1.2.3.4/32",
+                "APPLICATION_IP_WHITELIST__2": "5.0.0.0/8",
+                "X_FORWARDED_FOR_TRUSTED_HOPS": "2",
+                "JWT_PRIVATE_KEY": (
+                    "-----BEGIN PRIVATE KEY-----\n"
+                    "MC4CAQAwBQYDK2VwBCIEIA/EXAMPLE/EXAMPLE/EXAMPLE/EXAMPLE/EXAMPLE/A\n"
+                    "-----END PRIVATE KEY-----\n"
+                ),
+                "MLFLOW_PORT": "8004",
+            }
+        )
+        self.add_async_cleanup(cleanup_application)
+
+        is_logged_in = True
+        codes = iter(["some-code"])
+        tokens = iter(["token-1"])
+        auth_to_me = {
+            "Bearer token-1": {
+                "email": "test@test.com",
+                "contact_email": "test@test.com",
+                "related_emails": [],
+                "first_name": "Peter",
+                "last_name": "Piper",
+                "user_id": "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2",
+            }
+        }
+        sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
+        self.add_async_cleanup(sso_cleanup)
+
+        await until_succeeds("http://dataworkspace.test:8000/healthcheck")
+
+        # Ensure user created
+        async with session.request(
+            "GET", "http://dataworkspace.test:8000/", headers={"x-forwarded-for": "1.2.3.4"}
+        ) as response:
+            await response.text()
+
+        stdout, stderr, code = await give_user_app_perms()
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
+        self.assertEqual(code, 0)
+
+        async with session.request(
+            "GET",
+            "http://mlflow--data-science.dataworkspace.test:8000/",
+            headers={"x-forwarded-for": "1.2.3.4"},
+        ) as response:
+            self.assertEqual(response.status, 200)
+
+        self.assertTrue("Authorization" in mlflow_requests[0].headers)
+
+        jwt_token = mlflow_requests[0].headers["Authorization"][7:].encode()
+        _, payload_b64, _ = jwt_token.split(b".")
+        payload = json.loads(b64_decode(payload_b64))
+
+        # User has not been authorised to access an MLflow instance yet so payload should
+        # have no authorised hosts
+        self.assertEqual(payload["authorised_hosts"], [])
+
+        stdout, stderr, code = await add_user_to_mlflow_instance(
+            "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2", "data-science"
+        )
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
+        self.assertEqual(code, 0)
+
+        async with session.request(
+            "GET",
+            "http://mlflow--data-science.dataworkspace.test:8000/",
+            headers={"x-forwarded-for": "1.2.3.4"},
+        ) as response:
+            self.assertEqual(response.status, 200)
+
+        self.assertTrue("Authorization" in mlflow_requests[1].headers)
+
+        jwt_token = mlflow_requests[1].headers["Authorization"][7:].encode()
+        _, payload_b64, _ = jwt_token.split(b".")
+        payload = json.loads(b64_decode(payload_b64))
+
+        # User has now been authorised to access the data science MLflow instance so payload
+        # should contain an authorised host
+        self.assertEqual(
+            payload["authorised_hosts"], ["mlflow--data-science--internal.dataworkspace.test:8000"]
+        )
+
 
 def client_session():
     session = aiohttp.ClientSession()
@@ -2808,6 +2907,24 @@ async def create_superset():
     await superset_site.start()
 
     return superset_runner.cleanup, superset_requests
+
+
+async def create_mlflow():
+    mlflow_requests = []
+
+    async def handle(request):
+        nonlocal mlflow_requests
+        mlflow_requests.append(request)
+        return web.Response(text="OK", status=200)
+
+    mlflow_app = web.Application()
+    mlflow_app.add_routes([web.get("/{path:.*}", handle)])
+    mlflow_runner = web.AppRunner(mlflow_app)
+    await mlflow_runner.setup()
+    mlflow_site = web.TCPSite(mlflow_runner, "0.0.0.0", 8004)
+    await mlflow_site.start()
+
+    return mlflow_runner.cleanup, mlflow_requests
 
 
 # Run the application as close as possible to production
@@ -3724,3 +3841,39 @@ async def setup_elasticsearch_indexes():
     await client.indices.put_alias(known_index_name, known_index_alias)
 
     await asyncio.sleep(2)
+
+
+def b64_decode(b64_bytes):
+    return urlsafe_b64decode(b64_bytes + (b"=" * ((4 - len(b64_bytes) % 4) % 4)))
+
+
+async def add_user_to_mlflow_instance(user_sso_id: str, instance_name: str):
+    python_code = textwrap.dedent(
+        f"""\
+
+        from django.contrib.auth import get_user_model
+        from dataworkspace.apps.core.models import MLFlowInstance, MLFlowAuthorisedUser
+
+        User = get_user_model()
+
+        user = User.objects.get(profile__sso_id="{user_sso_id}")
+
+        instance, _ = MLFlowInstance.objects.get_or_create(
+            name="{instance_name}", hostname="mlflow--{instance_name}--internal.dataworkspace.test:8000"
+        )
+        _, _ = MLFlowAuthorisedUser.objects.get_or_create(user=user, instance=instance)
+
+        """
+    ).encode("ascii")
+
+    add_to_mlflow_instance = await asyncio.create_subprocess_shell(
+        "django-admin shell",
+        env=os.environ,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await add_to_mlflow_instance.communicate(python_code)
+    code = await add_to_mlflow_instance.wait()
+
+    return stdout, stderr, code

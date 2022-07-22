@@ -94,31 +94,9 @@ class DownloadFromQuerylogView(View):
 
 
 class ListQueryView(ListView):
-    def recently_viewed(self):
-        qll = (
-            QueryLog.objects.filter(
-                run_by_user=self.request.user,
-                query_id__isnull=False,
-                query__created_by_user=self.request.user,
-            )
-            .order_by("-run_at")
-            .select_related("query")
-        )
-        ret = []
-        tracker = []
-        for ql in qll:
-            if len(ret) == settings.EXPLORER_RECENT_QUERY_COUNT:
-                break
-
-            if ql.query_id not in tracker:
-                ret.append(ql)
-                tracker.append(ql.query_id)
-        return ret
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["object_list"] = self.object_list
-        context["recent_queries"] = self.recently_viewed()
         return context
 
     def get_queryset(self):

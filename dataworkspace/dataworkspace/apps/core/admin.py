@@ -2,6 +2,8 @@ from csp.decorators import csp_update
 from django.contrib import admin
 
 from dataworkspace.apps.core.models import (
+    MLFlowAuthorisedUser,
+    MLFlowInstance,
     Team,
     TeamMembership,
     NewsletterSubscription,
@@ -75,3 +77,19 @@ class NewsletterSubscriptionAdmin(admin.ModelAdmin):
 
 
 admin.site.register(NewsletterSubscription, NewsletterSubscriptionAdmin)
+
+
+@admin.register(MLFlowAuthorisedUser)
+class MLFlowAuthorisedusersAdmin(admin.ModelAdmin):
+    list_display = (
+        "user",
+        "instance",
+    )
+
+
+@admin.register(MLFlowInstance)
+class MLFlowInstancesAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "hostname",
+    )

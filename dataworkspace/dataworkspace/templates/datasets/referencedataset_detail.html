@@ -11,6 +11,7 @@
   {% flag DATA_GRID_REFERENCE_DATASET_FLAG %}
     <script src="{% static 'ag-grid-community.min.js' %}"></script>
     <script src="{% static 'dayjs.min.js' %}"></script>
+    <script src="{% static 'js/grid-utils.js' %}"></script>
     <script src="{% static 'data-grid.js' %}"></script>
     {# We *have* to include the stylesheet after the ag-grid js as it overrides the default styles #}
     <link rel="stylesheet" type="text/css" href="{% static 'data-grid.css' %}"/>
