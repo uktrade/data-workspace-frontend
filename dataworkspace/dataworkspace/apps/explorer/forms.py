@@ -24,7 +24,7 @@ class SqlField(Field):
             sql = parser.parse_sql(query)[0]()
         except IndexError as ex:
             raise ValidationError(
-                "Enter a SELECT SQL statement starting with SELECT, WITH or EXPLAIN",
+                "Enter a SQL statement starting with SELECT, WITH or EXPLAIN",
                 code="InvalidSql",
             ) from ex
         except parser.ParseError as ex:
@@ -35,7 +35,7 @@ class SqlField(Field):
             stmt = sql["stmt"]["query"]["@"]
         if stmt != "SelectStmt":
             raise ValidationError(
-                "Enter a SELECT SQL statement starting with SELECT, WITH or EXPLAIN",
+                "Enter a SQL statement starting with SELECT, WITH or EXPLAIN",
                 code="InvalidSql",
             )
 
