@@ -25,13 +25,13 @@
 
 {% block breadcrumbs %}
   <div class="govuk-grid-row">
-    <div class="govuk-grid-column-three-quarters">
+    <div class="govuk-grid-column-one-half">
       <div class="govuk-breadcrumbs">
         <ol class="govuk-breadcrumbs__list">
           <li class="govuk-breadcrumbs__list-item">
             <a class="govuk-breadcrumbs__link" href="/">Home</a>
           </li>
-          <li class="govuk-breadcrumbs__list-item">
+          <li class="govuk-breadcrumbs__list-item" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden; max-width: 330px">
             {{ model.name }}
           </li>
           {% if perms.datasets_dataset.change %}
@@ -43,7 +43,11 @@
         </ol>
       </div>
     </div>
-    <div class="govuk-grid-column-one-quarter govuk-!-margin-top-2" style="text-align: right;">
+    <div class="govuk-grid-column-one-half govuk-!-margin-top-2" style="text-align: right;">
+      {% flag NOTIFY_ON_DATACUT_CHANGE_FLAG %}
+      {% include "partials/subscription_link.html" with subscription=subscription dataset=dataset dataset_uuid=dataset.id %}
+      &nbsp;&nbsp;&nbsp;
+      {% endflag %}
       {% include "partials/bookmark-link.html" with dataset_uuid=model.id is_bookmarked=is_bookmarked %}
     </div>
   </div>
@@ -72,11 +76,6 @@
       {% endif %}
     </div>
     <div class="govuk-grid-column-one-third">
-      {% flag NOTIFY_ON_DATACUT_CHANGE_FLAG %}
-        <p class="govuk-body sidebar-section">
-          {% include "partials/subscription_link.html" with subscription=subscription dataset=dataset dataset_uuid=dataset.id %}
-        </p>
-      {% endflag %}
       {% if model.enquiries_contact %}
       <p class="govuk-body sidebar-section">
         <a href="mailto:{{ model.enquiries_contact.email }}?subject=Reporting an issue - {{ model.name }}" class="govuk-link govuk-link--no-visited-state">
@@ -91,9 +90,10 @@
       {% endif %}
 
       {% if related_data or related_visualisations %}
-        <aside class="app-related-items" role="complementary">
+      <aside class="app-related-items" role="complementary">
+        <p class="govuk-body sidebar-section">
           {% if related_data %}
-            <h3 class="govuk-heading-s">Source datasets</h3>
+            <h3 class="govuk-heading-s govuk-!-margin-top-2">Source datasets</h3>
             <nav role="navigation">
               <ul class="govuk-list">
                 {% for master in related_data %}
@@ -103,32 +103,44 @@
                 {% endfor %}
               </ul>
             </nav>
-          {% endif %}
-
+        </p>
+      </aside> 
+      {% endif %}
+        <aside class="app-related-items" role="complementary">
+          <h3 class="govuk-heading-s govuk-!-margin-top-2">Related dashboards</h3>
           {% if related_visualisations %}
-            <h3 class="govuk-heading-s {% if related_data %}govuk-!-margin-top-8{% endif %}">Related dashboards</h3>
             <nav role="navigation">
               <ul class="govuk-list">
                 {% for master in related_visualisations|slice:":4" %}
                   <li>
-                  {% include "partials/related_data_link.html" with dataset=master css_classname="related-dashboard" %}
+                    {% include "partials/related_data_link.html" with dataset=master css_classname="related-dashboard" %}
+                  </lusingi>
                 {% endfor %}
-                </li>
+
                 {% if related_visualiations|length > 4 %}
-                <li class="govuk-!-margin-top-4">
-                  <a href="{% url "datasets:related_visualisations" dataset_uuid=model.id %}"
-                     class="govuk-link govuk-link--no-visited-state">
-                    Show all related dashboards
-                  </a>
-                </li>
+                  <li class="govuk-!-margin-top-4">
+                    <a href="{% url "datasets:related_visualisations" dataset_uuid=model.id %}"
+                      class="govuk-link govuk-link--no-visited-state">
+                      Show all related dashboards
+                    </a>
+                  </li>
                 {% endif %}
               </ul>
             </nav>
+            {% else %}
+            <p class="govuk-body">
+              This data currently has no related dashboards.
+            </p>
           {% endif %}
-
-        </aside>
-      {% endif %}
-      {% include 'partials/using_data_dropdown.html' %}
+          <p class="govuk-body">
+            <small>If you'd like to create a dashboard using this data then you can see                   
+            <a href="https://data-services-help.trade.gov.uk/data-workspace/how-to/see-tools-specific-guidance/quicksight/create-a-dashboard/" 
+            class="govuk-link govuk-link--no-visited-state" target="_blank">
+            how to create a dashboard with Quicksight.</a></small>
+          </p>
+          {% endif %}
+        </aside> 
+      <p class="govuk-body sidebar-section"></p>
     </div>
   </div>
 
@@ -168,7 +180,7 @@
         </thead>
         <tbody>
 
-        {% for datacut_link, can_show_link, code_snippets, columns in datacut_links_info %}
+        {% for datacut_link, can_show_link, code_snippets, columns, tools_links in datacut_links_info %}
           <tr class="govuk-table__row">
             <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
               {{ datacut_link.name }}
@@ -225,12 +237,12 @@
                     <details class="govuk-details govuk-!-margin-bottom-2" data-module="govuk-details">
                       <summary class="govuk-details__summary">
                                   <span class="govuk-details__summary-text">
-                                    Use this data<span
+                                    Use this data for analysis<span
                                     class="govuk-visually-hidden"> "{{ source_table.schema }}"."{{ source_table.table }}"</span>
                                   </span>
                       </summary>
                       <div class="govuk-details__text">
-                        {% include 'partials/code_snippets.html' with code_snippets=code_snippets source_table=datacut_link %}
+                        {% include 'partials/code_snippets.html' with code_snippets=code_snippets source_table=datacut_link tools_links=tools_links %}
 
                       </div>
                     </details>
