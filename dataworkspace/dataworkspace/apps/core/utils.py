@@ -1329,7 +1329,10 @@ def trigger_dataflow_dag(conf, dag, dag_run_id):
 
 def copy_file_to_uploads_bucket(from_path, to_path):
     client = get_s3_client()
-    client.copy_object(
+    # For files > 5GB, this can make multiple requests, so it's borderline not
+    # OK to be in the request/response cycle. However, we don't expect much bigger
+    # that 5GB, so it should be good enough
+    client.copy(
         CopySource={"Bucket": settings.NOTEBOOKS_BUCKET, "Key": from_path},
         Bucket=settings.AWS_UPLOADS_BUCKET,
         Key=to_path,
