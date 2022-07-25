@@ -17,7 +17,10 @@ from django.http import Http404
 from django.urls import reverse
 from psycopg2.sql import Identifier, Literal, SQL
 
-from dataworkspace.apps.core.utils import close_all_connections_if_not_in_atomic_block
+from dataworkspace.apps.core.utils import (
+    close_all_connections_if_not_in_atomic_block,
+    stable_identification_suffix,
+)
 from dataworkspace.apps.core.errors import DatasetUnpublishedError
 from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
@@ -84,6 +87,14 @@ def dataset_type_to_manage_unpublished_permission_codename(dataset_type: int):
         DataSetType.DATACUT: "datasets.manage_unpublished_datacut_datasets",
         DataSetType.VISUALISATION: "datasets.manage_unpublished_visualisations",
     }[dataset_type]
+
+
+def get_tools_links_for_user(user, scheme="https"):
+    sso_id_hex_short = stable_identification_suffix(str(user.profile.sso_id), short=True)
+    return {
+        "jupyterlab_link": f"{scheme}://jupyterlab-{sso_id_hex_short}.{settings.APPLICATION_ROOT_DOMAIN}/",
+        "rstudio_link": f"{scheme}://rstudio-{sso_id_hex_short}.{settings.APPLICATION_ROOT_DOMAIN}/",
+    }
 
 
 def get_code_snippets_for_table(source_table):

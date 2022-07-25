@@ -28,7 +28,10 @@
         </pre>
       </div>
 
-      <a id="launch-data-explorer" class="govuk-button govuk-!-margin-top-5" href="{% url 'explorer:index' %}?sql={{ code_snippets.sql|quote_plus }}" target="_blank">Open <span class="govuk-visually-hidden">first 50 rows of "{{ source_table.schema }}"."{{ source_table.table }}" </span>in Data Explorer</a>
+      <div class="govuk-button-group">
+        <a id="launch-data-explorer" class="govuk-button govuk-!-margin-top-5" href="{% url 'explorer:index' %}?sql={{ code_snippets.sql|quote_plus }}" target="_blank">Open <span class="govuk-visually-hidden">first 50 rows of "{{ source_table.schema }}"."{{ source_table.table }}" </span>in Data Explorer</a>            
+          <a href="{{ tools_url }}" class="govuk-link govuk-link--no-visited-state">View all tools</a>
+      </div>
     </div>
 
     <div class="govuk-tabs__panel govuk-tabs__panel--hidden" id="code-snippet-python-{{ source_table.name|slugify }}">
@@ -37,6 +40,11 @@
         <pre data-module="app-copy" style="white-space: pre-wrap;">
           <code class="hljs python">{{ code_snippets.python }}</code>
         </pre>
+      </div>
+
+      <div class="govuk-button-group govuk-!-margin-top-5" id="launch-jupyter-lab">
+          <a class="govuk-button" href="{{ tools_links.jupyterlab_link }}" target="_blank" >Open <span class="govuk-visually-hidden"></span>JupyterLab</a>
+          <a href="{{ tools_url }}" class="govuk-link govuk-link--no-visited-state">View all tools</a>
       </div>
     </div>
 
@@ -47,7 +55,12 @@
           <code class="hljs r">{{ code_snippets.r }}</code>
         </pre>
       </div>
+
+      <div class="govuk-button-group govuk-!-margin-top-5" id="launch-r-studio">
+        <a class="govuk-button" href="{{ tools_links.rstudio_link }}" target="_blank" >Open <span class="govuk-visually-hidden"></span>R Studio</a>
+        <a href="{{ tools_url }}" class="govuk-link govuk-link--no-visited-state">View all tools</a>
+      </div>
     </div>
-  </div>
+
   {% endif %}
 {% endif %}
