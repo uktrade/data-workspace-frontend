@@ -15,6 +15,7 @@ var editor = ace.edit("ace-sql-editor", {
 var table_list = JSON.parse(document.getElementById("schema_tables").textContent);
 
 var staticWordCompleter = {
+  identifierRegexps: [/[a-zA-Z_0-9\.]/],  // The default does not include dots
   getCompletions: function(editor, session, pos, prefix, callback) {
       var wordList = table_list
 
