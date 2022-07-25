@@ -46,7 +46,7 @@ class DataDictionaryView(View):
             logger.info("looking for a dataset id %s", request.GET.get("dataset_uuid"))
             dataset = find_dataset(request.GET.get("dataset_uuid"), self.request.user)
 
-        service = DataDictionaryService(request.user)
+        service = DataDictionaryService()
         dictionary = service.get_dictionary(source_uuid)
 
         return render(
@@ -78,7 +78,7 @@ class DataDictionaryEditView(View):
         logger.info("Looking for a dataset with id = %s", dataset_uuid)
         dataset = find_dataset(dataset_uuid, self.request.user)
 
-        service = DataDictionaryService(request.user)
+        service = DataDictionaryService()
         dictionary = service.get_dictionary(source_uuid)
 
         return render(
@@ -91,7 +91,7 @@ class DataDictionaryEditView(View):
         )
 
     def post(self, request, dataset_uuid, source_uuid):
-        service = DataDictionaryService(request.user)
+        service = DataDictionaryService()
 
         update_rows = []
         for name, value in request.POST.items():

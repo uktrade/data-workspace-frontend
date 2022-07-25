@@ -1,6 +1,5 @@
 import pytest
 from django.http import Http404
-from mock import mock
 
 from dataworkspace.apps.datasets.data_dictionary.service import DataDictionaryService
 from dataworkspace.tests import factories
@@ -9,16 +8,14 @@ from dataworkspace.tests import factories
 @pytest.mark.django_db()
 class TestDataDictionaryService:
     def test_get_dictionary_for_reference_dataset(self):
-        mock_user = mock.Mock()
-        service = DataDictionaryService(mock_user)
+        service = DataDictionaryService()
 
         reference_dataset = factories.ReferenceDatasetFactory.create()
         dictionary = service.get_dictionary(reference_dataset.uuid)
         assert dictionary is not None
 
     def test_get_dictionary_for_master_dataset(self, metadata_db):
-        mock_user = mock.Mock()
-        service = DataDictionaryService(mock_user)
+        service = DataDictionaryService()
         master_dataset = factories.MasterDataSetFactory.create()
         source_table = factories.SourceTableFactory(
             dataset=master_dataset, database=metadata_db, schema="public", table="table1"
@@ -28,8 +25,7 @@ class TestDataDictionaryService:
         assert dictionary is not None
 
     def test_get_dictionary_for_datacut_dataset_fails(self, metadata_db):
-        mock_user = mock.Mock()
-        service = DataDictionaryService(mock_user)
+        service = DataDictionaryService()
         datacut = factories.DatacutDataSetFactory.create()
 
         with pytest.raises(Http404):
@@ -79,7 +75,7 @@ class TestReferenceDatasets:
         )
         reference_dataset.save()
 
-        service = DataDictionaryService(mock.Mock())
+        service = DataDictionaryService()
         dictionary = service.get_dictionary(reference_dataset.uuid)
 
         assert dictionary is not None

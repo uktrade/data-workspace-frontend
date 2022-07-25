@@ -1,11 +1,14 @@
 import logging
 from typing import List
 
-from django.http import Http404
+from django.shortcuts import get_object_or_404
 
 from dataworkspace import datasets_db
-from dataworkspace.apps.datasets.models import SourceTable, DataSetType, SourceTableFieldDefinition
-from dataworkspace.apps.datasets.utils import find_dataset
+from dataworkspace.apps.datasets.models import (
+    SourceTable,
+    SourceTableFieldDefinition,
+    ReferenceDataset,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -39,9 +42,6 @@ class DataDictionary:
 
 
 class DataDictionaryService:
-    def __init__(self, user):
-        self.user = user
-
     @staticmethod
     def _get_source_table(table_uuid):
         logger.info("Looking for a source table with uuid %s", table_uuid)
@@ -54,15 +54,12 @@ class DataDictionaryService:
         logger.debug("Found")
         return matches.last()
 
-    def _get_reference_dataset(self, uuid):
-        logger.debug("Looking for a dataset with uuid %s", uuid)
-        dataset = find_dataset(uuid, self.user)
+    @staticmethod
+    def _get_reference_dataset(uuid):
+        logger.debug("Looking for a reference dataset with uuid %s", uuid)
+        dataset = get_object_or_404(ReferenceDataset, uuid=uuid)
 
-        if dataset.type == DataSetType.REFERENCE:
-            logger.debug("Found")
-            return dataset
-
-        return None
+        return dataset
 
     @staticmethod
     def _get_dictionary_for_source_table(source_table):
@@ -153,11 +150,7 @@ class DataDictionaryService:
             return self._get_dictionary_for_source_table(source_table)
 
         dataset = self._get_reference_dataset(entity_uuid)
-        if dataset:
-            return self._get_dictionary_for_reference_dataset(dataset)
-
-        logger.error("Don't know how to handle dataset with uuid %s", entity_uuid)
-        raise Http404()
+        return self._get_dictionary_for_reference_dataset(dataset)
 
     def save_dictionary(
         self, entity_uuid, update_rows: List[DataDictionary.DataDictionaryUpdateRow]
@@ -168,8 +161,4 @@ class DataDictionaryService:
             return self._update_source_table(source_table, update_rows)
 
         dataset = self._get_reference_dataset(entity_uuid)
-        if dataset:
-            return self._update_reference_dataset(dataset, update_rows)
-
-        logger.error("Don't know how to save dictionary for dataset %s", entity_uuid)
-        raise Http404()
+        return self._update_reference_dataset(dataset, update_rows)
