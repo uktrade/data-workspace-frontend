@@ -8,6 +8,9 @@ module.exports = {
     ],
     viewer: [
       path.join(__dirname, './src/chart-viewer/index')
+    ],
+    test_app: [
+      path.join(__dirname, './src/test-app/index')
     ]
   },
   output: {

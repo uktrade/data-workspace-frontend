@@ -5,6 +5,7 @@
 {% load core_tags %}
 {% load datasets_tags %}
 {% load waffle_tags %}
+{% load render_bundle_csp %}
 
 {% block head %}
   {{ block.super }}
@@ -42,6 +43,9 @@
         <p class="govuk-body-l">
           Discover, access and analyse DIT data.
         </p>
+            <div id="test-app"></div>
+
+
       </div>
     </div>
 
@@ -315,4 +319,6 @@
       var searchInput = new ToggleInputClassOnFocus($("#live-search-form"))
     });
   </script>
+  {% render_bundle_csp "test_app" "js" %}
+
 {% endblock %}

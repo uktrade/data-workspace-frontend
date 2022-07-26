@@ -186,6 +186,7 @@ def _get_tags_as_dict():
 
 
 @require_GET
+@csp_update(SCRIPT_SRC=["'unsafe-eval'"])
 def find_datasets(request):
     ###############
     # Validate form
