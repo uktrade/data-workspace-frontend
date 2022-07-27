@@ -102,7 +102,7 @@ class DataDictionaryService:
 
         for row in rows:
             field, created = SourceTableFieldDefinition.objects.get_or_create(
-                source_table=source_table, field=row.name, description=row.definition
+                source_table=source_table, field=row.name, defaults={"description": row.definition}
             )
 
             if created:
