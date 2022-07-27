@@ -113,6 +113,7 @@ from dataworkspace.apps.datasets.utils import (
     get_code_snippets_for_query,
     get_code_snippets_for_reference_table,
     get_detailed_changelog,
+    get_tools_links_for_user,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event, log_permission_change
@@ -134,22 +135,19 @@ def _matches_filters(
     user_inaccessible: bool = False,
     selected_user_datasets: Set = None,
 ):
-    subscribed_or_bookmarked = set()
+    users_datasets = set()
     if data["is_bookmarked"]:
-        subscribed_or_bookmarked.add("bookmarked")
+        users_datasets.add("bookmarked")
     if data["is_subscribed"]:
-        subscribed_or_bookmarked.add("subscribed")
+        users_datasets.add("subscribed")
+    if data["is_owner"]:
+        users_datasets.add("owned")
 
     return (
         (
             not selected_user_datasets
             or selected_user_datasets == [None]
-            or set(selected_user_datasets).intersection(subscribed_or_bookmarked)
-        )
-        and (
-            not selected_user_datasets
-            or selected_user_datasets == [None]
-            or set(selected_user_datasets).intersection(subscribed_or_bookmarked)
+            or set(selected_user_datasets).intersection(users_datasets)
         )
         and (unpublished or data["published"])
         and (not opendata or data["is_open_data"])
@@ -405,7 +403,7 @@ class DatasetDetailView(DetailView):
         source_tables = sorted(self.object.sourcetable_set.all(), key=lambda x: x.name)
 
         MasterDatasetInfo = namedtuple(
-            "MasterDatasetInfo", ("source_table", "code_snippets", "columns")
+            "MasterDatasetInfo", ("source_table", "code_snippets", "columns", "tools_links")
         )
         master_datasets_info = [
             MasterDatasetInfo(
@@ -417,6 +415,7 @@ class DatasetDetailView(DetailView):
                     table=source_table.table,
                     include_types=True,
                 ),
+                tools_links=get_tools_links_for_user(self.request.user, self.request.scheme),
             )
             for source_table in sorted(source_tables, key=lambda x: x.name)
         ]
@@ -466,7 +465,7 @@ class DatasetDetailView(DetailView):
 
         DatacutLinkInfo = namedtuple(
             "DatacutLinkInfo",
-            ("datacut_link", "can_show_link", "code_snippets", "columns"),
+            ("datacut_link", "can_show_link", "code_snippets", "columns", "tools_links"),
         )
         datacut_links_info = [
             DatacutLinkInfo(
@@ -477,6 +476,7 @@ class DatasetDetailView(DetailView):
                     if hasattr(datacut_link, "query")
                     else None
                 ),
+                tools_links=get_tools_links_for_user(self.request.user, self.request.scheme),
                 columns=(
                     datasets_db.get_columns(
                         database_name=datacut_link.database.memorable_name,
@@ -1785,7 +1785,7 @@ class CreateGridChartView(WaffleFlagMixin, View):
 
         if chart_data["aggregate"] != AggregationType.NONE.value:
             query = (
-                sql.SQL("SELECT {{}}, {{}}({{}}) FROM (").format(
+                sql.SQL("SELECT {}, {}({}) FROM (").format(
                     sql.Identifier(chart_data["group_by"]),
                     sql.Identifier(chart_data["aggregate"]),
                     sql.Literal("*")

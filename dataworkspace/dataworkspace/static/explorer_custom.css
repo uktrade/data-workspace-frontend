@@ -136,3 +136,25 @@
   100% { transform: rotate(360deg); }
 }
 
+.button-link {
+  color: rgb(29, 112, 184);
+  cursor: pointer;
+  display: block;
+  font-family: arial, sans-serif;
+  font-size: inherit;
+  font-weight: 400;
+  line-height: 19px;
+  margin: 5px 15px 20px 0 !important;
+  text-decoration-color: rgb(29, 112, 184);
+  text-decoration-line: underline;
+  text-decoration-style: solid;
+  text-decoration-thickness: auto;
+  background-color: transparent;
+  border-width: 0;
+  padding: 0;
+}
+
+.enhanced-table {
+  display: none;
+}
+

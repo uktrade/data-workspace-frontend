@@ -122,10 +122,7 @@ class TestQueryDetailView:
             data={"title": query.title, "sql": "error", "action": "save"},
         )
 
-        assert (
-            "Enter a SQL statement starting with SELECT, WITH or EXPLAIN"
-            in resp.content.decode(resp.charset)
-        )
+        assert "Invalid SQL" in resp.content.decode(resp.charset)
 
     def test_posting_query_saves_correctly(self, staff_user, staff_client):
         expected = "select 2;"
