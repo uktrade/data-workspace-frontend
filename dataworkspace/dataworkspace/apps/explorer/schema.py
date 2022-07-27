@@ -139,8 +139,6 @@ def match_datasets_with_schema_info(schema):
         Func(Value(s.name.schema), Value(s.name.name), function="Row") for s in schema
     ]
 
-    logger.debug(schema_table_names)
-
     source_tables = (
         SourceTable.objects.alias(schema_table=Func(F("schema"), F("table"), function="Row"))
         .filter(schema_table__in=schema_table_names)

@@ -124,9 +124,13 @@ class DataDictionaryService:
         logger.debug("updating source table %s", source_table)
 
         for row in rows:
-            field, _ = SourceTableFieldDefinition.objects.get_or_create(
-                source_table=source_table, field=row.name
+            field, created = SourceTableFieldDefinition.objects.get_or_create(
+                source_table=source_table, field=row.name, description=row.definition
             )
+
+            if created:
+                continue
+
             if field.description != row.definition:
                 logger.debug("Updating %s %s", source_table.name, field.field)
                 field.description = row.definition
