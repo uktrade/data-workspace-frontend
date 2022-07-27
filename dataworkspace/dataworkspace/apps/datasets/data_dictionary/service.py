@@ -90,31 +90,8 @@ class DataDictionaryService:
         logger.info("Generating data dictionary for reference dataset %s", dataset.id)
         dictionary = DataDictionary("datasets", "public", dataset.table_name, dataset.uuid)
 
-        if not dataset.external_database:
-            logger.debug("Using field definitions from the reference dataset only")
-            for field in dataset.fields.all():
-                dictionary.append(field.name, field.get_postgres_datatype(), field.description)
-
-            return dictionary
-
-        if dataset.external_database:
-            logger.debug("querying external database for columns")
-            columns = datasets_db.get_columns(
-                dataset.external_database.memorable_name,
-                schema="public",
-                table=dataset.table_name,
-                include_types=True,
-            )
-
-            fields = dataset.fields.all()
-            for name, _ in columns:
-                field = fields.filter(column_name=name).first()
-                # There are default fields created on the external table which don't
-                # appear on the reference dataset
-                if field:
-                    dictionary.append(
-                        name, data_type=field.get_postgres_datatype(), definition=field.description
-                    )
+        for field in dataset.fields.all():
+            dictionary.append(field.name, field.get_postgres_datatype(), field.description)
 
         return dictionary
 
