@@ -98,7 +98,7 @@ docker-test-unit-local:
 	if [ -z "$$TEST_DIR" ]; \
 		then TEST_DIR="/dataworkspace/dataworkspace"; \
  	fi; \
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run data-workspace-test pytest $$TEST_DIR -x -v --disable-warnings
+	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run data-workspace-test pytest $$TEST_DIR -x -v --disable-warnings --reuse-db
 
 .PHONY: docker-test-shell-local
 docker-test-shell-local:
