@@ -168,7 +168,7 @@ docker-compose -f docker-compose-dev.yml up
 and in a separate terminal changing to the js app directory and running the webpack hotloader:
 
 ```shell
-cd dataworkspace/dataworkspace/static/js/chart-builder/
+cd dataworkspace/dataworkspace/static/js/react_apps/
 npm run dev
 ```
 
@@ -178,7 +178,7 @@ If you make any changes to the react apps you will need to rebuild and commit th
 This will create the relevant js files in `/static/js/bundles/` directory.
 
 ```shell
-cd dataworkspace/dataworkspace/static/js/chart-builder/
+cd dataworkspace/dataworkspace/static/js/react_apps/
 npm run build
 git add ../bundles/*.js
 ```

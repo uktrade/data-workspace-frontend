@@ -15,7 +15,7 @@ module.exports = merge(common, {
       },
     }),
     new BundleTracker({
-      filename: '../stats/chart-builder-stats.json',
+      filename: '../stats/react_apps-stats.json',
       relativePath: true,
     }),
   ],
