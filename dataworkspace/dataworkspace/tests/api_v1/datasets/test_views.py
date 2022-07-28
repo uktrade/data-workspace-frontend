@@ -499,6 +499,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
 
         response = unauthenticated_client.get(self.url)
         assert response.status_code == status.HTTP_200_OK
+
         assert response.json()["results"] == [
             self.expected_response(
                 datacut,
@@ -513,10 +514,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
                 master_dataset.personal_data,
                 master_dataset.retention_policy,
             ),
-            self.expected_response(
-                reference_dataset,
-                "Reference data",
-            ),
+            self.expected_response(reference_dataset, "Reference data"),
             self.expected_response(visualisation, "Visualisation", visualisation.personal_data),
             self.expected_response(visualisation2, "Visualisation"),
         ]

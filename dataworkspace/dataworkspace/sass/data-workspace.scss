@@ -405,5 +405,20 @@ p.sidebar-section {
   display: none;
 }
 
+.sticky-button-container {
+  position:sticky;
+  bottom:20px;
+
+  .sticky-button-contents {
+    padding: 1rem 1rem 0 1rem;
+    //set a negative horizontal margin to widen the container
+    //margin:0 -4rem;
+    background-color:govuk-colour("light-grey");
+    border: solid 1px $govuk-border-colour;
+    overflow:hidden;
+  }
+
+}
+
 @import "filters";
 @import "search";

@@ -1229,6 +1229,10 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             or self.record_sort_order != self._original_sort_order
         )
 
+    @property
+    def dictionary_published(self):
+        return True
+
     def manage_published(self, create):
         if not self.published:
             return
@@ -1786,6 +1790,17 @@ class ReferenceDatasetField(TimeStampedUserModel):
         DATA_TYPE_BOOLEAN: "boolean",
         DATA_TYPE_FOREIGN_KEY: "integer",
         DATA_TYPE_UUID: "uuid",
+    }
+    POSTGRES_TYPE_MAP = {
+        DATA_TYPE_CHAR: 18,
+        DATA_TYPE_INT: 23,
+        DATA_TYPE_FLOAT: 700,
+        DATA_TYPE_DATE: 1082,
+        DATA_TYPE_TIME: 1083,
+        DATA_TYPE_DATETIME: 1114,
+        DATA_TYPE_BOOLEAN: 16,
+        DATA_TYPE_FOREIGN_KEY: 23,
+        DATA_TYPE_UUID: 2950,
     }
     _DATA_TYPE_FORM_FIELD_MAP = {
         DATA_TYPE_CHAR: forms.CharField,

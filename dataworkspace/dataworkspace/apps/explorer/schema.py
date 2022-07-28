@@ -11,7 +11,7 @@ from django.db.models import F, Func, Value
 
 from dataworkspace.apps.explorer.connections import connections
 from dataworkspace.apps.explorer.utils import get_user_explorer_connection_settings
-from dataworkspace.apps.datasets.models import SourceTable
+from dataworkspace.apps.datasets.models import SourceTable, ReferenceDataset
 
 logger = logging.getLogger(__name__)
 
@@ -138,6 +138,7 @@ def match_datasets_with_schema_info(schema):
     schema_table_names = [
         Func(Value(s.name.schema), Value(s.name.name), function="Row") for s in schema
     ]
+
     source_tables = (
         SourceTable.objects.alias(schema_table=Func(F("schema"), F("table"), function="Row"))
         .filter(schema_table__in=schema_table_names)
@@ -150,6 +151,19 @@ def match_datasets_with_schema_info(schema):
         (source_table.schema, source_table.table): source_table.dataset.dictionary_published
         for source_table in source_tables
     }
+
+    # Same logic for reference datasets
+    reference_datasets = ReferenceDataset.objects.filter(
+        table_name__in=[
+            s.name.name
+            for s in schema
+            if s.name.schema == "public" and s.name.name.startswith("ref_")
+        ]
+    )
+
+    for dataset in reference_datasets:
+        dictionary_published[("public", dataset.table_name)] = True
+
     for s in schema:
         s.name.dictionary_published = dictionary_published.get((s.name.schema, s.name.name), False)
     return schema

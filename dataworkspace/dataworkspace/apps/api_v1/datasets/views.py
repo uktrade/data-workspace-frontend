@@ -356,7 +356,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
                 )
             )
             .annotate(draft=F("is_draft"))
-            .annotate(dictionary=_static_bool(None))
+            .annotate(dictionary=F("published"))
             .values(*_replace(fields, "id", "uuid"))
         )
         .union(
