@@ -8,7 +8,10 @@ from dataworkspace.apps.datasets.models import (
     SourceTable,
     SourceTableFieldDefinition,
     ReferenceDataset,
+    ReferenceDatasetField,
 )
+
+from dataworkspace.utils import TYPE_CODES_REVERSED
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +94,10 @@ class DataDictionaryService:
         dictionary = DataDictionary("datasets", "public", dataset.table_name, dataset.uuid)
 
         for field in dataset.fields.all():
-            dictionary.append(field.name, field.get_postgres_datatype(), field.description)
+            postgres_type = TYPE_CODES_REVERSED.get(
+                ReferenceDatasetField.POSTGRES_TYPE_MAP.get(field.data_type, ""), "Unknown"
+            )
+            dictionary.append(field.name, postgres_type, field.description)
 
         return dictionary
 
