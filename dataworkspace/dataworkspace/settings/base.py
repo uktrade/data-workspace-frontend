@@ -750,7 +750,7 @@ CLAMAV_URL = env.get("CLAMAV_URL", "")
 CLAMAV_USER = env.get("CLAMAV_USER", "")
 CLAMAV_PASSWORD = env.get("CLAMAV_PASSWORD", "")
 
-WEBPACK_STATS_FILE = "chart-builder-stats.json" if not LOCAL else "chart-builder-stats-hot.json"
+WEBPACK_STATS_FILE = "react_apps-stats.json" if not LOCAL else "react_apps-stats-hot.json"
 WEBPACK_LOADER = {
     "DEFAULT": {
         "CACHE": not LOCAL,
