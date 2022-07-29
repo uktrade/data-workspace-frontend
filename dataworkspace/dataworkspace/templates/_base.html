@@ -89,12 +89,6 @@
             </a>
           </li>
           {% endif %}
-          {% url 'about' as about_url %}
-          <li class="govuk-header__navigation-item{% if request.get_full_path == about_url %} govuk-header__navigation-item--active{% endif %}">
-            <a class="govuk-header__link" href="{{ about_url }}">
-              About
-            </a>
-          </li>
           <li class="govuk-header__navigation-item">
             <a class="govuk-header__link" href="{% url 'support' %}">
               Contact us
