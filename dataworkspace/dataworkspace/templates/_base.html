@@ -95,17 +95,9 @@
               About
             </a>
           </li>
-          {% flag CASE_STUDIES_FLAG %}
-            {% url 'case-studies:case-studies' as case_studies_url %}
-            <li class="govuk-header__navigation-item{% if request.get_full_path == case_studies_url %} govuk-header__navigation-item--active{% endif %}">
-              <a class="govuk-header__link" href="{{ case_studies_url }}">
-                Our Work
-              </a>
-            </li>
-          {% endflag %}
           <li class="govuk-header__navigation-item">
             <a class="govuk-header__link" href="{% url 'support' %}">
-              Support
+              Contact us
             </a>
           </li>
           <li class="govuk-header__navigation-item">
@@ -154,9 +146,17 @@
                 About
               </a>
             </li>
+            {% flag CASE_STUDIES_FLAG %}
+            {% url 'case-studies:case-studies' as case_studies_url %}
+              <li class="govuk-header__navigation-item{% if request.get_full_path == case_studies_url %} govuk-header__navigation-item--active{% endif %}">
+                <a class="govuk-header__link" href="{{ case_studies_url }}">
+                  Our Work
+                </a>
+              </li>
+            {% endflag %}
             <li class="govuk-footer__list-item">
               <a class="govuk-footer__link"  href="{% url 'support' %}">
-                Support
+                Contact us
               </a>
             </li>
             <li class="govuk-footer__list-item">
