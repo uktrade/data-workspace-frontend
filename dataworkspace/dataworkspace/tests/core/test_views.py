@@ -234,8 +234,7 @@ def test_header_links(request_client):
         ),
         ("Home", "http://dataworkspace.test:8000/"),
         ("Tools", "/tools/"),
-        ("About", "/about/"),
-        ("Support", "/support-and-feedback/"),
+        ("Contact us", "/support-and-feedback/"),
         (
             "Help centre (opens in a new tab)",
             "https://data-services-help.trade.gov.uk/data-workspace",
@@ -258,7 +257,7 @@ def test_footer_links(request_client):
         ("Home", "http://dataworkspace.test:8000/"),
         ("Tools", "/tools/"),
         ("About", "/about/"),
-        ("Support", "/support-and-feedback/"),
+        ("Contact us", "/support-and-feedback/"),
         (
             "Help centre (opens in a new tab)",
             "https://data-services-help.trade.gov.uk/data-workspace",
