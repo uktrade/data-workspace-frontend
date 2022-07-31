@@ -10,7 +10,6 @@ locals {
         artifact_bucket_name = "${aws_s3_bucket.mlflow[0].bucket}"
         jwt_public_key       = "${var.jwt_public_key}"
         mlflow_hostname      = "http://mlflow--${var.mlflow_instances_long[0]}.${var.admin_domain}"
-        tracking_server_host = "http://mlflow--${var.mlflow_instances_long[0]}.${var.admin_domain}:${local.mlflow_port}"
         database_uri         = "postgresql://${aws_rds_cluster.mlflow[0].master_username}:${random_string.aws_db_instance_mlflow_password[0].result}@${aws_rds_cluster.mlflow[0].endpoint}:5432/${aws_rds_cluster.mlflow[0].database_name}"
         proxy_port           = "${local.mlflow_port}"
     }

@@ -460,6 +460,7 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
             {
                 "fields": [
                     "published",
+                    "uuid",
                     "get_published_version",
                     "name",
                     "table_name",
@@ -483,7 +484,7 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
             },
         ),
     ]
-    readonly_fields = ("get_published_version",)
+    readonly_fields = ("get_published_version", "uuid")
     manage_unpublished_permission_codename = "datasets.manage_unpublished_reference_datasets"
 
     def get_published_version(self, obj):

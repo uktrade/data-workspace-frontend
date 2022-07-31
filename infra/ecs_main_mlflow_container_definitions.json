@@ -14,10 +14,6 @@
         "value": "${mlflow_hostname}"
       },
       {
-        "name": "TRACKING_SERVER_HOST",
-        "value": "${tracking_server_host}"
-      },
-      {
         "name": "DATABASE_URI",
         "value": "${database_uri}"
       },
