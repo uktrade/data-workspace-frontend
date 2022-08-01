@@ -8,7 +8,10 @@ module.exports = {
     ],
     viewer: [
       path.join(__dirname, './src/chart-viewer/index')
-    ]
+    ],
+    yourfiles: [
+      path.join(__dirname, './src/your-files/index')
+    ],
   },
   output: {
     path: path.resolve('../bundles/'),

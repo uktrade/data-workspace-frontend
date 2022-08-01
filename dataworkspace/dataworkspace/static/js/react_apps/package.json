@@ -16,6 +16,7 @@
     "@babel/preset-react": "^7.14.5",
     "babel-loader": "^8.2.2",
     "css-loader": "^5.2.6",
+    "prettier": "^2.7.1",
     "react-hot-loader": "^4.13.0",
     "style-loader": "^3.0.0",
     "webpack": "^5.42.0",
@@ -25,9 +26,10 @@
     "webpack-merge": "^5.8.0"
   },
   "scripts": {
-    "preinstall": "npx npm-force-resolutions",
+    "preinstall": "node bin/check-nvmrc.js && npx npm-force-resolutions",
     "dev": "./node_modules/.bin/webpack serve --config webpack.dev.js --hot",
-    "build": "./node_modules/.bin/webpack build --config webpack.prod.js"
+    "build": "./node_modules/.bin/webpack build --config webpack.prod.js",
+    "format": "prettier src/your-files --write"
   },
   "resolutions": {
     "ansi-regex": "5.0.1",

@@ -15,6 +15,11 @@ module.exports = merge(common, {
       'react-hot-loader/patch',
       'webpack-dev-server/client?http://0.0.0.0:3000',
       'webpack/hot/only-dev-server',
+    ],
+    yourfiles: [
+      'react-hot-loader/patch',
+      'webpack-dev-server/client?http://0.0.0.0:3000',
+      'webpack/hot/only-dev-server',
     ]
   },
   output: {

@@ -26,7 +26,7 @@
 {% endblock %}
 
 {% block content %}
-  <div id="root"></div>
+  <div id="your-files-app"></div>
   {% verbatim %}
   <!-- Icons provided by Font Awesome https://fontawesome.com/license -->
   <div>
@@ -389,18 +389,10 @@ close(conn)</pre>
   </div>
 
   {% endverbatim %}
-  <script nonce="{{ request.csp_nonce }}" src="https://unpkg.com/react@17/umd/react.development.js"
-          crossorigin></script>
-  <script nonce="{{ request.csp_nonce }}" src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"
-          crossorigin></script>
-  <script nonce="{{ request.csp_nonce }}" src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
 
 
   <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}aws-sdk-2.521.0.min.js"></script>
-  <script nonce="{{ request.csp_nonce }}" src="{% static 'regenerator-runtime.js' %}"></script>
-  <script nonce="{{ request.csp_nonce }}" type="text/babel" src="browser.jsx"></script>
-
-  {% render_bundle "your_files" "jsx" %}
+  {% render_bundle "yourfiles" "js" %}
 
   <!-- Generated from explorer-v1.js using https://babeljs.io/repl manually -->
   <script nonce="{{ request.csp_nonce }}">
