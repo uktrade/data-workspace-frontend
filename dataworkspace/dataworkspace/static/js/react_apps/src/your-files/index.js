@@ -1,6 +1,7 @@
 import React from "react";
-import { createRoot } from "react-dom/client";
+import ReactDOM from "react-dom";
 import App from "./App";
+import { S3Proxy } from "./s3-proxy";
 
 // Workaround for hot reload "ignored-module" issue when developing locally.
 if (module.hot) {
@@ -8,6 +9,6 @@ if (module.hot) {
 }
 
 const el = document.getElementById("your-files-app");
-const root = createRoot(el);
 
-root.render(<App />);
+const proxy = new S3Proxy(YOURFILES_CONFIG);
+ReactDOM.render(<App proxy={proxy} config={YOURFILES_CONFIG} />, el);

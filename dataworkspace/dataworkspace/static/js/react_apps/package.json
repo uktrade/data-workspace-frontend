@@ -26,7 +26,7 @@
     "webpack-merge": "^5.8.0"
   },
   "scripts": {
-    "preinstall": "node bin/check-nvmrc.js && npx npm-force-resolutions",
+    "preinstall": "npx npm-force-resolutions",
     "dev": "./node_modules/.bin/webpack serve --config webpack.dev.js --hot",
     "build": "./node_modules/.bin/webpack build --config webpack.prod.js",
     "format": "prettier src/your-files --write"
