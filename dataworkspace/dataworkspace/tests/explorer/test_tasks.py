@@ -120,16 +120,19 @@ class TestExecuteQuery:
         submit_query_for_execution(
             query.final_sql(), query.connection, query.id, self.user.id, 1, 100, 10000
         )
-        query_log_id = QueryLog.objects.first().id
+        query_log = QueryLog.objects.first()
+
+        assert isinstance(query_log.pid, int)
 
         expected_calls = [
+            call("SELECT pg_backend_pid()"),
             call("SET statement_timeout = 10000"),
             call("SELECT * FROM (select * from foo) sq LIMIT 0"),
             call(
-                f'CREATE TABLE _user_12b9377c._data_explorer_tmp_query_{query_log_id} ("foo" integer, "bar" text)'
+                f'CREATE TABLE _user_12b9377c._data_explorer_tmp_query_{query_log.id} ("foo" integer, "bar" text)'
             ),
             call(
-                f"INSERT INTO _user_12b9377c._data_explorer_tmp_query_{query_log_id}"
+                f"INSERT INTO _user_12b9377c._data_explorer_tmp_query_{query_log.id}"
                 " SELECT * FROM (select * from foo) sq LIMIT 100"
             ),
             call("SELECT COUNT(*) FROM (select * from foo) sq"),

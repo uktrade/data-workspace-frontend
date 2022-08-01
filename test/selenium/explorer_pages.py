@@ -41,6 +41,9 @@ class HomePage(_BaseExplorerPage):
     def click_format_sql(self):
         self._submit("Format SQL")
 
+    def click_cancel(self):
+        self._submit("Cancel")
+
     def wait_for_results(self):
         WebDriverWait(self._driver, 10).until(
             expected_conditions.visibility_of_element_located((By.ID, "query-results"))

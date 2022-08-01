@@ -91,6 +91,12 @@ def _mark_query_log_failed(query_log, exc):
     query_log.save()
 
 
+def _mark_query_log_cancelled(query_log, exc):
+    query_log.error = str(exc).replace("SELECT * FROM (", "").replace(") sq LIMIT 0", "")
+    query_log.state = QueryLogState.CANCELLED
+    query_log.save()
+
+
 @celery_app.task()
 @close_all_connections_if_not_in_atomic_block
 def _run_querylog_query(query_log_id, page, limit, timeout):
@@ -116,7 +122,12 @@ def _run_query(conn, query_log, page, limit, timeout, output_table):
     sql = query_log.sql.rstrip().rstrip(";")
 
     try:
+        cursor.execute("SELECT pg_backend_pid()")
+        query_log.pid = cursor.fetchone()[0]
+        query_log.save()
+
         cursor.execute(f"SET statement_timeout = {timeout}")
+
         if sql.strip().upper().startswith("EXPLAIN"):
             cursor.execute(
                 """
@@ -160,6 +171,9 @@ def _run_query(conn, query_log, page, limit, timeout, output_table):
             f"INSERT INTO {output_table} SELECT * FROM ({sql}) sq {limit_clause}{offset}"
         )
         cursor.execute(f"SELECT COUNT(*) FROM ({sql}) sq")
+    except (psycopg2.errors.QueryCanceled) as e:  # pylint: disable=no-member
+        _mark_query_log_cancelled(query_log, e)
+        return
     except (psycopg2.ProgrammingError, psycopg2.DataError) as e:
         _mark_query_log_failed(query_log, e)
         logger.warning("Failed to run query: %s", e)

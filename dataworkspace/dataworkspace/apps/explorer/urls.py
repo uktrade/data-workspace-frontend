@@ -15,6 +15,7 @@ from dataworkspace.apps.explorer.views import (
     RunningQueryView,
     ShareQueryConfirmationView,
     ShareQueryView,
+    CancelQueryView,
 )
 
 urlpatterns = [
@@ -65,6 +66,11 @@ urlpatterns = [
         "query/<int:query_log_id>/create-chart/",
         login_required(CreateChartView.as_view()),
         name="create_chart",
+    ),
+    path(
+        "query/<int:query_log_id>/cancel/",
+        login_required(CancelQueryView.as_view()),
+        name="cancel_query",
     ),
 ]
 

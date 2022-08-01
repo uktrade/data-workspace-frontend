@@ -40,6 +40,7 @@ from dataworkspace.apps.explorer.schema import (
 from dataworkspace.notify import send_email
 from dataworkspace.apps.explorer.tasks import submit_query_for_execution
 from dataworkspace.apps.explorer.utils import (
+    cancel_query,
     fetch_query_results,
     get_total_pages,
     QueryException,
@@ -659,3 +660,13 @@ class CreateChartView(WaffleFlagMixin, RedirectView):
         )
         run_chart_builder_query.delay(chart.id)
         return f"{chart.get_edit_url()}?prev={self.request.META.get('HTTP_REFERER')}"
+
+
+class CancelQueryView(View):
+    def post(self, request, *args, **kwargs):
+        query_log = get_object_or_404(QueryLog, pk=kwargs["query_log_id"])
+        if query_log.run_by_user != self.request.user:
+            raise DataExplorerQueryResultsPermissionError()
+
+        cancel_query(query_log)
+        return JsonResponse({"status": "OK"})
