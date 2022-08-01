@@ -20,7 +20,7 @@ class Credentials extends AWS.Credentials {
   }
 
   async refresh(callback) {
-    console.log("refresh");
+    console.log("refreshing AWS credentials");
     try {
       const response = await fetchJSON(this.config.credentialsUrl);
       this.accessKeyId = response.AccessKeyId;
