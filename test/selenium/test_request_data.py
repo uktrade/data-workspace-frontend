@@ -72,7 +72,7 @@ class TestRequestData:
         home_page.open()
 
         # Get to the "Request data" starting page
-        support_page = home_page.click_header_link("Support", SupportPage)
+        support_page = home_page.click_header_link("Contact us", SupportPage)
         request_data_page = support_page.select_new_dataset_option()
 
         who_are_you_page = request_data_page.click_start()
