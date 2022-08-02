@@ -9,9 +9,12 @@ from django.http import HttpResponse, JsonResponse
 from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
 
-from dataworkspace.apps.api_v1.core.serializers import UserSatisfactionSurveySerializer
+from dataworkspace.apps.api_v1.core.serializers import (
+    UserSatisfactionSurveySerializer,
+    NewsletterSubscriptionSerializer,
+)
 from dataworkspace.apps.applications.models import ApplicationInstance
-from dataworkspace.apps.core.models import UserSatisfactionSurvey
+from dataworkspace.apps.core.models import UserSatisfactionSurvey, NewsletterSubscription
 from dataworkspace.apps.core.utils import (
     generate_jwt_token,
     new_private_database_credentials,
@@ -126,3 +129,13 @@ def generate_mlflow_jwt(request):
     user = get_user_model().objects.get(profile__sso_id=request.headers["sso-profile-user-id"])
     jwt = generate_jwt_token(user)
     return JsonResponse({"jwt": jwt})
+
+
+class NewsletterSubscriptionViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint to list newsletter subscriptions for ingestion by data flow
+    """
+
+    queryset = NewsletterSubscription.objects.all()
+    serializer_class = NewsletterSubscriptionSerializer
+    pagination_class = PageNumberPagination
