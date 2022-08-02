@@ -234,11 +234,11 @@ def test_header_links(request_client):
         ),
         ("Home", "http://dataworkspace.test:8000/"),
         ("Tools", "/tools/"),
-        ("Contact us", "/support-and-feedback/"),
         (
             "Help centre (opens in a new tab)",
             "https://data-services-help.trade.gov.uk/data-workspace",
         ),
+        ("Contact us", "/support-and-feedback/"),
     ]
 
     assert link_labels == expected_links
