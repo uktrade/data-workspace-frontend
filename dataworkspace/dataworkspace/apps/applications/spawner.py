@@ -667,6 +667,7 @@ def _fargate_new_task_definition(
                 "requiresCompatibilities",
                 "cpu",
                 "memory",
+                "ephemeralStorage",
             ]
         },
     )
