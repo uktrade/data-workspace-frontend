@@ -4,6 +4,7 @@ import "./App.css";
 import { Header } from "./Header";
 import { FileList } from "./FileList";
 import { BigDataMessage } from "./BigDataMessage";
+import { getBreadcrumbs } from "./utils";
 
 export default class App extends React.Component {
   constructor(props) {
@@ -15,12 +16,15 @@ export default class App extends React.Component {
       error: null,
       bucketName: this.props.config.bucketName,
       prefix: this.props.config.initialPrefix,
+      rootPrefix: this.props.config.initialPrefix,
       region: this.props.config.region,
+      showBigDataMessage: false,
     };
 
     this.handleFileClick = this.handleFileClick.bind(this);
     this.handleFolderClick = this.handleFolderClick.bind(this);
     this.handleBreadcrumbClick = this.handleBreadcrumbClick.bind(this);
+    this.handleRefreshClick = this.handleRefreshClick.bind(this);
   }
 
   async refresh(prefix) {
@@ -31,15 +35,9 @@ export default class App extends React.Component {
     };
 
     console.log("refresh", params);
-
     const data = await this.props.proxy.listObjects(params);
     console.log(data);
-    this.setState({ files: data.Contents, folders: data.CommonPrefixes });
-  }
-
-  async componentDidUpdate() {
-    console.log("componentDidUpdate");
-    // await this.refresh();
+    this.setState({ files: data.files, folders: data.folders });
   }
 
   async componentDidMount() {
@@ -47,12 +45,13 @@ export default class App extends React.Component {
     await this.refresh();
   }
 
-  handleBreadcrumbClick() {
-    console.log("handleBreadcrumbClick", arguments);
+  async handleBreadcrumbClick(breadcrumb) {
+    console.log(breadcrumb);
+    await this.navigateTo(breadcrumb.prefix);
   }
 
   async handleRefreshClick() {
-    console.log("refresh");
+    await this.navigateTo(this.state.prefix);
   }
 
   async handleNewFolderClick() {
@@ -67,31 +66,45 @@ export default class App extends React.Component {
     console.log("delete click");
   }
 
-  getBreadcrumbs() {
-    const prefix = this.state.prefix;
-    const data = [
-      {
-        prefix: prefix,
-        label: "home",
-      },
-    ];
+  async handleFileClick(key) {
+    console.log(key);
+    const params = {
+      Bucket: this.state.bucketName,
+      Key: key,
+      Expires: 15,
+      ResponseContentDisposition: "attachment",
+    };
 
-    return data;
+    let url;
+    try {
+      url = await this.props.proxy.getSignedUrl(params);
+      console.log(url);
+      window.location.href = url;
+    } catch (ex) {
+      logger.error(ex);
+    }
   }
 
-  handleFileClick() {
-    console.log("handleFileClick", arguments);
-  }
-
-  async handleFolderClick(prefix) {
-    console.log("handleFolderClick", arguments);
-    console.log(prefix);
+  async navigateTo(prefix) {
     this.setState({ prefix: prefix });
     await this.refresh(prefix);
   }
 
+  async handleFolderClick(prefix) {
+    console.log("handleFolderClick", arguments);
+    // console.log(prefix);
+    // const state = { prefix: prefix };
+    // const url = prefix + ".html";
+    // history.pushState(state, "", url);
+    await this.navigateTo(prefix);
+  }
+
   render() {
-    const breadCrumbs = this.getBreadcrumbs();
+    const breadCrumbs = getBreadcrumbs(
+      this.state.rootPrefix,
+      this.state.prefix
+    );
+
     return (
       <div className="browser">
         <Header
@@ -108,7 +121,7 @@ export default class App extends React.Component {
           onFileClick={this.handleFileClick}
           onFolderClick={this.handleFolderClick}
         />
-        <BigDataMessage />
+        <BigDataMessage display={this.state.showBigDataMessage} />
       </div>
     );
   }

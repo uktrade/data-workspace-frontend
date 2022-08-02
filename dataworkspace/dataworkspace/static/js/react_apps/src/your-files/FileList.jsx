@@ -1,4 +1,5 @@
 import React from "react";
+import "./FileList.css";
 
 const sizes = ["bytes", "KB", "MB", "GB", "TB"];
 
@@ -41,7 +42,7 @@ export class FileList extends React.Component {
   constructor(props) {
     super(props);
 
-    this.handleFolderClick = this.props.onFolderClick.bind(this);
+    this.handleFolderClick = this.handleFolderClick.bind(this);
     this.handleFileClick = this.props.onFileClick.bind(this);
     this.handleCreateTableClick = this.handleCreateTableClick.bind(this);
   }
@@ -57,6 +58,8 @@ export class FileList extends React.Component {
 
   handleFolderClick(prefix) {
     console.log("handleFolderClick", prefix);
+    this.props.onFolderClick(prefix);
+    e.preventDefault();
   }
 
   handleFileClick(key) {

@@ -5,6 +5,11 @@ export class Header extends React.Component {
     super(props);
   }
 
+  handleRefreshClick() {
+    // Todo - spin the icon
+    this.props.onRefreshClick();
+  }
+
   render() {
     const breadCrumbs = this.props.breadCrumbs.map((b) => {
       return (
@@ -19,10 +24,7 @@ export class Header extends React.Component {
     });
     return (
       <div className="browser-header">
-        <button
-          className="navbutton"
-          onClick={() => this.props.onRefreshClick()}
-        >
+        <button className="navbutton" onClick={() => this.handleRefreshClick()}>
           <svg
             spinner="refresh"
             aria-hidden="true"

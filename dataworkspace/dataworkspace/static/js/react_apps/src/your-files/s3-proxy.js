@@ -32,12 +32,6 @@ class Credentials extends AWS.Credentials {
       return;
     }
 
-    const now = new Date();
-    this.expiration = new Date(
-      now.getFullYear() - 1,
-      now.getMonth(),
-      now.getDay()
-    );
     callback();
   }
 
@@ -48,14 +42,13 @@ class Credentials extends AWS.Credentials {
 
 export class S3Proxy {
   constructor(config) {
-    console.log(config);
-
+    this.config = config;
+    console.log(this.config);
     AWS.config.update({
       credentials: new Credentials(config),
       region: config.region,
     });
 
-    // const ep = new AWS.Endpoint("http://localhost:9000");
     if (config.endpointUrl) {
       console.log(`using ${config.endpointUrl} for endpoint`);
       AWS.config.update({
@@ -66,22 +59,34 @@ export class S3Proxy {
     this.s3 = new AWS.S3({ s3ForcePathStyle: true });
   }
 
-  enrichObjectContents(data) {
-    data.Contents.forEach((d) => {
-      d.isCsv = d.Key.substr(d.Key.length - 3, d.Key.length) === "csv";
-      d.formattedDate = new Date(d.LastModified);
-    });
-    return data;
-  }
-
   async listObjects(params) {
+    console.log(params);
     try {
       const response = await this.s3.listObjectsV2(params).promise();
-      const data = this.enrichObjectContents(response);
-      return data;
+      const files = response.Contents.filter((file) => {
+        return file.Key !== params.Prefix;
+      }).map((file) => {
+        file.isCsv =
+          file.Key.substr(file.Key.length - 3, file.Key.length) === "csv";
+        file.formattedDate = new Date(file.LastModified);
+        return file;
+      });
+
+      const folders = response.CommonPrefixes.filter((prefix) => {
+        return prefix.Prefix != this.config.Prefix + this.config.bigdataPrefix;
+      });
+
+      return {
+        files,
+        folders,
+      };
     } catch (err) {
       console.error(err);
       throw err;
     }
+  }
+
+  getSignedUrl(params) {
+    return this.s3.getSignedUrlPromise("getObject", params);
   }
 }

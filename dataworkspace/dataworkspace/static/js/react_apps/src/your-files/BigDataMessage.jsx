@@ -1,7 +1,10 @@
 import React from "react";
 export function BigDataMessage(props) {
+  console.log(props);
+  if (!props.display) return;
+
   return (
-    <div className="govuk-inset-text" ng-cloak>
+    <div className="govuk-inset-text">
       <p className="govuk-body">
         Files in the <code>bigdataPrefix</code> folder are not automatically
         accessible from your tools in the same way other files are. However,

@@ -1,0 +1,5 @@
+.folder,
+.file {
+  cursor: pointer;
+  text-decoration: none;
+}
