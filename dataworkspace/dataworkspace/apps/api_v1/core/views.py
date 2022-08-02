@@ -9,7 +9,10 @@ from django.http import HttpResponse, JsonResponse
 from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
 
-from dataworkspace.apps.api_v1.core.serializers import UserSatisfactionSurveySerializer, NewsletterSubscriptionSerializer
+from dataworkspace.apps.api_v1.core.serializers import (
+    UserSatisfactionSurveySerializer,
+    NewsletterSubscriptionSerializer,
+)
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.core.models import UserSatisfactionSurvey, NewsletterSubscription
 from dataworkspace.apps.core.utils import (

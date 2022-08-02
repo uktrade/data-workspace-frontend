@@ -21,7 +21,7 @@ urlpatterns = [
     ),
     path(
         "newslettersubscription",
-        views.NewsletterSubscriptionViewSet.as_view({'get': 'list'}),
-        name='newslettersubscription'
-    )
+        views.NewsletterSubscriptionViewSet.as_view({"get": "list"}),
+        name="newslettersubscription",
+    ),
 ]
