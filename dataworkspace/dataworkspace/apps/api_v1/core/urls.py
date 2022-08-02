@@ -19,4 +19,9 @@ urlpatterns = [
         views.generate_mlflow_jwt,
         name="generate-mlflow-jwt",
     ),
+    path(
+        "newslettersubscription",
+        views.NewsletterSubscriptionViewSet.as_view({'get': 'list'}),
+        name='newslettersubscription'
+    )
 ]
