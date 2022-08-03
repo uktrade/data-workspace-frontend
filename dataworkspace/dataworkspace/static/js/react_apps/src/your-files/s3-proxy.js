@@ -21,18 +21,23 @@ class Credentials extends AWS.Credentials {
 
   async refresh(callback) {
     console.log("refreshing AWS credentials");
-    try {
-      const response = await fetchJSON(this.config.credentialsUrl);
-      this.accessKeyId = response.AccessKeyId;
-      this.secretAccessKey = response.SecretAccessKey;
-      this.sessionToken = response.SessionToken;
-      this.expiration = Date.parse(response.Expiration);
-    } catch (err) {
-      callback(err);
-      return;
-    }
-
+    this.accessKeyId = "AAAA";
+    this.secretAccessKey = "BBBB";
+    this.sessionToken = "CCCCC";
+    this.expiration = new Date(2023, 1, 1);
     callback();
+    // try {
+    //   const response = await fetchJSON(this.config.credentialsUrl);
+    //   this.accessKeyId = response.AccessKeyId;
+    //   this.secretAccessKey = response.SecretAccessKey;
+    //   this.sessionToken = response.SessionToken;
+    //   this.expiration = Date.parse(response.Expiration);
+    // } catch (err) {
+    //   callback(err);
+    //   return;
+    // }
+    //
+    // callback();
   }
 
   needsRefresh() {
@@ -72,9 +77,31 @@ export class S3Proxy {
         return file;
       });
 
-      const folders = response.CommonPrefixes.filter((prefix) => {
-        return prefix.Prefix != this.config.Prefix + this.config.bigdataPrefix;
+      const folders = [];
+      if (params.Prefix === this.config.initialPrefix) {
+        folders.push({
+          Prefix: this.config.initialPrefix + this.config.bigdataPrefix,
+          isBigData: true,
+        });
+      }
+
+      const commonFolders = response.CommonPrefixes.filter((folder) => {
+        console.log(
+          folder,
+          this.config.initialPrefix,
+          this.config.bigdataPrefix
+        );
+
+        return (
+          folder.Prefix !==
+          `${this.config.initialPrefix}${this.config.bigdataPrefix}`
+        );
+      }).map((folder) => {
+        folder.isBigData = false;
+        return folder;
       });
+
+      folders.push(...commonFolders);
 
       return {
         files,

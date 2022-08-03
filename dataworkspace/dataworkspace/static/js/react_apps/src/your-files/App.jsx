@@ -12,6 +12,7 @@ export default class App extends React.Component {
     this.state = {
       files: [],
       folders: [],
+      bigDataFolder: undefined,
       isLoaded: false,
       error: null,
       bucketName: this.props.config.bucketName,
@@ -37,7 +38,10 @@ export default class App extends React.Component {
     console.log("refresh", params);
     const data = await this.props.proxy.listObjects(params);
     console.log(data);
-    this.setState({ files: data.files, folders: data.folders });
+    this.setState({
+      files: data.files,
+      folders: data.folders,
+    });
   }
 
   async componentDidMount() {
