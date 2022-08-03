@@ -1,18 +1,15 @@
 from django.conf import settings
 from django.views.generic import DetailView, ListView
-from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace.apps.case_studies.models import CaseStudy
 
 
-class CaseStudyListView(WaffleFlagMixin, ListView):
-    waffle_flag = settings.CASE_STUDIES_FLAG
+class CaseStudyListView(ListView):
     queryset = CaseStudy.objects.filter(published=True)
     paginate_by = 10
 
 
-class CaseStudyDetailView(WaffleFlagMixin, DetailView):
-    waffle_flag = settings.CASE_STUDIES_FLAG
+class CaseStudyDetailView(DetailView):
     queryset = CaseStudy.objects.filter(published=True)
     context_object_name = "case_study"
 
