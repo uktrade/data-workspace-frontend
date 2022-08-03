@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.views.generic import DetailView, ListView
 
 from dataworkspace.apps.case_studies.models import CaseStudy
