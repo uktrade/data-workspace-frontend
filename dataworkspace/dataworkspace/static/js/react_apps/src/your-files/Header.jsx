@@ -48,7 +48,7 @@ export class Header extends React.Component {
         <button
           className="navbutton"
           title="Create folder"
-          onClick={() => this.props.onNewFolderClick()}
+          onClick={() => this.props.onNewFolderClick(this.props.currentPrefix)}
         >
           <svg
             aria-hidden="true"
@@ -71,7 +71,7 @@ export class Header extends React.Component {
         <button
           className="navbutton"
           title="Upload files"
-          onClick={() => this.props.onUploadClick()}
+          onClick={() => this.props.onUploadClick(this.props.currentPrefix)}
         >
           <svg
             aria-hidden="true"

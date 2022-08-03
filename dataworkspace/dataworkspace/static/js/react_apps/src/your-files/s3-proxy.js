@@ -116,4 +116,8 @@ export class S3Proxy {
   getSignedUrl(params) {
     return this.s3.getSignedUrlPromise("getObject", params);
   }
+
+  async createFolder(prefix, folderName) {
+    console.log("createFolder", prefix, folderName);
+  }
 }

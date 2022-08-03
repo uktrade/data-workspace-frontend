@@ -5,6 +5,11 @@ import { Header } from "./Header";
 import { FileList } from "./FileList";
 import { BigDataMessage } from "./BigDataMessage";
 import { getBreadcrumbs } from "./utils";
+import { AddFolderPopup } from "./Popups";
+
+const popupTypes = {
+  ADD_FOLDER: "addFolder",
+};
 
 export default class App extends React.Component {
   constructor(props) {
@@ -12,7 +17,8 @@ export default class App extends React.Component {
     this.state = {
       files: [],
       folders: [],
-      bigDataFolder: undefined,
+      currentPrefix: this.props.config.rootPrefix,
+      bigDataFolder: this.props.config.bigdataPrefix,
       isLoaded: false,
       error: null,
       bucketName: this.props.config.bucketName,
@@ -20,33 +26,32 @@ export default class App extends React.Component {
       rootPrefix: this.props.config.initialPrefix,
       region: this.props.config.region,
       showBigDataMessage: false,
+      popups: {},
     };
+
+    for (const [key, value] of Object.entries(popupTypes)) {
+      this.state.popups[value] = false;
+    }
 
     this.handleFileClick = this.handleFileClick.bind(this);
     this.handleFolderClick = this.handleFolderClick.bind(this);
+
     this.handleBreadcrumbClick = this.handleBreadcrumbClick.bind(this);
     this.handleRefreshClick = this.handleRefreshClick.bind(this);
-  }
+    this.handleCreateTableClick = this.handleCreateTableClick.bind(this);
 
-  async refresh(prefix) {
-    const params = {
-      Bucket: this.state.bucketName,
-      Prefix: prefix || this.state.prefix,
-      Delimiter: "/",
-    };
-
-    console.log("refresh", params);
-    const data = await this.props.proxy.listObjects(params);
-    console.log(data);
-    this.setState({
-      files: data.files,
-      folders: data.folders,
-    });
+    this.showNewFolderPopup = this.showNewFolderPopup.bind(this);
+    this.createNewFolderClick = this.createNewFolderClick.bind(this);
+    this.hidePopup = this.hidePopup.bind(this);
   }
 
   async componentDidMount() {
     console.log("componentDidMount");
     await this.refresh();
+  }
+
+  async handleCreateTableClick(key) {
+    console.log("create table", key);
   }
 
   async handleBreadcrumbClick(breadcrumb) {
@@ -58,12 +63,34 @@ export default class App extends React.Component {
     await this.navigateTo(this.state.prefix);
   }
 
-  async handleNewFolderClick() {
-    console.log("new folder");
+  async showNewFolderPopup(prefix) {
+    console.log("new folder", prefix);
+    this.showPopup(popupTypes.ADD_FOLDER);
   }
 
-  async handleUploadClick() {
-    console.log("upload files");
+  showPopup(popupName) {
+    const state = { popups: {} };
+    state.popups[popupName] = true;
+    this.setState(state);
+  }
+
+  hidePopup(popupName) {
+    console.log("hide", popupName);
+    const state = { popups: {} };
+    state.popups[popupName] = false;
+    this.setState(state);
+  }
+
+  async createNewFolderClick(prefix, folderName) {
+    console.log("createNewFolderClick");
+    console.log(prefix, folderName);
+    this.hidePopup(popupTypes.ADD_FOLDER);
+    await this.props.proxy.createFolder(prefix, folderName);
+    await this.refresh(prefix);
+  }
+
+  async handleUploadClick(prefix) {
+    console.log("upload files to", prefix);
   }
 
   async handleDeleteClick() {
@@ -96,11 +123,30 @@ export default class App extends React.Component {
 
   async handleFolderClick(prefix) {
     console.log("handleFolderClick", arguments);
-    // console.log(prefix);
-    // const state = { prefix: prefix };
-    // const url = prefix + ".html";
-    // history.pushState(state, "", url);
     await this.navigateTo(prefix);
+  }
+
+  async refresh(prefix) {
+    const params = {
+      Bucket: this.state.bucketName,
+      Prefix: prefix || this.state.prefix,
+      Delimiter: "/",
+    };
+
+    console.log("refresh", params);
+
+    const showBigDataMessage =
+      params.Prefix === this.state.rootPrefix + this.state.bigDataFolder;
+
+    const data = await this.props.proxy.listObjects(params);
+
+    console.log(data);
+    this.setState({
+      files: data.files,
+      folders: data.folders,
+      currentPrefix: params.Prefix,
+      showBigDataMessage,
+    });
   }
 
   render() {
@@ -109,13 +155,24 @@ export default class App extends React.Component {
       this.state.prefix
     );
 
+    const currentPrefix = this.state.currentPrefix;
+
     return (
       <div className="browser">
+        {this.state.popups.addFolder ? (
+          <AddFolderPopup
+            currentPrefix={currentPrefix}
+            onSuccess={this.createNewFolderClick}
+            onCancel={() => this.hidePopup("addFolder")}
+          />
+        ) : null}
+
         <Header
           breadCrumbs={breadCrumbs}
+          currentPrefix={currentPrefix}
           onBreadcrumbClick={this.handleBreadcrumbClick}
           onRefreshClick={this.handleRefreshClick}
-          onNewFolderClick={this.handleNewFolderClick}
+          onNewFolderClick={this.showNewFolderPopup}
           onUploadClick={this.handleUploadClick}
           onDeleteClick={this.handleDeleteClick}
         />
@@ -124,8 +181,14 @@ export default class App extends React.Component {
           folders={this.state.folders}
           onFileClick={this.handleFileClick}
           onFolderClick={this.handleFolderClick}
+          onCreateTableClick={this.handleCreateTableClick}
         />
-        <BigDataMessage display={this.state.showBigDataMessage} />
+        {this.state.showBigDataMessage ? (
+          <BigDataMessage
+            bigDataFolder={this.state.bigDataFolder}
+            bucketName={this.state.bucketName}
+          />
+        ) : null}
       </div>
     );
   }
