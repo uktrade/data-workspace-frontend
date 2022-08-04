@@ -57,6 +57,8 @@ export class AddFolderPopup extends React.Component {
                   type="text"
                   value={this.state.value}
                   onChange={this.handleChange}
+                  required
+                  autoFocus
                 />
               </div>
             </div>
