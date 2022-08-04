@@ -57,11 +57,11 @@ black==22.3.0
     # via -r requirements-dev.in
 bleach==3.3.0
     # via -r requirements.txt
-boto3==1.17.44
+boto3==1.24.45
     # via
     #   -r requirements.txt
     #   tabulator
-botocore==1.20.44
+botocore==1.27.45
     # via
     #   -r requirements.txt
     #   boto3
