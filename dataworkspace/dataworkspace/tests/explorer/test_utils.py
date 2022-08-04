@@ -1,6 +1,6 @@
 import json
 from datetime import date, datetime
-from unittest.mock import call, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from django.core.serializers.json import DjangoJSONEncoder
 from django.test import TestCase
@@ -13,7 +13,7 @@ from dataworkspace.apps.explorer.exporters import (
     ExcelExporter,
     JSONExporter,
 )
-from dataworkspace.apps.explorer.utils import cancel_query, get_total_pages
+from dataworkspace.apps.explorer.utils import get_total_pages
 from dataworkspace.tests.explorer.factories import QueryLogFactory
 from dataworkspace.tests.factories import UserFactory
 
@@ -117,16 +117,3 @@ class TestExporters:
 
         res = ExcelExporter(request=self.request, querylog=QueryLogFactory()).get_output()
         assert res[:2] == six.b("PK")
-
-
-class TestCancelQuery(TestCase):
-    @patch("dataworkspace.apps.explorer.utils.connections")
-    def test_cancel_query(self, mock_connections):
-        queryLog = QueryLogFactory(sql="select '$$foo:bar$$', '$$qux$$';", pid=999)
-        mock_cursor = mock_connections.__getitem__(
-            queryLog.connection
-        ).cursor.return_value.__enter__.return_value
-        cancel_query(queryLog)
-
-        expected_calls = [call("SELECT pg_cancel_backend(999)")]
-        mock_cursor.execute.assert_has_calls(expected_calls)

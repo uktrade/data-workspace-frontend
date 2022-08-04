@@ -1,11 +1,12 @@
+import threading
 from datetime import datetime, timedelta
-from time import time
+import time
 
 import psycopg2
 from celery.utils.log import get_task_logger
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
-from django.db import connections
+from django.db import connections, IntegrityError, transaction
 
 from pytz import utc
 
@@ -91,12 +92,6 @@ def _mark_query_log_failed(query_log, exc):
     query_log.save()
 
 
-def _mark_query_log_cancelled(query_log, exc):
-    query_log.error = str(exc).replace("SELECT * FROM (", "").replace(") sq LIMIT 0", "")
-    query_log.state = QueryLogState.CANCELLED
-    query_log.save()
-
-
 @celery_app.task()
 @close_all_connections_if_not_in_atomic_block
 def _run_querylog_query(query_log_id, page, limit, timeout):
@@ -105,27 +100,49 @@ def _run_querylog_query(query_log_id, page, limit, timeout):
         query_log.run_by_user, query_log.connection
     )
     close_admin_db_connection_if_not_in_atomic_block()
+
+    continue_polling = True
+
     with user_explorer_connection(user_connection_settings) as conn:
-        _run_query(
-            conn,
-            query_log,
-            page,
-            limit,
-            timeout,
-            tempory_query_table_name(query_log.run_by_user, query_log.id),
-        )
+
+        @close_all_connections_if_not_in_atomic_block
+        def poll():
+            while True:
+                if (
+                    not continue_polling
+                    or QueryLog.objects.filter(
+                        id=query_log_id, state=QueryLogState.CANCELLED
+                    ).exists()
+                ):
+                    break
+                time.sleep(1)
+
+            if QueryLog.objects.filter(id=query_log_id, state=QueryLogState.CANCELLED).exists():
+                while continue_polling:
+                    conn.cancel()
+                    time.sleep(1)
+
+        t = threading.Thread(target=poll)
+        t.start()
+        try:
+            _run_query(
+                conn,
+                query_log,
+                page,
+                limit,
+                timeout,
+                tempory_query_table_name(query_log.run_by_user, query_log.id),
+            )
+        finally:
+            continue_polling = False
+            t.join()
 
 
 def _run_query(conn, query_log, page, limit, timeout, output_table):
     cursor = conn.cursor()
-    start_time = time()
+    start_time = time.time()
     sql = query_log.sql.rstrip().rstrip(";")
-
     try:
-        cursor.execute("SELECT pg_backend_pid()")
-        query_log.pid = cursor.fetchone()[0]
-        query_log.save()
-
         cursor.execute(f"SET statement_timeout = {timeout}")
 
         if sql.strip().upper().startswith("EXPLAIN"):
@@ -158,7 +175,6 @@ def _run_query(conn, query_log, page, limit, timeout, output_table):
             for i, col in enumerate(cursor.description, 1)
         ]
         cursor.execute(f'CREATE TABLE {output_table} ({", ".join(prefixed_sql_columns)})')
-
         limit_clause = ""
         if limit is not None:
             limit_clause = f"LIMIT {limit}"
@@ -172,7 +188,7 @@ def _run_query(conn, query_log, page, limit, timeout, output_table):
         )
         cursor.execute(f"SELECT COUNT(*) FROM ({sql}) sq")
     except (psycopg2.errors.QueryCanceled) as e:  # pylint: disable=no-member
-        _mark_query_log_cancelled(query_log, e)
+        logger.info("Query cancelled: %s", e)
         return
     except (psycopg2.ProgrammingError, psycopg2.DataError) as e:
         _mark_query_log_failed(query_log, e)
@@ -184,12 +200,21 @@ def _run_query(conn, query_log, page, limit, timeout, output_table):
         return
 
     row_count = cursor.fetchone()[0]
-    duration = (time() - start_time) * 1000
+    duration = (time.time() - start_time) * 1000
 
-    query_log.duration = duration
-    query_log.rows = row_count
-    query_log.state = QueryLogState.COMPLETE
-    query_log.save()
+    try:
+        with transaction.atomic():
+            # This prevents the QueryLog from being marked as COMPLETE after it has been
+            # marked as CANCELLED by the thread that gets spawned in _run_querylog_query
+            query_log = QueryLog.objects.select_for_update().get(id=query_log.id)
+            if query_log.state == QueryLogState.RUNNING:
+                query_log.state = QueryLogState.COMPLETE
+
+            query_log.duration = duration
+            query_log.rows = row_count
+            query_log.save()
+    except IntegrityError as e:
+        logger.error("Exception when marking QueryLog as COMPLETE: %s", e)
 
     logger.info("Created table %s and stored results", output_table)
 

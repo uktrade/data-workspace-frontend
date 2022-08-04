@@ -15,7 +15,7 @@ from dataworkspace.apps.explorer.views import (
     RunningQueryView,
     ShareQueryConfirmationView,
     ShareQueryView,
-    CancelQueryView,
+    QueryLogUpdateView,
 )
 
 urlpatterns = [
@@ -68,9 +68,9 @@ urlpatterns = [
         name="create_chart",
     ),
     path(
-        "query/<int:query_log_id>/cancel/",
-        login_required(CancelQueryView.as_view()),
-        name="cancel_query",
+        "query/<int:pk>/update/",
+        login_required(QueryLogUpdateView.as_view()),
+        name="update_query_state",
     ),
 ]
 

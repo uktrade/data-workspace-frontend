@@ -315,23 +315,33 @@ class TestHomePage:
         )
         assert resp.status_code == 404
 
-    @mock.patch("dataworkspace.apps.explorer.views.cancel_query")
-    def test_can_only_cancel_query_log_run_by_current_user(
-        self, mock_cancel_query, staff_user, staff_client
-    ):
+    def test_can_only_cancel_query_log_run_by_current_user(self, staff_user, staff_client):
         user = UserFactory(email="test@foo.bar")
         my_querylog = QueryLogFactory(run_by_user=staff_user)
         other_querylog = QueryLogFactory(run_by_user=user)
 
-        resp = staff_client.post(reverse("explorer:cancel_query", args=(my_querylog.id,)))
+        resp = staff_client.post(
+            reverse(
+                "explorer:update_query_state",
+                args=(my_querylog.id,),
+            ),
+            {"state": QueryLogState.CANCELLED},
+            follow=True,
+        )
+        my_querylog.refresh_from_db()
         assert resp.status_code == 200
-        assert mock_cancel_query.called
+        assert my_querylog.state == QueryLogState.CANCELLED
 
-        mock_cancel_query.reset_mock()
-
-        resp = staff_client.post(reverse("explorer:cancel_query", args=(other_querylog.id,)))
+        resp = staff_client.post(
+            reverse(
+                "explorer:update_query_state",
+                args=(other_querylog.id,),
+            ),
+            {"state": QueryLogState.CANCELLED},
+        )
+        other_querylog.refresh_from_db()
         assert resp.status_code == 403
-        assert not mock_cancel_query.called
+        assert other_querylog.state != QueryLogState.CANCELLED
 
 
 class TestCSVFromSQL:
@@ -583,21 +593,6 @@ class TestQueryLogEndpoint:
             sql="select 123",
             run_by_user=staff_user,
             state=QueryLogState.FAILED,
-            error="This is an error message",
-        )
-        resp = staff_client.get(reverse("explorer:querylog_results", args=(query_log.id,)))
-        assert resp.status_code == 200
-        json_response = resp.json()
-        assert json_response["query_log_id"] == query_log.id
-        assert json_response["state"] == query_log.state
-        assert json_response["error"] == "This is an error message"
-        assert json_response["html"] is None
-
-    def test_query_cancelled(self, staff_user, staff_client):
-        query_log = QueryLogFactory(
-            sql="select 123",
-            run_by_user=staff_user,
-            state=QueryLogState.CANCELLED,
             error="This is an error message",
         )
         resp = staff_client.get(reverse("explorer:querylog_results", args=(query_log.id,)))

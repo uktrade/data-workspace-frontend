@@ -134,7 +134,6 @@ class QueryLog(models.Model):
     page = models.IntegerField(default=1)
     page_size = models.IntegerField(default=settings.EXPLORER_DEFAULT_ROWS, null=True)
     error = models.TextField(null=True, blank=True)
-    pid = models.IntegerField(null=True, blank=True)
 
     @property
     def is_playground(self):

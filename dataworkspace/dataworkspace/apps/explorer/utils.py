@@ -13,7 +13,6 @@ from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.views import LoginView
 from django.core.cache import cache
-from django.db import connections
 from django.shortcuts import get_object_or_404
 
 from dataworkspace.apps.core.models import Database
@@ -138,13 +137,13 @@ def get_user_cached_credentials_key(user):
 
 def get_user_explorer_connection_settings(user, alias):
     from dataworkspace.apps.explorer.connections import (  # pylint: disable=import-outside-toplevel
-        connections as explorer_connections,
+        connections,
     )
 
     if not alias:
         alias = settings.EXPLORER_DEFAULT_CONNECTION
 
-    if alias not in explorer_connections:
+    if alias not in connections:
         raise InvalidExplorerConnectionException(
             "Attempted to access connection %s, but that is not a registered Explorer connection."
             % alias
@@ -190,7 +189,7 @@ def get_user_explorer_connection_settings(user, alias):
                 user,
                 valid_for=duration,
                 force_create_for_databases=Database.objects.filter(
-                    memorable_name__in=explorer_connections.keys()
+                    memorable_name__in=connections.keys()
                 ).all(),
             )
             cache.set(cache_key, user_credentials, timeout=cache_duration)
@@ -267,8 +266,3 @@ def fetch_query_results(query_log_id):
             for record in data_list
         ]
     return headers, data, query_log
-
-
-def cancel_query(query_log):
-    with connections[query_log.connection].cursor() as cursor:
-        cursor.execute(f"SELECT pg_cancel_backend({query_log.pid})")
