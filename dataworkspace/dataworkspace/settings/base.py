@@ -417,7 +417,7 @@ STS_LOCAL_ENDPOINT_URL = env.get("STS_LOCAL_ENDPOINT_URL", "")
 YOUR_FILES_CONNECT_SRC = [
     APPLICATION_ROOT_DOMAIN,
     "https://s3.eu-west-2.amazonaws.com",
-    "ws://dataworkspace.test:3000"
+    "ws://dataworkspace.test:3000",
 ] + ([S3_LOCAL_ENDPOINT_URL] if LOCAL else [])
 
 
