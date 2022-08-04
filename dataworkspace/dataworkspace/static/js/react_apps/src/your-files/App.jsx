@@ -5,10 +5,11 @@ import { Header } from "./Header";
 import { FileList } from "./FileList";
 import { BigDataMessage } from "./BigDataMessage";
 import { getBreadcrumbs } from "./utils";
-import { AddFolderPopup } from "./Popups";
+import { AddFolderPopup, UploadFilesPopup } from "./Popups";
 
 const popupTypes = {
   ADD_FOLDER: "addFolder",
+  UPLOAD_FILES: "uploadFiles",
 };
 
 export default class App extends React.Component {
@@ -17,6 +18,7 @@ export default class App extends React.Component {
     this.state = {
       files: [],
       folders: [],
+      selectedUploadFiles: [],
       currentPrefix: this.props.config.rootPrefix,
       bigDataFolder: this.props.config.bigdataPrefix,
       isLoaded: false,
@@ -39,10 +41,28 @@ export default class App extends React.Component {
     this.handleBreadcrumbClick = this.handleBreadcrumbClick.bind(this);
     this.handleRefreshClick = this.handleRefreshClick.bind(this);
     this.handleCreateTableClick = this.handleCreateTableClick.bind(this);
+    this.handleUploadClick = this.handleUploadClick.bind(this);
 
     this.showNewFolderPopup = this.showNewFolderPopup.bind(this);
-    this.createNewFolderClick = this.createNewFolderClick.bind(this);
+    this.createNewFolder = this.createNewFolder.bind(this);
+
     this.hidePopup = this.hidePopup.bind(this);
+
+    this.onFileChange = this.onFileChange.bind(this);
+
+    this.fileInputRef = React.createRef();
+  }
+
+  onFileChange(event) {
+    console.log("onfilechange", event.target.files);
+    if (!event.target.files) {
+      console.log("nothing selected");
+      return;
+    }
+    this.setState({
+      selectedUploadFiles: event.target.files,
+    });
+    this.showPopup(popupTypes.UPLOAD_FILES);
   }
 
   async componentDidMount() {
@@ -81,7 +101,7 @@ export default class App extends React.Component {
     this.setState(state);
   }
 
-  async createNewFolderClick(prefix, folderName) {
+  async createNewFolder(prefix, folderName) {
     console.log("createNewFolderClick");
     console.log(prefix, folderName);
     this.hidePopup(popupTypes.ADD_FOLDER);
@@ -91,6 +111,9 @@ export default class App extends React.Component {
 
   async handleUploadClick(prefix) {
     console.log("upload files to", prefix);
+    // this opens the file input ... processing continues
+    // in the onFileChange function
+    this.fileInputRef.current.click();
   }
 
   async handleDeleteClick() {
@@ -159,11 +182,25 @@ export default class App extends React.Component {
 
     return (
       <div className="browser">
+        <input
+          type="file"
+          onChange={this.onFileChange}
+          multiple={true}
+          ref={this.fileInputRef}
+          style={{ visibility: "hidden" }}
+        />
         {this.state.popups.addFolder ? (
           <AddFolderPopup
             currentPrefix={currentPrefix}
-            onSuccess={this.createNewFolderClick}
-            onCancel={() => this.hidePopup("addFolder")}
+            onSuccess={this.createNewFolder}
+            onCancel={() => this.hidePopup(popupTypes.ADD_FOLDER)}
+          />
+        ) : null}
+
+        {this.state.popups[popupTypes.UPLOAD_FILES] ? (
+          <UploadFilesPopup
+            selectedFiles={this.state.selectedUploadFiles}
+            onCancel={() => this.hidePopup(popupTypes.UPLOAD_FILES)}
           />
         ) : null}
 

@@ -97,3 +97,9 @@ export class AddFolderPopup extends React.Component {
     );
   }
 }
+
+export class AddFilesPopup extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+}
