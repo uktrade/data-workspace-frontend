@@ -135,9 +135,9 @@ et-xmlfile==1.0.1
     # via openpyxl
 geoalchemy2==0.8.4
     # via -r requirements.in
-gevent==20.6.2
+gevent==21.12.0
     # via -r requirements.in
-greenlet==0.4.16
+greenlet==1.1.0
     # via gevent
 hawk-server-asyncio==0.0.13
     # via -r requirements.in
@@ -246,7 +246,7 @@ rfc3986==1.4.0
     # via tableschema
 rjsmin==1.1.0
     # via django-compressor
-s3transfer==0.3.3
+s3transfer==0.6.0
     # via boto3
 sentry-sdk==1.5.4
     # via -r requirements.in
