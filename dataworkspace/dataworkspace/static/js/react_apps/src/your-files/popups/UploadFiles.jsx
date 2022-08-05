@@ -50,11 +50,18 @@ export class UploadFilesPopup extends React.Component {
       remaining: 0,
     };
     this.close = this.close.bind(this);
+    this.onUploadClick = this.onUploadClick.bind(this);
   }
 
   close() {
     console.log(this.state.remaining);
     this.props.onCancel();
+  }
+
+  onUploadClick(files){
+    console.log("uploadClick");
+    console.log(files);
+    console.log(this.props.selectedFiles);
   }
 
   render() {
@@ -99,8 +106,7 @@ export class UploadFilesPopup extends React.Component {
                   {this.state.remaining === 0 ? "Close" : "Cancel"}
                 </button>
                 <button
-                  id="upload-btn-upload"
-                  type="submit"
+                  onClick={()=>this.onUploadClick(files)}                  
                   className="govuk-button modal-button"
                 >
                   <svg

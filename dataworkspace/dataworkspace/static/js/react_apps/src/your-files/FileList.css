@@ -1,5 +1,6 @@
 .folder,
-.file {
+.file,
+.create-table {
   cursor: pointer;
-  text-decoration: none;
+  /* text-decoration: none; */
 }
