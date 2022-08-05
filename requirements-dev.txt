@@ -57,11 +57,11 @@ black==22.3.0
     # via -r requirements-dev.in
 bleach==3.3.0
     # via -r requirements.txt
-boto3==1.17.44
+boto3==1.24.45
     # via
     #   -r requirements.txt
     #   tabulator
-botocore==1.20.44
+botocore==1.27.45
     # via
     #   -r requirements.txt
     #   boto3
@@ -215,9 +215,9 @@ freezegun==1.1.0
     # via -r requirements-dev.in
 geoalchemy2==0.8.4
     # via -r requirements.txt
-gevent==20.6.2
+gevent==21.12.0
     # via -r requirements.txt
-greenlet==0.4.16
+greenlet==1.1.0
     # via
     #   -r requirements.txt
     #   gevent
@@ -483,7 +483,7 @@ rjsmin==1.1.0
     # via
     #   -r requirements.txt
     #   django-compressor
-s3transfer==0.3.3
+s3transfer==0.6.0
     # via
     #   -r requirements.txt
     #   boto3
