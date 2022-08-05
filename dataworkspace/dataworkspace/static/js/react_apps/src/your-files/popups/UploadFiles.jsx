@@ -1,6 +1,47 @@
 import React from "react";
-import "./Popups.css";
+import "./Popups.scss";
+
 import { bytesToSize } from "../utils";
+
+function UploadHeader() {
+  return (
+    <tr className="govuk-table__row">
+      <th className="govuk-table__header">Name</th>
+      <th className="govuk-table__header" style={{ width: "8em" }}>
+        Type
+      </th>
+      <th
+        className="govuk-table__header govuk-table__header--numeric"
+        style={{ width: "5em" }}
+      >
+        Size
+      </th>
+      <th
+        className="govuk-table__header govuk-table__header--numeric"
+        style={{ width: "6em" }}
+      >
+        Status
+      </th>
+    </tr>
+  );
+}
+
+function UploadFile(props) {
+  return (
+    <tr className="govuk-table__row">
+      <td className="govuk-table__cell">{props.file.name}</td>
+      <td className="govuk-table__cell">{props.file.type}</td>
+      <td className="govuk-table__cell govuk-table__cell--numeric">
+        {bytesToSize(props.file.size)}
+      </td>
+      <td className="govuk-table__cell govuk-table__cell--numeric govuk-table__cell-progress">
+        {/*<span ng-if="file.progress === undefined && file.error === undefined">...</span>*/}
+        {/*<strong ng-if="file.progress !== undefined && file.error === undefined" className="govuk-tag progress-percentage" ng-class="{'progress-percentage-complete': file.progress == 100}">{{ file.progress + '%' }}</strong>*/}
+        {/*<strong ng-if="file.error !== undefined" className="govuk-tag progress-error" title="{{ file.error }}">{{ file.error }}</strong></td>*/}
+      </td>
+    </tr>
+  );
+}
 
 export class UploadFilesPopup extends React.Component {
   constructor(props) {
@@ -19,9 +60,12 @@ export class UploadFilesPopup extends React.Component {
   render() {
     const files = Array.from(this.props.selectedFiles);
     return (
-      <>
-        <div className="popup-overlay" onClick={this.props.onCancel}></div>
-        <div className="popup-modal">
+      <div className="popup-container">
+        <div
+          className="popup-container__overlay"
+          onClick={this.props.onCancel}
+        ></div>
+        <div className="popup-container__modal modal-xl">
           <div className="modal-header">
             <h2 className="modal-title govuk-heading-m" id="upload-title">
               Upload to {this.props.folderName}
@@ -32,49 +76,11 @@ export class UploadFilesPopup extends React.Component {
               <div className="panel-body">
                 <table className="govuk-table" style={{ tableLayout: "fixed" }}>
                   <thead>
-                    <tr className="govuk-table__row">
-                      <th className="govuk-table__header">Name</th>
-                      <th
-                        className="govuk-table__header"
-                        style={{ width: "8em" }}
-                      >
-                        Type
-                      </th>
-                      <th
-                        className="govuk-table__header govuk-table__header--numeric"
-                        style={{ width: "5em" }}
-                      >
-                        Size
-                      </th>
-                      <th
-                        className="govuk-table__header govuk-table__header--numeric"
-                        style={{ width: "6em" }}
-                      >
-                        Status
-                      </th>
-                    </tr>
+                    <UploadHeader />
                   </thead>
                   <tbody id="upload-tbody">
                     {files.map((file) => {
-                      return (
-                        <tr
-                          className="govuk-table__row"
-                          ng-repeat="file in model.files"
-                        >
-                          <td className="govuk-table__cell">
-                            {file.name}
-                          </td>
-                          <td className="govuk-table__cell">{file.type}</td>
-                          <td className="govuk-table__cell govuk-table__cell--numeric">
-                            {bytesToSize(file.size)}
-                          </td>
-                          <td className="govuk-table__cell govuk-table__cell--numeric govuk-table__cell-progress">
-                            {/*<span ng-if="file.progress === undefined && file.error === undefined">...</span>*/}
-                            {/*<strong ng-if="file.progress !== undefined && file.error === undefined" className="govuk-tag progress-percentage" ng-class="{'progress-percentage-complete': file.progress == 100}">{{ file.progress + '%' }}</strong>*/}
-                            {/*<strong ng-if="file.error !== undefined" className="govuk-tag progress-error" title="{{ file.error }}">{{ file.error }}</strong></td>*/}
-                          </td>
-                        </tr>
-                      );
+                      return <UploadFile file={file} key={file.name} />;
                     })}
                   </tbody>
                 </table>
@@ -83,7 +89,7 @@ export class UploadFilesPopup extends React.Component {
           </div>
           <div className="modal-footer">
             <div className="form-group">
-              <div className="col-sm-offset-2 col-sm-10">
+              <div className="govuk-button-group">
                 <button
                   id="upload-btn-cancel"
                   type="button"
@@ -118,7 +124,7 @@ export class UploadFilesPopup extends React.Component {
             </div>
           </div>
         </div>
-      </>
+      </div>
     );
   }
 }

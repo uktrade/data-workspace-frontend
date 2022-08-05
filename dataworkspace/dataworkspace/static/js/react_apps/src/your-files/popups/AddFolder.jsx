@@ -1,5 +1,5 @@
 import React from "react";
-import "./Popups.css";
+import "./Popups.scss";
 
 export class AddFolderPopup extends React.Component {
   constructor(props) {
@@ -30,10 +30,13 @@ export class AddFolderPopup extends React.Component {
 
   render() {
     return (
-      <>
-        <div className="popup-overlay" onClick={this.props.onCancel}></div>
+      <div className="popup-container">
         <div
-          className="popup-modal"
+          className="popup-container__overlay"
+          onClick={this.props.onCancel}
+        ></div>
+        <div
+          className="popup-container__modal"
           tabIndex="-1"
           role="dialog"
           aria-labelledby="add-folder-title"
@@ -93,7 +96,7 @@ export class AddFolderPopup extends React.Component {
             </div>
           </form>
         </div>
-      </>
+      </div>
     );
   }
 }
