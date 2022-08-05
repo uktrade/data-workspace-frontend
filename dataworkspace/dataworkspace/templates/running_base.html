@@ -22,7 +22,7 @@
 
   <style>
     html, body {
-      height: 100%;
+      height: 100%; margin: 0;
     }
     .govuk-header__link, .govuk-phase-banner, .govuk-breadcrumbs {
       padding-left: 10px;
@@ -77,9 +77,9 @@
   <body class="govuk-template__body">
     {% include 'partials/gtm_body.html' %}
 
-    <a href="{{ request.path }}#visualisation" class="govuk-skip-link">Skip to main content</a>
-
     {% if wrap == 'IFRAME_WITH_VISUALISATIONS_HEADER' %}
+      <a href="{{ request.path }}#visualisation" class="govuk-skip-link">Skip to main content</a>
+
       <div class="header-wrap">
         <header class="govuk-header" role="banner" data-module="govuk-header">
           <div class="govuk-header__container govuk-grid-row">
