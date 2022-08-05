@@ -3,7 +3,7 @@ import "./Popups.scss";
 
 import { bytesToSize } from "../utils";
 
-function UploadHeader() {
+function UploadHeaderRow() {
   return (
     <tr className="govuk-table__row">
       <th className="govuk-table__header">Name</th>
@@ -26,7 +26,7 @@ function UploadHeader() {
   );
 }
 
-function UploadFile(props) {
+function UploadFileRow(props) {
   return (
     <tr className="govuk-table__row">
       <td className="govuk-table__cell">{props.file.name}</td>
@@ -35,8 +35,24 @@ function UploadFile(props) {
         {bytesToSize(props.file.size)}
       </td>
       <td className="govuk-table__cell govuk-table__cell--numeric govuk-table__cell-progress">
+        {props.file.progress === undefined &&
+        props.file.errors === undefined ? (
+          <span>...</span>
+        ) : null}
+
         {/*<span ng-if="file.progress === undefined && file.error === undefined">...</span>*/}
+        {props.file.progress ? (
+          <strong className="">{props.file.progress + "%"}</strong>
+        ) : null}
+
         {/*<strong ng-if="file.progress !== undefined && file.error === undefined" className="govuk-tag progress-percentage" ng-class="{'progress-percentage-complete': file.progress == 100}">{{ file.progress + '%' }}</strong>*/}
+
+        {props.file.error !== undefined ? (
+          <strong className="govuk-tag progress-error" title="{ file.error }">
+            {file.error}
+          </strong>
+        ) : null}
+
         {/*<strong ng-if="file.error !== undefined" className="govuk-tag progress-error" title="{{ file.error }}">{{ file.error }}</strong></td>*/}
       </td>
     </tr>
@@ -45,9 +61,19 @@ function UploadFile(props) {
 
 export class UploadFilesPopup extends React.Component {
   constructor(props) {
+    /**
+     * props is {}
+     * - folderName: The caption for the folder (not the prefix)
+     * - onCancel: function to call to dismiss the popup
+     * - onUploadFiles: function to call once upload is complete ... TODO - change the current impl
+     * - uploader - Uploader instance
+     */
+
+
     super(props);
     this.state = {
       remaining: 0,
+      folderName: this.props.folderName,
     };
     this.close = this.close.bind(this);
     this.onUploadClick = this.onUploadClick.bind(this);
@@ -58,7 +84,7 @@ export class UploadFilesPopup extends React.Component {
     this.props.onCancel();
   }
 
-  onUploadClick(files){
+  onUploadClick(files) {
     console.log("uploadClick");
     console.log(files);
     console.log(this.props.selectedFiles);
@@ -75,7 +101,7 @@ export class UploadFilesPopup extends React.Component {
         <div className="popup-container__modal modal-xl">
           <div className="modal-header">
             <h2 className="modal-title govuk-heading-m" id="upload-title">
-              Upload to {this.props.folderName}
+              Upload to {this.state.folderName}
             </h2>
           </div>
           <div className="modal-body">
@@ -83,11 +109,11 @@ export class UploadFilesPopup extends React.Component {
               <div className="panel-body">
                 <table className="govuk-table" style={{ tableLayout: "fixed" }}>
                   <thead>
-                    <UploadHeader />
+                    <UploadHeaderRow />
                   </thead>
                   <tbody id="upload-tbody">
                     {files.map((file) => {
-                      return <UploadFile file={file} key={file.name} />;
+                      return <UploadFileRow file={file} key={file.name} />;
                     })}
                   </tbody>
                 </table>
@@ -106,7 +132,7 @@ export class UploadFilesPopup extends React.Component {
                   {this.state.remaining === 0 ? "Close" : "Cancel"}
                 </button>
                 <button
-                  onClick={()=>this.onUploadClick(files)}                  
+                  onClick={() => this.onUploadClick(files)}
                   className="govuk-button modal-button"
                 >
                   <svg

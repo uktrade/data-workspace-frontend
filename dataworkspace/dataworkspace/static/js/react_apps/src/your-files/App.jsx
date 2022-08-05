@@ -4,8 +4,9 @@ import "./App.css";
 import { Header } from "./Header";
 import { FileList } from "./FileList";
 import { BigDataMessage } from "./BigDataMessage";
-import { getBreadcrumbs } from "./utils";
+import { getBreadcrumbs, getFolderName } from "./utils";
 import { AddFolderPopup, UploadFilesPopup } from "./popups";
+import { Uploader} from "./popups/uploader";
 
 const popupTypes = {
   ADD_FOLDER: "addFolder",
@@ -178,7 +179,12 @@ export default class App extends React.Component {
       this.state.prefix
     );
 
-    const currentPrefix = this.state.currentPrefix;
+    const currentFolderName = getFolderName(
+      this.state.currentPrefix,
+      this.state.rootPrefix
+    );
+
+    const uploader = new Uploader(this.props.proxy);
 
     return (
       <div className="browser">
@@ -191,7 +197,7 @@ export default class App extends React.Component {
         />
         {this.state.popups.addFolder ? (
           <AddFolderPopup
-            currentPrefix={currentPrefix}
+            currentPrefix={this.state.currentPrefix}
             onSuccess={this.createNewFolder}
             onCancel={() => this.hidePopup(popupTypes.ADD_FOLDER)}
           />
@@ -199,14 +205,17 @@ export default class App extends React.Component {
 
         {this.state.popups[popupTypes.UPLOAD_FILES] ? (
           <UploadFilesPopup
+            currentPrefix={this.state.currentPrefix}
             selectedFiles={this.state.selectedUploadFiles}
+            folderName={currentFolderName}
             onCancel={() => this.hidePopup(popupTypes.UPLOAD_FILES)}
+            uploader={uploader}
           />
         ) : null}
 
         <Header
           breadCrumbs={breadCrumbs}
-          currentPrefix={currentPrefix}
+          currentPrefix={this.state.currentPrefix}
           onBreadcrumbClick={this.handleBreadcrumbClick}
           onRefreshClick={this.handleRefreshClick}
           onNewFolderClick={this.showNewFolderPopup}

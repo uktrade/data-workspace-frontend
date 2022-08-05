@@ -21,7 +21,7 @@
 }
 @media (min-width: 40.0625em) {
   .browser-header {
-      height: 60px;
+    height: 60px;
   }
 }
 .browser-breadcrumbs {
@@ -40,9 +40,9 @@
 }
 @media (min-width: 40.0625em) {
   .browser-breadcrumbs {
-      height: 60px;
-      line-height: 60px;
-      font-size: 24px;
+    height: 60px;
+    line-height: 60px;
+    font-size: 24px;
   }
 }
 .browser-breadcrumb {
@@ -61,8 +61,8 @@
 }
 @media (min-width: 40.0625em) {
   .browser-breadcrumb:after {
-      font-size: 39px;
-      top: 3px;
+    font-size: 39px;
+    top: 3px;
   }
 }
 .browser-breadcrumb-link,
@@ -93,7 +93,7 @@
   -moz-appearance: none;
 }
 .navbutton[disabled] {
-  color: rgba(255,255,255,0.6);
+  color: rgba(255, 255, 255, 0.6);
 }
 .navbutton:focus {
   position: relative;
@@ -118,18 +118,18 @@
 }
 @media (min-width: 40.0625em) {
   .navbutton {
-      width: 60px;
-      height: 60px;
-      line-height: 60px;
+    width: 60px;
+    height: 60px;
+    line-height: 60px;
   }
   .navbutton-icon {
-      height: 24px;
+    height: 24px;
   }
   .navbutton-icon-small {
-      height: 22px;
+    height: 22px;
   }
   .navbutton-icon-large {
-      height: 26px;
+    height: 26px;
   }
 }
 .navbutton + .navbutton,
@@ -154,7 +154,10 @@
   vertical-align: top;
 }
 .govuk-table__row:hover .govuk-checkboxes__label:before,
-.govuk-checkboxes--small .govuk-checkboxes__item:hover .govuk-checkboxes__input:not(:disabled)+.govuk-checkboxes__label:before {
+.govuk-checkboxes--small
+  .govuk-checkboxes__item:hover
+  .govuk-checkboxes__input:not(:disabled)
+  + .govuk-checkboxes__label:before {
   box-shadow: 0 0 0 8px #dee0e2;
 }
 .govuk-table__cell {
@@ -162,22 +165,25 @@
 }
 @media (min-width: 40.0625em) {
   .govuk-table__header--checkbox {
-      width: 35px;
+    width: 35px;
   }
   .govuk-table__cell--checkbox {
-      padding: 0 5px 0 10px;
+    padding: 0 5px 0 10px;
   }
   .govuk-checkboxes--small .govuk-checkboxes__label:before {
-      top: 10px;
-      width: 25px;
-      height: 25px;
+    top: 10px;
+    width: 25px;
+    height: 25px;
   }
   .govuk-checkboxes--small .govuk-checkboxes__label:after {
-      top: 18px;
+    top: 18px;
   }
   .govuk-table__row:hover .govuk-checkboxes__label:before,
-  .govuk-checkboxes--small .govuk-checkboxes__item:hover .govuk-checkboxes__input:not(:disabled)+.govuk-checkboxes__label:before {
-      box-shadow: 0 0 0 10px #dee0e2;
+  .govuk-checkboxes--small
+    .govuk-checkboxes__item:hover
+    .govuk-checkboxes__input:not(:disabled)
+    + .govuk-checkboxes__label:before {
+    box-shadow: 0 0 0 10px #dee0e2;
   }
 }
 
@@ -230,11 +236,12 @@
 }
 @media (min-width: 40.0625em) {
   .modal {
-      padding: 40px 20px;
+    padding: 40px 20px;
   }
 }
 .modal-in {
-  transition: visibility 0s linear 0.1s, opacity 0.3s linear 0.1s, top 0.3s ease-out 0.1s;
+  transition: visibility 0s linear 0.1s, opacity 0.3s linear 0.1s,
+    top 0.3s ease-out 0.1s;
   visibility: visible;
   opacity: 1;
   top: 0;
@@ -253,15 +260,15 @@
   max-width: 940px;
 }
 .modal-dialog {
-  box-shadow: 0 5px 15px rgba(0,0,0,.5);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
 }
 .modal-header {
   background-color: #005ea5;
-  color: #FFFFFF;
+  color: #ffffff;
   padding: 15px;
 }
 .modal-header button.close {
-  color: #FFFFFF;
+  color: #ffffff;
 }
 .modal-title {
   color: white;
@@ -281,7 +288,7 @@
 }
 @media (min-width: 40.0625em) {
   .modal-button {
-      margin-bottom: 0;
+    margin-bottom: 0;
   }
 }
 .modal-backdrop {
@@ -296,12 +303,12 @@
   visibility: hidden;
 }
 .modal-backdrop-in {
-  transition: visibility 0s linear 0s, opacity .25s linear;
+  transition: visibility 0s linear 0s, opacity 0.25s linear;
   visibility: visible;
   opacity: 0.5;
 }
 .modal-backdrop-out {
-  transition: visibility 0s linear .5s, opacity .25s linear .25s;
+  transition: visibility 0s linear 0.5s, opacity 0.25s linear 0.25s;
   visibility: hidden;
   opacity: 0;
 }
@@ -315,7 +322,10 @@
   animation: 1s ease-in-out 0s 1 normal spin;
 }
 @keyframes spin {
-  from {transform:rotate(0deg);}
-  to {transform:rotate(360deg);}
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
-

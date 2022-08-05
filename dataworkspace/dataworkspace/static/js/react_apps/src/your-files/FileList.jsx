@@ -1,27 +1,10 @@
 import React from "react";
 import "./FileList.css";
 
-const sizes = ["bytes", "KB", "MB", "GB", "TB"];
-
-function bytesToSize(bytes) {
-  if (bytes === 0) return "0 bytes";
-  const ii = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)), 10);
-  return `${Math.round(bytes / 1024 ** ii, 2)} ${sizes[ii]}`;
-}
-
-// Convert cars/vw/golf.png to golf.png
-function fullpath2filename(path) {
-  return path.replace(/^.*[\\/]/, "");
-}
-
-// Convert cars/vw/ to vw/
-function prefix2folder(prefix) {
-  const parts = prefix.split("/");
-  return `${parts[parts.length - 2]}/`;
-}
+import { prefixToFolder, bytesToSize, fullPathToFilename } from "./utils";
 
 function BigDataFolder(props) {
-  const folderName = prefix2folder(props.folder.Prefix);
+  const folderName = prefixToFolder(props.folder.Prefix);
   return (
     <tr key={props.folder.Prefix} className="govuk-table__row">
       <td
@@ -64,7 +47,7 @@ function BigDataFolder(props) {
 }
 
 function Folder(props) {
-  const folderName = prefix2folder(props.folder.Prefix);
+  const folderName = prefixToFolder(props.folder.Prefix);
   return (
     <tr key={props.folder.Prefix} className="govuk-table__row">
       <td className="govuk-table__cell govuk-table__cell--checkbox">
@@ -92,7 +75,7 @@ function Folder(props) {
 }
 
 function File(props) {
-  const filename = fullpath2filename(props.text);
+  const filename = fullPathToFilename(props.text);
   return (
     <a className="file govuk-link" onClick={props.onClick}>
       {filename}
