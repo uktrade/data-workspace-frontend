@@ -11,6 +11,7 @@ resource "aws_ecs_task_definition" "pgadmin" {
   ephemeral_storage {
     size_in_gib = 50
   }
+  
   volume {
     name = "home_directory"
   }
