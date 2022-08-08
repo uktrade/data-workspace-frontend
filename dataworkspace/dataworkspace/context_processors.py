@@ -28,7 +28,6 @@ def common(request):
         "gtm_container_id": settings.GTM_CONTAINER_ID,
         "GTM_ENABLED": gtm_enabled,
         "gtm_container_environment_params": settings.GTM_CONTAINER_ENVIRONMENT_PARAMS,
-        "CASE_STUDIES_FLAG": settings.CASE_STUDIES_FLAG,
         "NOTIFY_ON_MASTER_DATASET_CHANGE_FLAG": settings.NOTIFY_ON_MASTER_DATASET_CHANGE_FLAG,
         "NOTIFY_ON_DATACUT_CHANGE_FLAG": settings.NOTIFY_ON_DATACUT_CHANGE_FLAG,
         "NOTIFY_ON_REFERENCE_DATASET_CHANGE_FLAG": settings.NOTIFY_ON_REFERENCE_DATASET_CHANGE_FLAG,

@@ -257,6 +257,7 @@ def test_footer_links(request_client):
         ("Home", "http://dataworkspace.test:8000/"),
         ("Tools", "/tools/"),
         ("About", "/about/"),
+        ("Our Work", "/case-studies/"),
         ("Contact us", "/support-and-feedback/"),
         (
             "Help centre (opens in a new tab)",

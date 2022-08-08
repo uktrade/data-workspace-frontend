@@ -141,14 +141,12 @@
                 About
               </a>
             </li>
-            {% flag CASE_STUDIES_FLAG %}
             {% url 'case-studies:case-studies' as case_studies_url %}
               <li class="govuk-footer__list-item">
                 <a class="govuk-footer__link" href="{{ case_studies_url }}">
                   Our Work
                 </a>
               </li>
-            {% endflag %}
             <li class="govuk-footer__list-item">
               <a class="govuk-footer__link"  href="{% url 'support' %}">
                 Contact us

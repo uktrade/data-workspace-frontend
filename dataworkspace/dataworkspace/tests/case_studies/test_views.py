@@ -1,12 +1,9 @@
 import pytest
-from django.conf import settings
 from django.urls import reverse
-from waffle.testutils import override_flag
 
 from dataworkspace.tests import factories
 
 
-@override_flag(settings.CASE_STUDIES_FLAG, active=True)
 def test_list_view_no_results(client):
     response = client.get(reverse("case-studies:case-studies"))
     assert response.status_code == 200
@@ -16,7 +13,6 @@ def test_list_view_no_results(client):
 
 
 @pytest.mark.django_db
-@override_flag(settings.CASE_STUDIES_FLAG, active=True)
 def test_list_view_single_page(client):
     case_studies = [
         factories.CaseStudyFactory.create(),
@@ -31,7 +27,6 @@ def test_list_view_single_page(client):
 
 
 @pytest.mark.django_db
-@override_flag(settings.CASE_STUDIES_FLAG, active=True)
 def test_list_view_multiple_pages(client):
     factories.CaseStudyFactory.create_batch(20)
     response = client.get(reverse("case-studies:case-studies"))
@@ -43,7 +38,6 @@ def test_list_view_multiple_pages(client):
 
 
 @pytest.mark.django_db
-@override_flag(settings.CASE_STUDIES_FLAG, active=True)
 def test_detail_view_unpublished(client):
     case_study = factories.CaseStudyFactory.create(published=False)
     response = client.get(reverse("case-studies:case-study", args=(case_study.id,)))
@@ -51,7 +45,6 @@ def test_detail_view_unpublished(client):
 
 
 @pytest.mark.django_db
-@override_flag(settings.CASE_STUDIES_FLAG, active=True)
 def test_detail_view_published(client):
     case_study1 = factories.CaseStudyFactory.create(published=True)
     case_study2 = factories.CaseStudyFactory.create(published=True)
