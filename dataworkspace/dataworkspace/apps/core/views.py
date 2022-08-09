@@ -84,7 +84,6 @@ def public_error_500_html_view(request):
 def healthcheck_view(request):
     if request.method != "GET":
         return HttpResponseNotAllowed(["GET"])
-    admin_db = settings.DATABASES["default"]
     if check_db_table("default", "public", "django_site"):
         return HttpResponse("OK")
     else:
