@@ -39,7 +39,7 @@ from dataworkspace.apps.core.utils import (
     table_data,
     table_exists,
     view_exists,
-    check_db_table
+    check_db_table,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -86,7 +86,6 @@ def healthcheck_view(request):
         return HttpResponseNotAllowed(["GET"])
     if check_db_table("default", "public", "django_site"):
         return HttpResponse("OK")
-
     return HttpResponseServerError("Database not available")
 
 
