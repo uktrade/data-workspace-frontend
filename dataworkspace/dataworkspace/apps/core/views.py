@@ -86,8 +86,8 @@ def healthcheck_view(request):
         return HttpResponseNotAllowed(["GET"])
     if check_db_table("default", "public", "django_site"):
         return HttpResponse("OK")
-    else:
-        return HttpResponseServerError("Database not available")
+
+    return HttpResponseServerError("Database not available")
 
 
 def about_page_view(request):
