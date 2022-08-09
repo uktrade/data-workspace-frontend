@@ -39,6 +39,7 @@ from dataworkspace.apps.core.utils import (
     table_data,
     table_exists,
     view_exists,
+    check_db_table
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -80,8 +81,14 @@ def public_error_500_html_view(request):
     return render(request, "errors/error_500.html", {"message": message}, status=500)
 
 
-def healthcheck_view(_):
-    return HttpResponse("OK")
+def healthcheck_view(request):
+    if request.method != "GET":
+        return HttpResponseNotAllowed(["GET"])
+    admin_db = settings.DATABASES["default"]
+    if check_db_table("default", "public", "django_site"):
+        return HttpResponse("OK")
+    else:
+        return HttpResponseServerError("Database not available")
 
 
 def about_page_view(request):
