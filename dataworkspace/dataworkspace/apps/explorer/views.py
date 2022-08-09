@@ -1,8 +1,9 @@
 import logging
 import re
+import time
 from urllib.parse import urlencode
 
-from psycopg2 import DatabaseError
+import psycopg2
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -21,7 +22,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView
 from django.views.generic.base import RedirectView, TemplateView, View
-from django.views.generic.edit import CreateView, DeleteView, FormView
+from django.views.generic.edit import CreateView, DeleteView, FormView, UpdateView
 from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace.apps.core.charts.models import ChartBuilderChart
@@ -63,7 +64,7 @@ def _export(request, querylog, download=True):
     exporter = exporter_class(querylog=querylog, request=request)
     try:
         output = exporter.get_output(delim=delim)
-    except DatabaseError as e:
+    except psycopg2.DatabaseError as e:
         if not re.match(
             r'^relation "_user_[a-zA-Z0-9]{8}\._data_explorer_tmp_query_\d+" does not exist$',
             str(e),
@@ -88,7 +89,7 @@ class DownloadFromQuerylogView(View):
 
         try:
             return _export(request, querylog)
-        except DatabaseError:
+        except psycopg2.DatabaseError:
             redirect_url = reverse("explorer:index")
             return redirect(redirect_url + f"?querylog_id={querylog.id}&error=download")
 
@@ -529,7 +530,16 @@ class QueryLogResultView(View):
                 html = template.render({}, request)
             elif query_log.state == QueryLogState.COMPLETE:
                 template = loader.get_template("explorer/partials/query_results.html")
-                headers, data, _ = fetch_query_results(querylog_id)
+                retries = 5
+                for _ in range(retries):
+                    try:
+                        headers, data, _ = fetch_query_results(querylog_id)
+                    except psycopg2.errors.UndefinedTable:  # pylint: disable=no-member
+                        time.sleep(1)
+                        continue
+                    else:
+                        break
+
                 context = {
                     "query_log": query_log,
                     "headers": headers,
@@ -659,3 +669,20 @@ class CreateChartView(WaffleFlagMixin, RedirectView):
         )
         run_chart_builder_query.delay(chart.id)
         return f"{chart.get_edit_url()}?prev={self.request.META.get('HTTP_REFERER')}"
+
+
+class QueryLogUpdateView(UpdateView):
+    model = QueryLog
+    fields = ["state"]
+    template_name = "explorer/home.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.method == "GET":
+            return redirect(reverse("explorer:index"))
+        query_log = get_object_or_404(QueryLog, pk=kwargs["pk"])
+        if query_log.run_by_user != request.user:
+            raise DataExplorerQueryResultsPermissionError()
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return reverse("explorer:running_query", kwargs={"query_log_id": self.get_object().id})

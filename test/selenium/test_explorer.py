@@ -66,6 +66,17 @@ class TestDataExplorer:
         assert home_page.read_result_headers() == ["?column?", "?column?", "?column?"]
         assert home_page.read_result_rows() == [["1", "2", "3"]]
 
+    def test_can_cancel_query(self, _application):
+        home_page = HomePage(driver=self.driver)
+        home_page.open()
+
+        home_page.enter_query("select 1,2,3 from pg_sleep(5)")
+        home_page.click_run()
+        home_page.click_cancel()
+        home_page.wait_for_cancel_confirmation()
+
+        assert True
+
     def test_query_exception_returned_as_friendly_error(self, _application):
         home_page = HomePage(driver=self.driver)
         home_page.open()

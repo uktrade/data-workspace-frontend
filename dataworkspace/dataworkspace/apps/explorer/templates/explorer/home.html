@@ -14,6 +14,20 @@
     <div class="govuk-width-container">
         <div class="govuk-grid-row">
           <div class="govuk-grid-column-full" id="query_area">
+            {% if query_log.state == 3 %}
+                <div id="query_cancelled" class="govuk-notification-banner govuk-notification-banner--success" role="alert" aria-labelledby="govuk-notification-banner-title" data-module="govuk-notification-banner">
+                  <div class="govuk-notification-banner__header">
+                    <h2 class="govuk-notification-banner__title" id="govuk-notification-banner-title">
+                      Success
+                    </h2>
+                  </div>
+                  <div class="govuk-notification-banner__content">
+                    <h3 class="govuk-notification-banner__heading">
+                      Your query has been cancelled
+                    </h3>
+                  </div>
+                </div>
+            {% endif %}
             <div id="error-banner"{% if not form.errors and not extra_errors %} class="govuk-!-display-none"{% endif %}>
               <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1"
                    data-module="govuk-error-summary">
@@ -160,6 +174,17 @@
                   {% include 'explorer/partials/query_results.html' %}
                 </div>
               </form>
+              {% if query_log.state == 0 %}
+                <form action="update/" method="post">
+                  {% csrf_token %}
+                  <div class="govuk-form-group">
+                    <input type="hidden" name="state" value="3">
+                    <button id="cancel_button" class="govuk-button govuk-button--warning" data-module="govuk-button">
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              {% endif %}
             </div>
             <div class="govuk-tabs__panel" id="database-tab">
 

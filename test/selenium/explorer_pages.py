@@ -41,6 +41,14 @@ class HomePage(_BaseExplorerPage):
     def click_format_sql(self):
         self._submit("Format SQL")
 
+    def click_cancel(self):
+        self._submit("Cancel")
+
+    def wait_for_cancel_confirmation(self):
+        WebDriverWait(self._driver, 10).until(
+            expected_conditions.visibility_of_element_located((By.ID, "query_cancelled"))
+        )
+
     def wait_for_results(self):
         WebDriverWait(self._driver, 10).until(
             expected_conditions.visibility_of_element_located((By.ID, "query-results"))
@@ -77,6 +85,10 @@ class HomePage(_BaseExplorerPage):
 
     def read_sql_error(self):
         span = self._driver.find_element_by_id("sql-error")
+        return span.text
+
+    def read_cancelled_error(self):
+        span = self._driver.find_element_by_id("query_cancelled")
         return span.text
 
     def change_results_pagination(self, page, results_per_page):
