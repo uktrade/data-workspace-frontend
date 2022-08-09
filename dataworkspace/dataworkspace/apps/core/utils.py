@@ -792,6 +792,12 @@ def _view_exists(cur, schema, view):
     return bool(cur.fetchone())
 
 
+def check_db(database):
+    with connect(database_dsn(settings.DATABASES[database])) as conn, conn.cursor() as cur:
+        cur.execute("SELECT 1")
+        return bool(cur.fetchone)
+
+
 def table_exists(database, schema, table):
     with connect(database_dsn(settings.DATABASES_DATA[database])) as conn, conn.cursor() as cur:
         return _table_exists(cur, schema, table)
