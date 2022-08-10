@@ -289,6 +289,16 @@ def find_datasets(request):
         ]
     )
 
+    if form.cleaned_data["q"]:
+        log_event(
+            request.user,
+            EventLog.TYPE_DATASET_FIND_FORM_QUERY,
+            extra={
+                "query": form.cleaned_data["q"],
+                "number_of_results": len(matched_datasets),
+            },
+        )
+
     def _without_none(it):
         return (val for val in it if val is not None)
 
