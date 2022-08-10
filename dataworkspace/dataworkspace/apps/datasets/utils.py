@@ -37,6 +37,7 @@ from dataworkspace.apps.datasets.models import (
     VisualisationLink,
     VisualisationLinkSqlQuery,
 )
+from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.cel import celery_app
 from dataworkspace.datasets_db import (
     extract_queried_tables_from_sql_query,
@@ -48,6 +49,7 @@ from dataworkspace.datasets_db import (
 )
 from dataworkspace.notify import EmailSendFailureException, send_email
 from dataworkspace.utils import TYPE_CODES_REVERSED
+
 
 logger = logging.getLogger("app")
 
@@ -1011,3 +1013,15 @@ def get_dataset_table(obj):
             for ref_dataset in ReferenceDataset.objects.live().filter(table_name=table.table):
                 datasets.add(ref_dataset)
     return datasets
+
+
+def get_recently_viewed_catalogue_pages(user):
+    user_event_logs = (
+        EventLog.objects.filter(user=user, event_type=EventLog.TYPE_DATASET_VIEW)
+        .order_by("timestamp__date")
+        .distinct("timestamp__date", "object_id")
+    )[:3]
+    user_event_choice_list = []
+    for log in user_event_logs:
+        user_event_choice_list.append((log.object_id, log.related_object))
+    return user_event_logs

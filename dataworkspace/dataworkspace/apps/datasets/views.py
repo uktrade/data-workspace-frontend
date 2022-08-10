@@ -114,6 +114,7 @@ from dataworkspace.apps.datasets.utils import (
     get_code_snippets_for_reference_table,
     get_detailed_changelog,
     get_tools_links_for_user,
+    get_recently_viewed_catalogue_pages,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event, log_permission_change
@@ -361,6 +362,7 @@ def find_datasets(request):
         "datasets/index.html",
         {
             "form": form,
+            "recently_viewed_catalogue_pages": get_recently_viewed_catalogue_pages(request.user),
             "query": filters.query,
             "datasets": datasets,
             "data_type": dict(data_types),
