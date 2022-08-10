@@ -1,4 +1,3 @@
-import datetime
 import json
 import logging
 import uuid
@@ -222,10 +221,14 @@ def find_datasets(request):
         settings.SEARCH_RESULTS_DATASETS_PER_PAGE,
     )
 
-    log_event(request.user, EventLog.TYPE_DATASET_FIND_FORM_QUERY, extra={
-        "query": form.cleaned_data["q"],
-        "number_of_results": len(matched_datasets),
-    })
+    log_event(
+        request.user,
+        EventLog.TYPE_DATASET_FIND_FORM_QUERY,
+        extra={
+            "query": form.cleaned_data["q"],
+            "number_of_results": len(matched_datasets),
+        },
+    )
 
     datasets = paginator.get_page(request.GET.get("page"))
 
