@@ -221,15 +221,6 @@ def find_datasets(request):
         settings.SEARCH_RESULTS_DATASETS_PER_PAGE,
     )
 
-    log_event(
-        request.user,
-        EventLog.TYPE_DATASET_FIND_FORM_QUERY,
-        extra={
-            "query": form.cleaned_data["q"],
-            "number_of_results": len(matched_datasets),
-        },
-    )
-
     datasets = paginator.get_page(request.GET.get("page"))
 
     ########################################################
@@ -297,6 +288,16 @@ def find_datasets(request):
             for table in query.tables.all()
         ]
     )
+
+    if form.cleaned_data["q"]:
+        log_event(
+            request.user,
+            EventLog.TYPE_DATASET_FIND_FORM_QUERY,
+            extra={
+                "query": form.cleaned_data["q"],
+                "number_of_results": len(matched_datasets),
+            },
+        )
 
     def _without_none(it):
         return (val for val in it if val is not None)
