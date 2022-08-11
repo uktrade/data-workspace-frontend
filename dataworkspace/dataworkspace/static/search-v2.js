@@ -343,7 +343,7 @@ document.body.addEventListener('click', function(event) {
   const csrf = document.getElementsByName("csrfmiddlewaretoken")[0].value;
   const [classFunc, path, title] = toggle.classList.contains('is-bookmarked') ?
     ['remove', '/datasets/' + dataset_id + '/unset-bookmark', 'You have not bookmarked this dataset'] :
-    ['add', '/datasets/' + dataset_id + '/unset-bookmark', 'You have bookmarked this dataset'];
+    ['add', '/datasets/' + dataset_id + '/set-bookmark', 'You have bookmarked this dataset'];
 
   toggle.classList[classFunc]('is-bookmarked');
   toggle.setAttribute('title', title);
