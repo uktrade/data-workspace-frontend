@@ -1,5 +1,6 @@
 var QUERY_STATE_RUNNING = 0;
 var QUERY_STATE_FAILED = 1;
+var QUERY_STATE_CANCELLED = 3;
 
 function pollForQueryResults(queryLogId, delay, delayStep, maxDelay) {
   var xhr = new XMLHttpRequest();
@@ -22,6 +23,10 @@ function pollForQueryResults(queryLogId, delay, delayStep, maxDelay) {
         document.getElementById('async-query-submitting').classList.add('govuk-!-display-none');
       }
       else {
+        var el = document.getElementById('cancel_button');
+        if (el) {
+          document.getElementById('cancel_button').classList.add('govuk-!-display-none');
+        }
         document.getElementById('query-results-wrapper').innerHTML = resp.html;
       }
     }

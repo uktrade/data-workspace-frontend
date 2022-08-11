@@ -7,6 +7,10 @@ resource "aws_ecs_task_definition" "theia" {
   memory                = "${local.notebook_container_memory}"
   requires_compatibilities = ["FARGATE"]
 
+  ephemeral_storage {
+    size_in_gib = 50
+  }
+
   volume {
     name = "home_directory"
   }

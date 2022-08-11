@@ -315,6 +315,34 @@ class TestHomePage:
         )
         assert resp.status_code == 404
 
+    def test_can_only_cancel_query_log_run_by_current_user(self, staff_user, staff_client):
+        user = UserFactory(email="test@foo.bar")
+        my_querylog = QueryLogFactory(run_by_user=staff_user)
+        other_querylog = QueryLogFactory(run_by_user=user)
+
+        resp = staff_client.post(
+            reverse(
+                "explorer:update_query_state",
+                args=(my_querylog.id,),
+            ),
+            {"state": QueryLogState.CANCELLED},
+            follow=True,
+        )
+        my_querylog.refresh_from_db()
+        assert resp.status_code == 200
+        assert my_querylog.state == QueryLogState.CANCELLED
+
+        resp = staff_client.post(
+            reverse(
+                "explorer:update_query_state",
+                args=(other_querylog.id,),
+            ),
+            {"state": QueryLogState.CANCELLED},
+        )
+        other_querylog.refresh_from_db()
+        assert resp.status_code == 403
+        assert other_querylog.state != QueryLogState.CANCELLED
+
 
 class TestCSVFromSQL:
     @pytest.fixture(scope="function", autouse=True)
