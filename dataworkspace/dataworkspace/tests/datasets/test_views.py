@@ -140,6 +140,40 @@ def test_toggle_bookmark_off_dataset():
 
 
 @pytest.mark.django_db
+def test_set_bookmark():
+    user = factories.UserFactory.create(is_superuser=False)
+    client = Client(**get_http_sso_data(user))
+    ds = factories.DataSetFactory.create(published=True)
+
+    response = client.post(
+        reverse("datasets:set_bookmark", kwargs={"dataset_uuid": ds.id}),
+    )
+    # Called from JavaScript - no need for redirect
+    assert response.status_code == 200
+
+    ds.refresh_from_db()
+    assert ds.user_has_bookmarked(user) is True
+
+
+@pytest.mark.django_db
+def test_unset_bookmark():
+    user = factories.UserFactory.create(is_superuser=False)
+    client = Client(**get_http_sso_data(user))
+    ds = factories.DataSetFactory.create(published=True)
+    factories.DataSetBookmarkFactory.create(user=user, dataset=ds)
+    assert ds.user_has_bookmarked(user) is True
+
+    response = client.post(
+        reverse("datasets:unset_bookmark", kwargs={"dataset_uuid": ds.id}),
+    )
+    # Called from JavaScript - no need for redirect
+    assert response.status_code == 200
+
+    ds.refresh_from_db()
+    assert ds.user_has_bookmarked(user) is False
+
+
+@pytest.mark.django_db
 def test_toggle_bookmark_on_reference():
     user = factories.UserFactory.create(is_superuser=False)
     client = Client(**get_http_sso_data(user))

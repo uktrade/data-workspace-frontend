@@ -167,27 +167,21 @@
           {% if has_filters %}
             <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
           {% endif %}
+          {% csrf_token %}
           {% for dataset in datasets %}
             <div class="search-result govuk-!-padding-bottom-4 govuk-!-margin-bottom-4">
               <h3 class="govuk-heading-m">
-                <div style="float:right;" class="dataset-icons-container">
-                  {#                  {% if dataset.is_subscribed %}{% include 'partials/subscription_icon.html' %}{% endif %}#}
-                  {% if dataset.is_bookmarked %}
-                    <span title="You have bookmarked this dataset">
-                    {% include 'partials/bookmark-yes.html' %}
-                    </span>
-                  {% else %}
-                    <span title="You have not bookmarked this dataset">
-                    {% include 'partials/bookmark-no.html' %}
-                    </span>
-                  {% endif %}
-                </div>
                 {% include "partials/gtm_dataset_link.html" with event_type="searchResultClick" search_page_number=datasets.number search_result_rank=forloop.counter search_type="search_bar" dataset=dataset %}
                 {% if not dataset.published %}
                   <strong class="govuk-tag govuk-tag--grey">
                     Unpublished
                   </strong>
                 {% endif %}
+                <div style="float:right;">
+                  <button type="button" class="bookmark-toggle{% if dataset.is_bookmarked %} is-bookmarked{% endif %}" title="{% if dataset.is_bookmarked %}You have bookmarked this dataset{% else %}You have not bookmarked this dataset{% endif %}" data-dataset-id="{{ dataset.id }}">
+                      {% include 'partials/bookmark.html' with dataset_id=dataset.id is_bookmarked=dataset.is_bookmarked %}
+                  </button>
+                </div>
               </h3>
 
               <p class="govuk-body">{{ dataset.short_description }}</p>
