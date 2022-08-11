@@ -47,7 +47,9 @@ class EventLogAdmin(admin.ModelAdmin):
                 args=(obj.related_object.id,),
             )
         except NoReverseMatch:
-            return format_html(f'<a href="/datasets/{obj.related_object.id}">{obj.related_object}</a>')
+            return format_html(
+                f'<a href="/datasets/{obj.related_object.id}">{obj.related_object}</a>'
+            )
 
         return format_html('<a href="{}">{}</a>'.format(url, obj.related_object))
 
