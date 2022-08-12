@@ -4,6 +4,7 @@
   "description": "This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).",
   "main": "webpack.config.js",
   "dependencies": {
+    "eventemitter3": "^4.0.7",
     "react": "^18.1.0",
     "react-chart-editor": "github:uktrade/react-chart-editor",
     "react-dom": "^18.1.0",

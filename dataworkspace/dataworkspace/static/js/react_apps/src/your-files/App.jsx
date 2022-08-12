@@ -6,7 +6,7 @@ import { FileList } from "./FileList";
 import { BigDataMessage } from "./BigDataMessage";
 import { getBreadcrumbs, getFolderName } from "./utils";
 import { AddFolderPopup, UploadFilesPopup } from "./popups";
-import { Uploader} from "./popups/uploader";
+import { Uploader } from "./popups/uploader";
 
 const popupTypes = {
   ADD_FOLDER: "addFolder",

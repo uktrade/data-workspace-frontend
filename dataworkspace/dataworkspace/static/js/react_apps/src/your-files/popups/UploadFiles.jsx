@@ -69,12 +69,13 @@ export class UploadFilesPopup extends React.Component {
      * - uploader - Uploader instance
      */
 
-
     super(props);
     this.state = {
       remaining: 0,
       folderName: this.props.folderName,
+      uploader: this.props.uploader,
     };
+    console.log(this.props.uploader);
     this.close = this.close.bind(this);
     this.onUploadClick = this.onUploadClick.bind(this);
   }
@@ -87,7 +88,14 @@ export class UploadFilesPopup extends React.Component {
   onUploadClick(files) {
     console.log("uploadClick");
     console.log(files);
-    console.log(this.props.selectedFiles);
+    console.log("this is the uploader");
+    console.log(this.props.uploader);
+
+    this.state.uploader.on("upload:start", function (file) {
+      console.log(file);
+    });
+
+    this.state.uploader.start(this.props.selectedFiles);
   }
 
   render() {
