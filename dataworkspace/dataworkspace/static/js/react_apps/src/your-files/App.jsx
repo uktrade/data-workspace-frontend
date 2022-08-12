@@ -184,7 +184,10 @@ export default class App extends React.Component {
       this.state.rootPrefix
     );
 
-    const uploader = new Uploader(this.props.proxy);
+    const uploader = new Uploader(this.props.proxy, {
+      bucketName: this.state.bucketName,
+      currentPrefix: this.state.currentPrefix,
+    });
 
     return (
       <div className="browser">

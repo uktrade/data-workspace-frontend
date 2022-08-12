@@ -1,3 +1,5 @@
+import AWS from "aws-sdk";
+
 function fetchJSON(url) {
   return new Promise((resolve, reject) => {
     function resolveJSON() {
@@ -149,4 +151,6 @@ export class S3Proxy {
       alert("Error creating folder: " + err);
     }
   }
+
+  
 }

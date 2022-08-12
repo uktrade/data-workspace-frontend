@@ -91,8 +91,16 @@ export class UploadFilesPopup extends React.Component {
     console.log("this is the uploader");
     console.log(this.props.uploader);
 
-    this.state.uploader.on("upload:start", function (file) {
-      console.log(file);
+    this.state.uploader.on("upload:start",  (file)=> {
+      console.log("Start");
+    });
+
+    this.state.uploader.on("upload:failed", (file) => {
+      console.log("failed", file);
+    });
+
+    this.state.uploader.on("upload:progress", (file, percent) => {
+      console.log(percent, file);
     });
 
     this.state.uploader.start(this.props.selectedFiles);
