@@ -36,6 +36,12 @@ export class Uploader extends EventEmitter {
     console.log("options are", options);
   }
 
+  cancel(){
+    console.log("aborting ...")
+    this.isAborted = true;
+    
+  }
+
   start(files) {
     const maxConnections = 4;
     const concurrentFiles = Math.min(maxConnections, files.length);
@@ -43,8 +49,8 @@ export class Uploader extends EventEmitter {
     this.queue = queue(concurrentFiles);
     this.remainingUploadCount = files.length;
 
-    // some v funky scope happening with the queue!
-    const s3 = this.s3;
+    // some v funky scope happening within the queue!
+    const s3 = this.s3.s3;
 
     for (const file of files) {
       const params = {
@@ -65,15 +71,16 @@ export class Uploader extends EventEmitter {
         try {
           if (!this.isAborted) {
             this.emit("upload:start");
-            console.log(s3);
-            let upload = s3.s3.upload(params, {
+            let upload = s3.upload(params, {
               queueSize: connectionsPerFile,
             });
             console.log(upload);
             this.uploads.push(upload);
             console.log("about to await the upload");
             await upload.on("httpUploadProgress", onProgress).promise();
-            console.log("finished awaiting");
+            this.emit("upload:complete", file);
+          } else {
+            this.emit("cancelled");
           }
         } catch (err) {
           console.error(err);
@@ -82,6 +89,10 @@ export class Uploader extends EventEmitter {
           }
         } finally {
           this.remainingUploadCount--;
+        }
+
+        if (this.remainingUploadCount == 0) {
+          this.emit("complete");
         }
       });
     }

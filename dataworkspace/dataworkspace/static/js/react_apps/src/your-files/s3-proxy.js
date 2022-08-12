@@ -67,7 +67,6 @@ export class S3Proxy {
   }
 
   async listObjects(params) {
-    console.log(params);
     try {
       const response = await this.s3.listObjectsV2(params).promise();
       const files = response.Contents.filter((file) => {
@@ -151,6 +150,4 @@ export class S3Proxy {
       alert("Error creating folder: " + err);
     }
   }
-
-  
 }

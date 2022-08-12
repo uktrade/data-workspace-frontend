@@ -19,7 +19,7 @@ export default class App extends React.Component {
     this.state = {
       files: [],
       folders: [],
-      selectedUploadFiles: [],
+      selectedFiles: [],
       currentPrefix: this.props.config.rootPrefix,
       bigDataFolder: this.props.config.bigdataPrefix,
       isLoaded: false,
@@ -54,14 +54,27 @@ export default class App extends React.Component {
     this.fileInputRef = React.createRef();
   }
 
+  createFilesArrayFromFileList(filelist) {
+    const files = [];
+
+    for (let i = 0; i < filelist.length; i++) {
+      const file = filelist[i];
+      file.relativePath = file.name;
+      files.push(file);
+    }
+
+    return files;
+  }
+
   onFileChange(event) {
     console.log("onfilechange", event.target.files);
     if (!event.target.files) {
       console.log("nothing selected");
       return;
     }
+    const files = this.createFilesArrayFromFileList(event.target.files);
     this.setState({
-      selectedUploadFiles: event.target.files,
+      selectedFiles: files,
     });
     this.showPopup(popupTypes.UPLOAD_FILES);
   }
@@ -122,7 +135,7 @@ export default class App extends React.Component {
   }
 
   async handleFileClick(key) {
-    console.log(key);
+    console.log("handleFileClick", key);
     const params = {
       Bucket: this.state.bucketName,
       Key: key,
@@ -146,7 +159,7 @@ export default class App extends React.Component {
   }
 
   async handleFolderClick(prefix) {
-    console.log("handleFolderClick", arguments);
+    console.log("handleFolderClick", prefix);
     await this.navigateTo(prefix);
   }
 
@@ -163,8 +176,6 @@ export default class App extends React.Component {
       params.Prefix === this.state.rootPrefix + this.state.bigDataFolder;
 
     const data = await this.props.proxy.listObjects(params);
-
-    console.log(data);
     this.setState({
       files: data.files,
       folders: data.folders,
@@ -209,7 +220,7 @@ export default class App extends React.Component {
         {this.state.popups[popupTypes.UPLOAD_FILES] ? (
           <UploadFilesPopup
             currentPrefix={this.state.currentPrefix}
-            selectedFiles={this.state.selectedUploadFiles}
+            selectedFiles={this.state.selectedFiles}
             folderName={currentFolderName}
             onCancel={() => this.hidePopup(popupTypes.UPLOAD_FILES)}
             uploader={uploader}
