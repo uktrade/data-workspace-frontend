@@ -431,6 +431,16 @@ class DataSet(DeletableTimestampedUserModel):
         else:
             self.datasetbookmark_set.create(user=user)
 
+    def set_bookmark(self, user):
+        if self.user_has_bookmarked(user):
+            return
+        self.datasetbookmark_set.create(user=user)
+
+    def unset_bookmark(self, user):
+        if not self.user_has_bookmarked(user):
+            return
+        self.datasetbookmark_set.filter(user=user).delete()
+
     def bookmark_count(self):
         return self.datasetbookmark_set.count()
 
@@ -1645,6 +1655,16 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         else:
             self.referencedatasetbookmark_set.create(user=user)
 
+    def set_bookmark(self, user):
+        if self.user_has_bookmarked(user):
+            return
+        self.referencedatasetbookmark_set.create(user=user)
+
+    def unset_bookmark(self, user):
+        if not self.user_has_bookmarked(user):
+            return
+        self.referencedatasetbookmark_set.filter(user=user).delete()
+
     def bookmark_count(self):
         return self.referencedatasetbookmark_set.count()
 
@@ -2349,6 +2369,16 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
             self.visualisationbookmark_set.filter(user=user).delete()
         else:
             self.visualisationbookmark_set.create(user=user)
+
+    def set_bookmark(self, user):
+        if self.user_has_bookmarked(user):
+            return
+        self.visualisationbookmark_set.create(user=user)
+
+    def unset_bookmark(self, user):
+        if not self.user_has_bookmarked(user):
+            return
+        self.visualisationbookmark_set.filter(user=user).delete()
 
     def bookmark_count(self):
         return self.visualisationbookmark_set.count()
