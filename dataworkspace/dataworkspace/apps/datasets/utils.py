@@ -1023,5 +1023,5 @@ def get_recently_viewed_catalogue_pages(user):
     )[:3]
     user_event_choice_list = []
     for log in user_event_logs:
-        user_event_choice_list.append((log.object_id, log.related_object.name, log.related_object._meta.object_name))
+        user_event_choice_list.append((log.object_id, log.related_object.name, log.related_object._meta.object_name, log.related_object.slug))
     return user_event_choice_list

@@ -49,15 +49,17 @@
       <div class="govuk-grid-column-full">
         <div class="search-field govuk-!-margin-bottom-2">
           <label class="govuk-label search-field__label" for="search">Search by dataset name or description</label>
-          <div class="search-field-wrapper govuk-!-padding-bottom-6">
+          <div class="search-field-wrapper">
             <input type="search" name="q" id="search" title="Search"
                    class="govuk-input search-field__item search-field__input js-class-toggle" value="{{ query }}"
                    aria-controls="search-summary-accessible-hint-wrapper" list="recently_viewed_catalogue_pages">
-            <datalist id="recently_viewed_catalogue_pages">
-              {% for id, name, type in recently_viewed_catalogue_pages %}
-                <option name="{{ id }}" value="{{ name }}">{{ type }}</option>
+            <ul id="recently_viewed_catalogue_pages" class="app-site-search__menu app-site-search__menu--overlay app-site-search__menu--hidden" role="listbox">
+              {% for id, name, type, slug in recently_viewed_catalogue_pages %}
+                <a href="{% url 'datasets:dataset_detail' dataset_uuid=id %}" class="app-site-search__option" role="option">{{ name }}
+                  <span class="app-site-search--section">{{ type }}</span>
+                </a>
               {% endfor %}
-            </datalist>
+            </ul>
             <div class="search-field-submit-wrapper search-field__item">
               <input class="search-field__submit" type="submit" value="Search">
             </div>
@@ -310,30 +312,18 @@
   {% endif %}
   <script nonce="{{ request.csp_nonce }}" src="{% static 'search-v2.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}">
-    $("input[name='q']").on('input', function (e) {
-      var $input = $(this),
-        val = $input.val();
-        list = $input.attr('list'),
-        match = $('#' + list + ' option').filter(function () {
-          return ($(this).val() === val);
-        });
-        var tmp = $('option[value="'+$(this).val()+'"]').attr('name');
-
-      if (match.length > 0) {
-        $.ajax({
-          type: "GET",
-          url: "{% url 'datasets:dataset_detail' dataset_uuid="00000000-0000-0000-0000-000000000000" %}".replace(/00000000-0000-0000-0000-000000000000/, tmp.toString()),
-          success: function() {
-            alert("works");
-          },
-          error: function() {
-            alert("error; " + eval(error));
-          }
-        })
-      } else {
-        // pass
+    $("input[name='q']").click(function () {
+        {
+          $("#recently_viewed_catalogue_pages").removeClass('app-site-search__menu--hidden').addClass('app-site-search__menu--visible')
+        }
       }
-    });
+    )
+    $("input[name='q']").keypress(function () {
+        {
+          $("#recently_viewed_catalogue_pages").removeClass('app-site-search__menu--visible').addClass('app-site-search__menu--hidden')
+        }
+      }
+    )
     $(document).ready(function () {
       var form = new LiveSearch('#live-search-form',
         '#live-search-wrapper',
