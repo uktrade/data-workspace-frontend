@@ -1,5 +1,4 @@
 import React from "react";
-import "./Popups.scss";
 
 export class AddFolderPopup extends React.Component {
   constructor(props) {

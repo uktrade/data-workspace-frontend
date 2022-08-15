@@ -1,5 +1,4 @@
 import React from "react";
-import "./Popups.scss";
 
 import { bytesToSize } from "../utils";
 
