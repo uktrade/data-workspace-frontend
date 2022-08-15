@@ -54,15 +54,19 @@
                    class="govuk-input search-field__item search-field__input js-class-toggle" value="{{ query }}"
                    aria-controls="search-summary-accessible-hint-wrapper" list="recently_viewed_catalogue_pages">
             <ul id="recently_viewed_catalogue_pages" class="app-site-search__menu app-site-search__menu--overlay app-site-search__menu--hidden" role="listbox">
-              <div style="padding: 10px">
+              <div class="govuk-!-padding-left-2">
                 <img alt="icon-clock" src="{% static 'assets/images/icon-clock.svg' %}">
                 <h3 style="display: inline" class="govuk-heading-s">Recently viewed data</h3>
               </div>
+            {% if recently_viewed_catalogue_pages %}
               {% for id, name, type in recently_viewed_catalogue_pages %}
                 <a href="{% url 'datasets:dataset_detail' dataset_uuid=id %}" class="govuk-body app-site-search__option" role="option" style="text-decoration: none">{{ name }}
                   <span class="app-site-search--section">{{ type }}</span>
                 </a>
               {% endfor %}
+            {% else %}
+                <li class="govuk-body govuk-!-padding-left-2">None found</li>
+            {% endif %}
             </ul>
             <div class="search-field-submit-wrapper search-field__item">
               <input class="search-field__submit" type="submit" value="Search">
