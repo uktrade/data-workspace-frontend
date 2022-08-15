@@ -417,9 +417,9 @@ STS_LOCAL_ENDPOINT_URL = env.get("STS_LOCAL_ENDPOINT_URL", "")
 YOUR_FILES_CONNECT_SRC = [
     APPLICATION_ROOT_DOMAIN,
     "https://s3.eu-west-2.amazonaws.com",
-    "ws://dataworkspace.test:3000",
 ] + ([S3_LOCAL_ENDPOINT_URL] if LOCAL else [])
 
+YOUR_FILES_SCRIPT_SRC = [] + (["http://0.0.0.0:3000", "'unsafe-eval'"] if LOCAL else [])
 
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]

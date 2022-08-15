@@ -58,7 +58,7 @@ def file_browser_html_view(request):
 
 @csp_update(
     CONNECT_SRC=settings.YOUR_FILES_CONNECT_SRC,
-    SCRIPT_SRC=["http://0.0.0.0:3000", "'unsafe-eval'"],
+    SCRIPT_SRC=settings.YOUR_FILES_SCRIPT_SRC,
 )
 def your_files_react(request):
     prefix = get_s3_prefix(str(request.user.profile.sso_id))
@@ -74,7 +74,9 @@ def your_files_react(request):
         status=200,
     )
 
-
+@csp_update(
+    CONNECT_SRC=settings.YOUR_FILES_CONNECT_SRC,
+)
 def file_browser_html_GET(request):
     prefix = get_s3_prefix(str(request.user.profile.sso_id))
 
