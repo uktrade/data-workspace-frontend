@@ -35,7 +35,9 @@
       initialPrefix: '{{ prefix }}',
       bigdataPrefix: 'bigdata/',
       credentialsUrl: '{% url 'api_v1:aws-credentials' %}',
-      endpointUrl: '{{ aws_endpoint }}'
+      endpointUrl: '{{ aws_endpoint }}',
+      createTableUrl: '{% url 'your-files:create-table-confirm' %}'
+
     };
     console.log(YOURFILES_CONFIG.credentialsUrl);;
   </script>

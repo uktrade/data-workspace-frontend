@@ -151,11 +151,9 @@ export class FileList extends React.Component {
             let createTableButton = null;
             console.log(file);
             if (file.isCsv) {
+              const createTableUrl = `${YOURFILES_CONFIG.createTableUrl}?path=${file.Key}`;
               createTableButton = (
-                <a
-                  className="create-table govuk-link"
-                  onClick={() => this.handleCreateTableClick(file.Key)}
-                >
+                <a className="create-table govuk-link" href={createTableUrl}>
                   Create table
                 </a>
               );

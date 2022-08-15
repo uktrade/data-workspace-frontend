@@ -36,10 +36,9 @@ export class Uploader extends EventEmitter {
     console.log("options are", options);
   }
 
-  cancel(){
-    console.log("aborting ...")
+  cancel() {
+    console.log("aborting ...");
     this.isAborted = true;
-    
   }
 
   start(files) {

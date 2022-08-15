@@ -82,8 +82,8 @@ export class UploadFilesPopup extends React.Component {
   }
 
   close() {
-    if(this.state.isUploading){
-      console.log("Cancel the uploads")
+    if (this.state.isUploading) {
+      console.log("Cancel the uploads");
       this.props.uploader.cancel();
       return;
     }
@@ -100,9 +100,9 @@ export class UploadFilesPopup extends React.Component {
       this.setState({ uploadsComplete: true, isUploading: false });
     });
 
-    uploader.on("cancelled", ()=>{
-      this.setState({isUploading:false})
-    })
+    uploader.on("cancelled", () => {
+      this.setState({ isUploading: false });
+    });
 
     uploader.on("upload:start", (file) => {
       console.log("Start", file);
