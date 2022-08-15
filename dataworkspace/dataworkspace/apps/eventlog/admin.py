@@ -47,9 +47,9 @@ class EventLogAdmin(admin.ModelAdmin):
                 args=(obj.related_object.id,),
             )
         except NoReverseMatch:
-            return obj.related_object
+            url = reverse("datasets:dataset_detail", args=(obj.related_object.id,))
 
-        return format_html('<a href="{}">{}</a>'.format(url, obj.related_object))
+        return format_html(f'<a href="{url}">{obj.related_object}</a>')
 
     related_object_link.short_description = "Related Object"
 

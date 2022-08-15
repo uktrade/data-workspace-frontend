@@ -41,6 +41,7 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.decorators.http import (
     require_GET,
+    require_POST,
     require_http_methods,
 )
 from django.views.generic import DetailView, FormView, TemplateView, UpdateView, View
@@ -645,6 +646,20 @@ def toggle_bookmark(request, dataset_uuid):
     dataset.toggle_bookmark(request.user)
 
     return HttpResponseRedirect(dataset.get_absolute_url())
+
+
+@require_POST
+def set_bookmark(request, dataset_uuid):
+    dataset = find_dataset(dataset_uuid, request.user)
+    dataset.set_bookmark(request.user)
+    return HttpResponse(status=200)
+
+
+@require_POST
+def unset_bookmark(request, dataset_uuid):
+    dataset = find_dataset(dataset_uuid, request.user)
+    dataset.unset_bookmark(request.user)
+    return HttpResponse(status=200)
 
 
 class ReferenceDatasetDownloadView(DetailView):

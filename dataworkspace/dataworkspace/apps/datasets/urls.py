@@ -97,6 +97,16 @@ urlpatterns = [
         name="toggle_bookmark",
     ),
     path(
+        "<uuid:dataset_uuid>/set-bookmark",
+        login_required(views.set_bookmark),
+        name="set_bookmark",
+    ),
+    path(
+        "<uuid:dataset_uuid>/unset-bookmark",
+        login_required(views.unset_bookmark),
+        name="unset_bookmark",
+    ),
+    path(
         "<uuid:dataset_uuid>/data-cut-usage-history",
         login_required(views.DatasetUsageHistoryView.as_view()),
         {"model_class": models.DataSet},
