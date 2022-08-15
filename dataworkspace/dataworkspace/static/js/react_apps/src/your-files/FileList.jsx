@@ -33,7 +33,7 @@ function BigDataFolder(props) {
       <td className="govuk-table__cell">
         <a
           draggable="false"
-          className="govuk-link govuk-link--no-visited"
+          className="folder govuk-link govuk-link--no-visited"
           onClick={props.onClick}
         >
           {folderName}
@@ -91,14 +91,20 @@ function TableHeader(props) {
       <th scope="col" className="govuk-table__header">
         Name
       </th>
-      <th scope="col" className="govuk-table__header">
+      <th
+        scope="col"
+        className="govuk-table__header govuk-table__header--numeric"
+      >
         Last modified
       </th>
-      <th scope="col" className="govuk-table__header">
+      <th
+        scope="col"
+        className="govuk-table__header govuk-table__header--numeric"
+      >
         Size
       </th>
       <th scope="col" className="govuk-table__header">
-        Details
+        &nbsp;
       </th>
     </tr>
   );
@@ -110,16 +116,6 @@ export class FileList extends React.Component {
 
     this.handleFolderClick = this.props.onFolderClick.bind(this);
     this.handleFileClick = this.props.onFileClick.bind(this);
-    this.handleCreateTableClick = this.props.onCreateTableClick.bind(this);
-  }
-
-  async componentDidMount() {
-    console.log("componentDidMount filelist");
-    console.log(this.props.files);
-  }
-
-  async componentDidUpdate() {
-    console.log("componentDidUpdate");
   }
 
   render() {
@@ -149,7 +145,6 @@ export class FileList extends React.Component {
           })}
           {files.map((file) => {
             let createTableButton = null;
-            console.log(file);
             if (file.isCsv) {
               const createTableUrl = `${this.props.createTableUrl}?path=${file.Key}`;
               createTableButton = (
@@ -185,7 +180,9 @@ export class FileList extends React.Component {
                 <td className="govuk-table__cell govuk-table__cell--numeric">
                   {bytesToSize(file.Size)}
                 </td>
-                <td className="govuk-table__cell">{createTableButton}</td>
+                <td className="govuk-table__cell govuk-table__cell--numeric">
+                  {createTableButton}
+                </td>
               </tr>
             );
           })}

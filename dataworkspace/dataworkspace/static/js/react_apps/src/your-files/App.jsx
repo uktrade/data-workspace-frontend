@@ -6,7 +6,6 @@ import { FileList } from "./FileList";
 import { BigDataMessage } from "./BigDataMessage";
 import { getBreadcrumbs, getFolderName } from "./utils";
 import { AddFolderPopup, UploadFilesPopup } from "./popups";
-import { Uploader } from "./popups/uploader";
 
 const popupTypes = {
   ADD_FOLDER: "addFolder",
@@ -42,7 +41,6 @@ export default class App extends React.Component {
 
     this.handleBreadcrumbClick = this.handleBreadcrumbClick.bind(this);
     this.handleRefreshClick = this.handleRefreshClick.bind(this);
-    this.handleCreateTableClick = this.handleCreateTableClick.bind(this);
     this.handleUploadClick = this.handleUploadClick.bind(this);
 
     this.showNewFolderPopup = this.showNewFolderPopup.bind(this);
@@ -83,12 +81,7 @@ export default class App extends React.Component {
   }
 
   async componentDidMount() {
-    console.log("componentDidMount");
     await this.refresh();
-  }
-
-  async handleCreateTableClick(key) {
-    console.log("create table", key);
   }
 
   async handleBreadcrumbClick(breadcrumb) {
@@ -203,11 +196,6 @@ export default class App extends React.Component {
       this.state.rootPrefix
     );
 
-    const uploader = new Uploader(this.props.proxy, {
-      bucketName: this.state.bucketName,
-      currentPrefix: this.state.currentPrefix,
-    });
-
     return (
       <div className="browser">
         <input
@@ -232,7 +220,7 @@ export default class App extends React.Component {
             folderName={currentFolderName}
             onCancel={() => this.hidePopup(popupTypes.UPLOAD_FILES)}
             onUploadsComplete={this.onUploadsComplete}
-            uploader={uploader}
+            uploader={this.props.uploader}
           />
         ) : null}
 

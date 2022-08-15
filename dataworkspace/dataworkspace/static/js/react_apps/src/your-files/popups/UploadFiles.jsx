@@ -73,6 +73,7 @@ export class UploadFilesPopup extends React.Component {
       remaining: this.props.selectedFiles.length,
       folderName: this.props.folderName,
       selectedFiles: this.props.selectedFiles,
+      currentPrefix: this.props.currentPrefix,
       uploadsComplete: false,
       isUploading: false,
     };
@@ -89,7 +90,7 @@ export class UploadFilesPopup extends React.Component {
     this.props.onCancel();
   }
 
-  onUploadClick(files) {
+  onUploadClick() {
     console.log("uploadClick");
 
     const uploader = this.props.uploader;
@@ -136,7 +137,6 @@ export class UploadFilesPopup extends React.Component {
           return file;
         });
 
-        console.log(selectedFiles);
         return {
           selectedFiles,
         };
@@ -147,7 +147,7 @@ export class UploadFilesPopup extends React.Component {
       remaining: this.state.selectedFiles.length,
       isUploading: true,
     });
-    uploader.start(this.state.selectedFiles);
+    uploader.start(this.state.selectedFiles, this.state.currentPrefix);
   }
 
   render() {

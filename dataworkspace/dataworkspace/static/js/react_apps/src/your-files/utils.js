@@ -1,6 +1,5 @@
 const ROOT_FOLDER_NAME = "home";
 export function getBreadcrumbs(rootPrefix, currentPrefix) {
-  console.log("getBreadcrumbs");
   const breadcrumbs = [
     {
       prefix: rootPrefix,
@@ -36,7 +35,6 @@ export function fullPathToFilename(path) {
 
 // Convert cars/vw/ to vw/
 export function prefixToFolder(prefix) {
-  console.log(prefix);
   if (!prefix) return "";
   const parts = prefix.split("/");
   return `${parts[parts.length - 2]}/`;

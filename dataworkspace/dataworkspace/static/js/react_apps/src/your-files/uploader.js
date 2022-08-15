@@ -41,7 +41,7 @@ export class Uploader extends EventEmitter {
     this.isAborted = true;
   }
 
-  start(files) {
+  start(files, prefix) {
     const maxConnections = 4;
     const concurrentFiles = Math.min(maxConnections, files.length);
     const connectionsPerFile = Math.floor(maxConnections / concurrentFiles);
@@ -49,12 +49,13 @@ export class Uploader extends EventEmitter {
     this.remainingUploadCount = files.length;
 
     // some v funky scope happening within the queue!
+    // also this needs a rethink!
     const s3 = this.s3.s3;
 
     for (const file of files) {
       const params = {
         Bucket: this.options.bucketName,
-        Key: this.options.currentPrefix + file.relativePath,
+        Key: prefix + file.relativePath,
         ContentType: file.type,
         Body: file,
       };
