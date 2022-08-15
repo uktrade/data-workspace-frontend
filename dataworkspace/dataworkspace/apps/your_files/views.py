@@ -74,6 +74,7 @@ def your_files_react(request):
         status=200,
     )
 
+
 @csp_update(
     CONNECT_SRC=settings.YOUR_FILES_CONNECT_SRC,
 )
