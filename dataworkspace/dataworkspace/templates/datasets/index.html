@@ -320,12 +320,14 @@
         }
       }
     )
-    .on('keypress focusout', function () {
-        {
-          $("#recently_viewed_catalogue_pages").removeClass('app-site-search__menu--visible').addClass('app-site-search__menu--hidden')
+      .on('keypress focusout', function () {
+          {
+            setTimeout(function () {
+              $("#recently_viewed_catalogue_pages").removeClass('app-site-search__menu--visible').addClass('app-site-search__menu--hidden')
+            }, 1000);
+          }
         }
-      }
-    )
+      )
     $(document).ready(function () {
       var form = new LiveSearch('#live-search-form',
         '#live-search-wrapper',
