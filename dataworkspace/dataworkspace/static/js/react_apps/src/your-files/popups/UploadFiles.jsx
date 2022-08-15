@@ -65,7 +65,7 @@ export class UploadFilesPopup extends React.Component {
      * props is a {}
      * - folderName: The caption for the folder (not the prefix)
      * - onCancel: function to call to dismiss the popup
-     * - onUploadFiles: function to call once upload is complete ... TODO - change the current impl
+     * - onUploadsComplete: function to call once upload is complete ... TODO - change the current impl
      * - uploader - Uploader instance
      */
 
@@ -94,10 +94,12 @@ export class UploadFilesPopup extends React.Component {
     console.log("uploadClick");
 
     const uploader = this.props.uploader;
+    const onComplete = this.props.onUploadsComplete;
 
     uploader.on("complete", () => {
       console.log("all complete");
       this.setState({ uploadsComplete: true, isUploading: false });
+      onComplete();
     });
 
     uploader.on("cancelled", () => {

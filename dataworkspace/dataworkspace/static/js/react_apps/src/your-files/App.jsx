@@ -22,6 +22,7 @@ export default class App extends React.Component {
       selectedFiles: [],
       currentPrefix: this.props.config.rootPrefix,
       bigDataFolder: this.props.config.bigdataPrefix,
+      createTableUrl: this.props.config.createTableUrl,
       isLoaded: false,
       error: null,
       bucketName: this.props.config.bucketName,
@@ -50,6 +51,8 @@ export default class App extends React.Component {
     this.hidePopup = this.hidePopup.bind(this);
 
     this.onFileChange = this.onFileChange.bind(this);
+
+    this.onUploadsComplete = this.onUploadsComplete.bind(this);
 
     this.fileInputRef = React.createRef();
   }
@@ -113,6 +116,11 @@ export default class App extends React.Component {
     const state = { popups: {} };
     state.popups[popupName] = false;
     this.setState(state);
+  }
+
+  async onUploadsComplete() {
+    console.log("uploads are complete");
+    await this.refresh(this.state.currentPrefix);
   }
 
   async createNewFolder(prefix, folderName) {
@@ -223,6 +231,7 @@ export default class App extends React.Component {
             selectedFiles={this.state.selectedFiles}
             folderName={currentFolderName}
             onCancel={() => this.hidePopup(popupTypes.UPLOAD_FILES)}
+            onUploadsComplete={this.onUploadsComplete}
             uploader={uploader}
           />
         ) : null}
@@ -239,6 +248,7 @@ export default class App extends React.Component {
         <FileList
           files={this.state.files}
           folders={this.state.folders}
+          createTableUrl={this.state.createTableUrl}
           onFileClick={this.handleFileClick}
           onFolderClick={this.handleFolderClick}
           onCreateTableClick={this.handleCreateTableClick}
