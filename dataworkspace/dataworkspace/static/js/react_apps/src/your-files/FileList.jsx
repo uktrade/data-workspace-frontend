@@ -3,7 +3,34 @@ import "./FileList.css";
 
 import { prefixToFolder, bytesToSize, fullPathToFilename } from "./utils";
 
-function BigDataFolder(props) {
+function TableHeader(props) {
+  return (
+    <tr className="govuk-table__row">
+      <td className="govuk-table__header govuk-table__header--checkbox"></td>
+
+      <th scope="col" className="govuk-table__header">
+        Name
+      </th>
+      <th
+        scope="col"
+        className="govuk-table__header govuk-table__header--numeric"
+      >
+        Last modified
+      </th>
+      <th
+        scope="col"
+        className="govuk-table__header govuk-table__header--numeric"
+      >
+        Size
+      </th>
+      <th scope="col" className="govuk-table__header">
+        &nbsp;
+      </th>
+    </tr>
+  );
+}
+
+function TableRowBigDataFolder(props) {
   const folderName = prefixToFolder(props.folder.Prefix);
   return (
     <tr key={props.folder.Prefix} className="govuk-table__row">
@@ -46,16 +73,23 @@ function BigDataFolder(props) {
   );
 }
 
-function Folder(props) {
+function TableRowFolder(props) {
   const folderName = prefixToFolder(props.folder.Prefix);
+  const folder = props.folder;
   return (
-    <tr key={props.folder.Prefix} className="govuk-table__row">
+    <tr key={folder.Prefix} className="govuk-table__row">
       <td className="govuk-table__cell govuk-table__cell--checkbox">
         <div className="govuk-form-group">
           <div className="govuk-checkboxes--small">
             <div className="govuk-checkboxes__item">
               <div>
-                <input className="govuk-checkboxes__input" type="checkbox" />
+                <input
+                  className="govuk-checkboxes__input"
+                  type="checkbox"
+                  onChange={(e) =>
+                    props.onFolderSelect(folder, e.target.checked)
+                  }
+                />
                 <label className="govuk-label govuk-checkboxes__label"></label>
               </div>
             </div>
@@ -74,38 +108,52 @@ function Folder(props) {
   );
 }
 
-function File(props) {
-  const filename = fullPathToFilename(props.text);
-  return (
-    <a className="file govuk-link" onClick={props.onClick}>
-      {filename}
-    </a>
-  );
-}
+function TableRowFile(props) {
+  let createTableButton = null;
+  const file = props.file;
+  const filename = fullPathToFilename(file.Key);
+  if (file.isCsv) {
+    const createTableUrl = `${props.createTableUrl}?path=${file.Key}`;
+    createTableButton = (
+      <a className="create-table govuk-link" href={createTableUrl}>
+        Create table
+      </a>
+    );
+  }
 
-function TableHeader(props) {
   return (
-    <tr className="govuk-table__row">
-      <td className="govuk-table__header govuk-table__header--checkbox"></td>
-
-      <th scope="col" className="govuk-table__header">
-        Name
-      </th>
-      <th
-        scope="col"
-        className="govuk-table__header govuk-table__header--numeric"
-      >
-        Last modified
-      </th>
-      <th
-        scope="col"
-        className="govuk-table__header govuk-table__header--numeric"
-      >
-        Size
-      </th>
-      <th scope="col" className="govuk-table__header">
-        &nbsp;
-      </th>
+    <tr key={file.Key}>
+      <td className="govuk-table__cell govuk-table__cell--checkbox">
+        <div className="govuk-form-group">
+          <div className="govuk-checkboxes--small">
+            <div className="govuk-checkboxes__item">
+              <input
+                className="govuk-checkboxes__input"
+                type="checkbox"
+                onChange={(e) => props.onFileSelect(file, e.target.checked)}
+              />
+              <label className="govuk-label govuk-checkboxes__label"></label>
+            </div>
+          </div>
+        </div>
+      </td>
+      <td className="govuk-table__cell">
+        <a
+          className="file govuk-link"
+          onClick={() => props.onFileClick(file.Key)}
+        >
+          {filename}
+        </a>
+      </td>
+      <td className="govuk-table__cell govuk-table__cell--numeric">
+        {file.formattedDate.toLocaleString()}
+      </td>
+      <td className="govuk-table__cell govuk-table__cell--numeric">
+        {bytesToSize(file.Size)}
+      </td>
+      <td className="govuk-table__cell govuk-table__cell--numeric">
+        {createTableButton}
+      </td>
     </tr>
   );
 }
@@ -113,9 +161,6 @@ function TableHeader(props) {
 export class FileList extends React.Component {
   constructor(props) {
     super(props);
-
-    this.handleFolderClick = this.props.onFolderClick.bind(this);
-    this.handleFileClick = this.props.onFileClick.bind(this);
   }
 
   render() {
@@ -130,60 +175,28 @@ export class FileList extends React.Component {
           {folders.map((folder) => {
             if (folder.isBigData)
               return (
-                <BigDataFolder
+                <TableRowBigDataFolder
                   folder={folder}
-                  onClick={() => this.handleFolderClick(folder.Prefix)}
+                  onClick={() => this.props.onFolderClick(folder.Prefix)}
                 />
               );
             else
               return (
-                <Folder
+                <TableRowFolder
                   folder={folder}
-                  onClick={() => this.handleFolderClick(folder.Prefix)}
+                  onClick={() => this.props.onFolderClick(folder.Prefix)}
+                  onFolderSelect={this.props.onFolderSelect}
                 />
               );
           })}
           {files.map((file) => {
-            let createTableButton = null;
-            if (file.isCsv) {
-              const createTableUrl = `${this.props.createTableUrl}?path=${file.Key}`;
-              createTableButton = (
-                <a className="create-table govuk-link" href={createTableUrl}>
-                  Create table
-                </a>
-              );
-            }
             return (
-              <tr key={file.Key}>
-                <td className="govuk-table__cell govuk-table__cell--checkbox">
-                  <div className="govuk-form-group">
-                    <div className="govuk-checkboxes--small">
-                      <div className="govuk-checkboxes__item">
-                        <input
-                          className="govuk-checkboxes__input"
-                          type="checkbox"
-                        />
-                        <label className="govuk-label govuk-checkboxes__label"></label>
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                <td className="govuk-table__cell">
-                  <File
-                    text={file.Key}
-                    onClick={() => this.handleFileClick(file.Key)}
-                  />
-                </td>
-                <td className="govuk-table__cell govuk-table__cell--numeric">
-                  {file.formattedDate.toLocaleString()}
-                </td>
-                <td className="govuk-table__cell govuk-table__cell--numeric">
-                  {bytesToSize(file.Size)}
-                </td>
-                <td className="govuk-table__cell govuk-table__cell--numeric">
-                  {createTableButton}
-                </td>
-              </tr>
+              <TableRowFile
+                file={file}
+                createTableUrl={this.props.createTableUrl}
+                onFileClick={() => this.props.onFileClick(file.Key)}
+                onFileSelect={this.props.onFileSelect}
+              />
             );
           })}
         </tbody>

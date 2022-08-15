@@ -36,22 +36,6 @@ export default class App extends React.Component {
       this.state.popups[value] = false;
     }
 
-    this.handleFileClick = this.handleFileClick.bind(this);
-    this.handleFolderClick = this.handleFolderClick.bind(this);
-
-    this.handleBreadcrumbClick = this.handleBreadcrumbClick.bind(this);
-    this.handleRefreshClick = this.handleRefreshClick.bind(this);
-    this.handleUploadClick = this.handleUploadClick.bind(this);
-
-    this.showNewFolderPopup = this.showNewFolderPopup.bind(this);
-    this.createNewFolder = this.createNewFolder.bind(this);
-
-    this.hidePopup = this.hidePopup.bind(this);
-
-    this.onFileChange = this.onFileChange.bind(this);
-
-    this.onUploadsComplete = this.onUploadsComplete.bind(this);
-
     this.fileInputRef = React.createRef();
   }
 
@@ -67,7 +51,11 @@ export default class App extends React.Component {
     return files;
   }
 
-  onFileChange(event) {
+  async componentDidMount() {
+    await this.refresh();
+  }
+
+  onFileChange = (event) => {
     console.log("onfilechange", event.target.files);
     if (!event.target.files) {
       console.log("nothing selected");
@@ -78,25 +66,21 @@ export default class App extends React.Component {
       selectedFiles: files,
     });
     this.showPopup(popupTypes.UPLOAD_FILES);
-  }
+  };
 
-  async componentDidMount() {
-    await this.refresh();
-  }
-
-  async handleBreadcrumbClick(breadcrumb) {
+  onBreadcrumbClick = async (breadcrumb) => {
     console.log(breadcrumb);
     await this.navigateTo(breadcrumb.prefix);
-  }
+  };
 
-  async handleRefreshClick() {
+  onRefreshClick = async () => {
     await this.navigateTo(this.state.prefix);
-  }
+  };
 
-  async showNewFolderPopup(prefix) {
+  showNewFolderPopup = async (prefix) => {
     console.log("new folder", prefix);
     this.showPopup(popupTypes.ADD_FOLDER);
-  }
+  };
 
   showPopup(popupName) {
     const state = { popups: {} };
@@ -104,38 +88,49 @@ export default class App extends React.Component {
     this.setState(state);
   }
 
-  hidePopup(popupName) {
+  hidePopup = (popupName) => {
     console.log("hide", popupName);
     const state = { popups: {} };
     state.popups[popupName] = false;
     this.setState(state);
-  }
+  };
 
-  async onUploadsComplete() {
+  onUploadsComplete = async () => {
     console.log("uploads are complete");
     await this.refresh(this.state.currentPrefix);
-  }
+  };
 
-  async createNewFolder(prefix, folderName) {
+  createNewFolder = async (prefix, folderName) => {
     console.log("createNewFolderClick");
     console.log(prefix, folderName);
     this.hidePopup(popupTypes.ADD_FOLDER);
     await this.props.proxy.createFolder(prefix, folderName);
     await this.refresh(prefix);
-  }
+  };
 
-  async handleUploadClick(prefix) {
+  onUploadClick = async (prefix) => {
     console.log("upload files to", prefix);
     // this opens the file input ... processing continues
     // in the onFileChange function
     this.fileInputRef.current.click();
-  }
+  };
 
-  async handleDeleteClick() {
+  onDeleteClick = async () => {
     console.log("delete click");
-  }
+    const filesToDelete = this.state.files.filter((file) => {
+      return file.isSelected;
+    });
 
-  async handleFileClick(key) {
+    const foldersToDelete = this.state.folders.filter((folder) => {
+      return folder.isSelected;
+    });
+
+    alert(
+      `delete ${filesToDelete.length} files and ${foldersToDelete.length} folders`
+    );
+  };
+
+  handleFileClick = async (key) => {
     console.log("handleFileClick", key);
     const params = {
       Bucket: this.state.bucketName,
@@ -152,17 +147,17 @@ export default class App extends React.Component {
     } catch (ex) {
       logger.error(ex);
     }
-  }
+  };
 
   async navigateTo(prefix) {
     this.setState({ prefix: prefix });
     await this.refresh(prefix);
   }
 
-  async handleFolderClick(prefix) {
+  handleFolderClick = async (prefix) => {
     console.log("handleFolderClick", prefix);
     await this.navigateTo(prefix);
-  }
+  };
 
   async refresh(prefix) {
     const params = {
@@ -184,6 +179,33 @@ export default class App extends React.Component {
       showBigDataMessage,
     });
   }
+
+  onFileSelect = (file, isSelected) => {
+    console.log(file, isSelected);
+    this.setState((state) => {
+      const files = state.files.map((f) => {
+        if (f.Key === file.Key) {
+          f.isSelected = isSelected;
+        }
+        return f;
+      });
+
+      return { files };
+    });
+  };
+
+  onFolderSelect = (folder, isSelected) => {
+    this.setState((state) => {
+      const folders = state.folders.map((f) => {
+        if (f.Prefix === folder.Prefix) {
+          f.isSelected = isSelected;
+        }
+        return f;
+      });
+
+      return { folders };
+    });
+  };
 
   render() {
     const breadCrumbs = getBreadcrumbs(
@@ -227,19 +249,20 @@ export default class App extends React.Component {
         <Header
           breadCrumbs={breadCrumbs}
           currentPrefix={this.state.currentPrefix}
-          onBreadcrumbClick={this.handleBreadcrumbClick}
-          onRefreshClick={this.handleRefreshClick}
+          onBreadcrumbClick={this.onBreadcrumbClick}
+          onRefreshClick={this.onRefreshClick}
           onNewFolderClick={this.showNewFolderPopup}
-          onUploadClick={this.handleUploadClick}
-          onDeleteClick={this.handleDeleteClick}
+          onUploadClick={this.onUploadClick}
+          onDeleteClick={this.onDeleteClick}
         />
         <FileList
           files={this.state.files}
           folders={this.state.folders}
           createTableUrl={this.state.createTableUrl}
-          onFileClick={this.handleFileClick}
           onFolderClick={this.handleFolderClick}
-          onCreateTableClick={this.handleCreateTableClick}
+          onFolderSelect={this.onFolderSelect}
+          onFileClick={this.handleFileClick}
+          onFileSelect={this.onFileSelect}
         />
         {this.state.showBigDataMessage ? (
           <BigDataMessage
