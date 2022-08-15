@@ -11,6 +11,11 @@
       "path": "viewer.js",
       "publicPath": "/__django_static/js/bundles/viewer.js"
     },
+    "yourfiles.js": {
+      "name": "yourfiles.js",
+      "path": "yourfiles.js",
+      "publicPath": "/__django_static/js/bundles/yourfiles.js"
+    },
     "builder.js.LICENSE.txt": {
       "name": "builder.js.LICENSE.txt",
       "path": "builder.js.LICENSE.txt",
@@ -20,6 +25,11 @@
       "name": "viewer.js.LICENSE.txt",
       "path": "viewer.js.LICENSE.txt",
       "publicPath": "/__django_static/js/bundles/viewer.js.LICENSE.txt"
+    },
+    "yourfiles.js.LICENSE.txt": {
+      "name": "yourfiles.js.LICENSE.txt",
+      "path": "yourfiles.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/yourfiles.js.LICENSE.txt"
     }
   },
   "chunks": {
@@ -28,6 +38,9 @@
     ],
     "viewer": [
       "viewer.js"
+    ],
+    "yourfiles": [
+      "yourfiles.js"
     ]
   },
   "publicPath": "/__django_static/js/bundles/"
