@@ -363,7 +363,7 @@ def find_datasets(request):
         "datasets/index.html",
         {
             "form": form,
-            "recently_viewed_catalogue_pages": get_recently_viewed_catalogue_pages(request.user),
+            "recently_viewed_catalogue_pages": get_recently_viewed_catalogue_pages(request),
             "query": filters.query,
             "datasets": datasets,
             "data_type": dict(data_types),

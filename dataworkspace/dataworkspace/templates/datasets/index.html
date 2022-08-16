@@ -59,8 +59,8 @@
                 <h3 style="display: inline" class="govuk-heading-s">Recently viewed data</h3>
               </div>
             {% if recently_viewed_catalogue_pages %}
-              {% for id, name, type in recently_viewed_catalogue_pages %}
-                <a href="{% url 'datasets:dataset_detail' dataset_uuid=id %}" class="govuk-body app-site-search__option" role="option" style="text-decoration: none">{{ name }}
+              {% for url, name, type in recently_viewed_catalogue_pages %}
+                <a href="{{ url }}" class="govuk-body app-site-search__option" role="option" style="text-decoration: none">{{ name }}
                   <span class="app-site-search--section">{{ type }}</span>
                 </a>
               {% endfor %}
