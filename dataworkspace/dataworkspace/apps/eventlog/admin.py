@@ -47,7 +47,7 @@ class EventLogAdmin(admin.ModelAdmin):
                 args=(obj.related_object.id,),
             )
         except NoReverseMatch:
-            url = reverse("datasets:dataset_detail", args=(obj.related_object.id,))
+            url = reverse("datasets:dataset_detail", args=(obj.object_id,))
 
         return format_html(f'<a href="{url}">{obj.related_object}</a>')
 
