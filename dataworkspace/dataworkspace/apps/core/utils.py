@@ -514,8 +514,22 @@ def new_private_database_credentials(
                     sql.Identifier(database_data["NAME"]), sql.Identifier(db_role)
                 )
             )
+
+            # Grant the permanent role the temporary user and vice versa. While a bit strange:
+            # - Granting the permanent role to the temporary user means the user can access objects
+            #   based on grants to the permanenet role
+            # - Granting the temporary user to the permanent role means pg_cancel_backend works
+            #   as expected. Because we do ALTER USER <temporary_user> SET ROLE <permanent_role>,
+            #   then on login the temporary user "is" the permanent_role. However, backends are all
+            #   essentially owned by user used to login, the temporary user, and so to cancel the
+            #   backends, the permanent role must be a granted the temporary user. Note that in other
+            #   systems it doesn't make sense to "grant" a user, but in PostgreSQL, there isn't much
+            #   of a distinction between a real "user" and a "role".
             cur.execute(
                 sql.SQL("GRANT {} TO {};").format(sql.Identifier(db_role), sql.Identifier(db_user))
+            )
+            cur.execute(
+                sql.SQL("GRANT {} TO {};").format(sql.Identifier(db_user), sql.Identifier(db_role))
             )
 
         # Make it so by default, objects created by the user are owned by the role
