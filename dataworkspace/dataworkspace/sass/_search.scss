@@ -48,7 +48,27 @@ $light_label_color: govuk-colour("dark-grey");
   color: $light_label_color;
 }
 
-.dataset-icons-container {
+.bookmark-toggle {
+  all: unset;
+  cursor: pointer;
   color: $govuk-link-colour;
 }
-
+.bookmark-toggle:hover {
+  color: $govuk-link-hover-colour;
+}
+.bookmark-toggle:focus {
+  background-color: #fd0;
+  box-shadow: 0 -2px $govuk-focus-colour, 0 4px $govuk-focus-text-colour;
+}
+.is-bookmarked-icon {
+  display: none;
+}
+.is-not-bookmarked-icon {
+  display: inline;
+}
+.is-bookmarked .is-bookmarked-icon {
+  display: inline;
+}
+.is-bookmarked .is-not-bookmarked-icon {
+  display: none;
+}

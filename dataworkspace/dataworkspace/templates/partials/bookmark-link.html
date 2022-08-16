@@ -1,4 +1,4 @@
-﻿<a aria-labelledby="bookmark_{{ dataset_uuid }}" class="govuk-link govuk-link--no-visited-state" href="{% url 'datasets:toggle_bookmark' dataset_uuid=dataset_uuid %}"><span style="position: relative;top:4px; margin-right:4px">{% if is_bookmarked %}{% include 'partials/bookmark-yes.html' %}{% else %}{% include 'partials/bookmark-no.html' %}{% endif %}</span>Bookmark</a>
+﻿<a aria-labelledby="bookmark_{{ dataset_uuid }}" class="govuk-link govuk-link--no-visited-state{% if is_bookmarked %} is-bookmarked{% endif %}" href="{% url 'datasets:toggle_bookmark' dataset_uuid=dataset_uuid %}"><span style="position: relative;top:4px; margin-right:4px">{% include 'partials/bookmark.html' with is_bookmarked=is_bookmarked %}</span>Bookmark</a>
 {% if is_bookmarked %}
 <div class="govuk-visually-hidden" id="bookmark_{{ dataset_uuid }}">Remove the bookmark from this dataset</div>
 {% else %}
