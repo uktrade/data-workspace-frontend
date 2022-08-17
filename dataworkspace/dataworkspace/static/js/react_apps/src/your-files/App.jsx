@@ -6,10 +6,12 @@ import { FileList } from "./FileList";
 import { BigDataMessage } from "./BigDataMessage";
 import { getBreadcrumbs, getFolderName } from "./utils";
 import { AddFolderPopup, UploadFilesPopup } from "./popups";
+import { DeleteObjectsPopup } from "./popups/DeleteObjects";
 
 const popupTypes = {
   ADD_FOLDER: "addFolder",
   UPLOAD_FILES: "uploadFiles",
+  DELETE_OBJECTS: "deleteObjects",
 };
 
 export default class App extends React.Component {
@@ -128,6 +130,8 @@ export default class App extends React.Component {
     alert(
       `delete ${filesToDelete.length} files and ${foldersToDelete.length} folders`
     );
+
+    this.showPopup(popupTypes.DELETE_OBJECTS);
   };
 
   handleFileClick = async (key) => {
@@ -227,6 +231,7 @@ export default class App extends React.Component {
           ref={this.fileInputRef}
           style={{ visibility: "hidden" }}
         />
+        {this.state.popups.deleteObjects ? <DeleteObjectsPopup /> : null}
         {this.state.popups.addFolder ? (
           <AddFolderPopup
             currentPrefix={this.state.currentPrefix}
