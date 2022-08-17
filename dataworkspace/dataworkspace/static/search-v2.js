@@ -1,4 +1,5 @@
 ("use strict");
+import accessibleAutocomplete from 'accessible-autocomplete'
 
 var ToggleInputClassOnFocus = function ($el) {
   var $toggleTarget = $el.find(".js-class-toggle");
@@ -354,3 +355,31 @@ document.body.addEventListener('click', function(event) {
     }}
   ));
 });
+
+(function() {
+  var queryInput = document.querySelector("input[name='q']");
+  var recentlyViewedCataloguePagesDatalist = document.getElementById("recently_viewed_catalogue_pages");
+
+  function showSearchMenu() {
+    queryInput.addEventListener("focus", function() {
+      recentlyViewedCataloguePagesDatalist.classList.remove("app-site-search__menu--hidden");
+      recentlyViewedCataloguePagesDatalist.classList.add("app-site-search__menu--visible");
+    })
+  }
+
+  function hideSearchMenu() {
+    queryInput.addEventListener("blur", function () {
+      setTimeout(
+        function () {
+          recentlyViewedCataloguePagesDatalist.classList.remove("app-site-search__menu--hidden");
+          recentlyViewedCataloguePagesDatalist.classList.add("app-site-search__menu--visible");
+        }
+        , 100)
+    })
+  }
+
+  accessibleAutocomplete({
+     param1: showSearchMenu,
+     param2: hideSearchMenu,
+  });
+})();

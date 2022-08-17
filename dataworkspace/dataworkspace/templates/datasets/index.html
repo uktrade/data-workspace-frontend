@@ -53,24 +53,23 @@
             <input type="search" name="q" id="search" title="Search"
                    class="govuk-input search-field__item search-field__input js-class-toggle" value="{{ query }}"
                    aria-controls="search-summary-accessible-hint-wrapper" list="recently_viewed_catalogue_pages">
-            <ul id="recently_viewed_catalogue_pages" class="app-site-search__menu app-site-search__menu--overlay app-site-search__menu--hidden" role="listbox">
-              <div class="govuk-!-padding-left-2">
-                <img alt="icon-clock" src="{% static 'assets/images/icon-clock.svg' %}">
-                <h3 style="display: inline" class="govuk-heading-s">Recently viewed data</h3>
-              </div>
-            {% if recently_viewed_catalogue_pages %}
-              {% for url, name, type in recently_viewed_catalogue_pages %}
-                <a href="{{ url }}" class="govuk-body app-site-search__option" role="option" style="text-decoration: none">{{ name }}
-                  <span class="app-site-search--section">{{ type }}</span>
-                </a>
-              {% endfor %}
-            {% else %}
-                <li class="govuk-body govuk-!-padding-left-2">None found</li>
-            {% endif %}
-            </ul>
             <div class="search-field-submit-wrapper search-field__item">
               <input class="search-field__submit" type="submit" value="Search">
             </div>
+            <ul id="recently_viewed_catalogue_pages" class="app-site-search__menu app-site-search__menu--overlay app-site-search__menu--hidden" role="listbox">
+              {% if recently_viewed_catalogue_pages %}
+                <div class="govuk-!-padding-left-2 govuk-!-padding-bottom-4 govuk-!-padding-top-4">
+                  <img alt="icon-clock" src="{% static 'assets/images/icon-clock.svg' %}" style="display: inline; text-align: right; height: 14px">
+                  <h3 style="display: inline; font: bold 16px Arial; color: #0b0c0c; padding-left: 5px">Recently viewed data</h3>
+                </div>
+                {% for url, name, type in recently_viewed_catalogue_pages %}
+                  <a href="{{ url }}" class="govuk-body app-site-search__option" role="option"
+                     style="text-decoration: none">{{ name }}
+                    <span class="app-site-search--section">{{ type }}</span>
+                  </a>
+                {% endfor %}
+              {% endif %}
+            </ul>
           </div>
           {% flag DATASET_FINDER_FLAG %}
             <p class="govuk-body">
@@ -314,20 +313,19 @@
   {% endif %}
   <script nonce="{{ request.csp_nonce }}" src="{% static 'search-v2.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}">
-    $("input[name='q']").focus(function () {
-        {
-          $("#recently_viewed_catalogue_pages").removeClass('app-site-search__menu--hidden').addClass('app-site-search__menu--visible')
-        }
-      }
-    )
-      .on('keypress focusout', function () {
-          {
-            setTimeout(function () {
-              $("#recently_viewed_catalogue_pages").removeClass('app-site-search__menu--visible').addClass('app-site-search__menu--hidden')
-            }, 100);
-          }
-        }
-      )
+    {#function hideSearchMenu() {#}
+    {#  document.getElementById("recently_viewed_catalogue_pages").classList.remove("app-site-search__menu--visible");#}
+    {#  document.getElementById("recently_viewed_catalogue_pages").classList.add("app-site-search__menu--hidden");#}
+    {#}#}
+    {##}
+    {#document.querySelector("input[name='q']").addEventListener("focus", function () {#}
+    {#  document.getElementById("recently_viewed_catalogue_pages").classList.remove("app-site-search__menu--hidden");#}
+    {#  document.getElementById("recently_viewed_catalogue_pages").classList.add("app-site-search__menu--visible");#}
+    {#})#}
+    {#document.querySelector("input[name='q']").addEventListener("keypress", hideSearchMenu)#}
+    {#document.querySelector("input[name='q']").addEventListener("blur", function () {#}
+    {#  setTimeout(hideSearchMenu, 100)#}
+    {#})#}
     $(document).ready(function () {
       var form = new LiveSearch('#live-search-form',
         '#live-search-wrapper',

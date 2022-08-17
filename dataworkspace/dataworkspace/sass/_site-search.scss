@@ -109,7 +109,7 @@ $icon-size: 40px;
   }
 
   .app-site-search__menu {
-    width: 100%;
+    width: 95.8%;
     max-height: 342px;
     margin: 0;
     padding: 0;
@@ -161,7 +161,7 @@ $icon-size: 40px;
     border-bottom-width: 0;
   }
 
-  .app-site-search__option--odd {
+  .app-site-search__option:nth-child(odd) {
     $_app-site-search-option-background-color: #fafafa;
     background-color: $_app-site-search-option-background-color;
   }
