@@ -313,19 +313,19 @@
   {% endif %}
   <script nonce="{{ request.csp_nonce }}" src="{% static 'search-v2.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}">
-    {#function hideSearchMenu() {#}
-    {#  document.getElementById("recently_viewed_catalogue_pages").classList.remove("app-site-search__menu--visible");#}
-    {#  document.getElementById("recently_viewed_catalogue_pages").classList.add("app-site-search__menu--hidden");#}
-    {#}#}
-    {##}
-    {#document.querySelector("input[name='q']").addEventListener("focus", function () {#}
-    {#  document.getElementById("recently_viewed_catalogue_pages").classList.remove("app-site-search__menu--hidden");#}
-    {#  document.getElementById("recently_viewed_catalogue_pages").classList.add("app-site-search__menu--visible");#}
-    {#})#}
-    {#document.querySelector("input[name='q']").addEventListener("keypress", hideSearchMenu)#}
-    {#document.querySelector("input[name='q']").addEventListener("blur", function () {#}
-    {#  setTimeout(hideSearchMenu, 100)#}
-    {#})#}
+    function hideSearchMenu() {
+      document.getElementById("recently_viewed_catalogue_pages").classList.remove("app-site-search__menu--visible");
+      document.getElementById("recently_viewed_catalogue_pages").classList.add("app-site-search__menu--hidden");
+    }
+
+    document.querySelector("input[name='q']").addEventListener("focus", function () {
+      document.getElementById("recently_viewed_catalogue_pages").classList.remove("app-site-search__menu--hidden");
+      document.getElementById("recently_viewed_catalogue_pages").classList.add("app-site-search__menu--visible");
+    });
+
+    document.querySelector("input[name='q']").addEventListener("keypress", hideSearchMenu)
+    document.querySelector(".search-field-wrapper *").addEventListener("blur", hideSearchMenu)
+
     $(document).ready(function () {
       var form = new LiveSearch('#live-search-form',
         '#live-search-wrapper',

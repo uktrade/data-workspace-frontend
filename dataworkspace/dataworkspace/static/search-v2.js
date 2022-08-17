@@ -357,29 +357,19 @@ document.body.addEventListener('click', function(event) {
 });
 
 (function() {
-  var queryInput = document.querySelector("input[name='q']");
-  var recentlyViewedCataloguePagesDatalist = document.getElementById("recently_viewed_catalogue_pages");
-
-  function showSearchMenu() {
-    queryInput.addEventListener("focus", function() {
-      recentlyViewedCataloguePagesDatalist.classList.remove("app-site-search__menu--hidden");
-      recentlyViewedCataloguePagesDatalist.classList.add("app-site-search__menu--visible");
-    })
+  function getData(query, callback) {
+    const results = query == '' ? ['Result 1', 'Result 2', 'Result 3'] : [];
+    callback(results);
   }
 
-  function hideSearchMenu() {
-    queryInput.addEventListener("blur", function () {
-      setTimeout(
-        function () {
-          recentlyViewedCataloguePagesDatalist.classList.remove("app-site-search__menu--hidden");
-          recentlyViewedCataloguePagesDatalist.classList.add("app-site-search__menu--visible");
-        }
-        , 100)
-    })
+  function onConfirm(result) {
+     window.location.href = result; // This is probably wrong
   }
 
   accessibleAutocomplete({
-     param1: showSearchMenu,
-     param2: hideSearchMenu,
+     element: document.getElementById('search'),
+     id: 'app-site-search__input',
+     source: getData,
+     onConfirm: onConfirm
   });
 })();
