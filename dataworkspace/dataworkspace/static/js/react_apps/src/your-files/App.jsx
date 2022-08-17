@@ -21,6 +21,9 @@ export default class App extends React.Component {
       files: [],
       folders: [],
       selectedFiles: [],
+      filesToDelete: [],
+      foldersToDelete: [],
+      canDelete: false,
       currentPrefix: this.props.config.rootPrefix,
       bigDataFolder: this.props.config.bigdataPrefix,
       createTableUrl: this.props.config.createTableUrl,
@@ -127,9 +130,14 @@ export default class App extends React.Component {
       return folder.isSelected;
     });
 
-    alert(
+    console.log(
       `delete ${filesToDelete.length} files and ${foldersToDelete.length} folders`
     );
+
+    this.setState({
+      filesToDelete,
+      foldersToDelete,
+    });
 
     this.showPopup(popupTypes.DELETE_OBJECTS);
   };
@@ -186,28 +194,38 @@ export default class App extends React.Component {
 
   onFileSelect = (file, isSelected) => {
     console.log(file, isSelected);
+    let selectedCount = 0;
     this.setState((state) => {
       const files = state.files.map((f) => {
         if (f.Key === file.Key) {
           f.isSelected = isSelected;
         }
+        if (f.isSelected) selectedCount++;
         return f;
       });
-
-      return { files };
+      state.folders.forEach((f) => {
+        if (f.isSelected) selectedCount++;
+      });
+      return { files, canDelete: selectedCount > 0 };
     });
   };
 
   onFolderSelect = (folder, isSelected) => {
+    let selectedCount = 0;
     this.setState((state) => {
       const folders = state.folders.map((f) => {
         if (f.Prefix === folder.Prefix) {
           f.isSelected = isSelected;
         }
+        if (f.isSelected) selectedCount++;
         return f;
       });
 
-      return { folders };
+      state.files.forEach((f) => {
+        if (f.isSelected) selectedCount++;
+      });
+
+      return { folders, canDelete: selectedCount > 0 };
     });
   };
 
@@ -231,7 +249,12 @@ export default class App extends React.Component {
           ref={this.fileInputRef}
           style={{ visibility: "hidden" }}
         />
-        {this.state.popups.deleteObjects ? <DeleteObjectsPopup /> : null}
+        {this.state.popups.deleteObjects ? (
+          <DeleteObjectsPopup
+            filesToDelete={this.state.filesToDelete}
+            foldersToDelete={this.state.foldersToDelete}
+          />
+        ) : null}
         {this.state.popups.addFolder ? (
           <AddFolderPopup
             currentPrefix={this.state.currentPrefix}
@@ -253,6 +276,7 @@ export default class App extends React.Component {
 
         <Header
           breadCrumbs={breadCrumbs}
+          canDelete={this.state.canDelete}
           currentPrefix={this.state.currentPrefix}
           onBreadcrumbClick={this.onBreadcrumbClick}
           onRefreshClick={this.onRefreshClick}
