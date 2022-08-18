@@ -1,7 +1,7 @@
 import csv
 import json
 from datetime import datetime
-
+import logging
 from django.contrib import admin
 from django.http import HttpResponse
 from django.urls import reverse, NoReverseMatch
@@ -9,6 +9,7 @@ from django.utils.html import format_html
 
 from dataworkspace.apps.eventlog.models import EventLog
 
+logger = logging.getLogger("app")
 
 @admin.register(EventLog)
 class EventLogAdmin(admin.ModelAdmin):
@@ -42,7 +43,11 @@ class EventLogAdmin(admin.ModelAdmin):
 
         try:
             url = obj.related_object.get_admin_edit_url()
-        except NoReverseMatch:
+        except NoReverseMatch as e:
+            logger.info(f'There was no reverse url match for {obj}: {e}')
+            return obj.related_object
+        except AttributeError as e:
+            logger.error(f'Object missing class method get_admin_edit_url() - {obj}: {e}')
             return obj.related_object
 
         return format_html(f'<a href="{url}">{obj.related_object}</a>')
