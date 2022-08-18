@@ -3,7 +3,6 @@ import json
 from datetime import datetime
 
 from django.contrib import admin
-from django.contrib.admin.templatetags.admin_urls import admin_urlname
 from django.http import HttpResponse
 from django.urls import reverse, NoReverseMatch
 from django.utils.html import format_html
@@ -42,12 +41,9 @@ class EventLogAdmin(admin.ModelAdmin):
             return None
 
         try:
-            url = reverse(
-                admin_urlname(obj.related_object._meta, "change"),
-                args=(obj.related_object.id,),
-            )
+            url = obj.related_object.get_admin_edit_url()
         except NoReverseMatch:
-            url = reverse("datasets:dataset_detail", args=(obj.object_id,))
+            return obj.related_object
 
         return format_html(f'<a href="{url}">{obj.related_object}</a>')
 
