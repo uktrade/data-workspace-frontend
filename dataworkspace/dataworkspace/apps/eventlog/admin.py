@@ -41,9 +41,7 @@ class EventLogAdmin(admin.ModelAdmin):
 
         try:
             url = obj.related_object.get_admin_edit_url()
-        except NoReverseMatch:
-            return obj.related_object
-        except AttributeError:
+        except (NoReverseMatch, AttributeError):
             return obj.related_object
 
         return format_html(f'<a href="{url}">{obj.related_object}</a>')
