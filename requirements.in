@@ -25,6 +25,7 @@ djangorestframework
 ecs-logging
 elastic-apm
 elasticsearch[async]
+escapejson
 geoalchemy2
 gevent
 hawk-server-asyncio

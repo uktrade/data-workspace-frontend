@@ -1,3 +1,5 @@
+import json
+
 from datetime import datetime
 from typing import Optional
 from urllib import parse
@@ -8,6 +10,7 @@ from django import template
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.safestring import mark_safe
+from escapejson import escapejson
 
 register = template.Library()
 
@@ -122,3 +125,14 @@ def can_edit_dataset(user, dataset):
         or user == dataset.information_asset_manager
         or user.is_superuser
     )
+
+
+@register.filter
+def to_json(data):
+    def handler(obj):
+        if hasattr(obj, "isoformat"):
+            return obj.isoformat()
+
+        return str(obj)
+
+    return mark_safe(escapejson(json.dumps(data, default=handler)))

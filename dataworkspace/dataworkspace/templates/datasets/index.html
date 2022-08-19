@@ -48,28 +48,10 @@
     <div class="govuk-grid-row">
       <div class="govuk-grid-column-full">
         <div class="search-field govuk-!-margin-bottom-2">
-          <label class="govuk-label search-field__label" for="search">Search by dataset name or description</label>
-          <div class="search-field-wrapper">
-            <input type="search" name="q" id="search" title="Search"
-                   class="govuk-input search-field__item search-field__input js-class-toggle" value="{{ query }}"
-                   aria-controls="search-summary-accessible-hint-wrapper" list="recently_viewed_catalogue_pages">
-            <div class="search-field-submit-wrapper search-field__item">
-              <input class="search-field__submit" type="submit" value="Search">
-            </div>
-            <ul id="recently_viewed_catalogue_pages" class="app-site-search__menu app-site-search__menu--overlay app-site-search__menu--hidden" role="listbox">
-              {% if recently_viewed_catalogue_pages %}
-                <div class="govuk-!-padding-left-2 govuk-!-padding-bottom-4 govuk-!-padding-top-4">
-                  <img alt="icon-clock" src="{% static 'assets/images/icon-clock.svg' %}" style="display: inline; text-align: right; height: 14px">
-                  <h3 style="display: inline; font: bold 16px Arial; color: #0b0c0c; padding-left: 5px">Recently viewed data</h3>
-                </div>
-                {% for url, name, type in recently_viewed_catalogue_pages %}
-                  <a href="{{ url }}" class="govuk-body app-site-search__option" role="option"
-                     style="text-decoration: none">{{ name }}
-                    <span class="app-site-search--section">{{ type }}</span>
-                  </a>
-                {% endfor %}
-              {% endif %}
-            </ul>
+          <div class="app-site-search" style="float: none; width: 100%">
+            <label class="govuk-visually-hidden" for="app-site-search__input">Search by dataset name or
+              description</label>
+            <div class="search-field-wrapper govuk-input" id="my-autocomplete-container"></div>
           </div>
           {% flag DATASET_FINDER_FLAG %}
             <p class="govuk-body">
@@ -313,19 +295,19 @@
   {% endif %}
   <script nonce="{{ request.csp_nonce }}" src="{% static 'search-v2.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}">
-    function hideSearchMenu() {
-      document.getElementById("recently_viewed_catalogue_pages").classList.remove("app-site-search__menu--visible");
-      document.getElementById("recently_viewed_catalogue_pages").classList.add("app-site-search__menu--hidden");
-    }
-
-    document.querySelector("input[name='q']").addEventListener("focus", function () {
-      document.getElementById("recently_viewed_catalogue_pages").classList.remove("app-site-search__menu--hidden");
-      document.getElementById("recently_viewed_catalogue_pages").classList.add("app-site-search__menu--visible");
-    });
-
-    document.querySelector("input[name='q']").addEventListener("keypress", hideSearchMenu)
-    document.querySelector(".search-field-wrapper *").addEventListener("blur", hideSearchMenu)
-
+    {#function hideSearchMenu() {#}
+    {#  document.getElementById("recently_viewed_catalogue_pages").classList.remove("app-site-search__menu--visible");#}
+    {#  document.getElementById("recently_viewed_catalogue_pages").classList.add("app-site-search__menu--hidden");#}
+    {#}#}
+    {##}
+    {#document.querySelector("input[name='q']").addEventListener("focus", function () {#}
+    {#  document.getElementById("recently_viewed_catalogue_pages").classList.remove("app-site-search__menu--hidden");#}
+    {#  document.getElementById("recently_viewed_catalogue_pages").classList.add("app-site-search__menu--visible");#}
+    {#});#}
+    {##}
+    {#document.querySelector("input[name='q']").addEventListener("keypress", hideSearchMenu)#}
+    {#document.querySelector(".search-field-wrapper *").addEventListener("blur", hideSearchMenu)#}
+    {##}
     $(document).ready(function () {
       var form = new LiveSearch('#live-search-form',
         '#live-search-wrapper',
@@ -334,5 +316,8 @@
       );
       var searchInput = new ToggleInputClassOnFocus($("#live-search-form"))
     });
+    console.log({{ recently_viewed_catalogue_pages | to_json }})
+    var dropdownData = {{ recently_viewed_catalogue_pages | to_json }}
+    accessibleAutocompleteOptions(dropdownData)
   </script>
 {% endblock %}

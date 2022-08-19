@@ -131,6 +131,8 @@ elastic-apm==6.2.2
     # via -r requirements.in
 elasticsearch[async]==7.11.0
     # via -r requirements.in
+escapejson==1.0
+    # via -r requirements.in
 et-xmlfile==1.0.1
     # via openpyxl
 geoalchemy2==0.8.4
