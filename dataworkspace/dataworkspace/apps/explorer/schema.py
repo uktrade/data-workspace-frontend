@@ -139,11 +139,13 @@ def match_datasets_with_schema_info(schema):
         Func(Value(s.name.schema), Value(s.name.name), function="Row") for s in schema
     ]
 
+    # reference_code is not needed, but we included it here since DataSet's __init__ class
+    # uses it and so results in a query per DataSet if we don't
     source_tables = (
         SourceTable.objects.alias(schema_table=Func(F("schema"), F("table"), function="Row"))
         .filter(schema_table__in=schema_table_names)
-        .select_related("dataset")
-        .only("schema", "table", "dataset__dictionary_published")
+        .select_related("dataset", "dataset__reference_code")
+        .only("schema", "table", "dataset__dictionary_published", "dataset__reference_code")
     )
 
     # Attach the dictionary_published to each table in schema
