@@ -360,9 +360,9 @@ document.body.addEventListener('click', function(event) {
 
 function accessibleAutocompleteOptions(data, iconClock) {
   var container = document.getElementById('my-autocomplete-container')
-
+  var recentlyViewedDummyResult = {"name": "", "type": "", "url": ""}
   function getData(query, callback) {
-    var dataName = [{"name":"Recently viewed data"}]
+    var dataName = [recentlyViewedDummyResult]
     for (var i = 0; i < data.length; ++i) {
       dataName.push(data[i]);
     }
@@ -371,24 +371,8 @@ function accessibleAutocompleteOptions(data, iconClock) {
   }
 
   function resultTemplate(result) {
-    if (result.name === "Recently viewed data") {
-      var recentlyViewedHeader = document.createElement('li')
-      var image = document.createElement('img')
-      image.src = iconClock
-      image.alt = "icon-clock"
-      image.style.display = 'inline'
-      image.style.textAlign = 'right'
-      image.style.height = '14px'
-      var h3Title = document.createElement("h3")
-      h3Title.style.display = 'inline'
-      h3Title.style.font = 'bold 16px Arial'
-      h3Title.style.color = '#0b0c0c'
-      h3Title.style.paddingLeft = '5px'
-      h3Title.innerText = result.name
-      recentlyViewedHeader.appendChild(image)
-      recentlyViewedHeader.appendChild(h3Title)
-      recentlyViewedHeader.classList.remove('app-site-search__option')
-      return recentlyViewedHeader.innerHTML
+    if (result === recentlyViewedDummyResult) {
+      return `<div class="app-site-search__recently-viewed-header"><img src=${iconClock} alt="icon-clock" id="iconClock"><h3 id="recentlyViewedDataHeader">Recently viewed data</h3></div>`
     }
     else {
       var elem = document.createElement('li')
@@ -409,7 +393,7 @@ function accessibleAutocompleteOptions(data, iconClock) {
     }
 
   function inputValueTemplate(result) {
-    if (result && result.name !== "Recently viewed data") {
+    if (result) {
       return result.name
     }
   }

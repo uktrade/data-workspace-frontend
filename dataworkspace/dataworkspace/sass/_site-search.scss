@@ -139,6 +139,10 @@ $icon-size: 40px;
     position: relative;
   }
 
+  #app-site-search__input__option--0 {
+    pointer-events: none;
+  }
+
   .app-site-search__option {
     display: block;
     position: relative;
@@ -253,4 +257,22 @@ $icon-size: 40px;
       color: govuk-colour("black");
     }
   }
+}
+
+.app-site-search__recently-viewed-header {
+  background-color: #fafafa;
+  pointer-events: none;
+}
+
+#iconClock {
+  display: inline;
+  text-align: right;
+  height: 14px;
+}
+
+#recentlyViewedDataHeader {
+  display: inline;
+  font: bold 16px Arial;
+  color: #0b0c0c;
+  padding-left: 5px;
 }
