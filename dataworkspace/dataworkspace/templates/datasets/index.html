@@ -308,8 +308,6 @@
     });
     var dropdownData = {{ recently_viewed_catalogue_pages | to_json }}
     var iconClock = "{% static 'assets/images/icon-clock.svg' %}"
-
-    console.log(dropdownData)
     accessibleAutocompleteOptions(dropdownData, iconClock)
 
 
