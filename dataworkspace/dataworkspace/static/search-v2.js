@@ -60,8 +60,6 @@ var LiveSearch = function (formSelector, wrapperSelector, GTM, linkSelector, GOV
 
   this.$form.find("input[type=submit]").click(
     function (e) {
-      console.log(this)
-      console.log('obvious')
       this.formChange();
       e.preventDefault();
     }.bind(this)
@@ -69,11 +67,8 @@ var LiveSearch = function (formSelector, wrapperSelector, GTM, linkSelector, GOV
 
   this.$form.find("input[type=text]").keypress(
     function (e) {
-      console.log(this)
-      console.log('test')
       if (e.keyCode == 13) {
         // 13 is the return key
-        console.log(this)
         this.formChange();
         e.preventDefault();
       }
