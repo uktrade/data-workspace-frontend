@@ -363,44 +363,60 @@ document.body.addEventListener('click', function(event) {
   ));
 });
 
-function accessibleAutocompleteOptions(data) {
+function accessibleAutocompleteOptions(data, iconClock) {
   var container = document.getElementById('my-autocomplete-container')
 
   function getData(query, callback) {
-    var dataName = []
+    var dataName = [{"name":"Recently viewed data"}]
     for (var i = 0; i < data.length; ++i) {
-      dataName.push(data[i].name);
+      dataName.push(data[i]);
     }
     const results = query == '' ? dataName : [];
     callback(results);
   }
 
-  function onConfirm() {
-    for (var i = 0; i < data.length; ++i) {
-      if(!data[i].url) {
-        return
-      }
-      window.location.href = data[i].url
+  function resultTemplate(result) {
+    if (result.name === "Recently viewed data") {
+      var recentlyViewedHeader = document.createElement('li')
+      var image = document.createElement('img')
+      image.src = iconClock
+      image.alt = "icon-clock"
+      image.style.display = 'inline'
+      image.style.textAlign = 'right'
+      image.style.height = '14px'
+      var h3Title = document.createElement("h3")
+      h3Title.style.display = 'inline'
+      h3Title.style.font = 'bold 16px Arial'
+      h3Title.style.color = '#0b0c0c'
+      h3Title.style.paddingLeft = '5px'
+      h3Title.innerText = result.name
+      recentlyViewedHeader.appendChild(image)
+      recentlyViewedHeader.appendChild(h3Title)
+      recentlyViewedHeader.classList.remove('app-site-search__option')
+      return recentlyViewedHeader.innerHTML
+    }
+    else {
+      var elem = document.createElement('li')
+      elem.textContent = result.name
+      var section = document.createElement('span')
+      section.className = "app-site-search--section"
+      section.innerHTML = result.type
+      elem.appendChild(section)
+      return elem.innerHTML
     }
   }
 
-  function resultTemplate() {
-    var dropdownChoices = []
-    var ul = document.createElement('ul')
-    for (var i = 0; i < data.length; ++i) {
-      if (data[i]) {
-        var elem = document.createElement('span')
-        var dataName = data[i].name
-        elem.textContent = dataName
-        var section = document.createElement('span')
-        section.className = 'app-site-search--section'
-        section.innerHTML = data[i].type
-
-        elem.appendChild(section)
-        ul.appendChild(elem)
+  function onConfirm(result) {
+      if(!result || !result.url) {
+        return
       }
+      window.location.href = result.url
     }
-    return ul.innerHTML
+
+  function inputValueTemplate(result) {
+    if (result && result.name !== "Recently viewed data") {
+      return result.name
+    }
   }
 
   accessibleAutocomplete({
@@ -409,13 +425,13 @@ function accessibleAutocompleteOptions(data) {
     cssNamespace: 'app-site-search',
     displayMenu: 'overlay',
     placeholder: 'Search by dataset name or description',
-    confirmonBlur: false,
-    autoselect: true,
+    autoselect: false,
     showAllValues: true,
     source: getData.bind(container),
     onConfirm: onConfirm,
     templates: {
+      inputValue: inputValueTemplate,
       suggestion: resultTemplate
     }
-  });
+  })
 }

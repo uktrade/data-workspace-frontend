@@ -48,10 +48,13 @@
     <div class="govuk-grid-row">
       <div class="govuk-grid-column-full">
         <div class="search-field govuk-!-margin-bottom-2">
-          <div class="app-site-search" style="float: none; width: 100%">
+          <div class="app-site-search" data-module="app-search" style="float: none; width: 100%; display: table">
             <label class="govuk-visually-hidden" for="app-site-search__input">Search by dataset name or
               description</label>
-            <div class="search-field-wrapper govuk-input" id="my-autocomplete-container"></div>
+            <div class="search-field-wrapper govuk-input" id="my-autocomplete-container"
+                 style="display:table-cell; padding: 0">
+            </div>
+            <input class="search-field__submit" type="submit" value="Search" style="display: table-cell; height: 50px">
           </div>
           {% flag DATASET_FINDER_FLAG %}
             <p class="govuk-body">
@@ -295,19 +298,6 @@
   {% endif %}
   <script nonce="{{ request.csp_nonce }}" src="{% static 'search-v2.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}">
-    {#function hideSearchMenu() {#}
-    {#  document.getElementById("recently_viewed_catalogue_pages").classList.remove("app-site-search__menu--visible");#}
-    {#  document.getElementById("recently_viewed_catalogue_pages").classList.add("app-site-search__menu--hidden");#}
-    {#}#}
-    {##}
-    {#document.querySelector("input[name='q']").addEventListener("focus", function () {#}
-    {#  document.getElementById("recently_viewed_catalogue_pages").classList.remove("app-site-search__menu--hidden");#}
-    {#  document.getElementById("recently_viewed_catalogue_pages").classList.add("app-site-search__menu--visible");#}
-    {#});#}
-    {##}
-    {#document.querySelector("input[name='q']").addEventListener("keypress", hideSearchMenu)#}
-    {#document.querySelector(".search-field-wrapper *").addEventListener("blur", hideSearchMenu)#}
-    {##}
     $(document).ready(function () {
       var form = new LiveSearch('#live-search-form',
         '#live-search-wrapper',
@@ -316,8 +306,11 @@
       );
       var searchInput = new ToggleInputClassOnFocus($("#live-search-form"))
     });
-    console.log({{ recently_viewed_catalogue_pages | to_json }})
     var dropdownData = {{ recently_viewed_catalogue_pages | to_json }}
-    accessibleAutocompleteOptions(dropdownData)
+    var iconClock = "{% static 'assets/images/icon-clock.svg' %}"
+
+    console.log(dropdownData)
+    accessibleAutocompleteOptions(dropdownData, iconClock)
+
   </script>
 {% endblock %}
