@@ -1022,14 +1022,20 @@ def get_recently_viewed_catalogue_pages(request):
         .order_by("object_id")
     )[:3]
     user_event_choice_list = []
-    transform_data_type_format_for_front_end_dict = {"DataSet": "Data set", "ReferenceDataset": "Reference dataset",
-                                                     "VisualisationCatalogueItem": "Visualisation"}
+    transform_data_type_format_for_front_end_dict = {
+        "DataSet": "Data set",
+        "ReferenceDataset": "Reference dataset",
+        "VisualisationCatalogueItem": "Visualisation",
+    }
     for log in user_event_logs:
-        data_type = transform_data_type_format_for_front_end_dict[log.related_object._meta.object_name]
-        user_event_choice_list.append({
-            "url": log.related_object.get_absolute_url(),
-            "name": log.related_object.name,
-            "type": data_type,
-        }
+        data_type = transform_data_type_format_for_front_end_dict[
+            log.related_object._meta.object_name
+        ]
+        user_event_choice_list.append(
+            {
+                "url": log.related_object.get_absolute_url(),
+                "name": log.related_object.name,
+                "type": data_type,
+            }
         )
     return user_event_choice_list
