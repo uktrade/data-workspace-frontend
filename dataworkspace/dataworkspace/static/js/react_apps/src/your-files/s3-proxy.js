@@ -22,25 +22,18 @@ class Credentials extends AWS.Credentials {
   }
 
   async refresh(callback) {
-    console.log("refreshing AWS credentials");
-    this.accessKeyId = "AAAA";
-    this.secretAccessKey = "BBBB";
-    this.sessionToken = "CCCCC";
-    this.expiration = new Date(2023, 1, 1);
-    callback();
-    return;
-    // try {
-    //   const response = await fetchJSON(this.config.credentialsUrl);
-    //   this.accessKeyId = response.AccessKeyId;
-    //   this.secretAccessKey = response.SecretAccessKey;
-    //   this.sessionToken = response.SessionToken;
-    //   this.expiration = Date.parse(response.Expiration);
-    // } catch (err) {
-    //   callback(err);
-    //   return;
-    // }
+    try {
+      const response = await fetchJSON(this.config.credentialsUrl);
+      this.accessKeyId = response.AccessKeyId;
+      this.secretAccessKey = response.SecretAccessKey;
+      this.sessionToken = response.SessionToken;
+      this.expiration = Date.parse(response.Expiration);
+    } catch (err) {
+      callback(err);
+      return;
+    }
 
-    // callback();
+    callback();
   }
 
   needsRefresh() {
