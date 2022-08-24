@@ -173,6 +173,9 @@ $icon-size: 40px;
     $_app-site-search-option-background-color: #fafafa;
     background-color: $_app-site-search-option-background-color;
   }
+  .app-site-search__option--focused:nth-child(odd).app-site-search__option--focused:not(:first-child){
+    background-color: govuk-colour("blue")!important;
+  }
 
   .app-site-search__option--focused,
   .app-site-search__option:hover {
