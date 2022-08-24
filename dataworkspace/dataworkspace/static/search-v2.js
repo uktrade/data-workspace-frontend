@@ -406,6 +406,7 @@ function accessibleAutocompleteOptions(data, iconClock) {
     placeholder: 'Search by dataset name or description',
     autoselect: false,
     showAllValues: true,
+    showNoOptionsFound: false,
     source: getData.bind(container),
     onConfirm: onConfirm,
     templates: {

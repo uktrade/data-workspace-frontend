@@ -82,6 +82,7 @@ $icon-size: 40px;
     background-size: $icon-size $icon-size;
     border-color: $govuk-focus-text-colour;
     border-right: none;
+    z-index: 1;
 
     &::placeholder {
       color: govuk-colour("dark-grey");
@@ -143,12 +144,13 @@ $icon-size: 40px;
 
   #app-site-search__input__option--0 {
     pointer-events: none;
+    border-bottom: none;
   }
 
   .app-site-search__option {
     display: block;
     position: relative;
-    padding: govuk-spacing(2);
+    padding: 10px 10px 10px 20px;
     border-bottom: solid govuk-colour("mid-grey");
     border-width: 1px 0;
     cursor: pointer;
