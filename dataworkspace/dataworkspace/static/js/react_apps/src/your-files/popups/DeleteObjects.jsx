@@ -1,5 +1,6 @@
 import React from "react";
 import { TrashIcon } from "../icons/trash";
+import { bytesToSize, fullPathToFilename, prefixToFolder } from "../utils";
 
 function DeleteTableHeader(props) {
   return (
@@ -39,12 +40,42 @@ export class DeleteObjectsPopup extends React.Component {
     super(props);
     this.state = {
       finished: false,
+      trashing: false,
+      foldersToDelete: this.props.foldersToDelete,
+      filesToDelete: this.props.filesToDelete,
     };
   }
 
+  onDeleteClick = () => {
+    console.log("start the delete");
+    const deleter = this.props.deleter;
+    this.setState({
+      trashing: true,
+    });
+
+    this.state.foldersToDelete.forEach((folder) => {
+      console.log(`delete folder ${folder.Prefix}`);
+      //list objects in the folder
+      //scedule bulk delete those objects in batches
+      //flush delete to allow ui catch up
+    });
+
+    this.state.filesToDelete.forEach((file) => {
+      console.log(`delete ${file.Key}`);
+    });
+  };
+
+  onCloseClick = () => {
+    console.log("closing delete");
+    this.setState({
+      aborted: true,
+    });
+  };
+
   render() {
-    const objectCount =
-      this.props.filesToDelete.length + this.props.foldersToDelete.length;
+    const folders = this.state.foldersToDelete;
+    const files = this.state.filesToDelete;
+    const objectCount = files.length + folders.length;
     return (
       <div className="popup-container">
         <div className="popup-container__overlay"></div>
@@ -62,65 +93,88 @@ export class DeleteObjectsPopup extends React.Component {
               <table className="govuk-table" style={{ tableLayout: "fixed" }}>
                 <DeleteTableHeader />
                 <tbody id="s3objects-tbody">
-                  <tr className="govuk-table__row">
-                    <td className="govuk-table__cell">prefix.Prefix</td>
-                    <td className="govuk-table__cell"></td>
-                    <td className="govuk-table__cell"></td>
-                    <td className="govuk-table__cell govuk-table__cell--numeric govuk-table__cell-progress">
-                      <span ng-if="!prefix.deleteStarted && !prefix.deleteFinished && !prefix.deleteError">
-                        ...
-                      </span>
-                      <strong
-                        ng-if="prefix.deleteStarted && !prefix.deleteFinished && !prefix.deleteError"
-                        className="govuk-tag progress-percentage"
+                  {folders.map((folder) => {
+                    console.log(folder);
+                    const folderName = prefixToFolder(folder.Prefix);
+                    return (
+                      <tr key={folder.Prefix} className="govuk-table__row">
+                        <td className="govuk-table__cell">{folderName}</td>
+                        <td className="govuk-table__cell"></td>
+                        <td className="govuk-table__cell"></td>
+                        <td className="govuk-table__cell govuk-table__cell--numeric govuk-table__cell-progress">
+                          {folder.deleteStarted ||
+                          folder.deleteFinished ||
+                          folder.deleteError ? null : (
+                            <span>...</span>
+                          )}
+
+                          {folder.deleteStarted &&
+                          !folder.deleteFinished &&
+                          !folder.deleteError ? (
+                            <strong className={"govuk-tag progress-percentage"}>
+                              Deleting
+                            </strong>
+                          ) : null}
+
+                          {folder.deleteError ? (
+                            <strong className={"govuk-tag progress-error"}>
+                              folder.deleteError
+                            </strong>
+                          ) : null}
+
+                          {folder.deleteFinished ? (
+                            <strong
+                              className={
+                                "govuk-tag progress-percentage-complete"
+                              }
+                            >
+                              Deleted
+                            </strong>
+                          ) : null}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {files.map((file) => {
+                    const filename = fullPathToFilename(file.Key);
+                    console.log(file);
+                    return (
+                      <tr
+                        key={file.Key}
+                        className="govuk-table__row"
+                        ng-repeat="object in model.objects"
                       >
-                        Deleting
-                      </strong>
-                      <strong
-                        ng-if="prefix.deleteError"
-                        className="govuk-tag progress-error"
-                      >
-                        prefix.deleteError
-                      </strong>
-                      <strong
-                        ng-if="prefix.deleteFinished"
-                        className="govuk-tag progress-percentage-complete"
-                      >
-                        Deleted
-                      </strong>
-                    </td>
-                  </tr>
-                  <tr
-                    className="govuk-table__row"
-                    ng-repeat="object in model.objects"
-                  >
-                    <td className="govuk-table__cell">
-                      fullpath2filename(object.Key
-                    </td>
-                    <td className="govuk-table__cell govuk-table__cell--numeric">
-                      object.LastModified.toLocaleString
-                    </td>
-                    <td className="govuk-table__cell govuk-table__cell--numeric">
-                      bytesToSize(object.Size)
-                    </td>
-                    <td className="govuk-table__cell govuk-table__cell--numeric govuk-table__cell-progress">
-                      <span ng-if="!object.deleteFinished && !object.deleteError">
-                        ...
-                      </span>
-                      <strong
-                        ng-if="object.deleteError"
-                        className="govuk-tag progress-error"
-                      >
-                        object.deleteError
-                      </strong>
-                      <strong
-                        ng-if="object.deleteFinished"
-                        className="govuk-tag progress-percentage-complete"
-                      >
-                        Deleted
-                      </strong>
-                    </td>
-                  </tr>
+                        <td className="govuk-table__cell">{filename}</td>
+                        <td className="govuk-table__cell govuk-table__cell--numeric">
+                          {file.LastModified.toLocaleString()}
+                        </td>
+                        <td className="govuk-table__cell govuk-table__cell--numeric">
+                          {bytesToSize(file.Size)}
+                        </td>
+                        <td className="govuk-table__cell govuk-table__cell--numeric govuk-table__cell-progress">
+                          {!file.deleteFinished && !file.deleteError ? (
+                            <span>...</span>
+                          ) : null}
+
+                          {file.deleteError ? (
+                            <strong className={"govuk-tag progress-error"}>
+                              {file.deleteError}
+                            </strong>
+                          ) : null}
+
+                          {file.deleteFinished ? (
+                            <strong
+                              className={
+                                "govuk-tag progress-percentage-complete"
+                              }
+                            >
+                              Deleted
+                            </strong>
+                          ) : null}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -136,17 +190,18 @@ export class DeleteObjectsPopup extends React.Component {
                 >
                   {this.state.finished ? "Close" : "Cancel"}
                 </button>
-                <button
-                  id="trash-btn-delete"
-                  type="button"
-                  className="govuk-button govuk-button--warning modal-button"
-                  ng-disabled="model.trashing"
-                  ng-if="!model.finished"
-                  focus-on="modal::open-end::trash"
-                >
-                  <TrashIcon />
-                  &nbsp;Delete model.count
-                </button>
+                {!this.state.finished ? (
+                  <button
+                    id="trash-btn-delete"
+                    type="button"
+                    onClick={() => this.onDeleteClick()}
+                    className="govuk-button govuk-button--warning modal-button"
+                    disabled={this.state.trashing}
+                  >
+                    <TrashIcon />
+                    &nbsp;Delete {objectCount}
+                  </button>
+                ) : null}
               </div>
             </div>
           </div>

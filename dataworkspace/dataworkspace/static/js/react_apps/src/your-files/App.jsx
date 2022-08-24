@@ -253,6 +253,8 @@ export default class App extends React.Component {
           <DeleteObjectsPopup
             filesToDelete={this.state.filesToDelete}
             foldersToDelete={this.state.foldersToDelete}
+            onCancel={() => this.hidePopup(popupTypes.DELETE_OBJECTS)}
+            deleter={this.props.deleter}
           />
         ) : null}
         {this.state.popups.addFolder ? (

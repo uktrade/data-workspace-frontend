@@ -1,31 +1,34 @@
-export function S3Deleter(s3, bucket) {
-  const bulkDeleteMaxFiles = 1000;
-  let keys = [];
+const BULK_DELETE_MAX_FILES = 1000;
 
-  async function deleteKeys() {
+export class S3Deleter {
+  constructor(s3, bucket) {
+    this.s3 = s3;
+    this.bucket = bucket;
+    this.keys = [];
+  }
+
+  deleteKeys = async () => {
     let response;
     try {
-      response = await s3
-        .deleteObjects({ Bucket: bucket, Delete: { Objects: keys } })
+      response = await this.s3
+        .deleteObjects({ Bucket: this.bucket, Delete: { Objects: this.keys } })
         .promise();
     } catch (err) {
       console.error(err);
       throw err;
     } finally {
-      keys = [];
+      this.keys = [];
     }
     return response;
-  }
+  };
 
-  async function scheduleDelete(key) {
-    keys.push({ Key: key });
-    if (keys.length >= bulkDeleteMaxFiles) return await deleteKeys();
-  }
+  scheduleDelete = async (key) => {
+    this.keys.push({ Key: key });
+    if (this.keys.length >= BULK_DELETE_MAX_FILES)
+      return await this.deleteKeys();
+  };
 
-  async function flushDelete() {
-    if (keys.length) return await deleteKeys();
-  }
-
-  console.log("here");
-  return [scheduleDelete, flushDelete];
+  flushDelete = async () => {
+    if (this.keys.length) return await this.deleteKeys();
+  };
 }
