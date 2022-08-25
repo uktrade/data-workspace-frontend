@@ -65,7 +65,7 @@ var LiveSearch = function (formSelector, wrapperSelector, GTM, linkSelector, GOV
     }.bind(this)
   );
 
-  this.$form.find("input[type=text]").keypress(
+  this.$form.find("input[type=search]").keypress(
     function (e) {
       if (e.keyCode == 13) {
         // 13 is the return key
