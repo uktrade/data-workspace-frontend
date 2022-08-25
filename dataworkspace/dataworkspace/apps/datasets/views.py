@@ -120,6 +120,7 @@ from dataworkspace.apps.datasets.utils import (
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event, log_permission_change
 from dataworkspace.apps.explorer.utils import invalidate_data_explorer_user_cached_credentials
+from waffle.decorators import waffle_flag
 
 logger = logging.getLogger("app")
 
@@ -369,6 +370,7 @@ def find_datasets(request):
             "data_type": dict(data_types),
             "show_admin_filters": has_unpublished_dataset_access(request.user),
             "DATASET_FINDER_FLAG": settings.DATASET_FINDER_ADMIN_ONLY_FLAG,
+            "ACCESSIBLE_AUTOCOMPLETE_FLAG": settings.ACCESSIBLE_AUTOCOMPLETE_FLAG,
             "search_type": "searchBar" if filters.query else "noSearch",
             "has_filters": filters.has_filters(),
         },
