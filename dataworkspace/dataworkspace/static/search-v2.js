@@ -389,6 +389,13 @@ function accessibleAutocompleteOptions(data, iconClock) {
       if(!result || !result.url) {
         return
       }
+      window.dataLayer = window.dataLayer || []
+      window.dataLayer.push({
+        event: "searchRecentClick",
+        "catalogueId": result,
+        "catalogueName": result.name,
+        "catalogueType": result.type,
+      })
       window.location.href = result.url
     }
 
