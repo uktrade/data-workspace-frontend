@@ -61,51 +61,46 @@ export class S3Proxy {
   }
 
   async listObjects(params) {
-    try {
-      const response = await this.s3.listObjectsV2(params).promise();
-      const files = response.Contents.filter((file) => {
-        return file.Key !== params.Prefix;
-      }).map((file) => {
-        file.isCsv =
-          file.Key.substr(file.Key.length - 3, file.Key.length) === "csv";
-        file.formattedDate = new Date(file.LastModified);
-        return file;
+    const response = await this.s3.listObjectsV2(params).promise();
+    const files = response.Contents.filter((file) => {
+      return file.Key !== params.Prefix;
+    }).map((file) => {
+      file.isCsv =
+        file.Key.substr(file.Key.length - 3, file.Key.length) === "csv";
+      file.formattedDate = new Date(file.LastModified);
+      return file;
+    });
+
+    const folders = [];
+    if (params.Prefix === this.config.initialPrefix) {
+      folders.push({
+        Prefix: this.config.initialPrefix + this.config.bigdataPrefix,
+        isBigData: true,
       });
-
-      const folders = [];
-      if (params.Prefix === this.config.initialPrefix) {
-        folders.push({
-          Prefix: this.config.initialPrefix + this.config.bigdataPrefix,
-          isBigData: true,
-        });
-      }
-
-      const commonFolders = response.CommonPrefixes.filter((folder) => {
-        console.log(
-          folder,
-          this.config.initialPrefix,
-          this.config.bigdataPrefix
-        );
-
-        return (
-          folder.Prefix !==
-          `${this.config.initialPrefix}${this.config.bigdataPrefix}`
-        );
-      }).map((folder) => {
-        folder.isBigData = false;
-        return folder;
-      });
-
-      folders.push(...commonFolders);
-
-      return {
-        files,
-        folders,
-      };
-    } catch (err) {
-      console.error(err);
-      throw err;
     }
+
+    const commonFolders = response.CommonPrefixes.filter((folder) => {
+      console.log(
+        folder,
+        this.config.initialPrefix,
+        this.config.bigdataPrefix
+      );
+
+      return (
+        folder.Prefix !==
+        `${this.config.initialPrefix}${this.config.bigdataPrefix}`
+      );
+    }).map((folder) => {
+      folder.isBigData = false;
+      return folder;
+    });
+
+    folders.push(...commonFolders);
+
+    return {
+      files,
+      folders,
+    };
   }
 
   getSignedUrl(params) {
@@ -129,8 +124,7 @@ export class S3Proxy {
     } catch (err) {
       canCreate = err.code === "NotFound";
       if (!canCreate) {
-        alert("Error creating folder: " + err);
-        return;
+        throw err;
       }
     }
     if (!canCreate) {
@@ -138,10 +132,6 @@ export class S3Proxy {
       return;
     }
 
-    try {
-      await this.s3.putObject(params).promise();
-    } catch (err) {
-      alert("Error creating folder: " + err);
-    }
+    await this.s3.putObject(params).promise();
   }
 }
