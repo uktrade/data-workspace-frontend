@@ -358,7 +358,7 @@ document.body.addEventListener('click', function(event) {
   ));
 });
 
-function accessibleAutocompleteOptions(data, iconClock) {
+function accessibleAutocompleteOptions(data, iconClock, GTM) {
   var container = document.getElementById('my-autocomplete-container')
   var recentlyViewedDummyResult = {"name": "", "type": "", "url": ""}
   function getData(query, callback) {
@@ -389,13 +389,7 @@ function accessibleAutocompleteOptions(data, iconClock) {
       if(!result || !result.url) {
         return
       }
-      window.dataLayer = window.dataLayer || []
-      window.dataLayer.push({
-        event: "searchRecentClick",
-        "catalogueId": result,
-        "catalogueName": result.name,
-        "catalogueType": result.type,
-      })
+      GTM.pushSearchRecentClick(result.url.split("/")[2].split("#")[0], result.name, result.type)
       window.location.href = result.url
     }
 
