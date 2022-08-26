@@ -390,13 +390,6 @@ function accessibleAutocompleteOptions(data, iconClock, GTM) {
         return
       }
       GTM.pushSearchRecentClick(result.url.split("/")[2].split("#")[0], result.name, result.type)
-      // GTM.dataLayer = GTM.dataLayer || []
-      // GTM.dataLayer.push({
-      //   event: "searchRecentClick",
-      //   "catalogueId": result.url.split("/")[2].split("#")[0],
-      //   "catalogueName": result.name,
-      //   "catalogueType": result.type,
-      // })
       window.location.href = result.url
     }
 
