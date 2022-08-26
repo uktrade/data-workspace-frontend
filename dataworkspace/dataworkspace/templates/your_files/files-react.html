@@ -1,0 +1,46 @@
+{% extends '_main.html' %}
+{% load static %}
+{% load render_bundle from webpack_loader %}
+
+{% block page_title %}Files - {{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="govuk-breadcrumbs">
+    <ol class="govuk-breadcrumbs__list">
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="/">Home</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="{% url 'applications:tools' %}">Tools</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">
+        Your files
+      </li>
+    </ol>
+  </div>
+{% endblock %}
+
+{% block content %}
+  <h1 class="govuk-heading-l">Your files</h1>
+  <div id="your-files-app"></div>
+  <!-- Icons provided by Font Awesome https://fontawesome.com/license -->
+  <div>
+
+  <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}aws-sdk-2.521.0.min.js"></script>
+
+  <script nonce="{{ request.csp_nonce }}">
+    const YOURFILES_CONFIG = {
+      region: 'eu-west-2',
+      bucketName: '{{ bucket }}',
+      initialPrefix: '{{ prefix }}',
+      bigdataPrefix: 'bigdata/',
+      credentialsUrl: '{% url 'api_v1:aws-credentials' %}',
+      endpointUrl: '{{ aws_endpoint }}',
+      createTableUrl: '{% url 'your-files:create-table-confirm' %}'
+
+    };
+    console.log(YOURFILES_CONFIG.credentialsUrl);;
+  </script>
+
+  {% render_bundle "yourfiles" "js" %}
+{% endblock %}
