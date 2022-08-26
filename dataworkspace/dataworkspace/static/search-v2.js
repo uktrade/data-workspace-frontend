@@ -389,10 +389,11 @@ function accessibleAutocompleteOptions(data, iconClock, GTM) {
       if(!result || !result.url) {
         return
       }
+      GTM.pushSearchRecentClick(1, result.name, result.type)
       GTM.dataLayer = GTM.dataLayer || []
       GTM.dataLayer.push({
         event: "searchRecentClick",
-        "catalogueId": result,
+        "catalogueId": result.url.split("/")[2].split("#")[0],
         "catalogueName": result.name,
         "catalogueType": result.type,
       })
