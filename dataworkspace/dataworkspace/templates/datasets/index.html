@@ -321,7 +321,7 @@
     {% flag ACCESSIBLE_AUTOCOMPLETE_FLAG %}
     var dropdownData = {{ recently_viewed_catalogue_pages | to_json }}
     var iconClock = "{% static 'assets/images/icon-clock.svg' %}"
-    accessibleAutocompleteOptions(dropdownData, iconClock)
+    accessibleAutocompleteOptions(dropdownData, iconClock, new GTMDatasetSearchSupport())
     {% endflag %}
 
 
