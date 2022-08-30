@@ -16,11 +16,31 @@ GTMDatasetSearchSupport.prototype.pushSearchResultClick =
     }
   };
 
+GTMDatasetSearchSupport.prototype.pushSearchRecentClick =
+  function pushSearchRecentClick(id, name, type) {
+    try {
+      this.pushSearchRecentClickEvent(id, name, type);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
 GTMDatasetSearchSupport.prototype.pushSearchResultClickEvent =
   function pushSearchResultClickEvent(data) {
     if (typeof dataLayer == "undefined") return;
     dataLayer.push(data);
   };
+
+GTMDatasetSearchSupport.prototype.pushSearchRecentClickEvent =
+  function pushSearchRecentClickEvent(id, name, type) {
+  if (typeof dataLayer == "undefined") return;
+    dataLayer.push({
+      event: "searchRecentClick",
+      "catalogueId": id,
+      "catalogueName": name,
+      "catalogueType": type,
+    })
+  }
 
 GTMDatasetSearchSupport.prototype.pushSearchEvent = function pushSearchEvent() {
   if (typeof dataLayer !== "undefined") {
