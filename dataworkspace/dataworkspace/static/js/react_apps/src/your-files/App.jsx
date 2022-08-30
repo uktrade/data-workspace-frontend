@@ -7,7 +7,7 @@ import { BigDataMessage } from "./BigDataMessage";
 import { getBreadcrumbs, getFolderName } from "./utils";
 import { AddFolderPopup, UploadFilesPopup } from "./popups";
 import { DeleteObjectsPopup } from "./popups/DeleteObjects";
-import { ErrorModal } from "./components/ErrorModal";
+import { ErrorModal } from "./popups/ErrorModal";
 
 const popupTypes = {
   ADD_FOLDER: "addFolder",
