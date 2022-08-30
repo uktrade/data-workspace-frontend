@@ -358,7 +358,7 @@ document.body.addEventListener('click', function(event) {
   ));
 });
 
-function accessibleAutocompleteOptions(data, iconClock, GTM) {
+function accessibleAutocompleteOptions(data, GTM) {
   var container = document.getElementById('my-autocomplete-container')
   var recentlyViewedDummyResult = {"name": "", "type": "", "url": ""}
   function getData(query, callback) {
@@ -372,9 +372,14 @@ function accessibleAutocompleteOptions(data, iconClock, GTM) {
 
   function resultTemplate(result) {
     if (result === recentlyViewedDummyResult) {
+      const clockSvgString = '<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><polygon points="10.3752 11.9064 6.8826 8.4142 6.8826 3.1999 8.8821 3.1999 8.8821 7.5861 11.7893 10.4924 10.3752 11.9064"/><path d="M8,2c3.3084,0,6,2.6916,6,6s-2.6916,6-6,6-6-2.6916-6-6S4.6916,2,8,2m0-2C3.5817,0,0,3.5817,0,8s3.5817,8,8,8,8-3.5817,8-8S12.4183,0,8,0h0Z"/></svg>';
+      const span = document.createElement('span');
+      span.innerHTML = clockSvgString;
+      span.firstElementChild.id = 'iconClock'
+      const clockSvgElement = span.firstElementChild;
       var header = document.createElement('div')
       header.classList.add("app-site-search__recently-viewed-header")
-      header.appendChild(iconClock)
+      header.appendChild(clockSvgElement)
       var h3 = document.createElement('h3')
       h3.id = "recentlyViewedDataHeader"
       h3.textContent = "Recently viewed data"
