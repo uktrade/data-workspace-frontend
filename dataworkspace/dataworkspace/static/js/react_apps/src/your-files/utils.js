@@ -46,11 +46,3 @@ export function getFolderName(prefix, rootPrefix) {
   if (!folder) return `${ROOT_FOLDER_NAME}/`;
   return prefixToFolder(folder);
 }
-
-export function objEntries(obj) {
-    var ownProps = Object.keys(obj);
-    var i = ownProps.length;
-    var resArray = new Array(i);
-    while (i--) resArray[i] = [ownProps[i], obj[ownProps[i]]];
-    return resArray;
-}

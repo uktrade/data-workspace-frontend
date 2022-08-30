@@ -2,7 +2,7 @@ import React from 'react';
 import { objEntries } from "../utils";
 
 export function ErrorModal({ error, onClose}) {
-  const errors = objEntries(error || {}).map(([key, value]) => ({ key, value }));
+  const errors = Object.entries(error || {}).map(([key, value]) => ({ key, value }));
   return (
     <div className="popup-container">
       <div className="popup-container__overlay"></div>
