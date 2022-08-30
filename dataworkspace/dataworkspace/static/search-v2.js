@@ -372,7 +372,14 @@ function accessibleAutocompleteOptions(data, iconClock, GTM) {
 
   function resultTemplate(result) {
     if (result === recentlyViewedDummyResult) {
-      return `<div class="app-site-search__recently-viewed-header"><img src=${iconClock} alt="icon-clock" id="iconClock"><h3 id="recentlyViewedDataHeader">Recently viewed data</h3></div>`
+      var header = document.createElement('div')
+      header.classList.add("app-site-search__recently-viewed-header")
+      header.appendChild(iconClock)
+      var h3 = document.createElement('h3')
+      h3.id = "recentlyViewedDataHeader"
+      h3.textContent = "Recently viewed data"
+      header.appendChild(h3)
+      return header.innerHTML
     }
     else {
       var elem = document.createElement('li')
