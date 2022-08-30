@@ -1,6 +1,4 @@
 import React from 'react';
-import { objEntries } from "../utils";
-
 export function ErrorModal({ error, onClose}) {
   const errors = Object.entries(error || {}).map(([key, value]) => ({ key, value }));
   return (
