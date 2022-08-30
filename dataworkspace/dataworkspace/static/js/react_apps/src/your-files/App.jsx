@@ -7,6 +7,7 @@ import { BigDataMessage } from "./BigDataMessage";
 import { getBreadcrumbs, getFolderName } from "./utils";
 import { AddFolderPopup, UploadFilesPopup } from "./popups";
 import { DeleteObjectsPopup } from "./popups/DeleteObjects";
+import { ErrorModal } from "./popups/ErrorModal";
 
 const popupTypes = {
   ADD_FOLDER: "addFolder",
@@ -109,8 +110,13 @@ export default class App extends React.Component {
     console.log("createNewFolderClick");
     console.log(prefix, folderName);
     this.hidePopup(popupTypes.ADD_FOLDER);
-    await this.props.proxy.createFolder(prefix, folderName);
-    await this.refresh(prefix);
+    try {
+      await this.props.proxy.createFolder(prefix, folderName);
+      await this.refresh(prefix);
+    }
+    catch (ex) {
+      this.showErrorPopup(ex);
+    }
   };
 
   onUploadClick = async (prefix) => {
@@ -142,6 +148,14 @@ export default class App extends React.Component {
     this.showPopup(popupTypes.DELETE_OBJECTS);
   };
 
+  showErrorPopup = (error) => {
+    const newState = {error, popups: this.state.popups};
+    Object.keys(newState.popups).forEach(key => {
+      newState.popups[key] = false;
+    });
+    this.setState(newState)
+  }
+
   handleFileClick = async (key) => {
     console.log("handleFileClick", key);
     const params = {
@@ -157,7 +171,7 @@ export default class App extends React.Component {
       console.log(url);
       window.location.href = url;
     } catch (ex) {
-      logger.error(ex);
+      this.showErrorPopup(ex);
     }
   };
 
@@ -183,13 +197,18 @@ export default class App extends React.Component {
     const showBigDataMessage =
       params.Prefix === this.state.rootPrefix + this.state.bigDataFolder;
 
-    const data = await this.props.proxy.listObjects(params);
-    this.setState({
-      files: data.files,
-      folders: data.folders,
-      currentPrefix: params.Prefix,
-      showBigDataMessage,
-    });
+    try {
+      const data = await this.props.proxy.listObjects(params);
+        this.setState({
+        files: data.files,
+        folders: data.folders,
+        currentPrefix: params.Prefix,
+        showBigDataMessage,
+      });
+    } catch (ex) {
+      this.showErrorPopup(ex);
+      return;
+    }
   }
 
   onFileSelect = (file, isSelected) => {
@@ -249,6 +268,12 @@ export default class App extends React.Component {
           ref={this.fileInputRef}
           style={{ visibility: "hidden" }}
         />
+        {this.state.error ? (
+          <ErrorModal
+            error={this.state.error}
+            onClose={() => this.setState({ error: null })}
+          />
+        ) : null}
         {this.state.popups.deleteObjects ? (
           <DeleteObjectsPopup
             filesToDelete={this.state.filesToDelete}

@@ -352,6 +352,7 @@
     height: 100%;
     padding: 10px;
     box-sizing: border-box;
+    max-width: 640px;
   }
   @media (min-width: 40.0625em) {
     .popup-container__modal {
@@ -365,6 +366,9 @@
 
     .form-group {
       float: right;
+    }
+    .govuk-button-group {
+      margin-bottom: 0;
     }
   }
 }
