@@ -320,7 +320,8 @@
     });
     {% flag ACCESSIBLE_AUTOCOMPLETE_FLAG %}
     var dropdownData = {{ recently_viewed_catalogue_pages | to_json }}
-    accessibleAutocompleteOptions(dropdownData, new GTMDatasetSearchSupport())
+    var dataSearchIndex = {{ suggested_searches | to_json }}
+    accessibleAutocompleteOptions(dropdownData, dataSearchIndex, new GTMDatasetSearchSupport())
     {% endflag %}
 
 

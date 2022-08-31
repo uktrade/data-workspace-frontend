@@ -358,16 +358,25 @@ document.body.addEventListener('click', function(event) {
   ));
 });
 
-function accessibleAutocompleteOptions(data, GTM) {
+function accessibleAutocompleteOptions(data, dataSearchIndex, GTM) {
   var container = document.getElementById('my-autocomplete-container')
   var recentlyViewedDummyResult = {"name": "", "type": "", "url": ""}
-  function getData(query, callback) {
+
+  function handleSearchQuery(query, callback) {
     var dataName = [recentlyViewedDummyResult]
+    var queryResults = []
     for (var i = 0; i < data.length; ++i) {
       dataName.push(data[i]);
     }
-    const results = query == '' ? dataName : [];
-    callback(results);
+
+    for (var d = 0; d < dataSearchIndex.length; ++d) {
+      if (dataSearchIndex[d].name.indexOf(query) !== -1) {
+        queryResults.push(dataSearchIndex[d])
+      }
+    }
+    const searchResults = query == '' ? dataName : queryResults;
+
+    callback(searchResults)
   }
 
   function resultTemplate(result) {
@@ -408,7 +417,7 @@ function accessibleAutocompleteOptions(data, GTM) {
     autoselect: false,
     showAllValues: true,
     showNoOptionsFound: false,
-    source: getData.bind(container),
+    source: handleSearchQuery.bind(container),
     onConfirm: onConfirm,
     templates: {
       inputValue: inputValueTemplate,

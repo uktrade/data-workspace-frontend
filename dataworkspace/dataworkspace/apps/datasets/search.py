@@ -805,3 +805,34 @@ def update_datasets_average_daily_users():
             _update_datasets_average_daily_users()
     except redis.exceptions.LockError:
         logger.info("Unable to acquire lock to update dataset averages")
+
+from django.urls import reverse
+
+def suggested_searches(request):
+    suggested_searches_choice_list = []
+
+    user_accessible_datasets = _sorted_datasets_and_visualisations_matching_query_for_user(
+        query="",
+        user=request.user,
+        sort_by={'display_name': 'Relevance', 'fields': ('-is_bookmarked', '-table_match', '-search_rank_name', '-search_rank_short_description', '-search_rank_tags', '-search_rank_description', '-search_rank', '-published_date', 'name')}
+    )
+
+    for dataset in user_accessible_datasets:
+        data_type = ""
+        if dataset["data_type"] == 0:
+            data_type = "Reference dataset"
+        if dataset["data_type"] == 1:
+            data_type = "Source dataset"
+        if dataset["data_type"] == 2:
+            data_type = "Data cut"
+        if dataset["data_type"] == 3:
+            data_type = "Visualisation"
+        suggested_searches_choice_list.append(
+            {
+                "url": "{}#{}".format(reverse("datasets:dataset_detail", args=(dataset["id"],)), dataset["slug"]),
+                "name": dataset["name"],
+                "type": data_type
+            }
+        )
+
+    return suggested_searches_choice_list
