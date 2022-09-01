@@ -1018,8 +1018,8 @@ def get_dataset_table(obj):
 def get_recently_viewed_catalogue_pages(request):
     user_event_logs = (
         EventLog.objects.filter(user=request.user, event_type=EventLog.TYPE_DATASET_VIEW)
-        .distinct("object_id")
-        .order_by("object_id")
+        .order_by("-timestamp", "object_id")
+        .distinct("timestamp", "object_id")
     )[:3]
     user_event_choice_list = []
     for log in user_event_logs:

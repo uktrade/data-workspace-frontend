@@ -810,17 +810,23 @@ def update_datasets_average_daily_users():
 def suggested_searches(request):
     user_recent_searches = EventLog.objects.filter(
         event_type=EventLog.TYPE_DATASET_FIND_FORM_QUERY, user=request.user
-    )
+    ).order_by("timestamp")
 
-    suggested_searches_choice_list = []
+    search_term_popularity = {}
+
     for search in user_recent_searches:
-        suggested_searches_choice_list.append(search.extra["query"])
+        query = search.extra["query"]
+        if query in search_term_popularity:
+            search_term_popularity[query] += 1
+        else:
+            search_term_popularity[query] = 1
 
-    # Remove duplicate search terms
-    suggested_searches_choice_list = list(dict.fromkeys(suggested_searches_choice_list))
+    suggested_searches_choice_list = {
+        k: v for k, v in sorted(search_term_popularity.items(), key=lambda item: item[1])
+    }.keys()
 
     suggested_searches_array_dict = []
-    for unique_result in suggested_searches_choice_list:
-        suggested_searches_array_dict.append({"query": unique_result})
+    for key in suggested_searches_choice_list:
+        suggested_searches_array_dict.append({"query": key})
 
-    return suggested_searches_array_dict
+    return list(reversed(suggested_searches_array_dict))

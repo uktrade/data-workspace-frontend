@@ -41,6 +41,7 @@ psutil
 psycogreen
 psycopg2-binary
 python-dotenv
+pyspellchecker
 redis
 pyjwt
 requests
