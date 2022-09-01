@@ -20,7 +20,6 @@ from django.db.models import (
     FilteredRelation,
 )
 from django.db.models import QuerySet
-from django.urls import reverse
 from pytz import utc
 import redis
 
@@ -809,21 +808,19 @@ def update_datasets_average_daily_users():
 
 
 def suggested_searches(request):
-    user_recent_searches = EventLog.objects.filter(event_type=EventLog.TYPE_DATASET_FIND_FORM_QUERY, user=request.user)
+    user_recent_searches = EventLog.objects.filter(
+        event_type=EventLog.TYPE_DATASET_FIND_FORM_QUERY, user=request.user
+    )
 
     suggested_searches_choice_list = []
     for search in user_recent_searches:
-        suggested_searches_choice_list.append(
-            search.extra["query"]
-        )
+        suggested_searches_choice_list.append(search.extra["query"])
 
     # Remove duplicate search terms
     suggested_searches_choice_list = list(dict.fromkeys(suggested_searches_choice_list))
 
     suggested_searches_array_dict = []
     for unique_result in suggested_searches_choice_list:
-        suggested_searches_array_dict.append(
-            {"query": unique_result}
-        )
+        suggested_searches_array_dict.append({"query": unique_result})
 
     return suggested_searches_array_dict

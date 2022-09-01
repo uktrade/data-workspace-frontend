@@ -146,7 +146,6 @@ LiveSearch.prototype.formChange = function formChange(e) {
 };
 
 LiveSearch.prototype.cache = function cache(slug, data) {
-  console.log(slug, data)
   if (typeof data === "undefined") {
     return this.resultsCache[slug];
   } else {
@@ -165,12 +164,6 @@ LiveSearch.prototype.updateResults = function updateResults() {
   var liveState = this.$form.serializeArray();
   var cachedResultData = this.cache(searchState);
   if (typeof cachedResultData === "undefined") {
-    console.log('1')
-    console.log(this.$form.attr("action"),)
-    console.log('2')
-    console.log($.param(liveState),)
-    console.log('3')
-    console.log(searchState)
     return $.ajax({
       url: this.$form.attr("action"),
       data: $.param(liveState),
