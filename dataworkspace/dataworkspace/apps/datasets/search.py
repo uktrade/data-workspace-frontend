@@ -809,32 +809,21 @@ def update_datasets_average_daily_users():
 
 
 def suggested_searches(request):
+    user_recent_searches = EventLog.objects.filter(event_type=EventLog.TYPE_DATASET_FIND_FORM_QUERY, user=request.user)
+
     suggested_searches_choice_list = []
-
-    user_accessible_datasets = _sorted_datasets_and_visualisations_matching_query_for_user(
-        query="",
-        user=request.user,
-        sort_by={"display_name": "Relevance", "fields": ("-average_unique_users_daily", "name")},
-    )
-
-    for dataset in user_accessible_datasets:
-        data_type = ""
-        if dataset["data_type"] == 0:
-            data_type = "Reference dataset"
-        if dataset["data_type"] == 1:
-            data_type = "Source dataset"
-        if dataset["data_type"] == 2:
-            data_type = "Data cut"
-        if dataset["data_type"] == 3:
-            data_type = "Visualisation"
+    for search in user_recent_searches:
         suggested_searches_choice_list.append(
-            {
-                "url": "{}#{}".format(
-                    reverse("datasets:dataset_detail", args=(dataset["id"],)), dataset["slug"]
-                ),
-                "name": dataset["name"].lower(),
-                "type": data_type,
-            }
+            search.extra["query"]
         )
 
-    return suggested_searches_choice_list
+    # Remove duplicate search terms
+    suggested_searches_choice_list = list(dict.fromkeys(suggested_searches_choice_list))
+
+    suggested_searches_array_dict = []
+    for unique_result in suggested_searches_choice_list:
+        suggested_searches_array_dict.append(
+            {"query": unique_result}
+        )
+
+    return suggested_searches_array_dict
