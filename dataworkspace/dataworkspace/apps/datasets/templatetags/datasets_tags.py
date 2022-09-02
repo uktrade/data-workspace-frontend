@@ -3,6 +3,8 @@ import json
 from datetime import datetime
 from typing import Optional
 from urllib import parse
+
+from dateutil import parser
 from dateutil.relativedelta import relativedelta
 import pytz
 
@@ -105,7 +107,7 @@ def format_date_uk(date: Optional[datetime.date]) -> Optional[str]:
 def parse_date_string(date_string: Optional[str]) -> Optional[str]:
     if date_string is None:
         return None
-    return datetime.strptime(date_string, "%Y-%m-%dT%H:%M:%SZ")
+    return parser.parse(date_string)
 
 
 @register.simple_tag()
