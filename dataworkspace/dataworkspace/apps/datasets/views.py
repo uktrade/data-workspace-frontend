@@ -1,6 +1,5 @@
 import json
 import logging
-import debugpy
 import uuid
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict, namedtuple
@@ -1122,9 +1121,6 @@ class DatasetUsageHistoryView(View):
 
 class DataCutSourceDetailView(DetailView):
     template_name = "datasets/data_cut_source_detail.html"
-    logger.debug("---> test log message")
-    # debugpy.listen(('0.0.0.0', 4444))
-    # debugpy.wait_for_client()
 
     def dispatch(self, request, *args, **kwargs):
         source = self.get_object()
