@@ -1,5 +1,6 @@
 import json
 import logging
+import debugpy
 import uuid
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict, namedtuple
@@ -1121,6 +1122,9 @@ class DatasetUsageHistoryView(View):
 
 class DataCutSourceDetailView(DetailView):
     template_name = "datasets/data_cut_source_detail.html"
+    logger.debug("---> test log message")
+    # debugpy.listen(('0.0.0.0', 4444))
+    # debugpy.wait_for_client()
 
     def dispatch(self, request, *args, **kwargs):
         source = self.get_object()
@@ -1169,7 +1173,8 @@ class DataGridDataView(DetailView):
                 cursor_factory=psycopg2.extras.RealDictCursor,
             ) as cursor:
                 cursor.execute(query, query_params)
-                return cursor.fetchall()
+                rs = cursor.fetchall()
+                return (cursor.rowcount, rs)
 
     def post(self, request, *args, **kwargs):
         source = self.get_object()
@@ -1242,8 +1247,8 @@ class DataGridDataView(DetailView):
                 cursor_name=f'data-grid--{self.kwargs["model_class"].__name__}--{source.id}',
             )
 
-        records = self._get_rows(source, query, params)
-        return JsonResponse({"records": records})
+        (rowcount, records) = self._get_rows(source, query, params)
+        return JsonResponse({"rowcount": rowcount, "records": records})
 
 
 class DatasetVisualisationPreview(View):
