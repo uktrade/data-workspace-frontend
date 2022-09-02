@@ -15,7 +15,7 @@ from django.db.models import Q
 from django.db.utils import DatabaseError
 from django.http import Http404
 from django.urls import reverse
-from psycopg2.sql import Identifier, Literal, SQL, Composed
+from psycopg2.sql import Identifier, Literal, SQL
 
 from dataworkspace.apps.core.utils import (
     close_all_connections_if_not_in_atomic_block,
@@ -549,11 +549,7 @@ def build_filtered_dataset_query(inner_query, column_config, params):
 
     if where_clause:
         where_clause = SQL("WHERE") + SQL(" AND ").join(where_clause)
-    logger.debug(f'INNER QUERY - {type(inner_query)} - {inner_query}')
-    inner_query = Composed([SQL('SELECT * FROM '),
-                            Identifier('public'),
-                            SQL('.'), Identifier('test_dataset'),
-                            ])
+
     query = SQL(
         f"""
         SELECT {{}}
@@ -569,12 +565,10 @@ def build_filtered_dataset_query(inner_query, column_config, params):
         SQL(" ").join(where_clause),
         SQL(",").join(map(Identifier, sort_fields)),
     )
-    for composable in inner_query:
-        logger.debug(f'COMPOSABLE: {composable}')
-    sql = next((s for s in inner_query if type(s) is SQL), None)
-    logger.debug(f'INNER SQL - {sql.string}')
-    # Composed([SQL('SELECT * from '), Identifier('public'), SQL('.'), Identifier('test_dataset')])
-    return query, query_params
+
+    rowcount_q = SQL(f'SELECT COUNT(iq.*) AS count FROM ({inner_query}) AS iq')
+
+    return rowcount_q, query, query_params
 
 
 def _get_detailed_changelog(changelog, initial_change_type):

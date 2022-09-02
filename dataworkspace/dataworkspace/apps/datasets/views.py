@@ -1173,22 +1173,7 @@ class DataGridDataView(DetailView):
                 cursor_factory=psycopg2.extras.RealDictCursor,
             ) as cursor:
                 cursor.execute(query, query_params)
-                rs = cursor.fetchall()
-                return (cursor.rowcount, rs)
-
-    @staticmethod
-    def _get_rowcount(source, query, query_params):
-        with psycopg2.connect(
-            database_dsn(settings.DATABASES_DATA[source.database.memorable_name])
-        ) as connection:
-            with connection.cursor(
-                name="data-grid-rowcount",
-                cursor_factory=psycopg2.extras.RealDictCursor,
-            ) as cursor:
-                query = "SELECT COUNT(*) FROM public.test_dataset;"
-                cursor.execute(query, query_params)
-                (r) = cursor.fetchone()
-                return r
+                return cursor.fetchall()
 
     def post(self, request, *args, **kwargs):
         source = self.get_object()
@@ -1220,7 +1205,7 @@ class DataGridDataView(DetailView):
             column_config = source.get_column_config()
 
         original_query = source.get_data_grid_query()
-        query, params = build_filtered_dataset_query(
+        rowcount_query, query, params = build_filtered_dataset_query(
             original_query,
             column_config,
             post_data,
@@ -1261,9 +1246,9 @@ class DataGridDataView(DetailView):
                 cursor_name=f'data-grid--{self.kwargs["model_class"].__name__}--{source.id}',
             )
 
-        (rowcount, records) = self._get_rows(source, query, params)
-        rowcount = self._get_rowcount(source, original_query, params)
-        return JsonResponse({"rowcount": rowcount, "records": records})
+        records = self._get_rows(source, query, params)
+        rowcount = self._get_rows(source, rowcount_query, params)
+        return JsonResponse({"rowcount": rowcount[0], "records": records})
 
 
 class DatasetVisualisationPreview(View):
