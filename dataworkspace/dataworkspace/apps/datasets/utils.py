@@ -569,7 +569,7 @@ def build_filtered_dataset_query(inner_query, download_limit, column_config, par
     where_clause = Composed(where_clause)
     inner_query = inner_query + where_clause
 
-    rowcount_q = SQL(f"SELECT COUNT(iq.*) AS count FROM ({{}}) AS iq").format(inner_query)
+    rowcount_q = SQL("SELECT COUNT(iq.*) AS count FROM ({}) AS iq").format(inner_query)
 
     return rowcount_q, query, query_params
 
