@@ -1245,10 +1245,13 @@ class DataGridDataView(DetailView):
 
         records = self._get_rows(source, query, params)
         rowcount = self._get_rows(source, rowcount_query, params)
-        return JsonResponse({"rowcount": rowcount[0],
-                             "download_limit": source.data_grid_download_limit,
-                             "records": records}
-                            )
+        return JsonResponse(
+            {
+                "rowcount": rowcount[0],
+                "download_limit": source.data_grid_download_limit,
+                "records": records,
+            }
+        )
 
 
 class DatasetVisualisationPreview(View):
