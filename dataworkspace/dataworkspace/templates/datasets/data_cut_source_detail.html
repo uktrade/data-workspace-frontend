@@ -29,6 +29,7 @@
       {% endflag %}
     );
   </script>
+
 {% endblock footer_scripts %}
 {% block content %}
   <div class="govuk-grid-row">
@@ -36,8 +37,8 @@
       <h1 class="govuk-heading-xl">
         {{ object.name }}
       </h1>
-      <p class="govuk-body">Use this data grid to <a class="govuk-link"
-                                                     href="https://data-services-help.trade.gov.uk/data-workspace/how-to/start-using-data-workspace/filter-and-sort-data/">
+      <p class="govuk-body">Use this data grid to 
+        <a class="govuk-link" href="https://data-services-help.trade.gov.uk/data-workspace/how-to/start-using-data-workspace/filter-and-sort-data/">
         filter, sort and download data
       </a>. You can:
       </p>
@@ -49,6 +50,7 @@
       <h2 class="govuk-heading-m govuk-!-margin-top-4">
         Data preview
       </h2>
+      <p id="data-grid-rowcount"> No rows </p>
       {# We only support data dictionaries for master and reference datasets currently #}
       {# reference datagrid uses reference_dataset_grid.html btw   #}
       {% if object.type == 1 %}
