@@ -197,6 +197,8 @@ elastic-apm==6.2.2
     # via -r requirements.txt
 elasticsearch[async]==7.11.0
     # via -r requirements.txt
+escapejson==1.0
+    # via -r requirements.txt
 et-xmlfile==1.0.1
     # via
     #   -r requirements.txt
@@ -564,6 +566,9 @@ typing-extensions==4.0.0
     # via
     #   -r requirements.txt
     #   aiohttp
+    #   astroid
+    #   black
+    #   pylint
 unicodecsv==0.14.1
     # via
     #   -r requirements.txt

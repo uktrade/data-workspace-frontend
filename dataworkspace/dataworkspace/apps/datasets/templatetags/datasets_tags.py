@@ -1,6 +1,10 @@
+import json
+
 from datetime import datetime
 from typing import Optional
 from urllib import parse
+
+from dateutil import parser
 from dateutil.relativedelta import relativedelta
 import pytz
 
@@ -8,6 +12,7 @@ from django import template
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.safestring import mark_safe
+from escapejson import escapejson
 
 register = template.Library()
 
@@ -102,7 +107,7 @@ def format_date_uk(date: Optional[datetime.date]) -> Optional[str]:
 def parse_date_string(date_string: Optional[str]) -> Optional[str]:
     if date_string is None:
         return None
-    return datetime.strptime(date_string, "%Y-%m-%dT%H:%M:%SZ")
+    return parser.parse(date_string)
 
 
 @register.simple_tag()
@@ -122,3 +127,14 @@ def can_edit_dataset(user, dataset):
         or user == dataset.information_asset_manager
         or user.is_superuser
     )
+
+
+@register.filter
+def to_json(data):
+    def handler(obj):
+        if hasattr(obj, "isoformat"):
+            return obj.isoformat()
+
+        return str(obj)
+
+    return mark_safe(escapejson(json.dumps(data, default=handler)))

@@ -1247,7 +1247,6 @@ async def async_main():
             ip_whitelist_required = (
                 is_app_requested(request)
                 or is_superset_requested(request)
-                or is_mirror_requested(request)
                 or is_requesting_credentials(request)
                 or is_requesting_files(request)
                 or is_data_explorer_requested(request)

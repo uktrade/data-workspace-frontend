@@ -48,6 +48,16 @@
     <div class="govuk-grid-row">
       <div class="govuk-grid-column-full">
         <div class="search-field govuk-!-margin-bottom-2">
+        {% flag ACCESSIBLE_AUTOCOMPLETE_FLAG %}
+          <div class="app-site-search govuk-!-padding-bottom-6" data-module="app-search" style="float: none; width: 100%; display: table">
+            <label class="govuk-visually-hidden" for="app-site-search__input">Search by dataset name or
+              description</label>
+            <div class="search-field-wrapper" id="my-autocomplete-container"
+                 style="display:table-cell; padding: 0">
+            </div>
+            <input class="search-field__submit" type="submit" value="Search" style="display: table-cell; top: -2px">
+          </div>
+          {% else %}
           <label class="govuk-label search-field__label" for="search">Search by dataset name or description</label>
           <div class="search-field-wrapper govuk-!-padding-bottom-6">
             <input type="search" name="q" id="search" title="Search"
@@ -57,6 +67,7 @@
               <input class="search-field__submit" type="submit" value="Search">
             </div>
           </div>
+        {% endflag %}
           {% flag DATASET_FINDER_FLAG %}
             <p class="govuk-body">
               <a href="{% url 'finder:find_datasets' %}" class="govuk-link govuk-link--no-visited-state">Find
@@ -297,7 +308,6 @@
   {% if form.source.field.choices %}
     {{ form.media }}
   {% endif %}
-
   <script nonce="{{ request.csp_nonce }}" src="{% static 'search-v2.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}">
     $(document).ready(function () {
@@ -308,5 +318,11 @@
       );
       var searchInput = new ToggleInputClassOnFocus($("#live-search-form"))
     });
+    {% flag ACCESSIBLE_AUTOCOMPLETE_FLAG %}
+    var dropdownData = {{ recently_viewed_catalogue_pages | to_json }}
+    accessibleAutocompleteOptions(dropdownData, new GTMDatasetSearchSupport())
+    {% endflag %}
+
+
   </script>
 {% endblock %}

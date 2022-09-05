@@ -15,6 +15,11 @@ module.exports = merge(common, {
       'react-hot-loader/patch',
       'webpack-dev-server/client?http://0.0.0.0:3000',
       'webpack/hot/only-dev-server',
+    ],
+    yourfiles: [
+      'react-hot-loader/patch',
+      // 'webpack-dev-server/client?http://0.0.0.0:3000',
+      'webpack/hot/only-dev-server',
     ]
   },
   output: {
@@ -35,6 +40,9 @@ module.exports = merge(common, {
     host: '0.0.0.0',
     port: 3000,
     allowedHosts: "all",
-    headers: { 'Access-Control-Allow-Origin': '*' }
+    headers: { 'Access-Control-Allow-Origin': '*' },
+    client: {
+      webSocketURL: 'ws://0.0.0.0:3000/ws',
+    },
   }
  });

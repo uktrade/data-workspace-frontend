@@ -19,10 +19,12 @@ from dataworkspace.apps.your_files.views import (
     RestoreTableViewSuccess,
     UploadedTableListView,
     file_browser_html_view,
+    your_files_react,
 )
 
 urlpatterns = [
     path("", login_required(file_browser_html_view), name="files"),
+    path("react", login_required(your_files_react), name="your_files_react"),
     path(
         "create-table/confirm",
         login_required(CreateTableView.as_view()),
