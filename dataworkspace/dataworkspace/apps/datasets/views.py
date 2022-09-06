@@ -364,7 +364,6 @@ def find_datasets(request):
         {
             "form": form,
             "recently_viewed_catalogue_pages": get_recently_viewed_catalogue_pages(request),
-            "suggested_searches": suggested_searches(request),
             "query": filters.query,
             "datasets": datasets,
             "data_type": dict(data_types),

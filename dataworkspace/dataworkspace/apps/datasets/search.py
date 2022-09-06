@@ -1,3 +1,4 @@
+import json
 import logging
 from datetime import datetime, time, timedelta
 
@@ -20,6 +21,7 @@ from django.db.models import (
     FilteredRelation,
 )
 from django.db.models import QuerySet
+from django.http import HttpResponse
 from pytz import utc
 import redis
 
@@ -808,25 +810,24 @@ def update_datasets_average_daily_users():
 
 
 def suggested_searches(request):
-    user_recent_searches = EventLog.objects.filter(
-        event_type=EventLog.TYPE_DATASET_FIND_FORM_QUERY, user=request.user
-    ).order_by("timestamp")
-
+    query = request.GET.get('query', None)
+    recent_searches = EventLog.objects.filter(event_type=EventLog.TYPE_DATASET_FIND_FORM_QUERY).order_by(
+        "timestamp__date")
+    query_searches = []
     search_term_popularity = {}
-
-    for search in user_recent_searches:
-        query = search.extra["query"]
-        if query in search_term_popularity:
-            search_term_popularity[query] += 1
-        else:
-            search_term_popularity[query] = 1
+    for search in recent_searches:
+        if search.extra["number_of_results"] > 0:
+            if search.extra["query"].startswith(query):
+                if search.extra["query"] in search_term_popularity:
+                    search_term_popularity[search.extra["query"]] += 1
+                else:
+                    search_term_popularity[search.extra["query"]] = 1
 
     suggested_searches_choice_list = {
         k: v for k, v in sorted(search_term_popularity.items(), key=lambda item: item[1])
     }.keys()
 
-    suggested_searches_array_dict = []
     for key in suggested_searches_choice_list:
-        suggested_searches_array_dict.append({"query": key})
+        query_searches.append({"name": key, "type": "", "url": ""})
 
-    return list(reversed(suggested_searches_array_dict))
+    return HttpResponse(json.dumps(list(reversed(query_searches))), content_type="application/json")

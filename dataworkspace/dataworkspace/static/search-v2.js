@@ -355,29 +355,41 @@ document.body.addEventListener('click', function(event) {
   ));
 });
 
-function accessibleAutocompleteOptions(data, dataSearchIndex, GTM) {
+function accessibleAutocompleteOptions(data, dataSearchURL, GTM) {
   const csrf = document.getElementsByName("csrfmiddlewaretoken")[0].value;
   var container = document.getElementById('my-autocomplete-container')
   var recentlyViewedDummyResult = {"name": "", "type": "", "url": ""}
-  var suggestedSearchDummyResult = {"name": ""}
+  var suggestedSearchDummyResult = {"name": "", "type": "", "url": ""}
   var resultsCache = {}
   var wrapperSelector = '#live-search-wrapper'
 
   function handleSearchQuery(query, callback) {
+    var suggestedSearchesName = []
     var dataName = [recentlyViewedDummyResult]
-    var queryResults = [suggestedSearchDummyResult]
     for (var i = 0; i < data.length; ++i) {
       dataName.push(data[i]);
     }
-    for (var d = 0; d < dataSearchIndex.length; ++d) {
-      if (dataSearchIndex[d].query.indexOf(query) !== -1 && queryResults.length <= 5) {
-        queryResults.push({"name": dataSearchIndex[d].query})
-      }
-    }
-    if (queryResults.length === 1) {
-      queryResults = []
-    }
-    const searchResults = query == '' ? dataName : queryResults;
+
+    $.ajax({
+      type: "GET",
+      url: dataSearchURL,
+      data: {'query': `${query}`},
+    })
+      .done(function (response) {
+          if (response !== []) {
+            suggestedSearchesName.push(suggestedSearchDummyResult)
+            for (var d = 0; d < response.length; ++d) {
+              if (suggestedSearchesName.length <= 5) {
+                suggestedSearchesName.push(response[d])
+              }
+            }
+          }
+        }
+      )
+        .fail(function (response) {
+          console.error(response.status)
+        })
+    const searchResults = query == '' ? dataName : suggestedSearchesName;
 
     callback(searchResults)
   }
@@ -392,12 +404,11 @@ function accessibleAutocompleteOptions(data, dataSearchIndex, GTM) {
     else {
       var elem = document.createElement('li')
       elem.textContent = result.name
-      if (result.type) {
-        var section = document.createElement('span')
-        section.className = "app-site-search--section"
-        section.innerHTML = result.type
-        elem.appendChild(section)
-      }
+      var section = document.createElement('span')
+      section.className = "app-site-search--section"
+      section.innerHTML = result.type
+      elem.appendChild(section)
+
       return elem.innerHTML
     }
   }
@@ -415,7 +426,7 @@ function accessibleAutocompleteOptions(data, dataSearchIndex, GTM) {
       return
     }
 
-    if (result.url) {
+    if (result.url !== "") {
       GTM.pushSearchRecentClick(result.url.split("/")[2].split("#")[0], result.name, result.type)
       window.location.href = result.url
     } else {
