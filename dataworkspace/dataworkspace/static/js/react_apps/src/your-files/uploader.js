@@ -1,27 +1,5 @@
 import * as EventEmitter from "eventemitter3";
-
-function queue(concurrency) {
-  var running = 0;
-  const tasks = [];
-
-  return async function run(task) {
-    console.log("run");
-    tasks.push(task);
-    if (running >= concurrency) return;
-
-    console.log("start a new task");
-    ++running;
-    while (tasks.length) {
-      try {
-        console.log("about to await the next task");
-        await tasks.shift()();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-    --running;
-  };
-}
+import { fileQueue } from "./utils";
 
 export class Uploader extends EventEmitter {
   constructor(s3, options) {
@@ -45,7 +23,7 @@ export class Uploader extends EventEmitter {
     const maxConnections = 4;
     const concurrentFiles = Math.min(maxConnections, files.length);
     const connectionsPerFile = Math.floor(maxConnections / concurrentFiles);
-    this.queue = queue(concurrentFiles);
+    this.queue = fileQueue(concurrentFiles);
     this.remainingUploadCount = files.length;
 
     // some v funky scope happening within the queue!
@@ -91,7 +69,7 @@ export class Uploader extends EventEmitter {
           this.remainingUploadCount--;
         }
 
-        if (this.remainingUploadCount == 0) {
+        if (this.remainingUploadCount === 0) {
           this.emit("complete");
         }
       });
