@@ -3548,6 +3548,8 @@ class TestGridDataView:
         )
         assert response.status_code == 200
         assert response.json() == {
+            "rowcount": {"count": 1},
+            "download_limit": None,
             "records": [
                 {
                     "date": None,
