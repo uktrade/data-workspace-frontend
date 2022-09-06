@@ -1018,16 +1018,24 @@ def get_dataset_table(obj):
 def get_recently_viewed_catalogue_pages(request):
     user_event_logs = (
         EventLog.objects.filter(user=request.user, event_type=EventLog.TYPE_DATASET_VIEW)
-        .distinct("object_id")
-        .order_by("object_id")
-    )[:3]
-    user_event_choice_list = []
+        .distinct("timestamp")
+        .order_by("-timestamp")
+    )
+
+    user_event_unique_logs = []
+
     for log in user_event_logs:
-        data_type = log.related_object.get_type_display()
+        if log.related_object not in user_event_unique_logs:
+            user_event_unique_logs.append(log.related_object)
+
+    user_event_choice_list = []
+
+    for log in user_event_unique_logs[:3]:
+        data_type = log.get_type_display()
         user_event_choice_list.append(
             {
-                "url": log.related_object.get_absolute_url(),
-                "name": log.related_object.name,
+                "url": log.get_absolute_url(),
+                "name": log.name,
                 "type": data_type,
             }
         )
