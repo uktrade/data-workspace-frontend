@@ -570,7 +570,7 @@ def build_filtered_dataset_query(inner_query, download_limit, column_config, par
 
     where_clause = Composed(where_clause)
     if download_limit is None:
-        download_limit = "ALL"
+        download_limit = 5001
     else:
         download_limit += 1
     limit_clause = Composed([SQL(f" LIMIT {download_limit}")])
