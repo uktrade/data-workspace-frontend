@@ -402,6 +402,7 @@ function accessibleAutocompleteOptions(data, GTM) {
   accessibleAutocomplete({
     element: container,
     id: 'app-site-search__input',
+    name: 'q',
     cssNamespace: 'app-site-search',
     displayMenu: 'overlay',
     placeholder: 'Search by dataset name or description',
