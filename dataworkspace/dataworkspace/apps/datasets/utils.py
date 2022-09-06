@@ -569,8 +569,8 @@ def build_filtered_dataset_query(inner_query, download_limit, column_config, par
     )
 
     where_clause = Composed(where_clause)
-    inner_query = inner_query + where_clause
-
+    limit_clause = Composed([SQL(f" LIMIT {download_limit+1}")])
+    inner_query = inner_query + where_clause + limit_clause
     rowcount_q = SQL("SELECT COUNT(iq.*) AS count FROM ({}) AS iq").format(inner_query)
 
     return rowcount_q, query, query_params
