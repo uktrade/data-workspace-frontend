@@ -1,6 +1,7 @@
 from datetime import timedelta, date, datetime, timezone
 import json
 import random
+from typing import Any
 from urllib.parse import quote_plus
 from uuid import uuid4
 
@@ -3345,7 +3346,7 @@ class TestGridDataView:
         )
         assert response.status_code == 200
         assert response.json() == {
-            "rowcount": {"count": None},
+            "rowcount": {"count": 1},
             "download_limit": None,
             "records": [
                 {
@@ -3383,6 +3384,8 @@ class TestGridDataView:
         )
         assert response.status_code == 200
         assert response.json() == {
+            "rowcount": {"count": 2},
+            "download_limit": None,
             "records": [
                 {
                     "date": "2019-01-01",
@@ -3426,6 +3429,8 @@ class TestGridDataView:
         )
         assert response.status_code == 200
         assert response.json() == {
+            "rowcount": {"count": 1},
+            "download_limit": None,
             "records": [
                 {
                     "date": "2019-01-01",
@@ -3462,6 +3467,8 @@ class TestGridDataView:
         )
         assert response.status_code == 200
         assert response.json() == {
+            "rowcount": {"count": 2},
+            "download_limit": None,
             "records": [
                 {
                     "date": None,
@@ -3504,6 +3511,8 @@ class TestGridDataView:
         )
         assert response.status_code == 200
         assert response.json() == {
+            "rowcount": {"count": 1},
+            "download_limit": None,
             "records": [
                 {
                     "date": "2020-01-01",
@@ -3575,6 +3584,8 @@ class TestGridDataView:
         )
         assert response.status_code == 200
         assert response.json() == {
+            "rowcount": {"count": 1},
+            "download_limit": None,
             "records": [
                 {
                     "date": "2019-01-01",
@@ -3611,6 +3622,8 @@ class TestGridDataView:
         )
         assert response.status_code == 200
         assert response.json() == {
+            "rowcount": {"count": 1},
+            "download_limit": None,
             "records": [
                 {
                     "date": "2019-01-01",
@@ -3647,6 +3660,8 @@ class TestGridDataView:
         )
         assert response.status_code == 200
         assert response.json() == {
+            "rowcount": {"count": 1},
+            "download_limit": None,
             "records": [
                 {
                     "date": "2020-01-01",
@@ -3683,6 +3698,8 @@ class TestGridDataView:
         )
         assert response.status_code == 200
         assert response.json() == {
+            "rowcount": {"count": 1},
+            "download_limit": None,            
             "records": [
                 {
                     "date": "2019-01-01",
@@ -3719,6 +3736,8 @@ class TestGridDataView:
         )
         assert response.status_code == 200
         assert response.json() == {
+            "rowcount": {"count": 2},
+            "download_limit": None,
             "records": [
                 {
                     "date": None,
@@ -3762,6 +3781,8 @@ class TestGridDataView:
         )
         assert response.status_code == 200
         assert response.json() == {
+            "rowcount": {"count": 1},
+            "download_limit": None,
             "records": [
                 {
                     "date": "2019-01-01",
@@ -3798,6 +3819,8 @@ class TestGridDataView:
         )
         assert response.status_code == 200
         assert response.json() == {
+            "rowcount": {"count": 2},
+            "download_limit": None,            
             "records": [
                 {
                     "date": "2019-01-01",

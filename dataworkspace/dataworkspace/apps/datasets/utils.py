@@ -550,7 +550,7 @@ def build_filtered_dataset_query(inner_query, download_limit, column_config, par
                 where_clause.append(SQL(f"{{}} {operator} %({field})s").format(Identifier(field)))
 
     if where_clause:
-        where_clause = SQL("WHERE") + SQL(" AND ").join(where_clause)
+        where_clause = SQL(" WHERE ") + SQL(" AND ").join(where_clause)
 
     query = SQL(
         f"""
