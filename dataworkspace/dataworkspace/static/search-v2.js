@@ -364,7 +364,7 @@ function accessibleAutocompleteOptions(data, dataSearchURL, GTM) {
   var wrapperSelector = '#live-search-wrapper'
 
   function handleSearchQuery(query, callback) {
-    var suggestedSearchesName = []
+    var suggestedSearchesName = [suggestedSearchDummyResult]
     var dataName = [recentlyViewedDummyResult]
     for (var i = 0; i < data.length; ++i) {
       dataName.push(data[i]);
@@ -376,8 +376,10 @@ function accessibleAutocompleteOptions(data, dataSearchURL, GTM) {
       data: {'query': `${query}`},
     })
       .done(function (response) {
-          if (response !== []) {
-            suggestedSearchesName.push(suggestedSearchDummyResult)
+        console.log(response)
+          if (response.length === 0) {
+            suggestedSearchesName.shift()
+          } else {
             for (var d = 0; d < response.length; ++d) {
               if (suggestedSearchesName.length <= 5) {
                 suggestedSearchesName.push(response[d])
