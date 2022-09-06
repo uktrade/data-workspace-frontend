@@ -3345,6 +3345,8 @@ class TestGridDataView:
         )
         assert response.status_code == 200
         assert response.json() == {
+            "rowcount": {"count": None},
+            "download_limit": None,
             "records": [
                 {
                     "name": "the last record",
