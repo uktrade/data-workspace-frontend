@@ -33,7 +33,7 @@ function TableHeader(props) {
 function TableRowBigDataFolder(props) {
   const folderName = prefixToFolder(props.folder.Prefix);
   return (
-    <tr key={props.folder.Prefix} className="govuk-table__row">
+    <tr className="govuk-table__row">
       <td
         className="govuk-table__cell govuk-table__cell--checkbox"
         title="This folder cannot be deleted"
@@ -77,7 +77,7 @@ function TableRowFolder(props) {
   const folderName = prefixToFolder(props.folder.Prefix);
   const folder = props.folder;
   return (
-    <tr key={folder.Prefix} className="govuk-table__row">
+    <tr className="govuk-table__row">
       <td className="govuk-table__cell govuk-table__cell--checkbox">
         <div className="govuk-form-group">
           <div className="govuk-checkboxes--small">
@@ -122,7 +122,7 @@ function TableRowFile(props) {
   }
 
   return (
-    <tr key={file.Key}>
+    <tr>
       <td className="govuk-table__cell govuk-table__cell--checkbox">
         <div className="govuk-form-group">
           <div className="govuk-checkboxes--small">
@@ -176,6 +176,7 @@ export class FileList extends React.Component {
             if (folder.isBigData)
               return (
                 <TableRowBigDataFolder
+                  key={folder.Prefix}
                   folder={folder}
                   onClick={() => this.props.onFolderClick(folder.Prefix)}
                 />
@@ -183,6 +184,7 @@ export class FileList extends React.Component {
             else
               return (
                 <TableRowFolder
+                  key={folder.Prefix}
                   folder={folder}
                   onClick={() => this.props.onFolderClick(folder.Prefix)}
                   onFolderSelect={this.props.onFolderSelect}
@@ -192,6 +194,7 @@ export class FileList extends React.Component {
           {files.map((file) => {
             return (
               <TableRowFile
+                key={file.Key}
                 file={file}
                 createTableUrl={this.props.createTableUrl}
                 onFileClick={() => this.props.onFileClick(file.Key)}
