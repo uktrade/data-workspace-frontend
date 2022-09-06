@@ -3355,7 +3355,7 @@ class TestGridDataView:
                     "id": "a41da88b-ffa3-4102-928c-b3937fa5b58f",
                     "an_array": None,
                 }
-            ]
+            ],
         }
 
     @pytest.mark.django_db
@@ -3400,7 +3400,7 @@ class TestGridDataView:
                     "num": "1",
                     "an_array": ["abc", "def"],
                 },
-            ]
+            ],
         }
 
     @pytest.mark.parametrize(
@@ -3438,7 +3438,7 @@ class TestGridDataView:
                     "num": "2",
                     "an_array": ["ghi", "jkl"],
                 }
-            ]
+            ],
         }
 
     @pytest.mark.parametrize(
@@ -3483,7 +3483,7 @@ class TestGridDataView:
                     "num": None,
                     "an_array": None,
                 },
-            ]
+            ],
         }
 
     @pytest.mark.parametrize(
@@ -3520,7 +3520,7 @@ class TestGridDataView:
                     "num": None,
                     "an_array": None,
                 }
-            ]
+            ],
         }
 
     @pytest.mark.parametrize(
@@ -3557,7 +3557,7 @@ class TestGridDataView:
                     "num": "1",
                     "an_array": ["abc", "def"],
                 }
-            ]
+            ],
         }
 
     @pytest.mark.parametrize(
@@ -3595,7 +3595,7 @@ class TestGridDataView:
                     "num": "2",
                     "an_array": ["ghi", "jkl"],
                 }
-            ]
+            ],
         }
 
     @pytest.mark.parametrize(
@@ -3633,7 +3633,7 @@ class TestGridDataView:
                     "num": "2",
                     "an_array": ["ghi", "jkl"],
                 }
-            ]
+            ],
         }
 
     @pytest.mark.parametrize(
@@ -3671,7 +3671,7 @@ class TestGridDataView:
                     "num": None,
                     "an_array": None,
                 }
-            ]
+            ],
         }
 
     @pytest.mark.django_db
@@ -3709,7 +3709,7 @@ class TestGridDataView:
                     "num": "2",
                     "an_array": ["ghi", "jkl"],
                 }
-            ]
+            ],
         }
 
     @pytest.mark.django_db
@@ -3754,7 +3754,7 @@ class TestGridDataView:
                     "num": None,
                     "an_array": None,
                 },
-            ]
+            ],
         }
 
     @pytest.mark.django_db
@@ -3792,7 +3792,7 @@ class TestGridDataView:
                     "num": "2",
                     "an_array": ["ghi", "jkl"],
                 }
-            ]
+            ],
         }
 
     @pytest.mark.django_db
@@ -3837,7 +3837,7 @@ class TestGridDataView:
                     "num": None,
                     "an_array": None,
                 },
-            ]
+            ],
         }
 
     def test_download_filtered(self, client, custom_query):
