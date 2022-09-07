@@ -1254,7 +1254,7 @@ class DataGridDataView(DetailView):
         return JsonResponse(
             {
                 "rowcount": rowcount[0],
-                "download_limit": download_limit,
+                "download_limit": source.data_grid_download_limit,
                 "records": records,
             }
         )
