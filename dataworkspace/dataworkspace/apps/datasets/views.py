@@ -1204,9 +1204,12 @@ class DataGridDataView(DetailView):
             column_config = source.get_column_config()
 
         original_query = source.get_data_grid_query()
+        download_limit = source.data_grid_download_limit
+        if download_limit is None:
+            download_limit = 5000
         rowcount_query, query, params = build_filtered_dataset_query(
             original_query,
-            source.data_grid_download_limit,
+            download_limit,
             column_config,
             post_data,
         )
@@ -1251,7 +1254,7 @@ class DataGridDataView(DetailView):
         return JsonResponse(
             {
                 "rowcount": rowcount[0],
-                "download_limit": source.data_grid_download_limit,
+                "download_limit": download_limit,
                 "records": records,
             }
         )
