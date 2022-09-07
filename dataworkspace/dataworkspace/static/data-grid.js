@@ -173,9 +173,9 @@ function initDataGrid(columnConfig, dataEndpoint, downloadSegment, records, expo
               var response = JSON.parse(xhr.responseText);
               var rc = response.rowcount.count
               var dlimit = response.download_limit
-              if (rc > dlimit) {
-                document.getElementById('data-grid-rowcount').innerText = rc+' rows';
-                document.getElementById('data-grid-download').innerText = 'Download this data ('+dlimit+'+ rows)';
+              if ((rc > dlimit) && (dlimit !== null)) {
+                document.getElementById('data-grid-rowcount').innerText = dlimit+'+ rows';
+                document.getElementById('data-grid-download').innerText = 'Download this data ('+dlimit+' rows)';
               }
               else {
                 document.getElementById('data-grid-rowcount').innerText = rc+' rows';
