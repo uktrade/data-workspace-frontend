@@ -427,7 +427,10 @@ def set_dataset_related_visualisation_catalogue_items(visualisation_link, tables
         visualisation_link.visualisation_catalogue_item.datasets.add(object_id)
 
 
-def build_filtered_dataset_query(inner_query, download_limit, column_config, params):
+def build_filtered_dataset_query(inner_query,
+                                 download_limit,
+                                 column_config,
+                                 params):
     column_map = {x["field"]: x for x in column_config}
     query_params = {
         "offset": int(params.get("start", 0)),
@@ -569,11 +572,7 @@ def build_filtered_dataset_query(inner_query, download_limit, column_config, par
     )
 
     where_clause = Composed(where_clause)
-    if download_limit is None:
-        download_limit = 5001
-    else:
-        download_limit += 1
-    limit_clause = Composed([SQL(f" LIMIT {download_limit}")])
+    limit_clause = Composed([SQL(f" LIMIT {download_limit + 1}")])
     inner_query = inner_query + where_clause + limit_clause
     rowcount_q = SQL("SELECT COUNT(iq.*) AS count FROM ({}) AS iq").format(inner_query)
 
