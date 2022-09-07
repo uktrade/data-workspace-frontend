@@ -76,17 +76,14 @@ export class DeleteObjectsPopup extends React.Component {
     });
 
     deleter.on("delete:start", (fileOrFolder) => {
-      console.log("started", fileOrFolder);
       this.updateDeleteState(fileOrFolder, { deleteStarted: true });
     });
 
     deleter.on("delete:error", (fileOrFolder, error) => {
-      console.log("error", fileOrFolder);
       this.updateDeleteState(fileOrFolder, { deleteError: error });
     });
 
     deleter.on("delete:finished", (fileOrFolder) => {
-      console.log("finished", fileOrFolder);
       this.updateDeleteState(fileOrFolder, { deleteFinished: true });
     });
 
@@ -125,7 +122,6 @@ export class DeleteObjectsPopup extends React.Component {
                 <DeleteTableHeader />
                 <tbody id="s3objects-tbody">
                   {folders.map((folder) => {
-                    console.log(folder);
                     const folderName = prefixToFolder(folder.Prefix);
                     return (
                       <tr key={folder.Prefix} className="govuk-table__row">
@@ -168,7 +164,6 @@ export class DeleteObjectsPopup extends React.Component {
                   })}
                   {files.map((file) => {
                     const filename = fullPathToFilename(file.Key);
-                    console.log(file);
                     return (
                       <tr
                         key={file.Key}
@@ -221,18 +216,16 @@ export class DeleteObjectsPopup extends React.Component {
                 >
                   {this.state.finished ? "Close" : "Cancel"}
                 </button>
-                {!this.state.finished ? (
-                  <button
-                    id="trash-btn-delete"
-                    type="button"
-                    onClick={() => this.onDeleteClick()}
-                    className="govuk-button govuk-button--warning modal-button"
-                    disabled={this.state.trashing}
-                  >
-                    <TrashIcon />
-                    &nbsp;Delete {objectCount}
-                  </button>
-                ) : null}
+                <button
+                  id="trash-btn-delete"
+                  type="button"
+                  onClick={() => this.onDeleteClick()}
+                  className="govuk-button govuk-button--warning modal-button"
+                  disabled={this.state.trashing || this.state.finished}
+                >
+                  <TrashIcon />
+                  &nbsp;Delete {objectCount}
+                </button>
               </div>
             </div>
           </div>
