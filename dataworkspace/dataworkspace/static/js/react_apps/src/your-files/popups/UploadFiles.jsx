@@ -92,13 +92,10 @@ export class UploadFilesPopup extends React.Component {
   }
 
   onUploadClick() {
-    console.log("uploadClick");
-
     const uploader = this.props.uploader;
     const onComplete = this.props.onUploadsComplete;
 
     uploader.on("complete", () => {
-      console.log("all complete");
       this.setState({ uploadsComplete: true, isUploading: false });
       onComplete();
     });
@@ -116,7 +113,6 @@ export class UploadFilesPopup extends React.Component {
     });
 
     uploader.on("upload:complete", (file) => {
-      console.log("upload complete", file.name);
       this.setState((state) => {
         return {
           remaining: state.remaining - 1,

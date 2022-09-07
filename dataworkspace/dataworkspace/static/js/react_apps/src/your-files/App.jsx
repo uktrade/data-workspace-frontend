@@ -24,7 +24,6 @@ export default class App extends React.Component {
       selectedFiles: [],
       filesToDelete: [],
       foldersToDelete: [],
-      canDelete: false,
       currentPrefix: this.props.config.rootPrefix,
       bigDataFolder: this.props.config.bigdataPrefix,
       createTableUrl: this.props.config.createTableUrl,
@@ -198,38 +197,24 @@ export default class App extends React.Component {
   }
 
   onFileSelect = (file, isSelected) => {
-    let selectedCount = 0;
-    this.setState((state) => {
-      const files = state.files.map((f) => {
+    this.setState({
+      files: this.state.files.map((f) => {
         if (f.Key === file.Key) {
           f.isSelected = isSelected;
         }
-        if (f.isSelected) selectedCount++;
         return f;
-      });
-      state.folders.forEach((f) => {
-        if (f.isSelected) selectedCount++;
-      });
-      return { files, canDelete: selectedCount > 0 };
+      })
     });
   };
 
   onFolderSelect = (folder, isSelected) => {
-    let selectedCount = 0;
-    this.setState((state) => {
-      const folders = state.folders.map((f) => {
+    this.setState({
+      folders: this.state.folders.map((f) => {
         if (f.Prefix === folder.Prefix) {
           f.isSelected = isSelected;
         }
-        if (f.isSelected) selectedCount++;
         return f;
-      });
-
-      state.files.forEach((f) => {
-        if (f.isSelected) selectedCount++;
-      });
-
-      return { folders, canDelete: selectedCount > 0 };
+      })
     });
   };
 
@@ -265,7 +250,10 @@ export default class App extends React.Component {
             foldersToDelete={this.state.foldersToDelete}
             onCancel={async () => {
               this.hidePopup(popupTypes.DELETE_OBJECTS);
-              this.setState({ selectedFiles: [] });
+              this.setState({
+                folders: this.state.folders.map(f => ({ ...f, isSelected: false})),
+                files: this.state.files.map(f => ({ ...f, isSelected: false})),
+              });
               await this.onRefreshClick();
             }}
             deleter={this.props.deleter}
@@ -292,7 +280,7 @@ export default class App extends React.Component {
 
         <Header
           breadCrumbs={breadCrumbs}
-          canDelete={this.state.canDelete}
+          canDelete={this.state.folders.concat(this.state.files).filter(f => f.isSelected).length > 0}
           currentPrefix={this.state.currentPrefix}
           onBreadcrumbClick={this.onBreadcrumbClick}
           onRefreshClick={this.onRefreshClick}
