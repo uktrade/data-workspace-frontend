@@ -315,6 +315,6 @@ urlpatterns = [
     path(
         "find_suggested_searches",
         login_required(suggested_searches),
-        name="find_suggested_searches"
-    )
+        name="find_suggested_searches",
+    ),
 ]
