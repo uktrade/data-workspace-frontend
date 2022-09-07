@@ -9,9 +9,10 @@ import boto3
 import botocore
 import requests
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.db import connections, IntegrityError, transaction
-from django.db.models import Q
+from django.db.models import Q, Max
 from django.db.utils import DatabaseError
 from django.http import Http404
 from django.urls import reverse
@@ -1019,10 +1020,6 @@ def get_dataset_table(obj):
             for ref_dataset in ReferenceDataset.objects.live().filter(table_name=table.table):
                 datasets.add(ref_dataset)
     return datasets
-
-
-from django.db.models import Max
-from django.contrib.contenttypes.models import ContentType
 
 
 def get_recently_viewed_catalogue_pages(request):
