@@ -427,10 +427,7 @@ def set_dataset_related_visualisation_catalogue_items(visualisation_link, tables
         visualisation_link.visualisation_catalogue_item.datasets.add(object_id)
 
 
-def build_filtered_dataset_query(inner_query,
-                                 download_limit,
-                                 column_config,
-                                 params):
+def build_filtered_dataset_query(inner_query, download_limit, column_config, params):
     column_map = {x["field"]: x for x in column_config}
     query_params = {
         "offset": int(params.get("start", 0)),
