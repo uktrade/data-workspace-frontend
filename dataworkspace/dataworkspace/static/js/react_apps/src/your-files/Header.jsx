@@ -21,7 +21,9 @@ export class Header extends React.Component {
           className="browser-breadcrumb"
           key={b.prefix}
         >
+          &nbsp;
           <a className="browser-breadcrumb-link">{b.label}</a>
+          &nbsp;
         </li>
       );
     });

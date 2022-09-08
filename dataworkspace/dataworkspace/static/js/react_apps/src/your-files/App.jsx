@@ -24,7 +24,6 @@ export default class App extends React.Component {
       selectedFiles: [],
       filesToDelete: [],
       foldersToDelete: [],
-      canDelete: false,
       currentPrefix: this.props.config.rootPrefix,
       bigDataFolder: this.props.config.bigdataPrefix,
       createTableUrl: this.props.config.createTableUrl,
@@ -62,7 +61,6 @@ export default class App extends React.Component {
   }
 
   onFileChange = (event) => {
-    console.log("onfilechange", event.target.files);
     if (!event.target.files) {
       console.log("nothing selected");
       return;
@@ -75,7 +73,6 @@ export default class App extends React.Component {
   };
 
   onBreadcrumbClick = async (breadcrumb) => {
-    console.log(breadcrumb);
     await this.navigateTo(breadcrumb.prefix);
   };
 
@@ -84,7 +81,6 @@ export default class App extends React.Component {
   };
 
   showNewFolderPopup = async (prefix) => {
-    console.log("new folder", prefix);
     this.showPopup(popupTypes.ADD_FOLDER);
   };
 
@@ -95,39 +91,32 @@ export default class App extends React.Component {
   }
 
   hidePopup = (popupName) => {
-    console.log("hide", popupName);
     const state = { popups: {} };
     state.popups[popupName] = false;
     this.setState(state);
   };
 
   onUploadsComplete = async () => {
-    console.log("uploads are complete");
     await this.refresh(this.state.currentPrefix);
   };
 
   createNewFolder = async (prefix, folderName) => {
-    console.log("createNewFolderClick");
-    console.log(prefix, folderName);
     this.hidePopup(popupTypes.ADD_FOLDER);
     try {
       await this.props.proxy.createFolder(prefix, folderName);
       await this.refresh(prefix);
-    }
-    catch (ex) {
+    } catch (ex) {
       this.showErrorPopup(ex);
     }
   };
 
   onUploadClick = async (prefix) => {
-    console.log("upload files to", prefix);
     // this opens the file input ... processing continues
     // in the onFileChange function
     this.fileInputRef.current.click();
   };
 
   onDeleteClick = async () => {
-    console.log("delete click");
     const filesToDelete = this.state.files.filter((file) => {
       return file.isSelected;
     });
@@ -149,12 +138,12 @@ export default class App extends React.Component {
   };
 
   showErrorPopup = (error) => {
-    const newState = {error, popups: this.state.popups};
-    Object.keys(newState.popups).forEach(key => {
+    const newState = { error, popups: this.state.popups };
+    Object.keys(newState.popups).forEach((key) => {
       newState.popups[key] = false;
     });
-    this.setState(newState)
-  }
+    this.setState(newState);
+  };
 
   handleFileClick = async (key) => {
     console.log("handleFileClick", key);
@@ -181,7 +170,6 @@ export default class App extends React.Component {
   }
 
   handleFolderClick = async (prefix) => {
-    console.log("handleFolderClick", prefix);
     await this.navigateTo(prefix);
   };
 
@@ -192,14 +180,12 @@ export default class App extends React.Component {
       Delimiter: "/",
     };
 
-    console.log("refresh", params);
-
     const showBigDataMessage =
       params.Prefix === this.state.rootPrefix + this.state.bigDataFolder;
 
     try {
       const data = await this.props.proxy.listObjects(params);
-        this.setState({
+      this.setState({
         files: data.files,
         folders: data.folders,
         currentPrefix: params.Prefix,
@@ -207,44 +193,28 @@ export default class App extends React.Component {
       });
     } catch (ex) {
       this.showErrorPopup(ex);
-      return;
     }
   }
 
   onFileSelect = (file, isSelected) => {
-    console.log(file, isSelected);
-    let selectedCount = 0;
-    this.setState((state) => {
-      const files = state.files.map((f) => {
+    this.setState({
+      files: this.state.files.map((f) => {
         if (f.Key === file.Key) {
           f.isSelected = isSelected;
         }
-        if (f.isSelected) selectedCount++;
         return f;
-      });
-      state.folders.forEach((f) => {
-        if (f.isSelected) selectedCount++;
-      });
-      return { files, canDelete: selectedCount > 0 };
+      })
     });
   };
 
   onFolderSelect = (folder, isSelected) => {
-    let selectedCount = 0;
-    this.setState((state) => {
-      const folders = state.folders.map((f) => {
+    this.setState({
+      folders: this.state.folders.map((f) => {
         if (f.Prefix === folder.Prefix) {
           f.isSelected = isSelected;
         }
-        if (f.isSelected) selectedCount++;
         return f;
-      });
-
-      state.files.forEach((f) => {
-        if (f.isSelected) selectedCount++;
-      });
-
-      return { folders, canDelete: selectedCount > 0 };
+      })
     });
   };
 
@@ -278,7 +248,14 @@ export default class App extends React.Component {
           <DeleteObjectsPopup
             filesToDelete={this.state.filesToDelete}
             foldersToDelete={this.state.foldersToDelete}
-            onCancel={() => this.hidePopup(popupTypes.DELETE_OBJECTS)}
+            onCancel={async () => {
+              this.hidePopup(popupTypes.DELETE_OBJECTS);
+              this.setState({
+                folders: this.state.folders.map(f => ({ ...f, isSelected: false})),
+                files: this.state.files.map(f => ({ ...f, isSelected: false})),
+              });
+              await this.onRefreshClick();
+            }}
             deleter={this.props.deleter}
           />
         ) : null}
@@ -303,7 +280,7 @@ export default class App extends React.Component {
 
         <Header
           breadCrumbs={breadCrumbs}
-          canDelete={this.state.canDelete}
+          canDelete={this.state.folders.concat(this.state.files).filter(f => f.isSelected).length > 0}
           currentPrefix={this.state.currentPrefix}
           onBreadcrumbClick={this.onBreadcrumbClick}
           onRefreshClick={this.onRefreshClick}
