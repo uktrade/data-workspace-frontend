@@ -1,12 +1,13 @@
 const webpack = require("webpack");
-const { merge } = require('webpack-merge');
-const common = require('./webpack.common.js');
+const { merge } = require("webpack-merge");
+const common = require("./webpack.common.js");
 const BundleTracker = require("webpack-bundle-tracker");
+const TerserPlugin = require("terser-webpack-plugin");
 
 module.exports = merge(common, {
-  mode: 'production',
+  mode: "production",
   output: {
-    publicPath: '/__django_static/js/bundles/',
+    publicPath: "/__django_static/js/bundles/",
   },
   plugins: [
     new webpack.DefinePlugin({
@@ -15,8 +16,20 @@ module.exports = merge(common, {
       },
     }),
     new BundleTracker({
-      filename: '../stats/react_apps-stats.json',
+      filename: "../stats/react_apps-stats.json",
       relativePath: true,
     }),
   ],
- });
+  optimization: {
+    minimize: true,
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          compress: {
+            drop_console: true,
+          },
+        },
+      }),
+    ],
+  },
+});
