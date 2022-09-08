@@ -26,5 +26,8 @@
   "devDependencies": {
     "govuk-frontend": "3.14",
     "node-sass": "^7.0.1"
+  },
+  "dependencies": {
+    "scss-tokenizer": "^0.4.3"
   }
 }
