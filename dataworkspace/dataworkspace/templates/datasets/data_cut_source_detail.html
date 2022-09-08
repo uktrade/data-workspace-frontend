@@ -29,6 +29,7 @@
       {% endflag %}
     );
   </script>
+
 {% endblock footer_scripts %}
 {% block content %}
   <div class="govuk-grid-row">
@@ -36,8 +37,8 @@
       <h1 class="govuk-heading-xl">
         {{ object.name }}
       </h1>
-      <p class="govuk-body">Use this data grid to <a class="govuk-link"
-                                                     href="https://data-services-help.trade.gov.uk/data-workspace/how-to/start-using-data-workspace/filter-and-sort-data/">
+      <p class="govuk-body">Use this data grid to 
+        <a class="govuk-link" href="https://data-services-help.trade.gov.uk/data-workspace/how-to/start-using-data-workspace/filter-and-sort-data/">
         filter, sort and download data
       </a>. You can:
       </p>
@@ -46,14 +47,12 @@
         <li>remove columns you do not need by dragging them off the grid</li>
         <li>filter rows by entering text into the box above each column</li>
       </ul>
-      <h2 class="govuk-heading-m govuk-!-margin-top-4">
-        Data preview
-      </h2>
       {# We only support data dictionaries for master and reference datasets currently #}
       {# reference datagrid uses reference_dataset_grid.html btw   #}
       {% if object.type == 1 %}
       {% if object.dataset.dictionary_published or request.user|can_edit_dataset:object.dataset %}
       <p class="govuk-body govuk-body-m">
+        To gain a better understanding of each of the columns you can view the 
         <a href="{% url "datasets:data_dictionary" source_uuid=object.id %}?dataset_uuid={{object.dataset.id}}"
         class="govuk-link">
         Data dictionary
@@ -61,12 +60,19 @@
       </p> 
       {% endif %}
       {% endif %}
+      <h2 class="govuk-heading-m govuk-!-margin-top-4">
+        Data preview
+      </h2>
+      <p class="govuk-body" id="data-grid-rowcount"> No rows </p>
+
       <div id="data-grid" class="ag-theme-alpine"></div>
       <div class="govuk-!-margin-top-4  govuk-button-group">
         {% if object.data_grid_download_enabled %}
           <button class="govuk-button" data-module="govuk-button" id="data-grid-download">
-            Download this data{% if object.data_grid_download_limit %} (max
-            {{ object.data_grid_download_limit|intcomma }} rows){% endif %}
+            Download this data
+            {% if object.data_grid_download_limit %} 
+              (max {{ object.data_grid_download_limit|intcomma }} rows)
+            {% endif %}
           </button>
           &nbsp;
         {% endif %}

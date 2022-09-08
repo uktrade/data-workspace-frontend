@@ -3345,6 +3345,8 @@ class TestGridDataView:
         )
         assert response.status_code == 200
         assert response.json() == {
+            "rowcount": {"count": 1},
+            "download_limit": None,
             "records": [
                 {
                     "name": "the last record",
@@ -3353,7 +3355,7 @@ class TestGridDataView:
                     "id": "a41da88b-ffa3-4102-928c-b3937fa5b58f",
                     "an_array": None,
                 }
-            ]
+            ],
         }
 
     @pytest.mark.django_db
@@ -3381,6 +3383,8 @@ class TestGridDataView:
         )
         assert response.status_code == 200
         assert response.json() == {
+            "rowcount": {"count": 2},
+            "download_limit": None,
             "records": [
                 {
                     "date": "2019-01-01",
@@ -3396,7 +3400,7 @@ class TestGridDataView:
                     "num": "1",
                     "an_array": ["abc", "def"],
                 },
-            ]
+            ],
         }
 
     @pytest.mark.parametrize(
@@ -3424,6 +3428,8 @@ class TestGridDataView:
         )
         assert response.status_code == 200
         assert response.json() == {
+            "rowcount": {"count": 1},
+            "download_limit": None,
             "records": [
                 {
                     "date": "2019-01-01",
@@ -3432,7 +3438,7 @@ class TestGridDataView:
                     "num": "2",
                     "an_array": ["ghi", "jkl"],
                 }
-            ]
+            ],
         }
 
     @pytest.mark.parametrize(
@@ -3460,6 +3466,8 @@ class TestGridDataView:
         )
         assert response.status_code == 200
         assert response.json() == {
+            "rowcount": {"count": 2},
+            "download_limit": None,
             "records": [
                 {
                     "date": None,
@@ -3475,7 +3483,7 @@ class TestGridDataView:
                     "num": None,
                     "an_array": None,
                 },
-            ]
+            ],
         }
 
     @pytest.mark.parametrize(
@@ -3502,6 +3510,8 @@ class TestGridDataView:
         )
         assert response.status_code == 200
         assert response.json() == {
+            "rowcount": {"count": 1},
+            "download_limit": None,
             "records": [
                 {
                     "date": "2020-01-01",
@@ -3510,7 +3520,7 @@ class TestGridDataView:
                     "num": None,
                     "an_array": None,
                 }
-            ]
+            ],
         }
 
     @pytest.mark.parametrize(
@@ -3537,6 +3547,8 @@ class TestGridDataView:
         )
         assert response.status_code == 200
         assert response.json() == {
+            "rowcount": {"count": 1},
+            "download_limit": None,
             "records": [
                 {
                     "date": None,
@@ -3545,7 +3557,7 @@ class TestGridDataView:
                     "num": "1",
                     "an_array": ["abc", "def"],
                 }
-            ]
+            ],
         }
 
     @pytest.mark.parametrize(
@@ -3573,6 +3585,8 @@ class TestGridDataView:
         )
         assert response.status_code == 200
         assert response.json() == {
+            "rowcount": {"count": 1},
+            "download_limit": None,
             "records": [
                 {
                     "date": "2019-01-01",
@@ -3581,7 +3595,7 @@ class TestGridDataView:
                     "num": "2",
                     "an_array": ["ghi", "jkl"],
                 }
-            ]
+            ],
         }
 
     @pytest.mark.parametrize(
@@ -3609,6 +3623,8 @@ class TestGridDataView:
         )
         assert response.status_code == 200
         assert response.json() == {
+            "rowcount": {"count": 1},
+            "download_limit": None,
             "records": [
                 {
                     "date": "2019-01-01",
@@ -3617,7 +3633,7 @@ class TestGridDataView:
                     "num": "2",
                     "an_array": ["ghi", "jkl"],
                 }
-            ]
+            ],
         }
 
     @pytest.mark.parametrize(
@@ -3645,6 +3661,8 @@ class TestGridDataView:
         )
         assert response.status_code == 200
         assert response.json() == {
+            "rowcount": {"count": 1},
+            "download_limit": None,
             "records": [
                 {
                     "date": "2020-01-01",
@@ -3653,7 +3671,7 @@ class TestGridDataView:
                     "num": None,
                     "an_array": None,
                 }
-            ]
+            ],
         }
 
     @pytest.mark.django_db
@@ -3681,6 +3699,8 @@ class TestGridDataView:
         )
         assert response.status_code == 200
         assert response.json() == {
+            "rowcount": {"count": 1},
+            "download_limit": None,
             "records": [
                 {
                     "date": "2019-01-01",
@@ -3689,7 +3709,7 @@ class TestGridDataView:
                     "num": "2",
                     "an_array": ["ghi", "jkl"],
                 }
-            ]
+            ],
         }
 
     @pytest.mark.django_db
@@ -3717,6 +3737,8 @@ class TestGridDataView:
         )
         assert response.status_code == 200
         assert response.json() == {
+            "rowcount": {"count": 2},
+            "download_limit": None,
             "records": [
                 {
                     "date": None,
@@ -3732,7 +3754,7 @@ class TestGridDataView:
                     "num": None,
                     "an_array": None,
                 },
-            ]
+            ],
         }
 
     @pytest.mark.django_db
@@ -3760,6 +3782,8 @@ class TestGridDataView:
         )
         assert response.status_code == 200
         assert response.json() == {
+            "rowcount": {"count": 1},
+            "download_limit": None,
             "records": [
                 {
                     "date": "2019-01-01",
@@ -3768,7 +3792,7 @@ class TestGridDataView:
                     "num": "2",
                     "an_array": ["ghi", "jkl"],
                 }
-            ]
+            ],
         }
 
     @pytest.mark.django_db
@@ -3796,6 +3820,8 @@ class TestGridDataView:
         )
         assert response.status_code == 200
         assert response.json() == {
+            "rowcount": {"count": 2},
+            "download_limit": None,
             "records": [
                 {
                     "date": "2019-01-01",
@@ -3811,7 +3837,7 @@ class TestGridDataView:
                     "num": None,
                     "an_array": None,
                 },
-            ]
+            ],
         }
 
     def test_download_filtered(self, client, custom_query):

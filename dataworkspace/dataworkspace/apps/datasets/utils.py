@@ -16,7 +16,7 @@ from django.db.models import Q, Max
 from django.db.utils import DatabaseError
 from django.http import Http404
 from django.urls import reverse
-from psycopg2.sql import Identifier, Literal, SQL
+from psycopg2.sql import Identifier, Literal, SQL, Composed
 
 from dataworkspace.apps.core.utils import (
     close_all_connections_if_not_in_atomic_block,
@@ -434,7 +434,7 @@ def set_dataset_related_visualisation_catalogue_items(visualisation_link, tables
         visualisation_link.visualisation_catalogue_item.datasets.add(object_id)
 
 
-def build_filtered_dataset_query(inner_query, column_config, params):
+def build_filtered_dataset_query(inner_query, download_limit, column_config, params):
     column_map = {x["field"]: x for x in column_config}
     query_params = {
         "offset": int(params.get("start", 0)),
@@ -557,7 +557,8 @@ def build_filtered_dataset_query(inner_query, column_config, params):
                 where_clause.append(SQL(f"{{}} {operator} %({field})s").format(Identifier(field)))
 
     if where_clause:
-        where_clause = SQL("WHERE") + SQL(" AND ").join(where_clause)
+        where_clause = SQL(" WHERE ") + SQL(" AND ").join(where_clause)
+
     query = SQL(
         f"""
         SELECT {{}}
@@ -574,7 +575,15 @@ def build_filtered_dataset_query(inner_query, column_config, params):
         SQL(",").join(map(Identifier, sort_fields)),
     )
 
-    return query, query_params
+    where_clause = Composed(where_clause)
+    if download_limit is None:
+        download_limit = 5000
+    download_limit += 1
+    limit_clause = Composed([SQL(f" LIMIT {download_limit}")])
+    inner_query = inner_query + where_clause + limit_clause
+    rowcount_q = SQL("SELECT COUNT(iq.*) AS count FROM ({}) AS iq").format(inner_query)
+
+    return rowcount_q, query, query_params
 
 
 def _get_detailed_changelog(changelog, initial_change_type):
