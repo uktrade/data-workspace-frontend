@@ -9,9 +9,10 @@ import boto3
 import botocore
 import requests
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.db import connections, IntegrityError, transaction
-from django.db.models import Q
+from django.db.models import Q, Max
 from django.db.utils import DatabaseError
 from django.http import Http404
 from django.urls import reverse
@@ -54,7 +55,7 @@ from dataworkspace.utils import TYPE_CODES_REVERSED
 logger = logging.getLogger("app")
 
 
-def find_dataset(dataset_uuid, user, model_class=None):
+def find_dataset(dataset_uuid, user, model_class=None, id_field_override=None):
     """
     Attempts to return a dataset given an ID and an optional model class.
     Raises the appropriate exception depending on if the dataset exists/is published
@@ -66,7 +67,13 @@ def find_dataset(dataset_uuid, user, model_class=None):
     )
     dataset = None
     for dataset_model in dataset_models:
-        id_field = "id" if dataset_model != ReferenceDataset else "uuid"
+        id_field = (
+            id_field_override
+            if id_field_override is not None
+            else "id"
+            if dataset_model != ReferenceDataset
+            else "uuid"
+        )
         try:
             dataset = dataset_model.objects.live().get(**{id_field: dataset_uuid})
         except dataset_model.DoesNotExist:
@@ -1016,19 +1023,29 @@ def get_dataset_table(obj):
 
 
 def get_recently_viewed_catalogue_pages(request):
-    user_event_logs = (
+    event_log_query = (
         EventLog.objects.filter(user=request.user, event_type=EventLog.TYPE_DATASET_VIEW)
-        .distinct("object_id")
-        .order_by("object_id")
+        .values("object_id", "content_type")
+        .annotate(latest_timestamp=Max("timestamp"))
+        .order_by("-latest_timestamp")
     )[:3]
+
     user_event_choice_list = []
-    for log in user_event_logs:
-        data_type = log.related_object.get_type_display()
-        user_event_choice_list.append(
-            {
-                "url": log.related_object.get_absolute_url(),
-                "name": log.related_object.name,
-                "type": data_type,
-            }
-        )
+
+    for event in event_log_query:
+        model_class = ContentType.objects.get_for_id(event["content_type"]).model_class()
+        try:
+            dataset = find_dataset(
+                event["object_id"], request.user, model_class, id_field_override="id"
+            )
+        except (DatasetUnpublishedError, Http404):
+            pass
+        else:
+            user_event_choice_list.append(
+                {
+                    "url": dataset.get_absolute_url(),
+                    "name": dataset.name,
+                    "type": dataset.get_type_display(),
+                }
+            )
     return user_event_choice_list
