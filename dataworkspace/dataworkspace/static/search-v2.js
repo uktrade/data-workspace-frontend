@@ -360,7 +360,6 @@ function accessibleAutocompleteOptions(data, dataSearchURL, GTM) {
   var container = document.getElementById('my-autocomplete-container')
   var recentlyViewedDummyResult = {"name": "", "type": "", "url": ""}
   var suggestedSearchDummyResult = {"name": "", "type": "", "url": ""}
-  var resultsCache = {}
   var wrapperSelector = '#live-search-wrapper'
 
   function handleSearchQuery(query, callback) {
@@ -374,24 +373,24 @@ function accessibleAutocompleteOptions(data, dataSearchURL, GTM) {
       type: "GET",
       url: dataSearchURL,
       data: {'query': `${query}`},
-    })
-      .done(function (response) {
-        console.log(response)
-          if (response.length === 0) {
-            suggestedSearchesName.shift()
-          } else {
-            for (var d = 0; d < response.length; ++d) {
-              if (suggestedSearchesName.length <= 5) {
-                suggestedSearchesName.push(response[d])
-              }
+      success: function (response) {
+        if (response.length === 0) {
+          suggestedSearchesName.shift()
+        } else {
+          for (var d = 0; d < response.length; ++d) {
+            if (suggestedSearchesName.length <= 5) {
+              suggestedSearchesName.push(response[d])
             }
           }
         }
-      )
-        .fail(function (response) {
-          console.error(response.status)
-        })
+      },
+      error: function (response) {
+        console.error(response.status)
+      }
+    })
+
     const searchResults = query == '' ? dataName : suggestedSearchesName;
+
 
     callback(searchResults)
   }
@@ -400,7 +399,7 @@ function accessibleAutocompleteOptions(data, dataSearchURL, GTM) {
     if (result === recentlyViewedDummyResult) {
       return '<div class="app-site-search__recently-viewed-header"><svg id="iconClock" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><polygon points="10.3752 11.9064 6.8826 8.4142 6.8826 3.1999 8.8821 3.1999 8.8821 7.5861 11.7893 10.4924 10.3752 11.9064"/><path d="M8,2c3.3084,0,6,2.6916,6,6s-2.6916,6-6,6-6-2.6916-6-6S4.6916,2,8,2m0-2C3.5817,0,0,3.5817,0,8s3.5817,8,8,8,8-3.5817,8-8S12.4183,0,8,0h0Z"/></svg><h3 id="recentlyViewedDataHeader">Recently viewed data</h3></div>'
     }
-    else if (result === suggestedSearchDummyResult) {
+    if (result === suggestedSearchDummyResult) {
       return '<div class="app-site-search__recently-viewed-header"><svg id="suggestedSearches" xmlns="http://www.w3.org/2000/svg" width="16.561" height="16.561" viewBox="0 0 16.561 16.561"><g id="Ellipse_1" data-name="Ellipse 1" fill="none" stroke="#000" stroke-width="2"><circle cx="6.427" cy="6.427" r="6.427" stroke="none"/><circle cx="6.427" cy="6.427" r="5.427" fill="none"/></g><line id="Line_1" data-name="Line 1" x2="5.25" y2="5.25" transform="translate(10.25 10.25)" fill="none" stroke="#000" stroke-width="3"/></svg><h3 id="recentlyViewedDataHeader">Suggested searches</h3></div>'
     }
     else {
@@ -416,14 +415,6 @@ function accessibleAutocompleteOptions(data, dataSearchURL, GTM) {
   }
 
   function onConfirm(result) {
-    function cache(slug, data) {
-      if (typeof data === "undefined") {
-        return resultsCache[slug];
-      } else {
-        resultsCache[slug] = data;
-      }
-    }
-
     if (!result) {
       return
     }
@@ -432,20 +423,8 @@ function accessibleAutocompleteOptions(data, dataSearchURL, GTM) {
       GTM.pushSearchRecentClick(result.url.split("/")[2].split("#")[0], result.name, result.type)
       window.location.href = result.url
     } else {
-      var searchState = `q=${result.name}&sort=relevance&csrfmiddlewaretoken=${csrf}`
-      return $.ajax({
-        url: '/datasets/',
-        data: searchState,
-        searchState: searchState,
-      })
-        .done(function (response) {
-          cache(searchState, response);
-          replaceBlock(wrapperSelector, $(response).find(wrapperSelector).html())
-        })
-        .fail(function (response) {
-          $(wrapperSelector).css("opacity", "1");
-          $(wrapperSelector).text("Error. Please try modifying your search and trying again.");
-        })
+      var searchState = `?q=${result.name}&sort=relevance&csrfmiddlewaretoken=${csrf}`
+      window.location.href = searchState
     }
 
   }
@@ -462,7 +441,6 @@ function accessibleAutocompleteOptions(data, dataSearchURL, GTM) {
     cssNamespace: 'app-site-search',
     displayMenu: 'overlay',
     placeholder: 'Search by dataset name or description',
-    autoselect: false,
     showAllValues: true,
     showNoOptionsFound: false,
     source: handleSearchQuery.bind(container),
