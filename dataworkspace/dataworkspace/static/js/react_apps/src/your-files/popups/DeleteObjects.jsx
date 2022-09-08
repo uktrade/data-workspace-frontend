@@ -2,7 +2,7 @@ import React from "react";
 import { TrashIcon } from "../icons/trash";
 import { bytesToSize, fullPathToFilename, prefixToFolder } from "../utils";
 
-function DeleteTableHeader(props) {
+function DeleteTableHeader() {
   return (
     <thead>
       <tr className="govuk-table__row">
@@ -41,35 +41,64 @@ export class DeleteObjectsPopup extends React.Component {
     this.state = {
       finished: false,
       trashing: false,
-      foldersToDelete: this.props.foldersToDelete,
-      filesToDelete: this.props.filesToDelete,
+      aborted: false,
+      foldersToDelete: this.props.foldersToDelete.map((folder) => ({
+        ...folder,
+        deleteStarted: false,
+        deleteFinished: false,
+        deleteError: null,
+      })),
+      filesToDelete: this.props.filesToDelete.map((file) => ({
+        ...file,
+        deleteStarted: false,
+        deleteFinished: false,
+        deleteError: null,
+      })),
     };
   }
 
+  updateDeleteState(fileOrFolder, newState) {
+    this.setState({
+      foldersToDelete: this.state.foldersToDelete.map((f) => {
+        return f.Prefix === fileOrFolder.Prefix ? { ...f, ...newState } : f;
+      }),
+      filesToDelete: this.state.filesToDelete.map((f) => {
+        return f.Key === fileOrFolder.Key ? { ...f, ...newState } : f;
+      }),
+    });
+  }
+
   onDeleteClick = () => {
-    console.log("start the delete");
     const deleter = this.props.deleter;
+
     this.setState({
       trashing: true,
     });
 
-    this.state.foldersToDelete.forEach((folder) => {
-      console.log(`delete folder ${folder.Prefix}`);
-      //list objects in the folder
-      //scedule bulk delete those objects in batches
-      //flush delete to allow ui catch up
+    deleter.on("delete:start", (fileOrFolder) => {
+      this.updateDeleteState(fileOrFolder, { deleteStarted: true });
     });
 
-    this.state.filesToDelete.forEach((file) => {
-      console.log(`delete ${file.Key}`);
+    deleter.on("delete:error", (fileOrFolder, error) => {
+      this.updateDeleteState(fileOrFolder, { deleteError: error });
     });
+
+    deleter.on("delete:finished", (fileOrFolder) => {
+      this.updateDeleteState(fileOrFolder, { deleteFinished: true });
+    });
+
+    deleter.on("delete:done", () => {
+      this.setState({ finished: true });
+    });
+
+    deleter.start(this.state.foldersToDelete, this.state.filesToDelete);
   };
 
   onCloseClick = () => {
-    console.log("closing delete");
     this.setState({
       aborted: true,
     });
+    this.props.onCancel();
   };
 
   render() {
@@ -79,7 +108,6 @@ export class DeleteObjectsPopup extends React.Component {
     return (
       <div className="popup-container">
         <div className="popup-container__overlay"></div>
-
         <div className="popup-container__modal modal-xl">
           <div className="modal-header">
             <h2 className="modal-title govuk-heading-m" id="trash-title">
@@ -94,7 +122,6 @@ export class DeleteObjectsPopup extends React.Component {
                 <DeleteTableHeader />
                 <tbody id="s3objects-tbody">
                   {folders.map((folder) => {
-                    console.log(folder);
                     const folderName = prefixToFolder(folder.Prefix);
                     return (
                       <tr key={folder.Prefix} className="govuk-table__row">
@@ -137,7 +164,6 @@ export class DeleteObjectsPopup extends React.Component {
                   })}
                   {files.map((file) => {
                     const filename = fullPathToFilename(file.Key);
-                    console.log(file);
                     return (
                       <tr
                         key={file.Key}
@@ -185,23 +211,21 @@ export class DeleteObjectsPopup extends React.Component {
                 <button
                   id="trash-btn-cancel"
                   type="button"
-                  onClick={this.props.onCancel}
+                  onClick={() => this.onCloseClick()}
                   className="govuk-button govuk-button--secondary modal-button"
                 >
                   {this.state.finished ? "Close" : "Cancel"}
                 </button>
-                {!this.state.finished ? (
-                  <button
-                    id="trash-btn-delete"
-                    type="button"
-                    onClick={() => this.onDeleteClick()}
-                    className="govuk-button govuk-button--warning modal-button"
-                    disabled={this.state.trashing}
-                  >
-                    <TrashIcon />
-                    &nbsp;Delete {objectCount}
-                  </button>
-                ) : null}
+                <button
+                  id="trash-btn-delete"
+                  type="button"
+                  onClick={() => this.onDeleteClick()}
+                  className="govuk-button govuk-button--warning modal-button"
+                  disabled={this.state.trashing || this.state.finished}
+                >
+                  <TrashIcon />
+                  &nbsp;Delete {objectCount}
+                </button>
               </div>
             </div>
           </div>

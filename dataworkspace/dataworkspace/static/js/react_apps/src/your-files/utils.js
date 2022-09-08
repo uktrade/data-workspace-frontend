@@ -46,3 +46,23 @@ export function getFolderName(prefix, rootPrefix) {
   if (!folder) return `${ROOT_FOLDER_NAME}/`;
   return prefixToFolder(folder);
 }
+
+export function fileQueue(concurrency) {
+  var running = 0;
+  const tasks = [];
+
+  return async function run(task) {
+    tasks.push(task);
+    if (running >= concurrency) return;
+
+    ++running;
+    while (tasks.length) {
+      try {
+        await tasks.shift()();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    --running;
+  };
+}

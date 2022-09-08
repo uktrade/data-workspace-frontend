@@ -18,7 +18,7 @@ const uploader = new Uploader(proxy, {
   bucketName: YOURFILES_CONFIG.bucketName,
 });
 
-const deleter = new S3Deleter(proxy.s3, YOURFILES_CONFIG.bucketName);
+const deleter = new S3Deleter(proxy, YOURFILES_CONFIG.bucketName);
 
 ReactDOM.render(
   <App

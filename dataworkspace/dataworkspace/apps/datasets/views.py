@@ -1204,8 +1204,9 @@ class DataGridDataView(DetailView):
             column_config = source.get_column_config()
 
         original_query = source.get_data_grid_query()
-        query, params = build_filtered_dataset_query(
+        rowcount_query, query, params = build_filtered_dataset_query(
             original_query,
+            source.data_grid_download_limit,
             column_config,
             post_data,
         )
@@ -1246,7 +1247,14 @@ class DataGridDataView(DetailView):
             )
 
         records = self._get_rows(source, query, params)
-        return JsonResponse({"records": records})
+        rowcount = self._get_rows(source, rowcount_query, params)
+        return JsonResponse(
+            {
+                "rowcount": rowcount[0],
+                "download_limit": source.data_grid_download_limit,
+                "records": records,
+            }
+        )
 
 
 class DatasetVisualisationPreview(View):
@@ -1801,8 +1809,9 @@ class CreateGridChartView(WaffleFlagMixin, View):
         chart_data = form.cleaned_data
 
         original_query = source.get_data_grid_query()
-        query, params = build_filtered_dataset_query(
+        _, query, params = build_filtered_dataset_query(
             original_query,
+            source.data_grid_download_limit,
             json.loads(request.POST.get("columns", "[]")),
             {
                 "filters": chart_data["filters"],

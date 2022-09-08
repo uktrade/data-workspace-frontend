@@ -9,13 +9,14 @@ import boto3
 import botocore
 import requests
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.db import connections, IntegrityError, transaction
-from django.db.models import Q
+from django.db.models import Q, Max
 from django.db.utils import DatabaseError
 from django.http import Http404
 from django.urls import reverse
-from psycopg2.sql import Identifier, Literal, SQL
+from psycopg2.sql import Identifier, Literal, SQL, Composed
 
 from dataworkspace.apps.core.utils import (
     close_all_connections_if_not_in_atomic_block,
@@ -54,7 +55,7 @@ from dataworkspace.utils import TYPE_CODES_REVERSED
 logger = logging.getLogger("app")
 
 
-def find_dataset(dataset_uuid, user, model_class=None):
+def find_dataset(dataset_uuid, user, model_class=None, id_field_override=None):
     """
     Attempts to return a dataset given an ID and an optional model class.
     Raises the appropriate exception depending on if the dataset exists/is published
@@ -66,7 +67,13 @@ def find_dataset(dataset_uuid, user, model_class=None):
     )
     dataset = None
     for dataset_model in dataset_models:
-        id_field = "id" if dataset_model != ReferenceDataset else "uuid"
+        id_field = (
+            id_field_override
+            if id_field_override is not None
+            else "id"
+            if dataset_model != ReferenceDataset
+            else "uuid"
+        )
         try:
             dataset = dataset_model.objects.live().get(**{id_field: dataset_uuid})
         except dataset_model.DoesNotExist:
@@ -427,7 +434,7 @@ def set_dataset_related_visualisation_catalogue_items(visualisation_link, tables
         visualisation_link.visualisation_catalogue_item.datasets.add(object_id)
 
 
-def build_filtered_dataset_query(inner_query, column_config, params):
+def build_filtered_dataset_query(inner_query, download_limit, column_config, params):
     column_map = {x["field"]: x for x in column_config}
     query_params = {
         "offset": int(params.get("start", 0)),
@@ -550,7 +557,8 @@ def build_filtered_dataset_query(inner_query, column_config, params):
                 where_clause.append(SQL(f"{{}} {operator} %({field})s").format(Identifier(field)))
 
     if where_clause:
-        where_clause = SQL("WHERE") + SQL(" AND ").join(where_clause)
+        where_clause = SQL(" WHERE ") + SQL(" AND ").join(where_clause)
+
     query = SQL(
         f"""
         SELECT {{}}
@@ -567,7 +575,15 @@ def build_filtered_dataset_query(inner_query, column_config, params):
         SQL(",").join(map(Identifier, sort_fields)),
     )
 
-    return query, query_params
+    where_clause = Composed(where_clause)
+    if download_limit is None:
+        download_limit = 5000
+    download_limit += 1
+    limit_clause = Composed([SQL(f" LIMIT {download_limit}")])
+    inner_query = inner_query + where_clause + limit_clause
+    rowcount_q = SQL("SELECT COUNT(iq.*) AS count FROM ({}) AS iq").format(inner_query)
+
+    return rowcount_q, query, query_params
 
 
 def _get_detailed_changelog(changelog, initial_change_type):
@@ -1016,19 +1032,29 @@ def get_dataset_table(obj):
 
 
 def get_recently_viewed_catalogue_pages(request):
-    user_event_logs = (
+    event_log_query = (
         EventLog.objects.filter(user=request.user, event_type=EventLog.TYPE_DATASET_VIEW)
-        .order_by("-timestamp", "object_id")
-        .distinct("timestamp", "object_id")
+        .values("object_id", "content_type")
+        .annotate(latest_timestamp=Max("timestamp"))
+        .order_by("-latest_timestamp")
     )[:3]
+
     user_event_choice_list = []
-    for log in user_event_logs:
-        data_type = log.related_object.get_type_display()
-        user_event_choice_list.append(
-            {
-                "url": log.related_object.get_absolute_url(),
-                "name": log.related_object.name,
-                "type": data_type,
-            }
-        )
+
+    for event in event_log_query:
+        model_class = ContentType.objects.get_for_id(event["content_type"]).model_class()
+        try:
+            dataset = find_dataset(
+                event["object_id"], request.user, model_class, id_field_override="id"
+            )
+        except (DatasetUnpublishedError, Http404):
+            pass
+        else:
+            user_event_choice_list.append(
+                {
+                    "url": dataset.get_absolute_url(),
+                    "name": dataset.name,
+                    "type": dataset.get_type_display(),
+                }
+            )
     return user_event_choice_list
