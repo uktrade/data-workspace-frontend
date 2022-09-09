@@ -10,7 +10,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build:css": "node-sass dataworkspace/dataworkspace/sass --output dataworkspace/dataworkspace/static --include-path node_modules --output-style compressed",
-    "debug:css": "node-sass dataworkspace/dataworkspace/sass --output dataworkspace/dataworkspace/static --source-map true --source-map-contents --include-path node_modules"
+    "debug:css": "node-sass dataworkspace/dataworkspace/sass --output dataworkspace/dataworkspace/static --source-map true --source-map-contents --include-path node_modules",
+    "preinstall": "npx npm-force-resolutions"
+  },
+  "resolutions": {
+    "scss-tokenizer": "0.4.3"
   },
   "repository": {
     "type": "git",
