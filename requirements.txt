@@ -321,6 +321,7 @@ zope-event==4.5.0
     # via gevent
 zope-interface==5.1.0
     # via gevent
+git+https://github.com/uktrade/helpdesk-client.git@main
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools

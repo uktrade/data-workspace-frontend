@@ -8,6 +8,8 @@ from zenpy.lib.api_objects import Ticket, User, Comment, CustomField
 
 from dataworkspace.notify import generate_token, send_email
 
+# from helpdesk_client.zenddesk_manager import ZendeskManager
+
 logger = logging.getLogger("app")
 
 zendesk_service_field_id = settings.ZENDESK_SERVICE_FIELD_ID
@@ -73,12 +75,6 @@ You can approve this request here
 
 
 def create_zendesk_ticket(request, access_request, catalogue_item=None):
-    client = Zenpy(
-        subdomain=settings.ZENDESK_SUBDOMAIN,
-        email=settings.ZENDESK_EMAIL,
-        token=settings.ZENDESK_TOKEN,
-    )
-
     access_request_url = request.build_absolute_uri(
         reverse("admin:request_access_accessrequest_change", args=(access_request.id,))
     )
@@ -99,39 +95,48 @@ def create_zendesk_ticket(request, access_request, catalogue_item=None):
 
     subject = f"Access Request for {catalogue_item if catalogue_item else username}"
 
-    ticket_audit = client.tickets.create(
-        Ticket(
-            subject=subject,
-            description=ticket_description,
-            requester=User(email=access_request.requester.email, name=username),
-            custom_fields=[
-                CustomField(id=zendesk_service_field_id, value=zendesk_service_field_value)
-            ],
-        )
-    )
+    # client = Zenpy(
+    #     subdomain=settings.ZENDESK_SUBDOMAIN,
+    #     email=settings.ZENDESK_EMAIL,
+    #     token=settings.ZENDESK_TOKEN,
+    # )
 
-    ticket_audit.ticket.comment = Comment(body=private_comment, public=False)
-    client.tickets.update(ticket_audit.ticket)
+    # ticket_audit = client.tickets.create(
+    #     Ticket(
+    #         subject=subject,
+    #         description=ticket_description,
+    #         requester=User(email=access_request.requester.email, name=username),
+    #         custom_fields=[
+    #             CustomField(id=zendesk_service_field_id, value=zendesk_service_field_value)
+    #         ],
+    #     )
+    # )
 
-    return ticket_audit.ticket.id
+    # ticket_audit.ticket.comment = Comment(body=private_comment, public=False)
+    # client.tickets.update(ticket_audit.ticket)
+
+    # return ticket_audit.ticket.id
+
+    return 0
 
 
 def update_zendesk_ticket(ticket_id, comment=None, status=None):
-    client = Zenpy(
-        subdomain=settings.ZENDESK_SUBDOMAIN,
-        email=settings.ZENDESK_EMAIL,
-        token=settings.ZENDESK_TOKEN,
-    )
+    # client = Zenpy(
+    #     subdomain=settings.ZENDESK_SUBDOMAIN,
+    #     email=settings.ZENDESK_EMAIL,
+    #     token=settings.ZENDESK_TOKEN,
+    # )
 
-    ticket = client.tickets(id=ticket_id)
+    # ticket = client.tickets(id=ticket_id)
 
     if comment:
-        ticket.comment = Comment(body=comment, public=False)
+        # ticket.comment = Comment(body=comment, public=False)
+        pass
 
     if status:
         ticket.status = status
 
-    client.tickets.update(ticket)
+    # client.tickets.update(ticket)
 
     return ticket
 
@@ -200,20 +205,20 @@ If access has not been granted to the requestor within 5 working days, this will
 
 
 def create_support_request(user, email, message, tag=None, subject=None):
-    client = Zenpy(
-        subdomain=settings.ZENDESK_SUBDOMAIN,
-        email=settings.ZENDESK_EMAIL,
-        token=settings.ZENDESK_TOKEN,
-    )
-    ticket_audit = client.tickets.create(
-        Ticket(
-            subject=subject or "Data Workspace Support Request",
-            description=message,
-            requester=User(email=email, name=user.get_full_name()),
-            tags=[tag] if tag else None,
-            custom_fields=[
-                CustomField(id=zendesk_service_field_id, value=zendesk_service_field_value)
-            ],
-        )
-    )
+    # client = Zenpy(
+    #     subdomain=settings.ZENDESK_SUBDOMAIN,
+    #     email=settings.ZENDESK_EMAIL,
+    #     token=settings.ZENDESK_TOKEN,
+    # )
+    # ticket_audit = client.tickets.create(
+    #     Ticket(
+    #         subject=subject or "Data Workspace Support Request",
+    #         description=message,
+    #         requester=User(email=email, name=user.get_full_name()),
+    #         tags=[tag] if tag else None,
+    #         custom_fields=[
+    #             CustomField(id=zendesk_service_field_id, value=zendesk_service_field_value)
+    #         ],
+    #     )
+    # )
     return ticket_audit.ticket.id
