@@ -812,25 +812,13 @@ def update_datasets_average_daily_users():
 def suggested_searches(request):
     query = request.GET.get("query", None)
     recent_searches = EventLog.objects.filter(
-        event_type=EventLog.TYPE_DATASET_FIND_FORM_QUERY
-    ).order_by("timestamp__date")
-    query_searches = []
-    search_term_popularity = {}
-    for search in recent_searches:
-        if search.extra["number_of_results"] > 0:
-            if search.extra["query"].startswith(query):
-                if search.extra["query"] in search_term_popularity:
-                    search_term_popularity[search.extra["query"]] += 1
-                else:
-                    search_term_popularity[search.extra["query"]] = 1
-
-    suggested_searches_choice_list = {
-        k: v for k, v in sorted(search_term_popularity.items(), key=lambda item: item[1])
-    }.keys()
-
-    for key in suggested_searches_choice_list:
-        query_searches.append({"name": key, "type": "", "url": ""})
+        event_type=EventLog.TYPE_DATASET_FIND_FORM_QUERY,
+        extra__query__startswith=query,
+        extra__number_of_results__gt=0,
+    ).values("extra__query").annotate(occurrences=Count("extra__query")).order_by("occurrences")
 
     return HttpResponse(
-        json.dumps(list(reversed(query_searches))), content_type="application/json"
+        json.dumps(
+            [{"name": search["extra__query"], "type": "", "url": ""} for search in recent_searches]
+        ), content_type="application/json"
     )
