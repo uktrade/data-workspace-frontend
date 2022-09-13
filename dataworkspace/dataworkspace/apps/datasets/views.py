@@ -1813,9 +1813,13 @@ class CreateGridChartView(WaffleFlagMixin, View):
         chart_data = form.cleaned_data
 
         original_query = source.get_data_grid_query()
+        download_limit = source.data_grid_download_limit
+        if download_limit is None:
+            download_limit = 5000
+
         _, query, params = build_filtered_dataset_query(
             original_query,
-            source.data_grid_download_limit,
+            download_limit,
             json.loads(request.POST.get("columns", "[]")),
             {
                 "filters": chart_data["filters"],
