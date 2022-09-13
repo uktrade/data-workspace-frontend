@@ -373,3 +373,10 @@
     }
   }
 }
+
+.drop-zone {
+  border: 2px solid transparent;
+  &.drag-active {
+    box-shadow: 0 0 0 5px #ffbf47;
+  }
+}

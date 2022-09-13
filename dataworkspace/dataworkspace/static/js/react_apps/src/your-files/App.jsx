@@ -35,6 +35,7 @@ export default class App extends React.Component {
       region: this.props.config.region,
       showBigDataMessage: false,
       popups: {},
+      dragActive: false,
     };
 
     for (const [key, value] of Object.entries(popupTypes)) {
@@ -146,7 +147,6 @@ export default class App extends React.Component {
   };
 
   handleFileClick = async (key) => {
-    console.log("handleFileClick", key);
     const params = {
       Bucket: this.state.bucketName,
       Key: key,
@@ -203,7 +203,7 @@ export default class App extends React.Component {
           f.isSelected = isSelected;
         }
         return f;
-      })
+      }),
     });
   };
 
@@ -214,8 +214,39 @@ export default class App extends React.Component {
           f.isSelected = isSelected;
         }
         return f;
-      })
+      }),
     });
+  };
+
+  handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    this.setState({ dragActive: true });
+  };
+
+  handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Don't fire the leave event if we are dragging over a child element
+    if (e.currentTarget.contains(e.relatedTarget)) return;
+    this.setState({ dragActive: false });
+  };
+
+  handleDragOver = (e) => {
+    // We need to cancel the drag over event to allow the drop event
+    // to be picked up on a child element
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    this.setState({
+      dragActive: false,
+      selectedFiles: this.createFilesArrayFromFileList(e.dataTransfer.files),
+    });
+    this.showPopup(popupTypes.UPLOAD_FILES);
   };
 
   render() {
@@ -251,8 +282,14 @@ export default class App extends React.Component {
             onCancel={async () => {
               this.hidePopup(popupTypes.DELETE_OBJECTS);
               this.setState({
-                folders: this.state.folders.map(f => ({ ...f, isSelected: false})),
-                files: this.state.files.map(f => ({ ...f, isSelected: false})),
+                folders: this.state.folders.map((f) => ({
+                  ...f,
+                  isSelected: false,
+                })),
+                files: this.state.files.map((f) => ({
+                  ...f,
+                  isSelected: false,
+                })),
               });
               await this.onRefreshClick();
             }}
@@ -278,31 +315,43 @@ export default class App extends React.Component {
           />
         ) : null}
 
-        <Header
-          breadCrumbs={breadCrumbs}
-          canDelete={this.state.folders.concat(this.state.files).filter(f => f.isSelected).length > 0}
-          currentPrefix={this.state.currentPrefix}
-          onBreadcrumbClick={this.onBreadcrumbClick}
-          onRefreshClick={this.onRefreshClick}
-          onNewFolderClick={this.showNewFolderPopup}
-          onUploadClick={this.onUploadClick}
-          onDeleteClick={this.onDeleteClick}
-        />
-        <FileList
-          files={this.state.files}
-          folders={this.state.folders}
-          createTableUrl={this.state.createTableUrl}
-          onFolderClick={this.handleFolderClick}
-          onFolderSelect={this.onFolderSelect}
-          onFileClick={this.handleFileClick}
-          onFileSelect={this.onFileSelect}
-        />
-        {this.state.showBigDataMessage ? (
-          <BigDataMessage
-            bigDataFolder={this.state.bigDataFolder}
-            bucketName={this.state.bucketName}
+        <div
+          className={`drop-zone ${this.state.dragActive ? "drag-active" : ""}`}
+          onDragEnter={this.handleDragEnter}
+          onDragLeave={this.handleDragLeave}
+          onDrop={this.handleDrop}
+          onDragOver={this.handleDragOver}
+        >
+          <Header
+            breadCrumbs={breadCrumbs}
+            canDelete={
+              this.state.folders
+                .concat(this.state.files)
+                .filter((f) => f.isSelected).length > 0
+            }
+            currentPrefix={this.state.currentPrefix}
+            onBreadcrumbClick={this.onBreadcrumbClick}
+            onRefreshClick={this.onRefreshClick}
+            onNewFolderClick={this.showNewFolderPopup}
+            onUploadClick={this.onUploadClick}
+            onDeleteClick={this.onDeleteClick}
           />
-        ) : null}
+          <FileList
+            files={this.state.files}
+            folders={this.state.folders}
+            createTableUrl={this.state.createTableUrl}
+            onFolderClick={this.handleFolderClick}
+            onFolderSelect={this.onFolderSelect}
+            onFileClick={this.handleFileClick}
+            onFileSelect={this.onFileSelect}
+          />
+          {this.state.showBigDataMessage ? (
+            <BigDataMessage
+              bigDataFolder={this.state.bigDataFolder}
+              bucketName={this.state.bucketName}
+            />
+          ) : null}
+        </div>
       </div>
     );
   }
