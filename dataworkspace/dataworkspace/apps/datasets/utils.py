@@ -438,7 +438,7 @@ def build_filtered_dataset_query(inner_query, download_limit, column_config, par
     column_map = {x["field"]: x for x in column_config}
     query_params = {
         "offset": int(params.get("start", 0)),
-        "limit": params.get("limit"),
+        "limit": params.get("limit") or download_limit,
     }
     sort_dir = "DESC" if params.get("sortDir", "").lower() == "desc" else "ASC"
     sort_fields = [column_config[0]["field"]]
