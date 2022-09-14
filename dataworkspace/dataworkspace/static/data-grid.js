@@ -179,15 +179,11 @@ function initDataGrid(columnConfig, dataEndpoint, downloadSegment, records, expo
                 if (rowcount) { rowcount.innerText = '5000+ rows' }
                 if (dl_count) { dl_count.innerText = 'Download this data' }
               }
-              if ((dlimit == null) && (rc < 5000)){
-                if (rowcount) { rowcount.innerText = '5000 rows' }
-                if (dl_count) { dl_count.innerText = 'Download this data' }
-              }
               if ((dlimit != null) && (rc > dlimit)){
                 if (rowcount) { rowcount.innerText = dlimit+'+ rows' }
                 if (dl_count) { dl_count.innerText = 'Download this data ('+dlimit+' rows)' }
               }
-              if ((dlimit != null) && rc < dlimit) {
+              if ((rc <= dlimit) || ((dlimit == null) && (rc < 5000))){              
                 if (rowcount) { rowcount.innerText = rc+' rows' }
                 if (dl_count) { dl_count.innerText = 'Download this data ('+rc+' rows)' }
               }
