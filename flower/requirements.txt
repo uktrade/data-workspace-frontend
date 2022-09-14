@@ -10,8 +10,6 @@ async-timeout==4.0.2
     # via redis
 billiard==3.6.4.0
     # via celery
-cached-property==1.5.2
-    # via kombu
 celery==5.2.6
     # via flower
 click==8.1.2
@@ -28,17 +26,10 @@ click-repl==0.2.0
     # via celery
 deprecated==1.2.13
     # via redis
-flower==1.0.0
+flower==1.2.0
     # via -r requirements.in
 humanize==4.0.0
     # via flower
-importlib-metadata==4.11.3
-    # via
-    #   celery
-    #   click
-    #   humanize
-    #   kombu
-    #   redis
 kombu==5.2.4
     # via celery
 packaging==21.3
@@ -59,11 +50,6 @@ six==1.16.0
     # via click-repl
 tornado==6.1
     # via flower
-typing-extensions==4.2.0
-    # via
-    #   async-timeout
-    #   importlib-metadata
-    #   redis
 vine==5.0.0
     # via
     #   amqp
@@ -73,5 +59,3 @@ wcwidth==0.2.5
     # via prompt-toolkit
 wrapt==1.14.0
     # via deprecated
-zipp==3.8.0
-    # via importlib-metadata
