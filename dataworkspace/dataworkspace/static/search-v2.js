@@ -379,6 +379,7 @@ function accessibleAutocompleteOptions(data, dataSearchURL, GTM) {
         } else {
           for (var d = 0; d < response.length; ++d) {
             if (suggestedSearchesName.length <= 5) {
+              response[d]["length"] = query.length
               suggestedSearchesName.push(response[d])
             }
           }
@@ -401,7 +402,16 @@ function accessibleAutocompleteOptions(data, dataSearchURL, GTM) {
     }
     else {
       var elem = document.createElement('li')
-      elem.textContent = result.name
+
+      if (result.type === "") {
+        var bold = document.createElement('B')
+        bold.textContent = result.name.substring(0, result.length)
+        elem.appendChild(bold)
+      }
+
+      var text = document.createTextNode(result.name.substring(result.length));
+      elem.appendChild(text)
+
       var section = document.createElement('span')
       section.className = "app-site-search--section"
       section.innerHTML = result.type
