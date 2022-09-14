@@ -8,7 +8,25 @@ from zenpy.lib.api_objects import Ticket, User, Comment, CustomField
 
 from dataworkspace.notify import generate_token, send_email
 
-# from helpdesk_client.zenddesk_manager import ZendeskManager
+print("x"*80)
+print("x"*80)
+print("x"*80)
+print(settings.HELP_DESK_INTERFACE)
+print("x"*80)
+print("x"*80)
+print("x"*80)
+print(settings.HELP_DESK_CREDS)
+print("x"*80)
+print("x"*80)
+print("x"*80)
+
+from helpdesk_client import get_helpdesk_interface
+from helpdesk_client.interfaces import (
+    HelpDeskTicket,
+    HelpDeskUser,
+    HelpDeskCustomField,
+    HelpDeskComment,
+)
 
 logger = logging.getLogger("app")
 
@@ -74,6 +92,12 @@ You can approve this request here
     return private_comment
 
 
+# configure and instantiate the client
+helpdesk_interface = get_helpdesk_interface("helpdesk_client.interfaces.HelpDeskStubbed")
+# helpdesk_interface = get_helpdesk_interface(settings.HELP_DESK_INTERFACE)
+helpdesk = helpdesk_interface(credentials=settings.HELP_DESK_CREDS)
+
+
 def create_zendesk_ticket(request, access_request, catalogue_item=None):
     access_request_url = request.build_absolute_uri(
         reverse("admin:request_access_accessrequest_change", args=(access_request.id,))
@@ -117,7 +141,36 @@ def create_zendesk_ticket(request, access_request, catalogue_item=None):
 
     # return ticket_audit.ticket.id
 
-    return 0
+    hdt = HelpDeskTicket(
+        subject=subject,
+        description=ticket_description,
+        user=HelpDeskUser(
+            full_name=username,
+            email=access_request.requester.email
+        ),
+        custom_fields=[
+            HelpDeskCustomField(
+                id=zendesk_service_field_id,
+                value=zendesk_service_field_value
+            )
+        ],
+        comment=HelpDeskComment(
+            body=private_comment,
+            public=False
+        )
+    )
+
+    print("X"*120, flush=True)
+    print(hdt, flush=True)
+    print("Y"*120, flush=True)
+
+    ticket_audit = helpdesk.create_ticket(hdt)
+
+    print("X"*120, flush=True)
+    print(ticket_audit.id, flush=True)
+    print("Y"*120, flush=True)
+
+    return ticket_audit.id
 
 
 def update_zendesk_ticket(ticket_id, comment=None, status=None):
@@ -131,10 +184,18 @@ def update_zendesk_ticket(ticket_id, comment=None, status=None):
 
     if comment:
         # ticket.comment = Comment(body=comment, public=False)
-        pass
+        helpdesk.helpdesk.add_comment(
+            ticket_id=ticket_id,
+            comment=comment(
+                body=private_comment,
+                public=False
+            )
+        )
 
     if status:
+        ticket = helpdesk.get_ticket(ticket_id=ticket_id)
         ticket.status = status
+        ticket = helpdesk.update_ticket(ticket=ticket)
 
     # client.tickets.update(ticket)
 
@@ -221,4 +282,24 @@ def create_support_request(user, email, message, tag=None, subject=None):
     #         ],
     #     )
     # )
-    return ticket_audit.ticket.id
+    # return ticket_audit.ticket.id
+
+    ticket_audit = helpdesk.create_ticket(
+        HelpDeskTicket(
+            subject=subject,
+            description=ticket_description,
+            user=HelpDeskUser(
+                full_name=username,
+                email=access_request.requester.email
+            ),
+            custom_fields=[
+                HelpDeskCustomField(
+                    id=zendesk_service_field_id,
+                    value=zendesk_service_field_value
+                )
+            ],
+            tags=[tag] if tag else None
+        )
+    )
+
+    return ticket_audit.id

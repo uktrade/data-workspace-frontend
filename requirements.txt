@@ -315,13 +315,14 @@ xlsxwriter==1.2.8
     # via -r requirements.in
 yarl==1.5.1
     # via aiohttp
-zenpy==2.0.21
+zenpy==2.0.25
+# zenpy==2.0.21
     # via -r requirements.in
 zope-event==4.5.0
     # via gevent
 zope-interface==5.1.0
     # via gevent
-git+https://github.com/uktrade/helpdesk-client.git@main
+helpdesk-client==0.1.6
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
