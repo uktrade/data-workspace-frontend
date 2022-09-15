@@ -68,7 +68,7 @@ var LiveSearch = function (formSelector, wrapperSelector, GTM, linkSelector, GOV
     "input[type=checkbox], select",
     this.formChange.bind(this)
   );
-  this.$form.on("search", "input[type=search]", this.formChange.bind(this));
+  this.$form.on("search", "input[type=text]", this.formChange.bind(this));
   $(window).on("popstate", this.popState.bind(this));
 
   this.$form.find("input[type=submit]").click(
@@ -78,7 +78,7 @@ var LiveSearch = function (formSelector, wrapperSelector, GTM, linkSelector, GOV
     }.bind(this)
   );
 
-  this.$form.find("input[type=search]").keypress(
+  this.$form.find("input[type=text]").keypress(
     function (e) {
       if (e.keyCode == 13) {
         // 13 is the return key
@@ -355,7 +355,7 @@ document.body.addEventListener('click', function(event) {
   ));
 });
 
-function accessibleAutocompleteOptions(data, dataSearchURL, GTM) {
+function accessibleAutocompleteOptions(data, dataSearchURL, GTM, liveSearchForm) {
   const csrf = document.getElementsByName("csrfmiddlewaretoken")[0].value;
   var container = document.getElementById('my-autocomplete-container')
   var recentlyViewedDummyResult = {"name": "", "type": "", "url": ""}
@@ -395,7 +395,7 @@ function accessibleAutocompleteOptions(data, dataSearchURL, GTM) {
 
   function resultTemplate(result) {
     if (result === recentlyViewedDummyResult) {
-      return '<div class="app-site-search__recently-viewed-header"><svg id="iconClock" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><polygon points="10.3752 11.9064 6.8826 8.4142 6.8826 3.1999 8.8821 3.1999 8.8821 7.5861 11.7893 10.4924 10.3752 11.9064"/><path d="M8,2c3.3084,0,6,2.6916,6,6s-2.6916,6-6,6-6-2.6916-6-6S4.6916,2,8,2m0-2C3.5817,0,0,3.5817,0,8s3.5817,8,8,8,8-3.5817,8-8S12.4183,0,8,0h0Z"/></svg><h3 id="recentlyViewedDataHeader">Recently viewed data</h3></div>'
+      return '<div class="app-site-search__recently-viewed-header"><svg style="margin-bottom: -3px; margin-left: -5px" id="iconClock" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><polygon points="10.3752 11.9064 6.8826 8.4142 6.8826 3.1999 8.8821 3.1999 8.8821 7.5861 11.7893 10.4924 10.3752 11.9064"/><path d="M8,2c3.3084,0,6,2.6916,6,6s-2.6916,6-6,6-6-2.6916-6-6S4.6916,2,8,2m0-2C3.5817,0,0,3.5817,0,8s3.5817,8,8,8,8-3.5817,8-8S12.4183,0,8,0h0Z"/></svg><h3 id="recentlyViewedDataHeader">Recently viewed data</h3></div>'
     }
     if (result === suggestedSearchDummyResult) {
       return '<div class="app-site-search__recently-viewed-header"><svg id="suggestedSearches" xmlns="http://www.w3.org/2000/svg" width="16.561" height="16.561" viewBox="0 0 16.561 16.561"><g id="Ellipse_1" data-name="Ellipse 1" fill="none" stroke="#000" stroke-width="2"><circle cx="6.427" cy="6.427" r="6.427" stroke="none"/><circle cx="6.427" cy="6.427" r="5.427" fill="none"/></g><line id="Line_1" data-name="Line 1" x2="5.25" y2="5.25" transform="translate(10.25 10.25)" fill="none" stroke="#000" stroke-width="3"/></svg><h3 id="recentlyViewedDataHeader">Suggested searches</h3></div>'
@@ -430,8 +430,9 @@ function accessibleAutocompleteOptions(data, dataSearchURL, GTM) {
       GTM.pushSearchRecentClick(result.url.split("/")[2].split("#")[0], result.name, result.type)
       window.location.href = result.url
     } else {
-      var searchState = `?q=${result.name}&sort=relevance&csrfmiddlewaretoken=${csrf}`
-      window.location.href = searchState
+      var inputElement = document.getElementById("app-site-search__input")
+      inputElement.value = result.name
+      liveSearchForm.formChange()
     }
 
   }
