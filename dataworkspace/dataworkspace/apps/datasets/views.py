@@ -1145,10 +1145,6 @@ class DataCutSourceDetailView(DetailView):
 
 
 class DataGridDataView(DetailView):
-    def _user_can_access(self):
-        source = self.get_object()
-        return source.dataset.user_has_access(self.request.user) and source.data_grid_enabled
-
     def get_object(self, queryset=None):
         dataset = find_dataset(self.kwargs.get("dataset_uuid"), self.request.user)
         return get_object_or_404(
@@ -1158,8 +1154,13 @@ class DataGridDataView(DetailView):
         )
 
     def dispatch(self, request, *args, **kwargs):
-        if not self._user_can_access():
-            return HttpResponseForbidden()
+        source = self.get_object()
+        if not source.data_grid_enabled:
+            raise DatasetPreviewDisabledError(source.dataset)
+
+        if not source.dataset.user_has_access(self.request.user):
+            raise DatasetPermissionDenied(source.dataset)
+
         return super().dispatch(request, *args, **kwargs)
 
     @staticmethod
@@ -1204,9 +1205,12 @@ class DataGridDataView(DetailView):
             column_config = source.get_column_config()
 
         original_query = source.get_data_grid_query()
+        download_limit = source.data_grid_download_limit
+        if download_limit is None:
+            download_limit = 5000
         rowcount_query, query, params = build_filtered_dataset_query(
             original_query,
-            source.data_grid_download_limit,
+            download_limit,
             column_config,
             post_data,
         )
@@ -1809,9 +1813,13 @@ class CreateGridChartView(WaffleFlagMixin, View):
         chart_data = form.cleaned_data
 
         original_query = source.get_data_grid_query()
+        download_limit = source.data_grid_download_limit
+        if download_limit is None:
+            download_limit = 5000
+
         _, query, params = build_filtered_dataset_query(
             original_query,
-            source.data_grid_download_limit,
+            download_limit,
             json.loads(request.POST.get("columns", "[]")),
             {
                 "filters": chart_data["filters"],
