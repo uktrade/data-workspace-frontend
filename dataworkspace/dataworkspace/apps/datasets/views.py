@@ -105,7 +105,7 @@ from dataworkspace.apps.datasets.permissions.utils import (
     process_dataset_authorized_users_change,
     process_visualisation_catalogue_item_authorized_users_change,
 )
-from dataworkspace.apps.datasets.search import search_for_datasets, suggested_searches
+from dataworkspace.apps.datasets.search import search_for_datasets
 from dataworkspace.apps.datasets.utils import (
     build_filtered_dataset_query,
     dataset_type_to_manage_unpublished_permission_codename,
