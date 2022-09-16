@@ -164,10 +164,10 @@ data "aws_iam_policy_document" "notebook_s3_access_template" {
     ]
 
     condition {
-      test = "StringLike"
+      test = "ForAnyValue:StringLike"
       variable = "s3:prefix"
       values = [
-        "__S3_PREFIX__*"
+        "__S3_PREFIXES__"
       ]
     }
   }
@@ -180,8 +180,16 @@ data "aws_iam_policy_document" "notebook_s3_access_template" {
     ]
 
     resources = [
-      "${aws_s3_bucket.notebooks.arn}/__S3_PREFIX__*",
+      "${aws_s3_bucket.notebooks.arn}",
     ]
+
+    condition {
+      test = "ForAnyValue:StringLike"
+      variable = "s3:prefix"
+      values = [
+        "__S3_PREFIXES__"
+      ]
+    }
   }
 
   statement {
