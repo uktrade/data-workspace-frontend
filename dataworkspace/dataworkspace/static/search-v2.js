@@ -356,11 +356,9 @@ document.body.addEventListener('click', function(event) {
 });
 
 function accessibleAutocompleteOptions(data, dataSearchURL, GTM, liveSearchForm) {
-  const csrf = document.getElementsByName("csrfmiddlewaretoken")[0].value;
   var container = document.getElementById('my-autocomplete-container')
   var recentlyViewedDummyResult = {"name": "", "type": "", "url": ""}
   var suggestedSearchDummyResult = {"name": "", "type": "", "url": ""}
-  var wrapperSelector = '#live-search-wrapper'
 
   function handleSearchQuery(query, callback) {
     var suggestedSearchesName = [suggestedSearchDummyResult]
