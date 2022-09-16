@@ -815,6 +815,7 @@ def suggested_searches(request):
             event_type=EventLog.TYPE_DATASET_FIND_FORM_QUERY,
             extra__query__startswith=query,
             extra__number_of_results__gt=0,
+            timestamp__date__gt=datetime.today() - timedelta(days=30),
         )
         .values("extra__query")
         .annotate(occurrences=Count("extra__query"))
