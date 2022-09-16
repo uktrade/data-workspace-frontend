@@ -34,6 +34,7 @@
 {% block page_title %}Search - {{ block.super }}{% endblock %}
 
 {% block content %}
+  {% csrf_token %}
   <form id="live-search-form" action="{% url 'datasets:find_datasets' %}" method="get">
 
     <div class="govuk-grid-row">
@@ -178,7 +179,6 @@
           {% if has_filters %}
             <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
           {% endif %}
-          {% csrf_token %}
           {% for dataset in datasets %}
             <div class="search-result govuk-!-padding-bottom-4 govuk-!-margin-bottom-4">
               <h3 class="govuk-heading-m">
