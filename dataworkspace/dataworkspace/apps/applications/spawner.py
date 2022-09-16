@@ -280,16 +280,18 @@ class FargateSpawner:
             user_profile_sso_id = user.profile.sso_id
             close_admin_db_connection_if_not_in_atomic_block()
 
-            role_arn, s3_prefix = create_tools_access_iam_role(
-                user_email, str(user_profile_sso_id), user_efs_access_point_id
+            role_arn, s3_prefixes = create_tools_access_iam_role(
+                user_email, user_efs_access_point_id
             )
 
             s3_env = {
-                "S3_PREFIX": s3_prefix,
+                "S3_PREFIX": s3_prefixes["home"],
                 "S3_REGION": s3_region,
                 "S3_HOST": s3_host,
                 "S3_BUCKET": s3_bucket,
             }
+
+            # TODO: We need to add env vars for each non-home prefix
 
             authorised_hosts = list(
                 user.authorised_mlflow_instances.all().values_list("instance__hostname", flat=True)

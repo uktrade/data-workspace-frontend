@@ -17,7 +17,7 @@ from timeit import default_timer as timer
 from typing import Tuple
 from urllib.parse import unquote
 
-
+import redis
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -45,6 +45,7 @@ from dataworkspace.apps.core.constants import (
 from dataworkspace.apps.core.models import DatabaseUser, Team
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import DataSet, SourceTable, ReferenceDataset
+from dataworkspace.cel import celery_app
 
 logger = logging.getLogger("app")
 
@@ -1122,18 +1123,16 @@ def get_s3_prefix(user_sso_id):
     return "user/federated/" + stable_identification_suffix(user_sso_id, short=False) + "/"
 
 
-def create_tools_access_iam_role(user_email_address, user_sso_id, access_point_id):
-    s3_prefix = get_s3_prefix(user_sso_id)
+def create_tools_access_iam_role(user_email_address, access_point_id):
 
     user = get_user_model().objects.get(email=user_email_address)
+    s3_prefixes = get_user_s3_prefixes(user)
     if user.profile.tools_access_role_arn:
-        return user.profile.tools_access_role_arn, s3_prefix
+        return user.profile.tools_access_role_arn, s3_prefixes
 
     iam_client = get_iam_client()
 
     assume_role_policy_document = settings.S3_ASSUME_ROLE_POLICY_DOCUMENT
-    policy_name = settings.S3_POLICY_NAME
-    policy_document_template = settings.S3_POLICY_DOCUMENT_TEMPLATE
     permissions_boundary_arn = settings.S3_PERMISSIONS_BOUNDARY_ARN
     role_prefix = settings.S3_ROLE_PREFIX
 
@@ -1173,27 +1172,13 @@ def create_tools_access_iam_role(user_email_address, user_sso_id, access_point_i
         else:
             break
 
-    for i in range(0, max_attempts):
-        try:
-            iam_client.put_role_policy(
-                RoleName=role_name,
-                PolicyName=policy_name,
-                PolicyDocument=policy_document_template.replace(
-                    "__S3_PREFIX__", s3_prefix
-                ).replace("__ACCESS_POINT_ID__", access_point_id or ""),
-            )
-        except iam_client.exceptions.NoSuchEntityException:
-            if i == max_attempts - 1:
-                raise
-            gevent.sleep(1)
-        else:
-            break
+    update_user_tool_access_policy(user, access_point_id)
 
     # Cache the role_arn so it can be retrieved in the future without calling AWS
     user.profile.tools_access_role_arn = role_arn
     user.save()
 
-    return role_arn, s3_prefix
+    return role_arn, s3_prefixes
 
 
 def without_duplicates_preserve_order(seq):
@@ -1448,3 +1433,52 @@ def generate_jwt_token(user):
     signature = b64encode_nopadding(private_key.sign(to_sign))
     jwt = (to_sign + b"." + signature).decode()
     return jwt
+
+
+def get_user_s3_prefixes(user):
+    return {
+        "home": get_s3_prefix(str(user.profile.sso_id)),
+        **{x.schema_name: x.schema_name for x in user.team_memberships.all()},
+    }
+
+
+def update_user_tool_access_policy(user, access_point_id):
+    max_attempts = 10
+    iam_client = get_iam_client()
+    s3_prefixes = get_user_s3_prefixes(user)
+    for i in range(0, max_attempts):
+        try:
+            iam_client.put_role_policy(
+                RoleName=settings.S3_ROLE_PREFIX + user.email,
+                PolicyName=settings.S3_POLICY_NAME,
+                PolicyDocument=settings.S3_POLICY_DOCUMENT_TEMPLATE.replace(
+                    "__S3_PREFIXES__", '","'.join([f"{x}/*" for x in s3_prefixes.values()])
+                ).replace("__ACCESS_POINT_ID__", access_point_id or ""),
+            )
+        except iam_client.exceptions.NoSuchEntityException:
+            if i == max_attempts - 1:
+                raise
+            gevent.sleep(1)
+        else:
+            break
+
+
+@celery_app.task(autoretry_for=(redis.exceptions.LockError,))
+@close_all_connections_if_not_in_atomic_block
+def update_tools_access_policy_task(user_id):
+    with cache.lock(
+        "update_tools_access_policy_task",
+        blocking_timeout=0,
+        timeout=360,
+    ):
+        _do_update_user_tool_access_policy(user_id)
+
+
+def _do_update_user_tool_access_policy(user_id):
+    user_model = get_user_model()
+    try:
+        user = user_model.objects.get(id=user_id)
+    except user_model.DoesNotExist:
+        logger.exception("User id %d does not exist", user_id)
+    else:
+        update_user_tool_access_policy(user, user.profile.home_directory_efs_access_point_id)
