@@ -1,4 +1,5 @@
 import logging
+import json
 from datetime import datetime, time, timedelta
 
 from django.contrib.postgres.aggregates.general import ArrayAgg, BoolOr
@@ -20,7 +21,7 @@ from django.db.models import (
     FilteredRelation,
 )
 from django.db.models import QuerySet
-from django.http import JsonResponse
+from django.http import HttpResponse
 from pytz import utc
 import redis
 
@@ -821,10 +822,9 @@ def suggested_searches(request):
         .order_by("occurrences")
     )
 
-    return JsonResponse(
-        {
-            "results": {"name": search["extra__query"], "type": "", "url": ""}
-            for search in recent_searches
-        },
-        status=200,
+    return HttpResponse(
+        json.dumps(
+            [{"name": search["extra__query"], "type": "", "url": ""} for search in recent_searches]
+        ),
+        content_type="application/json",
     )
