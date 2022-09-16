@@ -59,11 +59,10 @@
             <input class="search-field__submit" type="submit" value="Search" style="display: table-cell; top: -2px">
           </div>
           {% else %}
-          <label class="govuk-label search-field__label" for="search">Search by dataset name or description</label>
           <div class="search-field-wrapper govuk-!-padding-bottom-6">
             <input type="text" name="q" id="search" title="Search"
                    class="govuk-input search-field__item search-field__input js-class-toggle" value="{{ query }}"
-                   aria-controls="search-summary-accessible-hint-wrapper">
+                   aria-controls="search-summary-accessible-hint-wrapper" placeholder="Search by dataset name or description">
             <div class="search-field-submit-wrapper search-field__item">
               <input class="search-field__submit" type="submit" value="Search">
             </div>
