@@ -1438,7 +1438,7 @@ def generate_jwt_token(user):
 def get_user_s3_prefixes(user):
     return {
         "home": get_s3_prefix(str(user.profile.sso_id)),
-        **{x.schema_name: x.schema_name for x in user.team_memberships.all()},
+        **{x["name"]: x["schema_name"] for x in get_team_schemas_for_user(user)},
     }
 
 
