@@ -95,7 +95,7 @@ numpy==1.22.0
     #   pandas
     #   scikit-learn
     #   scipy
-oauthlib==3.2.0
+oauthlib==3.2.1
     # via databricks-cli
 packaging==21.3
     # via mlflow
