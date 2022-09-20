@@ -1,6 +1,7 @@
 import logging
-import waffle
 from datetime import datetime, time, timedelta
+
+import waffle
 
 from django.conf import settings
 from django.contrib.postgres.aggregates.general import ArrayAgg, BoolOr
