@@ -17,13 +17,14 @@ from timeit import default_timer as timer
 from typing import Tuple
 from urllib.parse import unquote
 
-import redis
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.db import connections, connection
 from django.db.models import Q
+from django.db.models.signals import post_delete, post_save
+from django.dispatch import receiver
 from django.http import StreamingHttpResponse
 import gevent
 import gevent.queue
@@ -33,6 +34,7 @@ from psycopg2 import connect, sql
 from psycopg2.sql import SQL
 import requests
 from tableschema import Schema
+import redis
 
 
 from dataworkspace.apps.core.boto3_client import get_s3_client, get_iam_client
@@ -42,7 +44,7 @@ from dataworkspace.apps.core.constants import (
     SCHEMA_POSTGRES_DATA_TYPE_MAP,
     TABLESCHEMA_FIELD_TYPE_MAP,
 )
-from dataworkspace.apps.core.models import Database, DatabaseUser, Team
+from dataworkspace.apps.core.models import Database, DatabaseUser, Team, TeamMembership
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import DataSet, SourceTable, ReferenceDataset
 from dataworkspace.cel import celery_app
@@ -1472,14 +1474,30 @@ def update_tools_access_policy_task(user_id):
         blocking_timeout=0,
         timeout=360,
     ):
-        _do_update_user_tool_access_policy(user_id)
+        user_model = get_user_model()
+        try:
+            user = user_model.objects.get(id=user_id)
+        except user_model.DoesNotExist:
+            logger.exception("User id %d does not exist", user_id)
+        else:
+            update_user_tool_access_policy(user, user.profile.home_directory_efs_access_point_id)
 
 
-def _do_update_user_tool_access_policy(user_id):
-    user_model = get_user_model()
-    try:
-        user = user_model.objects.get(id=user_id)
-    except user_model.DoesNotExist:
-        logger.exception("User id %d does not exist", user_id)
-    else:
-        update_user_tool_access_policy(user, user.profile.home_directory_efs_access_point_id)
+@receiver(post_save, sender=TeamMembership)
+def team_membership_post_save(instance, **kwargs):
+    """
+    When a team member is added to a team, update their tools access
+    to include the team s3 prefix
+    """
+    if kwargs["created"] and instance.user.profile.tools_access_role_arn:
+        update_tools_access_policy_task.delay(instance.user_id)
+
+
+@receiver(post_delete, sender=TeamMembership)
+def team_membership_post_delete(instance, **_):
+    """
+    When a team member is removed from a team, update their tools access
+    to remove the team s3 prefix
+    """
+    if instance.user.profile.tools_access_role_arn:
+        update_tools_access_policy_task.delay(instance.user_id)
