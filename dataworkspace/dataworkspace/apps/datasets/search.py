@@ -826,7 +826,10 @@ def suggested_searches(request):
         )
 
         return JsonResponse(
-            [{"name": search["extra__query"].lower(), "type": "", "url": ""} for search in recent_searches],
+            [
+                {"name": search["extra__query"].lower(), "type": "", "url": ""}
+                for search in recent_searches
+            ],
             safe=False,
             status=200,
         )
