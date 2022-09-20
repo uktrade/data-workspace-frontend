@@ -1,6 +1,8 @@
 import logging
+import waffle
 from datetime import datetime, time, timedelta
 
+from django.conf import settings
 from django.contrib.postgres.aggregates.general import ArrayAgg, BoolOr
 from django.contrib.postgres.search import SearchRank, SearchQuery
 from django.core.cache import cache
@@ -809,21 +811,29 @@ def update_datasets_average_daily_users():
 
 
 def suggested_searches(request):
-    query = request.GET.get("query", None)
-    recent_searches = (
-        EventLog.objects.filter(
-            event_type=EventLog.TYPE_DATASET_FIND_FORM_QUERY,
-            extra__query__startswith=query,
-            extra__number_of_results__gt=0,
-            timestamp__date__gt=datetime.today() - timedelta(days=30),
+    if waffle.flag_is_active(request, settings.SUGGESTED_SEARCHES_FLAG):
+        query = request.GET.get("query", None)
+        recent_searches = (
+            EventLog.objects.filter(
+                event_type=EventLog.TYPE_DATASET_FIND_FORM_QUERY,
+                extra__query__startswith=query,
+                extra__number_of_results__gt=0,
+                timestamp__date__gt=datetime.today() - timedelta(days=30),
+            )
+            .values("extra__query")
+            .annotate(occurrences=Count("extra__query"))
+            .order_by("occurrences")
         )
-        .values("extra__query")
-        .annotate(occurrences=Count("extra__query"))
-        .order_by("occurrences")
-    )
 
-    return JsonResponse(
-        [{"name": search["extra__query"], "type": "", "url": ""} for search in recent_searches],
-        safe=False,
-        status=200,
-    )
+        return JsonResponse(
+            [{"name": search["extra__query"].lower(), "type": "", "url": ""} for search in recent_searches],
+            safe=False,
+            status=200,
+        )
+
+    else:
+        return JsonResponse(
+            [],
+            safe=False,
+            status=200,
+        )
