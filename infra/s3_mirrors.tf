@@ -14,7 +14,7 @@ resource "aws_s3_bucket" "mirrors" {
 data "aws_s3_bucket" "mirrors" {
   count = "${var.mirrors_data_bucket_name != "" ? 1 : 0}"
   bucket = "${var.mirrors_data_bucket_name}"
-  # provider = "aws.mirror"
+  # provider = aws.mirror
 }
 
 resource "aws_s3_bucket_policy" "mirrors" {

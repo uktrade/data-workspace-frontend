@@ -17,7 +17,7 @@ resource "aws_ecs_task_definition" "remotedesktop" {
 
   lifecycle {
     ignore_changes = [
-      "revision",
+      revision,
     ]
   }
 }

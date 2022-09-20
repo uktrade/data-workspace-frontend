@@ -14,7 +14,7 @@ resource "aws_rds_cluster" "datasets" {
   enabled_cloudwatch_logs_exports = ["postgresql"]
 
   lifecycle {
-    ignore_changes = ["master_password", "engine_version"]
+    ignore_changes = [master_password, engine_version]
   }
 }
 
@@ -29,7 +29,7 @@ resource "aws_rds_cluster_instance" "datasets" {
   db_parameter_group_name       = "aurora-postgresql-10-pgaudit-db-parameter-group"
 
   lifecycle {
-    ignore_changes = ["engine_version"]
+    ignore_changes = [engine_version]
   }
 }
 

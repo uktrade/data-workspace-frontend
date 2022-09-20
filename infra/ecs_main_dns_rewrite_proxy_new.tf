@@ -39,7 +39,7 @@ resource "aws_lb_target_group" "dns_rewrite_proxy_new" {
     path               = "/"
   }
 
-  depends_on = ["aws_lb.dns_rewrite_proxy_new"]
+  depends_on = [aws_lb.dns_rewrite_proxy_new]
 }
 
 resource "aws_ecs_service" "dns_rewrite_proxy_new" {
@@ -74,7 +74,7 @@ resource "aws_ecs_task_definition" "dns_rewrite_proxy_new" {
 
   lifecycle {
     ignore_changes = [
-      "revision",
+      revision,
     ]
   }
 }

@@ -13,7 +13,7 @@ resource "aws_ecs_task_definition" "superset" {
 
   lifecycle {
     ignore_changes = [
-      "revision",
+      revision,
     ]
   }
 }

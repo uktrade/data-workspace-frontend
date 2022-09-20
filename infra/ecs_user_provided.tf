@@ -10,7 +10,7 @@ resource "aws_ecs_task_definition" "user_provided" {
 
   lifecycle {
     ignore_changes = [
-      "revision",
+      revision,
     ]
   }
 }

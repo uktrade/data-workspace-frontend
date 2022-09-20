@@ -10,14 +10,14 @@ provider "aws" {
 }
 
 variable aws_availability_zones {
- type = "list"
+ type = list(string)
 }
 variable aws_availability_zones_short {
- type = "list"
+ type = list(string)
 }
 
 variable ip_whitelist {
-  type = "list"
+  type = list(string)
 }
 
 variable prefix {}
@@ -85,7 +85,7 @@ variable zendesk_service_field_id {}
 variable zendesk_service_field_value {}
 
 variable prometheus_whitelist {
-  type = "list"
+  type = list(string)
 }
 variable metrics_service_discovery_basic_auth_user {}
 variable metrics_service_discovery_basic_auth_password {}
@@ -93,7 +93,7 @@ variable metrics_service_discovery_basic_auth_password {}
 variable google_analytics_site_id {}
 
 variable gitlab_ip_whitelist {
-  type = "list"
+  type = list(string)
 }
 variable gitlab_domain {}
 variable gitlab_bucket {}
@@ -129,10 +129,10 @@ variable paas_cidr_block {}
 variable paas_vpc_id {}
 variable quicksight_cidr_block {}
 variable datasets_subnet_cidr_blocks {
-  type = "list"
+  type = list(string)
 }
 variable dataset_subnets_availability_zones {
-  type = "list"
+  type = list(string)
 }
 variable quicksight_security_group_name {}
 variable quicksight_security_group_description {}

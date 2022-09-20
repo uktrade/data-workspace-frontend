@@ -18,7 +18,7 @@ resource "aws_ecs_task_definition" "rstudio" {
 
   lifecycle {
     ignore_changes = [
-      "revision",
+      revision,
     ]
   }
 }
