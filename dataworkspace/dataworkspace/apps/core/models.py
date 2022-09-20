@@ -3,10 +3,9 @@ import uuid
 
 from django.contrib.auth import get_user_model
 from django.db import models
-from django.db.models.signals import post_save, pre_delete, post_delete
+from django.db.models.signals import pre_delete, post_delete
 from django.core.validators import RegexValidator
 from django.conf import settings
-from django.dispatch import receiver
 
 
 class TimeStampedModel(models.Model):
@@ -190,30 +189,6 @@ class TeamMembership(TimeStampedModel):
 
     class Meta:
         unique_together = ("team_id", "user_id")
-
-
-@receiver(post_save, sender=TeamMembership)
-def team_membership_post_save(instance, **kwargs):
-    """
-    When a team member is added to a team, update their tools access
-    to include the team s3 prefix
-    """
-    from dataworkspace.apps.core.utils import update_tools_access_policy_task
-
-    if kwargs["created"] and instance.user.profile.tools_access_role_arn:
-        update_tools_access_policy_task.delay(instance.user_id)
-
-
-@receiver(post_delete, sender=TeamMembership)
-def team_membership_post_delete(instance, **_):
-    """
-    When a team member is removed from a team, update their tools access
-    to remove the team s3 prefix
-    """
-    from dataworkspace.apps.core.utils import update_tools_access_policy_task
-
-    if instance.user.profile.tools_access_role_arn:
-        update_tools_access_policy_task.delay(instance.user_id)
 
 
 class MLFlowInstance(TimeStampedModel):
