@@ -1439,7 +1439,7 @@ def generate_jwt_token(user):
 def get_user_s3_prefixes(user):
     return {
         "home": get_s3_prefix(str(user.profile.sso_id)),
-        **{x["name"]: x["schema_name"] for x in get_team_schemas_for_user(user)},
+        **{x["name"]: f'teams/{x["schema_name"]}/' for x in get_team_schemas_for_user(user)},
     }
 
 
@@ -1453,7 +1453,7 @@ def update_user_tool_access_policy(user, access_point_id):
                 RoleName=settings.S3_ROLE_PREFIX + user.email,
                 PolicyName=settings.S3_POLICY_NAME,
                 PolicyDocument=settings.S3_POLICY_DOCUMENT_TEMPLATE.replace(
-                    "__S3_PREFIXES__", '","'.join([f"{x}/*" for x in s3_prefixes.values()])
+                    "__S3_PREFIXES__", '","'.join([f"{x}*" for x in s3_prefixes.values()])
                 ).replace("__ACCESS_POINT_ID__", access_point_id or ""),
             )
         except iam_client.exceptions.NoSuchEntityException:

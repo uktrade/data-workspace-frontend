@@ -28,6 +28,7 @@ from dataworkspace.apps.applications.gitlab import (
     gitlab_api_v4_ecr_pipeline_trigger,
 )
 from dataworkspace.apps.core.utils import (
+    clean_db_identifier,
     close_admin_db_connection_if_not_in_atomic_block,
     close_all_connections_if_not_in_atomic_block,
     create_tools_access_iam_role,
@@ -276,7 +277,6 @@ class FargateSpawner:
             logger.info("Starting %s", cmd)
 
             user_email = user.email
-            user_profile_sso_id = user.profile.sso_id
             close_admin_db_connection_if_not_in_atomic_block()
 
             role_arn, s3_prefixes = create_tools_access_iam_role(
@@ -288,9 +288,12 @@ class FargateSpawner:
                 "S3_REGION": s3_region,
                 "S3_HOST": s3_host,
                 "S3_BUCKET": s3_bucket,
+                **{
+                    f"{clean_db_identifier(name).upper()}_TEAM_S3_PREFIX": prefix
+                    for name, prefix in s3_prefixes.items()
+                    if name != "home"
+                },
             }
-
-            # TODO: We need to add env vars for each non-home prefix
 
             authorised_hosts = list(
                 user.authorised_mlflow_instances.all().values_list("instance__hostname", flat=True)
