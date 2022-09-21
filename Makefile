@@ -31,8 +31,11 @@ docker-build:
 
 
 .PHONY: docker-test-unit
-docker-test-unit: docker-build
+docker-test-unit:
 	docker-compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test pytest /dataworkspace/dataworkspace/tests/request_access/test_views.py -s --disable-warnings
+
+down:
+	docker-compose -f docker-compose-test.yml -p data-workspace-test down
 
 
 .PHONY: docker-test-integration
@@ -98,7 +101,8 @@ docker-test-unit-local:
 	if [ -z "$$TEST_DIR" ]; \
 		then TEST_DIR="/dataworkspace/dataworkspace"; \
  	fi; \
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run data-workspace-test pytest $$TEST_DIR -x -v --disable-warnings --reuse-db
+	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run data-workspace-test pytest $$TEST_DIR/tests/request_access/test_views.py -k 'TestToolsAccessOnly' -x -v --disable-warnings
+	#docker-compose -f docker-compose-test-local.yml -p data-workspace-test run data-workspace-test pytest $$TEST_DIR -x -v --disable-warnings --reuse-db
 
 .PHONY: docker-test-shell-local
 docker-test-shell-local:
