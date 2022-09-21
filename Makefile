@@ -30,6 +30,7 @@ docker-build:
 	docker-compose -f docker-compose-test.yml build
 
 
+.PHONY: docker-test-unit
 docker-test-unit: docker-build
 	docker-compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test pytest /dataworkspace/dataworkspace
 
