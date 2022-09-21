@@ -71,7 +71,8 @@ var LiveSearch = function (formSelector, wrapperSelector, GTM, linkSelector, GOV
   this.$form.on("search", "input[type=text]", this.formChange.bind(this));
   $(window).on("popstate", this.popState.bind(this));
 
-  this.$form.find("input[type=submit]").click(
+  this.$form.on(
+    "submit",
     function (e) {
       this.formChange();
       e.preventDefault();
