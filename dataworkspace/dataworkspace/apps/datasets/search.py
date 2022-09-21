@@ -823,7 +823,7 @@ def suggested_searches(request):
             )
             .values("extra__query")
             .annotate(occurrences=Count("extra__query"))
-            .order_by("occurrences")
+            .order_by("occurrences")[:5]
         )
 
         return JsonResponse(
