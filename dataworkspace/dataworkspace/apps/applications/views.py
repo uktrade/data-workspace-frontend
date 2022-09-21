@@ -83,7 +83,7 @@ from dataworkspace.apps.datasets.models import (
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.notify import decrypt_token, send_email
-from dataworkspace.zendesk import update_zendesk_ticket
+from dataworkspace.zendesk import update_helpdesk_ticket
 
 TOOL_LOADING_MESSAGES = [
     {
@@ -726,7 +726,7 @@ def visualisation_users_give_access_html_POST(request, gitlab_project, token_dat
         return error(f"{user.get_full_name()} already has access")
 
     if email_address == token_data.get("email", "").strip().lower():
-        update_zendesk_ticket(
+        update_helpdesk_ticket(
             token_data["ticket"],
             comment=f"Access granted by {request.user.email}",
             status="solved",

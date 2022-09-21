@@ -30,12 +30,8 @@ docker-build:
 	docker-compose -f docker-compose-test.yml build
 
 
-.PHONY: docker-test-unit
-docker-test-unit:
-	docker-compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test pytest /dataworkspace/dataworkspace/tests/request_access/test_views.py -s --disable-warnings
-
-down:
-	docker-compose -f docker-compose-test.yml -p data-workspace-test down
+docker-test-unit: docker-build
+	docker-compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test pytest /dataworkspace/dataworkspace
 
 
 .PHONY: docker-test-integration

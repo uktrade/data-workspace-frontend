@@ -6,6 +6,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
+import helpdesk_client
+
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType
 from dataworkspace.apps.request_access.models import AccessRequest
@@ -15,8 +17,6 @@ from dataworkspace.tests.request_access import factories
 
 from dataworkspace.apps.core.storage import ClamAVResponse
 
-# from helpdesk_client.interfaces import HelpDeskStubbed
-import helpdesk_client
 
 class TestDatasetAccessOnly:
     def test_user_sees_appropriate_message_on_dataset_page(self, client, user, metadata_db):
