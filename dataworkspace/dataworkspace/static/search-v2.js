@@ -376,10 +376,8 @@ function accessibleAutocompleteOptions(data, dataSearchURL, GTM, liveSearchForm)
           suggestedSearchesName.shift()
         } else {
           for (var d = 0; d < response.length; ++d) {
-            if (suggestedSearchesName.length <= 5) {
               response[d]["length"] = query.length
               suggestedSearchesName.push(response[d])
-            }
           }
         }
         const searchResults = query == '' ? dataName : suggestedSearchesName;
