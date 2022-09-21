@@ -287,14 +287,14 @@ class TestToolsAccessOnly:
             "request_access:summary-page", kwargs={"pk": access_requests[0].pk}
         )
 
-    @pytest.mark.django_db(transaction=True)
+    @pytest.mark.django_db()
     @pytest.mark.parametrize(
         "access_type", (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
     )
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.request_access.views.zendesk.helpdesk.create_ticket")
     @mock.patch("dataworkspace.apps.core.storage._upload_to_clamav")
-    def test_helpdesk(
+    def test_helpdesk_ticket_created_after_form_submission(
         self,
         mock_upload_to_clamav,
         helpdesk_create_ticket,
@@ -303,6 +303,14 @@ class TestToolsAccessOnly:
         metadata_db,
         access_type,
     ):
+
+        class MockTicket:
+            @property
+            def id(self):
+                return 1
+
+        helpdesk_create_ticket.return_value = MockTicket()
+
         mock_upload_to_clamav.return_value = ClamAVResponse({"malware": False})
 
         dataset = DatasetsCommon()._create_master(user_access_type=access_type)
@@ -310,42 +318,42 @@ class TestToolsAccessOnly:
         client.get(reverse("request_access:dataset", kwargs={"dataset_uuid": dataset.id}))
         access_requests = AccessRequest.objects.all()
 
-#         screenshot = SimpleUploadedFile("file.txt", b"file_content")
-#         client.post(
-#             reverse("request_access:tools-1", kwargs={"pk": access_requests[0].pk}),
-#             {"training_screenshot": screenshot},
-#         )
-#         client.post(
-#             reverse("request_access:tools-2", kwargs={"pk": access_requests[0].pk}),
-#             follow=True,
-#         )
-#         client.post(
-#             reverse("request_access:summary-page", kwargs={"pk": access_requests[0].pk}),
-#             follow=True,
-#         )
+        screenshot = SimpleUploadedFile("file.txt", b"file_content")
+        client.post(
+            reverse("request_access:tools-1", kwargs={"pk": access_requests[0].pk}),
+            {"training_screenshot": screenshot},
+        )
+        client.post(
+            reverse("request_access:tools-2", kwargs={"pk": access_requests[0].pk}),
+            follow=True,
+        )
+        client.post(
+            reverse("request_access:summary-page", kwargs={"pk": access_requests[0].pk}),
+            follow=True,
+        )
 
-#         assert len(helpdesk_create_ticket.call_args_list) == 1
-#         call_args, _ = helpdesk_create_ticket.call_args_list[0]
-#         ticket = call_args[0]
+        assert len(helpdesk_create_ticket.call_args_list) == 1
+        call_args, _ = helpdesk_create_ticket.call_args_list[0]
+        ticket = call_args[0]
 
-#         assert ticket.subject == "Access Request for A master"
-#         assert (
-#             ticket.description
-#             == f"""Access request for
+        assert ticket.subject == "Access Request for A master"
+        assert (
+            ticket.description
+            == f"""Access request for
 
-# Username:   Frank Exampleson
-# Journey:    Tools access
-# Dataset:    A master
-# SSO Login:  frank.exampleson@test.com
-# People search: https://people.trade.gov.uk/search?search_filters[]=people&query=Frank%20Exampleson
+Username:   Frank Exampleson
+Journey:    Tools access
+Dataset:    A master
+SSO Login:  frank.exampleson@test.com
+People search: https://people.trade.gov.uk/search?search_filters[]=people&query=Frank%20Exampleson
 
 
-# Details for the request can be found at
+Details for the request can be found at
 
-# http://testserver/admin/request_access/accessrequest/{access_requests[0].pk}/change/
+http://testserver/admin/request_access/accessrequest/{access_requests[0].pk}/change/
 
-# """
-#         )
+"""
+        )
 
 
 class TestDatasetAndToolsAccess:

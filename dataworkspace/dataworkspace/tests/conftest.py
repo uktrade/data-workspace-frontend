@@ -142,7 +142,6 @@ def metadata_db(db):
     ) as conn, conn.cursor() as cursor:
         cursor.execute(
             """
-            BEGIN;
             CREATE SCHEMA IF NOT EXISTS dataflow;
             CREATE TABLE IF NOT EXISTS dataflow.metadata (
                 id SERIAL,
@@ -165,7 +164,6 @@ def metadata_db(db):
                 ('public','table2','2020-09-01 00:01:00.0','2020-09-02 00:01:00.0',NULL,1),
                 ('public','table1','2020-01-01 00:01:00.0','2020-09-02 00:01:00.0',NULL,1),
                 ('public','table4', NULL,'2021-12-01 00:00:00.0',NULL,1);
-            COMMIT;
             """
         )
         conn.commit()
