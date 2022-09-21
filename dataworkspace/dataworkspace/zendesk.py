@@ -8,18 +8,6 @@ from zenpy.lib.api_objects import Ticket, User, Comment, CustomField
 
 from dataworkspace.notify import generate_token, send_email
 
-print("x"*80)
-print("x"*80)
-print("x"*80)
-print(settings.HELP_DESK_INTERFACE)
-print("x"*80)
-print("x"*80)
-print("x"*80)
-print(settings.HELP_DESK_CREDS)
-print("x"*80)
-print("x"*80)
-print("x"*80)
-
 from helpdesk_client import get_helpdesk_interface
 from helpdesk_client.interfaces import (
     HelpDeskTicket,
@@ -94,7 +82,6 @@ You can approve this request here
 
 # configure and instantiate the client
 helpdesk_interface = get_helpdesk_interface("helpdesk_client.interfaces.HelpDeskStubbed")
-# helpdesk_interface = get_helpdesk_interface(settings.HELP_DESK_INTERFACE)
 helpdesk = helpdesk_interface(credentials=settings.HELP_DESK_CREDS)
 
 
@@ -119,29 +106,7 @@ def create_zendesk_ticket(request, access_request, catalogue_item=None):
 
     subject = f"Access Request for {catalogue_item if catalogue_item else username}"
 
-    # client = Zenpy(
-    #     subdomain=settings.ZENDESK_SUBDOMAIN,
-    #     email=settings.ZENDESK_EMAIL,
-    #     token=settings.ZENDESK_TOKEN,
-    # )
-
-    # ticket_audit = client.tickets.create(
-    #     Ticket(
-    #         subject=subject,
-    #         description=ticket_description,
-    #         requester=User(email=access_request.requester.email, name=username),
-    #         custom_fields=[
-    #             CustomField(id=zendesk_service_field_id, value=zendesk_service_field_value)
-    #         ],
-    #     )
-    # )
-
-    # ticket_audit.ticket.comment = Comment(body=private_comment, public=False)
-    # client.tickets.update(ticket_audit.ticket)
-
-    # return ticket_audit.ticket.id
-
-    hdt = HelpDeskTicket(
+    helpdesk_ticket = HelpDeskTicket(
         subject=subject,
         description=ticket_description,
         user=HelpDeskUser(
@@ -160,15 +125,7 @@ def create_zendesk_ticket(request, access_request, catalogue_item=None):
         )
     )
 
-    print("X"*120, flush=True)
-    print(hdt, flush=True)
-    print("Y"*120, flush=True)
-
-    ticket_audit = helpdesk.create_ticket(hdt)
-
-    print("X"*120, flush=True)
-    print(ticket_audit.id, flush=True)
-    print("Y"*120, flush=True)
+    ticket_audit = helpdesk.create_ticket(helpdesk_ticket)
 
     return ticket_audit.id
 

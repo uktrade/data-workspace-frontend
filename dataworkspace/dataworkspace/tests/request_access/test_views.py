@@ -285,19 +285,57 @@ class TestToolsAccessOnly:
             "request_access:summary-page", kwargs={"pk": access_requests[0].pk}
         )
 
+    # Hier...
+    # @pytest.mark.django_db
+    # @pytest.mark.parametrize(
+    #     "access_type", (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+    # )
+    # @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
+    # @mock.patch("dataworkspace.apps.request_access.views.zendesk.helpdesk.create_ticket")
+    # @mock.patch("dataworkspace.apps.core.storage._upload_to_clamav")
+    # def test_helpdesk(
+    #     self,
+    #     mock_upload_to_clamav,
+    #     helpdesk_create_ticket,
+    #     mock_boto,
+    #     client,
+    #     metadata_db,
+    #     access_type,
+    # ):
+    #     mock_upload_to_clamav.return_value = ClamAVResponse({"malware": False})
+
+    #     dataset = DatasetsCommon()._create_master(user_access_type=access_type)
+    #     client.get(reverse("request_access:dataset", kwargs={"dataset_uuid": dataset.id}))
+    #     access_requests = AccessRequest.objects.all()
+
+    #     screenshot = SimpleUploadedFile("file.txt", b"file_content")
+    #     client.post(
+    #         reverse("request_access:tools-1", kwargs={"pk": access_requests[0].pk}),
+    #         {"training_screenshot": screenshot},
+    #     )
+    #     client.post(
+    #         reverse("request_access:tools-2", kwargs={"pk": access_requests[0].pk}),
+    #         follow=True,
+    #     )
+    #     client.post(
+    #         reverse("request_access:summary-page", kwargs={"pk": access_requests[0].pk}),
+    #         follow=True,
+    #     )
+
+    #     assert len(helpdesk_create_ticket.call_args_list) == 1
+
+
     @pytest.mark.django_db
     @pytest.mark.parametrize(
         "access_type", (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
     )
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
-    # @mock.patch("dataworkspace.apps.request_access.views.zendesk.Zenpy")
     @mock.patch("dataworkspace.apps.request_access.views.zendesk.helpdesk.create_ticket")
     @mock.patch("dataworkspace.apps.core.storage._upload_to_clamav")
-    def test_zendesk_ticket_created_after_form_submission(
+    def test_helpdesk(
         self,
         mock_upload_to_clamav,
-        # mock_zendesk_client,
-        mock_helpdesk_create_ticket,
+        helpdesk_create_ticket,
         mock_boto,
         client,
         metadata_db,
@@ -323,17 +361,8 @@ class TestToolsAccessOnly:
             follow=True,
         )
 
-        print("TEST_PRINT\n"*10)
-        print("")
-        print("==")
-        print()
-        print("*"*10)
-        print("TEST_PRINT\n"*10)
-
-        # assert len(mock_zenpy_client.tickets.create.call_args_list) == 1
-        assert len(mock_helpdesk_create_ticket.call_args_list) == 1
-        # call_args, _ = mock_zenpy_client.tickets.create.call_args_list[0]
-        call_args, _ = mock_helpdesk_create_ticket.call_args_list[0]
+        assert len(helpdesk_create_ticket.call_args_list) == 1
+        call_args, _ = helpdesk_create_ticket.call_args_list[0]
         ticket = call_args[0]
 
         assert ticket.subject == "Access Request for A master"
