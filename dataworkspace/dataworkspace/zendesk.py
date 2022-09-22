@@ -212,9 +212,9 @@ If access has not been granted to the requestor within 5 working days, this will
 def create_support_request(user, email, message, tag=None, subject=None):
     ticket_audit = helpdesk.create_ticket(
         HelpDeskTicket(
-            subject=subject or "Data Workspace Support Request",,
+            subject=subject or "Data Workspace Support Request",
             description=message,
-            user=User(email=email, name=user.get_full_name()),,
+            user=User(email=email, name=user.get_full_name()),
             custom_fields=[
                 HelpDeskCustomField(
                     id=zendesk_service_field_id,
