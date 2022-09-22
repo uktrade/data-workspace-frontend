@@ -25,6 +25,15 @@ GTMDatasetSearchSupport.prototype.pushSearchRecentClick =
     }
   };
 
+GTMDatasetSearchSupport.prototype.pushSuggestedSearchesClick =
+  function pushSuggestedSearchesClick(name) {
+  try {
+    this.pushSuggestedSearchesClickEvent(name);
+  } catch (e) {
+    console.error(e);
+  }
+  }
+
 GTMDatasetSearchSupport.prototype.pushSearchResultClickEvent =
   function pushSearchResultClickEvent(data) {
     if (typeof dataLayer == "undefined") return;
@@ -39,6 +48,14 @@ GTMDatasetSearchSupport.prototype.pushSearchRecentClickEvent =
       "catalogueId": id,
       "catalogueName": name,
       "catalogueType": type,
+    })
+  }
+
+GTMDatasetSearchSupport.prototype.pushSuggestedSearchesClickEvent =
+  function pushSuggestedSearchesClickEvent(name) {
+    dataLayer.push({
+      event: "suggestedSearchesClick",
+      "name": name,
     })
   }
 

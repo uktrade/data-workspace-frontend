@@ -426,6 +426,7 @@ function accessibleAutocompleteOptions(data, dataSearchURL, GTM, liveSearchForm)
       GTM.pushSearchRecentClick(result.url.split("/")[2].split("#")[0], result.name, result.type)
       window.location.href = result.url
     } else {
+      GTM.pushSuggestedSearchesClick(result.name)
       var inputElement = document.getElementById("app-site-search__input")
       inputElement.value = result.name
       liveSearchForm.formChange()
