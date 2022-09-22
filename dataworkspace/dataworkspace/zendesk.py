@@ -3,8 +3,6 @@ import urllib.parse
 
 from django.conf import settings
 from django.urls import reverse
-from zenpy import Zenpy
-from zenpy.lib.api_objects import Ticket, User, Comment, CustomField
 
 from dataworkspace.notify import generate_token, send_email
 
@@ -134,8 +132,8 @@ def update_helpdesk_ticket(ticket_id, comment=None, status=None):
     if comment:
         helpdesk.helpdesk.add_comment(
             ticket_id=ticket_id,
-            comment=comment(
-                body=private_comment,
+            comment=HelpDeskComment(
+                body=comment,
                 public=False
             )
         )
@@ -214,12 +212,9 @@ If access has not been granted to the requestor within 5 working days, this will
 def create_support_request(user, email, message, tag=None, subject=None):
     ticket_audit = helpdesk.create_ticket(
         HelpDeskTicket(
-            subject=subject,
-            description=ticket_description,
-            user=HelpDeskUser(
-                full_name=username,
-                email=access_request.requester.email
-            ),
+            subject=subject or "Data Workspace Support Request",,
+            description=message,
+            user=User(email=email, name=user.get_full_name()),,
             custom_fields=[
                 HelpDeskCustomField(
                     id=zendesk_service_field_id,

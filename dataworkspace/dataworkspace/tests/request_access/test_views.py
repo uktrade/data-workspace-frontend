@@ -6,8 +6,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
-import helpdesk_client
-
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType
 from dataworkspace.apps.request_access.models import AccessRequest
