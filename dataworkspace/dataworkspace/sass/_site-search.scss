@@ -142,12 +142,6 @@ $icon-size: 40px;
     position: relative;
   }
 
-  #app-site-search__input__option--0 {
-    background-color: #fff;
-    pointer-events: none;
-    border-bottom: none;
-  }
-
   .app-site-search__option {
     display: block;
     position: relative;
@@ -170,11 +164,11 @@ $icon-size: 40px;
     border-bottom-width: 0;
   }
 
-  .app-site-search__option:nth-child(odd) {
+  .app-site-search__option:nth-child(even) {
     $_app-site-search-option-background-color: #fafafa;
     background-color: $_app-site-search-option-background-color;
   }
-  .app-site-search__option--focused:nth-child(odd).app-site-search__option--focused:not(:first-child){
+  .app-site-search__option--focused:nth-child(even).app-site-search__option--focused{
     background-color: govuk-colour("blue")!important;
   }
 
@@ -270,6 +264,10 @@ $icon-size: 40px;
 .app-site-search__recently-viewed-header {
   background-color: #fff;
   pointer-events: none;
+  padding-top: 12px;
+  padding-bottom: 6px;
+  padding-left: 12px;
+  margin: -12px -12px 6px -20px;
 }
 
 #iconClock {
