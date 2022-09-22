@@ -88,13 +88,9 @@
             {{ form.sort }}
           </div>
 
-          <div id="search-summary-accessible-hint-wrapper" class="govuk-visually-hidden" aria-atomic="true"
-               aria-live="polite" aria-relevant="additions text" role="status">
-            {{ datasets.paginator.count }} dataset{{ datasets.paginator.count|pluralize }} found.
-          </div>
-          <p class="govuk-body govuk-!-margin-top-2 govuk-!-margin-bottom-0">
-              <span role="status"
-                    id="search-results-count">{{ datasets.paginator.count }}</span>
+          <p class="govuk-body govuk-!-margin-top-2 govuk-!-margin-bottom-0"
+              aria-live="polite" aria-relevant="additions text" role="status">
+              <span id="search-results-count">{{ datasets.paginator.count }}</span>
             dataset{{ datasets.paginator.count|pluralize }} found.
           </p>
 
