@@ -214,7 +214,10 @@ def create_support_request(user, email, message, tag=None, subject=None):
         HelpDeskTicket(
             subject=subject or "Data Workspace Support Request",
             description=message,
-            user=User(email=email, name=user.get_full_name()),
+            user=HelpDeskUser(
+                full_name=user.get_full_name(),
+                email=email,
+            ),
             custom_fields=[
                 HelpDeskCustomField(
                     id=zendesk_service_field_id,
