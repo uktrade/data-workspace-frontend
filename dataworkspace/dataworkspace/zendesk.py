@@ -30,9 +30,7 @@ def get_people_url(name):
     )
 
 
-def build_ticket_description_text(
-    access_request, access_request_url, catalogue_item=None
-):
+def build_ticket_description_text(access_request, access_request_url, catalogue_item=None):
     username = get_username(access_request.requester)
     people_url = get_people_url(username)
     ticket_description = f"""Access request for
@@ -81,9 +79,7 @@ You can approve this request here
 
 
 # configure and instantiate the client
-helpdesk_interface = get_helpdesk_interface(
-    "helpdesk_client.interfaces.HelpDeskStubbed"
-)
+helpdesk_interface = get_helpdesk_interface("helpdesk_client.interfaces.HelpDeskStubbed")
 helpdesk = helpdesk_interface(credentials=settings.HELP_DESK_CREDS)
 
 
@@ -101,9 +97,7 @@ def create_zendesk_ticket(request, access_request, catalogue_item=None):
     )
 
     private_comment = (
-        build_private_comment_text(catalogue_item, authorize_url)
-        if catalogue_item
-        else None
+        build_private_comment_text(catalogue_item, authorize_url) if catalogue_item else None
     )
 
     username = get_username(access_request.requester)
@@ -115,9 +109,7 @@ def create_zendesk_ticket(request, access_request, catalogue_item=None):
         description=ticket_description,
         user=HelpDeskUser(full_name=username, email=access_request.requester.email),
         custom_fields=[
-            HelpDeskCustomField(
-                id=zendesk_service_field_id, value=zendesk_service_field_value
-            )
+            HelpDeskCustomField(id=zendesk_service_field_id, value=zendesk_service_field_value)
         ],
         comment=HelpDeskComment(body=private_comment, public=False),
     )
@@ -214,9 +206,7 @@ def create_support_request(user, email, message, tag=None, subject=None):
                 email=email,
             ),
             custom_fields=[
-                HelpDeskCustomField(
-                    id=zendesk_service_field_id, value=zendesk_service_field_value
-                )
+                HelpDeskCustomField(id=zendesk_service_field_id, value=zendesk_service_field_value)
             ],
             tags=[tag] if tag else None,
         )
