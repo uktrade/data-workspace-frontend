@@ -4,15 +4,15 @@ import urllib.parse
 from django.conf import settings
 from django.urls import reverse
 
-from dataworkspace.notify import generate_token, send_email
-
 from helpdesk_client import get_helpdesk_interface
 from helpdesk_client.interfaces import (
+    HelpDeskComment,
+    HelpDeskCustomField,
     HelpDeskTicket,
     HelpDeskUser,
-    HelpDeskCustomField,
-    HelpDeskComment,
 )
+
+from dataworkspace.notify import generate_token, send_email
 
 logger = logging.getLogger("app")
 
