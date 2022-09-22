@@ -363,8 +363,8 @@ function accessibleAutocompleteOptions(data, dataSearchURL, GTM, liveSearchForm)
   function handleSearchQuery(query, callback) {
     var suggestedSearchesName = []
     var dataName = []
-    data[0]["isFirst"] = true
     for (var i = 0; i < data.length; ++i) {
+      data[i]['isFirst'] = (i === 0);
       data[i]['searchType'] = "Recently viewed"
       dataName.push(data[i]);
     }
@@ -374,10 +374,10 @@ function accessibleAutocompleteOptions(data, dataSearchURL, GTM, liveSearchForm)
       url: dataSearchURL,
       data: {'query': `${query}`},
       success: function (response) {
-        response[0]["isFirst"] = true
         for (var d = 0; d < response.length; ++d) {
           response[d]["length"] = query.length
           response[d]["searchType"] = "Suggested search"
+          response[d]['isFirst'] = (d === 0);
           suggestedSearchesName.push(response[d])
         }
         const searchResults = query == '' ? dataName : suggestedSearchesName;
