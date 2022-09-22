@@ -142,8 +142,11 @@ $icon-size: 40px;
     position: relative;
   }
 
+  .app-site-search__recently-viewed-header {
+    display: none;
+}
   #app-site-search__input__option--0 > .app-site-search__recently-viewed-header {
-    display: block !important;
+      display: block;
   }
 
   .app-site-search__option {
