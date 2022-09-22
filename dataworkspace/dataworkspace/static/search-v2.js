@@ -359,7 +359,6 @@ document.body.addEventListener('click', function(event) {
 
 function accessibleAutocompleteOptions(data, dataSearchURL, GTM, liveSearchForm) {
   var container = document.getElementById('my-autocomplete-container')
-  var suggestedSearchDummyResult = {"name": "", "type": "", "url": ""}
 
   function handleSearchQuery(query, callback) {
     var suggestedSearchesName = []
