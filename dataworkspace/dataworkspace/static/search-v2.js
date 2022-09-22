@@ -363,6 +363,7 @@ function accessibleAutocompleteOptions(data, dataSearchURL, GTM, liveSearchForm)
   function handleSearchQuery(query, callback) {
     var suggestedSearchesName = []
     var dataName = []
+    data[0]["isFirst"] = true
     for (var i = 0; i < data.length; ++i) {
       data[i]['searchType'] = "Recently viewed"
       dataName.push(data[i]);
@@ -373,6 +374,7 @@ function accessibleAutocompleteOptions(data, dataSearchURL, GTM, liveSearchForm)
       url: dataSearchURL,
       data: {'query': `${query}`},
       success: function (response) {
+        response[0]["isFirst"] = true
         for (var d = 0; d < response.length; ++d) {
           response[d]["length"] = query.length
           response[d]["searchType"] = "Suggested search"
@@ -388,29 +390,31 @@ function accessibleAutocompleteOptions(data, dataSearchURL, GTM, liveSearchForm)
   }
 
   function resultTemplate(result) {
-      var elem = document.createElement('li')
+    var elem = document.createElement('li')
 
+    if (result.isFirst === true) {
       if (result.searchType === "Recently viewed") {
         elem.insertAdjacentHTML('beforeend', '<div class="app-site-search__recently-viewed-header"><svg id="iconClock" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><polygon points="10.3752 11.9064 6.8826 8.4142 6.8826 3.1999 8.8821 3.1999 8.8821 7.5861 11.7893 10.4924 10.3752 11.9064"/><path d="M8,2c3.3084,0,6,2.6916,6,6s-2.6916,6-6,6-6-2.6916-6-6S4.6916,2,8,2m0-2C3.5817,0,0,3.5817,0,8s3.5817,8,8,8,8-3.5817,8-8S12.4183,0,8,0h0Z"/></svg><h3 id="recentlyViewedDataHeader">Recently viewed data</h3></div>')
       } else if (result.searchType === "Suggested search") {
         elem.insertAdjacentHTML('beforeend', '<div class="app-site-search__recently-viewed-header"><svg style="margin-left: 5px" id="suggestedSearches" xmlns="http://www.w3.org/2000/svg" width="16.561" height="16.561" viewBox="0 0 16.561 16.561"><g id="Ellipse_1" data-name="Ellipse 1" fill="none" stroke="#000" stroke-width="2"><circle cx="6.427" cy="6.427" r="6.427" stroke="none"/><circle cx="6.427" cy="6.427" r="5.427" fill="none"/></g><line id="Line_1" data-name="Line 1" x2="5.25" y2="5.25" transform="translate(10.25 10.25)" fill="none" stroke="#000" stroke-width="3"/></svg><h3 id="recentlyViewedDataHeader">Suggested searches</h3></div>')
       }
+    }
 
-      if (result.type === "") {
-        var bold = document.createElement('B')
-        bold.textContent = result.name.substring(0, result.length)
-        elem.appendChild(bold)
-      }
+    if (result.type === "") {
+      var bold = document.createElement('B')
+      bold.textContent = result.name.substring(0, result.length)
+      elem.appendChild(bold)
+    }
 
-      var text = document.createTextNode(result.name.substring(result.length));
-      elem.appendChild(text)
+    var text = document.createTextNode(result.name.substring(result.length));
+    elem.appendChild(text)
 
-      var section = document.createElement('span')
-      section.className = "app-site-search--section"
-      section.innerHTML = result.type
-      elem.appendChild(section)
+    var section = document.createElement('span')
+    section.className = "app-site-search--section"
+    section.innerHTML = result.type
+    elem.appendChild(section)
 
-      return elem.innerHTML
+    return elem.innerHTML
   }
 
   function onConfirm(result) {
