@@ -834,7 +834,7 @@ def suggested_searches(request):
             .values("lower_query")  # So GROUP BY is only on "lower_query", not "id, lower_query"
             .annotate(occurrences=Count("lower_query"))
             .values("lower_query")  # Prevents "occurrences" from being output needlessly
-            .order_by("occurrences")[:5]
+            .order_by("-occurrences")[:5]
         )
 
         return JsonResponse(
