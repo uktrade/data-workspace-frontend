@@ -35,6 +35,7 @@
 </div>
 <div class="govuk-grid-row">
   {% if has_access %}
+    {% flag CHART_BUILDER_BUILD_CHARTS_FLAG %}
     <div class="govuk-grid-column-two-thirds">
       <div class="govuk-button-group">
         <a class="govuk-button" href="{% url 'datasets:select_chart_source' model.pk %}">Create a new chart</a>
@@ -44,6 +45,7 @@
         {% endif %}
       </div>
     </div>
+    {% endflag %}
   {% else %}
     <div class="govuk-grid-column-full">
       {% include 'partials/request_access_visuals.html' %}
