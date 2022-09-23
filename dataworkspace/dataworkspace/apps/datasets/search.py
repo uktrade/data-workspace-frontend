@@ -23,6 +23,8 @@ from django.db.models import (
     FilteredRelation,
 )
 from django.db.models import QuerySet
+from django.db.models.functions import Lower
+from django.db.models.fields.json import KeyTextTransform
 from django.http import JsonResponse
 from pytz import utc
 import redis
@@ -814,23 +816,29 @@ def update_datasets_average_daily_users():
 def suggested_searches(request):
     if waffle.flag_is_active(request, settings.SUGGESTED_SEARCHES_FLAG):
         query = request.GET.get("query", None)
+
+        # Using Django's standard '__' on JSON fields in keword arguments uses the '->' operator
+        # in the resulting SQL query. But we can't pass the result of that to the PostgreSQL
+        # function LOWER for a case-insensitive GROUP BY since PostreSQL won't know the result is
+        # text. Instead, need to use '->>'. But to do that we have to use KeyTextTransform
+        query_as_text = KeyTextTransform("query", "extra")
+
         recent_searches = (
-            EventLog.objects.filter(
+            EventLog.objects.annotate(lower_query=Lower(query_as_text))
+            .filter(
+                lower_query__startswith=query.lower().strip(),
                 event_type=EventLog.TYPE_DATASET_FIND_FORM_QUERY,
-                extra__query__startswith=query,
                 extra__number_of_results__gt=0,
                 timestamp__gt=datetime.today() - timedelta(days=30),
             )
-            .values("extra__query")
-            .annotate(occurrences=Count("extra__query"))
-            .order_by("occurrences")[:5]
+            .values("lower_query")  # So GROUP BY is only on "lower_query", not "id, lower_query"
+            .annotate(occurrences=Count("lower_query"))
+            .values("lower_query")  # Prevents "occurrences" from being output needlessly
+            .order_by("-occurrences")[:5]
         )
 
         return JsonResponse(
-            [
-                {"name": search["extra__query"].lower(), "type": "", "url": ""}
-                for search in recent_searches
-            ],
+            [{"name": search["lower_query"], "type": "", "url": ""} for search in recent_searches],
             safe=False,
             status=200,
         )
