@@ -105,7 +105,7 @@ prometheus-client==0.14.1
     # via prometheus-flask-exporter
 prometheus-flask-exporter==0.20.2
     # via mlflow
-protobuf==4.21.2
+protobuf==4.21.6
     # via mlflow
 psycopg2==2.9.3
     # via -r requirements-mlflow.in
