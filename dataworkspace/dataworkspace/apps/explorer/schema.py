@@ -144,13 +144,15 @@ def match_datasets_with_schema_info(schema):
     source_tables = (
         SourceTable.objects.alias(schema_table=Func(F("schema"), F("table"), function="Row"))
         .filter(schema_table__in=schema_table_names)
-        .select_related("dataset", "dataset__reference_code")
-        .only("schema", "table", "dataset__dictionary_published", "dataset__reference_code")
+        .only("schema", "table", "dataset__dictionary_published")
+        .values("schema", "table", "dataset__dictionary_published")
     )
 
     # Attach the dictionary_published to each table in schema
     dictionary_published = {
-        (source_table.schema, source_table.table): source_table.dataset.dictionary_published
+        (source_table["schema"], source_table["table"]): source_table[
+            "dataset__dictionary_published"
+        ]
         for source_table in source_tables
     }
 
