@@ -155,36 +155,16 @@ def match_datasets_with_schema_info(schema):
     }
 
     # Same logic for reference datasets
-    reference_datasets = (
-        ReferenceDataset.objects.filter(
-            table_name__in=[
-                s.name.name
-                for s in schema
-                if s.name.schema == "public" and s.name.name.startswith("ref_")
-            ]
-        )
-        .select_related(
-            # Various related fields are not needed, but they're used in the ReferenceDataset's __init__
-            # method, and so we have a query per ReferenceDataset if we don't pre-select them
-            "external_database",
-            "sort_field",
-            "sort_field__linked_reference_dataset_field",
-        )
-        .only(
-            "table_name",
-            "sort_direction",
-            "published",
-            "external_database",
-            "sort_field__data_type",
-            "sort_field__column_name",
-            "sort_field__relationship_name",
-            "sort_field__linked_reference_dataset_field__data_type",
-            "sort_field__linked_reference_dataset_field__column_name",
-        )
-    )
+    reference_datasets = ReferenceDataset.objects.filter(
+        table_name__in=[
+            s.name.name
+            for s in schema
+            if s.name.schema == "public" and s.name.name.startswith("ref_")
+        ]
+    ).values("table_name")
 
     for dataset in reference_datasets:
-        dictionary_published[("public", dataset.table_name)] = True
+        dictionary_published[("public", dataset["table_name"])] = True
 
     for s in schema:
         s.name.dictionary_published = dictionary_published.get((s.name.schema, s.name.name), False)
