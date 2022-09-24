@@ -161,6 +161,12 @@ def match_datasets_with_schema_info(schema):
             for s in schema
             if s.name.schema == "public" and s.name.name.startswith("ref_")
         ]
+    ).select_related(
+        # Various related fields are not needed, but they're used in the ReferenceDataset's __init__
+        # method, and so we have a query per ReferenceDataset if we don't pre-select them
+        "external_database",
+        "sort_field",
+        "sort_field__linked_reference_dataset_field",
     )
 
     for dataset in reference_datasets:
