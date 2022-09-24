@@ -667,6 +667,10 @@ def create_new_schema(schema_name):
 def source_tables_for_user(user):
     user_email_domain = user.email.split("@")[1]
 
+    # select_related to reduce number of database queries
+    # The `dataset__reference_code` field is not used in many cases, but is accessed
+    # in the DataSet's __init__ function, and so results in a database query for
+    # each Dataset if it isn't select_related or prefetch_related up-front
     req_authentication_tables = SourceTable.objects.filter(
         Q(
             dataset__user_access_type__in=[
@@ -676,18 +680,18 @@ def source_tables_for_user(user):
         ),
         dataset__deleted=False,
         **{"dataset__published": True} if not user.is_superuser else {},
-    )
+    ).select_related("dataset", "dataset__reference_code", "database")
     req_authorization_tables = SourceTable.objects.filter(
         dataset__user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
         dataset__deleted=False,
         dataset__datasetuserpermission__user=user,
         **{"dataset__published": True} if not user.is_superuser else {},
-    )
+    ).select_related("dataset", "dataset__reference_code", "database")
     automatically_authorized_tables = SourceTable.objects.filter(
         dataset__deleted=False,
         dataset__authorized_email_domains__contains=[user_email_domain],
         **{"dataset__published": True} if not user.is_superuser else {},
-    )
+    ).select_related("dataset", "dataset__reference_code", "database")
     source_tables = [
         {
             "database": x.database,
@@ -717,6 +721,7 @@ def source_tables_for_user(user):
         for x in ReferenceDataset.objects.live()
         .filter(deleted=False, **{"published": True} if not user.is_superuser else {})
         .exclude(external_database=None)
+        .select_related("external_database")
     ]
     return source_tables + reference_dataset_tables
 
