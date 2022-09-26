@@ -1066,7 +1066,6 @@ def _do_create_tools_access_iam_role(user_id):
     else:
         create_tools_access_iam_role(
             user.email,
-            str(user.profile.sso_id),
             user.profile.home_directory_efs_access_point_id,
         )
         gevent.sleep(1)

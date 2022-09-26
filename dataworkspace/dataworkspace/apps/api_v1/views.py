@@ -234,7 +234,6 @@ def aws_credentials_api_GET(request):
     client = get_sts_client()
     role_arn, _ = create_tools_access_iam_role(
         request.user.email,
-        str(request.user.profile.sso_id),
         request.user.profile.home_directory_efs_access_point_id,
     )
 
