@@ -41,7 +41,7 @@ class HelpDeskTest(HelpDeskBase):
         # Call help desk test server with ticket details
         ticket.id = self._ticket_id
 
-        resp = requests.post(
+        requests.post(
             "http://dataworkspace.test:8006/api/v2/tickets.json",
             json={
                 "ticket": {
@@ -50,9 +50,9 @@ class HelpDeskTest(HelpDeskBase):
                     "description": ticket.description,
                     "status": "new",
                     "requester_id": 1,
-                    "submitter_id": 1
+                    "submitter_id": 1,
                 },
-            }
+            },
         )
 
         return ticket
@@ -69,4 +69,5 @@ class HelpDeskTest(HelpDeskBase):
     def update_ticket(self, ticket: HelpDeskTicket) -> HelpDeskTicket:
         raise NotImplementedError
 
-HELP_DESK_INTERFACE="dataworkspace.settings.integration_tests.HelpDeskTest"
+
+HELP_DESK_INTERFACE = "dataworkspace.settings.integration_tests.HelpDeskTest"

@@ -1,5 +1,3 @@
-from unittest import mock
-
 import time
 
 import pytest
@@ -8,6 +6,7 @@ import requests
 from django.core.cache import cache
 
 from dataworkspace.apps.request_data.models import RoleType, SecurityClassificationType
+
 from test.selenium.common import get_driver  # pylint: disable=wrong-import-order
 from test.selenium.conftest import (  # pylint: disable=wrong-import-order
     create_sso,
@@ -24,11 +23,6 @@ from test.selenium.workspace_pages import (  # pylint: disable=wrong-import-orde
     SupportPage,
     RequestDataLicencePage,
 )
-
-from django.conf import settings
-
-
-from helpdesk_client.interfaces import HelpDeskBase, HelpDeskUser, HelpDeskTicket, HelpDeskComment
 
 
 class TestRequestData:
@@ -72,7 +66,6 @@ class TestRequestData:
             cache.clear()
 
             yield
-
 
     def test_happy_path(self, _application):
         home_page = HomePage(self.driver)
@@ -130,6 +123,8 @@ class TestRequestData:
         ).json()
 
         assert len(submitted_tickets) == 1
+
+        ticket_data = submitted_tickets[0]["ticket"]
 
         assert "Bobby Tables" in ticket_data["description"]
         assert "It’s data about DIT" in ticket_data["description"]

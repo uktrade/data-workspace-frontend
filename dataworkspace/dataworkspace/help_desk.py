@@ -206,7 +206,9 @@ def create_support_request(user, email, message, tag=None, subject=None):
                 email=email,
             ),
             custom_fields=[
-                HelpDeskCustomField(id=help_desk_service_field_id, value=help_desk_service_field_value)
+                HelpDeskCustomField(
+                    id=help_desk_service_field_id, value=help_desk_service_field_value
+                )
             ],
             tags=[tag] if tag else None,
         )

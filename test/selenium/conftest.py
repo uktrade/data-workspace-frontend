@@ -296,7 +296,9 @@ class HelpDeskServer(multiprocessing.Process):
                     self.send_header("Content-Type", "application/json")
                     self.end_headers()
 
-                    response_content = self.rfile.read(int(self.headers["content-length"])).decode("ascii")
+                    response_content = self.rfile.read(int(self.headers["content-length"])).decode(
+                        "ascii"
+                    )
                     ticket_dict = json.loads(response_content)
 
                     submitted_tickets.append(
