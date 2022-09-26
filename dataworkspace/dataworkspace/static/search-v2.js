@@ -90,14 +90,12 @@ var LiveSearch = function (formSelector, wrapperSelector, GTM, linkSelector, GOV
 
         var inputElement = document.getElementById("app-site-search__input")
         inputElement.ariaExpanded = "false"
-        inputElement.classList.remove('app-site-search__input--focused')
 
         var searchMenu = document.getElementById('app-site-search__input__listbox')
         searchMenu.classList.remove('app-site-search__menu--visible')
         searchMenu.classList.add('app-site-search__menu--hidden');
 
         e.preventDefault();
-        inputElement.blur()
       }
     }.bind(this)
   );
