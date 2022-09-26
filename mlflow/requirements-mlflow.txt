@@ -77,7 +77,7 @@ jmespath==1.0.1
     #   botocore
 joblib==1.1.0
     # via scikit-learn
-mako==1.2.0
+mako==1.2.2
     # via alembic
 markupsafe==2.1.1
     # via
