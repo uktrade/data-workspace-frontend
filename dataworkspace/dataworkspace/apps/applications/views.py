@@ -83,7 +83,7 @@ from dataworkspace.apps.datasets.models import (
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.notify import decrypt_token, send_email
-from dataworkspace.zendesk import update_helpdesk_ticket
+from dataworkspace.help_desk import update_helpdesk_ticket
 
 TOOL_LOADING_MESSAGES = [
     {

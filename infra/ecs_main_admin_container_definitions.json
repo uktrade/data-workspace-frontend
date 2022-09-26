@@ -829,24 +829,16 @@
       "value": "${mirror_remote_root}"
     },
     {
-      "name": "ZENDESK_EMAIL",
-      "value": "${zendesk_email}"
+      "name": "HELP_DESK_EMAIL",
+      "value": "${help_desk_email}"
     },
     {
-      "name": "ZENDESK_SUBDOMAIN",
-      "value": "${zendesk_subdomain}"
+      "name": "HELP_DESK_SERVICE_FIELD_ID",
+      "value": "${help_desk_service_field_id}"
     },
     {
-      "name": "ZENDESK_TOKEN",
-      "value": "${zendesk_token}"
-    },
-    {
-      "name": "ZENDESK_SERVICE_FIELD_ID",
-      "value": "${zendesk_service_field_id}"
-    },
-    {
-      "name": "ZENDESK_SERVICE_FIELD_VALUE",
-      "value": "${zendesk_service_field_value}"
+      "name": "ZHELP_DESK_SERVICE_FIELD_VALUE",
+      "value": "${help_desk_service_field_value}"
     },
     {
       "name": "QUICKSIGHT_DASHBOARD_EMBEDDING_ROLE_ARN",

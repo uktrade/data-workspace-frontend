@@ -90,7 +90,7 @@ class TestDatasetAccessOnly:
         )
 
     @pytest.mark.django_db
-    @mock.patch("dataworkspace.apps.request_access.views.zendesk.helpdesk.create_ticket")
+    @mock.patch("dataworkspace.apps.request_access.views.help_desk.helpdesk.create_ticket")
     @mock.patch("dataworkspace.apps.core.storage._upload_to_clamav")
     def test_helpdesk_ticket_created_after_form_submission(
         self,
@@ -290,7 +290,7 @@ class TestToolsAccessOnly:
         "access_type", (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
     )
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
-    @mock.patch("dataworkspace.apps.request_access.views.zendesk.helpdesk.create_ticket")
+    @mock.patch("dataworkspace.apps.request_access.views.help_desk.helpdesk.create_ticket")
     @mock.patch("dataworkspace.apps.core.storage._upload_to_clamav")
     def test_helpdesk_ticket_created_after_form_submission(
         self,

@@ -47,4 +47,4 @@ class DataRequest(TimeStampedModel):
         choices=DataRequestStatus.choices,
         default=DataRequestStatus.draft,
     )
-    zendesk_ticket_id = models.CharField(max_length=256)
+    help_desk_ticket_id = models.CharField(max_length=256)

@@ -31,10 +31,10 @@ class AccessRequest(TimeStampedModel):
     spss_and_stata = models.BooleanField(default=False, blank=True)
     line_manager_email_address = models.CharField(max_length=256, null=True)
     reason_for_spss_and_stata = models.TextField(null=True)
-    zendesk_reference_number = models.CharField(max_length=256, null=True)
+    help_desk_reference_number = models.CharField(max_length=256, null=True)
 
     def __str__(self):
-        return f"{self.requester} - Zendesk reference number: {self.zendesk_reference_number}"
+        return f"{self.requester} - Help desk reference number: {self.help_desk_reference_number}"
 
     @property
     def journey(self):

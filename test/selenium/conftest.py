@@ -269,11 +269,11 @@ def create_sso(is_logged_in, codes, tokens, auth_to_me):
     proc.join()
 
 
-class ZendeskServer(multiprocessing.Process):
+class HelpDeskServer(multiprocessing.Process):
     def run(self):
         submitted_tickets = []
 
-        class ZendeskHandler(BaseHTTPRequestHandler):
+        class HelpDeskHandler(BaseHTTPRequestHandler):
             def do_GET(self):
                 nonlocal submitted_tickets
                 if self.path == "/_meta/read-submitted-tickets":
@@ -296,17 +296,19 @@ class ZendeskServer(multiprocessing.Process):
                     self.send_header("Content-Type", "application/json")
                     self.end_headers()
 
+                    response_content = self.rfile.read(int(self.headers["content-length"])).decode("ascii")
+                    ticket_dict = json.loads(response_content)
+
                     submitted_tickets.append(
-                        json.loads(
-                            self.rfile.read(int(self.headers["content-length"])).decode("ascii")
-                        )
+                        ticket_dict,
                     )
 
-                    with open("test/stubs/zendesk/create-ticket.json", "rb") as stub:
+                    with open("test/stubs/help_desk/create-ticket.json", "rb") as stub:
                         response = BytesIO()
                         response.write(stub.read())
 
                     self.wfile.write(response.getvalue())
+
                     return
 
                 self.send_response(500)
@@ -317,7 +319,7 @@ class ZendeskServer(multiprocessing.Process):
 
         signal.signal(signal.SIGTERM, sys_exit)
 
-        httpd = HTTPServer(("0.0.0.0", 8006), ZendeskHandler)
+        httpd = HTTPServer(("0.0.0.0", 8006), HelpDeskHandler)
         try:
             httpd.serve_forever()
         finally:
@@ -325,8 +327,8 @@ class ZendeskServer(multiprocessing.Process):
 
 
 @contextmanager
-def create_zendesk():
-    proc = ZendeskServer()
+def create_help_desk():
+    proc = HelpDeskServer()
     proc.start()
 
     yield proc

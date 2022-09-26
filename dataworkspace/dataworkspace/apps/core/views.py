@@ -43,7 +43,7 @@ from dataworkspace.apps.core.utils import (
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
-from dataworkspace.zendesk import create_support_request
+from dataworkspace.help_desk import create_support_request
 
 logger = logging.getLogger("app")
 
@@ -101,7 +101,7 @@ class SupportView(FormView):
     form_class = SupportForm
     template_name = "core/support.html"
 
-    ZENDESK_TAGS = {"data-request": "data_request"}
+    HELP_DESK_TAGS = {"data-request": "data_request"}
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data()
@@ -122,7 +122,7 @@ class SupportView(FormView):
         if cleaned["support_type"] == form.SupportTypes.TECH_SUPPORT:
             return HttpResponseRedirect(f'{reverse("technical-support")}?email={cleaned["email"]}')
 
-        tag = self.ZENDESK_TAGS.get(self.request.GET.get("tag"))
+        tag = self.HELP_DESK_TAGS.get(self.request.GET.get("tag"))
         ticket_id = create_support_request(
             self.request.user, cleaned["email"], cleaned["message"], tag=tag
         )

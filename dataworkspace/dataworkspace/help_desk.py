@@ -16,8 +16,8 @@ from dataworkspace.notify import generate_token, send_email
 
 logger = logging.getLogger("app")
 
-zendesk_service_field_id = settings.ZENDESK_SERVICE_FIELD_ID
-zendesk_service_field_value = settings.ZENDESK_SERVICE_FIELD_VALUE
+help_desk_service_field_id = settings.HELP_DESK_SERVICE_FIELD_ID
+help_desk_service_field_value = settings.HELP_DESK_SERVICE_FIELD_VALUE
 
 
 def get_username(user):
@@ -79,11 +79,11 @@ You can approve this request here
 
 
 # configure and instantiate the client
-helpdesk_interface = get_helpdesk_interface("helpdesk_client.interfaces.HelpDeskStubbed")
+helpdesk_interface = get_helpdesk_interface(settings.HELP_DESK_INTERFACE)
 helpdesk = helpdesk_interface(credentials=settings.HELP_DESK_CREDS)
 
 
-def create_zendesk_ticket(request, access_request, catalogue_item=None):
+def create_help_desk_ticket(request, access_request, catalogue_item=None):
     access_request_url = request.build_absolute_uri(
         reverse("admin:request_access_accessrequest_change", args=(access_request.id,))
     )
@@ -109,7 +109,7 @@ def create_zendesk_ticket(request, access_request, catalogue_item=None):
         description=ticket_description,
         user=HelpDeskUser(full_name=username, email=access_request.requester.email),
         custom_fields=[
-            HelpDeskCustomField(id=zendesk_service_field_id, value=zendesk_service_field_value)
+            HelpDeskCustomField(id=help_desk_service_field_id, value=help_desk_service_field_value)
         ],
         comment=HelpDeskComment(body=private_comment, public=False),
     )
@@ -152,7 +152,7 @@ Data visualisation owner: {dataset.enquiries_contact.email if dataset.enquiries_
 
 Secondary contact: {dataset.secondary_enquiries_contact.email if dataset.secondary_enquiries_contact else 'Not set'}
 
-If access has not been granted to the requestor within 5 working days, this will trigger an update to this Zendesk ticket to resolve the request.
+If access has not been granted to the requestor within 5 working days, this will trigger an update to this help desk ticket to resolve the request.
     """
 
     ticket_reference = create_support_request(
@@ -206,7 +206,7 @@ def create_support_request(user, email, message, tag=None, subject=None):
                 email=email,
             ),
             custom_fields=[
-                HelpDeskCustomField(id=zendesk_service_field_id, value=zendesk_service_field_value)
+                HelpDeskCustomField(id=help_desk_service_field_id, value=help_desk_service_field_value)
             ],
             tags=[tag] if tag else None,
         )

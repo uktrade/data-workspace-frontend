@@ -18,7 +18,7 @@ from dataworkspace.apps.request_access.forms import (  # pylint: disable=import-
 )
 
 from dataworkspace.apps.request_access import models
-from dataworkspace import zendesk
+from dataworkspace import help_desk
 
 
 class DatasetAccessRequest(CreateView):
@@ -173,7 +173,7 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
 
     def get(self, request, *args, **kwargs):
         access_request = self.get_object()
-        if not access_request.zendesk_reference_number:
+        if not access_request.help_desk_reference_number:
             catalogue_item = (
                 find_dataset(access_request.catalogue_item_id, self.request.user)
                 if access_request.catalogue_item_id
@@ -184,15 +184,15 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
                 isinstance(catalogue_item, VisualisationCatalogueItem)
                 and catalogue_item.visualisation_template is not None
             ):
-                access_request.zendesk_reference_number = (
-                    zendesk.notify_visualisation_access_request(
+                access_request.help_desk_reference_number = (
+                    help_desk.notify_visualisation_access_request(
                         request,
                         access_request,
                         catalogue_item,
                     )
                 )
             else:
-                access_request.zendesk_reference_number = zendesk.create_zendesk_ticket(
+                access_request.help_desk_reference_number = help_desk.create_help_desk_ticket(
                     request,
                     access_request,
                     catalogue_item,
@@ -205,7 +205,7 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
                     EventLog.TYPE_DATASET_ACCESS_REQUEST,
                     catalogue_item,
                     extra={
-                        "ticket_reference": access_request.zendesk_reference_number,
+                        "ticket_reference": access_request.help_desk_reference_number,
                     },
                 )
             else:
@@ -213,7 +213,7 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
                     request.user,
                     EventLog.TYPE_TOOLS_ACCESS_REQUEST,
                     extra={
-                        "ticket_reference": access_request.zendesk_reference_number,
+                        "ticket_reference": access_request.help_desk_reference_number,
                     },
                 )
         return super().get(request, *args, **kwargs)
