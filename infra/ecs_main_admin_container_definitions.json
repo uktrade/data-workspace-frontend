@@ -837,7 +837,7 @@
       "value": "${help_desk_service_field_id}"
     },
     {
-      "name": "ZHELP_DESK_SERVICE_FIELD_VALUE",
+      "name": "HELP_DESK_SERVICE_FIELD_VALUE",
       "value": "${help_desk_service_field_value}"
     },
     {
