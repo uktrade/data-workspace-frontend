@@ -37,8 +37,7 @@ docker-test-unit: docker-build
 
 .PHONY: docker-test-integration
 docker-test-integration: docker-build
-	docker-compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test pytest --ds=DJANGO_SETTINGS_MODULE=dataworkspace.settings.integration_tests test/
-
+	docker-compose -f docker-compose-test.yml -p data-workspace-test run -e DJANGO_SETTINGS_MODULE=dataworkspace.settings.integration_tests data-workspace-test pytest test/
 
 .PHONY: docker-test
 docker-test: docker-test-integration docker-test-unit
