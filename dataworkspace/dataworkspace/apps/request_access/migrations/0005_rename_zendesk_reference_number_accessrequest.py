@@ -6,13 +6,13 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('request_access', '0004_alter_accessrequest_training_screenshot'),
+        ("request_access", "0004_alter_accessrequest_training_screenshot"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='accessrequest',
-            old_name='zendesk_reference_number',
-            new_name='help_desk_reference_number',
+            model_name="accessrequest",
+            old_name="zendesk_reference_number",
+            new_name="help_desk_reference_number",
         ),
     ]
