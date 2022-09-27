@@ -1,4 +1,4 @@
-FROM debian:buster-slim AS base
+FROM debian:bullseye-slim AS base
 
 RUN \
     apt-get update && \
@@ -40,10 +40,10 @@ ENV \
 
 COPY superset_config.py /etc/superset/
 
-COPY data-workspace-patches.js /usr/local/lib/python3.7/dist-packages/superset/static/assets/
+COPY data-workspace-patches.js /usr/local/lib/python3.9/dist-packages/superset/static/assets/
 
 RUN sed -i 's/<\/title>/<\/title><script src="\/static\/assets\/data-workspace-patches.js"><\/script>/g' \
-    /usr/local/lib/python3.7/dist-packages/superset/templates/superset/basic.html
+    /usr/local/lib/python3.9/dist-packages/superset/templates/superset/basic.html
 
 FROM base AS dev
 
