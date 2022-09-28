@@ -42,7 +42,7 @@ from dataworkspace.apps.core.constants import (
     SCHEMA_POSTGRES_DATA_TYPE_MAP,
     TABLESCHEMA_FIELD_TYPE_MAP,
 )
-from dataworkspace.apps.core.models import Database, DatabaseUser, Team
+from dataworkspace.apps.core.models import DatabaseUser, Team
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import DataSet, SourceTable, ReferenceDataset
 
@@ -99,7 +99,7 @@ def new_private_database_credentials(
     db_user,
     dw_user: get_user_model(),
     valid_for: datetime.timedelta,
-    force_create_for_databases: Tuple[Database] = tuple(),
+    force_create_for_databases: Tuple[str] = tuple(),
 ):
     db_team_roles = [team.schema_name for team in Team.objects.filter(member=dw_user)]
     db_team_roles_set = set(db_team_roles)
@@ -114,7 +114,7 @@ def new_private_database_credentials(
     def postgres_password():
         return "".join(secrets.choice(password_alphabet) for i in range(64))
 
-    def get_new_credentials(database_obj, tables):
+    def get_new_credentials(database_memorable_name, tables):
         # Each real-world user is given
         # - a private and permanent schema where they can manage tables and rows as needed
         # - a permanent database role that is the owner of the schema
@@ -124,10 +124,10 @@ def new_private_database_credentials(
         db_role = f"{USER_SCHEMA_STEM}{db_role_and_schema_suffix}"
         db_schema = f"{USER_SCHEMA_STEM}{db_role_and_schema_suffix}"
 
-        database_data = settings.DATABASES_DATA[database_obj.memorable_name]
+        database_data = settings.DATABASES_DATA[database_memorable_name]
         valid_until = (datetime.datetime.now() + valid_for).isoformat()
 
-        with connections[database_obj.memorable_name].cursor() as cur:
+        with connections[database_memorable_name].cursor() as cur:
             existing_tables_and_views_set = set(tables_and_views_that_exist(cur, tables))
 
             allowed_tables_that_exist = [
@@ -189,7 +189,7 @@ def new_private_database_credentials(
                 "database-grant-v1",
                 blocking_timeout=15,
                 timeout=60,
-            ), connections[database_obj.memorable_name].cursor() as cur:
+            ), connections[database_memorable_name].cursor() as cur:
                 cur.execute(
                     sql.SQL("GRANT {} TO {};").format(
                         sql.SQL(",").join(
@@ -199,7 +199,7 @@ def new_private_database_credentials(
                     )
                 )
 
-        with connections[database_obj.memorable_name].cursor() as cur:
+        with connections[database_memorable_name].cursor() as cur:
             # Find existing permissions
             cur.execute(
                 sql.SQL(
@@ -381,10 +381,10 @@ def new_private_database_credentials(
             "database-grant-v1",
             blocking_timeout=15,
             timeout=180,
-        ), connections[database_obj.memorable_name].cursor() as cur:
+        ), connections[database_memorable_name].cursor() as cur:
             logger.info(
                 "Revoking permissions ON %s %s from %s",
-                database_obj.memorable_name,
+                database_memorable_name,
                 schemas_to_revoke,
                 db_role,
             )
@@ -398,7 +398,7 @@ def new_private_database_credentials(
 
             logger.info(
                 "Revoking permissions ON %s %s from %s",
-                database_obj.memorable_name,
+                database_memorable_name,
                 tables_to_revoke,
                 db_role,
             )
@@ -414,7 +414,7 @@ def new_private_database_credentials(
 
             logger.info(
                 "Granting permissions ON %s %s from %s",
-                database_obj.memorable_name,
+                database_memorable_name,
                 schemas_to_grant,
                 db_role,
             )
@@ -427,7 +427,7 @@ def new_private_database_credentials(
                 )
             logger.info(
                 "Granting SELECT ON %s %s from %s",
-                database_obj.memorable_name,
+                database_memorable_name,
                 tables_to_grant,
                 db_role,
             )
@@ -519,7 +519,7 @@ def new_private_database_credentials(
             )
 
         # Make it so by default, objects created by the user are owned by the role
-        with connections[database_obj.memorable_name].cursor() as cur:
+        with connections[database_memorable_name].cursor() as cur:
             cur.execute(
                 sql.SQL("ALTER USER {} SET ROLE {};").format(
                     sql.Identifier(db_user), sql.Identifier(db_role)
@@ -527,8 +527,7 @@ def new_private_database_credentials(
             )
 
         return {
-            "memorable_name": database_obj.memorable_name,
-            "db_id": database_obj.id,
+            "memorable_name": database_memorable_name,
             "db_name": database_data["NAME"],
             "db_host": database_data["HOST"],
             "db_port": database_data["PORT"],
@@ -538,11 +537,11 @@ def new_private_database_credentials(
         }
 
     database_to_tables = {
-        database_obj: [
+        database_memorable_name: [
             (source_table["schema"], source_table["table"])
             for source_table in source_tables_for_database
         ]
-        for database_obj, source_tables_for_database in itertools.groupby(
+        for database_memorable_name, source_tables_for_database in itertools.groupby(
             source_tables, lambda source_table: source_table["database"]
         )
     }
@@ -555,8 +554,8 @@ def new_private_database_credentials(
             database_to_tables[extra_db] = []
 
     creds = [
-        get_new_credentials(database_obj, tables)
-        for database_obj, tables in database_to_tables.items()
+        get_new_credentials(database_memorable_name, tables)
+        for database_memorable_name, tables in database_to_tables.items()
     ]
 
     if dw_user is not None:
@@ -680,27 +679,48 @@ def source_tables_for_user(user):
         ),
         dataset__deleted=False,
         **{"dataset__published": True} if not user.is_superuser else {},
-    ).select_related("dataset", "dataset__reference_code", "database")
+    ).values(
+        "database__memorable_name",
+        "schema",
+        "table",
+        "dataset__id",
+        "dataset__name",
+        "dataset__user_access_type",
+    )
     req_authorization_tables = SourceTable.objects.filter(
         dataset__user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
         dataset__deleted=False,
         dataset__datasetuserpermission__user=user,
         **{"dataset__published": True} if not user.is_superuser else {},
-    ).select_related("dataset", "dataset__reference_code", "database")
+    ).values(
+        "database__memorable_name",
+        "schema",
+        "table",
+        "dataset__id",
+        "dataset__name",
+        "dataset__user_access_type",
+    )
     automatically_authorized_tables = SourceTable.objects.filter(
         dataset__deleted=False,
         dataset__authorized_email_domains__contains=[user_email_domain],
         **{"dataset__published": True} if not user.is_superuser else {},
-    ).select_related("dataset", "dataset__reference_code", "database")
+    ).values(
+        "database__memorable_name",
+        "schema",
+        "table",
+        "dataset__id",
+        "dataset__name",
+        "dataset__user_access_type",
+    )
     source_tables = [
         {
-            "database": x.database,
-            "schema": x.schema,
-            "table": x.table,
+            "database": x["database__memorable_name"],
+            "schema": x["schema"],
+            "table": x["table"],
             "dataset": {
-                "id": x.dataset.id,
-                "name": x.dataset.name,
-                "user_access_type": x.dataset.user_access_type,
+                "id": x["dataset__id"],
+                "name": x["dataset__name"],
+                "user_access_type": x["dataset__user_access_type"],
             },
         }
         for x in req_authentication_tables.union(
@@ -709,19 +729,19 @@ def source_tables_for_user(user):
     ]
     reference_dataset_tables = [
         {
-            "database": x.external_database,
+            "database": x["external_database__memorable_name"],
             "schema": "public",
-            "table": x.table_name,
+            "table": x["table_name"],
             "dataset": {
-                "id": x.uuid,
-                "name": x.name,
+                "id": x["uuid"],
+                "name": x["name"],
                 "user_access_type": UserAccessType.REQUIRES_AUTHENTICATION,
             },
         }
         for x in ReferenceDataset.objects.live()
         .filter(deleted=False, **{"published": True} if not user.is_superuser else {})
         .exclude(external_database=None)
-        .select_related("external_database")
+        .values("external_database__memorable_name", "table_name", "uuid", "name")
     ]
     return source_tables + reference_dataset_tables
 
@@ -745,7 +765,7 @@ def source_tables_for_app(application_template):
     )
     source_tables = [
         {
-            "database": x.database,
+            "database": x.database.memorable_name,
             "schema": x.schema,
             "table": x.table,
             "dataset": {
@@ -758,7 +778,7 @@ def source_tables_for_app(application_template):
     ]
     reference_dataset_tables = [
         {
-            "database": x.external_database,
+            "database": x.external_database.memorable_name,
             "schema": "public",
             "table": x.table_name,
             "dataset": {

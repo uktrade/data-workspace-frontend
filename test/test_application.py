@@ -1637,7 +1637,6 @@ class TestApplication(unittest.TestCase):
         )
         assert superset_requests[0].headers["Credentials-Db-User"].endswith("superset")
         assert "Credentials-Db-Password" in superset_requests[0].headers
-        assert "Credentials-Db-Id" in superset_requests[0].headers
 
     @async_test
     async def test_superset_public_headers(self):

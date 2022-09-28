@@ -16,6 +16,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 
 from dataworkspace.cel import celery_app
+from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.applications.models import (
     ApplicationInstance,
     ApplicationInstanceDbUsers,
@@ -133,7 +134,7 @@ class ProcessSpawner:
             for creds in credentials:
                 ApplicationInstanceDbUsers.objects.create(
                     application_instance=application_instance,
-                    db_id=creds["db_id"],
+                    db_id=Database.objects.get(memorable_name=creds["memorable_name"]).id,
                     db_username=creds["db_user"],
                     db_persistent_role=creds["db_persistent_role"],
                 )
@@ -258,7 +259,7 @@ class FargateSpawner:
             for creds in credentials:
                 ApplicationInstanceDbUsers.objects.create(
                     application_instance=application_instance,
-                    db_id=creds["db_id"],
+                    db_id=Database.objects.get(memorable_name=creds["memorable_name"]).id,
                     db_username=creds["db_user"],
                     db_persistent_role=creds["db_persistent_role"],
                 )
