@@ -154,45 +154,50 @@ def get_user_explorer_connection_settings(user, alias):
 
     user_profile_sso_id = user.profile.sso_id
     close_admin_db_connection_if_not_in_atomic_block()
-    with cache.lock(
-        f"get-explorer-connection-{user_profile_sso_id}",
-        blocking_timeout=30,
-        timeout=180,
-    ):
-        cache_key = get_user_cached_credentials_key(user)
-        user_credentials = cache.get(cache_key, None)
+    cache_key = get_user_cached_credentials_key(user)
+    user_credentials = cache.get(cache_key, None)
 
-        # Make sure that the connection settings are still valid
-        if user_credentials:
-            db_aliases_to_credentials = get_available_user_connections(user_credentials)
-            try:
-                with user_explorer_connection(db_aliases_to_credentials[alias]):
-                    pass
-            except psycopg2.OperationalError:
-                logger.exception(
-                    "Unable to connect using existing cached explorer credentials for %s",
-                    user,
-                )
-                user_credentials = None
-
-        if not user_credentials:
-            db_role_schema_suffix = db_role_schema_suffix_for_user(user)
-            source_tables = source_tables_for_user(user)
-            db_user = postgres_user(user.email, suffix="explorer")
-            duration = timedelta(hours=24)
-            cache_duration = (duration - timedelta(minutes=15)).total_seconds()
-
-            user_credentials = new_private_database_credentials(
-                db_role_schema_suffix,
-                source_tables,
-                db_user,
+    # Make sure that the connection settings are still valid
+    if user_credentials:
+        db_aliases_to_credentials = get_available_user_connections(user_credentials)
+        try:
+            with user_explorer_connection(db_aliases_to_credentials[alias]):
+                pass
+        except psycopg2.OperationalError:
+            logger.exception(
+                "Unable to connect using existing cached explorer credentials for %s",
                 user,
-                valid_for=duration,
-                force_create_for_databases=Database.objects.filter(
-                    memorable_name__in=connections.keys()
-                ).all(),
             )
-            cache.set(cache_key, user_credentials, timeout=cache_duration)
+            user_credentials = None
+
+    if not user_credentials:
+        with cache.lock(
+            f"get-explorer-connection-{user_profile_sso_id}",
+            blocking_timeout=30,
+            timeout=180,
+        ):
+            # There is a chance that a parallel request created new credentials. If so, we don't
+            # want to create credentials again since they are almost definitely still valid
+            user_credentials = cache.get(cache_key, None)
+
+            if not user_credentials:
+                db_role_schema_suffix = db_role_schema_suffix_for_user(user)
+                source_tables = source_tables_for_user(user)
+                db_user = postgres_user(user.email, suffix="explorer")
+                duration = timedelta(hours=24)
+                cache_duration = (duration - timedelta(minutes=15)).total_seconds()
+
+                user_credentials = new_private_database_credentials(
+                    db_role_schema_suffix,
+                    source_tables,
+                    db_user,
+                    user,
+                    valid_for=duration,
+                    force_create_for_databases=Database.objects.filter(
+                        memorable_name__in=connections.keys()
+                    ).all(),
+                )
+                cache.set(cache_key, user_credentials, timeout=cache_duration)
 
     db_aliases_to_credentials = get_available_user_connections(user_credentials)
     if alias not in db_aliases_to_credentials:
