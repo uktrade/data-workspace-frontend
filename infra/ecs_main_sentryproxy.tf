@@ -57,7 +57,7 @@ resource "aws_ecs_task_definition" "sentryproxy" {
 
   lifecycle {
     ignore_changes = [
-      "revision",
+      revision,
     ]
   }
 }

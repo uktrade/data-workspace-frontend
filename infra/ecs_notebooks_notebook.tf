@@ -18,7 +18,7 @@ resource "aws_ecs_task_definition" "notebook" {
 
   lifecycle {
     ignore_changes = [
-      "revision",
+      revision,
     ]
   }
 }

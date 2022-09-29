@@ -24,7 +24,7 @@ resource "aws_ecs_service" "healthcheck" {
 
   depends_on = [
     # The target group must have been associated with the listener first
-    "aws_alb_listener.healthcheck",
+    aws_alb_listener.healthcheck,
   ]
 }
 
@@ -68,7 +68,7 @@ resource "aws_ecs_task_definition" "healthcheck" {
 
   lifecycle {
     ignore_changes = [
-      "revision",
+      revision,
     ]
   }
 }
@@ -195,7 +195,7 @@ resource "aws_alb" "healthcheck" {
   }
 
   depends_on = [
-    "aws_s3_bucket_policy.alb_access_logs",
+    aws_s3_bucket_policy.alb_access_logs,
   ]
 }
 

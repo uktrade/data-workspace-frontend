@@ -29,8 +29,8 @@ resource "aws_ecs_service" "gitlab" {
 
   depends_on = [
     # The target group must have been associated with the listener first
-    "aws_lb_listener.gitlab_443",
-    "aws_lb_listener.gitlab_22",
+    aws_lb_listener.gitlab_443,
+    aws_lb_listener.gitlab_22,
   ]
 }
 
@@ -69,7 +69,7 @@ resource "aws_ecs_task_definition" "gitlab" {
 
   lifecycle {
     ignore_changes = [
-      "revision",
+      revision,
     ]
   }
 }
