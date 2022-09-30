@@ -66,9 +66,7 @@ idna==3.3
     #   requests
     #   yarl
 importlib-metadata==4.12.0
-    # via
-    #   flask
-    #   mlflow
+    # via mlflow
 itsdangerous==2.1.2
     # via flask
 jinja2==3.1.2
@@ -77,7 +75,7 @@ jmespath==1.0.1
     # via
     #   boto3
     #   botocore
-joblib==1.1.0
+joblib==1.2.0
     # via scikit-learn
 mako==1.2.3
     # via alembic
