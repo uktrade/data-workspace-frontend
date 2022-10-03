@@ -52,7 +52,7 @@ resource "aws_acm_certificate_validation" "admin" {
 }
 
 resource "aws_route53_record" "healthcheck" {
-  # provider = "aws.route53"
+  provider = "aws.route53"
   zone_id = "${data.aws_route53_zone.aws_route53_zone.zone_id}"
   name    = "${var.healthcheck_domain}"
   type    = "A"
