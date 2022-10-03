@@ -466,4 +466,7 @@ function accessibleAutocompleteOptions(data, dataSearchURL, GTM, liveSearchForm)
       suggestion: resultTemplate
     }
   })
+
+  var inputElement = document.getElementById('app-site-search__input')
+  inputElement.type = 'search'
 }
