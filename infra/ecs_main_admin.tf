@@ -161,7 +161,7 @@ resource "aws_ecs_task_definition" "admin" {
 data "template_file" "admin_container_definitions" {
   template = "${file("${path.module}/ecs_main_admin_container_definitions.json")}"
 
-  vars = "${merge(local.admin_container_vars, map("container_command", "[\"/dataworkspace/start.sh\"]"))}"
+  vars = "${merge(local.admin_container_vars, tomap({"container_command" = "[\"/dataworkspace/start.sh\"]"}))}"
 }
 
 data "external" "admin_current_tag" {
@@ -209,7 +209,7 @@ resource "aws_ecs_task_definition" "admin_celery" {
 data "template_file" "admin_celery_container_definitions" {
   template = "${file("${path.module}/ecs_main_admin_container_definitions.json")}"
 
-  vars = "${merge(local.admin_container_vars, map("container_command", "[\"/dataworkspace/start-celery.sh\"]"))}"
+  vars = "${merge(local.admin_container_vars, tomap({"container_command" = "[\"/dataworkspace/start-celery.sh\"]"}))}"
 }
 
 resource "random_string" "admin_secret_key" {
