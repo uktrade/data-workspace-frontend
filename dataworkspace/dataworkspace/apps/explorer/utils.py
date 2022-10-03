@@ -15,7 +15,6 @@ from django.contrib.auth.views import LoginView
 from django.core.cache import cache
 from django.shortcuts import get_object_or_404
 
-from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.core.utils import (
     close_admin_db_connection_if_not_in_atomic_block,
     new_private_database_credentials,
@@ -193,9 +192,7 @@ def get_user_explorer_connection_settings(user, alias):
                     db_user,
                     user,
                     valid_for=duration,
-                    force_create_for_databases=Database.objects.filter(
-                        memorable_name__in=connections.keys()
-                    ).all(),
+                    force_create_for_databases=list(connections.keys()),
                 )
                 cache.set(cache_key, user_credentials, timeout=cache_duration)
 
