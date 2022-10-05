@@ -6,10 +6,11 @@ import requests
 from django.core.cache import cache
 
 from dataworkspace.apps.request_data.models import RoleType, SecurityClassificationType
+
 from test.selenium.common import get_driver  # pylint: disable=wrong-import-order
 from test.selenium.conftest import (  # pylint: disable=wrong-import-order
     create_sso,
-    create_zendesk,
+    create_help_desk,
 )
 from test.selenium.workspace_pages import (  # pylint: disable=wrong-import-order
     HomePage,
@@ -45,7 +46,7 @@ class TestRequestData:
         }
         with create_sso(
             is_logged_in, codes, tokens, auth_to_me
-        ) as sso, create_zendesk() as zendesk:
+        ) as sso, create_help_desk() as help_desk:
             tries = 240  # 60 seconds
             while tries >= 0:
                 try:
@@ -60,14 +61,13 @@ class TestRequestData:
 
             self.__class__.driver = get_driver()
             self.__class__.sso = sso
-            self.__class__.zendesk = zendesk
+            self.__class__.help_desk = help_desk
 
             cache.clear()
 
             yield
 
     def test_happy_path(self, _application):
-
         home_page = HomePage(self.driver)
         home_page.open()
 
@@ -114,15 +114,18 @@ class TestRequestData:
 
         # Confirm that the answers are correct
         confirmation_page = check_answers_page.click_accept()
+
         assert "1234567890987654321" in confirmation_page.get_html()
 
-        # Check that the request data has been posted to Zendesk
+        # Check that the request data has been posted to the help desk
         submitted_tickets = requests.get(
             "http://dataworkspace.test:8006/_meta/read-submitted-tickets"
         ).json()
 
         assert len(submitted_tickets) == 1
+
         ticket_data = submitted_tickets[0]["ticket"]
+
         assert "Bobby Tables" in ticket_data["description"]
         assert "It’s data about DIT" in ticket_data["description"]
         assert (

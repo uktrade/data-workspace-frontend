@@ -49,5 +49,5 @@ sqlalchemy
 tableschema
 Werkzeug
 XlsxWriter
-zenpy
 django-webpack-loader
+helpdesk-client

@@ -78,11 +78,9 @@ variable healthcheck_domain {}
 variable prometheus_domain {}
 
 variable cloudwatch_subscription_filter {}
-variable zendesk_email {}
-variable zendesk_subdomain {}
-variable zendesk_token {}
-variable zendesk_service_field_id {}
-variable zendesk_service_field_value {}
+variable help_desk_email {}
+variable help_desk_service_field_id {}
+variable help_desk_service_field_value {}
 
 variable prometheus_whitelist {
   type = "list"

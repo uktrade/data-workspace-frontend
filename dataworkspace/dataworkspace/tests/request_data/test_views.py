@@ -209,7 +209,7 @@ class TestRequestDataCheckAnswers:
         assert resp.status_code == expected_status_code
 
     @mock.patch("dataworkspace.apps.request_data.views.create_support_request")
-    def test_submitting_data_request_that_has_been_submitted_does_not_create_new_zendesk_ticket(
+    def test_submitting_data_request_that_has_been_submitted_does_not_create_new_help_desk_ticket(
         self, create_support_request_mock, client
     ):
         dr = DataRequestFactory.create(status=DataRequestStatus.submitted)
@@ -241,8 +241,8 @@ class TestRequestDataConfirmationPage:
         resp = client.get(reverse("request-data:confirmation-page", kwargs={"pk": dr.pk}))
         assert resp.status_code == 200
 
-    def test_shows_zendesk_ticket_id(self, client):
-        dr = DataRequestFactory.create(zendesk_ticket_id="123456789-IM-A-REFERENCE-987654321")
+    def test_shows_help_desk_ticket_id(self, client):
+        dr = DataRequestFactory.create(help_desk_ticket_id="123456789-IM-A-REFERENCE-987654321")
         resp = client.get(reverse("request-data:confirmation-page", kwargs={"pk": dr.pk}))
         assert resp.status_code == 200
         assert "123456789-IM-A-REFERENCE-987654321" in resp.content.decode(resp.charset)

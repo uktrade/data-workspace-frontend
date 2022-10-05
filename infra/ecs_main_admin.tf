@@ -64,11 +64,9 @@ locals {
     fargate_spawner__user_provided_task_role__policy_document_template_base64 = "${base64encode(data.aws_iam_policy_document.user_provided_access_template.json)}"
     fargate_spawner__user_provided_ecr_repository__name = "${aws_ecr_repository.user_provided.name}"
 
-    zendesk_email = "${var.zendesk_email}"
-    zendesk_subdomain = "${var.zendesk_subdomain}"
-    zendesk_token = "${var.zendesk_token}"
-    zendesk_service_field_id = "${var.zendesk_service_field_id}"
-    zendesk_service_field_value = "${var.zendesk_service_field_value}"
+    help_desk_email = "${var.help_desk_email}"
+    help_desk_service_field_id = "${var.help_desk_service_field_id}"
+    help_desk_service_field_value = "${var.help_desk_service_field_value}"
 
     prometheus_domain = "${var.prometheus_domain}"
     metrics_service_discovery_basic_auth_user = "${var.metrics_service_discovery_basic_auth_user}"

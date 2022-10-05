@@ -17,7 +17,7 @@ from dataworkspace.apps.request_data.models import (  # pylint: disable=import-e
     RoleType,
     DataRequestStatus,
 )
-from dataworkspace.zendesk import create_support_request  # pylint: disable=import-error
+from dataworkspace.help_desk import create_support_request  # pylint: disable=import-error
 
 
 class RequestData(TemplateView):
@@ -249,11 +249,11 @@ class RequestDataCheckAnswers(DetailView):
 
         # If they've hacked the URL, some required fields might be blank.
         try:
-            obj.clean_fields(exclude=["zendesk_ticket_id"])
+            obj.clean_fields(exclude=["help_desk_ticket_id"])
         except ValidationError:
             return HttpResponseBadRequest()
 
-        zendesk_message = f"""
+        help_desk_message = f"""
 A request for a new dataset on Data Workspace has been submitted. Here are the details:
 
 # Request details
@@ -288,16 +288,21 @@ A request for a new dataset on Data Workspace has been submitted. Here are the d
 {obj.requester.email}
 """
 
+        from django.conf import settings
+
+        print("settings:::", flush=True)
+        print(settings.HELP_DESK_INTERFACE, flush=True)
+
         ticket_id = create_support_request(
             obj.requester,
             obj.requester.email,
-            zendesk_message,
+            help_desk_message,
             tag="request-for-data",
             subject="Request for new dataset on Data Workspace",
         )
 
         obj.status = DataRequestStatus.submitted
-        obj.zendesk_ticket_id = ticket_id
+        obj.help_desk_ticket_id = ticket_id
         obj.save()
 
         return HttpResponseRedirect(

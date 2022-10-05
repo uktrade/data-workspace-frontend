@@ -3,15 +3,21 @@ import urllib.parse
 
 from django.conf import settings
 from django.urls import reverse
-from zenpy import Zenpy
-from zenpy.lib.api_objects import Ticket, User, Comment, CustomField
+
+from helpdesk_client import get_helpdesk_interface
+from helpdesk_client.interfaces import (
+    HelpDeskComment,
+    HelpDeskCustomField,
+    HelpDeskTicket,
+    HelpDeskUser,
+)
 
 from dataworkspace.notify import generate_token, send_email
 
 logger = logging.getLogger("app")
 
-zendesk_service_field_id = settings.ZENDESK_SERVICE_FIELD_ID
-zendesk_service_field_value = settings.ZENDESK_SERVICE_FIELD_VALUE
+help_desk_service_field_id = settings.HELP_DESK_SERVICE_FIELD_ID
+help_desk_service_field_value = settings.HELP_DESK_SERVICE_FIELD_VALUE
 
 
 def get_username(user):
@@ -72,13 +78,12 @@ You can approve this request here
     return private_comment
 
 
-def create_zendesk_ticket(request, access_request, catalogue_item=None):
-    client = Zenpy(
-        subdomain=settings.ZENDESK_SUBDOMAIN,
-        email=settings.ZENDESK_EMAIL,
-        token=settings.ZENDESK_TOKEN,
-    )
+# configure and instantiate the client
+helpdesk_interface = get_helpdesk_interface(settings.HELP_DESK_INTERFACE)
+helpdesk = helpdesk_interface(credentials=settings.HELP_DESK_CREDS)
 
+
+def create_help_desk_ticket(request, access_request, catalogue_item=None):
     access_request_url = request.build_absolute_uri(
         reverse("admin:request_access_accessrequest_change", args=(access_request.id,))
     )
@@ -99,39 +104,31 @@ def create_zendesk_ticket(request, access_request, catalogue_item=None):
 
     subject = f"Access Request for {catalogue_item if catalogue_item else username}"
 
-    ticket_audit = client.tickets.create(
-        Ticket(
-            subject=subject,
-            description=ticket_description,
-            requester=User(email=access_request.requester.email, name=username),
-            custom_fields=[
-                CustomField(id=zendesk_service_field_id, value=zendesk_service_field_value)
-            ],
-        )
+    helpdesk_ticket = HelpDeskTicket(
+        subject=subject,
+        description=ticket_description,
+        user=HelpDeskUser(full_name=username, email=access_request.requester.email),
+        custom_fields=[
+            HelpDeskCustomField(id=help_desk_service_field_id, value=help_desk_service_field_value)
+        ],
+        comment=HelpDeskComment(body=private_comment, public=False),
     )
 
-    ticket_audit.ticket.comment = Comment(body=private_comment, public=False)
-    client.tickets.update(ticket_audit.ticket)
+    ticket_audit = helpdesk.create_ticket(helpdesk_ticket)
 
-    return ticket_audit.ticket.id
+    return ticket_audit.id
 
 
-def update_zendesk_ticket(ticket_id, comment=None, status=None):
-    client = Zenpy(
-        subdomain=settings.ZENDESK_SUBDOMAIN,
-        email=settings.ZENDESK_EMAIL,
-        token=settings.ZENDESK_TOKEN,
-    )
-
-    ticket = client.tickets(id=ticket_id)
-
+def update_helpdesk_ticket(ticket_id, comment=None, status=None):
     if comment:
-        ticket.comment = Comment(body=comment, public=False)
+        helpdesk.helpdesk.add_comment(
+            ticket_id=ticket_id, comment=HelpDeskComment(body=comment, public=False)
+        )
 
     if status:
+        ticket = helpdesk.get_ticket(ticket_id=ticket_id)
         ticket.status = status
-
-    client.tickets.update(ticket)
+        ticket = helpdesk.update_ticket(ticket=ticket)
 
     return ticket
 
@@ -155,7 +152,7 @@ Data visualisation owner: {dataset.enquiries_contact.email if dataset.enquiries_
 
 Secondary contact: {dataset.secondary_enquiries_contact.email if dataset.secondary_enquiries_contact else 'Not set'}
 
-If access has not been granted to the requestor within 5 working days, this will trigger an update to this Zendesk ticket to resolve the request.
+If access has not been granted to the requestor within 5 working days, this will trigger an update to this help desk ticket to resolve the request.
     """
 
     ticket_reference = create_support_request(
@@ -200,20 +197,21 @@ If access has not been granted to the requestor within 5 working days, this will
 
 
 def create_support_request(user, email, message, tag=None, subject=None):
-    client = Zenpy(
-        subdomain=settings.ZENDESK_SUBDOMAIN,
-        email=settings.ZENDESK_EMAIL,
-        token=settings.ZENDESK_TOKEN,
-    )
-    ticket_audit = client.tickets.create(
-        Ticket(
+    ticket_audit = helpdesk.create_ticket(
+        HelpDeskTicket(
             subject=subject or "Data Workspace Support Request",
             description=message,
-            requester=User(email=email, name=user.get_full_name()),
-            tags=[tag] if tag else None,
+            user=HelpDeskUser(
+                full_name=user.get_full_name(),
+                email=email,
+            ),
             custom_fields=[
-                CustomField(id=zendesk_service_field_id, value=zendesk_service_field_value)
+                HelpDeskCustomField(
+                    id=help_desk_service_field_id, value=help_desk_service_field_value
+                )
             ],
+            tags=[tag] if tag else None,
         )
     )
-    return ticket_audit.ticket.id
+
+    return ticket_audit.id

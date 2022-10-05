@@ -2,7 +2,15 @@
 
 from .base import *  # noqa
 
-DEBUG = True
+from helpdesk_client.interfaces import (
+    HelpDeskBase,
+    HelpDeskComment,
+    HelpDeskUser,
+    HelpDeskTicket,
+)
+
+import requests
+
 
 LOGGING = {
     "version": 1,
@@ -19,3 +27,46 @@ LOGGING = {
         "celery": {"handlers": ["dev"], "level": "INFO", "propagate": False},
     },
 }
+
+
+class HelpDeskTest(HelpDeskBase):
+    def __init__(self, *args, **kwargs) -> None:
+        self._ticket_id = 1234567890987654321
+
+    def get_or_create_user(self, user: HelpDeskUser) -> HelpDeskUser:
+        raise NotImplementedError
+
+    def create_ticket(self, ticket: HelpDeskTicket) -> HelpDeskTicket:
+        # Call help desk test server with ticket details
+        ticket.id = self._ticket_id
+
+        requests.post(
+            "http://dataworkspace.test:8006/api/v2/tickets.json",
+            json={
+                "ticket": {
+                    "id": ticket.id,
+                    "subject": ticket.subject,
+                    "description": ticket.description,
+                    "status": "new",
+                    "requester_id": 1,
+                    "submitter_id": 1,
+                },
+            },
+        )
+
+        return ticket
+
+    def get_ticket(self, ticket_id: int) -> HelpDeskTicket:
+        raise NotImplementedError
+
+    def close_ticket(self, ticket_id: int) -> HelpDeskTicket:
+        raise NotImplementedError
+
+    def add_comment(self, ticket_id: int, comment: HelpDeskComment) -> HelpDeskTicket:
+        raise NotImplementedError
+
+    def update_ticket(self, ticket: HelpDeskTicket) -> HelpDeskTicket:
+        raise NotImplementedError
+
+
+HELP_DESK_INTERFACE = "dataworkspace.settings.integration_tests.HelpDeskTest"

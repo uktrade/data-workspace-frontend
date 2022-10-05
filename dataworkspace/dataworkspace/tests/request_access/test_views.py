@@ -90,20 +90,22 @@ class TestDatasetAccessOnly:
         )
 
     @pytest.mark.django_db
-    @mock.patch("dataworkspace.apps.request_access.views.zendesk.Zenpy")
+    @mock.patch("dataworkspace.apps.request_access.views.help_desk.helpdesk.create_ticket")
     @mock.patch("dataworkspace.apps.core.storage._upload_to_clamav")
-    def test_zendesk_ticket_created_after_form_submission(
-        self, mock_upload_to_clamav, mock_zendesk_client, client, user, metadata_db
+    def test_helpdesk_ticket_created_after_form_submission(
+        self,
+        mock_upload_to_clamav,
+        mock_helpdesk_create_ticket,
+        client,
+        user,
+        metadata_db,
     ):
         class MockTicket:
             @property
-            def ticket(self):
-                return type("ticket", (object,), {"id": 1})()
+            def id(self):
+                return 1
 
-        mock_zenpy_client = mock.MagicMock()
-        mock_zenpy_client.tickets.create.return_value = MockTicket()
-
-        mock_zendesk_client.return_value = mock_zenpy_client
+        mock_helpdesk_create_ticket.return_value = MockTicket()
 
         mock_upload_to_clamav.return_value = ClamAVResponse({"malware": False})
 
@@ -136,8 +138,8 @@ class TestDatasetAccessOnly:
             follow=True,
         )
 
-        assert len(mock_zenpy_client.tickets.create.call_args_list) == 1
-        call_args, _ = mock_zenpy_client.tickets.create.call_args_list[0]
+        assert len(mock_helpdesk_create_ticket.call_args_list) == 1
+        call_args, _ = mock_helpdesk_create_ticket.call_args_list[0]
         ticket = call_args[0]
 
         assert ticket.subject == "Access Request for A master"
@@ -283,17 +285,17 @@ class TestToolsAccessOnly:
             "request_access:summary-page", kwargs={"pk": access_requests[0].pk}
         )
 
-    @pytest.mark.django_db
+    @pytest.mark.django_db()
     @pytest.mark.parametrize(
         "access_type", (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
     )
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
-    @mock.patch("dataworkspace.apps.request_access.views.zendesk.Zenpy")
+    @mock.patch("dataworkspace.apps.request_access.views.help_desk.helpdesk.create_ticket")
     @mock.patch("dataworkspace.apps.core.storage._upload_to_clamav")
-    def test_zendesk_ticket_created_after_form_submission(
+    def test_helpdesk_ticket_created_after_form_submission(
         self,
         mock_upload_to_clamav,
-        mock_zendesk_client,
+        mock_helpdesk_create_ticket,
         mock_boto,
         client,
         metadata_db,
@@ -301,17 +303,15 @@ class TestToolsAccessOnly:
     ):
         class MockTicket:
             @property
-            def ticket(self):
-                return type("ticket", (object,), {"id": 1})()
+            def id(self):
+                return 1
 
-        mock_zenpy_client = mock.MagicMock()
-        mock_zenpy_client.tickets.create.return_value = MockTicket()
-
-        mock_zendesk_client.return_value = mock_zenpy_client
+        mock_helpdesk_create_ticket.return_value = MockTicket()
 
         mock_upload_to_clamav.return_value = ClamAVResponse({"malware": False})
 
         dataset = DatasetsCommon()._create_master(user_access_type=access_type)
+
         client.get(reverse("request_access:dataset", kwargs={"dataset_uuid": dataset.id}))
         access_requests = AccessRequest.objects.all()
 
@@ -329,8 +329,8 @@ class TestToolsAccessOnly:
             follow=True,
         )
 
-        assert len(mock_zenpy_client.tickets.create.call_args_list) == 1
-        call_args, _ = mock_zenpy_client.tickets.create.call_args_list[0]
+        assert len(mock_helpdesk_create_ticket.call_args_list) == 1
+        call_args, _ = mock_helpdesk_create_ticket.call_args_list[0]
         ticket = call_args[0]
 
         assert ticket.subject == "Access Request for A master"

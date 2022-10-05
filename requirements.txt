@@ -143,6 +143,8 @@ greenlet==1.1.0
     # via gevent
 hawk-server-asyncio==0.0.13
     # via -r requirements.in
+helpdesk-client==0.1.7
+    # via -r requirements.in
 hiredis==1.1.0
     # via aioredis
 idna==2.10
@@ -315,8 +317,8 @@ xlsxwriter==1.2.8
     # via -r requirements.in
 yarl==1.5.1
     # via aiohttp
-zenpy==2.0.21
-    # via -r requirements.in
+zenpy==2.0.25
+    # via helpdesk-client
 zope-event==4.5.0
     # via gevent
 zope-interface==5.1.0
