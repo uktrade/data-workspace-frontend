@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from urllib.parse import urlencode
 
 import logging
@@ -25,15 +25,11 @@ from dataworkspace.apps.core.utils import (
     clean_db_identifier,
     copy_file_to_uploads_bucket,
     create_new_schema,
-    db_role_schema_suffix_for_user,
     get_all_schemas,
     get_random_data_sample,
     get_s3_prefix,
     get_task_error_message_template,
     get_team_schemas_for_user,
-    new_private_database_credentials,
-    postgres_user,
-    source_tables_for_user,
     trigger_dataflow_dag,
 )
 from dataworkspace.apps.your_files.forms import (
@@ -311,23 +307,8 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
         return kwargs
 
     def form_valid(self, form):
-        # call new_private_database_credentials to make sure everything is set
         config = settings.DATAFLOW_API_CONFIG
-        user = self.request.user
-        source_tables = source_tables_for_user(user)
-        db_role_schema_suffix = db_role_schema_suffix_for_user(user)
-        db_user = postgres_user(user.email)
-        duration = timedelta(hours=24)
-
         cleaned = form.cleaned_data
-        if cleaned["schema"] not in self.all_schemas:
-            new_private_database_credentials(
-                db_role_schema_suffix,
-                source_tables,
-                db_user,
-                user,
-                duration,
-            )
 
         file_info = get_s3_csv_file_info(cleaned["path"])
 
