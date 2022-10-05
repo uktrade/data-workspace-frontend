@@ -82,7 +82,7 @@ var LiveSearch = function (formSelector, wrapperSelector, GTM, linkSelector, GOV
 
   this.$form.on(
     "keydown",
-    "input[type=text]",
+    "input[type=search]",
     function (e) {
       if (e.keyCode == 13) {
         // 13 is the return key
