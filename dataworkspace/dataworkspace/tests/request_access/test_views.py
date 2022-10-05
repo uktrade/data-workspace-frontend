@@ -95,7 +95,7 @@ class TestDatasetAccessOnly:
     def test_helpdesk_ticket_created_after_form_submission(
         self,
         mock_upload_to_clamav,
-        helpdesk_create_ticket,
+        mock_helpdesk_create_ticket,
         client,
         user,
         metadata_db,
@@ -105,7 +105,7 @@ class TestDatasetAccessOnly:
             def id(self):
                 return 1
 
-        helpdesk_create_ticket.return_value = MockTicket()
+        mock_helpdesk_create_ticket.return_value = MockTicket()
 
         mock_upload_to_clamav.return_value = ClamAVResponse({"malware": False})
 
@@ -138,8 +138,8 @@ class TestDatasetAccessOnly:
             follow=True,
         )
 
-        assert len(helpdesk_create_ticket.call_args_list) == 1
-        call_args, _ = helpdesk_create_ticket.call_args_list[0]
+        assert len(mock_helpdesk_create_ticket.call_args_list) == 1
+        call_args, _ = mock_helpdesk_create_ticket.call_args_list[0]
         ticket = call_args[0]
 
         assert ticket.subject == "Access Request for A master"
@@ -295,7 +295,7 @@ class TestToolsAccessOnly:
     def test_helpdesk_ticket_created_after_form_submission(
         self,
         mock_upload_to_clamav,
-        helpdesk_create_ticket,
+        mock_helpdesk_create_ticket,
         mock_boto,
         client,
         metadata_db,
@@ -306,7 +306,7 @@ class TestToolsAccessOnly:
             def id(self):
                 return 1
 
-        helpdesk_create_ticket.return_value = MockTicket()
+        mock_helpdesk_create_ticket.return_value = MockTicket()
 
         mock_upload_to_clamav.return_value = ClamAVResponse({"malware": False})
 
@@ -329,8 +329,8 @@ class TestToolsAccessOnly:
             follow=True,
         )
 
-        assert len(helpdesk_create_ticket.call_args_list) == 1
-        call_args, _ = helpdesk_create_ticket.call_args_list[0]
+        assert len(mock_helpdesk_create_ticket.call_args_list) == 1
+        call_args, _ = mock_helpdesk_create_ticket.call_args_list[0]
         ticket = call_args[0]
 
         assert ticket.subject == "Access Request for A master"
