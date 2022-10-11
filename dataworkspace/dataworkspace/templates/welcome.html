@@ -111,7 +111,10 @@
         </div>
       </div>
 
-      <div class="govuk-!-padding-top-8 govuk-!-padding-bottom-8" id="visualise-data">
+      <!--
+        GB: Removed while Chart Builder is hidden
+
+        <div class="govuk-!-padding-top-8 govuk-!-padding-bottom-8" id="visualise-data">
         <div class="govuk-width-container">
           <div class="govuk-grid-row">
             <div class="govuk-grid-column-one-half">
@@ -125,14 +128,11 @@
             </div>
           </div>
         </div>
-      </div>
+      </div>-->
 
-      <div class="govuk-!-padding-top-8 govuk-!-padding-bottom-8" style="background-color:#F6F6F6;" id="automate-reporting">
+      <div class="govuk-!-padding-top-8 govuk-!-padding-bottom-8" id="automate-reporting">
         <div class="govuk-width-container">
           <div class="govuk-grid-row">
-            <div class="govuk-grid-column-one-half">
-              <img width=100% height=auto max-width=100% alt="Automate reporting illustration" src="{% static 'assets/images/automate_reporting.png' %}">
-            </div>
             <div class="govuk-grid-column-one-half">
               <h2 class="govuk-heading-l">Automate your reporting</h2>
               <p class="govuk-body">Design your own dashboards using our data visualisation tools or 
@@ -142,13 +142,19 @@
                 <a class="govuk-link" href="https://data-services-help.trade.gov.uk/data-workspace/how-to/share-and-collaborate/" target="_blank">Share your analysis</a> to collaborate with colleagues.
               </p>
             </div>
+            <div class="govuk-grid-column-one-half">
+              <img width=100% height=auto max-width=100% alt="Automate reporting illustration" src="{% static 'assets/images/automate_reporting.png' %}">
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="govuk-!-padding-top-8 govuk-!-padding-bottom-8" id="upload-and-analyse-data">
+      <div class="govuk-!-padding-top-8 govuk-!-padding-bottom-8" style="background-color:#F6F6F6;" id="upload-and-analyse-data">
         <div class="govuk-width-container">
           <div class="govuk-grid-row">
+            <div class="govuk-grid-column-one-half">
+              <center><img alt="Upload and analyse data illustration" src="{% static 'assets/images/upload_and_analyse_data.png' %}" width=auto height=auto max-width="100%"></center>
+            </div>
             <div class="govuk-grid-column-one-half">
               <h2 class="govuk-heading-l">Upload and analyse data</h2>
               <p class="govuk-body"><a class="govuk-link"
@@ -162,9 +168,6 @@
                 <a class="govuk-link" href="https://data.trade.gov.uk/tools/" target="_blank">Learn more about our tools.</a>
               </p>
             </div>
-            <div class="govuk-grid-column-one-half">
-              <center><img alt="Upload and analyse data illustration" src="{% static 'assets/images/upload_and_analyse_data.png' %}" width=auto height=auto max-width="100%"></center>
-            </div>
           </div>
         </div>
       </div>
@@ -175,16 +178,16 @@
             <div class="govuk-grid-column-full">
               <h2 class="govuk-heading-l">Find out more</h2>
               <p class="govuk-body">{% include "partials/sideways_arrow.html" %}<a class="govuk-link"
-                href="https://www.learninghub.trade.gov.uk/mod/facetoface/view.php?id=9594" target="_blank">Sign up to one of our intro sessions.</a>
-              </p>
-              <p class="govuk-body">{% include "partials/sideways_arrow.html" %}<a class="govuk-link"
-                href="https://data-services-help.trade.gov.uk/data-workspace/updates/data-workspace-bootcamp/" target="_blank">Register for a Data Workspace Bootcamp.</a>
+                href="https://data.trade.gov.uk/newsletter_subscription/" target="_blank">Subscribe to our newsletter to get the most out of Data Workspace.</a>
               </p>
               <p class="govuk-body">{% include "partials/sideways_arrow.html" %}<a class="govuk-link"
                 href="{{ TEAMS_DATA_WORKSPACE_COMMUNITY_URL }}" target="_blank">Engage with the Data Workspace Community on Teams.</a>
               </p>
               <p class="govuk-body">{% include "partials/sideways_arrow.html" %}<a class="govuk-link"
-                href="https://data.trade.gov.uk/newsletter_subscription/" target="_blank">Subscribe to our newsletter to recieve regular updates on new features and datasets.</a>
+                href="https://www.learninghub.trade.gov.uk/mod/facetoface/view.php?id=9594" target="_blank">Sign up to one of our intro sessions.</a>
+              </p>
+              <p class="govuk-body">{% include "partials/sideways_arrow.html" %}<a class="govuk-link"
+                href="https://data-services-help.trade.gov.uk/data-workspace/updates/data-workspace-bootcamp/" target="_blank">Register for a Data Workspace Bootcamp.</a>
               </p>
             </div>
           </div>
