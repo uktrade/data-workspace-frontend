@@ -204,46 +204,20 @@ def new_private_database_credentials(
             cur.execute(
                 sql.SQL(
                     """
-                SELECT
-                    schemaname AS schema,
-                    tablename as name
+                SELECT DISTINCT
+                    table_schema as schema, table_name as name
                 FROM
-                    pg_catalog.pg_tables
+                    information_schema.table_privileges
                 WHERE
-                    schemaname NOT IN ('information_schema', 'pg_catalog', 'pg_toast', {schema})
-                    AND schemaname NOT LIKE 'pg_temp_%'
-                    AND schemaname NOT LIKE 'pg_toast_temp_%'
-                    AND schemaname NOT LIKE '_team_%'
-                    AND tablename !~ '_\\d{{8}}t\\d{{6}}'
-                    AND has_table_privilege({role}, quote_ident(schemaname) || '.' ||
-                        quote_ident(tablename), 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER') = true
-                UNION ALL
-                SELECT
-                    schemaname AS schema,
-                    viewname as name
-                FROM
-                    pg_catalog.pg_views
-                WHERE
-                    schemaname NOT IN ('information_schema', 'pg_catalog', 'pg_toast', {schema})
-                    AND schemaname NOT LIKE 'pg_temp_%'
-                    AND schemaname NOT LIKE 'pg_toast_temp_%'
-                    AND schemaname NOT LIKE '_team_%'
-                    AND has_table_privilege({role}, quote_ident(schemaname) || '.' ||
-                        quote_ident(viewname), 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER')
-                UNION ALL
-                SELECT
-                    schemaname AS schema,
-                    matviewname as name
-                FROM
-                    pg_catalog.pg_matviews
-                WHERE
-                    schemaname NOT IN ('information_schema', 'pg_catalog', 'pg_toast', {schema})
-                    AND schemaname NOT LIKE 'pg_temp_%'
-                    AND schemaname NOT LIKE 'pg_toast_temp_%'
-                    AND schemaname NOT LIKE '_team_%'
-                    AND has_table_privilege({role}, quote_ident(schemaname) || '.' ||
-                        quote_ident(matviewname), 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER') = true
-                ORDER BY schema, name;
+                    grantee = {role}
+                    AND privilege_type IN ('SELECT', 'INSERT', 'UPDATE', 'DELETE', 'TRUNCATE', 'REFERENCES', 'TRIGGER')
+                    AND table_name !~ '_\\d{{8}}t\\d{{6}}'
+                    AND table_schema NOT IN ('information_schema', 'pg_catalog', 'pg_toast', {schema})
+                    AND table_schema NOT LIKE 'pg_temp_%'
+                    AND table_schema NOT LIKE 'pg_toast_temp_%'
+                    AND table_schema NOT LIKE '_team_%'
+                ORDER BY
+                    schema, name;
             """
                 ).format(role=sql.Literal(db_role), schema=sql.Literal(db_schema))
             )
