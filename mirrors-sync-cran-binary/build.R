@@ -1,11 +1,12 @@
-packages <- list('DBI', 'DT', 'RPostgres', 'aws.ec2metadata', 'aws.s3', 'bizdays', 'countrycode', 'flexdashboard', 'flextable', 'formattable', 'ggraph', 'gifski', 'igraph', 'janitor', 'jsonlite', 'kableExtra', 'leaflet', 'lubridate', 'openxlsx', 'plotly', 'quantmod', 'readxl', 'rgdal', 'rmapshaper', 'rworldmap', 'scales', 'sf', 'shiny', 'stringr', 'topicmodels', 'text2vec', 'tidytext', 'tidyverse', 'tm', 'tmap', 'tmaptools', 'widyr', 'wordcloud2', 'zoo')
+packages <- list('DBI', 'DT', 'RPostgres', 'aws.ec2metadata', 'aws.s3', 'bizdays', 'countrycode', 'flexdashboard', 'flextable', 'formattable', 'gert', 'ggraph', 'gifski', 'igraph', 'janitor', 'jsonlite', 'kableExtra', 'leaflet', 'lubridate', 'openxlsx', 'plotly', 'quantmod', 'readxl', 'rgdal', 'rmapshaper', 'rworldmap', 'scales', 'sf', 'shiny', 'stringr', 'topicmodels', 'text2vec', 'tidytext', 'tidyverse', 'tm', 'tmap', 'tmaptools', 'widyr', 'wordcloud2', 'zoo')
 folder_name <- "cran-binary"
 file_prefix <- "/src/contrib/"
 bucket_name <- Sys.getenv("MIRRORS_BUCKET_NAME") 
 
 # Generate binary packages
-## Custom XML package - support a specifically-required older version
+## Custom packages - the latest packages don't support R v3
 writeLines("\n\n\n\n\nInstalling package XML\n\n\n\n\n")
+install.packages("https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/cran/src/contrib/bizdays_1.0.8.tar.gz", repos=NULL, type="source", INSTALL_opts = c("--build"))
 install.packages("https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/cran/src/contrib/XML_3.98-1.20.tar.gz", repos=NULL, type="source", INSTALL_opts = c("--build"))
 
 ## Standard packages
