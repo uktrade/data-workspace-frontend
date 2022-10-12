@@ -29,40 +29,40 @@ RUN \
 	rm -rf /var/lib/apt/lists/* && \
 	apt-get update && \
 	apt-get install -y --no-install-recommends \
-		cargo=0.43.1-3~deb10u1 \
-		gdebi-core=0.9.5.7+nmu3 \
-		gfortran=4:8.3.0-1 \
-		git=1:2.20.1-2+deb10u3 \
-		libcairo2-dev=1.16.0-4+deb10u1 \
-		libfontconfig1-dev=2.13.1-2 \
-		libgit2-dev=0.27.7+dfsg.1-0.2 \
-		libgsl-dev=2.5+dfsg-6 \
-		libxml2-dev=2.9.4+dfsg1-7+deb10u4 \
-		libpq-dev=11.16-0+deb10u1 \
-		libgdal-dev=2.4.0+dfsg-1+b1 \
-		libudunits2-dev=2.2.26-5 \
-		libjq-dev=1.5+dfsg-2+b1 \
-		libprotobuf-dev=3.6.1.3-2 \
-		protobuf-compiler=3.6.1.3-2 \
-		libnode-dev=10.24.0~dfsg-1~deb10u1 \
-		lmodern=2.004.5-6 \
-		procps=2:3.3.15-2 \
-		r-base-dev=3.6.1-2~bustercran.0 \
-		r-base=3.6.1-2~bustercran.0 \
-		r-cran-base64enc=0.1-3-2 \
-		r-cran-curl=3.3+dfsg-1 \
-		r-cran-data.table=1.12.0+dfsg-1 \
-		r-cran-dbi=1.0.0-2 \
-		r-cran-httr=1.4.0-3 \
-		r-cran-rpostgresql=0.6-2+dfsg-2 \
-		r-cran-xml2=1.2.0-3 \
-		r-recommended=3.6.1-2~bustercran.0 \
-		ssh=1:7.9p1-10+deb10u2 \
-		texlive=2018.20190227-2 \
-		texlive-latex-extra=2018.20190227-2 \
-		git-man=1:2.20.1-2+deb10u3 \
-		man-db=2.8.5-2 \
-		wget=1.20.1-1.1 && \
+		cargo \
+		gdebi-core \
+		gfortran \
+		git \
+		libcairo2-dev  \
+		libfontconfig1-dev \
+		libgit2-dev \
+		libgsl-dev \
+		libxml2-dev \
+		libpq-dev \
+		libgdal-dev \
+		libudunits2-dev \
+		libjq-dev \
+		libprotobuf-dev \
+		protobuf-compiler \
+		libnode-dev \
+		lmodern \
+		procps \
+		r-base-dev \
+		r-base\
+		r-cran-base64enc \
+		r-cran-curl \
+		r-cran-data.table \
+		r-cran-dbi \
+		r-cran-httr \
+		r-cran-rpostgresql \
+		r-cran-xml2 \
+		r-recommended \
+		ssh \
+		texlive \
+		texlive-latex-extra \
+		git-man \
+		man-db\
+		wget && \
 	wget -q https://download2.rstudio.org/server/bionic/amd64/rstudio-server-1.2.5019-amd64.deb && \
 	echo "bfea9b32c04b721d5d2fb29be510b4378d57a6cd6c8c0dc8390b8760a87341b3  rstudio-server-1.2.5019-amd64.deb" | sha256sum -c && \
 	gdebi --non-interactive rstudio-server-1.2.5019-amd64.deb && \
