@@ -1166,10 +1166,10 @@ class DataGridDataView(DetailView):
     @staticmethod
     def _get_rows(source, query, query_params):
         with psycopg2.connect(
-            database_dsn(settings.DATABASES_DATA[source.database.memorable_name])
+            database_dsn(settings.DATABASES_DATA[source.database.memorable_name]),
+            application_name="data-grid-data",
         ) as connection:
             with connection.cursor(
-                name="data-grid-data",
                 cursor_factory=psycopg2.extras.RealDictCursor,
             ) as cursor:
                 cursor.execute(query, query_params)
