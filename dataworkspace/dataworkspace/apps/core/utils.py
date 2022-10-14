@@ -44,7 +44,7 @@ from dataworkspace.apps.core.constants import (
     SCHEMA_POSTGRES_DATA_TYPE_MAP,
     TABLESCHEMA_FIELD_TYPE_MAP,
 )
-from dataworkspace.apps.core.models import Database, DatabaseUser, Team, TeamMembership
+from dataworkspace.apps.core.models import DatabaseUser, Team, TeamMembership
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import DataSet, SourceTable, ReferenceDataset
 from dataworkspace.cel import celery_app
