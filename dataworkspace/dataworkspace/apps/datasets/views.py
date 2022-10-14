@@ -1172,6 +1172,10 @@ class DataGridDataView(DetailView):
             with connection.cursor(
                 cursor_factory=psycopg2.extras.RealDictCursor,
             ) as cursor:
+                # This is in the request/response cycle, so by 60 seconds of execution,
+                # the user would have received a 504 anyway
+                statement_timeout = 60 * 1000
+                cursor.execute("SET statement_timeout = %s", (statement_timeout,))
                 cursor.execute(query, query_params)
                 return cursor.fetchall()
 
