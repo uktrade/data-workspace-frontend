@@ -166,9 +166,7 @@ data "aws_iam_policy_document" "notebook_s3_access_template" {
     condition {
       test = "ForAnyValue:StringLike"
       variable = "s3:prefix"
-      values = [
-        "__S3_PREFIXES__"
-      ]
+      values = ["__S3_PREFIXES__"]
     }
   }
 
@@ -186,9 +184,7 @@ data "aws_iam_policy_document" "notebook_s3_access_template" {
     condition {
       test = "ForAnyValue:StringLike"
       variable = "s3:prefix"
-      values = [
-        "__S3_PREFIXES__"
-      ]
+      values = ["__S3_PREFIXES__"]
     }
   }
 

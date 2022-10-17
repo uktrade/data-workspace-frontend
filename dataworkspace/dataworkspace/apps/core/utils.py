@@ -1454,14 +1454,16 @@ def update_user_tool_access_policy(user, access_point_id):
             "__S3_PREFIXES__", '","'.join([f"{x}*" for x in s3_prefixes.values()])
         ).replace("__ACCESS_POINT_ID__", access_point_id or "")
     )
+    prefix_values = '","'.join([f"{x}*" for x in s3_prefixes.values()])
+    policy_document = settings.S3_POLICY_DOCUMENT_TEMPLATE.replace(
+        '"__S3_PREFIXES__"', f'["{prefix_values}"]'
+    ).replace("__ACCESS_POINT_ID__", access_point_id or "")
     for i in range(0, max_attempts):
         try:
             iam_client.put_role_policy(
                 RoleName=settings.S3_ROLE_PREFIX + user.email,
                 PolicyName=settings.S3_POLICY_NAME,
-                PolicyDocument=settings.S3_POLICY_DOCUMENT_TEMPLATE.replace(
-                    "__S3_PREFIXES__", '","'.join([f"{x}*" for x in s3_prefixes.values()])
-                ).replace("__ACCESS_POINT_ID__", access_point_id or ""),
+                PolicyDocument=policy_document,
             )
         except iam_client.exceptions.NoSuchEntityException:
             if i == max_attempts - 1:
