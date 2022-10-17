@@ -1448,6 +1448,12 @@ def update_user_tool_access_policy(user, access_point_id):
     max_attempts = 10
     iam_client = get_iam_client()
     s3_prefixes = get_user_s3_prefixes(user)
+    logger.info("***** Updating user perms *******")
+    logger.info(
+        settings.S3_POLICY_DOCUMENT_TEMPLATE.replace(
+            "__S3_PREFIXES__", '","'.join([f"{x}*" for x in s3_prefixes.values()])
+        ).replace("__ACCESS_POINT_ID__", access_point_id or "")
+    )
     for i in range(0, max_attempts):
         try:
             iam_client.put_role_policy(
