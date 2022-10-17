@@ -6,6 +6,12 @@ Allows users to launch applications in order to analyse data
 
 ## Running locally
 
+Set data infrastructure shared network
+
+```bash
+docker network create data-infrastructure-shared-network
+```
+
 Set the required variables by
 
 ```bash
