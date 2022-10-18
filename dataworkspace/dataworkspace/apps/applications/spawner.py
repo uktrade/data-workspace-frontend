@@ -290,7 +290,7 @@ class FargateSpawner:
                 "S3_HOST": s3_host,
                 "S3_BUCKET": s3_bucket,
                 **{
-                    f"S3_PREFIX_{clean_db_identifier(name).upper()}_TEAM": prefix
+                    f"S3_PREFIX_TEAM_{clean_db_identifier(name).upper()}": prefix
                     for name, prefix in s3_prefixes.items()
                     if name != "home"
                 },
