@@ -952,7 +952,6 @@ class TestCreateToolsAccessIAMRoleTask:
         assert mock_create_tools_access_iam_role.call_args_list == [
             mock.call(
                 "john.smith@trade.gov.uk",
-                "00000000-0000-0000-0000-000000000001",
                 "some-access-point-id",
             )
         ]
