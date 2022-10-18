@@ -10,9 +10,9 @@ def migrate_team_members(apps, _):
     Loop through users with team membership and update their
     s3 perms to allow for team prefixes
     """
-    user_ids = {x.user_id for x in apps.get_model("core", "TeamMembership").objects.all()}
-    for user_id in user_ids:
-        update_tools_access_policy_task.delay(user_id)
+    users = apps.get_model("core", "TeamMembership").objects.values("user_id").distinct()
+    for user in users:
+        update_tools_access_policy_task.delay(user["user_id"])
 
 
 class Migration(migrations.Migration):
