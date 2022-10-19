@@ -27,7 +27,7 @@ class TestCreateTableViews:
 
     @mock.patch("dataworkspace.apps.your_files.forms.get_user_s3_prefixes")
     def test_invalid_file_type(self, mock_get_s3_prefix, client):
-        mock_get_s3_prefix.return_value = ["user/federated/abc"]
+        mock_get_s3_prefix.return_value = {"home": "user/federated/abc"}
         response = client.post(
             reverse("your-files:create-table-confirm-name"),
             data={"path": "not-a-csv.txt"},
@@ -37,7 +37,7 @@ class TestCreateTableViews:
 
     @mock.patch("dataworkspace.apps.your_files.forms.get_user_s3_prefixes")
     def test_unauthorised_file(self, mock_get_s3_prefix, client):
-        mock_get_s3_prefix.return_value = ["user/federated/abc"]
+        mock_get_s3_prefix.return_value = {"home": "user/federated/abc"}
         response = client.post(
             reverse("your-files:create-table-confirm-name"),
             data={"path": "user/federated/def/a-csv.csv"},
@@ -54,7 +54,7 @@ class TestCreateTableViews:
                 operation_name="head_object",
             )
         ]
-        mock_get_s3_prefix.return_value = ["user/federated/abc"]
+        mock_get_s3_prefix.return_value = {"home": "user/federated/abc"}
         response = client.post(
             reverse("your-files:create-table-confirm-name"),
             data={"path": "user/federated/abc/a-csv.csv"},
@@ -77,7 +77,7 @@ class TestCreateTableViews:
         client,
     ):
         mock_get_schema_for_user.return_value = "test_schema"
-        mock_get_s3_prefix.return_value = ["user/federated/abc"]
+        mock_get_s3_prefix.return_value = {"home": "user/federated/abc"}
         mock_get_file_info.return_value = {
             "encoding": "utf-8-sig",
             "column_definitions": [
@@ -131,7 +131,7 @@ class TestCreateTableViews:
         client,
     ):
         mock_get_schema_for_user.return_value = "test_schema"
-        mock_get_s3_prefix.return_value = ["user/federated/abc"]
+        mock_get_s3_prefix.return_value = {"home": "user/federated/abc"}
 
         file_info_return_value = {
             "encoding": "utf-8-sig",
@@ -195,7 +195,7 @@ class TestCreateTableViews:
         mock_get_schema_for_user,
         client,
     ):
-        mock_get_s3_prefix.return_value = ["user/federated/abc"]
+        mock_get_s3_prefix.return_value = {"home": "user/federated/abc"}
         mock_get_all_schemas.return_value = ["public", "dit"]
         mock_get_schema_for_user.return_value = "test_schema"
         mock_get_team_schemas_for_user.return_value = [
@@ -239,7 +239,7 @@ class TestCreateTableViews:
         mock_get_schema_for_user,
         client,
     ):
-        mock_get_s3_prefix.return_value = ["user/federated/abc"]
+        mock_get_s3_prefix.return_value = {"home": "user/federated/abc"}
         mock_get_all_schemas.return_value = ["public", "dit"]
         mock_get_schema_for_user.return_value = "test_schema"
         mock_get_team_schemas_for_user.return_value = []
@@ -279,7 +279,7 @@ class TestCreateTableViews:
         mock_get_schema_for_user,
         staff_client,
     ):
-        mock_get_s3_prefix.return_value = ["user/federated/abc"]
+        mock_get_s3_prefix.return_value = {"home": "user/federated/abc"}
         mock_get_all_schemas.return_value = ["public", "dit"]
         mock_get_schema_for_user.return_value = "test_schema"
         mock_get_team_schemas_for_user.return_value = []
@@ -321,7 +321,7 @@ class TestCreateTableViews:
         mock_get_schema_for_user,
         staff_client,
     ):
-        mock_get_s3_prefix.return_value = ["user/federated/abc"]
+        mock_get_s3_prefix.return_value = {"home": "user/federated/abc"}
         mock_get_all_schemas.return_value = ["public", "dit"]
         mock_get_schema_for_user.return_value = "test_schema"
         mock_get_team_schemas_for_user.return_value = []
@@ -357,7 +357,7 @@ class TestCreateTableViews:
         mock_get_schema_for_user,
         staff_client,
     ):
-        mock_get_s3_prefix.return_value = ["user/federated/abc"]
+        mock_get_s3_prefix.return_value = {"home": "user/federated/abc"}
         mock_get_all_schemas.return_value = ["public", "dit"]
         mock_get_schema_for_user.return_value = "test_schema"
         mock_get_team_schemas_for_user.return_value = []
@@ -399,7 +399,7 @@ class TestCreateTableViews:
         mock_get_schema_for_user,
         staff_client,
     ):
-        mock_get_s3_prefix.return_value = ["user/federated/abc"]
+        mock_get_s3_prefix.return_value = {"home": "user/federated/abc"}
         mock_get_all_schemas.return_value = ["public", "dit"]
         mock_get_schema_for_user.return_value = "test_schema"
         mock_get_team_schemas_for_user.return_value = []
@@ -440,7 +440,7 @@ class TestCreateTableViews:
         mock_get_team_schemas_for_user.return_value = [
             {"name": "TestTeam", "schema_name": "test_team_schema"},
         ]
-        mock_get_s3_prefix.return_value = ["user/federated/abc"]
+        mock_get_s3_prefix.return_value = {"home": "user/federated/abc"}
         file_info_return_value = {
             "encoding": "utf-8-sig",
             "column_definitions": [
@@ -514,7 +514,7 @@ class TestCreateTableViews:
         mock_get_team_schemas_for_user.return_value = [
             {"name": "TestTeam", "schema_name": "test_team_schema"},
         ]
-        mock_get_s3_prefix.return_value = ["user/federated/abc"]
+        mock_get_s3_prefix.return_value = {"home": "user/federated/abc"}
         file_info_return_value = {
             "encoding": "utf-8-sig",
             "column_definitions": [
@@ -592,7 +592,7 @@ class TestCreateTableViews:
     def test_invalid_table_name(
         self, mock_get_s3_prefix, mock_boto_client, mock_get_file_info, client
     ):
-        mock_get_s3_prefix.return_value = ["user/federated/abc"]
+        mock_get_s3_prefix.return_value = {"home": "user/federated/abc"}
         mock_get_file_info.return_value = {
             "encoding": "utf-8-sig",
             "column_definitions": [],
@@ -615,7 +615,7 @@ class TestCreateTableViews:
     def test_table_name_too_long(
         self, mock_get_s3_prefix, mock_boto_client, mock_get_file_info, client
     ):
-        mock_get_s3_prefix.return_value = ["user/federated/abc"]
+        mock_get_s3_prefix.return_value = {"home": "user/federated/abc"}
         mock_get_file_info.return_value = {
             "encoding": "utf-8-sig",
             "column_definitions": [],
@@ -649,7 +649,7 @@ class TestCreateTableViews:
         client,
     ):
         mock_get_schema_for_user.return_value = "test_schema"
-        mock_get_s3_prefix.return_value = ["user/federated/abc"]
+        mock_get_s3_prefix.return_value = {"home": "user/federated/abc"}
         mock_get_file_info.return_value = {
             "encoding": "utf-8-sig",
             "column_definitions": [
