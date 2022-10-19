@@ -6,7 +6,7 @@ from django.core.validators import RegexValidator, MaxLengthValidator
 
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.constants import SCHEMA_POSTGRES_DATA_TYPE_MAP
-from dataworkspace.apps.core.utils import get_all_schemas, get_s3_prefix
+from dataworkspace.apps.core.utils import get_all_schemas, get_user_s3_prefixes
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
     GOVUKDesignSystemForm,
@@ -51,7 +51,11 @@ class CreateTableForm(GOVUKDesignSystemForm):
         path = self.cleaned_data["path"]
         client = get_s3_client()
 
-        if not path.startswith(get_s3_prefix(str(self.user.profile.sso_id))):
+        paths = get_user_s3_prefixes(self.user).values()
+
+        has_permissions = any([path.startswith(_path) for _path in paths])
+
+        if not has_permissions:
             raise ValidationError("You don't have permission to access this file")
 
         if not path.endswith(".csv"):
