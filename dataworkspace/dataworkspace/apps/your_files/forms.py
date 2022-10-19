@@ -53,7 +53,7 @@ class CreateTableForm(GOVUKDesignSystemForm):
 
         paths = get_user_s3_prefixes(self.user).values()
 
-        has_permissions = any([path.startswith(_path) for _path in paths])
+        has_permissions = any(path.startswith(_path) for _path in paths)
 
         if not has_permissions:
             raise ValidationError("You don't have permission to access this file")
