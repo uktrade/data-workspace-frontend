@@ -25,9 +25,9 @@ class TestCreateTableViews:
         response = client.get(reverse("your-files:create-table-confirm"))
         assert response.status_code == 400
 
-    @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
+    @mock.patch("dataworkspace.apps.your_files.forms.get_user_s3_prefixes")
     def test_invalid_file_type(self, mock_get_s3_prefix, client):
-        mock_get_s3_prefix.return_value = "user/federated/abc"
+        mock_get_s3_prefix.return_value = ["user/federated/abc"]
         response = client.post(
             reverse("your-files:create-table-confirm-name"),
             data={"path": "not-a-csv.txt"},
@@ -35,9 +35,9 @@ class TestCreateTableViews:
         )
         assert "We can’t process your CSV file" in response.content.decode("utf-8")
 
-    @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
+    @mock.patch("dataworkspace.apps.your_files.forms.get_user_s3_prefixes")
     def test_unauthorised_file(self, mock_get_s3_prefix, client):
-        mock_get_s3_prefix.return_value = "user/federated/abc"
+        mock_get_s3_prefix.return_value = ["user/federated/abc"]
         response = client.post(
             reverse("your-files:create-table-confirm-name"),
             data={"path": "user/federated/def/a-csv.csv"},
@@ -46,7 +46,7 @@ class TestCreateTableViews:
         assert "We can’t process your CSV file" in response.content.decode("utf-8")
 
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
-    @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
+    @mock.patch("dataworkspace.apps.your_files.forms.get_user_s3_prefixes")
     def test_non_existent_file(self, mock_get_s3_prefix, mock_boto_client, client):
         mock_boto_client().head_object.side_effect = [
             botocore.exceptions.ClientError(
@@ -54,7 +54,7 @@ class TestCreateTableViews:
                 operation_name="head_object",
             )
         ]
-        mock_get_s3_prefix.return_value = "user/federated/abc"
+        mock_get_s3_prefix.return_value = ["user/federated/abc"]
         response = client.post(
             reverse("your-files:create-table-confirm-name"),
             data={"path": "user/federated/abc/a-csv.csv"},
@@ -65,7 +65,7 @@ class TestCreateTableViews:
     @mock.patch("dataworkspace.apps.your_files.views.copy_file_to_uploads_bucket")
     @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_file_info")
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
-    @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
+    @mock.patch("dataworkspace.apps.your_files.forms.get_user_s3_prefixes")
     @mock.patch("dataworkspace.apps.your_files.views.get_schema_for_user")
     def test_trigger_failed(
         self,
@@ -77,7 +77,7 @@ class TestCreateTableViews:
         client,
     ):
         mock_get_schema_for_user.return_value = "test_schema"
-        mock_get_s3_prefix.return_value = "user/federated/abc"
+        mock_get_s3_prefix.return_value = ["user/federated/abc"]
         mock_get_file_info.return_value = {
             "encoding": "utf-8-sig",
             "column_definitions": [
@@ -118,7 +118,7 @@ class TestCreateTableViews:
     @mock.patch("dataworkspace.apps.your_files.views.copy_file_to_uploads_bucket")
     @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_file_info")
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
-    @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
+    @mock.patch("dataworkspace.apps.your_files.forms.get_user_s3_prefixes")
     @mock.patch("dataworkspace.apps.your_files.views.get_schema_for_user")
     def test_success(
         self,
@@ -131,7 +131,7 @@ class TestCreateTableViews:
         client,
     ):
         mock_get_schema_for_user.return_value = "test_schema"
-        mock_get_s3_prefix.return_value = "user/federated/abc"
+        mock_get_s3_prefix.return_value = ["user/federated/abc"]
 
         file_info_return_value = {
             "encoding": "utf-8-sig",
@@ -185,7 +185,7 @@ class TestCreateTableViews:
     @mock.patch("dataworkspace.apps.your_files.forms.get_team_schemas_for_user")
     @mock.patch("dataworkspace.apps.your_files.forms.get_all_schemas")
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
-    @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
+    @mock.patch("dataworkspace.apps.your_files.forms.get_user_s3_prefixes")
     def test_confirm_schema_with_teams(
         self,
         mock_get_s3_prefix,
@@ -195,7 +195,7 @@ class TestCreateTableViews:
         mock_get_schema_for_user,
         client,
     ):
-        mock_get_s3_prefix.return_value = "user/federated/abc"
+        mock_get_s3_prefix.return_value = ["user/federated/abc"]
         mock_get_all_schemas.return_value = ["public", "dit"]
         mock_get_schema_for_user.return_value = "test_schema"
         mock_get_team_schemas_for_user.return_value = [
@@ -229,7 +229,7 @@ class TestCreateTableViews:
     @mock.patch("dataworkspace.apps.your_files.forms.get_team_schemas_for_user")
     @mock.patch("dataworkspace.apps.your_files.forms.get_all_schemas")
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
-    @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
+    @mock.patch("dataworkspace.apps.your_files.forms.get_user_s3_prefixes")
     def test_confirm_schema_without_teams(
         self,
         mock_get_s3_prefix,
@@ -239,7 +239,7 @@ class TestCreateTableViews:
         mock_get_schema_for_user,
         client,
     ):
-        mock_get_s3_prefix.return_value = "user/federated/abc"
+        mock_get_s3_prefix.return_value = ["user/federated/abc"]
         mock_get_all_schemas.return_value = ["public", "dit"]
         mock_get_schema_for_user.return_value = "test_schema"
         mock_get_team_schemas_for_user.return_value = []
@@ -269,7 +269,7 @@ class TestCreateTableViews:
     @mock.patch("dataworkspace.apps.your_files.forms.get_team_schemas_for_user")
     @mock.patch("dataworkspace.apps.your_files.forms.get_all_schemas")
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
-    @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
+    @mock.patch("dataworkspace.apps.your_files.forms.get_user_s3_prefixes")
     def test_confirm_schema_staff_user(
         self,
         mock_get_s3_prefix,
@@ -279,7 +279,7 @@ class TestCreateTableViews:
         mock_get_schema_for_user,
         staff_client,
     ):
-        mock_get_s3_prefix.return_value = "user/federated/abc"
+        mock_get_s3_prefix.return_value = ["user/federated/abc"]
         mock_get_all_schemas.return_value = ["public", "dit"]
         mock_get_schema_for_user.return_value = "test_schema"
         mock_get_team_schemas_for_user.return_value = []
@@ -311,7 +311,7 @@ class TestCreateTableViews:
     @mock.patch("dataworkspace.apps.your_files.forms.get_team_schemas_for_user")
     @mock.patch("dataworkspace.apps.your_files.forms.get_all_schemas")
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
-    @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
+    @mock.patch("dataworkspace.apps.your_files.forms.get_user_s3_prefixes")
     def test_staff_user_create_new_schema(
         self,
         mock_get_s3_prefix,
@@ -321,7 +321,7 @@ class TestCreateTableViews:
         mock_get_schema_for_user,
         staff_client,
     ):
-        mock_get_s3_prefix.return_value = "user/federated/abc"
+        mock_get_s3_prefix.return_value = ["user/federated/abc"]
         mock_get_all_schemas.return_value = ["public", "dit"]
         mock_get_schema_for_user.return_value = "test_schema"
         mock_get_team_schemas_for_user.return_value = []
@@ -347,7 +347,7 @@ class TestCreateTableViews:
     @mock.patch("dataworkspace.apps.your_files.forms.get_team_schemas_for_user")
     @mock.patch("dataworkspace.apps.your_files.forms.get_all_schemas")
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
-    @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
+    @mock.patch("dataworkspace.apps.your_files.forms.get_user_s3_prefixes")
     def test_staff_user_create_new_schema_success(
         self,
         mock_get_s3_prefix,
@@ -357,7 +357,7 @@ class TestCreateTableViews:
         mock_get_schema_for_user,
         staff_client,
     ):
-        mock_get_s3_prefix.return_value = "user/federated/abc"
+        mock_get_s3_prefix.return_value = ["user/federated/abc"]
         mock_get_all_schemas.return_value = ["public", "dit"]
         mock_get_schema_for_user.return_value = "test_schema"
         mock_get_team_schemas_for_user.return_value = []
@@ -389,7 +389,7 @@ class TestCreateTableViews:
     @mock.patch("dataworkspace.apps.your_files.forms.get_team_schemas_for_user")
     @mock.patch("dataworkspace.apps.your_files.forms.get_all_schemas")
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
-    @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
+    @mock.patch("dataworkspace.apps.your_files.forms.get_user_s3_prefixes")
     def test_staff_user_create_new_schema_fail(
         self,
         mock_get_s3_prefix,
@@ -399,7 +399,7 @@ class TestCreateTableViews:
         mock_get_schema_for_user,
         staff_client,
     ):
-        mock_get_s3_prefix.return_value = "user/federated/abc"
+        mock_get_s3_prefix.return_value = ["user/federated/abc"]
         mock_get_all_schemas.return_value = ["public", "dit"]
         mock_get_schema_for_user.return_value = "test_schema"
         mock_get_team_schemas_for_user.return_value = []
@@ -424,7 +424,7 @@ class TestCreateTableViews:
     @mock.patch("dataworkspace.apps.your_files.views.copy_file_to_uploads_bucket")
     @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_file_info")
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
-    @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
+    @mock.patch("dataworkspace.apps.your_files.forms.get_user_s3_prefixes")
     def test_success_team_schema(
         self,
         mock_get_s3_prefix,
@@ -440,7 +440,7 @@ class TestCreateTableViews:
         mock_get_team_schemas_for_user.return_value = [
             {"name": "TestTeam", "schema_name": "test_team_schema"},
         ]
-        mock_get_s3_prefix.return_value = "user/federated/abc"
+        mock_get_s3_prefix.return_value = ["user/federated/abc"]
         file_info_return_value = {
             "encoding": "utf-8-sig",
             "column_definitions": [
@@ -496,7 +496,7 @@ class TestCreateTableViews:
     @mock.patch("dataworkspace.apps.your_files.views.copy_file_to_uploads_bucket")
     @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_file_info")
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
-    @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
+    @mock.patch("dataworkspace.apps.your_files.forms.get_user_s3_prefixes")
     def test_success_all_schemas(
         self,
         mock_get_s3_prefix,
@@ -514,7 +514,7 @@ class TestCreateTableViews:
         mock_get_team_schemas_for_user.return_value = [
             {"name": "TestTeam", "schema_name": "test_team_schema"},
         ]
-        mock_get_s3_prefix.return_value = "user/federated/abc"
+        mock_get_s3_prefix.return_value = ["user/federated/abc"]
         file_info_return_value = {
             "encoding": "utf-8-sig",
             "column_definitions": [
@@ -588,11 +588,11 @@ class TestCreateTableViews:
     @freeze_time("2021-01-01 01:01:01")
     @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_file_info")
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
-    @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
+    @mock.patch("dataworkspace.apps.your_files.forms.get_user_s3_prefixes")
     def test_invalid_table_name(
         self, mock_get_s3_prefix, mock_boto_client, mock_get_file_info, client
     ):
-        mock_get_s3_prefix.return_value = "user/federated/abc"
+        mock_get_s3_prefix.return_value = ["user/federated/abc"]
         mock_get_file_info.return_value = {
             "encoding": "utf-8-sig",
             "column_definitions": [],
@@ -611,11 +611,11 @@ class TestCreateTableViews:
     @freeze_time("2021-01-01 01:01:01")
     @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_file_info")
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
-    @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
+    @mock.patch("dataworkspace.apps.your_files.forms.get_user_s3_prefixes")
     def test_table_name_too_long(
         self, mock_get_s3_prefix, mock_boto_client, mock_get_file_info, client
     ):
-        mock_get_s3_prefix.return_value = "user/federated/abc"
+        mock_get_s3_prefix.return_value = ["user/federated/abc"]
         mock_get_file_info.return_value = {
             "encoding": "utf-8-sig",
             "column_definitions": [],
@@ -636,7 +636,7 @@ class TestCreateTableViews:
     @mock.patch("dataworkspace.apps.your_files.views.copy_file_to_uploads_bucket")
     @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_file_info")
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
-    @mock.patch("dataworkspace.apps.your_files.forms.get_s3_prefix")
+    @mock.patch("dataworkspace.apps.your_files.forms.get_user_s3_prefixes")
     @mock.patch("dataworkspace.apps.your_files.views.get_schema_for_user")
     def test_table_exists_override(
         self,
@@ -649,7 +649,7 @@ class TestCreateTableViews:
         client,
     ):
         mock_get_schema_for_user.return_value = "test_schema"
-        mock_get_s3_prefix.return_value = "user/federated/abc"
+        mock_get_s3_prefix.return_value = ["user/federated/abc"]
         mock_get_file_info.return_value = {
             "encoding": "utf-8-sig",
             "column_definitions": [
