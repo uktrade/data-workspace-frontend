@@ -19,7 +19,6 @@ services:
       - "data-workspace-postgres"
       - "data-workspace-redis"
       - "data-workspace-es"
-      - "data-workspace-minio"
     volumes:
       - .:/app
       - ./dataworkspace:/dataworkspace
@@ -63,21 +62,22 @@ services:
     ports:
       - "9200:9200"
 
-  data-workspace-minio:
-    image: minio/minio:RELEASE.2021-10-08T23-58-24Z.fips
-    environment:
-#     These are sample keys for local S3 development
-      MINIO_ROOT_USER: AAAAAAAAAAAAAAAAAAAA
-      MINIO_ROOT_PASSWORD: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/bbbbbbb
-      MINIO_REGION: eu-west-2
+  data-workspace-localstack:
+    build:
+      context: localstack
+      dockerfile: Dockerfile
     ports:
-      - "19001:9001"
-      - "19000:9000"
+      - "127.0.0.1:53:53"
+      - "127.0.0.1:53:53/udp"
+      - "127.0.0.1:443:443"
+      - '4563-4599:4563-4599'
+    environment:
+      - AWS_DEFAULT_REGION=eu-west-2
+      - EDGE_PORT=4566
+      - SERVICES=s3,sts,iam
+      - EXTRA_CORS_ALLOWED_ORIGINS=http://dataworkspace.test:8000
     volumes:
-      - ".local/minio/data:/data"
-    entrypoint: sh
-    command: ['-c', 'mkdir -p /data/my-bucket && mkdir -p /data/uploads && minio server /data --console-address ":9001" ']
-
+      - "./localstack:/tmp/localstack"
 
 volumes:
   db-data-dev:
