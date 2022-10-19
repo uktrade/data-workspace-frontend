@@ -76,6 +76,7 @@ services:
       - EDGE_PORT=4566
       - SERVICES=s3,sts,iam
       - EXTRA_CORS_ALLOWED_ORIGINS=http://dataworkspace.test:8000
+      - DATA_DIR=/tmp/localstack/data
     volumes:
       - "./localstack:/tmp/localstack"
 
