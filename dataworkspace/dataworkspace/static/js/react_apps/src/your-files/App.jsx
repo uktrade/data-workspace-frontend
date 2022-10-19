@@ -267,7 +267,7 @@ export default class App extends React.Component {
           onChange={this.onFileChange}
           multiple={true}
           ref={this.fileInputRef}
-          style={{ visibility: "hidden" }}
+          style={{ display: "none" }}
         />
         {this.state.error ? (
           <ErrorModal

@@ -11,19 +11,17 @@ function TableHeader(props) {
       <th scope="col" className="govuk-table__header">
         Name
       </th>
-      <th
-        scope="col"
-        className="govuk-table__header govuk-table__header--numeric"
-      >
+      <th scope="col" className="govuk-table__header" style={{ width: "15em" }}>
         Last modified
       </th>
       <th
         scope="col"
         className="govuk-table__header govuk-table__header--numeric"
+        style={{ width: "5em" }}
       >
         Size
       </th>
-      <th scope="col" className="govuk-table__header">
+      <th scope="col" className="govuk-table__header" style={{ width: "8em" }}>
         &nbsp;
       </th>
     </tr>
@@ -61,7 +59,12 @@ function TableRowBigDataFolder(props) {
         <a
           draggable="false"
           className="folder govuk-link govuk-link--no-visited"
-          onClick={props.onClick}
+          onClick={(e) => {
+            e.preventDefault();
+            props.onClick();
+            return false;
+          }}
+          href="#"
         >
           {folderName}
         </a>
@@ -97,7 +100,14 @@ function TableRowFolder(props) {
         </div>
       </td>
       <td className="govuk-table__cell">
-        <a className="folder govuk-link" onClick={props.onClick}>
+        <a
+          className="folder govuk-link govuk-link--no-visited"
+          onClick={(e) => {
+            e.preventDefault();
+            props.onClick();
+          }}
+          href="#"
+        >
           {folderName}
         </a>
       </td>
@@ -115,7 +125,10 @@ function TableRowFile(props) {
   if (file.isCsv) {
     const createTableUrl = `${props.createTableUrl}?path=${file.Key}`;
     createTableButton = (
-      <a className="create-table govuk-link" href={createTableUrl}>
+      <a
+        className="create-table govuk-link govuk-link--no-visited"
+        href={createTableUrl}
+      >
         Create table
       </a>
     );
@@ -139,8 +152,12 @@ function TableRowFile(props) {
       </td>
       <td className="govuk-table__cell">
         <a
-          className="file govuk-link"
-          onClick={() => props.onFileClick(file.Key)}
+          className="file govuk-link govuk-link--no-visited"
+          onClick={(e) => {
+            e.preventDefault();
+            props.onFileClick(file.Key);
+          }}
+          href="#"
         >
           {filename}
         </a>
@@ -167,7 +184,7 @@ export class FileList extends React.Component {
     const files = this.props.files;
     const folders = this.props.folders;
     return (
-      <table className="govuk-table">
+      <table className="govuk-table" style={{ tableLayout: "fixed" }}>
         <thead>
           <TableHeader />
         </thead>
