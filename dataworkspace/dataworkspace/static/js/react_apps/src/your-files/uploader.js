@@ -7,24 +7,19 @@ export class Uploader extends EventEmitter {
 
     this.s3 = s3;
     this.options = options;
-    this.isAborted = false;
-    this.remainingUploadCount = -1;
 
-    this.uploads = [];
     console.log("options are", options);
   }
 
-  cancel() {
-    console.log("aborting ...");
-    this.isAborted = true;
-  }
-
   start(files, prefix) {
+    var isAborted = false;
+    var remainingUploadCount = files.length;
+    var uploads = [];
+
     const maxConnections = 4;
     const concurrentFiles = Math.min(maxConnections, files.length);
     const connectionsPerFile = Math.floor(maxConnections / concurrentFiles);
-    this.queue = fileQueue(concurrentFiles);
-    this.remainingUploadCount = files.length;
+    const queue = fileQueue(concurrentFiles);
 
     // some v funky scope happening within the queue!
     // also this needs a rethink!
@@ -44,16 +39,16 @@ export class Uploader extends EventEmitter {
         this.emit("upload:progress", file, percent);
       };
 
-      this.queue(async () => {
+      queue(async () => {
         console.log("in task for", file.name);
         try {
-          if (!this.isAborted) {
+          if (!isAborted) {
             this.emit("upload:start");
             let upload = s3.upload(params, {
               queueSize: connectionsPerFile,
             });
             console.log(upload);
-            this.uploads.push(upload);
+            uploads.push(upload);
             console.log("about to await the upload");
             await upload.on("httpUploadProgress", onProgress).promise();
             this.emit("upload:complete", file);
@@ -62,16 +57,24 @@ export class Uploader extends EventEmitter {
           }
         } catch (err) {
           console.error(err);
-          if (this.isAborted) {
+          if (isAborted) {
             this.emit("upload:failed", file);
           }
         } finally {
-          this.remainingUploadCount--;
+          remainingUploadCount--;
         }
 
-        if (this.remainingUploadCount === 0) {
+        if (remainingUploadCount === 0) {
           this.emit("complete");
         }
+      });
+    }
+
+    return function() {
+      console.log("aborting ...");
+      isAborted = true;
+      uploads.forEach((upload) => {
+        upload.abort();
       });
     }
   }

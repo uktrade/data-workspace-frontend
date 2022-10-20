@@ -38,6 +38,7 @@ function DeleteTableHeader() {
 export class DeleteObjectsPopup extends React.Component {
   constructor(props) {
     super(props);
+    this.abort = () => {};
     this.state = {
       finished: false,
       trashing: false,
@@ -89,16 +90,17 @@ export class DeleteObjectsPopup extends React.Component {
 
     deleter.on("delete:done", () => {
       this.setState({ finished: true });
+      this.props.onSuccess();
     });
 
-    deleter.start(this.state.foldersToDelete, this.state.filesToDelete);
+    this.abort = deleter.start(this.state.foldersToDelete, this.state.filesToDelete);
   };
 
   onCloseClick = () => {
     this.setState({
       aborted: true,
     });
-    this.props.onCancel();
+    this.props.onClose();
   };
 
   render() {
@@ -216,7 +218,7 @@ export class DeleteObjectsPopup extends React.Component {
                 >
                   {this.state.finished ? "Close" : "Cancel"}
                 </button>
-                <button
+                {!this.state.finished ? <button
                   id="trash-btn-delete"
                   type="button"
                   onClick={() => this.onDeleteClick()}
@@ -225,7 +227,7 @@ export class DeleteObjectsPopup extends React.Component {
                 >
                   <TrashIcon />
                   &nbsp;Delete {objectCount}
-                </button>
+                </button> : null}
               </div>
             </div>
           </div>
