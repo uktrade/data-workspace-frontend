@@ -36,6 +36,7 @@ With the default environment, you will need the below in your `/etc/hosts` file.
 
 ```
 127.0.0.1       dataworkspace.test
+127.0.0.1       data-workspace-localstack
 ```
 
 And the application will be visible at http://dataworkspace.test:8000. This is to be able to properly test cookies that are shared with subdomains. To run tool and visualisation-related code, you will need subdomains in your `/etc/hosts` file, such as 
@@ -161,7 +162,7 @@ To build this locally requires NodeJS. Ideally installed via `nvm` https://githu
   npm run build:css
 ```
 
-## Running the chart builder react app locally
+## Running the React apps locally
 
 We're set up to use django-webpack-loader for hotloading the react app while developing. 
 
