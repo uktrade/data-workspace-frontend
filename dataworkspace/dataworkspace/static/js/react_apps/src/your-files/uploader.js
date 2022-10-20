@@ -73,6 +73,9 @@ export class Uploader extends EventEmitter {
     return function() {
       console.log("aborting ...");
       isAborted = true;
+      uploads.forEach((upload) => {
+        upload.abort();
+      });
     }
   }
 }
