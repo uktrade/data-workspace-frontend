@@ -44,6 +44,7 @@ locals {
     notebook_task_role__assume_role_policy_document_base64 = "${base64encode(data.aws_iam_policy_document.notebook_s3_access_ecs_tasks_assume_role.json)}"
     notebook_task_role__policy_name                        = "${var.notebook_task_role_policy_name}"
     notebook_task_role__policy_document_template_base64    = "${base64encode(data.aws_iam_policy_document.notebook_s3_access_template.json)}"
+    notebook_task_role__s3_bucket_arn                      = "${aws_s3_bucket.notebooks.arn}"
     fargate_spawner__aws_region            = "${data.aws_region.aws_region.name}"
     fargate_spawner__aws_ecs_host          = "ecs.${data.aws_region.aws_region.name}.amazonaws.com"
     fargate_spawner__notebook_port         = "${local.notebook_container_port}"
@@ -761,4 +762,3 @@ data "aws_iam_policy_document" "admin_list_ecs_tasks" {
     }
   }
 }
-
