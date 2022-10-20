@@ -1453,7 +1453,7 @@ def update_user_tool_access_policy(user, access_point_id):
     bucket_arns = '","'.join([f"{bucket_arn}/{x}*" for x in s3_prefixes])
     policy_document = (
         settings.S3_POLICY_DOCUMENT_TEMPLATE.replace('"__S3_PREFIXES__"', f'["{prefix_values}"]')
-        .replace('"__S3_BUCKET_ARNS__"', f'"{bucket_arns}"')
+        .replace('"__S3_BUCKET_ARNS__"', f'["{bucket_arns}"]')
         .replace("__ACCESS_POINT_ID__", access_point_id or "")
     )
     for i in range(0, max_attempts):
