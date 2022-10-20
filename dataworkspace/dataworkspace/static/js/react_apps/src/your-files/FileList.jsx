@@ -80,7 +80,7 @@ function TableRowFolder(props) {
   const folderName = prefixToFolder(props.folder.Prefix);
   const folder = props.folder;
   return (
-    <tr className="govuk-table__row">
+    <tr className="govuk-table__row" onClick={() => props.onFolderSelect(folder, !folder.isSelected)}>
       <td className="govuk-table__cell govuk-table__cell--checkbox">
         <div className="govuk-form-group">
           <div className="govuk-checkboxes--small">
@@ -89,6 +89,7 @@ function TableRowFolder(props) {
                 <input
                   className="govuk-checkboxes__input"
                   type="checkbox"
+                  checked={folder.isSelected}
                   onChange={(e) =>
                     props.onFolderSelect(folder, e.target.checked)
                   }
@@ -135,7 +136,7 @@ function TableRowFile(props) {
   }
 
   return (
-    <tr>
+    <tr onClick={() => props.onFileSelect(file, !file.isSelected)}>
       <td className="govuk-table__cell govuk-table__cell--checkbox">
         <div className="govuk-form-group">
           <div className="govuk-checkboxes--small">
@@ -143,6 +144,7 @@ function TableRowFile(props) {
               <input
                 className="govuk-checkboxes__input"
                 type="checkbox"
+                checked={file.isSelected}
                 onChange={(e) => props.onFileSelect(file, e.target.checked)}
               />
               <label className="govuk-label govuk-checkboxes__label"></label>

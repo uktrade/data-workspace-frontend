@@ -68,6 +68,7 @@ export class S3Proxy {
       file.isCsv =
         file.Key.substr(file.Key.length - 3, file.Key.length) === "csv";
       file.formattedDate = new Date(file.LastModified);
+      file.isSelected = false;
       return file;
     });
 
@@ -76,6 +77,7 @@ export class S3Proxy {
       folders.push({
         Prefix: this.config.initialPrefix + this.config.bigdataPrefix,
         isBigData: true,
+        isSelected: false,
       });
     }
 
@@ -86,6 +88,7 @@ export class S3Proxy {
       );
     }).map((folder) => {
       folder.isBigData = false;
+      folder.isSelected = false;
       return folder;
     });
 
