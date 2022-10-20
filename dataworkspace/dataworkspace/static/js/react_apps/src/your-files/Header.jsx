@@ -18,12 +18,11 @@ export class Header extends React.Component {
     const breadCrumbs = this.props.breadCrumbs.map((b) => {
       return (
         <li
-          onClick={() => this.props.onBreadcrumbClick(b)}
           className="browser-breadcrumb"
           key={b.prefix}
         >
           &nbsp;
-          <a className="browser-breadcrumb-link">{b.label}</a>
+          <a href="" onClick={(e) => this.props.onBreadcrumbClick(e, b)} className="browser-breadcrumb-link">{b.label}</a>
           &nbsp;
         </li>
       );

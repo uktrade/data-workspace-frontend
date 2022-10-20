@@ -73,7 +73,8 @@ export default class App extends React.Component {
     this.showPopup(popupTypes.UPLOAD_FILES);
   };
 
-  onBreadcrumbClick = async (breadcrumb) => {
+  onBreadcrumbClick = async (e, breadcrumb) => {
+    e.preventDefault();
     await this.navigateTo(breadcrumb.prefix);
   };
 
