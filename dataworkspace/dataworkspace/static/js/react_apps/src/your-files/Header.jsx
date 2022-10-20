@@ -6,11 +6,12 @@ import { NewFolderIcon } from "./icons/newfolder";
 export class Header extends React.Component {
   constructor(props) {
     super(props);
+    this.state = { spin: false }
   }
 
   handleRefreshClick() {
-    // Todo - spin the icon
     this.props.onRefreshClick();
+    this.setState({ spin: true })
   }
 
   render() {
@@ -36,7 +37,8 @@ export class Header extends React.Component {
             focusable="false"
             data-prefix="fas"
             data-icon="sync"
-            className="navbutton-icon navbutton-icon-small svg-inline--fa fa-sync fa-w-16"
+            className={`navbutton-icon navbutton-icon-small svg-inline--fa fa-sync fa-w-16${this.state.spin ? ' spin' : ''}`}
+            onAnimationEnd={() => this.setState({ spin: false })}
             role="img"
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 512 512"
