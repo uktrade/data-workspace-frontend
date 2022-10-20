@@ -26,7 +26,7 @@ def test_baseline_content_security_policy(client):
         "style-src dataworkspace.test:8000 'unsafe-inline' https://tagmanager.google.com https://fonts.googleapis.com",
         "default-src dataworkspace.test:8000",
         "connect-src dataworkspace.test:8000 https://www.google-analytics.com *.google-analytics.com *.analytics.google.com "
-        "*.googletagmanager.com dataworkspace.test:3000 ws://dataworkspace.test:3000",
+        "*.googletagmanager.com",
     }
 
     assert policies == expected_policies
