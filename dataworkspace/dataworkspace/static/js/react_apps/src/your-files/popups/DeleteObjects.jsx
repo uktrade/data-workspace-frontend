@@ -216,7 +216,7 @@ export class DeleteObjectsPopup extends React.Component {
                 >
                   {this.state.finished ? "Close" : "Cancel"}
                 </button>
-                <button
+                {!this.state.finished ? <button
                   id="trash-btn-delete"
                   type="button"
                   onClick={() => this.onDeleteClick()}
@@ -225,7 +225,7 @@ export class DeleteObjectsPopup extends React.Component {
                 >
                   <TrashIcon />
                   &nbsp;Delete {objectCount}
-                </button>
+                </button> : null}
               </div>
             </div>
           </div>
