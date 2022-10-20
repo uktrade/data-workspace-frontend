@@ -85,8 +85,7 @@ export class UploadFilesPopup extends React.Component {
   close() {
     if (this.state.isUploading) {
       console.log("Cancel the uploads");
-      this.props.uploader.cancel();
-      return;
+      this.cancelUpload();
     }
     this.props.onCancel();
   }
@@ -144,7 +143,7 @@ export class UploadFilesPopup extends React.Component {
       remaining: this.state.selectedFiles.length,
       isUploading: true,
     });
-    uploader.start(this.state.selectedFiles, this.state.currentPrefix);
+    this.cancelUpload = uploader.start(this.state.selectedFiles, this.state.currentPrefix);
   }
 
   render() {
