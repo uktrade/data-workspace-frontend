@@ -280,18 +280,10 @@ export default class App extends React.Component {
           <DeleteObjectsPopup
             filesToDelete={this.state.filesToDelete}
             foldersToDelete={this.state.foldersToDelete}
-            onCancel={async () => {
+            onClose={async () => {
               this.hidePopup(popupTypes.DELETE_OBJECTS);
-              this.setState({
-                folders: this.state.folders.map((f) => ({
-                  ...f,
-                  isSelected: false,
-                })),
-                files: this.state.files.map((f) => ({
-                  ...f,
-                  isSelected: false,
-                })),
-              });
+            }}
+            onSuccess={async () => {
               await this.onRefreshClick();
             }}
             deleter={this.props.deleter}
