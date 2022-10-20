@@ -177,15 +177,8 @@ data "aws_iam_policy_document" "notebook_s3_access_template" {
         "s3:DeleteObject"
     ]
 
-    resources = [
-      "${aws_s3_bucket.notebooks.arn}",
-    ]
+    resources = ["__S3_BUCKET_ARNS__"]
 
-    condition {
-      test = "ForAnyValue:StringLike"
-      variable = "s3:prefix"
-      values = ["__S3_PREFIXES__"]
-    }
   }
 
   statement {
