@@ -9,53 +9,51 @@ export class S3Deleter extends EventEmitter {
 
     this.s3 = s3;
     this.bucket = bucket;
-    this.isAborted = false;
-    this.remainingDeleteCount = -1;
-    this.keysToDelete = [];
-    this.filesToDelete = [];
-    this.foldersToDelete = [];
   }
 
-  cancel() {
-    this.isAborted = true;
-  }
-
-  async deleteKeys() {
-    let response;
-    try {
-      response = await this.s3.deleteObjects(this.bucket, this.keysToDelete);
-    } catch (err) {
-      console.error(err);
-      throw err;
-    } finally {
-      this.keysToDelete = [];
-    }
-    return response;
-  }
-
-  async scheduleDelete(key) {
-    this.keysToDelete.push(key);
-    if (this.keysToDelete.length > BULK_DELETE_MAX_FILES)
-      return await this.deleteKeys();
-  }
-
-  async flushDelete() {
-    if (this.keysToDelete.length) return await this.deleteKeys();
-  }
 
   start(folders, files) {
     const numObjects = folders.length + files.length;
     const maxConnections = 4;
-    this.queue = fileQueue(Math.min(maxConnections, numObjects));
-    this.remainingDeleteCount = numObjects;
+    const queue = fileQueue(Math.min(maxConnections, numObjects));
+
+    var isAborted = false;
+    var remainingDeleteCount = numObjects;
+    var keysToDelete = [];
+    var filesToDelete = [];
+    var foldersToDelete = [];
+
+    const deleteKeys = async () => {
+      let response;
+      try {
+        response = await this.s3.deleteObjects(this.bucket, keysToDelete);
+      } catch (err) {
+        console.error(err);
+        throw err;
+      } finally {
+        keysToDelete = [];
+      }
+      return response;
+    }
+
+    const flushDelete = async () => {
+      if (keysToDelete.length) return await deleteKeys();
+    }
+
+    const scheduleDelete = async (key) => {
+      keysToDelete.push(key);
+      if (keysToDelete.length > BULK_DELETE_MAX_FILES)
+        return await deleteKeys();
+    }
+
     const s3 = this.s3.s3;
     for (const folder of folders) {
-      this.queue(async () => {
+      queue(async () => {
         this.emit("delete:start", folder);
         let continuationToken = null;
         let isTruncated = true;
         while (isTruncated && !this.isAborted) {
-          if (this.isAborted) {
+          if (isAborted) {
             this.emit("delete:cancelled");
             return;
           }
@@ -78,11 +76,11 @@ export class S3Deleter extends EventEmitter {
           // Loop through the objects within the prefix and bulk delete them
           for (
             let j = 0;
-            j < response.Contents.length && !this.isAborted;
+            j < response.Contents.length && !isAborted;
             ++j
           ) {
             try {
-              await this.scheduleDelete(response.Contents[j].Key);
+              await scheduleDelete(response.Contents[j].Key);
             } catch (err) {
               this.emit("delete:error", folder);
               break;
@@ -93,19 +91,23 @@ export class S3Deleter extends EventEmitter {
       });
     }
     for (const file of files) {
-      this.queue(async () => {
+      queue(async () => {
         this.emit("delete:start", file);
         try {
-          await this.scheduleDelete(file.Key);
+          await scheduleDelete(file.Key);
         } catch (err) {
           this.emit("delete:error", file);
         }
         this.emit("delete:finished", file);
       });
     }
-    this.queue(async () => {
-      await this.flushDelete();
+    queue(async () => {
+      await flushDelete();
       this.emit("delete:done");
     });
+
+    return function() {
+      isAborted = true;
+    }
   }
 }

@@ -38,6 +38,7 @@ function DeleteTableHeader() {
 export class DeleteObjectsPopup extends React.Component {
   constructor(props) {
     super(props);
+    this.abort = () => {};
     this.state = {
       finished: false,
       trashing: false,
@@ -91,7 +92,7 @@ export class DeleteObjectsPopup extends React.Component {
       this.setState({ finished: true });
     });
 
-    deleter.start(this.state.foldersToDelete, this.state.filesToDelete);
+    this.abort = deleter.start(this.state.foldersToDelete, this.state.filesToDelete);
   };
 
   onCloseClick = () => {
