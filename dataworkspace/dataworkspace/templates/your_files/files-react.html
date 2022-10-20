@@ -39,7 +39,7 @@
       endpointUrl: '{{ aws_endpoint }}',
       createTableUrl: '{% url 'your-files:create-table-confirm' %}',
       teamsPrefixes: {{ teams_folders_prefixes | to_json }},
-
+      s3Path: '{{ s3_path }}'
     };
     console.log(YOURFILES_CONFIG.credentialsUrl);
   </script>

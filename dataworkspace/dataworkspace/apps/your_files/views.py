@@ -57,10 +57,9 @@ def file_browser_html_view(request):
     CONNECT_SRC=settings.YOUR_FILES_CONNECT_SRC,
     SCRIPT_SRC=settings.YOUR_FILES_SCRIPT_SRC,
 )
-def your_files_home(request):
+def your_files_home(request, s3_path=""):
     prefix = get_s3_prefix(str(request.user.profile.sso_id))
     teams_folders_prefixes = get_team_prefixes(request.user)
-
     return render(
         request,
         "your_files/files-react.html",
@@ -69,6 +68,7 @@ def your_files_home(request):
             "teams_folders_prefixes": teams_folders_prefixes,
             "bucket": settings.NOTEBOOKS_BUCKET,
             "aws_endpoint": settings.S3_LOCAL_ENDPOINT_URL,
+            "s3_path": s3_path,
         },
         status=200,
     )
