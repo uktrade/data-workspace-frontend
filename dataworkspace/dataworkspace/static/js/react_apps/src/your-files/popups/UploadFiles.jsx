@@ -80,6 +80,22 @@ export class UploadFilesPopup extends React.Component {
     };
     this.close = this.close.bind(this);
     this.onUploadClick = this.onUploadClick.bind(this);
+    this.escFunction = this.escFunction.bind(this);
+  }
+
+  componentDidMount() {
+    document.addEventListener("keydown", this.escFunction, false);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener("keydown", this.escFunction, false);
+  }
+
+  escFunction(event) {
+    if (event.key === 'Escape') {
+      this.close()
+
+    }
   }
 
   close() {
