@@ -187,16 +187,14 @@ export class UploadFilesPopup extends React.Component {
                 >
                   {this.state.isUploading ? "Cancel" : "Close"}
                 </button>
-                <button
+                {!this.state.uploadsComplete ? <button
                   onClick={() => this.onUploadClick(files)}
                   className="govuk-button modal-button"
-                  disabled={
-                    this.state.uploadsComplete || this.state.isUploading
-                  }
+                  disabled={this.state.isUploading}
                 >
                   <UploadIcon />
                   &nbsp;Upload ({this.state.remaining})
-                </button>
+                </button> : null}
               </div>
             </div>
           </div>
