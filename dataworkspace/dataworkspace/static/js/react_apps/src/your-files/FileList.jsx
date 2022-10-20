@@ -136,7 +136,7 @@ function TableRowFile(props) {
   }
 
   return (
-    <tr onClick={() => props.onFileSelect(file, !file.isSelected)}>
+    <tr className="govuk-table__row" onClick={() => props.onFileSelect(file, !file.isSelected)}>
       <td className="govuk-table__cell govuk-table__cell--checkbox">
         <div className="govuk-form-group">
           <div className="govuk-checkboxes--small">
