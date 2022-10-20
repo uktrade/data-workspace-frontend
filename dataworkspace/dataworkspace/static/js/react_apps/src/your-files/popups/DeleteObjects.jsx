@@ -90,6 +90,7 @@ export class DeleteObjectsPopup extends React.Component {
 
     deleter.on("delete:done", () => {
       this.setState({ finished: true });
+      this.props.onSuccess();
     });
 
     this.abort = deleter.start(this.state.foldersToDelete, this.state.filesToDelete);
@@ -99,7 +100,7 @@ export class DeleteObjectsPopup extends React.Component {
     this.setState({
       aborted: true,
     });
-    this.props.onCancel();
+    this.props.onClose();
   };
 
   render() {
