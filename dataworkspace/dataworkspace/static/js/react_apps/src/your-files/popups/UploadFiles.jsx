@@ -82,6 +82,21 @@ export class UploadFilesPopup extends React.Component {
     this.onUploadClick = this.onUploadClick.bind(this);
   }
 
+  componentDidMount() {
+    document.addEventListener("keydown", this.escFunction, false);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener("keydown", this.escFunction, false);
+  }
+
+  escFunction = (event) => {
+    if (event.key === 'Escape') {
+      this.close()
+
+    }
+  }
+
   close() {
     if (this.state.isUploading) {
       console.log("Cancel the uploads");
