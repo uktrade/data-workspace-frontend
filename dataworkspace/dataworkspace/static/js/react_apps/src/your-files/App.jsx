@@ -1,6 +1,10 @@
 import React from "react";
 import "./App.scss";
 
+import { Uploader } from "./uploader";
+import { S3Proxy } from "./s3-proxy";
+import { S3Deleter } from "./s3-deleter";
+
 import { Header } from "./Header";
 import { FileList } from "./FileList";
 import { BigDataMessage } from "./BigDataMessage";
@@ -18,6 +22,13 @@ const popupTypes = {
 export default class App extends React.Component {
   constructor(props) {
     super(props);
+
+    this.proxy = new S3Proxy(this.props.config);
+    this.uploader = new Uploader(this.proxy, {
+      bucketName: this.props.config.bucketName,
+    });
+    this.deleter = new S3Deleter(this.proxy, this.props.config.bucketName);
+
     this.state = {
       files: [],
       folders: [],
@@ -105,7 +116,7 @@ export default class App extends React.Component {
   createNewFolder = async (prefix, folderName) => {
     this.hidePopup(popupTypes.ADD_FOLDER);
     try {
-      await this.props.proxy.createFolder(prefix, folderName);
+      await this.proxy.createFolder(prefix, folderName);
       await this.refresh(prefix);
     } catch (ex) {
       this.showErrorPopup(ex);
@@ -157,7 +168,7 @@ export default class App extends React.Component {
 
     let url;
     try {
-      url = await this.props.proxy.getSignedUrl(params);
+      url = await this.proxy.getSignedUrl(params);
       console.log(url);
       window.location.href = url;
     } catch (ex) {
@@ -185,7 +196,7 @@ export default class App extends React.Component {
       params.Prefix === this.state.rootPrefix + this.state.bigDataFolder;
 
     try {
-      const data = await this.props.proxy.listObjects(params);
+      const data = await this.proxy.listObjects(params);
       this.setState({
         files: data.files,
         folders: data.folders,
@@ -286,7 +297,7 @@ export default class App extends React.Component {
             onSuccess={async () => {
               await this.onRefreshClick();
             }}
-            deleter={this.props.deleter}
+            deleter={this.deleter}
           />
         ) : null}
         {this.state.popups.addFolder ? (
@@ -304,7 +315,7 @@ export default class App extends React.Component {
             folderName={currentFolderName}
             onCancel={() => this.hidePopup(popupTypes.UPLOAD_FILES)}
             onUploadsComplete={this.onUploadsComplete}
-            uploader={this.props.uploader}
+            uploader={this.uploader}
           />
         ) : null}
 
