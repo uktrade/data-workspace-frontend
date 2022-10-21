@@ -2,7 +2,6 @@ import React from "react";
 import "./App.scss";
 
 import { Uploader } from "./uploader";
-import { S3Proxy } from "./s3-proxy";
 import { S3Deleter } from "./s3-deleter";
 
 import { Header } from "./Header";
