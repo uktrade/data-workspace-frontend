@@ -32,8 +32,10 @@
   <script nonce="{{ request.csp_nonce }}">
     const YOURFILES_CONFIG = {
       region: 'eu-west-2',
+      rootUrl: '{% url 'your-files:your_files_react' '/' %}',
       bucketName: '{{ bucket }}',
-      initialPrefix: '{{ prefix }}',
+      homePrefix: '{{ home_prefix }}',
+      initialPrefix: '{{ initial_prefix }}',
       bigdataPrefix: 'bigdata/',
       credentialsUrl: '{% url 'api_v1:aws-credentials' %}',
       endpointUrl: '{{ aws_endpoint }}',

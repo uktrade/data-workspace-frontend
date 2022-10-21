@@ -9,7 +9,6 @@ import { AddFolderPopup, UploadFilesPopup } from "./popups";
 import { DeleteObjectsPopup } from "./popups/DeleteObjects";
 import { ErrorModal } from "./popups/ErrorModal";
 
-
 const popupTypes = {
   ADD_FOLDER: "addFolder",
   UPLOAD_FILES: "uploadFiles",
@@ -46,14 +45,14 @@ class Credentials extends AWS.Credentials {
 export default class App extends React.Component {
   constructor(props) {
     super(props);
-
+    const appConfig = this.props.config;
     const awsConfig = {
-      credentials: new Credentials(this.props.config.credentialsUrl),
-      region: this.props.config.region,
+      credentials: new Credentials(appConfig.credentialsUrl),
+      region: appConfig.region,
       s3ForcePathStyle: true,
-      ...(this.props.config.endpointUrl ? {endpoint: this.props.config.endpointUrl} : {})
-    }
-    console.log('AWS Config', awsConfig);
+      ...(appConfig.endpointUrl ? { endpoint: appConfig.endpointUrl } : {}),
+    };
+    console.log("AWS Config", awsConfig);
     this.s3 = new AWS.S3(awsConfig);
 
     this.state = {
@@ -62,17 +61,21 @@ export default class App extends React.Component {
       selectedFiles: [],
       filesToDelete: [],
       foldersToDelete: [],
-      currentPrefix: this.props.config.rootPrefix,
-      bigDataFolder: this.props.config.bigdataPrefix,
-      createTableUrl: this.props.config.createTableUrl,
+      // Ensure the user provided prefix ends with a slash but does not start with a slash
+      currentPrefix: appConfig.initialPrefix
+        .replace(/^\//, "")
+        .replace(/([^\/]$)/, "$1/"),
+      bigDataFolder: appConfig.bigdataPrefix,
+      createTableUrl: appConfig.createTableUrl,
       isLoaded: false,
       error: null,
-      bucketName: this.props.config.bucketName,
-      prefix: this.props.config.initialPrefix,
-      rootPrefix: this.props.config.initialPrefix,
-      region: this.props.config.region,
+      bucketName: appConfig.bucketName,
+      rootPrefix: appConfig.homePrefix,
+      region: appConfig.region,
       showBigDataMessage: false,
-      popups: Object.fromEntries(Object.entries(popupTypes).map((key, value) => [value, false])),
+      popups: Object.fromEntries(
+        Object.entries(popupTypes).map((key, value) => [value, false])
+      ),
       dragActive: false,
     };
 
@@ -110,7 +113,7 @@ export default class App extends React.Component {
   };
 
   onRefreshClick = async () => {
-    await this.navigateTo(this.state.prefix);
+    await this.navigateTo(this.state.currentPrefix);
   };
 
   showNewFolderPopup = async (prefix) => {
@@ -178,7 +181,7 @@ export default class App extends React.Component {
 
     let url;
     try {
-      url = await this.s3.getSignedUrlPromise("getObject", params)
+      url = await this.s3.getSignedUrlPromise("getObject", params);
       console.log(url);
       window.location.href = url;
     } catch (ex) {
@@ -187,6 +190,7 @@ export default class App extends React.Component {
   };
 
   async navigateTo(prefix) {
+    window.history.pushState(null, null, this.props.config.rootUrl + prefix);
     this.setState({ prefix: prefix });
     await this.refresh(prefix);
   }
@@ -196,51 +200,69 @@ export default class App extends React.Component {
   };
 
   async refresh(prefix) {
-    const initialPrefix = this.props.config.initialPrefix;
+    const rootPrefix = this.props.config.rootPrefix;
     const bigdataPrefix = this.props.config.bigdataPrefix;
-    const showBigDataMessage = prefix === this.state.rootPrefix + this.state.bigDataFolder;
+    const showBigDataMessage =
+      prefix === this.state.rootPrefix + this.state.bigDataFolder;
     const params = {
       Bucket: this.state.bucketName,
-      Prefix: prefix || this.state.prefix,
+      Prefix: prefix || this.state.currentPrefix,
       Delimiter: "/",
     };
 
     const listObjects = async () => {
-      const response = await this.s3.listObjectsV2(params).promise();
-      const files = response.Contents
-        .filter((file) => (file.Key !== params.Prefix))
-        .map((file) => ({
-          ...file,
-          formattedDate: new Date(file.LastModified),
-          isSelected: false,
-        }));
+      let response;
+      try {
+        response = await this.s3.listObjectsV2(params).promise();
+      } catch (ex) {
+        console.error("Failed to fetch objects from S3", ex);
+        throw new Error(ex);
+      }
 
-      const teamsFolders = (params.Prefix === initialPrefix) ? (this.props.config.teamsPrefixes.map((prefix) => ({
-        Prefix: prefix,
-        isSharedFolder: true,
+      const teamsFolders =
+        params.Prefix === rootPrefix
+          ? this.props.config.teamsPrefixes.map((prefix) => ({
+              Prefix: prefix,
+              isSharedFolder: true,
+              isSelected: false,
+            }))
+          : [];
+
+      const bigDataFolder =
+        params.Prefix === rootPrefix
+          ? [
+              {
+                Prefix: rootPrefix + bigdataPrefix,
+                isBigData: true,
+                isSelected: false,
+              },
+            ]
+          : [];
+
+      const files = response.Contents.filter(
+        (file) => file.Key !== params.Prefix
+      ).map((file) => ({
+        ...file,
+        formattedDate: new Date(file.LastModified),
         isSelected: false,
-      }))) : [];
-
-      const bigDataFolder = (params.Prefix === initialPrefix) ? [{
-          Prefix: initialPrefix + bigdataPrefix,
-          isBigData: true,
-          isSelected: false,
-        }] : [];
+      }));
 
       const foldersWithoutBigData = response.CommonPrefixes.filter((folder) => {
-        return folder.Prefix !== `${initialPrefix}${bigdataPrefix}`;
+        return folder.Prefix !== `${rootPrefix}${bigdataPrefix}`;
       }).map((folder) => ({
         ...folder,
         isBigData: false,
         isSelected: false,
-      }))
-      const folders = teamsFolders.concat(bigDataFolder).concat(foldersWithoutBigData);
+      }));
+      const folders = teamsFolders
+        .concat(bigDataFolder)
+        .concat(foldersWithoutBigData);
 
       return {
         files,
         folders,
       };
-    }
+    };
 
     try {
       const data = await listObjects();
@@ -251,8 +273,8 @@ export default class App extends React.Component {
         showBigDataMessage,
       });
     } catch (ex) {
+      console.log("Error", ex);
       this.showErrorPopup(ex);
-      return
     }
   }
 
@@ -304,46 +326,50 @@ export default class App extends React.Component {
     e.stopPropagation();
 
     async function entries(directoryReader) {
-        var entries = [];
-        while (true) {
-            var latestEntries = await new Promise((resolve, reject) => {
-                directoryReader.readEntries(resolve, reject);
-            });
-            if (latestEntries.length == 0) break;
-            entries = entries.concat(latestEntries);
-        }
-        return entries;
+      var entries = [];
+      while (true) {
+        var latestEntries = await new Promise((resolve, reject) => {
+          directoryReader.readEntries(resolve, reject);
+        });
+        if (latestEntries.length == 0) break;
+        entries = entries.concat(latestEntries);
+      }
+      return entries;
     }
 
     async function file(fileEntry) {
-        var file = await new Promise((resolve, reject) => {
-            fileEntry.file(resolve, reject);
-        });
-        // We monkey-patch the file to include its FileSystemEntry fullPath,
-        // which is a path relative to the root of the pseudo-filesystem of
-        // a dropped folder
-        file.relativePath = fileEntry.fullPath.substring(1);  // Remove leading slash
-        return file;
+      var file = await new Promise((resolve, reject) => {
+        fileEntry.file(resolve, reject);
+      });
+      // We monkey-patch the file to include its FileSystemEntry fullPath,
+      // which is a path relative to the root of the pseudo-filesystem of
+      // a dropped folder
+      file.relativePath = fileEntry.fullPath.substring(1); // Remove leading slash
+      return file;
     }
 
     async function getFiles(dataTransferItemList) {
-        const files = [];
-        // DataTransferItemList does not support map
-        const fileAndDirectoryEntryQueue = [];
-        for (let i = 0; i < dataTransferItemList.length; ++i) {
-             // At the time of writing no browser supports `getAsEntry`
-            fileAndDirectoryEntryQueue.push(dataTransferItemList[i].webkitGetAsEntry());
-        }
+      const files = [];
+      // DataTransferItemList does not support map
+      const fileAndDirectoryEntryQueue = [];
+      for (let i = 0; i < dataTransferItemList.length; ++i) {
+        // At the time of writing no browser supports `getAsEntry`
+        fileAndDirectoryEntryQueue.push(
+          dataTransferItemList[i].webkitGetAsEntry()
+        );
+      }
 
-        while (fileAndDirectoryEntryQueue.length > 0) {
-            const entry = fileAndDirectoryEntryQueue.shift();
-            if (entry.isFile) {
-                files.push(await file(entry));
-            } else if (entry.isDirectory) {
-                fileAndDirectoryEntryQueue.push(...await entries(entry.createReader()));
-            }
+      while (fileAndDirectoryEntryQueue.length > 0) {
+        const entry = fileAndDirectoryEntryQueue.shift();
+        if (entry.isFile) {
+          files.push(await file(entry));
+        } else if (entry.isDirectory) {
+          fileAndDirectoryEntryQueue.push(
+            ...(await entries(entry.createReader()))
+          );
         }
-        return files;
+      }
+      return files;
     }
 
     this.setState({
@@ -356,7 +382,7 @@ export default class App extends React.Component {
   render() {
     const breadCrumbs = getBreadcrumbs(
       this.state.rootPrefix,
-      this.state.prefix
+      this.state.currentPrefix
     );
 
     const currentFolderName = getFolderName(
