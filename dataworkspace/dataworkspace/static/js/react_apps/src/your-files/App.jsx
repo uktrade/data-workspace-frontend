@@ -63,7 +63,7 @@ export default class App extends React.Component {
     this.uploader = new Uploader(this.proxy, {
       bucketName: this.props.config.bucketName,
     });
-    this.deleter = new S3Deleter(this.proxy, this.props.config.bucketName);
+    this.deleter = new S3Deleter(this.s3, this.props.config.bucketName);
 
     this.state = {
       files: [],
