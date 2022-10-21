@@ -64,7 +64,7 @@ export class S3Deleter extends EventEmitter {
           let response;
           try {
             response = await this.s3
-              .listObjects({
+              .listObjectsV2({
                 Bucket: this.bucket,
                 Prefix: folder.Prefix,
                 ContinuationToken: continuationToken,
