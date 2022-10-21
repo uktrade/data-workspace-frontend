@@ -6,22 +6,58 @@ export class AddFolderPopup extends React.Component {
     super(props);
 
     this.state = { value: "" };
-
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
-  handleSubmit(event) {
+  async handleSubmit(event) {
     console.log("on submit");
+    event.preventDefault();
 
     const folderName = this.state.value;
+    if (!folderName) return;
 
-    event.preventDefault();
-    if (!folderName) {
+    const s3 = this.props.s3;
+    const bucketName = this.props.bucketName;
+    const currentPrefix = this.props.currentPrefix;
+    const onSuccess = this.props.onSuccess;
+    const onClose = this.props.onClose;
+    const onError = this.props.onError;
+
+    const removeSlashes = (text) => {
+      return text.replace(/^\/+/g, "").replace(/\/+$/g, "");
+    }
+
+    console.log("createFolder", currentPrefix, folderName);
+    const folder = currentPrefix + removeSlashes(folderName) + "/";
+    console.log(folder);
+    const params = { Bucket: bucketName, Key: folder };
+
+    let canCreate = false;
+    // Slightly awkward since a 404 is converted to an exception
+    try {
+      await s3.headObject(params).promise();
+    } catch (err) {
+      canCreate = err.code === "NotFound";
+      if (!canCreate) {
+        onError(err);
+        return;
+      }
+    }
+    if (!canCreate) {
+      alert("Error: folder or object already exists at " + params.Key);
       return;
     }
 
-    this.props.onSuccess(this.props.currentPrefix, folderName);
+    try {
+      await s3.putObject(params).promise();
+    } catch(err) {
+      onError(err);
+      return
+    }
+
+    onSuccess();
+    onClose();
   }
 
   handleChange(event) {
@@ -69,7 +105,7 @@ export class AddFolderPopup extends React.Component {
               <button
                 type="button"
                 className="govuk-button govuk-button--secondary modal-button"
-                onClick={this.props.onCancel}
+                onClick={this.props.onClose}
               >
                 Cancel
               </button>

@@ -26,7 +26,12 @@ export class S3Deleter extends EventEmitter {
     const deleteKeys = async () => {
       let response;
       try {
-        response = await this.s3.deleteObjects(this.bucket, keysToDelete);
+        response = await this.s3
+          .deleteObjects({
+            Bucket: this.bucket,
+            Delete: { Objects: keysToDelete.map((key) => ({ Key: key })) },
+          })
+          .promise();
       } catch (err) {
         console.error(err);
         throw err;
@@ -46,7 +51,6 @@ export class S3Deleter extends EventEmitter {
         return await deleteKeys();
     }
 
-    const s3 = this.s3.s3;
     for (const folder of folders) {
       queue(async () => {
         this.emit("delete:start", folder);
@@ -59,7 +63,7 @@ export class S3Deleter extends EventEmitter {
           }
           let response;
           try {
-            response = await s3
+            response = await this.s3
               .listObjects({
                 Bucket: this.bucket,
                 Prefix: folder.Prefix,
