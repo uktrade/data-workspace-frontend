@@ -2,16 +2,7 @@ import * as EventEmitter from "eventemitter3";
 import { fileQueue } from "./utils";
 
 export class Uploader extends EventEmitter {
-  constructor(s3, options) {
-    super(s3);
-
-    this.s3 = s3;
-    this.options = options;
-
-    console.log("options are", options);
-  }
-
-  start(files, prefix) {
+  start(s3, bucketName, prefix, files) {
     var isAborted = false;
     var remainingUploadCount = files.length;
     var uploads = [];
@@ -21,13 +12,9 @@ export class Uploader extends EventEmitter {
     const connectionsPerFile = Math.floor(maxConnections / concurrentFiles);
     const queue = fileQueue(concurrentFiles);
 
-    // some v funky scope happening within the queue!
-    // also this needs a rethink!
-    const s3 = this.s3;
-
     for (const file of files) {
       const params = {
-        Bucket: this.options.bucketName,
+        Bucket: bucketName,
         Key: prefix + file.relativePath,
         ContentType: file.type,
         Body: file,

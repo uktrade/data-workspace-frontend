@@ -1,7 +1,6 @@
 import React from "react";
 import "./App.scss";
 
-import { Uploader } from "./uploader";
 import { S3Deleter } from "./s3-deleter";
 
 import { Header } from "./Header";
@@ -58,9 +57,6 @@ export default class App extends React.Component {
     console.log('AWS Config', awsConfig);
     this.s3 = new AWS.S3(awsConfig);
 
-    this.uploader = new Uploader(this.s3, {
-      bucketName: this.props.config.bucketName,
-    });
     this.deleter = new S3Deleter(this.s3, this.props.config.bucketName);
 
     this.state = {
@@ -371,12 +367,13 @@ export default class App extends React.Component {
 
         {this.state.popups[popupTypes.UPLOAD_FILES] ? (
           <UploadFilesPopup
+            s3={this.s3}
+            bucketName={this.props.config.bucketName}
             currentPrefix={this.state.currentPrefix}
             selectedFiles={this.state.selectedFiles}
             folderName={currentFolderName}
             onCancel={() => this.hidePopup(popupTypes.UPLOAD_FILES)}
             onUploadsComplete={this.onUploadsComplete}
-            uploader={this.uploader}
           />
         ) : null}
 

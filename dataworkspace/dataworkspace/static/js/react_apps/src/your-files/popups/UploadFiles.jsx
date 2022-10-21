@@ -1,5 +1,6 @@
 import React from "react";
 
+import { Uploader } from "../uploader";
 import { bytesToSize } from "../utils";
 import { UploadIcon } from "../icons/upload";
 
@@ -104,7 +105,7 @@ export class UploadFilesPopup extends React.Component {
   }
 
   onUploadClick = () => {
-    const uploader = this.props.uploader;
+    const uploader = new Uploader();
     const onComplete = this.props.onUploadsComplete;
 
     uploader.on("complete", () => {
@@ -156,7 +157,12 @@ export class UploadFilesPopup extends React.Component {
       remaining: this.state.selectedFiles.length,
       isUploading: true,
     });
-    this.cancelUpload = uploader.start(this.state.selectedFiles, this.state.currentPrefix);
+    this.cancelUpload = uploader.start(
+      this.props.s3,
+      this.props.bucketName,
+      this.state.currentPrefix,
+      this.state.selectedFiles,
+    );
   }
 
   render() {
