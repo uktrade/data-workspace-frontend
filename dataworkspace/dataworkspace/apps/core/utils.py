@@ -597,7 +597,7 @@ def can_access_schema_table(user, database, schema, table):
 
 
 def get_team_schemas_for_user(user):
-    teams = Team.objects.filter(member=user)
+    teams = Team.objects.filter(member=user).order_by("schema_name")
     teams = [{"name": team.name, "schema_name": team.schema_name} for team in teams]
 
     return teams

@@ -9,6 +9,7 @@ import { AddFolderPopup, UploadFilesPopup } from "./popups";
 import { DeleteObjectsPopup } from "./popups/DeleteObjects";
 import { ErrorModal } from "./popups/ErrorModal";
 
+
 const popupTypes = {
   ADD_FOLDER: "addFolder",
   UPLOAD_FILES: "uploadFiles",
@@ -219,7 +220,7 @@ export default class App extends React.Component {
 
       const teamsFolders = (params.Prefix === initialPrefix) ? (this.props.config.teamsPrefixes.map((prefix) => ({
         Prefix: prefix,
-        isBigData: true,
+        isSharedFolder: true,
         isSelected: false,
       }))) : [];
 
