@@ -1444,6 +1444,10 @@ def get_user_s3_prefixes(user):
     }
 
 
+def get_team_prefixes(user):
+    return [f'teams/{x["schema_name"]}/' for x in get_team_schemas_for_user(user)]
+
+
 def update_user_tool_access_policy(user, access_point_id):
     max_attempts = 10
     iam_client = get_iam_client()
