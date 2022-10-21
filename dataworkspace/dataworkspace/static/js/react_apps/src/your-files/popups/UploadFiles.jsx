@@ -1,7 +1,7 @@
 import React from "react";
 
-import { Uploader } from "../uploader";
 import { bytesToSize } from "../utils";
+import { fileQueue } from "../utils";
 import { UploadIcon } from "../icons/upload";
 
 function UploadHeaderRow() {
@@ -105,64 +105,66 @@ export class UploadFilesPopup extends React.Component {
   }
 
   onUploadClick = () => {
-    const uploader = new Uploader();
     const onComplete = this.props.onUploadsComplete;
+    const s3 = this.props.s3;
+    const bucketName = this.props.bucketName;
+    const prefix = this.props.currentPrefix;
 
-    uploader.on("complete", () => {
-      this.setState({ uploadsComplete: true, isUploading: false });
-      onComplete();
-    });
+    const files = this.state.selectedFiles
+    var isAborted = false;
+    var remainingUploadCount = files.length;
+    var uploads = [];
 
-    uploader.on("cancelled", () => {
-      this.setState({ isUploading: false });
-    });
+    const maxConnections = 4;
+    const concurrentFiles = Math.min(maxConnections, files.length);
+    const connectionsPerFile = Math.floor(maxConnections / concurrentFiles);
+    const queue = fileQueue(concurrentFiles);
 
-    uploader.on("upload:start", (file) => {
-      console.log("Start", file);
-    });
-
-    uploader.on("upload:failed", (file) => {
-      console.log("failed", file);
-    });
-
-    uploader.on("upload:complete", (file) => {
-      this.setState((state) => {
-        return {
-          remaining: state.remaining - 1,
-        };
-      });
-    });
-
-    uploader.on("upload:progress", (uploadingFile, percent) => {
-      console.log(percent, uploadingFile);
-
-      this.setState((state) => {
-        const selectedFiles = state.selectedFiles.map((file) => {
-          if (uploadingFile === file) {
-            const progress = Math.round(percent);
-            console.log("update progress to", progress);
-            file.progress = progress;
+    for (const file of files) {
+      queue(async () => {
+        try {
+          if (!isAborted) {
+            const upload = s3.upload({
+                Bucket: bucketName,
+                Key: prefix + file.relativePath,
+                ContentType: file.type,
+                Body: file,
+              }, {
+                queueSize: connectionsPerFile,
+            });
+            uploads.push(upload);
+            await upload.on("httpUploadProgress", (event) => {
+              file.progress = Math.round(event.total ? (event.loaded * 100.0) / event.total : 0)
+              this.setState({
+                selectedFiles: files
+              })
+            }).promise();
           }
+        } catch (err) {
+          if (!isAborted) {
+            console.error(err);
+          }
+        } finally {
+          remainingUploadCount--;
+        }
 
-          return file;
-        });
-
-        return {
-          selectedFiles,
-        };
+        if (remainingUploadCount === 0) {
+          this.setState({ uploadsComplete: true, isUploading: false });
+          onComplete();
+        }
       });
-    });
+    }
+
+    this.cancelUpload = () => {
+      isAborted = true;
+      uploads.forEach((upload) => {
+        upload.abort();
+      });
+    }
 
     this.setState({
-      remaining: this.state.selectedFiles.length,
       isUploading: true,
     });
-    this.cancelUpload = uploader.start(
-      this.props.s3,
-      this.props.bucketName,
-      this.state.currentPrefix,
-      this.state.selectedFiles,
-    );
   }
 
   render() {
@@ -212,7 +214,7 @@ export class UploadFilesPopup extends React.Component {
                   disabled={this.state.isUploading}
                 >
                   <UploadIcon />
-                  &nbsp;Upload ({this.state.remaining})
+                  &nbsp;Upload ({this.state.selectedFiles.length})
                 </button> : null}
               </div>
             </div>
