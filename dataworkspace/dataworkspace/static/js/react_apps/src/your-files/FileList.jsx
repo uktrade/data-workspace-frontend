@@ -124,7 +124,7 @@ function TableRowFile(props) {
   const file = props.file;
   const filename = fullPathToFilename(file.Key);
 
-  if (file.Key.substr(file.Key.length - 3, file.Key.length) === "csv") {
+  if (file.Key.substr(file.Key.length - 4, file.Key.length) === ".csv") {
     const createTableUrl = `${props.createTableUrl}?path=${file.Key}`;
     createTableButton = (
       <a
