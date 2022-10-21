@@ -1,4 +1,5 @@
 import React from "react";
+import { S3Deleter } from "../s3-deleter";
 import { TrashIcon } from "../icons/trash";
 import { bytesToSize, fullPathToFilename, prefixToFolder } from "../utils";
 
@@ -70,7 +71,7 @@ export class DeleteObjectsPopup extends React.Component {
   }
 
   onDeleteClick = () => {
-    const deleter = this.props.deleter;
+    const deleter = new S3Deleter();
 
     this.setState({
       trashing: true,
@@ -93,7 +94,12 @@ export class DeleteObjectsPopup extends React.Component {
       this.props.onSuccess();
     });
 
-    this.abort = deleter.start(this.state.foldersToDelete, this.state.filesToDelete);
+    this.abort = deleter.start(
+      this.props.s3,
+      this.props.bucketName,
+      this.state.foldersToDelete,
+      this.state.filesToDelete,
+    );
   };
 
   onCloseClick = () => {

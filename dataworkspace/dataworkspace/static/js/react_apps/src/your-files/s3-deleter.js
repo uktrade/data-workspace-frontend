@@ -4,15 +4,7 @@ import { fileQueue } from "./utils";
 const BULK_DELETE_MAX_FILES = 1000;
 
 export class S3Deleter extends EventEmitter {
-  constructor(s3, bucket) {
-    super();
-
-    this.s3 = s3;
-    this.bucket = bucket;
-  }
-
-
-  start(folders, files) {
+  start(s3, bucketName, folders, files) {
     const numObjects = folders.length + files.length;
     const maxConnections = 4;
     const queue = fileQueue(Math.min(maxConnections, numObjects));
@@ -63,9 +55,9 @@ export class S3Deleter extends EventEmitter {
           }
           let response;
           try {
-            response = await this.s3
+            response = await s3
               .listObjectsV2({
-                Bucket: this.bucket,
+                Bucket: bucketName,
                 Prefix: folder.Prefix,
                 ContinuationToken: continuationToken,
               })

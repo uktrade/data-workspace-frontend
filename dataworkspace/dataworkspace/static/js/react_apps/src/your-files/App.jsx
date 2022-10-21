@@ -1,8 +1,6 @@
 import React from "react";
 import "./App.scss";
 
-import { S3Deleter } from "./s3-deleter";
-
 import { Header } from "./Header";
 import { FileList } from "./FileList";
 import { BigDataMessage } from "./BigDataMessage";
@@ -56,8 +54,6 @@ export default class App extends React.Component {
     }
     console.log('AWS Config', awsConfig);
     this.s3 = new AWS.S3(awsConfig);
-
-    this.deleter = new S3Deleter(this.s3, this.props.config.bucketName);
 
     this.state = {
       files: [],
@@ -343,6 +339,8 @@ export default class App extends React.Component {
         ) : null}
         {this.state.popups.deleteObjects ? (
           <DeleteObjectsPopup
+            s3={this.s3}
+            bucketName={this.props.config.bucketName}
             filesToDelete={this.state.filesToDelete}
             foldersToDelete={this.state.foldersToDelete}
             onClose={async () => {
@@ -351,7 +349,6 @@ export default class App extends React.Component {
             onSuccess={async () => {
               await this.onRefreshClick();
             }}
-            deleter={this.deleter}
           />
         ) : null}
         {this.state.popups.addFolder ? (
