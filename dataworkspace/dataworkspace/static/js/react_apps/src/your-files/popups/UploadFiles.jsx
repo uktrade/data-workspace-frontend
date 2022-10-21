@@ -80,7 +80,6 @@ export class UploadFilesPopup extends React.Component {
     };
     this.close = this.close.bind(this);
     this.onUploadClick = this.onUploadClick.bind(this);
-    this.escFunction = this.escFunction.bind(this);
   }
 
   componentDidMount() {
@@ -91,7 +90,7 @@ export class UploadFilesPopup extends React.Component {
     document.removeEventListener("keydown", this.escFunction, false);
   }
 
-  escFunction(event) {
+  escFunction = (event) => {
     if (event.key === 'Escape') {
       this.close()
 
