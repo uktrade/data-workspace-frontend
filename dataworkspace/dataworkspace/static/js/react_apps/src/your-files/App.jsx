@@ -145,16 +145,6 @@ export default class App extends React.Component {
     await this.refresh(this.state.currentPrefix);
   };
 
-  createNewFolder = async (prefix, folderName) => {
-    this.hidePopup(popupTypes.ADD_FOLDER);
-    try {
-      await this.proxy.createFolder(prefix, folderName);
-      await this.refresh(prefix);
-    } catch (ex) {
-      this.showErrorPopup(ex);
-    }
-  };
-
   onUploadClick = async (prefix) => {
     // this opens the file input ... processing continues
     // in the onFileChange function
