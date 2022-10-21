@@ -80,7 +80,7 @@ function TableRowFolder(props) {
   const folderName = prefixToFolder(props.folder.Prefix);
   const folder = props.folder;
   return (
-    <tr className="govuk-table__row" onClick={() => props.onFolderSelect(folder, !folder.isSelected)}>
+    <tr className="govuk-table__row pointer" onClick={() => props.onFolderSelect(folder, !folder.isSelected)}>
       <td className="govuk-table__cell govuk-table__cell--checkbox">
         <div className="govuk-form-group">
           <div className="govuk-checkboxes--small">
@@ -136,7 +136,7 @@ function TableRowFile(props) {
   }
 
   return (
-    <tr className="govuk-table__row" onClick={() => props.onFileSelect(file, !file.isSelected)}>
+    <tr className="govuk-table__row pointer" onClick={() => props.onFileSelect(file, !file.isSelected)}>
       <td className="govuk-table__cell govuk-table__cell--checkbox">
         <div className="govuk-form-group">
           <div className="govuk-checkboxes--small">
