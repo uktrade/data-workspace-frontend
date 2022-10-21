@@ -200,7 +200,7 @@ export default class App extends React.Component {
 
     let url;
     try {
-      url = await this.proxy.getSignedUrl(params);
+      url = await this.s3.getSignedUrlPromise("getObject", params)
       console.log(url);
       window.location.href = url;
     } catch (ex) {

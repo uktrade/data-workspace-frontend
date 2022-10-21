@@ -6,10 +6,6 @@ export class S3Proxy {
     this.s3 = s3;
   }
 
-  getSignedUrl(params) {
-    return this.s3.getSignedUrlPromise("getObject", params);
-  }
-
   async deleteObjects(bucket, keys) {
     return this.s3
       .deleteObjects({
