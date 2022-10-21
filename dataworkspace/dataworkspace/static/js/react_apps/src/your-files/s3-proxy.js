@@ -30,19 +30,14 @@ class Credentials extends AWS.Credentials {
 export class S3Proxy {
   constructor(config) {
     this.config = config;
-    console.log(this.config);
-    AWS.config.update({
+    const awsConfig = {
       credentials: new Credentials(config),
       region: config.region,
-    });
-
-    if (config.endpointUrl) {
-      console.log(`using ${config.endpointUrl} for endpoint`);
-      AWS.config.update({
-        endpoint: config.endpointUrl,
-      });
+      ...(config.endpointUrl ? {endpoint: config.endpointUrl} : {})
     }
+    console.log('AWS Config', awsConfig)
 
+    AWS.config.update(awsConfig);
     this.s3 = new AWS.S3({ s3ForcePathStyle: true });
   }
 
