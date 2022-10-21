@@ -1,6 +1,9 @@
 import React from "react";
 import { TrashIcon } from "../icons/trash";
+import { fileQueue } from "../utils";
 import { bytesToSize, fullPathToFilename, prefixToFolder } from "../utils";
+
+const BULK_DELETE_MAX_FILES = 1000;
 
 function DeleteTableHeader() {
   return (
@@ -58,48 +61,120 @@ export class DeleteObjectsPopup extends React.Component {
     };
   }
 
-  updateDeleteState(fileOrFolder, newState) {
-    this.setState({
-      foldersToDelete: this.state.foldersToDelete.map((f) => {
-        return f.Prefix === fileOrFolder.Prefix ? { ...f, ...newState } : f;
-      }),
-      filesToDelete: this.state.filesToDelete.map((f) => {
-        return f.Key === fileOrFolder.Key ? { ...f, ...newState } : f;
-      }),
-    });
-  }
-
   onDeleteClick = () => {
-    const deleter = this.props.deleter;
+    const s3 = this.props.s3;
+    const bucketName = this.props.bucketName;
+    const foldersToDelete = this.state.foldersToDelete;
+    const filesToDelete = this.state.filesToDelete;
 
-    this.setState({
-      trashing: true,
-    });
+    const numObjects = foldersToDelete.length + filesToDelete.length;
+    const maxConnections = 4;
+    const queue = fileQueue(Math.min(maxConnections, numObjects));
 
-    deleter.on("delete:start", (fileOrFolder) => {
-      this.updateDeleteState(fileOrFolder, { deleteStarted: true });
-    });
+    var isAborted = false;
+    var remainingDeleteCount = numObjects;
+    var keysToDelete = [];
 
-    deleter.on("delete:error", (fileOrFolder, error) => {
-      this.updateDeleteState(fileOrFolder, { deleteError: error });
-    });
+    this.abort = () => {
+      isAborted = true;
+    }
 
-    deleter.on("delete:finished", (fileOrFolder) => {
-      this.updateDeleteState(fileOrFolder, { deleteFinished: true });
-    });
+    const updateDeleteState = (fileOrFolder, newState) => {
+      this.setState({
+        foldersToDelete: this.state.foldersToDelete.map((f) => {
+          return f.Prefix === fileOrFolder.Prefix ? { ...f, ...newState } : f;
+        }),
+        filesToDelete: this.state.filesToDelete.map((f) => {
+          return f.Key === fileOrFolder.Key ? { ...f, ...newState } : f;
+        }),
+      });
+    }
 
-    deleter.on("delete:done", () => {
+    const deleteKeys = async () => {
+      try {
+        await s3
+          .deleteObjects({
+            Bucket: bucketName,
+            Delete: { Objects: keysToDelete.map((key) => ({ Key: key })) },
+          })
+          .promise();
+      } catch (err) {
+        console.error(err);
+        throw err;
+      } finally {
+        keysToDelete = [];
+      }
+    }
+
+    const flushDelete = async () => {
+      if (keysToDelete.length) await deleteKeys();
+    }
+
+    const scheduleDelete = async (key) => {
+      keysToDelete.push(key);
+      if (keysToDelete.length > BULK_DELETE_MAX_FILES) {
+        await deleteKeys();
+      }
+    }
+
+    for (const folder of foldersToDelete) {
+      queue(async () => {
+        updateDeleteState(folder, { deleteStarted: true });
+        let continuationToken = null;
+        let isTruncated = true;
+        while (isTruncated && !isAborted) {
+          // Find objects at or under the prefix...
+          let response;
+          try {
+            response = await s3
+              .listObjectsV2({
+                Bucket: bucketName,
+                Prefix: folder.Prefix,
+                ContinuationToken: continuationToken,
+              })
+              .promise();
+            continuationToken = response.NextContinuationToken;
+            isTruncated = response.IsTruncated;
+          } catch (err) {
+            console.error(err);
+            updateDeleteState(folder, { deleteError: err.code || err.message || err });
+            return;
+          }
+          // ... and delete them
+          for (let j = 0; j < response.Contents.length && !isAborted; ++j) {
+            try {
+              await scheduleDelete(response.Contents[j].Key);
+            } catch (err) {
+              updateDeleteState(folder, { deleteError: err.code || err.message || err });
+              return;
+            }
+          }
+          updateDeleteState(folder, { deleteFinished: true });
+        }
+      });
+    }
+    for (const file of filesToDelete) {
+      queue(async () => {
+        if (isAborted) return;
+        updateDeleteState(file, { deleteStarted: true });
+        try {
+          await scheduleDelete(file.Key);
+        } catch (err) {
+          updateDeleteState(file, { deleteError: err.code || err.message || err });
+        }
+        updateDeleteState(file, { deleteFinished: true });
+      });
+    }
+    queue(async () => {
+      if (isAborted) return;
+      await flushDelete();
       this.setState({ finished: true });
       this.props.onSuccess();
     });
-
-    this.abort = deleter.start(this.state.foldersToDelete, this.state.filesToDelete);
-  };
+  }
 
   onCloseClick = () => {
-    this.setState({
-      aborted: true,
-    });
+    this.abort();
     this.props.onClose();
   };
 
