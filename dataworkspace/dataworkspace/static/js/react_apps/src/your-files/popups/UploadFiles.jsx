@@ -78,8 +78,6 @@ export class UploadFilesPopup extends React.Component {
       uploadsComplete: false,
       isUploading: false,
     };
-    this.close = this.close.bind(this);
-    this.onUploadClick = this.onUploadClick.bind(this);
   }
 
   componentDidMount() {
@@ -97,7 +95,7 @@ export class UploadFilesPopup extends React.Component {
     }
   }
 
-  close() {
+  close = () => {
     if (this.state.isUploading) {
       console.log("Cancel the uploads");
       this.cancelUpload();
@@ -105,7 +103,7 @@ export class UploadFilesPopup extends React.Component {
     this.props.onCancel();
   }
 
-  onUploadClick() {
+  onUploadClick = () => {
     const uploader = this.props.uploader;
     const onComplete = this.props.onUploadsComplete;
 
