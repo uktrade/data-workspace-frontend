@@ -6,36 +6,6 @@ export class S3Proxy {
     this.s3 = s3;
   }
 
-  async listObjects(params) {
-    const response = await this.s3.listObjectsV2(params).promise();
-    const files = response.Contents
-      .filter((file) => (file.Key !== params.Prefix))
-      .map((file) => ({
-        ...file,
-        formattedDate: new Date(file.LastModified),
-        isSelected: false,
-      }));
-
-    const bigDataFolder = (params.Prefix === this.config.initialPrefix) ? [{
-        Prefix: this.config.initialPrefix + this.config.bigdataPrefix,
-        isBigData: true,
-        isSelected: false,
-      }] : [];
-    const foldersWithoutBigData = response.CommonPrefixes.filter((folder) => {
-      return folder.Prefix !== `${this.config.initialPrefix}${this.config.bigdataPrefix}`;
-    }).map((folder) => ({
-      ...folder,
-      isBigData: false,
-      isSelected: false,
-    }))
-    const folders = bigDataFolder.concat(foldersWithoutBigData);
-
-    return {
-      files,
-      folders,
-    };
-  }
-
   getSignedUrl(params) {
     return this.s3.getSignedUrlPromise("getObject", params);
   }

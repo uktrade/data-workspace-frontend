@@ -218,17 +218,47 @@ export default class App extends React.Component {
   };
 
   async refresh(prefix) {
+    const initialPrefix = this.props.config.initialPrefix;
+    const bigdataPrefix = this.props.config.bigdataPrefix;
+    const showBigDataMessage = prefix === this.state.rootPrefix + this.state.bigDataFolder;
     const params = {
       Bucket: this.state.bucketName,
       Prefix: prefix || this.state.prefix,
       Delimiter: "/",
     };
 
-    const showBigDataMessage =
-      params.Prefix === this.state.rootPrefix + this.state.bigDataFolder;
+    const listObjects = async () => {
+      const response = await this.s3.listObjectsV2(params).promise();
+      const files = response.Contents
+        .filter((file) => (file.Key !== params.Prefix))
+        .map((file) => ({
+          ...file,
+          formattedDate: new Date(file.LastModified),
+          isSelected: false,
+        }));
+
+      const bigDataFolder = (params.Prefix === initialPrefix) ? [{
+          Prefix: initialPrefix + bigdataPrefix,
+          isBigData: true,
+          isSelected: false,
+        }] : [];
+      const foldersWithoutBigData = response.CommonPrefixes.filter((folder) => {
+        return folder.Prefix !== `${initialPrefix}${bigdataPrefix}`;
+      }).map((folder) => ({
+        ...folder,
+        isBigData: false,
+        isSelected: false,
+      }))
+      const folders = bigDataFolder.concat(foldersWithoutBigData);
+
+      return {
+        files,
+        folders,
+      };
+    }
 
     try {
-      const data = await this.proxy.listObjects(params);
+      const data = await listObjects();
       this.setState({
         files: data.files,
         folders: data.folders,
@@ -237,6 +267,7 @@ export default class App extends React.Component {
       });
     } catch (ex) {
       this.showErrorPopup(ex);
+      return
     }
   }
 
