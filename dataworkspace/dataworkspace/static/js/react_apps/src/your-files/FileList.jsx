@@ -105,6 +105,7 @@ function TableRowFolder(props) {
           className="folder govuk-link govuk-link--no-visited"
           onClick={(e) => {
             e.preventDefault();
+            e.stopPropagation();
             props.onClick();
           }}
           href="#"
@@ -158,6 +159,7 @@ function TableRowFile(props) {
           className="file govuk-link govuk-link--no-visited"
           onClick={(e) => {
             e.preventDefault();
+            e.stopPropagation();
             props.onFileClick(file.Key);
           }}
           href="#"
