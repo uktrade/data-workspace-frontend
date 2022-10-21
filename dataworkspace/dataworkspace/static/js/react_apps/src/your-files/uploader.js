@@ -23,7 +23,7 @@ export class Uploader extends EventEmitter {
 
     // some v funky scope happening within the queue!
     // also this needs a rethink!
-    const s3 = this.s3.s3;
+    const s3 = this.s3;
 
     for (const file of files) {
       const params = {

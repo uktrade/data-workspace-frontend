@@ -1,6 +1,9 @@
 import React from "react";
 import "./App.scss";
 
+import { Uploader } from "./uploader";
+import { S3Deleter } from "./s3-deleter";
+
 import { Header } from "./Header";
 import { FileList } from "./FileList";
 import { BigDataMessage } from "./BigDataMessage";
@@ -15,9 +18,51 @@ const popupTypes = {
   DELETE_OBJECTS: "deleteObjects",
 };
 
+class Credentials extends AWS.Credentials {
+  constructor(credentialsUrl) {
+    super();
+    this.expiration = 0;
+    this.credentialsUrl = credentialsUrl;
+  }
+
+  async refresh(callback) {
+    try {
+      const response = await (await fetch(this.credentialsUrl)).json();
+      this.accessKeyId = response.AccessKeyId;
+      this.secretAccessKey = response.SecretAccessKey;
+      this.sessionToken = response.SessionToken;
+      this.expiration = Date.parse(response.Expiration);
+    } catch (err) {
+      callback(err);
+      return;
+    }
+
+    callback();
+  }
+
+  needsRefresh() {
+    return this.expiration - 60 < Date.now();
+  }
+}
+
 export default class App extends React.Component {
   constructor(props) {
     super(props);
+
+    const awsConfig = {
+      credentials: new Credentials(this.props.config.credentialsUrl),
+      region: this.props.config.region,
+      s3ForcePathStyle: true,
+      ...(this.props.config.endpointUrl ? {endpoint: this.props.config.endpointUrl} : {})
+    }
+    console.log('AWS Config', awsConfig);
+    this.s3 = new AWS.S3(awsConfig);
+
+    this.uploader = new Uploader(this.s3, {
+      bucketName: this.props.config.bucketName,
+    });
+    this.deleter = new S3Deleter(this.s3, this.props.config.bucketName);
+
     this.state = {
       files: [],
       folders: [],
@@ -34,13 +79,9 @@ export default class App extends React.Component {
       rootPrefix: this.props.config.initialPrefix,
       region: this.props.config.region,
       showBigDataMessage: false,
-      popups: {},
+      popups: Object.fromEntries(Object.entries(popupTypes).map((key, value) => [value, false])),
       dragActive: false,
     };
-
-    for (const [key, value] of Object.entries(popupTypes)) {
-      this.state.popups[value] = false;
-    }
 
     this.fileInputRef = React.createRef();
   }
@@ -102,16 +143,6 @@ export default class App extends React.Component {
     await this.refresh(this.state.currentPrefix);
   };
 
-  createNewFolder = async (prefix, folderName) => {
-    this.hidePopup(popupTypes.ADD_FOLDER);
-    try {
-      await this.props.proxy.createFolder(prefix, folderName);
-      await this.refresh(prefix);
-    } catch (ex) {
-      this.showErrorPopup(ex);
-    }
-  };
-
   onUploadClick = async (prefix) => {
     // this opens the file input ... processing continues
     // in the onFileChange function
@@ -157,7 +188,7 @@ export default class App extends React.Component {
 
     let url;
     try {
-      url = await this.props.proxy.getSignedUrl(params);
+      url = await this.s3.getSignedUrlPromise("getObject", params)
       console.log(url);
       window.location.href = url;
     } catch (ex) {
@@ -175,17 +206,47 @@ export default class App extends React.Component {
   };
 
   async refresh(prefix) {
+    const initialPrefix = this.props.config.initialPrefix;
+    const bigdataPrefix = this.props.config.bigdataPrefix;
+    const showBigDataMessage = prefix === this.state.rootPrefix + this.state.bigDataFolder;
     const params = {
       Bucket: this.state.bucketName,
       Prefix: prefix || this.state.prefix,
       Delimiter: "/",
     };
 
-    const showBigDataMessage =
-      params.Prefix === this.state.rootPrefix + this.state.bigDataFolder;
+    const listObjects = async () => {
+      const response = await this.s3.listObjectsV2(params).promise();
+      const files = response.Contents
+        .filter((file) => (file.Key !== params.Prefix))
+        .map((file) => ({
+          ...file,
+          formattedDate: new Date(file.LastModified),
+          isSelected: false,
+        }));
+
+      const bigDataFolder = (params.Prefix === initialPrefix) ? [{
+          Prefix: initialPrefix + bigdataPrefix,
+          isBigData: true,
+          isSelected: false,
+        }] : [];
+      const foldersWithoutBigData = response.CommonPrefixes.filter((folder) => {
+        return folder.Prefix !== `${initialPrefix}${bigdataPrefix}`;
+      }).map((folder) => ({
+        ...folder,
+        isBigData: false,
+        isSelected: false,
+      }))
+      const folders = bigDataFolder.concat(foldersWithoutBigData);
+
+      return {
+        files,
+        folders,
+      };
+    }
 
     try {
-      const data = await this.props.proxy.listObjects(params);
+      const data = await listObjects();
       this.setState({
         files: data.files,
         folders: data.folders,
@@ -194,6 +255,7 @@ export default class App extends React.Component {
       });
     } catch (ex) {
       this.showErrorPopup(ex);
+      return
     }
   }
 
@@ -286,14 +348,17 @@ export default class App extends React.Component {
             onSuccess={async () => {
               await this.onRefreshClick();
             }}
-            deleter={this.props.deleter}
+            deleter={this.deleter}
           />
         ) : null}
         {this.state.popups.addFolder ? (
           <AddFolderPopup
+            s3={this.s3}
+            bucketName={this.props.config.bucketName}
             currentPrefix={this.state.currentPrefix}
-            onSuccess={this.createNewFolder}
-            onCancel={() => this.hidePopup(popupTypes.ADD_FOLDER)}
+            onSuccess={() => this.onRefreshClick()}
+            onClose={() => this.hidePopup(popupTypes.ADD_FOLDER)}
+            onError={(ex) => this.showErrorPopup(ex)}
           />
         ) : null}
 
@@ -304,7 +369,7 @@ export default class App extends React.Component {
             folderName={currentFolderName}
             onCancel={() => this.hidePopup(popupTypes.UPLOAD_FILES)}
             onUploadsComplete={this.onUploadsComplete}
-            uploader={this.props.uploader}
+            uploader={this.uploader}
           />
         ) : null}
 
