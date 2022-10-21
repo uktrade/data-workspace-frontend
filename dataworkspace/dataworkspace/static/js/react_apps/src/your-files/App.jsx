@@ -225,11 +225,18 @@ export default class App extends React.Component {
           isSelected: false,
         }));
 
+      const teamsFolders = (params.Prefix === initialPrefix) ? (this.props.config.teamsPrefixes.map((prefix) => ({
+        Prefix: prefix,
+        isBigData: true,
+        isSelected: false,
+      }))) : [];
+
       const bigDataFolder = (params.Prefix === initialPrefix) ? [{
           Prefix: initialPrefix + bigdataPrefix,
           isBigData: true,
           isSelected: false,
         }] : [];
+
       const foldersWithoutBigData = response.CommonPrefixes.filter((folder) => {
         return folder.Prefix !== `${initialPrefix}${bigdataPrefix}`;
       }).map((folder) => ({
@@ -237,7 +244,7 @@ export default class App extends React.Component {
         isBigData: false,
         isSelected: false,
       }))
-      const folders = bigDataFolder.concat(foldersWithoutBigData);
+      const folders = teamsFolders.concat(bigDataFolder).concat(foldersWithoutBigData);
 
       return {
         files,

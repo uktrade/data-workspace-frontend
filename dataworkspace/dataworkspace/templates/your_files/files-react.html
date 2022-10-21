@@ -1,6 +1,7 @@
 {% extends '_main.html' %}
 {% load static %}
 {% load render_bundle from webpack_loader %}
+{% load datasets_tags %}
 
 {% block page_title %}Files - {{ block.super }}{% endblock %}
 
@@ -36,10 +37,11 @@
       bigdataPrefix: 'bigdata/',
       credentialsUrl: '{% url 'api_v1:aws-credentials' %}',
       endpointUrl: '{{ aws_endpoint }}',
-      createTableUrl: '{% url 'your-files:create-table-confirm' %}'
+      createTableUrl: '{% url 'your-files:create-table-confirm' %}',
+      teamsPrefixes: {{ teams_folders_prefixes | to_json }},
 
     };
-    console.log(YOURFILES_CONFIG.credentialsUrl);;
+    console.log(YOURFILES_CONFIG.credentialsUrl);
   </script>
 
   {% render_bundle "yourfiles" "js" %}

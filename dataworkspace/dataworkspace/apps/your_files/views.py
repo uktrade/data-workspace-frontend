@@ -28,6 +28,7 @@ from dataworkspace.apps.core.utils import (
     get_all_schemas,
     get_random_data_sample,
     get_s3_prefix,
+    get_team_prefixes,
     get_task_error_message_template,
     get_team_schemas_for_user,
     trigger_dataflow_dag,
@@ -58,12 +59,14 @@ def file_browser_html_view(request):
 )
 def your_files_react(request):
     prefix = get_s3_prefix(str(request.user.profile.sso_id))
+    teams_folders_prefixes = get_team_prefixes(request.user)
 
     return render(
         request,
         "your_files/files-react.html",
         {
             "prefix": prefix,
+            "teams_folders_prefixes": teams_folders_prefixes,
             "bucket": settings.NOTEBOOKS_BUCKET,
             "aws_endpoint": settings.S3_LOCAL_ENDPOINT_URL,
         },
