@@ -45,13 +45,9 @@ export default class App extends React.Component {
       rootPrefix: this.props.config.initialPrefix,
       region: this.props.config.region,
       showBigDataMessage: false,
-      popups: {},
+      popups: Object.fromEntries(Object.entries(popupTypes).map((key, value) => [value, false])),
       dragActive: false,
     };
-
-    for (const [key, value] of Object.entries(popupTypes)) {
-      this.state.popups[value] = false;
-    }
 
     this.fileInputRef = React.createRef();
   }
