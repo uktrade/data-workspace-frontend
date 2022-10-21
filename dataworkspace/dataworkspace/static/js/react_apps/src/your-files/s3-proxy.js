@@ -1,19 +1,5 @@
 import AWS from "aws-sdk";
 
-function fetchJSON(url) {
-  return new Promise((resolve, reject) => {
-    function resolveJSON() {
-      resolve(JSON.parse(oReq.responseText));
-    }
-
-    var oReq = new XMLHttpRequest();
-    oReq.addEventListener("load", resolveJSON);
-    oReq.addEventListener("error", reject);
-    oReq.open("GET", url);
-    oReq.send();
-  });
-}
-
 class Credentials extends AWS.Credentials {
   constructor(config) {
     super();
@@ -23,7 +9,7 @@ class Credentials extends AWS.Credentials {
 
   async refresh(callback) {
     try {
-      const response = await fetchJSON(this.config.credentialsUrl);
+      const response = await (await fetch(this.config.credentialsUrl)).json();
       this.accessKeyId = response.AccessKeyId;
       this.secretAccessKey = response.SecretAccessKey;
       this.sessionToken = response.SessionToken;
