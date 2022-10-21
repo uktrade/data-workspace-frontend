@@ -20,15 +20,15 @@ const popupTypes = {
 };
 
 class Credentials extends AWS.Credentials {
-  constructor(config) {
+  constructor(credentialsUrl) {
     super();
     this.expiration = 0;
-    this.config = config;
+    this.credentialsUrl = credentialsUrl;
   }
 
   async refresh(callback) {
     try {
-      const response = await (await fetch(this.config.credentialsUrl)).json();
+      const response = await (await fetch(this.credentialsUrl)).json();
       this.accessKeyId = response.AccessKeyId;
       this.secretAccessKey = response.SecretAccessKey;
       this.sessionToken = response.SessionToken;
@@ -51,7 +51,7 @@ export default class App extends React.Component {
     super(props);
 
     const awsConfig = {
-      credentials: new Credentials(this.props.config),
+      credentials: new Credentials(this.props.config.credentialsUrl),
       region: this.props.config.region,
       ...(this.props.config.endpointUrl ? {endpoint: this.props.config.endpointUrl} : {})
     }
