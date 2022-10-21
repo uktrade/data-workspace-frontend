@@ -56,24 +56,19 @@ export class S3Proxy {
         isSelected: false,
       }));
 
-    const folders = [];
-    if (params.Prefix === this.config.initialPrefix) {
-      folders.push({
+    const bigDataFolder = (params.Prefix === this.config.initialPrefix) ? [{
         Prefix: this.config.initialPrefix + this.config.bigdataPrefix,
         isBigData: true,
         isSelected: false,
-      });
-    }
-
-    const commonFolders = response.CommonPrefixes.filter((folder) => {
+      }] : [];
+    const foldersWithoutBigData = response.CommonPrefixes.filter((folder) => {
       return folder.Prefix !== `${this.config.initialPrefix}${this.config.bigdataPrefix}`;
     }).map((folder) => ({
       ...folder,
       isBigData: false,
       isSelected: false,
-    }));
-
-    folders.push(...commonFolders);
+    }))
+    const folders = bigDataFolder.concat(foldersWithoutBigData);
 
     return {
       files,
