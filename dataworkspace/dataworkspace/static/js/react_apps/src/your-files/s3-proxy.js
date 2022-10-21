@@ -50,11 +50,11 @@ export class S3Proxy {
     const response = await this.s3.listObjectsV2(params).promise();
     const files = response.Contents.filter((file) => {
       return file.Key !== params.Prefix;
-    }).map((file) => {
-      file.formattedDate = new Date(file.LastModified);
-      file.isSelected = false;
-      return file;
-    });
+    }).map((file) => ({
+      ...file,
+      formattedDate: new Date(file.LastModified),
+      isSelected: false,
+    }));
 
     const folders = [];
     if (params.Prefix === this.config.initialPrefix) {
