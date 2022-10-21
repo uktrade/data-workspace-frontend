@@ -53,11 +53,11 @@ export default class App extends React.Component {
     const awsConfig = {
       credentials: new Credentials(this.props.config.credentialsUrl),
       region: this.props.config.region,
+      s3ForcePathStyle: true,
       ...(this.props.config.endpointUrl ? {endpoint: this.props.config.endpointUrl} : {})
     }
-    console.log('AWS Config', awsConfig)
-    AWS.config.update(awsConfig);
-    this.s3 = new AWS.S3({ s3ForcePathStyle: true });
+    console.log('AWS Config', awsConfig);
+    this.s3 = new AWS.S3(awsConfig);
 
     this.proxy = new S3Proxy(this.props.config, this.s3);
     this.uploader = new Uploader(this.proxy, {
