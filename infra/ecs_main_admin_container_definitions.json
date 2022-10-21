@@ -90,7 +90,11 @@
     {
       "name": "S3_PERMISSIONS_BOUNDARY_ARN",
       "value": "${notebook_task_role__permissions_boundary_arn}"
-    }, 
+    },
+    {
+      "name": "S3_NOTEBOOKS_BUCKET_ARN",
+      "value": "${notebook_task_role__s3_bucket_arn}"
+    },
     {
       "name": "APPLICATION_TEMPLATES__1__HOST_BASENAME",
       "value": "jupyterlab"

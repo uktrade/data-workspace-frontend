@@ -1447,11 +1447,15 @@ def get_user_s3_prefixes(user):
 def update_user_tool_access_policy(user, access_point_id):
     max_attempts = 10
     iam_client = get_iam_client()
-    s3_prefixes = get_user_s3_prefixes(user)
-    prefix_values = '","'.join([f"{x}*" for x in s3_prefixes.values()])
-    policy_document = settings.S3_POLICY_DOCUMENT_TEMPLATE.replace(
-        '"__S3_PREFIXES__"', f'["{prefix_values}"]'
-    ).replace("__ACCESS_POINT_ID__", access_point_id or "")
+    s3_prefixes = get_user_s3_prefixes(user).values()
+    prefix_values = '","'.join([f"{x}*" for x in s3_prefixes])
+    bucket_arn = settings.S3_NOTEBOOKS_BUCKET_ARN
+    bucket_arns = '","'.join([f"{bucket_arn}/{x}*" for x in s3_prefixes])
+    policy_document = (
+        settings.S3_POLICY_DOCUMENT_TEMPLATE.replace('"__S3_PREFIXES__"', f'["{prefix_values}"]')
+        .replace('"__S3_BUCKET_ARNS__"', f'["{bucket_arns}"]')
+        .replace("__ACCESS_POINT_ID__", access_point_id or "")
+    )
     for i in range(0, max_attempts):
         try:
             iam_client.put_role_policy(
