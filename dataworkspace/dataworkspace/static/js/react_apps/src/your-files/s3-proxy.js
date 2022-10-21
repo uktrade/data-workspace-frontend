@@ -1,44 +1,9 @@
 import AWS from "aws-sdk";
 
-class Credentials extends AWS.Credentials {
-  constructor(config) {
-    super();
-    this.expiration = 0;
-    this.config = config;
-  }
-
-  async refresh(callback) {
-    try {
-      const response = await (await fetch(this.config.credentialsUrl)).json();
-      this.accessKeyId = response.AccessKeyId;
-      this.secretAccessKey = response.SecretAccessKey;
-      this.sessionToken = response.SessionToken;
-      this.expiration = Date.parse(response.Expiration);
-    } catch (err) {
-      callback(err);
-      return;
-    }
-
-    callback();
-  }
-
-  needsRefresh() {
-    return this.expiration - 60 < Date.now();
-  }
-}
-
 export class S3Proxy {
-  constructor(config) {
+  constructor(config, s3) {
     this.config = config;
-    const awsConfig = {
-      credentials: new Credentials(config),
-      region: config.region,
-      ...(config.endpointUrl ? {endpoint: config.endpointUrl} : {})
-    }
-    console.log('AWS Config', awsConfig)
-
-    AWS.config.update(awsConfig);
-    this.s3 = new AWS.S3({ s3ForcePathStyle: true });
+    this.s3 = s3;
   }
 
   async listObjects(params) {

@@ -19,11 +19,47 @@ const popupTypes = {
   DELETE_OBJECTS: "deleteObjects",
 };
 
+class Credentials extends AWS.Credentials {
+  constructor(config) {
+    super();
+    this.expiration = 0;
+    this.config = config;
+  }
+
+  async refresh(callback) {
+    try {
+      const response = await (await fetch(this.config.credentialsUrl)).json();
+      this.accessKeyId = response.AccessKeyId;
+      this.secretAccessKey = response.SecretAccessKey;
+      this.sessionToken = response.SessionToken;
+      this.expiration = Date.parse(response.Expiration);
+    } catch (err) {
+      callback(err);
+      return;
+    }
+
+    callback();
+  }
+
+  needsRefresh() {
+    return this.expiration - 60 < Date.now();
+  }
+}
+
 export default class App extends React.Component {
   constructor(props) {
     super(props);
 
-    this.proxy = new S3Proxy(this.props.config);
+    const awsConfig = {
+      credentials: new Credentials(this.props.config),
+      region: this.props.config.region,
+      ...(this.props.config.endpointUrl ? {endpoint: this.props.config.endpointUrl} : {})
+    }
+    console.log('AWS Config', awsConfig)
+    AWS.config.update(awsConfig);
+    this.s3 = new AWS.S3({ s3ForcePathStyle: true });
+
+    this.proxy = new S3Proxy(this.props.config, this.s3);
     this.uploader = new Uploader(this.proxy, {
       bucketName: this.props.config.bucketName,
     });
