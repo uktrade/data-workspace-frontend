@@ -51,8 +51,6 @@ export class S3Proxy {
     const files = response.Contents.filter((file) => {
       return file.Key !== params.Prefix;
     }).map((file) => {
-      file.isCsv =
-        file.Key.substr(file.Key.length - 3, file.Key.length) === "csv";
       file.formattedDate = new Date(file.LastModified);
       file.isSelected = false;
       return file;
