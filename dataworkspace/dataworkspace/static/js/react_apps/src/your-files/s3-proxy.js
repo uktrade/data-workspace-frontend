@@ -10,13 +10,13 @@ export class S3Proxy {
     return this.s3.getSignedUrlPromise("getObject", params);
   }
 
-  removeSlashes(text) {
-    return text.replace(/^\/+/g, "").replace(/\/+$/g, "");
-  }
-
   async createFolder(prefix, folderName) {
+    const removeSlashes = (text) => {
+      return text.replace(/^\/+/g, "").replace(/\/+$/g, "");
+    }
+
     console.log("createFolder", prefix, folderName);
-    const folder = prefix + this.removeSlashes(folderName) + "/";
+    const folder = prefix + removeSlashes(folderName) + "/";
     console.log(folder);
     const params = { Bucket: this.config.bucketName, Key: folder };
     let canCreate = false;
