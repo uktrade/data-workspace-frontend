@@ -16,7 +16,7 @@ function TableHeader(props) {
       </th>
       <th
         scope="col"
-        className="govuk-table__header govuk-table__header--numeric"
+        className="govuk-table__header"
         style={{ width: "5em" }}
       >
         Size
@@ -325,13 +325,13 @@ function TableRowFile(props) {
           {filename}
         </a>
       </td>
-      <td className="govuk-table__cell govuk-table__cell--numeric">
+      <td className="govuk-table__cell">
         {file.formattedDate.toLocaleString()}
       </td>
-      <td className="govuk-table__cell govuk-table__cell--numeric">
+      <td className="govuk-table__cell">
         {bytesToSize(file.Size)}
       </td>
-      <td className="govuk-table__cell govuk-table__cell--numeric">
+      <td className="govuk-table__cell">
         {createTableButton}
       </td>
     </tr>
