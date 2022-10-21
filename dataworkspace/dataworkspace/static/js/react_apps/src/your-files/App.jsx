@@ -59,8 +59,7 @@ export default class App extends React.Component {
     console.log('AWS Config', awsConfig);
     this.s3 = new AWS.S3(awsConfig);
 
-    this.proxy = new S3Proxy(this.props.config, this.s3);
-    this.uploader = new Uploader(this.proxy, {
+    this.uploader = new Uploader(this.s3, {
       bucketName: this.props.config.bucketName,
     });
     this.deleter = new S3Deleter(this.s3, this.props.config.bucketName);
