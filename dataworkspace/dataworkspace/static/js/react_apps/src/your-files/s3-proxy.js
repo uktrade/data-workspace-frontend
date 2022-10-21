@@ -66,10 +66,7 @@ export class S3Proxy {
     }
 
     const commonFolders = response.CommonPrefixes.filter((folder) => {
-      return (
-        folder.Prefix !==
-        `${this.config.initialPrefix}${this.config.bigdataPrefix}`
-      );
+      return folder.Prefix !== `${this.config.initialPrefix}${this.config.bigdataPrefix}`;
     }).map((folder) => {
       folder.isBigData = false;
       folder.isSelected = false;
