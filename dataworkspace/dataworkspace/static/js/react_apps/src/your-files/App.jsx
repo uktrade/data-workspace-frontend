@@ -365,9 +365,12 @@ export default class App extends React.Component {
         ) : null}
         {this.state.popups.addFolder ? (
           <AddFolderPopup
+            s3={this.s3}
+            bucketName={this.props.config.bucketName}
             currentPrefix={this.state.currentPrefix}
-            onSuccess={this.createNewFolder}
-            onCancel={() => this.hidePopup(popupTypes.ADD_FOLDER)}
+            onSuccess={() => this.onRefreshClick()}
+            onClose={() => this.hidePopup(popupTypes.ADD_FOLDER)}
+            onError={(ex) => this.showErrorPopup(ex)}
           />
         ) : null}
 
