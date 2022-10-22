@@ -298,21 +298,56 @@ export default class App extends React.Component {
     e.stopPropagation();
   };
 
-  handleDrop = (e) => {
+  handleDrop = async (e) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const files = [];
+    async function entries(directoryReader) {
+        var entries = [];
+        while (true) {
+            var latestEntries = await new Promise((resolve, reject) => {
+                directoryReader.readEntries(resolve, reject);
+            });
+            if (latestEntries.length == 0) break;
+            entries = entries.concat(latestEntries);
+        }
+        return entries;
+    }
 
-    for (let i = 0; i < e.dataTransfer.files.length; i++) {
-      const file = e.dataTransfer.files[i];
-      file.relativePath = file.name;
-      files.push(file);
+    async function file(fileEntry) {
+        var file = await new Promise((resolve, reject) => {
+            fileEntry.file(resolve, reject);
+        });
+        // We monkey-patch the file to include its FileSystemEntry fullPath,
+        // which is a path relative to the root of the pseudo-filesystem of
+        // a dropped folder
+        file.relativePath = fileEntry.fullPath.substring(1);  // Remove leading slash
+        return file;
+    }
+
+    async function getFiles(dataTransferItemList) {
+        const files = [];
+        // DataTransferItemList does not support map
+        const fileAndDirectoryEntryQueue = [];
+        for (let i = 0; i < dataTransferItemList.length; ++i) {
+             // At the time of writing no browser supports `getAsEntry`
+            fileAndDirectoryEntryQueue.push(dataTransferItemList[i].webkitGetAsEntry());
+        }
+
+        while (fileAndDirectoryEntryQueue.length > 0) {
+            const entry = fileAndDirectoryEntryQueue.shift();
+            if (entry.isFile) {
+                files.push(await file(entry));
+            } else if (entry.isDirectory) {
+                fileAndDirectoryEntryQueue.push(...await entries(entry.createReader()));
+            }
+        }
+        return files;
     }
 
     this.setState({
       dragActive: false,
-      selectedFiles: files,
+      selectedFiles: await getFiles(e.dataTransfer.items),
     });
     this.showPopup(popupTypes.UPLOAD_FILES);
   };
