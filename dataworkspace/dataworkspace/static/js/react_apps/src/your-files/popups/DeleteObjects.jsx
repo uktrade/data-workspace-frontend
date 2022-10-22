@@ -61,6 +61,20 @@ export class DeleteObjectsPopup extends React.Component {
     };
   }
 
+  componentDidMount() {
+    document.addEventListener("keydown", this.escFunction, false);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener("keydown", this.escFunction, false);
+  }
+
+  escFunction = (event) => {
+    if (event.key === 'Escape') {
+      this.onCloseClick();
+    }
+  }
+
   onDeleteClick = () => {
     const s3 = this.props.s3;
     const bucketName = this.props.bucketName;
