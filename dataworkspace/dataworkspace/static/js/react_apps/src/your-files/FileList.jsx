@@ -86,7 +86,8 @@ function TableRowSharedFolder(props) {
       >
           <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"
                x="0px" y="0px"
-               width="80%" viewBox="0 0 400 400" enable-background="new 0 0 400 400">
+               width="80%" viewBox="0 0 400 400" enable-background="new 0 0 400 400"
+               style={{marginLeft: "-4px", marginTop: "7px", height: "30px"}}>
 <path fill="#FEFEFE" opacity="1.000000" stroke="none"
       d="
 M1.000000,149.000000
