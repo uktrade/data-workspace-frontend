@@ -240,7 +240,7 @@ function TableRowFolder(props) {
   return (
     <tr className="govuk-table__row pointer" onClick={() => props.onFolderSelect(folder, !folder.isSelected)}>
       <td className="govuk-table__cell govuk-table__cell--checkbox">
-        <div className="govuk-form-group">
+        <div className="govuk-form-group" style={{ marginBottom: "0" }}>
           <div className="govuk-checkboxes--small">
             <div className="govuk-checkboxes__item">
               <div>
@@ -298,7 +298,7 @@ function TableRowFile(props) {
   return (
     <tr className="govuk-table__row pointer" onClick={() => props.onFileSelect(file, !file.isSelected)}>
       <td className="govuk-table__cell govuk-table__cell--checkbox">
-        <div className="govuk-form-group">
+        <div className="govuk-form-group" style={{ marginBottom: "0" }}>
           <div className="govuk-checkboxes--small">
             <div className="govuk-checkboxes__item">
               <input
