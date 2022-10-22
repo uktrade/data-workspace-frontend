@@ -79,18 +79,6 @@ export default class App extends React.Component {
     this.fileInputRef = React.createRef();
   }
 
-  createFilesArrayFromFileList(filelist) {
-    const files = [];
-
-    for (let i = 0; i < filelist.length; i++) {
-      const file = filelist[i];
-      file.relativePath = file.name;
-      files.push(file);
-    }
-
-    return files;
-  }
-
   async componentDidMount() {
     await this.refresh();
   }
@@ -100,7 +88,15 @@ export default class App extends React.Component {
       console.log("nothing selected");
       return;
     }
-    const files = this.createFilesArrayFromFileList(event.target.files);
+
+    const files = [];
+
+    for (let i = 0; i < event.target.files.length; i++) {
+      const file = event.target.files[i];
+      file.relativePath = file.name;
+      files.push(file);
+    }
+
     this.setState({
       selectedFiles: files,
     });
@@ -305,9 +301,18 @@ export default class App extends React.Component {
   handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
+
+    const files = [];
+
+    for (let i = 0; i < e.dataTransfer.files.length; i++) {
+      const file = e.dataTransfer.files[i];
+      file.relativePath = file.name;
+      files.push(file);
+    }
+
     this.setState({
       dragActive: false,
-      selectedFiles: this.createFilesArrayFromFileList(e.dataTransfer.files),
+      selectedFiles: files,
     });
     this.showPopup(popupTypes.UPLOAD_FILES);
   };
