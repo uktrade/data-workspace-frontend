@@ -19,7 +19,7 @@ function UploadHeaderRow() {
       </th>
       <th
         className="govuk-table__header govuk-table__header--numeric"
-        style={{ width: "6em" }}
+        style={{ width: "7em" }}
       >
         Status
       </th>
@@ -37,7 +37,7 @@ function UploadFileRow(props) {
       </td>
       <td className="govuk-table__cell govuk-table__cell--numeric govuk-table__cell-progress">
         {props.file.progress === undefined &&
-        props.file.errors === undefined ? (
+        props.file.error === undefined ? (
           <span>...</span>
         ) : null}
 
@@ -49,8 +49,8 @@ function UploadFileRow(props) {
         {/*<strong ng-if="file.progress !== undefined && file.error === undefined" className="govuk-tag progress-percentage" ng-class="{'progress-percentage-complete': file.progress == 100}">{{ file.progress + '%' }}</strong>*/}
 
         {props.file.error !== undefined ? (
-          <strong className="govuk-tag progress-error" title="{ file.error }">
-            {file.error}
+          <strong className="govuk-tag progress-error" title="{ props.file.error }">
+            {props.file.error}
           </strong>
         ) : null}
 
@@ -111,6 +111,7 @@ export class UploadFilesPopup extends React.Component {
     const prefix = this.props.currentPrefix;
 
     const files = this.state.selectedFiles
+    var isErrored = false;
     var isAborted = false;
     var remainingUploadCount = files.length;
     var uploads = [];
@@ -141,16 +142,21 @@ export class UploadFilesPopup extends React.Component {
             }).promise();
           }
         } catch (err) {
-          if (!isAborted) {
-            console.error(err);
-          }
+          isErrored = true;
+          file.error = err.code || err.message || err;
+          this.setState({
+            selectedFiles: files
+          })
+          throw err
         } finally {
           remainingUploadCount--;
         }
 
         if (remainingUploadCount === 0) {
           this.setState({ uploadsComplete: true, isUploading: false });
-          onComplete();
+          if (!isErrored) {
+            onComplete();
+          }f
         }
       });
     }
