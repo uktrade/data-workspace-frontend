@@ -120,7 +120,7 @@ export class DeleteObjectsPopup extends React.Component {
 
     const scheduleDelete = async (rootFolder, key) => {
       keysToDelete.push([rootFolder, key]);
-      if (keysToDelete.length > BULK_DELETE_MAX_FILES) {
+      if (keysToDelete.length >= BULK_DELETE_MAX_FILES) {
         await deleteKeys();
       }
     }
