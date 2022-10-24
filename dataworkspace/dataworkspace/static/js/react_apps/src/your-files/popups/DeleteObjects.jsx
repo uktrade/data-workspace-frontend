@@ -298,8 +298,6 @@ export class DeleteObjectsPopup extends React.Component {
             </div>
           </div>
           <div className="modal-footer">
-            <div className="form-group">
-              <div className="govuk-button-group">
                 <button
                   id="trash-btn-cancel"
                   type="button"
@@ -308,7 +306,7 @@ export class DeleteObjectsPopup extends React.Component {
                 >
                   {this.state.finished ? "Close" : "Cancel"}
                 </button>
-                {!this.state.finished ? <button
+                {!this.state.finished ? <span>&nbsp;<button
                   id="trash-btn-delete"
                   type="button"
                   onClick={() => this.onDeleteClick()}
@@ -317,9 +315,7 @@ export class DeleteObjectsPopup extends React.Component {
                 >
                   <TrashIcon />
                   &nbsp;Delete {objectCount}
-                </button> : null}
-              </div>
-            </div>
+                </button></span> : null}
           </div>
         </div>
       </div>
