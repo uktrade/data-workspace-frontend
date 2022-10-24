@@ -174,53 +174,56 @@ export class UploadFilesPopup extends React.Component {
   render() {
     const files = this.state.selectedFiles;
     return (
-      <div className="popup-container">
-        <div
-          className="popup-container__overlay"
-          onClick={this.props.onCancel}
-        ></div>
-        <div className="popup-container__modal modal-xl">
-          <div className="modal-header">
-            <h2 className="modal-title govuk-heading-m" id="upload-title">
-              Upload to {this.state.folderName}
-            </h2>
-          </div>
-          <div className="modal-body">
-            <div className="col-md-18">
-              <div className="panel-body">
-                <table className="govuk-table" style={{ tableLayout: "fixed" }}>
-                  <thead>
-                    <UploadHeaderRow />
-                  </thead>
-                  <tbody id="upload-tbody">
-                    {files.map((file) => {
-                      return <UploadFileRow file={file} key={file.relativePath} />;
-                    })}
-                  </tbody>
-                </table>
+        <div className="popup-container">
+          <div
+              className="popup-container__overlay"
+              onClick={this.props.onCancel}
+          ></div>
+          <div className="popup-container__modal modal-xl">
+            <div className="modal-dialog" style={{maxWidth: "100%"}}>
+              <div className="modal-header">
+                <h2 className="modal-title govuk-heading-m" id="upload-title">
+                  Upload to {this.state.folderName}
+                </h2>
               </div>
-            </div>
-          </div>
-          <div className="modal-footer" style={{textAlign : "right"}}>
+              <div className="modal-body">
+                <div className="col-md-18">
+                  <div className="panel-body">
+                    <table className="govuk-table" style={{tableLayout: "fixed"}}>
+                      <thead>
+                      <UploadHeaderRow/>
+                      </thead>
+                      <tbody id="upload-tbody">
+                      {files.map((file) => {
+                        return <UploadFileRow file={file} key={file.relativePath}/>;
+                      })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer" style={{textAlign: "right"}}>
                 <button
-                  id="upload-btn-cancel"
-                  type="button"
-                  className="govuk-button govuk-button--secondary modal-button"
-                  onClick={() => this.close()}
+                    id="upload-btn-cancel"
+                    type="button"
+                    className="govuk-button govuk-button--secondary modal-button"
+                    onClick={() => this.close()}
                 >
                   {this.state.isUploading ? "Cancel" : "Close"}
                 </button>
-                {!this.state.uploadsComplete ? <span>&nbsp;<button
-                  onClick={() => this.onUploadClick(files)}
-                  className="govuk-button modal-button"
-                  disabled={this.state.isUploading}
-                >
-                  <UploadIcon />
-                  &nbsp;Upload ({this.state.selectedFiles.length})
+                {!this.state.uploadsComplete ? <span>&nbsp;
+                  <button
+                      onClick={() => this.onUploadClick(files)}
+                      className="govuk-button modal-button"
+                      disabled={this.state.isUploading}
+                  >
+                  <UploadIcon/>
+                    &nbsp;Upload ({this.state.selectedFiles.length})
                 </button></span> : null}
               </div>
+            </div>
+          </div>
         </div>
-      </div>
     );
   }
 }

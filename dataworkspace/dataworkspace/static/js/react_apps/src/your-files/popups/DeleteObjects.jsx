@@ -200,122 +200,125 @@ export class DeleteObjectsPopup extends React.Component {
     return (
       <div className="popup-container">
         <div className="popup-container__overlay"></div>
-        <div className="popup-container__modal modal-xl">
-          <div className="modal-header">
-            <h2 className="modal-title govuk-heading-m" id="trash-title">
-              {`Confirm delete of ${objectCount} object${
-                objectCount > 1 ? "s" : ""
-              }`}
-            </h2>
-          </div>
-          <div className="modal-body">
-            <div className="panel-body">
-              <table className="govuk-table" style={{ tableLayout: "fixed" }}>
-                <DeleteTableHeader />
-                <tbody id="s3objects-tbody">
+        <div className="popup-container__modal">
+          <div className="modal-dialog" style={{maxWidth: "100%"}}>
+            <div className="modal-header">
+              <h2 className="modal-title govuk-heading-m" id="trash-title">
+                {`Confirm delete of ${objectCount} object${
+                    objectCount > 1 ? "s" : ""
+                }`}
+              </h2>
+            </div>
+            <div className="modal-body">
+              <div className="panel-body">
+                <table className="govuk-table" style={{tableLayout: "fixed"}}>
+                  <DeleteTableHeader/>
+                  <tbody id="s3objects-tbody">
                   {folders.map((folder) => {
                     const folderName = prefixToFolder(folder.Prefix);
                     return (
-                      <tr key={folder.Prefix} className="govuk-table__row">
-                        <td className="govuk-table__cell">{folderName}</td>
-                        <td className="govuk-table__cell"></td>
-                        <td className="govuk-table__cell"></td>
-                        <td className="govuk-table__cell govuk-table__cell--numeric govuk-table__cell-progress">
-                          {folder.deleteStarted ||
-                          folder.deleteFinished ||
-                          folder.deleteError ? null : (
-                            <span>...</span>
-                          )}
+                        <tr key={folder.Prefix} className="govuk-table__row">
+                          <td className="govuk-table__cell">{folderName}</td>
+                          <td className="govuk-table__cell"></td>
+                          <td className="govuk-table__cell"></td>
+                          <td className="govuk-table__cell govuk-table__cell--numeric govuk-table__cell-progress">
+                            {folder.deleteStarted ||
+                            folder.deleteFinished ||
+                            folder.deleteError ? null : (
+                                <span>...</span>
+                            )}
 
-                          {folder.deleteStarted &&
-                          !folder.deleteFinished &&
-                          !folder.deleteError ? (
-                            <strong className={"govuk-tag progress-percentage"}>
-                              Deleting
-                            </strong>
-                          ) : null}
+                            {folder.deleteStarted &&
+                            !folder.deleteFinished &&
+                            !folder.deleteError ? (
+                                <strong className={"govuk-tag progress-percentage"}>
+                                  Deleting
+                                </strong>
+                            ) : null}
 
-                          {folder.deleteError ? (
-                            <strong className={"govuk-tag progress-error"}>
-                              {folder.deleteError}
-                            </strong>
-                          ) : null}
+                            {folder.deleteError ? (
+                                <strong className={"govuk-tag progress-error"}>
+                                  {folder.deleteError}
+                                </strong>
+                            ) : null}
 
-                          {folder.deleteFinished ? (
-                            <strong
-                              className={
-                                "govuk-tag progress-percentage-complete"
-                              }
-                            >
-                              Deleted
-                            </strong>
-                          ) : null}
-                        </td>
-                      </tr>
+                            {folder.deleteFinished ? (
+                                <strong
+                                    className={
+                                      "govuk-tag progress-percentage-complete"
+                                    }
+                                >
+                                  Deleted
+                                </strong>
+                            ) : null}
+                          </td>
+                        </tr>
                     );
                   })}
                   {files.map((file) => {
                     const filename = fullPathToFilename(file.Key);
                     return (
-                      <tr
-                        key={file.Key}
-                        className="govuk-table__row"
-                        ng-repeat="object in model.objects"
-                      >
-                        <td className="govuk-table__cell">{filename}</td>
-                        <td className="govuk-table__cell govuk-table__cell--numeric">
-                          {file.LastModified.toLocaleString()}
-                        </td>
-                        <td className="govuk-table__cell govuk-table__cell--numeric">
-                          {bytesToSize(file.Size)}
-                        </td>
-                        <td className="govuk-table__cell govuk-table__cell--numeric govuk-table__cell-progress">
-                          {!file.deleteFinished && !file.deleteError ? (
-                            <span>...</span>
-                          ) : null}
+                        <tr
+                            key={file.Key}
+                            className="govuk-table__row"
+                            ng-repeat="object in model.objects"
+                        >
+                          <td className="govuk-table__cell">{filename}</td>
+                          <td className="govuk-table__cell govuk-table__cell--numeric">
+                            {file.LastModified.toLocaleString()}
+                          </td>
+                          <td className="govuk-table__cell govuk-table__cell--numeric">
+                            {bytesToSize(file.Size)}
+                          </td>
+                          <td className="govuk-table__cell govuk-table__cell--numeric govuk-table__cell-progress">
+                            {!file.deleteFinished && !file.deleteError ? (
+                                <span>...</span>
+                            ) : null}
 
-                          {file.deleteError ? (
-                            <strong className={"govuk-tag progress-error"}>
-                              {file.deleteError}
-                            </strong>
-                          ) : null}
+                            {file.deleteError ? (
+                                <strong className={"govuk-tag progress-error"}>
+                                  {file.deleteError}
+                                </strong>
+                            ) : null}
 
-                          {file.deleteFinished ? (
-                            <strong
-                              className={
-                                "govuk-tag progress-percentage-complete"
-                              }
-                            >
-                              Deleted
-                            </strong>
-                          ) : null}
-                        </td>
-                      </tr>
+                            {file.deleteFinished ? (
+                                <strong
+                                    className={
+                                      "govuk-tag progress-percentage-complete"
+                                    }
+                                >
+                                  Deleted
+                                </strong>
+                            ) : null}
+                          </td>
+                        </tr>
                     );
                   })}
-                </tbody>
-              </table>
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
-          <div className="modal-footer">
-                <button
+            <div className="modal-footer">
+              <button
                   id="trash-btn-cancel"
                   type="button"
                   onClick={() => this.onCloseClick()}
                   className="govuk-button govuk-button--secondary modal-button"
+              >
+                {this.state.finished ? "Close" : "Cancel"}
+              </button>
+              {!this.state.finished ? <span>&nbsp;
+                <button
+                    id="trash-btn-delete"
+                    type="button"
+                    onClick={() => this.onDeleteClick()}
+                    className="govuk-button govuk-button--warning modal-button"
+                    disabled={this.state.trashing || this.state.finished}
                 >
-                  {this.state.finished ? "Close" : "Cancel"}
-                </button>
-                {!this.state.finished ? <span>&nbsp;<button
-                  id="trash-btn-delete"
-                  type="button"
-                  onClick={() => this.onDeleteClick()}
-                  className="govuk-button govuk-button--warning modal-button"
-                  disabled={this.state.trashing || this.state.finished}
-                >
-                  <TrashIcon />
+                  <TrashIcon/>
                   &nbsp;Delete {objectCount}
                 </button></span> : null}
+            </div>
           </div>
         </div>
       </div>
