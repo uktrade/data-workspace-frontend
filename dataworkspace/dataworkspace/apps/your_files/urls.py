@@ -23,7 +23,6 @@ from dataworkspace.apps.your_files.views import (
 )
 
 urlpatterns = [
-    path("", login_required(your_files_home), name="files"),
     path("legacy", login_required(file_browser_html_view), name="files_legacy"),
     path(
         "create-table/confirm",
@@ -105,4 +104,6 @@ urlpatterns = [
         login_required(RestoreTableViewSuccess.as_view()),
         name="restore-table-success",
     ),
+    path("<path:s3_path>", login_required(your_files_home), name="files"),
+    path("", login_required(your_files_home), name="files"),
 ]

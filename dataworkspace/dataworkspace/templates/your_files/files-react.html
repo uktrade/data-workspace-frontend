@@ -32,14 +32,17 @@
   <script nonce="{{ request.csp_nonce }}">
     const YOURFILES_CONFIG = {
       region: 'eu-west-2',
+      rootUrl: '{% url 'your-files:files' '/' %}',
       bucketName: '{{ bucket }}',
-      initialPrefix: '{{ prefix }}',
+      teamsPrefix: 'teams/',
+      rootPrefix: '{{ home_prefix }}',
+      initialPrefix: '{{ initial_prefix }}',
       bigdataPrefix: 'bigdata/',
       credentialsUrl: '{% url 'api_v1:aws-credentials' %}',
       endpointUrl: '{{ aws_endpoint }}',
       createTableUrl: '{% url 'your-files:create-table-confirm' %}',
       teamsPrefixes: {{ teams_folders_prefixes | to_json }},
-
+      s3Path: '{{ s3_path }}'
     };
     console.log(YOURFILES_CONFIG.credentialsUrl);
   </script>
