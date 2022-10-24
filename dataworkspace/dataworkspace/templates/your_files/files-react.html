@@ -32,7 +32,7 @@
   <script nonce="{{ request.csp_nonce }}">
     const YOURFILES_CONFIG = {
       region: 'eu-west-2',
-      rootUrl: '{% url 'your-files:your_files_react' '/' %}',
+      rootUrl: '{% url 'your-files:files' '/' %}',
       bucketName: '{{ bucket }}',
       teamsPrefix: 'teams/',
       rootPrefix: '{{ home_prefix }}',
