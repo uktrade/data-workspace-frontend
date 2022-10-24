@@ -82,6 +82,13 @@ export default class App extends React.Component {
   }
 
   async componentDidMount() {
+    addEventListener("popstate", () => {
+      const previousPrefix = window.location.pathname.replace(
+        this.props.config.rootUrl,
+        ""
+      );
+      this.refresh(previousPrefix);
+    });
     await this.refresh();
   }
 
@@ -225,7 +232,6 @@ export default class App extends React.Component {
         isSelected: false,
       }));
 
-      console.log(params.Prefix, rootPrefix);
       const teamsFolders =
         params.Prefix === rootPrefix
           ? this.props.config.teamsPrefixes.map((prefix) => ({
