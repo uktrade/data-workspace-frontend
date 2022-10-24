@@ -79,18 +79,6 @@ export default class App extends React.Component {
     this.fileInputRef = React.createRef();
   }
 
-  createFilesArrayFromFileList(filelist) {
-    const files = [];
-
-    for (let i = 0; i < filelist.length; i++) {
-      const file = filelist[i];
-      file.relativePath = file.name;
-      files.push(file);
-    }
-
-    return files;
-  }
-
   async componentDidMount() {
     await this.refresh();
   }
@@ -100,7 +88,15 @@ export default class App extends React.Component {
       console.log("nothing selected");
       return;
     }
-    const files = this.createFilesArrayFromFileList(event.target.files);
+
+    const files = [];
+
+    for (let i = 0; i < event.target.files.length; i++) {
+      const file = event.target.files[i];
+      file.relativePath = file.name;
+      files.push(file);
+    }
+
     this.setState({
       selectedFiles: files,
     });
@@ -303,12 +299,56 @@ export default class App extends React.Component {
     e.stopPropagation();
   };
 
-  handleDrop = (e) => {
+  handleDrop = async (e) => {
     e.preventDefault();
     e.stopPropagation();
+
+    async function entries(directoryReader) {
+        var entries = [];
+        while (true) {
+            var latestEntries = await new Promise((resolve, reject) => {
+                directoryReader.readEntries(resolve, reject);
+            });
+            if (latestEntries.length == 0) break;
+            entries = entries.concat(latestEntries);
+        }
+        return entries;
+    }
+
+    async function file(fileEntry) {
+        var file = await new Promise((resolve, reject) => {
+            fileEntry.file(resolve, reject);
+        });
+        // We monkey-patch the file to include its FileSystemEntry fullPath,
+        // which is a path relative to the root of the pseudo-filesystem of
+        // a dropped folder
+        file.relativePath = fileEntry.fullPath.substring(1);  // Remove leading slash
+        return file;
+    }
+
+    async function getFiles(dataTransferItemList) {
+        const files = [];
+        // DataTransferItemList does not support map
+        const fileAndDirectoryEntryQueue = [];
+        for (let i = 0; i < dataTransferItemList.length; ++i) {
+             // At the time of writing no browser supports `getAsEntry`
+            fileAndDirectoryEntryQueue.push(dataTransferItemList[i].webkitGetAsEntry());
+        }
+
+        while (fileAndDirectoryEntryQueue.length > 0) {
+            const entry = fileAndDirectoryEntryQueue.shift();
+            if (entry.isFile) {
+                files.push(await file(entry));
+            } else if (entry.isDirectory) {
+                fileAndDirectoryEntryQueue.push(...await entries(entry.createReader()));
+            }
+        }
+        return files;
+    }
+
     this.setState({
       dragActive: false,
-      selectedFiles: this.createFilesArrayFromFileList(e.dataTransfer.files),
+      selectedFiles: await getFiles(e.dataTransfer.items),
     });
     this.showPopup(popupTypes.UPLOAD_FILES);
   };
