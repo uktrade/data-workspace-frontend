@@ -105,6 +105,7 @@ export default class App extends React.Component {
       selectedFiles: files,
     });
     this.showPopup(popupTypes.UPLOAD_FILES);
+    this.fileInputRef.current.value = null;
   };
 
   onBreadcrumbClick = async (e, breadcrumb) => {
