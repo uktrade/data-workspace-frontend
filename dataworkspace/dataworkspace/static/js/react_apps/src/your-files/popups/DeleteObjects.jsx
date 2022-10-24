@@ -29,7 +29,7 @@ function DeleteTableHeader() {
         <th
           scope="col"
           className="govuk-table__header govuk-table__header--numeric"
-          style={{ width: "6em" }}
+          style={{ width: "7em" }}
         >
           Status
         </th>
@@ -71,6 +71,7 @@ export class DeleteObjectsPopup extends React.Component {
     const maxConnections = 4;
     const queue = fileQueue(Math.min(maxConnections, numObjects));
 
+    var isErrored = false;
     var isAborted = false;
     var remainingDeleteCount = numObjects;
     var keysToDelete = [];
@@ -91,18 +92,25 @@ export class DeleteObjectsPopup extends React.Component {
     }
 
     const deleteKeys = async () => {
+      const rootFileOrFolders = keysToDelete.map(([rootFileOrFolder, key]) => rootFileOrFolder)
       try {
         await s3
           .deleteObjects({
             Bucket: bucketName,
-            Delete: { Objects: keysToDelete.map((key) => ({ Key: key })) },
+            Delete: { Objects: keysToDelete.map(([rootFileOrFolder, key]) => ({ Key: key })) },
           })
           .promise();
       } catch (err) {
-        console.error(err);
-        throw err;
+        isErrored = true;
+        for (const rootFileOrFolder of rootFileOrFolders) {
+          updateDeleteState(rootFileOrFolder, {deleteError: err.code || err.message || err })
+        }
+        throw err
       } finally {
         keysToDelete = [];
+      }
+      for (const rootFileOrFolder of rootFileOrFolders) {
+        updateDeleteState(rootFileOrFolder, { deleteFinished: true })
       }
     }
 
@@ -110,9 +118,9 @@ export class DeleteObjectsPopup extends React.Component {
       if (keysToDelete.length) await deleteKeys();
     }
 
-    const scheduleDelete = async (key) => {
-      keysToDelete.push(key);
-      if (keysToDelete.length > BULK_DELETE_MAX_FILES) {
+    const scheduleDelete = async (rootFolder, key) => {
+      keysToDelete.push([rootFolder, key]);
+      if (keysToDelete.length >= BULK_DELETE_MAX_FILES) {
         await deleteKeys();
       }
     }
@@ -136,20 +144,14 @@ export class DeleteObjectsPopup extends React.Component {
             continuationToken = response.NextContinuationToken;
             isTruncated = response.IsTruncated;
           } catch (err) {
-            console.error(err);
+            isErrored = true;
             updateDeleteState(folder, { deleteError: err.code || err.message || err });
-            return;
+            throw err;
           }
           // ... and delete them
           for (let j = 0; j < response.Contents.length && !isAborted; ++j) {
-            try {
-              await scheduleDelete(response.Contents[j].Key);
-            } catch (err) {
-              updateDeleteState(folder, { deleteError: err.code || err.message || err });
-              return;
-            }
+            await scheduleDelete(folder, response.Contents[j].Key);
           }
-          updateDeleteState(folder, { deleteFinished: true });
         }
       });
     }
@@ -157,19 +159,18 @@ export class DeleteObjectsPopup extends React.Component {
       queue(async () => {
         if (isAborted) return;
         updateDeleteState(file, { deleteStarted: true });
-        try {
-          await scheduleDelete(file.Key);
-        } catch (err) {
-          updateDeleteState(file, { deleteError: err.code || err.message || err });
-        }
-        updateDeleteState(file, { deleteFinished: true });
+        await scheduleDelete(file, file.Key);
       });
     }
     queue(async () => {
       if (isAborted) return;
       await flushDelete();
+    });
+    queue(async () => {
       this.setState({ finished: true });
-      this.props.onSuccess();
+      if (!isErrored) {
+        this.props.onSuccess();
+      }
     });
   }
 
@@ -222,7 +223,7 @@ export class DeleteObjectsPopup extends React.Component {
 
                           {folder.deleteError ? (
                             <strong className={"govuk-tag progress-error"}>
-                              folder.deleteError
+                              {folder.deleteError}
                             </strong>
                           ) : null}
 
