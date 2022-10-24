@@ -203,9 +203,7 @@ export class UploadFilesPopup extends React.Component {
               </div>
             </div>
           </div>
-          <div className="modal-footer">
-            <div className="form-group">
-              <div className="govuk-button-group">
+          <div className="modal-footer" style={{textAlign : "right"}}>
                 <button
                   id="upload-btn-cancel"
                   type="button"
@@ -214,17 +212,15 @@ export class UploadFilesPopup extends React.Component {
                 >
                   {this.state.isUploading ? "Cancel" : "Close"}
                 </button>
-                {!this.state.uploadsComplete ? <button
+                {!this.state.uploadsComplete ? <span>&nbsp;<button
                   onClick={() => this.onUploadClick(files)}
                   className="govuk-button modal-button"
                   disabled={this.state.isUploading}
                 >
                   <UploadIcon />
                   &nbsp;Upload ({this.state.selectedFiles.length})
-                </button> : null}
+                </button></span> : null}
               </div>
-            </div>
-          </div>
         </div>
       </div>
     );
