@@ -95,7 +95,6 @@ export default class App extends React.Component {
         }
       );
     });
-    // window.history.pushState({ prefix: this.state.currentPrefix }, null);
     await this.refresh();
   }
 
