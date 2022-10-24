@@ -70,7 +70,6 @@ export default class App extends React.Component {
       isLoaded: false,
       error: null,
       bucketName: appConfig.bucketName,
-      rootPrefix: appConfig.homePrefix,
       region: appConfig.region,
       showBigDataMessage: false,
       popups: Object.fromEntries(
@@ -202,8 +201,7 @@ export default class App extends React.Component {
   async refresh(prefix) {
     const rootPrefix = this.props.config.rootPrefix;
     const bigdataPrefix = this.props.config.bigdataPrefix;
-    const showBigDataMessage =
-      prefix === this.state.rootPrefix + this.state.bigDataFolder;
+    const showBigDataMessage = prefix === rootPrefix + bigdataPrefix;
     const params = {
       Bucket: this.state.bucketName,
       Prefix: prefix || this.state.currentPrefix,
@@ -219,6 +217,15 @@ export default class App extends React.Component {
         throw new Error(ex);
       }
 
+      const files = response.Contents.filter(
+        (file) => file.Key !== params.Prefix
+      ).map((file) => ({
+        ...file,
+        formattedDate: new Date(file.LastModified),
+        isSelected: false,
+      }));
+
+      console.log(params.Prefix, rootPrefix);
       const teamsFolders =
         params.Prefix === rootPrefix
           ? this.props.config.teamsPrefixes.map((prefix) => ({
@@ -238,14 +245,6 @@ export default class App extends React.Component {
               },
             ]
           : [];
-
-      const files = response.Contents.filter(
-        (file) => file.Key !== params.Prefix
-      ).map((file) => ({
-        ...file,
-        formattedDate: new Date(file.LastModified),
-        isSelected: false,
-      }));
 
       const foldersWithoutBigData = response.CommonPrefixes.filter((folder) => {
         return folder.Prefix !== `${rootPrefix}${bigdataPrefix}`;
@@ -381,13 +380,14 @@ export default class App extends React.Component {
 
   render() {
     const breadCrumbs = getBreadcrumbs(
-      this.state.rootPrefix,
+      this.props.config.rootPrefix,
+      this.props.config.teamsPrefix,
       this.state.currentPrefix
     );
 
     const currentFolderName = getFolderName(
       this.state.currentPrefix,
-      this.state.rootPrefix
+      this.props.config.rootPrefix
     );
 
     return (

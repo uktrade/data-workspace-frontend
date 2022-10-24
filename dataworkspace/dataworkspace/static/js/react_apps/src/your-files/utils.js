@@ -1,15 +1,17 @@
 const ROOT_FOLDER_NAME = "home";
-export function getBreadcrumbs(rootPrefix, currentPrefix) {
+export function getBreadcrumbs(homePrefix, teamsPrefix, fullCurrentPrefix) {
   const breadcrumbs = [
     {
-      prefix: rootPrefix,
+      prefix: homePrefix,
       label: ROOT_FOLDER_NAME,
     },
   ];
 
-  const labels = currentPrefix.substring(rootPrefix.length).split("/");
-
-  let prefix = rootPrefix;
+  const re = new RegExp(`(^${homePrefix}|^${teamsPrefix}).*?`);
+  const currentBasePrefixMatch = fullCurrentPrefix.match(re);
+  const relativePrefix = fullCurrentPrefix.replace(re, "");
+  const labels = relativePrefix.split("/");
+  let prefix = currentBasePrefixMatch !== null ? currentBasePrefixMatch[1] : "";
   for (let i = 0; i < labels.length - 1; i++) {
     prefix += labels[i] + "/";
     breadcrumbs.push({
@@ -17,7 +19,6 @@ export function getBreadcrumbs(rootPrefix, currentPrefix) {
       label: labels[i],
     });
   }
-
   return breadcrumbs;
 }
 
