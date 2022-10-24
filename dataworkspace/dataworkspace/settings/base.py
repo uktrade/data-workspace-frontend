@@ -276,7 +276,7 @@ CSP_STYLE_SRC = [
 CSP_INCLUDE_NONCE_IN = ["script-src"]
 
 # Allow for connecting to the webpack hotloader for local development
-if LOCAL:
+if DEBUG:
     CSP_CONNECT_SRC += [
         f"{APPLICATION_ROOT_DOMAIN.split(':')[0]}:3000",
         f"ws://{APPLICATION_ROOT_DOMAIN.split(':')[0]}:3000",
@@ -417,9 +417,9 @@ STS_LOCAL_ENDPOINT_URL = env.get("STS_LOCAL_ENDPOINT_URL", "")
 YOUR_FILES_CONNECT_SRC = [
     APPLICATION_ROOT_DOMAIN,
     "https://s3.eu-west-2.amazonaws.com",
-] + ([S3_LOCAL_ENDPOINT_URL] if LOCAL else [])
+] + ([S3_LOCAL_ENDPOINT_URL] if DEBUG else [])
 
-YOUR_FILES_SCRIPT_SRC = [] + (["http://0.0.0.0:3000", "'unsafe-eval'"] if LOCAL else [])
+YOUR_FILES_SCRIPT_SRC = [] + (["http://0.0.0.0:3000", "'unsafe-eval'"] if DEBUG else [])
 
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
@@ -753,10 +753,10 @@ CLAMAV_URL = env.get("CLAMAV_URL", "")
 CLAMAV_USER = env.get("CLAMAV_USER", "")
 CLAMAV_PASSWORD = env.get("CLAMAV_PASSWORD", "")
 
-WEBPACK_STATS_FILE = "react_apps-stats.json" if not LOCAL else "react_apps-stats-hot.json"
+WEBPACK_STATS_FILE = "react_apps-stats.json" if not DEBUG else "react_apps-stats-hot.json"
 WEBPACK_LOADER = {
     "DEFAULT": {
-        "CACHE": not LOCAL,
+        "CACHE": not DEBUG,
         "BUNDLE_DIR_NAME": "js/bundles",
         "STATS_FILE": os.path.join(BASE_DIR, "static", "js", "stats", WEBPACK_STATS_FILE),
         "POLL_INTERVAL": 0.1,

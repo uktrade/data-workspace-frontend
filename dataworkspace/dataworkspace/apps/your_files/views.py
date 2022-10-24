@@ -57,7 +57,7 @@ def file_browser_html_view(request):
     CONNECT_SRC=settings.YOUR_FILES_CONNECT_SRC,
     SCRIPT_SRC=settings.YOUR_FILES_SCRIPT_SRC,
 )
-def your_files_react(request):
+def your_files_home(request):
     prefix = get_s3_prefix(str(request.user.profile.sso_id))
     teams_folders_prefixes = get_team_prefixes(request.user)
 
