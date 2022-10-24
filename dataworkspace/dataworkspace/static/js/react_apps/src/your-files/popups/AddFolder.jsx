@@ -10,6 +10,20 @@ export class AddFolderPopup extends React.Component {
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
+  componentDidMount() {
+    document.addEventListener("keydown", this.escFunction, false);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener("keydown", this.escFunction, false);
+  }
+
+  escFunction = (event) => {
+    if (event.key === 'Escape') {
+      this.props.onClose();
+    }
+  }
+
   async handleSubmit(event) {
     console.log("on submit");
     event.preventDefault();
