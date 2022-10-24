@@ -41,12 +41,11 @@ function UploadFileRow(props) {
           <span>...</span>
         ) : null}
 
-        {/*<span ng-if="file.progress === undefined && file.error === undefined">...</span>*/}
         {props.file.progress ? (
-          <strong className="">{props.file.progress + "%"}</strong>
+            <strong
+                className={"govuk-tag progress-percentage " + (props.file.progress == 100 ? "progress-percentage-complete" : "")}>{props.file.progress + "%"}</strong>
         ) : null}
 
-        {/*<strong ng-if="file.progress !== undefined && file.error === undefined" className="govuk-tag progress-percentage" ng-class="{'progress-percentage-complete': file.progress == 100}">{{ file.progress + '%' }}</strong>*/}
 
         {props.file.error !== undefined ? (
           <strong className="govuk-tag progress-error" title="{ props.file.error }">
@@ -54,7 +53,6 @@ function UploadFileRow(props) {
           </strong>
         ) : null}
 
-        {/*<strong ng-if="file.error !== undefined" className="govuk-tag progress-error" title="{{ file.error }}">{{ file.error }}</strong></td>*/}
       </td>
     </tr>
   );
