@@ -103,6 +103,7 @@ INSTALLED_APPS = [
     "dataworkspace.apps.case_studies",
     "csp_helpers",
     "webpack_loader",
+    "dataworkspace.apps.data_collections",
 ]
 
 MIDDLEWARE = [
