@@ -1,5 +1,6 @@
 {% extends '_main.html' %}
 {% load static %}
+{% load render_bundle from webpack_loader %}
 {% load datasets_tags %}
 
 {% block page_title %}Files - {{ block.super }}{% endblock %}
@@ -46,6 +47,5 @@
     console.log(YOURFILES_CONFIG.credentialsUrl);
   </script>
 
-  <script src="{% static 'js/bundles/yourfiles.js' %}"></script>
-
+  {% render_bundle "yourfiles" "js" %}
 {% endblock %}
