@@ -82,6 +82,19 @@ export default class App extends React.Component {
   }
 
   async componentDidMount() {
+    addEventListener("popstate", (event) => {
+      this.setState(
+        {
+          currentPrefix:
+            event.state && event.state.prefix
+              ? event.state.prefix
+              : this.props.config.initialPrefix,
+        },
+        () => {
+          this.refresh();
+        }
+      );
+    });
     await this.refresh();
   }
 
@@ -189,7 +202,11 @@ export default class App extends React.Component {
   };
 
   async navigateTo(prefix) {
-    window.history.pushState(null, null, this.props.config.rootUrl + prefix);
+    window.history.pushState(
+      { prefix: prefix },
+      null,
+      this.props.config.rootUrl + prefix
+    );
     this.setState({ prefix: prefix });
     await this.refresh(prefix);
   }
@@ -225,7 +242,6 @@ export default class App extends React.Component {
         isSelected: false,
       }));
 
-      console.log(params.Prefix, rootPrefix);
       const teamsFolders =
         params.Prefix === rootPrefix
           ? this.props.config.teamsPrefixes.map((prefix) => ({
