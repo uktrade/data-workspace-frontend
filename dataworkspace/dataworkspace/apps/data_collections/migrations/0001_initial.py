@@ -15,22 +15,48 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Collection',
+            name="Collection",
             fields=[
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
-                ('deleted', models.BooleanField(default=False)),
-                ('id', models.AutoField(primary_key=True, serialize=False)),
-                ('slug', models.SlugField()),
-                ('name', models.CharField(max_length=128)),
-                ('description', models.CharField(max_length=256)),
-                ('created_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created+', to=settings.AUTH_USER_MODEL)),
-                ('owner', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
-                ('updated_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='updated+', to=settings.AUTH_USER_MODEL)),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
+                ("deleted", models.BooleanField(default=False)),
+                ("id", models.AutoField(primary_key=True, serialize=False)),
+                ("slug", models.SlugField()),
+                ("name", models.CharField(max_length=128)),
+                ("description", models.CharField(max_length=256)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="created+",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "owner",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "updated_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="updated+",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Collection',
-                'verbose_name_plural': 'Collections',
+                "verbose_name": "Collection",
+                "verbose_name_plural": "Collections",
             },
         ),
     ]

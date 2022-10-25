@@ -170,7 +170,10 @@ urlpatterns = [
     ),
     path(
         "collections/",
-        include(("dataworkspace.apps.data_collections.urls", "data_collections"), namespace="data_collections"),
+        include(
+            ("dataworkspace.apps.data_collections.urls", "data_collections"),
+            namespace="data_collections",
+        ),
     ),
     path(
         "dataflow/dag-status/<str:execution_date>",
