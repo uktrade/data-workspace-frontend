@@ -15,7 +15,7 @@ module.exports = {
   },
   output: {
     path: path.resolve('../bundles/'),
-    filename: "[name].js",
+    filename: "[name].[contenthash].js",
   },
   module: {
     rules: [
