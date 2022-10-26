@@ -4,17 +4,44 @@
 Preview {{ source_object.name }}
 {% endblock %}
 
-{% block content %}
+{% block breadcrumbs %}
+    <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+            <li class="govuk-breadcrumbs__list-item">
+                <a class="govuk-breadcrumbs__link" href="/">Home</a>
+            </li>
 
-<div class="govuk-grid-row">
+            <li class="govuk-breadcrumbs__list-item">
+                Collections
+            </li>
+            <li class="govuk-breadcrumbs__list-item">
+                {{ source_object.name }}
+            </li>
+        </ol>
+    </div>
+{% endblock %}
+
+{% block main %}
+<!-- <div class="govuk-!-padding-top-8 govuk-!-padding-bottom-4" style="background-color:#3370B3;"" id="discover-data"> -->
+<div class="govuk-grid-row" style="background-color:#3370B3; padding-left: -20px" >
     <div class="govuk-grid-column-two-thirds">
-      <h1 class="govuk-heading-xl">Name: {{ source_object.name }}</h1>
-      <div class="govuk-body">
-        Description: {{ source_object.description|linebreaks }}<br>
-        Slug: {{ source_object.slug }}<br>
-        Owner: {{ source_object.owner }}
-      </div>
+      <p class="govuk-body" style="color:white; font-size: 24px; line-height: 36px;">Personal collection</p>
+      <h2 class="govuk-heading-xl" style="color:white; margin-bottom: 30px">{{ source_object.name }}</h2>
+      <p class="govuk-body" style="color:white; font-size: 24px; line-height: 36px;">{{ source_object.description }}</p>
     </div>
   </div>
-
+  <div class="govuk-grid-row" style="margin-top:50px">
+    <div class="govuk-grid-column-one-half">
+      <h2 class="govuk-heading-l">Data</h2>
+      <p class="govuk-body"><a href="">Search for data</a> you'd like to add.</p>
+      <h2 class="govuk-heading-l">Dashboards</h2>
+      <p class="govuk-body"><a href="">Search for dashboards</a> you'd like to add.</p>
+    </div>
+    <div class="govuk-grid-column-one-half">
+      <h2 class="govuk-heading-s" style="margin-bottom:0px">Owner</h2>
+      <p class="govuk-body">{{ source_object.owner }}<br>(<a href="mailto:{{ source_object.owner.email }}">{{ source_object.owner.email }}</a>)</p>
+    </div>
+  </div>
+<!-- </div> -->
 {% endblock %}
+
