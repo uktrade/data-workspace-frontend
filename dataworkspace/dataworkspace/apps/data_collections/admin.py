@@ -3,6 +3,7 @@ from dataworkspace.apps.data_collections.models import Collection
 
 
 class CollectionAdmin(admin.ModelAdmin):
+    prepopulated_fields = {"slug": ("name",)}
     list_display = ("name", "description", "owner")
     search_fields = ["name"]
 
