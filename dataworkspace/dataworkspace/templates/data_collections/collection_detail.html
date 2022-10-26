@@ -10,7 +10,7 @@ Preview {{ source_object.name }}
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-xl">Name: {{ source_object.name }}</h1>
       <div class="govuk-body">
-        Description: {{ source_object.description }}<br>
+        Description: {{ source_object.description|linebreaks }}<br>
         Slug: {{ source_object.slug }}<br>
         Owner: {{ source_object.owner }}
       </div>
