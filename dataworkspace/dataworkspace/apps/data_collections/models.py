@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.db import models
+from django.db import models, IntegrityError, transaction
 from django.utils.text import slugify
 
 from dataworkspace.apps.core.models import DeletableTimestampedUserModel
@@ -13,14 +13,24 @@ class Collection(DeletableTimestampedUserModel):
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
     )
+    published = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         create = self.pk is None
         if create:
-            slug = slugify(self.name)
-            self.slug = slug
-
-        super().save(*args, **kwargs)
+            for i in range(0, 20):
+                slug = slugify(self.name) + ("" if i == 0 else f"-{i}")
+                self.slug = slug
+                try:
+                    with transaction.atomic():
+                        super().save(*args, **kwargs)
+                except IntegrityError:
+                    if i == 19:
+                        raise
+                else:
+                    break
+        else:
+            super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Collection"
