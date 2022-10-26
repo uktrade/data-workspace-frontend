@@ -9,10 +9,8 @@ class CollectionsDetailView(DetailView):
 
     def get_object(self, queryset=None):
         collection_object = Collection.objects.live().get(slug=self.kwargs["collections_slug"])
-        if (
-            collection_object.published
-            and self.request.user == collection_object.owner
-            or self.request.user.is_superuser
+        if self.request.user.is_superuser or (
+            collection_object.published and self.request.user == collection_object.owner
         ):
             return collection_object
         else:

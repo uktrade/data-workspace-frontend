@@ -5,8 +5,8 @@ from dataworkspace.tests.conftest import get_staff_client, get_staff_user_data
 
 
 def test_collection(client):
-    user = factories.UserFactory()
-    client = get_staff_client(get_staff_user_data("my_database", user))
+    user = factories.UserFactory(is_superuser=True)
+    client = get_staff_client(get_staff_user_data("", user))
 
     c = factories.CollectionFactory.create(
         name="test-collections", description="test collections description", published=True
@@ -42,7 +42,7 @@ def test_unpublished_raises_404(client):
     assert response.status_code == 404
 
 
-def test_user_accessing_collection_who_is_not_an_owner_raises_404(client):
+def test_unauthorised_user_raises_404(client):
     c = factories.CollectionFactory.create(
         name="test-collections", description="test collections description", published=True
     )
