@@ -496,3 +496,12 @@ class DataSetChartBuilderChartFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = "datasets.DataSetChartBuilderChart"
+
+
+class CollectionFactory(factory.django.DjangoModelFactory):
+    slug = factory.fuzzy.FuzzyText(length=10)
+    name = factory.fuzzy.FuzzyText()
+    description = factory.fuzzy.FuzzyText()
+
+    class Meta:
+        model = "data_collections.Collection"

@@ -169,6 +169,13 @@ urlpatterns = [
         include(("dataworkspace.apps.core.charts.urls", "charts"), namespace="charts"),
     ),
     path(
+        "collections/",
+        include(
+            ("dataworkspace.apps.data_collections.urls", "data_collections"),
+            namespace="data_collections",
+        ),
+    ),
+    path(
         "dataflow/dag-status/<str:execution_date>",
         login_required(CreateTableDAGStatusView.as_view()),
         name="create-table-dag-status",
