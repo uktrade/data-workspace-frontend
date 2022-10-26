@@ -4,8 +4,9 @@ from dataworkspace.tests import factories
 
 
 def test_collection(client):
-    c = factories.CollectionFactory.create(slug="test-collections",
-                                           description="test collections description")
+    c = factories.CollectionFactory.create(
+        slug="test-collections", description="test collections description"
+    )
     response = client.get(
         reverse(
             "data_collections:collections_view",
