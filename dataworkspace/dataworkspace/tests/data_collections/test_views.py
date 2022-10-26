@@ -1,9 +1,13 @@
 from django.urls import reverse
 
 from dataworkspace.tests import factories
+from dataworkspace.tests.conftest import get_staff_client, get_staff_user_data
 
 
 def test_collection(client):
+    user = factories.UserFactory()
+    client = get_staff_client(get_staff_user_data("my_database", user))
+
     c = factories.CollectionFactory.create(
         name="test-collections", description="test collections description", published=True
     )
@@ -21,8 +25,26 @@ def test_collection(client):
 
 
 def test_unpublished_raises_404(client):
+    user = factories.UserFactory()
+    client = get_staff_client(get_staff_user_data("my_database", user))
+
     c = factories.CollectionFactory.create(
         name="test-collections", description="test collections description", published=False
+    )
+
+    response = client.get(
+        reverse(
+            "data_collections:collections_view",
+            kwargs={"collections_slug": c.slug},
+        )
+    )
+
+    assert response.status_code == 404
+
+
+def test_user_accessing_collection_who_is_not_an_owner_raises_404(client):
+    c = factories.CollectionFactory.create(
+        name="test-collections", description="test collections description", published=True
     )
 
     response = client.get(
