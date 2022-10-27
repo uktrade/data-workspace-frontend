@@ -1,3 +1,5 @@
+import uuid
+
 from django.conf import settings
 from django.db import models
 
@@ -5,7 +7,7 @@ from dataworkspace.apps.core.models import DeletableTimestampedUserModel
 
 
 class Collection(DeletableTimestampedUserModel):
-    id = models.AutoField(primary_key=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     name = models.CharField(blank=False, null=False, max_length=128)
     description = models.TextField(null=True, blank=True)
     owner = models.ForeignKey(
