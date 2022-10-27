@@ -5,7 +5,7 @@ from dataworkspace.apps.data_collections import views
 
 urlpatterns = [
     path(
-        "<slug:collections_slug>",
+        "<int:collections_id>",
         login_required(views.CollectionsDetailView.as_view()),
         name="collections_view",
     ),

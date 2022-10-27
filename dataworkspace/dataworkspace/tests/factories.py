@@ -499,7 +499,6 @@ class DataSetChartBuilderChartFactory(factory.django.DjangoModelFactory):
 
 
 class CollectionFactory(factory.django.DjangoModelFactory):
-    slug = factory.fuzzy.FuzzyText(length=10)
     name = factory.fuzzy.FuzzyText()
     description = factory.fuzzy.FuzzyText()
 
