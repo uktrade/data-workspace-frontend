@@ -7,7 +7,7 @@ from dataworkspace.apps.core.models import DeletableTimestampedUserModel
 
 
 class Collection(DeletableTimestampedUserModel):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    id = models.UUIDField(default=uuid.uuid4, primary_key=True)
     name = models.CharField(blank=False, null=False, max_length=128)
     description = models.TextField(null=True, blank=True)
     owner = models.ForeignKey(
