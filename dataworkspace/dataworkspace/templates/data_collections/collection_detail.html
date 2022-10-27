@@ -1,33 +1,37 @@
 {% extends '_main.html' %}
 
-{%  block page_title %}
-Preview {{ source_object.name }}
+{% block page_title %}
+  Preview {{ source_object.name }}
 {% endblock %}
 
 {% block breadcrumbs %}
-    <div class="govuk-breadcrumbs">
-        <ol class="govuk-breadcrumbs__list">
-            <li class="govuk-breadcrumbs__list-item">
-                <a class="govuk-breadcrumbs__link" href="/">Home</a>
-            </li>
-
-            <li class="govuk-breadcrumbs__list-item">
-                Collections
-            </li>
-            <li class="govuk-breadcrumbs__list-item">
-                {{ source_object.name }}
-            </li>
-        </ol>
-    </div>
 {% endblock %}
 
 {% block main %}
-<!-- <div class="govuk-!-padding-top-8 govuk-!-padding-bottom-4" style="background-color:#3370B3;"" id="discover-data"> -->
-<div class="govuk-grid-row" style="background-color:#3370B3; padding-left: -20px" >
-    <div class="govuk-grid-column-two-thirds">
-      <p class="govuk-body" style="color:white; font-size: 24px; line-height: 36px;">Personal collection</p>
-      <h2 class="govuk-heading-xl" style="color:white; margin-bottom: 30px">{{ source_object.name }}</h2>
-      <p class="govuk-body" style="color:white; font-size: 24px; line-height: 36px;">{{ source_object.description }}</p>
+  <div style="background-color:#3370B3; margin-left: -275px; margin-right: -277px">
+    <div class="govuk-grid-row">
+      <div class="govuk-breadcrumbs" style="padding-left: 290px">
+        <ol class="govuk-breadcrumbs__list" style="color: white">
+          <li class="govuk-breadcrumbs__list-item govuk-breadcrumbs__list-item-white" style="color: white">
+            <a class="govuk-breadcrumbs__link" href="/" style="color:white; line-height: 36px; --border-color: white">Home</a>
+          </li>
+
+          <li class="govuk-breadcrumbs__list-item govuk-breadcrumbs__list-item-white"
+              style="color:white; line-height: 36px; --border-color: white">
+            Collections
+          </li>
+          <li class="govuk-breadcrumbs__list-item govuk-breadcrumbs__list-item-white"
+              style="color:white; line-height: 36px; --border-color: white">
+            {{ source_object.name }}
+          </li>
+        </ol>
+      </div>
+      <div class="govuk-grid-column-full" style="padding-left: 290px">
+        <p class="govuk-body" style="color:white; font-size: 24px; line-height: 36px;">Personal collection</p>
+        <h2 class="govuk-heading-xl" style="color:white; margin-bottom: 30px">{{ source_object.name }}</h2>
+        <p class="govuk-body"
+           style="color:white; font-size: 24px; line-height: 36px;">{{ source_object.description|linebreaksbr }}</p>
+      </div>
     </div>
   </div>
   <div class="govuk-grid-row" style="margin-top:50px">
@@ -35,13 +39,14 @@ Preview {{ source_object.name }}
       <h2 class="govuk-heading-l">Data</h2>
       <p class="govuk-body"><a href="">Search for data</a> you'd like to add.</p>
       <h2 class="govuk-heading-l">Dashboards</h2>
-      <p class="govuk-body"><a href="">Search for dashboards</a> you'd like to add.</p>
+      <p class="govuk-body"><a href="https://data.trade.gov.uk/datasets/?q=&sort=relevance&data_type=3">Search for
+        dashboards</a> you'd like to add.</p>
     </div>
     <div class="govuk-grid-column-one-half">
       <h2 class="govuk-heading-s" style="margin-bottom:0px">Owner</h2>
-      <p class="govuk-body">{{ source_object.owner }}<br>(<a href="mailto:{{ source_object.owner.email }}">{{ source_object.owner.email }}</a>)</p>
+      <p class="govuk-body">{{ source_object.owner|default_if_none:"Not assigned" }}<br>{% if source_object.owner %}(
+        <a href="mailto:{{ source_object.owner.email }}">{{ source_object.owner.email }}</a>){% endif %}</p>
     </div>
   </div>
-<!-- </div> -->
 {% endblock %}
 

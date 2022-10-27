@@ -420,6 +420,10 @@ p.sidebar-section {
 
 }
 
+.govuk-breadcrumbs__list-item-white:before {
+  border-color: white !important;
+}
+
 @import "filters";
 @import "search";
 @import "site-search";
