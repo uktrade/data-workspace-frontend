@@ -16,12 +16,12 @@ class CollectionAdmin(DeletableTimeStampedUserAdmin):
                     "name",
                     "description",
                     "owner",
-                    "slug",
+                    "id",
                 ]
             },
         ),
     ]
-    readonly_fields = ["slug"]
+    readonly_fields = ["id"]
 
 
 admin.site.register(Collection, CollectionAdmin)

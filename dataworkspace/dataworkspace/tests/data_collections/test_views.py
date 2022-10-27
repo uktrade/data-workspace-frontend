@@ -12,16 +12,14 @@ def test_collection(client):
         name="test-collections", description="test collections description", published=True
     )
 
-    assert c.slug == "test-collections"
-
     response = client.get(
         reverse(
             "data_collections:collections_view",
-            kwargs={"collections_slug": c.slug},
+            kwargs={"collections_id": c.id},
         )
     )
     assert response.status_code == 200
-    assert "<p>test collections description</p>" in response.content.decode(response.charset)
+    assert "test collections description" in response.content.decode(response.charset)
 
 
 def test_unpublished_raises_404(client):
@@ -35,7 +33,7 @@ def test_unpublished_raises_404(client):
     response = client.get(
         reverse(
             "data_collections:collections_view",
-            kwargs={"collections_slug": c.slug},
+            kwargs={"collections_id": c.id},
         )
     )
 
@@ -50,7 +48,7 @@ def test_unauthorised_user_raises_404(client):
     response = client.get(
         reverse(
             "data_collections:collections_view",
-            kwargs={"collections_slug": c.slug},
+            kwargs={"collections_id": c.id},
         )
     )
 

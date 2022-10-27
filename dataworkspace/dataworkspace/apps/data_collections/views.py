@@ -8,7 +8,7 @@ class CollectionsDetailView(DetailView):
     template_name = "data_collections/collection_detail.html"
 
     def get_object(self, queryset=None):
-        collection_object = Collection.objects.live().get(slug=self.kwargs["collections_slug"])
+        collection_object = Collection.objects.live().get(id=self.kwargs["collections_id"])
         if self.request.user.is_superuser or (
             collection_object.published and self.request.user == collection_object.owner
         ):
