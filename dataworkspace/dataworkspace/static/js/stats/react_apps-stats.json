@@ -1,46 +1,46 @@
 {
   "status": "done",
   "assets": {
-    "builder.js": {
-      "name": "builder.js",
-      "path": "builder.js",
-      "publicPath": "/__django_static/js/bundles/builder.js"
+    "builder.35f744b594362e0e2e5e.js.LICENSE.txt": {
+      "name": "builder.35f744b594362e0e2e5e.js.LICENSE.txt",
+      "path": "builder.35f744b594362e0e2e5e.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/builder.35f744b594362e0e2e5e.js.LICENSE.txt"
     },
-    "viewer.js": {
-      "name": "viewer.js",
-      "path": "viewer.js",
-      "publicPath": "/__django_static/js/bundles/viewer.js"
+    "viewer.3023379f227b39ab5f41.js.LICENSE.txt": {
+      "name": "viewer.3023379f227b39ab5f41.js.LICENSE.txt",
+      "path": "viewer.3023379f227b39ab5f41.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/viewer.3023379f227b39ab5f41.js.LICENSE.txt"
     },
-    "yourfiles.js": {
-      "name": "yourfiles.js",
-      "path": "yourfiles.js",
-      "publicPath": "/__django_static/js/bundles/yourfiles.js"
+    "yourfiles.e17d6c6136559d3b2cf2.js.LICENSE.txt": {
+      "name": "yourfiles.e17d6c6136559d3b2cf2.js.LICENSE.txt",
+      "path": "yourfiles.e17d6c6136559d3b2cf2.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/yourfiles.e17d6c6136559d3b2cf2.js.LICENSE.txt"
     },
-    "builder.js.LICENSE.txt": {
-      "name": "builder.js.LICENSE.txt",
-      "path": "builder.js.LICENSE.txt",
-      "publicPath": "/__django_static/js/bundles/builder.js.LICENSE.txt"
+    "builder.35f744b594362e0e2e5e.js": {
+      "name": "builder.35f744b594362e0e2e5e.js",
+      "path": "builder.35f744b594362e0e2e5e.js",
+      "publicPath": "/__django_static/js/bundles/builder.35f744b594362e0e2e5e.js"
     },
-    "viewer.js.LICENSE.txt": {
-      "name": "viewer.js.LICENSE.txt",
-      "path": "viewer.js.LICENSE.txt",
-      "publicPath": "/__django_static/js/bundles/viewer.js.LICENSE.txt"
+    "viewer.3023379f227b39ab5f41.js": {
+      "name": "viewer.3023379f227b39ab5f41.js",
+      "path": "viewer.3023379f227b39ab5f41.js",
+      "publicPath": "/__django_static/js/bundles/viewer.3023379f227b39ab5f41.js"
     },
-    "yourfiles.js.LICENSE.txt": {
-      "name": "yourfiles.js.LICENSE.txt",
-      "path": "yourfiles.js.LICENSE.txt",
-      "publicPath": "/__django_static/js/bundles/yourfiles.js.LICENSE.txt"
+    "yourfiles.e17d6c6136559d3b2cf2.js": {
+      "name": "yourfiles.e17d6c6136559d3b2cf2.js",
+      "path": "yourfiles.e17d6c6136559d3b2cf2.js",
+      "publicPath": "/__django_static/js/bundles/yourfiles.e17d6c6136559d3b2cf2.js"
     }
   },
   "chunks": {
     "builder": [
-      "builder.js"
+      "builder.35f744b594362e0e2e5e.js"
     ],
     "viewer": [
-      "viewer.js"
+      "viewer.3023379f227b39ab5f41.js"
     ],
     "yourfiles": [
-      "yourfiles.js"
+      "yourfiles.e17d6c6136559d3b2cf2.js"
     ]
   },
   "publicPath": "/__django_static/js/bundles/"
