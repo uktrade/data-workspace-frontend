@@ -1,6 +1,5 @@
 import React from "react";
 import { TrashIcon } from "../icons/trash";
-import { fileQueue } from "../utils";
 import { bytesToSize, fullPathToFilename, prefixToFolder } from "../utils";
 
 const BULK_DELETE_MAX_FILES = 1000;
@@ -75,7 +74,7 @@ export class DeleteObjectsPopup extends React.Component {
     }
   }
 
-  onDeleteClick = () => {
+  onDeleteClick = async () => {
     const s3 = this.props.s3;
     const bucketName = this.props.bucketName;
     const foldersToDelete = this.state.foldersToDelete;
@@ -83,7 +82,6 @@ export class DeleteObjectsPopup extends React.Component {
 
     const numObjects = foldersToDelete.length + filesToDelete.length;
     const maxConnections = 4;
-    const queue = fileQueue(Math.min(maxConnections, numObjects));
 
     var isErrored = false;
     var isAborted = false;
@@ -140,52 +138,46 @@ export class DeleteObjectsPopup extends React.Component {
     }
 
     for (const folder of foldersToDelete) {
-      queue(async () => {
-        updateDeleteState(folder, { deleteStarted: true });
-        let continuationToken = null;
-        let isTruncated = true;
-        while (isTruncated && !isAborted) {
-          // Find objects at or under the prefix...
-          let response;
-          try {
-            response = await s3
-              .listObjectsV2({
-                Bucket: bucketName,
-                Prefix: folder.Prefix,
-                ContinuationToken: continuationToken,
-              })
-              .promise();
-            continuationToken = response.NextContinuationToken;
-            isTruncated = response.IsTruncated;
-          } catch (err) {
-            isErrored = true;
-            updateDeleteState(folder, { deleteError: err.code || err.message || err });
-            throw err;
-          }
-          // ... and delete them
-          for (let j = 0; j < response.Contents.length && !isAborted; ++j) {
-            await scheduleDelete(folder, response.Contents[j].Key);
-          }
+      updateDeleteState(folder, { deleteStarted: true });
+      let continuationToken = null;
+      let isTruncated = true;
+      while (isTruncated && !isAborted) {
+        // Find objects at or under the prefix...
+        let response;
+        try {
+          response = await s3
+            .listObjectsV2({
+              Bucket: bucketName,
+              Prefix: folder.Prefix,
+              ContinuationToken: continuationToken,
+            })
+            .promise();
+          continuationToken = response.NextContinuationToken;
+          isTruncated = response.IsTruncated;
+        } catch (err) {
+          isErrored = true;
+          updateDeleteState(folder, { deleteError: err.code || err.message || err });
+          throw err;
         }
-      });
+        // ... and delete them
+        for (let j = 0; j < response.Contents.length && !isAborted; ++j) {
+          await scheduleDelete(folder, response.Contents[j].Key);
+        }
+      }
     }
     for (const file of filesToDelete) {
-      queue(async () => {
-        if (isAborted) return;
-        updateDeleteState(file, { deleteStarted: true });
-        await scheduleDelete(file, file.Key);
-      });
+      if (isAborted) break;
+      updateDeleteState(file, { deleteStarted: true });
+      await scheduleDelete(file, file.Key);
     }
-    queue(async () => {
-      if (isAborted) return;
-      await flushDelete();
-    });
-    queue(async () => {
-      this.setState({ finished: true });
-      if (!isErrored) {
-        this.props.onSuccess();
-      }
-    });
+
+    if (isAborted) return;
+    await flushDelete();
+
+    this.setState({ finished: true });
+    if (!isErrored) {
+      this.props.onSuccess();
+    }
   }
 
   onCloseClick = () => {
