@@ -45,7 +45,7 @@
         {% for dataset in source_object.datasets.all %}
           <h3 class="govuk-heading-m">
             <a class="govuk-heading-m govuk-link dataset-link"
-               href="{% url "datasets:dataset_detail" dataset_uuid=dataset.id %}">{{ dataset.name }}</a>
+               href="{% if dataset.type == 0 %}{% url "datasets:dataset_detail" dataset_uuid=dataset.referencedataset_set.first.uuid %}#{{ dataset.slug }}{% else %}{% url "datasets:dataset_detail" dataset_uuid=dataset.id %}#{{ dataset.slug }}{% endif %}">{{ dataset.name }}</a>
           </h3>
           <p class="govuk-body">{{ dataset.short_description }}</p>
           <div class="govuk-body">

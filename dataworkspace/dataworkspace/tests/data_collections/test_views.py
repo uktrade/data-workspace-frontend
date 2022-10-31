@@ -76,3 +76,30 @@ def test_dataset_can_be_added(client):
 
     assert response.status_code == 200
     assert "Datacut dataset" in response.content.decode(response.charset)
+
+
+def test_reference_dataset_can_be_added(client):
+    user = factories.UserFactory(is_superuser=True)
+    client = get_staff_client(get_staff_user_data("", user))
+
+    rds = factories.ReferenceDatasetFactory(
+        published=True, description="reference dataset example description"
+    )
+
+    c = factories.CollectionFactory.create(
+        name="test-collections-with-reference-dataset",
+        description="test collections description for reference datasets",
+        published=True,
+    )
+
+    c.datasets.add(rds.reference_dataset_inheriting_from_dataset)
+
+    response = client.get(
+        reverse(
+            "data_collections:collections_view",
+            kwargs={"collections_id": c.id},
+        )
+    )
+
+    assert response.status_code == 200
+    assert "Reference Dataset" in response.content.decode(response.charset)

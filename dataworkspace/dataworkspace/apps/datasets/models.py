@@ -213,7 +213,7 @@ class DataSet(DeletableTimestampedUserModel):
         choices=[
             # pylint: disable=maybe-no-member
             (t, t.label)
-            for t in [DataSetType.MASTER, DataSetType.DATACUT]
+            for t in [DataSetType.MASTER, DataSetType.DATACUT, DataSetType.REFERENCE]
         ],
         default=DataSetType.DATACUT,
     )
@@ -1112,6 +1112,20 @@ class CustomDatasetQueryTable(models.Model):
     )
 
 
+class ReferenceDatasetManager(DeletableQuerySet):
+    def get_queryset(self):
+        return super().get_queryset().filter(type=DataSetType.REFERENCE)
+
+
+class ReferenceDatasetInheritingFromDataSet(DataSet):
+    objects = ReferenceDatasetManager()
+
+    class Meta:
+        proxy = True
+        verbose_name = "Reference dataset inheriting from dataset"
+        verbose_name_plural = "Reference datasets inheriting from datasets"
+
+
 class ReferenceDataset(DeletableTimestampedUserModel):
     SORT_DIR_ASC = 1
     SORT_DIR_DESC = 2
@@ -1211,6 +1225,14 @@ class ReferenceDataset(DeletableTimestampedUserModel):
 
     events = GenericRelation(EventLog)
 
+    reference_dataset_inheriting_from_dataset = models.ForeignKey(
+        ReferenceDatasetInheritingFromDataSet,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        unique=True,
+    )
+
     class Meta:
         db_table = "app_referencedataset"
         verbose_name = "Reference dataset"
@@ -1271,6 +1293,33 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     @transaction.atomic
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         create = self.pk is None
+
+        # ensuring ReferenceDataset is in sync with base DataSet model
+        create_reference_dataset = self.reference_dataset_inheriting_from_dataset is None
+
+        if create_reference_dataset or create:
+            self.reference_dataset_inheriting_from_dataset = (
+                ReferenceDatasetInheritingFromDataSet.objects.create(
+                    name=self.name,
+                    slug=self.slug,
+                    short_description=self.short_description,
+                    description=self.description,
+                    type=DataSetType.REFERENCE,
+                    updated_by=self.updated_by,
+                )
+            )
+        else:
+            ReferenceDatasetInheritingFromDataSet.objects.filter(
+                id=self.reference_dataset_inheriting_from_dataset.id
+            ).update(
+                name=self.name,
+                slug=self.slug,
+                short_description=self.short_description,
+                description=self.description,
+                type=DataSetType.REFERENCE,
+                updated_by=self.updated_by,
+            )
+
         if not create and self._schema_has_changed():
             self.schema_version += 1
 
