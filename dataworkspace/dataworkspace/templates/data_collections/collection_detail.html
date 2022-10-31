@@ -81,6 +81,43 @@
         {% endfor %}
         <p class="govuk-body" style="margin-bottom: 40px"><a href="">Search for data</a> you'd like to add.</p>
         </div><h2 class="govuk-heading-l">Dashboards</h2>
+    {% for catalogue in source_object.catalogues.all %}
+          <h3 class="govuk-heading-m">
+            <a class="govuk-heading-m govuk-link dataset-link"
+               href="{% url "datasets:dataset_detail" dataset_uuid=catalogue.id %}">{{ catalogue.name }}</a>
+          </h3>
+          <p class="govuk-body">{{ catalogue.short_description }}</p>
+          <div class="govuk-body">
+            <dl>
+              <dt>Data type:</dt>
+              <dd>{{ catalogue.get_type_display }}</dd>
+              <dt>Last updated:</dt>
+              <dd>
+                {{ catalogue.last_updated|date_with_gmt_offset|default_if_none:"N/A" }}
+              </dd>
+              <dt>Source:</dt>
+              <dd>
+                {% for source in catalogue.sources %}
+                  <a class="govuk-link"
+                     href="{% url "datasets:find_datasets" %}?source={{ catalogue.id }}">{{ catalogue.name }}</a>
+                  {% empty %}
+                  N/A
+                {% endfor %}
+              </dd>
+              {% if catalogue.topics %}
+                <dt>Topics:</dt>
+                <dd>
+                  {% for topic in catalogue.topics %}
+                    <a class="govuk-link"
+                       href="{% url "datasets:find_datasets" %}?topic={{ topic.id }}">{{ topic.name }}</a>
+                    {% empty %}
+                    &nbsp;
+                  {% endfor %}
+                </dd>
+              {% endif %}
+            </dl>
+          </div>
+        {% endfor %}
         <p class="govuk-body"><a href="https://data.trade.gov.uk/datasets/?q=&sort=relevance&data_type=3">Search for
           dashboards</a> you'd like to add.</p>
     </main>
