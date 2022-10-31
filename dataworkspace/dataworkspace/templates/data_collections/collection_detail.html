@@ -1,4 +1,6 @@
 {% extends '_main.html' %}
+{% load core_tags %}
+{% load datasets_tags %}
 
 {% block page_title %}
   Preview {{ source_object.name }}
@@ -33,15 +35,53 @@
     <div class="govuk-grid-row">
       <div class="govuk-grid-column-two-thirds">
         <h2 class="govuk-heading-l">Data</h2>
-        <p class="govuk-body"><a href="">Search for data</a> you'd like to add.</p>
-        <h2 class="govuk-heading-l">Dashboards</h2>
-        <p class="govuk-body"><a href="https://data.trade.gov.uk/datasets/?q=&sort=relevance&data_type=3">Search for
-          dashboards</a> you'd like to add.</p>
       </div>
-      <div class="govuk-grid-column-one-third">
+    <div class="govuk-grid-column-one-third">
         <h2 class="govuk-heading-s">Owner</h2>
         <p class="govuk-body">{{ source_object.owner.get_full_name|default_if_none:"Not assigned" }}<br>{% if source_object.owner %}(<a href="mailto:{{ source_object.owner.email }}">{{ source_object.owner.email }}</a>){% endif %}</p>
       </div>
     </div>
+      <div class="search-result" style="border-bottom: none">
+        {% for dataset in source_object.datasets.all %}
+          <h3 class="govuk-heading-m">
+            <a class="govuk-heading-m govuk-link dataset-link"
+               href="{% url "datasets:dataset_detail" dataset_uuid=dataset.id %}">{{ dataset.name }}</a>
+          </h3>
+          <p class="govuk-body">{{ dataset.short_description }}</p>
+          <div class="govuk-body">
+            <dl>
+              <dt>Data type:</dt>
+              <dd>{{ dataset.get_type_display }}</dd>
+              <dt>Last updated:</dt>
+              <dd>
+                {{ dataset.last_updated|date_with_gmt_offset|default_if_none:"N/A" }}
+              </dd>
+              <dt>Source:</dt>
+              <dd>
+                {% for source in dataset.sources %}
+                  <a class="govuk-link"
+                     href="{% url "datasets:find_datasets" %}?source={{ source.id }}">{{ source.name }}</a>
+                  {% empty %}
+                  N/A
+                {% endfor %}
+              </dd>
+              {% if dataset.topics %}
+                <dt>Topics:</dt>
+                <dd>
+                  {% for topic in dataset.topics %}
+                    <a class="govuk-link"
+                       href="{% url "datasets:find_datasets" %}?topic={{ topic.id }}">{{ topic.name }}</a>
+                    {% empty %}
+                    &nbsp;
+                  {% endfor %}
+                </dd>
+              {% endif %}
+            </dl>
+          </div>
+        {% endfor %}
+        <p class="govuk-body" style="margin-bottom: 40px"><a href="">Search for data</a> you'd like to add.</p>
+        </div><h2 class="govuk-heading-l">Dashboards</h2>
+        <p class="govuk-body"><a href="https://data.trade.gov.uk/datasets/?q=&sort=relevance&data_type=3">Search for
+          dashboards</a> you'd like to add.</p>
     </main>
 {% endblock %}
