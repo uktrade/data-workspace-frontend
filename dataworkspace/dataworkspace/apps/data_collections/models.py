@@ -33,3 +33,4 @@ class CollectionDatasetMembership(TimeStampedModel):
 
     class Meta:
         unique_together = ("dataset_id", "collection_id")
+        ordering = ("id",)
