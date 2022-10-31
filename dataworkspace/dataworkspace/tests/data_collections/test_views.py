@@ -53,3 +53,26 @@ def test_unauthorised_user_raises_404(client):
     )
 
     assert response.status_code == 404
+
+
+def test_dataset_can_be_added(client):
+    user = factories.UserFactory(is_superuser=True)
+    client = get_staff_client(get_staff_user_data("", user))
+
+    dataset = factories.DatacutDataSetFactory(published=True, name="Datacut dataset")
+
+    c = factories.CollectionFactory.create(
+        name="test-collections", description="test collections description", published=True
+    )
+
+    c.datasets.add(dataset)
+
+    response = client.get(
+        reverse(
+            "data_collections:collections_view",
+            kwargs={"collections_id": c.id},
+        )
+    )
+
+    assert response.status_code == 200
+    assert "Datacut dataset" in response.content.decode(response.charset)

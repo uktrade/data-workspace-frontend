@@ -4,6 +4,7 @@ from django.conf import settings
 from django.db import models
 
 from dataworkspace.apps.core.models import DeletableTimestampedUserModel
+from dataworkspace.apps.datasets.models import DataSet
 
 
 class Collection(DeletableTimestampedUserModel):
@@ -14,6 +15,7 @@ class Collection(DeletableTimestampedUserModel):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
     )
     published = models.BooleanField(default=False)
+    datasets = models.ManyToManyField(DataSet, related_name="related_datasets", blank=True)
 
     class Meta:
         verbose_name = "Collection"
