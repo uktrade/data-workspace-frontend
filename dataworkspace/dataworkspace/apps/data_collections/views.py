@@ -4,17 +4,21 @@ from django.views.generic import DetailView
 from dataworkspace.apps.data_collections.models import Collection
 
 
+def get_authorised_collection(request, collection_id):
+    collection_object = Collection.objects.live().get(id=collection_id)
+    if request.user.is_superuser or (
+        collection_object.published and request.user == collection_object.owner
+    ):
+        return collection_object
+    else:
+        raise Http404
+
+
 class CollectionsDetailView(DetailView):
     template_name = "data_collections/collection_detail.html"
 
     def get_object(self, queryset=None):
-        collection_object = Collection.objects.live().get(id=self.kwargs["collections_id"])
-        if self.request.user.is_superuser or (
-            collection_object.published and self.request.user == collection_object.owner
-        ):
-            return collection_object
-        else:
-            raise Http404
+        return get_authorised_collection(self.request, self.kwargs["collections_id"])
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
