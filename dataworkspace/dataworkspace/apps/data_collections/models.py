@@ -16,7 +16,7 @@ class Collection(DeletableTimestampedUserModel):
     )
     published = models.BooleanField(default=False)
     datasets = models.ManyToManyField(DataSet, through="CollectionDatasetMembership")
-    catalogues = models.ManyToManyField(
+    visualisation_catalogue_items = models.ManyToManyField(
         VisualisationCatalogueItem,
         through="CollectionVisualisationCatalogueItemMembership",
     )

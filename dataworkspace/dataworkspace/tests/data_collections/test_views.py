@@ -90,7 +90,7 @@ def test_visualisation_can_be_added(client):
         name="test-collections", description="test collections description", published=True
     )
 
-    c.catalogues.add(catalogue_item)
+    c.visualisation_catalogue_items.add(catalogue_item)
 
     response = client.get(
         reverse(
