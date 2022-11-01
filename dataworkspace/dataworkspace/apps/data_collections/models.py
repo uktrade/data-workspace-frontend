@@ -4,7 +4,7 @@ from django.conf import settings
 from django.db import models
 
 from dataworkspace.apps.core.models import DeletableTimestampedUserModel, TimeStampedModel
-from dataworkspace.apps.datasets.models import DataSet
+from dataworkspace.apps.datasets.models import DataSet, VisualisationCatalogueItem
 
 
 class Collection(DeletableTimestampedUserModel):
@@ -16,6 +16,10 @@ class Collection(DeletableTimestampedUserModel):
     )
     published = models.BooleanField(default=False)
     datasets = models.ManyToManyField(DataSet, through="CollectionDatasetMembership")
+    visualisation_catalogue_items = models.ManyToManyField(
+        VisualisationCatalogueItem,
+        through="CollectionVisualisationCatalogueItemMembership",
+    )
 
     class Meta:
         verbose_name = "Collection"
@@ -28,9 +32,22 @@ class Collection(DeletableTimestampedUserModel):
 class CollectionDatasetMembership(TimeStampedModel):
     dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE, related_name="datasets")
     collection = models.ForeignKey(
-        Collection, on_delete=models.CASCADE, related_name="collections"
+        Collection, on_delete=models.CASCADE, related_name="dataset_collections"
     )
 
     class Meta:
         unique_together = ("dataset_id", "collection_id")
+        ordering = ("id",)
+
+
+class CollectionVisualisationCatalogueItemMembership(TimeStampedModel):
+    visualisation = models.ForeignKey(
+        VisualisationCatalogueItem, on_delete=models.CASCADE, related_name="visualisation"
+    )
+    collection = models.ForeignKey(
+        Collection, on_delete=models.CASCADE, related_name="visualisation_collections"
+    )
+
+    class Meta:
+        unique_together = ("visualisation", "collection_id")
         ordering = ("id",)
