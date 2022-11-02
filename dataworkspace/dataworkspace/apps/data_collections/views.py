@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.http import Http404
 from django.views.generic import DetailView
 from django.views.decorators.http import require_http_methods
@@ -44,5 +45,6 @@ def delete_datasets_membership(request, collections_id, data_membership_id):
         raise Http404
 
     membership.delete(request.user)
+    messages.success(request, f"{membership.dataset.name} has been removed from this collection.")
 
     return redirect("data_collections:collections_view", collections_id=collections_id)

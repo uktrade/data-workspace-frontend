@@ -165,3 +165,6 @@ def test_authorised_user_attempting_delete_dataset_membership(user, other_user):
     )
     assert response.status_code == 200
     assert ">Datacut dataset<" not in response.content.decode(response.charset)
+    assert "Datacut dataset has been removed from this collection" in response.content.decode(
+        response.charset
+    )
