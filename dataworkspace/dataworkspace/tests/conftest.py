@@ -42,13 +42,13 @@ def staff_user_data(db, staff_user):
     return get_user_data(db, staff_user)
 
 
-def get_staff_client(staff_user_data):
+def get_client(staff_user_data):
     return Client(**staff_user_data)
 
 
 @pytest.fixture
 def staff_client(staff_user_data):
-    return get_staff_client(staff_user_data)
+    return get_client(staff_user_data)
 
 
 @pytest.fixture
