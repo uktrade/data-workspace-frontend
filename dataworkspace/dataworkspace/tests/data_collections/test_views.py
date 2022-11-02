@@ -184,7 +184,7 @@ def test_authorised_user_attempting_delete_visualisation_membership(user, other_
 
     # Create a visualisation and add it to the collection
     visualisation = factories.DatacutDataSetFactory(published=True, name="Visualisation")
-    c.visaulisation.add(visualisation)
+    c.visualisation.add(visualisation)
     membership = c.dataset_collections.all()[0]
     response = client_user.get(
         reverse(
