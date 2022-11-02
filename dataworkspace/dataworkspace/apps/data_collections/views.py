@@ -49,6 +49,7 @@ def delete_datasets_membership(request, collections_id, data_membership_id):
 
     return redirect("data_collections:collections_view", collections_id=collections_id)
 
+
 @require_http_methods(["POST"])
 def delete_visualisation_membership(request, collections_id, visualisation_membership_id):
     collection = get_authorised_collection(request, collections_id)

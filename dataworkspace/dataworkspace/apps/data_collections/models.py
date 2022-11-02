@@ -56,7 +56,7 @@ class CollectionVisualisationCatalogueItemMembership(DeletableTimestampedUserMod
     collection = models.ForeignKey(
         Collection, on_delete=models.CASCADE, related_name="visualisation_collections"
     )
-     
+
     class Meta:
         unique_together = ("visualisation", "collection_id")
         ordering = ("id",)

@@ -234,4 +234,4 @@ def test_authorised_user_attempting_delete_visualisation_membership(user, other_
     assert ">Visualisations<" not in response.content.decode(response.charset)
     assert "Visualisation has been removed from this collection" in response.content.decode(
         response.charset
-        )
+    )
