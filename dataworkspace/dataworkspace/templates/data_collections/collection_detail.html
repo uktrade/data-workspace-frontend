@@ -36,33 +36,39 @@
       <div class="govuk-grid-column-two-thirds">
         <h2 class="govuk-heading-l">Data</h2>
         <div class="search-result" style="border-bottom: none">
-          {% for dataset in source_object.datasets.all %}
+          {% for dataset_collection in dataset_collections %}
+            <!-- This form is only needed since we're POSTing directly from this page. When this is
+                 changed to link to the confirmation page, it can be a regular <a> tag -->
+            <form style="float:right" action="{% url "data_collections:collection_data_membership" collections_id=source_object.id data_membership_id=dataset_collection.id %}" method="POST">
+              {% csrf_token %}
+              <button type="submit">Remove</button>
+            </form>
             <h3 class="govuk-heading-m">
               <a class="govuk-heading-m govuk-link dataset-link"
-                 href="{% url "datasets:dataset_detail" dataset_uuid=dataset.id %}">{{ dataset.name }}</a>
+                 href="{% url "datasets:dataset_detail" dataset_uuid=dataset_collection.dataset.id %}">{{ dataset_collection.dataset.name }}</a>
             </h3>
-            <p class="govuk-body">{{ dataset.short_description }}</p>
+            <p class="govuk-body">{{ dataset_collection.dataset.short_description }}</p>
             <div class="govuk-body">
               <dl>
                 <dt>Data type:</dt>
-                <dd>{{ dataset.get_type_display }}</dd>
+                <dd>{{ dataset_collection.dataset.get_type_display }}</dd>
                 <dt>Last updated:</dt>
                 <dd>
-                  {{ dataset.last_updated|date_with_gmt_offset|default_if_none:"N/A" }}
+                  {{ dataset_collection.dataset.last_updated|date_with_gmt_offset|default_if_none:"N/A" }}
                 </dd>
                 <dt>Source:</dt>
                 <dd>
-                  {% for source in dataset.sources %}
+                  {% for source in dataset_collection.dataset.sources %}
                     <a class="govuk-link"
                        href="{% url "datasets:find_datasets" %}?source={{ source.id }}">{{ source.name }}</a>
                     {% empty %}
                     N/A
                   {% endfor %}
                 </dd>
-                {% if dataset.topics %}
+                {% if dataset_collection.dataset.topics %}
                   <dt>Topics:</dt>
                   <dd>
-                    {% for topic in dataset.topics %}
+                    {% for topic in dataset_collection.dataset.topics %}
                       <a class="govuk-link"
                          href="{% url "datasets:find_datasets" %}?topic={{ topic.id }}">{{ topic.name }}</a>
                       {% empty %}
@@ -76,33 +82,33 @@
           <p class="govuk-body" style="margin-bottom: 40px"><a href="">Search for data</a> you'd like to add.</p>
           </div><h2 class="govuk-heading-l">Dashboards</h2>
       <div class="search-result" style="border-bottom: none">
-    {% for catalogue in source_object.visualisation_catalogue_items.all %}
+    {% for visualisation_collection in visualisation_collections %}
           <h3 class="govuk-heading-m">
             <a class="govuk-heading-m govuk-link dataset-link"
-               href="{% url "datasets:dataset_detail" dataset_uuid=catalogue.id %}">{{ catalogue.name }}</a>
+               href="{% url "datasets:dataset_detail" dataset_uuid=visualisation_collection.visualisation.id %}">{{ visualisation_collection.visualisation.name }}</a>
           </h3>
-          <p class="govuk-body">{{ catalogue.short_description }}</p>
+          <p class="govuk-body">{{ visualisation_collection.visualisation.short_description }}</p>
           <div class="govuk-body">
             <dl>
               <dt>Data type:</dt>
-              <dd>{{ catalogue.get_type_display }}</dd>
+              <dd>{{ visualisation_collection.visualisation.get_type_display }}</dd>
               <dt>Last updated:</dt>
               <dd>
-                {{ catalogue.last_updated|date_with_gmt_offset|default_if_none:"N/A" }}
+                {{ visualisation_collection.visualisation.last_updated|date_with_gmt_offset|default_if_none:"N/A" }}
               </dd>
               <dt>Source:</dt>
               <dd>
-                {% for source in catalogue.sources %}
+                {% for source in visualisation_collection.visualisation.sources %}
                   <a class="govuk-link"
-                     href="{% url "datasets:find_datasets" %}?source={{ catalogue.id }}">{{ catalogue.name }}</a>
+                     href="{% url "datasets:find_datasets" %}?source={{ visualisation_collection.visualisation.id }}">{{ visualisation_collection.visualisation.name }}</a>
                   {% empty %}
                   N/A
                 {% endfor %}
               </dd>
-              {% if catalogue.topics %}
+              {% if visualisation_collection.visualisation.topics %}
                 <dt>Topics:</dt>
                 <dd>
-                  {% for topic in catalogue.topics %}
+                  {% for topic in visualisation_collection.visualisation.topics %}
                     <a class="govuk-link"
                        href="{% url "datasets:find_datasets" %}?topic={{ topic.id }}">{{ topic.name }}</a>
                     {% empty %}
