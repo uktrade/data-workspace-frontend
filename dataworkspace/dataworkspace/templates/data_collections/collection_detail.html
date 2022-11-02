@@ -36,7 +36,7 @@
       <div class="govuk-grid-column-two-thirds">
         <h2 class="govuk-heading-l">Data</h2>
         <div class="search-result" style="border-bottom: none">
-          {% for dataset_collection in source_object.dataset_collections.all %}
+          {% for dataset_collection in dataset_collections %}
             <h3 class="govuk-heading-m">
               <a class="govuk-heading-m govuk-link dataset-link"
                  href="{% url "datasets:dataset_detail" dataset_uuid=dataset_collection.dataset.id %}">{{ dataset_collection.dataset.name }}</a>

@@ -18,6 +18,8 @@ class CollectionsDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["source_object"] = self.get_object
+        source_object = self.get_object()
+        context["source_object"] = source_object
+        context["dataset_collections"] = source_object.dataset_collections.all()
 
         return context
