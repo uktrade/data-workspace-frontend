@@ -181,9 +181,9 @@ def test_authorised_user_attempting_delete_visualisation_membership(user, other_
         owner=user,
     )
 
-    # Create a dataset and add it to the collection
-    dataset = factories.DatacutDataSetFactory(published=True, name="Visualisation")
-    c.datasets.add(dataset)
+    # Create a visualisation and add it to the collection
+    visualisation = factories.DatacutDataSetFactory(published=True, name="Visualisation")
+    c.visaulisation.add(visualisation)
     membership = c.dataset_collections.all()[0]
     response = client_user.get(
         reverse(
@@ -211,7 +211,7 @@ def test_authorised_user_attempting_delete_visualisation_membership(user, other_
     assert response.status_code == 200
     assert ">Visualisation<" in response.content.decode(response.charset)
 
-    # But the owner user can remove the dataset from the collection page
+    # But the owner user can remove the visualisation from the collection page
     response = client_user.post(
         reverse(
             "data_collections:collection_data_membership",
