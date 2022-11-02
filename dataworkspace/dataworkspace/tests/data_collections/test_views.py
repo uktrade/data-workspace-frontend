@@ -198,7 +198,7 @@ def test_authorised_user_attempting_delete_visualisation_membership(user, other_
     # Ensure that a user that isn't the owner can't remove it
     response = client_other_user.post(
         reverse(
-            "data_collections:collection_data_membership",
+            "data_collections:collection_visualisation_membership",
             kwargs={"collections_id": c.id, "visualisation_membership_id": membership.id},
         )
     )
@@ -215,7 +215,7 @@ def test_authorised_user_attempting_delete_visualisation_membership(user, other_
     # But the owner user can remove the visualisation from the collection page
     response = client_user.post(
         reverse(
-            "data_collections:collection_data_membership",
+            "data_collections:collection_visualisation_membership",
             kwargs={"collections_id": c.id, "visualisation_membership_id": membership.id},
         )
     )
