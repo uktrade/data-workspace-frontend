@@ -26,7 +26,7 @@ def staff_user(db):
     return staff_user
 
 
-def get_staff_user_data(db, staff_user):
+def get_user_data(db, staff_user):
     return {
         "HTTP_SSO_PROFILE_EMAIL": staff_user.email,
         "HTTP_SSO_PROFILE_CONTACT_EMAIL": staff_user.email,
@@ -39,7 +39,7 @@ def get_staff_user_data(db, staff_user):
 
 @pytest.fixture
 def staff_user_data(db, staff_user):
-    return get_staff_user_data(db, staff_user)
+    return get_user_data(db, staff_user)
 
 
 def get_staff_client(staff_user_data):
