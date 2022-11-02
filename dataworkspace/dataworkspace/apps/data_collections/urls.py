@@ -10,7 +10,7 @@ urlpatterns = [
         name="collections_view",
     ),
     path(
-        "<uuid:collections_id>/dataset-memberships/<int:data_membership_id>",
+        "<uuid:collections_id>/dataset-memberships",
         login_required(views.delete_datasets_membership),
         name="collection_data_membership",
     ),
