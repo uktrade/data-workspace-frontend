@@ -76,7 +76,7 @@
           <p class="govuk-body" style="margin-bottom: 40px"><a href="">Search for data</a> you'd like to add.</p>
           </div><h2 class="govuk-heading-l">Dashboards</h2>
       <div class="search-result" style="border-bottom: none">
-    {% for visualisation_collection in source_object.visualisation_collections.all %}
+    {% for visualisation_collection in visualisation_collections %}
           <h3 class="govuk-heading-m">
             <a class="govuk-heading-m govuk-link dataset-link"
                href="{% url "datasets:dataset_detail" dataset_uuid=visualisation_collection.visualisation.id %}">{{ visualisation_collection.visualisation.name }}</a>

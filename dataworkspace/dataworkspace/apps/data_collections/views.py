@@ -25,5 +25,6 @@ class CollectionsDetailView(DetailView):
         source_object = self.get_object()
         context["source_object"] = source_object
         context["dataset_collections"] = source_object.dataset_collections.all()
+        context["visualisation_collections"] = source_object.visualisation_collections.all()
 
         return context
