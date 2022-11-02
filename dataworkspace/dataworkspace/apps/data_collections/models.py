@@ -59,7 +59,7 @@ class CollectionVisualisationCatalogueItemMembership(DeletableTimestampedUserMod
     class Meta:
         unique_together = ("visualisation", "collection_id")
         ordering = ("id",)
-    
+
     def delete(self, deleted_by, **kwargs):  # pylint: disable=arguments-differ
         with transaction.atomic():
             super().delete(**kwargs)

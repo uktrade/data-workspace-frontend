@@ -19,5 +19,5 @@ urlpatterns = [
         login_required(views.delete_visualisation_membership),
         name="collection_visualisation_membership",
     ),
-    
+
 ]

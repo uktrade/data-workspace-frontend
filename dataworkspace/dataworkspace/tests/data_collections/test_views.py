@@ -169,6 +169,7 @@ def test_authorised_user_attempting_delete_dataset_membership(user, other_user):
         response.charset
     )
 
+
 def test_authorised_user_attempting_delete_visualisation_membership(user, other_user):
     client_user = get_client(get_user_data(user))
     client_other_user = get_client(get_user_data(other_user))
@@ -233,4 +234,4 @@ def test_authorised_user_attempting_delete_visualisation_membership(user, other_
     assert ">Visualisations<" not in response.content.decode(response.charset)
     assert "Visualisation has been removed from this collection" in response.content.decode(
         response.charset
-    )
+        )
