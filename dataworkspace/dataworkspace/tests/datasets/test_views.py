@@ -50,7 +50,7 @@ from dataworkspace.tests.factories import (
     VisualisationLinkFactory,
 )
 
-from dataworkspace.tests.conftest import get_staff_client, get_staff_user_data
+from dataworkspace.tests.conftest import get_client, get_user_data
 from dataworkspace.apps.applications.models import ApplicationInstance
 
 
@@ -1888,7 +1888,7 @@ class TestRequestAccess(DatasetsCommon):
     def test_when_user_has_data_access_only(self, access_type, db, staff_user, metadata_db):
         master = self._create_master(user_access_type=access_type)
         url = reverse("datasets:dataset_detail", args=(master.id,))
-        client = get_staff_client(get_staff_user_data(db, staff_user))
+        client = get_client(get_user_data(staff_user))
         response = client.get(url)
 
         assert response.status_code == 200
@@ -1908,7 +1908,7 @@ class TestRequestAccess(DatasetsCommon):
         )
 
         staff_user.user_permissions.add(permission)
-        client = get_staff_client(get_staff_user_data(db, staff_user))
+        client = get_client(get_user_data(staff_user))
 
         response = client.get(url)
         assert response.status_code == 200
