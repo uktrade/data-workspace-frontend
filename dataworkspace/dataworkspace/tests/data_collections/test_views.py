@@ -168,3 +168,28 @@ def test_authorised_user_attempting_delete_dataset_membership(user, other_user):
     assert "Datacut dataset has been removed from this collection" in response.content.decode(
         response.charset
     )
+
+
+def test_authorised_user_attempting_to_add_new_catalogue_membership(staff_user):
+    client_user = get_client(get_user_data(staff_user))
+
+    # Create the collection
+    c = factories.CollectionFactory.create(
+        name="test-collections",
+        description="test collections description",
+        published=True,
+        owner=staff_user,
+    )
+
+    # Create a dataset to be added to the collection
+    visualisation = factories.VisualisationCatalogueItemFactory(
+        published=True, name="Visualisation catalogue item"
+    )
+
+    response = client_user.post(
+        reverse(
+            "data_collections:add_collection_data_membership",
+            kwargs={"collections_id": c.id, "catalogue_id": visualisation.id},
+        )
+    )
+    assert response.status_code == 302

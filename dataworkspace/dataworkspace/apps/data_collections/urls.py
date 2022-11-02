@@ -15,8 +15,8 @@ urlpatterns = [
         name="collection_data_membership",
     ),
     path(
-        "<uuid:collections_id>/add-dataset-memberships/<int:data_membership_id>",
-        login_required(views.add_dataset_to_collection),
+        "<uuid:collections_id>/add-dataset-memberships/<uuid:catalogue_id>",
+        login_required(views.add_catalogue_to_collection),
         name="add_collection_data_membership",
     ),
 ]
