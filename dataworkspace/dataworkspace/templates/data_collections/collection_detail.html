@@ -37,6 +37,12 @@
         <h2 class="govuk-heading-l">Data</h2>
         <div class="search-result" style="border-bottom: none">
           {% for dataset_collection in dataset_collections %}
+            <!-- This form is only needed since we're POSTing directly from this page. When this is
+                 changed to link to the confirmation page, it can be a regular <a> tag -->
+            <form style="float:right" action="{% url "data_collections:collection_data_membership" collections_id=source_object.id data_membership_id=dataset_collection.id %}" method="POST">
+              {% csrf_token %}
+              <button type="submit">Remove</button>
+            </form>
             <h3 class="govuk-heading-m">
               <a class="govuk-heading-m govuk-link dataset-link"
                  href="{% url "datasets:dataset_detail" dataset_uuid=dataset_collection.dataset.id %}">{{ dataset_collection.dataset.name }}</a>

@@ -117,6 +117,35 @@ def sme_client(sme_user, sme_user_data):
 
 
 @pytest.fixture
+def other_user(db):
+    return get_user_model().objects.create(
+        username="other@test.com",
+        email="other@test.com",
+        is_staff=True,
+        is_superuser=False,
+    )
+
+
+@pytest.fixture
+def other_user_data(db, other_user):
+    return {
+        "HTTP_SSO_PROFILE_EMAIL": other_user.email,
+        "HTTP_SSO_PROFILE_CONTACT_EMAIL": other_user.email,
+        "HTTP_SSO_PROFILE_RELATED_EMAILS": "",
+        "HTTP_SSO_PROFILE_USER_ID": "7b88631c-faca-4a0f-a5de-5e1bd62b8936",
+        "HTTP_SSO_PROFILE_LAST_NAME": "Mary",
+        "HTTP_SSO_PROFILE_FIRST_NAME": "Poppins",
+    }
+
+
+@pytest.fixture
+def other_user_client(other_user, other_user_data):
+    client = Client(**other_user_data)
+    client.force_login(other_user)
+    return client
+
+
+@pytest.fixture
 def unauthenticated_client():
     return Client()
 

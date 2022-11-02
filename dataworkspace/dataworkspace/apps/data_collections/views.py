@@ -1,7 +1,9 @@
 from django.http import Http404
 from django.views.generic import DetailView
+from django.views.decorators.http import require_http_methods
+from django.shortcuts import redirect
 
-from dataworkspace.apps.data_collections.models import Collection
+from dataworkspace.apps.data_collections.models import Collection, CollectionDatasetMembership
 
 
 def get_authorised_collection(request, collection_id):
@@ -30,3 +32,17 @@ class CollectionsDetailView(DetailView):
         )
 
         return context
+
+
+@require_http_methods(["POST"])
+def delete_datasets_membership(request, collections_id, data_membership_id):
+    collection = get_authorised_collection(request, collections_id)
+    membership = CollectionDatasetMembership.objects.get(id=data_membership_id)
+
+    # The membership ID doesn't match the collection ID in the URL
+    if membership.collection.id != collection.id:
+        raise Http404
+
+    membership.delete(request.user)
+
+    return redirect("data_collections:collections_view", collections_id=collections_id)

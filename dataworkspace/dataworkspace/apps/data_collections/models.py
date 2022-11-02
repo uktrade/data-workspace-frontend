@@ -1,10 +1,12 @@
 import uuid
 
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction
 
 from dataworkspace.apps.core.models import DeletableTimestampedUserModel
 from dataworkspace.apps.datasets.models import DataSet, VisualisationCatalogueItem
+from dataworkspace.apps.eventlog.models import EventLog
+from dataworkspace.apps.eventlog.utils import log_event
 
 
 class Collection(DeletableTimestampedUserModel):
@@ -38,6 +40,13 @@ class CollectionDatasetMembership(DeletableTimestampedUserModel):
     class Meta:
         unique_together = ("dataset_id", "collection_id")
         ordering = ("id",)
+
+    def delete(self, deleted_by, **kwargs):  # pylint: disable=arguments-differ
+        with transaction.atomic():
+            super().delete(**kwargs)
+            log_event(
+                deleted_by, EventLog.TYPE_REMOVE_DATASET_FROM_COLLECTION, related_object=self
+            )
 
 
 class CollectionVisualisationCatalogueItemMembership(DeletableTimestampedUserModel):
