@@ -48,3 +48,18 @@ def delete_datasets_membership(request, collections_id, data_membership_id):
     messages.success(request, f"{membership.dataset.name} has been removed from this collection.")
 
     return redirect("data_collections:collections_view", collections_id=collections_id)
+
+
+@require_http_methods(["POST"])
+def add_dataset_to_collection(request, collections_id, data_membership_id):
+    collection = get_authorised_collection(request, collections_id)
+    membership = CollectionDatasetMembership.objects.get(id=data_membership_id)
+
+    # The membership ID doesn't match the collection ID in the URL
+    if membership.collection.id != collection.id:
+        raise Http404
+
+    membership.add(request.user)
+    messages.success(request, f"{membership.dataset.name} has been added to this collection.")
+
+    return redirect("data_collections:collections_view", collections_id=collections_id)

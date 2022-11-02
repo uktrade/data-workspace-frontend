@@ -48,6 +48,13 @@ class CollectionDatasetMembership(DeletableTimestampedUserModel):
                 deleted_by, EventLog.TYPE_REMOVE_DATASET_FROM_COLLECTION, related_object=self
             )
 
+    def add(self, added_by, **kwargs):  # pylint: disable=arguments-differ
+        with transaction.atomic():
+            super().save(**kwargs)
+            log_event(
+                added_by, EventLog.TYPE_ADD_DATASET_TO_COLLECTION, related_object=self
+            )
+
 
 class CollectionVisualisationCatalogueItemMembership(DeletableTimestampedUserModel):
     visualisation = models.ForeignKey(
