@@ -1302,8 +1302,8 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                 ReferenceDatasetInheritingFromDataSet.objects.create(
                     name=self.name,
                     slug=self.slug,
-                    short_description=self.short_description,
-                    description=self.description,
+                    short_description=self.short_description or "",
+                    description=self.description or "",
                     type=DataSetType.REFERENCE,
                     updated_by=self.updated_by,
                 )
@@ -1314,8 +1314,8 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             ).update(
                 name=self.name,
                 slug=self.slug,
-                short_description=self.short_description,
-                description=self.description,
+                short_description=self.short_description or "",
+                description=self.description or "",
                 type=DataSetType.REFERENCE,
                 updated_by=self.updated_by,
             )
