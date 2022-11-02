@@ -49,21 +49,6 @@
     <div class="govuk-grid-column-two-thirds">
       <span class="govuk-caption-xl">Source dataset</span>
       <h1 class="govuk-heading-xl">{{ model.name }}</h1>
-      {% flag COLLECTIONS_FLAG %}
-      <form
-        action="{% url "data_collections:add_collection_data_membership" collections_id=collection_first_object dataset_id=model.id %}"
-        method="POST">
-        {% csrf_token %}
-        <button type="submit" class="govuk-body govuk-link" style=" background: none!important;
-  border: none;
-  padding: 0!important;
-  font-family: arial, sans-serif;
-  color: #069;
-  text-decoration: underline;
-  cursor: pointer;">+ Add to collection
-        </button>
-      </form>
-      {% endflag %}
     </div>
     <div class="govuk-grid-column-one-third">
 
