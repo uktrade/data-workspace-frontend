@@ -14,4 +14,10 @@ urlpatterns = [
         login_required(views.delete_datasets_membership),
         name="collection_data_membership",
     ),
+    path(
+        "<uuid:collections_id>/visualisations-memberships/<int:visualisation_membership_id>",
+        login_required(views.delete_visualisation_membership),
+        name="collection_visualisation_membership",
+    ),
+    
 ]

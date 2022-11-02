@@ -56,7 +56,13 @@ class CollectionVisualisationCatalogueItemMembership(DeletableTimestampedUserMod
     collection = models.ForeignKey(
         Collection, on_delete=models.CASCADE, related_name="visualisation_collections"
     )
-
     class Meta:
         unique_together = ("visualisation", "collection_id")
         ordering = ("id",)
+    
+    def delete(self, deleted_by, **kwargs):  # pylint: disable=arguments-differ
+        with transaction.atomic():
+            super().delete(**kwargs)
+            log_event(
+                deleted_by, EventLog.TYPE_REMOVE_VISUALISATION_FROM_COLLECTION, related_object=self
+            )
