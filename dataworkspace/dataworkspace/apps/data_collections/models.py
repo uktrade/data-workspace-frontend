@@ -3,7 +3,7 @@ import uuid
 from django.conf import settings
 from django.db import models
 
-from dataworkspace.apps.core.models import DeletableTimestampedUserModel, TimeStampedModel
+from dataworkspace.apps.core.models import DeletableTimestampedUserModel
 from dataworkspace.apps.datasets.models import DataSet, VisualisationCatalogueItem
 
 
@@ -29,7 +29,7 @@ class Collection(DeletableTimestampedUserModel):
         return self.name
 
 
-class CollectionDatasetMembership(TimeStampedModel):
+class CollectionDatasetMembership(DeletableTimestampedUserModel):
     dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE, related_name="datasets")
     collection = models.ForeignKey(
         Collection, on_delete=models.CASCADE, related_name="dataset_collections"
@@ -40,7 +40,7 @@ class CollectionDatasetMembership(TimeStampedModel):
         ordering = ("id",)
 
 
-class CollectionVisualisationCatalogueItemMembership(TimeStampedModel):
+class CollectionVisualisationCatalogueItemMembership(DeletableTimestampedUserModel):
     visualisation = models.ForeignKey(
         VisualisationCatalogueItem, on_delete=models.CASCADE, related_name="visualisation"
     )
