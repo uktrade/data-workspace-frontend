@@ -1,7 +1,7 @@
 from django.db import migrations
 
 
-def map_referencedatasets_to_datasets(apps):
+def map_referencedatasets_to_datasets(apps, _):
     ReferenceDatasetModel = apps.get_model("datasets", "referencedataset")
 
     for referencedataset in ReferenceDatasetModel.objects.all():
