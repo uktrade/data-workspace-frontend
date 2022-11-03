@@ -1,4 +1,4 @@
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.contrib import messages
 from django.http import Http404
 from django.views.generic import DetailView
@@ -83,11 +83,6 @@ def add_catalogue_to_collection(request, collections_id, catalogue_id):
     catalogue_object = VisualisationCatalogueItem.objects.get(id=catalogue_id)
 
     try:
-        CollectionVisualisationCatalogueItemMembership.objects.get(
-            collection=collection, visualisation=catalogue_object
-        )
-
-    except CollectionVisualisationCatalogueItemMembership.DoesNotExist:
         with transaction.atomic():
             CollectionVisualisationCatalogueItemMembership.objects.create(
                 collection=collection, visualisation=catalogue_object
@@ -97,6 +92,9 @@ def add_catalogue_to_collection(request, collections_id, catalogue_id):
                 EventLog.TYPE_ADD_DATASET_TO_COLLECTION,
                 related_object=catalogue_object,
             )
-    messages.success(request, f"{catalogue_object.name} has been added to this collection.")
+    except IntegrityError:
+        messages.success(request, f"{catalogue_object.name} was already in this collection")
+    else:
+        messages.success(request, f"{catalogue_object.name} has been added to this collection.")
 
     return redirect("data_collections:collections_view", collections_id=collections_id)
