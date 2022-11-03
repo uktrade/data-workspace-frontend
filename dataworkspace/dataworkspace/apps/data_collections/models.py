@@ -46,7 +46,6 @@ class CollectionDatasetMembership(DeletableTimestampedUserModel):
                 name="unique_dataset_if_not_deleted",
             )
         ]
-        unique_together = ("dataset_id", "collection_id")
         ordering = ("id",)
 
     def delete(self, deleted_by, **kwargs):  # pylint: disable=arguments-differ
@@ -73,7 +72,6 @@ class CollectionVisualisationCatalogueItemMembership(DeletableTimestampedUserMod
                 name="unique_visualisation_if_not_deleted",
             )
         ]
-        unique_together = ("visualisation", "collection_id")
         ordering = ("id",)
 
     def delete(self, deleted_by, **kwargs):  # pylint: disable=arguments-differ
