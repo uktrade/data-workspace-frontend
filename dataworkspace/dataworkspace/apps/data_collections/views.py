@@ -59,7 +59,6 @@ def delete_datasets_membership(request, collections_id, data_membership_id):
 
 
 @require_http_methods(["POST"])
-@transaction.atomic
 def add_catalogue_to_collection(request, collections_id, catalogue_id):
     collection = get_authorised_collection(request, collections_id)
     catalogue_object = VisualisationCatalogueItem.objects.get(id=catalogue_id)
@@ -70,12 +69,15 @@ def add_catalogue_to_collection(request, collections_id, catalogue_id):
         )
 
     except CollectionVisualisationCatalogueItemMembership.DoesNotExist:
-        CollectionVisualisationCatalogueItemMembership.objects.create(
-            collection=collection, visualisation=catalogue_object
-        )
-        log_event(
-            request.user, EventLog.TYPE_ADD_DATASET_TO_COLLECTION, related_object=catalogue_object
-        )
+        with transaction.atomic():
+            CollectionVisualisationCatalogueItemMembership.objects.create(
+                collection=collection, visualisation=catalogue_object
+            )
+            log_event(
+                request.user,
+                EventLog.TYPE_ADD_DATASET_TO_COLLECTION,
+                related_object=catalogue_object,
+            )
     messages.success(request, f"{catalogue_object.name} has been added to this collection.")
 
     return redirect("data_collections:collections_view", collections_id=collections_id)
