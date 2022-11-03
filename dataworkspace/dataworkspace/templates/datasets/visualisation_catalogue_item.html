@@ -44,7 +44,7 @@
       <h1 class="govuk-heading-xl">{{ model.name }}</h1>
       {% flag COLLECTIONS_FLAG %}
         <form
-          action="{% url "data_collections:add_collection_data_membership" collections_id=collection_first_object catalogue_id=model.id %}"
+          action="{% if collection_first_object %}{% url "data_collections:add_collection_data_membership" collections_id=collection_first_object catalogue_id=model.id %}{% endif %}"
           method="POST">
           {% csrf_token %}
 

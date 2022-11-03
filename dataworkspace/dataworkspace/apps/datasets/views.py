@@ -585,7 +585,9 @@ class DatasetDetailView(DetailView):
         ctx["DATA_CUT_ENHANCED_PREVIEW_FLAG"] = settings.DATA_CUT_ENHANCED_PREVIEW_FLAG
         ctx["DATASET_CHANGELOG_PAGE_FLAG"] = settings.DATASET_CHANGELOG_PAGE_FLAG
         ctx["DATA_UPLOADER_UI_FLAG"] = settings.DATA_UPLOADER_UI_FLAG
-        ctx["collection_first_object"] = Collection.objects.first().id
+        ctx["collection_first_object"] = (
+            Collection.objects.first().id if Collection.objects.first() else None
+        )
 
         if self._is_reference_dataset():
             return self._get_context_data_for_reference_dataset(ctx, **kwargs)
