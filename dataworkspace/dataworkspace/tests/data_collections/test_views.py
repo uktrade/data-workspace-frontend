@@ -2,8 +2,6 @@ from django.urls import reverse
 
 from dataworkspace.tests import factories
 from dataworkspace.tests.conftest import get_client, get_user_data
-from dataworkspace.apps.datasets.constants import DataSetType
-
 
 def test_collection(client):
     user = factories.UserFactory(is_superuser=True)
