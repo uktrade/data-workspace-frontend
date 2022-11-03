@@ -59,6 +59,25 @@ def delete_datasets_membership(request, collections_id, data_membership_id):
 
 
 @require_http_methods(["POST"])
+def delete_visualisation_membership(request, collections_id, visualisation_membership_id):
+    collection = get_authorised_collection(request, collections_id)
+    membership = CollectionVisualisationCatalogueItemMembership.objects.get(
+        id=visualisation_membership_id
+    )
+
+    # The membership ID doesn't match the collection ID in the URL
+    if membership.collection.id != collection.id:
+        raise Http404
+
+    membership.delete(request.user)
+    messages.success(
+        request, f"{membership.visualisation.name} has been removed from this collection."
+    )
+
+    return redirect("data_collections:collections_view", collections_id=collections_id)
+
+
+@require_http_methods(["POST"])
 def add_catalogue_to_collection(request, collections_id, catalogue_id):
     collection = get_authorised_collection(request, collections_id)
     catalogue_object = VisualisationCatalogueItem.objects.get(id=catalogue_id)
