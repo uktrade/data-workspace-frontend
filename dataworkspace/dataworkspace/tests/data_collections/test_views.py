@@ -4,6 +4,7 @@ from dataworkspace.tests import factories
 from dataworkspace.tests.conftest import get_client, get_user_data
 from dataworkspace.apps.datasets.constants import DataSetType
 
+
 def test_collection(client):
     user = factories.UserFactory(is_superuser=True)
     client = get_client(get_user_data(user))
@@ -174,7 +175,6 @@ def test_authorised_user_attempting_delete_visualisation_membership(user, other_
     client_user = get_client(get_user_data(user))
     client_other_user = get_client(get_user_data(other_user))
 
-
     # Create the collection
     c = factories.CollectionFactory.create(
         name="test-collections",
@@ -185,7 +185,7 @@ def test_authorised_user_attempting_delete_visualisation_membership(user, other_
 
     # Create a visualisation and add it to the collection
     visualisation = factories.VisualisationCatalogueItemFactory(
-    personal_data="personal", name="Visualisation"
+        personal_data="personal", name="Visualisation"
     )
     c.visualisation_catalogue_items.add(visualisation)
     membership = c.visualisation_collections.all()[0]
