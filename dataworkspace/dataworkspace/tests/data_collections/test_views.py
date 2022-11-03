@@ -2,7 +2,7 @@ from django.urls import reverse
 
 from dataworkspace.tests import factories
 from dataworkspace.tests.conftest import get_client, get_user_data
-
+from dataworkspace.apps.datasets.constants import DataSetType
 
 def test_collection(client):
     user = factories.UserFactory(is_superuser=True)
@@ -174,6 +174,7 @@ def test_authorised_user_attempting_delete_visualisation_membership(user, other_
     client_user = get_client(get_user_data(user))
     client_other_user = get_client(get_user_data(other_user))
 
+
     # Create the collection
     c = factories.CollectionFactory.create(
         name="test-collections",
@@ -183,8 +184,10 @@ def test_authorised_user_attempting_delete_visualisation_membership(user, other_
     )
 
     # Create a visualisation and add it to the collection
-    visualisation = factories.VisualisationDatasetFactory(published=True, name="Visualisation")
-    c.visualisation.add(visualisation)
+    visualisation = factories.VisualisationCatalogueItemFactory(
+    personal_data="personal", name="Visualisation"
+    )
+    c.visualisation_catalogue_items.add(visualisation)
     membership = c.visualisation_collections.all()[0]
     response = client_user.get(
         reverse(
@@ -215,7 +218,7 @@ def test_authorised_user_attempting_delete_visualisation_membership(user, other_
     # But the owner user can remove the visualisation from the collection page
     response = client_user.post(
         reverse(
-            "data_collections:collection_visaulisation_membership",
+            "data_collections:collection_visualisation_membership",
             kwargs={"collections_id": c.id, "visualisation_membership_id": membership.id},
         )
     )
