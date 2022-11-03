@@ -45,9 +45,8 @@
             </form>
             <h3 class="govuk-heading-m">
               <a class="govuk-heading-m govuk-link dataset-link"
-                 href="
-                   {% if dataset.type == 0 %}{% url "datasets:dataset_detail" dataset_uuid=dataset.referencedataset_set.first.uuid %}#
-                     {{ dataset.slug }}{% else %}{% url "datasets:dataset_detail" dataset_uuid=dataset.id %}#{{ dataset.slug }}{% endif %}">{{ dataset.name }}</a>
+                 href="{% if dataset_collection.dataset.type == 0 %}{% url "datasets:dataset_detail" dataset_uuid=dataset_collection.dataset.referencedataset_set.first.uuid %}#
+                     {{ dataset_collection.dataset.slug }}{% else %}{% url "datasets:dataset_detail" dataset_uuid=dataset_collection.dataset.id %}#{{ dataset_collection.dataset.slug }}{% endif %}">{{ dataset_collection.dataset.name }}</a>
             </h3>
             <p class="govuk-body">{{ dataset_collection.dataset.short_description }}</p>
             <div class="govuk-body">
