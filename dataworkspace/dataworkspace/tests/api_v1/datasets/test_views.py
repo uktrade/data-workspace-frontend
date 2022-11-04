@@ -450,7 +450,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             "enquiries_contact": dataset.enquiries_contact.id
             if dataset.enquiries_contact
             else None,
-            "is_draft": dataset.is_draft if dataset.type == DataSetType.REFERENCE else None,
+            # "is_draft": dataset.is_draft if dataset.type == DataSetType.REFERENCE else None,
             "dictionary_published": getattr(dataset, "dictionary_published", None),
             "licence": dataset.licence or None,
             "purpose": purpose,
@@ -515,7 +515,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
                 master_dataset.retention_policy,
             ),
             self.expected_response(reference_dataset, "Reference data"),
-            self.expected_response(ReferenceDatasetInheritingFromDataSet, "Reference data"),
+            self.expected_response(reference_dataset.reference_dataset_inheriting_from_dataset, "Reference data"),
             self.expected_response(visualisation, "Visualisation", visualisation.personal_data),
             self.expected_response(visualisation2, "Visualisation"),
         ]
