@@ -38,6 +38,12 @@ resource "aws_ecs_service" "mlflow" {
     container_name   = "mlflow"
   }
 
+  load_balancer {
+    target_group_arn = "${aws_lb_target_group.mlflow_dataflow[count.index].arn}"
+    container_port   = "${local.mlflow_port}"
+    container_name   = "mlflow"
+  }
+
   service_registries {
     registry_arn   = "${aws_service_discovery_service.mlflow[count.index].arn}"
   }
@@ -224,19 +230,23 @@ data "aws_iam_policy_document" "mlflow_access_artifacts_bucket" {
 }
 
 resource "aws_lb" "mlflow" {
-  count  = "${length(var.mlflow_instances)}"
+  count              = "${length(var.mlflow_instances)}"
   name               = "${var.prefix}-mf-${var.mlflow_instances[count.index]}"
-  load_balancer_type = "application"
+  load_balancer_type = "network"
   internal           = true
-  security_groups    = ["${aws_security_group.mlflow_lb[count.index].id}"]
-  subnets            = "${aws_subnet.private_without_egress.*.id}"
+  enable_cross_zone_load_balancing = true
+
+  subnet_mapping {
+    subnet_id            = "${aws_subnet.private_without_egress.*.id[0]}"
+    private_ipv4_address = cidrhost("${aws_subnet.private_without_egress.*.cidr_block[0]}", 7 + count.index)
+  }
 }
 
 resource "aws_lb_listener" "mlflow" {
   count  = "${length(var.mlflow_instances)}"
   load_balancer_arn = "${aws_lb.mlflow[count.index].arn}"
   port              = "${local.mlflow_port}"
-  protocol          = "HTTP"
+  protocol          = "TCP"
 
   default_action {
     target_group_arn = "${aws_lb_target_group.mlflow[count.index].arn}"
@@ -245,17 +255,65 @@ resource "aws_lb_listener" "mlflow" {
 }
 
 resource "aws_lb_target_group" "mlflow" {
-  count  = "${length(var.mlflow_instances)}"
-  name_prefix = "f${var.mlflow_instances[count.index]}-"
-  port        = "${local.mlflow_port}"
-  vpc_id      = "${aws_vpc.notebooks.id}"
-  target_type = "ip"
-  protocol    = "HTTP"
+  count              = "${length(var.mlflow_instances)}"
+  name_prefix        = "f${var.mlflow_instances[count.index]}-"
+  port               = "${local.mlflow_port}"
+  vpc_id             = "${aws_vpc.notebooks.id}"
+  target_type        = "ip"
+  protocol           = "TCP"
+  preserve_client_ip = false
 
   health_check {
     protocol = "HTTP"
     interval = 10
-    healthy_threshold   = 2
+    healthy_threshold   = 5
+    unhealthy_threshold = 5
+    path = "/healthcheck"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_lb" "mlflow_dataflow" {
+  count              = "${length(var.mlflow_instances)}"
+  name               = "${var.prefix}-mfdf-${var.mlflow_instances[count.index]}"
+  load_balancer_type = "network"
+  internal           = true
+  enable_cross_zone_load_balancing = true
+
+  subnet_mapping {
+    subnet_id            = "${aws_subnet.datasets.*.id[0]}"
+    private_ipv4_address = cidrhost("${aws_subnet.datasets.*.cidr_block[0]}", 7 + count.index)
+  }
+}
+
+resource "aws_lb_listener" "mlflow_dataflow" {
+  count  = "${length(var.mlflow_instances)}"
+  load_balancer_arn = "${aws_lb.mlflow_dataflow[count.index].arn}"
+  port              = "${local.mlflow_port}"
+  protocol          = "TCP"
+
+  default_action {
+    target_group_arn = "${aws_lb_target_group.mlflow_dataflow[count.index].arn}"
+    type             = "forward"
+  }
+}
+
+resource "aws_lb_target_group" "mlflow_dataflow" {
+  count              = "${length(var.mlflow_instances)}"
+  name_prefix        = "df${var.mlflow_instances[count.index]}-"
+  port               = "${local.mlflow_port}"
+  vpc_id             = "${aws_vpc.datasets.id}"
+  target_type        = "ip"
+  protocol           = "TCP"
+  preserve_client_ip = false
+
+  health_check {
+    protocol = "HTTP"
+    interval = 10
+    healthy_threshold   = 5
     unhealthy_threshold = 5
 
     path = "/healthcheck"

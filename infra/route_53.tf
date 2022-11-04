@@ -151,12 +151,22 @@ resource "aws_route53_record" "mlflow_internal" {
   zone_id = "${data.aws_route53_zone.aws_route53_zone.zone_id}"
   name    = "mlflow--${var.mlflow_instances_long[count.index]}--internal.${var.admin_domain}"
   type    = "A"
+  ttl     = "60"
+  records = [aws_lb.mlflow.*.subnet_mapping[count.index].*.private_ipv4_address[0]]
 
-  alias {
-    name                   = "${aws_lb.mlflow[count.index].dns_name}"
-    zone_id                = "${aws_lb.mlflow[count.index].zone_id}"
-    evaluate_target_health = false
+  lifecycle {
+    create_before_destroy = true
   }
+}
+
+resource "aws_route53_record" "mlflow_data_flow" {
+  count  = "${length(var.mlflow_instances)}"
+  provider = "aws.route53"
+  zone_id = "${data.aws_route53_zone.aws_route53_zone.zone_id}"
+  name    = "mlflow--${var.mlflow_instances_long[count.index]}--data-flow.${var.admin_domain}"
+  type    = "A"
+  ttl     = "60"
+  records = [aws_lb.mlflow_dataflow.*.subnet_mapping[count.index].*.private_ipv4_address[0]]
 
   lifecycle {
     create_before_destroy = true
