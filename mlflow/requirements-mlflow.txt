@@ -83,7 +83,7 @@ markupsafe==2.1.1
     # via
     #   jinja2
     #   mako
-mlflow==1.27.0
+mlflow==1.30.0
     # via -r requirements-mlflow.in
 multidict==6.0.2
     # via
