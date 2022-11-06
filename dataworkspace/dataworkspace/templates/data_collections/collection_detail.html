@@ -24,6 +24,7 @@
 {% endblock %}
 
 {% block main %}
+<div class="govuk-width-container">
     <main class="govuk-main-wrapper" id="main-content" role="main">
     <div class="govuk-grid-row">
       <div class="govuk-grid-column-two-thirds">
@@ -132,4 +133,5 @@
       <p class="govuk-body">{{ source_object.owner.get_full_name|default_if_none:"Not assigned" }}<br>{% if source_object.owner %}(<a href="mailto:{{ source_object.owner.email }}">{{ source_object.owner.email }}</a>){% endif %}</p>
     </div>
     </main>
+</div>
 {% endblock %}

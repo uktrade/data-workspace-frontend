@@ -1,15 +1,17 @@
 {% extends '_base.html' %}
 
 {% block main %}
-<div class="govuk-grid-row govuk-main-wrapper govuk-!-padding-top-5">
-    <nav class="govuk-grid-column-one-quarter">
-        {% block nav %}
-        {% endblock %}
-    </nav>
+<div class="govuk-width-container">
+    <div class="govuk-grid-row govuk-main-wrapper govuk-!-padding-top-5">
+        <nav class="govuk-grid-column-one-quarter">
+            {% block nav %}
+            {% endblock %}
+        </nav>
 
-    <main class="govuk-grid-column-three-quarters" id="main-content" role="main">
-        {% include 'partials/messages.html' %}
-        {% block content %}{% endblock %}
-    </main>
+        <main class="govuk-grid-column-three-quarters" id="main-content" role="main">
+            {% include 'partials/messages.html' %}
+            {% block content %}{% endblock %}
+        </main>
+    </div>
 </div>
 {% endblock %}
