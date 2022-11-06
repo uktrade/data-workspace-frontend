@@ -7,23 +7,22 @@
 {% endblock %}
 
 {% block main %}
-<div class="govuk-breadcrumbs">
-  <ol class="govuk-breadcrumbs__list">
-    <li class="govuk-breadcrumbs__list-item">
-      <a class="govuk-breadcrumbs__link" href="/">Home</a>
-    </li>
+  <div class="govuk-width-container">
+    <div class="govuk-breadcrumbs">
+      <ol class="govuk-breadcrumbs__list">
+        <li class="govuk-breadcrumbs__list-item">
+          <a class="govuk-breadcrumbs__link" href="/">Home</a>
+        </li>
 
-    <li class="govuk-breadcrumbs__list-item">
-      Collections
-    </li>
-    <li class="govuk-breadcrumbs__list-item">
-      {{ source_object.name }}
-    </li>
-  </ol>
-</div>
+        <li class="govuk-breadcrumbs__list-item">
+          Collections
+        </li>
+        <li class="govuk-breadcrumbs__list-item">
+          {{ source_object.name }}
+        </li>
+      </ol>
+    </div>
 
-<div class="govuk-width-container">
-    <main class="govuk-main-wrapper" id="main-content" role="main">
     <div class="govuk-grid-row">
       <div class="govuk-grid-column-two-thirds">
         <span class="govuk-caption-xl">Personal collection</span>
@@ -31,11 +30,15 @@
         <p class="govuk-body">{{ source_object.description|linebreaksbr }}</p>
       </div>
     </div>
-    <div class="govuk-grid-row">
-      <div class="govuk-grid-column-two-thirds">
-        <h2 class="govuk-heading-l">Data</h2>
-        <div class="search-result" style="border-bottom: none">
-          {% for dataset_collection in dataset_collections %}
+  </div>
+
+  <div class="govuk-width-container">
+    <main class="govuk-main-wrapper" id="main-content" role="main">
+      <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+          <h2 class="govuk-heading-l">Data</h2>
+          <div class="search-result" style="border-bottom: none">
+            {% for dataset_collection in dataset_collections %}
             <!-- This form is only needed since we're POSTing directly from this page. When this is
                  changed to link to the confirmation page, it can be a regular <a> tag -->
             <form style="float:right" action="{% url "data_collections:collection_data_membership" collections_id=source_object.id data_membership_id=dataset_collection.id %}" method="POST">
@@ -77,59 +80,60 @@
                 {% endif %}
               </dl>
             </div>
-          {% endfor %}
-          <p class="govuk-body" style="margin-bottom: 40px"><a href="">Search for data</a> you'd like to add.</p>
-          </div><h2 class="govuk-heading-l">Dashboards</h2>
-      <div class="search-result" style="border-bottom: none">
-    {% for visualisation_collection in visualisation_collections %}
-          <form style="float:right" action="{% url "data_collections:collection_visualisation_membership" collections_id=source_object.id visualisation_membership_id=visualisation_collection.id %}" method="POST">
-            {% csrf_token %}
-            <button type="submit">Remove</button>
-          </form>
-          <h3 class="govuk-heading-m">
-            <a class="govuk-heading-m govuk-link dataset-link"
+            {% endfor %}
+            <p class="govuk-body" style="margin-bottom: 40px"><a href="">Search for data</a> you'd like to add.</p>
+          </div>
+          <h2 class="govuk-heading-l">Dashboards</h2>
+          <div class="search-result" style="border-bottom: none">
+            {% for visualisation_collection in visualisation_collections %}
+            <form style="float:right" action="{% url "data_collections:collection_visualisation_membership" collections_id=source_object.id visualisation_membership_id=visualisation_collection.id %}" method="POST">
+              {% csrf_token %}
+              <button type="submit">Remove</button>
+            </form>
+            <h3 class="govuk-heading-m">
+              <a class="govuk-heading-m govuk-link dataset-link"
                href="{% url "datasets:dataset_detail" dataset_uuid=visualisation_collection.visualisation.id %}">{{ visualisation_collection.visualisation.name }}</a>
-          </h3>
-          <p class="govuk-body">{{ visualisation_collection.visualisation.short_description }}</p>
-          <div class="govuk-body">
-            <dl>
-              <dt>Data type:</dt>
-              <dd>{{ visualisation_collection.visualisation.get_type_display }}</dd>
-              <dt>Last updated:</dt>
-              <dd>
-                {{ visualisation_collection.visualisation.last_updated|date_with_gmt_offset|default_if_none:"N/A" }}
-              </dd>
-              <dt>Source:</dt>
-              <dd>
-                {% for source in visualisation_collection.visualisation.sources %}
-                  <a class="govuk-link"
-                     href="{% url "datasets:find_datasets" %}?source={{ visualisation_collection.visualisation.id }}">{{ visualisation_collection.visualisation.name }}</a>
-                  {% empty %}
-                  N/A
-                {% endfor %}
-              </dd>
-              {% if visualisation_collection.visualisation.topics %}
-                <dt>Topics:</dt>
+            </h3>
+            <p class="govuk-body">{{ visualisation_collection.visualisation.short_description }}</p>
+            <div class="govuk-body">
+              <dl>
+                <dt>Data type:</dt>
+                <dd>{{ visualisation_collection.visualisation.get_type_display }}</dd>
+                <dt>Last updated:</dt>
                 <dd>
-                  {% for topic in visualisation_collection.visualisation.topics %}
+                  {{ visualisation_collection.visualisation.last_updated|date_with_gmt_offset|default_if_none:"N/A" }}
+                </dd>
+                <dt>Source:</dt>
+                <dd>
+                  {% for source in visualisation_collection.visualisation.sources %}
                     <a class="govuk-link"
-                       href="{% url "datasets:find_datasets" %}?topic={{ topic.id }}">{{ topic.name }}</a>
+                       href="{% url "datasets:find_datasets" %}?source={{ visualisation_collection.visualisation.id }}">{{ visualisation_collection.visualisation.name }}</a>
                     {% empty %}
-                    &nbsp;
+                    N/A
                   {% endfor %}
                 </dd>
-              {% endif %}
-            </dl>
+                {% if visualisation_collection.visualisation.topics %}
+                  <dt>Topics:</dt>
+                  <dd>
+                    {% for topic in visualisation_collection.visualisation.topics %}
+                      <a class="govuk-link"
+                         href="{% url "datasets:find_datasets" %}?topic={{ topic.id }}">{{ topic.name }}</a>
+                      {% empty %}
+                      &nbsp;
+                    {% endfor %}
+                  </dd>
+                {% endif %}
+              </dl>
+            </div>
+            {% endfor %}
           </div>
-        {% endfor %}
-    </div>
-          <p class="govuk-body"><a href="https://data.trade.gov.uk/datasets/?q=&sort=relevance&data_type=3">Search for
-            dashboards</a> you'd like to add.</p>
-    </div>
-    <div class="govuk-grid-column-one-third">
-      <h2 class="govuk-heading-s">Owner</h2>
-      <p class="govuk-body">{{ source_object.owner.get_full_name|default_if_none:"Not assigned" }}<br>{% if source_object.owner %}(<a href="mailto:{{ source_object.owner.email }}">{{ source_object.owner.email }}</a>){% endif %}</p>
-    </div>
+          <p class="govuk-body"><a href="https://data.trade.gov.uk/datasets/?q=&sort=relevance&data_type=3">Search for dashboards</a> you'd like to add.</p>
+        </div>
+        <div class="govuk-grid-column-one-third">
+          <h2 class="govuk-heading-s">Owner</h2>
+          <p class="govuk-body">{{ source_object.owner.get_full_name|default_if_none:"Not assigned" }}<br>{% if source_object.owner %}(<a href="mailto:{{ source_object.owner.email }}">{{ source_object.owner.email }}</a>){% endif %}</p>
+        </div>
+      </div>
     </main>
-</div>
+  </div>
 {% endblock %}
