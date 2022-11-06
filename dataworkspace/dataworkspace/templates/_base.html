@@ -106,10 +106,18 @@
 
   <div class="govuk-width-container">
     {% include 'partials/beta_banner.html' %}
+  </div>
+
+  <div class="govuk-width-container">
     {% block breadcrumbs %}{% endblock %}
     {% block go_back %}{% endblock %}
-    {% include 'partials/messages.html' %}
+  </div>
 
+  <div class="govuk-width-container">
+    {% include 'partials/messages.html' %}
+  </div>
+
+  <div class="govuk-width-container">
     {% block main %}{% endblock %}
   </div>
 
