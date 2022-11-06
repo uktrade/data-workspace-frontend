@@ -424,6 +424,24 @@ p.sidebar-section {
   border-color: white !important;
 }
 
+.dw-banner {
+  background: $govuk-brand-colour;
+  padding-top: 1px;    // Stops margins escaping from the top of the blue area
+  margin-top: -1px;    // Hides the grey border from the alpha/beta banner
+  padding-bottom: 1px; // Stops margins escaping from the bottom of the blue area
+}
+.dw-banner__breadcrumbs__list-item,
+.dw-banner__breadcrumbs__link:link,
+.dw-banner__breadcrumbs__link:visited,
+.dw-banner__caption-xl,
+.dw-banner__heading-xl,
+.dw-banner__body {
+  color: govuk-colour("white");
+}
+.dw-banner__breadcrumbs__list-item::before {
+  border-color: white;
+}
+
 @import "filters";
 @import "search";
 @import "site-search";
