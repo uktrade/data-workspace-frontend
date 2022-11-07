@@ -579,8 +579,6 @@ class DatasetDetailView(DetailView):
         return ctx
 
     def get_context_data(self, **kwargs):
-        first_collection = Collection.objects.filter(owner=self.request.user).values("id").first()
-
         ctx = super().get_context_data()
         ctx["model"] = self.object
         ctx["DATA_CUT_ENHANCED_PREVIEW_FLAG"] = settings.DATA_CUT_ENHANCED_PREVIEW_FLAG
