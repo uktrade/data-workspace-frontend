@@ -343,23 +343,6 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         .annotate(dictionary=F("dictionary_published"))
         .values(*fields)
         .union(
-            ReferenceDataset.objects.live()
-            .annotate(personal_data=_static_char(None))
-            .annotate(retention_policy=_static_char(None))
-            .annotate(eligibility_criteria=_static_char(None))
-            .annotate(purpose=_static_int(DataSetType.REFERENCE))
-            .annotate(
-                source_tags=ArrayAgg(
-                    "tags__name",
-                    filter=models.Q(tags__type=TagType.SOURCE),
-                    distinct=True,
-                )
-            )
-            .annotate(draft=F("is_draft"))
-            .annotate(dictionary=F("published"))
-            .values(*_replace(fields, "id", "uuid"))
-        )
-        .union(
             VisualisationCatalogueItem.objects.live()
             .annotate(purpose=_static_int(DataSetType.VISUALISATION))
             .annotate(
