@@ -554,7 +554,9 @@ def _sorted_datasets_and_visualisations_matching_query_for_user(query, user, sor
     @return:
     """
     master_and_datacut_datasets = _get_datasets_data_for_user_matching_query(
-        DataSet.objects.live(),
+        # Exclude ReferenceDatasetInheritingFromDataSet as
+        # ReferenceDatasets are added below.
+        DataSet.objects.live().exclude(type=DataSetType.REFERENCE),
         query,
         id_field="id",
         user=user,
