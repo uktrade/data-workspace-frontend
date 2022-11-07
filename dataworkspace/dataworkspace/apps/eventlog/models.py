@@ -35,8 +35,9 @@ class EventLog(models.Model):
     TYPE_DATASET_VIEW = 28
     TYPE_DATASET_FIND_FORM_QUERY = 29
     TYPE_REMOVE_DATASET_FROM_COLLECTION = 30
-    TYPE_REMOVE_VISUALISATION_FROM_COLLECTION = 30
-    TYPE_ADD_DATASET_TO_COLLECTION = 31
+    TYPE_REMOVE_VISUALISATION_FROM_COLLECTION = 31
+    TYPE_ADD_DATASET_TO_COLLECTION = 32
+    TYPE_ADD_VISUALISATION_TO_COLLECTION = 33
 
     _TYPE_CHOICES = (
         (TYPE_DATASET_SOURCE_LINK_DOWNLOAD, "Dataset source link download"),
@@ -71,7 +72,9 @@ class EventLog(models.Model):
         (TYPE_DATASET_VIEW, "Dataset view"),
         (TYPE_DATASET_FIND_FORM_QUERY, "Dataset find form query"),
         (TYPE_REMOVE_DATASET_FROM_COLLECTION, "Remove dataset from collection"),
+        (TYPE_REMOVE_VISUALISATION_FROM_COLLECTION, "Remove visualisation from collection"),
         (TYPE_ADD_DATASET_TO_COLLECTION, "Add dataset to collection"),
+        (TYPE_ADD_VISUALISATION_TO_COLLECTION, "Add visualisation to collection"),
     )
     user = models.ForeignKey(get_user_model(), on_delete=models.DO_NOTHING, related_name="events")
     id = models.BigAutoField(primary_key=True)
