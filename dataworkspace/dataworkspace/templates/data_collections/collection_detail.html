@@ -47,7 +47,7 @@
                  changed to link to the confirmation page, it can be a regular <a> tag -->
             <form style="float:right" action="{% url "data_collections:collection_data_membership" collections_id=source_object.id data_membership_id=dataset_collection.id %}" method="POST">
               {% csrf_token %}
-              <button type="submit">Remove</button>
+              <button type="submit" onclick="dataLayer.push({'event': 'removeDatasetFromCollection', 'name': '{{ dataset_collection.dataset.name }}'})">Remove</button>
             </form>
             <h3 class="govuk-heading-m">
               <a class="govuk-heading-m govuk-link dataset-link"
@@ -93,7 +93,7 @@
             {% for visualisation_collection in visualisation_collections %}
             <form style="float:right" action="{% url "data_collections:collection_visualisation_membership" collections_id=source_object.id visualisation_membership_id=visualisation_collection.id %}" method="POST">
               {% csrf_token %}
-              <button type="submit">Remove</button>
+              <button type="submit" onclick="dataLayer.push({'event': 'removeCatalogueFromCollection', 'name': '{{ visualisation_collection.visualisation.name }}'})">Remove</button>
             </form>
             <h3 class="govuk-heading-m">
               <a class="govuk-heading-m govuk-link dataset-link"
