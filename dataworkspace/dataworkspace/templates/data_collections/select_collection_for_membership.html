@@ -15,8 +15,8 @@
           <h1 class="govuk-heading-xl govuk-!-margin-bottom-2">Select a collection</h1>
           {% include 'design_system/error_summary.html' with form=form %}
           <form method="post">
+            {% csrf_token %}
             {{ form.collection }}
-            {{ form.dataset_id }}
             <div class="govuk-button-group">
               <input class="govuk-button" type="submit" value="Continue">
               <a class="govuk-link govuk-link--no-visited-state" href="{{ dataset.get_absolute_url }}">Cancel</a>

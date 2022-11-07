@@ -85,42 +85,45 @@ def delete_visualisation_membership(request, collections_id, visualisation_membe
     return redirect("data_collections:collections_view", collections_id=collections_id)
 
 
-@require_http_methods(["GET"])
-def select_collection_for_membership(request, dataset_class, dataset_id):
+@require_http_methods(["GET", "POST"])
+def select_collection_for_membership(
+    request, dataset_class, membership_model_class, membership_model_relationship_name, dataset_id
+):
     dataset = get_object_or_404(dataset_class.objects.live(), pk=dataset_id)
+    user_collections = get_authorised_collections(request)
+    if request.method == "POST":
+        form = SelectCollectionForMembershipForm(
+            request.POST,
+            user_collections=user_collections,
+        )
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    membership_model_class.objects.create(
+                        collection=user_collections.get(pk=form.cleaned_data["collection"]),
+                        **{membership_model_relationship_name: dataset},
+                    )
+                    log_event(
+                        request.user,
+                        EventLog.TYPE_ADD_DATASET_TO_COLLECTION,
+                        related_object=dataset,
+                    )
+            except IntegrityError:
+                messages.success(request, f"{dataset.name} was already in this collection")
+            else:
+                messages.success(request, f"{dataset.name} has been added to this collection.")
+
+        return redirect(
+            "data_collections:collections_view", collections_id=form.cleaned_data["collection"]
+        )
+
     return render(
         request,
         "data_collections/select_collection_for_membership.html",
         {
-            "form": SelectCollectionForMembershipForm(
-                user_collections=get_authorised_collections(request),
-                initial={"dataset_id": dataset.id},
-            ),
+            "form": SelectCollectionForMembershipForm(user_collections=user_collections),
         },
     )
-
-
-@require_http_methods(["POST"])
-def add_catalogue_to_collection(request, collections_id, catalogue_id):
-    collection = get_authorised_collection(request, collections_id)
-    catalogue_object = VisualisationCatalogueItem.objects.get(id=catalogue_id)
-
-    try:
-        with transaction.atomic():
-            CollectionVisualisationCatalogueItemMembership.objects.create(
-                collection=collection, visualisation=catalogue_object
-            )
-            log_event(
-                request.user,
-                EventLog.TYPE_ADD_VISUALISATION_TO_COLLECTION,
-                related_object=catalogue_object,
-            )
-    except IntegrityError:
-        messages.success(request, f"{catalogue_object.name} was already in this collection")
-    else:
-        messages.success(request, f"{catalogue_object.name} has been added to this collection.")
-
-    return redirect("data_collections:collections_view", collections_id=collections_id)
 
 
 @require_http_methods(["POST"])

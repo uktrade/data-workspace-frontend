@@ -2,6 +2,9 @@ from django.urls import path
 
 from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.data_collections import views
+from dataworkspace.apps.data_collections.models import (
+    CollectionVisualisationCatalogueItemMembership,
+)
 from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
 
 urlpatterns = [
@@ -23,7 +26,11 @@ urlpatterns = [
     path(
         "select-collection-for-membership/visualisation/<uuid:dataset_id>",
         login_required(views.select_collection_for_membership),
-        {"dataset_class": VisualisationCatalogueItem},
+        {
+            "dataset_class": VisualisationCatalogueItem,
+            "membership_model_class": CollectionVisualisationCatalogueItemMembership,
+            "membership_model_relationship_name": "visualisation",
+        },
         name="visualisation_select_collection_for_membership",
     ),
     path(

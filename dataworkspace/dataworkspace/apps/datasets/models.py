@@ -2439,6 +2439,18 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     def get_type_display():
         return "Visualisation"
 
+    def get_select_collection_for_membership_url(self):
+        return reverse(
+            "data_collections:visualisation_select_collection_for_membership", args=(self.id,)
+        )
+
+    def create_collection_membership(self):
+        pass
+        # with transaction.atomic():
+        #     CollectionVisualisationCatalogueItemMembership.objects.create(
+        #         collection=collection, visualisation=catalogue_object
+        #     )
+
     def __str__(self):
         return self.name
 
