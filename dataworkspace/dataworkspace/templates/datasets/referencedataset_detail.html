@@ -6,6 +6,13 @@
 {% block initialGTMDataLayer %}
   {{ block.super }}
   {% include 'partials/gtm_datalayer.html' with catalogue_type='reference' %}
+  <script nonce='{{ request.csp.nonce }}'>
+    function addDatasetToCollection() {
+      dataLayer.push({
+        'event': 'addCatalogueToCollection',
+        'name': '{{ model.name }}'
+      })
+    }</script>
 {% endblock %}
 {% block footer_scripts %}
   {% flag DATA_GRID_REFERENCE_DATASET_FLAG %}
@@ -103,7 +110,7 @@
                 transform="translate(3729.5 4667)" fill="#386eb3"/>
         </svg>
 
-        <button type="submit" onclick="dataLayer.push({'event': 'addDatasetToCollection', 'name': '{{ model.name }}'})" class="govuk-body govuk-link" style=" background: none!important;
+        <button type="submit" onclick="addDatasetToCollection();" class="govuk-body govuk-link" style=" background: none!important;
   border: none;
   padding: 0!important;
   font-family: arial, sans-serif;

@@ -6,6 +6,13 @@
 {% block initialGTMDataLayer %}
   {{ block.super }}
   {% include 'partials/gtm_datalayer.html' with catalogue_type='visualisation' %}
+  <script nonce='{{ request.csp.nonce }}'>
+    function addCatalogueToCollection() {
+      dataLayer.push({
+        'event': 'addCatalogueToCollection',
+        'name': '{{ model.name }}'
+      })
+    }</script>
 {% endblock %}
 
 {% block breadcrumbs %}
@@ -53,7 +60,7 @@
                   transform="translate(3729.5 4667)" fill="#386eb3"/>
           </svg>
 
-          <button type="submit" onclick="dataLayer.push({'event': 'addCatalogueToCollection', 'name': '{{ model.name }}'})" class="govuk-body govuk-link" style=" background: none!important;
+          <button type="submit" onclick="addCatalogueToCollection();" class="govuk-body govuk-link" style=" background: none!important;
   border: none;
   padding: 0!important;
   font-family: arial, sans-serif;
