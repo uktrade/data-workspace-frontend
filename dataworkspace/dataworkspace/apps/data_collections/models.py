@@ -2,6 +2,7 @@ import uuid
 
 from django.conf import settings
 from django.db import models, transaction
+from django.db.models import Q
 
 from dataworkspace.apps.core.models import DeletableTimestampedUserModel
 from dataworkspace.apps.datasets.models import DataSet, VisualisationCatalogueItem
@@ -38,7 +39,13 @@ class CollectionDatasetMembership(DeletableTimestampedUserModel):
     )
 
     class Meta:
-        unique_together = ("dataset_id", "collection_id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["dataset_id", "collection_id"],
+                condition=Q(deleted=False),
+                name="unique_dataset_if_not_deleted",
+            )
+        ]
         ordering = ("id",)
 
     def delete(self, deleted_by, **kwargs):  # pylint: disable=arguments-differ
@@ -58,5 +65,18 @@ class CollectionVisualisationCatalogueItemMembership(DeletableTimestampedUserMod
     )
 
     class Meta:
-        unique_together = ("visualisation", "collection_id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["visualisation", "collection_id"],
+                condition=Q(deleted=False),
+                name="unique_visualisation_if_not_deleted",
+            )
+        ]
         ordering = ("id",)
+
+    def delete(self, deleted_by, **kwargs):  # pylint: disable=arguments-differ
+        with transaction.atomic():
+            super().delete(**kwargs)
+            log_event(
+                deleted_by, EventLog.TYPE_REMOVE_VISUALISATION_FROM_COLLECTION, related_object=self
+            )

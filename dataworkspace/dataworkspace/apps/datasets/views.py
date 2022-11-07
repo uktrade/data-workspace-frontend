@@ -117,6 +117,7 @@ from dataworkspace.apps.datasets.utils import (
     get_tools_links_for_user,
     get_recently_viewed_catalogue_pages,
 )
+from dataworkspace.apps.data_collections.models import Collection
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event, log_permission_change
 from dataworkspace.apps.explorer.utils import invalidate_data_explorer_user_cached_credentials
@@ -584,6 +585,9 @@ class DatasetDetailView(DetailView):
         ctx["DATA_CUT_ENHANCED_PREVIEW_FLAG"] = settings.DATA_CUT_ENHANCED_PREVIEW_FLAG
         ctx["DATASET_CHANGELOG_PAGE_FLAG"] = settings.DATASET_CHANGELOG_PAGE_FLAG
         ctx["DATA_UPLOADER_UI_FLAG"] = settings.DATA_UPLOADER_UI_FLAG
+        ctx["collection_first_object"] = (
+            Collection.objects.first().id if Collection.objects.first() else None
+        )
 
         if self._is_reference_dataset():
             return self._get_context_data_for_reference_dataset(ctx, **kwargs)

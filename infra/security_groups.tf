@@ -236,6 +236,18 @@ resource "aws_security_group_rule" "admin_service_egress_http_to_flower_lb" {
   protocol    = "tcp"
 }
 
+resource "aws_security_group_rule" "admin_service_egress_http_to_mlflow" {
+  description = "egress-http-to-mlflow-lb"
+
+  security_group_id = "${aws_security_group.admin_service.id}"
+  cidr_blocks = ["${cidrhost("${aws_subnet.private_without_egress.*.cidr_block[0]}", 7)}/32"]
+
+  type        = "egress"
+  from_port   = "${local.mlflow_port}"
+  to_port     = "${local.mlflow_port}"
+  protocol    = "tcp"
+}
+
 resource "aws_security_group_rule" "admin_service_egress_http_to_gitlab_service" {
   description = "egress-http-to-gitlab-service"
 
@@ -1722,21 +1734,6 @@ resource "aws_security_group_rule" "flower_service_egress_dns_udp_to_dns_rewrite
   protocol    = "udp"
 }
 
-resource "aws_security_group" "mlflow_lb" {
-  count  = "${length(var.mlflow_instances)}"
-  name        = "${var.prefix}-mlflow-${var.mlflow_instances[count.index]}-lb"
-  description = "${var.prefix}-mlflow-${var.mlflow_instances[count.index]}-lb"
-  vpc_id      = "${aws_vpc.notebooks.id}"
-
-  tags = {
-    Name = "${var.prefix}-mlflow-${var.mlflow_instances[count.index]}-lb"
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
 resource "aws_security_group" "mlflow_service" {
   count  = "${length(var.mlflow_instances)}"
   name        = "${var.prefix}-mlflow-${var.mlflow_instances[count.index]}-service"
@@ -1752,25 +1749,12 @@ resource "aws_security_group" "mlflow_service" {
   }
 }
 
-resource "aws_security_group_rule" "admin_service_egress_http_to_mlflow_lb" {
+resource "aws_security_group_rule" "mlflow_service_ingress_http_mlflow_lb" {
   count  = "${length(var.mlflow_instances)}"
-  description = "egress-http-to-mlflow-${var.mlflow_instances[count.index]}-lb"
+  description = "ingress-mlflow-lb"
 
-  security_group_id = "${aws_security_group.admin_service.id}"
-  source_security_group_id = "${aws_security_group.mlflow_lb[count.index].id}"
-
-  type        = "egress"
-  from_port   = "${local.mlflow_port}"
-  to_port     = "${local.mlflow_port}"
-  protocol    = "tcp"
-}
-
-resource "aws_security_group_rule" "mlflow_lb_inress_http_admin_service" {
-  count  = "${length(var.mlflow_instances)}"
-  description = "ingress-admin-service"
-
-  security_group_id = "${aws_security_group.mlflow_lb[count.index].id}"
-  source_security_group_id = "${aws_security_group.admin_service.id}"
+  security_group_id = "${aws_security_group.mlflow_service[count.index].id}"
+  cidr_blocks = ["${aws_lb.mlflow.*.subnet_mapping[count.index].*.private_ipv4_address[0]}/32"]
 
   type        = "ingress"
   from_port   = "${local.mlflow_port}"
@@ -1778,25 +1762,12 @@ resource "aws_security_group_rule" "mlflow_lb_inress_http_admin_service" {
   protocol    = "tcp"
 }
 
-resource "aws_security_group_rule" "mlflow_lb_egress_http_mlflow_service" {
+resource "aws_security_group_rule" "mlflow_service_ingress_http_mlflow_dataflow_lb" {
   count  = "${length(var.mlflow_instances)}"
-  description = "egress-http-mlflow-service"
-
-  security_group_id = "${aws_security_group.mlflow_lb[count.index].id}"
-  source_security_group_id = "${aws_security_group.mlflow_service[count.index].id}"
-
-  type        = "egress"
-  from_port   = "${local.mlflow_port}"
-  to_port     = "${local.mlflow_port}"
-  protocol    = "tcp"
-}
-
-resource "aws_security_group_rule" "mlflow_service_ingress_http_mlflow_lb" {
-  count  = "${length(var.mlflow_instances)}"
-  description = "ingress-mlflow-lb"
+  description = "ingress-mlflow-dataflow-lb"
 
   security_group_id = "${aws_security_group.mlflow_service[count.index].id}"
-  source_security_group_id = "${aws_security_group.mlflow_lb[count.index].id}"
+  cidr_blocks = ["${aws_lb.mlflow_dataflow.*.subnet_mapping[count.index].*.private_ipv4_address[0]}/32"]
 
   type        = "ingress"
   from_port   = "${local.mlflow_port}"
