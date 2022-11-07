@@ -3,8 +3,9 @@ from django.contrib import messages
 from django.http import Http404
 from django.views.generic import DetailView
 from django.views.decorators.http import require_http_methods
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect, render
 
+from dataworkspace.apps.data_collections.forms import SelectCollectionForMembershipForm
 from dataworkspace.apps.data_collections.models import (
     Collection,
     CollectionDatasetMembership,
@@ -13,6 +14,13 @@ from dataworkspace.apps.data_collections.models import (
 from dataworkspace.apps.datasets.models import VisualisationCatalogueItem, DataSet
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
+
+
+def get_authorised_collections(request):
+    collections = Collection.objects.live()
+    if request.user.is_superuser:
+        return collections
+    return collections.filter(owner=request.user)
 
 
 def get_authorised_collection(request, collection_id):
@@ -75,6 +83,21 @@ def delete_visualisation_membership(request, collections_id, visualisation_membe
     )
 
     return redirect("data_collections:collections_view", collections_id=collections_id)
+
+
+@require_http_methods(["GET"])
+def select_collection_for_membership(request, dataset_class, dataset_id):
+    dataset = get_object_or_404(dataset_class.objects.live(), pk=dataset_id)
+    return render(
+        request,
+        "data_collections/select_collection_for_membership.html",
+        {
+            "form": SelectCollectionForMembershipForm(
+                user_collections=get_authorised_collections(request),
+                initial={"dataset_id": dataset.id},
+            ),
+        },
+    )
 
 
 @require_http_methods(["POST"])
