@@ -89,7 +89,7 @@ def add_catalogue_to_collection(request, collections_id, catalogue_id):
             )
             log_event(
                 request.user,
-                EventLog.TYPE_ADD_DATASET_TO_COLLECTION,
+                EventLog.TYPE_ADD_VISUALISATION_TO_COLLECTION,
                 related_object=catalogue_object,
             )
     except IntegrityError:
