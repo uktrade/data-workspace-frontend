@@ -1,0 +1,35 @@
+{% extends '_main.html' %}
+{% load core_tags %}
+{% load datasets_tags %}
+
+{% block page_title %}
+  Remove {{ item_name }} from {{ collection_name }}
+{% endblock %}
+
+{% block go_back %}<a class="govuk-back-link govuk-link--no-visited-state" href="{{ collection_url }}">Go back</a>{% endblock %}
+
+{% block content %}
+<form action="{{ action_url }}" method="POST" novalidate>
+  {% csrf_token %}
+  <div class="govuk-form-group">
+    <fieldset class="govuk-fieldset">
+      <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
+        <h1 class="govuk-fieldset__heading">
+          Are you sure you want to remove {{ item_name }} from the collection?
+        </h1>
+      </legend>
+
+      <div class="govuk-warning-text">
+        <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+        <strong class="govuk-warning-text__text">
+          <span class="govuk-warning-text__assistive">Warning</span>
+          The item will be removed from this collection from all users. It will not be deleted from the catalogue.
+        </strong>
+      </div>
+    </fieldset>
+    <div class="govuk-button-group">
+      <button class="govuk-button govuk-button--warning" data-module="govuk-button" type="submit">Yes, remove from the collection</button>
+      <a class="govuk-link govuk-link--no-visited-state" href="{{ collection_url }}">Cancel</a>
+    </div>
+</form>
+{% endblock %}

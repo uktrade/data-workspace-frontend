@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.http import Http404
 from django.views.generic import DetailView
 from django.views.decorators.http import require_http_methods
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404, redirect, render, reverse
 
 from dataworkspace.apps.data_collections.forms import SelectCollectionForMembershipForm
 from dataworkspace.apps.data_collections.models import (
@@ -48,6 +48,64 @@ class CollectionsDetailView(DetailView):
         )
 
         return context
+
+
+@require_http_methods(["GET"])
+def dataset_membership_confirm_removal(request, collections_id, data_membership_id):
+    collection = get_authorised_collection(request, collections_id)
+    membership = CollectionDatasetMembership.objects.get(id=data_membership_id)
+    # The membership ID doesn't match the collection ID in the URL
+    if membership.collection.id != collection.id:
+        raise Http404
+
+    context = {
+        "collection": collection.name,
+        "collection_url": reverse(
+            "data_collections:collections_view",
+            kwargs={
+                "collections_id": collection.id,
+            },
+        ),
+        "item_name": membership.dataset.name,
+        "action_url": reverse(
+            "data_collections:collection_data_membership",
+            kwargs={
+                "collections_id": collection.id,
+                "data_membership_id": membership.id,
+            },
+        ),
+    }
+    return render(request, "data_collections/collection_membership_confirm_removal.html", context)
+
+
+@require_http_methods(["GET"])
+def visualisation_membership_confirm_removal(request, collections_id, visualisation_membership_id):
+    collection = get_authorised_collection(request, collections_id)
+    membership = CollectionVisualisationCatalogueItemMembership.objects.get(
+        id=visualisation_membership_id
+    )
+    # The membership ID doesn't match the collection ID in the URL
+    if membership.collection.id != collection.id:
+        raise Http404
+
+    context = {
+        "collection_name": collection.name,
+        "collection_url": reverse(
+            "data_collections:collections_view",
+            kwargs={
+                "collections_id": collection.id,
+            },
+        ),
+        "item_name": membership.visualisation.name,
+        "action_url": reverse(
+            "data_collections:collection_visualisation_membership",
+            kwargs={
+                "collections_id": collection.id,
+                "visualisation_membership_id": membership.id,
+            },
+        ),
+    }
+    return render(request, "data_collections/collection_membership_confirm_removal.html", context)
 
 
 @require_http_methods(["POST"])
