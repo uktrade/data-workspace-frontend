@@ -1,3 +1,4 @@
+from django.db import transaction, IntegrityError
 from django.contrib import messages
 from django.http import Http404
 from django.views.generic import DetailView
@@ -9,6 +10,9 @@ from dataworkspace.apps.data_collections.models import (
     CollectionDatasetMembership,
     CollectionVisualisationCatalogueItemMembership,
 )
+from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
+from dataworkspace.apps.eventlog.models import EventLog
+from dataworkspace.apps.eventlog.utils import log_event
 
 
 def get_authorised_collection(request, collection_id):
@@ -69,5 +73,28 @@ def delete_visualisation_membership(request, collections_id, visualisation_membe
     messages.success(
         request, f"{membership.visualisation.name} has been removed from this collection."
     )
+
+    return redirect("data_collections:collections_view", collections_id=collections_id)
+
+
+@require_http_methods(["POST"])
+def add_catalogue_to_collection(request, collections_id, catalogue_id):
+    collection = get_authorised_collection(request, collections_id)
+    catalogue_object = VisualisationCatalogueItem.objects.get(id=catalogue_id)
+
+    try:
+        with transaction.atomic():
+            CollectionVisualisationCatalogueItemMembership.objects.create(
+                collection=collection, visualisation=catalogue_object
+            )
+            log_event(
+                request.user,
+                EventLog.TYPE_ADD_DATASET_TO_COLLECTION,
+                related_object=catalogue_object,
+            )
+    except IntegrityError:
+        messages.success(request, f"{catalogue_object.name} was already in this collection")
+    else:
+        messages.success(request, f"{catalogue_object.name} has been added to this collection.")
 
     return redirect("data_collections:collections_view", collections_id=collections_id)
