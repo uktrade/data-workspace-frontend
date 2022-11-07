@@ -101,6 +101,7 @@ def select_collection_for_membership(
                 with transaction.atomic():
                     membership_model_class.objects.create(
                         collection=user_collections.get(pk=form.cleaned_data["collection"]),
+                        created_by=request.user,
                         **{membership_model_relationship_name: dataset},
                     )
                     log_event(
