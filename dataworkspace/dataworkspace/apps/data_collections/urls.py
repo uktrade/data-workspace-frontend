@@ -20,8 +20,13 @@ urlpatterns = [
         name="collection_visualisation_membership",
     ),
     path(
-        "<uuid:collections_id>/add-dataset-memberships/<uuid:catalogue_id>",
+        "<uuid:collections_id>/add-visualisation-memberships/<uuid:catalogue_id>",
         login_required(views.add_catalogue_to_collection),
+        name="add_collection_visualisation_membership",
+    ),
+    path(
+        "<uuid:collections_id>/add-dataset-memberships/<uuid:dataset_id>",
+        login_required(views.add_dataset_to_collection),
         name="add_collection_data_membership",
     ),
 ]

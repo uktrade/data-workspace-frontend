@@ -10,7 +10,7 @@ from dataworkspace.apps.data_collections.models import (
     CollectionDatasetMembership,
     CollectionVisualisationCatalogueItemMembership,
 )
-from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
+from dataworkspace.apps.datasets.models import VisualisationCatalogueItem, DataSet
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 
@@ -96,5 +96,28 @@ def add_catalogue_to_collection(request, collections_id, catalogue_id):
         messages.success(request, f"{catalogue_object.name} was already in this collection")
     else:
         messages.success(request, f"{catalogue_object.name} has been added to this collection.")
+
+    return redirect("data_collections:collections_view", collections_id=collections_id)
+
+
+@require_http_methods(["POST"])
+def add_dataset_to_collection(request, collections_id, dataset_id):
+    collection = get_authorised_collection(request, collections_id)
+    dataset_object = DataSet.objects.get(id=dataset_id)
+
+    try:
+        with transaction.atomic():
+            CollectionDatasetMembership.objects.create(
+                collection=collection, dataset=dataset_object
+            )
+            log_event(
+                request.user,
+                EventLog.TYPE_ADD_DATASET_TO_COLLECTION,
+                related_object=dataset_object,
+            )
+    except IntegrityError:
+        messages.success(request, f"{dataset_object.name} was already in this collection")
+    else:
+        messages.success(request, f"{dataset_object.name} has been added to this collection.")
 
     return redirect("data_collections:collections_view", collections_id=collections_id)

@@ -61,6 +61,28 @@
     <div class="govuk-grid-column-two-thirds">
       <span class="govuk-caption-xl">Data cut</span>
       <h1 class="govuk-heading-xl">{{ model.name }}</h1>
+      {% flag COLLECTIONS_FLAG %}
+      <form
+        action="
+          {% if collection_first_object %}{% url "data_collections:add_collection_data_membership" collections_id=collection_first_object dataset_id=model.id %}{% endif %}"
+        method="POST">
+        {% csrf_token %}
+
+        <svg xmlns="http://www.w3.org/2000/svg" width="15.999" height="16" viewBox="0 0 15.999 16">
+          <path id="Union_1" data-name="Union 1" d="M-3723-4651v-6.5h-6.5v-3h6.5v-6.5h3v6.5h6.5v3h-6.5v6.5Z"
+                transform="translate(3729.5 4667)" fill="#386eb3"/>
+        </svg>
+
+        <button type="submit" class="govuk-body govuk-link" style=" background: none!important;
+  border: none;
+  padding: 0!important;
+  font-family: arial, sans-serif;
+  color: #069;
+  text-decoration: underline;
+  cursor: pointer;">Add to collection
+        </button>
+      </form>
+      {% endflag %}
     </div>
   </div>
   <div class="govuk-grid-row">

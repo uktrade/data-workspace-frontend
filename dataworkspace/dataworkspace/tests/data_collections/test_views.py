@@ -171,6 +171,7 @@ def test_authorised_user_attempting_delete_dataset_membership(user, other_user):
 
 
 def test_authorised_user_attempting_delete_visualisation_membership(user, other_user):
+
     client_user = get_client(get_user_data(user))
     client_other_user = get_client(get_user_data(other_user))
 
@@ -257,7 +258,7 @@ def test_authorised_user_attempting_to_add_new_catalogue_membership(staff_user):
 
     response = client_user.post(
         reverse(
-            "data_collections:add_collection_data_membership",
+            "data_collections:add_collection_visualisation_membership",
             kwargs={"collections_id": c.id, "catalogue_id": visualisation.id},
         )
     )
