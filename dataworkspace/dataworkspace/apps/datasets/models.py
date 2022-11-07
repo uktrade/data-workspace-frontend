@@ -1311,6 +1311,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                     description=self.description or "",
                     type=DataSetType.REFERENCE,
                     updated_by=self.updated_by,
+                    published=self.published,
                 )
             )
         else:
@@ -1323,6 +1324,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                 description=self.description or "",
                 type=DataSetType.REFERENCE,
                 updated_by=self.updated_by,
+                published=self.published,
             )
 
         if not create and self._schema_has_changed():

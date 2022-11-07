@@ -256,7 +256,7 @@ def test_collection_selection_page(staff_user, staff_client):
     c3 = factories.CollectionFactory.create(
         name="test-collections-3",
         description="test collections 3",
-        published=True,
+        published=False,
         owner=staff_user,
     )
     visualisation = factories.VisualisationCatalogueItemFactory(
@@ -300,33 +300,6 @@ def test_authorised_user_attempting_to_add_new_catalogue_membership(staff_user):
     assert response.status_code == 302
 
 
-def test_reference_dataset_can_be_added(client):
-    user = factories.UserFactory(is_superuser=True)
-    client = get_client(get_user_data(user))
-
-    rds = factories.ReferenceDatasetFactory(
-        published=True, description="reference dataset example description"
-    )
-
-    c = factories.CollectionFactory.create(
-        name="test-collections-with-reference-dataset",
-        description="test collections description for reference datasets",
-        published=True,
-    )
-
-    c.datasets.add(rds.reference_dataset_inheriting_from_dataset)
-
-    response = client.post(
-        reverse(
-            "data_collections:dataset_select_collection_for_membership",
-            kwargs={"dataset_id": rds.reference_dataset_inheriting_from_dataset.id},
-        ),
-        data={"collection": c.id},
-    )
-
-    assert response.status_code == 302
-
-
 def test_authorised_user_attempting_to_add_new_collection_dataset_membership(staff_user):
     client = get_client(get_user_data(staff_user))
 
@@ -350,10 +323,9 @@ def test_authorised_user_attempting_to_add_new_collection_dataset_membership(sta
     assert response.status_code == 302
 
 
-def test_authorised_user_attempting_to_add_new_collection_reference_dataset_membership(staff_user):
-    client = get_client(get_user_data(staff_user))
-
-    # Create the collection
+def test_authorised_user_attempting_to_add_new_collection_reference_dataset_membership(
+    staff_client, staff_user
+):
     c = factories.CollectionFactory.create(
         name="test-collections",
         description="test collections description",
@@ -365,7 +337,7 @@ def test_authorised_user_attempting_to_add_new_collection_reference_dataset_memb
         published=True, description="reference dataset example description"
     )
 
-    response = client.post(
+    response = staff_client.post(
         reverse(
             "data_collections:dataset_select_collection_for_membership",
             kwargs={"dataset_id": rds.reference_dataset_inheriting_from_dataset.id},

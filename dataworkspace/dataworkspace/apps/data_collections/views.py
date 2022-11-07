@@ -16,7 +16,7 @@ from dataworkspace.apps.eventlog.utils import log_event
 
 
 def get_authorised_collections(request):
-    collections = Collection.objects.live()
+    collections = Collection.objects.live().filter(published=True)
     if request.user.is_superuser:
         return collections
     return collections.filter(owner=request.user)
