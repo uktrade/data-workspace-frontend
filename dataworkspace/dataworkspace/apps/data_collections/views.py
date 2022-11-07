@@ -88,7 +88,7 @@ def delete_visualisation_membership(request, collections_id, visualisation_membe
 def select_collection_for_membership(
     request, dataset_class, membership_model_class, membership_model_relationship_name, dataset_id
 ):
-    dataset = get_object_or_404(dataset_class.objects.live(), pk=dataset_id)
+    dataset = get_object_or_404(dataset_class.objects.live().filter(published=True), pk=dataset_id)
     user_collections = get_authorised_collections(request)
     if request.method == "POST":
         form = SelectCollectionForMembershipForm(
