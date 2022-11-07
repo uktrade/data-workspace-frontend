@@ -580,7 +580,12 @@ class DatasetDetailView(DetailView):
         return ctx
 
     def get_context_data(self, **kwargs):
-        first_collection = Collection.objects.filter(owner=self.request.user).values("id").first()
+        first_collection = (
+            Collection.objects.filter(owner=self.request.user).values("id").first()
+            or Collection.objects.first().values("id")
+            if self.request.user.is_superuser and Collection.objects.first()
+            else None
+        )
 
         ctx = super().get_context_data()
         ctx["model"] = self.object
