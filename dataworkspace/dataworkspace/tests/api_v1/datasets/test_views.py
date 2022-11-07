@@ -515,6 +515,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
                 master_dataset.retention_policy,
             ),
             self.expected_response(reference_dataset, "Reference data"),
+            # self.expected_response(reference_dataset.reference_dataset_inheriting_from_dataset, "Reference data"),
             self.expected_response(visualisation, "Visualisation", visualisation.personal_data),
             self.expected_response(visualisation2, "Visualisation"),
         ]

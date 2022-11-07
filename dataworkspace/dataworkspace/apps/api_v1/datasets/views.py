@@ -341,6 +341,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         )
         .annotate(draft=_static_bool(None))
         .annotate(dictionary=F("dictionary_published"))
+        .exclude(type=DataSetType.REFERENCE)
         .values(*fields)
         .union(
             ReferenceDataset.objects.live()
