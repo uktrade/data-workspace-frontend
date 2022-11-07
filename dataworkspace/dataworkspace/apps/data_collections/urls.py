@@ -3,9 +3,10 @@ from django.urls import path
 from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.data_collections import views
 from dataworkspace.apps.data_collections.models import (
+    CollectionDatasetMembership,
     CollectionVisualisationCatalogueItemMembership,
 )
-from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
+from dataworkspace.apps.datasets.models import DataSet, VisualisationCatalogueItem
 
 urlpatterns = [
     path(
@@ -34,8 +35,13 @@ urlpatterns = [
         name="visualisation_select_collection_for_membership",
     ),
     path(
-        "<uuid:collections_id>/add-dataset-memberships/<uuid:dataset_id>",
-        login_required(views.add_dataset_to_collection),
-        name="add_collection_data_membership",
+        "select-collection-for-membership/dataset/<uuid:dataset_id>",
+        login_required(views.select_collection_for_membership),
+        {
+            "dataset_class": DataSet,
+            "membership_model_class": CollectionDatasetMembership,
+            "membership_model_relationship_name": "dataset",
+        },
+        name="dataset_select_collection_for_membership",
     ),
 ]

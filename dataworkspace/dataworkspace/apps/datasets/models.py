@@ -493,6 +493,11 @@ class DataSet(DeletableTimestampedUserModel):
                 return related_object
         return None
 
+    def get_select_collection_for_membership_url(self):
+        return reverse(
+            "data_collections:dataset_select_collection_for_membership", args=(self.id,)
+        )
+
 
 class DataSetVisualisation(DeletableTimestampedUserModel):
     name = models.CharField(max_length=255)
@@ -1804,6 +1809,12 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                     )
             hashed_data.update(json.dumps(data).encode("utf-8"))
         return hashed_data.digest()
+
+    def get_select_collection_for_membership_url(self):
+        return reverse(
+            "data_collections:dataset_select_collection_for_membership",
+            args=(self.reference_dataset_inheriting_from_dataset.id,),
+        )
 
 
 class ReferenceDataSetBookmark(models.Model):
