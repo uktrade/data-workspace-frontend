@@ -121,6 +121,7 @@ def select_collection_for_membership(
         request,
         "data_collections/select_collection_for_membership.html",
         {
+            "dataset": dataset,
             "form": SelectCollectionForMembershipForm(user_collections=user_collections),
         },
     )

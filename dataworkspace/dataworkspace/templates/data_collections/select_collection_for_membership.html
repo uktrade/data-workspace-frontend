@@ -5,6 +5,9 @@
 {% block page_title %}
   Select a collection
 {% endblock %}
+{% block go_back %}
+    <a href="{{ dataset.get_absolute_url }}" class="govuk-back-link">Back</a>
+{% endblock go_back %}
 {% block main %}
   <div class="govuk-width-container">
     <main class="govuk-main-wrapper" id="main-content" role="main">
