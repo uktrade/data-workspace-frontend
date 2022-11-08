@@ -453,6 +453,12 @@ p.sidebar-section {
   border-color: white;
 }
 
+.dw-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
 @import "filters";
 @import "search";
 @import "site-search";
