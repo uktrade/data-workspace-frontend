@@ -7,7 +7,7 @@ from dataworkspace.forms import (
 
 class SelectCollectionForMembershipForm(GOVUKDesignSystemForm):
     collection = GOVUKDesignSystemRadioField(
-        required=True,
+        required=False,
         label="Choose the collection you want to add this item to",
         widget=GOVUKDesignSystemRadiosWidget(heading="p", extra_label_classes="govuk-body-l"),
     )

@@ -16,7 +16,7 @@ from dataworkspace.apps.eventlog.utils import log_event
 
 
 def get_authorised_collections(request):
-    collections = Collection.objects.live().filter(published=True)
+    collections = Collection.objects.live()
     if request.user.is_superuser:
         return collections
     return collections.filter(owner=request.user)
@@ -24,9 +24,7 @@ def get_authorised_collections(request):
 
 def get_authorised_collection(request, collection_id):
     collection_object = Collection.objects.live().get(id=collection_id)
-    if request.user.is_superuser or (
-        collection_object.published and request.user == collection_object.owner
-    ):
+    if request.user.is_superuser or request.user == collection_object.owner:
         return collection_object
     else:
         raise Http404
