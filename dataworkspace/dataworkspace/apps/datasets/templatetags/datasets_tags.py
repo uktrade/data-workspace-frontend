@@ -138,3 +138,10 @@ def to_json(data):
         return str(obj)
 
     return mark_safe(escapejson(json.dumps(data, default=handler)))
+
+
+@register.filter
+def startswith(text, starts):
+    if isinstance(text, str):
+        return text.startswith(starts)
+    return False

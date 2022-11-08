@@ -115,6 +115,7 @@ def delete_datasets_membership(request, collections_id, data_membership_id):
 
     membership.delete(request.user)
     messages.success(request, f"{membership.dataset.name} has been removed from this collection.")
+    messages.info(request, f"remove: {collection.name}, {collection.id}")
 
     return redirect("data_collections:collections_view", collections_id=collections_id)
 
@@ -134,6 +135,7 @@ def delete_visualisation_membership(request, collections_id, visualisation_membe
     messages.success(
         request, f"{membership.visualisation.name} has been removed from this collection."
     )
+    messages.info(request, f"remove: {collection.name}, {collection.id}")
 
     return redirect("data_collections:collections_view", collections_id=collections_id)
 
@@ -161,6 +163,8 @@ def select_collection_for_membership(
                 messages.success(request, f"{dataset.name} was already in this collection")
             else:
                 messages.success(request, f"{dataset.name} has been added to this collection.")
+
+            messages.info(request, f"add: {dataset.name}, {dataset.id}")
 
             log_event(
                 request.user,

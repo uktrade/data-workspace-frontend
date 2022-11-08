@@ -1,3 +1,5 @@
+{% load datasets_tags %}
+
 {% for message in messages %}
   {% if message.tags == 'error' %}
     <div class="govuk-notification-banner" role="alert" aria-labelledby="govuk-notification-banner-title" data-module="govuk-notification-banner">
@@ -27,4 +29,25 @@
       </div>
     </div>
   {% endif %}
+  {% if message.tags == "info" %}
+    <script nonce="{{ request.csp_nonce }}">
+      window.dataLayer = window.dataLayer || [];
+      {% if message|startswith:"add" %}
+        dataLayer.push({
+          "event": "GAEvent",
+          "eventCategory": "Catalogue",
+          "eventAction": "Add to collection",
+          "eventLabel": "{{ message }}",
+        })
+      {% elif message|startswith:"remove" %}
+        dataLayer.push({
+          "event": "GAEvent",
+          "eventCategory": "Collection",
+          "eventAction": "Remove item",
+          "eventLabel": "{{ message }}",
+        })
+      {% endif %}
+    </script>
+  {% endif %}
+
 {% endfor %}
