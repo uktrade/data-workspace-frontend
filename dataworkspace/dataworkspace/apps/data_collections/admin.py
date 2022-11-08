@@ -11,15 +11,44 @@ from dataworkspace.apps.data_collections.models import (
 class CollectionDatasetMembershipAdmin(admin.TabularInline):
     model = CollectionDatasetMembership
     extra = 1
-    autocomplete_fields = ("collection", "created_by",)
-    ordering = ["dataset"]
+    autocomplete_fields = (
+        "collection",
+        "created_by",
+        "updated_by",
+        "dataset",
+    )
+    readonly_fields = (
+        "created_by",
+        "updated_by",
+    )
+    fieldsets = [
+        (
+            None,
+            {"fields": ["deleted", "dataset"]},
+        ),
+    ]
 
 
 class CollectionVisualisationCatalogueItemMembershipAdmin(admin.TabularInline):
     model = CollectionVisualisationCatalogueItemMembership
     extra = 1
-    autocomplete_fields = ("collection", "created_by",)
-    ordering = ["visualisation"]
+    autocomplete_fields = (
+        "collection",
+        "created_by",
+        "updated_by",
+        "visualisation",
+    )
+    readonly_fields = (
+        "created_by",
+        "updated_by",
+    )
+    fieldsets = [
+        (
+            None,
+            {"fields": ["deleted", "visualisation"]},
+        ),
+    ]
+    ordering = ("visualisation",)
 
 
 class CollectionAdmin(DeletableTimeStampedUserAdmin):
@@ -32,6 +61,7 @@ class CollectionAdmin(DeletableTimeStampedUserAdmin):
             {"fields": ["name", "description", "owner", "id", "notes"]},
         ),
     ]
+    autocomplete_fields = ("owner",)
     readonly_fields = ["id"]
     inlines = (
         CollectionDatasetMembershipAdmin,
