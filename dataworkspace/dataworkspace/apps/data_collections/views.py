@@ -36,10 +36,11 @@ class CollectionsDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         source_object = self.get_object()
         context["source_object"] = source_object
-        context["dataset_collections"] = source_object.dataset_collections.filter(deleted=False)
+        context["dataset_collections"] = source_object.dataset_collections.filter(deleted=False).order_by(
+            "dataset__name")
         context["visualisation_collections"] = source_object.visualisation_collections.filter(
             deleted=False
-        )
+        ).order_by("visualisation__name")
 
         return context
 
