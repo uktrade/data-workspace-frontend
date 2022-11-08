@@ -438,6 +438,17 @@ p.sidebar-section {
 .dw-banner__body {
   color: govuk-colour("white");
 }
+.dw-banner__breadcrumbs__link:link {
+  text-decoration: none;
+}
+.dw-banner__breadcrumbs__link:hover {
+  text-decoration: underline;
+}
+.dw-banner__breadcrumbs__link:focus,
+.dw-banner__breadcrumbs__link:active {
+  text-decoration: none;
+  color: $govuk-link-active-colour;
+}
 .dw-banner__breadcrumbs__list-item::before {
   border-color: white;
 }
