@@ -81,7 +81,7 @@
               </dl>
             </div>
             {% endfor %}
-            <p class="govuk-body" style="margin-bottom: 40px"><a href="">Search for data</a> you'd like to add.</p>
+            <p class="govuk-body" style="margin-bottom: 40px"><a class="govuk-link govuk-link--no-visited-state" href="">Search for data</a> you'd like to add.</p>
           </div>
           <h2 class="govuk-heading-l">Dashboards</h2>
           <div class="search-result" style="border-bottom: none">
@@ -124,11 +124,11 @@
             </div>
             {% endfor %}
           </div>
-          <p class="govuk-body"><a href="https://data.trade.gov.uk/datasets/?q=&sort=relevance&data_type=3">Search for dashboards</a> you'd like to add.</p>
+          <p class="govuk-body"><a class="govuk-link govuk-link--no-visited-state" href="https://data.trade.gov.uk/datasets/?q=&sort=relevance&data_type=3">Search for dashboards</a> you'd like to add.</p>
         </div>
         <div class="govuk-grid-column-one-third">
           <h2 class="govuk-heading-s">Owner</h2>
-          <p class="govuk-body">{{ source_object.owner.get_full_name|default_if_none:"Not assigned" }}<br>{% if source_object.owner %}(<a href="mailto:{{ source_object.owner.email }}">{{ source_object.owner.email }}</a>){% endif %}</p>
+          <p class="govuk-body">{{ source_object.owner.get_full_name|default_if_none:"Not assigned" }}<br>{% if source_object.owner %}(<a class="govuk-link govuk-link--no-visited-state" href="mailto:{{ source_object.owner.email }}">{{ source_object.owner.email }}</a>){% endif %}</p>
         </div>
       </div>
     </main>
