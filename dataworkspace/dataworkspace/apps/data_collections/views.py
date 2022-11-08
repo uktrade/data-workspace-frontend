@@ -164,21 +164,23 @@ def select_collection_for_membership(
             else:
                 messages.success(request, f"{dataset.name} has been added to this collection.")
 
-        log_event(
-            request.user,
-            EventLog.TYPE_ADD_DATASET_TO_COLLECTION,
-            related_object=dataset,
-        )
+            log_event(
+                request.user,
+                EventLog.TYPE_ADD_DATASET_TO_COLLECTION,
+                related_object=dataset,
+            )
 
-        return redirect(
-            "data_collections:collections_view", collections_id=form.cleaned_data["collection"]
-        )
+            return redirect(
+                "data_collections:collections_view", collections_id=form.cleaned_data["collection"]
+            )
+    else:
+        form = SelectCollectionForMembershipForm(user_collections=user_collections)
 
     return render(
         request,
         "data_collections/select_collection_for_membership.html",
         {
             "dataset": dataset,
-            "form": SelectCollectionForMembershipForm(user_collections=user_collections),
+            "form": form,
         },
     )
