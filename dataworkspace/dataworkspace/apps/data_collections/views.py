@@ -23,11 +23,7 @@ def get_authorised_collections(request):
 
 
 def get_authorised_collection(request, collection_id):
-    collection_object = Collection.objects.live().get(id=collection_id)
-    if request.user.is_superuser or request.user == collection_object.owner:
-        return collection_object
-    else:
-        raise Http404
+    return get_object_or_404(get_authorised_collections(request), id=collection_id)
 
 
 class CollectionsDetailView(DetailView):

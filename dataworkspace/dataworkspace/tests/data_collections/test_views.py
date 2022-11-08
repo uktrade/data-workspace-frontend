@@ -9,7 +9,7 @@ def test_collection(client):
     client = get_client(get_user_data(user))
 
     c = factories.CollectionFactory.create(
-        name="test-collections", description="test collections description", published=True
+        name="test-collections", description="test collections description"
     )
 
     response = client.get(
@@ -22,12 +22,12 @@ def test_collection(client):
     assert "test collections description" in response.content.decode(response.charset)
 
 
-def test_unpublished_raises_404(client):
+def test_deleted_raises_404(client):
     user = factories.UserFactory()
     client = get_client(get_user_data(user))
 
     c = factories.CollectionFactory.create(
-        name="test-collections", description="test collections description", published=False
+        name="test-collections", description="test collections description", deleted=True
     )
 
     response = client.get(
@@ -42,7 +42,7 @@ def test_unpublished_raises_404(client):
 
 def test_unauthorised_user_raises_404(client):
     c = factories.CollectionFactory.create(
-        name="test-collections", description="test collections description", published=True
+        name="test-collections", description="test collections description"
     )
 
     response = client.get(
@@ -62,7 +62,7 @@ def test_dataset_can_be_added(client):
     dataset = factories.DatacutDataSetFactory(published=True, name="Datacut dataset")
 
     c = factories.CollectionFactory.create(
-        name="test-collections", description="test collections description", published=True
+        name="test-collections", description="test collections description"
     )
 
     c.datasets.add(dataset)
@@ -87,7 +87,7 @@ def test_visualisation_can_be_added(client):
     )
 
     c = factories.CollectionFactory.create(
-        name="test-collections", description="test collections description", published=True
+        name="test-collections", description="test collections description"
     )
 
     c.visualisation_catalogue_items.add(catalogue_item)
@@ -111,7 +111,6 @@ def test_authorised_user_attempting_delete_dataset_membership(user, other_user):
     c = factories.CollectionFactory.create(
         name="test-collections",
         description="test collections description",
-        published=True,
         owner=user,
     )
 
@@ -197,7 +196,6 @@ def test_authorised_user_attempting_delete_visualisation_membership(user, other_
     c = factories.CollectionFactory.create(
         name="test-collections",
         description="test collections description",
-        published=True,
         owner=user,
     )
 
@@ -280,20 +278,18 @@ def test_collection_selection_page(staff_user, staff_client):
     c1 = factories.CollectionFactory.create(
         name="test-collections-1",
         description="test collections 1",
-        published=True,
         owner=staff_user,
     )
     c2 = factories.CollectionFactory.create(
         name="test-collections-2",
         description="test collections 2",
-        published=True,
         owner=staff_user,
     )
     c3 = factories.CollectionFactory.create(
         name="test-collections-3",
         description="test collections 3",
-        published=False,
         owner=staff_user,
+        deleted=True,
     )
     visualisation = factories.VisualisationCatalogueItemFactory(
         published=True, name="Visualisation catalogue item"
@@ -317,7 +313,6 @@ def test_authorised_user_attempting_to_add_new_catalogue_membership(staff_user):
     c = factories.CollectionFactory.create(
         name="test-collections",
         description="test collections description",
-        published=True,
         owner=staff_user,
     )
 
@@ -343,7 +338,6 @@ def test_authorised_user_attempting_to_add_new_collection_dataset_membership(sta
     c = factories.CollectionFactory.create(
         name="test-collections",
         description="test collections description",
-        published=True,
         owner=staff_user,
     )
 
@@ -365,7 +359,6 @@ def test_authorised_user_attempting_to_add_new_collection_reference_dataset_memb
     c = factories.CollectionFactory.create(
         name="test-collections",
         description="test collections description",
-        published=True,
         owner=staff_user,
     )
 
