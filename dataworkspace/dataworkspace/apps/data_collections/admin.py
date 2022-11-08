@@ -11,18 +11,21 @@ from dataworkspace.apps.data_collections.models import (
 class CollectionDatasetMembershipAdmin(admin.TabularInline):
     model = CollectionDatasetMembership
     extra = 1
-    autocomplete_fields = ("collection",)
+    autocomplete_fields = ("collection", "created_by",)
+    ordering = ["dataset"]
 
 
 class CollectionVisualisationCatalogueItemMembershipAdmin(admin.TabularInline):
     model = CollectionVisualisationCatalogueItemMembership
     extra = 1
-    autocomplete_fields = ("collection",)
+    autocomplete_fields = ("collection", "created_by",)
+    ordering = ["visualisation"]
 
 
 class CollectionAdmin(DeletableTimeStampedUserAdmin):
     list_display = ("name", "description", "owner")
     search_fields = ["name"]
+    ordering = ["name"]
     fieldsets = [
         (
             None,
