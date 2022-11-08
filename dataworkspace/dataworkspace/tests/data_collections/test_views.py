@@ -240,8 +240,42 @@ def test_authorised_user_attempting_delete_visualisation_membership(user, other_
     )
 
 
+def test_collection_selection_page(staff_user, staff_client):
+    c1 = factories.CollectionFactory.create(
+        name="test-collections-1",
+        description="test collections 1",
+        published=True,
+        owner=staff_user,
+    )
+    c2 = factories.CollectionFactory.create(
+        name="test-collections-2",
+        description="test collections 2",
+        published=True,
+        owner=staff_user,
+    )
+    c3 = factories.CollectionFactory.create(
+        name="test-collections-3",
+        description="test collections 3",
+        published=False,
+        owner=staff_user,
+    )
+    visualisation = factories.VisualisationCatalogueItemFactory(
+        published=True, name="Visualisation catalogue item"
+    )
+    response = staff_client.get(
+        reverse(
+            "data_collections:visualisation_select_collection_for_membership",
+            kwargs={"dataset_id": visualisation.id},
+        )
+    )
+    assert response.status_code == 200
+    assert c1.name in response.content.decode(response.charset)
+    assert c2.name in response.content.decode(response.charset)
+    assert c3.name not in response.content.decode(response.charset)
+
+
 def test_authorised_user_attempting_to_add_new_catalogue_membership(staff_user):
-    client_user = get_client(get_user_data(staff_user))
+    client = get_client(get_user_data(staff_user))
 
     # Create the collection
     c = factories.CollectionFactory.create(
@@ -256,44 +290,18 @@ def test_authorised_user_attempting_to_add_new_catalogue_membership(staff_user):
         published=True, name="Visualisation catalogue item"
     )
 
-    response = client_user.post(
+    response = client.post(
         reverse(
-            "data_collections:add_collection_visualisation_membership",
-            kwargs={"collections_id": c.id, "catalogue_id": visualisation.id},
-        )
+            "data_collections:visualisation_select_collection_for_membership",
+            kwargs={"dataset_id": visualisation.id},
+        ),
+        data={"collection": c.id},
     )
     assert response.status_code == 302
 
 
-def test_reference_dataset_can_be_added(client):
-    user = factories.UserFactory(is_superuser=True)
-    client = get_client(get_user_data(user))
-
-    rds = factories.ReferenceDatasetFactory(
-        published=True, description="reference dataset example description"
-    )
-
-    c = factories.CollectionFactory.create(
-        name="test-collections-with-reference-dataset",
-        description="test collections description for reference datasets",
-        published=True,
-    )
-
-    c.datasets.add(rds.reference_dataset_inheriting_from_dataset)
-
-    response = client.get(
-        reverse(
-            "data_collections:collections_view",
-            kwargs={"collections_id": c.id},
-        )
-    )
-
-    assert response.status_code == 200
-    assert "Reference Dataset" in response.content.decode(response.charset)
-
-
 def test_authorised_user_attempting_to_add_new_collection_dataset_membership(staff_user):
-    client_user = get_client(get_user_data(staff_user))
+    client = get_client(get_user_data(staff_user))
 
     # Create the collection
     c = factories.CollectionFactory.create(
@@ -305,19 +313,19 @@ def test_authorised_user_attempting_to_add_new_collection_dataset_membership(sta
 
     dataset = factories.DatacutDataSetFactory(published=True, name="Datacut dataset")
 
-    response = client_user.post(
+    response = client.post(
         reverse(
-            "data_collections:add_collection_data_membership",
-            kwargs={"collections_id": c.id, "dataset_id": dataset.id},
-        )
+            "data_collections:dataset_select_collection_for_membership",
+            kwargs={"dataset_id": dataset.id},
+        ),
+        data={"collection": c.id},
     )
     assert response.status_code == 302
 
 
-def test_authorised_user_attempting_to_add_new_collection_reference_dataset_membership(staff_user):
-    client_user = get_client(get_user_data(staff_user))
-
-    # Create the collection
+def test_authorised_user_attempting_to_add_new_collection_reference_dataset_membership(
+    staff_client, staff_user
+):
     c = factories.CollectionFactory.create(
         name="test-collections",
         description="test collections description",
@@ -329,13 +337,11 @@ def test_authorised_user_attempting_to_add_new_collection_reference_dataset_memb
         published=True, description="reference dataset example description"
     )
 
-    response = client_user.post(
+    response = staff_client.post(
         reverse(
-            "data_collections:add_collection_data_membership",
-            kwargs={
-                "collections_id": c.id,
-                "dataset_id": rds.reference_dataset_inheriting_from_dataset.id,
-            },
-        )
+            "data_collections:dataset_select_collection_for_membership",
+            kwargs={"dataset_id": rds.reference_dataset_inheriting_from_dataset.id},
+        ),
+        data={"collection": c.id},
     )
     assert response.status_code == 302

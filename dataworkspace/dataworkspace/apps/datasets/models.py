@@ -493,6 +493,11 @@ class DataSet(DeletableTimestampedUserModel):
                 return related_object
         return None
 
+    def get_select_collection_for_membership_url(self):
+        return reverse(
+            "data_collections:dataset_select_collection_for_membership", args=(self.id,)
+        )
+
 
 class DataSetVisualisation(DeletableTimestampedUserModel):
     name = models.CharField(max_length=255)
@@ -1306,6 +1311,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                     description=self.description or "",
                     type=DataSetType.REFERENCE,
                     updated_by=self.updated_by,
+                    published=self.published,
                 )
             )
         else:
@@ -1318,6 +1324,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                 description=self.description or "",
                 type=DataSetType.REFERENCE,
                 updated_by=self.updated_by,
+                published=self.published,
             )
 
         if not create and self._schema_has_changed():
@@ -1804,6 +1811,12 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                     )
             hashed_data.update(json.dumps(data).encode("utf-8"))
         return hashed_data.digest()
+
+    def get_select_collection_for_membership_url(self):
+        return reverse(
+            "data_collections:dataset_select_collection_for_membership",
+            args=(self.reference_dataset_inheriting_from_dataset.id,),
+        )
 
 
 class ReferenceDataSetBookmark(models.Model):
@@ -2438,6 +2451,11 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     @staticmethod
     def get_type_display():
         return "Visualisation"
+
+    def get_select_collection_for_membership_url(self):
+        return reverse(
+            "data_collections:visualisation_select_collection_for_membership", args=(self.id,)
+        )
 
     def __str__(self):
         return self.name

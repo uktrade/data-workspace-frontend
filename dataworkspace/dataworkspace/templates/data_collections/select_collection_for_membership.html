@@ -1,0 +1,32 @@
+{% extends '_main.html' %}
+{% load core_tags %}
+{% load datasets_tags %}
+
+{% block page_title %}
+  Select a collection
+{% endblock %}
+{% block go_back %}
+    <a href="{{ dataset.get_absolute_url }}" class="govuk-back-link">Back</a>
+{% endblock go_back %}
+{% block main %}
+  <div class="govuk-width-container">
+    <main class="govuk-main-wrapper" id="main-content" role="main">
+      {% include 'partials/messages.html' %}
+
+      <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+          <h1 class="govuk-heading-xl govuk-!-margin-bottom-2">Select a collection</h1>
+          {% include 'design_system/error_summary.html' with form=form %}
+          <form method="post">
+            {% csrf_token %}
+            {{ form.collection }}
+            <div class="govuk-button-group">
+              <input class="govuk-button" type="submit" value="Continue">
+              <a class="govuk-link govuk-link--no-visited-state" href="{{ dataset.get_absolute_url }}">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+  </div>
+{% endblock main %}

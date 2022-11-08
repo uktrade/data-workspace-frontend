@@ -3,16 +3,23 @@ from django.contrib import messages
 from django.http import Http404
 from django.views.generic import DetailView
 from django.views.decorators.http import require_http_methods
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect, render
 
+from dataworkspace.apps.data_collections.forms import SelectCollectionForMembershipForm
 from dataworkspace.apps.data_collections.models import (
     Collection,
     CollectionDatasetMembership,
     CollectionVisualisationCatalogueItemMembership,
 )
-from dataworkspace.apps.datasets.models import VisualisationCatalogueItem, DataSet
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
+
+
+def get_authorised_collections(request):
+    collections = Collection.objects.live().filter(published=True)
+    if request.user.is_superuser:
+        return collections
+    return collections.filter(owner=request.user)
 
 
 def get_authorised_collection(request, collection_id):
@@ -77,47 +84,45 @@ def delete_visualisation_membership(request, collections_id, visualisation_membe
     return redirect("data_collections:collections_view", collections_id=collections_id)
 
 
-@require_http_methods(["POST"])
-def add_catalogue_to_collection(request, collections_id, catalogue_id):
-    collection = get_authorised_collection(request, collections_id)
-    catalogue_object = VisualisationCatalogueItem.objects.get(id=catalogue_id)
+@require_http_methods(["GET", "POST"])
+def select_collection_for_membership(
+    request, dataset_class, membership_model_class, membership_model_relationship_name, dataset_id
+):
+    dataset = get_object_or_404(dataset_class.objects.live().filter(published=True), pk=dataset_id)
+    user_collections = get_authorised_collections(request)
+    if request.method == "POST":
+        form = SelectCollectionForMembershipForm(
+            request.POST,
+            user_collections=user_collections,
+        )
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    membership_model_class.objects.create(
+                        collection=user_collections.get(pk=form.cleaned_data["collection"]),
+                        created_by=request.user,
+                        **{membership_model_relationship_name: dataset},
+                    )
+            except IntegrityError:
+                messages.success(request, f"{dataset.name} was already in this collection")
+            else:
+                messages.success(request, f"{dataset.name} has been added to this collection.")
 
-    try:
-        with transaction.atomic():
-            CollectionVisualisationCatalogueItemMembership.objects.create(
-                collection=collection, visualisation=catalogue_object
-            )
-            log_event(
-                request.user,
-                EventLog.TYPE_ADD_VISUALISATION_TO_COLLECTION,
-                related_object=catalogue_object,
-            )
-    except IntegrityError:
-        messages.success(request, f"{catalogue_object.name} was already in this collection")
-    else:
-        messages.success(request, f"{catalogue_object.name} has been added to this collection.")
+        log_event(
+            request.user,
+            EventLog.TYPE_ADD_DATASET_TO_COLLECTION,
+            related_object=dataset,
+        )
 
-    return redirect("data_collections:collections_view", collections_id=collections_id)
+        return redirect(
+            "data_collections:collections_view", collections_id=form.cleaned_data["collection"]
+        )
 
-
-@require_http_methods(["POST"])
-def add_dataset_to_collection(request, collections_id, dataset_id):
-    collection = get_authorised_collection(request, collections_id)
-    dataset_object = DataSet.objects.get(id=dataset_id)
-
-    try:
-        with transaction.atomic():
-            CollectionDatasetMembership.objects.create(
-                collection=collection, dataset=dataset_object
-            )
-            log_event(
-                request.user,
-                EventLog.TYPE_ADD_DATASET_TO_COLLECTION,
-                related_object=dataset_object,
-            )
-    except IntegrityError:
-        messages.success(request, f"{dataset_object.name} was already in this collection")
-    else:
-        messages.success(request, f"{dataset_object.name} has been added to this collection.")
-
-    return redirect("data_collections:collections_view", collections_id=collections_id)
+    return render(
+        request,
+        "data_collections/select_collection_for_membership.html",
+        {
+            "dataset": dataset,
+            "form": SelectCollectionForMembershipForm(user_collections=user_collections),
+        },
+    )
