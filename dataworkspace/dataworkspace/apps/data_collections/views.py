@@ -16,20 +16,14 @@ from dataworkspace.apps.eventlog.utils import log_event
 
 
 def get_authorised_collections(request):
-    collections = Collection.objects.live().filter(published=True)
+    collections = Collection.objects.live()
     if request.user.is_superuser:
         return collections
     return collections.filter(owner=request.user)
 
 
 def get_authorised_collection(request, collection_id):
-    collection_object = Collection.objects.live().get(id=collection_id)
-    if request.user.is_superuser or (
-        collection_object.published and request.user == collection_object.owner
-    ):
-        return collection_object
-    else:
-        raise Http404
+    return get_object_or_404(get_authorised_collections(request), id=collection_id)
 
 
 class CollectionsDetailView(DetailView):
@@ -166,21 +160,23 @@ def select_collection_for_membership(
             else:
                 messages.success(request, f"{dataset.name} has been added to this collection.")
 
-        log_event(
-            request.user,
-            EventLog.TYPE_ADD_DATASET_TO_COLLECTION,
-            related_object=dataset,
-        )
+            log_event(
+                request.user,
+                EventLog.TYPE_ADD_DATASET_TO_COLLECTION,
+                related_object=dataset,
+            )
 
-        return redirect(
-            "data_collections:collections_view", collections_id=form.cleaned_data["collection"]
-        )
+            return redirect(
+                "data_collections:collections_view", collections_id=form.cleaned_data["collection"]
+            )
+    else:
+        form = SelectCollectionForMembershipForm(user_collections=user_collections)
 
     return render(
         request,
         "data_collections/select_collection_for_membership.html",
         {
             "dataset": dataset,
-            "form": SelectCollectionForMembershipForm(user_collections=user_collections),
+            "form": form,
         },
     )

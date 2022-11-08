@@ -17,7 +17,6 @@ class Collection(DeletableTimestampedUserModel):
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
     )
-    published = models.BooleanField(default=False)
     datasets = models.ManyToManyField(DataSet, through="CollectionDatasetMembership")
     visualisation_catalogue_items = models.ManyToManyField(
         VisualisationCatalogueItem,

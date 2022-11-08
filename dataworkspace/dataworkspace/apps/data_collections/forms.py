@@ -1,3 +1,5 @@
+from django import forms
+
 from dataworkspace.forms import (
     GOVUKDesignSystemRadioField,
     GOVUKDesignSystemForm,
@@ -7,8 +9,8 @@ from dataworkspace.forms import (
 
 class SelectCollectionForMembershipForm(GOVUKDesignSystemForm):
     collection = GOVUKDesignSystemRadioField(
-        required=True,
-        label="Choose a collection you'll add the data to",
+        required=False,
+        label="Choose the collection you want to add this item to",
         widget=GOVUKDesignSystemRadiosWidget(heading="p", extra_label_classes="govuk-body-l"),
     )
 
@@ -16,3 +18,9 @@ class SelectCollectionForMembershipForm(GOVUKDesignSystemForm):
         self.user_collections = kwargs.pop("user_collections")
         super().__init__(*args, **kwargs)
         self.fields["collection"].choices = ((x.id, x.name) for x in self.user_collections)
+
+    def clean_collection(self):
+        collection = self.cleaned_data.get("collection")
+        if not collection:
+            raise forms.ValidationError("You must select a collection before continuing.")
+        return collection
