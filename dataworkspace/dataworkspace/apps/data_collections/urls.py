@@ -20,6 +20,11 @@ urlpatterns = [
         name="collection_data_membership",
     ),
     path(
+        "<uuid:collections_id>/dataset-memberships/<int:data_membership_id>/confirm-removal",
+        login_required(views.dataset_membership_confirm_removal),
+        name="collection_data_membership_confirm_removal",
+    ),
+    path(
         "<uuid:collections_id>/visualisations-memberships/<int:visualisation_membership_id>",
         login_required(views.delete_visualisation_membership),
         name="collection_visualisation_membership",
@@ -33,6 +38,11 @@ urlpatterns = [
             "membership_model_relationship_name": "visualisation",
         },
         name="visualisation_select_collection_for_membership",
+    ),
+    path(
+        "<uuid:collections_id>/visualisations-memberships/<int:visualisation_membership_id>/confirm-removal",
+        login_required(views.visualisation_membership_confirm_removal),
+        name="collection_visualisation_membership_confirm_removal",
     ),
     path(
         "select-collection-for-membership/dataset/<uuid:dataset_id>",

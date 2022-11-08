@@ -129,6 +129,13 @@ def test_authorised_user_attempting_delete_dataset_membership(user, other_user):
     assert ">Datacut dataset<" in response.content.decode(response.charset)
 
     # Ensure that a user that isn't the owner can't remove it
+    response = client_other_user.get(
+        reverse(
+            "data_collections:collection_data_membership_confirm_removal",
+            kwargs={"collections_id": c.id, "data_membership_id": membership.id},
+        )
+    )
+    assert response.status_code == 404
     response = client_other_user.post(
         reverse(
             "data_collections:collection_data_membership",
@@ -146,6 +153,17 @@ def test_authorised_user_attempting_delete_dataset_membership(user, other_user):
     assert ">Datacut dataset<" in response.content.decode(response.charset)
 
     # But the owner user can remove the dataset from the collection page
+    response = client_user.get(
+        reverse(
+            "data_collections:collection_data_membership_confirm_removal",
+            kwargs={"collections_id": c.id, "data_membership_id": membership.id},
+        )
+    )
+    assert response.status_code == 200
+    assert (
+        "Are you sure you want to remove Datacut dataset from the collection?"
+        in response.content.decode(response.charset)
+    )
     response = client_user.post(
         reverse(
             "data_collections:collection_data_membership",
@@ -199,6 +217,13 @@ def test_authorised_user_attempting_delete_visualisation_membership(user, other_
     assert ">Visualisation<" in response.content.decode(response.charset)
 
     # Ensure that a user that isn't the owner can't remove it
+    response = client_other_user.get(
+        reverse(
+            "data_collections:collection_visualisation_membership_confirm_removal",
+            kwargs={"collections_id": c.id, "visualisation_membership_id": membership.id},
+        )
+    )
+    assert response.status_code == 404
     response = client_other_user.post(
         reverse(
             "data_collections:collection_visualisation_membership",
@@ -216,6 +241,17 @@ def test_authorised_user_attempting_delete_visualisation_membership(user, other_
     assert ">Visualisation<" in response.content.decode(response.charset)
 
     # But the owner user can remove the visualisation from the collection page
+    response = client_user.get(
+        reverse(
+            "data_collections:collection_visualisation_membership_confirm_removal",
+            kwargs={"collections_id": c.id, "visualisation_membership_id": membership.id},
+        )
+    )
+    assert response.status_code == 200
+    assert (
+        "Are you sure you want to remove Visualisation from the collection?"
+        in response.content.decode(response.charset)
+    )
     response = client_user.post(
         reverse(
             "data_collections:collection_visualisation_membership",
