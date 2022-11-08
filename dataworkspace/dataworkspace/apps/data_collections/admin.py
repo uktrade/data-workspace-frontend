@@ -11,9 +11,7 @@ from dataworkspace.apps.data_collections.models import (
 class CollectionDatasetMembershipAdmin(admin.TabularInline):
     model = CollectionDatasetMembership
     extra = 1
-    autocomplete_fields = (
-        "collection",
-    )
+    autocomplete_fields = ("collection",)
     fieldsets = [
         (
             None,
