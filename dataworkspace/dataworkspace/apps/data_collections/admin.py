@@ -13,13 +13,6 @@ class CollectionDatasetMembershipAdmin(admin.TabularInline):
     extra = 1
     autocomplete_fields = (
         "collection",
-        "created_by",
-        "updated_by",
-        "dataset",
-    )
-    readonly_fields = (
-        "created_by",
-        "updated_by",
     )
     fieldsets = [
         (
@@ -34,13 +27,7 @@ class CollectionVisualisationCatalogueItemMembershipAdmin(admin.TabularInline):
     extra = 1
     autocomplete_fields = (
         "collection",
-        "created_by",
-        "updated_by",
         "visualisation",
-    )
-    readonly_fields = (
-        "created_by",
-        "updated_by",
     )
     fieldsets = [
         (
@@ -48,13 +35,11 @@ class CollectionVisualisationCatalogueItemMembershipAdmin(admin.TabularInline):
             {"fields": ["deleted", "visualisation"]},
         ),
     ]
-    ordering = ("visualisation",)
 
 
 class CollectionAdmin(DeletableTimeStampedUserAdmin):
     list_display = ("name", "description", "owner")
     search_fields = ["name"]
-    ordering = ["name"]
     fieldsets = [
         (
             None,
