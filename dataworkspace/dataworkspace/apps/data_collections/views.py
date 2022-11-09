@@ -5,6 +5,7 @@ from django.views.generic import DetailView
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 
+from dataworkspace.apps.core.utils import push_google_analytics_event
 from dataworkspace.apps.data_collections.forms import SelectCollectionForMembershipForm
 from dataworkspace.apps.data_collections.models import (
     Collection,
@@ -115,8 +116,9 @@ def delete_datasets_membership(request, collections_id, data_membership_id):
 
     membership.delete(request.user)
     messages.success(request, f"{membership.dataset.name} has been removed from this collection.")
-    messages.info(request, f"remove: {collection.name}, {collection.id}")
-
+    push_google_analytics_event(
+        request, "Collection", "Remove item", f"{collection.name}, {collection.id}"
+    )
     return redirect("data_collections:collections_view", collections_id=collections_id)
 
 
@@ -135,8 +137,9 @@ def delete_visualisation_membership(request, collections_id, visualisation_membe
     messages.success(
         request, f"{membership.visualisation.name} has been removed from this collection."
     )
-    messages.info(request, f"remove: {collection.name}, {collection.id}")
-
+    push_google_analytics_event(
+        request, "Collection", "Remove item", f"{collection.name}, {collection.id}"
+    )
     return redirect("data_collections:collections_view", collections_id=collections_id)
 
 
@@ -164,8 +167,9 @@ def select_collection_for_membership(
             else:
                 messages.success(request, f"{dataset.name} has been added to this collection.")
 
-            messages.info(request, f"add: {dataset.name}, {dataset.id}")
-
+            push_google_analytics_event(
+                request, "Catalogue", "Add to collection", f"{dataset.name}, {dataset.id}"
+            )
             log_event(
                 request.user,
                 EventLog.TYPE_ADD_DATASET_TO_COLLECTION,

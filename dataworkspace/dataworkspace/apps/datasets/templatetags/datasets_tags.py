@@ -141,7 +141,5 @@ def to_json(data):
 
 
 @register.filter
-def startswith(text, starts):
-    if isinstance(text, str):
-        return text.startswith(starts)
-    return False
+def split_string(string, split_char):
+    return string.split(split_char)

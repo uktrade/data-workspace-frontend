@@ -30,3 +30,5 @@ DATA_FLOW_TASK_ERROR_MAP = {
     r".*NumericValueOutOfRange.*": "core/partial/errors/out-of-range.html",
     r".*DatetimeFieldOverflow.*|.*InvalidDatetimeFormat*": "core/partial/errors/invalid-date.html",
 }
+
+GA_EVENT_MESSAGE_TYPE = 50

@@ -19,6 +19,7 @@ from urllib.parse import unquote
 
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.db import connections, connection
@@ -36,7 +37,7 @@ import requests
 from tableschema import Schema
 import redis
 
-
+from dataworkspace.apps.core import constants
 from dataworkspace.apps.core.boto3_client import get_s3_client, get_iam_client
 from dataworkspace.apps.core.constants import (
     DATA_FLOW_TASK_ERROR_MAP,
@@ -1510,3 +1511,9 @@ def team_membership_post_delete(instance, **_):
     """
     if instance.user.profile.tools_access_role_arn:
         update_tools_access_policy_task.delay(instance.user_id)
+
+
+def push_google_analytics_event(request, category, action, label):
+    messages.add_message(
+        request, constants.GA_EVENT_MESSAGE_TYPE, f"{category}|{action}", extra_tags=label
+    )

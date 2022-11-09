@@ -1,5 +1,7 @@
 from django.conf import settings
 
+from dataworkspace.apps.core import constants
+
 
 def common(request):
     # Ready to add a permissions check. Note: after putting an initial permissions
@@ -38,4 +40,5 @@ def common(request):
         "CHART_BUILDER_BUILD_CHARTS_FLAG": settings.CHART_BUILDER_BUILD_CHARTS_FLAG,
         "CHART_BUILDER_PUBLISH_CHARTS_FLAG": settings.CHART_BUILDER_PUBLISH_CHARTS_FLAG,
         "IS_SUBSCRIBED_TO_NEWSLETTER": is_subscribed_to_newsletter,
+        "GA_EVENT_MESSAGE_TYPE": constants.GA_EVENT_MESSAGE_TYPE,
     }
