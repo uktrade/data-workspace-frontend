@@ -8,31 +8,54 @@ from dataworkspace.apps.data_collections.models import (
 )
 
 
-class CollectionDatasetMembershipAdmin(admin.TabularInline):
+from dataworkspace.apps.datasets.models import DataSet
+
+
+# This is only used for autocomplete and is hidden from the admin UI
+class AutocompleteDatasetAdmin(admin.ModelAdmin):
+    search_fields = ("name",)
+    ordering = ["name"]
+
+    def has_module_permission(self, request):
+        return False
+
+
+admin.site.register(
+    DataSet,
+    AutocompleteDatasetAdmin,
+)
+
+
+class CollectionDatasetMembershipInlineAdmin(admin.TabularInline):
     model = CollectionDatasetMembership
     extra = 1
-    autocomplete_fields = ("collection",)
+    autocomplete_fields = ("dataset",)
+    ordering = ["dataset__name"]
     fieldsets = [
         (
             None,
-            {"fields": ["deleted", "dataset"]},
+            {"fields": ["dataset", "deleted"]},
         ),
     ]
 
+    def has_delete_permission(self, request, obj=None):
+        return False
 
-class CollectionVisualisationCatalogueItemMembershipAdmin(admin.TabularInline):
+
+class CollectionVisualisationCatalogueItemMembershipInlineAdmin(admin.TabularInline):
     model = CollectionVisualisationCatalogueItemMembership
     extra = 1
-    autocomplete_fields = (
-        "collection",
-        "visualisation",
-    )
+    autocomplete_fields = ("visualisation",)
+    ordering = ["visualisation__name"]
     fieldsets = [
         (
             None,
-            {"fields": ["deleted", "visualisation"]},
+            {"fields": ["visualisation", "deleted"]},
         ),
     ]
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 class CollectionAdmin(DeletableTimeStampedUserAdmin):
@@ -47,8 +70,8 @@ class CollectionAdmin(DeletableTimeStampedUserAdmin):
     autocomplete_fields = ("owner",)
     readonly_fields = ["id"]
     inlines = (
-        CollectionDatasetMembershipAdmin,
-        CollectionVisualisationCatalogueItemMembershipAdmin,
+        CollectionDatasetMembershipInlineAdmin,
+        CollectionVisualisationCatalogueItemMembershipInlineAdmin,
     )
 
 
