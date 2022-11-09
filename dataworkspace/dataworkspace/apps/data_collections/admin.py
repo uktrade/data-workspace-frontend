@@ -16,6 +16,9 @@ class AutocompleteDatasetAdmin(admin.ModelAdmin):
     search_fields = ("name",)
     ordering = ["name"]
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).filter(deleted=False)
+
     def has_module_permission(self, request):
         return False
 
@@ -38,6 +41,9 @@ class CollectionDatasetMembershipInlineAdmin(admin.TabularInline):
         ),
     ]
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).filter(deleted=False)
+
     def has_delete_permission(self, request, obj=None):
         return False
 
@@ -53,6 +59,9 @@ class CollectionVisualisationCatalogueItemMembershipInlineAdmin(admin.TabularInl
             {"fields": ["visualisation", "deleted"]},
         ),
     ]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).filter(deleted=False)
 
     def has_delete_permission(self, request, obj=None):
         return False
