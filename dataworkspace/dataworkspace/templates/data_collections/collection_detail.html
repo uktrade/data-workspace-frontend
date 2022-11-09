@@ -128,7 +128,13 @@
           </div>
           <p class="govuk-body"><a class="govuk-link govuk-link--no-visited-state" href="https://data.trade.gov.uk/datasets/?q=&sort=relevance&data_type=3">Search for dashboards</a> you'd like to add.</p>
           <h2 class="govuk-heading-l">Notes</h2>
-          <p class="govuk-body"><a href="{}">Edit notes</a></p>  
+          <p class="govuk-body">
+            {% if source_object.notes %}
+              {{ source_object.notes |linebreaksbr }}
+              {% else %} 
+              This collection does not have any notes. Use notes to provide additional context or information for yourself or others.
+              {% endif %}
+          </p>  
         </div>
         <div class="govuk-grid-column-one-third">
           <h2 class="govuk-heading-s">Owner</h2>

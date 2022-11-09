@@ -22,6 +22,7 @@ class Collection(DeletableTimestampedUserModel):
         VisualisationCatalogueItem,
         through="CollectionVisualisationCatalogueItemMembership",
     )
+    notes = models.TextField(null=True, blank=True)
 
     class Meta:
         verbose_name = "Collection"

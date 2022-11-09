@@ -26,7 +26,11 @@ class CollectionAdmin(DeletableTimeStampedUserAdmin):
     fieldsets = [
         (
             None,
+<<<<<<< HEAD
             {"fields": ["name", "description", "owner", "id"]},
+=======
+            {"fields": ["published", "name", "description", "owner", "id", "notes"]},
+>>>>>>> 678e892c (adding notes feature to django admin)
         ),
     ]
     readonly_fields = ["id"]
