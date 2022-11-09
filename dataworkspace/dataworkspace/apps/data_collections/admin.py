@@ -26,7 +26,7 @@ class CollectionAdmin(DeletableTimeStampedUserAdmin):
     fieldsets = [
         (
             None,
-            {"fields": ["name", "description", "owner", "id"]},
+            {"fields": ["name", "description", "owner", "id", "notes"]},
         ),
     ]
     readonly_fields = ["id"]
