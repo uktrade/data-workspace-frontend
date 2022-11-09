@@ -7,36 +7,34 @@
 {% endblock %}
 
 {% block main %}
-  <div class="dw-banner">
-    <div class="govuk-width-container">
-      <div class="govuk-breadcrumbs">
-        <ol class="govuk-breadcrumbs__list">
-          <li class="govuk-breadcrumbs__list-item dw-banner__breadcrumbs__list-item">
-            <a class="govuk-breadcrumbs__link dw-banner__breadcrumbs__link" href="/">Home</a>
-          </li>
+  <div class="govuk-width-container">
+    <div class="govuk-breadcrumbs">
+      <ol class="govuk-breadcrumbs__list">
+        <li class="govuk-breadcrumbs__list-item">
+          <a class="govuk-breadcrumbs__link" href="/">Home</a>
+        </li>
 
-          <li class="govuk-breadcrumbs__list-item dw-banner__breadcrumbs__list-item">
-            Collections
-          </li>
-          <li class="govuk-breadcrumbs__list-item dw-banner__breadcrumbs__list-item">
-            {{ source_object.name }}
-          </li>
-        </ol>
-      </div>
-
-      <div class="govuk-grid-row">
-        <div class="govuk-grid-column-two-thirds">
-          <span class="govuk-caption-xl dw-banner__caption-xl">Personal collection</span>
-          <h1 class="govuk-heading-xl dw-banner__heading-xl">{{ source_object.name }}</h1>
-          <p class="govuk-body dw-banner__body">{{ source_object.description|linebreaksbr }}</p>
-        </div>
-      </div>
+        <li class="govuk-breadcrumbs__list-item">
+          Collections
+        </li>
+        <li class="govuk-breadcrumbs__list-item">
+          {{ source_object.name }}
+        </li>
+      </ol>
     </div>
   </div>
 
   <div class="govuk-width-container">
     <main class="govuk-main-wrapper" id="main-content" role="main">
       {% include 'partials/messages.html' %}
+
+      <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+          <span class="govuk-caption-xl">Personal collection</span>
+          <h1 class="govuk-heading-xl">{{ source_object.name }}</h1>
+          <p class="govuk-body">{{ source_object.description|linebreaksbr }}</p>
+        </div>
+      </div>
 
       <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
