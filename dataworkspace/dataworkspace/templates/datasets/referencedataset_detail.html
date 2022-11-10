@@ -1,5 +1,5 @@
 {% extends '_main.html' %}
-{% load static humanize core_tags datasets_tags waffle_tags %}
+{% load static humanize core_tags datasets_tags waffle_tags core_filters %}
 
 {% block page_title %}{{ model.name }} - {{ block.super }}{% endblock %}
 
@@ -143,7 +143,7 @@
       </dl>
 
       <div class="govuk-body dataset-description-richtext">
-        {{ model.description | safe }}
+        {{ model.description | minimal_markdown }}
       </div>
     </div>
 

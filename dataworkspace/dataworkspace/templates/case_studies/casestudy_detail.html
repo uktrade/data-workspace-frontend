@@ -1,5 +1,6 @@
 {% extends '_main.html' %}
 {% load static datasets_tags %}
+{% load core_filters %}
 {% block page_title %}{{ case_study.name }} - {{ block.super }}{% endblock %}
 {% block breadcrumbs %}
   <div class="govuk-breadcrumbs">
@@ -59,19 +60,19 @@
       {% if case_study.background %}
         <h2 class="govuk-heading-m">Background</h2>
         <div class="govuk-body">
-          {{ case_study.background | safe }}
+          {{ case_study.background|minimal_markdown }}
         </div>
       {% endif %}
       {% if case_study.solution %}
         <h2 class="govuk-heading-m">Solution</h2>
         <div class="govuk-body">
-          {{ case_study.solution | safe }}
+          {{ case_study.solution|minimal_markdown }}
         </div>
       {% endif %}
       {% if case_study.impact %}
         <h2 class="govuk-heading-m">Impact</h2>
         <div class="govuk-body">
-          {{ case_study.impact | safe }}
+          {{ case_study.impact|minimal_markdown }}
         </div>
       {% endif %}
       {% if case_study.quote_title or case_study.quote_text %}
@@ -87,7 +88,7 @@
                 <div class="govuk-cookie-banner__content quote-content">
                   {% if case_study.quote_text %}
                     <div class="quote-text">
-                      {{ case_study.quote_text | safe }}
+                      {{ case_study.quote_text|minimal_markdown }}
                     </div>
                   {% endif %}
                   {% if case_study.quote_full_name %}{{ case_study.quote_full_name }}{% endif %}

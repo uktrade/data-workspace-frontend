@@ -1,6 +1,6 @@
 {% extends '_main.html' %}
 {% load humanize static datasets_tags core_tags waffle_tags %}
-
+{% load core_filters %}
 {% block page_title %}{{ model.name }} - {{ block.super }}{% endblock %}
 
 {% block initialGTMDataLayer %}
@@ -64,7 +64,7 @@
 
       <hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
       <div class="govuk-body dataset-description-richtext">
-        {{ model.description | safe }}
+        {{ model.description | minimal_markdown }}
       </div>
 
       {% if master_datasets_info %}

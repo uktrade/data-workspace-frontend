@@ -1,6 +1,6 @@
 {% extends '_main.html' %}
 {% load humanize static datasets_tags waffle_tags %}
-
+{% load core_filters %}
 {% block page_title %}{{ model.name }} - {{ block.super }}{% endblock %}
 
 {% block head %}
@@ -70,7 +70,7 @@
       {% include "partials/dataset_info_additional.html" with model=model show_usage_history=True %}
 
       <div class="govuk-body">
-        {{ model.description | safe }}
+        {{ model.description | minimal_markdown }}
       </div>
       {% if datacut_links_info and not has_access %}
         {% include 'partials/request_access.html' with type='datacut' has_data_access=has_access %}

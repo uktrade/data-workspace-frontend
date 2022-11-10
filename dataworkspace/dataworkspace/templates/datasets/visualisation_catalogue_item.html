@@ -58,7 +58,7 @@
         {% include "partials/dataset_info_additional.html" with model=model show_usage_history=True %}
 
         <div class="govuk-body dataset-description-richtext">
-          {{ model.description | safe }}
+          {{ model.description | minimal_markdown }}
         </div>
 
         {% if not has_access %}
