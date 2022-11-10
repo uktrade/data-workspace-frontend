@@ -169,10 +169,6 @@ kombu==5.2.3
     # via celery
 linear-tsv==1.1.0
     # via tabulator
-markdown==3.2.2
-    # via -r requirements.in
-markupsafe==1.1.1
-    # via -r requirements.in
 mohawk==1.1.0
     # via -r requirements.in
 multidict==4.7.6

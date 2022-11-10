@@ -1,9 +1,8 @@
 import bleach
-from markdown import Markdown
 from django import template
 
 from django.forms import ChoiceField, Field
-from markupsafe import Markup
+from django.utils.safestring import mark_safe
 
 register = template.Library()
 
@@ -30,7 +29,7 @@ def get_choice_field_data_for_gtm(field: ChoiceField):
 
 @register.filter
 def minimal_markup(text):
-    return Markup(
+    return mark_safe(
         bleach.clean(
             text or "",
             tags=[

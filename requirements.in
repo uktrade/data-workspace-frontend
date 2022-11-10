@@ -30,8 +30,6 @@ geoalchemy2
 gevent
 hawk-server-asyncio
 kaleido
-Markdown
-MarkupSafe
 mohawk
 notifications-python-client
 paste
