@@ -81,7 +81,7 @@
               </dl>
             </div>
             {% endfor %}
-            <p class="govuk-body" style="margin-bottom: 40px"><a class="govuk-link govuk-link--no-visited-state" href="https://data.trade.gov.uk/datasets/?q=&sort=relevance&data_type=1&data_type=2&data_type=0">Search for data</a> you'd like to add.</p>
+            <p class="govuk-body" style="margin-bottom: 40px"><a class="govuk-link govuk-link--no-visited-state" href="{% url 'datasets:find_datasets' %}?q=&sort=relevance&data_type=1&data_type=2&data_type=0">Search for data</a> you'd like to add.</p>
           </div>
           <h2 class="govuk-heading-l">Dashboards</h2>
           <div class="search-result" style="border-bottom: none">
@@ -126,7 +126,7 @@
             </div>
             {% endfor %}
           </div>
-          <p class="govuk-body"><a class="govuk-link govuk-link--no-visited-state" href="https://data.trade.gov.uk/datasets/?q=&sort=relevance&data_type=3">Search for dashboards</a> you'd like to add.</p>
+          <p class="govuk-body"><a class="govuk-link govuk-link--no-visited-state" href="{% url 'datasets:find_datasets' %}?q=&sort=relevance&data_type=3">Search for dashboards</a> you'd like to add.</p>
           <h2 class="govuk-heading-l">Notes</h2>
           <p class="govuk-body">
             {% if source_object.notes %}

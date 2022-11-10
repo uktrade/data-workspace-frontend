@@ -1,7 +1,19 @@
 {% extends '_main.html' %}
 {% load core_tags %}
 {% load datasets_tags %}
-
+{% block initialGTMDataLayer %}
+  {{ block.super }}
+  <script nonce='{{ request.csp_nonce }}'>
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById("add-form").addEventListener("submit", function() {
+        window.dataLayer.push({
+          'event': 'addDatasetToCollection',
+          'name': '{{ dataset.name }}'
+        })
+      });
+    });
+  </script>
+{% endblock %}
 {% block page_title %}
   Select a collection
 {% endblock %}
@@ -12,12 +24,11 @@
   <div class="govuk-width-container">
     <main class="govuk-main-wrapper" id="main-content" role="main">
       {% include 'partials/messages.html' %}
-
       <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
           <h1 class="govuk-heading-xl govuk-!-margin-bottom-2">Select a collection</h1>
           {% include 'design_system/error_summary.html' with form=form %}
-          <form method="post">
+          <form method="post" id="add-form">
             {% csrf_token %}
             {{ form.collection }}
             <div class="govuk-button-group">
