@@ -8,8 +8,10 @@
     document.addEventListener('DOMContentLoaded', function() {
       document.getElementById("remove-form").addEventListener("submit", function() {
         window.dataLayer.push({
-          'event': 'removeFromCollection',
-          'name': '{{ item_name }}'
+          'event': 'GAEvent',
+          'eventCategory': 'Collection',
+          'eventAction': 'Remove item',
+          'eventLabel': '{{ collection_name }} ({{ collection_id }})'
         })
       });
     });

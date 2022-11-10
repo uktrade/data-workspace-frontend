@@ -55,7 +55,8 @@ def dataset_membership_confirm_removal(request, collections_id, data_membership_
         raise Http404
 
     context = {
-        "collection": collection.name,
+        "collection_name": collection.name,
+        "collection_id": collection.id,
         "collection_url": reverse(
             "data_collections:collections_view",
             kwargs={
@@ -86,6 +87,7 @@ def visualisation_membership_confirm_removal(request, collections_id, visualisat
 
     context = {
         "collection_name": collection.name,
+        "collection_id": collection.id,
         "collection_url": reverse(
             "data_collections:collections_view",
             kwargs={

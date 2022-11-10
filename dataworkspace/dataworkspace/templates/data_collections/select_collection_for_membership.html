@@ -7,8 +7,10 @@
     document.addEventListener('DOMContentLoaded', function() {
       document.getElementById("add-form").addEventListener("submit", function() {
         window.dataLayer.push({
-          'event': 'addDatasetToCollection',
-          'name': '{{ dataset.name }}'
+          'event': 'GAEvent',
+          'eventCategory': "Catalogue",
+          'eventAction': "Add to collection",
+          'eventLabel': "{{ dataset.name }} ({{ dataset.id }})"
         })
       });
     });
