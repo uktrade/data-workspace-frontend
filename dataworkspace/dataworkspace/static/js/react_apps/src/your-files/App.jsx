@@ -51,6 +51,13 @@ export default class App extends React.Component {
       region: appConfig.region,
       s3ForcePathStyle: true,
       ...(appConfig.endpointUrl ? { endpoint: appConfig.endpointUrl } : {}),
+      httpOptions: {
+        // Total time a request is allowed to take, which for a multipart upload
+        // is the total time a single 5MB is allowed to take. The default is 2
+        // mins, but some people were hitting timeout errors, so bumped it to
+        // 10 minutes
+        timeout: 10 * 60 * 60 * 1000
+      }
     };
     console.log("AWS Config", awsConfig);
     this.s3 = new AWS.S3(awsConfig);
