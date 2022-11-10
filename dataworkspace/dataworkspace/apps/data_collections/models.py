@@ -1,5 +1,6 @@
 import uuid
 
+from ckeditor.fields import RichTextField
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models, transaction
@@ -23,7 +24,7 @@ class Collection(DeletableTimestampedUserModel):
         VisualisationCatalogueItem,
         through="CollectionVisualisationCatalogueItemMembership",
     )
-    notes = models.TextField(null=True, blank=True)
+    notes = RichTextField(null=True, blank=True)
 
     class Meta:
         verbose_name = "Collection"
