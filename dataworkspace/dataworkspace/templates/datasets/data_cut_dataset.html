@@ -70,7 +70,7 @@
       {% include "partials/dataset_info_additional.html" with model=model show_usage_history=True %}
 
       <div class="govuk-body">
-        {{ model.description | minimal_markdown }}
+        {{ model.description | minimal_markup }}
       </div>
       {% if datacut_links_info and not has_access %}
         {% include 'partials/request_access.html' with type='datacut' has_data_access=has_access %}

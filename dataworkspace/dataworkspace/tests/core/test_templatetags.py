@@ -3,7 +3,7 @@ import pytest
 
 from dataworkspace.apps.core.templatetags.core_filters import (
     get_choice_field_data_for_gtm,
-    minimal_markdown,
+    minimal_markup,
 )
 
 
@@ -76,5 +76,5 @@ def test_get_multi_choice_field_data_for_gtm(selections, expected_string):
         ),
     ),
 )
-def test_minimal_markdown(input_, expected_output, error_message):
-    assert minimal_markdown(input_) == expected_output, error_message
+def test_minimal_markup(input_, expected_output, error_message):
+    assert minimal_markup(input_) == expected_output, error_message

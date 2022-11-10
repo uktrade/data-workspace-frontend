@@ -60,19 +60,19 @@
       {% if case_study.background %}
         <h2 class="govuk-heading-m">Background</h2>
         <div class="govuk-body">
-          {{ case_study.background|minimal_markdown }}
+          {{ case_study.background|minimal_markup }}
         </div>
       {% endif %}
       {% if case_study.solution %}
         <h2 class="govuk-heading-m">Solution</h2>
         <div class="govuk-body">
-          {{ case_study.solution|minimal_markdown }}
+          {{ case_study.solution|minimal_markup }}
         </div>
       {% endif %}
       {% if case_study.impact %}
         <h2 class="govuk-heading-m">Impact</h2>
         <div class="govuk-body">
-          {{ case_study.impact|minimal_markdown }}
+          {{ case_study.impact|minimal_markup }}
         </div>
       {% endif %}
       {% if case_study.quote_title or case_study.quote_text %}
@@ -88,7 +88,7 @@
                 <div class="govuk-cookie-banner__content quote-content">
                   {% if case_study.quote_text %}
                     <div class="quote-text">
-                      {{ case_study.quote_text|minimal_markdown }}
+                      {{ case_study.quote_text|minimal_markup }}
                     </div>
                   {% endif %}
                   {% if case_study.quote_full_name %}{{ case_study.quote_full_name }}{% endif %}

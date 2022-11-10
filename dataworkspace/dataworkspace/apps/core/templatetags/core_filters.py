@@ -29,11 +29,10 @@ def get_choice_field_data_for_gtm(field: ChoiceField):
 
 
 @register.filter
-def minimal_markdown(text):
-    md = Markdown()
+def minimal_markup(text):
     return Markup(
         bleach.clean(
-            md.convert(text or ""),
+            text or "",
             tags=[
                 "div",
                 "em",
