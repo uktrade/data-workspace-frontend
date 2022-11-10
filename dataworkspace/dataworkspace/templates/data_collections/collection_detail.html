@@ -1,6 +1,7 @@
 {% extends '_main.html' %}
 {% load core_tags %}
 {% load datasets_tags %}
+{% load core_filters %}
 
 {% block page_title %}
   {{ source_object.name }}
@@ -136,7 +137,7 @@
           <h2 class="govuk-heading-l">Notes</h2>
           {% if source_object.notes %}
             <div class="govuk-body dataset-description-richtext">
-              {{ source_object.notes|safe }}
+              {{ source_object.notes|minimal_markdown }}
             </div>
           {% else %}
               <p class="govuk-body">
