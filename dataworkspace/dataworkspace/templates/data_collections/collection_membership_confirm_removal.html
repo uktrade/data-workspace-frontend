@@ -2,6 +2,22 @@
 {% load core_tags %}
 {% load datasets_tags %}
 
+{% block initialGTMDataLayer %}
+  {{ block.super }}
+  <script nonce='{{ request.csp_nonce }}'>
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById("remove-form").addEventListener("submit", function() {
+        window.dataLayer.push({
+          'event': 'GAEvent',
+          'eventCategory': 'Collection',
+          'eventAction': 'Remove item',
+          'eventLabel': '{{ collection_name }} ({{ collection_id }})'
+        })
+      });
+    });
+  </script>
+{% endblock %}
+
 {% block page_title %}
   Remove {{ item_name }} from {{ collection_name }}
 {% endblock %}
@@ -9,7 +25,7 @@
 {% block go_back %}<a class="govuk-back-link govuk-link--no-visited-state" href="{{ collection_url }}">Back</a>{% endblock %}
 
 {% block content %}
-<form action="{{ action_url }}" method="POST" novalidate>
+<form action="{{ action_url }}" method="POST" novalidate id="remove-form">
   {% csrf_token %}
   <div class="govuk-form-group">
     <fieldset class="govuk-fieldset">
@@ -31,5 +47,6 @@
       <button class="govuk-button govuk-button--warning" data-module="govuk-button" type="submit">Yes, remove from the collection</button>
       <a class="govuk-link govuk-link--no-visited-state" href="{{ collection_url }}">Cancel</a>
     </div>
+  </div>
 </form>
 {% endblock %}
