@@ -33,48 +33,16 @@ def test_get_multi_choice_field_data_for_gtm(selections, expected_string):
 
 
 @pytest.mark.parametrize(
-    "input_, expected_output, error_message",
+    "input, expected_output, error_message",
     (
-        ("foo", "<p>foo</p>", "Text should be wrapped in paragraph tags"),
+        ("<div>test</div>", "<div>test</div>", "Allow divs in output"),
+        ("<script>alert()</script>", "alert()", "Disallow script tags"),
         (
-            "foo\nbar",
-            "<p>foo\nbar</p>",
-            "Single newlines should not create separate paragraphs",
-        ),
-        (
-            "foo\n\nbar",
-            "<p>foo</p>\n<p>bar</p>",
-            "Double newlines should create new paragraphs",
-        ),
-        (
-            "foo\n\n\n\nbar",
-            "<p>foo</p>\n<p>bar</p>",
-            "Redundant newlines should be ignored",
-        ),
-        (
-            "* one\n* two",
-            "<ul>\n<li>one</li>\n<li>two</li>\n</ul>",
-            "Unordered lists should be rendered",
-        ),
-        (
-            "1. one\n2. two",
-            "<ol>\n<li>one</li>\n<li>two</li>\n</ol>",
-            "Ordered lists should be rendered",
-        ),
-        ("[link](https://www.unsafe.evil)", "<p>link</p>", "Links are not allowed"),
-        ("<script>alert(1);</script>", "alert(1);", "Script tags should be stripped"),
-        ('<img src="foo"/>', "<p></p>", "Img tags should be stripped"),
-        (
-            "**some bold text**",
-            "<p><strong>some bold text</strong></p>",
-            "Surrounding with ** should create strong text",
-        ),
-        (
-            "title  \nwith a line break",
-            "<p>title<br>\nwith a line break</p>",
-            "Ending a line with two spaces should insert a line break",
+            '<a href="#" onclick="doSomething()">test</a>',
+            '<a href="#">test</a>',
+            "Disallow on click attributes",
         ),
     ),
 )
-def test_minimal_markup(input_, expected_output, error_message):
-    assert minimal_markup(input_) == expected_output, error_message
+def test_minimal_markup(input, expected_output, error_message):
+    assert minimal_markup(input) == expected_output, error_message

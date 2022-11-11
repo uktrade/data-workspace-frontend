@@ -47,8 +47,9 @@ def minimal_markup(text):
                 "li",
                 "strong",
                 "br",
+                "a",
             ],
-            attributes={},
+            attributes=["href"],
             strip=True,
         )
     )
