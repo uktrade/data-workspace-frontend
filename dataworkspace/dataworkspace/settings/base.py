@@ -446,7 +446,7 @@ CKEDITOR_CONFIGS = {
         "enterMode": 3,
         "height": 350,
         "toolbar_Custom": [
-            ["Bold", "Italic", "Underline"],
+            ["Bold", "Italic", "Underline", "CodeSnippet"],
             [
                 "NumberedList",
                 "BulletedList",
@@ -454,19 +454,17 @@ CKEDITOR_CONFIGS = {
                 "Outdent",
                 "Indent",
                 "-",
-                "JustifyLeft",
-                "JustifyCenter",
-                "JustifyRight",
-                "JustifyBlock",
-                "-",
                 "Link",
                 "Unlink",
             ],
             ["Format"],
             ["Cut", "Copy", "Paste", "-", "Undo", "Redo"],
         ],
-        "format_tags": "div;p;h1;h2;h3;h4;h5;h6",
+        "format_tags": "p;h2;h3;h4;h5;h6",
         "linkShowAdvancedTab": False,
+        "extraPlugins": "codesnippet",
+        "codeSnippet_languages" : ['Python','R','SQL'],
+        "codeSnippet_theme" : ['default']
     }
 }
 
