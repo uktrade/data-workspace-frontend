@@ -33,7 +33,7 @@ def test_get_multi_choice_field_data_for_gtm(selections, expected_string):
 
 
 @pytest.mark.parametrize(
-    "input, expected_output, error_message",
+    "input_, expected_output, error_message",
     (
         ("<div>test</div>", "<div>test</div>", "Allow divs in output"),
         ("<script>alert()</script>", "alert()", "Disallow script tags"),
@@ -44,5 +44,5 @@ def test_get_multi_choice_field_data_for_gtm(selections, expected_string):
         ),
     ),
 )
-def test_minimal_markup(input, expected_output, error_message):
-    assert minimal_markup(input) == expected_output, error_message
+def test_minimal_markup(input_, expected_output, error_message):
+    assert minimal_markup(input_) == expected_output, error_message
