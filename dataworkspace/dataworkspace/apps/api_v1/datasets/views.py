@@ -328,6 +328,10 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         "personal_data",
         "retention_policy",
         "eligibility_criteria",
+        "licence_url",
+        "restrictions_on_usage",
+        "user_access_type",
+        "authorized_email_domains",
     ]
     queryset = (
         DataSet.objects.live()
@@ -348,6 +352,8 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
             .annotate(personal_data=_static_char(None))
             .annotate(retention_policy=_static_char(None))
             .annotate(eligibility_criteria=_static_char(None))
+            .annotate(user_access_type=_static_int(None))
+            .annotate(authorized_email_domains=_static_int(None))
             .annotate(purpose=_static_int(DataSetType.REFERENCE))
             .annotate(
                 source_tags=ArrayAgg(
