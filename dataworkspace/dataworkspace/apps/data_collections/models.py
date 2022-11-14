@@ -1,6 +1,7 @@
 import uuid
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db import models, transaction
 from django.db.models import Q
 
@@ -80,3 +81,25 @@ class CollectionVisualisationCatalogueItemMembership(DeletableTimestampedUserMod
             log_event(
                 deleted_by, EventLog.TYPE_REMOVE_VISUALISATION_FROM_COLLECTION, related_object=self
             )
+
+
+class CollectionUserMembership(DeletableTimestampedUserModel):
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name="users")
+    collection = models.ForeignKey(
+        Collection, on_delete=models.CASCADE, related_name="user_collections"
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user_id", "collection_id"],
+                condition=Q(deleted=False),
+                name="unique_user_if_not_deleted",
+            )
+        ]
+        ordering = ("id",)
+
+    def delete(self, deleted_by, **kwargs):  # pylint: disable=arguments-differ
+        with transaction.atomic():
+            super().delete(**kwargs)
+            log_event(deleted_by, EventLog.TYPE_REMOVE_USER_FROM_COLLECTION, related_object=self)
