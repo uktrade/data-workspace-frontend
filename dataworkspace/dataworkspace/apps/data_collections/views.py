@@ -11,6 +11,7 @@ from dataworkspace.apps.data_collections.models import (
     CollectionDatasetMembership,
     CollectionVisualisationCatalogueItemMembership,
 )
+from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 
@@ -166,7 +167,9 @@ def select_collection_for_membership(
 
             log_event(
                 request.user,
-                EventLog.TYPE_ADD_DATASET_TO_COLLECTION,
+                EventLog.TYPE_ADD_VISUALISATION_TO_COLLECTION
+                if dataset.type == DataSetType.VISUALISATION
+                else EventLog.TYPE_ADD_DATASET_TO_COLLECTION,
                 related_object=dataset,
             )
 
