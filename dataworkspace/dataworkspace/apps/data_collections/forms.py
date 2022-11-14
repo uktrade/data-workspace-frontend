@@ -2,6 +2,7 @@ from django import forms
 
 from dataworkspace.apps.data_collections.models import (
     CollectionDatasetMembership,
+    CollectionUserMembership,
     CollectionVisualisationCatalogueItemMembership,
 )
 from dataworkspace.forms import (
@@ -44,3 +45,11 @@ class CollectionVisualisationForm(forms.ModelForm):
     class Meta:
         model = CollectionVisualisationCatalogueItemMembership
         fields = ["visualisation", "deleted"]
+
+
+class CollectionUserForm(forms.ModelForm):
+    deleted = forms.BooleanField(label="DELETE?", required=False)
+
+    class Meta:
+        model = CollectionUserMembership
+        fields = ["user", "deleted"]
