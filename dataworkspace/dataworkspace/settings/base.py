@@ -463,8 +463,13 @@ CKEDITOR_CONFIGS = {
         "format_tags": "p;h2;h3;h4;h5;h6",
         "linkShowAdvancedTab": False,
         "extraPlugins": "codesnippet",
-        "codeSnippet_languages" : ['Python','R','SQL'],
-        "codeSnippet_theme" : ['default']
+        "codeSnippet_languages": {
+            "bash": "Bash",
+            "json": "JSON",
+            "python": "Python",
+            "r": "R",
+            "pgsql": "SQL",
+        },
     }
 }
 
