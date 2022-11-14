@@ -443,16 +443,13 @@ YOUR_FILES_ENABLED = env.get("YOUR_FILES_ENABLED", "False") == "True"
 CKEDITOR_CONFIGS = {
     "default": {
         "toolbar": "Custom",
-        "enterMode": 3,
+        "enterMode": 1,  # 1 = p, 2 = br, 3 = div
         "height": 350,
         "toolbar_Custom": [
-            ["Bold", "Italic", "Underline", "CodeSnippet"],
+            ["Bold", "CodeSnippet"],
             [
                 "NumberedList",
                 "BulletedList",
-                "-",
-                "Outdent",
-                "Indent",
                 "-",
                 "Link",
                 "Unlink",
