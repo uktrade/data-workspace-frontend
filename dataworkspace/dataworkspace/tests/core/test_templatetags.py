@@ -35,7 +35,7 @@ def test_get_multi_choice_field_data_for_gtm(selections, expected_string):
 @pytest.mark.parametrize(
     "input_, expected_output, error_message",
     (
-        ("<div>test</div>", "<div>test</div>", "Allow divs in output"),
+        ("<p>test</p>", "<p>test</p>", "Allow p in output"),
         ("<script>alert()</script>", "alert()", "Disallow script tags"),
         (
             '<a href="#" onclick="doSomething()">test</a>',

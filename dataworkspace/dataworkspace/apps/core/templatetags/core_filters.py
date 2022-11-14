@@ -33,9 +33,7 @@ def minimal_markup(text):
         bleach.clean(
             text or "",
             tags=[
-                "div",
                 "em",
-                "h1",
                 "h2",
                 "h3",
                 "h4",
