@@ -86,7 +86,7 @@ class CollectionVisualisationCatalogueItemMembership(DeletableTimestampedUserMod
 class CollectionUserMembership(DeletableTimestampedUserModel):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name="users")
     collection = models.ForeignKey(
-        Collection, on_delete=models.CASCADE, related_name="user_collections"
+        Collection, on_delete=models.CASCADE, related_name="user_memberships"
     )
 
     class Meta:
