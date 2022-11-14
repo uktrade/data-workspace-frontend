@@ -1,5 +1,9 @@
 from django import forms
 
+from dataworkspace.apps.data_collections.models import (
+    CollectionDatasetMembership,
+    CollectionVisualisationCatalogueItemMembership,
+)
 from dataworkspace.forms import (
     GOVUKDesignSystemRadioField,
     GOVUKDesignSystemForm,
@@ -24,3 +28,19 @@ class SelectCollectionForMembershipForm(GOVUKDesignSystemForm):
         if not collection:
             raise forms.ValidationError("You must select a collection before continuing.")
         return collection
+
+
+class CollectionDatasetForm(forms.ModelForm):
+    deleted = forms.BooleanField(label="DELETE?", required=False)
+
+    class Meta:
+        model = CollectionDatasetMembership
+        fields = ["dataset", "deleted"]
+
+
+class CollectionVisualisationForm(forms.ModelForm):
+    deleted = forms.BooleanField(label="DELETE?", required=False)
+
+    class Meta:
+        model = CollectionVisualisationCatalogueItemMembership
+        fields = ["visualisation", "deleted"]
