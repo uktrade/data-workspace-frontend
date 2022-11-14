@@ -43,6 +43,9 @@ class CollectionsDetailView(DetailView):
         context["visualisation_collections"] = source_object.visualisation_collections.filter(
             deleted=False
         ).order_by("visualisation__name")
+        context["user_memberships"] = source_object.user_memberships.live().order_by(
+            "user__first_name", "user__last_name"
+        )
 
         return context
 

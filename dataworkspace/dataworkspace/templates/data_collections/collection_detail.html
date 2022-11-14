@@ -30,7 +30,13 @@
 
       <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
-          <span class="govuk-caption-xl">Personal collection</span>
+          <span class="govuk-caption-xl">
+            {% if user_memberships.count > 0 %}
+              Shared
+            {% else %}
+              Personal
+            {% endif %} collection
+          </span>
           <h1 class="govuk-heading-xl">{{ source_object.name }}</h1>
           <p class="govuk-body">{{ source_object.description|linebreaksbr }}</p>
         </div>
@@ -136,10 +142,20 @@
               {% endif %}
           </p>  
         </div>
-        <div class="govuk-grid-column-one-third">
-          <h2 class="govuk-heading-s">Owner</h2>
+        <div class="govuk-grid-column-one-third govuk-!-margin-bottom-2">
+          <h2 class="govuk-heading-s govuk-!-margin-bottom-1">Owner</h2>
           <p class="govuk-body">{{ source_object.owner.get_full_name|default_if_none:"Not assigned" }}<br>{% if source_object.owner %}(<a class="govuk-link govuk-link--no-visited-state" href="mailto:{{ source_object.owner.email }}">{{ source_object.owner.email }}</a>){% endif %}</p>
         </div>
+        {% if user_memberships.count > 0 %}
+          <div class="govuk-grid-column-one-third govuk-!-margin-bottom-2">
+            <h2 class="govuk-heading-s govuk-!-margin-bottom-1">Users</h2>
+            <p class="govuk-body">
+              {% for membership in user_memberships %}
+                {{ membership.user.get_full_name }}{% if not forloop.last %}, {% endif %}
+              {% endfor %}
+            </p>
+          </div>
+        {% endif %}
       </div>
     </main>
   </div>
