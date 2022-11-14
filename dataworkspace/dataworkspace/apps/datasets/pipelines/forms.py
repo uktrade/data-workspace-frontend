@@ -89,7 +89,7 @@ class SQLPipelineCreateForm(BasePipelineCreateForm):
         query = self.cleaned_data["sql"].strip().rstrip(";")
         try:
             statements = pglast.parse_sql(query)
-        except pglast.parser.ParseError as e:
+        except pglast.parser.ParseError as e:  # pylint: disable=c-extension-no-member
             raise ValidationError(e) from e
         else:
             if len(statements) > 1:
