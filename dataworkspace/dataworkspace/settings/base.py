@@ -457,7 +457,7 @@ CKEDITOR_CONFIGS = {
             ["Format"],
             ["Cut", "Copy", "Paste", "-", "Undo", "Redo"],
         ],
-        "format_tags": "p;h2;h3;h4;h5;h6",
+        "format_tags": "p;h3;h4;h5;h6",
         "linkShowAdvancedTab": False,
         "extraPlugins": "codesnippet",
         "codeSnippet_languages": {

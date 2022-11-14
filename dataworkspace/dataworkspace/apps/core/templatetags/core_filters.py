@@ -34,7 +34,6 @@ def minimal_markup(text):
             text or "",
             tags=[
                 "em",
-                "h2",
                 "h3",
                 "h4",
                 "h5",
