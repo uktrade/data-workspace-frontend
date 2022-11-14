@@ -48,7 +48,7 @@ def minimal_markup(text):
                 "pre",
                 "code",
             ],
-            attributes={"a": ["href", "title"], "code": ["class"], "span": ["class"]},
+            attributes={"a": ["href", "title"], "code": ["class"]},
             strip=True,
         )
     )
