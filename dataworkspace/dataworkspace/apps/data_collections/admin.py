@@ -1,5 +1,9 @@
 from django.contrib import admin
 from dataworkspace.apps.core.admin import DeletableTimeStampedUserAdmin
+from dataworkspace.apps.data_collections.forms import (
+    CollectionDatasetForm,
+    CollectionVisualisationForm,
+)
 
 from dataworkspace.apps.data_collections.models import (
     Collection,
@@ -31,6 +35,7 @@ admin.site.register(
 
 class CollectionDatasetMembershipInlineAdmin(admin.TabularInline):
     model = CollectionDatasetMembership
+    form = CollectionDatasetForm
     extra = 1
     autocomplete_fields = ("dataset",)
     ordering = ["dataset__name"]
@@ -50,6 +55,7 @@ class CollectionDatasetMembershipInlineAdmin(admin.TabularInline):
 
 class CollectionVisualisationCatalogueItemMembershipInlineAdmin(admin.TabularInline):
     model = CollectionVisualisationCatalogueItemMembership
+    form = CollectionVisualisationForm
     extra = 1
     autocomplete_fields = ("visualisation",)
     ordering = ["visualisation__name"]
