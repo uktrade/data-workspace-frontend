@@ -29,7 +29,7 @@ class DataSetType(models.IntegerChoices):
     # Used to define what kind of data set we're dealing with.
     # These values are persisted to the database - do not change them.
     REFERENCE = 0, "Reference Dataset"
-    MASTER = 1, "Master Dataset"
+    MASTER = 1, "Source Dataset"
     DATACUT = 2, "Data Cut"
     VISUALISATION = 3, "Visualisation"
 
