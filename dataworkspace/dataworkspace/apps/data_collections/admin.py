@@ -2,12 +2,14 @@ from django.contrib import admin
 from dataworkspace.apps.core.admin import DeletableTimeStampedUserAdmin
 from dataworkspace.apps.data_collections.forms import (
     CollectionDatasetForm,
+    CollectionUserForm,
     CollectionVisualisationForm,
 )
 
 from dataworkspace.apps.data_collections.models import (
     Collection,
     CollectionDatasetMembership,
+    CollectionUserMembership,
     CollectionVisualisationCatalogueItemMembership,
 )
 
@@ -73,6 +75,26 @@ class CollectionVisualisationCatalogueItemMembershipInlineAdmin(admin.TabularInl
         return False
 
 
+class CollectionUserItemMembershipInlineAdmin(admin.TabularInline):
+    model = CollectionUserMembership
+    form = CollectionUserForm
+    extra = 1
+    autocomplete_fields = ("user",)
+    ordering = ["user__email"]
+    fieldsets = [
+        (
+            None,
+            {"fields": ["user", "deleted"]},
+        ),
+    ]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).filter(deleted=False)
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 class CollectionAdmin(DeletableTimeStampedUserAdmin):
     list_display = ("name", "description", "owner")
     search_fields = ["name"]
@@ -87,6 +109,7 @@ class CollectionAdmin(DeletableTimeStampedUserAdmin):
     inlines = (
         CollectionDatasetMembershipInlineAdmin,
         CollectionVisualisationCatalogueItemMembershipInlineAdmin,
+        CollectionUserItemMembershipInlineAdmin,
     )
 
 
