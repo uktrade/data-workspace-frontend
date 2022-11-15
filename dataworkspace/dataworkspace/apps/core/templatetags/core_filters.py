@@ -30,7 +30,13 @@ def get_choice_field_data_for_gtm(field: ChoiceField):
 
 
 def _filter_language_classes(_, name, value):
-    return name == "class" and re.match(r"^language-\w+$", value)
+    return name == "class" and value in [
+        "language-python",
+        "language-r",
+        "language-json",
+        "language-bash",
+        "language-pgsql",
+    ]
 
 
 @register.filter
