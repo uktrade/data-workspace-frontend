@@ -1,8 +1,9 @@
-FROM alpine:3.10
+FROM alpine:3.16
 
 COPY requirements.txt /app/
 RUN \
 	apk add --no-cache \
+		py3-pip \
 		python3 && \
 	pip3 install \
 		-r /app/requirements.txt
