@@ -54,7 +54,7 @@
             {% for dataset_collection in dataset_collections %}
             <div class="dw-row">
               <h3 class="govuk-heading-m">
-                <a class="govuk-heading-m govuk-link dataset-link"
+                <a class="govuk-link dataset-link"
                    href="{% if dataset_collection.dataset.type == 0 %}{% url "datasets:dataset_detail" dataset_uuid=dataset_collection.dataset.referencedataset_set.first.uuid %}#
                        {{ dataset_collection.dataset.slug }}{% else %}{% url "datasets:dataset_detail" dataset_uuid=dataset_collection.dataset.id %}#{{ dataset_collection.dataset.slug }}{% endif %}">{{ dataset_collection.dataset.name }}</a>
               </h3>
@@ -65,10 +65,6 @@
               <dl>
                 <dt>Data type:</dt>
                 <dd>{{ dataset_collection.dataset.get_type_display }}</dd>
-                <dt>Last updated:</dt>
-                <dd>
-                  {{ dataset_collection.dataset.last_updated|date_with_gmt_offset|default_if_none:"N/A" }}
-                </dd>
                 <dt>Source:</dt>
                 <dd>
                   {% for source in dataset_collection.dataset.sources %}
@@ -99,7 +95,7 @@
             {% for visualisation_collection in visualisation_collections %}
             <div class="dw-row">
               <h3 class="govuk-heading-m">
-                <a class="govuk-heading-m govuk-link dataset-link"
+                <a class="govuk-link dataset-link"
                  href="{% url "datasets:dataset_detail" dataset_uuid=visualisation_collection.visualisation.id %}">{{ visualisation_collection.visualisation.name }}</a>
               </h3>
               <a href="{% url 'data_collections:collection_visualisation_membership_confirm_removal' collections_id=source_object.id visualisation_membership_id=visualisation_collection.id %}" class="govuk-link govuk-link--no-visited-state govuk-!-margin-top-1 govuk-!-margin-left-4">Remove</a>
@@ -109,10 +105,6 @@
               <dl>
                 <dt>Data type:</dt>
                 <dd>{{ visualisation_collection.visualisation.get_type_display }}</dd>
-                <dt>Last updated:</dt>
-                <dd>
-                  {{ visualisation_collection.visualisation.last_updated|date_with_gmt_offset|default_if_none:"N/A" }}
-                </dd>
                 <dt>Source:</dt>
                 <dd>
                   {% for source in visualisation_collection.visualisation.sources %}
