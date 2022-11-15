@@ -49,7 +49,7 @@
             {% for dataset_collection in dataset_collections %}
             <div class="dw-row">
               <h3 class="govuk-heading-m">
-                <a class="govuk-heading-m govuk-link dataset-link"
+                <a class="govuk-link dataset-link"
                    href="{% if dataset_collection.dataset.type == 0 %}{% url "datasets:dataset_detail" dataset_uuid=dataset_collection.dataset.referencedataset_set.first.uuid %}#
                        {{ dataset_collection.dataset.slug }}{% else %}{% url "datasets:dataset_detail" dataset_uuid=dataset_collection.dataset.id %}#{{ dataset_collection.dataset.slug }}{% endif %}">{{ dataset_collection.dataset.name }}</a>
               </h3>
@@ -94,7 +94,7 @@
             {% for visualisation_collection in visualisation_collections %}
             <div class="dw-row">
               <h3 class="govuk-heading-m">
-                <a class="govuk-heading-m govuk-link dataset-link"
+                <a class="govuk-link dataset-link"
                  href="{% url "datasets:dataset_detail" dataset_uuid=visualisation_collection.visualisation.id %}">{{ visualisation_collection.visualisation.name }}</a>
               </h3>
               <a href="{% url 'data_collections:collection_visualisation_membership_confirm_removal' collections_id=source_object.id visualisation_membership_id=visualisation_collection.id %}" class="govuk-link govuk-link--no-visited-state govuk-!-margin-top-1 govuk-!-margin-left-4">Remove</a>
