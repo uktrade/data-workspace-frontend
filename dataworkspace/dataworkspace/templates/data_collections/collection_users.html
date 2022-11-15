@@ -42,10 +42,12 @@
       </div>
       <div class="govuk-grid-row govuk-!-margin-bottom-6">
         <div class="govuk-grid-column-one-half">
-            <p class="govuk-body govuk-!-margin-bottom-2">{{ collection.owner }} <span style="color: #707070">(Owner)</span></p>
-            {% for membership in user_memberships %}
-            <p class="govuk-body govuk-!-margin-bottom-2"> {{ membership.user.email }}</p>
-            {% endfor %}
+            <ul class="govuk-list">
+                <li class="govuk-body govuk-!-margin-bottom-2">{{ collection.owner }} (Owner)</li>
+                {% for membership in user_memberships %}
+                    <li class="govuk-body govuk-!-margin-bottom-2"> {{ membership.user.email }}</li>
+                {% endfor %}
+            </ul>
         </div>
       </div>
       <div class="govuk-grid-row">
