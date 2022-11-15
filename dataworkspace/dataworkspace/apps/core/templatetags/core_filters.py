@@ -28,8 +28,10 @@ def get_choice_field_data_for_gtm(field: ChoiceField):
     # a SearchableChoice object
     return ";".join(sorted(str(x.data["label"]) for x in field if x.data["selected"]))
 
+
 def _filter_language_classes(_, name, value):
     return name == "class" and re.match(r"^language-\w+$", value)
+
 
 @register.filter
 def minimal_markup(text):
@@ -53,7 +55,7 @@ def minimal_markup(text):
                 "pre",
                 "code",
             ],
-            attributes={"a": ["href", "title"], "code":_filter_language_classes},
+            attributes={"a": ["href", "title"], "code": _filter_language_classes},
             strip=True,
         )
     )
