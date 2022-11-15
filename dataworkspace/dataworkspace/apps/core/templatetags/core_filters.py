@@ -1,5 +1,3 @@
-import re
-
 import bleach
 from django import template
 
