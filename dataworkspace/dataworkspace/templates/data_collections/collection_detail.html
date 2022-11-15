@@ -60,10 +60,6 @@
               <dl>
                 <dt>Data type:</dt>
                 <dd>{{ dataset_collection.dataset.get_type_display }}</dd>
-                <dt>Last updated:</dt>
-                <dd>
-                  {{ dataset_collection.dataset.last_updated|date_with_gmt_offset|default_if_none:"N/A" }}
-                </dd>
                 <dt>Source:</dt>
                 <dd>
                   {% for source in dataset_collection.dataset.sources %}
@@ -104,10 +100,6 @@
               <dl>
                 <dt>Data type:</dt>
                 <dd>{{ visualisation_collection.visualisation.get_type_display }}</dd>
-                <dt>Last updated:</dt>
-                <dd>
-                  {{ visualisation_collection.visualisation.last_updated|date_with_gmt_offset|default_if_none:"N/A" }}
-                </dd>
                 <dt>Source:</dt>
                 <dd>
                   {% for source in visualisation_collection.visualisation.sources %}
