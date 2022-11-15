@@ -1,3 +1,5 @@
+import re
+
 import bleach
 from django import template
 
@@ -26,6 +28,8 @@ def get_choice_field_data_for_gtm(field: ChoiceField):
     # a SearchableChoice object
     return ";".join(sorted(str(x.data["label"]) for x in field if x.data["selected"]))
 
+def _filter_language_classes(_, name, value):
+    return name == "class" and re.match(r"^language-\w+$", value)
 
 @register.filter
 def minimal_markup(text):
@@ -33,6 +37,7 @@ def minimal_markup(text):
         bleach.clean(
             text or "",
             tags=[
+                "div",
                 "em",
                 "h3",
                 "h4",
@@ -48,7 +53,7 @@ def minimal_markup(text):
                 "pre",
                 "code",
             ],
-            attributes={"a": ["href", "title"], "code": ["class"]},
+            attributes={"a": ["href", "title"], "code":_filter_language_classes},
             strip=True,
         )
     )
