@@ -1,11 +1,10 @@
 from django.contrib import admin
-from dataworkspace.apps.core.admin import DeletableTimeStampedUserAdmin
 from dataworkspace.apps.data_collections.forms import (
     CollectionDatasetForm,
     CollectionUserForm,
     CollectionVisualisationForm,
 )
-
+from dataworkspace.apps.core.admin import CSPRichTextEditorMixin, DeletableTimeStampedUserAdmin
 from dataworkspace.apps.data_collections.models import (
     Collection,
     CollectionDatasetMembership,
@@ -95,7 +94,7 @@ class CollectionUserItemMembershipInlineAdmin(admin.TabularInline):
         return False
 
 
-class CollectionAdmin(DeletableTimeStampedUserAdmin):
+class CollectionAdmin(CSPRichTextEditorMixin, DeletableTimeStampedUserAdmin):
     list_display = ("name", "description", "owner")
     search_fields = ["name"]
     fieldsets = [

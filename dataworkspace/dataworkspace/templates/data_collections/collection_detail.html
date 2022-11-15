@@ -1,11 +1,16 @@
 {% extends '_main.html' %}
 {% load core_tags %}
 {% load datasets_tags %}
+{% load core_filters %}
+{% load static %}
 
 {% block page_title %}
   {{ source_object.name }}
 {% endblock %}
-
+{% block head %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'assets/vendor/highlight/styles/a11y-light.css' %}">
+{% endblock head %}
 {% block main %}
   <div class="govuk-width-container">
     <div class="govuk-breadcrumbs">
@@ -134,13 +139,15 @@
           </div>
           <p class="govuk-body"><a class="govuk-link govuk-link--no-visited-state" href="{% url 'datasets:find_datasets' %}?q=&sort=relevance&data_type=3">Search for dashboards</a> you'd like to add.</p>
           <h2 class="govuk-heading-l">Notes</h2>
-          <p class="govuk-body">
-            {% if source_object.notes %}
-              {{ source_object.notes |linebreaksbr }}
-              {% else %} 
-              This collection does not have any notes. Use notes to provide additional context or information for yourself or others.
-              {% endif %}
-          </p>  
+          {% if source_object.notes %}
+            <div class="govuk-body dataset-description-richtext">
+              {{ source_object.notes|minimal_markup }}
+            </div>
+          {% else %}
+              <p class="govuk-body">
+                This collection does not have any notes. Use notes to provide additional context or information for yourself or others.
+              </p>
+          {% endif %}
         </div>
         <div class="govuk-grid-column-one-third govuk-!-margin-bottom-2">
           <h2 class="govuk-heading-s govuk-!-margin-bottom-1">Owner</h2>
@@ -160,3 +167,8 @@
     </main>
   </div>
 {% endblock %}
+{% block footer_scripts %}
+  {{ block.super }}
+  <script src="{% static 'assets/vendor/highlight/highlight.pack.js' %}"></script>
+  <script nonce="{{ request.csp_nonce }}">hljs.initHighlightingOnLoad();</script>
+{% endblock footer_scripts %}

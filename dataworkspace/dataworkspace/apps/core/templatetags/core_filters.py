@@ -1,9 +1,8 @@
 import bleach
-from markdown import Markdown
 from django import template
 
 from django.forms import ChoiceField, Field
-from markupsafe import Markup
+from django.utils.safestring import mark_safe
 
 register = template.Library()
 
@@ -28,14 +27,39 @@ def get_choice_field_data_for_gtm(field: ChoiceField):
     return ";".join(sorted(str(x.data["label"]) for x in field if x.data["selected"]))
 
 
+def _filter_language_classes(_, name, value):
+    return name == "class" and value in [
+        "language-python",
+        "language-r",
+        "language-json",
+        "language-bash",
+        "language-pgsql",
+    ]
+
+
 @register.filter
-def minimal_markdown(text):
-    md = Markdown()
-    return Markup(
+def minimal_markup(text):
+    return mark_safe(
         bleach.clean(
-            md.convert(text or ""),
-            tags=["p", "ul", "ol", "li", "strong", "br"],
-            attributes={},
+            text or "",
+            tags=[
+                "div",
+                "em",
+                "h3",
+                "h4",
+                "h5",
+                "h6",
+                "p",
+                "ul",
+                "ol",
+                "li",
+                "strong",
+                "br",
+                "a",
+                "pre",
+                "code",
+            ],
+            attributes={"a": ["href", "title"], "code": _filter_language_classes},
             strip=True,
         )
     )

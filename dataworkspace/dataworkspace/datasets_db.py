@@ -124,7 +124,7 @@ def extract_queried_tables_from_sql_query(query):
 
     try:
         statements = pglast.parse_sql(query)
-    except pglast.parser.ParseError as e:
+    except pglast.parser.ParseError as e:  # pylint: disable=c-extension-no-member
         logger.error(e)
         return []
 

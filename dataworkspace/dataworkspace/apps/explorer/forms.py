@@ -27,7 +27,7 @@ class SqlField(Field):
                 "Enter a SQL statement starting with SELECT, WITH or EXPLAIN",
                 code="InvalidSql",
             ) from ex
-        except parser.ParseError as ex:
+        except parser.ParseError as ex:  # pylint: disable=c-extension-no-member
             raise ValidationError(f"Invalid SQL: {ex}", code="InvalidSql") from ex
 
         stmt = sql["stmt"]["@"]

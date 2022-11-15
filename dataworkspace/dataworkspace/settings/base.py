@@ -443,21 +443,13 @@ YOUR_FILES_ENABLED = env.get("YOUR_FILES_ENABLED", "False") == "True"
 CKEDITOR_CONFIGS = {
     "default": {
         "toolbar": "Custom",
-        "enterMode": 3,
+        "enterMode": 1,  # 1 = p, 2 = br, 3 = div
         "height": 350,
         "toolbar_Custom": [
-            ["Bold", "Italic", "Underline"],
+            ["Bold", "CodeSnippet"],
             [
                 "NumberedList",
                 "BulletedList",
-                "-",
-                "Outdent",
-                "Indent",
-                "-",
-                "JustifyLeft",
-                "JustifyCenter",
-                "JustifyRight",
-                "JustifyBlock",
                 "-",
                 "Link",
                 "Unlink",
@@ -465,8 +457,16 @@ CKEDITOR_CONFIGS = {
             ["Format"],
             ["Cut", "Copy", "Paste", "-", "Undo", "Redo"],
         ],
-        "format_tags": "div;p;h1;h2;h3;h4;h5;h6",
+        "format_tags": "p;h3;h4;h5;h6",
         "linkShowAdvancedTab": False,
+        "extraPlugins": "codesnippet",
+        "codeSnippet_languages": {
+            "bash": "Bash",
+            "json": "JSON",
+            "python": "Python",
+            "r": "R",
+            "pgsql": "SQL",
+        },
     }
 }
 
