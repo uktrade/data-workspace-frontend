@@ -150,12 +150,18 @@
           <div class="govuk-grid-column-one-third govuk-!-margin-bottom-2">
             <h2 class="govuk-heading-s govuk-!-margin-bottom-1">Users</h2>
             <p class="govuk-body">
-              {% for membership in user_memberships %}
-                {{ membership.user.get_full_name }}{% if not forloop.last %}, {% endif %}
+              {% for membership in user_memberships|slice:":5"%}
+                  {{ membership.user.get_full_name }}{% if not forloop.last %}, {% endif %}
               {% endfor %}
+            {% if user_memberships.count > 5 %}
+            and {{ user_memberships.count| add:"-5"}} more
+            {% endif %}
             </p>
           </div>
         {% endif %}
+        <div class="govuk-grid-column-one-third govuk-!-margin-bottom-2">
+          <p class="govuk-body"><a class="govuk-link govuk-link--no-visited-state" href="#">Return to the {{ source_object.name }} collection</a></p>
+        </div>
       </div>
     </main>
   </div>
