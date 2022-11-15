@@ -160,7 +160,7 @@
           </div>
         {% endif %}
         <div class="govuk-grid-column-one-third govuk-!-margin-bottom-2">
-          <p class="govuk-body"><a class="govuk-link govuk-link--no-visited-state" href="#">Return to the {{ source_object.name }} collection</a></p>
+          <p class="govuk-body"><a class="govuk-link govuk-link--no-visited-state" href="{% url 'data_collections:collection-users' source_object.id %}">View and edit users</a></p>
         </div>
       </div>
     </main>

@@ -54,4 +54,9 @@ urlpatterns = [
         },
         name="dataset_select_collection_for_membership",
     ),
+    path(
+        "<uuid:collections_id>/users",
+        login_required(views.CollectionUsersView.as_view()),
+        name="collection-users",
+    ),
 ]
