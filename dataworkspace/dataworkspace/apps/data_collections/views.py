@@ -1,7 +1,7 @@
 from django.db import transaction, IntegrityError
 from django.contrib import messages
 from django.http import Http404
-from django.views.generic import DetailView
+from django.views.generic import DetailView, TemplateView
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 
@@ -190,3 +190,17 @@ def select_collection_for_membership(
             "form": form,
         },
     )
+
+
+class CollectionUsersView(TemplateView):
+    template_name = "data_collections/collection_users.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["collection"] = get_authorised_collection(
+            self.request, self.kwargs["collections_id"]
+        )
+        context["user_memberships"] = (
+            context["collection"].user_memberships.live().order_by("user__email")
+        )
+        return context

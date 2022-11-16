@@ -1,0 +1,63 @@
+{% extends '_main.html' %}
+{% load core_tags %}
+{% load datasets_tags %}
+
+{% block page_title %}
+  Add or edit users
+{% endblock %}
+
+{% block main %}
+  <div class="govuk-width-container">
+    <div class="govuk-breadcrumbs">
+      <ol class="govuk-breadcrumbs__list">
+        <li class="govuk-breadcrumbs__list-item">
+          <a class="govuk-breadcrumbs__link" href="/">Home</a>
+        </li>
+
+        <li class="govuk-breadcrumbs__list-item">
+          Collections
+        </li>
+        <li class="govuk-breadcrumbs__list-item">
+          <a class="govuk-breadcrumbs__link" href="{% url 'data_collections:collections_view' collection.id %}">{{ collection.name }}</a>
+        </li>
+        <li class="govuk-breadcrumbs__list-item">
+            Add or edit users
+        </li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="govuk-width-container">
+    <main class="govuk-main-wrapper" id="main-content" role="main">
+      {% include 'partials/messages.html' %}
+      <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+          <h1 class="govuk-heading-xl">Add or edit users</h1>
+        </div>
+      </div>
+      <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+          <h2 class="govuk-heading-l">Users who have access to the collection</h2>
+        </div>
+      </div>
+      <div class="govuk-grid-row govuk-!-margin-bottom-6">
+        <div class="govuk-grid-column-one-half">
+            <ul class="govuk-list">
+                <li class="govuk-body govuk-!-margin-bottom-2">{{ collection.owner }} (Owner)</li>
+                {% for membership in user_memberships %}
+                    <li class="govuk-body govuk-!-margin-bottom-2"> {{ membership.user.email }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+      </div>
+      <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+            <p class="govuk-body">
+                <a class="govuk-link govuk-link--no-visited-state" href="{% url 'data_collections:collections_view' collection.id %}">Return to the {{collection.name}} collection</a>
+            </p>
+        </div>
+      </div>
+
+    </main>
+    </div>
+{% endblock %}
