@@ -46,7 +46,12 @@ class CollectionsDetailView(DetailView):
                     "dataset__tags",
                     queryset=Tag.objects.filter(type=TagType.SOURCE),
                     to_attr="sources",
-                )
+                ),
+                Prefetch(
+                    "dataset__tags",
+                    queryset=Tag.objects.filter(type=TagType.TOPIC),
+                    to_attr="topics",
+                ),
             )
             .order_by("dataset__name")
         )
@@ -57,7 +62,12 @@ class CollectionsDetailView(DetailView):
                     "visualisation__tags",
                     queryset=Tag.objects.filter(type=TagType.SOURCE),
                     to_attr="sources",
-                )
+                ),
+                Prefetch(
+                    "visualisation__tags",
+                    queryset=Tag.objects.filter(type=TagType.TOPIC),
+                    to_attr="topics",
+                ),
             )
             .order_by("visualisation__name")
         )

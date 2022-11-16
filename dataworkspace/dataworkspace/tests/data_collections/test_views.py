@@ -84,7 +84,7 @@ def test_dataset_can_be_added(client):
     response_text = response.content.decode(response.charset)
     assert "Datacut dataset" in response_text
     assert "The Source" in response_text
-    assert "The Topic" not in response_text
+    assert "The Topic" in response_text
 
 
 def test_reference_dataset_can_be_added(client):
@@ -118,7 +118,7 @@ def test_reference_dataset_can_be_added(client):
     response_text = response.content.decode(response.charset)
     assert "reference dataset example description" in response_text
     assert "The Source" in response_text
-    assert "The Topic" not in response_text
+    assert "The Topic" in response_text
 
 
 def test_visualisation_can_be_added(client):
@@ -152,7 +152,7 @@ def test_visualisation_can_be_added(client):
     response_text = response.content.decode(response.charset)
     assert "dummy visualisation catalogue item" in response_text
     assert "The Source" in response_text
-    assert "The Topic" not in response_text
+    assert "The Topic" in response_text
 
 
 def test_authorised_user_attempting_delete_dataset_membership(user, other_user):
