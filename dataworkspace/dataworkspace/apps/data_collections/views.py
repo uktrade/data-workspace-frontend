@@ -3,6 +3,7 @@ from django.db import transaction, IntegrityError
 from django.db.models import Prefetch
 from django.contrib import messages
 from django.http import Http404, HttpResponseRedirect
+
 from django.views.generic import DetailView, FormView
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import get_object_or_404, redirect, render, reverse
