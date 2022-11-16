@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.auth import get_user_model
 
 from dataworkspace.apps.data_collections.models import (
     CollectionDatasetMembership,
@@ -61,9 +62,28 @@ class CollectionUserAddForm(GOVUKDesignSystemForm):
     email = GOVUKDesignSystemEmailField(
         label="Enter the email address for users you’d like to have access to this collection",
         required=True,
-        error_messages={"required": "You must enter a valid email address"},
+        error_messages={
+            "required": "You must enter a valid email address",
+            "invalid": "You must enter a valid email address",
+        },
         widget=GOVUKDesignSystemTextWidget(
             label_size="m",
             extra_label_classes="govuk-!-margin-bottom-6 govuk-!-font-weight-regular",
         ),
     )
+
+    def __init__(self, *args, **kwargs):
+        self.collection = kwargs.pop("collection")
+        super().__init__(*args, **kwargs)
+
+    def clean_email(self):
+        user = get_user_model().objects.filter(email=self.cleaned_data["email"]).first()
+        if user is None:
+            raise forms.ValidationError(
+                "The user you are sharing with must have a DIT staff SSO account"
+            )
+        if self.collection.owner == user:
+            raise forms.ValidationError(f"{user.email} already has access to this collection")
+        if self.collection.user_memberships.live().filter(user=user).exists():
+            raise forms.ValidationError(f"{user.email} already has access to this collection")
+        return self.cleaned_data["email"]

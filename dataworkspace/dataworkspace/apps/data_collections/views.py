@@ -1,6 +1,7 @@
+from django.contrib.auth import get_user_model
 from django.db import transaction, IntegrityError
 from django.contrib import messages
-from django.http import Http404
+from django.http import Http404, HttpResponseRedirect
 from django.views.generic import DetailView, FormView
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import get_object_or_404, redirect, render, reverse
@@ -12,6 +13,7 @@ from dataworkspace.apps.data_collections.forms import (
 from dataworkspace.apps.data_collections.models import (
     Collection,
     CollectionDatasetMembership,
+    CollectionUserMembership,
     CollectionVisualisationCatalogueItemMembership,
 )
 from dataworkspace.apps.datasets.constants import DataSetType
@@ -209,4 +211,25 @@ class CollectionUsersView(FormView):
         )
         return context
 
-    # def form_invalid(self, form):
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["collection"] = get_authorised_collection(
+            self.request, self.kwargs["collections_id"]
+        )
+        return kwargs
+
+    def form_valid(self, form):
+        collection = get_authorised_collection(self.request, self.kwargs["collections_id"])
+        membership = CollectionUserMembership.objects.create(
+            collection=collection,
+            user=get_user_model().objects.get(email=form.cleaned_data["email"]),
+            created_by=self.request.user,
+        )
+        log_event(
+            self.request.user,
+            EventLog.TYPE_ADD_USER_TO_COLLECTION,
+            related_object=membership,
+        )
+        return HttpResponseRedirect(
+            reverse("data_collections:collection-users", args=(collection.id,))
+        )
