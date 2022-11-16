@@ -36,6 +36,8 @@ from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.urls import reverse
 from django.db.models import F, ProtectedError, Count, Q
+from django.db.models.signals import m2m_changed
+from django.dispatch import receiver
 from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import SearchVector, SearchVectorField
@@ -1817,6 +1819,11 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             "data_collections:dataset_select_collection_for_membership",
             args=(self.reference_dataset_inheriting_from_dataset.id,),
         )
+
+
+@receiver(m2m_changed, sender=ReferenceDataset.tags.through)
+def save_reference_dataset_tags_on_m2m_changed(instance, **_):
+    instance.reference_dataset_inheriting_from_dataset.tags.set(instance.tags.all())
 
 
 class ReferenceDataSetBookmark(models.Model):

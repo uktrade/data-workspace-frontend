@@ -87,6 +87,40 @@ def test_dataset_can_be_added(client):
     assert "The Topic" not in response_text
 
 
+def test_reference_dataset_can_be_added(client):
+    user = factories.UserFactory(is_superuser=True)
+    client = get_client(get_user_data(user))
+
+    reference_dataset = factories.ReferenceDatasetFactory(
+        published=True, short_description="reference dataset example description"
+    )
+    reference_dataset.tags.set(
+        [
+            factories.SourceTagFactory(name="The Source"),
+            factories.TopicTagFactory(name="The Topic"),
+        ]
+    )
+
+    c = factories.CollectionFactory.create(
+        name="test-collections", description="test collections description"
+    )
+
+    c.datasets.add(reference_dataset.reference_dataset_inheriting_from_dataset)
+
+    response = client.get(
+        reverse(
+            "data_collections:collections_view",
+            kwargs={"collections_id": c.id},
+        )
+    )
+
+    assert response.status_code == 200
+    response_text = response.content.decode(response.charset)
+    assert "reference dataset example description" in response_text
+    assert "The Source" in response_text
+    assert "The Topic" not in response_text
+
+
 def test_visualisation_can_be_added(client):
     user = factories.UserFactory(is_superuser=True)
     client = get_client(get_user_data(user))
