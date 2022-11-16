@@ -50,9 +50,17 @@ class CollectionsDetailView(DetailView):
             )
             .order_by("dataset__name")
         )
-        context["visualisation_collections"] = source_object.visualisation_collections.filter(
-            deleted=False
-        ).order_by("visualisation__name")
+        context["visualisation_collections"] = (
+            source_object.visualisation_collections.filter(deleted=False)
+            .prefetch_related(
+                Prefetch(
+                    "visualisation__tags",
+                    queryset=Tag.objects.filter(type=TagType.SOURCE),
+                    to_attr="sources",
+                )
+            )
+            .order_by("visualisation__name")
+        )
         context["user_memberships"] = source_object.user_memberships.live().order_by(
             "user__first_name", "user__last_name"
         )

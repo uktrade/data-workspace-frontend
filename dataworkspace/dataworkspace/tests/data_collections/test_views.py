@@ -94,6 +94,12 @@ def test_visualisation_can_be_added(client):
     catalogue_item = factories.VisualisationCatalogueItemFactory(
         personal_data="personal", name="dummy visualisation catalogue item"
     )
+    catalogue_item.tags.set(
+        [
+            factories.SourceTagFactory(name="The Source"),
+            factories.TopicTagFactory(name="The Topic"),
+        ]
+    )
 
     c = factories.CollectionFactory.create(
         name="test-collections", description="test collections description"
@@ -109,7 +115,10 @@ def test_visualisation_can_be_added(client):
     )
 
     assert response.status_code == 200
-    assert "dummy visualisation catalogue item" in response.content.decode(response.charset)
+    response_text = response.content.decode(response.charset)
+    assert "dummy visualisation catalogue item" in response_text
+    assert "The Source" in response_text
+    assert "The Topic" not in response_text
 
 
 def test_authorised_user_attempting_delete_dataset_membership(user, other_user):
