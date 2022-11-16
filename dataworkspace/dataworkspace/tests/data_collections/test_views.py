@@ -2,6 +2,7 @@ from django.urls import reverse
 
 from dataworkspace.tests import factories
 from dataworkspace.tests.conftest import get_client, get_user_data
+from dataworkspace.apps.data_collections.models import CollectionUserMembership
 
 
 def test_collection(client):
@@ -374,3 +375,36 @@ def test_authorised_user_attempting_to_add_new_collection_reference_dataset_memb
         data={"collection": c.id},
     )
     assert response.status_code == 302
+
+def test_user_page(client):
+    user = factories.UserFactory(is_superuser=True)
+    user2 = factories.UserFactory()
+    client = get_client(get_user_data(user))
+
+    c = factories.CollectionFactory.create(
+        name="test-collections", description="test collections description", owner=user
+    )
+    CollectionUserMembership.objects.create(collection=c, user=user2)
+
+    response = client.get(
+        reverse(
+            "data_collections:collection-users",
+            kwargs={"collections_id": c.id},
+        )
+    )
+    assert response.status_code == 200
+    assert user2.email in response.content.decode(response.charset)
+
+def test_user_not_owner_raises_404(client):
+    c = factories.CollectionFactory.create(
+        name="test-collections", description="test collections description"
+    )
+
+    response = client.get(
+        reverse(
+            "data_collections:collection-users",
+            kwargs={"collections_id": c.id},
+        )
+    )
+
+    assert response.status_code == 404
