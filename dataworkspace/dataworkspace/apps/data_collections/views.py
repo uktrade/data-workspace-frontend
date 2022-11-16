@@ -1,11 +1,14 @@
 from django.db import transaction, IntegrityError
 from django.contrib import messages
 from django.http import Http404
-from django.views.generic import DetailView, TemplateView
+from django.views.generic import DetailView, FormView
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 
-from dataworkspace.apps.data_collections.forms import SelectCollectionForMembershipForm
+from dataworkspace.apps.data_collections.forms import (
+    CollectionUserAddForm,
+    SelectCollectionForMembershipForm,
+)
 from dataworkspace.apps.data_collections.models import (
     Collection,
     CollectionDatasetMembership,
@@ -192,7 +195,8 @@ def select_collection_for_membership(
     )
 
 
-class CollectionUsersView(TemplateView):
+class CollectionUsersView(FormView):
+    form_class = CollectionUserAddForm
     template_name = "data_collections/collection_users.html"
 
     def get_context_data(self, **kwargs):
@@ -204,3 +208,5 @@ class CollectionUsersView(TemplateView):
             context["collection"].user_memberships.live().order_by("user__email")
         )
         return context
+
+    # def form_invalid(self, form):

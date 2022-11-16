@@ -6,9 +6,11 @@ from dataworkspace.apps.data_collections.models import (
     CollectionVisualisationCatalogueItemMembership,
 )
 from dataworkspace.forms import (
+    GOVUKDesignSystemEmailField,
     GOVUKDesignSystemRadioField,
     GOVUKDesignSystemForm,
     GOVUKDesignSystemRadiosWidget,
+    GOVUKDesignSystemTextWidget,
 )
 
 
@@ -53,3 +55,15 @@ class CollectionUserForm(forms.ModelForm):
     class Meta:
         model = CollectionUserMembership
         fields = ["user", "deleted"]
+
+
+class CollectionUserAddForm(GOVUKDesignSystemForm):
+    email = GOVUKDesignSystemEmailField(
+        label="Enter the email address for users you’d like to have access to this collection",
+        required=True,
+        error_messages={"required": "You must enter a valid email address"},
+        widget=GOVUKDesignSystemTextWidget(
+            label_size="m",
+            extra_label_classes="govuk-!-margin-bottom-6 govuk-!-font-weight-regular",
+        ),
+    )
