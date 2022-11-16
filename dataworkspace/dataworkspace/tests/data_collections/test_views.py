@@ -60,6 +60,12 @@ def test_dataset_can_be_added(client):
     client = get_client(get_user_data(user))
 
     dataset = factories.DatacutDataSetFactory(published=True, name="Datacut dataset")
+    dataset.tags.set(
+        [
+            factories.SourceTagFactory(name="The Source"),
+            factories.TopicTagFactory(name="The Topic"),
+        ]
+    )
 
     c = factories.CollectionFactory.create(
         name="test-collections", description="test collections description"
@@ -75,7 +81,10 @@ def test_dataset_can_be_added(client):
     )
 
     assert response.status_code == 200
-    assert "Datacut dataset" in response.content.decode(response.charset)
+    response_text = response.content.decode(response.charset)
+    assert "Datacut dataset" in response_text
+    assert "The Source" in response_text
+    assert "The Topic" not in response_text
 
 
 def test_visualisation_can_be_added(client):
