@@ -376,6 +376,7 @@ def test_authorised_user_attempting_to_add_new_collection_reference_dataset_memb
     )
     assert response.status_code == 302
 
+
 def test_user_page(client):
     user = factories.UserFactory(is_superuser=True)
     user2 = factories.UserFactory()
@@ -394,6 +395,7 @@ def test_user_page(client):
     )
     assert response.status_code == 200
     assert user2.email in response.content.decode(response.charset)
+
 
 def test_user_not_owner_raises_404(client):
     c = factories.CollectionFactory.create(
