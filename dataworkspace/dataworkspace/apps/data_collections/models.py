@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models, transaction
 from django.db.models import Q
+from django.urls import reverse
 
 from dataworkspace.apps.core.models import DeletableTimestampedUserModel
 from dataworkspace.apps.datasets.models import DataSet, VisualisationCatalogueItem
@@ -32,6 +33,9 @@ class Collection(DeletableTimestampedUserModel):
 
     def __str__(self):
         return self.name
+
+    def get_absolute_url(self):
+        return reverse("data_collections:collections_view", args=(self.id,))
 
 
 class CollectionDatasetMembership(DeletableTimestampedUserModel):
