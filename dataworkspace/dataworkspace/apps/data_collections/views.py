@@ -241,12 +241,12 @@ class CollectionUsersView(FormView):
                 )
         except IntegrityError:
             messages.success(
-                self.request,
-                f"{membership.user.get_full_name()} has been added to this collection",
+                self.request, f"{membership.user.email} already has access to this collection"
             )
         else:
             messages.success(
-                self.request, f"{membership.user.email} already has access to this collection"
+                self.request,
+                f"{membership.user.get_full_name()} has been added to this collection",
             )
 
         return HttpResponseRedirect(
