@@ -50,8 +50,8 @@
       <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
           <h2 class="govuk-heading-l">Data</h2>
-          <div class="search-result" style="border-bottom: none">
-            {% for dataset_collection in dataset_collections %}
+          {% for dataset_collection in dataset_collections %}
+          <div class="search-result govuk-!-margin-bottom-4">
             <div class="dw-row">
               <h3 class="govuk-heading-m">
                 <a class="govuk-link dataset-link"
@@ -87,12 +87,12 @@
                 {% endif %}
               </dl>
             </div>
-            {% endfor %}
-            <p class="govuk-body" style="margin-bottom: 40px"><a class="govuk-link govuk-link--no-visited-state" href="{% url 'datasets:find_datasets' %}?q=&sort=relevance&data_type=1&data_type=2&data_type=0">Search for data</a> you'd like to add.</p>
           </div>
+          {% endfor %}
+          <p class="govuk-body" style="margin-bottom: 40px"><a class="govuk-link govuk-link--no-visited-state" href="{% url 'datasets:find_datasets' %}?q=&sort=relevance&data_type=1&data_type=2&data_type=0">Search for data</a> you'd like to add.</p>
           <h2 class="govuk-heading-l">Dashboards</h2>
-          <div class="search-result" style="border-bottom: none">
-            {% for visualisation_collection in visualisation_collections %}
+          {% for visualisation_collection in visualisation_collections %}
+          <div class="search-result govuk-!-margin-bottom-4">
             <div class="dw-row">
               <h3 class="govuk-heading-m">
                 <a class="govuk-link dataset-link"
@@ -127,8 +127,8 @@
                 {% endif %}
               </dl>
             </div>
-            {% endfor %}
           </div>
+          {% endfor %}
           <p class="govuk-body"><a class="govuk-link govuk-link--no-visited-state" href="{% url 'datasets:find_datasets' %}?q=&sort=relevance&data_type=3">Search for dashboards</a> you'd like to add.</p>
           <h2 class="govuk-heading-l">Notes</h2>
           {% if source_object.notes %}
