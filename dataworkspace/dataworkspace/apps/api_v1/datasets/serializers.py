@@ -46,6 +46,10 @@ class CatalogueItemSerializer(serializers.Serializer):
     eligibility_criteria = serializers.ListField()
     source_tables = serializers.SerializerMethodField()
     slug = serializers.CharField()
+    licence_url = serializers.CharField()
+    restrictions_on_usage = serializers.CharField()
+    user_access_type = serializers.CharField()
+    authorized_email_domains = serializers.ListField()
     is_draft = serializers.BooleanField(source="draft")
     dictionary_published = serializers.BooleanField(source="dictionary")
 
@@ -61,6 +65,8 @@ class CatalogueItemSerializer(serializers.Serializer):
         instance["licence"] = instance["licence"] or None
         instance["personal_data"] = instance["personal_data"] or None
         instance["retention_policy"] = instance["retention_policy"] or None
+        instance["user_access_type"] = instance["user_access_type"]
+        instance["authorized_email_domains"] = instance["authorized_email_domains"]
         return instance
 
     def get_source_tables(self, instance):

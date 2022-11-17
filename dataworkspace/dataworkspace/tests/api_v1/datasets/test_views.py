@@ -465,6 +465,14 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             if dataset.type == DataSetType.MASTER
             else [],
             "slug": dataset.slug,
+            "licence_url": dataset.licence_url,
+            "restrictions_on_usage": dataset.restrictions_on_usage,
+            "user_access_type": None
+            if isinstance(dataset, ReferenceDataset)
+            else str(dataset.user_access_type),
+            "authorized_email_domains": None
+            if isinstance(dataset, ReferenceDataset)
+            else dataset.authorized_email_domains,
         }
 
     def test_success(self, unauthenticated_client):
