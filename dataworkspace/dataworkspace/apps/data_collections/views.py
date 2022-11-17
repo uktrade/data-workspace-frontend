@@ -220,19 +220,35 @@ class CollectionUsersView(FormView):
 
     def form_valid(self, form):
         collection = get_authorised_collection(self.request, self.kwargs["collections_id"])
-        membership = CollectionUserMembership.objects.create(
-            collection=collection,
-            user=get_user_model().objects.get(email=form.cleaned_data["email"]),
-            created_by=self.request.user,
-        )
-        messages.success(
-            self.request, f"{membership.user.get_full_name()} has been added to this collection"
-        )
-        log_event(
-            self.request.user,
-            EventLog.TYPE_ADD_USER_TO_COLLECTION,
-            related_object=membership,
-        )
+        try:
+            with transaction.atomic():
+                membership = CollectionUserMembership.objects.create(
+                    collection=collection,
+                    user=get_user_model().objects.get(email=form.cleaned_data["email"]),
+                    created_by=self.request.user,
+                )
+                log_event(
+                    self.request.user,
+                    EventLog.TYPE_ADD_USER_TO_COLLECTION,
+                    related_object=collection,
+                    extra={
+                        "added_user": {
+                            "id": membership.user.id,
+                            "email": membership.user.email,
+                            "name": membership.user.get_full_name(),
+                        }
+                    },
+                )
+        except IntegrityError:
+            messages.success(
+                self.request,
+                f"{membership.user.get_full_name()} has been added to this collection",
+            )
+        else:
+            messages.success(
+                self.request, f"{membership.user.email} already has access to this collection"
+            )
+
         return HttpResponseRedirect(
             reverse("data_collections:collection-users", args=(collection.id,))
         )
