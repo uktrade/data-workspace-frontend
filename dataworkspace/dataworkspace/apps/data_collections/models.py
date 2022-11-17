@@ -107,4 +107,15 @@ class CollectionUserMembership(DeletableTimestampedUserModel):
     def delete(self, deleted_by, **kwargs):  # pylint: disable=arguments-differ
         with transaction.atomic():
             super().delete(**kwargs)
-            log_event(deleted_by, EventLog.TYPE_REMOVE_USER_FROM_COLLECTION, related_object=self)
+            log_event(
+                deleted_by,
+                EventLog.TYPE_REMOVE_USER_FROM_COLLECTION,
+                related_object=self.collection,
+                extra={
+                    "removed_user": {
+                        "id": self.user.id,
+                        "email": self.user.email,
+                        "name": self.user.get_full_name(),
+                    }
+                },
+            )
