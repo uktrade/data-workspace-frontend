@@ -462,3 +462,93 @@ def test_user_not_owner_raises_404(client):
     )
 
     assert response.status_code == 404
+
+
+def test_add_user_invalid_email_input(client, user):
+    c = factories.CollectionFactory.create(name="test-collections", owner=user)
+    response = client.post(
+        reverse(
+            "data_collections:collection-users",
+            kwargs={"collections_id": c.id},
+        ),
+        data={"email": "imnotanemailaddress"},
+    )
+    assert response.status_code == 200
+    assert "You must enter a valid email address" in response.content.decode(response.charset)
+
+
+def test_add_user_email_provided_doesnt_exist(client, user):
+    c = factories.CollectionFactory.create(name="test-collections", owner=user)
+    response = client.post(
+        reverse(
+            "data_collections:collection-users",
+            kwargs={"collections_id": c.id},
+        ),
+        data={"email": "bob2@test.com"},
+    )
+    assert response.status_code == 200
+    assert (
+        "The user you are sharing with must have a DIT staff SSO account"
+        in response.content.decode(response.charset)
+    )
+
+
+def test_add_user_already_exists_on_collection(client, user):
+    c = factories.CollectionFactory.create(name="test-collections", owner=user)
+    user2 = factories.UserFactory()
+    CollectionUserMembership.objects.create(collection=c, user=user2)
+    response = client.post(
+        reverse(
+            "data_collections:collection-users",
+            kwargs={"collections_id": c.id},
+        ),
+        data={"email": user2.email},
+    )
+    assert response.status_code == 200
+    assert f"{user2.email} already has access to this collection" in response.content.decode(
+        response.charset
+    )
+
+
+def test_add_user_already_already_owner_of_collection(client, user):
+    c = factories.CollectionFactory.create(name="test-collections", owner=user)
+    response = client.post(
+        reverse(
+            "data_collections:collection-users",
+            kwargs={"collections_id": c.id},
+        ),
+        data={"email": user.email},
+    )
+    assert response.status_code == 200
+    assert f"{user.email} already has access to this collection" in response.content.decode(
+        response.charset
+    )
+
+
+def test_add_user_not_the_owner(client, user):
+    c = factories.CollectionFactory.create(name="test-collections")
+    response = client.post(
+        reverse(
+            "data_collections:collection-users",
+            kwargs={"collections_id": c.id},
+        ),
+        data={"email": "terrence@test.com"},
+    )
+    assert response.status_code == 404
+
+
+def test_add_user_success(client, user):
+    c = factories.CollectionFactory.create(name="test-collections", owner=user)
+    user2 = factories.UserFactory()
+    member_count = CollectionUserMembership.objects.all().count()
+    response = client.post(
+        reverse(
+            "data_collections:collection-users",
+            kwargs={"collections_id": c.id},
+        ),
+        data={"email": user2.email},
+        follow=True,
+    )
+    assert response.status_code == 200
+    assert CollectionUserMembership.objects.all().count() == member_count + 1
+    assert user2.email in response.content.decode(response.charset)

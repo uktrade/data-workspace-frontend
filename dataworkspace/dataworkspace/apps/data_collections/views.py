@@ -1,15 +1,20 @@
+from django.contrib.auth import get_user_model
 from django.db import transaction, IntegrityError
 from django.db.models import Prefetch
 from django.contrib import messages
-from django.http import Http404
-from django.views.generic import DetailView, TemplateView
+from django.http import Http404, HttpResponseRedirect
+from django.views.generic import DetailView, FormView
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 
-from dataworkspace.apps.data_collections.forms import SelectCollectionForMembershipForm
+from dataworkspace.apps.data_collections.forms import (
+    CollectionUserAddForm,
+    SelectCollectionForMembershipForm,
+)
 from dataworkspace.apps.data_collections.models import (
     Collection,
     CollectionDatasetMembership,
+    CollectionUserMembership,
     CollectionVisualisationCatalogueItemMembership,
 )
 from dataworkspace.apps.datasets.constants import DataSetType, TagType
@@ -220,7 +225,8 @@ def select_collection_for_membership(
     )
 
 
-class CollectionUsersView(TemplateView):
+class CollectionUsersView(FormView):
+    form_class = CollectionUserAddForm
     template_name = "data_collections/collection_users.html"
 
     def get_context_data(self, **kwargs):
@@ -232,3 +238,45 @@ class CollectionUsersView(TemplateView):
             context["collection"].user_memberships.live().order_by("user__email")
         )
         return context
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["collection"] = get_authorised_collection(
+            self.request, self.kwargs["collections_id"]
+        )
+        return kwargs
+
+    def form_valid(self, form):
+        collection = get_authorised_collection(self.request, self.kwargs["collections_id"])
+        try:
+            with transaction.atomic():
+                membership = CollectionUserMembership.objects.create(
+                    collection=collection,
+                    user=get_user_model().objects.get(email=form.cleaned_data["email"]),
+                    created_by=self.request.user,
+                )
+                log_event(
+                    self.request.user,
+                    EventLog.TYPE_ADD_USER_TO_COLLECTION,
+                    related_object=collection,
+                    extra={
+                        "added_user": {
+                            "id": membership.user.id,
+                            "email": membership.user.email,
+                            "name": membership.user.get_full_name(),
+                        }
+                    },
+                )
+        except IntegrityError:
+            messages.success(
+                self.request, f"{membership.user.email} already has access to this collection"
+            )
+        else:
+            messages.success(
+                self.request,
+                f"{membership.user.get_full_name()} has been added to this collection",
+            )
+
+        return HttpResponseRedirect(
+            reverse("data_collections:collection-users", args=(collection.id,))
+        )
