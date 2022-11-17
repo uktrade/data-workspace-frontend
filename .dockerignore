@@ -1,4 +1,5 @@
 .local
+.git
 node_modules
 env
 venv
