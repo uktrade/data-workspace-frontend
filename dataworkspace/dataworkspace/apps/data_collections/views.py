@@ -11,7 +11,13 @@ from dataworkspace.apps.data_collections.models import (
     Collection,
     CollectionDatasetMembership,
     CollectionVisualisationCatalogueItemMembership,
+    CollectionUserMembership,
 )
+from django.conf import settings
+from django.dispatch import receiver
+from django.db.models.signals import post_save
+from dataworkspace.notify import send_email
+
 from dataworkspace.apps.datasets.constants import DataSetType, TagType
 from dataworkspace.apps.datasets.models import Tag
 from dataworkspace.apps.eventlog.models import EventLog
@@ -232,3 +238,17 @@ class CollectionUsersView(TemplateView):
             context["collection"].user_memberships.live().order_by("user__email")
         )
         return context
+
+
+@receiver(post_save, sender=CollectionUserMembership)
+def send_emails_to_(request, collections_id, created, **_):
+    collection = get_authorised_collection(request, collections_id)
+    user_name = request.user
+    if created:
+        send_email(
+            template_id=settings.NOTIFY_COLLECTIONS_NOTIFICATION_USER_ADDED_ID,
+            personalisation={"collection_name": collection, "user_name": user_name},
+        )
+
+
+# send email to instance.user for being added to instance.collection
