@@ -70,13 +70,30 @@
         </div>
       </div>
       <div class="govuk-grid-row govuk-!-margin-bottom-6">
-        <div class="govuk-grid-column-one-half">
-            <ul class="govuk-list">
-                <li class="govuk-body govuk-!-margin-bottom-2">{{ collection.owner }} (Owner)</li>
+        <div class="govuk-grid-column-full">
+          <dl class="govuk-summary-list">
+            <div class="govuk-summary-list__row">
+              <dd class="govuk-summary-list__value">
+                <p class="govuk-body govuk-!-font-weight-bold">{{ collection.owner.get_full_name }} <span class="govuk-!-font-weight-regular">(Owner)</span></p>
+                <p class="govuk-body">{{ collection.owner.email }}</p>
+              </dd>
+              <dd class="govuk-summary-list__actions"></dd>
+            </div>
                 {% for membership in user_memberships %}
-                    <li class="govuk-body govuk-!-margin-bottom-2"> {{ membership.user.email }}</li>
+                <div class="govuk-summary-list__row">
+                  <dd class="govuk-summary-list__value">
+                    <p class="govuk-body govuk-!-font-weight-bold">{{ membership.user.get_full_name }}</p>
+                    <p class="govuk-body">{{ membership.user.email }}</p>
+                  </dd>
+                  <dd class="govuk-summary-list__actions">
+                    <form method="POST" action="{% url 'data_collections:remove-user' collection.id membership.id %}" >
+                      {% csrf_token %}
+                      <button type="submit" class="govuk-button govuk-!-margin-bottom-0" aria-label="Remove {{ membership.user.get_full_name }} from this collection">Remove access</button>
+                    </form>
+                  </dd>
+                </div>
                 {% endfor %}
-            </ul>
+            </dl>
         </div>
       </div>
       <div class="govuk-grid-row">

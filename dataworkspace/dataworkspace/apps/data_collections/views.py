@@ -282,3 +282,32 @@ class CollectionUsersView(FormView):
         return HttpResponseRedirect(
             reverse("data_collections:collection-users", args=(collection.id,))
         )
+
+
+@require_http_methods(["POST"])
+def remove_user_membership(request, collections_id, user_membership_id):
+    collection = get_authorised_collection(request, collections_id)
+    membership = get_object_or_404(
+        CollectionUserMembership.objects.live(),
+        id=user_membership_id,
+        collection=collection,
+    )
+
+    membership.delete(request.user)
+    messages.success(
+        request, f"{membership.user.get_full_name()} no longer has access to this collection."
+    )
+    log_event(
+        request.user,
+        EventLog.TYPE_REMOVE_USER_FROM_COLLECTION,
+        related_object=collection,
+        extra={
+            "removed_user": {
+                "id": membership.user.id,
+                "email": membership.user.email,
+                "name": membership.user.get_full_name(),
+            }
+        },
+    )
+
+    return redirect("data_collections:collection-users", collections_id=collections_id)
