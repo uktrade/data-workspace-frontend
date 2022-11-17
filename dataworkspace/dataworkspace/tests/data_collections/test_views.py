@@ -553,13 +553,14 @@ def test_add_user_success(client, user):
     assert CollectionUserMembership.objects.all().count() == member_count + 1
     assert user2.email in response.content.decode(response.charset)
 
+
 def test_remove_user_not_owner(client):
     c = factories.CollectionFactory.create(name="test-collections")
     member = factories.CollectionUserMembershipFactory.create(collection=c)
     response = client.post(
         reverse(
             "data_collections:remove-user",
-            kwargs={"user_membership_id": member.id, "collections_id": c.id}
+            kwargs={"user_membership_id": member.id, "collections_id": c.id},
         ),
     )
     assert response.status_code == 404
@@ -572,11 +573,10 @@ def test_user_successfully_removed(client, user):
     response = client.post(
         reverse(
             "data_collections:remove-user",
-            kwargs={"user_membership_id": member.id, "collections_id": c.id}
+            kwargs={"user_membership_id": member.id, "collections_id": c.id},
         ),
         follow=True,
     )
     assert response.status_code == 200
     assert CollectionUserMembership.objects.live().count() == member_count - 1
     assert member.user.email not in response.content.decode(response.charset)
-
