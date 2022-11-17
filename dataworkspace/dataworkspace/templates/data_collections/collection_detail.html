@@ -109,7 +109,7 @@
                 <dd>
                   {% for source in visualisation_collection.visualisation.sources %}
                     <a class="govuk-link"
-                       href="{% url "datasets:find_datasets" %}?source={{ visualisation_collection.visualisation.id }}">{{ visualisation_collection.visualisation.name }}</a>
+                       href="{% url "datasets:find_datasets" %}?source={{ source.id }}">{{ source.name }}</a>
                     {% empty %}
                     N/A
                   {% endfor %}

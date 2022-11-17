@@ -1,4 +1,5 @@
 from django.db import transaction, IntegrityError
+from django.db.models import Prefetch
 from django.contrib import messages
 from django.http import Http404
 from django.views.generic import DetailView, TemplateView
@@ -11,7 +12,8 @@ from dataworkspace.apps.data_collections.models import (
     CollectionDatasetMembership,
     CollectionVisualisationCatalogueItemMembership,
 )
-from dataworkspace.apps.datasets.constants import DataSetType
+from dataworkspace.apps.datasets.constants import DataSetType, TagType
+from dataworkspace.apps.datasets.models import Tag
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 
@@ -37,12 +39,38 @@ class CollectionsDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         source_object = self.get_object()
         context["source_object"] = source_object
-        context["dataset_collections"] = source_object.dataset_collections.filter(
-            deleted=False
-        ).order_by("dataset__name")
-        context["visualisation_collections"] = source_object.visualisation_collections.filter(
-            deleted=False
-        ).order_by("visualisation__name")
+        context["dataset_collections"] = (
+            source_object.dataset_collections.filter(deleted=False)
+            .prefetch_related(
+                Prefetch(
+                    "dataset__tags",
+                    queryset=Tag.objects.filter(type=TagType.SOURCE),
+                    to_attr="sources",
+                ),
+                Prefetch(
+                    "dataset__tags",
+                    queryset=Tag.objects.filter(type=TagType.TOPIC),
+                    to_attr="topics",
+                ),
+            )
+            .order_by("dataset__name")
+        )
+        context["visualisation_collections"] = (
+            source_object.visualisation_collections.filter(deleted=False)
+            .prefetch_related(
+                Prefetch(
+                    "visualisation__tags",
+                    queryset=Tag.objects.filter(type=TagType.SOURCE),
+                    to_attr="sources",
+                ),
+                Prefetch(
+                    "visualisation__tags",
+                    queryset=Tag.objects.filter(type=TagType.TOPIC),
+                    to_attr="topics",
+                ),
+            )
+            .order_by("visualisation__name")
+        )
         context["user_memberships"] = source_object.user_memberships.live().order_by(
             "user__first_name", "user__last_name"
         )

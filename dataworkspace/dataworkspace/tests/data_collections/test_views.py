@@ -61,6 +61,12 @@ def test_dataset_can_be_added(client):
     client = get_client(get_user_data(user))
 
     dataset = factories.DatacutDataSetFactory(published=True, name="Datacut dataset")
+    dataset.tags.set(
+        [
+            factories.SourceTagFactory(name="The Source"),
+            factories.TopicTagFactory(name="The Topic"),
+        ]
+    )
 
     c = factories.CollectionFactory.create(
         name="test-collections", description="test collections description"
@@ -76,7 +82,44 @@ def test_dataset_can_be_added(client):
     )
 
     assert response.status_code == 200
-    assert "Datacut dataset" in response.content.decode(response.charset)
+    response_text = response.content.decode(response.charset)
+    assert "Datacut dataset" in response_text
+    assert "The Source" in response_text
+    assert "The Topic" in response_text
+
+
+def test_reference_dataset_can_be_added(client):
+    user = factories.UserFactory(is_superuser=True)
+    client = get_client(get_user_data(user))
+
+    reference_dataset = factories.ReferenceDatasetFactory(
+        published=True, short_description="reference dataset example description"
+    )
+    reference_dataset.tags.set(
+        [
+            factories.SourceTagFactory(name="The Source"),
+            factories.TopicTagFactory(name="The Topic"),
+        ]
+    )
+
+    c = factories.CollectionFactory.create(
+        name="test-collections", description="test collections description"
+    )
+
+    c.datasets.add(reference_dataset.reference_dataset_inheriting_from_dataset)
+
+    response = client.get(
+        reverse(
+            "data_collections:collections_view",
+            kwargs={"collections_id": c.id},
+        )
+    )
+
+    assert response.status_code == 200
+    response_text = response.content.decode(response.charset)
+    assert "reference dataset example description" in response_text
+    assert "The Source" in response_text
+    assert "The Topic" in response_text
 
 
 def test_visualisation_can_be_added(client):
@@ -85,6 +128,12 @@ def test_visualisation_can_be_added(client):
 
     catalogue_item = factories.VisualisationCatalogueItemFactory(
         personal_data="personal", name="dummy visualisation catalogue item"
+    )
+    catalogue_item.tags.set(
+        [
+            factories.SourceTagFactory(name="The Source"),
+            factories.TopicTagFactory(name="The Topic"),
+        ]
     )
 
     c = factories.CollectionFactory.create(
@@ -101,7 +150,10 @@ def test_visualisation_can_be_added(client):
     )
 
     assert response.status_code == 200
-    assert "dummy visualisation catalogue item" in response.content.decode(response.charset)
+    response_text = response.content.decode(response.charset)
+    assert "dummy visualisation catalogue item" in response_text
+    assert "The Source" in response_text
+    assert "The Topic" in response_text
 
 
 def test_authorised_user_attempting_delete_dataset_membership(user, other_user):
