@@ -225,6 +225,9 @@ class CollectionUsersView(FormView):
             user=get_user_model().objects.get(email=form.cleaned_data["email"]),
             created_by=self.request.user,
         )
+        messages.success(
+            self.request, f"{membership.user.get_full_name()} has been added to this collection"
+        )
         log_event(
             self.request.user,
             EventLog.TYPE_ADD_USER_TO_COLLECTION,
