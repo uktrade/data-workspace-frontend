@@ -5,6 +5,9 @@ from django.http import Http404
 from django.views.generic import DetailView, TemplateView
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import get_object_or_404, redirect, render, reverse
+from django.conf import settings
+from django.dispatch import receiver
+from django.db.models.signals import post_save
 
 from dataworkspace.apps.data_collections.forms import SelectCollectionForMembershipForm
 from dataworkspace.apps.data_collections.models import (
@@ -13,15 +16,12 @@ from dataworkspace.apps.data_collections.models import (
     CollectionVisualisationCatalogueItemMembership,
     CollectionUserMembership,
 )
-from django.conf import settings
-from django.dispatch import receiver
-from django.db.models.signals import post_save
-from dataworkspace.notify import send_email
 
 from dataworkspace.apps.datasets.constants import DataSetType, TagType
 from dataworkspace.apps.datasets.models import Tag
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
+from dataworkspace.notify import send_email
 
 
 def get_authorised_collections(request):
@@ -242,11 +242,13 @@ class CollectionUsersView(TemplateView):
 
 @receiver(post_save, sender=CollectionUserMembership)
 def send_emails_to_(request, collections_id, created, **_):
+    user_emailed = request.user.email
     collection = get_authorised_collection(request, collections_id)
     user_name = request.user
     if created:
         send_email(
             template_id=settings.NOTIFY_COLLECTIONS_NOTIFICATION_USER_ADDED_ID,
+            email_address=user_emailed,
             personalisation={"collection_name": collection, "user_name": user_name},
         )
 
