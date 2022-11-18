@@ -560,7 +560,7 @@ def test_add_user_success(mock_send_email, client, user):
     mock_send_email.assert_has_calls(
         [
             mock.call(
-                "679046c0-dcc2-43fc-9cae-d6f817c59b52",
+                template_id = "679046c0-dcc2-43fc-9cae-d6f817c59b52",
                 email_address=user2.email,
                 personalisation={
                     "collection_name": c.name,
