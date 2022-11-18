@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib.auth import get_user_model
 from django.db import transaction, IntegrityError
 from django.db.models import Prefetch
@@ -26,7 +28,9 @@ from dataworkspace.apps.datasets.constants import DataSetType, TagType
 from dataworkspace.apps.datasets.models import Tag
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
-from dataworkspace.notify import send_email
+from dataworkspace.notify import EmailSendFailureException, send_email
+
+logger = logging.getLogger("app")
 
 
 def get_authorised_collections(request):
@@ -245,21 +249,6 @@ class CollectionUsersView(FormView):
         )
         return context
 
-
-@receiver(post_save, sender=CollectionUserMembership)
-def send_emails_to_(request, collections_id, created, **_):
-    user_emailed = request.user.email
-    collection = get_authorised_collection(request, collections_id)
-    user_name = request.user
-    if created:
-        send_email(
-            template_id=settings.NOTIFY_COLLECTIONS_NOTIFICATION_USER_ADDED_ID,
-            email_address=user_emailed,
-            personalisation={"collection_name": collection, "user_name": user_name},
-        )
-
-
-# send email to instance.user for being added to instance.collection
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["collection"] = get_authorised_collection(
@@ -297,6 +286,19 @@ def send_emails_to_(request, collections_id, created, **_):
                 self.request,
                 f"{membership.user.get_full_name()} has been added to this collection",
             )
+            try:
+                email_id = send_email(
+                    template_id=settings.NOTIFY_COLLECTIONS_NOTIFICATION_USER_ADDED_ID,
+                    email_address=membership.user.email,
+                    personalisation={
+                        "collection_name": collection.name,
+                        "user_name": self.request.user.get_full_name(),
+                    },
+                )
+            except EmailSendFailureException:
+                logger.exception("Failed to send email")
+            else:
+                email_id
 
         return HttpResponseRedirect(
             reverse("data_collections:collection-users", args=(collection.id,))
