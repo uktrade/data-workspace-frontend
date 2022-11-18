@@ -1,6 +1,7 @@
 from unittest.mock import patch
 from mock import mock
 
+from django.conf import settings
 from django.urls import reverse
 
 from dataworkspace.tests import factories
@@ -560,7 +561,7 @@ def test_add_user_success(mock_send_email, client, user):
     mock_send_email.assert_has_calls(
         [
             mock.call(
-                template_id = "679046c0-dcc2-43fc-9cae-d6f817c59b52",
+                template_id=settings.NOTIFY_COLLECTIONS_NOTIFICATION_USER_ADDED_ID,
                 email_address=user2.email,
                 personalisation={
                     "collection_name": c.name,
