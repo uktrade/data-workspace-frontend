@@ -3,9 +3,11 @@
   {% if widget.label_is_heading %}
   <{{ widget.heading }} class="govuk-label-wrapper">
   {% endif %}
+  {% if widget.label %}
     <label class="govuk-label {% if widget.label_is_heading %}govuk-label--{{ widget.label_size }}{% endif %} {{ widget.extra_label_classes }}" for="{{ id }}">
       {{ widget.label }}
     </label>
+  {% endif %}
   {% if widget.label_is_heading %}
   </{{ widget.heading }}>
   {% endif %}
@@ -27,9 +29,13 @@
   {% endif %}
 
   <textarea
-          class="govuk-textarea"
-          name="{{ widget.name }}"
-          {% if widget.help_text %}aria-describedby="{{ id }}-hint" {% endif %}
-          {% include "django/forms/widgets/attrs.html" %}>{{ widget.value|default_if_none:'' }}</textarea>
+    class="govuk-textarea"
+    name="{{ widget.name }}"
+    {% if widget.help_text %}aria-describedby="{{ id }}-hint" {% endif %}
+    {% include "django/forms/widgets/attrs.html" %}
+    {% include "design_system/partial/data_attributes.html" %}
+  >
+    {{ widget.value|default_if_none:'' }}
+  </textarea>
 </div>
 {% endwith %}

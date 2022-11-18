@@ -1,6 +1,7 @@
 import copy
 
 import re
+
 from django import forms
 from django.core.validators import EmailValidator
 from django.forms import (
@@ -23,6 +24,7 @@ class GOVUKDesignSystemWidgetMixin:
         extra_label_classes="",
         small=False,
         show_selected_file=False,
+        data_attributes: dict = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -34,6 +36,7 @@ class GOVUKDesignSystemWidgetMixin:
             extra_label_classes=extra_label_classes,
             small=small,
             show_selected_file=show_selected_file,
+            data_attributes=data_attributes,
         )
 
     def __deepcopy__(self, memo):
@@ -81,6 +84,14 @@ class GOVUKDesignSystemEmailWidget(GOVUKDesignSystemWidgetMixin, forms.widgets.E
 
 class GOVUKDesignSystemTextareaWidget(GOVUKDesignSystemWidgetMixin, forms.widgets.Textarea):
     template_name = "design_system/textarea.html"
+
+
+class GOVUKDesignSystemRichTextWidget(GOVUKDesignSystemTextareaWidget):
+    class Media:
+        js = (
+            "assets/vendor/ckeditor5/ckeditor.js",
+            "js/text-editor.js",
+        )
 
 
 class GOVUKDesignSystemPlainTextareaWidget(GOVUKDesignSystemTextareaWidget):
@@ -181,6 +192,10 @@ class GOVUKDesignSystemEmailValidationModelChoiceField(
 
 class GOVUKDesignSystemFileField(GOVUKDesignSystemFieldMixin, forms.FileField):
     widget = GOVUKDesignSystemFileInputWidget
+
+
+class GOVUKDesignSystemRichTextField(GOVUKDesignSystemFieldMixin, forms.CharField):
+    widget = GOVUKDesignSystemRichTextWidget(data_attributes={"type": "rich-text-editor"})
 
 
 class GOVUKDesignSystemModelForm(forms.ModelForm):

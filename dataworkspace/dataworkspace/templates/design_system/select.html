@@ -30,6 +30,7 @@
     name="{{ widget.name }}"
     {% if widget.help_text %}aria-describedby="{{ id }}-hint" {% endif %}
     {% include "django/forms/widgets/attrs.html" %}
+    {% include "design_system/partial/data_attributes.html" %}
   >
     {% for group_name, group_choices, group_index in widget.optgroups %}
       {% if group_name %}

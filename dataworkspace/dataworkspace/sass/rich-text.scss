@@ -1,0 +1,19 @@
+.govuk-form-group .ck-editor {
+  width: 100%;
+
+  .ck-content {
+    font-size: 19px;
+    font-family: arial, sans-serif;
+
+    pre {
+      code {
+        display: inline;
+        overflow-x: visible;
+        overflow-y: visible;
+        max-height: none;
+        background-color: rgba(0, 0, 0, 0);
+        margin-bottom: 0;
+      }
+    }
+  }
+}

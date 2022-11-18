@@ -32,6 +32,7 @@
           name="{{ widget.name }}"
           {% if widget.help_text %}aria-describedby="{{ id }}-hint" {% endif %}
           {% include "django/forms/widgets/attrs.html" %}
+          {% include "design_system/partial/data_attributes.html" %}
           value="{{ widget.value|default_if_none:'' }}"/>
 </div>
 {% endwith %}

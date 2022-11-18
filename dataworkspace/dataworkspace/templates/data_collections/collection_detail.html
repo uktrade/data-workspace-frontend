@@ -130,7 +130,10 @@
           </div>
           {% endfor %}
           <p class="govuk-body"><a class="govuk-link govuk-link--no-visited-state" href="{% url 'datasets:find_datasets' %}?q=&sort=relevance&data_type=3">Search for dashboards</a> you'd like to add.</p>
-          <h2 class="govuk-heading-l">Notes</h2>
+          <h2 class="govuk-heading-l govuk-!-margin-bottom-3">Notes</h2>
+          <p class="govuk-body govuk-!-margin-bottom-4">
+            <a class="govuk-link govuk-link--no-visited-state" href="{% url 'data_collections:collection-notes' source_object.id %}">Edit notes</a>
+          </p>
           {% if source_object.notes %}
             <div class="govuk-body dataset-description-richtext">
               {{ source_object.notes|minimal_markup }}
