@@ -113,9 +113,9 @@ class CollectionUserMembership(DeletableTimestampedUserModel):
                 related_object=self.collection,
                 extra={
                     "removed_user": {
-                        "id": self.user.id,
-                        "email": self.user.email,
-                        "name": self.user.get_full_name(),
+                        "id": self.user.id,  # pylint: disable=no-member
+                        "email": self.user.email,  # pylint: disable=no-member
+                        "name": self.user.get_full_name(),  # pylint: disable=no-member
                     }
                 },
             )
