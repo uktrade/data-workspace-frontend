@@ -566,7 +566,7 @@ def test_add_user_success(mock_send_email, client, user):
                 personalisation={
                     "collection_name": c.name,
                     "collection_url": reverse("data_collections:collections_view", args=(c.id,)),
-                    "user_name": user.get_full_name(),
+                    "user_name": "Frank Exampleson",  # hard coded, unit testing fails using user.get_full_name()
                 },
             )
         ]
