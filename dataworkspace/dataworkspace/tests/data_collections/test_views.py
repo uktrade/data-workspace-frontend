@@ -2,6 +2,7 @@ from unittest.mock import patch
 from mock import mock
 
 from django.urls import reverse
+from django.conf import settings
 
 from dataworkspace.tests import factories
 from dataworkspace.tests.conftest import get_client, get_user_data
@@ -557,13 +558,16 @@ def test_add_user_success(mock_send_email, client, user):
     assert response.status_code == 200
     assert CollectionUserMembership.objects.all().count() == member_count + 1
     assert user2.email in response.content.decode(response.charset)
-    assert mock_send_email == [
-        mock.call(
-            "000000000000000000000000000",
-            "frank.exampleson@test.com",
-            personalisation={
-                "collection_name": c.name,
-                "user_name": user2.get_full_name(),
-            },
-        )
-    ]
+    mock_send_email.assert_has_calls(
+        [
+            mock.call(
+                "000000000000000000000000000",
+                "frank.exampleson@test.com",
+                personalisation={
+                    "collection_name": c.name,
+                    "collection_url": reverse("data_collections:collections_view", args=(c.id,)),
+                    "user_name": user2.get_full_name(),
+                },
+            )
+        ]
+    )
