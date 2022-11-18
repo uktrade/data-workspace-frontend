@@ -73,22 +73,24 @@
         <div class="govuk-grid-column-full">
           <dl class="govuk-summary-list">
             <div class="govuk-summary-list__row">
-              <dd class="govuk-summary-list__value">
-                <p class="govuk-body govuk-!-font-weight-bold">{{ collection.owner.get_full_name }} <span class="govuk-!-font-weight-regular">(Owner)</span></p>
-                <p class="govuk-body">{{ collection.owner.email }}</p>
+              <dd class="govuk-summary-list__key">
+                {{ collection.owner.get_full_name }} <span class="govuk-!-font-weight-regular">(Owner)</span>
+                <span class="govuk-!-display-block govuk-!-font-weight-regular">{{ collection.owner.email }}</span>
               </dd>
               <dd class="govuk-summary-list__actions"></dd>
             </div>
                 {% for membership in user_memberships %}
                 <div class="govuk-summary-list__row">
-                  <dd class="govuk-summary-list__value">
-                    <p class="govuk-body govuk-!-font-weight-bold">{{ membership.user.get_full_name }}</p>
-                    <p class="govuk-body">{{ membership.user.email }}</p>
+                  <dd class="govuk-summary-list__key">
+                    {{ membership.user.get_full_name }}
+                    <span class="govuk-!-display-block govuk-!-font-weight-regular">{{ membership.user.email }}</span>
                   </dd>
                   <dd class="govuk-summary-list__actions">
                     <form method="POST" action="{% url 'data_collections:remove-user' collection.id membership.id %}" >
                       {% csrf_token %}
-                      <button type="submit" class="govuk-button govuk-!-margin-bottom-0" aria-label="Remove {{ membership.user.get_full_name }} from this collection">Remove access</button>
+                      <button type="submit" class="govuk-button govuk-!-margin-bottom-0 govuk-!-font-size-16 govuk-!-padding-top-1
+                      govuk-!-padding-bottom-1 govuk-!-padding-left-2 govuk-!-padding-right-2" 
+                      aria-label="Remove {{ membership.user.get_full_name }} from this collection">Remove access</button>
                     </form>
                   </dd>
                 </div>
