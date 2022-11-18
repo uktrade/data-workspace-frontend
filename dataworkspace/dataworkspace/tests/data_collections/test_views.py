@@ -557,7 +557,7 @@ def test_add_user_success(mock_send_email, client, user):
     assert response.status_code == 200
     assert CollectionUserMembership.objects.all().count() == member_count + 1
     assert user2.email in response.content.decode(response.charset)
-    mock_send_email.assert_has_calls == [
+    assert mock_send_email == [
         mock.call(
             "000000000000000000000000000",
             "frank.exampleson@test.com",
