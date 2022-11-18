@@ -9,8 +9,6 @@ from django.views.generic import DetailView, FormView
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.conf import settings
-from django.dispatch import receiver
-from django.db.models.signals import post_save
 
 from dataworkspace.apps.data_collections.forms import (
     CollectionUserAddForm,
@@ -21,7 +19,6 @@ from dataworkspace.apps.data_collections.models import (
     CollectionDatasetMembership,
     CollectionUserMembership,
     CollectionVisualisationCatalogueItemMembership,
-    CollectionUserMembership,
 )
 
 from dataworkspace.apps.datasets.constants import DataSetType, TagType
@@ -287,18 +284,19 @@ class CollectionUsersView(FormView):
                 f"{membership.user.get_full_name()} has been added to this collection",
             )
             try:
-                email_id = send_email(
+                send_email(
                     template_id=settings.NOTIFY_COLLECTIONS_NOTIFICATION_USER_ADDED_ID,
                     email_address=membership.user.email,
                     personalisation={
                         "collection_name": collection.name,
+                        "collection_url": reverse(
+                            "data_collections:collections_view", args=(collection.id,)
+                        ),
                         "user_name": self.request.user.get_full_name(),
                     },
                 )
             except EmailSendFailureException:
                 logger.exception("Failed to send email")
-            else:
-                email_id
 
         return HttpResponseRedirect(
             reverse("data_collections:collection-users", args=(collection.id,))

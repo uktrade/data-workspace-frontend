@@ -1,4 +1,5 @@
-from unittest.mock import call, patch
+from unittest.mock import patch
+from mock import mock
 
 from django.urls import reverse
 
@@ -552,11 +553,12 @@ def test_add_user_success(mock_send_email, client, user):
         data={"email": user2.email},
         follow=True,
     )
+
     assert response.status_code == 200
     assert CollectionUserMembership.objects.all().count() == member_count + 1
     assert user2.email in response.content.decode(response.charset)
-    assert mock_send_email.call_args_list == [
-        call(
+    mock_send_email.assert_has_calls == [
+        mock.call(
             "000000000000000000000000000",
             "frank.exampleson@test.com",
             personalisation={
