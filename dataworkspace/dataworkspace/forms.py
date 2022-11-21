@@ -3,11 +3,13 @@ import copy
 import re
 
 from django import forms
+from django.contrib.admin.widgets import AdminTextareaWidget
 from django.core.validators import EmailValidator
 from django.forms import (
     CheckboxInput,
     CharField,
     EmailField,
+    Media,
     ModelChoiceField,
 )
 from django.utils.html import linebreaks
@@ -258,3 +260,18 @@ class GOVUKDesignSystemForm(forms.Form):
         non_field_errors = [(None, e) for e in self.non_field_errors()]
 
         return non_field_errors + field_errors
+
+
+class AdminRichTextEditorWidget(AdminTextareaWidget):
+    def __init__(self, attrs=None):
+        super().__init__(attrs={"data-type": "rich-text-editor", **(attrs or {})})
+
+    @property
+    def media(self):
+        return Media(
+            js=(
+                "assets/vendor/ckeditor5/ckeditor.js",
+                "js/text-editor.js",
+            ),
+            css={"all": ["admin/css/rich-text.css"]},
+        )
