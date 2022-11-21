@@ -504,3 +504,11 @@ class CollectionFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = "data_collections.Collection"
+
+
+class CollectionUserMembershipFactory(factory.django.DjangoModelFactory):
+    user = factory.SubFactory(UserFactory)
+    collection = factory.SubFactory(CollectionFactory)
+
+    class Meta:
+        model = "data_collections.CollectionUserMembership"

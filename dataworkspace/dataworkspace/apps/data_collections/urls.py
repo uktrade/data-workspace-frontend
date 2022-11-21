@@ -59,4 +59,9 @@ urlpatterns = [
         login_required(views.CollectionUsersView.as_view()),
         name="collection-users",
     ),
+    path(
+        "<uuid:collections_id>/users/<int:user_membership_id>/delete",
+        login_required(views.remove_user_membership),
+        name="remove-user",
+    ),
 ]

@@ -5,6 +5,8 @@ from django.db import transaction, IntegrityError
 from django.db.models import Prefetch
 from django.contrib import messages
 from django.http import Http404, HttpResponseRedirect
+
+
 from django.views.generic import DetailView, FormView
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import get_object_or_404, redirect, render, reverse
@@ -301,3 +303,20 @@ class CollectionUsersView(FormView):
         return HttpResponseRedirect(
             reverse("data_collections:collection-users", args=(collection.id,))
         )
+
+
+@require_http_methods(["POST"])
+def remove_user_membership(request, collections_id, user_membership_id):
+    collection = get_authorised_collection(request, collections_id)
+    membership = get_object_or_404(
+        CollectionUserMembership.objects.live(),
+        id=user_membership_id,
+        collection=collection,
+    )
+
+    membership.delete(request.user)
+    messages.success(
+        request, f"{membership.user.get_full_name()} no longer has access to this collection."
+    )
+
+    return redirect("data_collections:collection-users", collections_id=collections_id)
