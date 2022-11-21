@@ -571,7 +571,6 @@ def test_add_user_success(mock_send_email, client, user):
             )
         ]
     )
-    print(mock_send_email.calls)
 
 
 def test_remove_user_not_owner(client):
@@ -613,4 +612,3 @@ def test_user_successfully_removed(mock_send_email, client, user):
             )
         ]
     )
-    print(mock_send_email.calls)
