@@ -1,5 +1,3 @@
-import logging
-
 from django.contrib.auth import get_user_model
 from django.db import transaction, IntegrityError
 from django.db.models import Prefetch
@@ -10,7 +8,6 @@ from django.http import Http404, HttpResponseRedirect
 from django.views.generic import DetailView, FormView
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import get_object_or_404, redirect, render, reverse
-from django.conf import settings
 
 from dataworkspace.apps.data_collections.forms import (
     CollectionUserAddForm,
@@ -22,14 +19,10 @@ from dataworkspace.apps.data_collections.models import (
     CollectionUserMembership,
     CollectionVisualisationCatalogueItemMembership,
 )
-
 from dataworkspace.apps.datasets.constants import DataSetType, TagType
 from dataworkspace.apps.datasets.models import Tag
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
-from dataworkspace.notify import EmailSendFailureException, send_email
-
-logger = logging.getLogger("app")
 
 
 def get_authorised_collections(request):
@@ -285,20 +278,6 @@ class CollectionUsersView(FormView):
                 self.request,
                 f"{membership.user.get_full_name()} has been added to this collection",
             )
-            try:
-                send_email(
-                    template_id=settings.NOTIFY_COLLECTIONS_NOTIFICATION_USER_ADDED_ID,
-                    email_address=membership.user.email,
-                    personalisation={
-                        "collection_name": collection.name,
-                        "collection_url": reverse(
-                            "data_collections:collections_view", args=(collection.id,)
-                        ),
-                        "user_name": self.request.user.get_full_name(),
-                    },
-                )
-            except EmailSendFailureException:
-                logger.exception("Failed to send email")
 
         return HttpResponseRedirect(
             reverse("data_collections:collection-users", args=(collection.id,))
