@@ -571,7 +571,6 @@ def test_add_user_success(mock_send_email, client, user):
             )
         ]
     )
-    print(mock_send_email.calls)
 
 
 def test_remove_user_not_owner(client):
@@ -586,7 +585,8 @@ def test_remove_user_not_owner(client):
     assert response.status_code == 404
 
 
-def test_user_successfully_removed(client, user):
+@patch("dataworkspace.apps.data_collections.views.send_email")
+def test_user_successfully_removed(mock_send_email, client, user):
     c = factories.CollectionFactory.create(name="test-collections", owner=user)
     member = factories.CollectionUserMembershipFactory.create(collection=c)
     member_count = CollectionUserMembership.objects.live().count()
@@ -600,3 +600,15 @@ def test_user_successfully_removed(client, user):
     assert response.status_code == 200
     assert CollectionUserMembership.objects.live().count() == member_count - 1
     assert member.user.email not in response.content.decode(response.charset)
+    mock_send_email.assert_has_calls(
+        [
+            mock.call(
+                template_id=settings.NOTIFY_COLLECTIONS_NOTIFICATION_USER_REMOVED_ID,
+                email_address=member.user.email,
+                personalisation={
+                    "collection_name": c.name,
+                    "user_name": "Frank Exampleson",  # hard coded, unit testing fails using user.get_full_name()
+                },
+            )
+        ]
+    )

@@ -318,5 +318,16 @@ def remove_user_membership(request, collections_id, user_membership_id):
     messages.success(
         request, f"{membership.user.get_full_name()} no longer has access to this collection."
     )
+    try:
+        send_email(
+            template_id=settings.NOTIFY_COLLECTIONS_NOTIFICATION_USER_REMOVED_ID,
+            email_address=membership.user.email,
+            personalisation={
+                "collection_name": collection.name,
+                "user_name": request.user.get_full_name(),
+            },
+        )
+    except EmailSendFailureException:
+        logger.exception("Failed to send email")
 
     return redirect("data_collections:collection-users", collections_id=collections_id)
