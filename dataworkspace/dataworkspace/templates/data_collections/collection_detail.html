@@ -135,8 +135,8 @@
             <a class="govuk-link govuk-link--no-visited-state" href="{% url 'data_collections:collection-notes' source_object.id %}">Edit notes</a>
           </p>
           {% if source_object.notes %}
-            <div class="govuk-body dataset-description-richtext">
-              {{ source_object.notes|minimal_markup }}
+            <div class="app-rich-text">
+              {{ source_object.notes|design_system_rich_text }}
             </div>
           {% else %}
               <p class="govuk-body">

@@ -1,6 +1,7 @@
 import bleach
-from django import template
+from bs4 import BeautifulSoup
 
+from django import template
 from django.forms import ChoiceField, Field
 from django.utils.safestring import mark_safe
 
@@ -63,6 +64,28 @@ def minimal_markup(text):
             strip=True,
         )
     )
+
+
+@register.filter
+def design_system_rich_text(text):
+    """
+    Add govuk design system classes to cleaned rich text
+    """
+    class_map = {
+        "p": "govuk-body",
+        "a": "govuk-link",
+        "h3": "govuk-heading-l",
+        "h4": "govuk-heading-m",
+        "h5": "govuk-heading-s",
+        "h6": "govuk-heading-xs",
+        "ul": "govuk-list govuk-list--bullet",
+        "ol": "govuk-list govuk-list--number",
+    }
+    soup = BeautifulSoup(minimal_markup(text), "html.parser")
+    for tag_name, class_name in class_map.items():
+        for el in soup.find_all(tag_name):
+            el["class"] = el.get("class", []) + class_name.split(" ")
+    return mark_safe(str(soup))
 
 
 @register.filter("startswith")

@@ -1,5 +1,5 @@
 /*
-  User facing styles
+  User facing editor styles
  */
 .govuk-form-group .ck-editor {
   width: 100%;
@@ -17,6 +17,17 @@
         background-color: rgba(0, 0, 0, 0);
         margin-bottom: 0;
       }
+    }
+  }
+}
+
+/*
+ User facing display styles
+ */
+.app-rich-text {
+  pre {
+    code {
+      margin-bottom: 20px;
     }
   }
 }
