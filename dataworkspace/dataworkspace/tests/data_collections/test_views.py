@@ -612,3 +612,29 @@ def test_user_successfully_removed(mock_send_email, client, user):
             )
         ]
     )
+
+
+def test_edit_note_not_the_owner(client, user):
+    c = factories.CollectionFactory.create(name="test-collections")
+    response = client.post(
+        reverse(
+            "data_collections:collection-notes",
+            kwargs={"collections_id": c.id},
+        ),
+        data={"notes": "This is a note"},
+    )
+    assert response.status_code == 404
+
+
+def test_edit_note(client, user):
+    c = factories.CollectionFactory.create(name="test-collections", owner=user)
+    response = client.post(
+        reverse(
+            "data_collections:collection-notes",
+            kwargs={"collections_id": c.id},
+        ),
+        data={"notes": "This is an updated note"},
+        follow=True,
+    )
+    assert response.status_code == 200
+    assert "This is an updated note" in response.content.decode(response.charset)
