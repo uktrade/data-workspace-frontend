@@ -1,0 +1,48 @@
+{% extends '_main.html' %}
+{% load core_tags static %}
+{% block page_title %}Edit notes{% endblock %}
+{% block go_back %}
+  <a href="{{ collection.get_absolute_url }}" class="govuk-back-link">Back</a>
+{% endblock go_back %}
+{% block main %}
+  <div class="govuk-width-container">
+    <main class="govuk-main-wrapper" id="main-content" role="main">
+      {% include 'partials/messages.html' %}
+      <div class="govuk-grid-row govuk-!-width-three-quarters">
+        <div class="govuk-grid-column-full govuk-!-margin-bottom-6">
+          <h1 class="govuk-heading-xl govuk-!-margin-bottom-3">Edit notes</h1>
+          <span class="govuk-caption-l">
+            You can edit and add text to be displayed in the notes section on the collection below.
+          </span>
+        </div>
+        <div class="govuk-grid-column-full govuk-!-margin-bottom-2">
+          <div class="govuk-warning-text">
+            <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+            <strong class="govuk-warning-text__text">
+              <span class="govuk-warning-text__assistive">Warning</span>
+              Notes can be read by anyone with access to the collection.
+            </strong>
+          </div>
+        </div>
+        <div class="govuk-grid-column-full">
+          {% include 'design_system/error_summary.html' with form=form %}
+          <form method="POST" novalidate>
+            {% csrf_token %}
+            {{ form.notes }}
+            <div class="govuk-button-group">
+              <button class="govuk-button" data-module="govuk-button">
+                Save
+              </button>
+               <a class="govuk-link govuk-link--no-visited-state" href="{{ collection.get_absolute_url }}">
+                 Cancel
+               </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+  </div>
+{% endblock %}
+{% block footer_scripts %}
+  {{ form.media }}
+{% endblock footer_scripts %}

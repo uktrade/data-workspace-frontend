@@ -1,0 +1,5 @@
+{% if widget.data_attributes is not None %}
+  {% for key, value in widget.data_attributes.items %}
+    data-{{ key }}="{{ value }}"
+  {% endfor %}
+{% endif %}

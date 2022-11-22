@@ -64,4 +64,9 @@ urlpatterns = [
         login_required(views.remove_user_membership),
         name="remove-user",
     ),
+    path(
+        "<uuid:collections_id>/notes/edit",
+        login_required(views.CollectionNotesView.as_view()),
+        name="collection-notes",
+    ),
 ]

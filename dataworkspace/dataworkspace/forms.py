@@ -1,12 +1,15 @@
 import copy
 
 import re
+
 from django import forms
+from django.contrib.admin.widgets import AdminTextareaWidget
 from django.core.validators import EmailValidator
 from django.forms import (
     CheckboxInput,
     CharField,
     EmailField,
+    Media,
     ModelChoiceField,
 )
 from django.utils.html import linebreaks
@@ -23,6 +26,7 @@ class GOVUKDesignSystemWidgetMixin:
         extra_label_classes="",
         small=False,
         show_selected_file=False,
+        data_attributes: dict = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -34,6 +38,7 @@ class GOVUKDesignSystemWidgetMixin:
             extra_label_classes=extra_label_classes,
             small=small,
             show_selected_file=show_selected_file,
+            data_attributes=data_attributes,
         )
 
     def __deepcopy__(self, memo):
@@ -81,6 +86,14 @@ class GOVUKDesignSystemEmailWidget(GOVUKDesignSystemWidgetMixin, forms.widgets.E
 
 class GOVUKDesignSystemTextareaWidget(GOVUKDesignSystemWidgetMixin, forms.widgets.Textarea):
     template_name = "design_system/textarea.html"
+
+
+class GOVUKDesignSystemRichTextWidget(GOVUKDesignSystemTextareaWidget):
+    class Media:
+        js = (
+            "assets/vendor/ckeditor5/ckeditor.js",
+            "js/text-editor.js",
+        )
 
 
 class GOVUKDesignSystemPlainTextareaWidget(GOVUKDesignSystemTextareaWidget):
@@ -183,6 +196,10 @@ class GOVUKDesignSystemFileField(GOVUKDesignSystemFieldMixin, forms.FileField):
     widget = GOVUKDesignSystemFileInputWidget
 
 
+class GOVUKDesignSystemRichTextField(GOVUKDesignSystemFieldMixin, forms.CharField):
+    widget = GOVUKDesignSystemRichTextWidget(data_attributes={"type": "rich-text-editor"})
+
+
 class GOVUKDesignSystemModelForm(forms.ModelForm):
     def clean(self):
         """We need to attach errors to widgets so that the fields can be rendered correctly. This slightly breaks
@@ -243,3 +260,18 @@ class GOVUKDesignSystemForm(forms.Form):
         non_field_errors = [(None, e) for e in self.non_field_errors()]
 
         return non_field_errors + field_errors
+
+
+class AdminRichTextEditorWidget(AdminTextareaWidget):
+    def __init__(self, attrs=None):
+        super().__init__(attrs={"data-type": "rich-text-editor", **(attrs or {})})
+
+    @property
+    def media(self):
+        return Media(
+            js=(
+                "assets/vendor/ckeditor5/ckeditor.js",
+                "js/text-editor.js",
+            ),
+            css={"all": ["admin/css/rich-text.css"]},
+        )

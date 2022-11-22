@@ -1,11 +1,14 @@
 import re
 import uuid
 
+from django import forms
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.signals import pre_delete, post_delete
 from django.core.validators import RegexValidator
 from django.conf import settings
+
+from dataworkspace.forms import AdminRichTextEditorWidget
 
 
 class TimeStampedModel(models.Model):
@@ -77,6 +80,12 @@ class TimeStampedUserModel(TimeStampedModel, UserLogModel):
 class DeletableTimestampedUserModel(DeletableModel, TimeStampedUserModel):
     class Meta:
         abstract = True
+
+
+class RichTextField(models.TextField):
+    def formfield(self, **kwargs):
+        kwargs.update({"form_class": forms.CharField, "widget": AdminRichTextEditorWidget})
+        return super().formfield(**kwargs)
 
 
 class Database(TimeStampedModel):

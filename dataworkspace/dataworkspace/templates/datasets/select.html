@@ -4,7 +4,12 @@
     {{ widget.label }}
   </label>
 
-  <select class="govuk-select govuk-!-margin-left-2" name="{{ widget.name }}"{% include "django/forms/widgets/attrs.html" %}>
+  <select
+    class="govuk-select govuk-!-margin-left-2"
+    name="{{ widget.name }}"
+    {% include "django/forms/widgets/attrs.html" %}
+    {% include "design_system/partial/data_attributes.html" %}
+  >
     {% for group_name, group_choices, group_index in widget.optgroups %}
       {% if group_name %}
         <optgroup label="{{ group_name }}">

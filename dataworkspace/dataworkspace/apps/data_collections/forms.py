@@ -2,15 +2,18 @@ from django import forms
 from django.contrib.auth import get_user_model
 
 from dataworkspace.apps.data_collections.models import (
+    Collection,
     CollectionDatasetMembership,
     CollectionUserMembership,
     CollectionVisualisationCatalogueItemMembership,
 )
 from dataworkspace.forms import (
     GOVUKDesignSystemEmailField,
+    GOVUKDesignSystemModelForm,
     GOVUKDesignSystemRadioField,
     GOVUKDesignSystemForm,
     GOVUKDesignSystemRadiosWidget,
+    GOVUKDesignSystemRichTextField,
     GOVUKDesignSystemTextWidget,
 )
 
@@ -87,3 +90,11 @@ class CollectionUserAddForm(GOVUKDesignSystemForm):
         if self.collection.user_memberships.live().filter(user=user).exists():
             raise forms.ValidationError(f"{user.email} already has access to this collection")
         return self.cleaned_data["email"]
+
+
+class CollectionNotesForm(GOVUKDesignSystemModelForm):
+    notes = GOVUKDesignSystemRichTextField(required=False)
+
+    class Meta:
+        model = Collection
+        fields = ["notes"]

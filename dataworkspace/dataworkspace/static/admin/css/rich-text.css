@@ -1,0 +1,102 @@
+/*
+ Admin styles
+ */
+.govuk-form-group .ck-editor {
+  width: 100%
+}
+
+.govuk-form-group .ck-editor .ck-content {
+  font-size: 19px;
+  font-family: arial, sans-serif
+}
+
+.govuk-form-group .ck-editor .ck-content pre code {
+  display: inline;
+  overflow-x: visible;
+  overflow-y: visible;
+  max-height: none;
+  background-color: rgba(0, 0, 0, 0);
+  margin-bottom: 0
+}
+
+.colM .aligned .ck-editor {
+  width: 610px
+}
+
+.colMS .aligned .ck-editor {
+  width: 350px
+}
+
+.form-row .ck-editor__main .ck-editor__editable {
+  background-color: var(--body-bg) !important
+}
+
+.form-row .ck-editor {
+  font-size: 13px;
+  display: inline-block;
+  color: var(--body-fg);
+  background-color: var(--body-bg);
+  margin: 20px
+}
+
+.form-row .ck-editor__editable {
+  font-size: 13px
+}
+
+.form-row .ck-editor__editable p {
+  font-size: 13px
+}
+
+.form-row .ck-editor__editable pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  -moz-tab-size: 4;
+  tab-size: 4;
+  color: var(--body-fg);
+  font-size: 13px
+}
+
+.form-row .ck-editor__editable code {
+  color: var(--body-fg)
+}
+
+.form-row .ck-editor__editable .marker {
+  background-color: Yellow
+}
+
+.form-row .ck-editor__editable h3, .form-row .ck-editor__editable h4, .form-row .ck-editor__editable h5, .form-row .ck-editor__editable h6 {
+  font-weight: bold;
+  padding-left: 0
+}
+
+.form-row .ck-editor__editable h3 {
+  font-size: 20px
+}
+
+.form-row .ck-editor__editable h4 {
+  font-size: 18px
+}
+
+.form-row .ck-editor__editable h5 {
+  font-size: 16px
+}
+
+.form-row .ck-editor__editable h6 {
+  font-size: 14px
+}
+
+.form-row .ck-editor__editable ol, .form-row .ck-editor__editable ul {
+  margin-left: 5px
+}
+
+.form-row .ck-editor__editable ul li {
+  list-style-type: disc
+}
+
+.form-row .ck-editor__editable ol {
+  padding-inline-start: 10px
+}
+
+.form-row .ck-editor__editable ol li {
+  list-style-type: auto
+}

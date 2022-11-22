@@ -1,5 +1,6 @@
 import logging
 
+from csp.decorators import csp_update
 from django.contrib.auth import get_user_model
 from django.db import transaction, IntegrityError
 from django.db.models import Prefetch
@@ -7,12 +8,13 @@ from django.contrib import messages
 from django.http import Http404, HttpResponseRedirect
 
 
-from django.views.generic import DetailView, FormView
+from django.views.generic import DetailView, FormView, UpdateView
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.conf import settings
 
 from dataworkspace.apps.data_collections.forms import (
+    CollectionNotesForm,
     CollectionUserAddForm,
     SelectCollectionForMembershipForm,
 )
@@ -331,3 +333,23 @@ def remove_user_membership(request, collections_id, user_membership_id):
         logger.exception("Failed to send email")
 
     return redirect("data_collections:collection-users", collections_id=collections_id)
+
+
+class CollectionNotesView(UpdateView):
+    model = Collection
+    form_class = CollectionNotesForm
+    template_name = "data_collections/collection_notes.html"
+    context_object_name = "collection"
+
+    @csp_update(SCRIPT_SRC=["'self'"])
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    def get_object(self, queryset=None):
+        return get_authorised_collection(self.request, self.kwargs["collections_id"])
+
+    def form_valid(self, form):
+        form.instance.updated_by = self.request.user
+        form.save(commit=False)
+        messages.success(self.request, "The notes have been updated")
+        return super().form_valid(form)
