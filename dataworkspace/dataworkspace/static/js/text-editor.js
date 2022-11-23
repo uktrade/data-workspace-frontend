@@ -2,44 +2,31 @@ const richTextConfig = {
   heading: {
     options: [
       {
-        model: "paragraph",
+        model: "govukParagraph",
         title: "Paragraph",
         view: {
           name: "p",
-          classes: "govuk-body",
+          classes: ["govuk-body"],
         },
+        class: "govuk-body",
       },
       {
         model: "heading3",
         title: "Heading 3",
         view: {
           name: "h3",
-          classes: "govuk-heading-l",
+          classes: ["govuk-heading-m"],
         },
+        class: "govuk-heading-m",
       },
       {
         model: "heading4",
         title: "Heading 4",
         view: {
           name: "h4",
-          classes: "govuk-heading-m",
+          classes: ["govuk-heading-s"],
         },
-      },
-      {
-        model: "heading5",
-        title: "Heading 5",
-        view: {
-          name: "h5",
-          classes: "govuk-heading-s",
-        },
-      },
-      {
-        model: "heading6",
-        title: "Heading 6",
-        view: {
-          name: "h6",
-          classes: "govuk-heading-xs",
-        },
+        class: "govuk-heading-s",
       },
     ],
   },

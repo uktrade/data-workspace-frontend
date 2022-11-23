@@ -48,8 +48,6 @@ def minimal_markup(text):
                 "em",
                 "h3",
                 "h4",
-                "h5",
-                "h6",
                 "p",
                 "ul",
                 "ol",
@@ -74,10 +72,8 @@ def design_system_rich_text(text):
     class_map = {
         "p": "govuk-body",
         "a": "govuk-link",
-        "h3": "govuk-heading-l",
-        "h4": "govuk-heading-m",
-        "h5": "govuk-heading-s",
-        "h6": "govuk-heading-xs",
+        "h3": "govuk-heading-m",
+        "h4": "govuk-heading-s",
         "ul": "govuk-list govuk-list--bullet",
         "ol": "govuk-list govuk-list--number",
     }
