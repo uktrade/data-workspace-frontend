@@ -2,6 +2,7 @@ from django.forms import Form, ChoiceField, MultipleChoiceField
 import pytest
 
 from dataworkspace.apps.core.templatetags.core_filters import (
+    design_system_rich_text,
     get_choice_field_data_for_gtm,
     minimal_markup,
 )
@@ -46,3 +47,20 @@ def test_get_multi_choice_field_data_for_gtm(selections, expected_string):
 )
 def test_minimal_markup(input_, expected_output, error_message):
     assert minimal_markup(input_) == expected_output, error_message
+
+
+@pytest.mark.parametrize(
+    "input_, expected_output, error_message",
+    (
+        ("<p>para</p>", '<p class="govuk-body">para</p>', "Add paragraph class"),
+        (
+            "<ul><li>list</li></ul>",
+            '<ul class="govuk-list govuk-list--bullet"><li>list</li></ul>',
+            "Add ul class",
+        ),
+        ('<a href="#">link</a>', '<a class="govuk-link" href="#">link</a>', "Add link class"),
+        ("<h5>disallowed</h5>", "disallowed", "Disallow h5 tags"),
+    ),
+)
+def test_design_system_rich_text(input_, expected_output, error_message):
+    assert design_system_rich_text(input_) == expected_output, error_message
