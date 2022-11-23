@@ -6,7 +6,6 @@ factory_boy
 flake8
 flake8-bugbear
 freezegun
-beautifulsoup4
 mock
 mohawk
 pip-tools

@@ -18,6 +18,8 @@ amqp==5.0.9
     #   kombu
 appdirs==1.4.4
     # via pyppeteer
+appnope==0.1.3
+    # via ipython
 asgiref==3.3.4
     # via
     #   -r requirements.txt
@@ -47,8 +49,8 @@ aws-requests-auth==0.4.3
     # via -r requirements.txt
 backcall==0.2.0
     # via ipython
-beautifulsoup4==4.9.3
-    # via -r requirements-dev.in
+beautifulsoup4==4.11.1
+    # via -r requirements.txt
 billiard==3.6.4.0
     # via
     #   -r requirements.txt
@@ -515,8 +517,10 @@ sniffio==1.2.0
     # via trio
 sortedcontainers==2.4.0
     # via trio
-soupsieve==2.1
-    # via beautifulsoup4
+soupsieve==2.3.2.post1
+    # via
+    #   -r requirements.txt
+    #   beautifulsoup4
 sqlalchemy==1.3.19
     # via
     #   -r requirements.txt

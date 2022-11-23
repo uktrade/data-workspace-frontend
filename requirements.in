@@ -1,6 +1,7 @@
 aiohttp
 aioredis
 aws-requests-auth
+beautifulsoup4
 bleach
 boto3
 celery-redbeat

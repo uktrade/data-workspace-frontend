@@ -2,28 +2,31 @@ const richTextConfig = {
   heading: {
     options: [
       {
-        model: "paragraph",
+        model: "govukParagraph",
         title: "Paragraph",
+        view: {
+          name: "p",
+          classes: ["govuk-body"],
+        },
+        class: "govuk-body",
       },
       {
         model: "heading3",
-        view: "h3",
         title: "Heading 3",
+        view: {
+          name: "h3",
+          classes: ["govuk-heading-m"],
+        },
+        class: "govuk-heading-m",
       },
       {
         model: "heading4",
-        view: "h4",
         title: "Heading 4",
-      },
-      {
-        model: "heading5",
-        view: "h5",
-        title: "Heading 5",
-      },
-      {
-        model: "heading6",
-        view: "h6",
-        title: "Heading 6",
+        view: {
+          name: "h4",
+          classes: ["govuk-heading-s"],
+        },
+        class: "govuk-heading-s",
       },
     ],
   },
@@ -34,6 +37,28 @@ const richTextConfig = {
       { language: "python", label: "Python" },
       { language: "r", label: "R" },
       { language: "pgsql", label: "SQL" },
+    ],
+  },
+  style: {
+    definitions: [
+      {
+        name: "Link",
+        element: "a",
+        classes: ["govuk-link"],
+      },
+    ],
+  },
+  link: {
+    decorators: [
+      {
+        mode: "automatic",
+        callback: function () {
+          return true;
+        },
+        attributes: {
+          class: "govuk-link",
+        },
+      },
     ],
   },
 };

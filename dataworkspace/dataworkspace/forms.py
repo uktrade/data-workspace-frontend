@@ -89,6 +89,10 @@ class GOVUKDesignSystemTextareaWidget(GOVUKDesignSystemWidgetMixin, forms.widget
 
 
 class GOVUKDesignSystemRichTextWidget(GOVUKDesignSystemTextareaWidget):
+    def __init__(self, **kwargs):
+        kwargs["attrs"] = {"style": "display:none;"}
+        super().__init__(**kwargs)
+
     class Media:
         js = (
             "assets/vendor/ckeditor5/ckeditor.js",
