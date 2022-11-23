@@ -69,4 +69,9 @@ urlpatterns = [
         login_required(views.CollectionNotesView.as_view()),
         name="collection-notes",
     ),
+    path(
+        "<uuid:collections_id>/edit",
+        login_required(views.CollectionEditView.as_view()),
+        name="collection-edit",
+    ),
 ]

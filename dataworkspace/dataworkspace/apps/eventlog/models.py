@@ -40,6 +40,7 @@ class EventLog(models.Model):
     TYPE_ADD_VISUALISATION_TO_COLLECTION = 33
     TYPE_ADD_USER_TO_COLLECTION = 34
     TYPE_REMOVE_USER_FROM_COLLECTION = 35
+    TYPE_EDITED_COLLECTION = 36
 
     _TYPE_CHOICES = (
         (TYPE_DATASET_SOURCE_LINK_DOWNLOAD, "Dataset source link download"),
@@ -79,6 +80,7 @@ class EventLog(models.Model):
         (TYPE_ADD_VISUALISATION_TO_COLLECTION, "Add visualisation to collection"),
         (TYPE_ADD_USER_TO_COLLECTION, "Add user to collection"),
         (TYPE_REMOVE_USER_FROM_COLLECTION, "Remove user from collection"),
+        (TYPE_EDITED_COLLECTION, "Edited collection"),
     )
     user = models.ForeignKey(get_user_model(), on_delete=models.DO_NOTHING, related_name="events")
     id = models.BigAutoField(primary_key=True)

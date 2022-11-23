@@ -8,6 +8,7 @@ from dataworkspace.apps.data_collections.models import (
     CollectionVisualisationCatalogueItemMembership,
 )
 from dataworkspace.forms import (
+    GOVUKDesignSystemCharField,
     GOVUKDesignSystemEmailField,
     GOVUKDesignSystemModelForm,
     GOVUKDesignSystemRadioField,
@@ -15,6 +16,7 @@ from dataworkspace.forms import (
     GOVUKDesignSystemRadiosWidget,
     GOVUKDesignSystemRichTextField,
     GOVUKDesignSystemTextWidget,
+    GOVUKDesignSystemTextareaWidget,
 )
 
 
@@ -98,3 +100,21 @@ class CollectionNotesForm(GOVUKDesignSystemModelForm):
     class Meta:
         model = Collection
         fields = ["notes"]
+
+
+class CollectionEditForm(GOVUKDesignSystemModelForm):
+    name = GOVUKDesignSystemCharField(
+        label="Collection name",
+        required=True,
+        widget=GOVUKDesignSystemTextWidget(label_is_heading=False),
+        error_messages={"required": "You must enter the collection name"},
+    )
+    description = GOVUKDesignSystemCharField(
+        label="Description (optional)",
+        required=False,
+        widget=GOVUKDesignSystemTextareaWidget(label_is_heading=False),
+    )
+
+    class Meta:
+        model = Collection
+        fields = ["name", "description"]
