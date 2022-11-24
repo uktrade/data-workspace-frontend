@@ -118,3 +118,7 @@ class CollectionEditForm(GOVUKDesignSystemModelForm):
     class Meta:
         model = Collection
         fields = ["name", "description"]
+
+    def clean_description(self):
+        # Do not allow newlines in the description
+        return self.cleaned_data["description"].replace("\r\n", " ")
