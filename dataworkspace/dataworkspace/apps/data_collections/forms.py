@@ -123,4 +123,4 @@ class CollectionEditForm(GOVUKDesignSystemModelForm):
 
     def clean_description(self):
         # Do not allow newlines in the description
-        return re.sub(r"(\r\n)+", " ", self.cleaned_data["description"])
+        return re.sub(r"[\r\n]+", " ", self.cleaned_data["description"])
