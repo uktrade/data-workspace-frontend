@@ -769,3 +769,30 @@ def test_member_remove_member_from_collection(_, client, user):
         follow=True,
     )
     assert response.status_code == 200
+
+
+def test_create_collection_blank_name(client, user):
+    response = client.post(
+        reverse("data_collections:collection-create"),
+        data={
+            "name": "",
+            "description": "",
+        },
+        follow=True,
+    )
+    assert response.status_code == 200
+    assert "You must enter the collection name" in response.content.decode(response.charset)
+
+
+def test_create_collection_success(client, user):
+    response = client.post(
+        reverse("data_collections:collection-create"),
+        data={
+            "name": "Collection name",
+            "description": "Some description",
+        },
+        follow=True,
+    )
+    assert response.status_code == 200
+    assert "Collection name" in response.content.decode(response.charset)
+    assert "Some description" in response.content.decode(response.charset)
