@@ -1,3 +1,5 @@
+import re
+
 from django import forms
 from django.contrib.auth import get_user_model
 
@@ -121,4 +123,4 @@ class CollectionEditForm(GOVUKDesignSystemModelForm):
 
     def clean_description(self):
         # Do not allow newlines in the description
-        return self.cleaned_data["description"].replace("\r\n", " ")
+        return re.sub(r"(\r\n)+", " ", self.cleaned_data["description"])
