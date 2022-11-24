@@ -1,6 +1,7 @@
 {% extends '_main.html' %}
 {% load static %}
-{% block page_title %}Edit collection{% endblock %}
+{% block page_title %}
+  {% if collection %}Edit{% else %}Create{% endif %} collection{% endblock %}
 {% block go_back %}
   {% if not collection %}
     <a href="#" class="govuk-back-link">Back</a>
