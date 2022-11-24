@@ -4,7 +4,7 @@
   {% if collection %}Edit{% else %}Create{% endif %} collection{% endblock %}
 {% block go_back %}
   {% if not collection %}
-    <a href="#" class="govuk-back-link">Back</a>
+    <a href="{% url 'root' %}" class="govuk-back-link">Back</a>
   {% endif %}
 {% endblock go_back %}
 {% block breadcrumbs %}
@@ -53,7 +53,7 @@
               </button>
                <a
                  class="govuk-link govuk-link--no-visited-state"
-                 href="{% if collection %}{{ collection.get_absolute_url }}{% else %}#{% endif %}"
+                 href="{% if collection %}{{ collection.get_absolute_url }}{% else %}{% url 'root' %}{% endif %}"
                >
                  Cancel
                </a>
