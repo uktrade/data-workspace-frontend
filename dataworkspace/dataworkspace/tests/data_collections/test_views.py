@@ -9,12 +9,9 @@ from dataworkspace.tests.conftest import get_client, get_user_data
 from dataworkspace.apps.data_collections.models import CollectionUserMembership
 
 
-def test_collection(client):
-    user = factories.UserFactory(is_superuser=True)
-    client = get_client(get_user_data(user))
-
+def test_collection(client, user):
     c = factories.CollectionFactory.create(
-        name="test-collections", description="test collections description"
+        name="test-collections", description="test collections description", owner=user
     )
 
     response = client.get(
@@ -27,12 +24,12 @@ def test_collection(client):
     assert "test collections description" in response.content.decode(response.charset)
 
 
-def test_deleted_raises_404(client):
-    user = factories.UserFactory()
-    client = get_client(get_user_data(user))
-
+def test_deleted_raises_404(client, user):
     c = factories.CollectionFactory.create(
-        name="test-collections", description="test collections description", deleted=True
+        name="test-collections",
+        description="test collections description",
+        deleted=True,
+        owner=user,
     )
 
     response = client.get(
@@ -60,10 +57,7 @@ def test_unauthorised_user_raises_404(client):
     assert response.status_code == 404
 
 
-def test_dataset_can_be_added(client):
-    user = factories.UserFactory(is_superuser=True)
-    client = get_client(get_user_data(user))
-
+def test_dataset_can_be_added(client, user):
     dataset = factories.DatacutDataSetFactory(published=True, name="Datacut dataset")
     dataset.tags.set(
         [
@@ -73,7 +67,7 @@ def test_dataset_can_be_added(client):
     )
 
     c = factories.CollectionFactory.create(
-        name="test-collections", description="test collections description"
+        name="test-collections", description="test collections description", owner=user
     )
 
     c.datasets.add(dataset)
@@ -92,10 +86,7 @@ def test_dataset_can_be_added(client):
     assert "The Topic" in response_text
 
 
-def test_reference_dataset_can_be_added(client):
-    user = factories.UserFactory(is_superuser=True)
-    client = get_client(get_user_data(user))
-
+def test_reference_dataset_can_be_added(client, user):
     reference_dataset = factories.ReferenceDatasetFactory(
         published=True, short_description="reference dataset example description"
     )
@@ -107,7 +98,7 @@ def test_reference_dataset_can_be_added(client):
     )
 
     c = factories.CollectionFactory.create(
-        name="test-collections", description="test collections description"
+        name="test-collections", description="test collections description", owner=user
     )
 
     c.datasets.add(reference_dataset.reference_dataset_inheriting_from_dataset)
@@ -126,10 +117,7 @@ def test_reference_dataset_can_be_added(client):
     assert "The Topic" in response_text
 
 
-def test_visualisation_can_be_added(client):
-    user = factories.UserFactory(is_superuser=True)
-    client = get_client(get_user_data(user))
-
+def test_visualisation_can_be_added(client, user):
     catalogue_item = factories.VisualisationCatalogueItemFactory(
         personal_data="personal", name="dummy visualisation catalogue item"
     )
@@ -141,7 +129,7 @@ def test_visualisation_can_be_added(client):
     )
 
     c = factories.CollectionFactory.create(
-        name="test-collections", description="test collections description"
+        name="test-collections", description="test collections description", owner=user
     )
 
     c.visualisation_catalogue_items.add(catalogue_item)
@@ -160,11 +148,8 @@ def test_visualisation_can_be_added(client):
     assert "The Topic" in response_text
 
 
-def test_authorised_user_attempting_delete_dataset_membership(user, other_user):
-    client_user = get_client(get_user_data(user))
+def test_authorised_user_attempting_delete_dataset_membership(client, user, other_user):
     client_other_user = get_client(get_user_data(other_user))
-
-    # Create the collection
     c = factories.CollectionFactory.create(
         name="test-collections",
         description="test collections description",
@@ -175,7 +160,7 @@ def test_authorised_user_attempting_delete_dataset_membership(user, other_user):
     dataset = factories.DatacutDataSetFactory(published=True, name="Datacut dataset")
     c.datasets.add(dataset)
     membership = c.dataset_collections.all()[0]
-    response = client_user.get(
+    response = client.get(
         reverse(
             "data_collections:collections_view",
             kwargs={"collections_id": c.id},
@@ -199,7 +184,7 @@ def test_authorised_user_attempting_delete_dataset_membership(user, other_user):
         )
     )
     assert response.status_code == 404
-    response = client_user.get(
+    response = client.get(
         reverse(
             "data_collections:collections_view",
             kwargs={"collections_id": c.id},
@@ -209,7 +194,7 @@ def test_authorised_user_attempting_delete_dataset_membership(user, other_user):
     assert ">Datacut dataset<" in response.content.decode(response.charset)
 
     # But the owner user can remove the dataset from the collection page
-    response = client_user.get(
+    response = client.get(
         reverse(
             "data_collections:collection_data_membership_confirm_removal",
             kwargs={"collections_id": c.id, "data_membership_id": membership.id},
@@ -220,7 +205,7 @@ def test_authorised_user_attempting_delete_dataset_membership(user, other_user):
         "Are you sure you want to remove Datacut dataset from the collection?"
         in response.content.decode(response.charset)
     )
-    response = client_user.post(
+    response = client.post(
         reverse(
             "data_collections:collection_data_membership",
             kwargs={"collections_id": c.id, "data_membership_id": membership.id},
@@ -231,7 +216,7 @@ def test_authorised_user_attempting_delete_dataset_membership(user, other_user):
         "data_collections:collections_view",
         kwargs={"collections_id": c.id},
     )
-    response = client_user.get(
+    response = client.get(
         reverse(
             "data_collections:collections_view",
             kwargs={"collections_id": c.id},
@@ -244,12 +229,8 @@ def test_authorised_user_attempting_delete_dataset_membership(user, other_user):
     )
 
 
-def test_authorised_user_attempting_delete_visualisation_membership(user, other_user):
-
-    client_user = get_client(get_user_data(user))
+def test_authorised_user_attempting_delete_visualisation_membership(client, user, other_user):
     client_other_user = get_client(get_user_data(other_user))
-
-    # Create the collection
     c = factories.CollectionFactory.create(
         name="test-collections",
         description="test collections description",
@@ -262,7 +243,7 @@ def test_authorised_user_attempting_delete_visualisation_membership(user, other_
     )
     c.visualisation_catalogue_items.add(visualisation)
     membership = c.visualisation_collections.all()[0]
-    response = client_user.get(
+    response = client.get(
         reverse(
             "data_collections:collections_view",
             kwargs={"collections_id": c.id},
@@ -286,7 +267,7 @@ def test_authorised_user_attempting_delete_visualisation_membership(user, other_
         )
     )
     assert response.status_code == 404
-    response = client_user.get(
+    response = client.get(
         reverse(
             "data_collections:collections_view",
             kwargs={"collections_id": c.id},
@@ -296,7 +277,7 @@ def test_authorised_user_attempting_delete_visualisation_membership(user, other_
     assert ">Visualisation<" in response.content.decode(response.charset)
 
     # But the owner user can remove the visualisation from the collection page
-    response = client_user.get(
+    response = client.get(
         reverse(
             "data_collections:collection_visualisation_membership_confirm_removal",
             kwargs={"collections_id": c.id, "visualisation_membership_id": membership.id},
@@ -307,7 +288,7 @@ def test_authorised_user_attempting_delete_visualisation_membership(user, other_
         "Are you sure you want to remove Visualisation from the collection?"
         in response.content.decode(response.charset)
     )
-    response = client_user.post(
+    response = client.post(
         reverse(
             "data_collections:collection_visualisation_membership",
             kwargs={"collections_id": c.id, "visualisation_membership_id": membership.id},
@@ -318,7 +299,7 @@ def test_authorised_user_attempting_delete_visualisation_membership(user, other_
         "data_collections:collections_view",
         kwargs={"collections_id": c.id},
     )
-    response = client_user.get(
+    response = client.get(
         reverse(
             "data_collections:collections_view",
             kwargs={"collections_id": c.id},
@@ -331,27 +312,27 @@ def test_authorised_user_attempting_delete_visualisation_membership(user, other_
     )
 
 
-def test_collection_selection_page(staff_user, staff_client):
+def test_collection_selection_page(user, client):
     c1 = factories.CollectionFactory.create(
         name="test-collections-1",
         description="test collections 1",
-        owner=staff_user,
+        owner=user,
     )
     c2 = factories.CollectionFactory.create(
         name="test-collections-2",
         description="test collections 2",
-        owner=staff_user,
+        owner=user,
     )
     c3 = factories.CollectionFactory.create(
         name="test-collections-3",
         description="test collections 3",
-        owner=staff_user,
+        owner=user,
         deleted=True,
     )
     visualisation = factories.VisualisationCatalogueItemFactory(
         published=True, name="Visualisation catalogue item"
     )
-    response = staff_client.get(
+    response = client.get(
         reverse(
             "data_collections:visualisation_select_collection_for_membership",
             kwargs={"dataset_id": visualisation.id},
@@ -363,14 +344,11 @@ def test_collection_selection_page(staff_user, staff_client):
     assert c3.name not in response.content.decode(response.charset)
 
 
-def test_authorised_user_attempting_to_add_new_catalogue_membership(staff_user):
-    client = get_client(get_user_data(staff_user))
-
-    # Create the collection
+def test_authorised_user_attempting_to_add_new_catalogue_membership(user, client):
     c = factories.CollectionFactory.create(
         name="test-collections",
         description="test collections description",
-        owner=staff_user,
+        owner=user,
     )
 
     # Create a dataset to be added to the collection
@@ -388,14 +366,11 @@ def test_authorised_user_attempting_to_add_new_catalogue_membership(staff_user):
     assert response.status_code == 302
 
 
-def test_authorised_user_attempting_to_add_new_collection_dataset_membership(staff_user):
-    client = get_client(get_user_data(staff_user))
-
-    # Create the collection
+def test_authorised_user_attempting_to_add_new_collection_dataset_membership(user, client):
     c = factories.CollectionFactory.create(
         name="test-collections",
         description="test collections description",
-        owner=staff_user,
+        owner=user,
     )
 
     dataset = factories.DatacutDataSetFactory(published=True, name="Datacut dataset")
@@ -411,19 +386,19 @@ def test_authorised_user_attempting_to_add_new_collection_dataset_membership(sta
 
 
 def test_authorised_user_attempting_to_add_new_collection_reference_dataset_membership(
-    staff_client, staff_user
+    client, user
 ):
     c = factories.CollectionFactory.create(
         name="test-collections",
         description="test collections description",
-        owner=staff_user,
+        owner=user,
     )
 
     rds = factories.ReferenceDatasetFactory(
         published=True, description="reference dataset example description"
     )
 
-    response = staff_client.post(
+    response = client.post(
         reverse(
             "data_collections:dataset_select_collection_for_membership",
             kwargs={"dataset_id": rds.reference_dataset_inheriting_from_dataset.id},
@@ -433,16 +408,12 @@ def test_authorised_user_attempting_to_add_new_collection_reference_dataset_memb
     assert response.status_code == 302
 
 
-def test_user_page(client):
-    user = factories.UserFactory(is_superuser=True)
+def test_user_page(client, user):
     user2 = factories.UserFactory()
-    client = get_client(get_user_data(user))
-
     c = factories.CollectionFactory.create(
         name="test-collections", description="test collections description", owner=user
     )
     CollectionUserMembership.objects.create(collection=c, user=user2)
-
     response = client.get(
         reverse(
             "data_collections:collection-users",
@@ -690,3 +661,104 @@ def test_edit_collection_success(client, user):
     c.refresh_from_db()
     assert c.name == "Updated name"
     assert c.description == "Updated description"
+
+
+def test_member_view_collection(client, user):
+    c = factories.CollectionFactory.create(name="test-collection")
+    factories.CollectionUserMembershipFactory(user=user, collection=c)
+    response = client.get(reverse("data_collections:collections_view", args=(c.id,)))
+    assert response.status_code == 200
+
+
+def test_member_edit_collection(client, user):
+    c = factories.CollectionFactory.create(name="test-collection")
+    factories.CollectionUserMembershipFactory(user=user, collection=c)
+    response = client.post(
+        reverse(
+            "data_collections:collection-edit",
+            kwargs={"collections_id": c.id},
+        ),
+        data={
+            "name": "Updated name",
+            "description": "Updated description",
+        },
+        follow=True,
+    )
+    assert response.status_code == 200
+    c.refresh_from_db()
+    assert c.name == "Updated name"
+    assert c.description == "Updated description"
+
+
+def test_member_edit_notes(client, user):
+    c = factories.CollectionFactory.create(name="test-collection")
+    factories.CollectionUserMembershipFactory(user=user, collection=c)
+    response = client.post(
+        reverse(
+            "data_collections:collection-notes",
+            kwargs={"collections_id": c.id},
+        ),
+        data={"notes": "This is an updated note"},
+        follow=True,
+    )
+    assert response.status_code == 200
+    assert "This is an updated note" in response.content.decode(response.charset)
+
+
+def test_member_add_dataset_to_collection(client, user):
+    c = factories.CollectionFactory.create(name="test-collection")
+    factories.CollectionUserMembershipFactory(user=user, collection=c)
+    dataset = factories.DatacutDataSetFactory(published=True, name="A dataset")
+    response = client.post(
+        reverse(
+            "data_collections:dataset_select_collection_for_membership",
+            kwargs={"dataset_id": dataset.id},
+        ),
+        data={"collection": c.id},
+        follow=True,
+    )
+    assert response.status_code == 200
+
+
+def test_member_remove_dataset_from_collection(client, user):
+    c = factories.CollectionFactory.create(name="test-collection")
+    factories.CollectionUserMembershipFactory(user=user, collection=c)
+    c.datasets.add(factories.DatacutDataSetFactory(published=True, name="A dataset"))
+    membership = c.dataset_collections.all()[0]
+    response = client.post(
+        reverse(
+            "data_collections:collection_data_membership",
+            kwargs={"collections_id": c.id, "data_membership_id": membership.id},
+        ),
+        follow=True,
+    )
+    assert response.status_code == 200
+
+
+@patch("dataworkspace.apps.data_collections.views.send_email")
+def test_member_add_member_to_collection(_, client, user):
+    c = factories.CollectionFactory.create(name="test-collection")
+    factories.CollectionUserMembershipFactory(user=user, collection=c)
+    response = client.post(
+        reverse(
+            "data_collections:collection-users",
+            kwargs={"collections_id": c.id},
+        ),
+        follow=True,
+    )
+    assert response.status_code == 200
+
+
+@patch("dataworkspace.apps.data_collections.views.send_email")
+def test_member_remove_member_from_collection(_, client, user):
+    c = factories.CollectionFactory.create(name="test-collection")
+    factories.CollectionUserMembershipFactory(user=user, collection=c)
+    new_member = factories.CollectionUserMembershipFactory(collection=c)
+    response = client.post(
+        reverse(
+            "data_collections:remove-user",
+            kwargs={"user_membership_id": new_member.id, "collections_id": c.id},
+        ),
+        follow=True,
+    )
+    assert response.status_code == 200
