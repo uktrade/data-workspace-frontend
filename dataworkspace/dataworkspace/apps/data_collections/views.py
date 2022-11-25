@@ -40,7 +40,8 @@ def get_authorised_collections(request):
     if request.user.is_superuser:
         return collections
     return collections.filter(
-        Q(owner=request.user) | Q(user_memberships__user=request.user)
+        Q(owner=request.user)
+        | Q(user_memberships__user=request.user, user_memberships__deleted=False)
     ).distinct()
 
 

@@ -670,6 +670,13 @@ def test_member_view_collection(client, user):
     assert response.status_code == 200
 
 
+def test_deleted_member_view_collection(client, user):
+    c = factories.CollectionFactory.create(name="test-collection")
+    factories.CollectionUserMembershipFactory(user=user, collection=c, deleted=True)
+    response = client.get(reverse("data_collections:collections_view", args=(c.id,)))
+    assert response.status_code == 404
+
+
 def test_member_edit_collection(client, user):
     c = factories.CollectionFactory.create(name="test-collection")
     factories.CollectionUserMembershipFactory(user=user, collection=c)
