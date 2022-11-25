@@ -3,7 +3,7 @@ import logging
 from csp.decorators import csp_update
 from django.contrib.auth import get_user_model
 from django.db import transaction, IntegrityError
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 from django.contrib import messages
 from django.http import Http404, HttpResponseRedirect
 
@@ -39,7 +39,10 @@ def get_authorised_collections(request):
     collections = Collection.objects.live()
     if request.user.is_superuser:
         return collections
-    return collections.filter(owner=request.user)
+    return collections.filter(
+        Q(owner=request.user)
+        | Q(user_memberships__user=request.user, user_memberships__deleted=False)
+    ).distinct()
 
 
 def get_authorised_collection(request, collection_id):
