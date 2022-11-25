@@ -14,6 +14,7 @@ from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.conf import settings
 
 from dataworkspace.apps.data_collections.forms import (
+    CollectionEditForm,
     CollectionNotesForm,
     CollectionUserAddForm,
     SelectCollectionForMembershipForm,
@@ -352,4 +353,25 @@ class CollectionNotesView(UpdateView):
         form.instance.updated_by = self.request.user
         form.save(commit=False)
         messages.success(self.request, "The notes have been updated")
+        return super().form_valid(form)
+
+
+class CollectionEditView(UpdateView):
+    model = Collection
+    form_class = CollectionEditForm
+    template_name = "data_collections/collection_edit.html"
+    context_object_name = "collection"
+
+    def get_object(self, queryset=None):
+        return get_authorised_collection(self.request, self.kwargs["collections_id"])
+
+    def form_valid(self, form):
+        form.instance.updated_by = self.request.user
+        form.save(commit=False)
+        messages.success(self.request, "Your changes have been saved")
+        log_event(
+            self.request.user,
+            EventLog.TYPE_EDITED_COLLECTION,
+            related_object=form.instance,
+        )
         return super().form_valid(form)

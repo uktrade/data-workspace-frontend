@@ -13,19 +13,27 @@
 {% endblock head %}
 {% block main %}
   <div class="govuk-width-container">
-    <div class="govuk-breadcrumbs">
-      <ol class="govuk-breadcrumbs__list">
-        <li class="govuk-breadcrumbs__list-item">
-          <a class="govuk-breadcrumbs__link" href="/">Home</a>
-        </li>
-
-        <li class="govuk-breadcrumbs__list-item">
-          Collections
-        </li>
-        <li class="govuk-breadcrumbs__list-item">
-          {{ source_object.name }}
-        </li>
-      </ol>
+    <div class="govuk-grid-row">
+      <div class="govuk-grid-column-two-thirds">
+        <div class="govuk-breadcrumbs">
+          <ol class="govuk-breadcrumbs__list">
+            <li class="govuk-breadcrumbs__list-item">
+              <a class="govuk-breadcrumbs__link" href="/">Home</a>
+            </li>
+            <li class="govuk-breadcrumbs__list-item">
+              Collections
+            </li>
+            <li class="govuk-breadcrumbs__list-item">
+              {{ source_object.name }}
+            </li>
+          </ol>
+        </div>
+      </div>
+      <div class="govuk-grid-column-one-third govuk-!-text-align-right govuk-!-margin-top-3">
+        <a href="{% url 'data_collections:collection-edit' collection.id %}" class="govuk-link">
+          Edit collection
+        </a>
+      </div>
     </div>
   </div>
 
