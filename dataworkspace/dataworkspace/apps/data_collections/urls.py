@@ -79,4 +79,5 @@ urlpatterns = [
         login_required(views.CollectionCreateView.as_view()),
         name="collection-create",
     ),
+    path("", login_required(views.CollectionListView.as_view()), name="collections-list"),
 ]

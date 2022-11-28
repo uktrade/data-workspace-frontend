@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.http import Http404, HttpResponseRedirect
 
 
-from django.views.generic import CreateView, DetailView, FormView, UpdateView
+from django.views.generic import CreateView, DetailView, FormView, ListView, UpdateView
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.conf import settings
@@ -397,3 +397,12 @@ class CollectionCreateView(CreateView):
             related_object=form.instance,
         )
         return super().form_valid(form)
+
+
+class CollectionListView(ListView):
+    model = Collection
+    template_name = "data_collections/collections.html"
+    context_object_name = "collections"
+
+    def get_queryset(self):
+        return get_authorised_collections(self.request)

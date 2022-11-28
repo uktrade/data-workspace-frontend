@@ -796,3 +796,9 @@ def test_create_collection_success(client, user):
     assert response.status_code == 200
     assert "Collection name" in response.content.decode(response.charset)
     assert "Some description" in response.content.decode(response.charset)
+
+
+def test_collections_page(client, user):
+    # Need to flesh this out with collections this user owns and is a member of and those they are not allowed to access
+    response = client.get(reverse("data_collections:collections-list"))
+    assert response.status_code == 200
