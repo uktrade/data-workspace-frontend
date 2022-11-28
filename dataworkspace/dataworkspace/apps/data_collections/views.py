@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.http import Http404, HttpResponseRedirect
 
 
-from django.views.generic import DetailView, FormView, UpdateView
+from django.views.generic import CreateView, DetailView, FormView, UpdateView
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.conf import settings
@@ -362,7 +362,7 @@ class CollectionNotesView(UpdateView):
 class CollectionEditView(UpdateView):
     model = Collection
     form_class = CollectionEditForm
-    template_name = "data_collections/collection_edit.html"
+    template_name = "data_collections/collection_form.html"
     context_object_name = "collection"
 
     def get_object(self, queryset=None):
@@ -375,6 +375,25 @@ class CollectionEditView(UpdateView):
         log_event(
             self.request.user,
             EventLog.TYPE_EDITED_COLLECTION,
+            related_object=form.instance,
+        )
+        return super().form_valid(form)
+
+
+class CollectionCreateView(CreateView):
+    model = Collection
+    form_class = CollectionEditForm
+    template_name = "data_collections/collection_form.html"
+    context_object_name = "collection"
+
+    def form_valid(self, form):
+        form.instance.owner = self.request.user
+        form.instance.created_by = self.request.user
+        form.save(commit=False)
+        messages.success(self.request, "Your changes have been saved")
+        log_event(
+            self.request.user,
+            EventLog.TYPE_CREATED_COLLECTION,
             related_object=form.instance,
         )
         return super().form_valid(form)

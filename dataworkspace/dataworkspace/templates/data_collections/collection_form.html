@@ -1,0 +1,69 @@
+{% extends '_main.html' %}
+{% load static %}
+{% block page_title %}
+  {% if collection %}Edit{% else %}Create{% endif %} collection{% endblock %}
+{% block go_back %}
+  {% if not collection %}
+    <a href="{% url 'root' %}" class="govuk-back-link">Back</a>
+  {% endif %}
+{% endblock go_back %}
+{% block breadcrumbs %}
+  {% if collection %}
+    <div class="govuk-width-container">
+      <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="/">Home</a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            Collections
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="{{ collection.get_absolute_url }}">
+              {{ collection.name }}
+            </a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            Edit collection
+          </li>
+        </ol>
+      </div>
+    </div>
+  {% endif %}
+{% endblock breadcrumbs %}
+{% block main %}
+  <div class="govuk-width-container">
+    <main class="govuk-main-wrapper" id="main-content" role="main">
+      {% include 'partials/messages.html' %}
+      <div class="govuk-grid-row govuk-!-width-three-quarters">
+        <div class="govuk-grid-column-full govuk-!-margin-bottom-6">
+          <h1 class="govuk-heading-xl govuk-!-margin-bottom-3">
+            {% if collection %}Edit{% else %}Create{% endif %} collection
+          </h1>
+        </div>
+        <div class="govuk-grid-column-full">
+          {% include 'design_system/error_summary.html' with form=form %}
+          <form method="POST" novalidate>
+            {% csrf_token %}
+            {{ form.name }}
+            {{ form.description }}
+            <div class="govuk-button-group">
+              <button class="govuk-button" data-module="govuk-button">
+                Save
+              </button>
+               <a
+                 class="govuk-link govuk-link--no-visited-state"
+                 href="{% if collection %}{{ collection.get_absolute_url }}{% else %}{% url 'root' %}{% endif %}"
+               >
+                 Cancel
+               </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+  </div>
+{% endblock %}
+{% block footer_scripts %}
+  {{ form.media }}
+{% endblock footer_scripts %}
