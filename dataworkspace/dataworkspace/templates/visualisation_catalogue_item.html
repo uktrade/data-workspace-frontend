@@ -41,7 +41,12 @@
 
   {{ form.short_description }}
 
-  {{ form.description }}
+  <div class="govuk-form-group">
+    <label class="govuk-label" for="id_description">
+      Description
+    </label>
+    {{ form.description }}
+  </div>
 
   {{ form.enquiries_contact }}
   {{ form.secondary_enquiries_contact }}
@@ -62,6 +67,7 @@
 {% endblock %}
 
 {% block footer_scripts %}
+  {{ form.media }}
   {{ block.super }}
 
   <script nonce="{{ request.csp_nonce }}">
