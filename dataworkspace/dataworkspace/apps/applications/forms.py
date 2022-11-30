@@ -21,6 +21,7 @@ from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
     GOVUKDesignSystemEmailValidationModelChoiceField,
     GOVUKDesignSystemBooleanField,
+    GOVUKDesignSystemRichTextField,
 )
 
 
@@ -58,10 +59,8 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
         widget=GOVUKDesignSystemTextWidget(label_is_heading=False),
         error_messages={"required": "The visualisation must have a summary"},
     )
-    description = GOVUKDesignSystemCharField(
-        label="Description",
+    description = GOVUKDesignSystemRichTextField(
         required=False,
-        widget=GOVUKDesignSystemTextareaWidget(label_is_heading=False),
     )
     enquiries_contact = GOVUKDesignSystemEmailValidationModelChoiceField(
         label="Enquiries contact",

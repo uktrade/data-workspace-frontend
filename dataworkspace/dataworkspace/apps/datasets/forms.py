@@ -22,6 +22,7 @@ from ...forms import (
     GOVUKDesignSystemTextareaWidget,
     GOVUKDesignSystemPlainTextareaWidget,
     GOVUKDesignSystemPlainTextareaField,
+    GOVUKDesignSystemRichTextField,
 )
 
 logger = logging.getLogger("app")
@@ -468,11 +469,7 @@ class DatasetEditForm(GOVUKDesignSystemModelForm):
         ),
         error_messages={"required": "You must provide a short description for this dataset."},
     )
-    description = GOVUKDesignSystemCharField(
-        label="Description *",
-        widget=GOVUKDesignSystemTextareaWidget(
-            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
-        ),
+    description = GOVUKDesignSystemRichTextField(
         error_messages={"required": "You must provide a description for this dataset."},
     )
     enquiries_contact = GOVUKDesignSystemCharField(
