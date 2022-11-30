@@ -41,8 +41,13 @@
                 <fieldset class="govuk-fieldset">
                     {{ form.name }}
                     {{ form.short_description }}
+                  <div class="govuk-form-group">
+                    <label class="govuk-label govuk-!-font-weight-bold" for="id_description">
+                      Description *
+                    </label>
                     {{ form.description }}
-                    <div class="govuk-form-group {% if form.enquiries_contact.errors %}govuk-form-group--error{% endif %}">
+                  </div>
+                  <div class="govuk-form-group {% if form.enquiries_contact.errors %}govuk-form-group--error{% endif %}">
                         <label class="govuk-label  govuk-!-font-weight-bold" for="id_enquiries_contact">
                             {{ form.enquiries_contact.label }}
                         </label>
@@ -105,3 +110,7 @@
         </div>
     </div>
 {% endblock %}
+
+{% block footer_scripts %}
+  {{ form.media }}
+{% endblock footer_scripts %}

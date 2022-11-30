@@ -561,13 +561,9 @@ class VisualisationCatalogueItemEditForm(GOVUKDesignSystemModelForm):
         error_messages={"required": "You must provide a short description for this dataset."},
     )
 
-    description = GOVUKDesignSystemPlainTextareaField(
-        label="Description *",
-        widget=GOVUKDesignSystemPlainTextareaWidget(
-            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
-        ),
-        error_messages={"required": "You must provide a description for this dataset."},
-    )
+    description = GOVUKDesignSystemRichTextField(
+        error_messages={"required": "You must provide a description for this dataset."}, )
+
     enquiries_contact = GOVUKDesignSystemCharField(
         label="Enquiries contact",
         widget=GOVUKDesignSystemTextWidget(
