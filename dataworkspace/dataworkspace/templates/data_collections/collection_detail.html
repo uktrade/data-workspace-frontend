@@ -21,7 +21,9 @@
               <a class="govuk-breadcrumbs__link" href="/">Home</a>
             </li>
             <li class="govuk-breadcrumbs__list-item">
-              Collections
+              <a class="govuk-breadcrumbs__link" href="{% url 'data_collections:collections-list' %}">
+                Collections
+              </a>
             </li>
             <li class="govuk-breadcrumbs__list-item">
               {{ source_object.name }}

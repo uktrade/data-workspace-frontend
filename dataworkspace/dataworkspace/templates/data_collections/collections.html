@@ -1,0 +1,42 @@
+{% extends '_main.html' %}
+{% load static %}
+{% block page_title %}Collections{% endblock %}
+{% block breadcrumbs %}
+  <div class="govuk-width-container">
+    <div class="govuk-breadcrumbs">
+      <ol class="govuk-breadcrumbs__list">
+        <li class="govuk-breadcrumbs__list-item">
+          <a class="govuk-breadcrumbs__link" href="/">Home</a>
+        </li>
+        <li class="govuk-breadcrumbs__list-item">Collections</li>
+      </ol>
+    </div>
+  </div>
+{% endblock breadcrumbs %}
+{% block main %}
+  <div class="govuk-width-container">
+    <main class="govuk-main-wrapper" id="main-content" role="main">
+      <div class="govuk-grid-row">
+        <div class="govuk-grid-column-one-half">
+          <h1 class="govuk-heading-xl govuk-!-margin-bottom-6 govuk-!-margin-top-3">
+            Collections
+          </h1>
+          <p class="govuk-body-l govuk-!-margin-bottom-4  ">
+            Gather and organise Data Workspace content to match the way you work.
+          </p>
+          <p class="govuk-body govuk-!-margin-bottom-6">
+            Use Collections to create personal or shared spaces for the data and dashboards you use most.
+          </p>
+          <p class="govuk-body">
+            <a class="govuk-button" href="{% url 'data_collections:collection-create' %}">
+              Create a collection
+            </a>
+          </p>
+        </div>
+        <div class="govuk-grid-column-one-half">
+          <img alt="Collections" src="{% static 'assets/images/collections.svg' %}" />
+        </div>
+      </div>
+    </main>
+  </div>
+{% endblock main %}
