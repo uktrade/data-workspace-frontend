@@ -20,8 +20,6 @@ from ...forms import (
     GOVUKDesignSystemTextWidget,
     GOVUKDesignSystemTextareaField,
     GOVUKDesignSystemTextareaWidget,
-    GOVUKDesignSystemPlainTextareaWidget,
-    GOVUKDesignSystemPlainTextareaField,
     GOVUKDesignSystemRichTextField,
 )
 
@@ -562,7 +560,8 @@ class VisualisationCatalogueItemEditForm(GOVUKDesignSystemModelForm):
     )
 
     description = GOVUKDesignSystemRichTextField(
-        error_messages={"required": "You must provide a description for this dataset."}, )
+        error_messages={"required": "You must provide a description for this dataset."},
+    )
 
     enquiries_contact = GOVUKDesignSystemCharField(
         label="Enquiries contact",
