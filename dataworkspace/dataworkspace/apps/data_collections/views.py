@@ -423,9 +423,9 @@ class CollectionListView(ListView):
                 or len(collection.user_memberships.all()) == 1
                 and collection.user_memberships.first().user != collection.owner
             ):
-                if (
-                    self.request.user == collection.owner
-                    or collection.user_memberships.first().user == self.request.user
+                if self.request.user in (
+                    collection.owner,
+                    collection.user_memberships.first().user,
                 ):
                     personal_collections.append(collection)
             if (
@@ -434,10 +434,7 @@ class CollectionListView(ListView):
                 or len(collection.user_memberships.all()) > 1
             ):
                 for user_membership in collection.user_memberships.all():
-                    if (
-                        self.request.user == user_membership.user
-                        or self.request.user == collection.owner
-                    ):
+                    if self.request.user in (user_membership.user, collection.owner):
                         shared_collections.append(collection)
 
         context["personal_collections"] = personal_collections
