@@ -75,13 +75,6 @@
               Home
             </a>
           </li>
-          {% url 'data_collections:collections-list' as collections_url %}
-          <li
-            class="govuk-header__navigation-item{% if request.get_full_path == collections_url %} govuk-header__navigation-item--active{% endif %}">
-            <a class="govuk-header__link" href="{{ collections_url }}">
-              Collections
-            </a>
-          </li>
           {% url 'applications:tools' as tools_url %}
           <li class="govuk-header__navigation-item{% if request.get_full_path == tools_url %} govuk-header__navigation-item--active{% endif %}">
             <a class="govuk-header__link" href="{{ tools_url }}">

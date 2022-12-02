@@ -414,6 +414,7 @@ class CollectionListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         authorised_collections = self.get_queryset()
+
         personal_collections = []
         shared_collections = []
         for collection in authorised_collections:
@@ -422,13 +423,22 @@ class CollectionListView(ListView):
                 or len(collection.user_memberships.all()) == 1
                 and collection.user_memberships.first().user != collection.owner
             ):
-                personal_collections.append(collection)
+                if (
+                    self.request.user == collection.owner
+                    or collection.user_memberships.first().user == self.request.user
+                ):
+                    personal_collections.append(collection)
             if (
                 collection.owner
                 and collection.user_memberships.all()
                 or len(collection.user_memberships.all()) > 1
             ):
-                shared_collections.append(collection)
+                for user_membership in collection.user_memberships.all():
+                    if (
+                        self.request.user == user_membership.user
+                        or self.request.user == collection.owner
+                    ):
+                        shared_collections.append(collection)
 
         context["personal_collections"] = personal_collections
         context["shared_collections"] = shared_collections

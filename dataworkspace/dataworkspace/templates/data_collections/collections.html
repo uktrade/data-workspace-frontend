@@ -40,7 +40,7 @@
         {% endif %}
       </div>
       {% if collections %}
-        <div class="govuk-grid-row govuk-!-padding-left-3">
+        <div class="govuk-body">
           {% if personal_collections %}
             <h2 class="govuk-heading-m">
               Personal collections
@@ -48,33 +48,27 @@
           {% endif %}
           <section class="collection-buttons-cards-container">
             {% for collection in personal_collections %}
-              {% if request.user == collection.owner or collection.user_memberships.first.user == request.user %}
-                <a class="collection-button"
-                   href="{% url 'data_collections:collections_view' collections_id=collection.id %}" role="button">
-                  <span class="collection-button__heading">{{ collection.name }}</span>
-                  <span class="collection-button__text">{{ collection.description }}</span>
-                </a>
-              {% endif %}
+              <a class="collection-button"
+                 href="{% url 'data_collections:collections_view' collections_id=collection.id %}" role="button">
+                <span class="collection-button__heading">{{ collection.name }}</span>
+                <span class="collection-button__text">{{ collection.description }}</span>
+              </a>
             {% endfor %}
           </section>
         </div>
-        {% if shared_collections %}
-        <div class="govuk-grid-row govuk-!-padding-left-3">
-          <h2 class="govuk-heading-m">
-            Shared collections
-          </h2>
-        {% endif %}
+        <div class="govuk-body">
+          {% if shared_collections %}
+            <h2 class="govuk-heading-m">
+              Shared collections
+            </h2>
+          {% endif %}
           <section class="collection-buttons-cards-container">
             {% for collection in shared_collections %}
-                {% for user_membership in collection.user_memberships.all %}
-                  {% if request.user == user_membership.user %}
-                    <a class="collection-button" style="margin-right: 30px"
-                       href="{% url 'data_collections:collections_view' collections_id=collection.id %}" role="button">
-                      <span class="collection-button__heading">{{ collection.name }}</span>
-                      <span class="collection-button__text">{{ collection.description }}</span>
-                    </a>
-                  {% endif %}
-                {% endfor %}
+              <a class="collection-button"
+                 href="{% url 'data_collections:collections_view' collections_id=collection.id %}" role="button">
+                <span class="collection-button__heading">{{ collection.name }}</span>
+                <span class="collection-button__text">{{ collection.description }}</span>
+              </a>
             {% endfor %}
           </section>
         </div>
