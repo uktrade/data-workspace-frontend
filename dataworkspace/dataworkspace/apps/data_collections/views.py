@@ -423,10 +423,13 @@ class CollectionListView(ListView):
                 or len(collection.user_memberships.all()) == 1
                 and collection.user_memberships.first().user != collection.owner
             ):
-                if self.request.user in (
-                    collection.owner,
-                    collection.user_memberships.first().user,
-                ):
+                if collection.user_memberships.all():
+                    if self.request.user in (
+                        collection.owner,
+                        collection.user_memberships.first().user,
+                    ):
+                        personal_collections.append(collection)
+                elif self.request.user == collection.owner:
                     personal_collections.append(collection)
             if (
                 collection.owner
