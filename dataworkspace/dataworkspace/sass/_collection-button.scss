@@ -30,21 +30,15 @@ $desktop-width: mq-get-breakpoint-width(desktop, $mq-breakpoints);
 	flex-direction: column;
 	justify-content: flex-start;
 
-	@include mq( $from: $collection-button-from-tablet-width ){
+	@include mq( $from: $tablet-width ){
 		width: calc(50% - 30px/2);
 	}
 
-	@include mq( $from: $collection-button-from-desktop-width){
+	@include mq( $from: $desktop-width){
 		width: calc(33% - (30px * 2)/3);
 	}
 
 	background-color: $govuk-brand-colour;
-}
-
-.collection-button__heading {
-	background-repeat: no-repeat;
-	background-position: 100% 50%;
-	display: table;
 }
 
 .collection-button__text {
