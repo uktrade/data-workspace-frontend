@@ -21,6 +21,7 @@ $desktop-width: mq-get-breakpoint-width(desktop, $mq-breakpoints);
 	@include mq( $until: $collection-button-from-desktop-width ){
 		flex-direction: column;
 	}
+	flex-wrap: wrap;
 }
 
 .collection-button {
@@ -40,7 +41,7 @@ $desktop-width: mq-get-breakpoint-width(desktop, $mq-breakpoints);
 		width: $collection-button-width;
 	}
 	@include mq( $from: $collection-button-from-desktop-width ){
-		margin-left: $collection-button-margin;
+		margin-right: $collection-button-margin;
 	}
 
 	&:first-of-type {
