@@ -37,8 +37,6 @@ logger = logging.getLogger("app")
 
 def get_authorised_collections(request):
     collections = Collection.objects.live().order_by("name")
-    if request.user.is_superuser:
-        return collections
     return (
         collections.filter(
             Q(owner=request.user)
@@ -418,27 +416,15 @@ class CollectionListView(ListView):
         personal_collections = []
         shared_collections = []
         for collection in authorised_collections:
-            if (
-                not collection.user_memberships.all()
-                or len(collection.user_memberships.all()) == 1
-                and collection.user_memberships.first().user != collection.owner
-            ):
-                if collection.user_memberships.all():
-                    if self.request.user in (
-                        collection.owner,
-                        collection.user_memberships.first().user,
-                    ):
-                        personal_collections.append(collection)
-                elif self.request.user == collection.owner:
-                    personal_collections.append(collection)
-            if (
-                collection.owner
-                and collection.user_memberships.all()
-                or len(collection.user_memberships.all()) > 1
-            ):
-                for user_membership in collection.user_memberships.all():
-                    if self.request.user in (user_membership.user, collection.owner):
-                        shared_collections.append(collection)
+            user_ids = ([collection.owner.id] if collection.owner else []) + [
+                membership.user.id
+                for membership in collection.user_memberships.filter(deleted=False)
+            ]
+            number_of_user_ids = len(set(user_ids))
+            if number_of_user_ids == 1:
+                personal_collections.append(collection)
+            else:
+                shared_collections.append(collection)
 
         context["personal_collections"] = personal_collections
         context["shared_collections"] = shared_collections

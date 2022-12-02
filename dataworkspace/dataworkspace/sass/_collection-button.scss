@@ -1,16 +1,11 @@
 // credit to market-access-python-frontend https://github.com/uktrade/market-access-python-frontend/blob/1f0172bbee5df22ca0e4063c0c88e12f8af758be/core/frontend/src/css/app-components/_dash-button.scss
 
-$collection-button-width: 295px;
-$collection-button-margin: 20px;
-
-$collection-button-from-tablet-width: ( ( $collection-button-width * 2 ) + $collection-button-margin + 60px );
-$collection-button-from-desktop-width: ( ( $collection-button-width * 3 ) + ( $collection-button-margin * 2 ) + 60px );
 $tablet-width: mq-get-breakpoint-width(tablet, $mq-breakpoints);
 $desktop-width: mq-get-breakpoint-width(desktop, $mq-breakpoints);
 
 .collection-buttons-cards-container {
 	display: flex;
-	@include mq( $until: $collection-button-from-desktop-width ){
+	@include mq( $until: $desktop-width ){
 		flex-direction: column;
 	}
 	gap: 10px;
