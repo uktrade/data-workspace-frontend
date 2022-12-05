@@ -21,11 +21,9 @@ $background-colour: $govuk-brand-colour;
     padding: 0;
     @include mq($from: tablet) {
         width: calc(100%/2 - (#{$big-gap} * 1)/2);
-        padding: 0;
     }
     @include mq($from: desktop) {
         width: calc(100%/3 - (#{$big-gap} * 2)/3);
-        padding: 0;
     }
 }
 
