@@ -36,13 +36,15 @@ logger = logging.getLogger("app")
 
 
 def get_authorised_collections(request):
-    collections = Collection.objects.live()
-    if request.user.is_superuser:
-        return collections
-    return collections.filter(
-        Q(owner=request.user)
-        | Q(user_memberships__user=request.user, user_memberships__deleted=False)
-    ).distinct()
+    collections = Collection.objects.live().order_by("name")
+    return (
+        collections.filter(
+            Q(owner=request.user)
+            | Q(user_memberships__user=request.user, user_memberships__deleted=False)
+        )
+        .order_by("name")
+        .distinct()
+    )
 
 
 def get_authorised_collection(request, collection_id):
@@ -406,3 +408,30 @@ class CollectionListView(ListView):
 
     def get_queryset(self):
         return get_authorised_collections(self.request)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        authorised_collections = self.get_queryset()
+
+        personal_collections = []
+        shared_collections_from_user = []
+        shared_collections_to_user = []
+
+        for collection in authorised_collections:
+            user_ids = ([collection.owner.id] if collection.owner else []) + [
+                membership.user.id
+                for membership in collection.user_memberships.filter(deleted=False)
+            ]
+            number_of_user_ids = len(set(user_ids))
+            if number_of_user_ids == 1:
+                personal_collections.append(collection)
+            elif collection.owner == self.request.user:
+                shared_collections_from_user.append(collection)
+            else:
+                shared_collections_to_user.append(collection)
+
+        context["personal_collections"] = personal_collections
+        context["shared_collections_from_user"] = shared_collections_from_user
+        context["shared_collections_to_user"] = shared_collections_to_user
+
+        return context
