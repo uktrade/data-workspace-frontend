@@ -75,6 +75,14 @@
               Home
             </a>
           </li>
+          {% flag COLLECTIONS_FLAG %}
+            {% url 'data_collections:collections-list' as collections_homepage_url %}
+          <li class="govuk-header__navigation-item{% if request.get_full_path == collections_homepage_url %} govuk-header__navigation-item--active{% endif %}">
+            <a class="govuk-header__link" href="{{ collections_homepage_url }}">
+              Collections
+            </a>
+          </li>
+          {% endflag %}
           {% url 'applications:tools' as tools_url %}
           <li class="govuk-header__navigation-item{% if request.get_full_path == tools_url %} govuk-header__navigation-item--active{% endif %}">
             <a class="govuk-header__link" href="{{ tools_url }}">
