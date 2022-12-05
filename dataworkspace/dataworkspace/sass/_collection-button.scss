@@ -15,7 +15,22 @@ $background-colour: $govuk-brand-colour;
     }
 }
 
-.collection-button {
+.collection-button__item {
+    color: #FFFFFF;
+    display: block;
+    width: 100%;
+    padding: 0;
+    @include mq($from: tablet) {
+        width: calc(100%/2 - (#{$big-gap} * 1)/2);
+        padding: 0;
+    }
+    @include mq($from: desktop) {
+        width: calc(100%/3 - (#{$big-gap} * 2)/3);
+        padding: 0;
+    }
+}
+
+.collection-button__link {
     @extend .govuk-button;
     @extend .govuk-button--start;
     text-align: left;
@@ -24,19 +39,10 @@ $background-colour: $govuk-brand-colour;
     box-sizing: border-box;
     min-height: govuk-em(70, 16);
     height: 100%;
+    width: 100%;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-
-    width: 500px;
-    padding: govuk-spacing(2);
-    @include mq($from: tablet) {
-        width: calc(960px/2 - (#{$big-gap} * 1)/2);
-        padding: govuk-spacing(3);
-    }
-    @include mq($from: desktop) {
-        width: calc(960px/3 - (#{$big-gap} * 2)/3);
-    }
 
     &:hover {
         @extend .govuk-button:hover;
