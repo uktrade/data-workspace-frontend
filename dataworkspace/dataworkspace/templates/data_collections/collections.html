@@ -39,61 +39,65 @@
           </div>
         {% endif %}
       </div>
+
       {% if collections %}
-        <div class="govuk-body">
-          {% if personal_collections %}
+        {% if personal_collections %}
+          <div class="govuk-body">
             <h2 class="govuk-heading-m">
               Personal collections
             </h2>
-          {% endif %}
-          <ul class="collection-buttons-cards-container">
-            {% for collection in personal_collections %}
-              <li class="collection-button__item">
-                <a class="collection-button__link"
-                   href="{% url 'data_collections:collections_view' collections_id=collection.id %}" role="button">
-                  <span class="collection-button__heading">{{ collection.name }}</span>
-                  <span class="collection-button__text">{{ collection.description }}</span>
-                </a>
-              </li>
-            {% endfor %}
-          </ul>
-        </div>
-        <div class="govuk-body">
-          {% if shared_collections_from_user %}
+            <ul class="collection-buttons-cards-container">
+              {% for collection in personal_collections %}
+                <li class="collection-button__item">
+                  <a class="collection-button__link"
+                     href="{% url 'data_collections:collections_view' collections_id=collection.id %}" role="button">
+                    <span class="collection-button__heading">{{ collection.name }}</span>
+                    <span class="collection-button__text">{{ collection.description }}</span>
+                  </a>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        {% if shared_collections_from_user %}
+          <div class="govuk-body">
             <h2 class="govuk-heading-m">
               Collections I have shared
             </h2>
-          {% endif %}
-          <ul class="collection-buttons-cards-container">
-            {% for collection in shared_collections_from_user %}
-              <li class="collection-button__item">
-                <a class="collection-button__link"
-                   href="{% url 'data_collections:collections_view' collections_id=collection.id %}" role="button">
-                  <span class="collection-button__heading">{{ collection.name }}</span>
-                  <span class="collection-button__text">{{ collection.description }}</span>
-                </a>
-              </li>
-            {% endfor %}
-          </ul>
-        </div>
-        <div class="govuk-body">
-          {% if shared_collections_to_user %}
+            <ul class="collection-buttons-cards-container">
+              {% for collection in shared_collections_from_user %}
+                <li class="collection-button__item">
+                  <a class="collection-button__link"
+                     href="{% url 'data_collections:collections_view' collections_id=collection.id %}" role="button">
+                    <span class="collection-button__heading">{{ collection.name }}</span>
+                    <span class="collection-button__text">{{ collection.description }}</span>
+                  </a>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        {% if shared_collections_to_user %}
+          <div class="govuk-body">
             <h2 class="govuk-heading-m">
               Collections shared with me
             </h2>
-          {% endif %}
-          <ul class="collection-buttons-cards-container">
-            {% for collection in shared_collections_to_user %}
-              <li class="collection-button__item">
-                <a class="collection-button__link"
-                   href="{% url 'data_collections:collections_view' collections_id=collection.id %}" role="button">
-                  <span class="collection-button__heading">{{ collection.name }}</span>
-                  <span class="collection-button__text">{{ collection.description }}</span>
-                </a>
-              </li>
-            {% endfor %}
-          </ul>
-        </div>
+            <ul class="collection-buttons-cards-container">
+              {% for collection in shared_collections_to_user %}
+                <li class="collection-button__item">
+                  <a class="collection-button__link"
+                     href="{% url 'data_collections:collections_view' collections_id=collection.id %}" role="button">
+                    <span class="collection-button__heading">{{ collection.name }}</span>
+                    <span class="collection-button__text">{{ collection.description }}</span>
+                  </a>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
       {% endif %}
     </main>
   </div>
