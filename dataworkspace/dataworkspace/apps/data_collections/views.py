@@ -414,7 +414,9 @@ class CollectionListView(ListView):
         authorised_collections = self.get_queryset()
 
         personal_collections = []
-        shared_collections = []
+        shared_collections_from_user = []
+        shared_collections_to_user = []
+
         for collection in authorised_collections:
             user_ids = ([collection.owner.id] if collection.owner else []) + [
                 membership.user.id
@@ -423,10 +425,13 @@ class CollectionListView(ListView):
             number_of_user_ids = len(set(user_ids))
             if number_of_user_ids == 1:
                 personal_collections.append(collection)
+            elif collection.owner == self.request.user:
+                shared_collections_from_user.append(collection)
             else:
-                shared_collections.append(collection)
+                shared_collections_to_user.append(collection)
 
         context["personal_collections"] = personal_collections
-        context["shared_collections"] = shared_collections
+        context["shared_collections_from_user"] = shared_collections_from_user
+        context["shared_collections_to_user"] = shared_collections_to_user
 
         return context
