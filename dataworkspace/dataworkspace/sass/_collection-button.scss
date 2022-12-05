@@ -22,19 +22,19 @@ $background-colour: $govuk-brand-colour;
     background: $background-colour;
     margin: 0;
     box-sizing: border-box;
-    min-height: govuk-em(70, 16);
+    height: 110px;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
 
-    width: 100%;
+    width: 500px;
     padding: govuk-spacing(2);
     @include mq($from: tablet) {
-        width: calc(100%/2 - (#{$big-gap} * 1)/2);
+        width: calc(960px/2 - (#{$big-gap} * 1)/2);
         padding: govuk-spacing(3);
     }
     @include mq($from: desktop) {
-        width: calc(100%/3 - (#{$big-gap} * 2)/3);
+        width: calc(960px/3 - (#{$big-gap} * 2)/3);
     }
 
     &:hover {
@@ -47,9 +47,4 @@ $background-colour: $govuk-brand-colour;
     @include govuk-font($size: 14);
     display: block;
     padding-top: govuk-spacing(2);
-}
-
-.collection-button__link {
-    color: #FFFFFF;
-    text-decoration: none;
 }
