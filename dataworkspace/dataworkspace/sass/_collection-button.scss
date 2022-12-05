@@ -22,7 +22,7 @@ $background-colour: $govuk-brand-colour;
     background: $background-colour;
     margin: 0;
     box-sizing: border-box;
-    height: 110px;
+    min-height: govuk-em(70, 16);
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
