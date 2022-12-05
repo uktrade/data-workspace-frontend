@@ -37,13 +37,15 @@ $background-colour: $govuk-brand-colour;
     min-height: govuk-em(70, 16);
     height: 100%;
     width: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
+    display: block;
 
     &:hover {
         @extend .govuk-button:hover;
         background-color: govuk-shade($background-colour, 20);
+    }
+    padding: govuk-spacing(2);
+    @include mq($from: tablet) {
+        padding: govuk-spacing(3);
     }
 }
 
