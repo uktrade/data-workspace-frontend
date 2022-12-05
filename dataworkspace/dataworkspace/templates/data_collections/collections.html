@@ -46,15 +46,17 @@
               Personal collections
             </h2>
           {% endif %}
-          <section class="collection-buttons-cards-container">
+          <ul class="collection-buttons-cards-container">
             {% for collection in personal_collections %}
-              <a class="collection-button"
-                 href="{% url 'data_collections:collections_view' collections_id=collection.id %}" role="button">
-                <span class="collection-button__heading">{{ collection.name }}</span>
-                <span class="collection-button__text">{{ collection.description }}</span>
-              </a>
+              <li class="collection-button">
+                <a class="collection-button__link"
+                   href="{% url 'data_collections:collections_view' collections_id=collection.id %}" role="button">
+                  <span class="collection-button__heading">{{ collection.name }}</span>
+                  <span class="collection-button__text">{{ collection.description }}</span>
+                </a>
+              </li>
             {% endfor %}
-          </section>
+          </ul>
         </div>
         <div class="govuk-body">
           {% if shared_collections %}
@@ -62,15 +64,17 @@
               Shared collections
             </h2>
           {% endif %}
-          <section class="collection-buttons-cards-container">
+          <ul class="collection-buttons-cards-container">
             {% for collection in shared_collections %}
-              <a class="collection-button"
-                 href="{% url 'data_collections:collections_view' collections_id=collection.id %}" role="button">
-                <span class="collection-button__heading">{{ collection.name }}</span>
-                <span class="collection-button__text">{{ collection.description }}</span>
-              </a>
+              <li class="collection-button">
+                <a class="collection-button__link"
+                   href="{% url 'data_collections:collections_view' collections_id=collection.id %}" role="button">
+                  <span class="collection-button__heading">{{ collection.name }}</span>
+                  <span class="collection-button__text">{{ collection.description }}</span>
+                </a>
+              </li>
             {% endfor %}
-          </section>
+          </ul>
         </div>
       {% endif %}
     </main>

@@ -8,6 +8,7 @@ $background-colour: $govuk-brand-colour;
     display: flex;
     flex-wrap: wrap;
     gap: $small-gap;
+    padding: 0;
 
     @include mq($from: tablet) {
         gap: $big-gap;
@@ -46,4 +47,9 @@ $background-colour: $govuk-brand-colour;
     @include govuk-font($size: 14);
     display: block;
     padding-top: govuk-spacing(2);
+}
+
+.collection-button__link {
+    color: #FFFFFF;
+    text-decoration: none;
 }
