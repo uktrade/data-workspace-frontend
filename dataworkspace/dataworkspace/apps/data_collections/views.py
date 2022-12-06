@@ -358,6 +358,11 @@ class CollectionNotesView(UpdateView):
         form.instance.updated_by = self.request.user
         form.save(commit=False)
         messages.success(self.request, "The notes have been updated")
+        log_event(
+            self.request.user,
+            EventLog.TYPE_EDITED_COLLECTION_NOTES,
+            related_object=form.instance,
+        )
         return super().form_valid(form)
 
 
