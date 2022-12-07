@@ -1,0 +1,44 @@
+{% extends '_main.html' %}
+{% load core_tags %}
+{% load datasets_tags %}
+
+{% block initialGTMDataLayer %}
+  {{ block.super }}
+  <script nonce='{{ request.csp_nonce }}'>
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById("remove-form").addEventListener("submit", function() {
+        window.dataLayer.push({
+          'event': 'GAEvent',
+          'eventCategory': 'Collection',
+          'eventAction': 'Remove item',
+          'eventLabel': '{{ collection.name }} ({{ collection.id }})'
+        })
+      });
+    });
+  </script>
+{% endblock %}
+
+{% block page_title %}
+  Remove {{ collection.name }}
+{% endblock %}
+
+{% block go_back %}<a class="govuk-back-link govuk-link--no-visited-state" href="{{ collection.get_absolute_url }}">Back</a>{% endblock %}
+
+{% block content %}
+<form action="{{ action_url }}" method="POST" novalidate id="remove-form">
+  {% csrf_token %}
+  <div class="govuk-form-group">
+    <fieldset class="govuk-fieldset">
+      <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
+        <h1 class="govuk-fieldset__heading">
+          Are you sure you want to delete {{ collection.name }} collection?
+        </h1>
+      </legend>
+    </fieldset>
+    <div class="govuk-button-group">
+      <button class="govuk-button govuk-button--warning" data-module="govuk-button" type="submit">Yes, delete this collection</button>
+      <a class="govuk-link govuk-link--no-visited-state" href="{{ collection.get_absolute_url }}">Cancel</a>
+    </div>
+  </div>
+</form>
+{% endblock %}

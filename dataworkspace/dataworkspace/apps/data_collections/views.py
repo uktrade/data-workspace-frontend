@@ -440,3 +440,28 @@ class CollectionListView(ListView):
         context["shared_collections_to_user"] = shared_collections_to_user
 
         return context
+
+
+@require_http_methods(["GET"])
+def remove_collection_confirmation(request, collections_id):
+    collection = get_authorised_collection(request, collections_id)
+
+    context = {
+        "collection": collection,
+        "action_url": reverse(
+            "data_collections:remove-collection",
+            kwargs={
+                "collections_id": collection.id,
+            },
+        ),
+    }
+    return render(request, "data_collections/delete_collection_confirmation_screen.html", context)
+
+
+@require_http_methods(["POST"])
+def remove_collection(request, collections_id):
+    collection = get_authorised_collection(request, collections_id)
+    collection.deleted = True
+    collection.save()
+    messages.success(request, f"{collection.name} collection has been deleted")
+    return HttpResponseRedirect(reverse("data_collections:collections-list"))

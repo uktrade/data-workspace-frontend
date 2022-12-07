@@ -6,7 +6,7 @@ from django.urls import reverse
 
 from dataworkspace.tests import factories
 from dataworkspace.tests.conftest import get_client, get_user_data
-from dataworkspace.apps.data_collections.models import CollectionUserMembership
+from dataworkspace.apps.data_collections.models import CollectionUserMembership, Collection
 
 
 def test_collection(client, user):
@@ -802,3 +802,17 @@ def test_collections_page(client, user):
     # Need to flesh this out with collections this user owns and is a member of and those they are not allowed to access
     response = client.get(reverse("data_collections:collections-list"))
     assert response.status_code == 200
+
+
+def test_collection_successfully_removed(client, user):
+    c = factories.CollectionFactory.create(name="test-collections", owner=user)
+    collection_objects = Collection.objects.all().count()
+    response = client.post(
+        reverse(
+            "data_collections:remove-collection",
+            kwargs={"collections_id": c.id},
+        ),
+        follow=True,
+    )
+    assert response.status_code == 200
+    assert Collection.objects.live().count() == collection_objects - 1
