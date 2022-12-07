@@ -8,9 +8,7 @@ from dataworkspace.tests import factories
 from dataworkspace.tests.conftest import get_client, get_user_data
 from dataworkspace.apps.data_collections.models import (
     CollectionUserMembership,
-    CollectionDatasetMembership,
 )
-from dataworkspace.apps.datasets.models import DataSet, VisualisationCatalogueItem
 
 
 def test_collection(client, user):
