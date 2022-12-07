@@ -80,4 +80,24 @@ urlpatterns = [
         name="collection-create",
     ),
     path("", login_required(views.CollectionListView.as_view()), name="collections-list"),
+    path(
+        "create/dataset/<uuid:dataset_id>",
+        login_required(views.CollectionCreateView.as_view()),
+        {
+            "dataset_class": DataSet,
+            "membership_model_class": CollectionDatasetMembership,
+            "membership_model_relationship_name": "dataset",
+        },
+        name="collection-create-with-selected-dataset",
+    ),
+    path(
+        "create/visualisation/<uuid:dataset_id>",
+        login_required(views.CollectionCreateView.as_view()),
+        {
+            "dataset_class": VisualisationCatalogueItem,
+            "membership_model_class": CollectionVisualisationCatalogueItemMembership,
+            "membership_model_relationship_name": "visualisation",
+        },
+        name="collection-create-with-selected-visualisation",
+    ),
 ]

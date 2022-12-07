@@ -2,6 +2,7 @@ import re
 
 from django import forms
 from django.contrib.auth import get_user_model
+from django.shortcuts import redirect
 
 from dataworkspace.apps.data_collections.models import (
     Collection,
@@ -33,6 +34,9 @@ class SelectCollectionForMembershipForm(GOVUKDesignSystemForm):
         self.user_collections = kwargs.pop("user_collections")
         super().__init__(*args, **kwargs)
         self.fields["collection"].choices = ((x.id, x.name) for x in self.user_collections)
+        self.fields["collection"].choices.append(
+            ("add_to_new_collection", "Add to new collection")
+        )
 
     def clean_collection(self):
         collection = self.cleaned_data.get("collection")
