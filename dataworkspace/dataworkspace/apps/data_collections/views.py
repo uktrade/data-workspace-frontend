@@ -423,7 +423,7 @@ class CollectionCreateView(CreateView):
             EventLog.TYPE_CREATED_COLLECTION,
             related_object=form.instance,
         )
-        if self.kwargs["dataset_id"]:
+        if self.kwargs:
             dataset = get_object_or_404(
                 self.kwargs["dataset_class"].objects.live().filter(published=True),
                 pk=self.kwargs["dataset_id"],
