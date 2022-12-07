@@ -816,3 +816,17 @@ def test_collection_successfully_removed(client, user):
     )
     assert response.status_code == 200
     assert Collection.objects.live().count() == collection_objects - 1
+
+
+def test_collection_cannot_be_removed_by_nonowner(client, user):
+    c = factories.CollectionFactory.create(name="test-collections")
+    collection_objects = Collection.objects.all().count()
+    response = client.post(
+        reverse(
+            "data_collections:remove-collection",
+            kwargs={"collections_id": c.id},
+        ),
+        follow=True,
+    )
+    assert response.status_code == 404
+    assert Collection.objects.live().count() == collection_objects

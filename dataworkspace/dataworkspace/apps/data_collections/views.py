@@ -461,7 +461,8 @@ def remove_collection_confirmation(request, collections_id):
 @require_http_methods(["POST"])
 def remove_collection(request, collections_id):
     collection = get_authorised_collection(request, collections_id)
-    collection.deleted = True
-    collection.save()
-    messages.success(request, f"{collection.name} collection has been deleted")
+    if collection.owner == request.user:
+        collection.deleted = True
+        collection.save()
+        messages.success(request, f"{collection.name} collection has been deleted")
     return HttpResponseRedirect(reverse("data_collections:collections-list"))
