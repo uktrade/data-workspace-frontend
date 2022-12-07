@@ -414,26 +414,22 @@ class CollectionCreateView(CreateView):
     context_object_name = "collection"
 
     def form_valid(self, form):
-        form.instance.owner = self.request.user
-        form.instance.created_by = self.request.user
-        form.save(commit=False)
-        messages.success(self.request, "Your changes have been saved")
-        log_event(
-            self.request.user,
-            EventLog.TYPE_CREATED_COLLECTION,
-            related_object=form.instance,
-        )
-        if self.kwargs:
-            dataset = get_object_or_404(
-                self.kwargs["dataset_class"].objects.live().filter(published=True),
-                pk=self.kwargs["dataset_id"],
-            )
+        with transaction.atomic():
             form.instance.owner = self.request.user
             form.instance.created_by = self.request.user
             form.save(commit=False)
+            messages.success(self.request, "Your changes have been saved")
+            log_event(
+                self.request.user,
+                EventLog.TYPE_CREATED_COLLECTION,
+                related_object=form.instance,
+            )
             super().form_valid(form)
-
-            with transaction.atomic():
+            if self.kwargs:
+                dataset = get_object_or_404(
+                    self.kwargs["dataset_class"].objects.live().filter(published=True),
+                    pk=self.kwargs["dataset_id"],
+                )
                 self.kwargs["membership_model_class"].objects.create(
                     collection=form.instance,
                     created_by=self.request.user,
