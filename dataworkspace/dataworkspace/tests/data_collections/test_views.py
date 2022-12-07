@@ -6,7 +6,11 @@ from django.urls import reverse
 
 from dataworkspace.tests import factories
 from dataworkspace.tests.conftest import get_client, get_user_data
-from dataworkspace.apps.data_collections.models import CollectionUserMembership
+from dataworkspace.apps.data_collections.models import (
+    CollectionUserMembership,
+    CollectionDatasetMembership,
+)
+from dataworkspace.apps.datasets.models import DataSet, VisualisationCatalogueItem
 
 
 def test_collection(client, user):
@@ -802,3 +806,35 @@ def test_collections_page(client, user):
     # Need to flesh this out with collections this user owns and is a member of and those they are not allowed to access
     response = client.get(reverse("data_collections:collections-list"))
     assert response.status_code == 200
+
+
+def test_create_collection_from_dataset_success(client, user):
+    ds = factories.DataSetFactory.create(published=True)
+    response = client.post(
+        reverse("data_collections:collection-create-with-selected-dataset", args=(ds.id,)),
+        data={
+            "name": "Collection name",
+            "description": "Some description",
+        },
+        follow=True,
+    )
+    assert response.status_code == 200
+    assert "Collection name" in response.content.decode(response.charset)
+    assert "Some description" in response.content.decode(response.charset)
+    assert "Your changes have been saved" in response.content.decode(response.charset)
+
+
+def test_create_collection_from_visualisation_success(client, user):
+    ds = factories.VisualisationCatalogueItemFactory.create(published=True)
+    response = client.post(
+        reverse("data_collections:collection-create-with-selected-visualisation", args=(ds.id,)),
+        data={
+            "name": "Collection name",
+            "description": "Some description",
+        },
+        follow=True,
+    )
+    assert response.status_code == 200
+    assert "Collection name" in response.content.decode(response.charset)
+    assert "Some description" in response.content.decode(response.charset)
+    assert "Your changes have been saved" in response.content.decode(response.charset)

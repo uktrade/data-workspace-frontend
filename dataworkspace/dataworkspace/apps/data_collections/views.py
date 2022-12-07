@@ -418,7 +418,6 @@ class CollectionCreateView(CreateView):
             form.instance.owner = self.request.user
             form.instance.created_by = self.request.user
             form.save(commit=False)
-            messages.success(self.request, "Your changes have been saved")
             log_event(
                 self.request.user,
                 EventLog.TYPE_CREATED_COLLECTION,
@@ -435,6 +434,8 @@ class CollectionCreateView(CreateView):
                     created_by=self.request.user,
                     **{self.kwargs["membership_model_relationship_name"]: dataset},
                 )
+
+        messages.success(self.request, "Your changes have been saved")
         return super().form_valid(form)
 
 
