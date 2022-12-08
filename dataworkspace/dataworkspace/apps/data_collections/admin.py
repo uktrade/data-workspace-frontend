@@ -95,7 +95,14 @@ class CollectionUserItemMembershipInlineAdmin(admin.TabularInline):
 
 
 class CollectionAdmin(CSPRichTextEditorMixin, DeletableTimeStampedUserAdmin):
-    list_display = ("name", "description", "owner")
+    list_display = (
+        "name",
+        "datasets_count",
+        "dashboards_count",
+        "users_count",
+        "notes_truncated",
+        "owner",
+    )
     search_fields = ["name"]
     fieldsets = [
         (
