@@ -436,7 +436,7 @@ class CollectionCreateView(CreateView):
                 )
 
         messages.success(self.request, "Your changes have been saved")
-        return super().form_valid(form)
+        return redirect("data_collections:collections_view", collections_id=form.instance.id)
 
 
 class CollectionListView(ListView):
