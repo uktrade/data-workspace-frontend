@@ -206,6 +206,18 @@ def select_collection_for_membership(
             user_collections=user_collections,
         )
         if form.is_valid():
+            if form.cleaned_data["collection"] == "add_to_new_collection":
+                if membership_model_relationship_name == "dataset":
+                    return redirect(
+                        "data_collections:collection-create-with-selected-dataset",
+                        dataset_id=dataset.id,
+                    )
+                elif membership_model_relationship_name == "visualisation":
+                    return redirect(
+                        "data_collections:collection-create-with-selected-visualisation",
+                        dataset_id=dataset.id,
+                    )
+
             try:
                 with transaction.atomic():
                     membership_model_class.objects.create(
@@ -238,6 +250,14 @@ def select_collection_for_membership(
         {
             "dataset": dataset,
             "form": form,
+            "collection_url": reverse(
+                "data_collections:collection-create-with-selected-dataset", args=(dataset.id,)
+            )
+            if membership_model_relationship_name == "dataset"
+            else reverse(
+                "data_collections:collection-create-with-selected-visualisation",
+                args=(dataset.id,),
+            ),
         },
     )
 
@@ -394,16 +414,29 @@ class CollectionCreateView(CreateView):
     context_object_name = "collection"
 
     def form_valid(self, form):
-        form.instance.owner = self.request.user
-        form.instance.created_by = self.request.user
-        form.save(commit=False)
+        with transaction.atomic():
+            form.instance.owner = self.request.user
+            form.instance.created_by = self.request.user
+            form.save(commit=False)
+            log_event(
+                self.request.user,
+                EventLog.TYPE_CREATED_COLLECTION,
+                related_object=form.instance,
+            )
+            super().form_valid(form)
+            if self.kwargs:
+                dataset = get_object_or_404(
+                    self.kwargs["dataset_class"].objects.live().filter(published=True),
+                    pk=self.kwargs["dataset_id"],
+                )
+                self.kwargs["membership_model_class"].objects.create(
+                    collection=form.instance,
+                    created_by=self.request.user,
+                    **{self.kwargs["membership_model_relationship_name"]: dataset},
+                )
+
         messages.success(self.request, "Your changes have been saved")
-        log_event(
-            self.request.user,
-            EventLog.TYPE_CREATED_COLLECTION,
-            related_object=form.instance,
-        )
-        return super().form_valid(form)
+        return redirect("data_collections:collections_view", collections_id=form.instance.id)
 
 
 class CollectionListView(ListView):

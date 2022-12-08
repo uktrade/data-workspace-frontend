@@ -830,3 +830,35 @@ def test_collection_cannot_be_removed_by_nonowner(client, user):
     )
     assert response.status_code == 404
     assert Collection.objects.live().count() == collection_objects
+
+
+def test_create_collection_from_dataset_success(client, user):
+    ds = factories.DataSetFactory.create(published=True)
+    response = client.post(
+        reverse("data_collections:collection-create-with-selected-dataset", args=(ds.id,)),
+        data={
+            "name": "Collection name",
+            "description": "Some description",
+        },
+        follow=True,
+    )
+    assert response.status_code == 200
+    assert "Collection name" in response.content.decode(response.charset)
+    assert "Some description" in response.content.decode(response.charset)
+    assert "Your changes have been saved" in response.content.decode(response.charset)
+
+
+def test_create_collection_from_visualisation_success(client, user):
+    ds = factories.VisualisationCatalogueItemFactory.create(published=True)
+    response = client.post(
+        reverse("data_collections:collection-create-with-selected-visualisation", args=(ds.id,)),
+        data={
+            "name": "Collection name",
+            "description": "Some description",
+        },
+        follow=True,
+    )
+    assert response.status_code == 200
+    assert "Collection name" in response.content.decode(response.charset)
+    assert "Some description" in response.content.decode(response.charset)
+    assert "Your changes have been saved" in response.content.decode(response.charset)

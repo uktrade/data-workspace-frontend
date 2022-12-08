@@ -30,14 +30,30 @@
         <div class="govuk-grid-column-two-thirds">
           <h1 class="govuk-heading-xl govuk-!-margin-bottom-2">Select a collection</h1>
           {% include 'design_system/error_summary.html' with form=form %}
-          <form method="post" id="add-form">
-            {% csrf_token %}
-            {{ form.collection }}
+          {% if form.collection|length > 1 %}
+            <form method="post" id="add-form">
+            <p class="govuk-hint">{{ form.collection.label }}</p>
+              {% csrf_token %}
+              {% for collection in form.collection %}
+                {% if collection != form.collection|last %}
+                  {{ collection }}
+                {% endif %}
+              {% endfor %}
+              <p class="govuk-body">or</p>
+              {{ form.collection|last }}
+              <div class="govuk-button-group">
+                <input class="govuk-button govuk-!-margin-top-2" type="submit" value="Continue">
+                <a class="govuk-link govuk-link--no-visited-state" href="{{ dataset.get_absolute_url }}">Cancel</a>
+              </div>
+            </form>
+          {% else %}
+            <p class="govuk-body govuk-!-margin-top-6">You don't currently have any collections</p>
             <div class="govuk-button-group">
-              <input class="govuk-button" type="submit" value="Continue">
-              <a class="govuk-link govuk-link--no-visited-state" href="{{ dataset.get_absolute_url }}">Cancel</a>
+              <a class="govuk-button govuk-!-margin-top-2"
+                 href="{{ collection_url }}">Create
+                a collection</a>
             </div>
-          </form>
+          {% endif %}
         </div>
       </div>
     </main>
