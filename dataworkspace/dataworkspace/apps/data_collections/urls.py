@@ -81,6 +81,16 @@ urlpatterns = [
     ),
     path("", login_required(views.CollectionListView.as_view()), name="collections-list"),
     path(
+        "<uuid:collections_id>/delete",
+        login_required(views.remove_collection_confirmation),
+        name="remove-collection-confirmation",
+    ),
+    path(
+        "<uuid:collections_id>/delete-confirmed",
+        login_required(views.remove_collection),
+        name="remove-collection",
+    ),
+    path(
         "create/dataset/<uuid:dataset_id>",
         login_required(views.CollectionCreateView.as_view()),
         {
