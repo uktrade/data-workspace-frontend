@@ -96,7 +96,7 @@ class CollectionUserItemMembershipInlineAdmin(admin.TabularInline):
 
 class CollectionAdmin(CSPRichTextEditorMixin, DeletableTimeStampedUserAdmin):
     exclude = ["created_date", "updated_date", "created_by", "updated_by"]
-    list_display = ("name", "description", "owner")
+    list_display = ("name", "description", "owner", "deleted")
     search_fields = ["name"]
     fieldsets = [
         (
