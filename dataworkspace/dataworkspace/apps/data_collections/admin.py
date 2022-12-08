@@ -95,12 +95,13 @@ class CollectionUserItemMembershipInlineAdmin(admin.TabularInline):
 
 
 class CollectionAdmin(CSPRichTextEditorMixin, DeletableTimeStampedUserAdmin):
+    exclude = ["created_date", "updated_date", "created_by", "updated_by"]
     list_display = ("name", "description", "owner")
     search_fields = ["name"]
     fieldsets = [
         (
             None,
-            {"fields": ["name", "description", "owner", "id", "notes"]},
+            {"fields": ["deleted", "name", "description", "owner", "id", "notes"]},
         ),
     ]
     autocomplete_fields = ("owner",)
@@ -110,6 +111,9 @@ class CollectionAdmin(CSPRichTextEditorMixin, DeletableTimeStampedUserAdmin):
         CollectionVisualisationCatalogueItemMembershipInlineAdmin,
         CollectionUserItemMembershipInlineAdmin,
     )
+
+    def get_queryset(self, request):
+        return self.model.objects.all()
 
 
 admin.site.register(Collection, CollectionAdmin)

@@ -60,7 +60,7 @@
                  Cancel
                </a>
             {% if collection and collection.owner == request.user %}
-              <a class="govuk-button govuk-button--warning" style="float: right" data-module="govuk-button"
+              <a class="govuk-button govuk-button--warning" style="float: right; margin-right: 0" data-module="govuk-button"
                  href="{% url 'data_collections:remove-collection-confirmation' collections_id=collection.id %}">
                 Delete
               </a>
