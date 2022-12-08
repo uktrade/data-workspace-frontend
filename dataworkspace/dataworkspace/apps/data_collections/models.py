@@ -43,10 +43,12 @@ class Collection(DeletableTimestampedUserModel):
         return self.visualisation_catalogue_items.live().count()
 
     def users_count(self):
-        return self.user_memberships.live().count() + 1 if self.owner else 0
+        return self.user_memberships.live().count()
 
     def notes_truncated(self):
-        return f"{self.notes[:100]}..." if self.notes else None
+        return True if self.notes else False
+
+    notes_truncated.boolean = True
 
 
 class CollectionDatasetMembership(DeletableTimestampedUserModel):
