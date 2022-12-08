@@ -50,6 +50,18 @@ class Collection(DeletableTimestampedUserModel):
 
     notes_truncated.boolean = True
 
+    datasets_count.admin_order_field = "datasets_count"
+    datasets_count.description = "Datasets count"
+
+    dashboards_count.admin_order_field = "dashboards_count"
+    dashboards_count.description = "Dashboards count"
+
+    users_count.admin_order_field = "users_count"
+    users_count.description = "Users count"
+
+    notes_truncated.order_field = "notes"
+    notes_truncated.description = "Notes truncated"
+
 
 class CollectionDatasetMembership(DeletableTimestampedUserModel):
     dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE, related_name="datasets")

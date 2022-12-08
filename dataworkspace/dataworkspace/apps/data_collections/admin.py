@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.models import Count, Q
 from dataworkspace.apps.data_collections.forms import (
     CollectionDatasetForm,
     CollectionUserForm,
@@ -121,7 +122,14 @@ class CollectionAdmin(CSPRichTextEditorMixin, DeletableTimeStampedUserAdmin):
     )
 
     def get_queryset(self, request):
-        return self.model.objects.all()
+        return self.model.objects.all().annotate(
+            datasets_count=Count("datasets", filter=Q(datasets__deleted=False)),
+            dashboards_count=Count(
+                "visualisation_catalogue_items",
+                filter=Q(visualisation_catalogue_items__deleted=False),
+            ),
+            users_count=Count("user_memberships", filter=Q(user_memberships__deleted=False)),
+        )
 
 
 admin.site.register(Collection, CollectionAdmin)
