@@ -36,6 +36,32 @@ class Collection(DeletableTimestampedUserModel):
     def get_absolute_url(self):
         return reverse("data_collections:collections_view", args=(self.id,))
 
+    def datasets_count(self, obj):
+        return obj.datasets_count
+
+    def dashboards_count(self, obj):
+        return obj.dashboards_count
+
+    def users_count(self, obj):
+        return obj.users_count
+
+    def notes_available(self):
+        return bool(self.notes)
+
+    notes_available.boolean = True
+
+    datasets_count.admin_order_field = "datasets_count"
+    datasets_count.description = "Datasets count"
+
+    dashboards_count.admin_order_field = "dashboards_count"
+    dashboards_count.description = "Dashboards count"
+
+    users_count.admin_order_field = "users_count"
+    users_count.description = "Users count"
+
+    notes_available.order_field = "notes"
+    notes_available.description = "Notes truncated"
+
 
 class CollectionDatasetMembership(DeletableTimestampedUserModel):
     dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE, related_name="datasets")
