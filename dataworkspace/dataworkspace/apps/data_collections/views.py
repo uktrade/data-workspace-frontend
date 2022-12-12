@@ -114,12 +114,6 @@ class CollectionsDetailView(DetailView):
 
 
 @require_http_methods(["GET"])
-def collection_archived(request):
-    context = None
-    return render(request, "data_collections/collection_has_been_archived.html", context)
-
-
-@require_http_methods(["GET"])
 def dataset_membership_confirm_removal(request, collections_id, data_membership_id):
     collection = get_authorised_collection(request, collections_id)
     membership = CollectionDatasetMembership.objects.get(id=data_membership_id)
