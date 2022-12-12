@@ -24,7 +24,7 @@ def test_collection(client, user):
     assert "test collections description" in response.content.decode(response.charset)
 
 
-def test_deleted_raises_404(client, user):
+def test_deleted_raises_302(client, user):
     c = factories.CollectionFactory.create(
         name="test-collections",
         description="test collections description",
@@ -39,10 +39,10 @@ def test_deleted_raises_404(client, user):
         )
     )
 
-    assert response.status_code == 404
+    assert response.status_code == 302
 
 
-def test_unauthorised_user_raises_404(client):
+def test_unauthorised_user_raises_302(client):
     c = factories.CollectionFactory.create(
         name="test-collections", description="test collections description"
     )
@@ -54,7 +54,7 @@ def test_unauthorised_user_raises_404(client):
         )
     )
 
-    assert response.status_code == 404
+    assert response.status_code == 302
 
 
 def test_dataset_can_be_added(client, user):
@@ -674,7 +674,7 @@ def test_deleted_member_view_collection(client, user):
     c = factories.CollectionFactory.create(name="test-collection")
     factories.CollectionUserMembershipFactory(user=user, collection=c, deleted=True)
     response = client.get(reverse("data_collections:collections_view", args=(c.id,)))
-    assert response.status_code == 404
+    assert response.status_code == 302
 
 
 def test_member_edit_collection(client, user):
@@ -862,3 +862,19 @@ def test_create_collection_from_visualisation_success(client, user):
     assert "Collection name" in response.content.decode(response.charset)
     assert "Some description" in response.content.decode(response.charset)
     assert "Your changes have been saved" in response.content.decode(response.charset)
+
+
+def test_deleted_collection_redirects_user(client, user):
+    collection = factories.CollectionFactory.create(
+        name="test-collections",
+        description="test collections description",
+        owner=user,
+        deleted=True,
+    )
+    response = client.get(
+        reverse(
+            "data_collections:collections_view",
+            kwargs={"collections_id": collection.id},
+        )
+    )
+    assert response.status_code == 302

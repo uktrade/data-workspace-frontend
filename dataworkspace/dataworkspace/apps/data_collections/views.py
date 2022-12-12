@@ -54,6 +54,10 @@ def get_authorised_collection(request, collection_id):
 class CollectionsDetailView(DetailView):
     template_name = "data_collections/collection_detail.html"
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.object = None
+
     def get_object(self, queryset=None):
         return get_authorised_collection(self.request, self.kwargs["collections_id"])
 
