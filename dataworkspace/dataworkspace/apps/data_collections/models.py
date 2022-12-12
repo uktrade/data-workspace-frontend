@@ -3,7 +3,7 @@ import uuid
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models, transaction
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.urls import reverse
 
 from dataworkspace.apps.core.models import DeletableTimestampedUserModel, RichTextField
@@ -36,19 +36,19 @@ class Collection(DeletableTimestampedUserModel):
     def get_absolute_url(self):
         return reverse("data_collections:collections_view", args=(self.id,))
 
-    def datasets_count(self):
-        return self.datasets.live().count()
+    def datasets_count(self, obj):
+        return obj.datasets_count
 
-    def dashboards_count(self):
-        return self.visualisation_catalogue_items.live().count()
+    def dashboards_count(self, obj):
+        return obj.dashboards_count
 
-    def users_count(self):
-        return self.user_memberships.live().count()
+    def users_count(self, obj):
+        return obj.users_count
 
-    def notes_truncated(self):
+    def notes_available(self):
         return True if self.notes else False
 
-    notes_truncated.boolean = True
+    notes_available.boolean = True
 
     datasets_count.admin_order_field = "datasets_count"
     datasets_count.description = "Datasets count"
@@ -59,8 +59,8 @@ class Collection(DeletableTimestampedUserModel):
     users_count.admin_order_field = "users_count"
     users_count.description = "Users count"
 
-    notes_truncated.order_field = "notes"
-    notes_truncated.description = "Notes truncated"
+    notes_available.order_field = "notes"
+    notes_available.description = "Notes truncated"
 
 
 class CollectionDatasetMembership(DeletableTimestampedUserModel):

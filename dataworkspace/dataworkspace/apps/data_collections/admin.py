@@ -102,7 +102,7 @@ class CollectionAdmin(CSPRichTextEditorMixin, DeletableTimeStampedUserAdmin):
         "datasets_count",
         "dashboards_count",
         "users_count",
-        "notes_truncated",
+        "notes_available",
         "owner",
         "deleted",
     )
@@ -122,13 +122,17 @@ class CollectionAdmin(CSPRichTextEditorMixin, DeletableTimeStampedUserAdmin):
     )
 
     def get_queryset(self, request):
-        return self.model.objects.all().annotate(
-            datasets_count=Count("datasets", filter=Q(datasets__deleted=False)),
-            dashboards_count=Count(
-                "visualisation_catalogue_items",
-                filter=Q(visualisation_catalogue_items__deleted=False),
-            ),
-            users_count=Count("user_memberships", filter=Q(user_memberships__deleted=False)),
+        return (
+            super()
+            .get_queryset(request)
+            .annotate(
+                datasets_count=Count("datasets", filter=Q(datasets__deleted=False)),
+                dashboards_count=Count(
+                    "visualisation_catalogue_items",
+                    filter=Q(visualisation_catalogue_items__deleted=False),
+                ),
+                users_count=Count("user_memberships", filter=Q(user_memberships__deleted=False)),
+            )
         )
 
 
