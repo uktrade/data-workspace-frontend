@@ -99,6 +99,20 @@ class CollectionsDetailView(DetailView):
 
         return context
 
+    def get(self, request, *args, **kwargs):
+        try:
+            self.object = self.get_object()
+        except Http404:
+            return redirect("data_collections:collection_archived")
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
+
+
+@require_http_methods(["GET"])
+def collection_archived(request):
+    context = None
+    return render(request, "data_collections/collection_has_been_archived.html", context)
+
 
 @require_http_methods(["GET"])
 def dataset_membership_confirm_removal(request, collections_id, data_membership_id):
