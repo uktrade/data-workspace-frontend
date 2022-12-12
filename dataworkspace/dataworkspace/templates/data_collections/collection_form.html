@@ -40,7 +40,7 @@
       <div class="govuk-grid-row govuk-!-width-three-quarters">
         <div class="govuk-grid-column-full govuk-!-margin-bottom-6">
           <h1 class="govuk-heading-xl govuk-!-margin-bottom-3">
-            {% if collection %}Edit or delete{% else %}Create{% endif %} collection
+            {% if collection %}Edit{% if collection.owner == request.user %} or delete{% endif %}{% else %}Create{% endif %} collection
           </h1>
         </div>
         <div class="govuk-grid-column-full">
@@ -54,13 +54,13 @@
                 Save
               </button>
                <a
-                 class="govuk-link govuk-link--no-visited-state"
+                 class="govuk-link govuk-link--no-visited-state govuk-!-margin-top-2"
                  href="{% if collection %}{{ collection.get_absolute_url }}{% else %}{% url 'data_collections:collections-list' %}{% endif %}"
                >
                  Cancel
                </a>
             {% if collection and collection.owner == request.user %}
-              <a class="govuk-button govuk-button--warning" style="float: right; margin-right: 0" data-module="govuk-button"
+              <a class="govuk-button govuk-button--secondary" style="float: right; margin-right: 0" data-module="govuk-button"
                  href="{% url 'data_collections:remove-collection-confirmation' collections_id=collection.id %}">
                 Delete
               </a>
