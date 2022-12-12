@@ -46,7 +46,7 @@ class Collection(DeletableTimestampedUserModel):
         return obj.users_count
 
     def notes_available(self):
-        return True if self.notes else False
+        bool(self.notes)
 
     notes_available.boolean = True
 
