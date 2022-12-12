@@ -36,6 +36,18 @@ logger = logging.getLogger("app")
 
 
 def get_authorised_collections(request):
+    collections = Collection.objects.all().order_by("name")
+    return (
+        collections.filter(
+            Q(owner=request.user)
+            | Q(user_memberships__user=request.user, user_memberships__deleted=False)
+        )
+        .order_by("name")
+        .distinct()
+    )
+
+
+def get_only_live_authorised_collections(request):
     collections = Collection.objects.live().order_by("name")
     return (
         collections.filter(
@@ -54,10 +66,6 @@ def get_authorised_collection(request, collection_id):
 class CollectionsDetailView(DetailView):
     template_name = "data_collections/collection_detail.html"
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.object = None
-
     def get_object(self, queryset=None):
         return get_authorised_collection(self.request, self.kwargs["collections_id"])
 
@@ -65,6 +73,10 @@ class CollectionsDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         source_object = self.get_object()
         context["source_object"] = source_object
+        if source_object.deleted:
+            context["archived_collection"] = True
+            return context
+
         context["dataset_collections"] = (
             source_object.dataset_collections.filter(deleted=False)
             .prefetch_related(
@@ -102,14 +114,6 @@ class CollectionsDetailView(DetailView):
         )
 
         return context
-
-    def get(self, request, *args, **kwargs):
-        try:
-            self.object = self.get_object()
-        except Http404:
-            return redirect("data_collections:collection_archived")
-        context = self.get_context_data(object=self.object)
-        return self.render_to_response(context)
 
 
 @require_http_methods(["GET"])
@@ -217,7 +221,7 @@ def select_collection_for_membership(
     request, dataset_class, membership_model_class, membership_model_relationship_name, dataset_id
 ):
     dataset = get_object_or_404(dataset_class.objects.live().filter(published=True), pk=dataset_id)
-    user_collections = get_authorised_collections(request)
+    user_collections = get_only_live_authorised_collections(request)
     if request.method == "POST":
         form = SelectCollectionForMembershipForm(
             request.POST,
@@ -463,7 +467,7 @@ class CollectionListView(ListView):
     context_object_name = "collections"
 
     def get_queryset(self):
-        return get_authorised_collections(self.request)
+        return get_only_live_authorised_collections(self.request)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

@@ -24,25 +24,7 @@ def test_collection(client, user):
     assert "test collections description" in response.content.decode(response.charset)
 
 
-def test_deleted_raises_302(client, user):
-    c = factories.CollectionFactory.create(
-        name="test-collections",
-        description="test collections description",
-        deleted=True,
-        owner=user,
-    )
-
-    response = client.get(
-        reverse(
-            "data_collections:collections_view",
-            kwargs={"collections_id": c.id},
-        )
-    )
-
-    assert response.status_code == 302
-
-
-def test_unauthorised_user_raises_302(client):
+def test_unauthorised_user_raises_404(client):
     c = factories.CollectionFactory.create(
         name="test-collections", description="test collections description"
     )
@@ -54,7 +36,7 @@ def test_unauthorised_user_raises_302(client):
         )
     )
 
-    assert response.status_code == 302
+    assert response.status_code == 404
 
 
 def test_dataset_can_be_added(client, user):
@@ -674,7 +656,7 @@ def test_deleted_member_view_collection(client, user):
     c = factories.CollectionFactory.create(name="test-collection")
     factories.CollectionUserMembershipFactory(user=user, collection=c, deleted=True)
     response = client.get(reverse("data_collections:collections_view", args=(c.id,)))
-    assert response.status_code == 302
+    assert response.status_code == 404
 
 
 def test_member_edit_collection(client, user):
@@ -877,4 +859,4 @@ def test_deleted_collection_redirects_user(client, user):
             kwargs={"collections_id": collection.id},
         )
     )
-    assert response.status_code == 302
+    assert "Sorry, this collection has been archived." in response.content.decode(response.charset)

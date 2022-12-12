@@ -110,9 +110,4 @@ urlpatterns = [
         },
         name="collection-create-with-selected-visualisation",
     ),
-    path(
-        "archived-collection",
-        login_required(views.collection_archived),
-        name="collection_archived",
-    ),
 ]
