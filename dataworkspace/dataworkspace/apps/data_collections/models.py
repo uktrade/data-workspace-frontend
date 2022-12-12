@@ -3,7 +3,7 @@ import uuid
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models, transaction
-from django.db.models import Q, Count
+from django.db.models import Q
 from django.urls import reverse
 
 from dataworkspace.apps.core.models import DeletableTimestampedUserModel, RichTextField
