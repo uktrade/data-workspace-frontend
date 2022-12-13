@@ -110,4 +110,9 @@ urlpatterns = [
         },
         name="collection-create-with-selected-visualisation",
     ),
+    path(
+        "<uuid:collections_id>/history",
+        login_required(views.history_of_collection_changes),
+        name="history-of-collection-changes",
+    ),
 ]

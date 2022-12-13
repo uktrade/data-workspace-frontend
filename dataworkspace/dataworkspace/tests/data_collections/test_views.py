@@ -1,12 +1,16 @@
+import datetime
 from unittest.mock import patch
 from mock import mock
+from waffle.testutils import override_flag
 
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 
 from dataworkspace.tests import factories
 from dataworkspace.tests.conftest import get_client, get_user_data
 from dataworkspace.apps.data_collections.models import CollectionUserMembership, Collection
+from dataworkspace.apps.eventlog.models import EventLog
 
 
 def test_collection(client, user):
@@ -860,3 +864,54 @@ def test_deleted_collection_presents_archived_page(client, user):
         )
     )
     assert "Sorry, this collection has been deleted" in response.content.decode(response.charset)
+
+
+@override_flag(settings.COLLECTIONS_FLAG, active=True)
+def test_collection_history_table_is_rendered(client, user):
+    collection = factories.CollectionFactory.create(
+        name="test-collections",
+        description="test collections description",
+        owner=user,
+    )
+
+    dataset = factories.DatacutDataSetFactory(published=True, name="Datacut dataset")
+
+    client.post(
+        reverse(
+            "data_collections:dataset_select_collection_for_membership",
+            kwargs={"dataset_id": dataset.id},
+        ),
+        data={"collection": collection.id},
+    )
+
+    client.post(
+        reverse(
+            "data_collections:collection_data_membership",
+            kwargs={
+                "collections_id": collection.id,
+                "data_membership_id": collection.dataset_collections.all()[0].id,
+            },
+        )
+    )
+
+    response = client.get(
+        reverse(
+            "data_collections:history-of-collection-changes",
+            kwargs={"collections_id": collection.id},
+        )
+    )
+
+    assert response.status_code == 200
+
+    events = EventLog.objects.filter(
+        object_id=collection.id,
+        content_type=ContentType.objects.get_for_model(collection),
+    )
+    assert len(events) == 2
+
+    assert "Add dataset" in response.content.decode(response.charset)
+    assert "Remove dataset" in response.content.decode(response.charset)
+    assert datetime.datetime.now().strftime("%d %b %Y") in response.content.decode(
+        response.charset
+    )
+    assert user.email in response.content.decode(response.charset)

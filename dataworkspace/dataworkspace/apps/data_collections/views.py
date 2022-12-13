@@ -2,6 +2,7 @@ import logging
 
 from csp.decorators import csp_update
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
 from django.db import transaction, IntegrityError
 from django.db.models import Prefetch, Q
 from django.contrib import messages
@@ -12,6 +13,8 @@ from django.views.generic import CreateView, DetailView, FormView, ListView, Upd
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.conf import settings
+
+from waffle.decorators import waffle_flag
 
 from dataworkspace.apps.data_collections.forms import (
     CollectionEditForm,
@@ -518,3 +521,20 @@ def remove_collection(request, collections_id):
         collection.save()
         messages.success(request, f"{collection.name} collection has been deleted")
     return HttpResponseRedirect(reverse("data_collections:collections-list"))
+
+
+@waffle_flag(settings.COLLECTIONS_FLAG)
+@require_http_methods(["GET"])
+def history_of_collection_changes(request, collections_id):
+    collection = get_authorised_collection(request, collections_id)
+
+    collection_history = EventLog.objects.filter(
+        object_id=collection.id,
+        content_type=ContentType.objects.get_for_model(collection),
+    ).order_by("-timestamp")
+
+    context = {
+        "collection": collection,
+        "collection_history": collection_history,
+    }
+    return render(request, "data_collections/collection_history.html", context)
