@@ -846,7 +846,7 @@ def test_create_collection_from_visualisation_success(client, user):
     assert "Your changes have been saved" in response.content.decode(response.charset)
 
 
-def test_deleted_collection_redirects_user(client, user):
+def test_deleted_collection_presents_archived_page(client, user):
     collection = factories.CollectionFactory.create(
         name="test-collections",
         description="test collections description",
