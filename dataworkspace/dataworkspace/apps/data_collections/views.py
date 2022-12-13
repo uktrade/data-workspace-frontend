@@ -33,6 +33,8 @@ from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.notify import EmailSendFailureException, send_email
 
+from waffle.decorators import waffle_flag
+
 logger = logging.getLogger("app")
 
 
@@ -521,6 +523,7 @@ def remove_collection(request, collections_id):
     return HttpResponseRedirect(reverse("data_collections:collections-list"))
 
 
+@waffle_flag(settings.COLLECTIONS_FLAG)
 @require_http_methods(["GET"])
 def history_of_collection_changes(request, collections_id):
     collection = get_authorised_collection(request, collections_id)

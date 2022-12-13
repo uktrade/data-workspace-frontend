@@ -2,11 +2,13 @@ from unittest.mock import patch
 from mock import mock
 
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 
 from dataworkspace.tests import factories
 from dataworkspace.tests.conftest import get_client, get_user_data
 from dataworkspace.apps.data_collections.models import CollectionUserMembership, Collection
+from dataworkspace.apps.eventlog.models import EventLog
 
 
 def test_collection(client, user):
@@ -860,3 +862,37 @@ def test_deleted_collection_presents_archived_page(client, user):
         )
     )
     assert "Sorry, this collection has been deleted" in response.content.decode(response.charset)
+
+
+def test_collection_history_table_is_rendered(client, user):
+    collection = factories.CollectionFactory.create(
+        name="test-collections",
+        description="test collections description",
+        owner=user,
+    )
+
+    dataset = factories.DatacutDataSetFactory(published=True, name="Datacut dataset")
+
+    client.post(
+        reverse(
+            "data_collections:dataset_select_collection_for_membership",
+            kwargs={"dataset_id": dataset.id},
+        ),
+        data={"collection": collection.id},
+    )
+
+    response = client.get(
+        reverse(
+            "data_collections:history-of-collection-changes",
+            kwargs={"collections_id": collection.id},
+        )
+    )
+
+    events = EventLog.objects.filter(
+        event_type=EventLog.TYPE_ADD_DATASET_TO_COLLECTION,
+        object_id=collection.id,
+        content_type=ContentType.objects.get_for_model(collection),
+    )
+    assert len(events) == 1
+
+    assert str(events.first().event_type) in response.content.decode(response.charset)
