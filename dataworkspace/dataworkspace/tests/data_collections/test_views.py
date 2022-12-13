@@ -859,4 +859,4 @@ def test_deleted_collection_redirects_user(client, user):
             kwargs={"collections_id": collection.id},
         )
     )
-    assert "Sorry, this collection has been archived." in response.content.decode(response.charset)
+    assert "Sorry, this collection has been deleted" in response.content.decode(response.charset)
