@@ -102,7 +102,7 @@ class CollectionAdmin(CSPRichTextEditorMixin, DeletableTimeStampedUserAdmin):
         "datasets_count",
         "dashboards_count",
         "users_count",
-        "notes_available",
+        "notes_added",
         "owner",
         "deleted",
     )

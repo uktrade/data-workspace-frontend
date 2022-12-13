@@ -45,10 +45,10 @@ class Collection(DeletableTimestampedUserModel):
     def users_count(self, obj):
         return obj.users_count
 
-    def notes_available(self):
+    def notes_added(self):
         return bool(self.notes)
 
-    notes_available.boolean = True
+    notes_added.boolean = True
 
     datasets_count.admin_order_field = "datasets_count"
     datasets_count.description = "Datasets count"
@@ -59,8 +59,8 @@ class Collection(DeletableTimestampedUserModel):
     users_count.admin_order_field = "users_count"
     users_count.description = "Users count"
 
-    notes_available.order_field = "notes"
-    notes_available.description = "Notes truncated"
+    notes_added.order_field = "notes"
+    notes_added.description = "Notes truncated"
 
 
 class CollectionDatasetMembership(DeletableTimestampedUserModel):
