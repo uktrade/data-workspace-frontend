@@ -1,11 +1,46 @@
 {% extends '_main.html' %}
+{% load static core_tags %}
 
-{% block page_title %}
-  Collection history for {{ collection.name }}
+{% block page_title %}{{ collection.name }} history{% endblock %}
+
+{% block go_back %}
+  <a class="govuk-back-link" href="{% url "data_collections:collections_view" collections_id=collection.id %}">
+    Back
+  </a>
 {% endblock %}
 
-{% block go_back %}<a class="govuk-back-link govuk-link--no-visited-state" href="{{ collection.get_absolute_url }}">Back</a>{% endblock %}
-
 {% block content %}
-{{ collection_history }}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+            <h2 class="govuk-heading-l govuk-!-margin-top-8">
+                {{ collection.name }} history
+            </h2>
+        </div>
+        <div class="scrollable-table" tabindex="0">
+            <table class="govuk-table govuk-!-font-size-16">
+                <thead>
+                    <tr class="govuk-table__row">
+                        <th class="govuk-table__header">Date</th>
+                        <th class="govuk-table__header">User</th>
+                        <th class="govuk-table__header">Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in collection_history %}
+                        <tr class="govuk-table__row">
+                            <td>{{ row.timestamp|date:"d M Y" }}</td>
+                            <td>{{ row.user.email }}</td>
+                            <td>{{ row.get_event_type_display }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr class="govuk-table__row">
+                            <td colspan="{{ fields|length }}">
+                                This dataset doesn't have any events yet.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 {% endblock %}

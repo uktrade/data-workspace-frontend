@@ -2,6 +2,7 @@ import logging
 
 from csp.decorators import csp_update
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
 from django.db import transaction, IntegrityError
 from django.db.models import Prefetch, Q
 from django.contrib import messages
@@ -524,7 +525,10 @@ def remove_collection(request, collections_id):
 def history_of_collection_changes(request, collections_id):
     collection = get_authorised_collection(request, collections_id)
 
-    collection_history = EventLog.objects.filter(object_id=collection.id)
+    collection_history = EventLog.objects.filter(
+        object_id=collection.id,
+        content_type=ContentType.objects.get_for_model(collection),
+    ).order_by("-timestamp")
 
     context = {
         "collection": collection,
