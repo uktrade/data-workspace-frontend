@@ -13,38 +13,47 @@
 {% endblock head %}
 {% block main %}
   <div class="govuk-width-container">
-    <div class="govuk-grid-row">
-      <div class="govuk-grid-column-two-thirds">
-        <div class="govuk-breadcrumbs">
-          <ol class="govuk-breadcrumbs__list">
-            <li class="govuk-breadcrumbs__list-item">
-              <a class="govuk-breadcrumbs__link" href="/">Home</a>
-            </li>
-            <li class="govuk-breadcrumbs__list-item">
-              <a class="govuk-breadcrumbs__link" href="{% url 'data_collections:collections-list' %}">
-                Collections
-              </a>
-            </li>
-            <li class="govuk-breadcrumbs__list-item">
-              {{ source_object.name }}
-            </li>
-          </ol>
-        </div>
-      </div>
-      <div class="govuk-grid-column-one-third govuk-!-text-align-right govuk-!-margin-top-3">
-        <a href="{% url 'data_collections:collection-edit' collection.id %}" class="govuk-link">
-          Edit collection
-        </a>
-      </div>
-    </div>
-  </div>
-
-  <div class="govuk-width-container">
-    <main class="govuk-main-wrapper" id="main-content" role="main">
-      {% include 'partials/messages.html' %}
-
+    {% if source_object.deleted %}
+      <main class="govuk-main-wrapper" id="main-content" role="main">
+        <h1 class="govuk-heading-xl">
+          Sorry, this collection has been deleted
+        </h1>
+        <p class="govuk-body">Please <a class="govuk-link" href="{% url 'support' %}">contact us</a> to restore this
+          collection.</p>
+      </main>
+    {% else %}
       <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
+          <div class="govuk-breadcrumbs">
+            <ol class="govuk-breadcrumbs__list">
+              <li class="govuk-breadcrumbs__list-item">
+                <a class="govuk-breadcrumbs__link" href="/">Home</a>
+              </li>
+              <li class="govuk-breadcrumbs__list-item">
+                <a class="govuk-breadcrumbs__link" href="{% url 'data_collections:collections-list' %}">
+                  Collections
+                </a>
+              </li>
+              <li class="govuk-breadcrumbs__list-item">
+                {{ source_object.name }}
+              </li>
+            </ol>
+          </div>
+        </div>
+        <div class="govuk-grid-column-one-third govuk-!-text-align-right govuk-!-margin-top-3">
+          <a href="{% url 'data_collections:collection-edit' collection.id %}" class="govuk-link">
+            Edit collection
+          </a>
+        </div>
+      </div>
+      </div>
+
+      <div class="govuk-width-container">
+      <main class="govuk-main-wrapper" id="main-content" role="main">
+        {% include 'partials/messages.html' %}
+
+        <div class="govuk-grid-row">
+          <div class="govuk-grid-column-two-thirds">
           <span class="govuk-caption-xl">
             {% if user_memberships.count > 0 %}
               Shared
@@ -52,131 +61,149 @@
               Personal
             {% endif %} collection
           </span>
-          <h1 class="govuk-heading-xl">{{ source_object.name }}</h1>
-          <p class="govuk-body">{{ source_object.description|linebreaksbr }}</p>
+            <h1 class="govuk-heading-xl">{{ source_object.name }}</h1>
+            <p class="govuk-body">{{ source_object.description|linebreaksbr }}</p>
+          </div>
         </div>
-      </div>
 
-      <div class="govuk-grid-row">
-        <div class="govuk-grid-column-two-thirds">
-          <h2 class="govuk-heading-l">Data</h2>
-          {% for dataset_collection in dataset_collections %}
-          <div class="search-result govuk-!-margin-bottom-4">
-            <div class="dw-row">
-              <h3 class="govuk-heading-m">
-                <a class="govuk-link dataset-link"
-                   href="{% if dataset_collection.dataset.type == 0 %}{% url "datasets:dataset_detail" dataset_uuid=dataset_collection.dataset.referencedataset_set.first.uuid %}#
-                       {{ dataset_collection.dataset.slug }}{% else %}{% url "datasets:dataset_detail" dataset_uuid=dataset_collection.dataset.id %}#{{ dataset_collection.dataset.slug }}{% endif %}">{{ dataset_collection.dataset.name }}</a>
-              </h3>
-              <a href="{% url 'data_collections:collection_data_membership_confirm_removal' collections_id=source_object.id data_membership_id=dataset_collection.id %}" class="govuk-link govuk-link--no-visited-state govuk-!-margin-top-1 govuk-!-margin-left-4">Remove</a>
-            </div>
-            <p class="govuk-body">{{ dataset_collection.dataset.short_description }}</p>
-            <div class="govuk-body">
-              <dl>
-                <dt>Data type:</dt>
-                <dd>{{ dataset_collection.dataset.get_type_display }}</dd>
-                <dt>Source:</dt>
-                <dd>
-                  {% for source in dataset_collection.dataset.sources %}
-                    <a class="govuk-link"
-                       href="{% url "datasets:find_datasets" %}?source={{ source.id }}">{{ source.name }}</a>
-                    {% empty %}
-                    N/A
-                  {% endfor %}
-                </dd>
-                {% if dataset_collection.dataset.topics %}
-                  <dt>Topics:</dt>
-                  <dd>
-                    {% for topic in dataset_collection.dataset.topics %}
-                      <a class="govuk-link"
-                         href="{% url "datasets:find_datasets" %}?topic={{ topic.id }}">{{ topic.name }}</a>
-                      {% empty %}
-                      &nbsp;
-                    {% endfor %}
-                  </dd>
-                {% endif %}
-              </dl>
-            </div>
-          </div>
-          {% endfor %}
-          <p class="govuk-body" style="margin-bottom: 40px"><a class="govuk-link govuk-link--no-visited-state" href="{% url 'datasets:find_datasets' %}?q=&sort=relevance&data_type=1&data_type=2&data_type=0">Search for data</a> you'd like to add.</p>
-          <h2 class="govuk-heading-l">Dashboards</h2>
-          {% for visualisation_collection in visualisation_collections %}
-          <div class="search-result govuk-!-margin-bottom-4">
-            <div class="dw-row">
-              <h3 class="govuk-heading-m">
-                <a class="govuk-link dataset-link"
-                 href="{% url "datasets:dataset_detail" dataset_uuid=visualisation_collection.visualisation.id %}">{{ visualisation_collection.visualisation.name }}</a>
-              </h3>
-              <a href="{% url 'data_collections:collection_visualisation_membership_confirm_removal' collections_id=source_object.id visualisation_membership_id=visualisation_collection.id %}" class="govuk-link govuk-link--no-visited-state govuk-!-margin-top-1 govuk-!-margin-left-4">Remove</a>
-            </div>
-            <p class="govuk-body">{{ visualisation_collection.visualisation.short_description }}</p>
-            <div class="govuk-body">
-              <dl>
-                <dt>Data type:</dt>
-                <dd>{{ visualisation_collection.visualisation.get_type_display }}</dd>
-                <dt>Source:</dt>
-                <dd>
-                  {% for source in visualisation_collection.visualisation.sources %}
-                    <a class="govuk-link"
-                       href="{% url "datasets:find_datasets" %}?source={{ source.id }}">{{ source.name }}</a>
-                    {% empty %}
-                    N/A
-                  {% endfor %}
-                </dd>
-                {% if visualisation_collection.visualisation.topics %}
-                  <dt>Topics:</dt>
-                  <dd>
-                    {% for topic in visualisation_collection.visualisation.topics %}
-                      <a class="govuk-link"
-                         href="{% url "datasets:find_datasets" %}?topic={{ topic.id }}">{{ topic.name }}</a>
-                      {% empty %}
-                      &nbsp;
-                    {% endfor %}
-                  </dd>
-                {% endif %}
-              </dl>
-            </div>
-          </div>
-          {% endfor %}
-          <p class="govuk-body"><a class="govuk-link govuk-link--no-visited-state" href="{% url 'datasets:find_datasets' %}?q=&sort=relevance&data_type=3">Search for dashboards</a> you'd like to add.</p>
-          <h2 class="govuk-heading-l govuk-!-margin-bottom-3">Notes</h2>
-          <p class="govuk-body govuk-!-margin-bottom-4">
-            <a class="govuk-link govuk-link--no-visited-state" href="{% url 'data_collections:collection-notes' source_object.id %}">Edit notes</a>
-          </p>
-          {% if source_object.notes %}
-            <div class="app-rich-text">
-              {{ source_object.notes|design_system_rich_text }}
-            </div>
-          {% else %}
-              <p class="govuk-body">
-                This collection does not have any notes. Use notes to provide additional context or information for yourself or others.
-              </p>
-          {% endif %}
-        </div>
-        <div class="govuk-grid-column-one-third govuk-!-margin-bottom-2">
-          <h2 class="govuk-heading-s govuk-!-margin-bottom-1">Collection owner</h2>
-          <p class="govuk-body">{{ source_object.owner.get_full_name|default_if_none:"Not assigned" }}<br>{% if source_object.owner %}(<a class="govuk-link govuk-link--no-visited-state" href="mailto:{{ source_object.owner.email }}">{{ source_object.owner.email }}</a>){% endif %}</p>
-        </div>
-        {% if user_memberships.count > 0 %}
-          <div class="govuk-grid-column-one-third govuk-!-margin-bottom-2">
-            <h2 class="govuk-heading-s govuk-!-margin-bottom-1">Collection users</h2>
-            <p class="govuk-body">
-              {% for membership in user_memberships|slice:":5"%}
-                  {{ membership.user.get_full_name }}{% if not forloop.last %}, {% endif %}
-              {% endfor %}
-            {% if user_memberships.count > 5 %}
-            and {{ user_memberships.count| add:"-5"}} more
-            {% endif %}
+        <div class="govuk-grid-row">
+          <div class="govuk-grid-column-two-thirds">
+            <h2 class="govuk-heading-l">Data</h2>
+            {% for dataset_collection in dataset_collections %}
+              <div class="search-result govuk-!-margin-bottom-4">
+                <div class="dw-row">
+                  <h3 class="govuk-heading-m">
+                    <a class="govuk-link dataset-link"
+                       href="
+                         {% if dataset_collection.dataset.type == 0 %}{% url "datasets:dataset_detail" dataset_uuid=dataset_collection.dataset.referencedataset_set.first.uuid %}#
+
+                           {{ dataset_collection.dataset.slug }}{% else %}{% url "datasets:dataset_detail" dataset_uuid=dataset_collection.dataset.id %}#{{ dataset_collection.dataset.slug }}{% endif %}">{{ dataset_collection.dataset.name }}</a>
+                  </h3>
+                  <a
+                    href="{% url 'data_collections:collection_data_membership_confirm_removal' collections_id=source_object.id data_membership_id=dataset_collection.id %}"
+                    class="govuk-link govuk-link--no-visited-state govuk-!-margin-top-1 govuk-!-margin-left-4">Remove</a>
+                </div>
+                <p class="govuk-body">{{ dataset_collection.dataset.short_description }}</p>
+                <div class="govuk-body">
+                  <dl>
+                    <dt>Data type:</dt>
+                    <dd>{{ dataset_collection.dataset.get_type_display }}</dd>
+                    <dt>Source:</dt>
+                    <dd>
+                      {% for source in dataset_collection.dataset.sources %}
+                        <a class="govuk-link"
+                           href="{% url "datasets:find_datasets" %}?source={{ source.id }}">{{ source.name }}</a>
+                        {% empty %}
+                        N/A
+                      {% endfor %}
+                    </dd>
+                    {% if dataset_collection.dataset.topics %}
+                      <dt>Topics:</dt>
+                      <dd>
+                        {% for topic in dataset_collection.dataset.topics %}
+                          <a class="govuk-link"
+                             href="{% url "datasets:find_datasets" %}?topic={{ topic.id }}">{{ topic.name }}</a>
+                          {% empty %}
+                          &nbsp;
+                        {% endfor %}
+                      </dd>
+                    {% endif %}
+                  </dl>
+                </div>
+              </div>
+            {% endfor %}
+            <p class="govuk-body" style="margin-bottom: 40px"><a class="govuk-link govuk-link--no-visited-state"
+                                                                 href="{% url 'datasets:find_datasets' %}?q=&sort=relevance&data_type=1&data_type=2&data_type=0">Search
+              for data</a> you'd like to add.</p>
+            <h2 class="govuk-heading-l">Dashboards</h2>
+            {% for visualisation_collection in visualisation_collections %}
+              <div class="search-result govuk-!-margin-bottom-4">
+                <div class="dw-row">
+                  <h3 class="govuk-heading-m">
+                    <a class="govuk-link dataset-link"
+                       href="{% url "datasets:dataset_detail" dataset_uuid=visualisation_collection.visualisation.id %}">{{ visualisation_collection.visualisation.name }}</a>
+                  </h3>
+                  <a
+                    href="{% url 'data_collections:collection_visualisation_membership_confirm_removal' collections_id=source_object.id visualisation_membership_id=visualisation_collection.id %}"
+                    class="govuk-link govuk-link--no-visited-state govuk-!-margin-top-1 govuk-!-margin-left-4">Remove</a>
+                </div>
+                <p class="govuk-body">{{ visualisation_collection.visualisation.short_description }}</p>
+                <div class="govuk-body">
+                  <dl>
+                    <dt>Data type:</dt>
+                    <dd>{{ visualisation_collection.visualisation.get_type_display }}</dd>
+                    <dt>Source:</dt>
+                    <dd>
+                      {% for source in visualisation_collection.visualisation.sources %}
+                        <a class="govuk-link"
+                           href="{% url "datasets:find_datasets" %}?source={{ source.id }}">{{ source.name }}</a>
+                        {% empty %}
+                        N/A
+                      {% endfor %}
+                    </dd>
+                    {% if visualisation_collection.visualisation.topics %}
+                      <dt>Topics:</dt>
+                      <dd>
+                        {% for topic in visualisation_collection.visualisation.topics %}
+                          <a class="govuk-link"
+                             href="{% url "datasets:find_datasets" %}?topic={{ topic.id }}">{{ topic.name }}</a>
+                          {% empty %}
+                          &nbsp;
+                        {% endfor %}
+                      </dd>
+                    {% endif %}
+                  </dl>
+                </div>
+              </div>
+            {% endfor %}
+            <p class="govuk-body"><a class="govuk-link govuk-link--no-visited-state"
+                                     href="{% url 'datasets:find_datasets' %}?q=&sort=relevance&data_type=3">Search for
+              dashboards</a> you'd like to add.</p>
+            <h2 class="govuk-heading-l govuk-!-margin-bottom-3">Notes</h2>
+            <p class="govuk-body govuk-!-margin-bottom-4">
+              <a class="govuk-link govuk-link--no-visited-state"
+                 href="{% url 'data_collections:collection-notes' source_object.id %}">Edit notes</a>
             </p>
+            {% if source_object.notes %}
+              <div class="app-rich-text">
+                {{ source_object.notes|design_system_rich_text }}
+              </div>
+            {% else %}
+              <p class="govuk-body">
+                This collection does not have any notes. Use notes to provide additional context or information for
+                yourself or others.
+              </p>
+            {% endif %}
           </div>
-        {% endif %}
-        <div class="govuk-grid-column-one-third govuk-!-margin-bottom-2">
-          <p class="govuk-body"><a class="govuk-link govuk-link--no-visited-state" href="{% url 'data_collections:collection-users' source_object.id %}">View and edit collection users</a></p>
+          <div class="govuk-grid-column-one-third govuk-!-margin-bottom-2">
+            <h2 class="govuk-heading-s govuk-!-margin-bottom-1">Collection owner</h2>
+            <p class="govuk-body">{{ source_object.owner.get_full_name|default_if_none:"Not assigned" }}<br>
+              {% if source_object.owner %}(<a class="govuk-link govuk-link--no-visited-state"
+                                              href="mailto:{{ source_object.owner.email }}">{{ source_object.owner.email }}</a>
+                ){% endif %}</p>
+          </div>
+          {% if user_memberships.count > 0 %}
+            <div class="govuk-grid-column-one-third govuk-!-margin-bottom-2">
+              <h2 class="govuk-heading-s govuk-!-margin-bottom-1">Collection users</h2>
+              <p class="govuk-body">
+                {% for membership in user_memberships|slice:":5" %}
+                  {{ membership.user.get_full_name }}{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+                {% if user_memberships.count > 5 %}
+                  and {{ user_memberships.count| add:"-5"}} more
+                {% endif %}
+              </p>
+            </div>
+          {% endif %}
+          <div class="govuk-grid-column-one-third govuk-!-margin-bottom-2">
+            <p class="govuk-body"><a class="govuk-link govuk-link--no-visited-state"
+                                     href="{% url 'data_collections:collection-users' source_object.id %}">View and edit
+              collection users</a></p>
+          </div>
         </div>
-      </div>
-    </main>
-  </div>
+      </main>
+    {% endif %}
+    </div>
 {% endblock %}
 {% block footer_scripts %}
   {{ block.super }}

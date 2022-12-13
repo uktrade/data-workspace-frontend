@@ -36,6 +36,18 @@ logger = logging.getLogger("app")
 
 
 def get_authorised_collections(request):
+    collections = Collection.objects.all().order_by("name")
+    return (
+        collections.filter(
+            Q(owner=request.user)
+            | Q(user_memberships__user=request.user, user_memberships__deleted=False)
+        )
+        .order_by("name")
+        .distinct()
+    )
+
+
+def get_only_live_authorised_collections(request):
     collections = Collection.objects.live().order_by("name")
     return (
         collections.filter(
@@ -61,6 +73,7 @@ class CollectionsDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         source_object = self.get_object()
         context["source_object"] = source_object
+
         context["dataset_collections"] = (
             source_object.dataset_collections.filter(deleted=False)
             .prefetch_related(
@@ -199,7 +212,7 @@ def select_collection_for_membership(
     request, dataset_class, membership_model_class, membership_model_relationship_name, dataset_id
 ):
     dataset = get_object_or_404(dataset_class.objects.live().filter(published=True), pk=dataset_id)
-    user_collections = get_authorised_collections(request)
+    user_collections = get_only_live_authorised_collections(request)
     if request.method == "POST":
         form = SelectCollectionForMembershipForm(
             request.POST,
@@ -445,7 +458,7 @@ class CollectionListView(ListView):
     context_object_name = "collections"
 
     def get_queryset(self):
-        return get_authorised_collections(self.request)
+        return get_only_live_authorised_collections(self.request)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

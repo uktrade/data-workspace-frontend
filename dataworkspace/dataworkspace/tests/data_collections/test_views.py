@@ -24,24 +24,6 @@ def test_collection(client, user):
     assert "test collections description" in response.content.decode(response.charset)
 
 
-def test_deleted_raises_404(client, user):
-    c = factories.CollectionFactory.create(
-        name="test-collections",
-        description="test collections description",
-        deleted=True,
-        owner=user,
-    )
-
-    response = client.get(
-        reverse(
-            "data_collections:collections_view",
-            kwargs={"collections_id": c.id},
-        )
-    )
-
-    assert response.status_code == 404
-
-
 def test_unauthorised_user_raises_404(client):
     c = factories.CollectionFactory.create(
         name="test-collections", description="test collections description"
@@ -862,3 +844,19 @@ def test_create_collection_from_visualisation_success(client, user):
     assert "Collection name" in response.content.decode(response.charset)
     assert "Some description" in response.content.decode(response.charset)
     assert "Your changes have been saved" in response.content.decode(response.charset)
+
+
+def test_deleted_collection_presents_archived_page(client, user):
+    collection = factories.CollectionFactory.create(
+        name="test-collections",
+        description="test collections description",
+        owner=user,
+        deleted=True,
+    )
+    response = client.get(
+        reverse(
+            "data_collections:collections_view",
+            kwargs={"collections_id": collection.id},
+        )
+    )
+    assert "Sorry, this collection has been deleted" in response.content.decode(response.charset)
