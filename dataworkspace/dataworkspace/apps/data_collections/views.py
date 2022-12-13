@@ -14,6 +14,8 @@ from django.views.decorators.http import require_http_methods
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.conf import settings
 
+from waffle.decorators import waffle_flag
+
 from dataworkspace.apps.data_collections.forms import (
     CollectionEditForm,
     CollectionNotesForm,
@@ -32,8 +34,6 @@ from dataworkspace.apps.datasets.models import Tag
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.notify import EmailSendFailureException, send_email
-
-from waffle.decorators import waffle_flag
 
 logger = logging.getLogger("app")
 
