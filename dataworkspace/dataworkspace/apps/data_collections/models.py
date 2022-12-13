@@ -83,7 +83,9 @@ class CollectionDatasetMembership(DeletableTimestampedUserModel):
         with transaction.atomic():
             super().delete(**kwargs)
             log_event(
-                deleted_by, EventLog.TYPE_REMOVE_DATASET_FROM_COLLECTION, related_object=self
+                deleted_by,
+                EventLog.TYPE_REMOVE_DATASET_FROM_COLLECTION,
+                related_object=self.collection,
             )
 
 
@@ -109,7 +111,9 @@ class CollectionVisualisationCatalogueItemMembership(DeletableTimestampedUserMod
         with transaction.atomic():
             super().delete(**kwargs)
             log_event(
-                deleted_by, EventLog.TYPE_REMOVE_VISUALISATION_FROM_COLLECTION, related_object=self
+                deleted_by,
+                EventLog.TYPE_REMOVE_VISUALISATION_FROM_COLLECTION,
+                related_object=self.collection,
             )
 
 
