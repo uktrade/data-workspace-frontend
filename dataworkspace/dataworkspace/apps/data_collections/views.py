@@ -110,6 +110,12 @@ class CollectionsDetailView(DetailView):
             "user__first_name", "user__last_name"
         )
 
+        log_event(
+            self.request.user,
+            EventLog.TYPE_COLLECTION_VIEW,
+            source_object,
+        )
+
         return context
 
 
@@ -248,7 +254,7 @@ def select_collection_for_membership(
                 EventLog.TYPE_ADD_VISUALISATION_TO_COLLECTION
                 if dataset.type == DataSetType.VISUALISATION
                 else EventLog.TYPE_ADD_DATASET_TO_COLLECTION,
-                related_object=dataset,
+                related_object=user_collections.get(pk=form.cleaned_data["collection"]),
             )
 
             return redirect(
