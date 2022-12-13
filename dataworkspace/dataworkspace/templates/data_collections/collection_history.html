@@ -1,0 +1,11 @@
+{% extends '_main.html' %}
+
+{% block page_title %}
+  Collection history for {{ collection.name }}
+{% endblock %}
+
+{% block go_back %}<a class="govuk-back-link govuk-link--no-visited-state" href="{{ collection.get_absolute_url }}">Back</a>{% endblock %}
+
+{% block content %}
+{{ collection_history }}
+{% endblock %}

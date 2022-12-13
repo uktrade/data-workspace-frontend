@@ -512,3 +512,16 @@ def remove_collection(request, collections_id):
         collection.save()
         messages.success(request, f"{collection.name} collection has been deleted")
     return HttpResponseRedirect(reverse("data_collections:collections-list"))
+
+
+@require_http_methods(["GET"])
+def history_of_collection_changes(request, collections_id):
+    collection = get_authorised_collection(request, collections_id)
+
+    collection_history = EventLog.objects.filter(object_id=collection.id)
+
+    context = {
+        "collection": collection,
+        "collection_history": collection_history,
+    }
+    return render(request, "data_collections/collection_history.html", context)
