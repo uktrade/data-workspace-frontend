@@ -115,4 +115,9 @@ urlpatterns = [
         login_required(views.history_of_collection_changes),
         name="history-of-collection-changes",
     ),
+    path(
+        "<uuid:collections_id>/request-access-completed",
+        login_required(views.request_access_completed),
+        name="request-access-completed",
+    ),
 ]

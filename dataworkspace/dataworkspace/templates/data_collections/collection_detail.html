@@ -28,9 +28,8 @@
   <link rel="stylesheet" href="{% static 'assets/vendor/highlight/styles/a11y-light.css' %}">
 {% endblock head %}
 {% block main %}
-  <div class="govuk-width-container">
-  {% if source_object %}
-  {% block breadcrumbs %}
+          <main class="govuk-main-wrapper" id="main-content" role="main">
+  {% if not source_object %}
     <div class="govuk-breadcrumbs">
       <ol class="govuk-breadcrumbs__list">
         <li class="govuk-breadcrumbs__list-item">
@@ -38,9 +37,7 @@
         </li>
       </ol>
     </div>
-  {% endblock %}
-
-  {% block content %}
+        <div class="govuk-width-container">
     <h1 class="govuk-heading-xl govuk-!-margin-bottom-3">Request access to collection</h1>
     <span class="govuk-caption-xl govuk-!-margin-bottom-7">
       You need to fill in this screen to request access to a collection
@@ -61,16 +58,17 @@
           </div>
         </fieldset>
       </form>
-  {% endblock %}
+  {% else %}
     {% if source_object.deleted %}
-      <main class="govuk-main-wrapper" id="main-content" role="main">
+          <div class="govuk-width-container">
         <h1 class="govuk-heading-xl">
           Sorry, this collection has been deleted
         </h1>
         <p class="govuk-body">Please <a class="govuk-link" href="{% url 'support' %}">contact us</a> to restore this
           collection.</p>
-      </main>
+          </div>
     {% else %}
+          <div class="govuk-width-container">
       <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
           <div class="govuk-breadcrumbs">
@@ -96,10 +94,7 @@
           </a>
         </div>
       </div>
-      </div>
 
-      <div class="govuk-width-container">
-      <main class="govuk-main-wrapper" id="main-content" role="main">
         {% include 'partials/messages.html' %}
 
         <div class="govuk-grid-row">
@@ -251,10 +246,10 @@
               collection users</a></p>
           </div>
         </div>
-      </main>
+          </div>
     {% endif %}
     {% endif %}
-    </div>
+          </main>
 {% endblock %}
 {% block footer_scripts %}
   {{ block.super }}

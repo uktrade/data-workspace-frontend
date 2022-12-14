@@ -77,7 +77,9 @@ class CollectionsDetailView(DetailView):
     template_name = "data_collections/collection_detail.html"
 
     def get_object(self, queryset=None):
-        return get_authorised_collections_or_return_none(self.request, self.kwargs["collections_id"])
+        return get_authorised_collections_or_return_none(
+            self.request, self.kwargs["collections_id"]
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -547,3 +549,10 @@ def history_of_collection_changes(request, collections_id):
         "collection_history": collection_history,
     }
     return render(request, "data_collections/collection_history.html", context)
+
+
+@require_http_methods(["POST"])
+def request_access_completed(request, collections_id):
+    collection = get_authorised_collection(request, collections_id)
+
+    #todo - build the request access post
