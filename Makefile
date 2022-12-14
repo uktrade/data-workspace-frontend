@@ -31,13 +31,15 @@ docker-build:
 
 
 .PHONY: docker-test-unit
+docker-test-unit: TESTS ?= /dataworkspace/dataworkspace
 docker-test-unit: docker-build
-	docker-compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test pytest /dataworkspace/dataworkspace
+	docker-compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test pytest $(TESTS)
 
 
 .PHONY: docker-test-integration
+docker-test-integration: TESTS ?= test/
 docker-test-integration: docker-build
-	docker-compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test pytest test/
+	docker-compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test pytest $(TESTS)
 
 
 .PHONY: docker-test
