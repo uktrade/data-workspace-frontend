@@ -29,7 +29,39 @@
 {% endblock head %}
 {% block main %}
   <div class="govuk-width-container">
-    {% if source_object %}
+  {% if source_object %}
+  {% block breadcrumbs %}
+    <div class="govuk-breadcrumbs">
+      <ol class="govuk-breadcrumbs__list">
+        <li class="govuk-breadcrumbs__list-item">
+          <a class="govuk-back-link" href="/">Back</a>
+        </li>
+      </ol>
+    </div>
+  {% endblock %}
+
+  {% block content %}
+    <h1 class="govuk-heading-xl govuk-!-margin-bottom-3">Request access to collection</h1>
+    <span class="govuk-caption-xl govuk-!-margin-bottom-7">
+      You need to fill in this screen to request access to a collection
+    </span>
+    <p class="govuk-label govuk-!-font-weight-bold govuk-!-margin-bottom-3">Collection Name</p>
+    <p class="govuk-body govuk-!-margin-bottom-8">{{ source_object }}</p>
+    <p class="govuk-label govuk-!-font-weight-bold govuk-!-margin-bottom-3">Collection Owner</p>
+    <p class="govuk-body govuk-!-margin-bottom-8">{{ source_object.owner.get_full_name}}</p>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        <fieldset class="govuk-fieldset">
+          {{ form.id }}
+          {{ form.contact_email }}
+          <div class="govuk-button-group">
+            <button type="submit" class="govuk-button" data-prevent-double-click="true">Continue</button>
+            <a class="govuk-link" href="#">Cancel</a>
+          </div>
+        </fieldset>
+      </form>
+  {% endblock %}
     {% if source_object.deleted %}
       <main class="govuk-main-wrapper" id="main-content" role="main">
         <h1 class="govuk-heading-xl">
