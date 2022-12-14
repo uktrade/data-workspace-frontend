@@ -4,6 +4,22 @@
 {% load core_filters %}
 {% load static %}
 
+{% block initialGTMDataLayer %}
+  {{ block.super }}
+  <script nonce='{{ request.csp_nonce }}'>
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById("collection-history-link").addEventListener("click", function() {
+        window.dataLayer.push({
+          'event': 'GAEvent',
+          'eventCategory': 'Collection',
+          'eventAction': 'Collection history',
+          'eventLabel': '{{ collection.name }} ({{ collection.id }})'
+        })
+      });
+    });
+  </script>
+{% endblock %}
+
 {% block page_title %}
   {{ source_object.name }}
 {% endblock %}
@@ -41,6 +57,9 @@
           </div>
         </div>
         <div class="govuk-grid-column-one-third govuk-!-text-align-right govuk-!-margin-top-3">
+          <a href="{% url 'data_collections:history-of-collection-changes' collection.id %}" class="govuk-link govuk-!-margin-right-3" id="collection-history-link">
+            Collection history
+          </a>
           <a href="{% url 'data_collections:collection-edit' collection.id %}" class="govuk-link">
             Edit collection
           </a>
