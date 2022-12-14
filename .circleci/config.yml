@@ -58,9 +58,9 @@ jobs:
       - run:
           name: Run test
           command: |
+            TEST=$(circleci tests glob "dataworkspace/tests/*/*.py" | circleci tests split --split-by=timings)
             touch .envs/dev.env
             make docker-test-unit
-            TEST=$(circleci tests glob "dataworkspace/tests/*/*.py" | circleci tests split --split-by=timings)
 
   docker-test-integration:
     docker:
@@ -80,10 +80,9 @@ jobs:
       - run:
           name: Run test
           command: |
+            TEST=$(circleci tests glob "dataworkspace/tests/*/*.py" | circleci tests split --split-by=timings)
             touch .envs/dev.env
             make docker-test-integration
-            TEST=$(circleci tests glob "dataworkspace/tests/*/*.py" | circleci tests split --split-by=timings)
-
 
   check-linting:
     docker:
