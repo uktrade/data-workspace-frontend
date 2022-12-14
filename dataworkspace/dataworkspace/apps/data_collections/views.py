@@ -66,58 +66,66 @@ def get_authorised_collection(request, collection_id):
     return get_object_or_404(get_authorised_collections(request), id=collection_id)
 
 
+def get_authorised_collections_or_return_none(request, collection_id):
+    try:
+        return get_authorised_collections(request).get(id=collection_id)
+    except Collection.DoesNotExist:
+        return None
+
+
 class CollectionsDetailView(DetailView):
     template_name = "data_collections/collection_detail.html"
 
     def get_object(self, queryset=None):
-        return get_authorised_collection(self.request, self.kwargs["collections_id"])
+        return get_authorised_collections_or_return_none(self.request, self.kwargs["collections_id"])
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         source_object = self.get_object()
-        context["source_object"] = source_object
+        if source_object:
+            context["source_object"] = source_object
 
-        context["dataset_collections"] = (
-            source_object.dataset_collections.filter(deleted=False)
-            .prefetch_related(
-                Prefetch(
-                    "dataset__tags",
-                    queryset=Tag.objects.filter(type=TagType.SOURCE),
-                    to_attr="sources",
-                ),
-                Prefetch(
-                    "dataset__tags",
-                    queryset=Tag.objects.filter(type=TagType.TOPIC),
-                    to_attr="topics",
-                ),
+            context["dataset_collections"] = (
+                source_object.dataset_collections.filter(deleted=False)
+                .prefetch_related(
+                    Prefetch(
+                        "dataset__tags",
+                        queryset=Tag.objects.filter(type=TagType.SOURCE),
+                        to_attr="sources",
+                    ),
+                    Prefetch(
+                        "dataset__tags",
+                        queryset=Tag.objects.filter(type=TagType.TOPIC),
+                        to_attr="topics",
+                    ),
+                )
+                .order_by("dataset__name")
             )
-            .order_by("dataset__name")
-        )
-        context["visualisation_collections"] = (
-            source_object.visualisation_collections.filter(deleted=False)
-            .prefetch_related(
-                Prefetch(
-                    "visualisation__tags",
-                    queryset=Tag.objects.filter(type=TagType.SOURCE),
-                    to_attr="sources",
-                ),
-                Prefetch(
-                    "visualisation__tags",
-                    queryset=Tag.objects.filter(type=TagType.TOPIC),
-                    to_attr="topics",
-                ),
+            context["visualisation_collections"] = (
+                source_object.visualisation_collections.filter(deleted=False)
+                .prefetch_related(
+                    Prefetch(
+                        "visualisation__tags",
+                        queryset=Tag.objects.filter(type=TagType.SOURCE),
+                        to_attr="sources",
+                    ),
+                    Prefetch(
+                        "visualisation__tags",
+                        queryset=Tag.objects.filter(type=TagType.TOPIC),
+                        to_attr="topics",
+                    ),
+                )
+                .order_by("visualisation__name")
             )
-            .order_by("visualisation__name")
-        )
-        context["user_memberships"] = source_object.user_memberships.live().order_by(
-            "user__first_name", "user__last_name"
-        )
+            context["user_memberships"] = source_object.user_memberships.live().order_by(
+                "user__first_name", "user__last_name"
+            )
 
-        log_event(
-            self.request.user,
-            EventLog.TYPE_COLLECTION_VIEW,
-            source_object,
-        )
+            log_event(
+                self.request.user,
+                EventLog.TYPE_COLLECTION_VIEW,
+                source_object,
+            )
 
         return context
 

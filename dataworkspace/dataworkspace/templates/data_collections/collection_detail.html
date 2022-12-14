@@ -29,6 +29,7 @@
 {% endblock head %}
 {% block main %}
   <div class="govuk-width-container">
+    {% if source_object %}
     {% if source_object.deleted %}
       <main class="govuk-main-wrapper" id="main-content" role="main">
         <h1 class="govuk-heading-xl">
@@ -219,6 +220,7 @@
           </div>
         </div>
       </main>
+    {% endif %}
     {% endif %}
     </div>
 {% endblock %}
