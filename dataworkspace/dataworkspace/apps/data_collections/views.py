@@ -529,6 +529,7 @@ def history_of_collection_changes(request, collections_id):
     collection = get_authorised_collection(request, collections_id)
 
     collection_history = EventLog.objects.filter(
+        ~Q(event_type=EventLog.TYPE_COLLECTION_VIEW),
         object_id=collection.id,
         content_type=ContentType.objects.get_for_model(collection),
     ).order_by("-timestamp")
