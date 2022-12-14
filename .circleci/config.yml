@@ -80,7 +80,7 @@ jobs:
       - run:
           name: Run test
           command: |
-            TEST=$(circleci tests glob "dataworkspace/tests/*/*.py" | circleci tests split --split-by=timings)
+            TEST=$(circleci tests glob "dataworkspace/dataworkspace/tests/*/*.py" | circleci tests split --split-by=timings)
             touch .envs/dev.env
             make docker-test-integration
 
