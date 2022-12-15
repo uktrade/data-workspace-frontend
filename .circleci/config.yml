@@ -64,7 +64,7 @@ jobs:
   docker-test-integration:
     docker:
       - image: circleci/python:3.9
-    parallelism: 4
+    parallelism: 3
     steps:
       - checkout
       - setup_remote_docker:
