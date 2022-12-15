@@ -7,8 +7,8 @@
 {% block initialGTMDataLayer %}
   {{ block.super }}
   <script nonce='{{ request.csp_nonce }}'>
-    document.addEventListener('DOMContentLoaded', function() {
-      document.getElementById("collection-history-link").addEventListener("click", function() {
+    document.addEventListener('DOMContentLoaded', function () {
+      document.getElementById("collection-history-link").addEventListener("click", function () {
         window.dataLayer.push({
           'event': 'GAEvent',
           'eventCategory': 'Collection',
@@ -28,26 +28,25 @@
   <link rel="stylesheet" href="{% static 'assets/vendor/highlight/styles/a11y-light.css' %}">
 {% endblock head %}
 {% block main %}
-          <main class="govuk-main-wrapper" id="main-content" role="main">
   {% if not source_object %}
-    <div class="govuk-breadcrumbs">
-      <ol class="govuk-breadcrumbs__list">
-        <li class="govuk-breadcrumbs__list-item">
-          <a class="govuk-back-link" href="/">Back</a>
-        </li>
-      </ol>
-    </div>
-        <div class="govuk-width-container">
-    <h1 class="govuk-heading-xl govuk-!-margin-bottom-3">Request access to collection</h1>
-    <span class="govuk-caption-xl govuk-!-margin-bottom-7">
+    <div class="govuk-width-container">
+      <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-back-link" href="/">Back</a>
+          </li>
+        </ol>
+      </div>
+      <h1 class="govuk-heading-xl govuk-!-margin-bottom-3">Request access to collection</h1>
+      <span class="govuk-caption-xl govuk-!-margin-bottom-7">
       You need to fill in this screen to request access to a collection
     </span>
-    <p class="govuk-label govuk-!-font-weight-bold govuk-!-margin-bottom-3">Collection Name</p>
-    <p class="govuk-body govuk-!-margin-bottom-8">{{ source_object }}</p>
-    <p class="govuk-label govuk-!-font-weight-bold govuk-!-margin-bottom-3">Collection Owner</p>
-    <p class="govuk-body govuk-!-margin-bottom-8">{{ source_object.owner.get_full_name}}</p>
+      <p class="govuk-label govuk-!-font-weight-bold govuk-!-margin-bottom-3">Collection Name</p>
+      <p class="govuk-body govuk-!-margin-bottom-8">{{ source_object }}</p>
+      <p class="govuk-label govuk-!-font-weight-bold govuk-!-margin-bottom-3">Collection Owner</p>
+      <p class="govuk-body govuk-!-margin-bottom-8">{{ source_object.owner.get_full_name }}</p>
 
-    <form method="post" novalidate>
+      <form method="post" novalidate>
         {% csrf_token %}
         <fieldset class="govuk-fieldset">
           {{ form.id }}
@@ -58,42 +57,44 @@
           </div>
         </fieldset>
       </form>
+    </div>
   {% else %}
     {% if source_object.deleted %}
-          <div class="govuk-width-container">
+      <div class="govuk-width-container">
         <h1 class="govuk-heading-xl">
           Sorry, this collection has been deleted
         </h1>
         <p class="govuk-body">Please <a class="govuk-link" href="{% url 'support' %}">contact us</a> to restore this
           collection.</p>
-          </div>
-    {% else %}
-          <div class="govuk-width-container">
-      <div class="govuk-grid-row">
-        <div class="govuk-grid-column-two-thirds">
-          <div class="govuk-breadcrumbs">
-            <ol class="govuk-breadcrumbs__list">
-              <li class="govuk-breadcrumbs__list-item">
-                <a class="govuk-breadcrumbs__link" href="/">Home</a>
-              </li>
-              <li class="govuk-breadcrumbs__list-item">
-                <a class="govuk-breadcrumbs__link" href="{% url 'data_collections:collections-list' %}">
-                  Collections
-                </a>
-              </li>
-              <li class="govuk-breadcrumbs__list-item">
-                {{ source_object.name }}
-              </li>
-            </ol>
-          </div>
-        </div>
-        <div class="govuk-grid-column-one-third govuk-!-text-align-right govuk-!-margin-top-3">
-          <a href="{% url 'data_collections:history-of-collection-changes' collection.id %}" class="govuk-link govuk-!-margin-right-3" id="collection-history-link">Collection history</a>
-          <a href="{% url 'data_collections:collection-edit' collection.id %}" class="govuk-link">
-            Edit collection
-          </a>
-        </div>
       </div>
+    {% else %}
+      <div class="govuk-width-container">
+        <div class="govuk-grid-row">
+          <div class="govuk-grid-column-two-thirds">
+            <div class="govuk-breadcrumbs">
+              <ol class="govuk-breadcrumbs__list">
+                <li class="govuk-breadcrumbs__list-item">
+                  <a class="govuk-breadcrumbs__link" href="/">Home</a>
+                </li>
+                <li class="govuk-breadcrumbs__list-item">
+                  <a class="govuk-breadcrumbs__link" href="{% url 'data_collections:collections-list' %}">
+                    Collections
+                  </a>
+                </li>
+                <li class="govuk-breadcrumbs__list-item">
+                  {{ source_object.name }}
+                </li>
+              </ol>
+            </div>
+          </div>
+          <div class="govuk-grid-column-one-third govuk-!-text-align-right govuk-!-margin-top-3">
+            <a href="{% url 'data_collections:history-of-collection-changes' collection.id %}"
+               class="govuk-link govuk-!-margin-right-3" id="collection-history-link">Collection history</a>
+            <a href="{% url 'data_collections:collection-edit' collection.id %}" class="govuk-link">
+              Edit collection
+            </a>
+          </div>
+        </div>
 
         {% include 'partials/messages.html' %}
 
@@ -120,7 +121,11 @@
                   <h3 class="govuk-heading-m">
                     <a class="govuk-link dataset-link"
                        href="
+
+
                          {% if dataset_collection.dataset.type == 0 %}{% url "datasets:dataset_detail" dataset_uuid=dataset_collection.dataset.referencedataset_set.first.uuid %}#
+
+
 
                            {{ dataset_collection.dataset.slug }}{% else %}{% url "datasets:dataset_detail" dataset_uuid=dataset_collection.dataset.id %}#{{ dataset_collection.dataset.slug }}{% endif %}">{{ dataset_collection.dataset.name }}</a>
                   </h3>
@@ -202,7 +207,8 @@
               </div>
             {% endfor %}
             <p class="govuk-body"><a class="govuk-link govuk-link--no-visited-state"
-                                     href="{% url 'datasets:find_datasets' %}?q=&sort=relevance&data_type=3">Search for
+                                     href="{% url 'datasets:find_datasets' %}?q=&sort=relevance&data_type=3">Search
+              for
               dashboards</a> you'd like to add.</p>
             <h2 class="govuk-heading-l govuk-!-margin-bottom-3">Notes</h2>
             <p class="govuk-body govuk-!-margin-bottom-4">
@@ -242,14 +248,14 @@
           {% endif %}
           <div class="govuk-grid-column-one-third govuk-!-margin-bottom-2">
             <p class="govuk-body"><a class="govuk-link govuk-link--no-visited-state"
-                                     href="{% url 'data_collections:collection-users' source_object.id %}">View and edit
+                                     href="{% url 'data_collections:collection-users' source_object.id %}">View and
+              edit
               collection users</a></p>
           </div>
         </div>
-          </div>
+      </div>
     {% endif %}
-    {% endif %}
-          </main>
+  {% endif %}
 {% endblock %}
 {% block footer_scripts %}
   {{ block.super }}
