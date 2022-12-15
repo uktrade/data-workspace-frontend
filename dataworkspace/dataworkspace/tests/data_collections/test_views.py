@@ -661,6 +661,10 @@ def test_deleted_member_view_collection(client, user):
     factories.CollectionUserMembershipFactory(user=user, collection=c, deleted=True)
     response = client.get(reverse("data_collections:collections_view", args=(c.id,)))
     assert response.status_code == 302
+    assert (
+        "You need to fill in this screen to request access to a collection"
+        in response.content.decode(response.charset)
+    )
 
 
 def test_member_edit_collection(client, user):
