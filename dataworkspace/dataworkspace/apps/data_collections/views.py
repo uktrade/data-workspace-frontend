@@ -21,6 +21,7 @@ from dataworkspace.apps.data_collections.forms import (
     CollectionNotesForm,
     CollectionUserAddForm,
     SelectCollectionForMembershipForm,
+    RequestAccessToCollectionForm,
 )
 from dataworkspace.apps.data_collections.models import (
     Collection,
@@ -130,6 +131,49 @@ class CollectionsDetailView(DetailView):
             )
 
         return context
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if not self.object:
+            return redirect(
+                "data_collections:request_collection_access",
+                collections_id=self.kwargs["collections_id"],
+            )
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
+
+
+class RequestAccessToCollection(FormView):
+    form_class = RequestAccessToCollectionForm
+    template_name = "data_collections/request_access_to_collection_form.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["collection"] = Collection.objects.get(id=self.kwargs["collections_id"])
+        return context
+
+    def form_valid(self, form):
+        try:
+            collection = Collection.objects.get(id=self.kwargs["collections_id"])
+            send_email(
+                template_id=settings.NOTIFY_COLLECTIONS_USER_REQUESTED_ACCESS,
+                email_address=collection.owner.email,
+                personalisation={
+                    "collection_name": collection.name,
+                    "collection_url": reverse(
+                        "data_collections:collections_view", args=(collection.id,)
+                    ),
+                    "email_for_access": form.cleaned_data["email"],
+                },
+            )
+        except EmailSendFailureException:
+            logger.exception("Failed to send email")
+        return HttpResponseRedirect(
+            reverse(
+                "data_collections:collection_request_complete",
+                args=(self.kwargs["collections_id"],),
+            )
+        )
 
 
 @require_http_methods(["GET"])
@@ -551,8 +595,8 @@ def history_of_collection_changes(request, collections_id):
     return render(request, "data_collections/collection_history.html", context)
 
 
-@require_http_methods(["POST"])
-def request_access_completed(request, collections_id):
-    collection = get_authorised_collection(request, collections_id)
-
-    #todo - build the request access post
+@require_http_methods(["GET"])
+def request_collection_complete(request, collections_id):
+    collection = Collection.objects.get(id=collections_id)
+    context = {"collection": collection}
+    return render(request, "data_collections/request_collection_complete.html", context)

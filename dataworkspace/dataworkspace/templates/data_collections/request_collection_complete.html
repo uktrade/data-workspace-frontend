@@ -1,0 +1,40 @@
+{% extends '_main.html' %}
+{% load core_tags %}
+{% load datasets_tags %}
+
+{% block initialGTMDataLayer %}
+  {{ block.super }}
+  <script nonce='{{ request.csp_nonce }}'>
+    document.addEventListener('DOMContentLoaded', function() {
+        window.dataLayer.push({
+          'event': 'GAEvent',
+          'eventCategory': 'Collection',
+          'eventAction': 'Request access completed',
+          'eventLabel': '{{ collection.name }} ({{ collection.id }}) - {{ request.user.email }}'
+        })
+      });
+  </script>
+{% endblock %}
+
+{% block page_title %}
+  Remove {{ collection.name }}
+{% endblock %}
+
+{% block go_back %}<a class="govuk-back-link govuk-link--no-visited-state" href="{{ collection.get_absolute_url }}">Back</a>{% endblock %}
+
+{% block content %}
+  <div class="govuk-panel govuk-panel--confirmation">
+  <h1 class="govuk-panel__title">
+    Request complete
+  </h1>
+  <div class="govuk-panel__body">
+    The collection owner will be informed
+  </div>
+</div>
+  <h2 class="govuk-heading-s">What happens next</h2>
+  <p class="govuk-body">We've sent your request to the collection owner.</p>
+  <br>
+  <p class="govuk-body">They will either confirm access to the collection, or contact you to ask for more information.</p>
+  <p class="govuk-body">You will get a confirmation email confirming you've been added to the collection successfully</p>
+  <a class="govuk-link" href="/">Return to Data Workspace homepage</a>
+{% endblock %}
