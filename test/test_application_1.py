@@ -16,8 +16,8 @@ from test.pages import (  # pylint: disable=wrong-import-order
     HomePage,
     get_browser,
 )
-from test.test_utility_functions import (   
-    flush_database, 
+from test.test_utility_functions import (
+    flush_database,
     flush_redis,
     client_session,
     create_application,
@@ -41,7 +41,7 @@ from test.test_utility_functions import (
     dataset_finder_opt_in_dataset,
     create_mlflow,
     setup_elasticsearch_indexes,
-    b64_decode
+    b64_decode,
 )
 
 
@@ -55,6 +55,11 @@ def async_test(func):
 
 
 class TestApplication(unittest.TestCase):
+
+    def add_async_cleanup(self, coroutine):
+        loop = asyncio.get_event_loop()
+        self.addCleanup(loop.run_until_complete, coroutine())
+
     @async_test
     async def test_application_redirects_to_sso_if_different_ip_group(self):
         await flush_database()

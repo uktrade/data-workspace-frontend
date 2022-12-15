@@ -12,6 +12,7 @@ import aioredis
 from elasticsearch import AsyncElasticsearch, helpers
 from lxml import html
 
+
 def client_session():
     session = aiohttp.ClientSession()
 

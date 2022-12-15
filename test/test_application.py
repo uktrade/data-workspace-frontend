@@ -7,8 +7,8 @@ import uuid
 
 from aiohttp import web
 
-from test.test_utility_functions import (   
-    flush_database, 
+from test.test_utility_functions import (
+    flush_database,
     flush_redis,
     client_session,
     create_application,
@@ -31,8 +31,9 @@ from test.test_utility_functions import (
     create_visualisation_dataset,
     give_visualisation_dataset_perms,
     create_superset,
-    create_visusalisation
+    create_visusalisation,
 )
+
 
 def async_test(func):
     def wrapper(*args, **kwargs):
@@ -41,6 +42,7 @@ def async_test(func):
         loop.run_until_complete(future)
 
     return wrapper
+
 
 class TestApplication(unittest.TestCase):
     """Tests the behaviour of the application, including Proxy"""
