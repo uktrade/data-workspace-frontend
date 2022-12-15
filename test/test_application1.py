@@ -18,6 +18,7 @@ from test.pages import (  # pylint: disable=wrong-import-order
 )
 from test.test_functions import *
 
+
 def async_test(func):
     def wrapper(*args, **kwargs):
         future = func(*args, **kwargs)
@@ -28,7 +29,6 @@ def async_test(func):
 
 
 class TestApplication(unittest.TestCase):
-    
     @async_test
     async def test_application_redirects_to_sso_if_different_ip_group(self):
         await flush_database()
@@ -1044,5 +1044,3 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(
             payload["authorised_hosts"], ["mlflow--data-science--internal.dataworkspace.test:8000"]
         )
-
-    

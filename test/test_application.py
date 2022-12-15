@@ -15,6 +15,7 @@ from test.pages import (  # pylint: disable=wrong-import-order
 
 from test.test_functions import *
 
+
 def async_test(func):
     def wrapper(*args, **kwargs):
         future = func(*args, **kwargs)
@@ -1753,4 +1754,3 @@ class TestApplication(unittest.TestCase):
         async with session.request("GET", "http://dataworkspace.test:8000/") as response:
             self.assertEqual(number_of_times_at_sso(), 2)
             self.assertEqual(200, response.status)
-
