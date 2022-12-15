@@ -20,6 +20,11 @@ from test.test_utility_functions import (
 
 
 class TestApplication(unittest.TestCase):
+
+    def add_async_cleanup(self, coroutine):
+        loop = asyncio.get_event_loop()
+        self.addCleanup(loop.run_until_complete, coroutine())
+
     @async_test
     async def test_application_shows_forbidden_if_not_auth_ip(self):
         await flush_database()
