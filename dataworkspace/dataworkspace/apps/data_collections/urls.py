@@ -123,6 +123,6 @@ urlpatterns = [
     path(
         "<uuid:collections_id>/request_collection_complete",
         login_required(views.request_collection_complete),
-        name="collection_request_complete",
+        name="request_collection_complete",
     ),
 ]

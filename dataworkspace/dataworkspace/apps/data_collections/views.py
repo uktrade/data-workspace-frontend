@@ -77,6 +77,10 @@ def get_authorised_collections_or_return_none(request, collection_id):
 class CollectionsDetailView(DetailView):
     template_name = "data_collections/collection_detail.html"
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.object = None
+
     def get_object(self, queryset=None):
         return get_authorised_collections_or_return_none(
             self.request, self.kwargs["collections_id"]
@@ -85,50 +89,49 @@ class CollectionsDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         source_object = self.get_object()
-        if source_object:
-            context["source_object"] = source_object
+        context["source_object"] = source_object
 
-            context["dataset_collections"] = (
-                source_object.dataset_collections.filter(deleted=False)
-                .prefetch_related(
-                    Prefetch(
-                        "dataset__tags",
-                        queryset=Tag.objects.filter(type=TagType.SOURCE),
-                        to_attr="sources",
-                    ),
-                    Prefetch(
-                        "dataset__tags",
-                        queryset=Tag.objects.filter(type=TagType.TOPIC),
-                        to_attr="topics",
-                    ),
-                )
-                .order_by("dataset__name")
+        context["dataset_collections"] = (
+            source_object.dataset_collections.filter(deleted=False)
+            .prefetch_related(
+                Prefetch(
+                    "dataset__tags",
+                    queryset=Tag.objects.filter(type=TagType.SOURCE),
+                    to_attr="sources",
+                ),
+                Prefetch(
+                    "dataset__tags",
+                    queryset=Tag.objects.filter(type=TagType.TOPIC),
+                    to_attr="topics",
+                ),
             )
-            context["visualisation_collections"] = (
-                source_object.visualisation_collections.filter(deleted=False)
-                .prefetch_related(
-                    Prefetch(
-                        "visualisation__tags",
-                        queryset=Tag.objects.filter(type=TagType.SOURCE),
-                        to_attr="sources",
-                    ),
-                    Prefetch(
-                        "visualisation__tags",
-                        queryset=Tag.objects.filter(type=TagType.TOPIC),
-                        to_attr="topics",
-                    ),
-                )
-                .order_by("visualisation__name")
+            .order_by("dataset__name")
+        )
+        context["visualisation_collections"] = (
+            source_object.visualisation_collections.filter(deleted=False)
+            .prefetch_related(
+                Prefetch(
+                    "visualisation__tags",
+                    queryset=Tag.objects.filter(type=TagType.SOURCE),
+                    to_attr="sources",
+                ),
+                Prefetch(
+                    "visualisation__tags",
+                    queryset=Tag.objects.filter(type=TagType.TOPIC),
+                    to_attr="topics",
+                ),
             )
-            context["user_memberships"] = source_object.user_memberships.live().order_by(
-                "user__first_name", "user__last_name"
-            )
+            .order_by("visualisation__name")
+        )
+        context["user_memberships"] = source_object.user_memberships.live().order_by(
+            "user__first_name", "user__last_name"
+        )
 
-            log_event(
-                self.request.user,
-                EventLog.TYPE_COLLECTION_VIEW,
-                source_object,
-            )
+        log_event(
+            self.request.user,
+            EventLog.TYPE_COLLECTION_VIEW,
+            source_object,
+        )
 
         return context
 
@@ -141,39 +144,6 @@ class CollectionsDetailView(DetailView):
             )
         context = self.get_context_data(object=self.object)
         return self.render_to_response(context)
-
-
-class RequestAccessToCollection(FormView):
-    form_class = RequestAccessToCollectionForm
-    template_name = "data_collections/request_access_to_collection_form.html"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["collection"] = Collection.objects.get(id=self.kwargs["collections_id"])
-        return context
-
-    def form_valid(self, form):
-        try:
-            collection = Collection.objects.get(id=self.kwargs["collections_id"])
-            send_email(
-                template_id=settings.NOTIFY_COLLECTIONS_USER_REQUESTED_ACCESS,
-                email_address=collection.owner.email,
-                personalisation={
-                    "collection_name": collection.name,
-                    "collection_url": reverse(
-                        "data_collections:collections_view", args=(collection.id,)
-                    ),
-                    "email_for_access": form.cleaned_data["email"],
-                },
-            )
-        except EmailSendFailureException:
-            logger.exception("Failed to send email")
-        return HttpResponseRedirect(
-            reverse(
-                "data_collections:collection_request_complete",
-                args=(self.kwargs["collections_id"],),
-            )
-        )
 
 
 @require_http_methods(["GET"])
@@ -593,6 +563,39 @@ def history_of_collection_changes(request, collections_id):
         "collection_history": collection_history,
     }
     return render(request, "data_collections/collection_history.html", context)
+
+
+class RequestAccessToCollection(FormView):
+    form_class = RequestAccessToCollectionForm
+    template_name = "data_collections/request_access_to_collection_form.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["collection"] = Collection.objects.get(id=self.kwargs["collections_id"])
+        return context
+
+    def form_valid(self, form):
+        try:
+            collection = Collection.objects.get(id=self.kwargs["collections_id"])
+            send_email(
+                template_id=settings.NOTIFY_COLLECTIONS_USER_REQUESTED_ACCESS,
+                email_address=collection.owner.email,
+                personalisation={
+                    "collection_name": collection.name,
+                    "collection_url": reverse(
+                        "data_collections:collections_view", args=(collection.id,)
+                    ),
+                    "user_email": form.cleaned_data["email"],
+                },
+            )
+        except EmailSendFailureException:
+            logger.exception("Failed to send email")
+        return HttpResponseRedirect(
+            reverse(
+                "data_collections:request_collection_complete",
+                args=(self.kwargs["collections_id"],),
+            )
+        )
 
 
 @require_http_methods(["GET"])
