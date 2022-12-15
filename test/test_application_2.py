@@ -20,7 +20,6 @@ from test.test_utility_functions import (
 
 
 class TestApplication(unittest.TestCase):
-
     def add_async_cleanup(self, coroutine):
         loop = asyncio.get_event_loop()
         self.addCleanup(loop.run_until_complete, coroutine())
