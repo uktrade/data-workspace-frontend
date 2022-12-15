@@ -6,15 +6,6 @@ import json
 import os
 import unittest
 
-from aiohttp import web
-import aiopg
-import mohawk
-from django.conf import settings
-
-from test.pages import (  # pylint: disable=wrong-import-order
-    HomePage,
-    get_browser,
-)
 from test.test_utility_functions import (
     async_test,
     add_user_to_mlflow_instance,
@@ -42,6 +33,16 @@ from test.test_utility_functions import (
     setup_elasticsearch_indexes,
     sync_query_logs,
     until_succeeds,
+)
+
+from aiohttp import web
+import aiopg
+import mohawk
+from django.conf import settings
+
+from test.pages import (  # pylint: disable=wrong-import-order
+    HomePage,
+    get_browser,
 )
 
 

@@ -5,8 +5,6 @@ import re
 import unittest
 import uuid
 
-from aiohttp import web
-
 from test.test_utility_functions import (
     async_test,
     add_user_to_team,
@@ -31,6 +29,8 @@ from test.test_utility_functions import (
     until_non_202,
     until_succeeds,
 )
+
+from aiohttp import web
 
 
 class TestApplication(unittest.TestCase):
