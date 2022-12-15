@@ -16,7 +16,33 @@ from test.pages import (  # pylint: disable=wrong-import-order
     HomePage,
     get_browser,
 )
-from test.test_functions import *
+from test.test_utility_functions import (   
+    flush_database, 
+    flush_redis,
+    client_session,
+    create_application,
+    create_sso,
+    until_succeeds,
+    give_user_app_perms,
+    create_private_dataset,
+    add_user_to_mlflow_instance,
+    create_server,
+    create_mirror,
+    find_search_filter_labels,
+    create_metadata_table,
+    give_user_dataset_perms,
+    give_user_visualisation_developer_perms,
+    create_sentry,
+    create_sample_datasets_and_visualisations,
+    create_application_db_user,
+    create_query_logs,
+    sync_query_logs,
+    set_waffle_flag,
+    dataset_finder_opt_in_dataset,
+    create_mlflow,
+    setup_elasticsearch_indexes,
+    b64_decode
+)
 
 
 def async_test(func):

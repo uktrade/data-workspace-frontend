@@ -1,6 +1,5 @@
 import asyncio
 
-from base64 import urlsafe_b64decode
 import json
 import re
 import unittest
@@ -8,13 +7,32 @@ import uuid
 
 from aiohttp import web
 
-from test.pages import (  # pylint: disable=wrong-import-order
-    HomePage,
-    get_browser,
+from test.test_utility_functions import (   
+    flush_database, 
+    flush_redis,
+    client_session,
+    create_application,
+    create_sso,
+    until_succeeds,
+    give_user_app_perms,
+    create_private_dataset,
+    make_all_tools_visible,
+    create_server,
+    until_non_202,
+    give_user_dataset_perms,
+    give_user_visualisation_developer_perms,
+    create_sentry,
+    ensure_team_created,
+    add_user_to_team,
+    create_visualisation_echo,
+    toggle_visualisation_visibility,
+    give_user_visualisation_perms,
+    set_visualisation_wrap,
+    create_visualisation_dataset,
+    give_visualisation_dataset_perms,
+    create_superset,
+    create_visusalisation
 )
-
-from test.test_functions import *
-
 
 def async_test(func):
     def wrapper(*args, **kwargs):
@@ -23,7 +41,6 @@ def async_test(func):
         loop.run_until_complete(future)
 
     return wrapper
-
 
 class TestApplication(unittest.TestCase):
     """Tests the behaviour of the application, including Proxy"""
