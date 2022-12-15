@@ -1,6 +1,5 @@
 import asyncio
 
-from base64 import urlsafe_b64decode
 import csv
 import io
 import json
