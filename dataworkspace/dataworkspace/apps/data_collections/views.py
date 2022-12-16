@@ -587,7 +587,9 @@ class RequestAccessToCollection(FormView):
                         "data_collections:collections_view", args=(collection.id,)
                     ),
                     "user_email": form.cleaned_data["email"],
-                    "people_url": get_people_url(self.request.user.get_full_name()),
+                    "people_url": "https://people.trade.gov.uk/people/{}".format(
+                        self.request.user.profile.sso_id
+                    ),
                 },
             )
         except EmailSendFailureException:
