@@ -80,7 +80,7 @@ jobs:
           name: Run test
           command: |
             touch .envs/dev.env
-            make docker-test-integration TESTS=$(circleci tests glob "dataworkspace/test/**/test_*.py" | circleci tests split --split-by=timings)
+            make docker-test-integration TESTS=$(circleci tests glob "test/**/test_*.py" | circleci tests split --split-by=timings)
 
   check-linting:
     docker:
