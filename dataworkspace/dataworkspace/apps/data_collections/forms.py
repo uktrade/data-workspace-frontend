@@ -127,3 +127,16 @@ class CollectionEditForm(GOVUKDesignSystemModelForm):
     def clean_description(self):
         # Do not allow newlines in the description
         return re.sub(r"[\r\n]+", " ", self.cleaned_data["description"])
+
+
+class RequestAccessToCollectionForm(GOVUKDesignSystemModelForm):
+    email = GOVUKDesignSystemCharField(
+        label="Contact email",
+        required=True,
+        widget=GOVUKDesignSystemTextWidget(label_is_heading=True),
+        error_messages={"required": "You must enter an email"},
+    )
+
+    class Meta:
+        model = Collection
+        fields = ["email"]
