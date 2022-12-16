@@ -115,4 +115,14 @@ urlpatterns = [
         login_required(views.history_of_collection_changes),
         name="history-of-collection-changes",
     ),
+    path(
+        "<uuid:collections_id>/request_collection_access",
+        login_required(views.RequestAccessToCollection.as_view()),
+        name="request_collection_access",
+    ),
+    path(
+        "<uuid:collections_id>/request_collection_complete",
+        login_required(views.request_collection_complete),
+        name="request_collection_complete",
+    ),
 ]

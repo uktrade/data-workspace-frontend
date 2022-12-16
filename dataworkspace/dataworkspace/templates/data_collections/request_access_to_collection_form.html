@@ -1,0 +1,75 @@
+{% extends '_main.html' %}
+{% load static %}
+
+{% block initialGTMDataLayer %}
+  {{ block.super }}
+  <script nonce='{{ request.csp_nonce }}'>
+    document.addEventListener('DOMContentLoaded', function() {
+        window.dataLayer.push({
+          'event': 'GAEvent',
+          'eventCategory': 'Collection',
+          'eventAction': 'Request access',
+          'eventLabel': '{{ collection.name }} ({{ collection.id }}) - {{ request.user.email }}'
+        })
+      });
+  </script>
+{% endblock %}
+
+{% block page_title %}
+  {{ collection.name }}
+{% endblock %}
+{% block main %}
+    <div class="govuk-width-container">
+      <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-back-link" href="/">Back</a>
+          </li>
+        </ol>
+      </div>
+      <h1 class="govuk-heading-xl govuk-!-margin-bottom-3">Request access to collection</h1>
+      <span class="govuk-caption-xl govuk-!-margin-bottom-7">
+      You need to request access from the owner of this collection.
+    </span>
+      <p class="govuk-label govuk-!-font-weight-bold govuk-!-margin-bottom-3">Collection name</p>
+      <p class="govuk-body govuk-!-margin-bottom-8">{{ collection.name }}</p>
+      <h2 class="govuk-label govuk-!-font-weight-bold govuk-!-margin-bottom-3">Collection owner</h2>
+      <p class="govuk-body govuk-!-margin-bottom-8">{{ collection.owner.get_full_name|default:'Not available' }}</p>
+
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="govuk-form-group {% if form.errors %}govuk-form-group--error{% endif %}">
+              <h1 class="govuk-label-wrapper">
+                <label class="govuk-label govuk-!-font-weight-bold govuk-!-margin-bottom-3" for="id_email">
+                  {{ form.email.label }}
+                </label>
+              </h1>
+                  <div class="govuk-hint">
+            You are logged in as {{ request.user.email }}
+          </div>
+              {% if form.errors %}
+                <span id="id_email-error" class="govuk-error-message">
+                  <span class="govuk-visually-hidden">Error: </span>{{ form.errors.0 }}
+                </span>
+              {% endif %}
+              {% if form.email.errors %}
+                <p class="govuk-error-message">
+                  {{ form.email.errors.0 }}
+                </p>
+              {% endif %}
+              <input
+                class="govuk-input govuk-!-width-two-thirds govuk-!-margin-bottom-6 {% if form.email.errors %} govuk-input--error{% endif %}"
+                type="email"
+                name="email"
+                id="id_email"
+                value="{{ form.email.value|default_if_none:request.user.email }}"
+              >
+          <div class="govuk-button-group">
+            <button type="submit" class="govuk-button">Continue</button>
+            <a class="govuk-link" href="/">Cancel</a>
+          </div>
+        </div>
+      </form>
+    </div>
+{% endblock %}
