@@ -2,7 +2,7 @@ import unittest
 
 import asyncio
 
-from test.test_utility_functions import (
+from test.utility_functions import (
     async_test,
     client_session,
     create_application,

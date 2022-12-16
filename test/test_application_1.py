@@ -6,7 +6,7 @@ import json
 import os
 import unittest
 
-from test.test_utility_functions import (
+from test.utility_functions import (
     async_test,
     add_user_to_mlflow_instance,
     b64_decode,

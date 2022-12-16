@@ -5,7 +5,7 @@ import re
 import unittest
 import uuid
 
-from test.test_utility_functions import (
+from test.utility_functions import (
     async_test,
     add_user_to_team,
     client_session,
