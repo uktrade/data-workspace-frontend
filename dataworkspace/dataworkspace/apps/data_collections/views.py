@@ -586,7 +586,7 @@ class RequestAccessToCollection(FormView):
                         "data_collections:collections_view", args=(collection.id,)
                     ),
                     "user_email": form.cleaned_data["email"],
-                    "people_url": "https://people.trade.gov.uk/people/{}".format(
+                    "people_url": "https://people.trade.gov.uk/people/get-by-staff-sso-id/{}".format(
                         self.request.user.profile.sso_id
                     ),
                 },
