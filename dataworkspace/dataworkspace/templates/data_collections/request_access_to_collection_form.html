@@ -29,11 +29,11 @@
       </div>
       <h1 class="govuk-heading-xl govuk-!-margin-bottom-3">Request access to collection</h1>
       <span class="govuk-caption-xl govuk-!-margin-bottom-7">
-      You need to fill in this screen to request access to a collection
+      You need to request access from the owner of this collection.
     </span>
-      <p class="govuk-heading-s">Collection Name</p>
+      <p class="govuk-label govuk-!-font-weight-bold govuk-!-margin-bottom-3">Collection name</p>
       <p class="govuk-body govuk-!-margin-bottom-8">{{ collection.name }}</p>
-      <h2 class="govuk-heading-s">Collection Owner</h2>
+      <h2 class="govuk-label govuk-!-font-weight-bold govuk-!-margin-bottom-3">Collection owner</h2>
       <p class="govuk-body govuk-!-margin-bottom-8">{{ collection.owner.get_full_name|default:'Not available' }}</p>
 
 
@@ -41,7 +41,7 @@
         {% csrf_token %}
         <div class="govuk-form-group {% if form.errors %}govuk-form-group--error{% endif %}">
               <h1 class="govuk-label-wrapper">
-                <label class="govuk-heading-s" for="id_email">
+                <label class="govuk-label govuk-!-font-weight-bold govuk-!-margin-bottom-3" for="id_email">
                   {{ form.email.label }}
                 </label>
               </h1>
