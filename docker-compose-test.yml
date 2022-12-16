@@ -17,6 +17,8 @@ services:
       - "data-workspace-postgres"
       - "data-workspace-redis"
       - "data-workspace-es"
+    depends_on:
+      - "data-workspace-test-results"
     extra_hosts:
       - "dataworkspace.test:127.0.0.1"
       - "superset.dataworkspace.test:127.0.0.1"
@@ -33,6 +35,7 @@ services:
       - "mlflow--data-science.dataworkspace.test:127.0.0.1"
     volumes:
       - db-logs-dev:/var/log/postgres
+      - test-results:/test-results
   data-workspace-postgres:
     build:
       context: postgres
@@ -56,7 +59,16 @@ services:
       - http.port=9200
     ports:
       - "9200:9200"
-
+  # Have a named volume since mounting a local directory isn't possible in CircleCI's
+  # remote docker system. And docker-compose run kills the container running the tests
+  # proper, so to be able to copy out results, run a small container just to be able
+  # to access the named volume after the tests finish
+  data-workspace-test-results:
+    image: busybox
+    tty: true
+    volumes:
+      - test-results:/test-results
 
 volumes:
   db-logs-dev:
+  test-results:
