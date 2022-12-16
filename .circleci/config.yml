@@ -59,7 +59,7 @@ jobs:
           name: Run test
           command: |
             touch .envs/dev.env
-            make docker-test-unit TESTS="$(circleci tests glob 'dataworkspace/dataworkspace/tests/**/test_*.py' | circleci tests split --split-by=timings | tr '\n' ' ')"
+            make docker-test-unit TESTS="$(circleci tests glob 'dataworkspace/dataworkspace/tests/**/test_*.py' | circleci tests split --split-by=name | tr '\n' ' ')"
 
   docker-test-integration:
     docker:
