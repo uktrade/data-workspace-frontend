@@ -12,6 +12,7 @@ import aioredis
 from elasticsearch import AsyncElasticsearch, helpers
 from lxml import html
 
+
 def async_test(func):
     def wrapper(*args, **kwargs):
         future = func(*args, **kwargs)
