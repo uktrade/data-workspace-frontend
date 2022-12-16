@@ -40,6 +40,7 @@ jobs:
   docker-test-unit:
     docker:
       - image: circleci/python:3.9
+    parallelism: 5
     steps:
       - checkout
       - setup_remote_docker:
@@ -58,11 +59,12 @@ jobs:
           name: Run test
           command: |
             touch .envs/dev.env
-            make docker-test-unit
+            make docker-test-unit TESTS=$(circleci tests glob "dataworkspace/dataworkspace/tests/**/test_*.py" | circleci tests split --split-by=timings)
 
   docker-test-integration:
     docker:
       - image: circleci/python:3.9
+    parallelism: 3
     steps:
       - checkout
       - setup_remote_docker:
@@ -78,7 +80,7 @@ jobs:
           name: Run test
           command: |
             touch .envs/dev.env
-            make docker-test-integration
+            make docker-test-integration TESTS=$(circleci tests glob "test/**/test_*.py" | circleci tests split --split-by=timings)
 
   check-linting:
     docker:
