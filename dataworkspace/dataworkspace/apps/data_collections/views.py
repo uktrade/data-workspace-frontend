@@ -35,7 +35,6 @@ from dataworkspace.apps.datasets.models import Tag
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.notify import EmailSendFailureException, send_email
-from dataworkspace.zendesk import get_people_url
 
 logger = logging.getLogger("app")
 
