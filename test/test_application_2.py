@@ -3,7 +3,6 @@ import unittest
 import asyncio
 
 from test.utility_functions import (
-    async_test,
     client_session,
     create_application,
     create_private_dataset,
@@ -19,21 +18,16 @@ from test.utility_functions import (
 )
 
 
-class TestApplication(unittest.TestCase):
-    def add_async_cleanup(self, coroutine):
-        loop = asyncio.get_event_loop()
-        self.addCleanup(loop.run_until_complete, coroutine())
-
-    @async_test
+class TestApplication(unittest.IsolatedAsyncioTestCase):
     async def test_application_shows_forbidden_if_not_auth_ip(self):
         await flush_database()
         await flush_redis()
 
         cleanup_sentry, sentry_requests = await create_sentry()
-        self.add_async_cleanup(cleanup_sentry)
+        self.addAsyncCleanup(cleanup_sentry)
 
         session, cleanup_session = client_session()
-        self.add_async_cleanup(cleanup_session)
+        self.addAsyncCleanup(cleanup_session)
 
         # Create application with a non-open whitelist
         cleanup_application = await create_application(
@@ -42,7 +36,7 @@ class TestApplication(unittest.TestCase):
                 "APPLICATION_IP_ALLOWLIST_GROUPS__my_group__1": "4.3.1.1/32",
             }
         )
-        self.add_async_cleanup(cleanup_application)
+        self.addAsyncCleanup(cleanup_application)
 
         is_logged_in = True
         codes = iter(
@@ -67,7 +61,7 @@ class TestApplication(unittest.TestCase):
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
-        self.add_async_cleanup(sso_cleanup)
+        self.addAsyncCleanup(sso_cleanup)
 
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
@@ -127,7 +121,7 @@ class TestApplication(unittest.TestCase):
                 "SENTRY_ENVIRONMENT": "Test",
             }
         )
-        self.add_async_cleanup(cleanup_application)
+        self.addAsyncCleanup(cleanup_application)
 
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
@@ -242,13 +236,12 @@ class TestApplication(unittest.TestCase):
         self.assertIn("You do not have access to this page", content)
         self.assertEqual(response.status, 403)
 
-    @async_test
     async def test_integrated_data_explorer_has_ip_restrictions(self):
         await flush_database()
         await flush_redis()
 
         session, cleanup_session = client_session()
-        self.add_async_cleanup(cleanup_session)
+        self.addAsyncCleanup(cleanup_session)
 
         # Create application with a non-open whitelist
         # Explorer/DB credentials generator cannot handle two database connections which point to the sme
@@ -261,7 +254,7 @@ class TestApplication(unittest.TestCase):
                 "EXPLORER_CONNECTIONS": '{"Postgres": "my_database"}',
             }
         )
-        self.add_async_cleanup(cleanup_application)
+        self.addAsyncCleanup(cleanup_application)
 
         is_logged_in = True
         codes = iter(
@@ -299,7 +292,7 @@ class TestApplication(unittest.TestCase):
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
-        self.add_async_cleanup(sso_cleanup)
+        self.addAsyncCleanup(sso_cleanup)
 
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
@@ -358,7 +351,7 @@ class TestApplication(unittest.TestCase):
                 "EXPLORER_CONNECTIONS": '{"Postgres": "my_database"}',
             }
         )
-        self.add_async_cleanup(cleanup_application)
+        self.addAsyncCleanup(cleanup_application)
 
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
@@ -423,16 +416,15 @@ class TestApplication(unittest.TestCase):
         self.assertIn("You do not have access to this page", content)
         self.assertEqual(response.status, 403)
 
-    @async_test
     async def test_superset_editor_headers(self):
         await flush_database()
         await flush_redis()
 
         session, cleanup_session = client_session()
-        self.add_async_cleanup(cleanup_session)
+        self.addAsyncCleanup(cleanup_session)
 
         cleanup_superset, superset_requests = await create_superset()
-        self.add_async_cleanup(cleanup_superset)
+        self.addAsyncCleanup(cleanup_superset)
 
         cleanup_application = await create_application(
             env=lambda: {
@@ -442,7 +434,7 @@ class TestApplication(unittest.TestCase):
                 "SUPERSET_ROOT": "http://localhost:8008/",
             }
         )
-        self.add_async_cleanup(cleanup_application)
+        self.addAsyncCleanup(cleanup_application)
 
         is_logged_in = True
         codes = iter(["some-code"])
@@ -458,7 +450,7 @@ class TestApplication(unittest.TestCase):
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
-        self.add_async_cleanup(sso_cleanup)
+        self.addAsyncCleanup(sso_cleanup)
 
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
@@ -517,16 +509,15 @@ class TestApplication(unittest.TestCase):
         assert superset_requests[0].headers["Credentials-Db-User"].endswith("superset")
         assert "Credentials-Db-Password" in superset_requests[0].headers
 
-    @async_test
     async def test_superset_public_headers(self):
         await flush_database()
         await flush_redis()
 
         session, cleanup_session = client_session()
-        self.add_async_cleanup(cleanup_session)
+        self.addAsyncCleanup(cleanup_session)
 
         cleanup_superset, superset_requests = await create_superset()
-        self.add_async_cleanup(cleanup_superset)
+        self.addAsyncCleanup(cleanup_superset)
 
         cleanup_application = await create_application(
             env=lambda: {
@@ -536,7 +527,7 @@ class TestApplication(unittest.TestCase):
                 "SUPERSET_ROOT": "http://localhost:8008/",
             }
         )
-        self.add_async_cleanup(cleanup_application)
+        self.addAsyncCleanup(cleanup_application)
 
         is_logged_in = True
         codes = iter(["some-code"])
@@ -552,7 +543,7 @@ class TestApplication(unittest.TestCase):
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
-        self.add_async_cleanup(sso_cleanup)
+        self.addAsyncCleanup(sso_cleanup)
 
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
