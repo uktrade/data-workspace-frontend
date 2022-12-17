@@ -5,11 +5,20 @@ set -e
 (
     cd "$(dirname "$0")"
 
+    echo "COLLECT STATIC START"
+    now=$(date +"%T")
+    echo "Current time : $now"
     django-admin collectstatic --noinput
 
     # Not suitable on a cluster of size > 1, but for our purposes,
     # no need for more
+    echo "MIGRATING START"
+    now=$(date +"%T")
+    echo "Current time : $now"
     django-admin migrate
+    echo "MIGRATING END"
+    now=$(date +"%T")
+    echo "Current time : $now"
 
     django-admin ensure_databases_configured
     django-admin ensure_application_template_models

@@ -137,14 +137,22 @@ class TestApplication(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(number_of_times_at_sso(), 3)
 
     async def test_application_download(self):
+        import time
+
+        start = time.monotonic()
+        print("1")
         await flush_database()
+        print("2")
         await flush_redis()
+        print("3")
 
         session, cleanup_session = client_session()
         self.addAsyncCleanup(cleanup_session)
+        print("4")
 
         cleanup_application = await create_application()
         self.addAsyncCleanup(cleanup_application)
+        print("5")
 
         is_logged_in = True
         codes = iter(["some-code", "some-other-code"])
@@ -162,8 +170,11 @@ class TestApplication(unittest.IsolatedAsyncioTestCase):
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
         self.addAsyncCleanup(sso_cleanup)
+        print("6")
 
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
+        print("7")
+        startup_end = time.monotonic()
 
         dataset_id_test_dataset = "70ce6fdd-1791-4806-bbe0-4cf880a9cc37"
         table_id = "5a2ee5dd-f025-4939-b0a1-bb85ab7504d7"
@@ -273,6 +284,9 @@ class TestApplication(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(rows_1[20001][0], "Number of rows: 20000")
         self.assertEqual(rows_2[20001][0], "Number of rows: 20000")
         self.assertEqual(rows_3[20001][0], "Number of rows: 20000")
+
+        print("STARTUP", startup_end - start)
+        print("TEST PROPER", time.monotonic() - startup_end)
 
     async def test_hawk_authenticated_source_table_api_endpoint(self):
         await flush_database()
