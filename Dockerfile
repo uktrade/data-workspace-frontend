@@ -62,6 +62,9 @@ COPY dataworkspace /dataworkspace
 RUN cd dataworkspace
 
 COPY etc /etc
+RUN \
+    mkdir /test-results && \
+    chown -R django:django /test-results
 
 USER django
 

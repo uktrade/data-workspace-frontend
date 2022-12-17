@@ -44,7 +44,7 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker:
-          version: 20.10.6
+          version: 20.10.18
       - <<: *restore-docker-cache
       - <<: *load-docker-layers
       - run:
@@ -60,6 +60,9 @@ jobs:
           command: |
             touch .envs/dev.env
             make docker-test-unit TESTS="$(circleci tests glob 'dataworkspace/dataworkspace/tests/**/test_*.py' | circleci tests split --split-by=timings | tr '\n' ' ')"
+            docker cp data-workspace-test_data-workspace-test-results_1:/test-results ./test-results
+      - store_test_results:
+          path: test-results
 
   docker-test-integration:
     docker:
@@ -68,7 +71,7 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker:
-          version: 20.10.6
+          version: 20.10.18
       - <<: *restore-docker-cache
       - <<: *load-docker-layers
       - run:
@@ -81,6 +84,9 @@ jobs:
           command: |
             touch .envs/dev.env
             make docker-test-integration TESTS="$(circleci tests glob 'test/**/test_*.py' | circleci tests split --split-by=timings | tr '\n' ' ')"
+            docker cp data-workspace-test_data-workspace-test-results_1:/test-results ./test-results
+      - store_test_results:
+          path: test-results
 
   check-linting:
     docker:
