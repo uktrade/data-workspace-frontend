@@ -56,6 +56,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 COPY requirements-dev.txt requirements-dev.txt
+COPY setup.cfg setup.cfg
 RUN pip3 install -r requirements-dev.txt
 
 COPY dataworkspace /dataworkspace
