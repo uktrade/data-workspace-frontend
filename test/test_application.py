@@ -6,7 +6,6 @@ import unittest
 import uuid
 
 from test.utility_functions import (
-    async_test,
     add_user_to_team,
     client_session,
     create_application,
@@ -33,23 +32,18 @@ from test.utility_functions import (
 from aiohttp import web
 
 
-class TestApplication(unittest.TestCase):
+class TestApplication(unittest.IsolatedAsyncioTestCase):
     """Tests the behaviour of the application, including Proxy"""
 
-    def add_async_cleanup(self, coroutine):
-        loop = asyncio.get_event_loop()
-        self.addCleanup(loop.run_until_complete, coroutine())
-
-    @async_test
     async def test_application_shows_content_if_authorized(self):
         await flush_database()
         await flush_redis()
 
         session, cleanup_session = client_session()
-        self.add_async_cleanup(cleanup_session)
+        self.addAsyncCleanup(cleanup_session)
 
         cleanup_application_1 = await create_application()
-        self.add_async_cleanup(cleanup_application_1)
+        self.addAsyncCleanup(cleanup_application_1)
 
         is_logged_in = True
         codes = iter(["some-code"])
@@ -65,7 +59,7 @@ class TestApplication(unittest.TestCase):
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
-        self.add_async_cleanup(sso_cleanup)
+        self.addAsyncCleanup(sso_cleanup)
 
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
@@ -193,7 +187,7 @@ class TestApplication(unittest.TestCase):
         # we load up the application succesfully
         await cleanup_application_1()
         cleanup_application_2 = await create_application()
-        self.add_async_cleanup(cleanup_application_2)
+        self.addAsyncCleanup(cleanup_application_2)
 
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
@@ -227,16 +221,15 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(received_content["headers"]["from-downstream"], "downstream-header-value")
         self.assertEqual(received_headers["from-upstream"], "upstream-header-value")
 
-    @async_test
     async def test_db_application_can_read_and_write_to_private_and_team_schemas(self):
         await flush_database()
         await flush_redis()
 
         session, cleanup_session = client_session()
-        self.add_async_cleanup(cleanup_session)
+        self.addAsyncCleanup(cleanup_session)
 
         cleanup_application_1 = await create_application()
-        self.add_async_cleanup(cleanup_application_1)
+        self.addAsyncCleanup(cleanup_application_1)
 
         is_logged_in = True
         codes = iter(["some-code"])
@@ -252,7 +245,7 @@ class TestApplication(unittest.TestCase):
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
-        self.add_async_cleanup(sso_cleanup)
+        self.addAsyncCleanup(sso_cleanup)
 
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
@@ -372,16 +365,15 @@ class TestApplication(unittest.TestCase):
         ) as response:
             await response.text()
 
-    @async_test
     async def test_visualisation_shows_content_if_authorized_and_published(self):
         await flush_database()
         await flush_redis()
 
         session, cleanup_session = client_session()
-        self.add_async_cleanup(cleanup_session)
+        self.addAsyncCleanup(cleanup_session)
 
         cleanup_application_1 = await create_application()
-        self.add_async_cleanup(cleanup_application_1)
+        self.addAsyncCleanup(cleanup_application_1)
 
         is_logged_in = True
         codes = iter(["some-code"])
@@ -397,7 +389,7 @@ class TestApplication(unittest.TestCase):
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
-        self.add_async_cleanup(sso_cleanup)
+        self.addAsyncCleanup(sso_cleanup)
 
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
@@ -522,16 +514,15 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(received_content["headers"]["from-downstream"], "downstream-header-value")
         self.assertEqual(received_headers["from-upstream"], "upstream-header-value")
 
-    @async_test
     async def test_visualisation_commit_shows_content_if_authorized(self):
         await flush_database()
         await flush_redis()
 
         session, cleanup_session = client_session()
-        self.add_async_cleanup(cleanup_session)
+        self.addAsyncCleanup(cleanup_session)
 
         cleanup_application_1 = await create_application()
-        self.add_async_cleanup(cleanup_application_1)
+        self.addAsyncCleanup(cleanup_application_1)
 
         is_logged_in = True
         codes = iter(["some-code"])
@@ -547,7 +538,7 @@ class TestApplication(unittest.TestCase):
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
-        self.add_async_cleanup(sso_cleanup)
+        self.addAsyncCleanup(sso_cleanup)
 
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
@@ -588,7 +579,7 @@ class TestApplication(unittest.TestCase):
                 web.get("/{path:.*}", handle_general_gitlab),
             ],
         )
-        self.add_async_cleanup(gitlab_cleanup)
+        self.addAsyncCleanup(gitlab_cleanup)
 
         # Ensure the user doesn't have access to the application
         async with session.request(
@@ -638,16 +629,15 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(received_content["headers"]["from-downstream"], "downstream-header-value")
         self.assertEqual(received_headers["from-upstream"], "upstream-header-value")
 
-    @async_test
     async def test_visualisation_shows_dataset_if_authorised(self):
         await flush_database()
         await flush_redis()
 
         session, cleanup_session = client_session()
-        self.add_async_cleanup(cleanup_session)
+        self.addAsyncCleanup(cleanup_session)
 
         cleanup_application_1 = await create_application()
-        self.add_async_cleanup(cleanup_application_1)
+        self.addAsyncCleanup(cleanup_application_1)
 
         is_logged_in = True
         codes = iter(["some-code"])
@@ -663,7 +653,7 @@ class TestApplication(unittest.TestCase):
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
-        self.add_async_cleanup(sso_cleanup)
+        self.addAsyncCleanup(sso_cleanup)
 
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
@@ -767,7 +757,7 @@ class TestApplication(unittest.TestCase):
                 web.get("/{path:.*}", handle_general_gitlab),
             ],
         )
-        self.add_async_cleanup(gitlab_cleanup)
+        self.addAsyncCleanup(gitlab_cleanup)
 
         stdout, stderr, code = await give_user_dataset_perms("dataset_1")
         self.assertEqual(stdout, b"")
@@ -989,16 +979,15 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(received_content, {"data": list(range(1, 20001))})
         self.assertEqual(received_status, 200)
 
-    @async_test
     async def test_application_spawn(self):
         await flush_database()
         await flush_redis()
 
         session, cleanup_session = client_session()
-        self.add_async_cleanup(cleanup_session)
+        self.addAsyncCleanup(cleanup_session)
 
         cleanup_application_1 = await create_application()
-        self.add_async_cleanup(cleanup_application_1)
+        self.addAsyncCleanup(cleanup_application_1)
 
         is_logged_in = True
         codes = iter(["some-code"])
@@ -1014,7 +1003,7 @@ class TestApplication(unittest.TestCase):
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
-        self.add_async_cleanup(sso_cleanup)
+        self.addAsyncCleanup(sso_cleanup)
 
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
@@ -1108,23 +1097,22 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(received_binary_content, b"some-\0binary-data")
         self.assertEqual(received_text_content, "some-text-data")
 
-    @async_test
     async def test_application_redirects_to_sso_if_initially_not_authorized(self):
         await flush_database()
         await flush_redis()
 
         session, cleanup_session = client_session()
-        self.add_async_cleanup(cleanup_session)
+        self.addAsyncCleanup(cleanup_session)
 
         cleanup_application = await create_application()
-        self.add_async_cleanup(cleanup_application)
+        self.addAsyncCleanup(cleanup_application)
 
         is_logged_in = False
         codes = iter([])
         tokens = iter([])
         auth_to_me = {}
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
-        self.add_async_cleanup(sso_cleanup)
+        self.addAsyncCleanup(sso_cleanup)
 
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 

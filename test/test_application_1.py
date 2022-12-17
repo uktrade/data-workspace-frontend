@@ -1,5 +1,3 @@
-import asyncio
-
 import csv
 import io
 import json
@@ -7,7 +5,6 @@ import os
 import unittest
 
 from test.utility_functions import (
-    async_test,
     add_user_to_mlflow_instance,
     b64_decode,
     client_session,
@@ -46,18 +43,13 @@ from test.pages import (  # pylint: disable=wrong-import-order
 )
 
 
-class TestApplication(unittest.TestCase):
-    def add_async_cleanup(self, coroutine):
-        loop = asyncio.get_event_loop()
-        self.addCleanup(loop.run_until_complete, coroutine())
-
-    @async_test
+class TestApplication(unittest.IsolatedAsyncioTestCase):
     async def test_application_redirects_to_sso_if_different_ip_group(self):
         await flush_database()
         await flush_redis()
 
         session, cleanup_session = client_session()
-        self.add_async_cleanup(cleanup_session)
+        self.addAsyncCleanup(cleanup_session)
 
         cleanup_application = await create_application(
             env=lambda: {
@@ -67,7 +59,7 @@ class TestApplication(unittest.TestCase):
                 "X_FORWARDED_FOR_TRUSTED_HOPS": "2",
             }
         )
-        self.add_async_cleanup(cleanup_application)
+        self.addAsyncCleanup(cleanup_application)
 
         is_logged_in = True
         codes = iter(["some-code-1", "some-code-2", "some-code-3"])
@@ -85,7 +77,7 @@ class TestApplication(unittest.TestCase):
         sso_cleanup, number_of_times_at_sso = await create_sso(
             is_logged_in, codes, tokens, auth_to_me
         )
-        self.add_async_cleanup(sso_cleanup)
+        self.addAsyncCleanup(sso_cleanup)
 
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
@@ -144,16 +136,15 @@ class TestApplication(unittest.TestCase):
             self.assertEqual(200, response.status)
             self.assertEqual(number_of_times_at_sso(), 3)
 
-    @async_test
     async def test_application_download(self):
         await flush_database()
         await flush_redis()
 
         session, cleanup_session = client_session()
-        self.add_async_cleanup(cleanup_session)
+        self.addAsyncCleanup(cleanup_session)
 
         cleanup_application = await create_application()
-        self.add_async_cleanup(cleanup_application)
+        self.addAsyncCleanup(cleanup_application)
 
         is_logged_in = True
         codes = iter(["some-code", "some-other-code"])
@@ -170,7 +161,7 @@ class TestApplication(unittest.TestCase):
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
-        self.add_async_cleanup(sso_cleanup)
+        self.addAsyncCleanup(sso_cleanup)
 
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
@@ -283,16 +274,15 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(rows_2[20001][0], "Number of rows: 20000")
         self.assertEqual(rows_3[20001][0], "Number of rows: 20000")
 
-    @async_test
     async def test_hawk_authenticated_source_table_api_endpoint(self):
         await flush_database()
         await flush_redis()
 
         session, cleanup_session = client_session()
-        self.add_async_cleanup(cleanup_session)
+        self.addAsyncCleanup(cleanup_session)
 
         cleanup_application = await create_application()
-        self.add_async_cleanup(cleanup_application)
+        self.addAsyncCleanup(cleanup_application)
 
         is_logged_in = True
         codes = iter(["some-code", "some-other-code"])
@@ -309,7 +299,7 @@ class TestApplication(unittest.TestCase):
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
-        self.add_async_cleanup(sso_cleanup)
+        self.addAsyncCleanup(sso_cleanup)
 
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
@@ -384,13 +374,12 @@ class TestApplication(unittest.TestCase):
             content = await response.text()
         self.assertEqual(status, 401)
 
-    @async_test
     async def test_mirror(self):
         session, cleanup_session = client_session()
-        self.add_async_cleanup(cleanup_session)
+        self.addAsyncCleanup(cleanup_session)
 
         cleanup_application = await create_application()
-        self.add_async_cleanup(cleanup_application)
+        self.addAsyncCleanup(cleanup_application)
 
         is_logged_in = True
         codes = iter(["some-code", "some-other-code"])
@@ -407,10 +396,10 @@ class TestApplication(unittest.TestCase):
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
-        self.add_async_cleanup(sso_cleanup)
+        self.addAsyncCleanup(sso_cleanup)
 
         mirror_cleanup = await create_mirror()
-        self.add_async_cleanup(mirror_cleanup)
+        self.addAsyncCleanup(mirror_cleanup)
 
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
@@ -423,16 +412,15 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertEqual(content, "Mirror path: /some-remote-folder/some/path/in/mirror")
 
-    @async_test
     async def test_gitlab_application_can_be_managed(self):
         await flush_database()
         await flush_redis()
 
         session, cleanup_session = client_session()
-        self.add_async_cleanup(cleanup_session)
+        self.addAsyncCleanup(cleanup_session)
 
         cleanup_application = await create_application()
-        self.add_async_cleanup(cleanup_application)
+        self.addAsyncCleanup(cleanup_application)
 
         is_logged_in = True
         codes = iter(["some-code", "some-other-code"])
@@ -448,7 +436,7 @@ class TestApplication(unittest.TestCase):
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
-        self.add_async_cleanup(sso_cleanup)
+        self.addAsyncCleanup(sso_cleanup)
 
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
@@ -548,7 +536,7 @@ class TestApplication(unittest.TestCase):
                 web.get("/{path:.*}", handle_general_gitlab),
             ],
         )
-        self.add_async_cleanup(gitlab_cleanup)
+        self.addAsyncCleanup(gitlab_cleanup)
 
         async with session.request(
             "GET", "http://dataworkspace.test:8000/visualisations"
@@ -588,7 +576,7 @@ class TestApplication(unittest.TestCase):
             )
 
         ecr_cleanup = await create_server(8008, [web.post("/{path:.*}", handle_general_ecr)])
-        self.add_async_cleanup(ecr_cleanup)
+        self.addAsyncCleanup(ecr_cleanup)
 
         async with session.request(
             "GET",
@@ -617,13 +605,12 @@ class TestApplication(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertIn("Give access", content)
 
-    @async_test
     async def test_sentry_dsn_does_not_stop_proxy_from_becoming_healthy(self):
         _, cleanup_session = client_session()
-        self.add_async_cleanup(cleanup_session)
+        self.addAsyncCleanup(cleanup_session)
 
         cleanup_sentry, _ = await create_sentry()
-        self.add_async_cleanup(cleanup_sentry)
+        self.addAsyncCleanup(cleanup_sentry)
 
         cleanup_application = await create_application(
             env=lambda: {
@@ -631,14 +618,13 @@ class TestApplication(unittest.TestCase):
                 "SENTRY_ENVIRONMENT": "Test",
             }
         )
-        self.add_async_cleanup(cleanup_application)
+        self.addAsyncCleanup(cleanup_application)
 
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
-    @async_test
     async def test_search_filter_result_predictions(self):
         cleanup_application = await create_application()
-        self.add_async_cleanup(cleanup_application)
+        self.addAsyncCleanup(cleanup_application)
 
         is_logged_in = True
         codes = iter(["some-code"])
@@ -654,7 +640,7 @@ class TestApplication(unittest.TestCase):
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
-        self.add_async_cleanup(sso_cleanup)
+        self.addAsyncCleanup(sso_cleanup)
 
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
@@ -662,7 +648,7 @@ class TestApplication(unittest.TestCase):
         assert code == 0
 
         browser = await get_browser()
-        self.add_async_cleanup(browser.close)
+        self.addAsyncCleanup(browser.close)
         home_page = await HomePage(browser=browser).open()
 
         with_no_filters = find_search_filter_labels(await home_page.get_html())
@@ -741,16 +727,15 @@ class TestApplication(unittest.TestCase):
         assert "ONS (1)" in with_dit_and_ons_filters
         assert "HMRC (1)" in with_dit_and_ons_filters
 
-    @async_test
     async def test_tool_query_log_sync(self):
         await flush_database()
         await flush_redis()
 
         session, cleanup_session = client_session()
-        self.add_async_cleanup(cleanup_session)
+        self.addAsyncCleanup(cleanup_session)
 
         cleanup_application = await create_application()
-        self.add_async_cleanup(cleanup_application)
+        self.addAsyncCleanup(cleanup_application)
 
         is_logged_in = True
         codes = iter(["some-code"])
@@ -766,7 +751,7 @@ class TestApplication(unittest.TestCase):
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
-        self.add_async_cleanup(sso_cleanup)
+        self.addAsyncCleanup(sso_cleanup)
 
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
@@ -796,16 +781,15 @@ class TestApplication(unittest.TestCase):
             self.assertIn("INSERT INTO query_log_test VALUES(1, &#x27;a record&#x27;);", content)
             self.assertIn("SELECT * FROM query_log_test;", content)
 
-    @async_test
     async def test_sso_token_endpoint_header(self):
         await flush_database()
         await flush_redis()
 
         session, cleanup_session = client_session()
-        self.add_async_cleanup(cleanup_session)
+        self.addAsyncCleanup(cleanup_session)
 
         cleanup_application = await create_application()
-        self.add_async_cleanup(cleanup_application)
+        self.addAsyncCleanup(cleanup_application)
 
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
@@ -845,16 +829,15 @@ class TestApplication(unittest.TestCase):
 
         await sso_site.stop()
 
-    @async_test
     async def test_dataset_finder(self):
         await flush_database()
         await flush_redis()
 
         session, cleanup_session = client_session()
-        self.add_async_cleanup(cleanup_session)
+        self.addAsyncCleanup(cleanup_session)
 
         cleanup_application = await create_application()
-        self.add_async_cleanup(cleanup_application)
+        self.addAsyncCleanup(cleanup_application)
 
         is_logged_in = True
         codes = iter(["some-code", "some-other-code"])
@@ -871,7 +854,7 @@ class TestApplication(unittest.TestCase):
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
-        self.add_async_cleanup(sso_cleanup)
+        self.addAsyncCleanup(sso_cleanup)
 
         await set_waffle_flag(settings.DATASET_FINDER_ADMIN_ONLY_FLAG)
 
@@ -969,16 +952,15 @@ class TestApplication(unittest.TestCase):
             content = await response.text()
         self.assertIn("There are no matches for the phrase “new”.", content)
 
-    @async_test
     async def test_mlflow(self):
         await flush_database()
         await flush_redis()
 
         session, cleanup_session = client_session()
-        self.add_async_cleanup(cleanup_session)
+        self.addAsyncCleanup(cleanup_session)
 
         cleanup_mlflow, mlflow_requests = await create_mlflow()
-        self.add_async_cleanup(cleanup_mlflow)
+        self.addAsyncCleanup(cleanup_mlflow)
 
         cleanup_application = await create_application(
             env=lambda: {
@@ -993,7 +975,7 @@ class TestApplication(unittest.TestCase):
                 "MLFLOW_PORT": "8004",
             }
         )
-        self.add_async_cleanup(cleanup_application)
+        self.addAsyncCleanup(cleanup_application)
 
         is_logged_in = True
         codes = iter(["some-code"])
@@ -1009,7 +991,7 @@ class TestApplication(unittest.TestCase):
             }
         }
         sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
-        self.add_async_cleanup(sso_cleanup)
+        self.addAsyncCleanup(sso_cleanup)
 
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
