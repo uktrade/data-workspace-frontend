@@ -39,7 +39,7 @@
 
       <form method="post" novalidate>
         {% csrf_token %}
-        <div class="govuk-form-group {% if form.errors %}govuk-form-group--error{% endif %}">
+        <div class="govuk-form-group govuk-!-margin-bottom-7 {% if form.errors %}govuk-form-group--error{% endif %}">
               <h1 class="govuk-label-wrapper">
                 <label class="govuk-label govuk-!-font-weight-bold govuk-!-margin-bottom-3" for="id_email">
                   {{ form.email.label }}
@@ -59,7 +59,7 @@
                 </p>
               {% endif %}
               <input
-                class="govuk-input govuk-!-width-two-thirds govuk-!-margin-bottom-6 {% if form.email.errors %} govuk-input--error{% endif %}"
+                class="govuk-input govuk-!-width-two-thirds govuk-!-margin-bottom-7 {% if form.email.errors %} govuk-input--error{% endif %}"
                 type="email"
                 name="email"
                 id="id_email"

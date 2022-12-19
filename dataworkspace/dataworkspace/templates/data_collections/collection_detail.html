@@ -199,7 +199,7 @@
           </div>
           <div class="govuk-grid-column-one-third govuk-!-margin-bottom-2">
             <h2 class="govuk-heading-s govuk-!-margin-bottom-1">Collection owner</h2>
-            <p class="govuk-body">{{ source_object.owner.get_full_name|default_if_none:"Not assigned" }}<br>
+            <p class="govuk-body-s">{{ source_object.owner.get_full_name|default_if_none:"Not assigned" }}<br>
               {% if source_object.owner %}(<a class="govuk-link govuk-link--no-visited-state"
                                               href="mailto:{{ source_object.owner.email }}">{{ source_object.owner.email }}</a>
                 ){% endif %}</p>
@@ -207,7 +207,7 @@
           {% if user_memberships.count > 0 %}
             <div class="govuk-grid-column-one-third govuk-!-margin-bottom-2">
               <h2 class="govuk-heading-s govuk-!-margin-bottom-1">Collection users</h2>
-              <p class="govuk-body">
+              <p class="govuk-body-s">
                 {% for membership in user_memberships|slice:":5" %}
                   {{ membership.user.get_full_name }}{% if not forloop.last %}, {% endif %}
                 {% endfor %}
@@ -218,7 +218,7 @@
             </div>
           {% endif %}
           <div class="govuk-grid-column-one-third govuk-!-margin-bottom-2">
-            <p class="govuk-body"><a class="govuk-link govuk-link--no-visited-state"
+            <p class="govuk-body-s"><a class="govuk-link govuk-link--no-visited-state"
                                      href="{% url 'data_collections:collection-users' source_object.id %}">View and edit
               collection users</a></p>
           </div>
