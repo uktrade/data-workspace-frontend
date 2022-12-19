@@ -16,6 +16,7 @@ from dataworkspace.apps.core.utils import update_tools_access_policy_task
 # RunPython operations to refer to the local versions:
 # dataworkspace.apps.core.migrations.0011_auto_20221017_1448
 
+
 def migrate_team_members(apps, _):
     """
     Loop through users with team membership and update their
@@ -28,149 +29,337 @@ def migrate_team_members(apps, _):
 
 class Migration(migrations.Migration):
 
-    replaces = [('core', '0001_initial'), ('core', '0002_databaseuser'), ('core', '0003_usersatisfactionsurvey'), ('core', '0004_auto_20210615_1619'), ('core', '0005_alter_usersatisfactionsurvey_how_satisfied'), ('core', '0006_chartbuilderchart'), ('core', '0007_auto_20220404_1519'), ('core', '0008_newslettersubscription'), ('core', '0009_alter_newslettersubscription_user'), ('core', '0010_mlflowauthoriseduser_mlflowinstance'), ('core', '0011_auto_20221017_1448')]
+    replaces = [
+        ("core", "0001_initial"),
+        ("core", "0002_databaseuser"),
+        ("core", "0003_usersatisfactionsurvey"),
+        ("core", "0004_auto_20210615_1619"),
+        ("core", "0005_alter_usersatisfactionsurvey_how_satisfied"),
+        ("core", "0006_chartbuilderchart"),
+        ("core", "0007_auto_20220404_1519"),
+        ("core", "0008_newslettersubscription"),
+        ("core", "0009_alter_newslettersubscription_user"),
+        ("core", "0010_mlflowauthoriseduser_mlflowinstance"),
+        ("core", "0011_auto_20221017_1448"),
+    ]
 
     initial = True
 
     dependencies = [
-        ('explorer', '0018_chartbuilderchart_thumbnail'),
-        ('contenttypes', '0002_remove_content_type_name'),
+        ("explorer", "0018_chartbuilderchart_thumbnail"),
+        ("contenttypes", "0002_remove_content_type_name"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Database',
+            name="Database",
             fields=[
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('memorable_name', models.CharField(help_text='Must match the set of environment variables starting with DATA_DB__[memorable_name]__', max_length=128, unique=True, validators=[django.core.validators.RegexValidator(regex='[A-Za-z0-9_]')])),
-                ('is_public', models.BooleanField(default=False, help_text='If public, the same credentials for the database will be shared with each user. If not public, each user must be explicilty given access, and temporary credentials will be created for each.')),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                (
+                    "memorable_name",
+                    models.CharField(
+                        help_text="Must match the set of environment variables starting with DATA_DB__[memorable_name]__",
+                        max_length=128,
+                        unique=True,
+                        validators=[django.core.validators.RegexValidator(regex="[A-Za-z0-9_]")],
+                    ),
+                ),
+                (
+                    "is_public",
+                    models.BooleanField(
+                        default=False,
+                        help_text="If public, the same credentials for the database will be shared with each user. If not public, each user must be explicilty given access, and temporary credentials will be created for each.",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'app_database',
+                "db_table": "app_database",
             },
         ),
         migrations.CreateModel(
-            name='DatabaseUser',
+            name="DatabaseUser",
             fields=[
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('username', models.CharField(max_length=256)),
-                ('deleted_date', models.DateTimeField(blank=True, null=True)),
-                ('owner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='db_user', to=settings.AUTH_USER_MODEL)),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                ("username", models.CharField(max_length=256)),
+                ("deleted_date", models.DateTimeField(blank=True, null=True)),
+                (
+                    "owner",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="db_user",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='Team',
+            name="Team",
             fields=[
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('name', models.CharField(max_length=256, unique=True)),
-                ('schema_name', models.CharField(max_length=63, unique=True)),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                ("name", models.CharField(max_length=256, unique=True)),
+                ("schema_name", models.CharField(max_length=63, unique=True)),
             ],
             options={
-                'verbose_name': 'Team',
-                'verbose_name_plural': 'Teams',
+                "verbose_name": "Team",
+                "verbose_name_plural": "Teams",
             },
         ),
         migrations.CreateModel(
-            name='TeamMembership',
+            name="TeamMembership",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
-                ('team', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='memberships', to='core.team')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='team_memberships', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
+                (
+                    "team",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="memberships",
+                        to="core.team",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="team_memberships",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'unique_together': {('team_id', 'user_id')},
+                "unique_together": {("team_id", "user_id")},
             },
         ),
         migrations.AddField(
-            model_name='team',
-            name='member',
-            field=models.ManyToManyField(through='core.TeamMembership', to=settings.AUTH_USER_MODEL),
+            model_name="team",
+            name="member",
+            field=models.ManyToManyField(
+                through="core.TeamMembership", to=settings.AUTH_USER_MODEL
+            ),
         ),
         migrations.CreateModel(
-            name='UserSatisfactionSurvey',
+            name="UserSatisfactionSurvey",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
-                ('how_satisfied', models.CharField(choices=[('very-satified', 'Very satisfied'), ('satified', 'Satisfied'), ('neither', 'Neither satisfied nor dissatisfied'), ('dissatisfied', 'Dissatisfied'), ('very-dissatisfied', 'Very dissatisfied')], max_length=32)),
-                ('trying_to_do', models.TextField(blank=True, choices=[('looking', 'Looking for data'), ('access-data', 'Trying to access data'), ('analyse-data', 'Analyse data'), ('use-tool', 'Use a tool'), ('create-visualisation', 'Create a data visualisation'), ('share-date', 'Share data'), ('share-visualisation', 'Share a data visualisation'), ('view-visualisation', 'View a data visualisation'), ('other', 'Other'), ('dont-know', 'Don’t know')], null=True)),
-                ('improve_service', models.TextField(blank=True, null=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
+                (
+                    "how_satisfied",
+                    models.CharField(
+                        choices=[
+                            ("very-satified", "Very satisfied"),
+                            ("satified", "Satisfied"),
+                            ("neither", "Neither satisfied nor dissatisfied"),
+                            ("dissatisfied", "Dissatisfied"),
+                            ("very-dissatisfied", "Very dissatisfied"),
+                        ],
+                        max_length=32,
+                    ),
+                ),
+                (
+                    "trying_to_do",
+                    models.TextField(
+                        blank=True,
+                        choices=[
+                            ("looking", "Looking for data"),
+                            ("access-data", "Trying to access data"),
+                            ("analyse-data", "Analyse data"),
+                            ("use-tool", "Use a tool"),
+                            ("create-visualisation", "Create a data visualisation"),
+                            ("share-date", "Share data"),
+                            ("share-visualisation", "Share a data visualisation"),
+                            ("view-visualisation", "View a data visualisation"),
+                            ("other", "Other"),
+                            ("dont-know", "Don’t know"),
+                        ],
+                        null=True,
+                    ),
+                ),
+                ("improve_service", models.TextField(blank=True, null=True)),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='ChartBuilderChart',
+            name="ChartBuilderChart",
             fields=[
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('title', models.CharField(max_length=255)),
-                ('description', models.TextField(blank=True, null=True)),
-                ('chart_config', models.JSONField(null=True)),
-                ('thumbnail', models.FileField(blank=True, null=True, storage=dataworkspace.apps.core.storage.S3FileStorage(location='chart-builder-thumbnails'), upload_to='')),
-                ('created_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created+', to=settings.AUTH_USER_MODEL)),
-                ('query_log', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='chart', to='explorer.querylog')),
-                ('updated_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='updated+', to=settings.AUTH_USER_MODEL)),
-                ('source_content_type', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='contenttypes.contenttype')),
-                ('source_id', models.CharField(max_length=255, null=True)),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                ("title", models.CharField(max_length=255)),
+                ("description", models.TextField(blank=True, null=True)),
+                ("chart_config", models.JSONField(null=True)),
+                (
+                    "thumbnail",
+                    models.FileField(
+                        blank=True,
+                        null=True,
+                        storage=dataworkspace.apps.core.storage.S3FileStorage(
+                            location="chart-builder-thumbnails"
+                        ),
+                        upload_to="",
+                    ),
+                ),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="created+",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "query_log",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="chart",
+                        to="explorer.querylog",
+                    ),
+                ),
+                (
+                    "updated_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="updated+",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "source_content_type",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="contenttypes.contenttype",
+                    ),
+                ),
+                ("source_id", models.CharField(max_length=255, null=True)),
             ],
             options={
-                'ordering': ('-created_date',),
+                "ordering": ("-created_date",),
             },
         ),
         migrations.CreateModel(
-            name='NewsletterSubscription',
+            name="NewsletterSubscription",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
-                ('is_active', models.BooleanField(default=False)),
-                ('email_address', models.CharField(max_length=256)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='newsletter_signups', to=settings.AUTH_USER_MODEL, unique=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
+                ("is_active", models.BooleanField(default=False)),
+                ("email_address", models.CharField(max_length=256)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="newsletter_signups",
+                        to=settings.AUTH_USER_MODEL,
+                        unique=True,
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='MLFlowInstance',
+            name="MLFlowInstance",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
-                ('name', models.CharField(max_length=256)),
-                ('hostname', models.CharField(max_length=256, unique=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
+                ("name", models.CharField(max_length=256)),
+                ("hostname", models.CharField(max_length=256, unique=True)),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='MLFlowAuthorisedUser',
+            name="MLFlowAuthorisedUser",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
-                ('instance', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='users', to='core.mlflowinstance')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='authorised_mlflow_instances', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
+                (
+                    "instance",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="users",
+                        to="core.mlflowinstance",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="authorised_mlflow_instances",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
-        migrations.RunPython(migrate_team_members, migrations.RunPython.noop)
+        migrations.RunPython(migrate_team_members, migrations.RunPython.noop),
     ]

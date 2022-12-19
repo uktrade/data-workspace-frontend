@@ -19,6 +19,7 @@ from dataworkspace.apps.core.utils import (
 # RunPython operations to refer to the local versions:
 # dataworkspace.apps.applications.migrations.0016_applicationinstancedbusers_db_persistent_role
 
+
 def migrate_existing_application_instance_db_users(apps, _):
     ApplicationInstanceDbUsers = apps.get_model("applications", "ApplicationInstanceDbUsers")
     for db_user in ApplicationInstanceDbUsers.objects.all():
@@ -37,373 +38,640 @@ def migrate_existing_application_instance_db_users(apps, _):
 
 class Migration(migrations.Migration):
 
-    replaces = [('applications', '0001_squashed_0022_auto_20200414_1352'), ('applications', '0002_remove_applicationtemplate_host_pattern'), ('applications', '0003_auto_20200415_1143'), ('applications', '0004_auto_20200416_1952'), ('applications', '0005_visualisationapproval'), ('applications', '0006_auto_20200430_1503'), ('applications', '0007_applicationtemplate_wrap'), ('applications', '0008_auto_20200519_1245'), ('applications', '0009_auto_20200610_1318'), ('applications', '0010_auto_20200724_1331'), ('applications', '0011_auto_20200810_1124'), ('applications', '0012_auto_20201015_0738'), ('applications', '0013_auto_20201030_0844'), ('applications', '0014_usertoolconfiguration'), ('applications', '0015_auto_20201113_1103'), ('applications', '0016_applicationinstancedbusers_db_persistent_role'), ('applications', '0017_applicationtemplate_group_name'), ('applications', '0018_alter_applicationtemplate_group_name'), ('applications', '0019_alter_applicationtemplate_group_name'), ('applications', '0020_alter_applicationtemplate_group_name')]
+    replaces = [
+        ("applications", "0001_squashed_0022_auto_20200414_1352"),
+        ("applications", "0002_remove_applicationtemplate_host_pattern"),
+        ("applications", "0003_auto_20200415_1143"),
+        ("applications", "0004_auto_20200416_1952"),
+        ("applications", "0005_visualisationapproval"),
+        ("applications", "0006_auto_20200430_1503"),
+        ("applications", "0007_applicationtemplate_wrap"),
+        ("applications", "0008_auto_20200519_1245"),
+        ("applications", "0009_auto_20200610_1318"),
+        ("applications", "0010_auto_20200724_1331"),
+        ("applications", "0011_auto_20200810_1124"),
+        ("applications", "0012_auto_20201015_0738"),
+        ("applications", "0013_auto_20201030_0844"),
+        ("applications", "0014_usertoolconfiguration"),
+        ("applications", "0015_auto_20201113_1103"),
+        ("applications", "0016_applicationinstancedbusers_db_persistent_role"),
+        ("applications", "0017_applicationtemplate_group_name"),
+        ("applications", "0018_alter_applicationtemplate_group_name"),
+        ("applications", "0019_alter_applicationtemplate_group_name"),
+        ("applications", "0020_alter_applicationtemplate_group_name"),
+    ]
 
     initial = True
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('core', '0001_initial'),
+        ("core", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ApplicationInstance',
+            name="ApplicationInstance",
             fields=[
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('public_host', models.CharField(help_text='The leftmost part of the domain name of this application', max_length=63)),
-                ('spawner', models.CharField(help_text='The spawner used to start the application', max_length=15)),
-                ('spawner_application_template_options', models.CharField(help_text='The spawner options at the time the application instance was spawned', max_length=10240)),
-                ('spawner_application_instance_id', models.CharField(help_text='An ID that the spawner understands to control and report on the application', max_length=128)),
-                ('state', models.CharField(choices=[('SPAWNING', 'Spawning'), ('RUNNING', 'Running'), ('STOPPED', 'Stopped')], default='SPAWNING', max_length=16)),
-                ('proxy_url', models.CharField(help_text='The URL that the proxy can proxy HTTP and WebSockets requests to', max_length=256)),
-                ('single_running_or_spawning_integrity', models.CharField(help_text='Used internally to avoid duplicate running applications', max_length=63, unique=True)),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                (
+                    "public_host",
+                    models.CharField(
+                        help_text="The leftmost part of the domain name of this application",
+                        max_length=63,
+                    ),
+                ),
+                (
+                    "spawner",
+                    models.CharField(
+                        help_text="The spawner used to start the application", max_length=15
+                    ),
+                ),
+                (
+                    "spawner_application_template_options",
+                    models.CharField(
+                        help_text="The spawner options at the time the application instance was spawned",
+                        max_length=10240,
+                    ),
+                ),
+                (
+                    "spawner_application_instance_id",
+                    models.CharField(
+                        help_text="An ID that the spawner understands to control and report on the application",
+                        max_length=128,
+                    ),
+                ),
+                (
+                    "state",
+                    models.CharField(
+                        choices=[
+                            ("SPAWNING", "Spawning"),
+                            ("RUNNING", "Running"),
+                            ("STOPPED", "Stopped"),
+                        ],
+                        default="SPAWNING",
+                        max_length=16,
+                    ),
+                ),
+                (
+                    "proxy_url",
+                    models.CharField(
+                        help_text="The URL that the proxy can proxy HTTP and WebSockets requests to",
+                        max_length=256,
+                    ),
+                ),
+                (
+                    "single_running_or_spawning_integrity",
+                    models.CharField(
+                        help_text="Used internally to avoid duplicate running applications",
+                        max_length=63,
+                        unique=True,
+                    ),
+                ),
             ],
             options={
-                'db_table': 'app_applicationinstance',
-                'permissions': [('start_all_applications', 'Can start all applications'), ('access_appstream', 'Can access appstream')],
+                "db_table": "app_applicationinstance",
+                "permissions": [
+                    ("start_all_applications", "Can start all applications"),
+                    ("access_appstream", "Can access appstream"),
+                ],
             },
         ),
         migrations.CreateModel(
-            name='ApplicationTemplate',
+            name="ApplicationTemplate",
             fields=[
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('name', models.CharField(help_text='Used in URLs: only lowercase letters allowed', max_length=128, unique=True, validators=[django.core.validators.RegexValidator(regex='^[a-z]+$')])),
-                ('nice_name', models.CharField(max_length=128, unique=True, validators=[django.core.validators.RegexValidator(regex='^[a-zA-Z0-9\\- ]+$')])),
-                ('spawner', models.CharField(choices=[('PROCESS', 'Process')], default='PROCESS', max_length=10)),
-                ('spawner_options', models.CharField(help_text='Options that the spawner understands to start the application', max_length=10240)),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="Used in URLs: only lowercase letters allowed",
+                        max_length=128,
+                        unique=True,
+                        validators=[django.core.validators.RegexValidator(regex="^[a-z]+$")],
+                    ),
+                ),
+                (
+                    "nice_name",
+                    models.CharField(
+                        max_length=128,
+                        unique=True,
+                        validators=[
+                            django.core.validators.RegexValidator(regex="^[a-zA-Z0-9\\- ]+$")
+                        ],
+                    ),
+                ),
+                (
+                    "spawner",
+                    models.CharField(
+                        choices=[("PROCESS", "Process")], default="PROCESS", max_length=10
+                    ),
+                ),
+                (
+                    "spawner_options",
+                    models.CharField(
+                        help_text="Options that the spawner understands to start the application",
+                        max_length=10240,
+                    ),
+                ),
             ],
             options={
-                'db_table': 'app_applicationtemplate',
+                "db_table": "app_applicationtemplate",
             },
         ),
         migrations.AddIndex(
-            model_name='applicationtemplate',
-            index=models.Index(fields=['name'], name='app_applica_name_76f0ef_idx'),
+            model_name="applicationtemplate",
+            index=models.Index(fields=["name"], name="app_applica_name_76f0ef_idx"),
         ),
         migrations.AddField(
-            model_name='applicationinstance',
-            name='application_template',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='applications.applicationtemplate'),
+            model_name="applicationinstance",
+            name="application_template",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT, to="applications.applicationtemplate"
+            ),
         ),
         migrations.AddField(
-            model_name='applicationinstance',
-            name='owner',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to=settings.AUTH_USER_MODEL),
+            model_name="applicationinstance",
+            name="owner",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT, to=settings.AUTH_USER_MODEL
+            ),
         ),
         migrations.AddIndex(
-            model_name='applicationinstance',
-            index=models.Index(fields=['owner', 'created_date'], name='app_applica_owner_i_d86479_idx'),
+            model_name="applicationinstance",
+            index=models.Index(
+                fields=["owner", "created_date"], name="app_applica_owner_i_d86479_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='applicationinstance',
-            index=models.Index(fields=['public_host', 'state'], name='app_applica_public__48682b_idx'),
+            model_name="applicationinstance",
+            index=models.Index(
+                fields=["public_host", "state"], name="app_applica_public__48682b_idx"
+            ),
         ),
         migrations.AddField(
-            model_name='applicationtemplate',
-            name='host_pattern',
+            model_name="applicationtemplate",
+            name="host_pattern",
             field=models.CharField(max_length=128, unique=True),
         ),
         migrations.AddField(
-            model_name='applicationtemplate',
-            name='spawner_time',
+            model_name="applicationtemplate",
+            name="spawner_time",
             field=models.IntegerField(default=120),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='applicationinstance',
-            name='cpu',
+            model_name="applicationinstance",
+            name="cpu",
             field=models.CharField(max_length=16, null=True),
         ),
         migrations.AddField(
-            model_name='applicationinstance',
-            name='memory',
+            model_name="applicationinstance",
+            name="memory",
             field=models.CharField(max_length=16, null=True),
         ),
         migrations.CreateModel(
-            name='ApplicationInstanceReport',
-            fields=[
-            ],
+            name="ApplicationInstanceReport",
+            fields=[],
             options={
-                'verbose_name': 'Application report',
-                'verbose_name_plural': 'Application report',
-                'proxy': True,
-                'indexes': [],
-                'constraints': [],
+                "verbose_name": "Application report",
+                "verbose_name_plural": "Application report",
+                "proxy": True,
+                "indexes": [],
+                "constraints": [],
             },
-            bases=('applications.applicationinstance',),
+            bases=("applications.applicationinstance",),
         ),
         migrations.AlterField(
-            model_name='applicationtemplate',
-            name='nice_name',
-            field=models.CharField(max_length=128, unique=True, validators=[django.core.validators.RegexValidator(regex='^[a-zA-Z0-9\\- ]+$')], verbose_name='application'),
+            model_name="applicationtemplate",
+            name="nice_name",
+            field=models.CharField(
+                max_length=128,
+                unique=True,
+                validators=[django.core.validators.RegexValidator(regex="^[a-zA-Z0-9\\- ]+$")],
+                verbose_name="application",
+            ),
         ),
         migrations.AddField(
-            model_name='applicationinstance',
-            name='spawner_created_at',
+            model_name="applicationinstance",
+            name="spawner_created_at",
             field=models.DateTimeField(null=True),
         ),
         migrations.AddField(
-            model_name='applicationinstance',
-            name='spawner_stopped_at',
+            model_name="applicationinstance",
+            name="spawner_stopped_at",
             field=models.DateTimeField(null=True),
         ),
         migrations.AddIndex(
-            model_name='applicationinstance',
-            index=models.Index(fields=['created_date'], name='app_applica_created_29c0c8_idx'),
+            model_name="applicationinstance",
+            index=models.Index(fields=["created_date"], name="app_applica_created_29c0c8_idx"),
         ),
         migrations.AddField(
-            model_name='applicationinstance',
-            name='spawner_cpu',
+            model_name="applicationinstance",
+            name="spawner_cpu",
             field=models.CharField(max_length=16, null=True),
         ),
         migrations.AddField(
-            model_name='applicationinstance',
-            name='spawner_memory',
+            model_name="applicationinstance",
+            name="spawner_memory",
             field=models.CharField(max_length=16, null=True),
         ),
         migrations.AddField(
-            model_name='applicationtemplate',
-            name='visible',
+            model_name="applicationtemplate",
+            name="visible",
             field=models.BooleanField(default=True),
         ),
         migrations.CreateModel(
-            name='ApplicationTemplateUserPermission',
+            name="ApplicationTemplateUserPermission",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
             ],
             options={
-                'db_table': 'app_applicationtemplateuserpermission',
+                "db_table": "app_applicationtemplateuserpermission",
             },
         ),
         migrations.CreateModel(
-            name='VisualisationTemplate',
-            fields=[
-            ],
+            name="VisualisationTemplate",
+            fields=[],
             options={
-                'verbose_name': 'Visualisation',
-                'proxy': True,
-                'indexes': [],
-                'constraints': [],
+                "verbose_name": "Visualisation",
+                "proxy": True,
+                "indexes": [],
+                "constraints": [],
             },
-            bases=('applications.applicationtemplate',),
+            bases=("applications.applicationtemplate",),
         ),
         migrations.AddField(
-            model_name='applicationtemplate',
-            name='application_type',
-            field=models.CharField(choices=[('VISUALISATION', 'Visualisation: One instance launched and accessed by all authorized users'), ('TOOL', 'Tool: A separate instance launched for each user')], default='TOOL', max_length=64),
+            model_name="applicationtemplate",
+            name="application_type",
+            field=models.CharField(
+                choices=[
+                    (
+                        "VISUALISATION",
+                        "Visualisation: One instance launched and accessed by all authorized users",
+                    ),
+                    ("TOOL", "Tool: A separate instance launched for each user"),
+                ],
+                default="TOOL",
+                max_length=64,
+            ),
         ),
         migrations.AddField(
-            model_name='applicationtemplate',
-            name='host_exact',
+            model_name="applicationtemplate",
+            name="host_exact",
             field=models.CharField(blank=True, max_length=128),
         ),
         migrations.AddField(
-            model_name='applicationtemplate',
-            name='user_access_type',
-            field=models.CharField(choices=[('REQUIRES_AUTHENTICATION', 'Requires authentication'), ('REQUIRES_AUTHORIZATION', 'Requires authorization')], default='REQUIRES_AUTHENTICATION', max_length=64),
+            model_name="applicationtemplate",
+            name="user_access_type",
+            field=models.CharField(
+                choices=[
+                    ("REQUIRES_AUTHENTICATION", "Requires authentication"),
+                    ("REQUIRES_AUTHORIZATION", "Requires authorization"),
+                ],
+                default="REQUIRES_AUTHENTICATION",
+                max_length=64,
+            ),
         ),
         migrations.AlterField(
-            model_name='applicationtemplate',
-            name='host_pattern',
+            model_name="applicationtemplate",
+            name="host_pattern",
             field=models.CharField(max_length=128),
         ),
         migrations.AlterField(
-            model_name='applicationtemplate',
-            name='spawner',
-            field=models.CharField(choices=[('PROCESS', 'Process'), ('FARGATE', 'Fargate')], default='FARGATE', max_length=10),
+            model_name="applicationtemplate",
+            name="spawner",
+            field=models.CharField(
+                choices=[("PROCESS", "Process"), ("FARGATE", "Fargate")],
+                default="FARGATE",
+                max_length=10,
+            ),
         ),
         migrations.AlterUniqueTogether(
-            name='applicationtemplate',
-            unique_together={('host_exact', 'host_pattern')},
+            name="applicationtemplate",
+            unique_together={("host_exact", "host_pattern")},
         ),
         migrations.AddIndex(
-            model_name='applicationtemplate',
-            index=models.Index(fields=['host_exact'], name='app_applica_host_ex_7bfb56_idx'),
+            model_name="applicationtemplate",
+            index=models.Index(fields=["host_exact"], name="app_applica_host_ex_7bfb56_idx"),
         ),
         migrations.AddField(
-            model_name='applicationtemplateuserpermission',
-            name='application_template',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='applications.applicationtemplate'),
+            model_name="applicationtemplateuserpermission",
+            name="application_template",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to="applications.applicationtemplate"
+            ),
         ),
         migrations.AddField(
-            model_name='applicationtemplateuserpermission',
-            name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
+            model_name="applicationtemplateuserpermission",
+            name="user",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL
+            ),
         ),
         migrations.AlterUniqueTogether(
-            name='applicationtemplateuserpermission',
-            unique_together={('user', 'application_template')},
+            name="applicationtemplateuserpermission",
+            unique_together={("user", "application_template")},
         ),
         migrations.AddIndex(
-            model_name='applicationtemplate',
-            index=models.Index(fields=['application_type'], name='app_applica_applica_dd47f1_idx'),
+            model_name="applicationtemplate",
+            index=models.Index(fields=["application_type"], name="app_applica_applica_dd47f1_idx"),
         ),
         migrations.CreateModel(
-            name='ApplicationInstanceDbUsers',
+            name="ApplicationInstanceDbUsers",
             fields=[
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('db_username', models.CharField(max_length=256)),
-                ('application_instance', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='applications.applicationinstance')),
-                ('db', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='core.database')),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                ("db_username", models.CharField(max_length=256)),
+                (
+                    "application_instance",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="applications.applicationinstance",
+                    ),
+                ),
+                (
+                    "db",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="core.database"
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.AddIndex(
-            model_name='applicationinstancedbusers',
-            index=models.Index(fields=['db_username'], name='application_db_user_1e30c1_idx'),
+            model_name="applicationinstancedbusers",
+            index=models.Index(fields=["db_username"], name="application_db_user_1e30c1_idx"),
         ),
         migrations.AlterModelOptions(
-            name='applicationinstance',
-            options={'permissions': [('start_all_applications', 'Can start all applications'), ('develop_visualisations', 'Can develop visualisations'), ('access_appstream', 'Can access appstream')]},
+            name="applicationinstance",
+            options={
+                "permissions": [
+                    ("start_all_applications", "Can start all applications"),
+                    ("develop_visualisations", "Can develop visualisations"),
+                    ("access_appstream", "Can access appstream"),
+                ]
+            },
         ),
         migrations.CreateModel(
-            name='ToolTemplate',
-            fields=[
-            ],
+            name="ToolTemplate",
+            fields=[],
             options={
-                'verbose_name': 'Tool',
-                'proxy': True,
-                'indexes': [],
-                'constraints': [],
+                "verbose_name": "Tool",
+                "proxy": True,
+                "indexes": [],
+                "constraints": [],
             },
-            bases=('applications.applicationtemplate',),
+            bases=("applications.applicationtemplate",),
         ),
         migrations.AlterUniqueTogether(
-            name='applicationtemplate',
+            name="applicationtemplate",
             unique_together=set(),
         ),
         migrations.AddField(
-            model_name='applicationtemplate',
-            name='gitlab_project_id',
-            field=models.IntegerField(help_text='The ID of the corresponding project in GitLab', null=True, unique=True),
+            model_name="applicationtemplate",
+            name="gitlab_project_id",
+            field=models.IntegerField(
+                help_text="The ID of the corresponding project in GitLab", null=True, unique=True
+            ),
         ),
         migrations.AddField(
-            model_name='applicationinstance',
-            name='commit_id',
+            model_name="applicationinstance",
+            name="commit_id",
             field=models.CharField(max_length=8, null=True),
         ),
         migrations.RemoveIndex(
-            model_name='applicationtemplate',
-            name='app_applica_host_ex_7bfb56_idx',
+            model_name="applicationtemplate",
+            name="app_applica_host_ex_7bfb56_idx",
         ),
         migrations.RenameField(
-            model_name='applicationtemplate',
-            old_name='host_exact',
-            new_name='host_basename',
+            model_name="applicationtemplate",
+            old_name="host_exact",
+            new_name="host_basename",
         ),
         migrations.AlterField(
-            model_name='applicationtemplate',
-            name='host_basename',
+            model_name="applicationtemplate",
+            name="host_basename",
             field=models.CharField(max_length=128, unique=True),
         ),
         migrations.AddIndex(
-            model_name='applicationtemplate',
-            index=models.Index(fields=['host_basename'], name='app_applica_host_ba_d9ab7e_idx'),
+            model_name="applicationtemplate",
+            index=models.Index(fields=["host_basename"], name="app_applica_host_ba_d9ab7e_idx"),
         ),
         migrations.RemoveField(
-            model_name='applicationtemplate',
-            name='host_pattern',
+            model_name="applicationtemplate",
+            name="host_pattern",
         ),
         migrations.AlterField(
-            model_name='applicationtemplate',
-            name='name',
-            field=models.CharField(help_text='Used in URLs: only lowercase letters allowed', max_length=128, validators=[django.core.validators.RegexValidator(regex='^[a-z]+$')]),
+            model_name="applicationtemplate",
+            name="name",
+            field=models.CharField(
+                help_text="Used in URLs: only lowercase letters allowed",
+                max_length=128,
+                validators=[django.core.validators.RegexValidator(regex="^[a-z]+$")],
+            ),
         ),
         migrations.AlterField(
-            model_name='applicationtemplate',
-            name='nice_name',
-            field=models.CharField(max_length=128, verbose_name='application'),
+            model_name="applicationtemplate",
+            name="nice_name",
+            field=models.CharField(max_length=128, verbose_name="application"),
         ),
         migrations.CreateModel(
-            name='VisualisationApproval',
+            name="VisualisationApproval",
             fields=[
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('approved', models.BooleanField(default=True)),
-                ('visualisation', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='applications.visualisationtemplate')),
-                ('approver', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to=settings.AUTH_USER_MODEL)),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                ("approved", models.BooleanField(default=True)),
+                (
+                    "visualisation",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="applications.visualisationtemplate",
+                    ),
+                ),
+                (
+                    "approver",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT, to=settings.AUTH_USER_MODEL
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.AlterField(
-            model_name='applicationtemplate',
-            name='visible',
-            field=models.BooleanField(default=True, help_text="For tools, whether this appears on the Tools page. For visualisations, whether it's accessible at its production URL."),
+            model_name="applicationtemplate",
+            name="visible",
+            field=models.BooleanField(
+                default=True,
+                help_text="For tools, whether this appears on the Tools page. For visualisations, whether it's accessible at its production URL.",
+            ),
         ),
         migrations.AddField(
-            model_name='applicationtemplate',
-            name='wrap',
-            field=models.CharField(choices=[('NONE', 'No wrapping'), ('FULL_HEIGHT_IFRAME', 'Wrapped in full height iframe'), ('IFRAME_WITH_VISUALISATIONS_HEADER', 'Wrapped in iframe with visualisations header')], default='NONE', max_length=128),
+            model_name="applicationtemplate",
+            name="wrap",
+            field=models.CharField(
+                choices=[
+                    ("NONE", "No wrapping"),
+                    ("FULL_HEIGHT_IFRAME", "Wrapped in full height iframe"),
+                    (
+                        "IFRAME_WITH_VISUALISATIONS_HEADER",
+                        "Wrapped in iframe with visualisations header",
+                    ),
+                ],
+                default="NONE",
+                max_length=128,
+            ),
         ),
         migrations.RemoveField(
-            model_name='applicationtemplate',
-            name='user_access_type',
+            model_name="applicationtemplate",
+            name="user_access_type",
         ),
         migrations.DeleteModel(
-            name='ApplicationTemplateUserPermission',
+            name="ApplicationTemplateUserPermission",
         ),
         migrations.AlterModelOptions(
-            name='applicationinstance',
-            options={'permissions': [('start_all_applications', 'Can start all applications'), ('develop_visualisations', 'Can develop visualisations'), ('access_appstream', 'Can access appstream'), ('access_quicksight', 'Can access AWS QuickSight')]},
+            name="applicationinstance",
+            options={
+                "permissions": [
+                    ("start_all_applications", "Can start all applications"),
+                    ("develop_visualisations", "Can develop visualisations"),
+                    ("access_appstream", "Can access appstream"),
+                    ("access_quicksight", "Can access AWS QuickSight"),
+                ]
+            },
         ),
         migrations.AddField(
-            model_name='applicationtemplate',
-            name='application_help_link',
-            field=models.URLField(blank=True, help_text='A link to a Help Centre article that explains how to use this tool.', max_length=1024),
+            model_name="applicationtemplate",
+            name="application_help_link",
+            field=models.URLField(
+                blank=True,
+                help_text="A link to a Help Centre article that explains how to use this tool.",
+                max_length=1024,
+            ),
         ),
         migrations.AddField(
-            model_name='applicationtemplate',
-            name='application_summary',
-            field=models.CharField(blank=True, help_text='A few sentences describing the high-level features of this tool.', max_length=255),
+            model_name="applicationtemplate",
+            name="application_summary",
+            field=models.CharField(
+                blank=True,
+                help_text="A few sentences describing the high-level features of this tool.",
+                max_length=255,
+            ),
         ),
         migrations.AlterField(
-            model_name='applicationinstance',
-            name='spawner_application_instance_id',
-            field=models.CharField(help_text='An ID that the spawner understands to control and report on the application', max_length=10240),
+            model_name="applicationinstance",
+            name="spawner_application_instance_id",
+            field=models.CharField(
+                help_text="An ID that the spawner understands to control and report on the application",
+                max_length=10240,
+            ),
         ),
         migrations.AddField(
-            model_name='applicationtemplate',
-            name='default_cpu',
-            field=models.CharField(default='1024', help_text='The default amount of CPU allocated, where 1024 is 1 CPU', max_length=16),
+            model_name="applicationtemplate",
+            name="default_cpu",
+            field=models.CharField(
+                default="1024",
+                help_text="The default amount of CPU allocated, where 1024 is 1 CPU",
+                max_length=16,
+            ),
         ),
         migrations.AddField(
-            model_name='applicationtemplate',
-            name='default_memory',
-            field=models.CharField(default='8192', help_text='The default amount of memory allocated in MBs', max_length=16),
+            model_name="applicationtemplate",
+            name="default_memory",
+            field=models.CharField(
+                default="8192",
+                help_text="The default amount of memory allocated in MBs",
+                max_length=16,
+            ),
         ),
         migrations.CreateModel(
-            name='UserToolConfiguration',
+            name="UserToolConfiguration",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('size', models.IntegerField(choices=[(1, 'Small'), (2, 'Medium'), (3, 'Large'), (4, 'Extra Large')], default=2)),
-                ('tool_template', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='user_tool_configuration', to='applications.tooltemplate')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "size",
+                    models.IntegerField(
+                        choices=[(1, "Small"), (2, "Medium"), (3, "Large"), (4, "Extra Large")],
+                        default=2,
+                    ),
+                ),
+                (
+                    "tool_template",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="user_tool_configuration",
+                        to="applications.tooltemplate",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT, to=settings.AUTH_USER_MODEL
+                    ),
+                ),
             ],
         ),
         migrations.AddField(
-            model_name='applicationinstancedbusers',
-            name='db_persistent_role',
-            field=models.CharField(default='', max_length=256),
+            model_name="applicationinstancedbusers",
+            name="db_persistent_role",
+            field=models.CharField(default="", max_length=256),
             preserve_default=False,
         ),
         migrations.RunPython(
             migrate_existing_application_instance_db_users, migrations.RunPython.noop
         ),
         migrations.AddField(
-            model_name='applicationtemplate',
-            name='group_name',
-            field=models.CharField(blank=True, choices=[('Visualisation Tools', 'Visualisation Tools'), ('Data Analysis Tools', 'Data Analysis Tools'), ('Data Management Tools', 'Data Management Tools'), ('Integrated Development Environments', 'Integrated Development Environments')], default='Data Analysis Tools', max_length=50, null=True),
+            model_name="applicationtemplate",
+            name="group_name",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("Visualisation Tools", "Visualisation Tools"),
+                    ("Data Analysis Tools", "Data Analysis Tools"),
+                    ("Data Management Tools", "Data Management Tools"),
+                    ("Integrated Development Environments", "Integrated Development Environments"),
+                ],
+                default="Data Analysis Tools",
+                max_length=50,
+                null=True,
+            ),
         ),
     ]

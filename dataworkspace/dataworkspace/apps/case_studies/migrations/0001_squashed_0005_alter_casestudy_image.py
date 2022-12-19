@@ -9,7 +9,13 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    replaces = [('case_studies', '0001_initial'), ('case_studies', '0002_auto_20210602_1557'), ('case_studies', '0003_auto_20210603_1253'), ('case_studies', '0004_auto_20210604_0827'), ('case_studies', '0005_alter_casestudy_image')]
+    replaces = [
+        ("case_studies", "0001_initial"),
+        ("case_studies", "0002_auto_20210602_1557"),
+        ("case_studies", "0003_auto_20210603_1253"),
+        ("case_studies", "0004_auto_20210604_0827"),
+        ("case_studies", "0005_alter_casestudy_image"),
+    ]
 
     initial = True
 
@@ -19,33 +25,66 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='CaseStudy',
+            name="CaseStudy",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_date', models.DateTimeField(auto_now_add=True)),
-                ('modified_date', models.DateTimeField(auto_now=True)),
-                ('slug', models.SlugField()),
-                ('published', models.BooleanField(default=False)),
-                ('publish_date', models.DateTimeField(null=True)),
-                ('name', models.CharField(max_length=255)),
-                ('short_description', models.CharField(max_length=255)),
-                ('department_name', models.CharField(blank=True, max_length=255)),
-                ('service_name', models.CharField(blank=True, max_length=255)),
-                ('outcome', models.CharField(blank=True, max_length=255)),
-                ('image', models.FileField(blank=True, storage=dataworkspace.apps.core.storage.S3FileStorage(location='case-studies'), upload_to='', validators=[dataworkspace.apps.core.storage.malware_file_validator])),
-                ('background', ckeditor.fields.RichTextField(blank=True)),
-                ('solution', ckeditor.fields.RichTextField(blank=True)),
-                ('impact', ckeditor.fields.RichTextField(blank=True)),
-                ('quote_title', models.CharField(blank=True, max_length=255)),
-                ('quote_text', ckeditor.fields.RichTextField(blank=True)),
-                ('quote_full_name', models.CharField(blank=True, max_length=255)),
-                ('quote_department_name', models.CharField(blank=True, max_length=255)),
-                ('created_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created+', to=settings.AUTH_USER_MODEL)),
-                ('updated_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='updated+', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("created_date", models.DateTimeField(auto_now_add=True)),
+                ("modified_date", models.DateTimeField(auto_now=True)),
+                ("slug", models.SlugField()),
+                ("published", models.BooleanField(default=False)),
+                ("publish_date", models.DateTimeField(null=True)),
+                ("name", models.CharField(max_length=255)),
+                ("short_description", models.CharField(max_length=255)),
+                ("department_name", models.CharField(blank=True, max_length=255)),
+                ("service_name", models.CharField(blank=True, max_length=255)),
+                ("outcome", models.CharField(blank=True, max_length=255)),
+                (
+                    "image",
+                    models.FileField(
+                        blank=True,
+                        storage=dataworkspace.apps.core.storage.S3FileStorage(
+                            location="case-studies"
+                        ),
+                        upload_to="",
+                        validators=[dataworkspace.apps.core.storage.malware_file_validator],
+                    ),
+                ),
+                ("background", ckeditor.fields.RichTextField(blank=True)),
+                ("solution", ckeditor.fields.RichTextField(blank=True)),
+                ("impact", ckeditor.fields.RichTextField(blank=True)),
+                ("quote_title", models.CharField(blank=True, max_length=255)),
+                ("quote_text", ckeditor.fields.RichTextField(blank=True)),
+                ("quote_full_name", models.CharField(blank=True, max_length=255)),
+                ("quote_department_name", models.CharField(blank=True, max_length=255)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="created+",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "updated_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="updated+",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'verbose_name_plural': 'Case studies',
-                'ordering': ('-created_date',),
+                "verbose_name_plural": "Case studies",
+                "ordering": ("-created_date",),
             },
         ),
     ]
