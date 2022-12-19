@@ -35,7 +35,6 @@ from dataworkspace.apps.datasets.models import Tag
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.notify import EmailSendFailureException, send_email
-from dataworkspace.zendesk import get_people_url
 
 logger = logging.getLogger("app")
 
@@ -587,7 +586,9 @@ class RequestAccessToCollection(FormView):
                         "data_collections:collections_view", args=(collection.id,)
                     ),
                     "user_email": form.cleaned_data["email"],
-                    "people_url": get_people_url(self.request.user.get_full_name()),
+                    "people_url": "https://people.trade.gov.uk/people/get-by-staff-sso-id/{}".format(
+                        self.request.user.profile.sso_id
+                    ),
                 },
             )
         except EmailSendFailureException:
