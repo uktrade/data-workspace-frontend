@@ -1321,7 +1321,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
             field3.column_name: 2.0,
             field4.column_name: "2019-01-02",
             field5.column_name: "11:11:00",
-            field6.column_name: "2019-05-25 14:30:59",
+            field6.column_name: "2019-01-25 14:30:59",
             field7.column_name: True,
         }
         response = self._authenticated_post(
@@ -1422,7 +1422,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
             field3.column_name: 1.0,
             field4.column_name: "2017-03-22",
             field5.column_name: "23:23:00",
-            field6.column_name: "2019-05-25 14:30:59",
+            field6.column_name: "2019-01-25 14:30:59",
             field7.column_name: True,
         }
         response = self._authenticated_post(

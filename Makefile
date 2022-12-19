@@ -33,13 +33,13 @@ docker-build:
 .PHONY: docker-test-unit
 docker-test-unit: TESTS ?= /dataworkspace/dataworkspace
 docker-test-unit: docker-build
-	docker-compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test pytest $(TESTS)
+	docker-compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test pytest --junitxml=/test-results/junit.xml $(TESTS)
 
 
 .PHONY: docker-test-integration
 docker-test-integration: TESTS ?= test/
 docker-test-integration: docker-build
-	docker-compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test pytest $(TESTS)
+	docker-compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test pytest --junitxml=/test-results/junit.xml $(TESTS)
 
 
 .PHONY: docker-test
@@ -132,9 +132,16 @@ docker-test-sequential:
 	docker-compose -f docker-compose-test-local.yml -p data-workspace-test stop
 
 	docker-compose -f docker-compose-test-local.yml -p data-workspace-test up -d
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test pytest /test/test_utils.py -x -v
+	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test pytest /test/test_application_1.py -x -v
 	docker-compose -f docker-compose-test-local.yml -p data-workspace-test stop
 
+	docker-compose -f docker-compose-test-local.yml -p data-workspace-test up -d
+	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test pytest /test/test_application_2.py -x -v
+	docker-compose -f docker-compose-test-local.yml -p data-workspace-test stop
+
+	docker-compose -f docker-compose-test-local.yml -p data-workspace-test up -d
+	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test pytest /test/test_utils.py -x -v
+	docker-compose -f docker-compose-test-local.yml -p data-workspace-test stop
 
 	docker-compose -f docker-compose-test-local.yml -p data-workspace-test up -d
 	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test pytest /test/selenium/test_explorer.py -x -v

@@ -86,3 +86,4 @@ node_modules
 dataworkspace/dataworkspace/static/*.css.map
 .local
 .localstack
+test-results/
