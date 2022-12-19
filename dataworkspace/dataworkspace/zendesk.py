@@ -19,7 +19,7 @@ def get_username(user):
 
 
 def get_people_url(name):
-    return "https://people.trade.gov.uk/search?search_filters[]=people&query={}".format(
+    return "https://people.trade.gov.uk/people-and-teams/search/?query={}&filters=teams&filters=people".format(
         urllib.parse.quote(name)
     )
 
