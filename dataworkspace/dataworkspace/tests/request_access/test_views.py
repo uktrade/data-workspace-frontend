@@ -149,7 +149,7 @@ Username:   Frank Exampleson
 Journey:    Dataset access
 Dataset:    A master
 SSO Login:  frank.exampleson@test.com
-People search: https://people.trade.gov.uk/search?search_filters[]=people&query=Frank%20Exampleson
+People search: https://people.trade.gov.uk/people-and-teams/search/?query=Frank%20Exampleson&filters=teams&filters=people
 
 
 Details for the request can be found at
