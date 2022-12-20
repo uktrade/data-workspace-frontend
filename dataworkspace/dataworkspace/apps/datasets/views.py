@@ -1517,10 +1517,19 @@ class UserSearchFormView(EditBaseView, FormView):
         context = super().get_context_data(**kwargs)
         search_query = self.request.GET.get("search_query")
         if search_query:
-            email_filter = Q(email__icontains=search_query)
-            name_filter = Q(first_name__icontains=search_query) | Q(
-                last_name__icontains=search_query
-            )
+            if "\n" in search_query:
+                email_filter = Q()
+                name_filter = Q()
+                for query in search_query.split("\n"):
+                    email_filter | (Q(email__icontains=query))
+                    name_filter | (
+                        Q(first_name__icontains=query) | Q(last_name__icontains=search_query)
+                    )
+            else:
+                email_filter = Q(email__icontains=search_query)
+                name_filter = Q(first_name__icontains=search_query) | Q(
+                    last_name__icontains=search_query
+                )
             users = get_user_model().objects.filter(Q(email_filter | name_filter))
             context["search_results"] = users
             context["search_query"] = search_query
