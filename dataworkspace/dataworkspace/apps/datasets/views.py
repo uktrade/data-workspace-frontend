@@ -1645,11 +1645,9 @@ class DatasetAuthorisedUsersSearchView(UserSearchFormView):
         return context
 
     def get_success_url(self):
-        return (
-            reverse(
-                "datasets:search_authorized_users",
-                args=[self.obj.pk, self.kwargs.get("summary_id")],
-            )
+        return reverse(
+            "datasets:search_authorized_users",
+            args=[self.obj.pk, self.kwargs.get("summary_id")],
         )
 
 
