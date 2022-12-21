@@ -4423,7 +4423,7 @@ class TestDatasetEditView:
 
     def test_add_user_search_shows_relevant_results(self, client, user):
         user_1 = factories.UserFactory.create(email="john@example.com")
-        user_2 = factories.UserFactory.create(first_name="john")
+        user_2 = factories.UserFactory.create(email="john@example2.com")
 
         dataset = factories.DataSetFactory.create(
             published=True,
@@ -4444,9 +4444,11 @@ class TestDatasetEditView:
 
         soup = BeautifulSoup(response.content.decode(response.charset))
         search_url = soup.findAll("a", href=True, text="Add another user")[0]["href"]
-        response = client.post(search_url, data={"search": "John"}, follow=True)
+        response = client.post(
+            search_url, data={"search": "john@example.com\njohn@example2.com"}, follow=True
+        )
         assert response.status_code == 200
-        assert b"Found 2 results for John" in response.content
+        assert b"Found 2 results" in response.content
         assert user_1.email.encode() in response.content
         assert user_1.first_name.encode() in response.content
         assert user_2.email.encode() in response.content
