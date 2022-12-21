@@ -1508,7 +1508,7 @@ class VisualisationCatalogueItemEditView(EditBaseView, UpdateView):
 class UserSearchFormView(EditBaseView, FormView):
     form_class = UserSearchForm
     form: None
-    plus_context = dict()
+    plus_context = {}
 
     def form_valid(self, form):
         self.form = form
