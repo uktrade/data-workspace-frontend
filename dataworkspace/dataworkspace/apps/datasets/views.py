@@ -1536,6 +1536,7 @@ class UserSearchFormView(EditBaseView, FormView):
         if self.plus_context:
             context["search_results"] = self.plus_context["results"]
             context["search_query"] = self.plus_context["query"]
+            self.plus_context.clear()
         return context
 
 
