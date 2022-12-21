@@ -35,7 +35,14 @@
               {% csrf_token %}
               <fieldset class="govuk-fieldset">
                   <div class="govuk-form-group ">
+                    {% if waffle_flag %}
                     {{ form.search }}
+                    {% else %}
+                    <label class="govuk-label  govuk-!-font-weight-bold" for="id_search">
+                        {{ form.search.label }}
+                      </label>
+                    <input class="govuk-input" type="text" name="search" id="id_search" value="{{ search_query }}">
+                    {% endif %}
                   </div>
                   <button type="submit" class="govuk-button" data-prevent-double-click="true" >Search</button>
               </fieldset>

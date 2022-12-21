@@ -4421,6 +4421,7 @@ class TestDatasetEditView:
         assert user_1.email.encode() in response.content
         assert user_2.email.encode() not in response.content
 
+    @override_flag(settings.ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK, active=True)
     def test_add_user_search_shows_relevant_results(self, client, user):
         user_1 = factories.UserFactory.create(email="john@example.com")
         user_2 = factories.UserFactory.create(email="john@example2.com")

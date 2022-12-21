@@ -7,6 +7,7 @@ from itertools import chain
 from typing import Set
 
 import psycopg2
+import waffle
 from botocore.exceptions import ClientError
 from csp.decorators import csp_update
 from django.conf import settings
@@ -1513,30 +1514,42 @@ class UserSearchFormView(EditBaseView, FormView):
     def form_valid(self, form):
         self.form = form
         search_query = self.request.POST["search"]
-        if search_query:
-            if "\n" in search_query:
-                email_filter = Q(email__icontains=search_query.splitlines()[0])
-                for query in search_query.splitlines()[1:]:
-                    email_filter = email_filter | (Q(email__icontains=query))
-            else:
-                email_filter = Q(email__icontains=search_query)
-            users = get_user_model().objects.filter(Q(email_filter))
-            self.plus_context["results"] = users
-            self.plus_context["query"] = search_query
+        if waffle.flag_is_active(self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"):
+            if search_query:
+                if "\n" in search_query:
+                    email_filter = Q(email__icontains=search_query.splitlines()[0])
+                    for query in search_query.splitlines()[1:]:
+                        email_filter = email_filter | (Q(email__icontains=query))
+                else:
+                    email_filter = Q(email__icontains=search_query)
+                users = get_user_model().objects.filter(Q(email_filter))
+                self.plus_context["results"] = users
+                self.plus_context["query"] = search_query
         return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        if waffle.flag_is_active(self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"):
+            if self.plus_context:
+                context["search_results"] = self.plus_context["results"]
+                context["search_query"] = self.plus_context["query"]
+                self.plus_context.clear()
+        else:
+            search_query = self.request.GET.get("search_query")
+            if search_query:
+                email_filter = Q(email__icontains=search_query)
+                name_filter = Q(first_name__icontains=search_query) | Q(
+                    last_name__icontains=search_query
+                )
+                users = get_user_model().objects.filter(Q(email_filter | name_filter))
+                context["search_results"] = users
+                context["search_query"] = search_query
         context["obj"] = self.obj
         context["obj_edit_url"] = (
             reverse("datasets:edit_dataset", args=[self.obj.pk])
             if isinstance(self.obj, DataSet)
             else reverse("datasets:edit_visualisation_catalogue_item", args=[self.obj.pk])
         )
-        if self.plus_context:
-            context["search_results"] = self.plus_context["results"]
-            context["search_query"] = self.plus_context["query"]
-            self.plus_context.clear()
         return context
 
 
@@ -1643,13 +1656,26 @@ class DatasetAuthorisedUsersSearchView(UserSearchFormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["summary_id"] = self.kwargs.get("summary_id")
+        context["waffle_flag"] = waffle.flag_is_active(
+            self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"
+        )
         return context
 
     def get_success_url(self):
-        return reverse(
-            "datasets:search_authorized_users",
-            args=[self.obj.pk, self.kwargs.get("summary_id")],
-        )
+        if waffle.flag_is_active(self, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"):
+            return reverse(
+                "datasets:search_authorized_users",
+                args=[self.obj.pk, self.kwargs.get("summary_id")],
+            )
+        else:
+            return (
+                reverse(
+                    "datasets:search_authorized_users",
+                    args=[self.obj.pk, self.kwargs.get("summary_id")],
+                )
+                + "?search_query="
+                + self.form.cleaned_data["search"]
+            )
 
 
 class DatasetAddAuthorisedUserView(EditBaseView, View):
