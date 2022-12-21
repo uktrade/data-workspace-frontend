@@ -113,3 +113,19 @@ function tableResize(tableEl, api) {
     autoSizeColumns(api);
   }
 }
+
+function getColumnsRemovedState(columnApi) {
+  var columns_removed = False;
+  if (columnApi.getAllColumns() != columnApi.getAllDisplayedColumns()) {
+    columns_removed = True;
+  };
+  return columns_removed;
+}
+
+function getFilterState(api) {
+  var rows_filtered = False;
+  if (api.getFilterModel() != {}) {
+    rows_filtered = True;
+  }
+  return rows_filtered
+}
