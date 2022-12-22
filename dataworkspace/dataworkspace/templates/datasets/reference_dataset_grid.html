@@ -13,8 +13,8 @@
           'item_name': '{{ model.name }}',
           'item_type': '{{ model.type.label }}',
           'data_format': 'CSV',
-          'columns_removed': getColumnsRemovedState(columnApi),
-          'rows_filtered': getFilterState(GridOptions.api),
+          'columns_removed': getColumnsRemovedState(gridOptions.columnApi),
+          'rows_filtered': getFilterState(gridOptions.api),
         })
       });
     });
@@ -28,8 +28,8 @@
           'item_name': '{{ model.name }}',
           'item_type': '{{ model.type.label }}',
           'data_format': 'JSON',
-          'columns_removed': getColumnsRemovedState(columnApi),
-          'rows_filtered': getColumnsRemovedState(GridOptions.api),
+          'columns_removed': getColumnsRemovedState(gridOptions.columnApi),
+          'rows_filtered': getFilterState(gridOptions.api),
         })
       });
     });
