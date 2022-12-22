@@ -13,8 +13,8 @@
           'item_name': '{{ object.name }}',
           'item_type': '{{ object.type.label }}',
           'data_format': 'CSV',
-          'columns_removed': getColumnsRemovedState(),
-          'rows_filtered': getFilterState(),
+          'columns_removed': getColumnsRemovedState(gridOptions.columnApi),
+          'rows_filtered': getFilterState(gridOptions.api),
         })
       });
     });
