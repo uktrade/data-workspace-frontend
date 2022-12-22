@@ -106,7 +106,7 @@ function getBooleanFilterComponent() {
 
 // When the grid first loads or the page size
 // is changed after load resize accordingly
-function tableRze(tableEl, api) {
+function tableResize(tableEl, api) {
   if (tableEl.dataset.sizeToFit !== undefined) {
     api.sizeColumnsToFit();
   } else {
