@@ -13,8 +13,8 @@
           'item_name': '{{ model.name }}',
           'item_type': '{{ model.type.label }}',
           'data_format': 'CSV',
-          'columns_removed': getColumnsRemovedState(gridOptions.columnApi),
-          'rows_filtered': getFilterState(gridOptions.api),
+          'columns_removed': '',
+          'rows_filtered': document.querySelector('#data-grid').getFilterModel(),
         })
       });
     });
