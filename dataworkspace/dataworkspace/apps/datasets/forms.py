@@ -642,9 +642,9 @@ class VisualisationCatalogueItemEditForm(GOVUKDesignSystemModelForm):
 
 
 class UserSearchForm(GOVUKDesignSystemForm):
-    search = GOVUKDesignSystemCharField(
-        label="Search by email address or name",
-        widget=GOVUKDesignSystemTextWidget(
+    search = GOVUKDesignSystemTextareaField(
+        label="Enter one or more email addresses on separate lines or search for a single user by name.",
+        widget=GOVUKDesignSystemTextareaWidget(
             label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
         ),
         error_messages={"required": "You must provide a search terms."},

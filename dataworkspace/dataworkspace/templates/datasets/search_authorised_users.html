@@ -35,17 +35,21 @@
               {% csrf_token %}
               <fieldset class="govuk-fieldset">
                   <div class="govuk-form-group ">
-                      <label class="govuk-label  govuk-!-font-weight-bold" for="id_search">
+                    {% if waffle_flag %}
+                    {{ form.search }}
+                    {% else %}
+                    <label class="govuk-label  govuk-!-font-weight-bold" for="id_search">
                         {{ form.search.label }}
                       </label>
                     <input class="govuk-input" type="text" name="search" id="id_search" value="{{ search_query }}">
+                    {% endif %}
                   </div>
-                  <button type="submit" class="govuk-button" data-prevent-double-click="true" >Seach</button>
+                  <button type="submit" class="govuk-button" data-prevent-double-click="true" >Search</button>
               </fieldset>
           </form>
             {% if search_results %}
                 <table class="govuk-table">
-                    <caption class="govuk-table__caption govuk-table__caption--m">Found {{ search_results.count }} result{% if search_results.count > 1 %}s{% endif %} for {{ search_query }}</caption>
+                    <caption class="govuk-table__caption govuk-table__caption--m">Found {{ search_results.count }} result{% if search_results.count > 1 %}s{% else %} for {{ search_query }}{% endif %}</caption>
                     <tbody class="govuk-table__body">
                         {% for result in search_results %}
                         <tr class="govuk-table__row">
@@ -58,7 +62,7 @@
                   </table>
             {% else %}
               {% if search_query %}
-                <h2 class="govuk-heading-m">Found 0 results for {{ search_query }}</h2>
+                <h2 class="govuk-heading-m">Found 0 results</h2>
               {% endif %}
             {% endif %}
         </div>
