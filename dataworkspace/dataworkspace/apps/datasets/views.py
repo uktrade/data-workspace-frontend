@@ -1514,36 +1514,29 @@ class UserSearchFormView(EditBaseView, FormView):
     def form_valid(self, form):
         self.form = form
         search_query = self.request.POST["search"]
-        if waffle.flag_is_active(self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"):
-            if search_query:
-                if "\n" in search_query:
-                    email_filter = Q(email__icontains=search_query.splitlines()[0])
-                    for query in search_query.splitlines()[1:]:
-                        email_filter = email_filter | (Q(email__icontains=query))
-                else:
-                    email_filter = Q(email__icontains=search_query)
+        if search_query:
+            if "\n" in search_query:
+                email_filter = Q(pk__in=[])
+                for query in search_query.splitlines():
+                    email_filter = email_filter | (Q(email=query.strip()))
                 users = get_user_model().objects.filter(Q(email_filter))
-                self.plus_context["results"] = users
-                self.plus_context["query"] = search_query
+            else:
+                email_filter = Q(email__icontains=search_query.strip())
+                name_filter = Q(first_name__icontains=search_query.strip()) | Q(
+                    last_name__icontains=search_query.strip()
+                )
+                users = get_user_model().objects.filter(Q(email_filter | name_filter))
+
+            self.plus_context["results"] = users
+            self.plus_context["query"] = search_query
         return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if waffle.flag_is_active(self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"):
-            if self.plus_context:
-                context["search_results"] = self.plus_context["results"]
-                context["search_query"] = self.plus_context["query"]
-                self.plus_context.clear()
-        else:
-            search_query = self.request.GET.get("search_query")
-            if search_query:
-                email_filter = Q(email__icontains=search_query)
-                name_filter = Q(first_name__icontains=search_query) | Q(
-                    last_name__icontains=search_query
-                )
-                users = get_user_model().objects.filter(Q(email_filter | name_filter))
-                context["search_results"] = users
-                context["search_query"] = search_query
+        if self.plus_context:
+            context["search_results"] = self.plus_context["results"]
+            context["search_query"] = self.plus_context["query"]
+            self.plus_context.clear()
         context["obj"] = self.obj
         context["obj_edit_url"] = (
             reverse("datasets:edit_dataset", args=[self.obj.pk])
@@ -1662,20 +1655,10 @@ class DatasetAuthorisedUsersSearchView(UserSearchFormView):
         return context
 
     def get_success_url(self):
-        if waffle.flag_is_active(self, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"):
-            return reverse(
-                "datasets:search_authorized_users",
-                args=[self.obj.pk, self.kwargs.get("summary_id")],
-            )
-        else:
-            return (
-                reverse(
-                    "datasets:search_authorized_users",
-                    args=[self.obj.pk, self.kwargs.get("summary_id")],
-                )
-                + "?search_query="
-                + self.form.cleaned_data["search"]
-            )
+        return reverse(
+            "datasets:search_authorized_users",
+            args=[self.obj.pk, self.kwargs.get("summary_id")],
+        )
 
 
 class DatasetAddAuthorisedUserView(EditBaseView, View):
