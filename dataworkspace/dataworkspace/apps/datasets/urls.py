@@ -261,6 +261,11 @@ urlpatterns = [
         name="add_authorized_user",
     ),
     path(
+        "<uuid:pk>/add-authorized-users/<int:summary_id>",
+        login_required(views.DatasetAddAuthorisedUsersView.as_view()),
+        name="add_authorized_users",
+    ),
+    path(
         "<uuid:pk>/remove-authorized-user/<int:summary_id>/<int:user_id>",
         login_required(views.DatasetRemoveAuthorisedUserView.as_view()),
         name="remove_authorized_user",
