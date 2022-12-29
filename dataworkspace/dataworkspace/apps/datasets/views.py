@@ -1509,11 +1509,19 @@ class VisualisationCatalogueItemEditView(EditBaseView, UpdateView):
 class UserSearchFormView(EditBaseView, FormView):
     form_class = UserSearchForm
     form: None
-    plus_context = {}
 
     def form_valid(self, form):
         self.form = form
         search_query = self.request.POST["search"]
+        if search_query:
+            self.request.session[f'search-query--edit-dataset-permissions--{self.obj.pk}--{self.summary.id}'] = search_query
+
+
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        search_query = self.request.session.get(f'search-query--edit-dataset-permissions--{self.obj.pk}--{self.summary.id}')
         if search_query:
             if "\n" in search_query:
                 email_filter = Q(pk__in=[])
@@ -1526,17 +1534,8 @@ class UserSearchFormView(EditBaseView, FormView):
                     last_name__icontains=search_query.strip()
                 )
                 users = get_user_model().objects.filter(Q(email_filter | name_filter))
-
-            self.plus_context["results"] = users
-            self.plus_context["query"] = search_query
-        return super().form_valid(form)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        if self.plus_context:
-            context["search_results"] = self.plus_context["results"]
-            context["search_query"] = self.plus_context["query"]
-            self.plus_context.clear()
+        context["search_results"] = users
+        context["search_query"] = search_query
         context["obj"] = self.obj
         context["obj_edit_url"] = (
             reverse("datasets:edit_dataset", args=[self.obj.pk])
