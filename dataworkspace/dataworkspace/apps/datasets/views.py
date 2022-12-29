@@ -1514,14 +1514,17 @@ class UserSearchFormView(EditBaseView, FormView):
         self.form = form
         search_query = self.request.POST["search"]
         if search_query:
-            self.request.session[f'search-query--edit-dataset-permissions--{self.obj.pk}--{self.summary.id}'] = search_query
-
+            self.request.session[
+                f"search-query--edit-dataset-permissions--{self.obj.pk}--{self.summary.id}"
+            ] = search_query
 
         return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        search_query = self.request.session.get(f'search-query--edit-dataset-permissions--{self.obj.pk}--{self.summary.id}')
+        search_query = self.request.session.get(
+            f"search-query--edit-dataset-permissions--{self.obj.pk}--{self.summary.id}"
+        )
         if search_query:
             if "\n" in search_query:
                 email_filter = Q(pk__in=[])
