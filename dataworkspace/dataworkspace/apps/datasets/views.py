@@ -1536,8 +1536,8 @@ class UserSearchFormView(EditBaseView, FormView):
                     last_name__icontains=search_query.strip()
                 )
                 users = get_user_model().objects.filter(Q(email_filter | name_filter))
-        context["search_results"] = users
-        context["search_query"] = search_query
+            context["search_results"] = users
+            context["search_query"] = search_query
         context["obj"] = self.obj
         context["obj_edit_url"] = (
             reverse("datasets:edit_dataset", args=[self.obj.pk])
