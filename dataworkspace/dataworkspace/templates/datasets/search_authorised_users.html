@@ -51,7 +51,7 @@
       <h1 class="govuk-heading-l">Unable to match {{non_matches|length}} {% if non_matches|length == 1 %} email address to a user{% else %} email addresses to users{% endif %}</h1>
       <ul class="govuk-list">
         {% for non_match in non_matches %}
-        <li class="govuk-listitem">
+        <li class="govuk-body">
             {{ non_match }}
         </li>
         {% endfor %}
