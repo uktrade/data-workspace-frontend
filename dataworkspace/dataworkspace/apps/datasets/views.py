@@ -1519,6 +1519,16 @@ class UserSearchFormView(EditBaseView, FormView):
 
         return super().form_valid(form)
 
+    def get_initial(self):
+        initial = super().get_initial()
+        try:
+            initial["search"] = self.request.session[
+                f"search-query--edit-dataset-permissions--{self.obj.pk}--{self.summary.id}"
+            ]
+        except KeyError:
+            pass
+        return initial
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         search_query = self.request.session.get(
