@@ -1522,7 +1522,7 @@ class UserSearchFormView(EditBaseView, FormView):
     def get_initial(self):
         initial = super().get_initial()
         try:
-            initial['search'] = self.request.session[
+            initial["search"] = self.request.session[
                 f"search-query--edit-dataset-permissions--{self.obj.pk}--{self.summary.id}"
             ]
         except KeyError:
