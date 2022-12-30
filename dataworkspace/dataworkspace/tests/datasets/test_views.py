@@ -4449,7 +4449,7 @@ class TestDatasetEditView:
             search_url, data={"search": "john@example.com\njohn@example2.com"}, follow=True
         )
         assert response.status_code == 200
-        assert b"Found 2 results" in response.content
+        assert b"Found 2 matching users" in response.content
         assert user_1.email.encode() in response.content
         assert user_1.first_name.encode() in response.content
         assert user_2.email.encode() in response.content
@@ -4479,7 +4479,7 @@ class TestDatasetEditView:
         search_url = soup.findAll("a", href=True, text="Add another user")[0]["href"]
         response = client.post(search_url, data={"search": "John"}, follow=True)
         assert response.status_code == 200
-        assert b"Found 1 result for John" in response.content
+        assert b"Found 1 matching user" in response.content
         assert user_1.email.encode() in response.content
         assert user_1.first_name.encode() in response.content
 
@@ -4545,7 +4545,7 @@ class TestDatasetEditView:
         search_url = soup.findAll("a", href=True, text="Add another user")[0]["href"]
         response = client.post(search_url, data={"search": "John"}, follow=True)
         assert response.status_code == 200
-        assert b"Found 1 result for John" in response.content
+        assert b"Found 1 matching user" in response.content
         assert user_1.email.encode() in response.content
         assert user_1.first_name.encode() in response.content
 
@@ -4642,7 +4642,7 @@ class TestVisualisationCatalogueItemEditView:
         search_url = soup.findAll("a", href=True, text="Add another user")[0]["href"]
         response = client.post(search_url, data={"search": "John"}, follow=True)
         assert response.status_code == 200
-        assert b"Found 1 result for John" in response.content
+        assert b"Found 1 matching user" in response.content
         assert user_1.email.encode() in response.content
         assert user_1.first_name.encode() in response.content
 

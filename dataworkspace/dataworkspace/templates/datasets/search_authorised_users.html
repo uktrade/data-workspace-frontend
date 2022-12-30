@@ -39,7 +39,7 @@
               {{ form.search }}
             {% else %}
               <label class="govuk-label  govuk-!-font-weight-bold" for="id_search">
-                {{ form.search.label }}
+                Search by email address or name
               </label>
               <input class="govuk-input" type="text" name="search" id="id_search" value="{{ search_query }}">
             {% endif %}
@@ -80,7 +80,7 @@
         </form>
           {% else %}
           <table class="govuk-table">
-                    <caption class="govuk-table__caption govuk-table__caption--m">Found {{ search_results.count }} result{% if search_results.count > 1 %}s{% else %} for {{ search_query }}{% endif %}</caption>
+                    <caption class="govuk-table__caption govuk-table__caption--m">Found {{ search_results.count }}  matching user{% if search_results.count > 1 %}s{% else %} for {{ search_query }}{% endif %}</caption>
                     <tbody class="govuk-table__body">
                         {% for result in search_results %}
                         <tr class="govuk-table__row">
