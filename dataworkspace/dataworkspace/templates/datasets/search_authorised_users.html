@@ -27,29 +27,60 @@
 {% endblock %}
 
 {% block content %}
-    <div class="govuk-grid-row">
-        <div class="govuk-grid-column-two-thirds">
-            {% include 'design_system/error_summary.html' with form=form %}
-            <h1 class="govuk-heading-l">Edit permissions for {{ obj.name }}</h1>
-            <form method="post" enctype="multipart/form-data" novalidate>
-              {% csrf_token %}
-              <fieldset class="govuk-fieldset">
-                  <div class="govuk-form-group ">
-                    {% if waffle_flag %}
-                    {{ form.search }}
-                    {% else %}
-                    <label class="govuk-label  govuk-!-font-weight-bold" for="id_search">
-                        Search by email address or name
-                      </label>
-                    <input class="govuk-input" type="text" name="search" id="id_search" value="{{ search_query }}">
-                    {% endif %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      {% include 'design_system/error_summary.html' with form=form %}
+      <h1 class="govuk-heading-l">Edit permissions for {{ obj.name }}</h1>
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        <fieldset class="govuk-fieldset">
+          <div class="govuk-form-group">
+            {% if waffle_flag %}
+              {{ form.search }}
+            {% else %}
+              <label class="govuk-label  govuk-!-font-weight-bold" for="id_search">
+                Search by email address or name
+              </label>
+              <input class="govuk-input" type="text" name="search" id="id_search" value="{{ search_query }}">
+            {% endif %}
+          </div>
+          <button type="submit" class="govuk-button" data-prevent-double-click="true">Search</button>
+        </fieldset>
+      </form>
+      {% if search_results %}
+        {% if waffle_flag %}
+        <fieldset class="govuk-fieldset" aria-describedby="search-hint">
+          <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
+            <h1 class="govuk-fieldset__heading">
+              Found {{ search_results.count }} matching user{% if search_results.count > 1 %}s{% else %} for
+              {{ search_query }}{% endif %}
+            </h1>
+          </legend>
+        </fieldset>
+        <form action="{% url 'datasets:add_authorized_users' obj.id summary_id %}" method="post"
+              enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          <fieldset class="govuk-fieldset">
+            <div class="govuk-form-group">
+              <div class="govuk-checkboxes govuk-!-margin-bottom-6" data-module="govuk-checkboxes">
+                {% for result in search_results %}
+                  <div class="govuk-checkboxes__item">
+                    <input class="govuk-checkboxes__input" id="{{ result.id }}" name="selected-user"
+                           type="checkbox"
+                           value="{{ result.id }}">
+                    <label class="govuk-label govuk-checkboxes__label" for="{{ result.id }}">
+                      {{ result.first_name }} {{ result.last_name }} ({{ result.email }})
+                    </label>
                   </div>
-                  <button type="submit" class="govuk-button" data-prevent-double-click="true" >Search</button>
-              </fieldset>
-          </form>
-            {% if search_results %}
-                <table class="govuk-table">
-                    <caption class="govuk-table__caption govuk-table__caption--m">Found {{ search_results.count }} matching user{% if search_results.count > 1 %}s{% endif %}</caption>
+                {% endfor %}
+              </div>
+            </div>
+            <button type="submit" class="govuk-button" data-prevent-double-click="true">Add selected users</button>
+          </fieldset>
+        </form>
+          {% else %}
+          <table class="govuk-table">
+                    <caption class="govuk-table__caption govuk-table__caption--m">Found {{ search_results.count }} matching user{% if search_results.count > 1 %}s{% else %} for {{ search_query }}{% endif %}</caption>
                     <tbody class="govuk-table__body">
                         {% for result in search_results %}
                         <tr class="govuk-table__row">
@@ -60,11 +91,12 @@
                         {% endfor %}
                     </tbody>
                   </table>
-            {% else %}
-              {% if search_query %}
-                <h2 class="govuk-heading-m">Found 0 results</h2>
-              {% endif %}
-            {% endif %}
-        </div>
+          {% endif %}
+      {% else %}
+        {% if search_query %}
+          <h2 class="govuk-heading-m">Found 0 results</h2>
+        {% endif %}
+      {% endif %}
     </div>
+  </div>
 {% endblock %}

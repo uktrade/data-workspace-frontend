@@ -1684,6 +1684,30 @@ class DatasetAddAuthorisedUserView(EditBaseView, View):
         )
 
 
+class DatasetAddAuthorisedUsersView(EditBaseView, View):
+    def post(self, request, *args, **kwargs):
+        summary = PendingAuthorizedUsers.objects.get(id=self.kwargs.get("summary_id"))
+        users = json.loads(summary.users if summary.users else "[]")
+        for selected_user in self.request.POST.getlist("selected-user"):
+            user = get_user_model().objects.get(id=selected_user)
+
+            if user.id not in users:
+                users.append(user.id)
+
+        summary.users = json.dumps(users)
+        summary.save()
+
+        return HttpResponseRedirect(
+            reverse(
+                "datasets:edit_permissions_summary",
+                args=[
+                    self.obj.id,
+                    self.kwargs.get("summary_id"),
+                ],
+            )
+        )
+
+
 class DatasetRemoveAuthorisedUserView(EditBaseView, View):
     def get(self, request, *args, **kwargs):
         summary = PendingAuthorizedUsers.objects.get(id=self.kwargs.get("summary_id"))
