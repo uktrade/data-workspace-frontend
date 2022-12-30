@@ -1709,8 +1709,9 @@ class DatasetAddAuthorisedUsersView(EditBaseView, View):
 
             if user.id not in users:
                 users.append(user.id)
-                summary.users = json.dumps(users)
-                summary.save()
+
+        summary.users = json.dumps(users)
+        summary.save()
 
         return HttpResponseRedirect(
             reverse(
