@@ -60,6 +60,9 @@
         <form action="{% url 'datasets:add_authorized_users' obj.id summary_id %}" method="post"
               enctype="multipart/form-data" novalidate>
           {% csrf_token %}
+          <div class="govuk-button-group">
+            <a class="govuk-link govuk-link--no-visited-state" id="toggle-search-results">Select all </a>
+          </div>
           <fieldset class="govuk-fieldset">
             <div class="govuk-form-group">
               <div class="govuk-checkboxes govuk-!-margin-bottom-6" data-module="govuk-checkboxes">
@@ -67,7 +70,9 @@
                   <div class="govuk-checkboxes__item">
                     <input class="govuk-checkboxes__input" id="{{ result.id }}" name="selected-user"
                            type="checkbox"
-                           value="{{ result.id }}">
+                           value="{{ result.id }}"
+                           onchange="UpdateSelectAllText();"
+                    >
                     <label class="govuk-label govuk-checkboxes__label" for="{{ result.id }}">
                       {{ result.first_name }} {{ result.last_name }} ({{ result.email }})
                     </label>
@@ -99,4 +104,29 @@
       {% endif %}
     </div>
   </div>
+{% endblock %}
+
+{% block footer_scripts %}
+  <script nonce="{{ request.csp_nonce }}">
+    let toggleSearchResults = document.getElementById('toggle-search-results');
+    let checkboxes = document.getElementsByName('selected-user');
+    if (toggleSearchResults !== null) {
+      toggleSearchResults.addEventListener('click', function (e) {
+        for (var i = 0, n = checkboxes.length; i < n; i++) {
+          checkboxes[i].checked = !checkboxes[i].checked;
+        }
+      });
+
+    }
+    function UpdateSelectAllText() {
+      for (var i = 0, n = checkboxes.length; i < n; i++) {
+        if (checkboxes[i].checked) {
+          toggleSearchResults.innerText = 'Deselect all'
+        }
+        if (!checkboxes[i].checked) {
+          toggleSearchResults.innerText = 'Select all'
+        }
+      }
+    }
+  </script>
 {% endblock %}
