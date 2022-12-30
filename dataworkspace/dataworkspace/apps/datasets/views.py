@@ -1548,16 +1548,6 @@ class UserSearchFormView(EditBaseView, FormView):
                         non_email_matches.append(query)
                 context["search_results"] = email_matches
                 context["non_matches"] = non_email_matches
-                # non_email_matches = []
-                # email_filter = Q(pk__in=[])
-                # for query in search_query.splitlines():
-                #     email_filter = email_filter | (Q(email=query.strip()))
-                # users = get_user_model().objects.filter(Q(email_filter))
-
-                # for query in search_query.splitlines():
-                #     if not users.filter(Q(email=query.strip())):
-                #         non_email_matches.append(query)
-                # context["non_matches"] = non_email_matches
 
             else:
                 email_filter = Q(email__icontains=search_query.strip())
