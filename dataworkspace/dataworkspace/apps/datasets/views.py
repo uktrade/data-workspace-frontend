@@ -1630,6 +1630,9 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
         context["authorised_users"] = get_user_model().objects.filter(
             id__in=json.loads(self.summary.users if self.summary.users else "[]")
         )
+        context["waffle_flag"] = waffle.flag_is_active(
+            self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"
+        )
         return context
 
     def post(self, request, *args, **kwargs):
