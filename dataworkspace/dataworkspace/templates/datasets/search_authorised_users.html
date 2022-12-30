@@ -72,8 +72,7 @@
         <fieldset class="govuk-fieldset" aria-describedby="search-hint">
           <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
             <h1 class="govuk-fieldset__heading">
-              Found {{ search_results.count }} matching user{% if search_results.count > 1 %}s{% else %} for
-              {{ search_query }}{% endif %}
+              Found {{ search_results|length }} matching user{% if search_results|length > 1 %}s{% endif %}
             </h1>
           </legend>
         </fieldset>
