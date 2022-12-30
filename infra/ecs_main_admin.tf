@@ -81,6 +81,13 @@ locals {
     superset_dw_user_username = "${var.superset_dw_user_username}"
     superset_dw_user_password = "${var.superset_dw_user_password}"
 
+    quicksight_namespace = "${var.quicksight_namespace}"
+    quicksight_user_region = "${var.quicksight_user_region}"
+    quicksight_vpc_arn = "${var.quicksight_vpc_arn}"
+    quicksight_dashboard_group = "${var.quicksight_dashboard_group}"
+    quicksight_author_custom_permissions = "${var.quicksight_author_custom_permissions}"
+    quicksight_author_iam_arn = "${var.quicksight_author_iam_arn}"
+    quicksight_sso_url = "${var.quicksight_sso_url}"
     admin_dashboard_embedding_role_arn = "${aws_iam_role.admin_dashboard_embedding.arn}"
 
     efs_id = "${aws_efs_file_system.notebooks.id}"
