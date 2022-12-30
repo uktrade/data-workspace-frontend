@@ -4444,7 +4444,7 @@ class TestDatasetEditView:
         assert b"There are currently no authorized users" in response.content
 
         soup = BeautifulSoup(response.content.decode(response.charset))
-        search_url = soup.findAll("a", href=True, text="Add another user")[0]["href"]
+        search_url = soup.findAll("a", href=True, text="Add users")[0]["href"]
         response = client.post(
             search_url, data={"search": "john@example.com\njohn@example2.com"}, follow=True
         )
