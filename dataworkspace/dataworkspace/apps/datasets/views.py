@@ -1536,10 +1536,18 @@ class UserSearchFormView(EditBaseView, FormView):
         )
         if search_query:
             if "\n" in search_query:
+                non_email_matches = []
                 email_filter = Q(pk__in=[])
                 for query in search_query.splitlines():
                     email_filter = email_filter | (Q(email=query.strip()))
                 users = get_user_model().objects.filter(Q(email_filter))
+
+                for query in search_query.splitlines():
+                    if users.filter(Q(email_icontains=query)):
+                        continue
+                    else:
+                        non_email_matches.append(query)
+
             else:
                 email_filter = Q(email__icontains=search_query.strip())
                 name_filter = Q(first_name__icontains=search_query.strip()) | Q(
@@ -1548,6 +1556,7 @@ class UserSearchFormView(EditBaseView, FormView):
                 users = get_user_model().objects.filter(Q(email_filter | name_filter))
             context["search_results"] = users
             context["search_query"] = search_query
+            context["non_matches"] = non_email_matches
         context["obj"] = self.obj
         context["obj_edit_url"] = (
             reverse("datasets:edit_dataset", args=[self.obj.pk])
