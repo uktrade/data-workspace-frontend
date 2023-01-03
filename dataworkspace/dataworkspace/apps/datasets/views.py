@@ -1512,10 +1512,11 @@ class UserSearchFormView(EditBaseView, FormView):
 
     def form_valid(self, form):
         self.form = form
-        search_query = self.request.POST["search"]
+        search_terms = self.request.POST["search"]
+        self.request.POST["search"]
         self.request.session[
             f"search-query--edit-dataset-permissions--{self.obj.pk}--{self.summary.id}"
-        ] = search_query
+        ] = search_terms
 
         return super().form_valid(form)
 
@@ -1557,6 +1558,7 @@ class UserSearchFormView(EditBaseView, FormView):
                 users = get_user_model().objects.filter(Q(email_filter | name_filter))
                 context["search_results"] = users
             context["search_query"] = search_query
+            del self.request.session[f"search-query--edit-dataset-permissions--{self.obj.pk}--{self.summary.id}"]
         context["obj"] = self.obj
         context["obj_edit_url"] = (
             reverse("datasets:edit_dataset", args=[self.obj.pk])
