@@ -1512,11 +1512,11 @@ class UserSearchFormView(EditBaseView, FormView):
 
     def form_valid(self, form):
         self.form = form
-        search_terms = self.request.POST["search"]
+        search_query = self.request.POST["search"]
         self.request.POST["search"]
         self.request.session[
             f"search-query--edit-dataset-permissions--{self.obj.pk}--{self.summary.id}"
-        ] = search_terms
+        ] = search_query
 
         return super().form_valid(form)
 
