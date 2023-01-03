@@ -112,20 +112,28 @@
     let checkboxes = document.getElementsByName('selected-user');
     if (toggleSearchResults !== null) {
       toggleSearchResults.addEventListener('click', function (e) {
-        for (var i = 0, n = checkboxes.length; i < n; i++) {
-          checkboxes[i].checked = !checkboxes[i].checked;
+        if (toggleSearchResults.innerText === 'Select all') {
+          for (var i = 0, n = checkboxes.length; i < n; i++) {
+            checkboxes[i].checked = true;
+            toggleSearchResults.innerText = 'Deselect all'
+          }
         }
-      });
-
+        else if (toggleSearchResults.innerText === 'Deselect all') {
+          for (var i = 0, n = checkboxes.length; i < n; i++) {
+            checkboxes[i].checked = false;
+            toggleSearchResults.innerText = 'Select all'
+          }
+        }
+        })
     }
     function UpdateSelectAllText() {
+      let checker = arr => arr.every(v => v === true);
+      let checkboxesChecked = [];
       for (var i = 0, n = checkboxes.length; i < n; i++) {
-        if (checkboxes[i].checked) {
-          toggleSearchResults.innerText = 'Deselect all'
-        }
-        if (!checkboxes[i].checked) {
-          toggleSearchResults.innerText = 'Select all'
-        }
+        checkboxesChecked.push(checkboxes[i].checked)
+      }
+      if (!checker(checkboxesChecked)) {
+        toggleSearchResults.innerText = 'Deselect all'
       }
     }
   </script>
