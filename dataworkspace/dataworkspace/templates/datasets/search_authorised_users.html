@@ -102,9 +102,9 @@
                   </table>
           {% endif %}
       {% else %}
-        {% if search_query %}
-          <h2 class="govuk-heading-m">Found 0 results</h2>
-        {% endif %}
+          {% if search_query and not non_matches %}
+            <h2 class="govuk-heading-m">Found 0 results</h2>
+          {% endif %}
       {% endif %}
     </div>
   </div>
