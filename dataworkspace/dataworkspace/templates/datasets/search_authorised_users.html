@@ -48,7 +48,7 @@
         </fieldset>
       </form>
       {% if non_matches %}
-      <h1 class="govuk-heading-l">Unable to match {{non_matches|length}} {% if non_matches|length == 1 %} email address to a user{% else %} email addresses to users{% endif %}</h1>
+      <h1 class="govuk-heading-l">Unable to match {{non_matches|length}}{% if non_matches|length == 1 %} email address to a user{% else %} email addresses to users{% endif %}</h1>
       <ul class="govuk-list govuk-!-margin-bottom-6">
         {% for non_match in non_matches %}
         <li class="govuk-body">
