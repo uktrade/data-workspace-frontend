@@ -65,13 +65,12 @@
           </div>
           <fieldset class="govuk-fieldset">
             <div class="govuk-form-group">
-              <div class="govuk-checkboxes govuk-!-margin-bottom-6" data-module="govuk-checkboxes">
+              <div class="govuk-checkboxes govuk-!-margin-bottom-6" data-module="govuk-checkboxes" id="select-user-checkboxes-group">
                 {% for result in search_results %}
                   <div class="govuk-checkboxes__item">
                     <input class="govuk-checkboxes__input" id="{{ result.id }}" name="selected-user"
                            type="checkbox"
                            value="{{ result.id }}"
-                           onchange="UpdateSelectAllText();"
                     >
                     <label class="govuk-label govuk-checkboxes__label" for="{{ result.id }}">
                       {{ result.first_name }} {{ result.last_name }} ({{ result.email }})
@@ -126,15 +125,16 @@
         }
         })
     }
-    function UpdateSelectAllText() {
-      let checker = arr => arr.every(v => v === true);
-      let checkboxesChecked = [];
-      for (var i = 0, n = checkboxes.length; i < n; i++) {
-        checkboxesChecked.push(checkboxes[i].checked)
+    document.getElementById('select-user-checkboxes-group').addEventListener("change", function (e) {
+        let checker = arr => arr.every(v => v === true);
+        let checkboxesChecked = [];
+        for (var i = 0, n = checkboxes.length; i < n; i++) {
+          checkboxesChecked.push(checkboxes[i].checked)
+        }
+        if (!checker(checkboxesChecked)) {
+          toggleSearchResults.innerText = 'Deselect all'
+        }
       }
-      if (!checker(checkboxesChecked)) {
-        toggleSearchResults.innerText = 'Deselect all'
-      }
-    }
+    )
   </script>
 {% endblock %}
