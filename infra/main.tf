@@ -137,6 +137,13 @@ variable dataset_subnets_availability_zones {
 variable quicksight_security_group_name {}
 variable quicksight_security_group_description {}
 variable quicksight_subnet_availability_zone {}
+variable quicksight_namespace {}
+variable quicksight_user_region {}
+variable quicksight_vpc_arn {}
+variable quicksight_dashboard_group {}
+variable quicksight_sso_url {}
+variable quicksight_author_custom_permissions {}
+variable quicksight_author_iam_arn {}
 
 variable shared_keypair_public_key {}
 

@@ -273,10 +273,10 @@ def quicksight_start_polling_sync_and_redirect(request):
     try:
         qs_client.register_user(
             AwsAccountId=account_id,
-            Namespace="default",
+            Namespace=settings.QUICKSIGHT_NAMESPACE,
             IdentityType="IAM",
-            IamArn=f"arn:aws:iam::{account_id}:role/quicksight_federation",
-            CustomPermissionsName="author-custom-permissions",
+            IamArn=settings.QUICKSIGHT_AUTHOR_IAM_ARN,
+            CustomPermissionsName=settings.QUICKSIGHT_AUTHOR_CUSTOM_PERMISSIONS,
             UserRole="AUTHOR",
             SessionName=str(request.user.profile.sso_id),
             Email=request.user.email,
