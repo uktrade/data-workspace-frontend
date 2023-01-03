@@ -61,7 +61,7 @@
               enctype="multipart/form-data" novalidate>
           {% csrf_token %}
           <div class="govuk-button-group">
-            <a class="govuk-link" id="toggle-search-results" style="cursor: pointer">Deselect all</a>
+            <a class="govuk-link" id="toggle-search-results" style="cursor: pointer">Deselect all users</a>
           </div>
           <fieldset class="govuk-fieldset">
             <div class="govuk-form-group">
@@ -112,16 +112,16 @@
     let checkboxes = document.getElementsByName('selected-user');
     if (toggleSearchResults !== null) {
       toggleSearchResults.addEventListener('click', function (e) {
-        if (toggleSearchResults.innerText === 'Select all') {
+        if (toggleSearchResults.innerText === 'Select all users') {
           for (var i = 0, n = checkboxes.length; i < n; i++) {
             checkboxes[i].checked = true;
-            toggleSearchResults.innerText = 'Deselect all'
+            toggleSearchResults.innerText = 'Deselect all users'
           }
         }
-        else if (toggleSearchResults.innerText === 'Deselect all') {
+        else if (toggleSearchResults.innerText === 'Deselect all users') {
           for (var i = 0, n = checkboxes.length; i < n; i++) {
             checkboxes[i].checked = false;
-            toggleSearchResults.innerText = 'Select all'
+            toggleSearchResults.innerText = 'Select all users'
           }
         }
         })
@@ -133,7 +133,7 @@
           checkboxesChecked.push(checkboxes[i].checked)
         }
         if (!checker(checkboxesChecked)) {
-          toggleSearchResults.innerText = 'Deselect all'
+          toggleSearchResults.innerText = 'Deselect all users'
         }
       }
     )
