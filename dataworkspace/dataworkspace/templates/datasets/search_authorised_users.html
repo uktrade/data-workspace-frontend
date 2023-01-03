@@ -61,7 +61,7 @@
               enctype="multipart/form-data" novalidate>
           {% csrf_token %}
           <div class="govuk-button-group">
-            <a class="govuk-link govuk-link--no-visited-state" id="toggle-search-results">Select all </a>
+            <a class="govuk-link" id="toggle-search-results" style="cursor: pointer">Deselect all</a>
           </div>
           <fieldset class="govuk-fieldset">
             <div class="govuk-form-group">
@@ -71,6 +71,7 @@
                     <input class="govuk-checkboxes__input" id="{{ result.id }}" name="selected-user"
                            type="checkbox"
                            value="{{ result.id }}"
+                           checked
                     >
                     <label class="govuk-label govuk-checkboxes__label" for="{{ result.id }}">
                       {{ result.first_name }} {{ result.last_name }} ({{ result.email }})
