@@ -1536,18 +1536,33 @@ class UserSearchFormView(EditBaseView, FormView):
         )
         if search_query:
             if "\n" in search_query:
-                email_filter = Q(pk__in=[])
+                email_matches = []
+                non_email_matches = []
                 for query in search_query.splitlines():
-                    email_filter = email_filter | (Q(email=query.strip()))
-                users = get_user_model().objects.filter(Q(email_filter))
+                    if not query.strip():
+                        continue
+                    matches_for_query = get_user_model().objects.filter(Q(email=query.strip()))
+                    for match in matches_for_query:
+                        email_matches.append(match)
+                    if not matches_for_query:
+                        non_email_matches.append(query)
+                context["search_results"] = email_matches
+                context["non_matches"] = non_email_matches
+
             else:
                 email_filter = Q(email__icontains=search_query.strip())
                 name_filter = Q(first_name__icontains=search_query.strip()) | Q(
                     last_name__icontains=search_query.strip()
                 )
                 users = get_user_model().objects.filter(Q(email_filter | name_filter))
-            context["search_results"] = users
+                context["search_results"] = users
             context["search_query"] = search_query
+            try:
+                search_query = self.request.session.pop(
+                    f"search-query--edit-dataset-permissions--{self.obj.pk}--{self.summary.id}"
+                )
+            except KeyError:
+                search_query = None
         context["obj"] = self.obj
         context["obj_edit_url"] = (
             reverse("datasets:edit_dataset", args=[self.obj.pk])
