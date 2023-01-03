@@ -49,20 +49,24 @@
       </form>
       {% if search_results %}
         {% if waffle_flag %}
-        <fieldset class="govuk-fieldset" aria-describedby="search-hint">
-          <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
-            <h1 class="govuk-fieldset__heading">
-              Found {{ search_results.count }} matching user{% if search_results.count > 1 %}s{% else %} for
-              {{ search_query }}{% endif %}
-            </h1>
-          </legend>
-        </fieldset>
+          <fieldset class="govuk-fieldset" aria-describedby="search-hint">
+            <div>
+              <h1 class="govuk-heading-l" style="float: left">
+                Found {{ search_results.count }} matching user{% if search_results.count > 1 %}s{% else %} for
+                {{ search_query }}{% endif %}
+              </h1>
+              <button class="govuk-body govuk-link" id="toggle-search-results" style="background: none!important;
+  border: none;
+  color: #069;
+  cursor: pointer;
+  padding-top: 10px;
+float: right">Deselect all users
+              </button>
+            </div>
+          </fieldset>
         <form action="{% url 'datasets:add_authorized_users' obj.id summary_id %}" method="post"
               enctype="multipart/form-data" novalidate>
           {% csrf_token %}
-          <div class="govuk-button-group">
-            <a class="govuk-link" id="toggle-search-results" style="cursor: pointer">Deselect all users</a>
-          </div>
           <fieldset class="govuk-fieldset">
             <div class="govuk-form-group">
               <div class="govuk-checkboxes govuk-!-margin-bottom-6" data-module="govuk-checkboxes" id="select-user-checkboxes-group">
