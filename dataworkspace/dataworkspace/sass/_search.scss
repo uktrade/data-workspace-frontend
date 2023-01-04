@@ -75,7 +75,6 @@ $light_label_color: govuk-colour("dark-grey");
 .select-deselect-toggle {
   @extend .bookmark-toggle;
   font-family: $govuk-font-family;
-  padding-top: 15px;
   text-decoration: underline;
   @include govuk-media-query($from: tablet) {
     padding-bottom: 15px;
@@ -83,6 +82,7 @@ $light_label_color: govuk-colour("dark-grey");
     float: none;
   }
   @include govuk-media-query($from: desktop) {
+    padding-top: 15px;
     float: right;
   }
 }
