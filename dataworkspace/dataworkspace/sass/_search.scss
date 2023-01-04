@@ -72,3 +72,21 @@ $light_label_color: govuk-colour("dark-grey");
 .is-bookmarked .is-not-bookmarked-icon {
   display: none;
 }
+.select-deselect-toggle {
+  @extend .bookmark-toggle;
+  font-family: $govuk-font-family;
+  padding-top: 15px;
+  text-decoration: underline;
+  @include govuk-media-query($from: tablet) {
+    padding-bottom: 15px;
+    padding-top: 0;
+    float: none;
+  }
+  @include govuk-media-query($from: desktop) {
+    float: right;
+  }
+}
+
+.select-deselect-toggle:focus {
+  text-decoration: none;
+}
