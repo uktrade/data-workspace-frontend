@@ -762,6 +762,35 @@ async def give_visualisation_dataset_perms(vis_name, dataset_name):
     return stdout, stderr, code
 
 
+async def give_visualisation_domain_perms(name, domains):
+    python_code = textwrap.dedent(
+        f"""\
+        from dataworkspace.apps.applications.models import VisualisationTemplate
+        from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
+        visualisationtemplate = VisualisationTemplate.objects.get(
+            host_basename="{name}",
+        )
+        catalogue_item = VisualisationCatalogueItem.objects.get(
+            visualisation_template=visualisationtemplate
+        )
+        catalogue_item.authorized_email_domains={str(domains)}
+        catalogue_item.save()
+        """
+    ).encode("ascii")
+
+    give_perm = await asyncio.create_subprocess_shell(
+        "django-admin shell",
+        env=os.environ,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await give_perm.communicate(python_code)
+    code = await give_perm.wait()
+
+    return stdout, stderr, code
+
+
 async def set_waffle_flag(flag_name, everyone=True):
     python_code = textwrap.dedent(
         f"""
