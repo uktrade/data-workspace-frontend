@@ -60,23 +60,28 @@
       {% if search_results %}
         {% if waffle_flag %}
         <fieldset class="govuk-fieldset" aria-describedby="search-hint">
-          <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
-            <h1 class="govuk-fieldset__heading">
-              Found {{ search_results|length }} matching user{% if search_results|length > 1 %}s{% endif %}
-            </h1>
-          </legend>
-        </fieldset>
+            <div>
+              <h1 class="govuk-heading-l" style="float: left">
+                Found {{ search_results|length }} matching user{% if search_results|length > 1 %}s{% endif %}
+              </h1>
+              <button type="button" class="select-deselect-toggle" id="toggle-search-results">
+                Deselect all users
+              </button>
+            </div>
+          </fieldset>
         <form action="{% url 'datasets:add_authorized_users' obj.id summary_id %}" method="post"
               enctype="multipart/form-data" novalidate>
           {% csrf_token %}
           <fieldset class="govuk-fieldset">
             <div class="govuk-form-group">
-              <div class="govuk-checkboxes govuk-!-margin-bottom-6" data-module="govuk-checkboxes">
+              <div class="govuk-checkboxes govuk-!-margin-bottom-6" data-module="govuk-checkboxes" id="select-user-checkboxes-group">
                 {% for result in search_results %}
                   <div class="govuk-checkboxes__item">
                     <input class="govuk-checkboxes__input" id="{{ result.id }}" name="selected-user"
                            type="checkbox"
-                           value="{{ result.id }}">
+                           value="{{ result.id }}"
+                           checked
+                    >
                     <label class="govuk-label govuk-checkboxes__label" for="{{ result.id }}">
                       {{ result.first_name }} {{ result.last_name }} ({{ result.email }})
                     </label>
@@ -108,4 +113,38 @@
       {% endif %}
     </div>
   </div>
+{% endblock %}
+
+{% block footer_scripts %}
+  <script nonce="{{ request.csp_nonce }}">
+    let toggleSearchResults = document.getElementById('toggle-search-results');
+    let checkboxes = document.getElementsByName('selected-user');
+    if (toggleSearchResults !== null) {
+      toggleSearchResults.addEventListener('click', function (e) {
+        if (toggleSearchResults.innerText === 'Select all users') {
+          for (var i = 0, n = checkboxes.length; i < n; i++) {
+            checkboxes[i].checked = true;
+            toggleSearchResults.innerText = 'Deselect all users'
+          }
+        }
+        else if (toggleSearchResults.innerText === 'Deselect all users') {
+          for (var i = 0, n = checkboxes.length; i < n; i++) {
+            checkboxes[i].checked = false;
+            toggleSearchResults.innerText = 'Select all users'
+          }
+        }
+        })
+    }
+    document.getElementById('select-user-checkboxes-group').addEventListener("change", function (e) {
+        let checker = arr => arr.every(v => v === true);
+        let checkboxesChecked = [];
+        for (var i = 0, n = checkboxes.length; i < n; i++) {
+          checkboxesChecked.push(checkboxes[i].checked)
+        }
+        if (!checker(checkboxesChecked)) {
+          toggleSearchResults.innerText = 'Deselect all users'
+        }
+      }
+    )
+  </script>
 {% endblock %}
