@@ -46,7 +46,11 @@
               </tbody>
             </table>
             <div class="govuk-body">
+              {% if waffle_flag %}
+              <a class="govuk-link" href="{% url 'datasets:search_authorized_users' obj.id summary.id %}">Add users</a>
+              {% else %}
               <a class="govuk-link" href="{% url 'datasets:search_authorized_users' obj.id summary.id %}">Add another user</a>
+              {% endif %}
             </div>
             <div class="govuk-body">
               <a class="govuk-link" href="{{ obj.get_usage_history_url }}">View usage history</a>

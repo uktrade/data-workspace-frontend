@@ -47,9 +47,19 @@
           <button type="submit" class="govuk-button" data-prevent-double-click="true">Search</button>
         </fieldset>
       </form>
+      {% if non_matches %}
+      <h1 class="govuk-heading-l">Unable to match {{non_matches|length}}{% if non_matches|length == 1 %} email address to a user{% else %} email addresses to users{% endif %}</h1>
+      <ul class="govuk-list govuk-!-margin-bottom-6">
+        {% for non_match in non_matches %}
+        <li class="govuk-body">
+            {{ non_match }}
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %} 
       {% if search_results %}
         {% if waffle_flag %}
-          <fieldset class="govuk-fieldset" aria-describedby="search-hint">
+        <fieldset class="govuk-fieldset" aria-describedby="search-hint">
             <div>
               <h1 class="govuk-heading-l" style="float: left">
                 Found {{ search_results.count }} matching user{% if search_results.count > 1 %}s{% else %} for
@@ -98,9 +108,9 @@
                   </table>
           {% endif %}
       {% else %}
-        {% if search_query %}
-          <h2 class="govuk-heading-m">Found 0 results</h2>
-        {% endif %}
+          {% if search_query and not non_matches %}
+            <h2 class="govuk-heading-m">Found 0 results</h2>
+          {% endif %}
       {% endif %}
     </div>
   </div>
