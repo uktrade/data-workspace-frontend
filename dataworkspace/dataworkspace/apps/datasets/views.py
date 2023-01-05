@@ -1541,7 +1541,9 @@ class UserSearchFormView(EditBaseView, FormView):
                 for query in search_query.splitlines():
                     if not query.strip():
                         continue
-                    matches_for_query = get_user_model().objects.filter(Q(email=query.strip()))
+                    matches_for_query = get_user_model().objects.filter(
+                        Q(email__iexact=query.strip())
+                    )
                     for match in matches_for_query:
                         email_matches.append(match)
                     if not matches_for_query:
