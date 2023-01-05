@@ -231,6 +231,8 @@ def application_api_is_allowed(request, public_host):
         )
 
     def is_published_visualisation_and_requires_authorisation_and_has_authorisation():
+        user_email_domain = request.user.email.split("@")[1]
+
         vis_requires_auth = (
             not is_preview
             and application_template.visible is True
@@ -243,6 +245,7 @@ def application_api_is_allowed(request, public_host):
             and not request.user.visualisationuserpermission_set.filter(
                 visualisation=visualisation_catalogue_item
             ).exists()
+            and user_email_domain not in visualisation_catalogue_item.authorized_email_domains
         ):
             raise DatasetPermissionDenied(visualisation_catalogue_item)
         return vis_requires_auth

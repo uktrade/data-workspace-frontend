@@ -20,6 +20,7 @@ from test.utility_functions import (
     give_user_app_perms,
     give_user_dataset_perms,
     give_visualisation_dataset_perms,
+    give_visualisation_domain_perms,
     give_user_visualisation_developer_perms,
     give_user_visualisation_perms,
     make_all_tools_visible,
@@ -431,6 +432,157 @@ class TestApplication(unittest.IsolatedAsyncioTestCase):
 
         # Ensure that the user can't see a visualisation which is unpublished, even if if they have authorization
         stdout, stderr, code = await give_user_visualisation_perms("testvisualisation")
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
+        self.assertEqual(code, 0)
+        stdout, stderr, code = await toggle_visualisation_visibility(
+            "testvisualisation", visible=False
+        )
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
+        self.assertEqual(code, 0)
+
+        # Ensure the user doesn't have access to the application
+        async with session.request(
+            "GET", "http://testvisualisation.dataworkspace.test:8000/"
+        ) as response:
+            content = await response.text()
+
+        self.assertIn("You do not have access to this page", content)
+        self.assertEqual(response.status, 403)
+
+        # Finally, if the visualisation is published *and* they have authorization, they can see it.
+        stdout, stderr, code = await toggle_visualisation_visibility(
+            "testvisualisation", visible=True
+        )
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
+        self.assertEqual(code, 0)
+
+        async with session.request(
+            "GET", "http://testvisualisation.dataworkspace.test:8000/"
+        ) as response:
+            application_content_1 = await response.text()
+
+        self.assertIn("testvisualisation is loading...", application_content_1)
+
+        await until_non_202(session, "http://testvisualisation.dataworkspace.test:8000/")
+
+        sent_headers = {"from-downstream": "downstream-header-value"}
+        async with session.request(
+            "GET",
+            "http://testvisualisation.dataworkspace.test:8000/http",
+            headers=sent_headers,
+        ) as response:
+            received_content = await response.json()
+            received_headers = response.headers
+
+        # Assert that we received the echo
+        self.assertEqual(received_content["method"], "GET")
+        self.assertEqual(received_content["headers"]["from-downstream"], "downstream-header-value")
+        self.assertEqual(received_content["headers"]["sso-profile-email"], "test@test.com")
+        self.assertEqual(received_headers["from-upstream"], "upstream-header-value")
+
+        stdout, stderr, code = await set_visualisation_wrap(
+            "testvisualisation", "FULL_HEIGHT_IFRAME"
+        )
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
+        self.assertEqual(code, 0)
+
+        async with session.request(
+            "GET",
+            "http://testvisualisation.dataworkspace.test:8000/",
+            headers=sent_headers,
+        ) as response:
+            received_content = await response.text()
+
+        self.assertIn(
+            '<iframe src="http://testvisualisation--8888.dataworkspace.test:8000/"',
+            received_content,
+        )
+
+        async with session.request(
+            "GET",
+            "http://testvisualisation--8888.dataworkspace.test:8000/http",
+            headers=sent_headers,
+        ) as response:
+            received_content = await response.json()
+            received_headers = response.headers
+
+        # Assert that we received the echo
+        self.assertEqual(received_content["method"], "GET")
+        self.assertEqual(received_content["headers"]["from-downstream"], "downstream-header-value")
+        self.assertEqual(received_headers["from-upstream"], "upstream-header-value")
+
+    async def test_visualisation_shows_content_if_authorized_by_domain_and_published(self):
+        await flush_database()
+        await flush_redis()
+
+        session, cleanup_session = client_session()
+        self.addAsyncCleanup(cleanup_session)
+
+        cleanup_application_1 = await create_application()
+        self.addAsyncCleanup(cleanup_application_1)
+
+        is_logged_in = True
+        codes = iter(["some-code"])
+        tokens = iter(["token-1"])
+        auth_to_me = {
+            "Bearer token-1": {
+                "email": "test@test.com",
+                "contact_email": "test@test.com",
+                "related_emails": [],
+                "first_name": "Peter",
+                "last_name": "Piper",
+                "user_id": "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2",
+            }
+        }
+        sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
+        self.addAsyncCleanup(sso_cleanup)
+
+        await until_succeeds("http://dataworkspace.test:8000/healthcheck")
+
+        stdout, stderr, code = await create_visualisation_echo("testvisualisation")
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
+        self.assertEqual(code, 0)
+
+        # Ensure the user doesn't see the visualisation link on the home page
+        async with session.request("GET", "http://dataworkspace.test:8000/") as response:
+            content = await response.text()
+        self.assertNotIn("Test testvisualisation", content)
+
+        # Ensure the user doesn't have access to the application
+        async with session.request(
+            "GET", "http://testvisualisation.dataworkspace.test:8000/"
+        ) as response:
+            content = await response.text()
+
+        self.assertIn("You do not have access to this page", content)
+        self.assertEqual(response.status, 403)
+
+        # Ensure that the user can't see a visualisation which is published if they don't have authorization
+        stdout, stderr, code = await toggle_visualisation_visibility(
+            "testvisualisation", visible=True
+        )
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
+        self.assertEqual(code, 0)
+
+        # Ensure the user doesn't have access to the application
+        async with session.request(
+            "GET", "http://testvisualisation.dataworkspace.test:8000/"
+        ) as response:
+            content = await response.text()
+
+        self.assertIn("You do not have access to this page", content)
+        self.assertEqual(response.status, 403)
+
+        # Ensure that the user can't see a visualisation which is unpublished, even if if they have authorization
+        stdout, stderr, code = await give_visualisation_domain_perms(
+            "testvisualisation", ["test.com"]
+        )
         self.assertEqual(stdout, b"")
         self.assertEqual(stderr, b"")
         self.assertEqual(code, 0)
