@@ -8,13 +8,18 @@
   <script nonce='{{ request.csp_nonce }}'>
     document.addEventListener('DOMContentLoaded', function () {
       document.getElementById("data-grid-download").addEventListener("click", function () {
+        let GridOptions = document.querySelector('#data-grid').gridOptions();
+        let columnsRemovedState = GridOptions.columnAPI.getAllColumns() !== GridOptions.columnAPI.getAllDisplayedColumns();
+        alert(columnsRemovedState)
+        let filterState = GridOptions.api.getFilterModel() !== {};
+        alert(filterState)
         window.dataLayer.push({
           'event' : 'data_download',
           'item_name': '{{ model.name }}',
           'item_type': '{{ model.type.label }}',
           'data_format': 'CSV',
-          'columns_removed': getColumnsRemovedState(),
-          'rows_filtered': getFilterState(),
+          'columns_removed': columnsRemovedState,
+          'rows_filtered': filterState,
         })
       });
     });
