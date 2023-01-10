@@ -114,18 +114,11 @@ function tableResize(tableEl, api) {
   }
 }
 
-function getColumnsRemovedState(columnApi) {
-  var columns_removed = False;
-  if (columnApi.getAllColumns() != columnApi.getAllDisplayedColumns()) {
-    columns_removed = True;
-  };
-  return columns_removed;
+function getColumnsRemovedState() {
+  let columnAPI = document.querySelector('#data-grid').gridOptions.columnApi
+  return columnAPI.getAllColumns() !== columnAPI.getAllDisplayedColumns();
 }
 
-function getFilterState(api) {
-  var rows_filtered = False;
-  if (api.getFilterModel() != {}) {
-    rows_filtered = True;
-  }
-  return rows_filtered
+function getFilterState() {
+  return document.querySelector('#data-grid').gridOptions.api.getFilterModel() !== {};
 }
