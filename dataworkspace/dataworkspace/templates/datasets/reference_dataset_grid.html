@@ -8,7 +8,7 @@
   <script nonce='{{ request.csp_nonce }}'>
     document.addEventListener('DOMContentLoaded', function () {
       document.getElementById("data-grid-download").addEventListener("click", function () {
-        let GridOptions = document.querySelector('#data-grid').gridOptions();
+        let GridOptions = document.querySelector('#data-grid').gridOptions;
         let columnsRemovedState = GridOptions.columnAPI.getAllColumns() !== GridOptions.columnAPI.getAllDisplayedColumns();
         alert(columnsRemovedState)
         let filterState = GridOptions.api.getFilterModel() !== {};
