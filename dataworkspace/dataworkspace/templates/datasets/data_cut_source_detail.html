@@ -1,26 +1,6 @@
 {% extends '_main.html' %}
 {% load static core_tags humanize waffle_tags datasets_tags %}
 
-{% block initialGTMDataLayer %}
-  {{ block.super }}
-  <script src="{% static 'js/grid-utils.js' %}"></script>
-
-  <script nonce='{{ request.csp_nonce }}'>
-    document.addEventListener('DOMContentLoaded', function () {
-      document.getElementById("data-grid-download").addEventListener("click", function () {
-        window.dataLayer.push({
-          'event' : 'data_download',
-          'item_name': '{{ object.name }}',
-          'item_type': '{{ object.type.label }}',
-          'data_format': 'CSV',
-          'columns_removed': getColumnsRemovedState(),
-          'rows_filtered': getFilterState(),
-        })
-      });
-    });
-  </script>
-{% endblock %}
-
 {% block page_title %}View {{ object.name }} - {{ block.super }}{% endblock %}
 {% block go_back %}
   <a class="govuk-back-link"
@@ -47,7 +27,10 @@
         '{% url 'datasets:create_chart_from_grid' object.dataset.id object.id %}'
       {% else %}
         null
-      {% endflag %}
+      {% endflag %},
+      null,
+      '{{ object.dataset.name }}',
+      '{{ object.dataset.get_type_display }}'
     );
   </script>
 

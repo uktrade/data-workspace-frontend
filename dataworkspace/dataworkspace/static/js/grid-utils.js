@@ -113,14 +113,3 @@ function tableResize(tableEl, api) {
     autoSizeColumns(api);
   }
 }
-
-function getColumnsRemovedState() {
-  alert("1");
-  let columnAPI = document.querySelector('#data-grid').gridOptions.columnApi
-  return columnAPI.getAllColumns() !== columnAPI.getAllDisplayedColumns();
-}
-
-function getFilterState() {
-  alert("2");
-  return document.querySelector('#data-grid').gridOptions.api.getFilterModel() !== {};
-}

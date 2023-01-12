@@ -1,46 +1,6 @@
 {% extends '_main.html' %}
 {% load static core_tags humanize %}
 
-{% block initialGTMDataLayer %}
-  {{ block.super }}
-  <script src="{% static 'js/grid-utils.js' %}"></script>
-  
-  <script nonce='{{ request.csp_nonce }}'>
-    document.addEventListener('DOMContentLoaded', function () {
-      document.getElementById("data-grid-download").addEventListener("click", function () {
-        let GridOptions = document.querySelector('#data-grid').gridOptions;
-        let columnsRemovedState = GridOptions.columnAPI.getAllColumns() !== GridOptions.columnAPI.getAllDisplayedColumns();
-        alert(columnsRemovedState)
-        let filterState = GridOptions.api.getFilterModel() !== {};
-        alert(filterState)
-        window.dataLayer.push({
-          'event' : 'data_download',
-          'item_name': '{{ model.name }}',
-          'item_type': '{{ model.type.label }}',
-          'data_format': 'CSV',
-          'columns_removed': columnsRemovedState,
-          'rows_filtered': filterState,
-        })
-      });
-    });
-  </script>
-
-  <script nonce='{{ request.csp_nonce }}'>
-    document.addEventListener('DOMContentLoaded', function () {
-      document.getElementById("data-grid-json-download").addEventListener("click", function () {
-        window.dataLayer.push({
-          'event' : 'data_download',
-          'item_name': '{{ model.name }}',
-          'item_type': '{{ model.type.label }}',
-          'data_format': 'JSON',
-          'columns_removed': getColumnsRemovedState(),
-          'rows_filtered': getFilterState(),
-        })
-      });
-    });
-  </script>
-{% endblock %}
-
 {% block page_title %}View {{ object.name }} - {{ block.super }}{% endblock %}
 {% block go_back %}
   <a class="govuk-back-link" href="{% url "datasets:dataset_detail" dataset_uuid=model.uuid %}#{{ model.slug }}">
@@ -65,6 +25,8 @@
         '{{ model.slug }}-{{ model.published_version }}-custom-export.csv',
         null,
         '{{ model.send_post_data_url}}',
+        '{{ model.name }}',
+        '{{ model.get_type_display }}'
     );
   </script>
 {% endblock footer_scripts %}
