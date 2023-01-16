@@ -25,11 +25,16 @@ function logDownloadEvent(gridOptions, itemName, itemType, dataFormat) {
     event: "data_download",
     item_name: itemName,
     item_type: itemType,
+    item_id:1,
     data_format: dataFormat,
-    columns_removed:
-      columnApi.getAllColumns().length !==
-      columnApi.getAllDisplayedColumns().length,
+    //columns_removed:
+    //columnApi.getAllColumns().length !==
+    //columnApi.getAllDisplayedColumns().length,
     rows_filtered: Object.keys(gridOptions.api.getFilterModel()).length !== 0,
+    columns_total: columnApi.getAllDisplayedColumns().length,
+    columns_downloaded: columnApi.getAllDisplayedColumns().length,
+    rows_total: 1,
+    rows_downloaded: 1
   });
 }
 
