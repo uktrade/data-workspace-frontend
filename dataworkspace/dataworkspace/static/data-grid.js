@@ -18,10 +18,11 @@ function createInputFormField(name, value) {
   return field;
 }
 
-function logDownloadEvent(gridOptions, itemName, itemType, dataFormat) {
+function logDownloadEvent(gridOptions, itemName, itemType, dataFormat, rowsDownLoad) {
   var columnApi = gridOptions.columnApi;
-  if (window.dataLayer == null) return;
-  window.dataLayer.push({
+ // if (window.dataLayer == null) return;
+  //window.dataLayer.push({
+    console.log({
     event: "data_download",
     item_name: itemName,
     item_type: itemType,
@@ -31,10 +32,11 @@ function logDownloadEvent(gridOptions, itemName, itemType, dataFormat) {
     //columnApi.getAllColumns().length !==
     //columnApi.getAllDisplayedColumns().length,
     rows_filtered: Object.keys(gridOptions.api.getFilterModel()).length !== 0,
-    columns_total: columnApi.getAllDisplayedColumns().length,
+    columns_total: columnApi.getAllColumns().length,
     columns_downloaded: columnApi.getAllDisplayedColumns().length,
     rows_total: 1,
-    rows_downloaded: 1
+    rows_downloaded:rowsDownLoad
+
   });
 }
 
@@ -90,8 +92,10 @@ function initDataGrid(
   createChartEndpoint,
   referenceDataEndpoint,
   itemName,
-  itemType
+  itemType,
+  totalDownloadableRows
 ) {
+  totalDownloadableRows = totalDownloadableRows != null ? totalDownloadableRows : 0;
   for (var i = 0; i < columnConfig.length; i++) {
     var column = columnConfig[i];
     // Try to determine filter types from the column config.
@@ -210,10 +214,14 @@ function initDataGrid(
             if (this.status === 200) {
               var response = JSON.parse(xhr.responseText);
               var rc = response.rowcount.count;
-              var dlimit = response.download_limit;
+              totalDownloadableRows = response.rowcount.count;
+              var downLoadLimit = response.download_limit;
+              if (totalDownloadableRows > downLoadLimit){
+                  totalDownloadableRows = downLoadLimit
+              }
               const rowcount = document.getElementById("data-grid-rowcount");
               const dl_count = document.getElementById("data-grid-download");
-              if (dlimit == null && rc > 5000) {
+              if (downLoadLimit == null && rc > 5000) {
                 if (rowcount) {
                   rowcount.innerText =
                     "Over " + Number("5000").toLocaleString() + " rows";
@@ -222,19 +230,19 @@ function initDataGrid(
                   dl_count.innerText = "Download this data";
                 }
               }
-              if (dlimit != null && rc > dlimit) {
+              if (downLoadLimit != null && rc > downLoadLimit) {
                 if (rowcount) {
                   rowcount.innerText =
-                    "Over " + dlimit.toLocaleString() + " rows";
+                    "Over " + downLoadLimit.toLocaleString() + " rows";
                 }
                 if (dl_count) {
                   dl_count.innerText =
                     "Download this data (Max " +
-                    dlimit.toLocaleString() +
+                    downLoadLimit.toLocaleString() +
                     " rows)";
                 }
               }
-              if (rc <= dlimit || (dlimit == null && rc < 5000)) {
+              if (rc <= downLoadLimit || (downLoadLimit == null && rc < 5000)) {
                 if (rowcount) {
                   rowcount.innerText = rc.toLocaleString() + " rows";
                 }
@@ -281,7 +289,7 @@ function initDataGrid(
           fileName: exportFileName,
         });
       }
-      logDownloadEvent(gridOptions, itemName, itemType, "CSV");
+      logDownloadEvent(gridOptions, itemName, itemType, "CSV",dataEndpoint == null ?  : totalDownloadableRows);
       document.activeElement.blur();
       return;
     });
@@ -303,7 +311,7 @@ function initDataGrid(
         linkElement.setAttribute("href", dataUri);
         linkElement.setAttribute("download", exportFileDefaultName);
         linkElement.click();
-        logDownloadEvent(gridOptions, itemName, itemType, "JSON");
+        logDownloadEvent(gridOptions, itemName, itemType, "JSON",dataEndpoint == null ? gridOptions.api.getDisplayedRowCount() : totalDownloadableRows);
         document.activeElement.blur();
         return;
       });

@@ -26,7 +26,8 @@
         null,
         '{{ model.send_post_data_url}}',
         '{{ model.name }}',
-        '{{ model.get_type_display }}'
+        '{{ model.get_type_display }}',
+        {{ model.get_grid_data|length }}
     );
   </script>
 {% endblock footer_scripts %}
