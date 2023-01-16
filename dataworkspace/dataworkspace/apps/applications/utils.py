@@ -653,7 +653,7 @@ def get_quicksight_dashboard_name_url(dashboard_id, user):
     try:
         qs_user_client.register_user(
             AwsAccountId=account_id,
-            Namespace="default",
+            Namespace = settings.QUICKSIGHT_NAMESPACE,
             IdentityType="IAM",
             IamArn=embed_role_arn,
             UserRole="READER",
@@ -669,7 +669,7 @@ def get_quicksight_dashboard_name_url(dashboard_id, user):
         try:
             qs_user_client.create_group_membership(
                 AwsAccountId=account_id,
-                Namespace="default",
+                Namespace=settings.QUICKSIGHT_NAMESPACE,
                 GroupName=settings.QUICKSIGHT_DASHBOARD_GROUP,
                 MemberName=f"{embed_role_name}/{user.email}",
             )
@@ -820,7 +820,7 @@ def sync_quicksight_users(data_client, user_client, account_id, quicksight_user_
                     if user_role == "ADMIN":
                         user_client.update_user(
                             AwsAccountId=account_id,
-                            Namespace="default",
+                            Namespace=settings.QUICKSIGHT_NAMESPACE,
                             Role=user_role,
                             UnapplyCustomPermissions=True,
                             UserName=user_username,
@@ -829,7 +829,7 @@ def sync_quicksight_users(data_client, user_client, account_id, quicksight_user_
                     else:
                         user_client.update_user(
                             AwsAccountId=account_id,
-                            Namespace="default",
+                            Namespace=settings.QUICKSIGHT_NAMESPACE,
                             Role=user_role,
                             CustomPermissionsName=settings.QUICKSIGHT_AUTHOR_CUSTOM_PERMISSIONS,
                             UserName=user_username,
@@ -909,7 +909,7 @@ def sync_quicksight_permissions(user_sso_ids_to_update=tuple()):
                 quicksight_user_list.append(
                     user_client.describe_user(
                         AwsAccountId=account_id,
-                        Namespace="default",
+                        Namespace=settings.QUICKSIGHT_NAMESPACE,
                         # \/ This is the format of the user name created by DIT SSO \/
                         UserName=f"quicksight_federation/{user_sso_id}",
                     )["User"]
@@ -931,7 +931,7 @@ def sync_quicksight_permissions(user_sso_ids_to_update=tuple()):
     else:
         next_token = None
         while True:
-            list_user_args = dict(AwsAccountId=account_id, Namespace="default")
+            list_user_args = dict(AwsAccountId=account_id, Namespace=settings.QUICKSIGHT_NAMESPACE)
             if next_token:
                 list_user_args["NextToken"] = next_token
 
