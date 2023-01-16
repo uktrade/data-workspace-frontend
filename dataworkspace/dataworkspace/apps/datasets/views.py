@@ -7,6 +7,7 @@ from itertools import chain
 from typing import Set
 
 import psycopg2
+import waffle
 from botocore.exceptions import ClientError
 from csp.decorators import csp_update
 from django.conf import settings
@@ -1511,19 +1512,59 @@ class UserSearchFormView(EditBaseView, FormView):
 
     def form_valid(self, form):
         self.form = form
+        search_query = self.request.POST["search"]
+        self.request.session[
+            f"search-query--edit-dataset-permissions--{self.obj.pk}--{self.summary.id}"
+        ] = search_query
+
         return super().form_valid(form)
+
+    def get_initial(self):
+        initial = super().get_initial()
+        try:
+            initial["search"] = self.request.session[
+                f"search-query--edit-dataset-permissions--{self.obj.pk}--{self.summary.id}"
+            ]
+        except KeyError:
+            pass
+        return initial
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        search_query = self.request.GET.get("search_query")
+        search_query = self.request.session.get(
+            f"search-query--edit-dataset-permissions--{self.obj.pk}--{self.summary.id}"
+        )
         if search_query:
-            email_filter = Q(email__icontains=search_query)
-            name_filter = Q(first_name__icontains=search_query) | Q(
-                last_name__icontains=search_query
-            )
-            users = get_user_model().objects.filter(Q(email_filter | name_filter))
-            context["search_results"] = users
+            if "\n" in search_query:
+                email_matches = []
+                non_email_matches = []
+                for query in search_query.splitlines():
+                    if not query.strip():
+                        continue
+                    matches_for_query = get_user_model().objects.filter(
+                        Q(email__iexact=query.strip())
+                    )
+                    for match in matches_for_query:
+                        email_matches.append(match)
+                    if not matches_for_query:
+                        non_email_matches.append(query)
+                context["search_results"] = email_matches
+                context["non_matches"] = non_email_matches
+
+            else:
+                email_filter = Q(email__icontains=search_query.strip())
+                name_filter = Q(first_name__icontains=search_query.strip()) | Q(
+                    last_name__icontains=search_query.strip()
+                )
+                users = get_user_model().objects.filter(Q(email_filter | name_filter))
+                context["search_results"] = users
             context["search_query"] = search_query
+            try:
+                search_query = self.request.session.pop(
+                    f"search-query--edit-dataset-permissions--{self.obj.pk}--{self.summary.id}"
+                )
+            except KeyError:
+                search_query = None
         context["obj"] = self.obj
         context["obj_edit_url"] = (
             reverse("datasets:edit_dataset", args=[self.obj.pk])
@@ -1606,6 +1647,9 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
         context["authorised_users"] = get_user_model().objects.filter(
             id__in=json.loads(self.summary.users if self.summary.users else "[]")
         )
+        context["waffle_flag"] = waffle.flag_is_active(
+            self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"
+        )
         return context
 
     def post(self, request, *args, **kwargs):
@@ -1636,16 +1680,15 @@ class DatasetAuthorisedUsersSearchView(UserSearchFormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["summary_id"] = self.kwargs.get("summary_id")
+        context["waffle_flag"] = waffle.flag_is_active(
+            self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"
+        )
         return context
 
     def get_success_url(self):
-        return (
-            reverse(
-                "datasets:search_authorized_users",
-                args=[self.obj.pk, self.kwargs.get("summary_id")],
-            )
-            + "?search_query="
-            + self.form.cleaned_data["search"]
+        return reverse(
+            "datasets:search_authorized_users",
+            args=[self.obj.pk, self.kwargs.get("summary_id")],
         )
 
 
@@ -1659,6 +1702,30 @@ class DatasetAddAuthorisedUserView(EditBaseView, View):
             users.append(user.id)
             summary.users = json.dumps(users)
             summary.save()
+
+        return HttpResponseRedirect(
+            reverse(
+                "datasets:edit_permissions_summary",
+                args=[
+                    self.obj.id,
+                    self.kwargs.get("summary_id"),
+                ],
+            )
+        )
+
+
+class DatasetAddAuthorisedUsersView(EditBaseView, View):
+    def post(self, request, *args, **kwargs):
+        summary = PendingAuthorizedUsers.objects.get(id=self.kwargs.get("summary_id"))
+        users = json.loads(summary.users if summary.users else "[]")
+        for selected_user in self.request.POST.getlist("selected-user"):
+            user = get_user_model().objects.get(id=selected_user)
+
+            if user.id not in users:
+                users.append(user.id)
+
+        summary.users = json.dumps(users)
+        summary.save()
 
         return HttpResponseRedirect(
             reverse(

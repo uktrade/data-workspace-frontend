@@ -853,6 +853,34 @@
       "value": "${zendesk_service_field_value}"
     },
     {
+      "name": "QUICKSIGHT_NAMESPACE",
+      "value": "${quicksight_namespace}"
+    },
+    {
+      "name": "QUICKSIGHT_USER_REGION",
+      "value": "${quicksight_user_region}"
+    },
+    {
+      "name": "QUICKSIGHT_VPC_ARN",
+      "value": "${quicksight_vpc_arn}"
+    },
+    {
+      "name": "QUICKSIGHT_DASHBOARD_GROUP",
+      "value": "${quicksight_dashboard_group}"
+    },
+    {
+      "name": "QUICKSIGHT_AUTHOR_CUSTOM_PERMISSIONS",
+      "value": "${quicksight_author_custom_permissions}"
+    },
+    {
+      "name": "QUICKSIGHT_AUTHOR_IAM_ARN",
+      "value": "${quicksight_author_iam_arn}"
+    },
+    {
+      "name": "QUICKSIGHT_SSO_URL",
+      "value": "${quicksight_sso_url}"
+    },
+    {
       "name": "QUICKSIGHT_DASHBOARD_EMBEDDING_ROLE_ARN",
       "value": "${admin_dashboard_embedding_role_arn}"
     },

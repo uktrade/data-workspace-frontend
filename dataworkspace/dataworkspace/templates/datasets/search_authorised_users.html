@@ -27,25 +27,74 @@
 {% endblock %}
 
 {% block content %}
-    <div class="govuk-grid-row">
-        <div class="govuk-grid-column-two-thirds">
-            {% include 'design_system/error_summary.html' with form=form %}
-            <h1 class="govuk-heading-l">Edit permissions for {{ obj.name }}</h1>
-            <form method="post" enctype="multipart/form-data" novalidate>
-              {% csrf_token %}
-              <fieldset class="govuk-fieldset">
-                  <div class="govuk-form-group ">
-                      <label class="govuk-label  govuk-!-font-weight-bold" for="id_search">
-                        {{ form.search.label }}
-                      </label>
-                    <input class="govuk-input" type="text" name="search" id="id_search" value="{{ search_query }}">
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      {% include 'design_system/error_summary.html' with form=form %}
+      <h1 class="govuk-heading-l">Edit permissions for {{ obj.name }}</h1>
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        <fieldset class="govuk-fieldset">
+          <div class="govuk-form-group">
+            {% if waffle_flag %}
+              {{ form.search }}
+            {% else %}
+              <label class="govuk-label  govuk-!-font-weight-bold" for="id_search">
+                Search by email address or name
+              </label>
+              <input class="govuk-input" type="text" name="search" id="id_search" value="{{ search_query }}">
+            {% endif %}
+          </div>
+          <button type="submit" class="govuk-button" data-prevent-double-click="true">Search</button>
+        </fieldset>
+      </form>
+      {% if non_matches %}
+      <h1 class="govuk-heading-l">Unable to match {{non_matches|length}}{% if non_matches|length == 1 %} email address to a user{% else %} email addresses to users{% endif %}</h1>
+      <ul class="govuk-list govuk-!-margin-bottom-6">
+        {% for non_match in non_matches %}
+        <li class="govuk-body">
+            {{ non_match }}
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %} 
+      {% if search_results %}
+        {% if waffle_flag %}
+        <fieldset class="govuk-fieldset" aria-describedby="search-hint">
+            <div>
+              <h1 class="govuk-heading-l" style="float: left">
+                Found {{ search_results|length }} matching user{% if search_results|length > 1 %}s{% endif %}
+              </h1>
+              <button type="button" class="select-deselect-toggle" id="toggle-search-results">
+                Deselect all users
+              </button>
+            </div>
+          </fieldset>
+        <form action="{% url 'datasets:add_authorized_users' obj.id summary_id %}" method="post"
+              enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          <fieldset class="govuk-fieldset">
+            <div class="govuk-form-group">
+              <div class="govuk-checkboxes govuk-!-margin-bottom-6" data-module="govuk-checkboxes" id="select-user-checkboxes-group">
+                {% for result in search_results %}
+                  <div class="govuk-checkboxes__item">
+                    <input class="govuk-checkboxes__input" id="{{ result.id }}" name="selected-user"
+                           type="checkbox"
+                           value="{{ result.id }}"
+                           checked
+                    >
+                    <label class="govuk-label govuk-checkboxes__label" for="{{ result.id }}">
+                      {{ result.first_name }} {{ result.last_name }} ({{ result.email }})
+                    </label>
                   </div>
-                  <button type="submit" class="govuk-button" data-prevent-double-click="true" >Seach</button>
-              </fieldset>
-          </form>
-            {% if search_results %}
-                <table class="govuk-table">
-                    <caption class="govuk-table__caption govuk-table__caption--m">Found {{ search_results.count }} result{% if search_results.count > 1 %}s{% endif %} for {{ search_query }}</caption>
+                {% endfor %}
+              </div>
+            </div>
+            <button type="submit" class="govuk-button" data-prevent-double-click="true">Add selected users</button>
+          </fieldset>
+        </form>
+          {% else %}
+          <table class="govuk-table">
+                    <caption class="govuk-table__caption govuk-table__caption--m">Found {{ search_results.count }} matching user{% if search_results.count > 1 %}s{% else %} for {{ search_query }}{% endif %}</caption>
                     <tbody class="govuk-table__body">
                         {% for result in search_results %}
                         <tr class="govuk-table__row">
@@ -56,11 +105,46 @@
                         {% endfor %}
                     </tbody>
                   </table>
-            {% else %}
-              {% if search_query %}
-                <h2 class="govuk-heading-m">Found 0 results for {{ search_query }}</h2>
-              {% endif %}
-            {% endif %}
-        </div>
+          {% endif %}
+      {% else %}
+          {% if search_query and not non_matches %}
+            <h2 class="govuk-heading-m">Found 0 results</h2>
+          {% endif %}
+      {% endif %}
     </div>
+  </div>
+{% endblock %}
+
+{% block footer_scripts %}
+  <script nonce="{{ request.csp_nonce }}">
+    let toggleSearchResults = document.getElementById('toggle-search-results');
+    let checkboxes = document.getElementsByName('selected-user');
+    if (toggleSearchResults !== null) {
+      toggleSearchResults.addEventListener('click', function (e) {
+        if (toggleSearchResults.innerText === 'Select all users') {
+          for (var i = 0, n = checkboxes.length; i < n; i++) {
+            checkboxes[i].checked = true;
+            toggleSearchResults.innerText = 'Deselect all users'
+          }
+        }
+        else if (toggleSearchResults.innerText === 'Deselect all users') {
+          for (var i = 0, n = checkboxes.length; i < n; i++) {
+            checkboxes[i].checked = false;
+            toggleSearchResults.innerText = 'Select all users'
+          }
+        }
+        })
+    }
+    document.getElementById('select-user-checkboxes-group').addEventListener("change", function (e) {
+        let checker = arr => arr.every(v => v === true);
+        let checkboxesChecked = [];
+        for (var i = 0, n = checkboxes.length; i < n; i++) {
+          checkboxesChecked.push(checkboxes[i].checked)
+        }
+        if (!checker(checkboxesChecked)) {
+          toggleSearchResults.innerText = 'Deselect all users'
+        }
+      }
+    )
+  </script>
 {% endblock %}
