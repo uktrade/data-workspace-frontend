@@ -667,7 +667,9 @@ class VisualisationLinkAdmin(admin.ModelAdmin):
             AwsAccountId=account_id, DataSetId=dataset_id
         )
         user = quicksight_client.describe_user(
-            AwsAccountId=account_id, UserName=new_data_source_owner, Namespace=settings.QUICKSIGHT_NAMESPACE
+            AwsAccountId=account_id,
+            UserName=new_data_source_owner,
+            Namespace=settings.QUICKSIGHT_NAMESPACE,
         )["User"]
         db_name = list(settings.DATABASES_DATA.items())[0][0]
         replacement_datasource_arn = (
