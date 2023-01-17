@@ -23,7 +23,11 @@
         null,
         null,
         JSON.parse(document.getElementById('grid_data').textContent),
-        '{{ model.slug }}-{{ model.published_version }}-custom-export.csv'
+        '{{ model.slug }}-{{ model.published_version }}-custom-export.csv',
+        null,
+        '{{ model.send_post_data_url}}',
+        '{{ model.name }}',
+        '{{ model.get_type_display }}'
       );
     </script>
   {% endflag %}

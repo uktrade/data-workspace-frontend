@@ -20,7 +20,11 @@
         '{% url 'finder:data_grid_results' source_table.schema source_table.table %}?{{ request.GET.urlencode }}',
         '&download=1',
         null,
-        '{{ source_table.name }}-{{ search_term }}-custom-export.csv'
+        '{{ source_table.name }}-{{ search_term }}-custom-export.csv',
+        null,
+        null,
+        '{{ source_table.dataset.name }}',
+        '{{ source_table.dataset.get_type_display }}',
     );
   </script>
 {% endblock footer_scripts %}
