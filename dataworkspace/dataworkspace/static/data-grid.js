@@ -18,20 +18,26 @@ function createInputFormField(name, value) {
   return field;
 }
 
-function logDownloadEvent(gridOptions, itemId, itemName, itemType, dataFormat, rowsDownLoad) {
+function logDownloadEvent(
+  gridOptions,
+  itemId,
+  itemName,
+  itemType,
+  dataFormat,
+  rowsDownLoaded
+) {
   var columnApi = gridOptions.columnApi;
- if (window.dataLayer == null) return;
-  window.dataLayer.push({ 
+  if (window.dataLayer == null) return;
+  window.dataLayer.push({
     event: "data_download",
     item_name: itemName,
     item_type: itemType,
-    item_id:itemId,
+    item_id: itemId,
     data_format: dataFormat,
     columns_total: columnApi.getAllColumns().length,
     columns_downloaded: columnApi.getAllDisplayedColumns().length,
     rows_total: null,
-    rows_downloaded:rowsDownLoad
-
+    rows_downloaded: rowsDownLoaded,
   });
 }
 
@@ -91,7 +97,8 @@ function initDataGrid(
   itemType,
   totalDownloadableRows
 ) {
-  totalDownloadableRows = totalDownloadableRows != null ? totalDownloadableRows : 0;
+  totalDownloadableRows =
+    totalDownloadableRows != null ? totalDownloadableRows : 0;
   for (var i = 0; i < columnConfig.length; i++) {
     var column = columnConfig[i];
     // Try to determine filter types from the column config.
@@ -212,8 +219,11 @@ function initDataGrid(
               var rc = response.rowcount.count;
               totalDownloadableRows = response.rowcount.count;
               var downLoadLimit = response.download_limit;
-              if (totalDownloadableRows > downLoadLimit){
-                  totalDownloadableRows = downLoadLimit
+              if (
+                downLoadLimit != null &&
+                totalDownloadableRows > downLoadLimit
+              ) {
+                totalDownloadableRows = downLoadLimit;
               }
               const rowcount = document.getElementById("data-grid-rowcount");
               const dl_count = document.getElementById("data-grid-download");
@@ -285,7 +295,16 @@ function initDataGrid(
           fileName: exportFileName,
         });
       }
-      logDownloadEvent(gridOptions, itemId, itemName, itemType, "CSV",dataEndpoint == null ? gridOptions.api.getDisplayedRowCount() : totalDownloadableRows);
+      logDownloadEvent(
+        gridOptions,
+        itemId,
+        itemName,
+        itemType,
+        "CSV",
+        dataEndpoint == null
+          ? gridOptions.api.getDisplayedRowCount()
+          : totalDownloadableRows
+      );
       document.activeElement.blur();
       return;
     });
@@ -307,7 +326,16 @@ function initDataGrid(
         linkElement.setAttribute("href", dataUri);
         linkElement.setAttribute("download", exportFileDefaultName);
         linkElement.click();
-        logDownloadEvent(gridOptions,itemId,itemName, itemType, "JSON",dataEndpoint == null ? gridOptions.api.getDisplayedRowCount() : totalDownloadableRows);
+        logDownloadEvent(
+          gridOptions,
+          itemId,
+          itemName,
+          itemType,
+          "JSON",
+          dataEndpoint == null
+            ? gridOptions.api.getDisplayedRowCount()
+            : totalDownloadableRows
+        );
         document.activeElement.blur();
         return;
       });
