@@ -6,6 +6,7 @@ import random
 import string
 
 import botocore
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
@@ -106,7 +107,7 @@ class TestSyncQuickSightPermissions:
         assert mock_user_client.update_user.call_args_list == [
             mock.call(
                 AwsAccountId=mock.ANY,
-                Namespace="default",
+                Namespace=settings.QUICKSIGHT_NAMESPACE,
                 Role="AUTHOR",
                 CustomPermissionsName="author-custom-permissions-test",
                 UserName="user/fake@email.com",
@@ -209,7 +210,7 @@ class TestSyncQuickSightPermissions:
         assert mock_user_client.update_user.call_args_list == [
             mock.call(
                 AwsAccountId=mock.ANY,
-                Namespace="default",
+                Namespace=settings.QUICKSIGHT_NAMESPACE,
                 Role="AUTHOR",
                 CustomPermissionsName="author-custom-permissions-test",
                 UserName="user/fake@email.com",
@@ -217,7 +218,7 @@ class TestSyncQuickSightPermissions:
             ),
             mock.call(
                 AwsAccountId=mock.ANY,
-                Namespace="default",
+                Namespace=settings.QUICKSIGHT_NAMESPACE,
                 Role="AUTHOR",
                 CustomPermissionsName="author-custom-permissions-test",
                 UserName="user/fake2@email.com",
@@ -275,7 +276,7 @@ class TestSyncQuickSightPermissions:
         assert mock_user_client.update_user.call_args_list == [
             mock.call(
                 AwsAccountId=mock.ANY,
-                Namespace="default",
+                Namespace=settings.QUICKSIGHT_NAMESPACE,
                 Role="AUTHOR",
                 CustomPermissionsName="author-custom-permissions-test",
                 UserName="user/fake@email.com",
@@ -394,7 +395,7 @@ class TestSyncQuickSightPermissions:
         assert mock_user_client.update_user.call_args_list == [
             mock.call(
                 AwsAccountId=mock.ANY,
-                Namespace="default",
+                Namespace=settings.QUICKSIGHT_NAMESPACE,
                 Role="ADMIN",
                 UnapplyCustomPermissions=True,
                 UserName="user/fake2@email.com",
@@ -404,12 +405,12 @@ class TestSyncQuickSightPermissions:
         assert mock_user_client.describe_user.call_args_list == [
             mock.call(
                 AwsAccountId=mock.ANY,
-                Namespace="default",
+                Namespace=settings.QUICKSIGHT_NAMESPACE,
                 UserName=f"quicksight_federation/{user.profile.sso_id}",
             ),
             mock.call(
                 AwsAccountId=mock.ANY,
-                Namespace="default",
+                Namespace=settings.QUICKSIGHT_NAMESPACE,
                 UserName=f"quicksight_federation/{user2.profile.sso_id}",
             ),
         ]
