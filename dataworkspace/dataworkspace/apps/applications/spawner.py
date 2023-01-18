@@ -86,10 +86,17 @@ def spawn(
         valid_for=datetime.timedelta(days=31),
     )
 
-    authorised_hosts = list(
-        user.authorised_mlflow_instances.all().values_list("instance__hostname", flat=True)
+    authorised_hosts, sub = (
+        (
+            list(
+                user.authorised_mlflow_instances.all().values_list("instance__hostname", flat=True)
+            ),
+            user.email,
+        )
+        if application_instance.application_template.application_type == "TOOL"
+        else ([], None)
     )
-    sub = user.email
+
     jwt_token = generate_jwt_token(authorised_hosts, sub)
 
     if application_instance.application_template.application_type == "TOOL":
