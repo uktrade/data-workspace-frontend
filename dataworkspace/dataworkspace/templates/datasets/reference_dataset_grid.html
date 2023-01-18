@@ -25,8 +25,10 @@
         '{{ model.slug }}-{{ model.published_version }}-custom-export.csv',
         null,
         '{{ model.send_post_data_url}}',
+        '{{ model.id }}',
         '{{ model.name }}',
-        '{{ model.get_type_display }}'
+        '{{ model.get_type_display }}',
+        {{ model.get_grid_data|length }}
     );
   </script>
 {% endblock footer_scripts %}
