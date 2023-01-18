@@ -94,7 +94,14 @@ def spawn(
             user.email,
         )
         if application_instance.application_template.application_type == "TOOL"
-        else ([], None)
+        else (
+            list(
+                application_instance.application_template.authorised_mlflow_instances.all().values_list(
+                    "mlflow_instance__hostname", flat=True
+                )
+            ),
+            application_instance.application_template.host_basename,
+        )
     )
 
     jwt_token = generate_jwt_token(mlflow_authorised_hosts, sub)
