@@ -1413,7 +1413,7 @@ def b64encode_nopadding(to_encode):
     return urlsafe_b64encode(to_encode).rstrip(b"=")
 
 
-def generate_jwt_token(user):
+def generate_jwt_token(authorised_hosts, sub):
     private_key = load_pem_private_key(settings.JWT_PRIVATE_KEY.encode(), password=None)
     header = {
         "typ": "JWT",
@@ -1421,11 +1421,9 @@ def generate_jwt_token(user):
         "crv": "Ed25519",
     }
     payload = {
-        "sub": user.email,
+        "sub": sub,
         "exp": int(time.time() + 60 * 60 * 24),
-        "authorised_hosts": list(
-            user.authorised_mlflow_instances.all().values_list("instance__hostname", flat=True)
-        ),
+        "authorised_hosts": authorised_hosts,
     }
     to_sign = (
         b64encode_nopadding(json.dumps(header).encode("utf-8"))

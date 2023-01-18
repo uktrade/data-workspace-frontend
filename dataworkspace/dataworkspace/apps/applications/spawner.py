@@ -86,7 +86,11 @@ def spawn(
         valid_for=datetime.timedelta(days=31),
     )
 
-    jwt_token = generate_jwt_token(user)
+    authorised_hosts = list(
+        user.authorised_mlflow_instances.all().values_list("instance__hostname", flat=True)
+    )
+    sub = user.email
+    jwt_token = generate_jwt_token(authorised_hosts, sub)
 
     if application_instance.application_template.application_type == "TOOL":
         # For AppStream to access credentials

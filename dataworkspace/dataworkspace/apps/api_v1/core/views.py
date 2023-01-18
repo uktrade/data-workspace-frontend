@@ -127,7 +127,11 @@ def invalidate_superset_user_cached_credentials():
 
 def generate_mlflow_jwt(request):
     user = get_user_model().objects.get(profile__sso_id=request.headers["sso-profile-user-id"])
-    jwt = generate_jwt_token(user)
+    authorised_hosts = list(
+        user.authorised_mlflow_instances.all().values_list("instance__hostname", flat=True)
+    )
+    sub = user.email
+    jwt = generate_jwt_token(authorised_hosts, sub)
     return JsonResponse({"jwt": jwt})
 
 
