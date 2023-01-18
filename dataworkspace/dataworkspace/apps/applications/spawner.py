@@ -86,11 +86,25 @@ def spawn(
         valid_for=datetime.timedelta(days=31),
     )
 
-    authorised_hosts = list(
-        user.authorised_mlflow_instances.all().values_list("instance__hostname", flat=True)
+    mlflow_authorised_hosts, sub = (
+        (
+            list(
+                user.authorised_mlflow_instances.all().values_list("instance__hostname", flat=True)
+            ),
+            user.email,
+        )
+        if application_instance.application_template.application_type == "TOOL"
+        else (
+            list(
+                application_instance.application_template.authorised_mlflow_instances.all().values_list(
+                    "mlflow_instance__hostname", flat=True
+                )
+            ),
+            application_instance.application_template.host_basename,
+        )
     )
-    sub = user.email
-    jwt_token = generate_jwt_token(authorised_hosts, sub)
+
+    jwt_token = generate_jwt_token(mlflow_authorised_hosts, sub)
 
     if application_instance.application_template.application_type == "TOOL":
         # For AppStream to access credentials
@@ -105,6 +119,7 @@ def spawn(
         spawner_options,
         credentials,
         jwt_token,
+        mlflow_authorised_hosts,
         app_schema,
     )
 
@@ -130,6 +145,7 @@ class ProcessSpawner:
         spawner_options,
         credentials,
         jwt_token,
+        mlflow_authorised_hosts,
         ___,
     ):
 
@@ -235,6 +251,7 @@ class FargateSpawner:
         spawner_options,
         credentials,
         jwt_token,
+        mlflow_authorised_hosts,
         app_schema,
     ):
         try:
@@ -300,14 +317,11 @@ class FargateSpawner:
                 },
             }
 
-            authorised_hosts = list(
-                user.authorised_mlflow_instances.all().values_list("instance__hostname", flat=True)
-            )
             mlflow_env = {}
-            if authorised_hosts:
+            if mlflow_authorised_hosts:
                 mlflow_env = {
                     "MLFLOW_TRACKING_TOKEN": jwt_token,
-                    "MLFLOW_TRACKING_URI": f"{authorised_hosts[0]}:{settings.MLFLOW_PORT}",
+                    "MLFLOW_TRACKING_URI": f"{mlflow_authorised_hosts[0]}:{settings.MLFLOW_PORT}",
                 }
 
             # Build tag if we can and it doesn't already exist
