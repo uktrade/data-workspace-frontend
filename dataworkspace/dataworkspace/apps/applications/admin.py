@@ -26,6 +26,7 @@ from dataworkspace.apps.datasets.models import (
     DataSetApplicationTemplatePermission,
     MasterDataset,
     VisualisationCatalogueItem,
+    MLFlowApplicationTemplatePermission,
 )
 
 from dataworkspace.apps.applications.utils import (
@@ -489,3 +490,11 @@ class VisualisationTemplateAdmin(admin.ModelAdmin):
         )
 
         super().save_model(request, obj, form, change)
+
+
+@admin.register(MLFlowApplicationTemplatePermission)
+class MLFlowApplicationTemplatePermissionAdmin(admin.ModelAdmin):
+    list_display = (
+        "application_template",
+        "mlflow_instance",
+    )

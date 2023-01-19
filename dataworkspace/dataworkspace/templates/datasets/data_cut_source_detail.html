@@ -1,6 +1,7 @@
 {% extends '_main.html' %}
 {% load static core_tags humanize waffle_tags datasets_tags %}
-{% block page_title %}View {{ object.name }} - {{ block.super }}{% endblock %}
+
+{% block page_title %}View {{ object.name }} - {{ block.super }}{% endblock %}data-grid
 {% block go_back %}
   <a class="govuk-back-link"
      href="{% url "datasets:dataset_detail" dataset_uuid=object.dataset.id %}#{{ object.dataset.slug }}">
@@ -26,7 +27,11 @@
         '{% url 'datasets:create_chart_from_grid' object.dataset.id object.id %}'
       {% else %}
         null
-      {% endflag %}
+      {% endflag %},
+      null,
+      '{{ object.dataset.id }}',
+      '{{ object.dataset.name }}',
+      '{{ object.dataset.get_type_display }}'
     );
   </script>
 

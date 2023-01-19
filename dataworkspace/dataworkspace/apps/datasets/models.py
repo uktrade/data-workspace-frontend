@@ -52,6 +52,7 @@ from dataworkspace.apps.core.models import (
     TimeStampedUserModel,
     Database,
     DeletableQuerySet,
+    MLFlowInstance,
 )
 from dataworkspace.apps.applications.models import (
     ApplicationTemplate,
@@ -549,6 +550,18 @@ class DataSetApplicationTemplatePermission(models.Model):
     class Meta:
         db_table = "app_datasetapplicationtemplatepermission"
         unique_together = ("dataset", "application_template")
+
+
+class MLFlowApplicationTemplatePermission(models.Model):
+    application_template = models.ForeignKey(
+        ApplicationTemplate, on_delete=models.CASCADE, related_name="authorised_mlflow_instances"
+    )
+    mlflow_instance = models.ForeignKey(MLFlowInstance, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = "Visualisation permission for MLFlow"
+        verbose_name_plural = "Visualisation permissions for MLFlow"
+        unique_together = ("application_template", "mlflow_instance")
 
 
 class MasterDatasetManager(DeletableQuerySet):

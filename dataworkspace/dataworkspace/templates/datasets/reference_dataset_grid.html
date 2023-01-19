@@ -1,5 +1,6 @@
 {% extends '_main.html' %}
 {% load static core_tags humanize %}
+
 {% block page_title %}View {{ object.name }} - {{ block.super }}{% endblock %}
 {% block go_back %}
   <a class="govuk-back-link" href="{% url "datasets:dataset_detail" dataset_uuid=model.uuid %}#{{ model.slug }}">
@@ -24,6 +25,10 @@
         '{{ model.slug }}-{{ model.published_version }}-custom-export.csv',
         null,
         '{{ model.send_post_data_url}}',
+        '{{ model.id }}',
+        '{{ model.name }}',
+        '{{ model.get_type_display }}',
+        {{ model.get_grid_data|length }}
     );
   </script>
 {% endblock footer_scripts %}
