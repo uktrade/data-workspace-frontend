@@ -899,7 +899,9 @@ def sync_quicksight_permissions(user_sso_ids_to_update=tuple()):
     data_client = boto3.client("quicksight")
 
     account_id = boto3.client("sts").get_caller_identity().get("Account")
-
+    username_suffix = (
+        "" if settings.QUICKSIGHT_NAMESPACE == "default" else ("_" + settings.QUICKSIGHT_NAMESPACE)
+    )
     quicksight_user_list: List[Dict[str, str]]
     if len(user_sso_ids_to_update) > 0:
         quicksight_user_list = []
@@ -911,7 +913,7 @@ def sync_quicksight_permissions(user_sso_ids_to_update=tuple()):
                         AwsAccountId=account_id,
                         Namespace=settings.QUICKSIGHT_NAMESPACE,
                         # \/ This is the format of the user name created by DIT SSO \/
-                        UserName=f"quicksight_federation/{user_sso_id}",
+                        UserName=f"quicksight_federation{username_suffix}/{user_sso_id}",
                     )["User"]
                 )
             except botocore.exceptions.ClientError as e:
