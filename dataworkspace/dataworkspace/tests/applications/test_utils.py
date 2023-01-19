@@ -390,6 +390,11 @@ class TestSyncQuickSightPermissions:
         sync_quicksight_permissions(
             user_sso_ids_to_update=[str(user.profile.sso_id), str(user2.profile.sso_id)]
         )
+        username_suffix = (
+            ""
+            if settings.QUICKSIGHT_NAMESPACE == "default"
+            else ("_" + settings.QUICKSIGHT_NAMESPACE)
+        )
 
         # Assert
         assert mock_user_client.update_user.call_args_list == [
@@ -406,12 +411,12 @@ class TestSyncQuickSightPermissions:
             mock.call(
                 AwsAccountId=mock.ANY,
                 Namespace=settings.QUICKSIGHT_NAMESPACE,
-                UserName=f"quicksight_federation/{user.profile.sso_id}",
+                UserName=f"quicksight_federation{username_suffix}/{user.profile.sso_id}",
             ),
             mock.call(
                 AwsAccountId=mock.ANY,
                 Namespace=settings.QUICKSIGHT_NAMESPACE,
-                UserName=f"quicksight_federation/{user2.profile.sso_id}",
+                UserName=f"quicksight_federation{username_suffix}/{user2.profile.sso_id}",
             ),
         ]
         assert len(mock_data_client.create_data_source.call_args_list) == 1
