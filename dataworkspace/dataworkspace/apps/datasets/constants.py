@@ -133,3 +133,16 @@ class AggregationType(models.TextChoices):
     AVG = "avg", "Average"
     MIN = "min", "Minimum"
     MAX = "max", "Maximum"
+
+
+class GovernmentSecurityClassificationType(models.IntegerChoices):
+    OFFICIAL = 1, "OFFICIAL"
+    OFFICIAL_SENSITIVE = 2, "OFFICIAL-SENSITIVE"
+    SECRET = 3, "SECRET"
+    TOP_SECRET = 4, "TOP SECRET"
+
+
+class SensitivityType(models.IntegerChoices):
+    PERSONAL = 1
+    COMMERCIAL = 2
+    LOCSEN = 3
