@@ -135,11 +135,9 @@ class AggregationType(models.TextChoices):
     MAX = "max", "Maximum"
 
 
-class GovernmentSecurityClassificationType(models.IntegerChoices):
+class SecurityClassificationAndHandlingInstructionType(models.IntegerChoices):
     OFFICIAL = 1, "OFFICIAL"
     OFFICIAL_SENSITIVE = 2, "OFFICIAL-SENSITIVE"
-    SECRET = 3, "SECRET"
-    TOP_SECRET = 4, "TOP SECRET"
 
 
 class SensitivityType(models.IntegerChoices):

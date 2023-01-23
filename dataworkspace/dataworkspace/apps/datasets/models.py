@@ -63,7 +63,7 @@ from dataworkspace.apps.datasets.constants import (
     DataLinkType,
     GRID_DATA_TYPE_MAP,
     GRID_ACRONYM_MAP,
-    GovernmentSecurityClassificationType,
+    SecurityClassificationAndHandlingInstructionType,
     PipelineType,
     SensitivityType,
     TagType,
@@ -285,7 +285,7 @@ class DataSet(DeletableTimestampedUserModel):
 
     average_unique_users_daily = models.FloatField(default=0)
     government_security_classification = models.IntegerField(
-        choices=GovernmentSecurityClassificationType.choices,
+        choices=SecurityClassificationAndHandlingInstructionType.choices,
         null=True,
         blank=True,
     )
@@ -1265,7 +1265,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         unique=True,
     )
     government_security_classification = models.IntegerField(
-        choices=GovernmentSecurityClassificationType.choices,
+        choices=SecurityClassificationAndHandlingInstructionType.choices,
         null=True,
         blank=True,
     )
@@ -2389,7 +2389,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     search_vector_english_tags = SearchVectorField(null=True, blank=True)
     search_vector_english_description = SearchVectorField(null=True, blank=True)
     government_security_classification = models.IntegerField(
-        choices=GovernmentSecurityClassificationType.choices,
+        choices=SecurityClassificationAndHandlingInstructionType.choices,
         null=True,
         blank=True,
     )
