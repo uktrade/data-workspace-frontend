@@ -14,6 +14,10 @@ resource "aws_ecr_repository" "rstudio" {
   name = "${var.prefix}-rstudio"
 }
 
+resource "aws_ecr_repository" "rstudio_rv4" {
+  name = "${var.prefix}-rstudio-rv4"
+}
+
 resource "aws_ecr_repository" "pgadmin" {
   name = "${var.prefix}-pgadmin"
 }
@@ -239,6 +243,7 @@ data "aws_iam_policy_document" "aws_vpc_endpoint_ecr" {
       "${aws_ecr_repository.admin.arn}",
       "${aws_ecr_repository.jupyterlab_python.arn}",
       "${aws_ecr_repository.rstudio.arn}",
+      "${aws_ecr_repository.rstudio_rv4.arn}",
       "${aws_ecr_repository.pgadmin.arn}",
       "${aws_ecr_repository.remotedesktop.arn}",
       "${aws_ecr_repository.theia.arn}",
