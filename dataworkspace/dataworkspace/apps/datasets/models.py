@@ -63,7 +63,9 @@ from dataworkspace.apps.datasets.constants import (
     DataLinkType,
     GRID_DATA_TYPE_MAP,
     GRID_ACRONYM_MAP,
+    SecurityClassificationAndHandlingInstructionType,
     PipelineType,
+    SensitivityType,
     TagType,
     UserAccessType,
 )
@@ -282,6 +284,16 @@ class DataSet(DeletableTimestampedUserModel):
     subscriptions = GenericRelation(DataSetSubscription)
 
     average_unique_users_daily = models.FloatField(default=0)
+    government_security_classification = models.IntegerField(
+        choices=SecurityClassificationAndHandlingInstructionType.choices,
+        null=True,
+        blank=True,
+    )
+    sensitivity = models.IntegerField(
+        choices=SensitivityType.choices,
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         db_table = "app_dataset"
@@ -1251,6 +1263,16 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         null=True,
         blank=True,
         unique=True,
+    )
+    government_security_classification = models.IntegerField(
+        choices=SecurityClassificationAndHandlingInstructionType.choices,
+        null=True,
+        blank=True,
+    )
+    sensitivity = models.IntegerField(
+        choices=SensitivityType.choices,
+        null=True,
+        blank=True,
     )
 
     class Meta:
@@ -2366,6 +2388,16 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     search_vector_english_short_description = SearchVectorField(null=True, blank=True)
     search_vector_english_tags = SearchVectorField(null=True, blank=True)
     search_vector_english_description = SearchVectorField(null=True, blank=True)
+    government_security_classification = models.IntegerField(
+        choices=SecurityClassificationAndHandlingInstructionType.choices,
+        null=True,
+        blank=True,
+    )
+    sensitivity = models.IntegerField(
+        choices=SensitivityType.choices,
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         permissions = [
