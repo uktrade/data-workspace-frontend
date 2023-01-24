@@ -1,6 +1,30 @@
-{% load humanize datasets_tags %}
+{% load humanize datasets_tags waffle_tags %}
 
 <dl class="govuk-summary-list">
+  {% flag SECURITY_CLASSIFICATION_FLAG %}
+    <div class="govuk-summary-list__row">
+      <dt class="govuk-summary-list__key">Security classifications</dt>
+      <dd class="govuk-summary-list__value">
+        {% if model.get_government_security_classification_display == "OFFICIAL" %}
+          <strong class="govuk-tag govuk-tag--blue">{{ model.get_government_security_classification_display }}</strong>
+        {% else %}
+          {% if model.sensitivity.all %}
+            {% for sensitivity in model.sensitivity.all %}
+              <strong
+                class="govuk-tag govuk-tag--red">{{ model.get_government_security_classification_display }} {{ sensitivity }}</strong>
+            {% endfor %}
+          {% else %}
+            <strong class="govuk-tag govuk-tag--red">{{ model.get_government_security_classification_display }}</strong>
+          {% endif %}
+        {% endif %}
+        <br>
+        <a
+          href="https://workspace.trade.gov.uk/working-at-dit/policies-and-guidance/guidance/information-classification-and-handling/"
+          class="govuk-link">Find out more about security classifications</a>
+      </dd>
+    </div>
+  {% endflag %}
+
   <div class="govuk-summary-list__row">
     <dt class="govuk-summary-list__key">Date added</dt>
     <dd class="govuk-summary-list__value">{{ model.published_at|format_date_uk }}</dd>
