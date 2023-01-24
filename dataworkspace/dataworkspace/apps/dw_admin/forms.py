@@ -16,6 +16,7 @@ from django_better_admin_arrayfield.forms.fields import DynamicArrayField
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import (
     DataSetChartBuilderChart,
+    SensitivityType,
     SourceLink,
     DataSet,
     DataSetVisualisation,
@@ -49,6 +50,9 @@ class AutoCompleteUserFieldsMixin:
 
 class ReferenceDatasetForm(AutoCompleteUserFieldsMixin, forms.ModelForm):
     model = ReferenceDataset
+    sensitivity = forms.ModelMultipleChoiceField(
+        queryset=SensitivityType.objects.all(), widget=forms.CheckboxSelectMultiple, required=False
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -480,6 +484,9 @@ class BaseDatasetForm(AutoCompleteUserFieldsMixin, forms.ModelForm):
         widget=FilteredSelectMultiple("users", False),
         queryset=get_user_model().objects.filter().order_by("email"),
     )
+    sensitivity = forms.ModelMultipleChoiceField(
+        queryset=SensitivityType.objects.all(), widget=forms.CheckboxSelectMultiple, required=False
+    )
 
     # Invalid dataset type - must be overridden by the subclass.
     dataset_type = -1
@@ -655,6 +662,9 @@ class VisualisationCatalogueItemForm(AutoCompleteUserFieldsMixin, forms.ModelFor
         queryset=get_user_model().objects.filter().order_by("email"),
     )
     can_change_user_permission_codename = "datasets.change_visualisationuserpermission"
+    sensitivity = forms.ModelMultipleChoiceField(
+        queryset=SensitivityType.objects.all(), widget=forms.CheckboxSelectMultiple, required=False
+    )
 
     class Meta:
         model = VisualisationCatalogueItem

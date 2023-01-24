@@ -138,9 +138,3 @@ class AggregationType(models.TextChoices):
 class SecurityClassificationAndHandlingInstructionType(models.IntegerChoices):
     OFFICIAL = 1, "OFFICIAL"
     OFFICIAL_SENSITIVE = 2, "OFFICIAL-SENSITIVE"
-
-
-class SensitivityType(models.IntegerChoices):
-    PERSONAL = 1
-    COMMERCIAL = 2
-    LOCSEN = 3

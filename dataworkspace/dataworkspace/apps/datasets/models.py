@@ -65,7 +65,6 @@ from dataworkspace.apps.datasets.constants import (
     GRID_ACRONYM_MAP,
     SecurityClassificationAndHandlingInstructionType,
     PipelineType,
-    SensitivityType,
     TagType,
     UserAccessType,
 )
@@ -212,6 +211,13 @@ class DataSetSubscription(TimeStampedUserModel):
         return selected
 
 
+class SensitivityType(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
 class DataSet(DeletableTimestampedUserModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     type = models.IntegerField(
@@ -289,8 +295,8 @@ class DataSet(DeletableTimestampedUserModel):
         null=True,
         blank=True,
     )
-    sensitivity = models.IntegerField(
-        choices=SensitivityType.choices,
+    sensitivity = models.ManyToManyField(
+        SensitivityType,
         null=True,
         blank=True,
     )
@@ -1269,8 +1275,8 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         null=True,
         blank=True,
     )
-    sensitivity = models.IntegerField(
-        choices=SensitivityType.choices,
+    sensitivity = models.ManyToManyField(
+        SensitivityType,
         null=True,
         blank=True,
     )
@@ -2393,8 +2399,8 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         null=True,
         blank=True,
     )
-    sensitivity = models.IntegerField(
-        choices=SensitivityType.choices,
+    sensitivity = models.ManyToManyField(
+        SensitivityType,
         null=True,
         blank=True,
     )
