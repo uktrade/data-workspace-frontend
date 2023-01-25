@@ -105,7 +105,7 @@ def new_private_database_credentials(
     force_create_for_databases: Tuple[str] = tuple(),
 ):
     db_team_roles = (
-        None
+        []
         if dw_user is None
         else ([team.schema_name for team in Team.objects.filter(member=dw_user)])
     )
