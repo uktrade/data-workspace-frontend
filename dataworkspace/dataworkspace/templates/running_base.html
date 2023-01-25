@@ -26,6 +26,7 @@
     }
     .govuk-header__link, .govuk-phase-banner, .govuk-breadcrumbs {
       padding-left: 10px;
+      padding-right: 15px;
     }
   </style>
 
@@ -123,7 +124,7 @@
             </div>
           </div>
           <div class="govuk-grid-column-one-half" style="text-align: right;">
-            <div class="govuk-breadcrumbs">
+            <div class="govuk-breadcrumbs", style="margin-top: 13px;">
               {% if catalogue_item.get_government_security_classification_display == "OFFICIAL" %}
               <strong class="govuk-tag govuk-tag--blue">{{ catalogue_item.get_government_security_classification_display }}</strong>
                 {% else %}
