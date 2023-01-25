@@ -439,6 +439,7 @@ class RelatedVisualisationsSortForm(forms.Form):
 
 
 class DatasetEditForm(GOVUKDesignSystemModelForm):
+
     class Meta:
         model = DataSet
         fields = [
@@ -446,6 +447,8 @@ class DatasetEditForm(GOVUKDesignSystemModelForm):
             "short_description",
             "description",
             "enquiries_contact",
+            "government_security_classification",
+            "sensitivity",
             "licence",
             "licence_url",
             "retention_policy",
