@@ -3,7 +3,7 @@
 <dl class="govuk-summary-list">
   {% flag SECURITY_CLASSIFICATION_FLAG %}
     <div class="govuk-summary-list__row">
-      <dt class="govuk-summary-list__key">Security classifications</dt>
+      <dt class="govuk-summary-list__key">Government Security Classification</dt>
       <dd class="govuk-summary-list__value">
         {% if model.get_government_security_classification_display == "OFFICIAL" %}
           <strong class="govuk-tag govuk-tag--blue">{{ model.get_government_security_classification_display }}</strong>
@@ -20,7 +20,7 @@
         <br>
         <a
           href="https://workspace.trade.gov.uk/working-at-dit/policies-and-guidance/guidance/information-classification-and-handling/"
-          class="govuk-link">Find out more about security classifications</a>
+          class="govuk-link">About security classifications</a>
       </dd>
     </div>
   {% endflag %}
