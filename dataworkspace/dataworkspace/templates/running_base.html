@@ -125,15 +125,15 @@
           <div class="govuk-grid-column-one-half" style="text-align: right;">
             <div class="govuk-breadcrumbs">
               {% if catalogue_item.get_government_security_classification_display == "OFFICIAL" %}
-                <strong class="govuk-tag govuk-tag--blue">{{ catalogue_item.get_government_security_classification_display }}</strong>
-              {% else %}
-                <strong class="govuk-tag govuk-tag--red">{{ catalogue_item.get_government_security_classification_display }} </strong>
-                {% if catalogue_item.sensitivity.all %}
-                  {% for sensitivity in catalogue_item.sensitivity.all %}
-                    <strong class="govuk-tag govuk-tag--red"> <span>&#8226;</span> {{ sensitivity }} </strong>
-                  {% endfor %}
-                {% endif %}
-              {% endif %}
+              <strong class="govuk-tag govuk-tag--blue">{{ catalogue_item.get_government_security_classification_display }}</strong>
+                {% else %}
+                  <strong class="govuk-tag govuk-tag--red">{{ catalogue_item.get_government_security_classification_display }}
+                    {% if catalogue_item.sensitivity.all %}
+                      {% for sensitivity in catalogue_item.sensitivity.all %}
+                        {% if not forloop.first  %}<span>&#8226;{% endif %}</span> {{ sensitivity }}
+                      {% endfor %}
+                  {% endif %} </strong>
+              {% endif %}            
             </div>
           </div>
         </div>
