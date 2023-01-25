@@ -162,7 +162,7 @@ function initDataGrid(
     columnDefs: columnConfig,
     components: {
       loadingRenderer: function (params) {
-        if (params.value !== null && params.value !== undefined) {
+        if (params.data != null) {
           return params.valueFormatted !== null &&
             params.valueFormatted !== undefined
             ? params.valueFormatted
