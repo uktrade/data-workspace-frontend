@@ -84,8 +84,27 @@
           {{ loading_message.body }}
         </p>
       </div>
-      <p class="govuk-body">Remember you have a personal responsibility - alongside DIT’s corporate responsibility - to protect data.</p>
-      <p class="govuk-body">If you’re unsure about what you can and can’t do, contact the Data Protection team (<a class="govuk-link" href="mailto:data.protection@trade.gov.uk">data.protection@trade.gov.uk</a>) or talk to your line manager.</p>
+      {% flag SECURITY_CLASSIFICATION_FLAG %}
+      <p class="govuk-body">
+        It is your personal responsibility, alongside DIT’s corporate responsibility, to protect and handle data
+        appropriately. This includes adhering to the Data Protection Act 2018 and General Data Protection Regulation
+        (GDPR).
+        <br><br>
+        Before you work with a dataset, check the Government Security Classification and usage restrictions on the <a
+        href="{{ root_href }}">Data Workspace catalogue</a>.
+        <br><br>
+        If you are unsure about what you can and can’t do, contact the dataset’s Information Asset Owner.
+        <br><br>
+        If you need to share or publish data that contains Personally Identifiable Information (PII), contact the Data
+        Protection team (<a href="mailto:data.protection@trade.gov.uk">data.protection@trade.gov.uk</a>).
+      </p>
+      {% else %}
+      <p class="govuk-body">Remember you have a personal responsibility - alongside DIT’s corporate responsibility - to
+        protect data.</p>
+      <p class="govuk-body">If you’re unsure about what you can and can’t do, contact the Data Protection team (<a
+        class="govuk-link" href="mailto:data.protection@trade.gov.uk">data.protection@trade.gov.uk</a>) or talk to your
+        line manager.</p>
+      {% endflag %}
     </div>
   </div>
 {% endblock %}
