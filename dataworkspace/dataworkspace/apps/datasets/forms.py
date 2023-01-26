@@ -2,8 +2,10 @@ from collections import defaultdict
 from functools import partial
 import logging
 import json
+import waffle
 
 from django import forms
+from django.conf import settings
 from django.contrib.auth import get_user_model
 
 from dataworkspace.apps.datasets.constants import AggregationType, DataSetType, TagType
@@ -446,6 +448,8 @@ class DatasetEditForm(GOVUKDesignSystemModelForm):
             "short_description",
             "description",
             "enquiries_contact",
+            "government_security_classification",
+            "sensitivity",
             "licence",
             "licence_url",
             "retention_policy",
@@ -512,6 +516,12 @@ class DatasetEditForm(GOVUKDesignSystemModelForm):
         ),
         required=False,
     )
+
+    def __init__(self, request, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.request = request
+        if waffle.flag_is_active(self.request, settings.SECURITY_CLASSIFICATION_FLAG):
+            self.fields["government_security_classification"].required = True
 
     def clean_enquiries_contact(self):
         if self.cleaned_data["enquiries_contact"]:

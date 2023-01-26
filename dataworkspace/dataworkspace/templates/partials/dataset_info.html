@@ -11,16 +11,16 @@
           {% if model.sensitivity.all %}
             {% for sensitivity in model.sensitivity.all %}
               <strong
-                class="govuk-tag govuk-tag--red">{{ model.get_government_security_classification_display }} {{ sensitivity }}</strong>
+                class="govuk-tag govuk-tag--red govuk-!-margin-bottom-1">{{ model.get_government_security_classification_display }} {{ sensitivity }}</strong>
             {% endfor %}
           {% else %}
             <strong class="govuk-tag govuk-tag--red">{{ model.get_government_security_classification_display }}</strong>
           {% endif %}
         {% endif %}
-        <br>
+      <br>
         <a
           href="https://workspace.trade.gov.uk/working-at-dit/policies-and-guidance/guidance/information-classification-and-handling/"
-          class="govuk-link">About security classifications</a>
+          class="govuk-link govuk-!-font-size-16">About security classifications</a>
       </dd>
     </div>
   {% endflag %}
