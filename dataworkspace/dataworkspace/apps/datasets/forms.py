@@ -6,7 +6,6 @@ import json
 from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.test import RequestFactory
 
 from dataworkspace.apps.datasets.constants import AggregationType, DataSetType, TagType
 from .models import DataSet, SourceLink, Tag, VisualisationCatalogueItem

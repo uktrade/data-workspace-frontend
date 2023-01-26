@@ -1441,7 +1441,6 @@ class DatasetEditView(EditBaseView, UpdateView):
         kwargs["request"] = self.request
         return kwargs
 
-
     def get_success_url(self):
         return self.object.get_absolute_url()
 
