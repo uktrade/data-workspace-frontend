@@ -82,7 +82,7 @@ def spawn(
         db_role_schema_suffix,
         source_tables,
         db_user,
-        user,
+        user if application_instance.application_template.application_type == "TOOL" else None,
         valid_for=datetime.timedelta(days=31),
     )
 
