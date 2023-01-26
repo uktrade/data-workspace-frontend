@@ -34,6 +34,18 @@
 {% endblock footer_scripts %}
 {% block content %}
   <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full" style ="margin-bottom: 13px;">
+      {% if model.get_government_security_classification_display == "OFFICIAL" %}
+        <strong class="govuk-tag govuk-tag--blue">{{ model.get_government_security_classification_display }}</strong>
+      {% else %}
+        <strong class="govuk-tag govuk-tag--red">{{ model.get_government_security_classification_display }}
+          {% if model.sensitivity.all %}
+            {% for sensitivity in model.sensitivity.all %}
+              {% if not forloop.first  %}<span>&#8226;{% endif %}</span> {{ sensitivity }}
+            {% endfor %}
+        {% endif %} </strong>
+      {% endif %}      
+    </div>
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-xl">{{ model.name }}</h1>
       <p class="govuk-body">

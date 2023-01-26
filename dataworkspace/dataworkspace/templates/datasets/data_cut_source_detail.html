@@ -38,6 +38,18 @@
 {% endblock footer_scripts %}
 {% block content %}
   <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full" style ="margin-bottom: 13px;">
+      {% if object.dataset.get_government_security_classification_display == "OFFICIAL" %}
+        <strong class="govuk-tag govuk-tag--blue">{{ object.dataset.get_government_security_classification_display }}</strong>
+      {% else %}
+        <strong class="govuk-tag govuk-tag--red">{{ object.dataset.get_government_security_classification_display }}
+          {% if object.dataset.sensitivity.all %}
+            {% for sensitivity in object.dataset.sensitivity.all %}
+              {% if not forloop.first  %}<span>&#8226;{% endif %}</span> {{ sensitivity }}
+            {% endfor %}
+        {% endif %} </strong>
+      {% endif %}      
+    </div>
     <div class="govuk-grid-column-full">
       <h1 class="govuk-heading-xl">
         {{ object.name }}
