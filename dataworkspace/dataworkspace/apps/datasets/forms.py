@@ -4,7 +4,9 @@ import logging
 import json
 
 from django import forms
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.test import RequestFactory
 
 from dataworkspace.apps.datasets.constants import AggregationType, DataSetType, TagType
 from .models import DataSet, SourceLink, Tag, VisualisationCatalogueItem
@@ -22,6 +24,7 @@ from ...forms import (
     GOVUKDesignSystemTextareaWidget,
     GOVUKDesignSystemRichTextField,
 )
+import waffle
 
 logger = logging.getLogger("app")
 
@@ -439,7 +442,6 @@ class RelatedVisualisationsSortForm(forms.Form):
 
 
 class DatasetEditForm(GOVUKDesignSystemModelForm):
-
     class Meta:
         model = DataSet
         fields = [
@@ -515,6 +517,12 @@ class DatasetEditForm(GOVUKDesignSystemModelForm):
         ),
         required=False,
     )
+
+    def __init__(self, request, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.request = request
+        if waffle.flag_is_active(self.request, settings.SECURITY_CLASSIFICATION_FLAG):
+            self.fields["government_security_classification"].required = True
 
     def clean_enquiries_contact(self):
         if self.cleaned_data["enquiries_contact"]:

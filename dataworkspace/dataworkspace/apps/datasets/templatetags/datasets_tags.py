@@ -138,3 +138,14 @@ def to_json(data):
         return str(obj)
 
     return mark_safe(escapejson(json.dumps(data, default=handler)))
+
+
+@register.filter
+def sensitivity_with_descriptor(value):
+    sensitivity_with_descriptor_dict = {
+        "PERSONAL": "PERSONAL (relates to an identifiable person)",
+        "COMMERCIAL": "COMMERCIAL (contains market-sensitive information)",
+        "LOCSEN": "LOCSEN (sensitive information that locally-engaged staff overseas must not access)",
+    }
+
+    return sensitivity_with_descriptor_dict[str(value)]

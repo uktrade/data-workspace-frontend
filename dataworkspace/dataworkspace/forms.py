@@ -213,8 +213,10 @@ class GOVUKDesignSystemModelForm(forms.ModelForm):
 
         if self.is_bound:
             for field in self:
-                if self.errors.get(field.name) and not isinstance(
-                    self.fields[field.name].widget, forms.HiddenInput
+                if (
+                    self.errors.get(field.name)
+                    and hasattr(self.fields[field.name].widget, "custom_context")
+                    and not isinstance(self.fields[field.name].widget, forms.HiddenInput)
                 ):
                     self.fields[field.name].widget.custom_context["errors"] = self.errors[
                         field.name
