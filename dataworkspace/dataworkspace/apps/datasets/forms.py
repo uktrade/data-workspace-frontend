@@ -2,6 +2,7 @@ from collections import defaultdict
 from functools import partial
 import logging
 import json
+import waffle
 
 from django import forms
 from django.conf import settings
@@ -23,7 +24,6 @@ from ...forms import (
     GOVUKDesignSystemTextareaWidget,
     GOVUKDesignSystemRichTextField,
 )
-import waffle
 
 logger = logging.getLogger("app")
 

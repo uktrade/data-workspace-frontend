@@ -1437,7 +1437,7 @@ class DatasetEditView(EditBaseView, UpdateView):
     template_name = "datasets/edit_dataset.html"
 
     def get_form_kwargs(self):
-        kwargs = super(DatasetEditView, self).get_form_kwargs()
+        kwargs = super().get_form_kwargs()
         kwargs["request"] = self.request
         return kwargs
 
