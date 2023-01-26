@@ -58,19 +58,6 @@
                         <input class="govuk-input" type="text" disabled value="{% if request.GET.enquiries_contact %}{{ request.GET.enquiries_contact }}{% else %}{{ form.enquiries_contact.value }}{% endif %}">
                         <a class="govuk-link" href="{% url 'datasets:search_enquiries_contact' object.id %}">Add or change contact person</a>
                     </div>
-                    <div class="govuk-form-group {% if form.enquiries_contact.errors %}govuk-form-group--error{% endif %}">
-                        <label class="govuk-label  govuk-!-font-weight-bold" for="id_information_asset_owner">
-                            {{ form.enquiries_contact.label }}
-                        </label>
-                        {% if form.enquiries_contact.errors %}
-                          <span id="id_enquiries_contact-error" class="govuk-error-message">
-                            <span class="govuk-visually-hidden">Error: </span> {{ form.enquiries_contact.errors.0 }}
-                          </span>
-                        {% endif %}
-                        <input class="govuk-input" type="hidden" name="enquiries_contact" id="id_user_access_type" value="{% if request.GET.enquiries_contact %}{{ request.GET.enquiries_contact }}{% else %}{{ form.enquiries_contact.value }}{% endif %}">
-                        <input class="govuk-input" type="text" disabled value="{% if request.GET.enquiries_contact %}{{ request.GET.enquiries_contact }}{% else %}{{ form.enquiries_contact.value }}{% endif %}">
-                        <a class="govuk-link" href="{% url 'datasets:search_enquiries_contact' object.id %}">Add or change contact person</a>
-                    </div>
                 {% flag SECURITY_CLASSIFICATION_FLAG %}
                     <div class="govuk-form-group {% if form.government_security_classification.errors %}govuk-form-group--error{% endif %}">
                         <label class="govuk-label  govuk-!-font-weight-bold" for="id_government_security_classification">
