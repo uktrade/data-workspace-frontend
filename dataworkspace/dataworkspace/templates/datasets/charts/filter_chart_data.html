@@ -1,5 +1,5 @@
 {% extends '_main.html' %}
-{% load static core_tags humanize %}
+{% load static core_tags humanize waffle_tags %}
 {% block page_title %}Filter chart data - {{ block.super }}{% endblock %}
 {% block go_back %}
   <a class="govuk-back-link" href="{% url "datasets:select_chart_source" pk=source.dataset.id %}">
@@ -8,6 +8,20 @@
 {% endblock %}
 {% block content %}
   <div class="govuk-grid-row">
+    {% flag SECURITY_CLASSIFICATION_FLAG %}
+    <div class="govuk-grid-column-full" style ="margin-bottom: 13px;">
+      {% if object.dataset.get_government_security_classification_display == "OFFICIAL" %}
+        <strong class="govuk-tag govuk-tag--blue">{{ object.dataset.get_government_security_classification_display }}</strong>
+      {% else %}
+        <strong class="govuk-tag govuk-tag--red">{{ object.dataset.get_government_security_classification_display }}
+          {% if object.dataset.sensitivity.all %}
+            {% for sensitivity in object.dataset.sensitivity.all %}
+              {% if not forloop.first  %}and{% endif %}</span> {{ sensitivity }}
+            {% endfor %}
+        {% endif %} </strong>
+      {% endif %}   
+    </div>
+    {% endflag %}   
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-xl">{{ source.name }}</h1>
       <p class="govuk-body">
