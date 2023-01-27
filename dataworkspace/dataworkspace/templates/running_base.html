@@ -1,4 +1,4 @@
-{% load static %}
+{% load static waffle_tags %}
 <!DOCTYPE html>
 <html lang="en-GB" class="vis-template">
 
@@ -26,6 +26,7 @@
     }
     .govuk-header__link, .govuk-phase-banner, .govuk-breadcrumbs {
       padding-left: 10px;
+      padding-right: 15px;
     }
   </style>
 
@@ -94,7 +95,7 @@
           </div>
         </header>
         <div class="govuk-grid-row">
-          <div class="govuk-grid-column-full">
+          <div class="govuk-grid-column-one-half">
             <div class="govuk-breadcrumbs">
               <ol class="govuk-breadcrumbs__list">
                   <li class="govuk-breadcrumbs__list-item">
@@ -122,6 +123,22 @@
               </ol>
             </div>
           </div>
+          {% flag SECURITY_CLASSIFICATION_FLAG %}
+          <div class="govuk-grid-column-one-half" style="text-align: right;">
+            <div class="govuk-breadcrumbs" style="margin-top: 13px;">
+              {% if catalogue_item.get_government_security_classification_display == "OFFICIAL" %}
+              <strong class="govuk-tag govuk-tag--blue">{{ catalogue_item.get_government_security_classification_display }}</strong>
+                {% else %}
+                  <strong class="govuk-tag govuk-tag--red">{{ catalogue_item.get_government_security_classification_display }}
+                    {% if catalogue_item.sensitivity.all %}
+                      {% for sensitivity in catalogue_item.sensitivity.all %}
+                        {% if not forloop.first  %}and{% endif %}</span> {{ sensitivity }}
+                      {% endfor %}
+                  {% endif %} </strong>
+              {% endif %}   
+            </div>
+          </div>
+        {% endflag %}
         </div>
       </div>
     {% endif %}
