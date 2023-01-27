@@ -41,7 +41,7 @@
         <strong class="govuk-tag govuk-tag--red">{{ model.get_government_security_classification_display }}
           {% if model.sensitivity.all %}
             {% for sensitivity in model.sensitivity.all %}
-              {% if not forloop.first  %}<span>&#8226;{% endif %}</span> {{ sensitivity }}
+              {% if not forloop.first  %}and{% endif %}</span> {{ sensitivity }}
             {% endfor %}
         {% endif %} </strong>
       {% endif %}      
