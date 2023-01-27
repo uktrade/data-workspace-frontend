@@ -38,6 +38,7 @@
 {% endblock footer_scripts %}
 {% block content %}
   <div class="govuk-grid-row">
+  {% flag SECURITY_CLASSIFICATION_FLAG %}
     <div class="govuk-grid-column-full" style ="margin-bottom: 13px;">
       {% if object.dataset.get_government_security_classification_display == "OFFICIAL" %}
         <strong class="govuk-tag govuk-tag--blue">{{ object.dataset.get_government_security_classification_display }}</strong>
@@ -50,6 +51,7 @@
         {% endif %} </strong>
       {% endif %}      
     </div>
+  {% endflag %}
     <div class="govuk-grid-column-full">
       <h1 class="govuk-heading-xl">
         {{ object.name }}
