@@ -529,11 +529,11 @@ class FargateSpawner:
 
         except ClientError as exception_obj:
             logger.exception("FARGATE %s %s", spawner_application_id_parsed, proxy_url)
-            if exception_obj.response['Error']['Code'] == 'ThrottlingException':
-                return 'RUNNING'
-            return 'STOPPED'
-        except Exception:
-            return 'STOPPED'
+            if exception_obj.response["Error"]["Code"] == "ThrottlingException":
+                return "RUNNING"
+            return "STOPPED"
+        except Exception:  # pylint: disable=broad-except
+            return "STOPPED"
 
     @staticmethod
     def stop(application_instance_id):
