@@ -882,6 +882,16 @@ def sync_quicksight_users(data_client, user_client, account_id, quicksight_user_
 
 
 @celery_app.task()
+def full_quicksight_permissions_sync():
+    with cache.lock(
+        "full_quicksight_permissions_sync",
+        blocking_timeout=0,
+        timeout=360,
+    ):
+        sync_quicksight_permissions()
+
+
+@celery_app.task()
 @close_all_connections_if_not_in_atomic_block
 def sync_quicksight_permissions(user_sso_ids_to_update=tuple()):
     logger.info(
