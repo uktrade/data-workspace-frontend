@@ -529,7 +529,7 @@ class FargateSpawner:
 
         except Exception:  # pylint: disable=broad-except
             logger.exception("FARGATE %s %s", spawner_application_id_parsed, proxy_url)
-            return "STOPPED"
+            return "RUNNING"
 
     @staticmethod
     def stop(application_instance_id):
