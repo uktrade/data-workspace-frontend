@@ -9,6 +9,7 @@ import os
 import subprocess
 
 import boto3
+from botocore.config import Config
 from botocore.exceptions import ClientError
 import gevent
 
@@ -716,7 +717,8 @@ def _fargate_task_ip(cluster_name, arn):
 
 
 def _fargate_task_describe(cluster_name, arn):
-    client = boto3.client("ecs")
+    config = Config(retries=dict(max_attempts=10))
+    client = boto3.client("ecs", config=config)
 
     described_tasks = client.describe_tasks(cluster=cluster_name, tasks=[arn])
 
