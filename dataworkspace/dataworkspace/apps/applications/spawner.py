@@ -9,7 +9,6 @@ import os
 import subprocess
 
 import boto3
-from botocore.config import Config
 from botocore.exceptions import ClientError
 import gevent
 
@@ -530,7 +529,7 @@ class FargateSpawner:
 
         except Exception:  # pylint: disable=broad-except
             logger.exception("FARGATE %s %s", spawner_application_id_parsed, proxy_url)
-            return "STOPPED"
+            return "RUNNING"
 
     @staticmethod
     def stop(application_instance_id):
@@ -717,8 +716,7 @@ def _fargate_task_ip(cluster_name, arn):
 
 
 def _fargate_task_describe(cluster_name, arn):
-    config = Config(retries=dict(max_attempts=10))
-    client = boto3.client("ecs", config=config)
+    client = boto3.client("ecs")
 
     described_tasks = client.describe_tasks(cluster=cluster_name, tasks=[arn])
 
