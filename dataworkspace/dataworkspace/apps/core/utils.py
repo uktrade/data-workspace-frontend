@@ -46,7 +46,12 @@ from dataworkspace.apps.core.constants import (
 )
 from dataworkspace.apps.core.models import DatabaseUser, Team, TeamMembership
 from dataworkspace.apps.datasets.constants import UserAccessType
-from dataworkspace.apps.datasets.models import DataSet, SourceTable, ReferenceDataset
+from dataworkspace.apps.datasets.models import (
+    DataSet,
+    SourceTable,
+    ReferenceDataset,
+    AdminVisualisationUserPermission,
+)
 from dataworkspace.cel import celery_app
 
 logger = logging.getLogger("app")
@@ -108,6 +113,15 @@ def new_private_database_credentials(
         []
         if dw_user is None
         else ([team.schema_name for team in Team.objects.filter(member=dw_user)])
+    ) + (
+        []
+        if dw_user is None
+        else (
+            [
+                USER_SCHEMA_STEM + db_role_schema_suffix_for_app(permission.visualisation_template)
+                for permission in AdminVisualisationUserPermission.objects.filter(user=dw_user)
+            ]
+        )
     )
     db_shared_roles_set = set(db_shared_roles)
     db_shared_schemas = db_shared_roles
@@ -261,6 +275,7 @@ def new_private_database_credentials(
                 WHERE
                     (
                         rolname LIKE '\\_team\\_%'
+                        OR rolname LIKE '\\_user\\_app\\_%'
                     )
                     AND pg_has_role({db_role}, rolname, 'member');
             """
