@@ -75,9 +75,13 @@
     </h2>
   </div>
   {% flag SECURITY_CLASSIFICATION_FLAG %}
-  <p class="govuk-body">
-    {{ application_nice_name }} will be stopped automatically if left inactive for more than two hours.
-  </p>
+    <div class="govuk-warning-text">
+      <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+      <strong class="govuk-warning-text__text">
+        <span class="govuk-warning-text__assistive">Warning</span>
+        {{ application_nice_name }} will be stopped automatically if left inactive for more than two hours.
+      </strong>
+    </div>
     {% else %}
     <p class="govuk-body">
       {{ application_nice_name }} will be automatically stopped after two hours of inactivity
