@@ -260,7 +260,7 @@ def new_private_database_credentials(
                     pg_roles
                 WHERE
                     (
-                        rolname LIKE '\\_team\\_'
+                        rolname LIKE '\\_team\\_%'
                     )
                     AND pg_has_role({db_role}, rolname, 'member');
             """
