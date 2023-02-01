@@ -118,7 +118,8 @@ def new_private_database_credentials(
         if dw_user is None
         else (
             [
-                USER_SCHEMA_STEM + db_role_schema_suffix_for_app(permission.visualisation_template)
+                USER_SCHEMA_STEM
+                + db_role_schema_suffix_for_app(permission.visualisation.visualisation_template)
                 for permission in AdminVisualisationUserPermission.objects.filter(user=dw_user)
             ]
         )
