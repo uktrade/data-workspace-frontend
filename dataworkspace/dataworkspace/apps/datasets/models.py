@@ -2519,6 +2519,15 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         return self.name
 
 
+class AdminVisualisationUserPermission(models.Model):
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    visualisation = models.ForeignKey(VisualisationCatalogueItem, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = "app_adminvisualisationuserpermission"
+        unique_together = ("user", "visualisation")
+
+
 class VisualisationUserPermission(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     visualisation = models.ForeignKey(VisualisationCatalogueItem, on_delete=models.CASCADE)
