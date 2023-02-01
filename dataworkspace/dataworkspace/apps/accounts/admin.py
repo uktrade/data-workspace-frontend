@@ -27,6 +27,7 @@ from dataworkspace.apps.datasets.models import (
     DataCutDataset,
     VisualisationCatalogueItem,
     VisualisationUserPermission,
+    AdminVisualisationUserPermission,
 )
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.applications.utils import (
@@ -111,6 +112,13 @@ class AppUserEditForm(forms.ModelForm):
         queryset=None,
     )
 
+    authorized_admin_visualisations = forms.ModelMultipleChoiceField(
+        label="Authorized admin visualisations",
+        required=False,
+        widget=FilteredSelectMultiple("visualisations", False),
+        queryset=None,
+    )
+
     class Meta:
         model = get_user_model()
         fields = "__all__"
@@ -160,6 +168,14 @@ class AppUserEditForm(forms.ModelForm):
         )
         self.fields[
             "authorized_visualisations"
+        ].queryset = VisualisationCatalogueItem.objects.live().order_by("name", "id")
+        self.fields[
+            "authorized_admin_visualisations"
+        ].initial = VisualisationCatalogueItem.objects.live().filter(
+            adminvisualisationuserpermission__user=instance
+        )
+        self.fields[
+            "authorized_admin_visualisations"
         ].queryset = VisualisationCatalogueItem.objects.live().order_by("name", "id")
 
 
@@ -279,6 +295,7 @@ class AppUserAdmin(UserAdmin):
                     "authorized_master_datasets",
                     "authorized_data_cut_datasets",
                     "authorized_visualisations",
+                    "authorized_admin_visualisations",
                 ]
             },
         ),
@@ -507,6 +524,40 @@ class AppUserAdmin(UserAdmin):
                         EventLog.TYPE_REVOKED_VISUALISATION_PERMISSION,
                         serializers.serialize("python", [visualisation_catalogue_item])[0],
                         f"Removed application {visualisation_catalogue_item} permission",
+                    )
+
+        if "authorized_admin_visualisations" in form.cleaned_data:
+            current_visualisations = VisualisationCatalogueItem.objects.filter(
+                visualisationuserpermission__user=obj
+            )
+            for visualisation_catalogue_item in form.cleaned_data[
+                "authorized_admin_visualisations"
+            ]:
+                if visualisation_catalogue_item not in current_visualisations.all():
+                    AdminVisualisationUserPermission.objects.create(
+                        visualisation=visualisation_catalogue_item, user=obj
+                    )
+                    log_permission_change(
+                        request.user,
+                        obj,
+                        EventLog.TYPE_GRANTED_VISUALISATION_PERMISSION,
+                        serializers.serialize("python", [visualisation_catalogue_item])[0],
+                        f"Added application {visualisation_catalogue_item} admin permission",
+                    )
+            for visualisation_catalogue_item in current_visualisations:
+                if (
+                    visualisation_catalogue_item
+                    not in form.cleaned_data["authorized_admin_visualisations"]
+                ):
+                    AdminVisualisationUserPermission.objects.filter(
+                        visualisation=visualisation_catalogue_item, user=obj
+                    ).delete()
+                    log_permission_change(
+                        request.user,
+                        obj,
+                        EventLog.TYPE_REVOKED_VISUALISATION_PERMISSION,
+                        serializers.serialize("python", [visualisation_catalogue_item])[0],
+                        f"Removed application {visualisation_catalogue_item} admin permission",
                     )
 
         if "home_directory_efs_access_point_id" in form.cleaned_data:
