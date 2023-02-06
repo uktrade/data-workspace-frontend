@@ -88,12 +88,41 @@ resource "aws_ecs_task_definition" "mirrors_sync_cran_binary" {
   requires_compatibilities = ["FARGATE"]
 }
 
+resource "aws_ecs_task_definition" "mirrors_sync_cran_binary_rv4" {
+  count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
+  family                = "jupyterhub-mirrors-sync-cran-binary-rv4"
+  container_definitions = "${data.template_file.mirrors_sync_container_definitions_cran_binary_rv4.*.rendered[count.index]}"
+  execution_role_arn    = "${aws_iam_role.mirrors_sync_task_execution.*.arn[count.index]}"
+  task_role_arn         = "${aws_iam_role.mirrors_sync_task.*.arn[count.index]}"
+  network_mode          = "awsvpc"
+  cpu                   = "${local.mirrors_sync_container_cpu}"
+  memory                = "${local.mirrors_sync_container_memory}"
+  requires_compatibilities = ["FARGATE"]
+}
+
 data "template_file" "mirrors_sync_container_definitions_cran_binary" {
   count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
   template = "${file("${path.module}/ecs_main_mirrors_sync_cran_binary_container_definition.json")}"
 
   vars = {
     container_image    = "${aws_ecr_repository.mirrors_sync_cran_binary.repository_url}:latest"
+    container_name     = "${local.mirrors_sync_cran_binary_container_name}"
+    container_cpu      = "${local.mirrors_sync_cran_binary_container_cpu}"
+    container_memory   = "${local.mirrors_sync_cran_binary_container_memory}"
+
+    log_group  = "${aws_cloudwatch_log_group.mirrors_sync.*.name[count.index]}"
+    log_region = "${data.aws_region.aws_region.name}"
+
+    mirrors_bucket_name = "${var.mirrors_bucket_name}"
+  }
+}
+
+data "template_file" "mirrors_sync_container_definitions_cran_binary_rv4" {
+  count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
+  template = "${file("${path.module}/ecs_main_mirrors_sync_cran_binary_container_definition.json")}"
+
+  vars = {
+    container_image    = "${aws_ecr_repository.mirrors_sync_cran_binary_rv4.repository_url}:latest"
     container_name     = "${local.mirrors_sync_cran_binary_container_name}"
     container_cpu      = "${local.mirrors_sync_cran_binary_container_cpu}"
     container_memory   = "${local.mirrors_sync_cran_binary_container_memory}"
@@ -290,6 +319,7 @@ data "aws_iam_policy_document" "mirrors_sync_task_execution" {
     resources = [
       "${aws_ecr_repository.mirrors_sync.arn}",
       "${aws_ecr_repository.mirrors_sync_cran_binary.arn}",
+      "${aws_ecr_repository.mirrors_sync_cran_binary_rv4.arn}",
     ]
   }
 
@@ -367,66 +397,6 @@ resource "aws_cloudwatch_event_rule" "daily_at_four_am" {
   schedule_expression = "cron(0 4 * * ? *)"
 }
 
-resource "aws_cloudwatch_event_target" "mirrors_sync_pypi_scheduled_task" {
-  count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
-  target_id = "${var.prefix}-mirror-pypi"
-  arn       = "${aws_ecs_cluster.main_cluster.arn}"
-  rule      = "${aws_cloudwatch_event_rule.daily_at_four_am[0].name}"
-  role_arn  = "${aws_iam_role.mirrors_sync_events.*.arn[count.index]}"
-
-  ecs_target {
-    task_count          = 1
-    task_definition_arn = "${aws_ecs_task_definition.mirrors_sync_pypi.*.arn[count.index]}"
-    launch_type = "FARGATE"
-    network_configuration {
-      # In a public subnet to KISS and minimise costs. NAT traffic is more expensive
-      subnets = "${aws_subnet.public.*.id}"
-      security_groups = ["${aws_security_group.mirrors_sync.id}"]
-      assign_public_ip = true
-    }
-  }
-}
-
-resource "aws_cloudwatch_event_target" "mirrors_sync_conda_scheduled_task" {
-  count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
-  target_id = "${var.prefix}-mirror-conda"
-  arn       = "${aws_ecs_cluster.main_cluster.arn}"
-  rule      = "${aws_cloudwatch_event_rule.daily_at_four_am[0].name}"
-  role_arn  = "${aws_iam_role.mirrors_sync_events.*.arn[count.index]}"
-
-  ecs_target {
-    task_count          = 1
-    task_definition_arn = "${aws_ecs_task_definition.mirrors_sync_conda.*.arn[count.index]}"
-    launch_type = "FARGATE"
-    network_configuration {
-      # In a public subnet to KISS and minimise costs. NAT traffic is more expensive
-      subnets = "${aws_subnet.public.*.id}"
-      security_groups = ["${aws_security_group.mirrors_sync.id}"]
-      assign_public_ip = true
-    }
-  }
-}
-
-resource "aws_cloudwatch_event_target" "mirrors_sync_cran_scheduled_task" {
-  count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
-  target_id = "${var.prefix}-mirror-cran"
-  arn       = "${aws_ecs_cluster.main_cluster.arn}"
-  rule      = "${aws_cloudwatch_event_rule.daily_at_four_am[0].name}"
-  role_arn  = "${aws_iam_role.mirrors_sync_events.*.arn[count.index]}"
-
-  ecs_target {
-    task_count          = 1
-    task_definition_arn = "${aws_ecs_task_definition.mirrors_sync_cran.*.arn[count.index]}"
-    launch_type = "FARGATE"
-    network_configuration {
-      # In a public subnet to KISS and minimise costs. NAT traffic is more expensive
-      subnets = "${aws_subnet.public.*.id}"
-      security_groups = ["${aws_security_group.mirrors_sync.id}"]
-      assign_public_ip = true
-    }
-  }
-}
-
 resource "aws_cloudwatch_event_target" "mirrors_sync_cran_binary_scheduled_task" {
   count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
   target_id = "${var.prefix}-mirror-cran-binary"
@@ -437,6 +407,26 @@ resource "aws_cloudwatch_event_target" "mirrors_sync_cran_binary_scheduled_task"
   ecs_target {
     task_count          = 1
     task_definition_arn = "${aws_ecs_task_definition.mirrors_sync_cran_binary.*.arn[count.index]}"
+    launch_type = "FARGATE"
+    network_configuration {
+      # In a public subnet to KISS and minimise costs. NAT traffic is more expensive
+      subnets = "${aws_subnet.public.*.id}"
+      security_groups = ["${aws_security_group.mirrors_sync.id}"]
+      assign_public_ip = true
+    }
+  }
+}
+
+resource "aws_cloudwatch_event_target" "mirrors_sync_cran_binary_rv4_scheduled_task" {
+  count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
+  target_id = "${var.prefix}-mirror-cran-binary-rv4"
+  arn       = "${aws_ecs_cluster.main_cluster.arn}"
+  rule      = "${aws_cloudwatch_event_rule.daily_at_four_am[0].name}"
+  role_arn  = "${aws_iam_role.mirrors_sync_events.*.arn[count.index]}"
+
+  ecs_target {
+    task_count          = 1
+    task_definition_arn = "${aws_ecs_task_definition.mirrors_sync_cran_binary_rv4.*.arn[count.index]}"
     launch_type = "FARGATE"
     network_configuration {
       # In a public subnet to KISS and minimise costs. NAT traffic is more expensive
