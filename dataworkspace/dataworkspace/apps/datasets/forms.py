@@ -546,6 +546,8 @@ class VisualisationCatalogueItemEditForm(GOVUKDesignSystemModelForm):
             "short_description",
             "description",
             "enquiries_contact",
+            "government_security_classification",
+            "sensitivity",
             "secondary_enquiries_contact",
             "licence",
             "licence_url",
@@ -622,6 +624,12 @@ class VisualisationCatalogueItemEditForm(GOVUKDesignSystemModelForm):
         ),
         required=False,
     )
+
+    def __init__(self, request, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.request = request
+        if waffle.flag_is_active(self.request, settings.SECURITY_CLASSIFICATION_FLAG):
+            self.fields["government_security_classification"].required = True
 
     def clean_enquiries_contact(self):
         if self.cleaned_data["enquiries_contact"]:

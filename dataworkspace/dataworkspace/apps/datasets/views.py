@@ -1477,6 +1477,11 @@ class VisualisationCatalogueItemEditView(EditBaseView, UpdateView):
     form_class = VisualisationCatalogueItemEditForm
     template_name = "datasets/edit_visualisation_catalogue_item.html"
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["request"] = self.request
+        return kwargs
+
     def get_success_url(self):
         return self.object.get_absolute_url()
 
