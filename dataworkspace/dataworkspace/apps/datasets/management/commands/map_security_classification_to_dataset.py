@@ -8,12 +8,12 @@ class Command(BaseCommand):
     help = "Map security classification to dataset"
 
     def add_arguments(self, parser):
-        parser.add_argument("--email",
-                            dest="email")
-        parser.add_argument("--dataset_uuid",
-                            help="DataSet UUID",
-                            dest="dataset_uuid",
-                            )
+        parser.add_argument("--email", dest="email")
+        parser.add_argument(
+            "--dataset_uuid",
+            help="DataSet UUID",
+            dest="dataset_uuid",
+        )
         parser.add_argument(
             "--government_security_classification",
             help="Security classification - 1: Official . 2: Official-sensitive",
@@ -33,9 +33,7 @@ class Command(BaseCommand):
 
         if user is None:
             self.stdout.write(
-                self.style.ERROR(
-                    "Cannot find user with email address {}".format(options["email"])
-                )
+                self.style.ERROR("Cannot find user with email address {}".format(options["email"]))
             )
             return
 
@@ -51,8 +49,6 @@ class Command(BaseCommand):
 
         self.stdout.write(
             self.style.SUCCESS(
-                "Dataset {} had the correct security classification added".format(
-                    dataset
-                )
+                "Dataset {} had the correct security classification added".format(dataset)
             )
         )
