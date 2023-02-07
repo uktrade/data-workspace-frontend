@@ -74,6 +74,10 @@ resource "aws_ecr_repository" "mirrors_sync_cran_binary" {
   name = "${var.prefix}-mirrors-sync-cran-binary"
 }
 
+resource "aws_ecr_repository" "mirrors_sync_cran_binary_rv4" {
+  name = "${var.prefix}-mirrors-sync-cran-binary-rv4"
+}
+
 resource "aws_ecr_repository" "superset" {
   name = "${var.prefix}-superset"
 }
