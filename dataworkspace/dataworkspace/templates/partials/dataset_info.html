@@ -1,6 +1,10 @@
 {% load humanize datasets_tags waffle_tags %}
 
 <dl class="govuk-summary-list">
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Summary</dt>
+    <dd class="govuk-summary-list__value">{{ model.short_description }}</dd>
+  </div>
   {% flag SECURITY_CLASSIFICATION_FLAG %}
     <div class="govuk-summary-list__row">
       <dt class="govuk-summary-list__key">Government Security Classification</dt>
@@ -24,6 +28,15 @@
       </dd>
     </div>
   {% endflag %}
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Personal data</dt>
+    <dd class="govuk-summary-list__value">{{ model.personal_data|default:'' }}</dd>
+  </div>
+
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Usage restrictions</dt>
+    <dd class="govuk-summary-list__value">{{ model.restrictions_on_usage | linebreaksbr }}</dd>
+  </div>
 
   <div class="govuk-summary-list__row">
     <dt class="govuk-summary-list__key">Date added</dt>
@@ -38,16 +51,6 @@
   <div class="govuk-summary-list__row">
     <dt class="govuk-summary-list__key">Source</dt>
     <dd class="govuk-summary-list__value">{{ source_text }}</dd>
-  </div>
-
-  <div class="govuk-summary-list__row">
-    <dt class="govuk-summary-list__key">Restrictions on usage</dt>
-    <dd class="govuk-summary-list__value">{{ model.restrictions_on_usage | linebreaksbr }}</dd>
-  </div>
-
-  <div class="govuk-summary-list__row">
-    <dt class="govuk-summary-list__key">Summary</dt>
-    <dd class="govuk-summary-list__value">{{ model.short_description }}</dd>
   </div>
 
   <div class="govuk-summary-list__row">
