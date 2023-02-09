@@ -804,7 +804,7 @@ def sync_quicksight_users(data_client, user_client, account_id, quicksight_user_
         user_email = quicksight_user["Email"].lower()
         user_role = quicksight_user["Role"]
         user_username = quicksight_user["UserName"]
-        sso_id = quicksight_user["UserName"].split('/')[-1]
+        sso_id = quicksight_user["UserName"].split("/")[-1]
 
         if user_role not in {"AUTHOR", "ADMIN"}:
             logger.info("Skipping %s with role %s.", user_email, user_role)
@@ -856,9 +856,7 @@ def sync_quicksight_users(data_client, user_client, account_id, quicksight_user_
                 logger.info("Syncing QuickSight resources for %s", dw_user)
 
                 source_tables = source_tables_for_user(dw_user)
-                db_role_schema_suffix = stable_identification_suffix(
-                    str(sso_id), short=True
-                )
+                db_role_schema_suffix = stable_identification_suffix(str(sso_id), short=True)
 
                 # This creates a DB user for each of our datasets DBs. These users are intended to be long-lived,
                 # so they might already exist. If this is the case, we still generate a new password, as at the moment
