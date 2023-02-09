@@ -804,6 +804,7 @@ def sync_quicksight_users(data_client, user_client, account_id, quicksight_user_
         user_email = quicksight_user["Email"].lower()
         user_role = quicksight_user["Role"]
         user_username = quicksight_user["UserName"]
+        sso_id = quicksight_user["UserName"].split('/')[-1]
 
         if user_role not in {"AUTHOR", "ADMIN"}:
             logger.info("Skipping %s with role %s.", user_email, user_role)
@@ -842,7 +843,7 @@ def sync_quicksight_users(data_client, user_client, account_id, quicksight_user_
 
                     raise e
 
-                dw_user = get_user_model().objects.filter(email=user_email).first()
+                dw_user = get_user_model().objects.get(id=sso_id)
                 if not dw_user:
                     logger.error(
                         "Skipping %s - cannot match with Data Workspace user.",
@@ -856,7 +857,7 @@ def sync_quicksight_users(data_client, user_client, account_id, quicksight_user_
 
                 source_tables = source_tables_for_user(dw_user)
                 db_role_schema_suffix = stable_identification_suffix(
-                    str(dw_user.profile.sso_id), short=True
+                    str(sso_id), short=True
                 )
 
                 # This creates a DB user for each of our datasets DBs. These users are intended to be long-lived,
