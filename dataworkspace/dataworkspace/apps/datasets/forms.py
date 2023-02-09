@@ -734,13 +734,3 @@ class ChartAggregateForm(GOVUKDesignSystemForm):
             self.fields["aggregate_field"].widget.custom_context["errors"] = [err]
             raise forms.ValidationError({"aggregate_field": err})
         return cleaned_data
-
-class PostForm(forms.ModelForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['information_asset_owner'].required = True
-        self.fields['information_asset_manager'].required = True
-
-    class Meta:
-        model = DataSet, VisualisationCatalogueItem, ReferenceDataset, DataGrouping
-        fields = '__all__'

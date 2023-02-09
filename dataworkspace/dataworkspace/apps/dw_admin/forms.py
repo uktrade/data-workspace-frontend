@@ -58,7 +58,12 @@ class ReferenceDatasetForm(AutoCompleteUserFieldsMixin, forms.ModelForm):
         super().__init__(*args, **kwargs)
         if "sort_field" in self.fields:
             self.fields["sort_field"].queryset = self.instance.fields.all()
+        self.fields['information_asset_owner'].required = True
+        self.fields['information_asset_manager'].required = True
 
+    class Meta:
+        model = ReferenceDataset
+        fields = '__all__'
 
 class ReferenceDataInlineFormset(CustomInlineFormSet):
     model = ReferenceDatasetField
@@ -528,6 +533,14 @@ class DataCutDatasetForm(BaseDatasetForm):
 class MasterDatasetForm(BaseDatasetForm):
     dataset_type = DataSetType.MASTER
     can_change_user_permission_codename = "datasets.change_masterdatasetuserpermission"
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['information_asset_owner'].required = True
+        self.fields['information_asset_manager'].required = True
+
+    class Meta:
+        model = MasterDataset
+        fields = '__all__'
 
 
 class SourceLinkForm(forms.ModelForm):
@@ -693,6 +706,10 @@ class VisualisationCatalogueItemForm(AutoCompleteUserFieldsMixin, forms.ModelFor
                     for user in self.fields["authorized_users"].queryset.all()
                 )
             )
+
+        self.fields['information_asset_owner'].required = True
+        self.fields['information_asset_manager'].required = True
+
 
 
 class VisualisationLinkForm(forms.ModelForm):
