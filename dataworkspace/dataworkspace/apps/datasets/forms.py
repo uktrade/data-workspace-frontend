@@ -9,7 +9,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 
 from dataworkspace.apps.datasets.constants import AggregationType, DataSetType, TagType
-from .models import DataSet, SourceLink, Tag, VisualisationCatalogueItem
+from .models import DataSet, SourceLink, Tag, VisualisationCatalogueItem, ReferenceDataset, DataGrouping
 from .search import SORT_FIELD_MAP, SearchDatasetsFilters
 from ...forms import (
     GOVUKDesignSystemChoiceField,
@@ -734,3 +734,13 @@ class ChartAggregateForm(GOVUKDesignSystemForm):
             self.fields["aggregate_field"].widget.custom_context["errors"] = [err]
             raise forms.ValidationError({"aggregate_field": err})
         return cleaned_data
+
+class PostForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['information_asset_owner'].required = True
+        self.fields['information_asset_manager'].required = True
+
+    class Meta:
+        model = DataSet, VisualisationCatalogueItem, ReferenceDataset, DataGrouping
+        fields = '__all__'
