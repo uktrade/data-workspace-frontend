@@ -564,6 +564,8 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "valid_from": "",
                 "valid_to": "",
                 "enquiries_contact": "",
+                "information_asset_owner": self.user.id,
+                "information_asset_manager": self.user.id, 
                 "licence": "",
                 "restrictions_on_usage": "",
                 "sort_field": "",
@@ -1143,6 +1145,8 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "valid_from": "",
                 "valid_to": "",
                 "enquiries_contact": "",
+                "information_asset_owner": self.user.id,
+                "information_asset_manager": self.user.id, 
                 "licence": "",
                 "restrictions_on_usage": "",
                 "sort_field": field2.id,
@@ -1988,6 +1992,8 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "valid_from": "",
                 "valid_to": "",
                 "enquiries_contact": "",
+                "information_asset_owner": self.user.id,
+                "information_asset_manager": self.user.id,
                 "licence": "",
                 "restrictions_on_usage": "",
                 "sort_field": "",
@@ -2943,7 +2949,7 @@ class TestDatasetAdminPytest:
             (
                 "manage_unpublished_reference_datasets",
                 "admin:datasets_referencedataset_change",
-                factories.ReferenceDatasetFactory.create,
+                partial(factories.DataSetFactory.create, type=DataSetType.REFERENCE)
             ),
         ),
     )
@@ -3254,9 +3260,6 @@ class TestDatasetAdminPytest:
             table="my_table",
             dataset=dataset,
         )
-
-        user = get_user_model().objects.create(is_staff=True)
-
         # Login to admin site
         staff_client.post(reverse("admin:index"), follow=True)
 
@@ -3268,8 +3271,8 @@ class TestDatasetAdminPytest:
                 "slug": dataset.slug,
                 "short_description": "test short description",
                 "description": "test description",
-                "information_asset_owner": user.id,
-                "information_asset_manager": user.id, 
+                "information_asset_owner": str(user_1.id),
+                "information_asset_manager": str(user_1.id), 
                 "type": dataset.type,
                 "user_access_type": dataset.user_access_type,
                 "authorized_users": [str(user_1.id), str(user_2.id)],
@@ -3313,10 +3316,7 @@ class TestDatasetAdminPytest:
     def test_dataset_access_type_change_invalidates_all_user_cached_credentials(
         self, staff_client
     ):
-        user_1 = factories.UserFactory()
-
-        user = get_user_model().objects.create(is_staff=True)
-
+        user = factories.UserFactory()
         dataset = factories.MasterDataSetFactory.create(
             published=True, user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
@@ -3329,7 +3329,7 @@ class TestDatasetAdminPytest:
         # Login to admin site
         staff_client.post(reverse("admin:index"), follow=True)
 
-        original_connection = get_user_explorer_connection_settings(user_1, "test_external_db")
+        original_connection = get_user_explorer_connection_settings(user, "test_external_db")
 
         response = staff_client.post(
             reverse("admin:datasets_masterdataset_change", args=(dataset.id,)),
@@ -3339,8 +3339,8 @@ class TestDatasetAdminPytest:
                 "slug": dataset.slug,
                 "short_description": "test short description",
                 "description": "test description",
-                "information_asset_owner": user.id,
-                "information_asset_manager": user.id, 
+                "information_asset_owner": str(user.id),
+                "information_asset_manager": str(user.id), 
                 "type": dataset.type,
                 "user_access_type": UserAccessType.REQUIRES_AUTHENTICATION,
                 "sourcetable_set-TOTAL_FORMS": "1",
@@ -3366,7 +3366,7 @@ class TestDatasetAdminPytest:
             follow=True,
         )
 
-        new_connection = get_user_explorer_connection_settings(user_1, "test_external_db")
+        new_connection = get_user_explorer_connection_settings(user, "test_external_db")
 
         assert response.status_code == 200
         assert original_connection != new_connection
@@ -3378,9 +3378,7 @@ class TestDatasetAdminPytest:
     def test_master_dataset_permission_changes_clears_authorized_users_cached_credentials(
         self, mock_remove_cached_credentials, staff_client
     ):
-        user_1 = factories.UserFactory()
-
-        user = get_user_model().objects.create(is_staff=True)
+        user = factories.UserFactory()
 
         dataset = factories.MasterDataSetFactory.create(
             published=True, user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
@@ -3402,8 +3400,8 @@ class TestDatasetAdminPytest:
                 "slug": dataset.slug,
                 "short_description": "test short description",
                 "description": "test description",
-                "information_asset_owner": user.id,
-                "information_asset_manager": user.id, 
+                "information_asset_owner": str(user.id),
+                "information_asset_manager": str(user.id), 
                 "type": dataset.type,
                 "user_access_type": UserAccessType.REQUIRES_AUTHORIZATION,
                 "authorized_users": str(user.id),
@@ -3433,7 +3431,7 @@ class TestDatasetAdminPytest:
         assert response.status_code == 200
         # As the user has just been authorized to access the dataset, their cached
         # data explorer credentials should be cleared
-        assert mock_remove_cached_credentials.call_args_list == [mock.call(user_1)]
+        assert mock_remove_cached_credentials.call_args_list == [mock.call(user)]
 
     @pytest.mark.django_db
     def test_source_table_data_grid_download_enabled_without_limit(self, staff_client):

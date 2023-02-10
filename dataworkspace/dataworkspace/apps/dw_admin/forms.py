@@ -49,21 +49,21 @@ class AutoCompleteUserFieldsMixin:
 
 
 class ReferenceDatasetForm(AutoCompleteUserFieldsMixin, forms.ModelForm):
-    model = ReferenceDataset
     sensitivity = forms.ModelMultipleChoiceField(
         queryset=SensitivityType.objects.all(), widget=forms.CheckboxSelectMultiple, required=False
     )
+    class Meta:
+        model = ReferenceDataset
+        fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if "sort_field" in self.fields:
             self.fields["sort_field"].queryset = self.instance.fields.all()
+        
         self.fields['information_asset_owner'].required = True
         self.fields['information_asset_manager'].required = True
 
-    class Meta:
-        model = ReferenceDataset
-        fields = '__all__'
 
 class ReferenceDataInlineFormset(CustomInlineFormSet):
     model = ReferenceDatasetField
