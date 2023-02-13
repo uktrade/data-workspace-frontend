@@ -53,7 +53,7 @@ billiard==3.6.4.0
     # via
     #   -r requirements.txt
     #   celery
-black==22.3.0
+black==23.1.0
     # via -r requirements-dev.in
 bleach==3.3.0
     # via -r requirements.txt
