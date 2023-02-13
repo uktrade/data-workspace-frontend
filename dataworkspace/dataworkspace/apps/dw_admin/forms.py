@@ -57,12 +57,12 @@ class ReferenceDatasetForm(AutoCompleteUserFieldsMixin, forms.ModelForm):
         super().__init__(*args, **kwargs)
         if "sort_field" in self.fields:
             self.fields["sort_field"].queryset = self.instance.fields.all()
-        self.fields['information_asset_owner'].required = True
-        self.fields['information_asset_manager'].required = True
+        self.fields["information_asset_owner"].required = True
+        self.fields["information_asset_manager"].required = True
 
     class Meta:
         model = ReferenceDataset
-        fields = '__all__'
+        fields = "__all__"
 
 
 class ReferenceDataInlineFormset(CustomInlineFormSet):
@@ -536,12 +536,12 @@ class MasterDatasetForm(BaseDatasetForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['information_asset_owner'].required = True
-        self.fields['information_asset_manager'].required = True
+        self.fields["information_asset_owner"].required = True
+        self.fields["information_asset_manager"].required = True
 
     class Meta:
         model = MasterDataset
-        fields = '__all__'
+        fields = "__all__"
 
 
 class SourceLinkForm(forms.ModelForm):
@@ -708,8 +708,8 @@ class VisualisationCatalogueItemForm(AutoCompleteUserFieldsMixin, forms.ModelFor
                 )
             )
 
-        self.fields['information_asset_owner'].required = True
-        self.fields['information_asset_manager'].required = True
+        self.fields["information_asset_owner"].required = True
+        self.fields["information_asset_manager"].required = True
 
 
 class VisualisationLinkForm(forms.ModelForm):
