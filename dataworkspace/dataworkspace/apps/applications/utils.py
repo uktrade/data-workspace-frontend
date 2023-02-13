@@ -650,39 +650,57 @@ def get_quicksight_dashboard_name_url(dashboard_id, user):
     qs_user_client = session.client("quicksight", region_name=user_region)
     qs_dashboard_client = session.client("quicksight")
 
+    username_suffix = (
+        "" if settings.QUICKSIGHT_NAMESPACE == "default" else ("_" + settings.QUICKSIGHT_NAMESPACE)
+    )
+    author_user = None
     try:
-        qs_user_client.register_user(
+        author_user = qs_client.describe_user(
             AwsAccountId=account_id,
             Namespace=settings.QUICKSIGHT_NAMESPACE,
-            IdentityType="IAM",
-            IamArn=embed_role_arn,
-            UserRole="READER",
-            SessionName=user.email,
-            Email=user.email,
+            UserName=f"quicksight_federation{username_suffix}/{user_sso_id}",
         )
-    except qs_user_client.exceptions.ResourceExistsException:
-        pass
+    except botocore.exceptions.ClientError as e:
+        if e.response["Error"]["Code"] != "ResourceNotFoundException":
+            raise
 
-    attempts = 5
-    while attempts > 0:
-        attempts -= 1
+    if author_user is not None:
+        # Give author user read perms on the dashboard??
+
+    else:
         try:
-            qs_user_client.create_group_membership(
+            qs_user_client.register_user(
                 AwsAccountId=account_id,
                 Namespace=settings.QUICKSIGHT_NAMESPACE,
-                GroupName=settings.QUICKSIGHT_DASHBOARD_GROUP,
-                MemberName=f"{embed_role_name}/{user.email}",
+                IdentityType="IAM",
+                IamArn=embed_role_arn,
+                UserRole="READER",
+                SessionName=user.email,
+                Email=user.email,
             )
-            break
+        except qs_user_client.exceptions.ResourceExistsException:
+            pass
 
-        except botocore.exceptions.ClientError as e:
-            if e.response["Error"]["Code"] == "ResourceNotFoundException":
-                if attempts > 0:
-                    gevent.sleep(5 - attempts)
+        attempts = 5
+        while attempts > 0:
+            attempts -= 1
+            try:
+                qs_user_client.create_group_membership(
+                    AwsAccountId=account_id,
+                    Namespace=settings.QUICKSIGHT_NAMESPACE,
+                    GroupName=settings.QUICKSIGHT_DASHBOARD_GROUP,
+                    MemberName=f"{embed_role_name}/{user.email}",
+                )
+                break
+
+            except botocore.exceptions.ClientError as e:
+                if e.response["Error"]["Code"] == "ResourceNotFoundException":
+                    if attempts > 0:
+                        gevent.sleep(5 - attempts)
+                    else:
+                        raise e
                 else:
                     raise e
-            else:
-                raise e
 
     dashboard_name = qs_dashboard_client.describe_dashboard(
         AwsAccountId=account_id, DashboardId=dashboard_id, AliasName="$PUBLISHED"
