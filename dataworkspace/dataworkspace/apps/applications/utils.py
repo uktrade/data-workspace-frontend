@@ -843,7 +843,7 @@ def sync_quicksight_users(data_client, user_client, account_id, quicksight_user_
 
                     raise e
 
-                dw_user = get_user_model().objects.get(id=sso_id)
+                dw_user = get_user_model().objects.get(profile__sso_id=sso_id)
                 if not dw_user:
                     logger.error(
                         "Skipping %s - cannot match with Data Workspace user.",
