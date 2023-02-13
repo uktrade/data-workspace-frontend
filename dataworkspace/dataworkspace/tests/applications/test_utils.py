@@ -233,7 +233,7 @@ class TestSyncQuickSightPermissions:
     @mock.patch("dataworkspace.apps.applications.utils.cache")
     def test_update_existing_data_source(self, mock_cache, mock_boto3_client, mock_creds):
         # Arrange
-        UserFactory.create(username="fake@email.com")
+        user = UserFactory.create(username="fake@email.com")
         SourceTableFactory(
             dataset=MasterDataSetFactory.create(
                 user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
@@ -247,7 +247,7 @@ class TestSyncQuickSightPermissions:
                     "Arn": "Arn",
                     "Email": "fake@email.com",
                     "Role": "AUTHOR",
-                    "UserName": "user/fake@email.com",
+                    "UserName": f"user/fake@email.com/{user.profile.sso_id}",
                 }
             ]
         }
@@ -280,7 +280,7 @@ class TestSyncQuickSightPermissions:
                 Namespace=settings.QUICKSIGHT_NAMESPACE,
                 Role="AUTHOR",
                 CustomPermissionsName="author-custom-permissions-test",
-                UserName="user/fake@email.com",
+                UserName=f"user/fake@email.com/{user.profile.sso_id}",
                 Email="fake@email.com",
             )
         ]
@@ -371,7 +371,7 @@ class TestSyncQuickSightPermissions:
                     "Arn": "Arn",
                     "Email": "fake2@email.com",
                     "Role": "ADMIN",
-                    "UserName": "user/fake2@email.com",
+                    "UserName": f"user/fake2@email.com/{user2.profile.sso_id}",
                 }
             },
             botocore.exceptions.ClientError(
@@ -404,7 +404,7 @@ class TestSyncQuickSightPermissions:
                 Namespace=settings.QUICKSIGHT_NAMESPACE,
                 Role="ADMIN",
                 UnapplyCustomPermissions=True,
-                UserName="user/fake2@email.com",
+                UserName=f"user/fake2@email.com/{user2.profile.sso_id}",
                 Email="fake2@email.com",
             )
         ]
