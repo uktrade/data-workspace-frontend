@@ -1,0 +1,89 @@
+FROM debian:buster
+
+RUN \
+	apt-get update && \
+	apt-get install -y --no-install-recommends \
+		locales=2.28-10+deb10u1 && \
+	echo "en_GB.UTF-8 UTF-8" >> /etc/locale.gen && \
+	locale-gen en_GB.utf8 && \
+	rm -rf /var/lib/apt/lists/*
+
+ENV \
+	LC_ALL=en_GB.UTF-8 \
+	LANG=en_GB.UTF-8 \
+	LANGUAGE=en_GB.UTF-8
+
+RUN \
+	apt-get update && \
+	apt-get install -y --no-install-recommends \
+		ca-certificates \
+		dirmngr \
+		gnupg2 && \
+	rm -rf /var/lib/apt/lists/* && \
+	echo "deb http://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster main" > /etc/apt/sources.list && \
+	echo "deb http://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian-security/ buster/updates main" >> /etc/apt/sources.list && \
+	echo "deb http://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster-updates main" >> /etc/apt/sources.list && \
+	echo "deb http://cran.ma.imperial.ac.uk/bin/linux/debian buster-cran40/" >> /etc/apt/sources.list && \
+	echo "Acquire{Check-Valid-Until false; Retries 10;}" >> /etc/apt/apt.conf && \
+	until apt-key adv --keyserver keyserver.ubuntu.com --recv-key '95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7'; do sleep 10; done && \
+	rm -rf /var/lib/apt/lists/* && \
+	apt-get update && \
+	apt-get install -y --no-install-recommends \
+        gdebi-core \
+		gfortran \
+		git \
+		libgit2-dev \
+		libgsl-dev \
+		libxml2-dev \
+		libpq-dev \
+		libgdal-dev \
+		lmodern \
+		procps \
+		r-base-dev \
+		r-base \
+		r-recommended \
+		ssh \
+		texlive \
+		texlive-latex-extra \
+		git-man \
+		libcairo2-dev \
+		libfontconfig1-dev \
+		libjq-dev \
+		libmagick++-dev \
+		libnode-dev \
+		libprotobuf-dev \
+		libprotobuf-dev \
+		libssl-dev \
+		libudunits2-dev \
+		libv8-dev \
+		protobuf-compiler \
+		man-db \
+        vim \
+        emacs \
+		wget && \
+    wget -q https://download2.rstudio.org/server/bionic/amd64/rstudio-server-2022.12.0-353-amd64.deb && \
+	echo "bb88e37328c304881e60d6205d7dac145525a5c2aaaf9da26f1cb625b7d47e6e  rstudio-server-2022.12.0-353-amd64.deb" | sha256sum -c && \
+	gdebi --non-interactive rstudio-server-2022.12.0-353-amd64.deb && \
+	rm rstudio-server-2022.12.0-353-amd64.deb && \
+	apt-get remove --purge -y \
+		dirmngr \
+		gdebi-core \
+		gnupg2 \
+		wget && \
+	apt-get clean -y && \
+	apt-get autoremove -y && \
+	apt-get autoclean -y && \
+	rm -rf /tmp/* && \
+	rm -rf /var/lib/apt/lists/* 
+
+RUN \
+	# Remove the last line from sources: the CRAN debian repo that has R itself, which we don't mirror
+	sed -i '$d' /etc/apt/sources.list && \
+	echo 'local({' > /usr/lib/R/etc/Rprofile.site && \
+	echo '  r = getOption("repos")' >> /usr/lib/R/etc/Rprofile.site && \
+	echo '  r["CRAN"] = "https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/cran/"' >> /usr/lib/R/etc/Rprofile.site && \
+	echo '  options(repos = r)' >> /usr/lib/R/etc/Rprofile.site && \
+	echo '})' >> /usr/lib/R/etc/Rprofile.site
+
+COPY build.R /home
+CMD Rscript /home/build.R

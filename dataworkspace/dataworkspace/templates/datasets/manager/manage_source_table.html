@@ -23,12 +23,47 @@
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
+    {% flag SECURITY_CLASSIFICATION_FLAG %}
+    {% if source.dataset.government_security_classification %}
+      {% if source.dataset.get_government_security_classification_display == "OFFICIAL" %}
+        <strong class="govuk-tag govuk-tag--blue">{{ source.dataset.get_government_security_classification_display }}</strong>
+      {% else %}
+        <strong class="govuk-tag govuk-tag--red govuk-!-margin-bottom-4">{{ source.dataset.get_government_security_classification_display }}
+          {% if source.dataset.sensitivity.all %}
+            {% for sensitivity in source.dataset.sensitivity.all %}
+              {% if not forloop.first %}<span>and{% endif %}</span> {{ sensitivity }}
+            {% endfor %}
+          {% endif %}
+        </strong>
+      {% endif %}
+    {% endif %}
+    {% endflag %}
       <h1 class="govuk-heading-l">"{{ source.schema }}"."{{ source.table }}"</h1>
       <p class="govuk-body govuk-body-m">
         You can restore this table to a previous version from the last 6 months or update the table with a new CSV.
       </p>
     </div>
   </div>
+  {% flag SECURITY_CLASSIFICATION_FLAG %}
+  <div class="govuk-grid-row govuk-grid-column-two-thirds">
+  <h1 class="govuk-heading-s">Government Security Classification</h1>
+    <p class="govuk-body govuk-body-m">
+      This data is currently classified as {% if source.dataset.get_government_security_classification_display == "OFFICIAL" %}
+        <strong class="govuk-tag govuk-tag--blue">{{ source.dataset.get_government_security_classification_display }}</strong>
+      {% else %}
+        <strong class="govuk-tag govuk-tag--red govuk-!-margin-bottom-4">{{ source.dataset.get_government_security_classification_display }}
+          {% if source.dataset.sensitivity.all %}
+            {% for sensitivity in source.dataset.sensitivity.all %}
+              {% if not forloop.first %}<span>and {% endif %}</span>{{ sensitivity }}
+            {% endfor %}
+          {% endif %}
+        </strong>
+      {% endif %}
+      <br>If this is no longer correct, please update the classification on
+      the <a href="{% url 'datasets:edit_dataset' source.dataset.id %}">Manage screen.</a>
+    </p>
+  </div>
+  {% endflag %}
   {% block success_banner %}{% endblock %}
   <div class="govuk-grid-row govuk-!-margin-top-6" id="update">
     <div class="govuk-grid-column-two-thirds">

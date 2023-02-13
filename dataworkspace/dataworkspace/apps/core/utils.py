@@ -46,7 +46,12 @@ from dataworkspace.apps.core.constants import (
 )
 from dataworkspace.apps.core.models import DatabaseUser, Team, TeamMembership
 from dataworkspace.apps.datasets.constants import UserAccessType
-from dataworkspace.apps.datasets.models import DataSet, SourceTable, ReferenceDataset
+from dataworkspace.apps.datasets.models import (
+    DataSet,
+    SourceTable,
+    ReferenceDataset,
+    AdminVisualisationUserPermission,
+)
 from dataworkspace.cel import celery_app
 
 logger = logging.getLogger("app")
@@ -104,13 +109,23 @@ def new_private_database_credentials(
     valid_for: datetime.timedelta,
     force_create_for_databases: Tuple[str] = tuple(),
 ):
-    db_team_roles = (
+    db_shared_roles = (
         []
         if dw_user is None
         else ([team.schema_name for team in Team.objects.filter(member=dw_user)])
+    ) + (
+        []
+        if dw_user is None
+        else (
+            [
+                USER_SCHEMA_STEM
+                + db_role_schema_suffix_for_app(permission.visualisation.visualisation_template)
+                for permission in AdminVisualisationUserPermission.objects.filter(user=dw_user)
+            ]
+        )
     )
-    db_team_roles_set = set(db_team_roles)
-    db_team_schemas = db_team_roles
+    db_shared_roles_set = set(db_shared_roles)
+    db_shared_schemas = db_shared_roles
 
     # This function can take a while. That isn't great, but also not great to
     # hold a connection to the admin database
@@ -164,7 +179,7 @@ def new_private_database_credentials(
                     ).format(role=sql.Identifier(db_role_name))
                 )
 
-            for db_role_name in db_team_roles + [db_role]:
+            for db_role_name in db_shared_roles + [db_role]:
                 ensure_db_role(db_role_name)
 
             # On RDS, to do SET ROLE, you have to GRANT the role to the current master user. You also
@@ -260,14 +275,15 @@ def new_private_database_credentials(
                     pg_roles
                 WHERE
                     (
-                        rolname LIKE '\\_team\\_'
+                        rolname LIKE '\\_team\\_%'
+                        OR rolname LIKE '\\_user\\_app\\_%'
                     )
                     AND pg_has_role({db_role}, rolname, 'member');
             """
                 ).format(db_role=sql.Literal(db_role))
             )
-            db_team_roles_previously_granted = [role for (role,) in cur.fetchall()]
-            db_team_roles_previously_granted_set = set(db_team_roles_previously_granted)
+            db_shared_roles_previously_granted = [role for (role,) in cur.fetchall()]
+            db_shared_roles_previously_granted_set = set(db_shared_roles_previously_granted)
 
             tables_to_revoke = [
                 (schema, table)
@@ -291,15 +307,15 @@ def new_private_database_credentials(
                 if schema not in schemas_with_existing_privs_set
             ]
 
-            db_team_roles_to_revoke = [
-                db_team_role
-                for db_team_role in db_team_roles_previously_granted
-                if db_team_role not in db_team_roles_set
+            db_shared_roles_to_revoke = [
+                db_shared_role
+                for db_shared_role in db_shared_roles_previously_granted
+                if db_shared_role not in db_shared_roles_set
             ]
-            db_team_roles_to_grant = [
-                db_team_role
-                for db_team_role in db_team_roles
-                if db_team_role not in db_team_roles_previously_granted_set
+            db_shared_roles_to_grant = [
+                db_shared_role
+                for db_shared_role in db_shared_roles
+                if db_shared_role not in db_shared_roles_previously_granted_set
             ]
 
             # Create user. Note that in PostgreSQL a USER and ROLE are almost the same thing, the
@@ -316,7 +332,7 @@ def new_private_database_credentials(
             )
 
             # ... create schemas
-            for _db_role, _db_schema in list(zip(db_team_roles, db_team_schemas)) + [
+            for _db_role, _db_schema in list(zip(db_shared_roles, db_shared_schemas)) + [
                 (db_role, db_schema)
             ]:
                 cur.execute(
@@ -328,7 +344,7 @@ def new_private_database_credentials(
 
             # Give the roles reasonable timeouts...
             # [Out of paranoia on all roles in case the user change role mid session]
-            for _db_user in [db_role, db_user] + db_team_roles:
+            for _db_user in [db_role, db_user] + db_shared_roles:
                 cur.execute(
                     sql.SQL(
                         "ALTER USER {} SET idle_in_transaction_session_timeout = '60min';"
@@ -424,22 +440,22 @@ def new_private_database_credentials(
 
             logger.info(
                 "Revoking %s from %s",
-                db_team_roles_to_revoke,
+                db_shared_roles_to_revoke,
                 db_role,
             )
-            if db_team_roles_to_revoke:
+            if db_shared_roles_to_revoke:
                 cur.execute(
                     sql.SQL("REVOKE {} FROM {};").format(
                         sql.SQL(",").join(
                             [
-                                sql.Identifier(db_team_role)
-                                for db_team_role in db_team_roles_to_revoke
+                                sql.Identifier(db_shared_role)
+                                for db_shared_role in db_shared_roles_to_revoke
                             ]
                         ),
                         sql.Identifier(db_role),
                     )
                 )
-                for team_role in db_team_roles_to_revoke:
+                for db_shared_role in db_shared_roles_to_revoke:
                     cur.execute(
                         sql.SQL(
                             """
@@ -450,23 +466,23 @@ def new_private_database_credentials(
                             """
                         ).format(
                             sql.Identifier(db_role),
-                            sql.Identifier(team_role),
-                            sql.Identifier(team_role),
+                            sql.Identifier(db_shared_role),
+                            sql.Identifier(db_shared_role),
                         )
                     )
 
             logger.info(
                 "Granting %s to %s",
-                db_team_roles_to_grant,
+                db_shared_roles_to_grant,
                 db_role,
             )
-            if db_team_roles_to_grant:
+            if db_shared_roles_to_grant:
                 cur.execute(
                     sql.SQL("GRANT {} TO {};").format(
                         sql.SQL(",").join(
                             [
-                                sql.Identifier(db_team_role)
-                                for db_team_role in db_team_roles_to_grant
+                                sql.Identifier(db_shared_role)
+                                for db_shared_role in db_shared_roles_to_grant
                             ]
                         ),
                         sql.Identifier(db_role),
@@ -474,7 +490,7 @@ def new_private_database_credentials(
                 )
                 # When this user creates a table in a team schema
                 # ensure all members of that team can access it
-                for team_role in db_team_roles_to_grant:
+                for db_shared_role in db_shared_roles_to_grant:
                     cur.execute(
                         sql.SQL(
                             """
@@ -485,8 +501,8 @@ def new_private_database_credentials(
                             """
                         ).format(
                             sql.Identifier(db_role),
-                            sql.Identifier(team_role),
-                            sql.Identifier(team_role),
+                            sql.Identifier(db_shared_role),
+                            sql.Identifier(db_shared_role),
                         )
                     )
 

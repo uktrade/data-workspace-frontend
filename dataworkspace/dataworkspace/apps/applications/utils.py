@@ -877,7 +877,8 @@ def sync_quicksight_users(data_client, user_client, account_id, quicksight_user_
                     data_client, account_id, quicksight_user, creds
                 )
 
-        except redis.exceptions.LockError:
+        # We want to sync as many users as possible even if some failed
+        except Exception:  # pylint: disable=broad-except
             logger.exception("Unable to sync permissions for %s", quicksight_user["Arn"])
 
 
