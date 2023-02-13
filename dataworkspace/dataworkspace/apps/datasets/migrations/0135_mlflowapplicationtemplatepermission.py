@@ -5,7 +5,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("core", "0011_auto_20221017_1448"),
         ("applications", "0020_alter_applicationtemplate_group_name"),

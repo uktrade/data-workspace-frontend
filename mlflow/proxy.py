@@ -141,7 +141,6 @@ async def async_main():
             allow_redirects=False,
             timeout=timeout,
         ) as upstream_response:
-
             downstream_response = web.StreamResponse(
                 status=upstream_response.status,
                 headers=CIMultiDict(
@@ -157,7 +156,6 @@ async def async_main():
     def server_logger():
         @web.middleware
         async def _server_logger(request, handler):
-
             request_logger = get_random_context_logger()
             request["logger"] = request_logger
             url = request_url(request)

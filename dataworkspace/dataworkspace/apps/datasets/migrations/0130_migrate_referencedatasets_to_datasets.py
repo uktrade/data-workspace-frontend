@@ -9,7 +9,6 @@ def map_referencedatasets_to_datasets(apps, _):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("datasets", "0129_auto_20221031_1449"),
     ]

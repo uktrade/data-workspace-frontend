@@ -29,7 +29,6 @@ def noop(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ("datasets", "0046_visualisationcatalogueitem_eligibility_criteria"),

@@ -44,7 +44,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-
         dataset_type_text = options["type"].upper()
 
         if dataset_type_text not in DataSetType.__members__:

@@ -335,7 +335,6 @@ def get_rows(sourcetable, schema_value_funcs, query_var):
     with connect(
         database_dsn(settings.DATABASES_DATA[sourcetable.database.memorable_name])
     ) as conn, conn.cursor() as cur:
-
         cur.execute(
             """
             SELECT
@@ -366,7 +365,6 @@ def get_rows(sourcetable, schema_value_funcs, query_var):
     ) as conn, conn.cursor(
         name="google_data_studio_all_table_data"
     ) as cur:  # Named cursor => server-side cursor
-
         cur.itersize = cursor_itersize
         cur.arraysize = cursor_itersize
 

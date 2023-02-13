@@ -13,7 +13,6 @@ def migrate_data_cut_to_master_dataset(apps, _):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [("datasets", "0026_add_dataset_type_proxy_models")]
 
     operations = [

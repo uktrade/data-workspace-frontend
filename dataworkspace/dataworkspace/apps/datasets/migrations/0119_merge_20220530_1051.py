@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("datasets", "0118_migrate_grid_query_downloads"),
         ("datasets", "0118_sourcetablefielddefinition"),

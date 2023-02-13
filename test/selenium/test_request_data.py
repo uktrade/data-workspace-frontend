@@ -67,7 +67,6 @@ class TestRequestData:
             yield
 
     def test_happy_path(self, _application):
-
         home_page = HomePage(self.driver)
         home_page.open()
 

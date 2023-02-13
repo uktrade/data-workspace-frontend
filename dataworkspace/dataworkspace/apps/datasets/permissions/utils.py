@@ -76,7 +76,6 @@ def process_dataset_authorized_users_change(
             remove_superset_user_cached_credentials(user)
 
     if is_master_dataset:
-
         if changed_users:
             # If we're changing permissions for loads of users, let's just do a full quicksight re-sync.
             # Makes fewer AWS calls and probably completes as quickly if not quicker.

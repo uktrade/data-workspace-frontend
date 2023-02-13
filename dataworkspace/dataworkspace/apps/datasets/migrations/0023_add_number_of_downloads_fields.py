@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [("datasets", "0022_joint_datasets_linked_field_name_change")]
 
     operations = [

@@ -5,7 +5,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("core", "0006_chartbuilderchart"),
         ("datasets", "0113_remove_datasetchartbuilderchart_chart"),

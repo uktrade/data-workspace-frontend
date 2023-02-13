@@ -116,7 +116,6 @@ def _len_chunk_header(num_chunk_bytes):
 
 
 def _get_streaming_http_response(streaming_class, request, primary_key, columns, rows):
-
     # StreamingHttpResponse translates to HTTP/1.1 chunking performed by gunicorn. However,
     # we don't have any visibility on the actual bytes sent as part of the HTTP body, i.e. each
     # chunk header and footer. We also don't appear to be able to work-around it and implement
@@ -183,7 +182,6 @@ def _get_streaming_http_response(streaming_class, request, primary_key, columns,
 
 
 def dataset_api_view_GET(request, dataset_id, source_table_id):
-
     source_table = get_object_or_404(
         SourceTable, id=source_table_id, dataset__id=dataset_id, dataset__deleted=False
     )

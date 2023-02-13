@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("datasets", "0064_auto_20201222_1032"),
         ("datasets", "0064_toolqueryauditlogtable"),

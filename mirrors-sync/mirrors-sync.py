@@ -152,7 +152,6 @@ def _aws_sig_v4_headers(
 async def s3_request_full(
     logger, context, method, path, query, api_pre_auth_headers, payload, payload_hash
 ):
-
     with logged(
         logger,
         "Request: %s %s %s %s %s",
@@ -271,7 +270,6 @@ def logged(logger, message, logger_args):
 
 
 def get_ecs_role_credentials(url):
-
     aws_access_key_id = None
     aws_secret_access_key = None
     token = None

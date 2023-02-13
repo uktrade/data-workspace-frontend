@@ -5,7 +5,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [("datasets", "0035_migrate_group_asset_manager_data")]
 
     operations = [

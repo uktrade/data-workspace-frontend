@@ -5,7 +5,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [("datasets", "0011_merge_20190821_0558")]
 
     operations = [

@@ -14,7 +14,6 @@ def set_explorer_connection_defaults(apps, _):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("explorer", "0014_querylog_error_message"),
     ]

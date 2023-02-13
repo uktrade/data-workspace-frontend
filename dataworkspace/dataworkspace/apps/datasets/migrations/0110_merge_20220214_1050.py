@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("datasets", "0107_datasetchartbuilderchart"),
         ("datasets", "0109_remove_data_grid_column_config"),

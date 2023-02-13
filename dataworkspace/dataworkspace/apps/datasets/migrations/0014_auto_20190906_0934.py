@@ -13,7 +13,6 @@ def reorder(apps, _):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [("datasets", "0013_referencedatasetuploadlog_referencedatasetuploadlogrecord")]
 
     operations = [

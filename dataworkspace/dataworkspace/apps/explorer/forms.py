@@ -41,7 +41,6 @@ class SqlField(Field):
 
 
 class QueryForm(ModelForm):
-
     sql = SqlField()
     connection = CharField(widget=Select, required=False)
     title = CharField(

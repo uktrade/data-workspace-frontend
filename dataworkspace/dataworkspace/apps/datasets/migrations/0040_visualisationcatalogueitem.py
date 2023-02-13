@@ -10,7 +10,6 @@ import ckeditor.fields
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("applications", "0001_squashed_0022_auto_20200414_1352"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),

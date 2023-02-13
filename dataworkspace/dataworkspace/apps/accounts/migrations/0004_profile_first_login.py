@@ -11,7 +11,6 @@ def migrate_existing_users_fist_login(apps, _):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("accounts", "0003_profile_tools_access_role_arn"),
     ]

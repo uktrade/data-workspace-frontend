@@ -32,7 +32,6 @@ def set_query_tables(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("datasets", "0052_customdatasetquerytable"),
     ]

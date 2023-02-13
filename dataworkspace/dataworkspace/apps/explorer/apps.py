@@ -5,7 +5,6 @@ from django.db import connections as djcs
 
 
 class ExplorerAppConfig(AppConfig):
-
     name = "dataworkspace.apps.explorer"
 
     def ready(self):

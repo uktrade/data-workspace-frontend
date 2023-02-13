@@ -13,7 +13,6 @@ def update_joint_dataset_version_number(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [("datasets", "0021_dataset_access_criteria")]
 
     operations = [

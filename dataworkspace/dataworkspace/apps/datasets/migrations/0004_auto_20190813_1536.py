@@ -28,7 +28,6 @@ def generate_table_name(apps, _):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [("datasets", "0003_referencedataset_table_name")]
 
     operations = [

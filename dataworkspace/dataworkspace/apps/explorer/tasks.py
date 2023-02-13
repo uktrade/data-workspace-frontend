@@ -187,7 +187,7 @@ def _run_query(conn, query_log, page, limit, timeout, output_table):
             f"INSERT INTO {output_table} SELECT * FROM ({sql}) sq {limit_clause}{offset}"
         )
         cursor.execute(f"SELECT COUNT(*) FROM ({sql}) sq")
-    except (psycopg2.errors.QueryCanceled) as e:  # pylint: disable=no-member
+    except psycopg2.errors.QueryCanceled as e:  # pylint: disable=no-member
         logger.info("Query cancelled: %s", e)
         return
     except (psycopg2.ProgrammingError, psycopg2.DataError) as e:

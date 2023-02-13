@@ -141,7 +141,6 @@ def get_groups(request):
 
 
 def get_grouped_tools(request):
-
     sso_id_hex_short = stable_identification_suffix(str(request.user.profile.sso_id), short=True)
 
     def link(template):

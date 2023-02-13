@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [("datasets", "0027_migrate_master_datasets")]
 
     operations = [

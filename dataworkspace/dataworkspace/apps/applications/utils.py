@@ -1412,7 +1412,6 @@ def long_running_query_alert():
 
 @celery_app.task()
 def push_tool_monitoring_dashboard_datasets():
-
     geckboard_api_key = os.environ["GECKOBOARD_API_KEY"]
     cluster = os.environ["APPLICATION_SPAWNER_OPTIONS__FARGATE__VISUALISATION__CLUSTER_NAME"]
     task_role_prefix = os.environ["APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__ROLE_PREFIX"]
@@ -1421,7 +1420,6 @@ def push_tool_monitoring_dashboard_datasets():
     )
 
     def report_running_tools(client, session):
-
         pending_task_arns = client.list_tasks(cluster=cluster, desiredStatus="RUNNING")["taskArns"]
 
         pending_tasks = (
@@ -1447,7 +1445,6 @@ def push_tool_monitoring_dashboard_datasets():
         )
 
     def report_failed_tools(client, session):
-
         stopped_tasks_arns = client.list_tasks(cluster=cluster, desiredStatus="STOPPED")[
             "taskArns"
         ]
@@ -1493,7 +1490,6 @@ def push_tool_monitoring_dashboard_datasets():
         )
 
     def report_tool_average_start_times(client, session):
-
         pending_task_arns = client.list_tasks(cluster=cluster, desiredStatus="RUNNING")["taskArns"]
 
         pending_tasks = (
@@ -1549,7 +1545,6 @@ def push_tool_monitoring_dashboard_datasets():
         )
 
     def report_recent_tool_start_times(client, session):
-
         pending_task_arns = client.list_tasks(cluster=cluster, desiredStatus="RUNNING")["taskArns"]
 
         pending_tasks = (

@@ -11,7 +11,6 @@ def migrate_sql_pipelines(apps, _):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("datasets", "0113_add_pipeline_config"),
     ]

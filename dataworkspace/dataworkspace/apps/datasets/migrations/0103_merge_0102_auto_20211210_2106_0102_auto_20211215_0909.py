@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("datasets", "0102_auto_20211210_2106"),
         ("datasets", "0102_auto_20211215_0909"),

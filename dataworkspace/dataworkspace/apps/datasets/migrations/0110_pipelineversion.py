@@ -5,7 +5,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("datasets", "0109_remove_data_grid_column_config"),
     ]

@@ -12,7 +12,6 @@ def save_datasets(apps, _):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("datasets", "0100_auto_20211129_1411"),
     ]

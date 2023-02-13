@@ -5,7 +5,6 @@ import dataworkspace.apps.core.storage
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("explorer", "0017_chartbuilderchart"),
     ]

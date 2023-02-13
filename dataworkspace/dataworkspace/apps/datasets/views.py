@@ -601,7 +601,6 @@ class DatasetDetailView(DetailView):
         raise ValueError(f"Unknown dataset/type for {self.__class__.__name__}: {self.object}")
 
     def get_template_names(self):
-
         if self._is_reference_dataset():
             return ["datasets/referencedataset_detail.html"]
         elif self.object.type == DataSetType.MASTER:
