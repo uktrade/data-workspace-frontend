@@ -324,7 +324,7 @@ openpyxl==3.0.6
     #   tabulator
 outcome==1.1.0
     # via trio
-packaging==20.4
+packaging==22.0
     # via
     #   -r requirements.txt
     #   bleach
