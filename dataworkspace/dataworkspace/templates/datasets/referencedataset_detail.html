@@ -103,6 +103,37 @@
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       <dl class="govuk-summary-list">
+      <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">Summary</dt>
+          <dd class="govuk-summary-list__value">{{ model.short_description }}</dd>
+        </div>
+      {% flag SECURITY_CLASSIFICATION_FLAG %}
+    <div class="govuk-summary-list__row">
+      <dt class="govuk-summary-list__key">Government Security Classification</dt>
+      <dd class="govuk-summary-list__value">
+        {% if model.get_government_security_classification_display == "OFFICIAL" %}
+          <strong class="govuk-tag govuk-tag--blue">{{ model.get_government_security_classification_display }}</strong>
+        {% else %}
+          {% if model.sensitivity.all %}
+            {% for sensitivity in model.sensitivity.all %}
+              <strong
+                class="govuk-tag govuk-tag--red govuk-!-margin-bottom-1">{{ model.get_government_security_classification_display }} {{ sensitivity }}</strong>
+            {% endfor %}
+          {% else %}
+            <strong class="govuk-tag govuk-tag--red">{{ model.get_government_security_classification_display }}</strong>
+          {% endif %}
+        {% endif %}
+      <br>
+        <a
+          href="https://workspace.trade.gov.uk/working-at-dit/policies-and-guidance/guidance/information-classification-and-handling/"
+          class="govuk-link govuk-!-font-size-16">About security classifications</a>
+      </dd>
+    </div>
+  {% endflag %}
+      <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">Usage restrictions</dt>
+          <dd class="govuk-summary-list__value">{{ model.restrictions_on_usage }}</dd>
+        </div>
         <div class="govuk-summary-list__row">
           <dt class="govuk-summary-list__key">Date added</dt>
           <dd class="govuk-summary-list__value">{{ model.published_at|format_date_uk }}</dd>
@@ -111,16 +142,6 @@
         <div class="govuk-summary-list__row">
           <dt class="govuk-summary-list__key">Source</dt>
           <dd class="govuk-summary-list__value">N/A</dd>
-        </div>
-
-        <div class="govuk-summary-list__row">
-          <dt class="govuk-summary-list__key">Restrictions on usage</dt>
-          <dd class="govuk-summary-list__value">{{ model.restrictions_on_usage }}</dd>
-        </div>
-
-        <div class="govuk-summary-list__row">
-          <dt class="govuk-summary-list__key">Summary</dt>
-          <dd class="govuk-summary-list__value">{{ model.short_description }}</dd>
         </div>
 
         <div class="govuk-summary-list__row">
