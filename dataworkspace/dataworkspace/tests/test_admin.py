@@ -77,7 +77,6 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "table_name": "ref_test1",
                 "slug": "test-ref-1",
                 "short_description": "test description that is short",
-
                 "fields-TOTAL_FORMS": 1,
                 "fields-INITIAL_FORMS": 1,
                 "fields-MIN_NUM_FORMS": 1,
@@ -564,8 +563,8 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "valid_from": "",
                 "valid_to": "",
                 "enquiries_contact": "",
-                "information_asset_owner": self.user.id,
-                "information_asset_manager": self.user.id, 
+                # "information_asset_owner": self.user.id,
+                # "information_asset_manager": self.user.id,
                 "licence": "",
                 "restrictions_on_usage": "",
                 "sort_field": "",
@@ -2949,7 +2948,7 @@ class TestDatasetAdminPytest:
             (
                 "manage_unpublished_reference_datasets",
                 "admin:datasets_referencedataset_change",
-                partial(factories.DataSetFactory.create, type=DataSetType.REFERENCE)
+                factories.ReferenceDatasetFactory.create,
             ),
         ),
     )
@@ -2970,14 +2969,24 @@ class TestDatasetAdminPytest:
             if client is authenticated_client:
                 # Log into admin site
                 client.post(reverse("admin:index"), follow=True)
+                print('yes')
 
             view_response = client.get(reverse(admin_change_view, args=(dataset.id,)), follow=True)
+            print('hello')
+            print(admin_change_view)
+            print(dataset)
             change_response = client.post(
                 reverse(admin_change_view, args=(dataset.id,)), follow=True
             )
+            print('goodbye')
 
             assert view_response.status_code == (200 if client is authenticated_client else 403)
+            print('this is fail')
+            print(view_response.status_code)
+            print('endof')
+            print(change_response.status_code)
             assert change_response.status_code == 403
+            print('yes this')
 
     @pytest.mark.django_db
     def test_manage_master_dataset_permission_allows_editing_unpublished_datasets(self):
