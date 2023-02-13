@@ -784,6 +784,7 @@ class VisualisationLinkInline(admin.TabularInline, ManageUnpublishedDatasetsMixi
 
     clone_quicksight_dataset.allow_tags = True
 
+
 @admin.register(VisualisationCatalogueItem)
 class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStampedUserAdmin):
     form = VisualisationCatalogueItemForm

@@ -57,7 +57,6 @@ class ReferenceDatasetForm(AutoCompleteUserFieldsMixin, forms.ModelForm):
         super().__init__(*args, **kwargs)
         if "sort_field" in self.fields:
             self.fields["sort_field"].queryset = self.instance.fields.all()
-        
         self.fields['information_asset_owner'].required = True
         self.fields['information_asset_manager'].required = True
 
@@ -534,6 +533,7 @@ class DataCutDatasetForm(BaseDatasetForm):
 class MasterDatasetForm(BaseDatasetForm):
     dataset_type = DataSetType.MASTER
     can_change_user_permission_codename = "datasets.change_masterdatasetuserpermission"
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['information_asset_owner'].required = True
@@ -710,7 +710,6 @@ class VisualisationCatalogueItemForm(AutoCompleteUserFieldsMixin, forms.ModelFor
 
         self.fields['information_asset_owner'].required = True
         self.fields['information_asset_manager'].required = True
-
 
 
 class VisualisationLinkForm(forms.ModelForm):

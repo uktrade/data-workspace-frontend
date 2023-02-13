@@ -563,8 +563,8 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "valid_from": "",
                 "valid_to": "",
                 "enquiries_contact": "",
-                # "information_asset_owner": self.user.id,
-                # "information_asset_manager": self.user.id,
+                "information_asset_owner": self.user.id,
+                "information_asset_manager": self.user.id,
                 "licence": "",
                 "restrictions_on_usage": "",
                 "sort_field": "",
@@ -872,7 +872,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "valid_to": "",
                 "enquiries_contact": "",
                 "information_asset_owner": self.user.id,
-                "information_asset_manager": self.user.id, 
+                "information_asset_manager": self.user.id,
                 "licence": "",
                 "sort_direction": ReferenceDataset.SORT_DIR_DESC,
                 "restrictions_on_usage": "",
@@ -930,7 +930,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "valid_to": "",
                 "enquiries_contact": "",
                 "information_asset_owner": self.user.id,
-                "information_asset_manager": self.user.id, 
+                "information_asset_manager": self.user.id,
                 "licence": "",
                 "restrictions_on_usage": "",
                 "sort_field": field1.id,
@@ -987,7 +987,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "valid_to": "",
                 "enquiries_contact": "",
                 "information_asset_owner": self.user.id,
-                "information_asset_manager": self.user.id, 
+                "information_asset_manager": self.user.id,
                 "licence": "",
                 "restrictions_on_usage": "",
                 "sort_field": "",
@@ -1045,7 +1045,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "valid_to": "",
                 "enquiries_contact": "",
                 "information_asset_owner": self.user.id,
-                "information_asset_manager": self.user.id, 
+                "information_asset_manager": self.user.id,
                 "licence": "",
                 "restrictions_on_usage": "",
                 "fields-TOTAL_FORMS": 2,
@@ -1145,7 +1145,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "valid_to": "",
                 "enquiries_contact": "",
                 "information_asset_owner": self.user.id,
-                "information_asset_manager": self.user.id, 
+                "information_asset_manager": self.user.id,
                 "licence": "",
                 "restrictions_on_usage": "",
                 "sort_field": field2.id,
@@ -1880,7 +1880,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "valid_to": "",
                 "enquiries_contact": "",
                 "information_asset_owner": self.user.id,
-                "information_asset_manager": self.user.id, 
+                "information_asset_manager": self.user.id,
                 "licence": "",
                 "restrictions_on_usage": "",
                 "sort_field": "",
@@ -2104,7 +2104,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "valid_to": "",
                 "enquiries_contact": "",
                 "information_asset_owner": self.user.id,
-                "information_asset_manager": self.user.id, 
+                "information_asset_manager": self.user.id,
                 "licence": "",
                 "restrictions_on_usage": "",
                 "fields-TOTAL_FORMS": 2,
@@ -2341,7 +2341,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "valid_to": "",
                 "enquiries_contact": "",
                 "information_asset_owner": self.user.id,
-                "information_asset_manager": self.user.id, 
+                "information_asset_manager": self.user.id,
                 "licence": "",
                 "restrictions_on_usage": "",
                 "sort_field": field1.id,
@@ -2969,24 +2969,14 @@ class TestDatasetAdminPytest:
             if client is authenticated_client:
                 # Log into admin site
                 client.post(reverse("admin:index"), follow=True)
-                print('yes')
 
             view_response = client.get(reverse(admin_change_view, args=(dataset.id,)), follow=True)
-            print('hello')
-            print(admin_change_view)
-            print(dataset)
             change_response = client.post(
                 reverse(admin_change_view, args=(dataset.id,)), follow=True
             )
-            print('goodbye')
 
             assert view_response.status_code == (200 if client is authenticated_client else 403)
-            print('this is fail')
-            print(view_response.status_code)
-            print('endof')
-            print(change_response.status_code)
             assert change_response.status_code == 403
-            print('yes this')
 
     @pytest.mark.django_db
     def test_manage_master_dataset_permission_allows_editing_unpublished_datasets(self):
@@ -3211,7 +3201,6 @@ class TestDatasetAdminPytest:
             dataset=dataset,
         )
         user = get_user_model().objects.create(is_staff=True)
-        
         # Login to admin site
         staff_client.post(reverse("admin:index"), follow=True)
 
@@ -3281,7 +3270,7 @@ class TestDatasetAdminPytest:
                 "short_description": "test short description",
                 "description": "test description",
                 "information_asset_owner": str(user_1.id),
-                "information_asset_manager": str(user_1.id), 
+                "information_asset_manager": str(user_1.id),
                 "type": dataset.type,
                 "user_access_type": dataset.user_access_type,
                 "authorized_users": [str(user_1.id), str(user_2.id)],
@@ -3349,7 +3338,7 @@ class TestDatasetAdminPytest:
                 "short_description": "test short description",
                 "description": "test description",
                 "information_asset_owner": str(user.id),
-                "information_asset_manager": str(user.id), 
+                "information_asset_manager": str(user.id),
                 "type": dataset.type,
                 "user_access_type": UserAccessType.REQUIRES_AUTHENTICATION,
                 "sourcetable_set-TOTAL_FORMS": "1",
@@ -3410,7 +3399,7 @@ class TestDatasetAdminPytest:
                 "short_description": "test short description",
                 "description": "test description",
                 "information_asset_owner": str(user.id),
-                "information_asset_manager": str(user.id), 
+                "information_asset_manager": str(user.id),
                 "type": dataset.type,
                 "user_access_type": UserAccessType.REQUIRES_AUTHORIZATION,
                 "authorized_users": str(user.id),
@@ -3511,7 +3500,7 @@ class TestDatasetAdminPytest:
                 "short_description": "test short description",
                 "description": "test description",
                 "information_asset_owner": user.id,
-                "information_asset_manager":user.id, 
+                "information_asset_manager": user.id,
                 "type": dataset.type,
                 "user_access_type": dataset.user_access_type,
                 "sourcetable_set-TOTAL_FORMS": "1",
