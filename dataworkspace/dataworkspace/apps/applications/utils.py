@@ -649,6 +649,7 @@ def get_quicksight_dashboard_name_url(dashboard_id, user):
     # QuickSight manages users in a separate region to our data/dashboards.
     qs_user_client = session.client("quicksight", region_name=user_region)
     qs_dashboard_client = session.client("quicksight")
+    reader_email = "reader@dataworkspace"
 
     try:
         qs_user_client.register_user(
@@ -657,8 +658,8 @@ def get_quicksight_dashboard_name_url(dashboard_id, user):
             IdentityType="IAM",
             IamArn=embed_role_arn,
             UserRole="READER",
-            SessionName=user.email,
-            Email=user.email,
+            SessionName=reader_email,
+            Email=reader_email,
         )
     except qs_user_client.exceptions.ResourceExistsException:
         pass
@@ -671,7 +672,7 @@ def get_quicksight_dashboard_name_url(dashboard_id, user):
                 AwsAccountId=account_id,
                 Namespace=settings.QUICKSIGHT_NAMESPACE,
                 GroupName=settings.QUICKSIGHT_DASHBOARD_GROUP,
-                MemberName=f"{embed_role_name}/{user.email}",
+                MemberName=f"{embed_role_name}/{reader_email}",
             )
             break
 
@@ -692,7 +693,7 @@ def get_quicksight_dashboard_name_url(dashboard_id, user):
         DashboardId=dashboard_id,
         IdentityType="QUICKSIGHT",
         UserArn=f"arn:aws:quicksight:{user_region}:{account_id}:user/"
-        + f"{settings.QUICKSIGHT_NAMESPACE}/{embed_role_name}/{user.email}",
+        + f"{settings.QUICKSIGHT_NAMESPACE}/{embed_role_name}/{reader_email}",
     )["EmbedUrl"]
 
     return dashboard_name, dashboard_url
