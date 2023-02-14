@@ -177,8 +177,6 @@ class ReferenceDatasetFactory(factory.django.DjangoModelFactory):
     published = True
     schema_version = factory.Sequence(lambda n: n)
     table_name = factory.fuzzy.FuzzyText(length=20, prefix="ref_")
-    information_asset_owner = factory.SubFactory(UserFactory)
-    information_asset_manager = factory.SubFactory(UserFactory)
 
     class Meta:
         model = "datasets.ReferenceDataset"
