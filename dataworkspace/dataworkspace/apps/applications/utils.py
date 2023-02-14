@@ -636,19 +636,9 @@ def get_quicksight_dashboard_name_url(dashboard_id, user):
     sts = boto3.client("sts")
     account_id = sts.get_caller_identity().get("Account")
 
-    role_credentials = sts.assume_role(RoleArn=embed_role_arn, RoleSessionName=user.email)[
-        "Credentials"
-    ]
-
-    session = boto3.Session(
-        aws_access_key_id=role_credentials["AccessKeyId"],
-        aws_secret_access_key=role_credentials["SecretAccessKey"],
-        aws_session_token=role_credentials["SessionToken"],
-    )
-
     # QuickSight manages users in a separate region to our data/dashboards.
-    qs_user_client = session.client("quicksight", region_name=user_region)
-    qs_dashboard_client = session.client("quicksight")
+    qs_user_client = boto3.client("quicksight", region_name=user_region)
+    qs_dashboard_client = boto3.client("quicksight")
     reader_email = "reader@dataworkspace"
 
     try:
