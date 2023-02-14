@@ -691,7 +691,8 @@ def get_quicksight_dashboard_name_url(dashboard_id, user):
         AwsAccountId=account_id,
         DashboardId=dashboard_id,
         IdentityType="QUICKSIGHT",
-        UserArn=f"arn:aws:quicksight:{user_region}:{account_id}:user/default/{embed_role_name}/{user.email}",
+        UserArn=f"arn:aws:quicksight:{user_region}:{account_id}:user/"
+        + f"{settings.QUICKSIGHT_NAMESPACE}/{embed_role_name}/{user.email}",
     )["EmbedUrl"]
 
     return dashboard_name, dashboard_url
