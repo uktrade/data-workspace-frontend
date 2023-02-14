@@ -26,7 +26,6 @@ def migrate_existing_application_instance_db_users(apps, _):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("applications", "0015_auto_20201113_1103"),
     ]

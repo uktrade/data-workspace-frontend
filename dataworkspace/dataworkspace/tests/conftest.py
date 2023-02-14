@@ -66,7 +66,6 @@ def user(db):
 
 @pytest.fixture
 def user_data(db, user):
-
     return {
         "HTTP_SSO_PROFILE_EMAIL": user.email,
         "HTTP_SSO_PROFILE_CONTACT_EMAIL": user.email,

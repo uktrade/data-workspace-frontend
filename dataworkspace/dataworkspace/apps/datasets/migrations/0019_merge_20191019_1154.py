@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("datasets", "0016_auto_20191016_0933"),
         ("datasets", "0018_sourcetable_accessible_by_google_data_studio"),

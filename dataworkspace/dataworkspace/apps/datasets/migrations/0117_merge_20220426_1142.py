@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("datasets", "0115_merge_20220426_0858"),
         ("datasets", "0116_order_pipelines_by_name"),

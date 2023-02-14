@@ -142,7 +142,6 @@ class DataDictionaryService:
     def save_dictionary(
         self, entity_uuid, update_rows: List[DataDictionary.DataDictionaryUpdateRow]
     ):
-
         source_table = self._get_source_table(entity_uuid)
         if source_table:
             return self._update_source_table(source_table, update_rows)

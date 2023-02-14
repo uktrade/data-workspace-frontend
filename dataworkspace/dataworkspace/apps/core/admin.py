@@ -54,7 +54,6 @@ class TeamAdmin(admin.ModelAdmin):
 
 
 class CSPRichTextEditorMixin:
-
     # We allow inline scripts to run on this page in order to support CKEditor,
     # which gives rich-text formatting but unfortunately uses inline scripts to
     # do so - and we don't have a clean way to either hash the inline script on-demand

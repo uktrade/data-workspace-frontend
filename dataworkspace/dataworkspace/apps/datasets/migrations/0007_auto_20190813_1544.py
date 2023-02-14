@@ -11,7 +11,6 @@ def generate_column_name(apps, _):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [("datasets", "0006_auto_20190813_1544")]
 
     operations = [

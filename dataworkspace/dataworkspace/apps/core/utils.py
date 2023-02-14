@@ -955,7 +955,6 @@ def streaming_query_response(
         start = timer()
 
         with conn.cursor(name=cursor_name) as cur:
-
             cur.itersize = batch_size
             cur.arraysize = batch_size
             cur.execute(query, query_params)
@@ -1014,7 +1013,6 @@ def streaming_query_response(
         return counts[0]
 
     def run_queries():
-
         with connect(
             database_dsn(settings.DATABASES_DATA[database]),
             options=(
@@ -1107,7 +1105,6 @@ def get_random_data_sample(database, query, sample_size):
     with connect(database_dsn(settings.DATABASES_DATA[database])) as conn, conn.cursor(
         name="data_preview"
     ) as cur:  # Named cursor => server-side cursor
-
         conn.set_session(readonly=True)
 
         # set statements can't be issued in a server-side cursor, so we
@@ -1146,7 +1143,6 @@ def get_s3_prefix(user_sso_id):
 
 
 def create_tools_access_iam_role(user_email_address, access_point_id):
-
     user = get_user_model().objects.get(email=user_email_address)
     s3_prefixes = get_user_s3_prefixes(user)
     if user.profile.tools_access_role_arn:

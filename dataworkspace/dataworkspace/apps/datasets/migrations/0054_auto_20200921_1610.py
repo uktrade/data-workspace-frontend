@@ -6,7 +6,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("datasets", "0053_set_custom_dataset_query_tables"),
     ]

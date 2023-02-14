@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [("datasets", "0030_reference_dataset_unique_uuid")]
 
     operations = [

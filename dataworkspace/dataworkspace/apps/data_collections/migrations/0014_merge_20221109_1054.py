@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("data_collections", "0013_collection_notes"),
         ("data_collections", "0013_remove_collection_published"),

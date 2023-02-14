@@ -36,7 +36,6 @@ def update_linked_reference_datasets(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("datasets", "0054_auto_20200921_1610"),
     ]

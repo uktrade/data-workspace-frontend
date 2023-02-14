@@ -54,7 +54,6 @@ class BaseExporter:
 
 
 class CSVExporter(BaseExporter):
-
     name = "CSV"
     content_type = "text/csv"
     file_extension = ".csv"
@@ -72,7 +71,6 @@ class CSVExporter(BaseExporter):
 
 
 class JSONExporter(BaseExporter):
-
     name = "JSON"
     content_type = "application/json"
     file_extension = ".json"
@@ -89,7 +87,6 @@ class JSONExporter(BaseExporter):
 
 
 class ExcelExporter(BaseExporter):
-
     name = "Excel"
     content_type = "application/vnd.ms-excel"
     file_extension = ".xlsx"

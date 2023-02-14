@@ -10,7 +10,6 @@ def resave_reference_dataset_tags(apps, _):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("datasets", "0133_alter_dataset_type"),
     ]

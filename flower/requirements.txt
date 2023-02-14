@@ -32,7 +32,7 @@ humanize==4.0.0
     # via flower
 kombu==5.2.4
     # via celery
-packaging==21.3
+packaging==22.0
     # via redis
 prometheus-client==0.14.1
     # via flower

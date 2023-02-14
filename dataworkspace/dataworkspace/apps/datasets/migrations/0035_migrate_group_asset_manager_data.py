@@ -21,7 +21,6 @@ def add_dataset_iam_info(apps, _):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [("datasets", "0034_add_dataset_asset_manager_fields")]
 
     operations = [migrations.RunPython(add_dataset_iam_info, migrations.RunPython.noop)]

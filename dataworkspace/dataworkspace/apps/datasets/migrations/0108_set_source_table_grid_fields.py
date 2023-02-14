@@ -19,7 +19,6 @@ def set_download_limit(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("datasets", "0107_add_source_table_grid_fields"),
     ]

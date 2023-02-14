@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("datasets", "0084_alter_sourcetable_data_grid_column_config"),
         ("datasets", "0086_auto_20210809_1627"),

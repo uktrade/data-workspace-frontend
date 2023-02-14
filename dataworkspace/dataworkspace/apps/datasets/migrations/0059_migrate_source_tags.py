@@ -22,7 +22,6 @@ def migrate_source_tags_to_tags(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("datasets", "0058_auto_20201113_1136"),
     ]

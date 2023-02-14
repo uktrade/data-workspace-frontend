@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [("datasets", "0029_reference_dataset_add_uuid")]
     operations = [
         # Drop foreign key constraint on ReferenceDatasetField.reference_dataset

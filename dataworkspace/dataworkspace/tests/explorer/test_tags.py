@@ -5,7 +5,6 @@ from dataworkspace.apps.explorer.templatetags.explorer_tags import (
 
 
 def test_format_duration():
-
     assert format_duration(36061001.3456) == "10 hours 1 minute 1 second"
     assert format_duration(1) == "1 millisecond"
     assert format_duration(1.273) == "1.27 milliseconds"

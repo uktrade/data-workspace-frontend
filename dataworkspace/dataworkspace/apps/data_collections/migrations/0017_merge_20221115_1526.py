@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("data_collections", "0015_alter_collection_notes"),
         ("data_collections", "0016_alter_collectionusermembership_collection"),

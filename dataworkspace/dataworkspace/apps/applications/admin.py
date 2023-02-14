@@ -360,7 +360,6 @@ class ToolTemplateEditForm(forms.ModelForm):
 
 @admin.register(ToolTemplate)
 class ToolTemplateAdmin(admin.ModelAdmin):
-
     form = ToolTemplateEditForm
 
     list_display = (
@@ -421,7 +420,6 @@ class VisualisationTemplateEditForm(forms.ModelForm):
 
 @admin.register(VisualisationTemplate)
 class VisualisationTemplateAdmin(admin.ModelAdmin):
-
     form = VisualisationTemplateEditForm
 
     fieldsets = [

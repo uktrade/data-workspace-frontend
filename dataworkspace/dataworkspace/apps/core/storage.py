@@ -64,7 +64,6 @@ class S3FileStorage(FileSystemStorage):
         content.seek(0)
 
     def _save_to_s3(self, name, content):
-
         client = get_s3_client()
         filename = f"{name}!{uuid.uuid4()}"
         key = self._get_key(filename)

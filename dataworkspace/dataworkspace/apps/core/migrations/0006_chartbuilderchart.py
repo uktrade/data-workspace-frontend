@@ -10,7 +10,6 @@ import dataworkspace.apps.core.storage
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ("explorer", "0018_chartbuilderchart_thumbnail"),

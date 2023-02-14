@@ -47,7 +47,6 @@ def generate_search_vectors_english(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("datasets", "0126_auto_20220614_1814"),
     ]

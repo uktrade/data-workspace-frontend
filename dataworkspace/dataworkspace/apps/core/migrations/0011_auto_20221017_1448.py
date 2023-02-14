@@ -16,7 +16,6 @@ def migrate_team_members(apps, _):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("core", "0010_mlflowauthoriseduser_mlflowinstance"),
     ]

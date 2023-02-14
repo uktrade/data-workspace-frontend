@@ -82,7 +82,6 @@ def get_random_tag(tag_type: TagType):
 
 
 def create_fake_dataset(dataset_type=DataSetType.MASTER):
-
     if dataset_type not in [DataSetType.MASTER, DataSetType.DATACUT]:
         raise Exception(f"Can't handle a DatasetType of {dataset_type.name}")
 

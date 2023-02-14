@@ -7,7 +7,6 @@ import dataworkspace.apps.core.storage
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [

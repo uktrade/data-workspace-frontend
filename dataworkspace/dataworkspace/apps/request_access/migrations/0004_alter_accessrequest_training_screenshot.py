@@ -5,7 +5,6 @@ import dataworkspace.apps.core.storage
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("request_access", "0003_accessrequest_eligibility_criteria_met"),
     ]

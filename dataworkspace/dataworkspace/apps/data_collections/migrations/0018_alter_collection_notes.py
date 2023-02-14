@@ -5,7 +5,6 @@ import dataworkspace.apps.core.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("data_collections", "0017_merge_20221115_1526"),
     ]

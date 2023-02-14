@@ -908,7 +908,6 @@ async def async_main():
             allow_redirects=False,
             timeout=timeout,
         ) as upstream_response:
-
             _, _, _, with_session_cookie = downstream_request[SESSION_KEY]
             downstream_response = await with_session_cookie(
                 web.StreamResponse(
@@ -927,7 +926,6 @@ async def async_main():
     def server_logger():
         @web.middleware
         async def _server_logger(request, handler):
-
             request_logger = get_random_context_logger()
             request["logger"] = request_logger
             url = request_url(request)
@@ -973,7 +971,6 @@ async def async_main():
         return _authenticate_by_peer_ip
 
     def authenticate_by_staff_sso():
-
         auth_path = "o/authorize/"
         token_path = "o/token/"
         me_path = "api/v1/user/me/"

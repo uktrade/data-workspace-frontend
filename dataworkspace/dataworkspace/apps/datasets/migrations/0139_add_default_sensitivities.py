@@ -17,7 +17,6 @@ def create_default_sensitivities(apps, _):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("datasets", "0138_auto_20230124_1325"),
     ]

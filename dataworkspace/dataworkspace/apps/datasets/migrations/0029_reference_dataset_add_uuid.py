@@ -15,7 +15,6 @@ def generate_uuids(apps, _):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [("datasets", "0028_add_dataset_source_tags")]
 
     operations = [

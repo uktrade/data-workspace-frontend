@@ -9,7 +9,6 @@ def resave_reference_datasets(apps, _):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("datasets", "0130_migrate_referencedatasets_to_datasets"),
     ]

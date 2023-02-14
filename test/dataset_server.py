@@ -9,7 +9,6 @@ import psycopg2.sql
 
 
 async def async_main():
-
     stdout_handler = logging.StreamHandler(sys.stdout)
     for logger_name in ["aiohttp.server", "aiohttp.web", "aiohttp.access"]:
         logger = logging.getLogger(logger_name)

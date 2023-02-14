@@ -11,7 +11,6 @@ def set_published_at_dates(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("datasets", "0056_dataset_published_at"),
     ]

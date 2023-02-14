@@ -330,7 +330,6 @@ class PlayQueryView(View):
         rows=settings.EXPLORER_DEFAULT_ROWS,
         page=1,
     ):
-
         download_failed = request.GET.get("error") == "download"
         form = QueryForm(request.POST if request.method == "POST" else None, instance=query)
 

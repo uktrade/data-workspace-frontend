@@ -948,7 +948,6 @@ class TestCreateToolsAccessIAMRoleTask:
     @pytest.mark.django_db
     @mock.patch("dataworkspace.apps.applications.utils.create_tools_access_iam_role")
     def test_task_creates_iam_role(self, mock_create_tools_access_iam_role):
-
         user = UserFactory.create(username="john.smith@trade.gov.uk")
         user.profile.sso_id = "00000000-0000-0000-0000-000000000001"
         user.profile.home_directory_efs_access_point_id = "some-access-point-id"

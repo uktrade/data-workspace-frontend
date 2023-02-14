@@ -195,7 +195,6 @@ def tools_html_view(request):
 
 
 def tools_html_GET(request):
-
     tools = get_grouped_tools(request)
 
     return render(
@@ -1469,7 +1468,6 @@ def _without_duplicates_preserve_order(seq, key):
 
 
 class UserToolSizeConfigurationView(SuccessMessageMixin, UpdateView):
-
     model = UserToolConfiguration
     fields = ["size"]
     template_name = "user_tool_size_configuration_form.html"

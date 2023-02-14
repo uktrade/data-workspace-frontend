@@ -46,7 +46,8 @@ class PlaygroundSQL(models.Model):
     """All records in this field are transient and shouldn't be relied upon. These are used to facilitate
     post-redirect-get flow when moving from 'building a query' to 'saving a query', which has an intermediate
     dialogue page that needs to be populated. Originally this passed SQL through URL query parameters, but
-    our proxy (and some old browser) don't support long URLs (>2000 bytes) so we need to use POSTs."""
+    our proxy (and some old browser) don't support long URLs (>2000 bytes) so we need to use POSTs.
+    """
 
     id = models.AutoField(primary_key=True)
     sql = models.TextField()

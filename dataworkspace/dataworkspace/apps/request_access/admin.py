@@ -7,7 +7,6 @@ from dataworkspace.apps.request_access.models import AccessRequest
 
 
 class AccessRequestAdmin(admin.ModelAdmin):
-
     exclude = ("catalogue_item_id", "id", "modified_date")
 
     def get_readonly_fields(self, request, obj=None):

@@ -6,7 +6,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [("datasets", "0031_add_referencedataset_source_tags")]
 
     operations = [

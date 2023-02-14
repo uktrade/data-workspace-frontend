@@ -5,7 +5,6 @@ import dataworkspace.apps.core.storage
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("case_studies", "0003_auto_20210603_1253"),
     ]

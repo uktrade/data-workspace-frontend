@@ -148,7 +148,6 @@ class ProcessSpawner:
         mlflow_authorised_hosts,
         ___,
     ):
-
         try:
             # The database users are stored so when the database users are cleaned up,
             # we know _not_ to delete any users used by running or spawning apps

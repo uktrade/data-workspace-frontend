@@ -17,7 +17,6 @@ def set_default_values_of_published_datasets(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [("datasets", "0023_add_number_of_downloads_fields")]
 
     operations = [
