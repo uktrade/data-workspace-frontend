@@ -2982,6 +2982,8 @@ class TestDatasetAdminPytest:
                 "user_access_type": dataset.user_access_type,
                 "short_description": "some description",
                 "description": "some description",
+                "information_asset_owner": user.id,
+                "information_asset_manager": user.id,
                 "type": 1,
                 "sourcetable_set-TOTAL_FORMS": "0",
                 "sourcetable_set-INITIAL_FORMS": "0",
@@ -3024,6 +3026,8 @@ class TestDatasetAdminPytest:
                 "slug": dataset.slug,
                 "short_description": "some description",
                 "description": "some description",
+                "information_asset_owner": user.id,
+                "information_asset_manager": user.id,
                 "type": 2,
                 "user_access_type": dataset.user_access_type,
                 "sourcelink_set-TOTAL_FORMS": "0",
@@ -3087,6 +3091,8 @@ class TestDatasetAdminPytest:
                 "table_name": dataset.table_name,
                 "slug": dataset.slug,
                 "short_description": "test description that is short",
+                "information_asset_owner": user.id,
+                "information_asset_manager": user.id,
                 "sort_direction": ReferenceDataset.SORT_DIR_DESC,
                 "fields-TOTAL_FORMS": 1,
                 "fields-INITIAL_FORMS": 1,
@@ -3174,7 +3180,7 @@ class TestDatasetAdminPytest:
             table="my_table",
             dataset=dataset,
         )
-
+        user = get_user_model().objects.create(is_staff=True)
         # Login to admin site
         staff_client.post(reverse("admin:index"), follow=True)
 
@@ -3186,6 +3192,8 @@ class TestDatasetAdminPytest:
                 "slug": dataset.slug,
                 "short_description": "test short description",
                 "description": "test description",
+                "information_asset_owner": user.id,
+                "information_asset_manager": user.id,
                 "type": dataset.type,
                 "user_access_type": UserAccessType.REQUIRES_AUTHORIZATION,
                 "sourcetable_set-TOTAL_FORMS": "1",
@@ -3230,7 +3238,6 @@ class TestDatasetAdminPytest:
             table="my_table",
             dataset=dataset,
         )
-
         # Login to admin site
         staff_client.post(reverse("admin:index"), follow=True)
 
@@ -3242,6 +3249,8 @@ class TestDatasetAdminPytest:
                 "slug": dataset.slug,
                 "short_description": "test short description",
                 "description": "test description",
+                "information_asset_owner": str(user_1.id),
+                "information_asset_manager": str(user_1.id),
                 "type": dataset.type,
                 "user_access_type": dataset.user_access_type,
                 "authorized_users": [str(user_1.id), str(user_2.id)],
@@ -3286,7 +3295,6 @@ class TestDatasetAdminPytest:
         self, staff_client
     ):
         user = factories.UserFactory()
-
         dataset = factories.MasterDataSetFactory.create(
             published=True, user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
@@ -3309,6 +3317,8 @@ class TestDatasetAdminPytest:
                 "slug": dataset.slug,
                 "short_description": "test short description",
                 "description": "test description",
+                "information_asset_owner": str(user.id),
+                "information_asset_manager": str(user.id),
                 "type": dataset.type,
                 "user_access_type": UserAccessType.REQUIRES_AUTHENTICATION,
                 "sourcetable_set-TOTAL_FORMS": "1",
@@ -3347,6 +3357,7 @@ class TestDatasetAdminPytest:
         self, mock_remove_cached_credentials, staff_client
     ):
         user = factories.UserFactory()
+
         dataset = factories.MasterDataSetFactory.create(
             published=True, user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
         )
@@ -3367,6 +3378,8 @@ class TestDatasetAdminPytest:
                 "slug": dataset.slug,
                 "short_description": "test short description",
                 "description": "test description",
+                "information_asset_owner": str(user.id),
+                "information_asset_manager": str(user.id),
                 "type": dataset.type,
                 "user_access_type": UserAccessType.REQUIRES_AUTHORIZATION,
                 "authorized_users": str(user.id),
@@ -3455,6 +3468,9 @@ class TestDatasetAdminPytest:
         )
         database = factories.DatabaseFactory()
         num_tables = SourceTable.objects.count()
+
+        user = get_user_model().objects.create(is_staff=True)
+
         response = staff_client.post(
             reverse("admin:datasets_masterdataset_change", args=(dataset.id,)),
             {
@@ -3463,6 +3479,8 @@ class TestDatasetAdminPytest:
                 "slug": dataset.slug,
                 "short_description": "test short description",
                 "description": "test description",
+                "information_asset_owner": user.id,
+                "information_asset_manager": user.id,
                 "type": dataset.type,
                 "user_access_type": dataset.user_access_type,
                 "sourcetable_set-TOTAL_FORMS": "1",
@@ -3499,6 +3517,9 @@ class TestDatasetAdminPytest:
         )
         database = factories.DatabaseFactory()
         num_tables = SourceTable.objects.count()
+
+        user = get_user_model().objects.create(is_staff=True)
+
         response = staff_client.post(
             reverse("admin:datasets_masterdataset_change", args=(dataset.id,)),
             {
@@ -3507,6 +3528,8 @@ class TestDatasetAdminPytest:
                 "slug": dataset.slug,
                 "short_description": "test short description",
                 "description": "test description",
+                "information_asset_owner": user.id,
+                "information_asset_manager": user.id,
                 "type": dataset.type,
                 "user_access_type": dataset.user_access_type,
                 "sourcetable_set-TOTAL_FORMS": "1",

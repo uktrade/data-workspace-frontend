@@ -529,6 +529,15 @@ class MasterDatasetForm(BaseDatasetForm):
     dataset_type = DataSetType.MASTER
     can_change_user_permission_codename = "datasets.change_masterdatasetuserpermission"
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["information_asset_owner"].required = True
+        self.fields["information_asset_manager"].required = True
+
+    class Meta:
+        model = MasterDataset
+        fields = "__all__"
+
 
 class SourceLinkForm(forms.ModelForm):
     class Meta:
@@ -693,6 +702,9 @@ class VisualisationCatalogueItemForm(AutoCompleteUserFieldsMixin, forms.ModelFor
                     for user in self.fields["authorized_users"].queryset.all()
                 )
             )
+
+        self.fields["information_asset_owner"].required = True
+        self.fields["information_asset_manager"].required = True
 
 
 class VisualisationLinkForm(forms.ModelForm):

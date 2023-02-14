@@ -79,6 +79,8 @@ class DataSetFactory(factory.django.DjangoModelFactory):
     published = True
     deleted = False
     type = DataSetType.DATACUT
+    information_asset_owner = factory.SubFactory(UserFactory)
+    information_asset_manager = factory.SubFactory(UserFactory)
 
     class Meta:
         model = "datasets.DataSet"
