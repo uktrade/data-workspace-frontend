@@ -628,62 +628,20 @@ def _do_delete_unused_datasets_users():
     logger.info("delete_unused_datasets_users: End")
 
 
-def get_quicksight_dashboard_name_url(dashboard_id, user):
-    user_region = settings.QUICKSIGHT_USER_REGION
-    embed_role_arn = settings.QUICKSIGHT_DASHBOARD_EMBEDDING_ROLE_ARN
-    embed_role_name = embed_role_arn.rsplit("/", 1)[1]
-
+def get_quicksight_dashboard_name_url(dashboard_id):
     sts = boto3.client("sts")
     account_id = sts.get_caller_identity().get("Account")
 
-    # QuickSight manages users in a separate region to our data/dashboards.
-    qs_user_client = boto3.client("quicksight", region_name=user_region)
     qs_dashboard_client = boto3.client("quicksight")
-    reader_email = "reader@dataworkspace"
-
-    try:
-        qs_user_client.register_user(
-            AwsAccountId=account_id,
-            Namespace=settings.QUICKSIGHT_NAMESPACE,
-            IdentityType="IAM",
-            IamArn=embed_role_arn,
-            UserRole="READER",
-            SessionName=reader_email,
-            Email=reader_email,
-        )
-    except qs_user_client.exceptions.ResourceExistsException:
-        pass
-
-    attempts = 5
-    while attempts > 0:
-        attempts -= 1
-        try:
-            qs_user_client.create_group_membership(
-                AwsAccountId=account_id,
-                Namespace=settings.QUICKSIGHT_NAMESPACE,
-                GroupName=settings.QUICKSIGHT_DASHBOARD_GROUP,
-                MemberName=f"{embed_role_name}/{reader_email}",
-            )
-            break
-
-        except botocore.exceptions.ClientError as e:
-            if e.response["Error"]["Code"] == "ResourceNotFoundException":
-                if attempts > 0:
-                    gevent.sleep(5 - attempts)
-                else:
-                    raise e
-            else:
-                raise e
 
     dashboard_name = qs_dashboard_client.describe_dashboard(
         AwsAccountId=account_id, DashboardId=dashboard_id, AliasName="$PUBLISHED"
     )["Dashboard"]["Name"]
+    # This URL can be used one time and only in the next five minutes.
     dashboard_url = qs_dashboard_client.get_dashboard_embed_url(
         AwsAccountId=account_id,
         DashboardId=dashboard_id,
-        IdentityType="QUICKSIGHT",
-        UserArn=f"arn:aws:quicksight:{user_region}:{account_id}:user/"
-        + f"{settings.QUICKSIGHT_NAMESPACE}/{embed_role_name}/{reader_email}",
+        IdentityType="ANONYMOUS",
     )["EmbedUrl"]
 
     return dashboard_name, dashboard_url
