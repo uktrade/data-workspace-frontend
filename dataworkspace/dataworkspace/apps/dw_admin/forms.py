@@ -58,7 +58,8 @@ class ReferenceDatasetForm(AutoCompleteUserFieldsMixin, forms.ModelForm):
         super().__init__(*args, **kwargs)
         if "sort_field" in self.fields:
             self.fields["sort_field"].queryset = self.instance.fields.all()
-            
+
+
 class ReferenceDataInlineFormset(CustomInlineFormSet):
     model = ReferenceDatasetField
 
