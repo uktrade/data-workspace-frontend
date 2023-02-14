@@ -642,6 +642,7 @@ def get_quicksight_dashboard_name_url(dashboard_id):
         AwsAccountId=account_id,
         DashboardId=dashboard_id,
         IdentityType="ANONYMOUS",
+        Namespace=settings.QUICKSIGHT_NAMESPACE,
     )["EmbedUrl"]
 
     return dashboard_name, dashboard_url
