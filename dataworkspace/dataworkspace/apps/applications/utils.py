@@ -632,11 +632,12 @@ def get_quicksight_dashboard_name_url(dashboard_id, user):
     user_region = settings.QUICKSIGHT_USER_REGION
     embed_role_arn = settings.QUICKSIGHT_DASHBOARD_EMBEDDING_ROLE_ARN
     embed_role_name = embed_role_arn.rsplit("/", 1)[1]
+    sso_id = str(user.profile.sso_id)
 
     sts = boto3.client("sts")
     account_id = sts.get_caller_identity().get("Account")
 
-    role_credentials = sts.assume_role(RoleArn=embed_role_arn, RoleSessionName=user.email)[
+    role_credentials = sts.assume_role(RoleArn=embed_role_arn, RoleSessionName=sso_id)[
         "Credentials"
     ]
 
@@ -657,8 +658,8 @@ def get_quicksight_dashboard_name_url(dashboard_id, user):
             IdentityType="IAM",
             IamArn=embed_role_arn,
             UserRole="READER",
-            SessionName=user.email,
-            Email=user.email,
+            SessionName=sso_id,
+            Email=sso_id,
         )
     except qs_user_client.exceptions.ResourceExistsException:
         pass
@@ -671,7 +672,7 @@ def get_quicksight_dashboard_name_url(dashboard_id, user):
                 AwsAccountId=account_id,
                 Namespace=settings.QUICKSIGHT_NAMESPACE,
                 GroupName=settings.QUICKSIGHT_DASHBOARD_GROUP,
-                MemberName=f"{embed_role_name}/{user.email}",
+                MemberName=f"{embed_role_name}/{sso_id}",
             )
             break
 
@@ -692,7 +693,7 @@ def get_quicksight_dashboard_name_url(dashboard_id, user):
         DashboardId=dashboard_id,
         IdentityType="QUICKSIGHT",
         UserArn=f"arn:aws:quicksight:{user_region}:{account_id}:user/"
-        + f"{settings.QUICKSIGHT_NAMESPACE}/{embed_role_name}/{user.email}",
+        + f"{settings.QUICKSIGHT_NAMESPACE}/{embed_role_name}/{sso_id}",
     )["EmbedUrl"]
 
     return dashboard_name, dashboard_url
