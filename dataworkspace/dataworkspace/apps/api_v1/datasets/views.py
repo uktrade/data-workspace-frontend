@@ -368,6 +368,13 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
             VisualisationCatalogueItem.objects.live()
             .annotate(purpose=_static_int(DataSetType.VISUALISATION))
             .annotate(
+                visualisation_type=ArrayAgg(
+                    "visualisationlink_set__visualisation_type",
+                    filter=models.Q(visualisation_type=TagType.SOURCE),
+
+                )
+            )
+            .annotate(
                 source_tags=ArrayAgg(
                     "tags__name",
                     filter=models.Q(tags__type=TagType.SOURCE),
@@ -377,6 +384,11 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
             .annotate(draft=_static_bool(None))
             .annotate(dictionary=_static_bool(None))
             .values(*fields)
+            # .union(
+            #     VisualisationLink.objects.live()
+            #     .annotate(visualisation_type= models.ForeignKey(VisualisationCatalogueItem)
+            #     .values(*fields)
+            # )
         )
     ).order_by("created_date")
 
