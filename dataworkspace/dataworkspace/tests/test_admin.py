@@ -2456,6 +2456,8 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 "slug": dataset.slug,
                 "short_description": "test short description",
                 "description": "test description",
+                "information_asset_owner": str(user1.id),
+                "information_asset_manager": str(user1.id),
                 "type": 2,
                 "user_access_type": UserAccessType.REQUIRES_AUTHORIZATION,
                 "sourcelink_set-TOTAL_FORMS": "0",
@@ -2496,6 +2498,8 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 "slug": dataset.slug,
                 "short_description": "test short description",
                 "description": "test description",
+                "information_asset_owner": str(user1.id),
+                "information_asset_manager": str(user1.id),
                 "type": 2,
                 "user_access_type": UserAccessType.REQUIRES_AUTHORIZATION,
                 "sourcelink_set-TOTAL_FORMS": "0",
@@ -2527,6 +2531,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
         source_link = factories.SourceLinkFactory(
             link_type=SourceLink.TYPE_EXTERNAL, dataset=dataset
         )
+        user1 = factories.UserFactory()
         link_count = dataset.sourcelink_set.count()
         response = self._authenticated_post(
             reverse("admin:datasets_datacutdataset_change", args=(dataset.id,)),
@@ -2536,6 +2541,8 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 "slug": dataset.slug,
                 "short_description": "test short description",
                 "description": "test description",
+                "information_asset_owner": str(user1.id),
+                "information_asset_manager": str(user1.id),
                 "type": 2,
                 "user_access_type": UserAccessType.OPEN,
                 "sourcelink_set-TOTAL_FORMS": "1",
@@ -2576,6 +2583,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     def test_delete_local_source_link_aws_failure(self, mock_client):
         dataset = factories.DataSetFactory.create()
+        user1 = factories.UserFactory()
         source_link = factories.SourceLinkFactory(link_type=SourceLink.TYPE_LOCAL, dataset=dataset)
         link_count = dataset.sourcelink_set.count()
         mock_client.return_value.head_object.side_effect = ClientError(
@@ -2590,6 +2598,8 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 "slug": dataset.slug,
                 "short_description": "test short description",
                 "description": "test description",
+                "information_asset_owner": str(user1.id),
+                "information_asset_manager": str(user1.id),
                 "type": 2,
                 "user_access_type": UserAccessType.OPEN,
                 "sourcelink_set-TOTAL_FORMS": "1",
@@ -2630,6 +2640,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     def test_delete_local_source_link(self, mock_client):
         dataset = factories.DataSetFactory.create()
+        user = factories.UserFactory()
         source_link = factories.SourceLinkFactory(link_type=SourceLink.TYPE_LOCAL, dataset=dataset)
         link_count = dataset.sourcelink_set.count()
         response = self._authenticated_post(
@@ -2641,6 +2652,8 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 "user_access_type": UserAccessType.OPEN,
                 "short_description": "test short description",
                 "description": "test description",
+                "information_asset_owner": str(user.id),
+                "information_asset_manager": str(user.id),
                 "type": 2,
                 "sourcelink_set-TOTAL_FORMS": "1",
                 "sourcelink_set-INITIAL_FORMS": "1",
@@ -2753,6 +2766,7 @@ class TestDatasetAdminPytest:
     @pytest.mark.django_db
     def test_sql_query_tables_extracted_correctly(self, staff_client, query, expected_tables):
         dataset = factories.DataSetFactory.create(published=False)
+        user = factories.UserFactory()
         sql = factories.CustomDatasetQueryFactory.create(dataset=dataset, reviewed=False)
 
         # Login to admin site
@@ -2766,6 +2780,8 @@ class TestDatasetAdminPytest:
                 "slug": dataset.slug,
                 "short_description": "test short description",
                 "description": "test description",
+                "information_asset_owner": str(user.id),
+                "information_asset_manager": str(user.id),
                 "type": 2,
                 "user_access_type": dataset.user_access_type,
                 "sourcelink_set-TOTAL_FORMS": "0",
@@ -2813,6 +2829,7 @@ class TestDatasetAdminPytest:
     def test_sql_queries_can_only_be_reviewed_by_superusers(
         self, request_client, expected_response_code, can_review
     ):
+        user = factories.UserFactory()
         dataset = factories.DataSetFactory.create(published=False)
         sql = factories.CustomDatasetQueryFactory.create(dataset=dataset, reviewed=False)
 
@@ -2827,6 +2844,8 @@ class TestDatasetAdminPytest:
                 "slug": dataset.slug,
                 "short_description": "test short description",
                 "description": "test description",
+                "information_asset_owner": str(user.id),
+                "information_asset_manager": str(user.id),
                 "type": 2,
                 "user_access_type": dataset.user_access_type,
                 "sourcelink_set-TOTAL_FORMS": "0",
@@ -2874,7 +2893,7 @@ class TestDatasetAdminPytest:
         self, request_client, expected_response_code, should_publish
     ):
         dataset = factories.DataSetFactory.create(published=False)
-
+        user = factories.UserFactory()
         # Login to admin site
         request_client.post(reverse("admin:index"), follow=True)
 
@@ -2886,6 +2905,8 @@ class TestDatasetAdminPytest:
                 "slug": dataset.slug,
                 "short_description": "test short description",
                 "description": "test description",
+                "information_asset_owner": str(user.id),
+                "information_asset_manager": str(user.id),
                 "type": 2,
                 "user_access_type": dataset.user_access_type,
                 "sourcelink_set-TOTAL_FORMS": "0",
@@ -3118,6 +3139,7 @@ class TestDatasetAdminPytest:
     def test_unpublished_datacut_query_review_flag_is_toggled_off_if_query_changed_when_already_reviewed(
         self, staff_client, published, expected_reviewed_status
     ):
+        user = factories.UserFactory()
         dataset = factories.DataSetFactory.create(published=published)
         sql = factories.CustomDatasetQueryFactory.create(
             dataset=dataset, reviewed=True, query="original query"
@@ -3134,6 +3156,8 @@ class TestDatasetAdminPytest:
                 "slug": dataset.slug,
                 "short_description": "test short description",
                 "description": "test description",
+                "information_asset_owner": str(user.id),
+                "information_asset_manager": str(user.id),
                 "type": 2,
                 "user_access_type": dataset.user_access_type,
                 "sourcelink_set-TOTAL_FORMS": "0",
