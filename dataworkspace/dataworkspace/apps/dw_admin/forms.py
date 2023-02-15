@@ -524,6 +524,15 @@ class DataCutDatasetForm(BaseDatasetForm):
     dataset_type = DataSetType.DATACUT
     can_change_user_permission_codename = "datasets.change_datacutuserpermission"
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["information_asset_owner"].required = True
+        self.fields["information_asset_manager"].required = True
+
+    class Meta:
+        model = MasterDataset
+        fields = "__all__"
+
 
 class MasterDatasetForm(BaseDatasetForm):
     dataset_type = DataSetType.MASTER
