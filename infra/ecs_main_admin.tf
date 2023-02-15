@@ -332,7 +332,7 @@ data "aws_iam_policy_document" "admin_dashboard_embedding" {
   }
   statement {
     actions = ["quicksight:GetAuthCode"]
-    resources = ["arn:aws:quicksight:*:${data.aws_caller_identity.aws_caller_identity.account_id}:user/default/${var.prefix}-quicksight-embedding/*"]
+    resources = ["arn:aws:quicksight:*:${data.aws_caller_identity.aws_caller_identity.account_id}:user/${var.quicksight_namespace}/${var.prefix}-quicksight-embedding/*"]
   }
 }
 
