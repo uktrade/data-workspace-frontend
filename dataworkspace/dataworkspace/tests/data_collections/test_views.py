@@ -49,7 +49,6 @@ def test_dataset_can_be_added(client, user):
         [
             factories.SourceTagFactory(name="The Source"),
             factories.TopicTagFactory(name="The Topic"),
-            factories.PublisherTagFactory(name="The Publisher"),
         ]
     )
 
@@ -71,7 +70,6 @@ def test_dataset_can_be_added(client, user):
     assert "Datacut dataset" in response_text
     assert "The Source" in response_text
     assert "The Topic" in response_text
-    assert "The Publisher" in response_text
 
 
 def test_reference_dataset_can_be_added(client, user):
@@ -82,7 +80,6 @@ def test_reference_dataset_can_be_added(client, user):
         [
             factories.SourceTagFactory(name="The Source"),
             factories.TopicTagFactory(name="The Topic"),
-            factories.PublisherTagFactory(name="The Publisher"),
         ]
     )
 
@@ -104,7 +101,6 @@ def test_reference_dataset_can_be_added(client, user):
     assert "reference dataset example description" in response_text
     assert "The Source" in response_text
     assert "The Topic" in response_text
-    assert "The Publisher" in response_text
 
 
 def test_visualisation_can_be_added(client, user):
@@ -115,7 +111,6 @@ def test_visualisation_can_be_added(client, user):
         [
             factories.SourceTagFactory(name="The Source"),
             factories.TopicTagFactory(name="The Topic"),
-            factories.PublisherTagFactory(name="The Publisher"),
         ]
     )
 
@@ -137,7 +132,6 @@ def test_visualisation_can_be_added(client, user):
     assert "dummy visualisation catalogue item" in response_text
     assert "The Source" in response_text
     assert "The Topic" in response_text
-    assert "The Publisher" in response_text
 
 
 def test_authorised_user_attempting_delete_dataset_membership(client, user, other_user):
