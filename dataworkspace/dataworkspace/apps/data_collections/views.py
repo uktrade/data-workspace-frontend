@@ -104,6 +104,11 @@ class CollectionsDetailView(DetailView):
                     queryset=Tag.objects.filter(type=TagType.TOPIC),
                     to_attr="topics",
                 ),
+                Prefetch(
+                    "dataset__tags",
+                    queryset=Tag.objects.filter(type=TagType.PUBLISHER),
+                    to_attr="publishers",
+                ),
             )
             .order_by("dataset__name")
         )
@@ -119,6 +124,11 @@ class CollectionsDetailView(DetailView):
                     "visualisation__tags",
                     queryset=Tag.objects.filter(type=TagType.TOPIC),
                     to_attr="topics",
+                ),
+                Prefetch(
+                    "visualisation__tags",
+                    queryset=Tag.objects.filter(type=TagType.PUBLISHER),
+                    to_attr="publishers",
                 ),
             )
             .order_by("visualisation__name")

@@ -43,6 +43,13 @@ class Command(BaseCommand):
             help="Assign the dataset to a random source tag if any exist",
         )
 
+        parser.add_argument(
+            "-p",
+            "--publisher",
+            action="store_true",
+            help="Assign the dataset to a random publisher tag if any exist",
+        )
+
     def handle(self, *args, **options):
         dataset_type_text = options["type"].upper()
 
@@ -53,9 +60,12 @@ class Command(BaseCommand):
 
         should_add_topic = options["topic"]
         should_add_source = options["source"]
+        should_add_publisher = options["publisher"]
 
-        if should_add_topic and should_add_source:
-            self.stderr.write(self.style.ERROR("Please choose either --topic or --source tags"))
+        if should_add_topic and should_add_source and should_add_publisher:
+            self.stderr.write(
+                self.style.ERROR("Please choose either --topic, --source or --publisher tags")
+            )
             self.print_help("manage.py", "create_fake_dataset")
             sys.exit(1)
 
@@ -63,6 +73,8 @@ class Command(BaseCommand):
             tag_type = TagType.TOPIC
         elif should_add_source:
             tag_type = TagType.SOURCE
+        elif should_add_publisher:
+            tag_type = TagType.PUBLISHER
         else:
             tag_type = None
 

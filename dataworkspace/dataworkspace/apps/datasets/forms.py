@@ -224,6 +224,14 @@ class DatasetSearchForm(forms.Form):
         ),
     )
 
+    publisher = SourceTagField(
+        queryset=Tag.objects.order_by("name").filter(type=TagType.PUBLISHER),
+        required=False,
+        widget=AccordionFilterWidget(
+            "Publisher",
+        ),
+    )
+
     def _get_sort_choices(self):
         return [(k, v["display_name"]) for k, v in SORT_FIELD_MAP.items()]
 
@@ -267,6 +275,7 @@ class DatasetSearchForm(forms.Form):
             "data_type": defaultdict(int),
             "source": defaultdict(int),
             "topic": defaultdict(int),
+            "publisher": defaultdict(int),
             "user_access": defaultdict(int),
         }
 
@@ -280,6 +289,7 @@ class DatasetSearchForm(forms.Form):
         selected_data_type = set(self.cleaned_data["data_type"])
         selected_source_ids = set(source.id for source in self.cleaned_data["source"])
         selected_topic_ids = set(topic.id for topic in self.cleaned_data["topic"])
+        selected_publisher_ids = set(publisher.id for publisher in self.cleaned_data["publisher"])
 
         # Cache these locally for performance. The source model choice field can end up hitting the DB each time.
         user_access_choices = list(self.fields["user_access"].choices)
@@ -288,6 +298,7 @@ class DatasetSearchForm(forms.Form):
         data_type_choices = list(self.fields["data_type"].choices)
         source_choices = list(self.fields["source"].choices)
         topic_choices = list(self.fields["topic"].choices)
+        publisher_choices = list(self.fields["publisher"].choices)
 
         for dataset in datasets:
             dataset_matcher = partial(
@@ -300,6 +311,7 @@ class DatasetSearchForm(forms.Form):
                 data_type=selected_data_type,
                 source_ids=selected_source_ids,
                 topic_ids=selected_topic_ids,
+                publisher_ids=selected_publisher_ids,
                 user_accessible=user_access == {"yes"},
                 user_inaccessible=user_access == {"no"},
                 selected_user_datasets=self.cleaned_data["my_datasets"],
@@ -334,6 +346,10 @@ class DatasetSearchForm(forms.Form):
             for topic_id, _ in topic_choices:
                 if dataset_matcher(topic_ids={topic_id.value}):
                     counts["topic"][topic_id.value] += 1
+
+            for publisher_id, _ in publisher_choices:
+                if dataset_matcher(publisher_ids={publisher_id.value}):
+                    counts["publisher"][publisher_id.value] += 1
 
         self.fields["user_access"].choices = [
             (access_id, SearchableChoice(access_text, counts["user_access"][access_id]))
@@ -380,6 +396,16 @@ class DatasetSearchForm(forms.Form):
             if topic_id.value in selected_topic_ids or counts["topic"][topic_id.value] != 0
         ]
 
+        self.fields["publisher"].choices = [
+            (
+                publisher_id,
+                SearchableChoice(publisher_text, counts["publisher"][publisher_id.value]),
+            )
+            for publisher_id, publisher_text in publisher_choices
+            if publisher_id.value in selected_publisher_ids
+            or counts["publisher"][publisher_id.value] != 0
+        ]
+
     def get_filters(self):
         filters = SearchDatasetsFilters()
 
@@ -393,6 +419,9 @@ class DatasetSearchForm(forms.Form):
         filters.sort_type = SORT_FIELD_MAP.get(self.cleaned_data["sort"])
         filters.source_ids = set(source.id for source in self.cleaned_data.get("source"))
         filters.topic_ids = set(topic.id for topic in self.cleaned_data.get("topic"))
+        filters.publisher_ids = set(
+            publisher.id for publisher in self.cleaned_data.get("publisher")
+        )
         filters.user_accessible = set(self.cleaned_data.get("user_access", [])) == {"yes"}
         filters.user_inaccessible = set(self.cleaned_data.get("user_access", [])) == {"no"}
 

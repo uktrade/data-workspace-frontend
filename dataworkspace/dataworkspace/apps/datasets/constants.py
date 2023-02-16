@@ -44,6 +44,7 @@ class DataLinkType(models.IntegerChoices):
 class TagType(models.IntegerChoices):
     SOURCE = 1, "Source"
     TOPIC = 2, "Topic"
+    PUBLISHER = 3, "Publisher"
 
 
 class UserAccessType(models.TextChoices):

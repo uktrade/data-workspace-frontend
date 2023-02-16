@@ -90,6 +90,7 @@ class SearchDatasetsFilters:
     sort_type: str
     source_ids: set
     topic_ids: set
+    publisher_ids: set
     user_accessible: set
     user_inaccessible: set
     query: str
@@ -106,6 +107,7 @@ class SearchDatasetsFilters:
             or bool(self.data_type)
             or bool(self.source_ids)
             or bool(self.topic_ids)
+            or bool(self.publisher_ids)
             or bool(self.user_accessible)
             or bool(self.user_inaccessible)
         )
@@ -206,6 +208,7 @@ def _get_datasets_data_for_user_matching_query(
         "search_rank_description",
         "source_tag_ids",
         "topic_tag_ids",
+        "publisher_tag_ids",
         "data_type",
         "published",
         "is_open_data",
@@ -359,7 +362,7 @@ def _annotate_data_type(datasets):
 
 def _annotate_tags(datasets):
     """
-    Adds annotation for source and topic tags
+    Adds annotation for source, publisher and topic tags
     @param datasets: django queryset
     @return:
     """
@@ -368,6 +371,9 @@ def _annotate_tags(datasets):
     )
     datasets = datasets.annotate(
         topic_tag_ids=ArrayAgg("tags", filter=Q(tags__type=TagType.TOPIC), distinct=True)
+    )
+    datasets = datasets.annotate(
+        publisher_tag_ids=ArrayAgg("tags", filter=Q(tags__type=TagType.PUBLISHER), distinct=True)
     )
     return datasets
 
@@ -617,6 +623,7 @@ def search_for_datasets(user, filters: SearchDatasetsFilters, matcher) -> tuple:
                 filters.data_type,
                 filters.source_ids,
                 filters.topic_ids,
+                filters.publisher_ids,
                 filters.user_accessible,
                 filters.user_inaccessible,
                 filters.my_datasets,

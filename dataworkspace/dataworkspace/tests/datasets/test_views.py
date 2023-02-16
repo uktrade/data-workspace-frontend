@@ -276,6 +276,7 @@ def expected_search_result(catalogue_item, **kwargs):
         "published_date": mock.ANY,
         "source_tag_ids": mock.ANY,
         "topic_tag_ids": mock.ANY,
+        "publisher_tag_ids": mock.ANY,
         "data_type": mock.ANY,
         "published": catalogue_item.published,
         "has_access": True,
@@ -286,6 +287,7 @@ def expected_search_result(catalogue_item, **kwargs):
         "is_open_data": getattr(catalogue_item, "user_access_type", None) == UserAccessType.OPEN,
         "sources": mock.ANY,
         "topics": mock.ANY,
+        "publishers": mock.ANY,
         "last_updated": mock.ANY,
         "average_unique_users_daily": mock.ANY,
         "is_owner": False,
@@ -621,6 +623,67 @@ def test_find_datasets_filters_by_topic(client):
     ]
 
     assert len(list(response.context["form"].fields["topic"].choices)) == 2
+    assert len(results) == 3
+    for expected in expected_results:
+        assert expected in results
+
+
+def test_find_datasets_filters_by_publisher(client):
+    publisher = factories.PublisherTagFactory.create()
+    publisher_2 = factories.PublisherTagFactory.create()
+    # Create another SourceTag that won't be associated to a dataset
+    factories.PublisherTagFactory.create()
+
+    _ds = factories.DataSetFactory.create(published=True, type=1, name="A dataset")
+    _ds.tags.set([factories.SourceTagFactory()])
+
+    _vis = factories.VisualisationCatalogueItemFactory.create(
+        published=True, name="A visualisation"
+    )
+
+    factories.DataSetApplicationTemplatePermissionFactory(
+        application_template=_vis.visualisation_template, dataset=_ds
+    )
+
+    ds = factories.DataSetFactory.create(published=True, type=2, name="A new dataset")
+    ds.tags.set([publisher, publisher_2])
+
+    rds = factories.ReferenceDatasetFactory.create(published=True, name="A new reference dataset")
+    rds.tags.set([publisher])
+
+    vis = factories.VisualisationCatalogueItemFactory.create(
+        published=True, name="A new visualisation"
+    )
+    vis.tags.set([publisher])
+
+    factories.DataSetApplicationTemplatePermissionFactory(
+        application_template=vis.visualisation_template, dataset=ds
+    )
+
+    response = client.get(reverse("datasets:find_datasets"), {"publisher": [publisher.id]})
+
+    assert response.status_code == 200
+    results = list(response.context["datasets"])
+    expected_results = [
+        expected_search_result(
+            ds,
+            has_access=False,
+            publisher_tag_ids=MatchUnorderedMembers([publisher.id, publisher_2.id]),
+            search_rank=0.0,
+        ),
+        expected_search_result(
+            rds,
+            publisher_tag_ids=[publisher.id],
+            data_type=DataSetType.REFERENCE,
+        ),
+        expected_search_result(
+            vis,
+            publisher_tag_ids=[publisher.id],
+            data_type=DataSetType.VISUALISATION,
+        ),
+    ]
+
+    assert len(list(response.context["form"].fields["publisher"].choices)) == 2
     assert len(results) == 3
     for expected in expected_results:
         assert expected in results
