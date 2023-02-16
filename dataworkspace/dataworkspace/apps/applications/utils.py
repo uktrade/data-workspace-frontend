@@ -932,6 +932,7 @@ def sync_quicksight_permissions(user_sso_ids_to_update=tuple()):
         )
 
     else:
+        quicksight_user_list: List[Dict[str, str]] = []
         next_token = None
         while True:
             list_user_args = dict(AwsAccountId=account_id, Namespace=settings.QUICKSIGHT_NAMESPACE)
@@ -939,18 +940,18 @@ def sync_quicksight_permissions(user_sso_ids_to_update=tuple()):
                 list_user_args["NextToken"] = next_token
 
             list_users_response = user_client.list_users(**list_user_args)
-            quicksight_user_list: List[Dict[str, str]] = list_users_response["UserList"]
+            quicksight_user_list.extend(list_users_response["UserList"])
             next_token = list_users_response.get("NextToken")
-
-            sync_quicksight_users(
-                data_client=data_client,
-                user_client=user_client,
-                account_id=account_id,
-                quicksight_user_list=quicksight_user_list,
-            )
 
             if not next_token:
                 break
+
+        sync_quicksight_users(
+            data_client=data_client,
+            user_client=user_client,
+            account_id=account_id,
+            quicksight_user_list=quicksight_user_list,
+        )
 
     logger.info(
         "sync_quicksight_user_datasources(%s) finished",
