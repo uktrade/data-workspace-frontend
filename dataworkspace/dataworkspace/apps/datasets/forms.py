@@ -402,7 +402,8 @@ class DatasetSearchForm(forms.Form):
                 SearchableChoice(publisher_text, counts["publisher"][publisher_id.value]),
             )
             for publisher_id, publisher_text in publisher_choices
-            if publisher_id.value in selected_publisher_ids or counts["publisher"][publisher_id.value] != 0
+            if publisher_id.value in selected_publisher_ids
+            or counts["publisher"][publisher_id.value] != 0
         ]
 
     def get_filters(self):
@@ -418,7 +419,9 @@ class DatasetSearchForm(forms.Form):
         filters.sort_type = SORT_FIELD_MAP.get(self.cleaned_data["sort"])
         filters.source_ids = set(source.id for source in self.cleaned_data.get("source"))
         filters.topic_ids = set(topic.id for topic in self.cleaned_data.get("topic"))
-        filters.publisher_ids = set(publisher.id for publisher in self.cleaned_data.get("publisher"))
+        filters.publisher_ids = set(
+            publisher.id for publisher in self.cleaned_data.get("publisher")
+        )
         filters.user_accessible = set(self.cleaned_data.get("user_access", [])) == {"yes"}
         filters.user_inaccessible = set(self.cleaned_data.get("user_access", [])) == {"no"}
 

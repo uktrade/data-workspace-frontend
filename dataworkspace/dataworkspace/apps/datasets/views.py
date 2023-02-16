@@ -237,7 +237,9 @@ def find_datasets(request):
             tags_dict.get(str(source_id)) for source_id in dataset["source_tag_ids"]
         ]
         dataset["topics"] = [tags_dict.get(str(topic_id)) for topic_id in dataset["topic_tag_ids"]]
-        dataset["publishers"] = [tags_dict.get(str(publisher_id)) for publisher_id in dataset["publisher_tag_ids"]]
+        dataset["publishers"] = [
+            tags_dict.get(str(publisher_id)) for publisher_id in dataset["publisher_tag_ids"]
+        ]
 
     ######################################################################
     # Augment results with last updated dates, avoiding queries-per-result

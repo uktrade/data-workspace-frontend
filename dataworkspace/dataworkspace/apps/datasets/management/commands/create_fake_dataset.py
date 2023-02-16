@@ -63,7 +63,9 @@ class Command(BaseCommand):
         should_add_publisher = options["publisher"]
 
         if should_add_topic and should_add_source and should_add_publisher:
-            self.stderr.write(self.style.ERROR("Please choose either --topic, --source or --publisher tags"))
+            self.stderr.write(
+                self.style.ERROR("Please choose either --topic, --source or --publisher tags")
+            )
             self.print_help("manage.py", "create_fake_dataset")
             sys.exit(1)
 

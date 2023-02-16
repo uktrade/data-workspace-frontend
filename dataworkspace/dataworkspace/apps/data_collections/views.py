@@ -108,7 +108,7 @@ class CollectionsDetailView(DetailView):
                     "dataset__tags",
                     queryset=Tag.objects.filter(type=TagType.PUBLISHER),
                     to_attr="publishers",
-                )
+                ),
             )
             .order_by("dataset__name")
         )
