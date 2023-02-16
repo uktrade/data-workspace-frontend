@@ -946,6 +946,10 @@ def sync_quicksight_permissions(user_sso_ids_to_update=tuple()):
             if not next_token:
                 break
 
+        logger.info(
+            "starting sync_quicksight_permissions for %s number of users",
+            len(quicksight_user_list),
+        )
         sync_quicksight_users(
             data_client=data_client,
             user_client=user_client,
