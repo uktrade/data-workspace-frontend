@@ -117,6 +117,10 @@
               {{ form.source }}
             {% endif %}
 
+            {% if form.publisher.field.choices %}
+              {{ form.publisher }}
+            {% endif %}
+
             {{ form.user_access }}
             {{ form.data_type }}
 
@@ -156,6 +160,12 @@
               {% for value, text in form.source.field.choices %}
                 {% if value|stringformat:"s" in form.source.value %}
                   {% include "datasets/filter_button.html" with id=value text=text tag_type=form.source.name label="Source" %}
+                {% endif %}
+              {% endfor %}
+
+              {% for value, text in form.publisher.field.choices %}
+                {% if value|stringformat:"s" in form.publisher.value %}
+                  {% include "datasets/filter_button.html" with id=value text=text tag_type=form.publisher.name label="Publisher" %}
                 {% endif %}
               {% endfor %}
 

@@ -134,6 +134,7 @@ def _matches_filters(
     data_type: Set,
     source_ids: Set,
     topic_ids: Set,
+    publisher_ids: Set,
     user_accessible: bool = False,
     user_inaccessible: bool = False,
     selected_user_datasets: Set = None,
@@ -158,6 +159,7 @@ def _matches_filters(
         and (not data_type or data_type == [None] or data["data_type"] in data_type)
         and (not source_ids or source_ids.intersection(set(data["source_tag_ids"])))
         and (not topic_ids or topic_ids.intersection(set(data["topic_tag_ids"])))
+        and (not publisher_ids or publisher_ids.intersection(set(data["publisher_tag_ids"])))
         and (not user_accessible or data["has_access"])
         and (not user_inaccessible or not data["has_access"])
     )
@@ -235,6 +237,7 @@ def find_datasets(request):
             tags_dict.get(str(source_id)) for source_id in dataset["source_tag_ids"]
         ]
         dataset["topics"] = [tags_dict.get(str(topic_id)) for topic_id in dataset["topic_tag_ids"]]
+        dataset["publishers"] = [tags_dict.get(str(publisher_id)) for publisher_id in dataset["publisher_tag_ids"]]
 
     ######################################################################
     # Augment results with last updated dates, avoiding queries-per-result

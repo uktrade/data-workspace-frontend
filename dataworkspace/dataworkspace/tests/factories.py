@@ -61,6 +61,10 @@ class TopicTagFactory(TagFactory):
     type = TagType.TOPIC
 
 
+class PublisherTagFactory(TagFactory):
+    type = TagType.PUBLISHER
+
+
 class VisualisationDatasetFactory(factory.django.DjangoModelFactory):
     name = factory.fuzzy.FuzzyText()
     summary = factory.fuzzy.FuzzyText()
