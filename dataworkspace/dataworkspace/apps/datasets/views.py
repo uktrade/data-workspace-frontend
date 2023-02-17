@@ -1142,11 +1142,23 @@ class DataCutSourceDetailView(DetailView):
 
     def get_object(self, queryset=None):
         dataset = find_dataset(self.kwargs["dataset_uuid"], self.request.user)
-        return get_object_or_404(
+        table_object = get_object_or_404(
             self.kwargs["model_class"],
             dataset=dataset,
             pk=self.kwargs["object_id"],
         )
+        log_event(
+            self.request.user,
+            EventLog.TYPE_DATA_TABLE_VIEW,
+            table_object,
+            extra={
+                "path": self.request.get_full_path(),
+                "data_table_name": table_object.name,
+                "data_table_id": table_object.id,
+                "dataset": dataset.name,
+            },
+        )
+        return table_object
 
 
 class DataGridDataView(DetailView):
