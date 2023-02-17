@@ -964,7 +964,7 @@ class ReferenceDatasetGridView(View):
         dataset = find_dataset(dataset_uuid, request.user, ReferenceDataset)
         log_event(
             request.user,
-            EventLog.TYPE_REFERENCE_DATASET_VIEW,
+            EventLog.TYPE_DATA_TABLE_VIEW,
             dataset,
             extra={
                 "path": request.get_full_path(),
