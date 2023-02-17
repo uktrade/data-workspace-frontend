@@ -46,6 +46,7 @@ class EventLog(models.Model):
     TYPE_COLLECTION_VIEW = 39
     TYPE_GRANTED_VISUALISATION_ADMIN_PERMISSION = 40
     TYPE_REVOKED_VISUALISATION_ADMIN_PERMISSION = 41
+    TYPE_DATA_TABLE_VIEW = 42
 
     _TYPE_CHOICES = (
         (TYPE_DATASET_SOURCE_LINK_DOWNLOAD, "Dataset source link download"),
@@ -91,6 +92,7 @@ class EventLog(models.Model):
         (TYPE_COLLECTION_VIEW, "Collection view"),
         (TYPE_GRANTED_VISUALISATION_ADMIN_PERMISSION, "Granted visualisation admin permission"),
         (TYPE_REVOKED_VISUALISATION_ADMIN_PERMISSION, "Revoked visualisation admin permission"),
+        (TYPE_DATA_TABLE_VIEW, "Data table view")
     )
     user = models.ForeignKey(get_user_model(), on_delete=models.DO_NOTHING, related_name="events")
     id = models.BigAutoField(primary_key=True)
