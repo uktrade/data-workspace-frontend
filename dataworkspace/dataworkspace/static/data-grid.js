@@ -326,6 +326,13 @@ function initDataGrid(
         linkElement.setAttribute("href", dataUri);
         linkElement.setAttribute("download", exportFileDefaultName);
         linkElement.click();
+        if (referenceDataEndpoint) {
+          var xhr = new XMLHttpRequest();
+          xhr.open("POST", referenceDataEndpoint, true);
+          xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+          xhr.setRequestHeader("X-CSRFToken", getCsrfToken());
+          xhr.send();
+        }
         logDownloadEvent(
           gridOptions,
           itemId,
@@ -340,14 +347,6 @@ function initDataGrid(
         return;
       });
     }
-  }
-
-  if (referenceDataEndpoint) {
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", referenceDataEndpoint, true);
-    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-    xhr.setRequestHeader("X-CSRFToken", getCsrfToken());
-    xhr.send();
   }
 
   var createChartButton = document.querySelector("#data-grid-create-chart");
