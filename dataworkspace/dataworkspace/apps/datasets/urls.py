@@ -56,8 +56,8 @@ urlpatterns = [
         name="reference_dataset_grid",
     ),
     path(
-        "<uuid:dataset_uuid>/reference/<str:format>/download",
-        login_required(views.ReferenceDatasetDownloadView.as_view()),
+        "<uuid:dataset_uuid>/reference/<str:data_type>/download",
+        login_required(views.reference_dataset_download),
         name="reference_dataset_download",
     ),
     path(

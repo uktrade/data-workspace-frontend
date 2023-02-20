@@ -670,20 +670,19 @@ def unset_bookmark(request, dataset_uuid):
     return HttpResponse(status=200)
 
 
-class ReferenceDatasetDownloadView(DetailView):
-    def post(self, request, *args, **kwargs):
-        dataset = find_dataset(self.kwargs.get("dataset_uuid"), request.user, ReferenceDataset)
-        log_event(
-            request.user,
-            EventLog.TYPE_REFERENCE_DATASET_DOWNLOAD,
-            dataset,
-            extra={
-                "path": request.get_full_path(),
-                "reference_dataset_version": dataset.published_version,
-                "format": self.kwargs.get("format"),
-            },
-        )
-        return HttpResponse(status=200)
+def reference_dataset_download(request, dataset_uuid, data_type):
+    dataset = find_dataset(dataset_uuid, request.user, ReferenceDataset)
+    log_event(
+        request.user,
+        EventLog.TYPE_REFERENCE_DATASET_DOWNLOAD,
+        dataset,
+        extra={
+            "path": request.get_full_path(),
+            "reference_dataset_version": dataset.published_version,
+            "format": data_type,
+        },
+    )
+    return HttpResponse(status=200)
 
 
 class SourceLinkDownloadView(DetailView):

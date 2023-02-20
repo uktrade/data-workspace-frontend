@@ -3,6 +3,7 @@ import re
 
 from django import template
 from django.utils.html import format_html
+from django.urls import reverse
 
 register = template.Library()
 
@@ -67,3 +68,8 @@ def spawner_cpu(value):
 def browser_is_internet_explorer(context, **kwargs):
     user_agent = context["request"].META.get("HTTP_USER_AGENT", "")
     return re.search(r"MSIE|Trident/7\.0; rv:\d+", user_agent) is not None
+
+
+@register.simple_tag
+def send_post_data_url(dataset_uuid, data_type):
+    return reverse("datasets:reference_dataset_download", args=(dataset_uuid, data_type))

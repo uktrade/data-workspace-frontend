@@ -18,7 +18,7 @@ from psycopg2 import sql
 from botocore.exceptions import ClientError
 from ckeditor.fields import RichTextField
 
-from django import forms
+from django import forms, template
 from django.apps import apps
 from django.db import (
     DatabaseError,
@@ -76,6 +76,7 @@ from dataworkspace.datasets_db import (
     get_earliest_tables_last_updated_date,
 )
 
+register = template.Library()
 
 class DataGroupingManager(DeletableQuerySet):
     def with_published_datasets(self):
@@ -1334,9 +1335,6 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                 self.published_minor_version += 1
             self.major_version = self.published_major_version
             self.minor_version = self.published_minor_version
-
-    def send_post_data_url(self):
-        return reverse("datasets:reference_dataset_download", args=(self.uuid, "csv"))
 
     @transaction.atomic
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
