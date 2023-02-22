@@ -963,12 +963,13 @@ class ReferenceDatasetGridView(View):
     def get(self, request, dataset_uuid):
         dataset = find_dataset(dataset_uuid, request.user, ReferenceDataset)
         log_event(
-            request.user,
-            EventLog.TYPE_REFERENCE_DATASET_VIEW,
+            self.request.user,
+            EventLog.TYPE_DATA_TABLE_VIEW,
             dataset,
             extra={
-                "path": request.get_full_path(),
-                "reference_dataset_version": dataset.published_version,
+                "path": self.request.get_full_path(),
+                "data_table_name": dataset.name,
+                "data_table_id": dataset.id,
             },
         )
         return render(
@@ -1138,6 +1139,18 @@ class DataCutSourceDetailView(DetailView):
         if not source.dataset.user_has_access(self.request.user):
             raise DatasetPermissionDenied(source.dataset)
 
+        log_event(
+            self.request.user,
+            EventLog.TYPE_DATA_TABLE_VIEW,
+            source,
+            extra={
+                "path": self.request.get_full_path(),
+                "data_table_name": source.name,
+                "data_table_id": source.id,
+                "dataset": source.dataset.name,
+            },
+        )
+
         return super().dispatch(request, *args, **kwargs)
 
     def get_object(self, queryset=None):
@@ -1147,17 +1160,7 @@ class DataCutSourceDetailView(DetailView):
             dataset=dataset,
             pk=self.kwargs["object_id"],
         )
-        log_event(
-            self.request.user,
-            EventLog.TYPE_DATA_TABLE_VIEW,
-            table_object,
-            extra={
-                "path": self.request.get_full_path(),
-                "data_table_name": table_object.name,
-                "data_table_id": table_object.id,
-                "dataset": dataset.name,
-            },
-        )
+
         return table_object
 
 
