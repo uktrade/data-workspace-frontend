@@ -35,7 +35,7 @@ click==8.1.3
     #   mlflow
 cloudpickle==2.1.0
     # via mlflow
-cryptography==38.0.3
+cryptography==39.0.1
     # via -r requirements-mlflow.in
 databricks-cli==0.17.0
     # via mlflow
@@ -97,7 +97,7 @@ numpy==1.22.0
     #   scipy
 oauthlib==3.2.2
     # via databricks-cli
-packaging==22.0
+packaging==21.3
     # via mlflow
 pandas==1.3.5
     # via mlflow
