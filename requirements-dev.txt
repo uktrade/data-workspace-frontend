@@ -403,7 +403,7 @@ pylint-django==2.3.0
     # via -r requirements-dev.in
 pylint-plugin-utils==0.6
     # via pylint-django
-pyopenssl==22.0.0
+pyopenssl==23.0.0
     # via urllib3
 pyppeteer==0.2.6
     # via -r requirements-dev.in
