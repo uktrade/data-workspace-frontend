@@ -496,7 +496,7 @@ DATABASES = {
         "ENGINE": "django_db_geventpool.backends.postgresql_psycopg2",
         "CONN_MAX_AGE": 0,
         **env["ADMIN_DB"],
-        "OPTIONS": {"sslmode": "require", "MAX_CONNS": 20},
+        "OPTIONS": {"sslmode": "require", "MAX_CONNS": int(env.get("DEFAULT_DB_MAX_CONNS", "20"))},
     },
     **{
         database_name: {
