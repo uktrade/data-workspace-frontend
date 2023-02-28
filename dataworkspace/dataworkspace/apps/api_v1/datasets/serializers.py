@@ -52,6 +52,7 @@ class CatalogueItemSerializer(serializers.Serializer):
     authorized_email_domains = serializers.ListField()
     is_draft = serializers.BooleanField(source="draft")
     dictionary_published = serializers.BooleanField(source="dictionary")
+    user_ids = serializers.ListField()
 
     def to_representation(self, instance):
         instance = super().to_representation(instance)

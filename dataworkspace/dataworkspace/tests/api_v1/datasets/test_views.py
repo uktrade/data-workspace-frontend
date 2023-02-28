@@ -430,7 +430,10 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
         personal_data=None,
         retention_policy=None,
         eligibility_criteria=None,
+        userids=None,
     ):
+        if userids is None:
+            userids = []
         return {
             "id": str(dataset.uuid) if isinstance(dataset, ReferenceDataset) else str(dataset.id),
             "name": dataset.name,
@@ -473,6 +476,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             "authorized_email_domains": None
             if isinstance(dataset, ReferenceDataset)
             else dataset.authorized_email_domains,
+            "user_ids": userids,
         }
 
     def test_success(self, unauthenticated_client):
@@ -523,9 +527,43 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
                 master_dataset.retention_policy,
             ),
             self.expected_response(reference_dataset, "Reference data"),
-            # self.expected_response(reference_dataset.reference_dataset_inheriting_from_dataset, "Reference data"),
             self.expected_response(visualisation, "Visualisation", visualisation.personal_data),
             self.expected_response(visualisation2, "Visualisation"),
+        ]
+
+    def test_user_permissions(self, unauthenticated_client):
+        master = factories.DataSetFactory.create(
+            published=True,
+            type=DataSetType.MASTER,
+            name="A master",
+        )
+        user = factories.UserFactory.create()
+        factories.DataSetUserPermissionFactory.create(dataset=master, user=user)
+
+        visualisation = factories.VisualisationCatalogueItemFactory.create(
+            published=True,
+            name="Visualisation",
+        )
+
+        factories.VisualisationUserPermissionFactory.create(visualisation=visualisation, user=user)
+
+        response = unauthenticated_client.get(self.url)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["results"] == [
+            self.expected_response(
+                master,
+                "Master dataset",
+                master.personal_data,
+                master.retention_policy,
+                userids=[user.id],
+            ),
+            self.expected_response(
+                visualisation,
+                "Visualisation",
+                visualisation.personal_data,
+                visualisation.retention_policy,
+                userids=[user.id],
+            ),
         ]
 
 
