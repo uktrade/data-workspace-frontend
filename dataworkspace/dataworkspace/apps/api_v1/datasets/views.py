@@ -5,10 +5,11 @@ import psycopg2
 from django.conf import settings
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.db import models
-from django.db.models import F
+from django.db.models import F, Q, Value
 from django.db.models.functions import Substr
 from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
+from django.contrib.postgres.fields import ArrayField
 from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
 
@@ -330,6 +331,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         "restrictions_on_usage",
         "user_access_type",
         "authorized_email_domains",
+        "user_ids",
     ]
     queryset = (
         DataSet.objects.live()
@@ -338,6 +340,13 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
             source_tags=ArrayAgg(
                 "tags__name",
                 filter=models.Q(tags__type=TagType.SOURCE),
+                distinct=True,
+            )
+        )
+        .annotate(
+            user_ids=ArrayAgg(
+                "datasetuserpermission__user",
+                filter=Q(datasetuserpermission__user__isnull=False),
                 distinct=True,
             )
         )
@@ -360,6 +369,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
                     distinct=True,
                 )
             )
+            .annotate(user_ids=Value([], output_field=ArrayField(models.IntegerField())))
             .annotate(draft=F("is_draft"))
             .annotate(dictionary=F("published"))
             .values(*_replace(fields, "id", "uuid"))
@@ -371,6 +381,13 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
                 source_tags=ArrayAgg(
                     "tags__name",
                     filter=models.Q(tags__type=TagType.SOURCE),
+                    distinct=True,
+                )
+            )
+            .annotate(
+                user_ids=ArrayAgg(
+                    "visualisationuserpermission__user",
+                    filter=Q(visualisationuserpermission__user__isnull=False),
                     distinct=True,
                 )
             )
