@@ -29,6 +29,7 @@ from django.http import JsonResponse
 from pytz import utc
 import redis
 
+from dataworkspace.apps.core.utils import close_all_connections_if_not_in_atomic_block
 from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType, TagType
 from dataworkspace.apps.datasets.models import (
     ReferenceDataset,
@@ -792,7 +793,6 @@ def calculate_ref_dataset_average(ref_dataset):
     return len(total_users) / total_days
 
 
-@celery_app.task()
 def _update_datasets_average_daily_users():
     def _update_datasets(datasets, calculate_value):
         for dataset in datasets:
@@ -812,6 +812,7 @@ def _update_datasets_average_daily_users():
 
 
 @celery_app.task()
+@close_all_connections_if_not_in_atomic_block
 def update_datasets_average_daily_users():
     try:
         with cache.lock(

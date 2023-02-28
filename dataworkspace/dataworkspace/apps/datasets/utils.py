@@ -348,6 +348,7 @@ def store_sql_query(visualisation_link, data_set_id, table_id, sql_query):
 
 
 @celery_app.task()
+@close_all_connections_if_not_in_atomic_block
 def link_superset_visualisations_to_related_datasets():
     api_url = os.environ["SUPERSET_ROOT"] + "/api/v1/%s"
 
@@ -660,6 +661,7 @@ def get_change_item(related_object, change_id):
 
 
 @celery_app.task()
+@close_all_connections_if_not_in_atomic_block
 def update_metadata_with_source_table_id():
     database_name = list(settings.DATABASES_DATA.items())[0][0]
     with connections[database_name].cursor() as cursor:
@@ -771,6 +773,7 @@ def do_store_custom_dataset_query_metadata():
 
 
 @celery_app.task()
+@close_all_connections_if_not_in_atomic_block
 def store_reference_dataset_metadata():
     for reference_dataset in ReferenceDataset.objects.live().filter(published=True):
         logger.info(
@@ -872,6 +875,7 @@ def store_reference_dataset_metadata():
 
 
 @celery_app.task()
+@close_all_connections_if_not_in_atomic_block
 def send_notification_emails():
     """
     Rules are:

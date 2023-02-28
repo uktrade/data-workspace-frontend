@@ -1417,6 +1417,7 @@ def long_running_query_alert():
 
 
 @celery_app.task()
+@close_all_connections_if_not_in_atomic_block
 def push_tool_monitoring_dashboard_datasets():
     geckboard_api_key = os.environ["GECKOBOARD_API_KEY"]
     cluster = os.environ["APPLICATION_SPAWNER_OPTIONS__FARGATE__VISUALISATION__CLUSTER_NAME"]
