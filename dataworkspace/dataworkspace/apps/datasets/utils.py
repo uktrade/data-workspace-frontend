@@ -1019,13 +1019,14 @@ def send_notification_emails():
             except IntegrityError as e:
                 logger.error("Exception when sending notifications: %s", e)
 
-    try:
-        with transaction.atomic():
-            create_notifications()
-    except IntegrityError as e:
-        logger.error("Exception when creating notifications: %s", e)
-    else:
-        send_notifications()
+    with cache.lock("send_notification_emails", blocking_timeout=0, timeout=3600):
+        try:
+            with transaction.atomic():
+                create_notifications()
+        except IntegrityError as e:
+            logger.error("Exception when creating notifications: %s", e)
+        else:
+            send_notifications()
 
 
 def get_dataset_table(obj):
