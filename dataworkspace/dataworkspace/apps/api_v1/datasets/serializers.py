@@ -53,6 +53,7 @@ class CatalogueItemSerializer(serializers.Serializer):
     is_draft = serializers.BooleanField(source="draft")
     dictionary_published = serializers.BooleanField(source="dictionary")
     user_ids = serializers.ListField()
+    classification = serializers.ListField()
 
     def to_representation(self, instance):
         instance = super().to_representation(instance)

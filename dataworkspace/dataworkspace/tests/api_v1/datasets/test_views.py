@@ -477,6 +477,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             if isinstance(dataset, ReferenceDataset)
             else dataset.authorized_email_domains,
             "user_ids": userids,
+            "classification": str(dataset.government_security_classification)
         }
 
     def test_success(self, unauthenticated_client):
