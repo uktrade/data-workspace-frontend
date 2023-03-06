@@ -206,12 +206,12 @@ export class UploadFilesPopup extends React.Component {
                   <strong className="govuk-warning-text__text">
                     <span className="govuk-warning-text__assistive">Warning</span>
                     It is your personal responsibility to protect and handle data appropriately. If you are unsure about
-                    the information security or data protection of this upload, seek advice on
-                    <a className="govuk-link"
+                    the information security or data protection of this upload, seek advice on{' '}
+                     <a className="govuk-link"
                        href="https://workspace.trade.gov.uk/working-at-dit/policies-and-guidance/guidance/information-classification-and-handling/">
                       information classification and data handling
                     </a>
-                     or contact your line manager.
+                    {' '}or contact your line manager.
                   </strong>
                 </div>
               </div>
