@@ -124,7 +124,7 @@ def spawn(
     )
 
 
-@celery_app.task()
+@celery_app.task(autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={"max_retries": 5})
 @close_all_connections_if_not_in_atomic_block
 def stop(name, application_instance_id):
     get_spawner(name).stop(application_instance_id)
