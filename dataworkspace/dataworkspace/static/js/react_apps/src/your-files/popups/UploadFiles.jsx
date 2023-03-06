@@ -211,7 +211,7 @@ export class UploadFilesPopup extends React.Component {
                        href="https://workspace.trade.gov.uk/working-at-dit/policies-and-guidance/guidance/information-classification-and-handling/">
                       information classification and data handling
                     </a>
-                    or contact your line manager.
+                     or contact your line manager.
                   </strong>
                 </div>
               </div>
