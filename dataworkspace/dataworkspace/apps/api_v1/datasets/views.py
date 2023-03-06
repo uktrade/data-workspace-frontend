@@ -332,7 +332,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         "user_access_type",
         "authorized_email_domains",
         "user_ids",
-        "classification",
+        "government_security_classification",
     ]
     queryset = (
         DataSet.objects.live()
@@ -348,12 +348,6 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
             user_ids=ArrayAgg(
                 "datasetuserpermission__user",
                 filter=Q(datasetuserpermission__user__isnull=False),
-                distinct=True,
-            )
-        )
-        .annotate(
-            classification=ArrayAgg(
-                "government_security_classification",
                 distinct=True,
             )
         )
@@ -376,12 +370,6 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
                     distinct=True,
                 )
             )
-            .annotate(
-                classification=ArrayAgg(
-                    "government_security_classification",
-                    distinct=True,
-                )
-            )
             .annotate(user_ids=Value([], output_field=ArrayField(models.IntegerField())))
             .annotate(draft=F("is_draft"))
             .annotate(dictionary=F("published"))
@@ -401,12 +389,6 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
                 user_ids=ArrayAgg(
                     "visualisationuserpermission__user",
                     filter=Q(visualisationuserpermission__user__isnull=False),
-                    distinct=True,
-                )
-            )
-            .annotate(
-                classification=ArrayAgg(
-                    "government_security_classification",
                     distinct=True,
                 )
             )
