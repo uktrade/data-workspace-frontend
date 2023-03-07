@@ -411,6 +411,12 @@ class DatasetDetailView(DetailView):
         )
         return source_text
 
+    def _get_publisher_text(self, model):
+        publisher_text = ",".join(
+            sorted({t.name for t in self.object.tags.filter(type=TagType.PUBLISHER)})
+        )
+        return publisher_text
+
     def _get_user_tools_access(self) -> bool:
         user_has_tools_access = self.request.user.user_permissions.filter(
             codename="start_all_applications",
