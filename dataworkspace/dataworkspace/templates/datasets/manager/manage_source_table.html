@@ -52,7 +52,7 @@
   <div class="govuk-grid-row govuk-grid-column-two-thirds">
   <h1 class="govuk-heading-s">Government Security Classification</h1>
     <p class="govuk-body govuk-body-m">
-      This data is currently classified as {% if not model.government_security_classification %}
+      This data is currently classified as {% if not source.dataset.government_security_classification %}
       <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
       {% else %}{% if source.dataset.get_government_security_classification_display == "OFFICIAL" %}
         <strong
