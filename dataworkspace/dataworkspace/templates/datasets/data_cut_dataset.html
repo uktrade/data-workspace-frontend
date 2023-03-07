@@ -84,7 +84,7 @@
         </a>
       </p>
       {% endif %}
-      {% if request.user == model.information_asset_owner or request.user == model.information_asset_manager %}
+      {% if request.user.is_superuser or request.user == model.information_asset_owner or request.user == model.information_asset_manager %}
           <p class="govuk-body sidebar-section">
             <a href="{% url 'datasets:edit_dataset' model.id %}" class="govuk-link">Manage this dataset</a>
           </p>
