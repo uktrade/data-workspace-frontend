@@ -269,7 +269,7 @@ function initDataGrid(
               }
             } else {
               gridOptions.overlayNoRowsTemplate =
-                this.status === 200
+                this.status === 504
                   ? "<p>The data you requested has taken too long to load. Please try again or contact the <a href='https://data.trade.gov.uk/support-and-feedback/'> Data Workspace team</a> if the problem continues.</p>"
                   : "<p>An unknown error occurred</p>";
               gridOptions.api.showNoRowsOverlay();
