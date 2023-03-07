@@ -24,10 +24,10 @@
       null,
       '{{ object.name }}-custom-export.csv',
       {% flag CHART_BUILDER_BUILD_CHARTS_FLAG %}
-        '{% url 'datasets:create_chart_from_grid' object.dataset.id object.id %}'
+        '{% url 'datasets:create_chart_from_grid' object.dataset.id object.id %}',
       {% else %}
-        null
-      {% endflag %},
+        null,
+      {% endflag %}
       null,
       '{{ object.dataset.id }}',
       '{{ object.dataset.name }}',
@@ -40,16 +40,21 @@
   <div class="govuk-grid-row">
   {% flag SECURITY_CLASSIFICATION_FLAG %}
     <div class="govuk-grid-column-full" style ="margin-bottom: 13px;">
-      {% if object.dataset.get_government_security_classification_display == "OFFICIAL" %}
-        <strong class="govuk-tag govuk-tag--blue">{{ object.dataset.get_government_security_classification_display }}</strong>
+      {% if not model.government_security_classification %}
+        <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
       {% else %}
-        <strong class="govuk-tag govuk-tag--red">{{ object.dataset.get_government_security_classification_display }}
-          {% if object.dataset.sensitivity.all %}
-            {% for sensitivity in object.dataset.sensitivity.all %}
-              {% if not forloop.first  %}and{% endif %}</span> {{ sensitivity }}
-            {% endfor %}
-        {% endif %} </strong>
-      {% endif %}      
+        {% if object.dataset.get_government_security_classification_display == "OFFICIAL" %}
+          <strong
+            class="govuk-tag govuk-tag--blue">{{ object.dataset.get_government_security_classification_display }}</strong>
+        {% else %}
+          <strong class="govuk-tag govuk-tag--red">{{ object.dataset.get_government_security_classification_display }}
+            {% if object.dataset.sensitivity.all %}
+              {% for sensitivity in object.dataset.sensitivity.all %}
+                {% if not forloop.first %}and{% endif %}</span> {{ sensitivity }}
+              {% endfor %}
+            {% endif %} </strong>
+        {% endif %}
+      {% endif %}
     </div>
   {% endflag %}
     <div class="govuk-grid-column-full">

@@ -36,16 +36,20 @@
   <div class="govuk-grid-row">
   {% flag SECURITY_CLASSIFICATION_FLAG %}
     <div class="govuk-grid-column-full" style ="margin-bottom: 13px;">
-      {% if model.get_government_security_classification_display == "OFFICIAL" %}
-        <strong class="govuk-tag govuk-tag--blue">{{ model.get_government_security_classification_display }}</strong>
+      {% if not model.government_security_classification %}
+        <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
       {% else %}
-        <strong class="govuk-tag govuk-tag--red">{{ model.get_government_security_classification_display }}
-          {% if model.sensitivity.all %}
-            {% for sensitivity in model.sensitivity.all %}
-              {% if not forloop.first  %}and{% endif %}</span> {{ sensitivity }}
-            {% endfor %}
-        {% endif %} </strong>
-      {% endif %}      
+        {% if model.get_government_security_classification_display == "OFFICIAL" %}
+          <strong class="govuk-tag govuk-tag--blue">{{ model.get_government_security_classification_display }}</strong>
+        {% else %}
+          <strong class="govuk-tag govuk-tag--red">{{ model.get_government_security_classification_display }}
+            {% if model.sensitivity.all %}
+              {% for sensitivity in model.sensitivity.all %}
+                {% if not forloop.first %}and{% endif %}</span> {{ sensitivity }}
+              {% endfor %}
+            {% endif %} </strong>
+        {% endif %}
+      {% endif %}
     </div>
   {% endflag %}
     <div class="govuk-grid-column-two-thirds">
