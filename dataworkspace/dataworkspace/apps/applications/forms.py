@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-
 from django.contrib.postgres.forms import SplitArrayField, SplitArrayWidget
 from django.core.exceptions import ValidationError
 from django.forms import (
@@ -106,6 +105,7 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
             "invalid_choice": "The information asset owner must have previously visited Data Workspace",
         },
     )
+
     licence = GOVUKDesignSystemCharField(
         label="Licence",
         required=False,
@@ -160,6 +160,8 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
             "secondary_enquiries_contact",
             "information_asset_manager",
             "information_asset_owner",
+            "government_security_classification",
+            "sensitivity",
             "licence",
             "retention_policy",
             "personal_data",

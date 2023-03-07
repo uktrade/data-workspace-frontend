@@ -1,5 +1,5 @@
 {% extends '_visualisation.html' %}
-{% load core_filters %}
+{% load core_filters datasets_tags waffle_tags %}
 
 {% block head %}
 {{ block.super }}
@@ -53,6 +53,77 @@
   {{ form.information_asset_manager }}
   {{ form.information_asset_owner }}
   {{ form.licence }}
+  {% flag SECURITY_CLASSIFICATION_FLAG %}
+    <div
+      class="govuk-form-group {% if form.government_security_classification.errors %}govuk-form-group--error{% endif %}">
+      <label class="govuk-label  govuk-!-font-weight-bold" for="id_government_security_classification">
+        {{ form.government_security_classification.label }} *
+      </label>
+      <span class="govuk-hint">Choose the appropriate classification for this item. <a
+        href="https://workspace.trade.gov.uk/working-at-dit/policies-and-guidance/guidance/information-classification-and-handling/">About Security Classifications</a> </span>
+      {% if form.government_security_classification.errors %}
+        <span id="id_government_security_classification-error" class="govuk-error-message">
+                            <span class="govuk-visually-hidden">Error: </span> Please choose the appropriate Government Security Classification
+                          </span>
+      {% endif %}
+      <div class="govuk-radios">
+        {% for value, text in form.government_security_classification.field.choices|slice:"1:" %}
+          <div class="govuk-radios__item">
+            <input class="govuk-radios__input" id="{{ value }}_id"
+                   name="{{ form.government_security_classification.html_name }}" type="radio" value="{{ value }}"
+                   {% if value == form.government_security_classification.value %}checked{% endif %}
+            >
+            <label class="govuk-label govuk-radios__label"
+                   for="{{ value }}_id">{{ text }}
+            </label>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="govuk-inset-text" id="sensitivitySection"
+         style="display: {% if form.government_security_classification.value == 2 %}block{% else %}none{% endif %}">
+      <div
+        class="govuk-form-group {% if form.sensitivity.errors %}govuk-form-group--error{% endif %}">
+        {% if form.sensitivity.errors %}
+          {% for error in form.sensitivity.errors %}
+            <span class="govuk-error-message">
+                          <span class="govuk-visually-hidden">Error:</span>
+                          {{ error }}
+                        </span>
+          {% endfor %}
+        {% endif %}
+        <label class="govuk-label  govuk-!-font-weight-bold" for="{{ form.sensitivity.id_for_label }}">
+          {{ form.sensitivity.label }}
+        </label>
+        <span class="govuk-hint">If the data is of a particularly sensitive nature, please choose the relevant options below so that it can be protected and handled the right way.</span>
+        <div class="govuk-checkboxes--small">
+          {% for value, text in form.sensitivity.field.choices %}
+            <div class="govuk-checkboxes__item">
+              <input
+                {% if value in form.sensitivity.value %}checked{% endif %}
+                class="govuk-checkboxes__input"
+                id="id_{{ value }}"
+                name="{{ form.sensitivity.html_name }}"
+                type="checkbox"
+                value="{{ value }}"
+              >
+              <label class="govuk-label govuk-checkboxes__label"
+                     for="id_{{ value }}">
+                {{ text|sensitivity_with_descriptor }}
+              </label>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="govuk-warning-text">
+      <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+      <strong class="govuk-warning-text__text">
+        <span class="govuk-warning-text__assistive">Warning</span>
+        Data Workspace is not accredited for SECRET or TOP SECRET information.
+      </strong>
+    </div>
+  {% endflag %}
   {{ form.retention_policy }}
   {{ form.personal_data }}
   {{ form.restrictions_on_usage }}
@@ -85,5 +156,12 @@
     if (user_access_type.checked === false) {
         eligibility_criteria.classList.add('govuk-visually-hidden');
     }
+
+    const sensitivity = document.getElementById('sensitivitySection')
+    document.getElementsByName("government_security_classification").forEach(item => {
+      item.addEventListener("change", event => {
+        (event.target.value === "2" ? sensitivity.style.display = "block" : sensitivity.style.display = "none")
+      })
+    })
   </script>
 {% endblock %}
