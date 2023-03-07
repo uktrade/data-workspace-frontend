@@ -162,10 +162,11 @@ mako==1.2.3
     # via alembic
 markdown==3.2.2
     # via apache-superset
-markupsafe==2.0.0
+markupsafe==2.1.2
     # via
     #   jinja2
     #   mako
+    #   werkzeug
     #   wtforms
 marshmallow==3.12.1
     # via
@@ -303,7 +304,7 @@ wcwidth==0.2.5
     # via prompt-toolkit
 webencodings==0.5.1
     # via bleach
-werkzeug==2.0.3
+werkzeug==2.2.3
     # via
     #   flask
     #   flask-jwt-extended

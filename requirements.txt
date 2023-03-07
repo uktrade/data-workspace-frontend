@@ -173,6 +173,8 @@ kombu==5.2.3
     # via celery
 linear-tsv==1.1.0
     # via tabulator
+markupsafe==2.1.2
+    # via werkzeug
 mohawk==1.1.0
     # via -r requirements.in
 multidict==4.7.6
@@ -306,7 +308,7 @@ wcwidth==0.2.5
     # via prompt-toolkit
 webencodings==0.5.1
     # via bleach
-werkzeug==1.0.1
+werkzeug==2.2.3
     # via -r requirements.in
 xlrd==2.0.1
     # via tabulator
