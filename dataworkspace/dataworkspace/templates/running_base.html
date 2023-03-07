@@ -126,16 +126,22 @@
           {% flag SECURITY_CLASSIFICATION_FLAG %}
           <div class="govuk-grid-column-one-half" style="text-align: right;">
             <div class="govuk-breadcrumbs" style="margin-top: 13px;">
-              {% if catalogue_item.get_government_security_classification_display == "OFFICIAL" %}
-              <strong class="govuk-tag govuk-tag--blue">{{ catalogue_item.get_government_security_classification_display }}</strong>
+              {% if not model.government_security_classification %}
+                <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
+              {% else %}
+                {% if catalogue_item.get_government_security_classification_display == "OFFICIAL" %}
+                  <strong
+                    class="govuk-tag govuk-tag--blue">{{ catalogue_item.get_government_security_classification_display }}</strong>
                 {% else %}
-                  <strong class="govuk-tag govuk-tag--red">{{ catalogue_item.get_government_security_classification_display }}
+                  <strong
+                    class="govuk-tag govuk-tag--red">{{ catalogue_item.get_government_security_classification_display }}
                     {% if catalogue_item.sensitivity.all %}
                       {% for sensitivity in catalogue_item.sensitivity.all %}
-                        {% if not forloop.first  %}and{% endif %}</span> {{ sensitivity }}
+                        {% if not forloop.first %}and{% endif %}</span> {{ sensitivity }}
                       {% endfor %}
-                  {% endif %} </strong>
-              {% endif %}   
+                    {% endif %} </strong>
+                {% endif %}
+              {% endif %}
             </div>
           </div>
         {% endflag %}

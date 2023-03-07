@@ -111,16 +111,22 @@
     <div class="govuk-summary-list__row">
       <dt class="govuk-summary-list__key">Government Security Classification</dt>
       <dd class="govuk-summary-list__value">
-        {% if model.get_government_security_classification_display == "OFFICIAL" %}
-          <strong class="govuk-tag govuk-tag--blue">{{ model.get_government_security_classification_display }}</strong>
+        {% if not model.government_security_classification %}
+          <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
         {% else %}
-          {% if model.sensitivity.all %}
-            {% for sensitivity in model.sensitivity.all %}
-              <strong
-                class="govuk-tag govuk-tag--red govuk-!-margin-bottom-1">{{ model.get_government_security_classification_display }} {{ sensitivity }}</strong>
-            {% endfor %}
+          {% if model.get_government_security_classification_display == "OFFICIAL" %}
+            <strong
+              class="govuk-tag govuk-tag--blue">{{ model.get_government_security_classification_display }}</strong>
           {% else %}
-            <strong class="govuk-tag govuk-tag--red">{{ model.get_government_security_classification_display }}</strong>
+            {% if model.sensitivity.all %}
+              {% for sensitivity in model.sensitivity.all %}
+                <strong
+                  class="govuk-tag govuk-tag--red govuk-!-margin-bottom-1">{{ model.get_government_security_classification_display }} {{ sensitivity }}</strong>
+              {% endfor %}
+            {% else %}
+              <strong
+                class="govuk-tag govuk-tag--red">{{ model.get_government_security_classification_display }}</strong>
+            {% endif %}
           {% endif %}
         {% endif %}
       <br>
