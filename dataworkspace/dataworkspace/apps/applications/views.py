@@ -3,13 +3,13 @@ import itertools
 import json
 import random
 import re
-import waffle
 from contextlib import closing
 from io import StringIO
 from urllib.parse import urlsplit, urlencode
 
 import boto3
 import botocore
+import waffle
 from botocore.config import Config
 from csp.decorators import csp_exempt, csp_update
 from django.conf import settings
