@@ -3,6 +3,7 @@ import itertools
 import json
 import random
 import re
+import waffle
 from contextlib import closing
 from io import StringIO
 from urllib.parse import urlsplit, urlencode
@@ -925,6 +926,9 @@ def visualisation_catalogue_item_html_GET(request, gitlab_project):
     # We don't want client-side validation on this field, so we remove it - but only for the GET request.
     form.fields["short_description"].required = False
 
+    if waffle.flag_is_active(request, settings.SECURITY_CLASSIFICATION_FLAG):
+        form.fields["government_security_classification"].required = True
+
     return _render_visualisation(
         request,
         "visualisation_catalogue_item.html",
@@ -940,6 +944,8 @@ def visualisation_catalogue_item_html_POST(request, gitlab_project):
     catalogue_item = _get_visualisation_catalogue_item_for_gitlab_project(gitlab_project)
     user_access_type = catalogue_item.user_access_type
     form = VisualisationsUICatalogueItemForm(request.POST, instance=catalogue_item)
+    if waffle.flag_is_active(request, settings.SECURITY_CLASSIFICATION_FLAG):
+        form.fields["government_security_classification"].required = True
     if form.is_valid():
         with transaction.atomic():
             form.save()
