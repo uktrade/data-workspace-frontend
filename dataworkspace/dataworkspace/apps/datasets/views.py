@@ -456,6 +456,7 @@ class DatasetDetailView(DetailView):
             {
                 "summarised_update_frequency": summarised_update_frequency,
                 "source_text": self._get_source_text(self.object),
+                "publisher_text": self._get_publisher_text(self.object),
                 "has_access": self.object.user_has_access(self.request.user),
                 "has_tools_access": self._get_user_tools_access(),
                 "is_bookmarked": self.object.user_has_bookmarked(self.request.user),
