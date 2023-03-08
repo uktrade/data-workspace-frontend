@@ -403,23 +403,16 @@ class ReferenceDataFieldInline(
     min_num = 1
     extra = 1
     exclude = ["created_date", "updated_date", "created_by", "updated_by"]
-    fieldsets = [
-        (
-            None,
-            {
-                "fields": [
-                    "name",
-                    "data_type",
-                    "column_name",
-                    "relationship_name",
-                    "linked_reference_dataset_field",
-                    "description",
-                    "is_identifier",
-                    "is_display_name",
-                    "sort_order",
-                ]
-            },
-        )
+    fields = [
+        "name",
+        "data_type",
+        "column_name",
+        "relationship_name",
+        "linked_reference_dataset_field",
+        "description",
+        "is_identifier",
+        "is_display_name",
+        "sort_order",
     ]
     manage_unpublished_permission_codename = "datasets.manage_unpublished_reference_datasets"
 
@@ -430,7 +423,7 @@ class ReferenceDataFieldInline(
             if parent_id is not None:
                 kwargs["queryset"] = ReferenceDatasetField.objects.exclude(
                     reference_dataset__id=parent_id
-                )
+                ).select_related("reference_dataset")
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
