@@ -1,25 +1,25 @@
 {
   "status": "done",
   "assets": {
-    "builder.4091afac457747d84534.js": {
-      "name": "builder.4091afac457747d84534.js",
-      "path": "builder.4091afac457747d84534.js",
-      "publicPath": "/__django_static/js/bundles/builder.4091afac457747d84534.js"
+    "builder.58dd439c3a0d51aa7543.js.LICENSE.txt": {
+      "name": "builder.58dd439c3a0d51aa7543.js.LICENSE.txt",
+      "path": "builder.58dd439c3a0d51aa7543.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/builder.58dd439c3a0d51aa7543.js.LICENSE.txt"
     },
-    "builder.4091afac457747d84534.js.LICENSE.txt": {
-      "name": "builder.4091afac457747d84534.js.LICENSE.txt",
-      "path": "builder.4091afac457747d84534.js.LICENSE.txt",
-      "publicPath": "/__django_static/js/bundles/builder.4091afac457747d84534.js.LICENSE.txt"
+    "viewer.08734df7339e28c342cc.js.LICENSE.txt": {
+      "name": "viewer.08734df7339e28c342cc.js.LICENSE.txt",
+      "path": "viewer.08734df7339e28c342cc.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/viewer.08734df7339e28c342cc.js.LICENSE.txt"
     },
-    "viewer.018de9542808691c388b.js": {
-      "name": "viewer.018de9542808691c388b.js",
-      "path": "viewer.018de9542808691c388b.js",
-      "publicPath": "/__django_static/js/bundles/viewer.018de9542808691c388b.js"
+    "yourfiles.2e3320d0c45a8054b2c0.js.LICENSE.txt": {
+      "name": "yourfiles.2e3320d0c45a8054b2c0.js.LICENSE.txt",
+      "path": "yourfiles.2e3320d0c45a8054b2c0.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/yourfiles.2e3320d0c45a8054b2c0.js.LICENSE.txt"
     },
-    "viewer.018de9542808691c388b.js.LICENSE.txt": {
-      "name": "viewer.018de9542808691c388b.js.LICENSE.txt",
-      "path": "viewer.018de9542808691c388b.js.LICENSE.txt",
-      "publicPath": "/__django_static/js/bundles/viewer.018de9542808691c388b.js.LICENSE.txt"
+    "builder.58dd439c3a0d51aa7543.js": {
+      "name": "builder.58dd439c3a0d51aa7543.js",
+      "path": "builder.58dd439c3a0d51aa7543.js",
+      "publicPath": "/__django_static/js/bundles/builder.58dd439c3a0d51aa7543.js"
     },
     "yourfiles.bfc1dceee24b64203abb.js": {
       "name": "yourfiles.bfc1dceee24b64203abb.js",
@@ -34,10 +34,10 @@
   },
   "chunks": {
     "builder": [
-      "builder.4091afac457747d84534.js"
+      "builder.58dd439c3a0d51aa7543.js"
     ],
     "viewer": [
-      "viewer.018de9542808691c388b.js"
+      "viewer.08734df7339e28c342cc.js"
     ],
     "yourfiles": [
       "yourfiles.bfc1dceee24b64203abb.js"
