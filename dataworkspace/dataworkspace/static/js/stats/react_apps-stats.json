@@ -21,15 +21,15 @@
       "path": "viewer.018de9542808691c388b.js.LICENSE.txt",
       "publicPath": "/__django_static/js/bundles/viewer.018de9542808691c388b.js.LICENSE.txt"
     },
-    "yourfiles.410f3fc9658e99fa0b99.js": {
-      "name": "yourfiles.410f3fc9658e99fa0b99.js",
-      "path": "yourfiles.410f3fc9658e99fa0b99.js",
-      "publicPath": "/__django_static/js/bundles/yourfiles.410f3fc9658e99fa0b99.js"
+    "yourfiles.bfc1dceee24b64203abb.js": {
+      "name": "yourfiles.bfc1dceee24b64203abb.js",
+      "path": "yourfiles.bfc1dceee24b64203abb.js",
+      "publicPath": "/__django_static/js/bundles/yourfiles.bfc1dceee24b64203abb.js"
     },
-    "yourfiles.410f3fc9658e99fa0b99.js.LICENSE.txt": {
-      "name": "yourfiles.410f3fc9658e99fa0b99.js.LICENSE.txt",
-      "path": "yourfiles.410f3fc9658e99fa0b99.js.LICENSE.txt",
-      "publicPath": "/__django_static/js/bundles/yourfiles.410f3fc9658e99fa0b99.js.LICENSE.txt"
+    "yourfiles.bfc1dceee24b64203abb.js.LICENSE.txt": {
+      "name": "yourfiles.bfc1dceee24b64203abb.js.LICENSE.txt",
+      "path": "yourfiles.bfc1dceee24b64203abb.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/yourfiles.bfc1dceee24b64203abb.js.LICENSE.txt"
     }
   },
   "chunks": {
@@ -40,7 +40,7 @@
       "viewer.018de9542808691c388b.js"
     ],
     "yourfiles": [
-      "yourfiles.410f3fc9658e99fa0b99.js"
+      "yourfiles.bfc1dceee24b64203abb.js"
     ]
   },
   "publicPath": "/__django_static/js/bundles/"

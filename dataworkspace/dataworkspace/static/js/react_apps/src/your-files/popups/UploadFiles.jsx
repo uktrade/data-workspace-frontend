@@ -205,9 +205,10 @@ export class UploadFilesPopup extends React.Component {
                   <span className="govuk-warning-text__icon" aria-hidden="true">!</span>
                   <strong className="govuk-warning-text__text">
                     <span className="govuk-warning-text__assistive">Warning</span>
-                    It is your personal responsibility to protect and handle data appropriately. If you are unsure about
+                    It is your personal responsibility to protect and handle data appropriately. Data Workspace is not
+                    accredited for SECRET or TOP SECRET information. If you are unsure about
                     the information security or data protection of this upload, seek advice on{' '}
-                     <a className="govuk-link"
+                    <a className="govuk-link"
                        href="https://workspace.trade.gov.uk/working-at-dit/policies-and-guidance/guidance/information-classification-and-handling/">
                       information classification and data handling
                     </a>
