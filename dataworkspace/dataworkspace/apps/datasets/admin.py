@@ -437,7 +437,11 @@ class ReferenceDataFieldInline(
 @admin.register(ReferenceDataset)
 class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
     form = ReferenceDatasetForm
-    list_select_related = ['enquiries_contact', 'information_asset_owner', 'information_asset_manager']
+    list_select_related = [
+        "enquiries_contact",
+        "information_asset_owner",
+        "information_asset_manager",
+    ]
     list_per_page = 25
     change_form_template = "admin/reference_dataset_changeform.html"
     prepopulated_fields = {"slug": ("name",)}
