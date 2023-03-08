@@ -11,25 +11,25 @@
       "path": "viewer.08734df7339e28c342cc.js.LICENSE.txt",
       "publicPath": "/__django_static/js/bundles/viewer.08734df7339e28c342cc.js.LICENSE.txt"
     },
-    "yourfiles.2e3320d0c45a8054b2c0.js.LICENSE.txt": {
-      "name": "yourfiles.2e3320d0c45a8054b2c0.js.LICENSE.txt",
-      "path": "yourfiles.2e3320d0c45a8054b2c0.js.LICENSE.txt",
-      "publicPath": "/__django_static/js/bundles/yourfiles.2e3320d0c45a8054b2c0.js.LICENSE.txt"
+    "yourfiles.c93bfed2dd8a9c6f4718.js.LICENSE.txt": {
+      "name": "yourfiles.c93bfed2dd8a9c6f4718.js.LICENSE.txt",
+      "path": "yourfiles.c93bfed2dd8a9c6f4718.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/yourfiles.c93bfed2dd8a9c6f4718.js.LICENSE.txt"
     },
     "builder.58dd439c3a0d51aa7543.js": {
       "name": "builder.58dd439c3a0d51aa7543.js",
       "path": "builder.58dd439c3a0d51aa7543.js",
       "publicPath": "/__django_static/js/bundles/builder.58dd439c3a0d51aa7543.js"
     },
-    "yourfiles.bfc1dceee24b64203abb.js": {
-      "name": "yourfiles.bfc1dceee24b64203abb.js",
-      "path": "yourfiles.bfc1dceee24b64203abb.js",
-      "publicPath": "/__django_static/js/bundles/yourfiles.bfc1dceee24b64203abb.js"
+    "viewer.08734df7339e28c342cc.js": {
+      "name": "viewer.08734df7339e28c342cc.js",
+      "path": "viewer.08734df7339e28c342cc.js",
+      "publicPath": "/__django_static/js/bundles/viewer.08734df7339e28c342cc.js"
     },
-    "yourfiles.bfc1dceee24b64203abb.js.LICENSE.txt": {
-      "name": "yourfiles.bfc1dceee24b64203abb.js.LICENSE.txt",
-      "path": "yourfiles.bfc1dceee24b64203abb.js.LICENSE.txt",
-      "publicPath": "/__django_static/js/bundles/yourfiles.bfc1dceee24b64203abb.js.LICENSE.txt"
+    "yourfiles.c93bfed2dd8a9c6f4718.js": {
+      "name": "yourfiles.c93bfed2dd8a9c6f4718.js",
+      "path": "yourfiles.c93bfed2dd8a9c6f4718.js",
+      "publicPath": "/__django_static/js/bundles/yourfiles.c93bfed2dd8a9c6f4718.js"
     }
   },
   "chunks": {
@@ -40,7 +40,7 @@
       "viewer.08734df7339e28c342cc.js"
     ],
     "yourfiles": [
-      "yourfiles.bfc1dceee24b64203abb.js"
+      "yourfiles.c93bfed2dd8a9c6f4718.js"
     ]
   },
   "publicPath": "/__django_static/js/bundles/"
