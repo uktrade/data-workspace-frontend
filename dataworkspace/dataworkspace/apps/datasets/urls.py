@@ -322,4 +322,9 @@ urlpatterns = [
         login_required(suggested_searches),
         name="find_suggested_searches",
     ),
+    path(
+        "log_data_preview_timeout/<uuid:dataset_uuid>/<str:source_id>/",
+        login_required(views.log_data_preview_timeout),
+        name="log_data_preview_timeout",
+    ),
 ]

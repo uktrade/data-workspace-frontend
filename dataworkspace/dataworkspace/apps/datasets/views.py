@@ -1992,3 +1992,21 @@ class DatasetChartsView(WaffleFlagMixin, View):
             "datasets/charts/charts.html",
             context={"charts": dataset.related_charts(), "dataset": dataset},
         )
+
+
+@require_POST
+def log_data_preview_timeout(request, dataset_uuid, source_id):
+    dataset = find_dataset(dataset_uuid, request.user)
+    source = dataset.get_related_source(source_id)
+    if source is None:
+        raise Http404
+    received_json_data = json.loads(request.body)
+    return log_event(
+        request.user,
+        EventLog.TYPE_DATA_PREVIEW_TIMEOUT,
+        source,
+        extra={
+            **{"table_name": source.name, "table_id": source.id, "dataset": dataset.name},
+            **received_json_data,
+        },
+    )
