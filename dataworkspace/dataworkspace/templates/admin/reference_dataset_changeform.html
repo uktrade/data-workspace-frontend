@@ -50,23 +50,22 @@
                     </tr>
                   {% endfor %}
                   <tr class="add-row">
-                    <td colspan="{{ instance.fields.count|add:1 }}">
+                    <td colspan="{{ fields|length|add:1 }}">
                       <a href="{% url 'dw-admin:reference-dataset-record-add' reference_dataset_id=instance.id %}">
                         Add a record
                       </a>
                     </td>
                   </tr>
                   <tr class="add-row">
-                    <td colspan="{{ instance.fields.count|add:1 }}">
+                    <td colspan="{{ fields|length|add:1 }}">
                       <a href="{% url 'dw-admin:reference-dataset-record-upload' reference_dataset_id=instance.id %}">
                         Upload a CSV
                       </a>
                     </td>
                   </tr>
                   <tr class="deletelink-box">
-                    <td class="deletelink-box" colspan="{{ instance.fields.count|add:1 }}">
-                      <a class="deletelink-box"
-                         href="{% url 'dw-admin:reference-dataset-record-delete-all' reference_dataset_id=instance.id %}">
+                    <td class="deletelink-box" colspan="{{ fields|length|add:1 }}">
+                      <a class="deletelink-box" href="{% url 'dw-admin:reference-dataset-record-delete-all' reference_dataset_id=instance.id %}">
                         Delete all
                       </a>
                     </td>
