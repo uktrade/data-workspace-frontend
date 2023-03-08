@@ -411,6 +411,12 @@ class DatasetDetailView(DetailView):
         )
         return source_text
 
+    def _get_publisher_text(self, model):
+        publisher_text = ",".join(
+            sorted({t.name for t in self.object.tags.filter(type=TagType.PUBLISHER)})
+        )
+        return publisher_text
+
     def _get_user_tools_access(self) -> bool:
         user_has_tools_access = self.request.user.user_permissions.filter(
             codename="start_all_applications",
@@ -450,6 +456,7 @@ class DatasetDetailView(DetailView):
             {
                 "summarised_update_frequency": summarised_update_frequency,
                 "source_text": self._get_source_text(self.object),
+                "publisher_text": self._get_publisher_text(self.object),
                 "has_access": self.object.user_has_access(self.request.user),
                 "has_tools_access": self._get_user_tools_access(),
                 "is_bookmarked": self.object.user_has_bookmarked(self.request.user),
@@ -528,6 +535,7 @@ class DatasetDetailView(DetailView):
                 ),
                 "summarised_update_frequency": summarised_update_frequency,
                 "source_text": self._get_source_text(self.object),
+                "publisher_text": self._get_publisher_text(self.object),
                 "subscription": {
                     "current_user_is_subscribed": subscription.exists()
                     and subscription.first().is_active(),
@@ -580,6 +588,7 @@ class DatasetDetailView(DetailView):
                 "visualisation_links": self.object.get_visualisation_links(self.request),
                 "summarised_update_frequency": "N/A",
                 "source_text": self._get_source_text(self.object),
+                "publisher_text": self._get_publisher_text(self.object),
             }
         )
         return ctx
