@@ -67,7 +67,7 @@ cron-descriptor==1.2.24
     # via apache-superset
 croniter==1.0.13
     # via apache-superset
-cryptography==3.3.2
+cryptography==39.0.2
     # via apache-superset
 deprecation==2.1.0
     # via apache-superset
@@ -162,10 +162,11 @@ mako==1.2.3
     # via alembic
 markdown==3.2.2
     # via apache-superset
-markupsafe==2.0.0
+markupsafe==2.1.2
     # via
     #   jinja2
     #   mako
+    #   werkzeug
     #   wtforms
 marshmallow==3.12.1
     # via
@@ -259,7 +260,6 @@ six==1.14.0
     # via
     #   bleach
     #   click-repl
-    #   cryptography
     #   flask-talisman
     #   isodate
     #   jsonschema
@@ -303,7 +303,7 @@ wcwidth==0.2.5
     # via prompt-toolkit
 webencodings==0.5.1
     # via bleach
-werkzeug==2.0.3
+werkzeug==2.2.3
     # via
     #   flask
     #   flask-jwt-extended
