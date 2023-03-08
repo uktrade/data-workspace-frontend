@@ -1,15 +1,16 @@
 {% extends 'admin/change_form.html' %}
-{% load static core_tags %}
-{% block after_related_objects %}
-  {% with adminform.form.instance as instance %}
-    {% with instance.fields.all as fields %}
-      {% if instance.id %}
-        <div class="inline-group" data-inline-type="tabular">
-          <div class="tabular inline-related">
-            <fieldset class="module ">
-              <h2>Reference dataset records</h2>
-              <table>
-                <thead>
+{% load static core_tags cache %}
+{% cache 3600 'reference_dataset_cache' %}
+  {% block after_related_objects %}
+    {% with adminform.form.instance as instance %}
+      {% with instance.fields.all as fields %}
+        {% if instance.id %}
+          <div class="inline-group" data-inline-type="tabular">
+            <div class="tabular inline-related">
+              <fieldset class="module ">
+                <h2>Reference dataset records</h2>
+                <table>
+                  <thead>
                   <tr>
                     {% for field in fields %}
                       <th class="column-{{ field.name }}">
@@ -18,8 +19,8 @@
                     {% endfor %}
                     <th>Actions</th>
                   </tr>
-                </thead>
-                <tbody>
+                  </thead>
+                  <tbody>
                   {% for record in instance.get_records %}
                     <tr class="form-row">
                       {% for field in fields %}
@@ -32,15 +33,17 @@
                             {% endwith %}
                           {% endwith %}
                         {% else %}
-                            {% with record|get_attr:field.column_name as value %}
-                              <td{% if value is None %} style="color: #bfc1c3"{% endif %}>
-                                {{ value|default_if_none:"Not set" }}
-                              </td>
-                            {% endwith %}
+                          {% with record|get_attr:field.column_name as value %}
+                            <td{% if value is None %} style="color: #bfc1c3"{% endif %}>
+                              {{ value|default_if_none:"Not set" }}
+                            </td>
+                          {% endwith %}
                         {% endif %}
                       {% endfor %}
                       <td class="edit">
-                        <a href="{% url 'dw-admin:reference-dataset-record-edit' reference_dataset_id=instance.id record_id=record.id %}" class="button">
+                        <a
+                          href="{% url 'dw-admin:reference-dataset-record-edit' reference_dataset_id=instance.id record_id=record.id %}"
+                          class="button">
                           Edit Record
                         </a>
                       </td>
@@ -62,17 +65,19 @@
                   </tr>
                   <tr class="deletelink-box">
                     <td class="deletelink-box" colspan="{{ instance.fields.count|add:1 }}">
-                      <a class="deletelink-box" href="{% url 'dw-admin:reference-dataset-record-delete-all' reference_dataset_id=instance.id %}">
+                      <a class="deletelink-box"
+                         href="{% url 'dw-admin:reference-dataset-record-delete-all' reference_dataset_id=instance.id %}">
                         Delete all
                       </a>
                     </td>
                   </tr>
-                </tbody>
-              </table>
-            </fieldset>
+                  </tbody>
+                </table>
+              </fieldset>
+            </div>
           </div>
-        </div>
-      {% endif %}
+        {% endif %}
+      {% endwith %}
     {% endwith %}
-  {% endwith %}
-{% endblock after_related_objects %}
+  {% endblock after_related_objects %}
+{% endcache %}
