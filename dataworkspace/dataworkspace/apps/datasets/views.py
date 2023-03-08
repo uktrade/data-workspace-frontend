@@ -535,6 +535,7 @@ class DatasetDetailView(DetailView):
                 ),
                 "summarised_update_frequency": summarised_update_frequency,
                 "source_text": self._get_source_text(self.object),
+                "publisher_text": self._get_publisher_text(self.object),
                 "subscription": {
                     "current_user_is_subscribed": subscription.exists()
                     and subscription.first().is_active(),
@@ -587,6 +588,7 @@ class DatasetDetailView(DetailView):
                 "visualisation_links": self.object.get_visualisation_links(self.request),
                 "summarised_update_frequency": "N/A",
                 "source_text": self._get_source_text(self.object),
+                "publisher_text": self._get_publisher_text(self.object),
             }
         )
         return ctx
