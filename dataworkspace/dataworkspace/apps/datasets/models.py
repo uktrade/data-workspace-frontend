@@ -1336,7 +1336,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             self.minor_version = self.published_minor_version
 
     def send_post_data_url(self):
-        return reverse("datasets:reference_dataset_download", args=(self.uuid, "csv"))
+        return reverse("datasets:reference_dataset_download", args=(self.uuid,))
 
     @transaction.atomic
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):

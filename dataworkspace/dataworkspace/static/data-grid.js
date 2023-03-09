@@ -24,9 +24,22 @@ function logDownloadEvent(
   itemName,
   itemType,
   dataFormat,
-  rowsDownLoaded
+  rowsDownLoaded,
+  referenceDataEndpoint,
 ) {
   var columnApi = gridOptions.columnApi;
+
+  // Register download in event log
+  if (referenceDataEndpoint) {
+    let eventLogPOST = new XMLHttpRequest();
+    eventLogPOST.open("POST", referenceDataEndpoint, true);
+    eventLogPOST.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    eventLogPOST.setRequestHeader("X-CSRFToken", getCsrfToken());
+    let eventLogData = JSON.stringify({"format": dataFormat})
+    eventLogPOST.send(eventLogData);
+  }
+
+  // Google Analytics event
   if (window.dataLayer == null) return;
   window.dataLayer.push({
     event: "data_download",
@@ -308,7 +321,8 @@ function initDataGrid(
         "CSV",
         dataEndpoint == null
           ? gridOptions.api.getDisplayedRowCount()
-          : totalDownloadableRows
+          : totalDownloadableRows,
+        referenceDataEndpoint,
       );
       document.activeElement.blur();
       return;
@@ -339,20 +353,13 @@ function initDataGrid(
           "JSON",
           dataEndpoint == null
             ? gridOptions.api.getDisplayedRowCount()
-            : totalDownloadableRows
+            : totalDownloadableRows,
+          referenceDataEndpoint
         );
         document.activeElement.blur();
         return;
       });
     }
-  }
-
-  if (referenceDataEndpoint) {
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", referenceDataEndpoint, true);
-    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-    xhr.setRequestHeader("X-CSRFToken", getCsrfToken());
-    xhr.send();
   }
 
   var createChartButton = document.querySelector("#data-grid-create-chart");

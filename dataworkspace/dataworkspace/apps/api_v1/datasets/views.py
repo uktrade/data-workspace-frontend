@@ -338,6 +338,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         "user_ids",
         "security_classification_display",
         "sensitivity_name",
+        "visualisation_type",
     ]
     queryset = (
         DataSet.objects.live()
@@ -368,6 +369,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
             )
         )
         .annotate(sensitivity_name=ArrayAgg("sensitivity__name", distinct=True))
+        .annotate(visualisation_type=_static_char(None))
         .exclude(type=DataSetType.REFERENCE)
         .values(*fields)
         .union(
@@ -398,6 +400,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
                 )
             )
             .annotate(sensitivity_name=ArrayAgg("sensitivity__name", distinct=True))
+            .annotate(visualisation_type=_static_char(None))
             .values(*_replace(fields, "id", "uuid"))
         )
         .union(
@@ -429,7 +432,19 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
                 )
             )
             .annotate(sensitivity_name=ArrayAgg("sensitivity__name", distinct=True))
-            .values(*fields)
+            .annotate(
+                visualisation_type=models.Case(
+                    models.When(
+                        visualisationlink__visualisation_type="QUICKSIGHT",
+                        then="visualisationlink__identifier",
+                    ),
+                    default=None,
+                    output_field=models.CharField(),
+                ),
+            )
+            .values(
+                *fields,
+            )
         )
     ).order_by("created_date")
 
