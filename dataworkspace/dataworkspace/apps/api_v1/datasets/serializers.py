@@ -53,6 +53,7 @@ class CatalogueItemSerializer(serializers.Serializer):
     is_draft = serializers.BooleanField(source="draft")
     dictionary_published = serializers.BooleanField(source="dictionary")
     user_ids = serializers.ListField()
+    visualisation_type = serializers.CharField(allow_null=True)
 
     def to_representation(self, instance):
         instance = super().to_representation(instance)
@@ -68,6 +69,7 @@ class CatalogueItemSerializer(serializers.Serializer):
         instance["retention_policy"] = instance["retention_policy"] or None
         instance["user_access_type"] = instance["user_access_type"]
         instance["authorized_email_domains"] = instance["authorized_email_domains"]
+        instance["visualisation_type"] = instance["visualisation_type"] or None
         return instance
 
     def get_source_tables(self, instance):
