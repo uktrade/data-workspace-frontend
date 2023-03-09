@@ -210,6 +210,7 @@ function initDataGrid(
           qs["sortDir"] = params.sortModel[0].sort;
         }
         var xhr = new XMLHttpRequest();
+        var startTime = Date.now();
         xhr.open("POST", dataEndpoint, true);
         xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         xhr.setRequestHeader("X-CSRFToken", getCsrfToken());
@@ -280,7 +281,7 @@ function initDataGrid(
               eventLogPOST.open("POST", eventLogEndpoint, true);
               eventLogPOST.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
               eventLogPOST.setRequestHeader("X-CSRFToken", getCsrfToken());
-              let eventLogData = JSON.stringify({"status_code": this.status})
+              let eventLogData = JSON.stringify({"status_code": this.status, "query_time_milliseconds": Date.now() - startTime})
               eventLogPOST.send(eventLogData);
 
               // hack to hide infinite spinner
