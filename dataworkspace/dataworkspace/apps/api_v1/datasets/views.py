@@ -332,7 +332,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         "user_access_type",
         "authorized_email_domains",
         "user_ids",
-        "government_security_classification",
+        "security_classification",
         "sensitivity",
     ]
     queryset = (
@@ -354,7 +354,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         )
         .annotate(draft=_static_bool(None))
         .annotate(dictionary=F("dictionary_published"))
-        .annotate(government_security_classification=F("government_security_classification"))
+        .annotate(security_classification=F("government_security_classification__display"))
         .annotate(sensitivity=ArrayAgg("sensitivity__name", distinct=True))
         .exclude(type=DataSetType.REFERENCE)
         .values(*fields)
@@ -376,7 +376,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
             .annotate(user_ids=Value([], output_field=ArrayField(models.IntegerField())))
             .annotate(draft=F("is_draft"))
             .annotate(dictionary=F("published"))
-            .annotate(government_security_classification=F("government_security_classification"))
+            .annotate(security_classification=F("government_security_classification__display"))
             .annotate(sensitivity=ArrayAgg("sensitivity__name", distinct=True))
             .values(*_replace(fields, "id", "uuid"))
         )
@@ -399,7 +399,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
             )
             .annotate(draft=_static_bool(None))
             .annotate(dictionary=_static_bool(None))
-            .annotate(government_security_classification=F("government_security_classification"))
+            .annotate(security_classification=F("government_security_classification__display"))
             .annotate(sensitivity=ArrayAgg("sensitivity__name", distinct=True))
             .values(*fields)
         )
