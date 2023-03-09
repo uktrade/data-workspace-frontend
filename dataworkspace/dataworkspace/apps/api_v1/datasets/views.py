@@ -332,6 +332,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         "user_access_type",
         "authorized_email_domains",
         "user_ids",
+        "visualisation_link",
     ]
     queryset = (
         DataSet.objects.live()
