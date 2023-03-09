@@ -490,9 +490,6 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
     readonly_fields = ("get_published_version", "uuid")
     manage_unpublished_permission_codename = "datasets.manage_unpublished_reference_datasets"
 
-    def get_queryset(self, request):
-        return super().get_queryset(request).prefetch_related("tags")
-
     def get_published_version(self, obj):
         if obj.published_version == "0.0":
             return " - "
@@ -525,12 +522,10 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
         return readonly_fields
 
     def save_formset(self, request, form, formset, change):
-        with transaction.atomic():
-            for f in formset.forms:
-                if not change:
-                    f.instance.created_by = request.user
-                f.instance.updated_by = request.user
-                f.save()
+        for f in formset.forms:
+            if not change:
+                f.instance.created_by = request.user
+            f.instance.updated_by = request.user
         super().save_formset(request, form, formset, change)
 
 
