@@ -5,7 +5,7 @@ import psycopg2
 from django.conf import settings
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.db import models
-from django.db.models import F, Q, Value
+from django.db.models import F, Q, Value, Case, When
 from django.db.models.functions import Substr
 from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
@@ -18,7 +18,11 @@ from dataworkspace.apps.core.utils import (
     database_dsn,
     StreamingHttpResponseWithoutDjangoDbConnection,
 )
-from dataworkspace.apps.datasets.constants import DataSetType, TagType
+from dataworkspace.apps.datasets.constants import (
+    DataSetType,
+    TagType,
+    SecurityClassificationAndHandlingInstructionType,
+)
 from dataworkspace.apps.datasets.models import (
     SourceTable,
     DataSet,
@@ -332,8 +336,6 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         "user_access_type",
         "authorized_email_domains",
         "user_ids",
-        "security_classification",
-        "sensitivity",
     ]
     queryset = (
         DataSet.objects.live()
@@ -354,8 +356,16 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         )
         .annotate(draft=_static_bool(None))
         .annotate(dictionary=F("dictionary_published"))
-        .annotate(security_classification=F("government_security_classification__display"))
-        .annotate(sensitivity=ArrayAgg("sensitivity__name", distinct=True))
+        .annotate(
+            security_classification_display=Case(
+                *[
+                    When(government_security_classification=c[0], then=Value(c[1]))
+                    for c in SecurityClassificationAndHandlingInstructionType.choices
+                ],
+                output_field=models.CharField(),
+            )
+        )
+        .annotate(sensitivity_name=ArrayAgg("sensitivity__name", distinct=True))
         .exclude(type=DataSetType.REFERENCE)
         .values(*fields)
         .union(
@@ -376,9 +386,16 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
             .annotate(user_ids=Value([], output_field=ArrayField(models.IntegerField())))
             .annotate(draft=F("is_draft"))
             .annotate(dictionary=F("published"))
-            .annotate(security_classification=F("government_security_classification__display"))
-            .annotate(sensitivity=ArrayAgg("sensitivity__name", distinct=True))
-            .values(*_replace(fields, "id", "uuid"))
+            .annotate(
+                security_classification_display=Case(
+                    *[
+                        When(government_security_classification=c[0], then=Value(c[1]))
+                        for c in SecurityClassificationAndHandlingInstructionType.choices
+                    ],
+                    output_field=models.CharField(),
+                )
+            )
+            .annotate(sensitivity_name=ArrayAgg("sensitivity__name", distinct=True))
         )
         .union(
             VisualisationCatalogueItem.objects.live()
@@ -399,8 +416,16 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
             )
             .annotate(draft=_static_bool(None))
             .annotate(dictionary=_static_bool(None))
-            .annotate(security_classification=F("government_security_classification__display"))
-            .annotate(sensitivity=ArrayAgg("sensitivity__name", distinct=True))
+            .annotate(
+                security_classification_display=Case(
+                    *[
+                        When(government_security_classification=c[0], then=Value(c[1]))
+                        for c in SecurityClassificationAndHandlingInstructionType.choices
+                    ],
+                    output_field=models.CharField(),
+                )
+            )
+            .annotate(sensitivity_name=ArrayAgg("sensitivity__name", distinct=True))
             .values(*fields)
         )
     ).order_by("created_date")
