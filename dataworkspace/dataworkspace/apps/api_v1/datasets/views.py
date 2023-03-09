@@ -336,6 +336,8 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         "user_access_type",
         "authorized_email_domains",
         "user_ids",
+        "security_classification_display",
+        "sensitivity_name",
     ]
     queryset = (
         DataSet.objects.live()
@@ -396,6 +398,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
                 )
             )
             .annotate(sensitivity_name=ArrayAgg("sensitivity__name", distinct=True))
+            .values(*_replace(fields, "id", "uuid"))
         )
         .union(
             VisualisationCatalogueItem.objects.live()
