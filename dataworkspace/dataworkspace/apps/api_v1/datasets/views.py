@@ -353,6 +353,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         )
         .annotate(draft=_static_bool(None))
         .annotate(dictionary=F("dictionary_published"))
+        .annotate(visualisation_type=_static_char(None))
         .exclude(type=DataSetType.REFERENCE)
         .values(*fields)
         .union(
@@ -373,6 +374,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
             .annotate(user_ids=Value([], output_field=ArrayField(models.IntegerField())))
             .annotate(draft=F("is_draft"))
             .annotate(dictionary=F("published"))
+            .annotate(visualisation_type=_static_char(None))
             .values(*_replace(fields, "id", "uuid"))
         )
         .union(
@@ -398,22 +400,14 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
                 visualisation_type=models.Case(
                     models.When(
                         visualisationlink__visualisation_type="QUICKSIGHT",
-                        then=Value("QUICKSIGHT"),
-                    ),
-                    default=Value(""),
-                    output_field=models.CharField(),
-                )
-            )
-            .values(
-                *fields,
-                visualisation_type=models.Case(
-                    models.When(
-                        visualisationlink__visualisation_type="QUICKSIGHT",
                         then="visualisationlink__identifier",
                     ),
                     default=None,
                     output_field=models.CharField(),
                 ),
+            )
+            .values(
+                *fields,
             )
         )
     ).order_by("created_date")
