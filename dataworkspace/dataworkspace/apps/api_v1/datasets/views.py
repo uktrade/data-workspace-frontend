@@ -332,6 +332,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         "user_access_type",
         "authorized_email_domains",
         "user_ids",
+        "identifier",
     ]
     queryset = (
         DataSet.objects.live()
@@ -393,7 +394,27 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
             )
             .annotate(draft=_static_bool(None))
             .annotate(dictionary=_static_bool(None))
-            .values(*fields)
+            .annotate(
+                visualisation_type=models.Case(
+                    models.When(
+                        visualisationlink__visualisation_type="QUICKSIGHT",
+                        then=Value("QUICKSIGHT"),
+                    ),
+                    default=Value(""),
+                    output_field=models.CharField(),
+                )
+            )
+            .values(
+                *fields,
+                visualisation_type=models.Case(
+                    models.When(
+                        visualisationlink__visualisation_type="QUICKSIGHT",
+                        then="visualisationlink__identifier",
+                    ),
+                    default=None,
+                    output_field=models.CharField(),
+                ),
+            )
         )
     ).order_by("created_date")
 
