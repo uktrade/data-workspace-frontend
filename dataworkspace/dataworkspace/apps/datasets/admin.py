@@ -516,7 +516,15 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
     get_average_unique_users_daily.short_description = "Average unique daily users"
 
     class Media:
-        js = ("admin/js/vendor/jquery/jquery.js", "data-workspace-admin.js")
+        js = (
+            "admin/js/vendor/jquery/jquery.js",
+            "data-workspace-admin.js",
+            "ag-grid-community.min.js",
+            "dayjs.min.js",
+            "js/grid-utils.js",
+            "data-grid.js",
+        )
+        css = {"grid": ["data-grid.css"]}
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)

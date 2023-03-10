@@ -2049,3 +2049,16 @@ def log_data_preview_load_time(request, dataset_uuid, source_id):
     else:
         log_event(request.user, EventLog.TYPE_DATA_PREVIEW_TIMEOUT, source, extra=extra)
         return HttpResponse(status=200)
+
+
+class ReferenceDatasetGridDataView(View):
+    def get(self, request, **kwargs):
+        ref_dataset = get_object_or_404(
+            ReferenceDataset, pk=self.kwargs["object_id"], deleted=False
+        )
+        return JsonResponse(
+            {
+                "records": ref_dataset.get_grid_data(),
+            }
+        )
+

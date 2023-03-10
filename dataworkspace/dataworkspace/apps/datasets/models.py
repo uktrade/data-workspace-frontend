@@ -1947,6 +1947,9 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             args=(self.reference_dataset_inheriting_from_dataset.id,),
         )
 
+    def get_grid_data_url(self):
+        return reverse("datasets:reference_dataset_grid_data", args=(self.id,))
+
 
 @receiver(m2m_changed, sender=ReferenceDataset.tags.through)
 def save_reference_dataset_tags_on_m2m_changed(instance, **_):
