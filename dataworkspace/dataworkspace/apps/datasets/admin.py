@@ -440,6 +440,8 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
         "short_description",
         "table_name",
         "acronyms",
+        "slug",
+        "short_description",
     )
     list_per_page = 25
     change_form_template = "admin/reference_dataset_changeform.html"
