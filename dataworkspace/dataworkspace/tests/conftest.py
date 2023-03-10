@@ -181,7 +181,8 @@ def metadata_db(db):
                 data_ids TEXT[],
                 data_type INTEGER NOT NULL,
                 data_hash_v1 TEXT,
-                primary_keys TEXT[]
+                primary_keys TEXT[],
+                number_of_rows INTEGER
             );
             TRUNCATE TABLE dataflow.metadata;
             INSERT INTO dataflow.metadata (
