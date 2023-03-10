@@ -866,7 +866,7 @@ def store_reference_dataset_metadata():
                             data_hash_v1,
                             data_type,
                             data_ids,
-                            number_of_rows,
+                            number_of_rows
                         )
                         VALUES ({},'public', {}, {}, {}, {}, {},{})
                         """
