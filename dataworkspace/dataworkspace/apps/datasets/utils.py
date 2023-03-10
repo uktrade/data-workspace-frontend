@@ -865,9 +865,10 @@ def store_reference_dataset_metadata():
                             table_structure,
                             data_hash_v1,
                             data_type,
-                            data_ids
+                            data_ids,
+                            number_of_rows,
                         )
-                        VALUES ({},'public', {}, {}, {}, {}, {})
+                        VALUES ({},'public', {}, {}, {}, {}, {},{})
                         """
                     ).format(
                         Literal(latest_update_date),
@@ -876,6 +877,7 @@ def store_reference_dataset_metadata():
                         Literal(reference_dataset.get_metadata_table_hash()),
                         Literal(int(DataSetType.REFERENCE)),
                         Literal([reference_dataset.id]),
+                        Literal(reference_dataset.get_records().count()),
                     )
                 )
             else:
