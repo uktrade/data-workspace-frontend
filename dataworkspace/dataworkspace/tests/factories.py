@@ -176,6 +176,7 @@ class DatasetReferenceCodeFactory(factory.django.DjangoModelFactory):
 
 
 class ReferenceDatasetFactory(factory.django.DjangoModelFactory):
+    id = factory.Sequence(lambda n: n)
     group = factory.SubFactory(DataGroupingFactory)
     name = factory.fuzzy.FuzzyText()
     slug = factory.fuzzy.FuzzyText(length=10)
