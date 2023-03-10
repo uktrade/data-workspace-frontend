@@ -157,9 +157,11 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
         self.reference_dataset = kwargs.pop("parent", None)
         super().__init__(*args, **kwargs)
 
+        fields = ReferenceDatasetField.objects.all()
+
         # Hide linked reference datasets fields that are themselves linked to
         # other reference dataset fields
-        linked_reference_dataset_fields = ReferenceDatasetField.objects.filter(
+        linked_reference_dataset_fields = fields.filter(
             data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
         ).values_list("id", flat=True)
 
@@ -167,15 +169,15 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
         # pointing to a field in the current dataset (circular link)
         circular_reference_datasets_fields = []
         if self.reference_dataset.id:
-            circular_reference_datasets = ReferenceDatasetField.objects.filter(
+            circular_reference_datasets = fields.filter(
                 linked_reference_dataset_field__reference_dataset=self.reference_dataset
             ).values_list("reference_dataset_id", flat=True)
-            circular_reference_datasets_fields = ReferenceDatasetField.objects.filter(
+            circular_reference_datasets_fields = fields.filter(
                 reference_dataset_id__in=circular_reference_datasets
             ).values_list("id", flat=True)
 
         # Hide fields belonging to deleted reference datasets
-        deleted_reference_dataset_fields = ReferenceDatasetField.objects.filter(
+        deleted_reference_dataset_fields = fields.filter(
             reference_dataset__deleted=True
         ).values_list("id", flat=True)
 
