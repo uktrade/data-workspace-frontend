@@ -47,6 +47,7 @@ from dataworkspace.datasets_db import (
     get_reference_dataset_changelog,
     get_source_table_changelog,
     get_earliest_tables_last_updated_date,
+    get_rows_number,
 )
 from dataworkspace.notify import EmailSendFailureException, send_email
 from dataworkspace.utils import TYPE_CODES_REVERSED
@@ -757,17 +758,28 @@ def do_store_custom_dataset_query_metadata():
 
                 columns = [(col[0], TYPE_CODES_REVERSED[col[1]]) for col in cursor.description]
 
+                try:
+                    data_rows_number = get_rows_number(cursor, sql)
+                except DatabaseError as e:
+                    logger.error(
+                        "Not adding metadata for query %s get_rows_number %s",
+                        query.name,
+                        e,
+                    )
+                    continue
+
                 cursor.execute(
                     SQL(
                         "INSERT INTO dataflow.metadata"
-                        "(source_data_modified_utc, table_structure, data_hash_v1, data_ids, data_type)"
-                        "VALUES ({},{},{},{},{})"
+                        "(source_data_modified_utc, table_structure, data_hash_v1, data_ids, data_type,number_of_rows)"
+                        "VALUES ({},{},{},{},{},{})"
                     ).format(
                         Literal(last_updated_date),
                         Literal(json.dumps(columns)),
                         Literal(data_hash),
                         Literal([str(query.id)]),
                         Literal(int(DataSetType.DATACUT)),
+                        Literal(data_rows_number),
                     )
                 )
 
