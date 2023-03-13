@@ -236,6 +236,11 @@ def get_data_hash(cursor, sql):
     return None
 
 
+def get_rows_number(cursor, sql):
+    cursor.execute(SQL(f"SELECT count(*) FROM ({sql}) as t"))
+    return cursor.fetchone()[0]
+
+
 def get_changelog_from_metadata_rows(rows):
     if not rows:
         return []
