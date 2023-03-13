@@ -224,6 +224,7 @@ function initDataGrid(
         }
         var xhr = new XMLHttpRequest();
         var startTime = Date.now();
+        var eventLogPOST = new XMLHttpRequest();
         xhr.open("POST", dataEndpoint, true);
         xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         xhr.setRequestHeader("X-CSRFToken", getCsrfToken());
@@ -282,6 +283,14 @@ function initDataGrid(
                 autoSizeColumns(gridOptions.columnApi);
                 initialDataLoaded = true;
               }
+
+              // log event in backend
+              eventLogPOST.open("POST", eventLogEndpoint, true);
+              eventLogPOST.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+              eventLogPOST.setRequestHeader("X-CSRFToken", getCsrfToken());
+              let eventLogData = JSON.stringify({"status_code": this.status, "query_time_milliseconds": Date.now() - startTime})
+              eventLogPOST.send(eventLogData);
+
             } else {
               gridOptions.overlayNoRowsTemplate =
                 this.status === 504
@@ -290,7 +299,6 @@ function initDataGrid(
               gridOptions.api.showNoRowsOverlay();
 
               // log event in backend
-              let eventLogPOST = new XMLHttpRequest();
               eventLogPOST.open("POST", eventLogEndpoint, true);
               eventLogPOST.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
               eventLogPOST.setRequestHeader("X-CSRFToken", getCsrfToken());

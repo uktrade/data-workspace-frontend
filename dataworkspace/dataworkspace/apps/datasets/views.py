@@ -2007,7 +2007,7 @@ class DatasetChartsView(WaffleFlagMixin, View):
 
 
 @require_POST
-def log_data_preview_timeout(request, dataset_uuid, source_id):
+def log_data_preview_load_time(request, dataset_uuid, source_id):
     dataset = find_dataset(dataset_uuid, request.user)
     source = dataset.get_related_source(source_id)
     if source is None:
