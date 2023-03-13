@@ -94,7 +94,7 @@ class EventLog(models.Model):
         (TYPE_GRANTED_VISUALISATION_ADMIN_PERMISSION, "Granted visualisation admin permission"),
         (TYPE_REVOKED_VISUALISATION_ADMIN_PERMISSION, "Revoked visualisation admin permission"),
         (TYPE_DATA_TABLE_VIEW, "Data table view"),
-        (TYPE_DATA_PREVIEW_TIMEOUT, "Data preview timeout"),
+        (TYPE_DATA_PREVIEW_TIMEOUT, "Data preview load time"),
     )
     user = models.ForeignKey(get_user_model(), on_delete=models.DO_NOTHING, related_name="events")
     id = models.BigAutoField(primary_key=True)

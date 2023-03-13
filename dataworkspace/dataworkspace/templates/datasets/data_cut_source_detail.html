@@ -33,7 +33,7 @@
       '{{ object.dataset.name }}',
       '{{ object.dataset.get_type_display }}',
       null,
-      '{% url 'datasets:log_data_preview_timeout' object.dataset.id object.id %}'
+      '{% url 'datasets:log_data_preview_load_time' object.dataset.id object.id %}'
     );
   </script>
 
