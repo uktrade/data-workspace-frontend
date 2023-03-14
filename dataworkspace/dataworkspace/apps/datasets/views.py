@@ -1159,6 +1159,7 @@ class DataCutSourceDetailView(DetailView):
             extra={
                 "path": self.request.get_full_path(),
                 "data_table_name": source.name,
+                "data_table_raw_name": f"{source.schema}.{source.table}",
                 "data_table_id": source.id,
                 "dataset": source.dataset.name,
             },
@@ -2021,7 +2022,13 @@ def log_data_preview_load_time(request, dataset_uuid, source_id):
 
     extra = (
         {
-            **{"table_name": source.name, "table_id": source.id, "dataset": dataset.name},
+            **{
+                "path": request.path,
+                "data_table_name": source.name,
+                "data_table_id": source.id,
+                "data_table_raw_name": f"{source.schema}.{source.table}",
+                "dataset": dataset.name,
+            },
             **received_json_data,
         },
     )
