@@ -5,6 +5,7 @@ import logging
 import os
 import re
 import urllib.parse
+from collections import defaultdict
 from typing import Dict, List
 
 import boto3
@@ -1609,3 +1610,92 @@ def push_tool_monitoring_dashboard_datasets():
     report_failed_tools(client, session)
     report_tool_average_start_times(client, session)
     report_recent_tool_start_times(client, session)
+
+
+def _run_duplicate_tools_monitor():
+    client = boto3.client("ecs")
+    cluster = os.environ["APPLICATION_SPAWNER_OPTIONS__FARGATE__VISUALISATION__CLUSTER_NAME"]
+
+    # Get a list of all running or spawning tasks
+    task_arns = []
+    next_token = ""
+    while True:
+        tasks_response = client.list_tasks(
+            cluster=cluster, desiredStatus="RUNNING", nextToken=next_token
+        )
+        task_arns.extend(tasks_response["taskArns"])
+        next_token = tasks_response.get("nextToken")
+        if not next_token:
+            break
+
+    total_running_tasks = len(task_arns)
+    logger.info("Found %d running tasks on cluster %s", total_running_tasks, cluster)
+
+    def paginate(records):
+        for i in range(0, len(records), 100):
+            yield records[i : i + 100]
+
+    # Group running tasks by their task definition arn
+    task_details = defaultdict(list)
+    for chunk in paginate(task_arns):
+        for description in client.describe_tasks(cluster=cluster, tasks=chunk)["tasks"]:
+            if "startedAt" not in description:
+                continue
+            task_details[description["taskDefinitionArn"].split("/")[-1].split(":")[0]].append(
+                {"started": description["startedAt"], "arn": description["taskArn"]}
+            )
+
+    total_unique_running_task_arns = len(task_details)
+    logger.info(
+        "Found %d unique task definitions (out of %d running tasks)",
+        total_unique_running_task_arns,
+        total_running_tasks,
+    )
+
+    num_duplicate_tasks = total_running_tasks - total_unique_running_task_arns
+    if num_duplicate_tasks == 0:
+        logger.info("No duplicate running tasks detected on cluster %s", cluster)
+        return
+
+    message = f":rotating_light: Found {num_duplicate_tasks} duplicate tasks running on cluster {cluster}."
+    logger.error(message)
+    _send_slack_message(message)
+
+    if waffle.switch_is_active("force_stop_duplicate_running_tasks"):
+        # Loop through task definitions, if any definition has more than one running task,
+        # stop all but the task with the latest started date
+        logger.info("Attempting to kill duplicate tasks")
+        stop_count = 0
+        for task_def_arn, task_details in task_details.items():
+            if len(task_details) <= 1:
+                continue
+            running_tasks = sorted(task_details, key=lambda x: x["started"])
+            tasks_to_stop = running_tasks[:-1]
+            logger.info(
+                "Task def %s has %d running tasks. Will stop %d of them",
+                task_def_arn,
+                len(running_tasks),
+                len(tasks_to_stop),
+            )
+            for task in tasks_to_stop:
+                logger.info("Stopping task %s which started at %s", task["arn"], task["started"])
+                client.stop_task(cluster=cluster, task=task["arn"])
+                stop_count += 1
+
+            logger.info(
+                "Left one running task %s which started at %s",
+                running_tasks[-1]["arn"],
+                running_tasks[-1]["started"],
+            )
+    else:
+        logger.info("Not attempting to kill duplicate tasks as the switch is disabled")
+
+
+@celery_app.task()
+@close_all_connections_if_not_in_atomic_block
+def duplicate_tools_monitor():
+    try:
+        with cache.lock("duplicate_tools_monitor", blocking_timeout=0, timeout=1800):
+            _run_duplicate_tools_monitor()
+    except redis.exceptions.LockError:
+        logger.info("duplicate_tools_alert: Unable to acquire lock to monitor for duplicate tools")

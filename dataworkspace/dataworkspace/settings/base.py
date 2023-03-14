@@ -407,6 +407,11 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
             "schedule": crontab(minute=30),
             "args": (),
         },
+        "duplicate-tools-monitor": {
+            "task": "dataworkspace.apps.applications.utils.duplicate_tools_monitor",
+            "schedule": 60 * 10,
+            "args": (),
+        },
     }
 
 CELERY_REDBEAT_REDIS_URL = env["REDIS_URL"]
