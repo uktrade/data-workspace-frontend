@@ -338,7 +338,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         "user_ids",
         "security_classification_display",
         "sensitivity_name",
-        "visualisation_type",
+        "quicksight_id",
     ]
     queryset = (
         DataSet.objects.live()
@@ -369,7 +369,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
             )
         )
         .annotate(sensitivity_name=ArrayAgg("sensitivity__name", distinct=True))
-        .annotate(visualisation_type=_static_char(None))
+        .annotate(quicksight_id=_static_char(None))
         .exclude(type=DataSetType.REFERENCE)
         .values(*fields)
         .union(
@@ -400,7 +400,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
                 )
             )
             .annotate(sensitivity_name=ArrayAgg("sensitivity__name", distinct=True))
-            .annotate(visualisation_type=_static_char(None))
+            .annotate(quicksight_id=_static_char(None))
             .values(*_replace(fields, "id", "uuid"))
         )
         .union(
@@ -433,7 +433,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
             )
             .annotate(sensitivity_name=ArrayAgg("sensitivity__name", distinct=True))
             .annotate(
-                visualisation_type=models.Case(
+                quicksight_id=models.Case(
                     models.When(
                         visualisationlink__visualisation_type="QUICKSIGHT",
                         then="visualisationlink__identifier",

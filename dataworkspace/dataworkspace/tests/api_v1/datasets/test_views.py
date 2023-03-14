@@ -477,7 +477,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             if isinstance(dataset, ReferenceDataset)
             else dataset.authorized_email_domains,
             "user_ids": userids,
-            "visualisation_type": None,
+            "quicksight_id": None,
         }
 
     def test_success(self, unauthenticated_client):
