@@ -32,6 +32,7 @@ from django.forms.models import model_to_dict
 from django.http import (
     Http404,
     HttpResponse,
+    HttpResponseBadRequest,
     HttpResponseForbidden,
     HttpResponseNotFound,
     HttpResponseRedirect,
@@ -2008,17 +2009,24 @@ class DatasetChartsView(WaffleFlagMixin, View):
 
 @require_POST
 def log_data_preview_load_time(request, dataset_uuid, source_id):
+    try:
+        received_json_data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return HttpResponseBadRequest("Invalid JSON data")
+
     dataset = find_dataset(dataset_uuid, request.user)
     source = dataset.get_related_source(source_id)
     if source is None:
         raise Http404
-    received_json_data = json.loads(request.body)
-    return log_event(
-        request.user,
-        EventLog.TYPE_DATA_PREVIEW_TIMEOUT,
-        source,
-        extra={
+
+    extra = (
+        {
             **{"table_name": source.name, "table_id": source.id, "dataset": dataset.name},
             **received_json_data,
         },
     )
+
+    if received_json_data.get("status_code") == 200:
+        return log_event(request.user, EventLog.TYPE_DATA_PREVIEW_COMPLETE, source, extra=extra)
+    else:
+        return log_event(request.user, EventLog.TYPE_DATA_PREVIEW_TIMEOUT, source, extra=extra)

@@ -48,6 +48,7 @@ class EventLog(models.Model):
     TYPE_REVOKED_VISUALISATION_ADMIN_PERMISSION = 41
     TYPE_DATA_TABLE_VIEW = 42
     TYPE_DATA_PREVIEW_TIMEOUT = 43
+    TYPE_DATA_PREVIEW_COMPLETE = 44
 
     _TYPE_CHOICES = (
         (TYPE_DATASET_SOURCE_LINK_DOWNLOAD, "Dataset source link download"),
@@ -94,7 +95,8 @@ class EventLog(models.Model):
         (TYPE_GRANTED_VISUALISATION_ADMIN_PERMISSION, "Granted visualisation admin permission"),
         (TYPE_REVOKED_VISUALISATION_ADMIN_PERMISSION, "Revoked visualisation admin permission"),
         (TYPE_DATA_TABLE_VIEW, "Data table view"),
-        (TYPE_DATA_PREVIEW_TIMEOUT, "Data preview load time"),
+        (TYPE_DATA_PREVIEW_TIMEOUT, "Data table view load timeout"),
+        (TYPE_DATA_PREVIEW_COMPLETE, "Data table view load complete"),
     )
     user = models.ForeignKey(get_user_model(), on_delete=models.DO_NOTHING, related_name="events")
     id = models.BigAutoField(primary_key=True)
