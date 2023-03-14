@@ -224,7 +224,7 @@ function initDataGrid(
         }
         var xhr = new XMLHttpRequest();
         var startTime = Date.now();
-        var datasetPath = window.location.href
+        var datasetPath = window.location.pathname
         var eventLogPOST = new XMLHttpRequest();
         xhr.open("POST", dataEndpoint, true);
         xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
