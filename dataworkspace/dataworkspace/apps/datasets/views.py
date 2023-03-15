@@ -1159,9 +1159,13 @@ class DataCutSourceDetailView(DetailView):
             extra={
                 "path": self.request.get_full_path(),
                 "data_table_name": source.name,
-                "data_table_tablename": f"{source.schema}.{source.table}",
                 "data_table_id": source.id,
                 "dataset": source.dataset.name,
+                **(
+                    {"data_table_tablename": f"{source.schema}.{source.table}"}
+                    if hasattr(source, "schema")
+                    else {}
+                ),
             },
         )
 
