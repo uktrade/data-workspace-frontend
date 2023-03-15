@@ -2031,7 +2031,7 @@ def log_data_preview_load_time(request, dataset_uuid, source_id):
 
     if received_json_data.get("status_code") == 200:
         log_event(request.user, EventLog.TYPE_DATA_PREVIEW_COMPLETE, source, extra=extra)
-        return HttpResponse("Data preview complete")
+        return HttpResponse(status=200)
     else:
         log_event(request.user, EventLog.TYPE_DATA_PREVIEW_TIMEOUT, source, extra=extra)
-        return HttpResponse("Data preview timeout", status=504)
+        return HttpResponse(status=200)
