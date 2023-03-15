@@ -1164,7 +1164,11 @@ class DataCutSourceDetailView(DetailView):
                 **(
                     {"data_table_tablename": f"{source.schema}.{source.table}"}
                     if hasattr(source, "schema")
-                    else {}
+                    else {
+                        "data_table_sourcetables": [
+                            f"{s.schema}.{s.table}" for s in source.tables.all()
+                        ]
+                    }
                 ),
             },
         )
@@ -2032,7 +2036,9 @@ def log_data_preview_load_time(request, dataset_uuid, source_id):
         **(
             {"data_table_tablename": f"{source.schema}.{source.table}"}
             if hasattr(source, "schema")
-            else {}
+            else {
+                "data_table_sourcetables": [f"{s.schema}.{s.table}" for s in source.tables.all()]
+            }
         ),
         **received_json_data,
     }
