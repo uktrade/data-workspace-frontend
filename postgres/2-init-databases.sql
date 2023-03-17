@@ -17,6 +17,19 @@ SELECT i, concat('test data ', i::text)
 FROM generate_series(1, 20000) AS t(i);
 CREATE SCHEMA dataflow;
 CREATE SCHEMA _data_explorer_charts;
+CREATE TABLE IF NOT EXISTS dataflow.metadata (
+    id SERIAL,
+    table_schema TEXT,
+    table_name TEXT,
+    source_data_modified_utc TIMESTAMP WITHOUT TIME ZONE,
+    dataflow_swapped_tables_utc TIMESTAMP WITHOUT TIME ZONE,
+    table_structure JSONB,
+    data_ids TEXT[],
+    data_type INTEGER NOT NULL,
+    data_hash_v1 TEXT,
+    primary_keys TEXT[],
+    number_of_rows INT
+);
 
 \c testdb1;
 CREATE TABLE dataset_1 (id int primary key, data text);
