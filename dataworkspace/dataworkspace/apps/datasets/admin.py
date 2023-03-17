@@ -435,6 +435,12 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
         "information_asset_owner",
         "information_asset_manager",
     ]
+    search_fields = (
+        "name",
+        "short_description",
+        "table_name",
+        "acronyms",
+    )
     list_per_page = 25
     change_form_template = "admin/reference_dataset_changeform.html"
     prepopulated_fields = {"slug": ("name",)}
