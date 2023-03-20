@@ -384,10 +384,15 @@ class FargateSpawner:
             memory = application_instance.memory
             close_admin_db_connection_if_not_in_atomic_block()
 
+            private_ips_in_use = set()
+
             for i in range(0, 10):
                 # Sometimes there is an error assuming the new role: both IAM  and ECS are
                 # eventually consistent
                 try:
+                    ip_address = _fargate_task_ip(options["CLUSTER_NAME"], task_arn)
+                    if ip_address in private_ips_in_use:
+                        raise Exception(f"Private IP {ip_address} already in use")
                     start_task_response = _fargate_task_run(
                         role_arn,
                         cluster_name,
@@ -415,6 +420,7 @@ class FargateSpawner:
                 else start_task_response["task"]
             )
             task_arn = task["taskArn"]
+
             application_instance.spawner_application_instance_id = json.dumps(
                 {"pipeline_id": pipeline_id, "task_arn": task_arn}
             )
@@ -439,9 +445,18 @@ class FargateSpawner:
             for _ in range(0, 60):
                 ip_address = _fargate_task_ip(options["CLUSTER_NAME"], task_arn)
                 if ip_address:
-                    application_instance.proxy_url = f"http://{ip_address}:{port}"
-                    application_instance.save(update_fields=["proxy_url"])
-                    return
+                    # add the private IP to the set of IPs in use
+                    private_ips_in_use.add(ip_address)
+                    existing_application_instance = ApplicationInstance.objects.filter(
+                        proxy_url__contains=ip_address).first()
+                    if existing_application_instance:
+                        # mark tool as sstopped
+                        application_instance.state = "STOPPED"
+
+                    else:
+                        application_instance.proxy_url = f"http://{ip_address}:{port}"
+                        application_instance.save(update_fields=["proxy_url"])
+                        return
                 gevent.sleep(3)
 
             raise Exception("Spawner timed out before finding ip address")
