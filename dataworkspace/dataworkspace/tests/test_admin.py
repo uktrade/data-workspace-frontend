@@ -559,8 +559,8 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "slug": ref_dataset_slug,
                 "external_database": "",
                 "short_description": "test description that is short",
-                "information_asset_manager": self.user,
-                "information_asset_owner": self.user,
+                "information_asset_manager": self.user.id,
+                "information_asset_owner": self.user.id,
                 "description": "test description",
                 "valid_from": "",
                 "valid_to": "",
@@ -608,6 +608,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "slug": "test-ref-1",
                 "external_database": "",
                 "short_description": "test description that is short",
+
                 "description": "",
                 "valid_from": "",
                 "valid_to": "",
@@ -867,8 +868,8 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "slug": reference_dataset.slug,
                 "external_database": "",
                 "short_description": "test description that is short",
-                "information_asset_manager": self.user,
-                "information_asset_owner": self.user,
+                "information_asset_manager": self.user.id,
+                "information_asset_owner": self.user.id,
                 "description": "",
                 "valid_from": "",
                 "valid_to": "",
@@ -925,8 +926,8 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "slug": "test-ref-1",
                 "external_database": "",
                 "short_description": reference_dataset.short_description,
-                "information_asset_manager": self.user,
-                "information_asset_owner": self.user,
+                "information_asset_manager": self.user.id,
+                "information_asset_owner": self.user.id,
                 "description": "",
                 "valid_from": "",
                 "valid_to": "",
@@ -982,8 +983,8 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "slug": "test-ref-1",
                 "external_database": "",
                 "short_description": "test description that is short",
-                "information_asset_manager": self.user,
-                "information_asset_owner": self.user,
+                "information_asset_manager": self.user.id,
+                "information_asset_owner": self.user.id,
                 "description": "",
                 "valid_from": "",
                 "valid_to": "",
@@ -1138,8 +1139,8 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "slug": "test-ref-1",
                 "external_database": "",
                 "short_description": "test description that is short",
-                "information_asset_manager": self.user,
-                "information_asset_owner": self.user,
+                "information_asset_manager": self.user.id,
+                "information_asset_owner": self.user.id,
                 "description": "",
                 "valid_from": "",
                 "valid_to": "",
@@ -1985,8 +1986,8 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "slug": "test-ref-link-non-external",
                 "external_database": db.id,
                 "short_description": "test description that is short",
-                "information_asset_manager": self.user,
-                "information_asset_owner": self.user,
+                "information_asset_manager": self.user.id,
+                "information_asset_owner": self.user.id,
                 "description": "",
                 "valid_from": "",
                 "valid_to": "",
@@ -2332,8 +2333,8 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "slug": "test-ref-1",
                 "external_database": "",
                 "short_description": "test description that is short",
-                "information_asset_manager": self.user,
-                "information_asset_owner": self.user,
+                "information_asset_manager": self.user.id,
+                "information_asset_owner": self.user.id,
                 "description": "",
                 "valid_from": "",
                 "valid_to": "",
@@ -2711,6 +2712,9 @@ class TestDatasetAdmin(BaseAdminTestCase):
 
 
 class TestDatasetAdminPytest:
+    def setUp(self):
+        self.user = factories.UserFactory()
+
     def test_sql_queries_must_be_reviewed_before_publishing(self, staff_client):
         dataset = factories.DataSetFactory.create(published=False)
         sql = factories.CustomDatasetQueryFactory.create(dataset=dataset, reviewed=False)
@@ -2725,6 +2729,8 @@ class TestDatasetAdminPytest:
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
+                "information_asset_manager": self.user.id,
+                "information_asset_owner": self.user.id,
                 "description": "test description",
                 "type": 2,
                 "sourcelink_set-TOTAL_FORMS": "0",
@@ -2782,7 +2788,6 @@ class TestDatasetAdminPytest:
     @pytest.mark.django_db
     def test_sql_query_tables_extracted_correctly(self, staff_client, query, expected_tables):
         dataset = factories.DataSetFactory.create(published=False)
-        user = factories.UserFactory()
         sql = factories.CustomDatasetQueryFactory.create(dataset=dataset, reviewed=False)
 
         # Login to admin site
@@ -2796,8 +2801,8 @@ class TestDatasetAdminPytest:
                 "slug": dataset.slug,
                 "short_description": "test short description",
                 "description": "test description",
-                "information_asset_owner": str(user.id),
-                "information_asset_manager": str(user.id),
+                "information_asset_owner": str(self.user.id),
+                "information_asset_manager": str(self.user.id),
                 "type": 2,
                 "user_access_type": dataset.user_access_type,
                 "sourcelink_set-TOTAL_FORMS": "0",
@@ -2845,7 +2850,6 @@ class TestDatasetAdminPytest:
     def test_sql_queries_can_only_be_reviewed_by_superusers(
         self, request_client, expected_response_code, can_review
     ):
-        user = factories.UserFactory()
         dataset = factories.DataSetFactory.create(published=False)
         sql = factories.CustomDatasetQueryFactory.create(dataset=dataset, reviewed=False)
 
@@ -2860,8 +2864,8 @@ class TestDatasetAdminPytest:
                 "slug": dataset.slug,
                 "short_description": "test short description",
                 "description": "test description",
-                "information_asset_owner": str(user.id),
-                "information_asset_manager": str(user.id),
+                "information_asset_owner": str(self.user.id),
+                "information_asset_manager": str(self.user.id),
                 "type": 2,
                 "user_access_type": dataset.user_access_type,
                 "sourcelink_set-TOTAL_FORMS": "0",
@@ -2909,7 +2913,6 @@ class TestDatasetAdminPytest:
         self, request_client, expected_response_code, should_publish
     ):
         dataset = factories.DataSetFactory.create(published=False)
-        user = factories.UserFactory()
         # Login to admin site
         request_client.post(reverse("admin:index"), follow=True)
 
@@ -2921,8 +2924,8 @@ class TestDatasetAdminPytest:
                 "slug": dataset.slug,
                 "short_description": "test short description",
                 "description": "test description",
-                "information_asset_owner": str(user.id),
-                "information_asset_manager": str(user.id),
+                "information_asset_owner": str(self.user.id),
+                "information_asset_manager": str(self.user.id),
                 "type": 2,
                 "user_access_type": dataset.user_access_type,
                 "sourcelink_set-TOTAL_FORMS": "0",
@@ -2974,13 +2977,13 @@ class TestDatasetAdminPytest:
         self, manage_unpublished_permission, admin_change_view, DatasetFactory
     ):
         dataset = DatasetFactory(published=True)
-        user = get_user_model().objects.create(is_staff=True)
+        self.user.is_staff = True
         perm = Permission.objects.get(codename=manage_unpublished_permission)
-        user.user_permissions.add(perm)
-        user.save()
+        self.user.user_permissions.add(perm)
+        self.user.save()
 
         unauthenticated_client = Client()
-        authenticated_client = Client(**get_http_sso_data(user))
+        authenticated_client = Client(**get_http_sso_data(self.user))
 
         for client in [unauthenticated_client, authenticated_client]:
             if client is authenticated_client:
@@ -3000,12 +3003,12 @@ class TestDatasetAdminPytest:
         dataset = factories.DataSetFactory.create(
             published=False, name="original", type=DataSetType.MASTER
         )
-        user = get_user_model().objects.create(is_staff=True)
+        self.user.is_staff = True
         perm = Permission.objects.get(codename="manage_unpublished_master_datasets")
-        user.user_permissions.add(perm)
-        user.save()
+        self.user.user_permissions.add(perm)
+        self.user.save()
 
-        client = Client(**get_http_sso_data(user))
+        client = Client(**get_http_sso_data(self.user))
 
         # Login to admin site
         client.post(reverse("admin:index"), follow=True)
@@ -3019,8 +3022,8 @@ class TestDatasetAdminPytest:
                 "user_access_type": dataset.user_access_type,
                 "short_description": "some description",
                 "description": "some description",
-                "information_asset_owner": user.id,
-                "information_asset_manager": user.id,
+                "information_asset_owner": self.user.id,
+                "information_asset_manager": self.user.id,
                 "type": 1,
                 "sourcetable_set-TOTAL_FORMS": "0",
                 "sourcetable_set-INITIAL_FORMS": "0",
@@ -3045,12 +3048,12 @@ class TestDatasetAdminPytest:
         dataset = factories.DataSetFactory.create(
             published=False, name="original", type=DataSetType.DATACUT
         )
-        user = get_user_model().objects.create(is_staff=True)
+        self.user.is_staff = True
         perm = Permission.objects.get(codename="manage_unpublished_datacut_datasets")
-        user.user_permissions.add(perm)
-        user.save()
+        self.user.user_permissions.add(perm)
+        self.user.save()
 
-        client = Client(**get_http_sso_data(user))
+        client = Client(**get_http_sso_data(self.user))
 
         # Login to admin site
         client.post(reverse("admin:index"), follow=True)
@@ -3063,8 +3066,8 @@ class TestDatasetAdminPytest:
                 "slug": dataset.slug,
                 "short_description": "some description",
                 "description": "some description",
-                "information_asset_owner": user.id,
-                "information_asset_manager": user.id,
+                "information_asset_owner": self.user.id,
+                "information_asset_manager": self.user.id,
                 "type": 2,
                 "user_access_type": dataset.user_access_type,
                 "sourcelink_set-TOTAL_FORMS": "0",
@@ -3109,13 +3112,12 @@ class TestDatasetAdminPytest:
             column_name="field_1",
             description="field 1 description",
         )
-
-        user = get_user_model().objects.create(is_staff=True)
+        self.user.is_staff = True
         perm = Permission.objects.get(codename="manage_unpublished_reference_datasets")
-        user.user_permissions.add(perm)
-        user.save()
+        self.user.user_permissions.add(perm)
+        self.user.save()
 
-        client = Client(**get_http_sso_data(user))
+        client = Client(**get_http_sso_data(self.user))
 
         # Login to admin site
         client.post(reverse("admin:index"), follow=True)
@@ -3128,8 +3130,8 @@ class TestDatasetAdminPytest:
                 "table_name": dataset.table_name,
                 "slug": dataset.slug,
                 "short_description": "test description that is short",
-                "information_asset_owner": user.id,
-                "information_asset_manager": user.id,
+                "information_asset_owner": self.user.id,
+                "information_asset_manager": self.user.id,
                 "sort_direction": ReferenceDataset.SORT_DIR_DESC,
                 "fields-TOTAL_FORMS": 1,
                 "fields-INITIAL_FORMS": 1,
@@ -3155,7 +3157,6 @@ class TestDatasetAdminPytest:
     def test_unpublished_datacut_query_review_flag_is_toggled_off_if_query_changed_when_already_reviewed(
         self, staff_client, published, expected_reviewed_status
     ):
-        user = factories.UserFactory()
         dataset = factories.DataSetFactory.create(published=published)
         sql = factories.CustomDatasetQueryFactory.create(
             dataset=dataset, reviewed=True, query="original query"
@@ -3172,8 +3173,8 @@ class TestDatasetAdminPytest:
                 "slug": dataset.slug,
                 "short_description": "test short description",
                 "description": "test description",
-                "information_asset_owner": str(user.id),
-                "information_asset_manager": str(user.id),
+                "information_asset_owner": str(self.user.id),
+                "information_asset_manager": str(self.user.id),
                 "type": 2,
                 "user_access_type": dataset.user_access_type,
                 "sourcelink_set-TOTAL_FORMS": "0",
