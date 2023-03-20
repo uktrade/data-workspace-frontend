@@ -55,7 +55,12 @@ def public_error_404_html_view(request, exception=None):
 def public_error_403_html_view(request, exception=None):
     default_template = "errors/error_403.html"
     if exception is None:
-        return render(request, default_template, status=403)
+        return render(
+            request,
+            default_template,
+            context={"peer_ip": request.META.get("HTTP_X_FORWARDED_FOR")},
+            status=403,
+        )
     return render(
         request,
         getattr(exception, "template_name", default_template),
