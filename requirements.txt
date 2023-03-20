@@ -195,7 +195,7 @@ pglast==3.10
     # via -r requirements.in
 plotly==5.6.0
     # via -r requirements.in
-prompt-toolkit==3.0.24
+prompt-toolkit==3.0.38
     # via click-repl
 psutil==5.7.2
     # via -r requirements.in
