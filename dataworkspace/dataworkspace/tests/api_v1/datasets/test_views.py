@@ -478,6 +478,8 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             else dataset.authorized_email_domains,
             "user_ids": userids,
             "quicksight_id": None,
+            "security_classification_display": None,
+            "sensitivity_name": [None] 
         }
 
     def test_success(self, unauthenticated_client):
