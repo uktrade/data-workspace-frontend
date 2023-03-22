@@ -439,7 +439,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
                         then="visualisationlink__identifier",
                     ),
                     default=None,
-                    output_field=models.CharField(),
+                    output_field=ArrayField(models.CharField()),
                 ),
             )
             .values(
