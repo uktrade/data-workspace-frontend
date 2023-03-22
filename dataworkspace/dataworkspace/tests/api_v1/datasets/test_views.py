@@ -477,7 +477,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             if isinstance(dataset, ReferenceDataset)
             else dataset.authorized_email_domains,
             "user_ids": userids,
-            "quicksight_id": None,
+            "quicksight_id": [None],
             "security_classification_display": None,
             "sensitivity_name": [None],
         }

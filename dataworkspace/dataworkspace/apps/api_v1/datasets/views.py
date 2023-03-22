@@ -369,7 +369,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
             )
         )
         .annotate(sensitivity_name=ArrayAgg("sensitivity__name", distinct=True))
-        .annotate(quicksight_id=Value(None, output_field=ArrayField(models.TextField())))
+        .annotate(quicksight_id=Value([], output_field=ArrayField(models.TextField())))
         .exclude(type=DataSetType.REFERENCE)
         .values(*fields)
         .union(
@@ -400,7 +400,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
                 )
             )
             .annotate(sensitivity_name=ArrayAgg("sensitivity__name", distinct=True))
-            .annotate(quicksight_id=Value(None, output_field=ArrayField(models.TextField())))
+            .annotate(quicksight_id=Value([], output_field=ArrayField(models.TextField())))
             .values(*_replace(fields, "id", "uuid"))
         )
         .union(
