@@ -417,7 +417,7 @@ class TestAPIReferenceDatasetView(TestCase):
         )
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 class TestCatalogueItemsAPIView(BaseAPIViewTest):
     url = reverse("api-v1:dataset:catalogue-items")
     factory = factories.DataSetFactory
@@ -477,7 +477,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             if isinstance(dataset, ReferenceDataset)
             else dataset.authorized_email_domains,
             "user_ids": userids,
-            "quicksight_id": None,
+            "quicksight_id": [None],
             "security_classification_display": None,
             "sensitivity_name": [None],
         }
