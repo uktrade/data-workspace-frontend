@@ -417,7 +417,7 @@ class TestAPIReferenceDatasetView(TestCase):
         )
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 class TestCatalogueItemsAPIView(BaseAPIViewTest):
     url = reverse("api-v1:dataset:catalogue-items")
     factory = factories.DataSetFactory
