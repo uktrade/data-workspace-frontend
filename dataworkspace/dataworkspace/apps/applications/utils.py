@@ -1652,18 +1652,8 @@ def _run_duplicate_tools_monitor():
         total_running_tasks,
     )
 
-    num_duplicate_tasks = total_running_tasks - total_unique_running_task_arns
-    if num_duplicate_tasks == 0:
-        logger.info("No duplicate running tasks detected on cluster %s", cluster)
-        return
-
-    message = f":rotating_light: Found {num_duplicate_tasks} duplicate tasks running on cluster {cluster}."
-    logger.error(message)
-    _send_slack_message(message)
-
     # Loop through task definitions, if any definition has more than one running task,
     # stop all but the task with the latest started date
-    logger.info("Attempting to kill duplicate tasks")
     stop_count = 0
     for task_def_arn, task_details in task_details.items():
         if len(task_details) <= 1:
@@ -1691,6 +1681,13 @@ def _run_duplicate_tools_monitor():
             running_tasks[-1]["arn"],
             running_tasks[-1]["started"],
         )
+
+    message = f"Found {stop_count} duplicate tasks running on cluster {cluster}."
+    if stop_count > 0:
+        logger.error(message)
+        _send_slack_message(":rotating_light: " + message)
+    else:
+        logger.info(message)
 
 
 @celery_app.task()
