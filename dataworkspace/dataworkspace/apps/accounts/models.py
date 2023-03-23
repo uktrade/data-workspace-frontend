@@ -22,7 +22,6 @@ class Profile(models.Model):
         db_table = "app_profile"
 
     def get_private_schema(self):
-
         identification_suffix = stable_identification_suffix(str(self.sso_id), short=True)
         db_schema = f"{USER_SCHEMA_STEM}{identification_suffix}"
 

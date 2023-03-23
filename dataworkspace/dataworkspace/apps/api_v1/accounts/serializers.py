@@ -45,5 +45,4 @@ class UserSerializer(serializers.ModelSerializer):
         return user.profile.first_login
 
     def get_private_schema(self, user):
-
         return user.profile.get_private_schema()
