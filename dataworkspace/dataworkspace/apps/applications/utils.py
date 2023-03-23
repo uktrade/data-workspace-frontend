@@ -1661,34 +1661,36 @@ def _run_duplicate_tools_monitor():
     logger.error(message)
     _send_slack_message(message)
 
-    if waffle.switch_is_active("force_stop_duplicate_running_tasks"):
-        # Loop through task definitions, if any definition has more than one running task,
-        # stop all but the task with the latest started date
-        logger.info("Attempting to kill duplicate tasks")
-        stop_count = 0
-        for task_def_arn, task_details in task_details.items():
-            if len(task_details) <= 1:
-                continue
-            running_tasks = sorted(task_details, key=lambda x: x["started"])
-            tasks_to_stop = running_tasks[:-1]
-            logger.info(
-                "Task def %s has %d running tasks. Will stop %d of them",
-                task_def_arn,
-                len(running_tasks),
-                len(tasks_to_stop),
-            )
-            for task in tasks_to_stop:
+    # Loop through task definitions, if any definition has more than one running task,
+    # stop all but the task with the latest started date
+    logger.info("Attempting to kill duplicate tasks")
+    stop_count = 0
+    for task_def_arn, task_details in task_details.items():
+        if len(task_details) <= 1:
+            continue
+        running_tasks = sorted(task_details, key=lambda x: x["started"])
+        tasks_to_stop = running_tasks[:-1]
+        logger.info(
+            "Task def %s has %d running tasks. Will stop %d of them",
+            task_def_arn,
+            len(running_tasks),
+            len(tasks_to_stop),
+        )
+        for task in tasks_to_stop:
+            if waffle.switch_is_active("force_stop_duplicate_running_tasks"):
                 logger.info("Stopping task %s which started at %s", task["arn"], task["started"])
                 client.stop_task(cluster=cluster, task=task["arn"])
-                stop_count += 1
+            else:
+                logger.info(
+                    "Task %s which started at %s would be stopped", task["arn"], task["started"]
+                )
+            stop_count += 1
 
-            logger.info(
-                "Left one running task %s which started at %s",
-                running_tasks[-1]["arn"],
-                running_tasks[-1]["started"],
-            )
-    else:
-        logger.info("Not attempting to kill duplicate tasks as the switch is disabled")
+        logger.info(
+            "Left one running task %s which started at %s",
+            running_tasks[-1]["arn"],
+            running_tasks[-1]["started"],
+        )
 
 
 @celery_app.task()
