@@ -6,6 +6,7 @@ class UserSerializer(serializers.ModelSerializer):
     user_permissions_subset = serializers.SerializerMethodField()
     user_sso = serializers.SerializerMethodField("get_user_sso")
     first_login = serializers.SerializerMethodField()
+    private_schema = serializers.SerializerMethodField()
 
     class Meta:
         model = get_user_model()
