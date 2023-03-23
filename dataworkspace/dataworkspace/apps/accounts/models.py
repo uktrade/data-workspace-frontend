@@ -4,6 +4,7 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
+from dataworkspace.apps.core.utils import USER_SCHEMA_STEM, stable_identification_suffix
 
 
 class Profile(models.Model):
@@ -19,6 +20,12 @@ class Profile(models.Model):
 
     class Meta:
         db_table = "app_profile"
+
+    def get_private_schema(self):
+        identification_suffix = stable_identification_suffix(str(self.sso_id), short=True)
+        db_schema = f"{USER_SCHEMA_STEM}{identification_suffix}"
+
+        return db_schema
 
 
 @receiver(post_save, sender=get_user_model())
