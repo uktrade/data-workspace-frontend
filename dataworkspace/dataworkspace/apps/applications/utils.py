@@ -1333,7 +1333,9 @@ def _do_sync_tool_query_logs():
                 else None,
             )
         except IntegrityError:
-            logger.info("Skipping duplicate log record for %s", log["user_name"])
+            logger.info(
+                "Skipping duplicate log record for %s at %s", log["user_name"], log["log_time"]
+            )
             continue
 
         # Extract the queried tables
