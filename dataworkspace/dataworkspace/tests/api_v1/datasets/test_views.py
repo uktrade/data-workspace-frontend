@@ -5,6 +5,7 @@ import pytest
 from django.conf import settings
 from django.test import TestCase
 from django.urls import resolve, reverse
+from freezegun import freeze_time
 from rest_framework import status
 
 from dataworkspace.apps.core.models import Database
@@ -418,6 +419,7 @@ class TestAPIReferenceDatasetView(TestCase):
 
 
 @pytest.mark.django_db(transaction=True)
+@freeze_time("2023-03-27")
 class TestCatalogueItemsAPIView(BaseAPIViewTest):
     url = reverse("api-v1:dataset:catalogue-items")
     factory = factories.DataSetFactory
@@ -571,6 +573,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
 
 
 @pytest.mark.django_db
+@freeze_time("2023-03-27")
 class TestToolQueryAuditLogAPIView(BaseAPIViewTest):
     url = reverse("api-v1:dataset:tool-query-audit-logs")
     factory = factories.ToolQueryAuditLogFactory
