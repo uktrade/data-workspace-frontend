@@ -213,6 +213,7 @@ class EventLogFactory(factory.django.DjangoModelFactory):
         model = "eventlog.EventLog"
 
 
+@freeze_time("2023-03-27")
 class RelatedObjectEventFactory(factory.django.DjangoModelFactory):
     id = factory.Sequence(lambda n: n)
     user = factory.SubFactory(UserFactory)
@@ -399,6 +400,7 @@ class VisualisationLinkFactory(factory.django.DjangoModelFactory):
         model = "datasets.VisualisationLink"
 
 
+@freeze_time("2023-03-27")
 class ApplicationInstanceFactory(factory.django.DjangoModelFactory):
     id = factory.LazyAttribute(lambda _: uuid.uuid4())
     application_template = factory.SubFactory(ApplicationTemplateFactory)
