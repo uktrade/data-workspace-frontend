@@ -17,6 +17,7 @@ from django.db.utils import DatabaseError
 from django.http import Http404
 from django.urls import reverse
 from psycopg2.sql import Identifier, Literal, SQL, Composed
+from redis.exceptions import LockError, LockNotOwnedError
 
 from dataworkspace.apps.core.utils import (
     close_all_connections_if_not_in_atomic_block,
@@ -693,8 +694,13 @@ def update_metadata_with_source_table_id():
 @celery_app.task()
 @close_all_connections_if_not_in_atomic_block
 def store_custom_dataset_query_metadata():
-    with cache.lock("store_custom_dataset_query_metadata_lock", blocking_timeout=0, timeout=86400):
-        do_store_custom_dataset_query_metadata()
+    try:
+        with cache.lock(
+            "store_custom_dataset_query_metadata_lock", blocking_timeout=0, timeout=86400
+        ):
+            do_store_custom_dataset_query_metadata()
+    except LockError as e:
+        logger.warning("Failed to acquire lock for store_custom_dataset_query_metadata: %s", e)
 
 
 def do_store_custom_dataset_query_metadata():
@@ -1033,14 +1039,19 @@ def send_notification_emails():
             except IntegrityError as e:
                 logger.error("Exception when sending notifications: %s", e)
 
-    with cache.lock("send_notification_emails", blocking_timeout=0, timeout=3600):
-        try:
-            with transaction.atomic():
-                create_notifications()
-        except IntegrityError as e:
-            logger.error("Exception when creating notifications: %s", e)
-        else:
-            send_notifications()
+    try:
+        with cache.lock("send_notification_emails", blocking_timeout=0, timeout=3600):
+            try:
+                with transaction.atomic():
+                    create_notifications()
+            except IntegrityError as e:
+                logger.error("Exception when creating notifications: %s", e)
+            else:
+                send_notifications()
+    except LockNotOwnedError:
+        logger.info("delete_unused_datasets_users: Lock not owned - running on another instance?")
+    except LockError as e:
+        logger.warning("Failed to acquire lock for send_notification_emails: %s", e)
 
 
 def get_dataset_table(obj):
