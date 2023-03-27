@@ -1,6 +1,7 @@
 import string
 import uuid
 from datetime import datetime, timedelta
+from freezegun import freeze_time
 
 import factory.fuzzy
 
@@ -318,6 +319,7 @@ class SupersetVisualisationViewedEventFactory(RelatedObjectEventFactory):
     }
 
 
+@freeze_time("2023-03-27")
 class ApplicationTemplateFactory(factory.django.DjangoModelFactory):
     name = factory.fuzzy.FuzzyText()
     visible = True
@@ -429,6 +431,7 @@ class DatabaseUserFactory(factory.django.DjangoModelFactory):
         model = "core.DatabaseUser"
 
 
+@freeze_time("2023-03-27")
 class ToolQueryAuditLogFactory(factory.django.DjangoModelFactory):
     id = factory.Sequence(lambda n: n)
     user = factory.SubFactory(UserFactory)
