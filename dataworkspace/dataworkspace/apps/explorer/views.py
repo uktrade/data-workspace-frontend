@@ -530,6 +530,8 @@ class QueryLogResultView(View):
             elif query_log.state == QueryLogState.COMPLETE:
                 template = loader.get_template("explorer/partials/query_results.html")
                 retries = 5
+                headers = []
+                data = []
                 for _ in range(retries):
                     try:
                         headers, data, _ = fetch_query_results(querylog_id)
