@@ -1,6 +1,7 @@
 import string
 import uuid
 from datetime import datetime, timedelta
+from freezegun import freeze_time
 
 import factory.fuzzy
 
@@ -212,6 +213,7 @@ class EventLogFactory(factory.django.DjangoModelFactory):
         model = "eventlog.EventLog"
 
 
+@freeze_time("2020-01-01 00:00:00")
 class RelatedObjectEventFactory(factory.django.DjangoModelFactory):
     id = factory.Sequence(lambda n: n)
     user = factory.SubFactory(UserFactory)
@@ -318,6 +320,7 @@ class SupersetVisualisationViewedEventFactory(RelatedObjectEventFactory):
     }
 
 
+@freeze_time("2020-01-01 00:00:00")
 class ApplicationTemplateFactory(factory.django.DjangoModelFactory):
     name = factory.fuzzy.FuzzyText()
     visible = True
@@ -397,6 +400,7 @@ class VisualisationLinkFactory(factory.django.DjangoModelFactory):
         model = "datasets.VisualisationLink"
 
 
+@freeze_time("2020-01-01 00:00:00")
 class ApplicationInstanceFactory(factory.django.DjangoModelFactory):
     id = factory.LazyAttribute(lambda _: uuid.uuid4())
     application_template = factory.SubFactory(ApplicationTemplateFactory)
@@ -429,6 +433,7 @@ class DatabaseUserFactory(factory.django.DjangoModelFactory):
         model = "core.DatabaseUser"
 
 
+@freeze_time("2020-01-01 00:00:00")
 class ToolQueryAuditLogFactory(factory.django.DjangoModelFactory):
     id = factory.Sequence(lambda n: n)
     user = factory.SubFactory(UserFactory)

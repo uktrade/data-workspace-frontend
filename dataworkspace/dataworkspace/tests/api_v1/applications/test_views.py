@@ -1,5 +1,6 @@
 import pytest
 from django.urls import reverse
+from freezegun import freeze_time
 from rest_framework import status
 from rest_framework.fields import DateTimeField
 
@@ -8,6 +9,7 @@ from dataworkspace.tests.api_v1.base import BaseAPIViewTest
 
 
 @pytest.mark.django_db
+@freeze_time("2020-01-01 00:00:00")
 class TestEventLogAPIView(BaseAPIViewTest):
     url = reverse("api-v1:application-instance:instances")
     factory = factories.ApplicationInstanceFactory
@@ -37,6 +39,7 @@ class TestEventLogAPIView(BaseAPIViewTest):
         }
 
     @pytest.mark.django_db
+    @freeze_time("2020-01-01 00:00:00")
     def test_success(self, unauthenticated_client):
         instance1 = factories.ApplicationInstanceFactory()
         instance2 = factories.ApplicationInstanceFactory()
