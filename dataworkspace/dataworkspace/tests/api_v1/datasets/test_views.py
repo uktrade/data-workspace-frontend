@@ -581,6 +581,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
 
 
 @pytest.mark.django_db
+@freeze_time("2020-01-01 00:06:00")
 class TestToolQueryAuditLogAPIView(BaseAPIViewTest):
     url = reverse("api-v1:dataset:tool-query-audit-logs")
     factory = factories.ToolQueryAuditLogFactory
