@@ -1333,7 +1333,9 @@ def _do_sync_tool_query_logs():
                 else None,
             )
         except IntegrityError:
-            logger.info("Skipping duplicate log record for %s", log["user_name"])
+            logger.info(
+                "Skipping duplicate log record for %s at %s", log["user_name"], log["log_time"]
+            )
             continue
 
         # Extract the queried tables
@@ -1652,43 +1654,42 @@ def _run_duplicate_tools_monitor():
         total_running_tasks,
     )
 
-    num_duplicate_tasks = total_running_tasks - total_unique_running_task_arns
-    if num_duplicate_tasks == 0:
-        logger.info("No duplicate running tasks detected on cluster %s", cluster)
-        return
-
-    message = f":rotating_light: Found {num_duplicate_tasks} duplicate tasks running on cluster {cluster}."
-    logger.error(message)
-    _send_slack_message(message)
-
-    if waffle.switch_is_active("force_stop_duplicate_running_tasks"):
-        # Loop through task definitions, if any definition has more than one running task,
-        # stop all but the task with the latest started date
-        logger.info("Attempting to kill duplicate tasks")
-        stop_count = 0
-        for task_def_arn, task_details in task_details.items():
-            if len(task_details) <= 1:
-                continue
-            running_tasks = sorted(task_details, key=lambda x: x["started"])
-            tasks_to_stop = running_tasks[:-1]
-            logger.info(
-                "Task def %s has %d running tasks. Will stop %d of them",
-                task_def_arn,
-                len(running_tasks),
-                len(tasks_to_stop),
-            )
-            for task in tasks_to_stop:
+    # Loop through task definitions, if any definition has more than one running task,
+    # stop all but the task with the latest started date
+    stop_count = 0
+    for task_def_arn, task_details in task_details.items():
+        if len(task_details) <= 1:
+            continue
+        running_tasks = sorted(task_details, key=lambda x: x["started"])
+        tasks_to_stop = running_tasks[:-1]
+        logger.info(
+            "Task def %s has %d running tasks. Will stop %d of them",
+            task_def_arn,
+            len(running_tasks),
+            len(tasks_to_stop),
+        )
+        for task in tasks_to_stop:
+            if waffle.switch_is_active("force_stop_duplicate_running_tasks"):
                 logger.info("Stopping task %s which started at %s", task["arn"], task["started"])
                 client.stop_task(cluster=cluster, task=task["arn"])
-                stop_count += 1
+            else:
+                logger.info(
+                    "Task %s which started at %s would be stopped", task["arn"], task["started"]
+                )
+            stop_count += 1
 
-            logger.info(
-                "Left one running task %s which started at %s",
-                running_tasks[-1]["arn"],
-                running_tasks[-1]["started"],
-            )
+        logger.info(
+            "Left one running task %s which started at %s",
+            running_tasks[-1]["arn"],
+            running_tasks[-1]["started"],
+        )
+
+    message = f"Found {stop_count} duplicate tasks running on cluster {cluster}."
+    if stop_count > 0:
+        logger.error(message)
+        _send_slack_message(":rotating_light: " + message)
     else:
-        logger.info("Not attempting to kill duplicate tasks as the switch is disabled")
+        logger.info(message)
 
 
 @celery_app.task()

@@ -5,6 +5,7 @@ import pytest
 from django.conf import settings
 from django.test import TestCase
 from django.urls import resolve, reverse
+from freezegun import freeze_time
 from rest_framework import status
 
 from dataworkspace.apps.core.models import Database
@@ -417,7 +418,8 @@ class TestAPIReferenceDatasetView(TestCase):
         )
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
+@freeze_time("2020-01-01 00:01:00")
 class TestCatalogueItemsAPIView(BaseAPIViewTest):
     url = reverse("api-v1:dataset:catalogue-items")
     factory = factories.DataSetFactory
@@ -440,7 +442,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             "short_description": dataset.short_description,
             "description": dataset.description or None,
             "published": dataset.published,
-            "created_date": dataset.created_date.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+            "created_date": dataset.created_date.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "published_at": dataset.published_at.strftime("%Y-%m-%d")
             if dataset.published_at
             else None,
@@ -478,37 +480,45 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             else dataset.authorized_email_domains,
             "user_ids": userids,
             "quicksight_id": None,
+            "security_classification_display": None,
+            "sensitivity_name": [None],
         }
 
     def test_success(self, unauthenticated_client):
-        datacut = factories.DatacutDataSetFactory(
-            information_asset_owner=factories.UserFactory(),
-            information_asset_manager=factories.UserFactory(),
-            enquiries_contact=factories.UserFactory(),
-            personal_data="personal",
-            retention_policy="retention",
-            eligibility_criteria=["eligibility"],
-        )
+        with freeze_time("2020-01-01 00:00:00"):
+            datacut = factories.DatacutDataSetFactory(
+                information_asset_owner=factories.UserFactory(),
+                information_asset_manager=factories.UserFactory(),
+                enquiries_contact=factories.UserFactory(),
+                personal_data="personal",
+                retention_policy="retention",
+                eligibility_criteria=["eligibility"],
+            )
         datacut.tags.set([factories.SourceTagFactory()])
 
-        master_dataset = factories.MasterDataSetFactory(
-            information_asset_owner=factories.UserFactory(),
-            information_asset_manager=factories.UserFactory(),
-            personal_data="personal",
-            retention_policy="retention",
-            dictionary_published=True,
-        )
+        with freeze_time("2020-01-01 00:01:00"):
+            master_dataset = factories.MasterDataSetFactory(
+                information_asset_owner=factories.UserFactory(),
+                information_asset_manager=factories.UserFactory(),
+                personal_data="personal",
+                retention_policy="retention",
+                dictionary_published=True,
+            )
         factories.SourceTableFactory(dataset=master_dataset, schema="public", table="test_table1")
         factories.SourceTableFactory(dataset=master_dataset, schema="public", table="test_table1")
-        reference_dataset = factories.ReferenceDatasetFactory(
-            information_asset_owner=factories.UserFactory(),
-        )
 
-        visualisation = factories.VisualisationCatalogueItemFactory(
-            personal_data="personal",
-        )
+        with freeze_time("2020-01-01 00:02:00"):
+            reference_dataset = factories.ReferenceDatasetFactory(
+                information_asset_owner=factories.UserFactory(),
+            )
 
-        visualisation2 = factories.VisualisationCatalogueItemFactory(published=False)
+        with freeze_time("2020-01-01 00:03:00"):
+            visualisation = factories.VisualisationCatalogueItemFactory(
+                personal_data="personal",
+            )
+
+        with freeze_time("2020-01-01 00:04:00"):
+            visualisation2 = factories.VisualisationCatalogueItemFactory(published=False)
 
         response = unauthenticated_client.get(self.url)
         assert response.status_code == status.HTTP_200_OK
@@ -533,18 +543,20 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
         ]
 
     def test_user_permissions(self, unauthenticated_client):
-        master = factories.DataSetFactory.create(
-            published=True,
-            type=DataSetType.MASTER,
-            name="A master",
-        )
+        with freeze_time("2020-01-01 00:05:00"):
+            master = factories.DataSetFactory.create(
+                published=True,
+                type=DataSetType.MASTER,
+                name="A master",
+            )
         user = factories.UserFactory.create()
         factories.DataSetUserPermissionFactory.create(dataset=master, user=user)
 
-        visualisation = factories.VisualisationCatalogueItemFactory.create(
-            published=True,
-            name="Visualisation",
-        )
+        with freeze_time("2020-01-01 00:06:00"):
+            visualisation = factories.VisualisationCatalogueItemFactory.create(
+                published=True,
+                name="Visualisation",
+            )
 
         factories.VisualisationUserPermissionFactory.create(visualisation=visualisation, user=user)
 
@@ -569,6 +581,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
 
 
 @pytest.mark.django_db
+@freeze_time("2020-01-01 00:06:00")
 class TestToolQueryAuditLogAPIView(BaseAPIViewTest):
     url = reverse("api-v1:dataset:tool-query-audit-logs")
     factory = factories.ToolQueryAuditLogFactory

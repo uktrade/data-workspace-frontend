@@ -1264,7 +1264,9 @@ async def async_main():
                 return await handle_admin(
                     request,
                     "GET",
-                    CIMultiDict(admin_headers_request(request)),
+                    CIMultiDict(
+                        admin_headers_request(request) + tuple([("x-forwarded-for", peer_ip)])
+                    ),
                     "/error_403",
                     {},
                     b"",
