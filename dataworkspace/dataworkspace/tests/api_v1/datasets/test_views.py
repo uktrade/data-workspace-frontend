@@ -419,7 +419,7 @@ class TestAPIReferenceDatasetView(TestCase):
 
 
 @pytest.mark.django_db(transaction=True)
-@freeze_time("2020-01-01 00:01:00")
+@freeze_time("2020-01-01 00:00:00")
 class TestCatalogueItemsAPIView(BaseAPIViewTest):
     url = reverse("api-v1:dataset:catalogue-items")
     factory = factories.DataSetFactory
@@ -552,7 +552,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
         user = factories.UserFactory.create()
         factories.DataSetUserPermissionFactory.create(dataset=master, user=user)
 
-        with freeze_time("2020-01-01 00:06:00"):
+        with freeze_time("2020-01-01 00:00:00"):
             visualisation = factories.VisualisationCatalogueItemFactory.create(
                 published=True,
                 name="Visualisation",
@@ -581,7 +581,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
 
 
 @pytest.mark.django_db
-@freeze_time("2020-01-01 00:06:00")
+@freeze_time("2020-01-01 00:00:00")
 class TestToolQueryAuditLogAPIView(BaseAPIViewTest):
     url = reverse("api-v1:dataset:tool-query-audit-logs")
     factory = factories.ToolQueryAuditLogFactory
@@ -604,6 +604,7 @@ class TestToolQueryAuditLogAPIView(BaseAPIViewTest):
             ],
         }
 
+    @freeze_time("2020-01-01 00:00:00")
     def test_success(self, unauthenticated_client):
         log_1 = factories.ToolQueryAuditLogFactory.create()
         log_2 = factories.ToolQueryAuditLogFactory.create()
@@ -616,6 +617,7 @@ class TestToolQueryAuditLogAPIView(BaseAPIViewTest):
             self.expected_response(log_2),
         ]
 
+    @freeze_time("2020-01-01 00:00:00")
     def test_large_query(self, unauthenticated_client):
         chars = settings.TOOL_QUERY_LOG_API_QUERY_TRUNC_LENGTH
         log = factories.ToolQueryAuditLogFactory.create(

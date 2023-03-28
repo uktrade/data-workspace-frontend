@@ -3,6 +3,7 @@ import uuid
 import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from freezegun import freeze_time
 from rest_framework import status
 from rest_framework.fields import DateTimeField
 
@@ -13,6 +14,7 @@ from dataworkspace.tests.factories import EventLogFactory, VisualisationLinkFact
 
 
 @pytest.mark.django_db
+@freeze_time("2020-01-01 00:00:00")
 class TestEventLogAPIView(BaseAPIViewTest):
     url = reverse("api-v1:eventlog:events")
     factory = factories.DatasetLinkDownloadEventFactory
