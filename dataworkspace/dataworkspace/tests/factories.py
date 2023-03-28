@@ -400,7 +400,6 @@ class VisualisationLinkFactory(factory.django.DjangoModelFactory):
         model = "datasets.VisualisationLink"
 
 
-@freeze_time("2020-01-01 00:00:00")
 class ApplicationInstanceFactory(factory.django.DjangoModelFactory):
     id = factory.LazyAttribute(lambda _: uuid.uuid4())
     application_template = factory.SubFactory(ApplicationTemplateFactory)
