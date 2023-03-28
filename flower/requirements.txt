@@ -6,8 +6,6 @@
 #
 amqp==5.1.1
     # via kombu
-async-timeout==4.0.2
-    # via redis
 billiard==3.6.4.0
     # via celery
 celery==5.2.6
@@ -24,27 +22,21 @@ click-plugins==1.1.1
     # via celery
 click-repl==0.2.0
     # via celery
-deprecated==1.2.13
-    # via redis
 flower==1.2.0
     # via -r requirements.in
 humanize==4.0.0
     # via flower
 kombu==5.2.4
     # via celery
-packaging==22.0
-    # via redis
 prometheus-client==0.14.1
     # via flower
 prompt-toolkit==3.0.29
     # via click-repl
-pyparsing==3.0.8
-    # via packaging
 pytz==2022.1
     # via
     #   celery
     #   flower
-redis==4.2.2
+redis==4.5.3
     # via -r requirements.in
 six==1.16.0
     # via click-repl
@@ -57,5 +49,3 @@ vine==5.0.0
     #   kombu
 wcwidth==0.2.5
     # via prompt-toolkit
-wrapt==1.14.0
-    # via deprecated
