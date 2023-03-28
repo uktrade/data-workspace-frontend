@@ -419,6 +419,7 @@ class TestAPIReferenceDatasetView(TestCase):
 
 
 @pytest.mark.django_db(transaction=True)
+@freeze_time("2020-01-01 00:01:00")
 class TestCatalogueItemsAPIView(BaseAPIViewTest):
     url = reverse("api-v1:dataset:catalogue-items")
     factory = factories.DataSetFactory
