@@ -33,7 +33,7 @@ docker-build:
 .PHONY: docker-test-unit
 docker-test-unit: TESTS ?= /dataworkspace/dataworkspace
 docker-test-unit: docker-build
-	docker-compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test pytest -vv --junitxml=/test-results/junit.xml $(TESTS)
+	docker-compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test pytest --junitxml=/test-results/junit.xml $(TESTS)
 
 
 .PHONY: docker-test-integration
