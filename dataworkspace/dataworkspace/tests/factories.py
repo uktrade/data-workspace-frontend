@@ -433,7 +433,6 @@ class DatabaseUserFactory(factory.django.DjangoModelFactory):
         model = "core.DatabaseUser"
 
 
-@freeze_time("2020-01-01 00:00:00")
 class ToolQueryAuditLogFactory(factory.django.DjangoModelFactory):
     id = factory.Sequence(lambda n: n)
     user = factory.SubFactory(UserFactory)

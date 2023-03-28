@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 
 import psycopg2
 import pytest
@@ -581,7 +582,6 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
 
 
 @pytest.mark.django_db
-@freeze_time("2020-01-01 00:06:00")
 class TestToolQueryAuditLogAPIView(BaseAPIViewTest):
     url = reverse("api-v1:dataset:tool-query-audit-logs")
     factory = factories.ToolQueryAuditLogFactory
@@ -597,7 +597,7 @@ class TestToolQueryAuditLogAPIView(BaseAPIViewTest):
             "database": log.database.memorable_name,
             "query_sql": log.query_sql[: settings.TOOL_QUERY_LOG_API_QUERY_TRUNC_LENGTH],
             "rolename": log.rolename,
-            "timestamp": log.timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+            "timestamp": log.timestamp.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "tables": [
                 {"id": table.id, "schema": table.schema, "table": table.table}
                 for table in log.tables.all().order_by("id")
@@ -605,8 +605,9 @@ class TestToolQueryAuditLogAPIView(BaseAPIViewTest):
         }
 
     def test_success(self, unauthenticated_client):
-        log_1 = factories.ToolQueryAuditLogFactory.create()
-        log_2 = factories.ToolQueryAuditLogFactory.create()
+        with freeze_time("2020-01-01 00:06:00"):
+            log_1 = factories.ToolQueryAuditLogFactory.create(timestamp=datetime.now())
+            log_2 = factories.ToolQueryAuditLogFactory.create(timestamp=datetime.now())
         factories.ToolQueryAuditLogTableFactory.create(audit_log=log_2)
         factories.ToolQueryAuditLogTableFactory.create(audit_log=log_2)
         response = unauthenticated_client.get(self.url)
@@ -618,9 +619,11 @@ class TestToolQueryAuditLogAPIView(BaseAPIViewTest):
 
     def test_large_query(self, unauthenticated_client):
         chars = settings.TOOL_QUERY_LOG_API_QUERY_TRUNC_LENGTH
-        log = factories.ToolQueryAuditLogFactory.create(
-            query_sql=f'SELECT {",".join(["X" for _ in range(chars)])} FROM a_table;'
-        )
+        with freeze_time("2020-01-01 00:06:00"):
+            log = factories.ToolQueryAuditLogFactory.create(
+                timestamp=datetime.now(),
+                query_sql=f'SELECT {",".join(["X" for _ in range(chars)])} FROM a_table;',
+            )
         factories.ToolQueryAuditLogTableFactory.create(audit_log=log)
         response = unauthenticated_client.get(self.url)
         assert response.status_code == status.HTTP_200_OK
