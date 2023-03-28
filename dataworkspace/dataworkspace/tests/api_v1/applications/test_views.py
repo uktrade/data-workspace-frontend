@@ -39,6 +39,7 @@ class TestEventLogAPIView(BaseAPIViewTest):
         }
 
     @pytest.mark.django_db
+    @freeze_time("2020-01-01 00:00:00")
     def test_success(self, unauthenticated_client):
         instance1 = factories.ApplicationInstanceFactory()
         instance2 = factories.ApplicationInstanceFactory()
