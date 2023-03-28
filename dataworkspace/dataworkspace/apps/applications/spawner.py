@@ -6,6 +6,7 @@ import datetime
 import json
 import logging
 import os
+import re
 import subprocess
 
 import boto3
@@ -439,6 +440,13 @@ class FargateSpawner:
             for _ in range(0, 60):
                 ip_address = _fargate_task_ip(options["CLUSTER_NAME"], task_arn)
                 if ip_address:
+                    conflicting_instances = ApplicationInstance.objects.filter(
+                        proxy_url__regex=r".*\b" + re.escape(ip_address) + r"\b.*", state="RUNNING"
+                    )
+                    for instance in conflicting_instances:
+                        instance.state = "STOPPED"
+                        instance.save(update_fields=["state"])
+                        logger.exception("We have two tools on the same IP!")
                     application_instance.proxy_url = f"http://{ip_address}:{port}"
                     application_instance.save(update_fields=["proxy_url"])
                     return
