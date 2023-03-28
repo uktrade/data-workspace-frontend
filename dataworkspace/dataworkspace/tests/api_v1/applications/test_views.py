@@ -9,7 +9,7 @@ from dataworkspace.tests.api_v1.base import BaseAPIViewTest
 
 
 @pytest.mark.django_db
-@freeze_time("2023-03-27")
+@freeze_time("2020-01-01 00:00:00")
 class TestEventLogAPIView(BaseAPIViewTest):
     url = reverse("api-v1:application-instance:instances")
     factory = factories.ApplicationInstanceFactory
