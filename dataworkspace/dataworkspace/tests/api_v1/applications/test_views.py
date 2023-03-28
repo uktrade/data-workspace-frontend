@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 import pytest
 from django.urls import reverse
 from freezegun import freeze_time
@@ -9,8 +11,7 @@ from dataworkspace.tests.api_v1.base import BaseAPIViewTest
 
 
 @pytest.mark.django_db
-@freeze_time("2020-01-01 00:00:00")
-class TestEventLogAPIView(BaseAPIViewTest):
+class TestApplicationInstanceReportAPIView(BaseAPIViewTest):
     url = reverse("api-v1:application-instance:instances")
     factory = factories.ApplicationInstanceFactory
     pagination_class = "dataworkspace.apps.api_v1.applications.views.ApplicationInstanceCursorPagination.page_size"
@@ -39,10 +40,16 @@ class TestEventLogAPIView(BaseAPIViewTest):
         }
 
     @pytest.mark.django_db
-    @freeze_time("2020-01-01 00:00:00")
     def test_success(self, unauthenticated_client):
-        instance1 = factories.ApplicationInstanceFactory()
-        instance2 = factories.ApplicationInstanceFactory()
+        with freeze_time("2020-01-01 00:00:00"):
+            instance1 = factories.ApplicationInstanceFactory(
+                spawner_created_at=datetime.now() - timedelta(minutes=5),
+                spawner_stopped_at=datetime.now() - timedelta(minutes=3),
+            )
+            instance2 = factories.ApplicationInstanceFactory(
+                spawner_created_at=datetime.now() - timedelta(minutes=3),
+                spawner_stopped_at=datetime.now() - timedelta(minutes=1),
+            )
         response = unauthenticated_client.get(reverse("api-v1:application-instance:instances"))
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["results"] == sorted(
