@@ -516,13 +516,12 @@ def new_private_database_credentials(
             )
 
         # Make it so by default, objects created by the user are owned by the role
-        with connections[database_memorable_name].cursor() as cur:
-            cur.execute(
-                sql.SQL("ALTER USER {} SET ROLE {};").format(
-                    sql.Identifier(db_user), sql.Identifier(db_role)
-                )
-            )
-            cur.execute(sql.SQL("SET SESSION AUTHORIZATION {};").format(sql.Identifier(db_role)))
+        # with connections[database_memorable_name].cursor() as cur:
+        #     cur.execute(
+        #         sql.SQL("ALTER USER {} SET ROLE {};").format(
+        #             sql.Identifier(db_user), sql.Identifier(db_role)
+        #         )
+        #     )
 
         return {
             "memorable_name": database_memorable_name,
