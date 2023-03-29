@@ -522,6 +522,7 @@ def new_private_database_credentials(
                     sql.Identifier(db_user), sql.Identifier(db_role)
                 )
             )
+            cur.execute(sql.SQL("SET SESSION AUTHORIZATION {};").format(sql.Identifier(db_role)))
 
         return {
             "memorable_name": database_memorable_name,
