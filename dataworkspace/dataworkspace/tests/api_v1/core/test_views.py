@@ -9,6 +9,7 @@ from rest_framework import status
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.tests import factories
+from dataworkspace.tests.api_v1.base import BaseAPIViewTest
 
 
 @pytest.mark.django_db
@@ -180,11 +181,13 @@ class TestGetSupersetCredentialsAPIView:
                 timeout=mock.ANY,
             ),
         ]
+
+
 class TestTeamsAPIView(BaseAPIViewTest):
     url = reverse("api-v1:core:teams")
     factory = factories.UserFactory
 
-    def test_success(self,unauthenticated_client):
+    def test_success(self, unauthenticated_client):
         user1 = UserFactory()
         user2 = UserFactory()
         user3 = UserFactory()
@@ -193,19 +196,19 @@ class TestTeamsAPIView(BaseAPIViewTest):
         response = unauthenticated_client.get(self.url)
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["results"] == [
-                {
-                    "name":team1.name,
-                    "schema":team1.schema,
-                    "memers": [
-                        user1.id,
-                        user2.id,
-                    ]
-                },
-                {
-                    "name": team1.name,
-                    "schema": team1.schema,
-                    "memers": [
-                        user3.id,
-                    ]
-                },
-            ]
+            {
+                "name": team1.name,
+                "schema": team1.schema,
+                "memers": [
+                    user1.id,
+                    user2.id,
+                ],
+            },
+            {
+                "name": team1.name,
+                "schema": team1.schema,
+                "memers": [
+                    user3.id,
+                ],
+            },
+        ]

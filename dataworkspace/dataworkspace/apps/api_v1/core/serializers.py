@@ -14,16 +14,13 @@ class NewsletterSubscriptionSerializer(serializers.ModelSerializer):
         model = NewsletterSubscription
         fields = "__all__"
 
-class TeamSerializer(serializers.ModelSerializer):
 
+class TeamSerializer(serializers.ModelSerializer):
     members = serializers.SerializerMethodField()
+
     class Meta:
         model = Team
-        fields = ("name",
-        "schema_name",
-        "members"
-        )
+        fields = ("name", "schema_name", "members")
 
     def get_members(self, team):
-        return[x.id for x in team.members()]
-
+        return [x.id for x in team.members()]
