@@ -180,3 +180,32 @@ class TestGetSupersetCredentialsAPIView:
                 timeout=mock.ANY,
             ),
         ]
+class TestTeamsAPIView(BaseAPIViewTest):
+    url = reverse("api-v1:core:teams")
+    factory = factories.UserFactory
+
+    def test_success(self,unauthenticated_client):
+        user1 = UserFactory()
+        user2 = UserFactory()
+        user3 = UserFactory()
+        team1 = Team.objects.create(name="team1", schema="team1")
+        team2 = Team.objects.create(name="team2", schema="team2")
+        response = unauthenticated_client.get(self.url)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["results"] == [
+                {
+                    "name":team1.name,
+                    "schema":team1.schema,
+                    "memers": [
+                        user1.id,
+                        user2.id,
+                    ]
+                },
+                {
+                    "name": team1.name,
+                    "schema": team1.schema,
+                    "memers": [
+                        user3.id,
+                    ]
+                },
+            ]

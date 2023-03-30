@@ -24,4 +24,9 @@ urlpatterns = [
         views.NewsletterSubscriptionViewSet.as_view({"get": "list"}),
         name="newslettersubscription",
     ),
+    path(
+        "teams",
+        views.TeamViewSet.as_view({"get": "list"}),
+        name="teams",
+    ),
 ]

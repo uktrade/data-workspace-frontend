@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from dataworkspace.apps.core.models import UserSatisfactionSurvey, NewsletterSubscription
+from dataworkspace.apps.core.models import UserSatisfactionSurvey, NewsletterSubscription, Team
 
 
 class UserSatisfactionSurveySerializer(serializers.ModelSerializer):
@@ -13,3 +13,17 @@ class NewsletterSubscriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = NewsletterSubscription
         fields = "__all__"
+
+class TeamSerializer(serializers.ModelSerializer):
+
+    members = serializers.SerializerMethodField()
+    class Meta:
+        model = Team
+        fields = ("name",
+        "schema_name",
+        "members"
+        )
+
+    def get_members(self, team):
+        return[x.id for x in team.members()]
+
