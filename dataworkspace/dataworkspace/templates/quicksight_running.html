@@ -6,7 +6,7 @@
 {% block javascript %}
   <script nonce="{{ request.csp_nonce }}">
     dashboard = QuickSightEmbedding.embedDashboard({
-        url: '{{ visualisation_src|safe }}',
+        url: '{{ visualisation_src|safe }}' + window.location.hash,
         container: document.getElementById('visualisation'),
         locale: "en-gb",
         printEnabled: true,
