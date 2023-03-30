@@ -19,7 +19,6 @@ from dataworkspace.apps.core.models import (
     UserSatisfactionSurvey,
     NewsletterSubscription,
     Team,
-    TeamMembership,
 )
 from dataworkspace.apps.core.utils import (
     generate_jwt_token,
