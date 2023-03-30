@@ -193,14 +193,14 @@ class TestTeamsAPIView(BaseAPIViewTest):
         user1 = UserFactory()
         user2 = UserFactory()
         user3 = UserFactory()
-        team1 = Team.objects.create(name="team1", schema="team1")
-        team2 = Team.objects.create(name="team2", schema="team2")
+        team1 = Team.objects.create(name="team1", schema_name="team1")
+        team2 = Team.objects.create(name="team2", schema_name="team2")
         response = unauthenticated_client.get(self.url)
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["results"] == [
             {
                 "name": team1.name,
-                "schema": team1.schema,
+                "schema": team1.schema_name ,
                 "memers": [
                     user1.id,
                     user2.id,
@@ -208,7 +208,7 @@ class TestTeamsAPIView(BaseAPIViewTest):
             },
             {
                 "name": team2.name,
-                "schema": team2.schema,
+                "schema": team2.schema_name,
                 "memers": [
                     user3.id,
                 ],
