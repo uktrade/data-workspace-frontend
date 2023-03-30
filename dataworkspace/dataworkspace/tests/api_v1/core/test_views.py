@@ -200,8 +200,8 @@ class TestTeamsAPIView(BaseAPIViewTest):
         assert response.json()["results"] == [
             {
                 "name": team1.name,
-                "schema": team1.schema_name ,
-                "memers": [
+                "schema": team1.schema_name,
+                "member": [
                     user1.id,
                     user2.id,
                 ],
@@ -209,7 +209,7 @@ class TestTeamsAPIView(BaseAPIViewTest):
             {
                 "name": team2.name,
                 "schema": team2.schema_name,
-                "memers": [
+                "member": [
                     user3.id,
                 ],
             },
