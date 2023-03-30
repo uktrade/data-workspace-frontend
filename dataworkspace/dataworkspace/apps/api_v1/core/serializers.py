@@ -20,7 +20,7 @@ class TeamSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Team
-        fields = ("name", "schema_name", "members")
+        fields = ("name", "schema_name", "member")
 
     def get_members(self, team):
-        return [x.id for x in team.members()]
+        return [x.id for x in team.member()]
