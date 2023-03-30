@@ -8,7 +8,8 @@ from rest_framework import status
 
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.datasets.constants import UserAccessType
-from dataworkspace.tests import factories
+from dataworkspace.apps.core.models import Team
+from dataworkspace.tests import factories, UserFactory
 from dataworkspace.tests.api_v1.base import BaseAPIViewTest
 
 
@@ -205,8 +206,8 @@ class TestTeamsAPIView(BaseAPIViewTest):
                 ],
             },
             {
-                "name": team1.name,
-                "schema": team1.schema,
+                "name": team2.name,
+                "schema": team2.schema,
                 "memers": [
                     user3.id,
                 ],
