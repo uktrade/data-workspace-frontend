@@ -194,8 +194,6 @@ class TestTeamsAPIView(BaseAPIViewTest):
         user1 = UserFactory()
         user2 = UserFactory()
         user3 = UserFactory()
-        id1 = TeamFactory.create()
-        id2 = TeamFactory.create()
         team1 = TeamFactory.create()
         team2 = TeamFactory.create()
         team1.member.add(user1.id)
@@ -205,7 +203,7 @@ class TestTeamsAPIView(BaseAPIViewTest):
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["results"] == [
             {
-                "id": id1,
+                "id": team1.id,
                 "name": team1.name,
                 "schema_name": team1.schema_name,
                 "members": [
@@ -214,7 +212,7 @@ class TestTeamsAPIView(BaseAPIViewTest):
                 ],
             },
             {
-                "id": id2,
+                "id": team2.id,
                 "name": team2.name,
                 "schema_name": team2.schema_name,
                 "members": [
