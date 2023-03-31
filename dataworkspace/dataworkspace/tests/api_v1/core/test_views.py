@@ -195,6 +195,9 @@ class TestTeamsAPIView(BaseAPIViewTest):
         user3 = UserFactory()
         team1 = Team.objects.create(name="team1", schema_name="team1")
         team2 = Team.objects.create(name="team2", schema_name="team2")
+        team1.member.add(user1.id)
+        team1.member.add(user2.id)
+        team2.member.add(user3.id)
         response = unauthenticated_client.get(self.url)
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["results"] == [
