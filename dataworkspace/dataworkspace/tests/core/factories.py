@@ -1,8 +1,9 @@
+import uuid
 import factory
-
 from dataworkspace.apps.core.charts.models import ChartBuilderChart
 from dataworkspace.tests.explorer.factories import QueryLogFactory
 from dataworkspace.tests.factories import UserFactory
+from dataworkspace.apps.core.models import Team
 
 
 class ChartBuilderChartFactory(factory.django.DjangoModelFactory):
@@ -14,3 +15,12 @@ class ChartBuilderChartFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = ChartBuilderChart
+
+
+class TeamFactory(factory.django.DjangoModelFactory):
+    id = factory.LazyAttribute(lambda _: uuid.uuid4())
+    name = factory.fuzzy.FuzzyText(length=20)
+    schema_name = factory.fuzzy.FuzzyText(length=20)
+
+    class Meta:
+        model = Team

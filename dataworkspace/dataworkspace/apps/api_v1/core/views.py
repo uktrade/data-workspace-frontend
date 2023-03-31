@@ -12,9 +12,14 @@ from rest_framework.pagination import PageNumberPagination
 from dataworkspace.apps.api_v1.core.serializers import (
     UserSatisfactionSurveySerializer,
     NewsletterSubscriptionSerializer,
+    TeamSerializer,
 )
 from dataworkspace.apps.applications.models import ApplicationInstance
-from dataworkspace.apps.core.models import UserSatisfactionSurvey, NewsletterSubscription
+from dataworkspace.apps.core.models import (
+    UserSatisfactionSurvey,
+    NewsletterSubscription,
+    Team,
+)
 from dataworkspace.apps.core.utils import (
     generate_jwt_token,
     new_private_database_credentials,
@@ -142,4 +147,14 @@ class NewsletterSubscriptionViewSet(viewsets.ModelViewSet):
 
     queryset = NewsletterSubscription.objects.all()
     serializer_class = NewsletterSubscriptionSerializer
+    pagination_class = PageNumberPagination
+
+
+class TeamViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint to list of team schema members for ingestion by data flow
+    """
+
+    queryset = Team.objects.all()
+    serializer_class = TeamSerializer
     pagination_class = PageNumberPagination

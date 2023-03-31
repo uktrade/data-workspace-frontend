@@ -9,6 +9,9 @@ from rest_framework import status
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.tests import factories
+from dataworkspace.tests.factories import UserFactory
+from dataworkspace.tests.api_v1.base import BaseAPIViewTest
+from dataworkspace.tests.core.factories import TeamFactory
 
 
 @pytest.mark.django_db
@@ -179,4 +182,39 @@ class TestGetSupersetCredentialsAPIView:
                 {"credentials": credentials, "dashboards": [visualisation.identifier]},
                 timeout=mock.ANY,
             ),
+        ]
+
+
+class TestTeamsAPIView(BaseAPIViewTest):
+    url = reverse("api-v1:core:teams")
+    pagination_class = "dataworkspace.apps.api_v1.core.views.PageNumberPagination.page_size"
+    factory = TeamFactory
+
+    def test_success(self, unauthenticated_client):
+        user1 = UserFactory()
+        user2 = UserFactory()
+        user3 = UserFactory()
+        team1 = TeamFactory.create()
+        team2 = TeamFactory.create()
+        team1.member.add(user1.id)
+        team1.member.add(user2.id)
+        team2.member.add(user3.id)
+        response = unauthenticated_client.get(self.url)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["results"] == [
+            {
+                "name": team1.name,
+                "schema_name": team1.schema_name,
+                "members": [
+                    user1.id,
+                    user2.id,
+                ],
+            },
+            {
+                "name": team2.name,
+                "schema_name": team2.schema_name,
+                "members": [
+                    user3.id,
+                ],
+            },
         ]
