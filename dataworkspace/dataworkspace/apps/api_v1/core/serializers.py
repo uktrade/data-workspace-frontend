@@ -16,11 +16,11 @@ class NewsletterSubscriptionSerializer(serializers.ModelSerializer):
 
 
 class TeamSerializer(serializers.ModelSerializer):
-    member = serializers.SerializerMethodField()
+    members = serializers.SerializerMethodField()
 
     class Meta:
         model = Team
         fields = ("name", "schema_name", "member")
 
-    def get_member(self, team):
-        return [x.id for x in team.member()]
+    def get_members(self, team):
+        return [x.id for x in team.member.all()]
