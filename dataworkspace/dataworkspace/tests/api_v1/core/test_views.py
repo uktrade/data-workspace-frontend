@@ -12,7 +12,7 @@ from dataworkspace.apps.core.models import Team
 from dataworkspace.tests import factories
 from dataworkspace.tests.factories import UserFactory
 from dataworkspace.tests.api_v1.base import BaseAPIViewTest
-
+from dataworkspace.tests.core.factories import TeamFactory
 
 @pytest.mark.django_db
 class TestGetSupersetCredentialsAPIView:
@@ -188,13 +188,14 @@ class TestGetSupersetCredentialsAPIView:
 class TestTeamsAPIView(BaseAPIViewTest):
     url = reverse("api-v1:core:teams")
     pagination_class = "dataworkspace.apps.api_v1.core.views.PageNumberPagination.page_size"
+    factory = TeamFactory
 
     def test_success(self, unauthenticated_client):
         user1 = UserFactory()
         user2 = UserFactory()
         user3 = UserFactory()
-        team1 = Team.objects.create(name="team1", schema_name="team1")
-        team2 = Team.objects.create(name="team2", schema_name="team2")
+        team1 = TeamFactory.create()
+        team2 = TeamFactory.create()
         team1.member.add(user1.id)
         team1.member.add(user2.id)
         team2.member.add(user3.id)
