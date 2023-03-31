@@ -187,7 +187,7 @@ class TestGetSupersetCredentialsAPIView:
 
 class TestTeamsAPIView(BaseAPIViewTest):
     url = reverse("api-v1:core:teams")
-    factory = factories.UserFactory
+    pagination_class = "dataworkspace.apps.api_v1.core.views.PageNumberPagination.page_size"
 
     def test_success(self, unauthenticated_client):
         user1 = UserFactory()
@@ -203,16 +203,16 @@ class TestTeamsAPIView(BaseAPIViewTest):
         assert response.json()["results"] == [
             {
                 "name": team1.name,
-                "schema": team1.schema_name,
-                "member": [
+                "schema_name": team1.schema_name,
+                "members": [
                     user1.id,
                     user2.id,
                 ],
             },
             {
                 "name": team2.name,
-                "schema": team2.schema_name,
-                "member": [
+                "schema_name": team2.schema_name,
+                "members": [
                     user3.id,
                 ],
             },
