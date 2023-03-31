@@ -14,6 +14,7 @@ from dataworkspace.tests.factories import UserFactory
 from dataworkspace.tests.api_v1.base import BaseAPIViewTest
 from dataworkspace.tests.core.factories import TeamFactory
 
+
 @pytest.mark.django_db
 class TestGetSupersetCredentialsAPIView:
     @pytest.mark.django_db

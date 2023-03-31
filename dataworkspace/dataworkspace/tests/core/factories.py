@@ -11,13 +11,15 @@ class ChartBuilderChartFactory(factory.django.DjangoModelFactory):
     updated_by = factory.SubFactory(UserFactory)
     title = factory.fuzzy.FuzzyText(length=20)
     description = factory.fuzzy.FuzzyText(length=50)
-    
+
     class Meta:
         model = ChartBuilderChart
 
+
 class TeamFactory(factory.django.DjangoModelFactory):
-    id=factory.LazyAttribute(lambda _: uuid.uuid4())
+    id = factory.LazyAttribute(lambda _: uuid.uuid4())
     name = factory.fuzzy.FuzzyText(length=20)
     schema_name = factory.fuzzy.FuzzyText(length=20)
+
     class Meta:
         model = Team
