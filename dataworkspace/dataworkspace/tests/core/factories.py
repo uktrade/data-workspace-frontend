@@ -1,5 +1,5 @@
 import factory
-
+import uuid
 from dataworkspace.apps.core.charts.models import ChartBuilderChart
 from dataworkspace.tests.explorer.factories import QueryLogFactory
 from dataworkspace.tests.factories import UserFactory
