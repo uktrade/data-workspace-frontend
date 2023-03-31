@@ -101,9 +101,11 @@ variable gitlab_instance_type {}
 variable gitlab_memory {}
 variable gitlab_cpu {}
 variable gitlab_runner_instance_type {}
+variable gitlab_runner_tap_instance_type {}
 variable gitlab_runner_root_volume_size {}
 variable gitlab_db_instance_class {}
 variable gitlab_runner_visualisations_deployment_project_token {}
+variable gitlab_runner_tap_project_token {}
 
 variable gitlab_sso_id {}
 variable gitlab_sso_secret {}
