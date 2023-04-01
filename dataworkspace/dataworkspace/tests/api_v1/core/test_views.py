@@ -203,7 +203,6 @@ class TestTeamsAPIView(BaseAPIViewTest):
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["results"] == [
             {
-                "id": team1.id,
                 "name": team1.name,
                 "schema_name": team1.schema_name,
                 "members": [
@@ -212,7 +211,6 @@ class TestTeamsAPIView(BaseAPIViewTest):
                 ],
             },
             {
-                "id": team2.id,
                 "name": team2.name,
                 "schema_name": team2.schema_name,
                 "members": [
