@@ -17,7 +17,7 @@ class NewsletterSubscriptionSerializer(serializers.ModelSerializer):
 
 class TeamSerializer(serializers.ModelSerializer):
     members = serializers.SerializerMethodField()
-    id = serializers.SerializerMethodField()
+    id = serializers.UUIDField()
 
     class Meta:
         model = Team
