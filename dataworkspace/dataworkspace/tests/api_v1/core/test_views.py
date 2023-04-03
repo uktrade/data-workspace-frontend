@@ -199,8 +199,8 @@ class TestTeamsAPIView(BaseAPIViewTest):
         team1.member.add(user1.id)
         team1.member.add(user2.id)
         team2.member.add(user3.id)
-        id1 = team1.id
-        id2 = team2.id
+        id1 = serializers.team1.id
+        id2 = serializers.team2.id
         response = unauthenticated_client.get(self.url)
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["results"] == [
