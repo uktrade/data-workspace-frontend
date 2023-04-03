@@ -1,6 +1,5 @@
 from unittest import mock
 import pytest
-from rest_framework import serializers
 from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
