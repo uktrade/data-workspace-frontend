@@ -212,7 +212,7 @@ class TestTeamsAPIView(BaseAPIViewTest):
                 ],
             },
             {
-                "id": str(team1.id),
+                "id": str(team2.id),
                 "name": team2.name,
                 "schema_name": team2.schema_name,
                 "members": [
