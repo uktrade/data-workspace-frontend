@@ -1,0 +1,33 @@
+site_name: Data Workspace
+repo_name: uktrade/data-workspace
+repo_url: https://github.com/uktrade/data-workspace
+theme:
+  name: tech_docs_template
+  logo: assets/dit-logo.png
+  favicon: assets/dit-favicon.png
+  features:
+    - content.code.copy
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.indexes
+markdown_extensions:
+  - def_list
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+plugins:
+  - material/search
+nav:
+    - Quickstart: 'index.md'
+    - Infrastructure: 'infrastructure.md'
+    - Development Guides:
+      - Intro: 'devguides.md'
+      - Remote Debugging: 'Remote Debugging.md'
+      - Enhanced Tables: 'Enhanced-tables.md'
+      - mkdocs commands: 'mkdocs.md'
+    - Contributing:
+      - How to contribute: 'contributing.md'
