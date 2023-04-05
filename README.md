@@ -37,11 +37,6 @@ With the default environment, you will need the below in your `/etc/hosts` file.
 ```
 127.0.0.1       dataworkspace.test
 127.0.0.1       data-workspace-localstack
-```
-
-If you're using the mock SSO, you will need the below in your `/etc/hosts` file.
-
-```
 127.0.0.1       data-workspace-sso.test
 ```
 
