@@ -61,12 +61,12 @@ services:
     build: https://github.com/uktrade/mock-sso.git#code-test
     environment:
       - MOCK_SSO_PORT=8081
+      - MOCK_SSO_TOKEN=bar
+      - MOCK_SSO_CODE=fizz
       # - MOCK_SSO_USERNAME=foo
       # - MOCK_SSO_EMAIL_USER_ID=foo@bar.com
       # - MOCK_SSO_SCOPE=data-workspace
-      - MOCK_SSO_TOKEN=bar
       # - MOCK_SSO_VALIDATE_TOKEN=False
-      - MOCK_SSO_CODE=fizz
     ports:
       - "8081:8081"
 
