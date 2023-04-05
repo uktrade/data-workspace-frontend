@@ -57,6 +57,15 @@ services:
     ports:
       - "9200:9200"
 
+  data-workspace-sso.test:
+    build: https://github.com/uktrade/mock-sso.git
+    environment:
+      - MOCK_SSO_PORT=8081
+      - MOCK_SSO_TOKEN=bar
+      - MOCK_SSO_CODE=fizz
+    ports:
+      - "8081:8081"
+
   data-workspace-localstack:
     build:
       context: localstack
