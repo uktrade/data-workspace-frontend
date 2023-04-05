@@ -217,11 +217,11 @@
                   <dd>
                   {{ dataset.last_updated|date_with_gmt_offset|default_if_none:"N/A" }}
                   </dd>
-                  <dt>Source:</dt>
+                  <dt>Publisher:</dt>
                   <dd>
-                    {% for source in dataset.sources %}
+                    {% for publisher in dataset.publishers %}
                       <a class="govuk-link"
-                         href="{% url "datasets:find_datasets" %}?source={{ source.id }}">{{ source.name }}</a>
+                         href="{% url "datasets:find_datasets" %}?publisher={{ publisher.id }}">{{ publisher.name }}</a>
                       {% empty %}
                       N/A
                     {% endfor %}
