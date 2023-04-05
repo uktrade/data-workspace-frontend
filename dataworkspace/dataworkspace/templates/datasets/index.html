@@ -221,7 +221,7 @@
                   <dd>
                     {% for publisher in dataset.publishers %}
                       <a class="govuk-link"
-                         href="{% url "datasets:find_datasets" %}?source={{ publisher.id }}">{{ publisher.name }}</a>
+                         href="{% url "datasets:find_datasets" %}?publisher={{ publisher.id }}">{{ publisher.name }}</a>
                       {% empty %}
                       N/A
                     {% endfor %}
