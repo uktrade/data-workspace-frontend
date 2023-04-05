@@ -1,9 +1,11 @@
+<!-- --8<-- [start:intro] -->
 # Data Workspace [![CircleCI](https://circleci.com/gh/uktrade/data-workspace.svg?style=svg)](https://circleci.com/gh/uktrade/data-workspace)
 
 Allows users to launch applications in order to analyse data
 
-![Data Workspace architecture](data-workspace-architecture.png)
-
+![Data Workspace architecture](./assets/data-workspace-architecture.png)
+<!-- --8<-- [end:intro] -->
+<!-- --8<-- [start:runninglocally] -->
 ## Running locally
 
 Set data infrastructure shared network
@@ -46,8 +48,8 @@ And the application will be visible at http://dataworkspace.test:8000. This is t
 ```
 
 Some parts of the database are managed and populated by [data-flow](https://github.com/uktrade/data-flow/). To ensure there are no issues with some tables being missing, initial setup should include checking out that repo and running the `docker-compose-dw.yml` file, which will perform migrations on the shared Data Workspace/Data Flow DB.
-
-
+<!-- --8<-- [end:runninglocally] -->
+<!-- --8<-- [start:runningsuperset] -->
 ## Running superset locally
 
 There is a separate compose file to run superset as it's not necessary to run it locally all the time.
@@ -80,8 +82,8 @@ After placing the following lines in /etc/hosts:
 ```
 
 you can then visit http://superset-edit.dataworkspace.test:8000/ or http://superset-admin.dataworkspace.test:8000/
-
-
+<!-- --8<-- [end:runningsuperset] -->
+<!-- --8<-- [start:migrations] -->
 ## Creating migrations / running management commands
 
 ```bash
@@ -93,12 +95,13 @@ docker-compose run \
 ```
 
 For other commands, replace `makemigrations` with the name of the command.
-
-
+<!-- --8<-- [end:migrations] -->
+<!-- --8<-- [start:docker] -->
 ## Debugging in docker
 
 See the [remote debugging docs](./docs/Remote%20Debugging.md)
-
+<!-- --8<-- [end:docker] -->
+<!-- --8<-- [start:tests] -->
 ## Running tests
 
 ```bash
@@ -109,7 +112,8 @@ Django tests
 ```bash
 make docker-test-unit
 ```
-
+<!-- --8<-- [end:tests] -->
+<!-- --8<-- [start:unitandintegration] -->
 ### Running unit and integration tests locally
 
 To run the tests locally without having to rebuild the containers every time append `-local` to the test make commands
@@ -127,28 +131,32 @@ make docker-test-local
 ```
 
 To run specific tests pass `-e TARGET=<test>` into make
+
 ```bash
 make docker-test-unit-local -e TARGET=dataworkspace/dataworkspace/tests/test_admin.py::TestCustomAdminSite::test_non_admin_access
- ```
+```
 
 ```bash
 make docker-test-integration-local -e TARGET=test/test_application.py
- ```
-
+```
+<!-- --8<-- [end:unitandintegration] -->
+<!-- --8<-- [start:selenium] -->
 ### Running selenium tests locally
 
 We have some selenium integration tests that launch a (headless) browser in order to interact with a running instance of Data Workspace to assure some core flows (only Data Explorer at the time of writing). It is sometimes desirable to watch these tests run, e.g. in order to debug where it is failing. To run the selenium tests through docker-compose using a local browser, do the following:
 
 1) Download the latest [Selenium Server](https://www.selenium.dev/downloads/) and run it in the background, e.g. `java -jar ~/Downloads/selenium-server-standalone-3.141.59 &`
 2) Run the selenium tests via docker-compose, exposing the Data Workspace port and the mock-SSO port and setting the `REMOTE_SELENIUM_URL` environment variable, e.g. `docker-compose -f docker-compose-test.yml -p data-workspace-test run -e REMOTE_SELENIUM_URL=http://host.docker.internal:4444/wd/hub -p 8000:8000 -p 8005:8005 --rm data-workspace-test pytest -vvvs test/test_selenium.py`
-
+<!-- --8<-- [end:selenium] -->
+<!-- --8<-- [start:dependencies] -->
 ## Updating a dependency
 
 We use [pip-tools](https://github.com/jazzband/pip-tools) to manage dependencies across two files - `requirements.txt` and `requirements-dev.txt`. These have corresponding `.in` files where we specify our top-level dependencies.
 
 Add the new dependencies to those `.in` files, or update an existing dependency, then (with `pip-tools` already installed), run `make save-requirements`.
-
-# Front end static assets
+<!-- --8<-- [end:dependencies] -->
+<!-- --8<-- [start:staticassets] -->
+## Front end static assets
 
 We use [node-sass](https://github.com/sass/node-sass#command-line-interface) to build the front end css and include the GOVUK Front End styles.
 
@@ -161,7 +169,8 @@ To build this locally requires NodeJS. Ideally installed via `nvm` https://githu
   npm install
   npm run build:css
 ```
-
+<!-- --8<-- [end:staticassets] -->
+<!-- --8<-- [start:react] -->
 ## Running the React apps locally
 
 We're set up to use django-webpack-loader for hotloading the react app while developing. 
@@ -189,8 +198,8 @@ cd dataworkspace/dataworkspace/static/js/react_apps/
 npm run build
 git add ../bundles/*.js ../stats/react_apps-stats.json
 ```
-
-
+<!-- --8<-- [end:react] -->
+<!-- --8<-- [start:infrastructure] -->
 # Infrastructure
 
 The infrastructure is heavily Docker/Fargate based. Production Docker images are built by [quay.io](https://quay.io/organization/uktrade).
@@ -283,7 +292,6 @@ A common question is why not just NGINX instead of the custom proxy? The reason 
 
 While not impossible to leverage NGINX to move some code from the proxy, there would still need to be custom code, and NGINX would have to communicate via some mechanism to this custom code to acheive all of the above: extra HTTP or Redis requests, or maybe through a custom NGINX module. It is suspected that this will make things more complex rather than less, and increase the burden on the developer.
 
-
 ## Why is the proxy written using asyncio?
 
 - The proxy fits the typical use-case of event-loop based programming: low CPU but high IO requirements, with potentially high number of connections.
@@ -303,7 +311,6 @@ While not impossible to leverage NGINX to move some code from the proxy, there w
 
 - Django gives a lot of benefits for the main application: for example, it is within the skill set of most available developers. Only a small fraction of changes need to involve the proxy.
 
-
 ## Comparison with JupyterHub
 
 In addition to being able to run any Docker container, not just JupyterLab, Data Workspace has some deliberate architectural features that are different to JupyterHub.
@@ -319,3 +326,4 @@ In addition to being able to run any Docker container, not just JupyterLab, Data
 - The launched containers do not make requests to the main application, and the main application does not make requests to the launched containers. This means there are fewer cyclic dependencies in terms of data flow, and that applications don't need to be customised for this environment. They just need to open a port for HTTP requests, which makes them extremely standard web-based Docker applications.
 
 There is a notable exception to the statelessness of the main application: the launch of an application is made of a sequence of calls to AWS, and is done in a Celery task. If this sequence is interrupted, the launch of the application will fail. This is a solvable problem: the state could be saving into the database and sequence resumed later. However, since this sequence of calls lasts only a few seconds, and the user will be told of the error and can refresh to try to launch the application again, at this stage of the project this has been deemed unnecessary.
+<!-- --8<-- [end:infrastructure] -->
