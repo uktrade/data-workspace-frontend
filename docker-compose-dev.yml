@@ -58,15 +58,11 @@ services:
       - "9200:9200"
 
   data-workspace-sso.test:
-    build: https://github.com/uktrade/mock-sso.git#code-test
+    build: https://github.com/uktrade/mock-sso.git
     environment:
       - MOCK_SSO_PORT=8081
       - MOCK_SSO_TOKEN=bar
       - MOCK_SSO_CODE=fizz
-      # - MOCK_SSO_USERNAME=foo
-      # - MOCK_SSO_EMAIL_USER_ID=foo@bar.com
-      # - MOCK_SSO_SCOPE=data-workspace
-      # - MOCK_SSO_VALIDATE_TOKEN=False
     ports:
       - "8081:8081"
 

@@ -39,6 +39,12 @@ With the default environment, you will need the below in your `/etc/hosts` file.
 127.0.0.1       data-workspace-localstack
 ```
 
+If you're using the mock SSO, you will need the below in your `/etc/hosts` file.
+
+```
+127.0.0.1       data-workspace-sso.test
+```
+
 And the application will be visible at http://dataworkspace.test:8000. This is to be able to properly test cookies that are shared with subdomains. To run tool and visualisation-related code, you will need subdomains in your `/etc/hosts` file, such as 
 
 ```
