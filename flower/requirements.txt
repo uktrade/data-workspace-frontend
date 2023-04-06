@@ -6,6 +6,8 @@
 #
 amqp==5.1.1
     # via kombu
+async-timeout==4.0.2
+    # via redis
 billiard==3.6.4.0
     # via celery
 celery==5.2.6
@@ -36,7 +38,7 @@ pytz==2022.1
     # via
     #   celery
     #   flower
-redis==4.5.3
+redis==4.5.4
     # via -r requirements.in
 six==1.16.0
     # via click-repl
