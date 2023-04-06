@@ -26,21 +26,21 @@ prepare-docker-cache: &prepare-docker-cache
     name: Prepare cache (docker layers and dockerfile/pip reqs)
     command: |
       mkdir -p caches
-      if ! test -f caches/checksums; then
-        # Needed for first time run of a new image
-        docker compose -f docker-compose-test.yml build data-workspace-test  | grep "\-\-\->" | grep -v "Using cache" | cut -f 3 -d " " > /tmp/layers.txt
-        docker save $(cat /tmp/layers.txt) | gzip > caches/data-workspace-test-latest.tar.gz
-        sha256sum Dockerfile requirements.txt requirements-dev.txt > caches/checksums
-      fi;
-      if sha256sum --check caches/checksums; then
-        # None of these files have changed, so the Docker layers _probably_ haven't changed either.
-        # Saving them is quite slow, so in this case let's not bother.
-        echo ''
-      else
-        docker compose -f docker-compose-test.yml build data-workspace-test  | grep "\-\-\->" | grep -v "Using cache" | cut -f 3 -d " " > /tmp/layers.txt
-        docker save $(cat /tmp/layers.txt) | gzip > caches/data-workspace-test-latest.tar.gz
-        sha256sum Dockerfile requirements.txt requirements-dev.txt > caches/checksums
-      fi
+      # if ! test -f caches/checksums; then
+      #   # Needed for first time run of a new image
+      #   docker compose -f docker-compose-test.yml build data-workspace-test  | grep "\-\-\->" | grep -v "Using cache" | cut -f 3 -d " " > /tmp/layers.txt
+      #   docker save $(cat /tmp/layers.txt) | gzip > caches/data-workspace-test-latest.tar.gz
+      #   sha256sum Dockerfile requirements.txt requirements-dev.txt > caches/checksums
+      # fi;
+      # if sha256sum --check caches/checksums; then
+      #   # None of these files have changed, so the Docker layers _probably_ haven't changed either.
+      #   # Saving them is quite slow, so in this case let's not bother.
+      #   echo ''
+      # else
+      docker compose -f docker-compose-test.yml build data-workspace-test  | grep "\-\-\->" | grep -v "Using cache" | cut -f 3 -d " " > /tmp/layers.txt
+      docker save $(cat /tmp/layers.txt) | gzip > caches/data-workspace-test-latest.tar.gz
+      sha256sum Dockerfile requirements.txt requirements-dev.txt > caches/checksums
+      # fi
 
 jobs:
   docker-test-unit:
