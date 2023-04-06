@@ -32,7 +32,7 @@ prepare-docker-cache: &prepare-docker-cache
         docker save $(cat /tmp/layers.txt) | gzip > caches/data-workspace-test-latest.tar.gz
         sha256sum Dockerfile requirements.txt requirements-dev.txt > caches/checksums
       fi;
-      if sha256sum --check --status caches/checksums; then
+      if sha256sum --check caches/checksums; then
         # None of these files have changed, so the Docker layers _probably_ haven't changed either.
         # Saving them is quite slow, so in this case let's not bother.
         echo ''
