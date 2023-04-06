@@ -1,3 +1,8 @@
+---
+title: Contributing
+hide:
+  - navigation
+---
 # How to Contribute
 
 In most cases to contribute you will need a [GitHub account](https://github.com/join).
