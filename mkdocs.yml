@@ -8,6 +8,7 @@ theme:
   features:
     - content.code.copy
     - navigation.tabs
+    - nvaigation.tabs.sticky
     - navigation.indexes
 markdown_extensions:
   - def_list
@@ -18,10 +19,12 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+  - admonition
+  - pymdownx.details
+  - tables
+  - attr_list
 plugins:
   - material/search
-extra_css:
-  - stylesheets/extra.css
 nav:
     - Home:
       - 'index.md'

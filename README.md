@@ -202,7 +202,7 @@ git add ../bundles/*.js ../stats/react_apps-stats.json
 ```
 <!-- --8<-- [end:react] -->
 <!-- --8<-- [start:infrastructure] -->
-# Infrastructure
+## Infrastructure
 
 The infrastructure is heavily Docker/Fargate based. Production Docker images are built by [quay.io](https://quay.io/organization/uktrade).
 
