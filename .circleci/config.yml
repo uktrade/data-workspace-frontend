@@ -97,8 +97,6 @@ jobs:
       - restore_cache:
           keys:
             - v3.9-python-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}
-            - v3.9-python-{{ checksum "requirements.txt" }}
-            - v3.9-python
       - run:
           name: Install requirements
           command: |
