@@ -23,7 +23,7 @@ cp .envs/sample.env .envs/dev.env
 Start the application by
 
 ```bash
-docker-compose -f docker-compose.yml up --build
+docker compose -f docker-compose.yml up --build
 ```
 
 ### Issues running on Apple Silicon/M1 Chipset?
@@ -31,7 +31,7 @@ docker-compose -f docker-compose.yml up --build
 If you have issues building the containers try the following
 
 ```
-DOCKER_DEFAULT_PLATFORM=linux/amd64 docker-compose -f docker-compose.yml up --build
+DOCKER_DEFAULT_PLATFORM=linux/amd64 docker compose -f docker-compose.yml up --build
 ```
 
 With the default environment, you will need the below in your `/etc/hosts` file.
@@ -63,10 +63,10 @@ cp .envs/superset-sample.env .envs/superset.dev.env
 
 Update the new file with your dit email address (must match your SSO email).
 
-Then run docker-compose using both the dev and dev superset compose files
+Then run docker compose using both the dev and dev superset compose files
 
 ```bash
-docker-compose -f docker-compose.yml -f docker-compose-superset-dev.yml up
+docker compose -f docker-compose.yml -f docker-compose-superset-dev.yml up
 ```
 
 Initially you will then need to set up the Editor role by running the following script, replacing container-id with the id of the data-workspace-postgres docker container:
@@ -88,8 +88,8 @@ you can then visit http://superset-edit.dataworkspace.test:8000/ or http://super
 ## Creating migrations / running management commands
 
 ```bash
-docker-compose build && \
-docker-compose run \
+docker compose build && \
+docker compose run \
     --user root \
     --volume=$PWD/dataworkspace:/dataworkspace/ \
     data-workspace django-admin makemigrations
@@ -144,10 +144,10 @@ make docker-test-integration-local -e TARGET=test/test_application.py
 <!-- --8<-- [start:selenium] -->
 ### Running selenium tests locally
 
-We have some selenium integration tests that launch a (headless) browser in order to interact with a running instance of Data Workspace to assure some core flows (only Data Explorer at the time of writing). It is sometimes desirable to watch these tests run, e.g. in order to debug where it is failing. To run the selenium tests through docker-compose using a local browser, do the following:
+We have some selenium integration tests that launch a (headless) browser in order to interact with a running instance of Data Workspace to assure some core flows (only Data Explorer at the time of writing). It is sometimes desirable to watch these tests run, e.g. in order to debug where it is failing. To run the selenium tests through docker compose using a local browser, do the following:
 
 1) Download the latest [Selenium Server](https://www.selenium.dev/downloads/) and run it in the background, e.g. `java -jar ~/Downloads/selenium-server-standalone-3.141.59 &`
-2) Run the selenium tests via docker-compose, exposing the Data Workspace port and the mock-SSO port and setting the `REMOTE_SELENIUM_URL` environment variable, e.g. `docker-compose -f docker-compose-test.yml -p data-workspace-test run -e REMOTE_SELENIUM_URL=http://host.docker.internal:4444/wd/hub -p 8000:8000 -p 8005:8005 --rm data-workspace-test pytest -vvvs test/test_selenium.py`
+2) Run the selenium tests via docker-compose, exposing the Data Workspace port and the mock-SSO port and setting the `REMOTE_SELENIUM_URL` environment variable, e.g. `docker compose -f docker-compose-test.yml -p data-workspace-test run -e REMOTE_SELENIUM_URL=http://host.docker.internal:4444/wd/hub -p 8000:8000 -p 8005:8005 --rm data-workspace-test pytest -vvvs test/test_selenium.py`
 <!-- --8<-- [end:selenium] -->
 <!-- --8<-- [start:dependencies] -->
 ## Updating a dependency
@@ -179,7 +179,7 @@ We're set up to use django-webpack-loader for hotloading the react app while dev
 You can get it running by starting the dev server:
 
 ```shell
-docker-compose -f docker-compose.yml up
+docker compose -f docker-compose.yml up
 ```
 
 and in a separate terminal changing to the js app directory and running the webpack hotloader:

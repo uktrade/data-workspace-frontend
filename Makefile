@@ -22,24 +22,24 @@ first-use:
 
 .PHONY: up
 up: first-use
-	docker-compose -f docker-compose.yml up
+	docker compose -f docker-compose.yml up
 
 
 .PHONY: docker-build
 docker-build:
-	docker-compose -f docker-compose-test.yml build
+	docker compose -f docker-compose-test.yml build
 
 
 .PHONY: docker-test-unit
 docker-test-unit: TESTS ?= /dataworkspace/dataworkspace
 docker-test-unit: docker-build
-	docker-compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test pytest -vv --junitxml=/test-results/junit.xml $(TESTS)
+	docker compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test pytest -vv --junitxml=/test-results/junit.xml $(TESTS)
 
 
 .PHONY: docker-test-integration
 docker-test-integration: TESTS ?= test/
 docker-test-integration: docker-build
-	docker-compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test pytest --junitxml=/test-results/junit.xml $(TESTS)
+	docker compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test pytest --junitxml=/test-results/junit.xml $(TESTS)
 
 
 .PHONY: docker-test
@@ -48,7 +48,7 @@ docker-test: docker-test-integration docker-test-unit
 
 .PHONY: docker-clean
 docker-clean:
-	docker-compose -f docker-compose-test.yml -p data-workspace-test down -v
+	docker compose -f docker-compose-test.yml -p data-workspace-test down -v
 
 .PHONY: check-flake8
 check-flake8:
@@ -56,7 +56,7 @@ check-flake8:
 
 .PHONY: docker-check-migrations
 docker-check-migrations:
-	docker-compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test sh -c "sleep 5 && django-admin makemigrations --check --dry-run --verbosity 3"
+	docker compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test sh -c "sleep 5 && django-admin makemigrations --check --dry-run --verbosity 3"
 
 .PHONY: check-black
 check-black:
@@ -72,11 +72,11 @@ check: check-flake8 check-black check-pylint
 
 .PHONY: docker-check
 docker-check:
-	docker-compose -f docker-compose.yml run --rm data-workspace bash -c "cd /app && make check"
+	docker compose -f docker-compose.yml run --rm data-workspace bash -c "cd /app && make check"
 
 .PHONY: docker-format
 docker-format: first-use
-	docker-compose -f docker-compose.yml run --rm data-workspace bash -c "cd /app && black ."
+	docker compose -f docker-compose.yml run --rm data-workspace bash -c "cd /app && black ."
 
 
 .PHONY: format
@@ -86,13 +86,13 @@ format:
 
 .PHONY: dev-shell
 dev-shell:
-	docker-compose -f docker-compose.yml run --rm data-workspace bash
+	docker compose -f docker-compose.yml run --rm data-workspace bash
 
 
 .PHONY: save-requirements
 save-requirements:
-	docker-compose -f docker-compose.yml run --rm data-workspace bash -c "cd /app && pip-compile requirements.in"
-	docker-compose -f docker-compose.yml run --rm data-workspace bash -c "cd /app && pip-compile requirements-dev.in"
+	docker compose -f docker-compose.yml run --rm data-workspace bash -c "cd /app && pip-compile requirements.in"
+	docker compose -f docker-compose.yml run --rm data-workspace bash -c "cd /app && pip-compile requirements-dev.in"
 
 .PHONY: docker-test-unit-local
 docker-test-unit-local:
@@ -100,11 +100,11 @@ docker-test-unit-local:
 	if [ -z "$$TEST_DIR" ]; \
 		then TEST_DIR="/dataworkspace/dataworkspace"; \
  	fi; \
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run data-workspace-test pytest $$TEST_DIR -x -v --disable-warnings --reuse-db
+	docker compose -f docker-compose-test-local.yml -p data-workspace-test run data-workspace-test pytest $$TEST_DIR -x -v --disable-warnings --reuse-db
 
 .PHONY: docker-test-shell-local
 docker-test-shell-local:
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test bash
+	docker compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test bash
 
 .PHONY: docker-test-integration-local
 docker-test-integration-local:
@@ -112,41 +112,41 @@ docker-test-integration-local:
 	if [ -z "$$TEST_DIR" ]; \
 		then TEST_DIR="/test"; \
  	fi; \
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test bash -c "DJANGO_SETTINGS_MODULE=dataworkspace.settings.integration_tests pytest -x -v $$TEST_DIR --disable-warnings"
+	docker compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test bash -c "DJANGO_SETTINGS_MODULE=dataworkspace.settings.integration_tests pytest -x -v $$TEST_DIR --disable-warnings"
 
 .PHONY: docker-test-local
 docker-test-local: docker-test-unit-local docker-test-integration-local
 
 .PHONY: logout
 logout:
-	docker-compose exec data-workspace-redis bash -c "redis-cli --scan --pattern data_workspace* | xargs redis-cli unlink"
+	docker compose exec data-workspace-redis bash -c "redis-cli --scan --pattern data_workspace* | xargs redis-cli unlink"
 
 
 .PHONY: docker-test-sequential
 docker-test-sequential:
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test stop
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test rm -f
+	docker compose -f docker-compose-test-local.yml -p data-workspace-test stop
+	docker compose -f docker-compose-test-local.yml -p data-workspace-test rm -f
 
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test up -d
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test pytest /test/test_application.py -x -v
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test stop
+	docker compose -f docker-compose-test-local.yml -p data-workspace-test up -d
+	docker compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test pytest /test/test_application.py -x -v
+	docker compose -f docker-compose-test-local.yml -p data-workspace-test stop
 
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test up -d
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test pytest /test/test_application_1.py -x -v
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test stop
+	docker compose -f docker-compose-test-local.yml -p data-workspace-test up -d
+	docker compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test pytest /test/test_application_1.py -x -v
+	docker compose -f docker-compose-test-local.yml -p data-workspace-test stop
 
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test up -d
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test pytest /test/test_application_2.py -x -v
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test stop
+	docker compose -f docker-compose-test-local.yml -p data-workspace-test up -d
+	docker compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test pytest /test/test_application_2.py -x -v
+	docker compose -f docker-compose-test-local.yml -p data-workspace-test stop
 
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test up -d
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test pytest /test/test_utils.py -x -v
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test stop
+	docker compose -f docker-compose-test-local.yml -p data-workspace-test up -d
+	docker compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test pytest /test/test_utils.py -x -v
+	docker compose -f docker-compose-test-local.yml -p data-workspace-test stop
 
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test up -d
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test pytest /test/selenium/test_explorer.py -x -v
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test stop
+	docker compose -f docker-compose-test-local.yml -p data-workspace-test up -d
+	docker compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test pytest /test/selenium/test_explorer.py -x -v
+	docker compose -f docker-compose-test-local.yml -p data-workspace-test stop
 
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test up -d
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test pytest /test/selenium/test_request_data.py -x -v
-	docker-compose -f docker-compose-test-local.yml -p data-workspace-test stop
+	docker compose -f docker-compose-test-local.yml -p data-workspace-test up -d
+	docker compose -f docker-compose-test-local.yml -p data-workspace-test run --rm data-workspace-test pytest /test/selenium/test_request_data.py -x -v
+	docker compose -f docker-compose-test-local.yml -p data-workspace-test stop
