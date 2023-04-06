@@ -3,14 +3,14 @@ version: 2
 restore-docker-cache: &restore-docker-cache
   restore_cache:
     keys:
-      - v3.9-docker-{{ checksum "Dockerfile" }}-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}
-      - v3.9-docker-{{ checksum "Dockerfile" }}-{{ checksum "requirements.txt" }}
-      - v3.9-docker-{{ checksum "Dockerfile" }}
-      - v3.9-docker
+      - v3.9-docker-{{ checksum "Dockerfile" }}-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}-cimg
+      - v3.9-docker-{{ checksum "Dockerfile" }}-{{ checksum "requirements.txt" }}-cimg
+      - v3.9-docker-{{ checksum "Dockerfile" }}-cimg
+      - v3.9-docker-cimg
 
 save-docker-cache: &save-docker-cache
   save_cache:
-    key: v3.9-docker-{{ checksum "Dockerfile" }}-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}
+    key: v3.9-docker-{{ checksum "Dockerfile" }}-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}-cimg
     paths:
       - "caches"
 
@@ -96,9 +96,9 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - v3.9-python-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}
-            - v3.9-python-{{ checksum "requirements.txt" }}
-            - v3.9-python
+            - v3.9-python-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}-cimg
+            - v3.9-python-{{ checksum "requirements.txt" }}-cimg
+            - v3.9-python-cimg
       - run:
           name: Install requirements
           command: |
