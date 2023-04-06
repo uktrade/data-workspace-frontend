@@ -39,7 +39,7 @@ prepare-docker-cache: &prepare-docker-cache
 jobs:
   docker-test-unit:
     docker:
-      - image: circleci/python:3.9
+      - image: cimg/python:3.9
     parallelism: 4
     steps:
       - checkout
@@ -66,7 +66,7 @@ jobs:
 
   docker-test-integration:
     docker:
-      - image: circleci/python:3.9
+      - image: cimg/python:3.9
     parallelism: 4
     steps:
       - checkout
@@ -90,7 +90,7 @@ jobs:
 
   check-linting:
     docker:
-      - image: circleci/python:3.9
+      - image: cimg/python:3.9
     resource_class: small
     steps:
       - checkout
