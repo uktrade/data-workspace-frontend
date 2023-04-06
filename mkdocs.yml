@@ -9,7 +9,6 @@ theme:
     - content.code.copy
     - navigation.tabs
     - navigation.tabs.sticky
-    - navigation.indexes
 markdown_extensions:
   - def_list
   - pymdownx.highlight:
@@ -21,13 +20,17 @@ markdown_extensions:
   - pymdownx.superfences
 plugins:
   - material/search
+extra_css:
+  - stylesheets/extra.css
 nav:
-    - Quickstart: 'index.md'
+    - Data Workspace:
+      - What is Data Workspace?: 'index.md'
+      - Developing Locally: 'developinglocally.md'
     - Infrastructure: 'infrastructure.md'
     - Development Guides:
       - Intro: 'devguides.md'
-      - Remote Debugging: 'Remote Debugging.md'
-      - Enhanced Tables: 'Enhanced-tables.md'
+      - Remote Debugging: 'remotedebugging.md'
+      - Enhanced Tables: 'enhancedtables.md'
       - mkdocs commands: 'mkdocs.md'
     - Contributing:
       - How to contribute: 'contributing.md'

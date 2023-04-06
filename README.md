@@ -1,9 +1,10 @@
 <!-- --8<-- [start:intro] -->
 # Data Workspace [![CircleCI](https://circleci.com/gh/uktrade/data-workspace.svg?style=svg)](https://circleci.com/gh/uktrade/data-workspace)
 
-Allows users to launch applications in order to analyse data
+![Data Workspace image](assets/dw-readme-front-page.png)
 
-![Data Workspace architecture](./assets/data-workspace-architecture.png)
+Data Workspace is a way to access, produce and share data, all in one system. Use your data to do analysis in Data Workspace tools such as RStudio, JupyterLab or Theia. Preview, filter and download data using the enhanced preview feature. Design your own dashboards using data visualisation tools. 
+
 <!-- --8<-- [end:intro] -->
 <!-- --8<-- [start:runninglocally] -->
 ## Running locally
@@ -100,7 +101,7 @@ For other commands, replace `makemigrations` with the name of the command.
 <!-- --8<-- [start:docker] -->
 ## Debugging in docker
 
-See the [remote debugging docs](./docs/Remote%20Debugging.md)
+See the [remote debugging docs](remotedebugging.md)
 <!-- --8<-- [end:docker] -->
 <!-- --8<-- [start:tests] -->
 ## Running tests
@@ -204,6 +205,10 @@ git add ../bundles/*.js ../stats/react_apps-stats.json
 # Infrastructure
 
 The infrastructure is heavily Docker/Fargate based. Production Docker images are built by [quay.io](https://quay.io/organization/uktrade).
+
+## Architecture Diagram
+
+![Data Workspace architecture](./assets/data-workspace-architecture.png)
 
 
 ## User-facing components
