@@ -72,11 +72,11 @@ check: check-flake8 check-black check-pylint
 
 .PHONY: docker-check
 docker-check:
-	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash -c "cd /app && make check"
+	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash -c "cd /dataworkspace && make check"
 
 .PHONY: docker-format
 docker-format: first-use
-	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash -c "cd /app && black ."
+	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash -c "cd /dataworkspace && black ."
 
 
 .PHONY: format
@@ -91,8 +91,8 @@ dev-shell:
 
 .PHONY: save-requirements
 save-requirements:
-	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash -c "cd /app && pip-compile requirements.in"
-	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash -c "cd /app && pip-compile requirements-dev.in"
+	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash -c "cd /dataworkspace && pip-compile requirements.in"
+	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash -c "cd /dataworkspace && pip-compile requirements-dev.in"
 
 .PHONY: docker-test-unit-local
 docker-test-unit-local:

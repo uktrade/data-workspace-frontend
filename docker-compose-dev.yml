@@ -15,7 +15,6 @@ services:
       - "data-workspace-redis"
       - "data-workspace-es"
     volumes:
-      - .:/app
       - ./dataworkspace:/dataworkspace
       - ./dataworkspace/dataworkspace/static/js/stats:/dataworkspace/dataworkspace/static/js/stats/
   data-workspace-celery:
