@@ -22,7 +22,7 @@ first-use:
 
 .PHONY: up
 up: first-use
-	docker-compose -f docker-compose-dev.yml up
+	docker-compose -f docker-compose.yml up
 
 
 .PHONY: docker-build
@@ -72,11 +72,11 @@ check: check-flake8 check-black check-pylint
 
 .PHONY: docker-check
 docker-check:
-	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash -c "cd /app && make check"
+	docker-compose -f docker-compose.yml run --rm data-workspace bash -c "cd /app && make check"
 
 .PHONY: docker-format
 docker-format: first-use
-	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash -c "cd /app && black ."
+	docker-compose -f docker-compose.yml run --rm data-workspace bash -c "cd /app && black ."
 
 
 .PHONY: format
@@ -86,13 +86,13 @@ format:
 
 .PHONY: dev-shell
 dev-shell:
-	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash
+	docker-compose -f docker-compose.yml run --rm data-workspace bash
 
 
 .PHONY: save-requirements
 save-requirements:
-	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash -c "cd /app && pip-compile requirements.in"
-	docker-compose -f docker-compose-dev.yml run --rm data-workspace bash -c "cd /app && pip-compile requirements-dev.in"
+	docker-compose -f docker-compose.yml run --rm data-workspace bash -c "cd /app && pip-compile requirements.in"
+	docker-compose -f docker-compose.yml run --rm data-workspace bash -c "cd /app && pip-compile requirements-dev.in"
 
 .PHONY: docker-test-unit-local
 docker-test-unit-local:
