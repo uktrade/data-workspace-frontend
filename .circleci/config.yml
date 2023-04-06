@@ -39,7 +39,7 @@ prepare-docker-cache: &prepare-docker-cache
 jobs:
   docker-test-unit:
     docker:
-      - image: circleci/python:3.9
+      - image: cimg/python:3.9
     parallelism: 4
     steps:
       - checkout
@@ -60,13 +60,13 @@ jobs:
           command: |
             touch .envs/dev.env
             make docker-test-unit TESTS="$(circleci tests glob 'dataworkspace/dataworkspace/tests/**/test_*.py' | circleci tests split --split-by=timings | tr '\n' ' ')"
-            docker cp data-workspace-test_data-workspace-test-results_1:/test-results ./test-results
+            docker cp data-workspace-test-data-workspace-test-results-1:/test-results ./test-results
       - store_test_results:
           path: test-results
 
   docker-test-integration:
     docker:
-      - image: circleci/python:3.9
+      - image: cimg/python:3.9
     parallelism: 4
     steps:
       - checkout
@@ -84,19 +84,19 @@ jobs:
           command: |
             touch .envs/dev.env
             make docker-test-integration TESTS="$(circleci tests glob 'test/**/test_*.py' | circleci tests split --split-by=timings | tr '\n' ' ')"
-            docker cp data-workspace-test_data-workspace-test-results_1:/test-results ./test-results
+            docker cp data-workspace-test-data-workspace-test-results-1:/test-results ./test-results
       - store_test_results:
           path: test-results
 
   check-linting:
     docker:
-      - image: circleci/python:3.9
+      - image: cimg/python:3.9
     resource_class: small
     steps:
       - checkout
       - restore_cache:
           keys:
-            - v3.9-python-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}
+            - v3.9-python-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}-v2
       - run:
           name: Install requirements
           command: |
@@ -104,7 +104,7 @@ jobs:
             . venv/bin/activate
             pip install -r requirements-dev.txt
       - save_cache:
-          key: v3.9-python-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}
+          key: v3.9-python-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}-v2
           paths:
             - "venv"
       - run:
