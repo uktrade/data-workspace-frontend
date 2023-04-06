@@ -23,7 +23,7 @@ cp .envs/sample.env .envs/dev.env
 Start the application by
 
 ```bash
-docker-compose -f docker-compose-dev.yml up --build
+docker-compose -f docker-compose.yml up --build
 ```
 
 ### Issues running on Apple Silicon/M1 Chipset?
@@ -31,7 +31,7 @@ docker-compose -f docker-compose-dev.yml up --build
 If you have issues building the containers try the following
 
 ```
-DOCKER_DEFAULT_PLATFORM=linux/amd64 docker-compose -f docker-compose-dev.yml up --build
+DOCKER_DEFAULT_PLATFORM=linux/amd64 docker-compose -f docker-compose.yml up --build
 ```
 
 With the default environment, you will need the below in your `/etc/hosts` file.
@@ -66,7 +66,7 @@ Update the new file with your dit email address (must match your SSO email).
 Then run docker-compose using both the dev and dev superset compose files
 
 ```bash
-docker-compose -f docker-compose-dev.yml -f docker-compose-superset-dev.yml up
+docker-compose -f docker-compose.yml -f docker-compose-superset-dev.yml up
 ```
 
 Initially you will then need to set up the Editor role by running the following script, replacing container-id with the id of the data-workspace-postgres docker container:
@@ -179,7 +179,7 @@ We're set up to use django-webpack-loader for hotloading the react app while dev
 You can get it running by starting the dev server:
 
 ```shell
-docker-compose -f docker-compose-dev.yml up
+docker-compose -f docker-compose.yml up
 ```
 
 and in a separate terminal changing to the js app directory and running the webpack hotloader:

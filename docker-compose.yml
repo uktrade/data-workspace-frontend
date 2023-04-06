@@ -1,29 +1,37 @@
-version: "3"
-
+version: "3.4"
 services:
   data-workspace:
     build:
       context: .
       dockerfile: Dockerfile
+      target: dev
     image: data-workspace
     ports:
       - "8000:8000"
+      - "4444:4444"
     env_file: .envs/dev.env
     links:
       - "data-workspace-postgres"
       - "data-workspace-redis"
-
+      - "data-workspace-es"
+    volumes:
+      - .:/app
+      - ./dataworkspace:/dataworkspace
+      - ./dataworkspace/dataworkspace/static/js/stats:/dataworkspace/dataworkspace/static/js/stats/
   data-workspace-celery:
     build:
       context: .
       dockerfile: Dockerfile
+      target: dev
     image: data-workspace
     env_file: .envs/dev.env
     links:
       - "data-workspace-postgres"
       - "data-workspace-redis"
-    command: "/dataworkspace/start-celery.sh"
-
+    command: "/dataworkspace/start-celery-dev.sh"
+    volumes:
+      - ./dataworkspace:/dataworkspace
+      - db-logs-dev:/var/log/postgres
   data-workspace-postgres:
     build:
       context: postgres
@@ -32,8 +40,8 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - db-data:/var/lib/postgresql/data
-
+      - db-data-dev:/var/lib/postgresql/data
+      - db-logs-dev:/var/log/postgres
   data-workspace-redis:
     build:
       context: redis
@@ -41,6 +49,46 @@ services:
     image: data-workspace-redis
     ports:
       - "6379:6379"
+  data-workspace-es:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.0
+    environment:
+      - discovery.type=single-node
+      - http.port=9200
+    ports:
+      - "9200:9200"
+
+  data-workspace-sso.test:
+    build: https://github.com/uktrade/mock-sso.git
+    environment:
+      - MOCK_SSO_PORT=8081
+      - MOCK_SSO_TOKEN=bar
+      - MOCK_SSO_CODE=fizz
+    ports:
+      - "8081:8081"
+
+  data-workspace-localstack:
+    build:
+      context: localstack
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:53:53"
+      - "127.0.0.1:53:53/udp"
+      - "127.0.0.1:443:443"
+      - '4563-4599:4563-4599'
+    environment:
+      - AWS_DEFAULT_REGION=eu-west-2
+      - EDGE_PORT=4566
+      - SERVICES=s3,sts,iam
+      - EXTRA_CORS_ALLOWED_ORIGINS=http://dataworkspace.test:8000
+      - DATA_DIR=/tmp/localstack/data
+    volumes:
+      - "./.localstack:/tmp/localstack"
 
 volumes:
-  db-data:
+  db-data-dev:
+  db-logs-dev:
+  
+networks:
+  default:
+    external:
+      name: data-infrastructure-shared-network
