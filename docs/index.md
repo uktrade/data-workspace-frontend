@@ -23,7 +23,7 @@ hide:
 
     ![Data Workspace image](assets/dw-readme-front-page.png){ align=right width=300px height=300px}
 
-    **Data Workspace** is an open source data analysis platform with features for users with a range of technical skills. Feature includes:
+    **Data Workspace** is an open source data analysis platform with features for users with a range of technical skills. Features include:
 
     - a data catalogue for users to discover, filter, and download data
     - a permission system that allows users to only access specific datasets
