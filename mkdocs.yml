@@ -33,6 +33,6 @@ nav:
       - Remote Debugging: 'development/remotedebugging.md'
       - Enhanced Tables: 'development/enhancedtables.md'
     - Architecture: 
-      - 'infrastructure.md'
+      - 'architecture.md'
     - Contributing: 
       - 'contributing.md'
