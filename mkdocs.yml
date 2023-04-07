@@ -8,7 +8,7 @@ theme:
   features:
     - content.code.copy
     - navigation.tabs
-    - nvaigation.tabs.sticky
+    - navigation.tabs.sticky
     - navigation.indexes
 markdown_extensions:
   - def_list
