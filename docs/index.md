@@ -1,5 +1,5 @@
 ---
-title: Data Workspace
+title: Data Workspace Technical Documentation
 hide:
   - navigation
   - toc
