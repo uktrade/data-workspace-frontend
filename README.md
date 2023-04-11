@@ -67,7 +67,7 @@ Update the new file with your dit email address (must match your SSO email).
 Then run docker-compose using both the dev and dev superset compose files
 
 ```bash
-docker-compose -f docker-compose.yml -f docker-compose-superset-dev.yml up
+docker-compose --profile superset up
 ```
 
 Initially you will then need to set up the Editor role by running the following script, replacing container-id with the id of the data-workspace-postgres docker container:

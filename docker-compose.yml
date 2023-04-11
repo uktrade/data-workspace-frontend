@@ -18,6 +18,7 @@ services:
       - .:/app
       - ./dataworkspace:/dataworkspace
       - ./dataworkspace/dataworkspace/static/js/stats:/dataworkspace/dataworkspace/static/js/stats/
+  
   data-workspace-celery:
     build:
       context: .
@@ -32,6 +33,7 @@ services:
     volumes:
       - ./dataworkspace:/dataworkspace
       - db-logs-dev:/var/log/postgres
+  
   data-workspace-postgres:
     build:
       context: postgres
@@ -42,6 +44,7 @@ services:
     volumes:
       - db-data-dev:/var/lib/postgresql/data
       - db-logs-dev:/var/log/postgres
+
   data-workspace-redis:
     build:
       context: redis
@@ -83,6 +86,27 @@ services:
       - DATA_DIR=/tmp/localstack/data
     volumes:
       - "./.localstack:/tmp/localstack"
+
+  data-workspace-superset:
+    build:
+      context: superset
+      dockerfile: Dockerfile
+      target: dev
+    image: data-workspace-superset
+    depends_on:
+      - data-workspace-postgres
+    profiles:
+      - superset
+    environment:
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_HOST: data-workspace-postgres
+      DB_NAME: superset
+      DB_PORT: 5432
+    env_file:
+      - .envs/superset.dev.env
+    volumes:
+      - ./superset/superset_config.py:/etc/superset/superset_config.py
 
 volumes:
   db-data-dev:
