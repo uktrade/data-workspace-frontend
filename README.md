@@ -208,12 +208,12 @@ git add ../bundles/*.js ../stats/react_apps-stats.json
 <!-- --8<-- [start:architecture] -->
 ## Architecture
 
-The architecture is heavily Docker/Fargate based. Production Docker images are built by [quay.io](https://quay.io/organization/uktrade).
+The architecture is heavily Docker/Fargate based.
 <!-- --8<-- [end:architecture] -->
 <!-- --8<-- [start:architecturediagram] -->
 ## Architecture Diagram
 
-![Data Workspace architecture](./assets/data-workspace-architecture.png)
+![Data Workspace architecture](data-workspace-architecture.png)
 <!-- --8<-- [end:architecturediagram] -->
 <!-- --8<-- [start:userfacingcomponents] -->
 ## User-facing components
