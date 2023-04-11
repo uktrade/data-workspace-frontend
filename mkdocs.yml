@@ -24,16 +24,20 @@ theme:
       superseded: material/sticker-alert-outline
       rejected: material/sticker-remove-outline
 markdown_extensions:
-  - def_list
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
       pygments_lang_class: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
-  - pymdownx.superfences
   - admonition
   - pymdownx.details
+  - def_list
   - tables
   - attr_list
 extra_css:
