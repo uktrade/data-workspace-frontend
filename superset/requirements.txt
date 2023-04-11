@@ -206,7 +206,7 @@ prison==0.2.1
     # via flask-appbuilder
 prompt-toolkit==3.0.30
     # via click-repl
-psycopg2-binary==2.8.6
+psycopg2-binary==2.9.6
     # via -r requirements.in
 pyarrow==5.0.0
     # via apache-superset
