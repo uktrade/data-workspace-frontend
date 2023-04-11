@@ -60,7 +60,7 @@ services:
     ports:
       - "9200:9200"
   # Have a named volume since mounting a local directory isn't possible in CircleCI's
-  # remote docker system. And docker-compose run kills the container running the tests
+  # remote docker system. And docker compose run kills the container running the tests
   # proper, so to be able to copy out results, run a small container just to be able
   # to access the named volume after the tests finish
   data-workspace-test-results:

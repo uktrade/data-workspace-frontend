@@ -12,7 +12,7 @@ To set this up locally.
     - `REMOTE_PDB_HOST=0.0.0.0`
     - `REMOTE_PDB_PORT=4444`
 3. Sprinkle some `breakpoint()`s liberally in your code
-4. Bring up the docker containers ` docker-compose -f docker-compose.yml up` 
+4. Bring up the docker containers `docker compose up` 
 5. Listen to remote pdb using `remotepdb_client --host localhost --port 4444`
 6. Go and break things http://dataworkspace.test:8000
 
@@ -28,7 +28,7 @@ is set to the path of your dev environment.
     ![Python debug server](assets/remote-debug-server.png)
 
 3. Bring up the containers  
-    ` docker-compose -f docker-compose.yml up`
+    ` docker compose up`
 
 4. Start the pycharm debugger  
     ![Start the debugger](assets/pycharm-start-debugger.png)
@@ -75,7 +75,7 @@ Below are the basic steps for debugging remotely with vscode. They are confirmed
 4. Set a breakpoint in your code  
     `breakpoint()`
 5. Bring up the containers  
-    ` docker-compose -f docker-compose.yml up`
+    ` docker compose up`
 6. Start the remote python debugger  
     ![Vscode run debug](assets/vscode-run-debug.png)
 7. Load the relevant page http://dataworkspace.test:8000
