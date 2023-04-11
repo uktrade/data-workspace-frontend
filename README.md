@@ -66,20 +66,18 @@ DOCKER_DEFAULT_PLATFORM=linux/amd64 docker-compose -f docker-compose.yml up --bu
 <!-- --8<-- [start:runningsuperset] -->
 ## Running superset locally
 
-There is a separate compose file to run superset as it's not necessary to run it locally all the time.
-
 To get started you will need to create an env file
 
 ```bash
 cp .envs/superset-sample.env .envs/superset.dev.env
 ```
 
-Update the new file with your dit email address (must match your SSO email).
+Update the new file with your DIT email address (must match your SSO email, or mock SSO credentials).
 
-Then run docker-compose using both the dev and dev superset compose files
+Then run docker-compose using the superset profile.
 
 ```bash
-docker-compose -f docker-compose.yml -f docker-compose-superset-dev.yml up
+docker-compose --profile superset up
 ```
 
 Initially you will then need to set up the Editor role by running the following script, replacing container-id with the id of the data-workspace-postgres docker container:
@@ -89,7 +87,7 @@ docker exec -i <container-id> psql -U postgres -d superset < superset/create-edi
 ```
 
 
-you can then visit http://superset-edit.dataworkspace.test:8000/ or http://superset-admin.dataworkspace.test:8000/
+You can then visit http://superset-edit.dataworkspace.test:8000/ or http://superset-admin.dataworkspace.test:8000/
 <!-- --8<-- [end:runningsuperset] -->
 <!-- --8<-- [start:migrations] -->
 ## Creating migrations / running management commands
