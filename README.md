@@ -3,7 +3,12 @@
 
 ![Data Workspace image](assets/dw-readme-front-page.png)
 
-Data Workspace is a way to access, produce and share data, all in one system. Use your data to do analysis in Data Workspace tools such as RStudio, JupyterLab or Theia. Preview, filter and download data using the enhanced preview feature. Design your own dashboards using data visualisation tools. 
+  Data Workspace is an open source data analysis platform with features for users with a range of technical skills. Features include:
+
+  - a data catalogue for users to discover, filter, and download data
+  - a permission system that allows users to only access specific datasets
+  - a framework for hosting tools that allows users to analyse data without downloading it, such as through JupyterLab, RStudio, or Theia (a VS Code-like IDE)
+  - dashboard creation and hosting
 
 <!-- --8<-- [end:intro] -->
 <!-- --8<-- [start:runninglocally] -->
@@ -27,15 +32,10 @@ Start the application by
 docker-compose -f docker-compose.yml up --build
 ```
 
-### Issues running on Apple Silicon/M1 Chipset?
+Some parts of the database are managed and populated by [data-flow](https://github.com/uktrade/data-flow/). To ensure there are no issues with some tables being missing, initial setup should include checking out that repo and running the `docker-compose-dw.yml` file, which will perform migrations on the shared Data Workspace/Data Flow DB.
+### Domains
 
-If you have issues building the containers try the following
-
-```
-DOCKER_DEFAULT_PLATFORM=linux/amd64 docker-compose -f docker-compose.yml up --build
-```
-
-With the default environment, you will need the below in your `/etc/hosts` file.
+With the default environment, in order to be able to properly test cookies that are shared with subdomains, and for the application to be visible at http://dataworkspace.test:8000, you will need the below in your `/etc/hosts` file.
 
 ```
 127.0.0.1       dataworkspace.test
@@ -43,13 +43,25 @@ With the default environment, you will need the below in your `/etc/hosts` file.
 127.0.0.1       data-workspace-sso.test
 ```
 
-And the application will be visible at http://dataworkspace.test:8000. This is to be able to properly test cookies that are shared with subdomains. To run tool and visualisation-related code, you will need subdomains in your `/etc/hosts` file, such as 
+To run tool and visualisation-related code, you will need subdomains in your `/etc/hosts` file, such as 
 
 ```
 127.0.0.1       visualisation-a.dataworkspace.test
 ```
 
-Some parts of the database are managed and populated by [data-flow](https://github.com/uktrade/data-flow/). To ensure there are no issues with some tables being missing, initial setup should include checking out that repo and running the `docker-compose-dw.yml` file, which will perform migrations on the shared Data Workspace/Data Flow DB.
+If intending to run superset locally, the following subdomains will also be required
+
+```
+127.0.0.1       superset-admin.dataworkspace.test
+127.0.0.1       superset-edit.dataworkspace.test
+```
+### Issues running on Apple Silicon/M1 Chipset?
+
+If you have issues building the containers try the following
+
+```
+DOCKER_DEFAULT_PLATFORM=linux/amd64 docker-compose -f docker-compose.yml up --build
+```
 <!-- --8<-- [end:runninglocally] -->
 <!-- --8<-- [start:runningsuperset] -->
 ## Running superset locally
@@ -76,12 +88,6 @@ Initially you will then need to set up the Editor role by running the following 
 docker exec -i <container-id> psql -U postgres -d superset < superset/create-editor-role.sql
 ```
 
-After placing the following lines in /etc/hosts:
-
-```
-127.0.0.1       superset-admin.dataworkspace.test
-127.0.0.1       superset-edit.dataworkspace.test
-```
 
 you can then visit http://superset-edit.dataworkspace.test:8000/ or http://superset-admin.dataworkspace.test:8000/
 <!-- --8<-- [end:runningsuperset] -->
@@ -205,12 +211,13 @@ git add ../bundles/*.js ../stats/react_apps-stats.json
 ## Architecture
 
 The architecture is heavily Docker/Fargate based. Production Docker images are built by [quay.io](https://quay.io/organization/uktrade).
-
+<!-- --8<-- [end:architecture] -->
+<!-- --8<-- [start:architecturediagram] -->
 ## Architecture Diagram
 
 ![Data Workspace architecture](./assets/data-workspace-architecture.png)
-
-
+<!-- --8<-- [end:architecturediagram] -->
+<!-- --8<-- [start:userfacingcomponents] -->
 ## User-facing components
 
 - [Main application](https://quay.io/repository/uktrade/data-workspace)
@@ -227,7 +234,8 @@ The architecture is heavily Docker/Fargate based. Production Docker images are b
 
 - File browser:
   A single-page-application that offers upload and download of files to/from each user's folder in S3. The data is transferred directly between the user's browser and S3.
-
+<!-- --8<-- [end:userfacingcomponents] -->
+<!-- --8<-- [start:infrastructurecomponents] -->
 
 ## Infrastructure components
 
@@ -254,7 +262,8 @@ The architecture is heavily Docker/Fargate based. Production Docker images are b
 
 - [sentryproxy](https://quay.io/repository/uktrade/data-workspace-sentryproxy)
   Proxies errors to a Sentry instance: only used by JupyterLab.
-
+<!-- --8<-- [end:infrastructurecomponents] -->
+<!-- --8<-- [start:applicationlifecycle] -->
 
 ## Application lifecycle
 
@@ -277,7 +286,8 @@ The proxy however, has a more complex behaviour. On an incoming request from the
 - if an application is returned from the `GET` as `STOPPED`, which happens on error, it will `DELETE` the application, and show an error to the user.
 
 The proxy itself _only_ responds to incoming requests from the browser, and has no long-lived tasks that go beyond one HTTP request or WebSockets connection. This ensures it can be horizontally scaled.
-
+<!-- --8<-- [end:applicationlifecycle] -->
+<!-- --8<-- [start:customproxy] -->
 
 ## Why the custom proxy?
 
@@ -297,7 +307,8 @@ A common question is why not just NGINX instead of the custom proxy? The reason 
 - Ideally, there would not be duplicate reponsibilities between the proxy and other parts of the system, e.g. the Django application.
 
 While not impossible to leverage NGINX to move some code from the proxy, there would still need to be custom code, and NGINX would have to communicate via some mechanism to this custom code to acheive all of the above: extra HTTP or Redis requests, or maybe through a custom NGINX module. It is suspected that this will make things more complex rather than less, and increase the burden on the developer.
-
+<!-- --8<-- [end:customproxy] -->
+<!-- --8<-- [start:asyncio] -->
 ## Why is the proxy written using asyncio?
 
 - The proxy fits the typical use-case of event-loop based programming: low CPU but high IO requirements, with potentially high number of connections.
@@ -316,7 +327,8 @@ While not impossible to leverage NGINX to move some code from the proxy, there w
   Requests and responses can be of the order of several GBs, so this streaming behaviour is a critical requirement.
 
 - Django gives a lot of benefits for the main application: for example, it is within the skill set of most available developers. Only a small fraction of changes need to involve the proxy.
-
+<!-- --8<-- [end:asyncio] -->
+<!-- --8<-- [start:jupyterhubcomparison] -->
 ## Comparison with JupyterHub
 
 In addition to being able to run any Docker container, not just JupyterLab, Data Workspace has some deliberate architectural features that are different to JupyterHub.
@@ -332,4 +344,4 @@ In addition to being able to run any Docker container, not just JupyterLab, Data
 - The launched containers do not make requests to the main application, and the main application does not make requests to the launched containers. This means there are fewer cyclic dependencies in terms of data flow, and that applications don't need to be customised for this environment. They just need to open a port for HTTP requests, which makes them extremely standard web-based Docker applications.
 
 There is a notable exception to the statelessness of the main application: the launch of an application is made of a sequence of calls to AWS, and is done in a Celery task. If this sequence is interrupted, the launch of the application will fail. This is a solvable problem: the state could be saving into the database and sequence resumed later. However, since this sequence of calls lasts only a few seconds, and the user will be told of the error and can refresh to try to launch the application again, at this stage of the project this has been deemed unnecessary.
-<!-- --8<-- [end:infrastructure] -->
+<!-- --8<-- [end:jupyterhubcomparison] -->

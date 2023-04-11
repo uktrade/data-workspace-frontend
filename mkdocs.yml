@@ -10,6 +10,19 @@ theme:
     - navigation.tabs
     - navigation.tabs.sticky
     - navigation.indexes
+  font:
+    text: Roboto
+    code: Roboto Mono
+  icon:
+    admonition:
+      quote: octicons/quote-16
+    tag:
+      draft: material/sticker-outline
+      accepted: material/sticker-check-outline
+      proposed: material/sticker-plus-outline
+      deprecated: material/sticker-minus-outline
+      superseded: material/sticker-alert-outline
+      rejected: material/sticker-remove-outline
 markdown_extensions:
   - def_list
   - pymdownx.highlight:
@@ -23,8 +36,20 @@ markdown_extensions:
   - pymdownx.details
   - tables
   - attr_list
+extra_css:
+  - stylesheets/tags-color.css
 plugins:
   - material/search
+  - material/tags:
+      tags_file: 'ADRs/README.md'
+extra:
+  tags:
+    Draft: draft
+    Accepted: accepted
+    Proposed: proposed
+    Superseded: superseded
+    Deprecated: deprecated
+    Rejected: rejected
 nav:
     - Home:
       - 'index.md'
@@ -34,5 +59,7 @@ nav:
       - Enhanced Tables: 'development/enhancedtables.md'
     - Architecture: 
       - 'architecture.md'
+    - ADRs:
+      - 'ADRs/README.md'
     - Contributing: 
       - 'contributing.md'
