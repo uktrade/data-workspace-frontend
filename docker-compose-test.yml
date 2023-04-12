@@ -72,3 +72,21 @@ services:
 volumes:
   db-logs-dev:
   test-results:
+  dataworkspace:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ${PWD}/dataworkspace
+  test:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ${PWD}/test
+  app:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ${PWD}
