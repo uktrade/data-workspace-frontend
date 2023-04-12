@@ -110,3 +110,7 @@ insert into ab_permission_view_role select nextval('ab_permission_view_role_id_s
 insert into ab_permission_view_role select nextval('ab_permission_view_role_id_seq'),131, 7;
 insert into ab_permission_view_role select nextval('ab_permission_view_role_id_seq'),132, 7;
 insert into ab_permission_view_role select nextval('ab_permission_view_role_id_seq'),135, 7;
+insert into ab_permission_view_role select nextval('ab_permission_view_role_id_seq'),155, 7;  # can post on TabStateView
+insert into ab_permission_view_role select nextval('ab_permission_view_role_id_seq'),157, 7;  # can put on TabStateView
+insert into ab_permission_view_role select nextval('ab_permission_view_role_id_seq'),156, 7;  # can delete on TabStateView
+insert into ab_permission_view_role select nextval('ab_permission_view_role_id_seq'),199, 7;  # all_database_access on all_database_access
