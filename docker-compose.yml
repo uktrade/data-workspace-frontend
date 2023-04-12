@@ -193,5 +193,5 @@ volumes:
   
 networks:
   default:
-    external:
-      name: data-infrastructure-shared-network
+    name: data-infrastructure-shared-network
+    external: true
