@@ -6,6 +6,11 @@ superset db upgrade
 
 # Creates or updates roles
 superset init
+PGUSER=$DB_USER \
+PGPASSWORD=$DB_PASSWORD \
+PGDATABASE=$DB_NAME \
+PGHOST=$DB_HOST \
+    psql -f create-editor-role.sql
 
 gunicorn \
     -w 10 \
