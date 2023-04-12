@@ -10,6 +10,6 @@
   - a framework for hosting tools that allows users to analyse data without downloading it, such as through JupyterLab, RStudio, or Theia (a VS Code-like IDE)
   - dashboard creation and hosting
 
-Visit the [documentation site](https://data-workspace.docs.data.trade.gov.uk/) for more details.
+Visit the [documentation site](https://data-workspace.docs.trade.gov.uk/) for more details.
 
-[Run Data Workspace locally](https://data-workspace.docs.data.trade.gov.uk/development/developinglocally/)
+[Run Data Workspace locally](https://data-workspace.docs.trade.gov.uk/development/developinglocally/)
