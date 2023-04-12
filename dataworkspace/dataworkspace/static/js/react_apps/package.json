@@ -40,7 +40,8 @@
   },
   "resolutions": {
     "d3-color": "3.1.0",
-    "loader-utils": "^2.0.4"
+    "loader-utils": "^2.0.4",
+    "xml2js": "0.5.0"
   },
   "author": "",
   "license": "ISC"
