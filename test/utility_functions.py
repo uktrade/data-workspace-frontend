@@ -240,8 +240,8 @@ async def flush_database():
 
 
 async def flush_redis():
-    redis_client = await aioredis.create_redis("redis://data-workspace-redis:6379")
-    await redis_client.execute("FLUSHDB")
+    redis_client = aioredis.from_url("redis://data-workspace-redis:6379")
+    await redis_client.execute_command("FLUSHDB")
 
 
 async def give_user_superuser_perms():
