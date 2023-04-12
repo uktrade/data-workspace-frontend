@@ -23,7 +23,7 @@ To contribute changes to documentation or code, you will need the source of data
 
 ### If you’re a member of uktrade
 
-1. [Setup an SSH key and associate it with your GitHub account] (https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
+1. [Setup an SSH key and associate it with your GitHub account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
 
 2. Clone the repository
 
@@ -37,7 +37,7 @@ You should not fork the repository if you're a member of uktrade.
 
 ### If you’re not a member of uktrade
 
-1.[Setup an SSH key and associate it with your GitHub account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account).
+1. [Setup an SSH key and associate it with your GitHub account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account).
 
 2. Clone the repository.
 
@@ -46,7 +46,7 @@ You should not fork the repository if you're a member of uktrade.
     cd data-workspace
     ```
 
-3.[Fork the repository](https://github.com/uktrade/data-workspacefork). Make a note of the "Owner" that you fork to. This is usually your username.
+3. [Fork the repository](https://github.com/uktrade/data-workspacefork). Make a note of the "Owner" that you fork to. This is usually your username.
   
   There is more documentation on forking in [GitHub's guide on contributing to projects](https://docs.github.com/en/get-started/quickstart/contributing-to-projects).
   

@@ -1,5 +1,17 @@
 ## Running locally
 
+### Cloning the Data Workspace Repository
+
+1. [Setup an SSH key and associate it with your GitHub account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
+
+2. Clone the repository
+
+    ```bash
+    git clone git@github.com:uktrade/data-workspace.git
+    ```
+
+### Starting the Application
+
 Set data infrastructure shared network
 
 ```bash
