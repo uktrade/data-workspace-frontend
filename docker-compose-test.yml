@@ -36,9 +36,6 @@ services:
     volumes:
       - db-logs-dev:/var/log/postgres
       - test-results:/test-results
-      - dataworkspace:/dataworkspace
-      - test:/test
-      - app:/app
   data-workspace-postgres:
     build:
       context: postgres

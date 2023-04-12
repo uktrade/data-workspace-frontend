@@ -24,23 +24,19 @@ first-use:
 up: first-use
 	docker compose up
 
-
 .PHONY: docker-build
 docker-build:
 	docker compose -f docker-compose-test.yml build
-
 
 .PHONY: docker-test-unit
 docker-test-unit: TESTS ?= /dataworkspace/dataworkspace
 docker-test-unit: docker-build
 	docker compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test pytest -vv --junitxml=/test-results/junit.xml $(TESTS)
 
-
 .PHONY: docker-test-integration
 docker-test-integration: TESTS ?= test/
 docker-test-integration: docker-build
 	docker compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test pytest --junitxml=/test-results/junit.xml $(TESTS)
-
 
 .PHONY: docker-test
 docker-test: docker-test-integration docker-test-unit
@@ -78,16 +74,13 @@ docker-check:
 docker-format: first-use
 	docker compose run --rm data-workspace bash -c "cd /app && black ."
 
-
 .PHONY: format
 format:
 	black .
 
-
 .PHONY: dev-shell
 dev-shell:
 	docker compose run --rm data-workspace bash
-
 
 .PHONY: save-requirements
 save-requirements:
@@ -120,7 +113,6 @@ docker-test-local: docker-test-unit-local docker-test-integration-local
 .PHONY: logout
 logout:
 	docker compose exec data-workspace-redis bash -c "redis-cli --scan --pattern data_workspace* | xargs redis-cli unlink"
-
 
 .PHONY: docker-test-sequential
 docker-test-sequential:

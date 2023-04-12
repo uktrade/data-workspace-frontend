@@ -53,7 +53,7 @@ jobs:
       - <<: *prepare-docker-cache
       - <<: *save-docker-cache
       - run:
-          name: Check all migrations have been generated
+          name: Check all docker-test-unit-local migrations have been generated
           command: make docker-check-migrations
       - run:
           name: Run test
