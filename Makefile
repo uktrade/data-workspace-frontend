@@ -26,17 +26,17 @@ up: first-use
 
 .PHONY: docker-build
 docker-build:
-	docker compose -f docker-compose-test.yml build
+	docker compose --profile test build
 
 .PHONY: docker-test-unit
 docker-test-unit: TESTS ?= /dataworkspace/dataworkspace
 docker-test-unit: docker-build
-	docker compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test pytest -vv --junitxml=/test-results/junit.xml $(TESTS)
+	docker compose --profile test -p data-workspace-test run data-workspace-test pytest -vv --junitxml=/test-results/junit.xml $(TESTS)
 
 .PHONY: docker-test-integration
 docker-test-integration: TESTS ?= test/
 docker-test-integration: docker-build
-	docker compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test pytest --junitxml=/test-results/junit.xml $(TESTS)
+	docker compose --profile test -p data-workspace-test run data-workspace-test pytest --junitxml=/test-results/junit.xml $(TESTS)
 
 .PHONY: docker-test
 docker-test: docker-test-integration docker-test-unit
@@ -44,7 +44,7 @@ docker-test: docker-test-integration docker-test-unit
 
 .PHONY: docker-clean
 docker-clean:
-	docker compose -f docker-compose-test.yml -p data-workspace-test down -v
+	docker compose --profile test -p data-workspace-test down -v
 
 .PHONY: check-flake8
 check-flake8:
@@ -52,7 +52,7 @@ check-flake8:
 
 .PHONY: docker-check-migrations
 docker-check-migrations:
-	docker compose -f docker-compose-test.yml -p data-workspace-test run data-workspace-test sh -c "sleep 5 && django-admin makemigrations --check --dry-run --verbosity 3"
+	docker compose --profile test -p data-workspace-test run data-workspace-test sh -c "sleep 5 && django-admin makemigrations --check --dry-run --verbosity 3"
 
 .PHONY: check-black
 check-black:
