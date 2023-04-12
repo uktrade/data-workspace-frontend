@@ -36,6 +36,9 @@ services:
     volumes:
       - db-logs-dev:/var/log/postgres
       - test-results:/test-results
+      - dataworkspace:/dataworkspace
+      - test:/test
+      - app:/app
   data-workspace-postgres:
     build:
       context: postgres
@@ -72,3 +75,21 @@ services:
 volumes:
   db-logs-dev:
   test-results:
+  dataworkspace:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ${PWD}/dataworkspace
+  test:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ${PWD}/test
+  app:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ${PWD}
