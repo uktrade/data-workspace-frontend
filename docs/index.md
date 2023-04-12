@@ -35,8 +35,8 @@ hide:
 
   .admonition .dw-start {
     line-height:  1;
-    padding-top: 7px;
-    padding-bottom: 7px;
+    padding-top: 8px;
+    padding-bottom: 8px;
     display: block;
     text-align: center;
   }
