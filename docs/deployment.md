@@ -52,11 +52,13 @@ terraform init
 # add .terraform to .gitignore
 ```
 
-Check the environment your created has worked correctly.
+Check the environment you created has worked correctly.
 
 ```bash
 terraform plan
 ```
+
+Our template has been tested on AWS. If you're deploying elsewhere, some extra tinkering with `infra/environment/my_environment` might be needed. Note that `make terraform_environments` will overwrite any changes in the folders within `infra/environment`, so you may want to break that relationship if you need to make edits not handled in the template. 
 
 If everything looks right, you're ready to deploy!
 
