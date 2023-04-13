@@ -12,7 +12,10 @@ jobs:
           docker_layer_caching: true
       - run:
           name: Build docker containers
-          command: make docker-build
+          command: |
+            touch .envs/dev.env
+            touch .envs/superset.dev.env      
+            make docker-build
       - run:
           name: Check all docker-test-unit-local migrations have been generated
           command: make docker-check-migrations
@@ -20,6 +23,7 @@ jobs:
           name: Run test
           command: |
             touch .envs/dev.env
+            touch .envs/superset.dev.env
             make docker-test-unit TESTS="$(circleci tests glob 'dataworkspace/dataworkspace/tests/**/test_*.py' | circleci tests split --split-by=timings | tr '\n' ' ')"
             docker cp data-workspace-test-data-workspace-test-results-1:/test-results ./test-results
       - store_test_results:
@@ -36,11 +40,15 @@ jobs:
           docker_layer_caching: true
       - run:
           name: Build docker containers
-          command: make docker-build
+          command: |
+            touch .envs/dev.env
+            touch .envs/superset.dev.env      
+            make docker-build
       - run:
           name: Run test
           command: |
             touch .envs/dev.env
+            touch .envs/superset.dev.env
             make docker-test-integration TESTS="$(circleci tests glob 'test/**/test_*.py' | circleci tests split --split-by=timings | tr '\n' ' ')"
             docker cp data-workspace-test-data-workspace-test-results-1:/test-results ./test-results
       - store_test_results:

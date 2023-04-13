@@ -1,11 +1,16 @@
 version: "3.4"
 services:
+
+  # Core data workspace services
+
   data-workspace:
     build:
       context: .
       dockerfile: Dockerfile
       target: dev
     image: data-workspace
+    networks:
+      - data-infrastructure-shared-network
     ports:
       - "8000:8000"
       - "4444:4444"
@@ -25,6 +30,8 @@ services:
       dockerfile: Dockerfile
       target: dev
     image: data-workspace
+    networks:
+      - data-infrastructure-shared-network
     env_file: .envs/dev.env
     links:
       - "data-workspace-postgres"
@@ -39,6 +46,9 @@ services:
       context: postgres
       dockerfile: Dockerfile
     image: data-workspace-postgres
+    networks:
+      - data-infrastructure-shared-network
+      - test
     ports:
       - "5432:5432"
     volumes:
@@ -50,13 +60,20 @@ services:
       context: redis
       dockerfile: Dockerfile
     image: data-workspace-redis
+    networks:
+      - data-infrastructure-shared-network
+      - test
     ports:
       - "6379:6379"
+  
   data-workspace-es:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.10.0
     environment:
       - discovery.type=single-node
       - http.port=9200
+    networks:
+      - data-infrastructure-shared-network
+      - test
     ports:
       - "9200:9200"
 
@@ -66,6 +83,8 @@ services:
       - MOCK_SSO_PORT=8081
       - MOCK_SSO_TOKEN=bar
       - MOCK_SSO_CODE=fizz
+    networks:
+      - data-infrastructure-shared-network
     ports:
       - "8081:8081"
 
@@ -73,6 +92,8 @@ services:
     build:
       context: localstack
       dockerfile: Dockerfile
+    networks:
+      - data-infrastructure-shared-network
     ports:
       - "127.0.0.1:53:53"
       - "127.0.0.1:53:53/udp"
@@ -87,12 +108,16 @@ services:
     volumes:
       - "./.localstack:/tmp/localstack"
 
+  # Superset profile services
+
   data-workspace-superset:
     build:
       context: superset
       dockerfile: Dockerfile
       target: dev
     image: data-workspace-superset
+    networks:
+      - data-infrastructure-shared-network
     depends_on:
       - data-workspace-postgres
     profiles:
@@ -108,11 +133,89 @@ services:
     volumes:
       - ./superset/superset_config.py:/etc/superset/superset_config.py
 
+  # Test profile services
+
+  data-workspace-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: test
+    image: data-workspace-test
+    profiles:
+      - test
+    networks:
+      - test
+    stdin_open: true
+    tty: true
+    env_file:
+      - ./.envs/test.env
+    shm_size: '200mb'  # needed for chromium selenium tests - otherwise page/tab crashes
+    ports:
+      - "8000"
+    links:
+      - "data-workspace-postgres"
+      - "data-workspace-redis"
+      - "data-workspace-es"
+    depends_on:
+      - "data-workspace-test-results"
+    extra_hosts:
+      - "dataworkspace.test:127.0.0.1"
+      - "superset.dataworkspace.test:127.0.0.1"
+      - "superset-edit.dataworkspace.test:127.0.0.1"
+      - "testapplication-23b40dd9.dataworkspace.test:127.0.0.1"
+      - "testdbapplication-23b40dd9.dataworkspace.test:127.0.0.1"
+      - "testvisualisation.dataworkspace.test:127.0.0.1"
+      - "testvisualisation--8888.dataworkspace.test:127.0.0.1"
+      - "testvisualisation--11372717.dataworkspace.test:127.0.0.1"
+      - "testvisualisation--11372717--8888.dataworkspace.test:127.0.0.1"
+      - "testvisualisation-a.dataworkspace.test:127.0.0.1"
+      - "testvisualisation-b.dataworkspace.test:127.0.0.1"
+      - "api.ecr.my-region-1.amazonaws.com:127.0.0.1"
+      - "mlflow--data-science.dataworkspace.test:127.0.0.1"
+    volumes:
+      - db-logs-dev:/var/log/postgres
+      - test-results:/test-results
+  
+  # Have a named volume since mounting a local directory isn't possible in CircleCI's
+  # remote docker system. And docker compose run kills the container running the tests
+  # proper, so to be able to copy out results, run a small container just to be able
+  # to access the named volume after the tests finish
+  data-workspace-test-results:
+    image: busybox
+    profiles:
+      - test
+    networks:
+      - test
+    tty: true
+    volumes:
+      - test-results:/test-results
+
 volumes:
   db-data-dev:
   db-logs-dev:
+  # Test volume config
+  test-results:
+  dataworkspace:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ${PWD}/dataworkspace
+  test:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ${PWD}/test
+  app:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ${PWD}
   
 networks:
-  default:
-    external:
-      name: data-infrastructure-shared-network
+  data-infrastructure-shared-network:
+    driver: bridge
+  test:
+    driver: bridge
