@@ -12,12 +12,6 @@
 
 ### Starting the Application
 
-Set data infrastructure shared network
-
-```bash
-docker network create data-infrastructure-shared-network
-```
-
 Set the required variables by
 
 ```bash

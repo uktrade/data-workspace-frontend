@@ -12,7 +12,10 @@ jobs:
           docker_layer_caching: true
       - run:
           name: Build docker containers
-          command: make docker-build
+          command: |
+            touch .envs/dev.env
+            touch .envs/superset.dev.env      
+            make docker-build
       - run:
           name: Check all docker-test-unit-local migrations have been generated
           command: make docker-check-migrations
