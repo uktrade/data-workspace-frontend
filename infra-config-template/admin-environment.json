@@ -1,0 +1,204 @@
+{
+    "name": "APPSTREAM_AWS_SECRET_KEY",
+    "value": "REPLACE_ME"
+},
+{
+    "name": "APPSTREAM_AWS_ACCESS_KEY",
+    "value": "REPLACE_ME"
+},
+{
+    "name": "APPSTREAM_AWS_REGION",
+    "value": "eu-west-1"
+},
+{
+    "name": "APPSTREAM_FLEET_NAME",
+    "value": "statav3"
+},
+{
+    "name": "APPSTREAM_STACK_NAME",
+    "value": "statav3"
+},
+{
+    "name": "APPLICATION_IP_ALLOWLIST_GROUPS__General__1",
+    "value": "0.0.0.0/0"
+},
+{
+    "name": "HAWK_SENDERS__1__id",
+    "value": "countriesofinterestservice"
+},
+{
+    "name": "HAWK_SENDERS__1__key",
+    "value": "REPLACE_ME"
+},
+{
+    "name": "HAWK_SENDERS__2__id",
+    "value": "dataflow"
+},
+{
+    "name": "HAWK_SENDERS__2__key",
+    "value": "REPLACE_ME"
+},
+{
+    "name": "SENTRY_DSN",
+    "value": "REPLACE_ME"
+},
+{
+    "name": "SENTRY_ENVIRONMENT",
+    "value": "Production"
+},
+{
+    "name": "YOUR_FILES_ENABLED",
+    "value": "True"
+},
+{
+    "name": "GITLAB_URL",
+    "value": "http://gitlab.jupyterhub/"
+},
+{
+    "name": "GITLAB_TOKEN",
+    "value": "REPLACE_ME"
+},
+{
+    "name": "GITLAB_ECR_PROJECT_ID",
+    "value": "34"
+},
+{
+    "name": "GITLAB_ECR_PROJECT_TRIGGER_TOKEN",
+    "value": "REPLACE_ME"
+},
+{
+    "name": "GITLAB_VISUALISATIONS_GROUP",
+    "value": "visualisations"
+},
+{
+    "name": "GA_TRACKING_ID",
+    "value": "REPLACE_ME"
+},
+{
+    "name": "GTM_CONTAINER_ENVIRONMENT_PARAMS",
+    "value": ""
+},
+{
+    "name": "GTM_CONTAINER_ID",
+    "value": "REPLACE_ME"
+},
+{
+    "name": "ELASTIC_APM_SECRET_TOKEN",
+    "value": "REPLACE_ME"
+},
+{
+    "name": "ELASTIC_APM_URL",
+    "value": "REPLACE_ME"
+},
+{
+    "name": "ENVIRONMENT",
+    "value": "production"
+},
+{
+    "name": "NOTIFY_API_KEY",
+    "value": "REPLACE_ME"
+},
+{
+    "name": "FERNET_EMAIL_TOKEN_KEY",
+    "value": "REPLACE_ME"
+},
+{
+    "name": "METABASE_EMBEDDING_SECRET_KEY",
+    "value": "REPLACE_ME"
+},
+{
+    "name": "PGAUDIT_ROLE",
+    "value": "rds_pgaudit"
+},
+{
+    "name": "PGAUDIT_LOG_SCOPES",
+    "value": "ALL, -MISC"
+},
+{
+    "name": "ACTIVITY_STREAM_BASE_URL",
+    "value": "REPLACE_ME"
+},
+{
+    "name": "ACTIVITY_STREAM_HAWK_CREDENTIALS_ID",
+    "value": "data-workspace-sso"
+},
+{
+    "name": "ACTIVITY_STREAM_HAWK_CREDENTIALS_KEY",
+    "value": "REPLACE_ME"
+},
+{
+    "name": "SLACK_SENTRY_CHANNEL_WEBHOOK",
+    "value": "REPLACE_ME"
+},
+{
+    "name": "DATAFLOW_BASE_URL",
+    "value": "REPLACE_ME"
+},
+{
+    "name": "DATAFLOW_HAWK_ID",
+    "value": "data-workspace-your-files"
+},
+{
+    "name": "DATAFLOW_HAWK_KEY",
+    "value": "REPLACE_ME"
+},
+{
+    "name": "DATAFLOW_S3_IMPORT_DAG",
+    "value": "DataWorkspaceS3ImportPipeline"
+},
+{
+    "name": "DATAFLOW_RESTORE_TABLE_DAG",
+    "value": "DataWorkspaceRestorePipeline"
+},
+{
+    "name": "DATASET_FINDER_ES_HOST",
+    "value": "REPLACE_ME"
+},
+{
+    "name": "DATASET_FINDER_ES_PORT",
+    "value": "443"
+},
+{
+    "name": "DATASET_FINDER_AWS_REGION",
+    "value": "eu-west-2"
+},
+{
+    "name": "DATASET_FINDER_DB_NAME",
+    "value": "datasets_1"
+},
+{
+    "name": "GECKOBOARD_API_KEY",
+    "value": "REPLACE_ME"
+},
+{
+    "name": "GITLAB_URL_FOR_TOOLS",
+    "value": "REPLACE_ME"
+},
+{
+    "name": "SSO_ADMIN_SCOPE_TOKEN",
+    "value": "REPLACE_ME"
+},
+{
+    "name": "TEAMS_DATA_WORKSPACE_COMMUNITY_URL",
+    "value": "REPLACE_ME"
+},
+{
+    "name": "DATA_WORKSPACE_ROADMAP_URL",
+    "value": "REPLACE_ME"
+},
+{
+    "name": "CLAMAV_URL",
+    "value": "REPLACE_ME"
+},
+{
+    "name": "CLAMAV_USER",
+    "value": "data-workspace-prod"
+},
+{
+    "name": "CLAMAV_PASSWORD",
+    "value": "REPLACE_ME"
+},
+{
+    "name": "DEFAULT_DB_MAX_CONNS",
+    "value": "37"
+},
