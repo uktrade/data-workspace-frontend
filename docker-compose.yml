@@ -9,6 +9,8 @@ services:
       dockerfile: Dockerfile
       target: dev
     image: data-workspace
+    networks:
+      - data-infrastructure-shared-network
     ports:
       - "8000:8000"
       - "4444:4444"
@@ -28,6 +30,8 @@ services:
       dockerfile: Dockerfile
       target: dev
     image: data-workspace
+    networks:
+      - data-infrastructure-shared-network
     env_file: .envs/dev.env
     links:
       - "data-workspace-postgres"
@@ -42,6 +46,9 @@ services:
       context: postgres
       dockerfile: Dockerfile
     image: data-workspace-postgres
+    networks:
+      - data-infrastructure-shared-network
+      - test
     ports:
       - "5432:5432"
     volumes:
@@ -53,6 +60,9 @@ services:
       context: redis
       dockerfile: Dockerfile
     image: data-workspace-redis
+    networks:
+      - data-infrastructure-shared-network
+      - test
     ports:
       - "6379:6379"
   
@@ -61,6 +71,9 @@ services:
     environment:
       - discovery.type=single-node
       - http.port=9200
+    networks:
+      - data-infrastructure-shared-network
+      - test
     ports:
       - "9200:9200"
 
@@ -70,6 +83,8 @@ services:
       - MOCK_SSO_PORT=8081
       - MOCK_SSO_TOKEN=bar
       - MOCK_SSO_CODE=fizz
+    networks:
+      - data-infrastructure-shared-network
     ports:
       - "8081:8081"
 
@@ -77,6 +92,8 @@ services:
     build:
       context: localstack
       dockerfile: Dockerfile
+    networks:
+      - data-infrastructure-shared-network
     ports:
       - "127.0.0.1:53:53"
       - "127.0.0.1:53:53/udp"
@@ -99,6 +116,8 @@ services:
       dockerfile: Dockerfile
       target: dev
     image: data-workspace-superset
+    networks:
+      - data-infrastructure-shared-network
     depends_on:
       - data-workspace-postgres
     profiles:
@@ -123,6 +142,8 @@ services:
       target: test
     image: data-workspace-test
     profiles:
+      - test
+    networks:
       - test
     stdin_open: true
     tty: true
@@ -163,6 +184,8 @@ services:
     image: busybox
     profiles:
       - test
+    networks:
+      - test
     tty: true
     volumes:
       - test-results:/test-results
@@ -192,6 +215,7 @@ volumes:
       device: ${PWD}
   
 networks:
-  default:
-    name: data-infrastructure-shared-network
-    external: true
+  data-infrastructure-shared-network:
+    driver: bridge
+  test:
+    driver: bridge
