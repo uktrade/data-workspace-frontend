@@ -16,6 +16,7 @@ theme:
   icon:
     admonition:
       quote: octicons/quote-16
+      note: material/information
     tag:
       draft: material/sticker-outline
       accepted: material/sticker-check-outline
@@ -64,6 +65,7 @@ nav:
       - Enhanced Tables: 'development/enhancedtables.md'
     - Deployment: 
       - 'deployment.md'
+    - Data Ingestion: 'gettingdata.md'
     - Architecture: 
       - Components: 'architecture/components.md'
       - Application Lifecycle: 'architecture/application-lifecycle.md'
