@@ -15,50 +15,41 @@ terraform apply
 
 ## Deploying Data Workspace (ideal)
 
-Data Workspace is deployed using [Terraform](https://developer.hashicorp.com/terraform), and this repo contains templates to allow you to quickly deploy new infrastructure environments.
+Data Workspace is deployed using [Terraform](https://developer.hashicorp.com/terraform), and this repo contains templates to allow you to quickly deploy new infrastructure environments. The default platform is AWS, and deploying elsewhere would require significant reconfiguration.
 
-Set up your new environment by cloning the sample environment .env file.
+`make terraform_environments` prompts you to name a new environment, then creates it in infra/environment/. It generates the required SSH keys, confgures as much of the environment's terraform.tfvars file as possible, and initialises Terraform in the new directory.
 
-For security, this new .env file will need adding to the .gitignore. Any .env file in .env/terraform/ will be ignored by default.
-
-```bash
-cp .env/sample_terraform_environment.env .env/terraform/my_environment.env
-# add .env/terraform/ to .gitignore
-```
-
-Edit your new environment's .env file, entering the details of your hosting platform.
-
-You're ready to create the new environment's configuration files. There's a make command just for this.
+For security, the generated environment configuration folder will need adding to the .gitignore. Anything in infra/environment/ is ignored by default.
 
 ```bash
 make terraform_environments
 # add infra/environment to .gitignore
+# add terraform.tfvars to infra/environment_template
 
-# Using infra/environment_template, creates infra/environment/my_environment/ using the my_environment.env settings
-# Will do the same for anything in .env/terraform
-# Note that environment_template's sources will now be within this repo, and will need updating
+# Prompts for a new environment name, eg deploy, refuses if it exists
+# Using infra/environment_template, creates infra/environment/deploy/
+# cd to new directory
+# runs terraform init
+# generates the ssh keys and adds to terraform.tfvars
+# cd back to root
+
+# Note that environment_template's source params will now reference this repo, and will need updating
 # Make a way to diff ci.uktrade.digital's version with our template? Idk.
 ```
 
-`make terraform_environments` creates any environment in .env/terraform/ in infra/environment/. It creates a directory based on the `TERRAFORM_DIR_NAME` variable you set.
-
-For security, this environment configuration folder will need adding to the .gitignore. Anything in infra/environment/ is ignored by default.
-
-Let's assume you set `TERRAFORM_DIR_NAME=my_environment`. Go to your new directory and initialise Terraform.
+Let's assume you named your new environment `deploy`.
 
 ```bash
-cd infra/environment/my_environment
-terraform init
-# add .terraform to .gitignore
+cd infra/environment/deploy
 ```
+
+Edit your new environment's terraform.tfvars file, entering the details of your hosting platform.
 
 Check the environment you created has worked correctly.
 
 ```bash
 terraform plan
 ```
-
-Our template has been tested on AWS. If you're deploying elsewhere, some extra tinkering with `infra/environment/my_environment` might be needed. Note that `make terraform_environments` will overwrite any changes in the folders within `infra/environment`, so you may want to break that relationship if you need to make edits not handled in the template. 
 
 If everything looks right, you're ready to deploy!
 
