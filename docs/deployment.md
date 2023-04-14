@@ -7,7 +7,7 @@ hide:
 
 Data Workspace is deployed using [Terraform](https://developer.hashicorp.com/terraform/) environments that should sit within a sibling folder to Data Workspace's repository. These environments should then reference the Data Workspace repository's `infra/` folder.
 
-We supply `infra/environment-template/` to allow you to quickly deploy new infrastructure environments. The default platform is AWS, and deploying elsewhere would require significant reconfiguration.
+We supply `infra/environment-template/` to help you deploy new infrastructure environments. The default platform is AWS, and deploying elsewhere would require significant reconfiguration.
 
 Copy the template files to the repository's sibling directory. We name this `data-workspace-environments` by default.
 
@@ -52,16 +52,5 @@ terraform plan
 If everything looks right, you're ready to deploy!
 
 ```bash
-terraform apply
-```
-
-## For DBT employees
-
-The above `data-workspace-environments` sibling folder is replaced by the [terraform-data-workspace](https://gitlab.ci.uktrade.digital/data-infrastructure/terraform-data-workspace) repository.
-
-Clone `terraform-data-workspace` as a sibling to the Data Workspace repository, then for each of its environments initialise and apply with Terraform.
-
-```bash
-terraform init
 terraform apply
 ```
