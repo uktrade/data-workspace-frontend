@@ -62,6 +62,8 @@ nav:
       - Local Development: 'development/developinglocally.md'
       - Remote Debugging: 'development/remotedebugging.md'
       - Enhanced Tables: 'development/enhancedtables.md'
+    - Deployment: 
+      - 'deployment.md'
     - Architecture: 
       - Components: 'architecture/components.md'
       - Application Lifecycle: 'architecture/application-lifecycle.md'
