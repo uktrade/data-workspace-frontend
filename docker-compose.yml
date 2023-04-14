@@ -216,6 +216,7 @@ volumes:
   
 networks:
   data-infrastructure-shared-network:
+    name: data-infrastructure-shared-network
     driver: bridge
   test:
     driver: bridge
