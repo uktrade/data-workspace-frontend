@@ -6,6 +6,5 @@ aiohttp
 cryptography
 ecs-logging
 
-# A dependency of mlflow, but tensorflow requires protobuf<4, which is used in data-flow,
-# so keeping <4 across the board is all components that might communicate with each other
-protobuf<4
+# A dependency of mlflow
+protobuf
