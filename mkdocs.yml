@@ -65,7 +65,7 @@ nav:
       - Enhanced Tables: 'development/enhancedtables.md'
     - Deployment: 
       - 'deployment.md'
-    - Getting Data Into Data Workspace: 'gettingdata.md'
+    - Data Ingestion: 'gettingdata.md'
     - Architecture: 
       - Components: 'architecture/components.md'
       - Application Lifecycle: 'architecture/application-lifecycle.md'
