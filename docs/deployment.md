@@ -17,12 +17,12 @@ terraform apply
 
 Data Workspace is deployed using [Terraform](https://developer.hashicorp.com/terraform), and this repo contains templates to allow you to quickly deploy new infrastructure environments. The default platform is AWS, and deploying elsewhere would require significant reconfiguration.
 
-`make terraform_environments` prompts you to name a new environment, then creates it in infra/environment/. It generates the required SSH keys, confgures as much of the environment's terraform.tfvars file as possible, and initialises Terraform in the new directory.
+`make terraform_environment` prompts you to name a new environment, then creates it in infra/environment/. It generates the required SSH keys, confgures as much of the environment's terraform.tfvars file as possible, and initialises Terraform in the new directory.
 
 For security, the generated environment configuration folder will need adding to the .gitignore. Anything in infra/environment/ is ignored by default.
 
 ```bash
-make terraform_environments
+make terraform_environment
 # add infra/environment to .gitignore
 # add terraform.tfvars to infra/environment_template
 
