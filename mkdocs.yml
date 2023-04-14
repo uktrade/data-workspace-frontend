@@ -46,7 +46,7 @@ extra_css:
 plugins:
   - material/search
   - material/tags:
-      tags_file: 'ADRs/README.md'
+      tags_file: 'architecture/ADRs/README.md'
 extra:
   tags:
     Draft: draft
@@ -63,8 +63,10 @@ nav:
       - Remote Debugging: 'development/remotedebugging.md'
       - Enhanced Tables: 'development/enhancedtables.md'
     - Architecture: 
-      - 'architecture.md'
-    - ADRs:
-      - 'ADRs/README.md'
+      - Components: 'architecture/components.md'
+      - Application Lifecycle: 'architecture/application-lifecycle.md'
+      - Comparison with JupyterHub: 'architecture/comparison-with-jupyterhub.md'
+      - ADRs:
+          - 'architecture/ADRs/README.md'
     - Contributing: 
       - 'contributing.md'
