@@ -68,7 +68,7 @@ nav:
     - Deployment: 
       - To AWS: 'deployment/aws.md'
       - To other platforms: 'deployment/other-platforms.md'
-    - Data Ingestion: 'gettingdata.md'
+    - Data Ingestion: 'data-ingestion.md'
     - Architecture: 
       - Components: 'architecture/components.md'
       - Application Lifecycle: 'architecture/application-lifecycle.md'
