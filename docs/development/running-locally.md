@@ -1,3 +1,6 @@
+To develop features on Data Workspace, or to evaluate if it's suitable for your use case, it can be helpful to run Data Workspace on your local computer.
+
+
 ## Prerequisites
 
 To run Data Workspace locally, you must have these tools installed:
