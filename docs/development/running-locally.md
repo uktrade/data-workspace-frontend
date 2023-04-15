@@ -5,6 +5,8 @@ To run Data Workspace locally, you must have these tools installed:
 - [Docker](https://docs.docker.com/get-docker/)
 - [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 
+You should also have familiarity with the command line, and editing text files.
+
 
 ## Cloning the source code repository
 
