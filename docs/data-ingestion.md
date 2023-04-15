@@ -16,9 +16,9 @@ Data Workspace is a [Django](https://www.djangoproject.com/) application, with a
 
 ## Source datasets
 
-A source dataset is the core Data Workspace dataset type. It is made up of one or more tables in the datasets database. Typically a source dataset would be updated frequently.
+A source dataset is the core Data Workspace dataset type. It is made up of one or more tables in the PostgreSQL datasets database. Typically a source dataset would be updated frequently.
 
-However, ingesting into these tables is not handled by the Data Workspace project itself. There are many ways to data into a source dataset. The Department for Business and Trade uses [Airflow](https://airflow.apache.org/) to handle ingestion using a combination of Python and SQL code.
+However, ingesting into these tables is not handled by the Data Workspace project itself. There are many ways to ingest data into PostgreSQL tables. The Department for Business and Trade uses [Airflow](https://airflow.apache.org/) to handle ingestion using a combination of Python and SQL code.
 
 !!! note
 
