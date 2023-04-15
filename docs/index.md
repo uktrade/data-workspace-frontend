@@ -69,7 +69,7 @@ hide:
       - a framework for hosting tools that allows users to analyse data without downloading it, such as through JupyterLab, RStudio, or Theia (a VS Code-like IDE)
       - dashboard creation and hosting
 
-      Data Workspace has been built with features specifically for the Department for Business and Trade. However, we are open to contributions to make this more generic. See [contributing](./contributing.md) for details on how to make changes for your use case.
+      Data Workspace has been built with features specifically for the Department for Business and Trade. However, we are open to contributions to make this more generic. See [Contributing](./contributing.md) for details on how to make changes for your use case.
       </div>
 
       <div class="dw-image-column">![Data Workspace image](assets/dw-readme-front-page.png){ width=300px}</div>
