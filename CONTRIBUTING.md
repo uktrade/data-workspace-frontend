@@ -62,7 +62,7 @@ When the PR is merged, the documentation is deployed automatically to [https://d
 
 ## Contributing code
 
-Changes are then submitted via a Pull Request (PR). To do this:
+Changes are submitted via a Pull Request (PR). To do this:
 
 1. Decide on a short hyphen-separated descriptive name for your change, prefixed with the type of change. For example fix/the-bug-description.
 
