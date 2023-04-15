@@ -12,15 +12,17 @@ You should also have familiarity with the command line, and editing text files. 
 
 To run Data Workspace locally, you must also have the Data Workspace source code, which is stored in the [Data Workspace GitHub repository](https://github.com/uktrade/data-workspace). The process of copying this code so it is available locally is known as cloning.
 
-1. [Setup an SSH key and associate it with your GitHub account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
+1. If you don't already have a GitHub account, [create a GitHub account](https://github.com/signup)
 
-2. Clone the repository
+2. [Setup an SSH key and associate it with your GitHub account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
+
+3. Clone the repository
 
     ```bash
     git clone git@github.com:uktrade/data-workspace.git
     ```
 
-3. Change to the Data Workspace directory
+4. Change to the Data Workspace directory
 
     ```bash
     cd data-workspace
