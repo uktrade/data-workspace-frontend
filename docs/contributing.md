@@ -15,7 +15,7 @@ An issue that contains a [minimal, reproducible example](https://stackoverflow.c
 
 ## Contributing a Feature Request
 
-A feature request can be submitted using the [Ideas category in Data Workspace discussions](https://github.com/uktrade/data-workspace/discussions/categories/ideas). (This page currently doesn't exist)
+A feature request can be submitted using the [Ideas category in Data Workspace discussions](https://github.com/uktrade/data-workspace/discussions/categories/ideas).
 
 ## Contributing documentation or code
 
