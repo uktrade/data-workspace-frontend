@@ -8,8 +8,10 @@ Data Workspace is essentially an interface to a PostgreSQL database, referred to
 
 Conceptually, there are 3 different types of datasets in Data Workspace: source datasets, reference datasets, and data cuts. Metadata for the 3 dataset types is controlled through a single administration interface, but how data is ingested into these depends on the dataset.
 
+In addition to the structured data exposed in the catalogue, data can be uploaded by users on an ad-hoc basis, treated by Data Workspace as binary blobs.
 
-## Metadata
+
+## Dataset metadata
 
 Data Workspace is a [Django](https://www.djangoproject.com/) application, with a staff-facing administration interface, usually refered to as Django admin. Metadata for of each the 3 types of dataset is managed within Django admin.
 
@@ -37,3 +39,14 @@ The structure and data of reference datasets can be completely controlled throug
 Data isn't ingested into data cuts directly. Instead, data cuts are defined by SQL queries entered into Django admin that run dynamically, querying from source and reference datasets. As such they update as frequently as the data they query from updates.
 
 A datacut could filter a larger source dataset for a specific country, calculate aggregate statistics, join multiple source datasets together, join a source dataset with a reference dataset, or a combination of these.
+
+
+## Ad-hoc binary blobs
+
+Each users is able to upload binary blobs in an ad-host cases to their own private prefix in an S3 bucket, as well to any authorized team prefixes. Read and write access to these prefixes is by 3 mechanisms:
+
+- Through a custom React-based S3 browser built into the Data Workspace Django application
+
+- From tools using the S3 API or S3 SDKs, for example [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html).
+
+- Certain parts of each user's prefix are automatically synced to and from the local filesystem in on-demand tools they launch. This gives users the illusion of a permanent filesystem in their tools, even though the tools are ephermeral.
