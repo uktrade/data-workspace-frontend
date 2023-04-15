@@ -69,27 +69,25 @@ Changes are submitted via a Pull Request (PR). To do this:
 2. Make a branch using this descriptive name.
 
     ```bash
-    git checkout -b fix-a-bug-description
+    git checkout -b fix/a-bug-description
     ```
 
-3. Make sure you can run existing tests locally
+3. Make sure you can run existing tests locally, for example by running:
 
     ```bash
-    pip install -e ".[dev]"  # Only needed once
-    pytest
+    make docker-test
     ```
 
-4. Make your changes in a text editor. In the cases of changing behaviour, this would usually include changing or adding at least one test likely within [dataworkspace/dataworkspace/tests](https://github.com/uktrade/data-workspace/tree/master/dataworkspace/dataworkspace/tests), and running them.
+    See [Running tests](https://data-workspace.docs.trade.gov.uk/development/running-tests/) for more details on running tests.
 
-    ```bash
-    pytest
-    ```
+4. Make your changes in a text editor. In the cases of changing behaviour, this would usually include changing or adding tests within [dataworkspace/dataworkspace/tests](https://github.com/uktrade/data-workspace/tree/master/dataworkspace/dataworkspace/tests), and running them.
+
 
 5. Commit your changes and push to your fork. Ideally the commit message will follow the [Conventional Commit specification](https://www.conventionalcommits.org/).
 
     ```bash
     git add my_file.py  # Repeat for each file changed
-    git commit -m "feat: the bug description"
+    git commit -m "fix: the bug description"
     git push origin fix/the-bug-description
     ```
 
