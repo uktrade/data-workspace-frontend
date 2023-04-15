@@ -14,6 +14,6 @@
 
 Visit the [Data Workspace technical documentation](https://data-workspace.docs.trade.gov.uk/) for details on:
 
-- [how to run Data Workspace locally](https://data-workspace.docs.trade.gov.uk/development/run-locally/)
+- [how to run Data Workspace locally](https://data-workspace.docs.trade.gov.uk/development/running-locally/)
 - [the architecture of Data Workspace](https://data-workspace.docs.trade.gov.uk/architecture/components/)
 - [how to deploy Data Workspace to a cloud hosting platform](https://data-workspace.docs.trade.gov.uk/deployment/)
