@@ -1,6 +1,6 @@
 ## Prerequisites and source code
 
-To run tests you must have the Data Workspace prerequisites installed and cloned its source code. See [Running locally](running-locally.md) for instructions on how to do this.
+To run tests you must have the Data Workspace prerequisites and cloned its source code. See [Running locally](running-locally.md) for details.
 
 
 ## Unit and integration tests
