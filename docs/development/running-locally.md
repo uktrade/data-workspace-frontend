@@ -1,6 +1,14 @@
-## Cloning the Data Workspace repository
+## Prerequisites
 
-To run Data Workspace locally, you must have the Data Workspace source code, which is stored in the [Data Workspace GitHub repository](https://github.com/uktrade/data-workspace). The process of copying this code so it is available locally is known as cloning.
+To run Data Workspace locally, you must have these tools installed:
+
+- [Docker](https://docs.docker.com/get-docker/)
+- [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+
+
+## Cloning the source code repository
+
+To run Data Workspace locally, you must also have the Data Workspace source code, which is stored in the [Data Workspace GitHub repository](https://github.com/uktrade/data-workspace). The process of copying this code so it is available locally is known as cloning.
 
 1. [Setup an SSH key and associate it with your GitHub account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
 
