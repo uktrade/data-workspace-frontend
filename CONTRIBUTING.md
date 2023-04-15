@@ -1,56 +1,25 @@
 # How to Contribute
 
-In most cases to contribute you will need a [GitHub account](https://github.com/join).
+Contributions to Data Workspace are welcome. Data Workspace has been built with features specifically for the Department for Business and Trade, and contributions are especially welcome that make features that are specific to the Department for Business and Trade more generic.
 
-## Contributing an Issue
 
-Suspected issues with Data Workspace can be submitted at the [Data Workspace page](https://github.com/uktrade/data-workspace/issues).
+## Prerequisites
+
+- In all cases a [GitHub account](https://github.com/join) is needed to contribute.
+- To contribute code or documentation, you must have a copy of the Data Workspace source code locally, and have certain tools installed. See [Running locally](https://data-workspace.docs.trade.gov.uk/development/running-locally/) for details of these.
+- To contribute code, knowledge of [Python](https://www.python.org/) is required.
+
+
+## Contributing an issue
+
+Suspected issues with Data Workspace can be submitted at [Data Workspace issues](https://github.com/uktrade/data-workspace/issues).
 An issue that contains a [minimal, reproducible example](https://stackoverflow.com/help/minimal-reproducible-example) stands the best chance of being resolved. However, it is understood that this is not possible in all circumstances.
 
 
-## Contributing a Feature Request
+## Contributing a feature request
 
 A feature request can be submitted using the [Ideas category in Data Workspace discussions](https://github.com/uktrade/data-workspace/discussions/categories/ideas).
 
-## Contributing documentation or code
-
-To contribute changes to documentation or code, you will need the source of data-workspace locally. The instructions for this depend on if you are a member of the [uktrade GitHub organisation](https://github.com/uktrade). In both cases, experience of working with source code, working on the command line, and working with git is helpful.
-
-### If you’re a member of uktrade
-
-1. [Setup an SSH key and associate it with your GitHub account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
-
-2. Clone the repository
-
-    ```bash
-    git clone git@github.com:uktrade/data-workspace.git
-    cd data-workspace
-    ```
-
-You should not fork the repository if you're a member of uktrade.
-
-
-### If you’re not a member of uktrade
-
-1. [Setup an SSH key and associate it with your GitHub account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account).
-
-2. Clone the repository.
-
-    ```bash
-    git clone git@github.com:/data-workspace.git
-    cd data-workspace
-    ```
-
-3. [Fork the repository](https://github.com/uktrade/data-workspacefork). Make a note of the "Owner" that you fork to. This is usually your username.
-  
-  There is more documentation on forking in [GitHub's guide on contributing to projects](https://docs.github.com/en/get-started/quickstart/contributing-to-projects).
-  
-4. Clone the forked repository. In the following, replace my-username with the owner that you forked to in step 2.
-
-    ```bash
-    git clone git@github.com:my-username/data-workspace.git
-    cd data-workspace
-    ```
 
 ## Contributing documentation
 
@@ -66,7 +35,7 @@ Changes are then submitted via a Pull Request (PR). To do this:
     git checkout -b docs/add-example
     cd data-workspace
     ```
-    
+
 3. Make your changes in a text editor.
 
 4. Preview your changes locally.
@@ -75,7 +44,7 @@ Changes are then submitted via a Pull Request (PR). To do this:
     pip install -r requirements-docs.txt  # Only needed once
     mkdocs serve
     ```
-    
+
 5. Commit your change and push to your fork. Ideally the commit message will follow the [Conventional Commit specification](https://www.conventionalcommits.org/).
 
     ```bash
@@ -83,19 +52,15 @@ Changes are then submitted via a Pull Request (PR). To do this:
     git commit -m "docs: add an example"
     gir push origin docs/add-example
     ```
-    
+
 6. Raise a PR at [https://github.com/uktrade/data-workspace/pulls](https://github.com/uktrade/data-workspace/pulls) against the main branch in data-workspace.
 
 7. Wait for the PR to be approved and merged, and respond to any questions or suggested changes.
 
-When the PR is merged, the documentation is deployed automatically to [https://uktrade.github.io/data-workspace/](https://uktrade.github.io/data-workspace/).
+When the PR is merged, the documentation is deployed automatically to [https://data-workspace.docs.trade.gov.uk/](https://data-workspace.docs.trade.gov.uk/).
 
 
 ## Contributing code
-
-To contribute most code changes:
-
-- Knowledge of Python is required. Python iterables, and specifically generators, are used heavily.
 
 Changes are then submitted via a Pull Request (PR). To do this:
 
@@ -106,28 +71,28 @@ Changes are then submitted via a Pull Request (PR). To do this:
     ```bash
     git checkout -b fix-a-bug-description
     ```
-    
+
 3. Make sure you can run existing tests locally
 
     ```bash
     pip install -e ".[dev]"  # Only needed once
     pytest
     ```
-    
+
 4. Make your changes in a text editor. In the cases of changing behaviour, this would usually include changing or adding at least one test likely within [dataworkspace/dataworkspace/tests](https://github.com/uktrade/data-workspace/tree/master/dataworkspace/dataworkspace/tests), and running them.
 
     ```bash
     pytest
     ```
-    
+
 5. Commit your changes and push to your fork. Ideally the commit message will follow the [Conventional Commit specification](https://www.conventionalcommits.org/).
 
     ```bash
-    git add stream_zip.py  # Repeat for each file changed
+    git add my_file.py  # Repeat for each file changed
     git commit -m "feat: the bug description"
     git push origin fix/the-bug-description
     ```
-    
-6. Raise a PR at https://github.com/uktrade/data-workspace/pulls(https://github.com/uktrade/data-workspace/pulls) against the main branch in data-workspace.
+
+6. Raise a PR at [https://github.com/uktrade/data-workspace/pulls](https://github.com/uktrade/data-workspace/pulls) against the master branch of data-workspace.
 
 7. Wait for the PR to be approved and merged, and respond to any questions or suggested changes.
