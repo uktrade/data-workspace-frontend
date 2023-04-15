@@ -1,6 +1,6 @@
 # How to Contribute
 
-Contributions to Data Workspace are welcome. Data Workspace has been built with features specifically for the Department for Business and Trade, and contributions are especially welcome that make features that are specific to the Department for Business and Trade more generic.
+Contributions to Data Workspace are welcome. Data Workspace has been built with features specifically for the Department for Business and Trade, and contributions are especially welcome that make these features more generic.
 
 
 ## Prerequisites
