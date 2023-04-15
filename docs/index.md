@@ -75,4 +75,4 @@ hide:
       <div class="dw-image-column">![Data Workspace image](assets/dw-readme-front-page.png){ width=300px}</div>
     </div>
 
-    <a class="md-button md-button--primary dw-start" href="development/developinglocally/">Run Data Workspace locally<svg class="dw-start__start-icon" xmlns="http://www.w3.org/2000/svg" width="17.5" height="19" viewBox="0 0 33 40" focusable="false" aria-hidden="true"><path fill="currentColor" d="M0 0h13l20 20-20 20H0l20-20z"></path></a>
+    <a class="md-button md-button--primary dw-start" href="development/run-locally/">Run Data Workspace locally<svg class="dw-start__start-icon" xmlns="http://www.w3.org/2000/svg" width="17.5" height="19" viewBox="0 0 33 40" focusable="false" aria-hidden="true"><path fill="currentColor" d="M0 0h13l20 20-20 20H0l20-20z"></path></a>
