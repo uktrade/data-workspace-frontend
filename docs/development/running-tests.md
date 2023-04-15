@@ -1,3 +1,6 @@
+Running tests locally is useful when developing features on Data Workspace to make sure existing functionality isn't broken, and to ensure any new functionality works as intended.
+
+
 ## Prerequisites and source code
 
 To run tests you must have the Data Workspace prerequisites and cloned its source code. See [Running locally](running-locally.md) for details.
