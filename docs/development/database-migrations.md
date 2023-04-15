@@ -1,8 +1,16 @@
 # Database migrations
 
-Data Workspace is written in Python, and uses [Django](https://www.djangoproject.com/) as the framework for its user-facing metadata catalogue and permissions system. When developing Data Workspace, if a change is made to Django's models, then to reflect this change in the metadata database, migrations must be created and run.
+Data Workspace's user-facing metadata catalogue uses [Django](https://www.djangoproject.com/). When developing Data Workspace, if a change is made to Django's models, to reflect this change in the metadata database, migrations must be created and run.
 
-To create any required migrations locally
+
+## Prerequisites and source code
+
+To create migrations you must have the Data Workspace prerequisites and cloned its source code. See [Running locally](running-locally.md) for details.
+
+
+## Creating migrations
+
+After making changes to Django models, to create any required migrations:
 
 ```bash
 docker compose build && \
