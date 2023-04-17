@@ -1,7 +1,5 @@
 ---
 title: Data Ingestion
-hide:
-    - navigation
 ---
 
 Data Workspace is essentially an interface to a PostgreSQL database, referred to as the datasets database. Technical users can access specific tables in the datasets database directly, but there is a concept of "datasets" on top of this direct access. Each dataset has its own page in the user-facing data catalogue that has features for non-technical users.

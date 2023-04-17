@@ -10,9 +10,7 @@ Turn an existing govuk styled table into a govuk styled ag-grid grid.
 - If the user has JavaScript disabled, automatically fall back to the standard govuk table.
 - In the future can be enhanced to add column filtering
 
-## How to
-
-### Create table
+## Create table
 
 1. Create a gov uk style table and give it the class `enhanced-table`.
 2. The table must have one `<thead>` and one `<tbody>`
@@ -24,7 +22,7 @@ Turn an existing govuk styled table into a govuk styled ag-grid grid.
 </table>
 ```
 
-### Configure rows
+## Configure rows
 
 Configuration for the columns is done on the `<th>` elements via data attributes. The options are:
 
@@ -61,7 +59,7 @@ Configuration for the columns is done on the `<th>` elements via data attributes
 </table>
 ```
 
-### Initialise it
+## Initialise it
 
 Add the following to your page
 

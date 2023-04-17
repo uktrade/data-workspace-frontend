@@ -18,7 +18,7 @@ To deploy Data Workspace to AWS you must have:
 You should also have familiarity with working on the command line, working with Terraform, and with AWS.
 
 
-## Creating environment folder
+## Environment folder
 
 Each deployment, or environment, of Data Workspace requires a folder for its configuration. This folder should be within a sibling folder to `data-workspace`.
 

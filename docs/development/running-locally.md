@@ -117,7 +117,7 @@ To build this locally requires NodeJS. Ideally installed via `nvm` [https://gith
 ```
 
 
-## Running React apps locally
+## React apps
 
 We're set up to use django-webpack-loader for hotloading the React app while developing. 
 

@@ -11,6 +11,7 @@ theme:
     - navigation.tabs.sticky
     - navigation.indexes
     - navigation.tracking
+    - toc.integrate
   font:
     text: Roboto
     code: Roboto Mono
@@ -45,6 +46,7 @@ markdown_extensions:
   - md_in_html
 extra_css:
   - stylesheets/tags-color.css
+  - stylesheets/extra.css
 plugins:
   - material/search
   - material/tags:

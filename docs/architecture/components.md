@@ -4,9 +4,7 @@ title: Components
 
 The architecture is heavily Docker/Fargate based.
 
-## Architecture diagrams
-
-### High level
+## High level architecture
 
 At the highest level, users access the Data Workspace application, which accesses a PostgreSQL database.
 
@@ -15,7 +13,7 @@ graph
   A[User] --> B[Data Workspace]
   B --> C["PostgreSQL (Aurora)"]
 ```
-### Medium level
+## Medium level architecture
 
 ``` mermaid
 graph
@@ -33,7 +31,7 @@ graph
 
 ```
 
-## User-facing components
+## User-facing
 
 - [Main application](https://quay.io/repository/uktrade/data-workspace):
   A Django application to manage datasets and permissions, launch containers, a proxy to route requests to those containers, and an NGINX instance to route to the proxy and serve static files.
@@ -50,7 +48,7 @@ graph
 - File browser:
   A single-page-application that offers upload and download of files to/from each user's folder in S3. The data is transferred directly between the user's browser and S3.
 
-## Infrastructure components
+## Infrastructure
 
 - [metrics](https://quay.io/repository/uktrade/data-workspace-metrics):
   A sidecar-container for the user-launched containers that exposes metrics from the [ECS task metadata endpoint](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-metadata-endpoint-v3.html) in Prometheus format.
