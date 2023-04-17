@@ -12,7 +12,7 @@ Turn an existing govuk styled table into a govuk styled ag-grid grid.
 
 ## How to
 
-### Create the table
+### Create table
 
 1. Create a gov uk style table and give it the class `enhanced-table`.
 2. The table must have one `<thead>` and one `<tbody>`
@@ -24,7 +24,7 @@ Turn an existing govuk styled table into a govuk styled ag-grid grid.
 </table>
 ```
 
-### Configure the rows
+### Configure rows
 
 Configuration for the columns is done on the `<th>` elements via data attributes. The options are:
 

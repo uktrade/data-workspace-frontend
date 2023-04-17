@@ -15,7 +15,7 @@ To run Data Workspace locally, you must have these tools installed:
 You should also have familiarity with the command line, and editing text files. If you plan to make changes to the Data Workspace source code, you should also have familiarity with [Python](https://www.python.org/).
 
 
-## Cloning the source code repository
+## Cloning source code
 
 To run Data Workspace locally, you must also have the Data Workspace source code, which is stored in the [Data Workspace GitHub repository](https://github.com/uktrade/data-workspace). The process of copying this code so it is available locally is known as cloning.
 
@@ -42,7 +42,7 @@ To run Data Workspace locally, you must also have the Data Workspace source code
     cd data-workspace
     ```
 
-## Creating dataworkspace.test domains
+## Creating domains
 
 In order to be able to properly test cookies that are shared with subdomains, localhost is not used for local development. Instead, by default the dataworkspace.test domain is used. For this to work, you will need the below in your `/etc/hosts` file.
 
@@ -117,7 +117,7 @@ To build this locally requires NodeJS. Ideally installed via `nvm` [https://gith
 ```
 
 
-## Running the React apps locally
+## Running React apps locally
 
 We're set up to use django-webpack-loader for hotloading the React app while developing. 
 
@@ -146,7 +146,7 @@ git add ../bundles/*.js ../stats/react_apps-stats.json
 ```
 
 
-## Issues running on Apple Silicon/M1 chipset?
+## Issues on Apple Silicon
 
 If you have issues building the containers try the following
 

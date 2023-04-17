@@ -2,7 +2,7 @@
 title: Remote debugging
 ---
 
-# Remote debugging docker containers
+# Remote debugging containers
 
 ## PDB
 
