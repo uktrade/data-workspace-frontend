@@ -1,10 +1,10 @@
 terraform {
   backend "s3" {
-    region         = "eu-west-2"
+    region         = "REPLACE_ME"
     encrypt        = true
     bucket         = "REPLACE_ME"
-    key            = "live/terraform.tfstate"
-    dynamodb_table = "data-workspace-terraform-lock"
+    key            = "REPLACE_ME.tfstate"
+    dynamodb_table = "REPLACE_ME"
   }
 }
 
