@@ -73,9 +73,6 @@ docker compose up --build
 
 The application should then visible at [http://dataworkspace.test:8000](http://dataworkspace.test:8000).
 
-Some parts of the database are managed and populated by [data-flow](https://github.com/uktrade/data-flow/). To ensure there are no issues with some tables being missing, initial setup should include checking out that repo and running the `docker-compose-dw.yml` file, which will perform migrations on the shared Data Workspace/Data Flow DB.
-
-
 ## Running Superset locally
 
 To get started you will need to create an env file
