@@ -17,7 +17,6 @@ import aiohttp
 import ecs_logging
 from aiohttp import web
 
-import aioredis
 from elasticapm.contrib.aiohttp import ElasticAPM
 from hawkserver import authenticate_hawk_header
 from multidict import CIMultiDict
@@ -25,6 +24,7 @@ from sentry_sdk import set_user
 from sentry_sdk.integrations.aiohttp import AioHttpIntegration
 from yarl import URL
 from sentry import init_sentry
+import redis.asyncio as redis
 
 from dataworkspace.utils import normalise_environment
 from proxy_session import SESSION_KEY, redis_session_middleware
@@ -153,7 +153,7 @@ async def async_main():
             "worker-src 'self' blob:;"
         )
 
-    redis_pool = await aioredis.create_redis_pool(redis_url)
+    redis_pool = await redis.from_url(redis_url)
 
     default_http_timeout = aiohttp.ClientTimeout()
 
@@ -1088,8 +1088,8 @@ async def async_main():
             redis_profile_key = f"{PROFILE_CACHE_PREFIX}___{session_token_key}___{token}".encode(
                 "ascii"
             )
-            with await redis_pool as conn:
-                me_profile_raw = await conn.execute("GET", redis_profile_key)
+            async with redis_pool as conn:
+                me_profile_raw = await conn.get(redis_profile_key)
             me_profile = json.loads(me_profile_raw) if me_profile_raw else None
 
             async def handler_with_sso_headers():
@@ -1141,13 +1141,11 @@ async def async_main():
                 "first_name": me_profile_full["first_name"],
                 "last_name": me_profile_full["last_name"],
             }
-            with await redis_pool as conn:
-                await conn.execute(
-                    "SET",
+            async with redis_pool as conn:
+                await conn.set(
                     redis_profile_key,
                     json.dumps(me_profile).encode("utf-8"),
-                    "EX",
-                    60,
+                    ex=60,
                 )
 
             return await handler_with_sso_headers()
@@ -1194,10 +1192,11 @@ async def async_main():
 
         async def seen_nonce(nonce, sender_id):
             nonce_key = f"nonce-{sender_id}-{nonce}"
-            with await redis_pool as conn:
-                response = await conn.execute("SET", nonce_key, "1", "EX", 60, "NX")
-                seen_nonce = response != b"OK"
-                return seen_nonce
+            async with redis_pool as conn:
+                exists = await conn.exists(nonce_key)
+                if not exists:
+                    await conn.set(nonce_key, "1", ex=60)
+                return exists
 
         @web.middleware
         async def _authenticate_by_hawk_auth(request, handler):

@@ -8,9 +8,9 @@ import textwrap
 import aiohttp
 import elasticsearch
 from aiohttp import web
-import aioredis
 from elasticsearch import AsyncElasticsearch, helpers
 from lxml import html
+import redis.asyncio as redis
 
 
 def client_session():
@@ -240,8 +240,9 @@ async def flush_database():
 
 
 async def flush_redis():
-    redis_client = await aioredis.create_redis("redis://data-workspace-redis:6379")
-    await redis_client.execute("FLUSHDB")
+    redis_pool = redis.from_url("redis://data-workspace-redis:6379")
+    async with redis_pool as conn:
+        await conn.execute_command("FLUSHDB")
 
 
 async def give_user_superuser_perms():
