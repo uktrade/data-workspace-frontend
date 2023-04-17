@@ -25,9 +25,6 @@ theme:
       superseded: material/sticker-alert-outline
       rejected: material/sticker-remove-outline
 markdown_extensions:
-  - toc:
-      permalink: ⚓
-      permalink_title: Anchor link to this section for reference
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid
