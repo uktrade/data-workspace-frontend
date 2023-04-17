@@ -1,3 +1,7 @@
+---
+title: Running locally
+---
+
 To develop features on Data Workspace, or to evaluate if it's suitable for your use case, it can be helpful to run Data Workspace on your local computer.
 
 
@@ -102,7 +106,7 @@ You can then visit http://superset-edit.dataworkspace.test:8000/ or http://super
 
 We use [node-sass](https://github.com/sass/node-sass#command-line-interface) to build the front end css and include the GOVUK Front End styles.
 
-To build this locally requires NodeJS. Ideally installed via `nvm` https://github.com/nvm-sh/nvm
+To build this locally requires NodeJS. Ideally installed via `nvm` [https://github.com/nvm-sh/nvm)](https://github.com/nvm-sh/nvm)
 
 
 ```
@@ -115,7 +119,7 @@ To build this locally requires NodeJS. Ideally installed via `nvm` https://githu
 
 ## Running the React apps locally
 
-We're set up to use django-webpack-loader for hotloading the react app while developing. 
+We're set up to use django-webpack-loader for hotloading the React app while developing. 
 
 You can get it running by starting the dev server:
 
@@ -130,9 +134,9 @@ cd dataworkspace/dataworkspace/static/js/react_apps/
 npm run dev
 ```
 
-For production usage we use pre-built javascript bundles to reduce the pain of having to build npm modules at deployment.
+For production usage we use pre-built JavaScript bundles to reduce the pain of having to build npm modules at deployment.
 
-If you make any changes to the react apps you will need to rebuild and commit the bundles. 
+If you make any changes to the React apps you will need to rebuild and commit the bundles. 
 This will create the relevant js files in `/static/js/bundles/` directory.
 
 ```shell

@@ -1,3 +1,6 @@
+---
+title: Database migrations
+---
 # Database migrations
 
 Data Workspace's user-facing metadata catalogue uses [Django](https://www.djangoproject.com/). When developing Data Workspace, if a change is made to Django's models, to reflect this change in the metadata database, migrations must be created and run.

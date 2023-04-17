@@ -1,7 +1,5 @@
 ---
 title: Data Ingestion
-hide:
-  - navigation
 ---
 
 Data Workspace is essentially an interface to a PostgreSQL database, referred to as the datasets database. Technical users can access specific tables in the datasets database directly, but there is a concept of "datasets" on top of this direct access. Each dataset has its own page in the user-facing data catalogue that has features for non-technical users.
@@ -43,7 +41,7 @@ A datacut could filter a larger source dataset for a specific country, calculate
 
 ## Ad-hoc binary blobs
 
-Each users is able to upload binary blobs in an ad-hoc cases to their own private prefix in an S3 bucket, as well to any authorized team prefixes. Read and write access to these prefixes is by 3 mechanisms:
+Each user is able to upload binary blobs in ad-hoc cases to their own private prefix in an S3 bucket, as well to any authorized team prefixes. Read and write access to these prefixes is by 3 mechanisms:
 
 - Through a custom React-based S3 browser built into the Data Workspace Django application
 

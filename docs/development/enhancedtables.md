@@ -1,9 +1,13 @@
+---
+title: Enhanced tables
+---
+
 # Enhanced tables
 
 Turn an existing govuk styled table into a govuk styled ag-grid grid.
 
 - Allows for sorting columns
-- If the user has javascript disabled, automatically fall back to the standard govuk table.
+- If the user has JavaScript disabled, automatically fall back to the standard govuk table.
 - In the future can be enhanced to add column filtering
 
 ## How to
