@@ -270,7 +270,7 @@ rich==13.3.3
     # via flask-limiter
 selenium==3.141.0
     # via apache-superset
-sentry-sdk[flask]==1.5.6
+sentry-sdk[flask]==1.19.1
     # via -r requirements.in
 simplejson==3.17.2
     # via apache-superset
@@ -309,7 +309,7 @@ typing-extensions==4.5.0
     #   apache-superset
     #   flask-limiter
     #   limits
-urllib3==1.26.5
+urllib3==1.26.15
     # via
     #   selenium
     #   sentry-sdk
