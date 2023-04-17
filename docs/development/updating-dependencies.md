@@ -1,4 +1,6 @@
-## Updating a dependendencies
+---
+title: Updating dependencies
+---
 
 We use [pip-tools](https://github.com/jazzband/pip-tools) to manage dependencies across two files - `requirements.txt` and `requirements-dev.txt`. These have corresponding `.in` files where we specify our top-level dependencies.
 

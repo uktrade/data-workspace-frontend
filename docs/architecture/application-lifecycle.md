@@ -1,3 +1,6 @@
+---
+title: Application lifecycle
+---
 # Application lifecycle
 
 As an example, from the point of view of user `abcde1234`, `https://jupyterlab-abcde1234.mydomain.com/` is the fixed address of their private JupyterLab application. Going to `https://jupyterlab-abcde1234.mydomain.com/` in a browser will
@@ -15,7 +18,7 @@ The proxy however, has a more complex behaviour. On an incoming request from the
 - it will attempt to `GET` details of an application with the host `jupyterlab-abcde1234` from an internal API of the main application;
 - if the `GET` returns a 404, it will make a `PUT` request to the main application that initiates creation of the Fargate task;
 - if the `GET` returns a 200, and the details contain a URL, the proxy will attempt to proxy the incoming request to it;
-- it does not treat errors connecting to a `SPAWNING` application as a true error: they are effectely swallowed.
+- it does not treat errors connecting to a `SPAWNING` application as a true error: they are effectively swallowed.
 - if an application is returned from the `GET` as `STOPPED`, which happens on error, it will `DELETE` the application, and show an error to the user.
 
 The proxy itself _only_ responds to incoming requests from the browser, and has no long-lived tasks that go beyond one HTTP request or WebSockets connection. This ensures it can be horizontally scaled.

@@ -1,3 +1,7 @@
+---
+title: Running locally
+---
+
 To develop features on Data Workspace, or to evaluate if it's suitable for your use case, it can be helpful to run Data Workspace on your local computer.
 
 
@@ -11,7 +15,7 @@ To run Data Workspace locally, you must have these tools installed:
 You should also have familiarity with the command line, and editing text files. If you plan to make changes to the Data Workspace source code, you should also have familiarity with [Python](https://www.python.org/).
 
 
-## Cloning the source code repository
+## Cloning source code
 
 To run Data Workspace locally, you must also have the Data Workspace source code, which is stored in the [Data Workspace GitHub repository](https://github.com/uktrade/data-workspace). The process of copying this code so it is available locally is known as cloning.
 
@@ -38,7 +42,7 @@ To run Data Workspace locally, you must also have the Data Workspace source code
     cd data-workspace
     ```
 
-## Creating dataworkspace.test domains
+## Creating domains
 
 In order to be able to properly test cookies that are shared with subdomains, localhost is not used for local development. Instead, by default the dataworkspace.test domain is used. For this to work, you will need the below in your `/etc/hosts` file.
 
@@ -102,7 +106,7 @@ You can then visit http://superset-edit.dataworkspace.test:8000/ or http://super
 
 We use [node-sass](https://github.com/sass/node-sass#command-line-interface) to build the front end css and include the GOVUK Front End styles.
 
-To build this locally requires NodeJS. Ideally installed via `nvm` https://github.com/nvm-sh/nvm
+To build this locally requires NodeJS. Ideally installed via `nvm` [https://github.com/nvm-sh/nvm)](https://github.com/nvm-sh/nvm)
 
 
 ```
@@ -113,9 +117,9 @@ To build this locally requires NodeJS. Ideally installed via `nvm` https://githu
 ```
 
 
-## Running the React apps locally
+## Running React apps locally
 
-We're set up to use django-webpack-loader for hotloading the react app while developing. 
+We're set up to use django-webpack-loader for hotloading the React app while developing. 
 
 You can get it running by starting the dev server:
 
@@ -130,9 +134,9 @@ cd dataworkspace/dataworkspace/static/js/react_apps/
 npm run dev
 ```
 
-For production usage we use pre-built javascript bundles to reduce the pain of having to build npm modules at deployment.
+For production usage we use pre-built JavaScript bundles to reduce the pain of having to build npm modules at deployment.
 
-If you make any changes to the react apps you will need to rebuild and commit the bundles. 
+If you make any changes to the React apps you will need to rebuild and commit the bundles. 
 This will create the relevant js files in `/static/js/bundles/` directory.
 
 ```shell
@@ -142,7 +146,7 @@ git add ../bundles/*.js ../stats/react_apps-stats.json
 ```
 
 
-## Issues running on Apple Silicon/M1 chipset?
+## Issues on Apple Silicon
 
 If you have issues building the containers try the following
 

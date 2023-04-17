@@ -1,4 +1,4 @@
-# How to Contribute
+# How to contribute
 
 Contributions to Data Workspace are welcome, such as reporting issues, requesting features, making documentation changes, or submitting code changes.
 
@@ -23,11 +23,11 @@ A feature request can be submitted using the [Ideas category in Data Workspace d
 
 ## Contributing documentation
 
-The source of the documentation is in the [docs/](https://github.com/uktrade/data-workspace/tree/main/docs) directory of the source code, and is written using [Material for mkdocs](https://squidfunk.github.io/mkdocs-material/).
+The source of the documentation is in the [`docs/`](https://github.com/uktrade/data-workspace/tree/master/docs) directory of the source code, and is written using [Material for mkdocs](https://squidfunk.github.io/mkdocs-material/).
 
 Changes are then submitted via a Pull Request (PR). To do this:
 
-1. Decide on a short hyphen-separated descriptive name for your change, prefixed with docs/ for example docs/add-example.
+1. Decide on a short hyphen-separated descriptive name for your change, prefixed with `docs/`, for example `docs/add-example`.
 
 2. Make a branch using this descriptive name.
 
@@ -50,7 +50,7 @@ Changes are then submitted via a Pull Request (PR). To do this:
     ```bash
     git add docs/getting-started.md  # Repeat for each file changed
     git commit -m "docs: add an example"
-    gir push origin docs/add-example
+    git push origin docs/add-example
     ```
 
 6. Raise a PR at [https://github.com/uktrade/data-workspace/pulls](https://github.com/uktrade/data-workspace/pulls) against the main branch in data-workspace.
@@ -64,7 +64,7 @@ When the PR is merged, the documentation is deployed automatically to [https://d
 
 Changes are submitted via a Pull Request (PR). To do this:
 
-1. Decide on a short hyphen-separated descriptive name for your change, prefixed with the type of change. For example fix/the-bug-description.
+1. Decide on a short hyphen-separated descriptive name for your change, prefixed with the type of change. For example `fix/the-bug-description`.
 
 2. Make a branch using this descriptive name.
 

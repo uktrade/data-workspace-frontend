@@ -1,6 +1,6 @@
 ---
 title: Contributing
 hide:
-  - navigation
+    - navigation
 ---
 --8<-- "CONTRIBUTING.md"
