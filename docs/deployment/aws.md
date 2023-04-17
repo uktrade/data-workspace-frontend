@@ -55,16 +55,17 @@ Before deploying the environment, it must be initialised.
     sh create-keys.sh
     ```
 
-3. [Install AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) and [configure an AWS CLI profile](https://docs.aws.amazon.com/cli/latest/userguide/sso-configure-profile-token.html).
+3. [Install AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) and [configure an AWS CLI profile](https://docs.aws.amazon.com/toolkit-for-visual-studio/latest/user-guide/keys-profiles-credentials.html). This will support some of the included configuration scripts.
+
+    You can do this by putting credentials directly into `~/.aws/credentials` or by using `aws sso`.
+
+4. Create an S3 bucket and dynamodb table for Terraform to use, and add them to `main.tf`. `--bucket` will provide the base name for both objects.
 
     ```bash
-    aws configure sso
-    ```
-
-4. Create an S3 bucket and dynamodb table for Terraform to use, and add them to `main.tf`. The script will use the AWS CLI profile you just created.
-
-    ```bash
-    sh bootstrap-terraform.sh
+    sh bootstrap-terraform.sh \
+        --profile <value> \
+        --bucket <value> \
+        --region <value>
     ```
 
 5. Enter the details of your hosting platform, SSH keys, and OAuth 2.0 server by changing all instances of `REPLACE_ME` in:
