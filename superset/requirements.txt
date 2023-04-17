@@ -12,6 +12,8 @@ apache-superset==2.1.0
     # via -r requirements.in
 apispec[yaml]==3.3.2
     # via flask-appbuilder
+async-timeout==4.0.2
+    # via redis
 attrs==19.3.0
     # via jsonschema
 babel==2.9.1
@@ -264,13 +266,13 @@ pyyaml==5.4.1
     # via
     #   apache-superset
     #   apispec
-redis==3.5.3
+redis==4.5.4
     # via apache-superset
 rich==13.3.3
     # via flask-limiter
 selenium==3.141.0
     # via apache-superset
-sentry-sdk[flask]==1.5.6
+sentry-sdk[flask]==1.19.1
     # via -r requirements.in
 simplejson==3.17.2
     # via apache-superset
@@ -309,7 +311,7 @@ typing-extensions==4.5.0
     #   apache-superset
     #   flask-limiter
     #   limits
-urllib3==1.26.5
+urllib3==1.26.15
     # via
     #   selenium
     #   sentry-sdk
