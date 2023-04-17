@@ -10,18 +10,18 @@ Contributions to Data Workspace are welcome, such as reporting issues, requestin
 - To contribute code, knowledge of [Python](https://www.python.org/) is required.
 
 
-## Contributing an issue
+## Issues
 
 Suspected issues with Data Workspace can be submitted at [Data Workspace issues](https://github.com/uktrade/data-workspace/issues).
 An issue that contains a [minimal, reproducible example](https://stackoverflow.com/help/minimal-reproducible-example) stands the best chance of being resolved. However, it is understood that this is not possible in all circumstances.
 
 
-## Contributing a feature request
+## Feature requests
 
 A feature request can be submitted using the [Ideas category in Data Workspace discussions](https://github.com/uktrade/data-workspace/discussions/categories/ideas).
 
 
-## Contributing documentation
+## Documentation
 
 The source of the documentation is in the [`docs/`](https://github.com/uktrade/data-workspace/tree/master/docs) directory of the source code, and is written using [Material for mkdocs](https://squidfunk.github.io/mkdocs-material/).
 
@@ -60,7 +60,7 @@ Changes are then submitted via a Pull Request (PR). To do this:
 When the PR is merged, the documentation is deployed automatically to [https://data-workspace.docs.trade.gov.uk/](https://data-workspace.docs.trade.gov.uk/).
 
 
-## Contributing code
+## Code
 
 Changes are submitted via a Pull Request (PR). To do this:
 

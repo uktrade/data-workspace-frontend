@@ -31,7 +31,7 @@ make docker-test-integration
 ```
 
 
-## Without rebuilding containers
+## Without rebuilding
 
 To run the tests locally without having to rebuild the containers every time append `-local` to the test make commands
 
