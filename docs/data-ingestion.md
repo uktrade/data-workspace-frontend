@@ -43,7 +43,7 @@ A datacut could filter a larger source dataset for a specific country, calculate
 
 ## Ad-hoc binary blobs
 
-Each users is able to upload binary blobs in an ad-host cases to their own private prefix in an S3 bucket, as well to any authorized team prefixes. Read and write access to these prefixes is by 3 mechanisms:
+Each users is able to upload binary blobs in an ad-hoc cases to their own private prefix in an S3 bucket, as well to any authorized team prefixes. Read and write access to these prefixes is by 3 mechanisms:
 
 - Through a custom React-based S3 browser built into the Data Workspace Django application
 
