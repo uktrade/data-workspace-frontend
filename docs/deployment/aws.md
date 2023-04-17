@@ -43,7 +43,7 @@ This folder structure allows the configuration to find and use the `infra/` fold
 Before deploying the environment, it must be initialised.
 
 
-1. Change to the new folder for the environment
+1. Change to the new folder for the environment.
 
     ```bash
     cd ../data-workspace-environments/production
@@ -55,13 +55,25 @@ Before deploying the environment, it must be initialised.
     sh create-keys.sh
     ```
 
-2. Enter the details of your hosting platform, SSH keys, and OAuth 2.0 server by changing all instances of `REPLACE_ME` in:
+3. [Install AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) and [configure an AWS CLI profile](https://docs.aws.amazon.com/cli/latest/userguide/sso-configure-profile-token.html).
+
+    ```bash
+    aws configure sso
+    ```
+
+4. Create an S3 bucket and dynamodb table for Terraform to use, and add them to `main.tf`. The script will use the AWS CLI profile you just created.
+
+    ```bash
+    sh bootstrap-terraform.sh
+    ```
+
+5. Enter the details of your hosting platform, SSH keys, and OAuth 2.0 server by changing all instances of `REPLACE_ME` in:
 
     * `admin-environment.json`
     * `gitlab-secrets.json`
     * `main.tf`
 
-3. Initialise Terraform.
+6. Initialise Terraform.
 
     ```bash
     terraform init
