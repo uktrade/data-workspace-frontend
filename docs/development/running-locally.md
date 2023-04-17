@@ -137,6 +137,8 @@ This will create the relevant js files in `/static/js/bundles/` directory.
 
 ```shell
 cd dataworkspace/dataworkspace/static/js/react_apps/
+# this may about 10 minutes to install all dependencies
+npm install
 npm run build
 git add ../bundles/*.js ../stats/react_apps-stats.json
 ```
