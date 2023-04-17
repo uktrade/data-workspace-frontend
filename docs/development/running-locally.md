@@ -71,10 +71,14 @@ Start the application by
 docker compose up --build
 ```
 
+<<<<<<< HEAD:docs/development/running-locally.md
 The application should then visible at [http://dataworkspace.test:8000](http://dataworkspace.test:8000).
 
 Some parts of the database are managed and populated by [data-flow](https://github.com/uktrade/data-flow/). To ensure there are no issues with some tables being missing, initial setup should include checking out that repo and running the `docker-compose-dw.yml` file, which will perform migrations on the shared Data Workspace/Data Flow DB.
 
+=======
+### Domains
+>>>>>>> cf3b0986 (Removed data flow mention from developing locally as it's covered in the data flow repo):docs/development/developinglocally.md
 
 ## Running Superset locally
 
