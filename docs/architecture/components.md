@@ -2,7 +2,19 @@
 title: Components
 ---
 
-The architecture is heavily Docker/Fargate based.
+Data Workspace is made of a number of components. This page explains what those are and how they work together.
+
+
+## Prerequestites
+
+To understand the components of Data Workspace's architecture, you should have familiary with:
+
+- Amazon Web Services (AWS), especially [VPCs](https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html) and [ECS](https://aws.amazon.com/ecs/)
+- [Docker](https://aws.amazon.com/docker/)
+- [HTTP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Overview)
+- The [Domain name system (DNS)](https://aws.amazon.com/route53/what-is-dns/)
+- [PostgreSQL](https://www.postgresql.org/)
+
 
 ## High level architecture
 
@@ -13,7 +25,10 @@ graph
   A[User] --> B[Data Workspace]
   B --> C["PostgreSQL (Aurora)"]
 ```
+
 ## Medium level architecture
+
+The architecture is heavily Docker/ECS Fargate based.
 
 ``` mermaid
 graph
