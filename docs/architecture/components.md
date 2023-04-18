@@ -5,7 +5,7 @@ title: Components
 Data Workspace is made of a number of components. This page explains what those are and how they work together.
 
 
-## Prerequestites
+## Prerequisites
 
 To understand the components of Data Workspace's architecture, you should have familiary with:
 
