@@ -32,7 +32,7 @@ The Data Workspace source code contains a template for this configuration. To cr
 
     ```bash
     mkdir -p ../data-workspace-environments
-    cp -R infra/environment-template ../data-workspace-environments/production
+    cp -Rp infra/environment-template ../data-workspace-environments/production
     ```
 
 This folder structure allows the configuration to find and use the `infra/` folder in `data-workspace` which contains the low level details of the infrastructure to provision in each environment.
@@ -43,7 +43,7 @@ This folder structure allows the configuration to find and use the `infra/` fold
 Before deploying the environment, it must be initialised.
 
 
-1. Change to the new folder for the environment
+1. Change to the new folder for the environment.
 
     ```bash
     cd ../data-workspace-environments/production
@@ -52,16 +52,29 @@ Before deploying the environment, it must be initialised.
 2. Generate new SSH keys.
 
     ```bash
-    sh create-keys.sh
+    ./create-keys.sh
     ```
 
-2. Enter the details of your hosting platform, SSH keys, and OAuth 2.0 server by changing all instances of `REPLACE_ME` in:
+3. [Install AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) and [configure an AWS CLI profile](https://docs.aws.amazon.com/toolkit-for-visual-studio/latest/user-guide/keys-profiles-credentials.html). This will support some of the included configuration scripts.
+
+    You can do this by putting credentials directly into `~/.aws/credentials` or by using `aws sso`.
+
+4. Create an S3 bucket and dynamodb table for Terraform to use, and add them to `main.tf`. `--bucket` will provide the base name for both objects.
+
+    ```bash
+    ./bootstrap-terraform.sh \
+        --profile <value> \
+        --bucket <value> \
+        --region <value>
+    ```
+
+5. Enter the details of your hosting platform, SSH keys, and OAuth 2.0 server by changing all instances of `REPLACE_ME` in:
 
     * `admin-environment.json`
     * `gitlab-secrets.json`
     * `main.tf`
 
-3. Initialise Terraform.
+6. Initialise Terraform.
 
     ```bash
     terraform init
