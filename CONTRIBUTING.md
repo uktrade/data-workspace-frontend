@@ -29,7 +29,7 @@ Changes are then submitted via a Pull Request (PR). To do this:
 
 1. Decide on a short hyphen-separated descriptive name for your change, prefixed with `docs/`, for example `docs/add-example`.
 
-2. Make a branch using this descriptive name.
+2. Make a branch using this descriptive name:
 
     ```bash
     git checkout -b docs/add-example
@@ -38,14 +38,14 @@ Changes are then submitted via a Pull Request (PR). To do this:
 
 3. Make your changes in a text editor.
 
-4. Preview your changes locally.
+4. Preview your changes locally:
 
     ```bash
     pip install -r requirements-docs.txt  # Only needed once
     mkdocs serve
     ```
 
-5. Commit your change and push to your fork. Ideally the commit message will follow the [Conventional Commit specification](https://www.conventionalcommits.org/).
+5. Commit your change and push to your fork. Ideally the commit message will follow the [Conventional Commit specification](https://www.conventionalcommits.org/):
 
     ```bash
     git add docs/getting-started.md  # Repeat for each file changed
@@ -53,7 +53,7 @@ Changes are then submitted via a Pull Request (PR). To do this:
     git push origin docs/add-example
     ```
 
-6. Raise a PR at [https://github.com/uktrade/data-workspace/pulls](https://github.com/uktrade/data-workspace/pulls) against the main branch in data-workspace.
+6. Raise a PR at [https://github.com/uktrade/data-workspace/pulls](https://github.com/uktrade/data-workspace/pulls) against the master branch in data-workspace.
 
 7. Wait for the PR to be approved and merged, and respond to any questions or suggested changes.
 
@@ -66,7 +66,7 @@ Changes are submitted via a Pull Request (PR). To do this:
 
 1. Decide on a short hyphen-separated descriptive name for your change, prefixed with the type of change. For example `fix/the-bug-description`.
 
-2. Make a branch using this descriptive name.
+2. Make a branch using this descriptive name:
 
     ```bash
     git checkout -b fix/a-bug-description
@@ -83,7 +83,7 @@ Changes are submitted via a Pull Request (PR). To do this:
 4. Make your changes in a text editor. In the cases of changing behaviour, this would usually include changing or adding tests within [dataworkspace/dataworkspace/tests](https://github.com/uktrade/data-workspace/tree/master/dataworkspace/dataworkspace/tests), and running them.
 
 
-5. Commit your changes and push to your fork. Ideally the commit message will follow the [Conventional Commit specification](https://www.conventionalcommits.org/).
+5. Commit your changes and push to your fork. Ideally the commit message will follow the [Conventional Commit specification](https://www.conventionalcommits.org/):
 
     ```bash
     git add my_file.py  # Repeat for each file changed

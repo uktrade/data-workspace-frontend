@@ -43,7 +43,7 @@ A datacut could filter a larger source dataset for a specific country, calculate
 
 Each user is able to upload binary blobs in ad-hoc cases to their own private prefix in an S3 bucket, as well to any authorized team prefixes. Read and write access to these prefixes is by 3 mechanisms:
 
-- Through a custom React-based S3 browser built into the Data Workspace Django application
+- Through a custom React-based S3 browser built into the Data Workspace Django application.
 
 - From tools using the S3 API or S3 SDKs, for example [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html).
 
