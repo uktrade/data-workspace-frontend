@@ -22,6 +22,7 @@ RUN \
         libldap2-dev \
         libsasl2-dev \
         libssl-dev \
+        postgresql-client \
         python3 \
         python3-dev \
         python3-pip
@@ -39,6 +40,7 @@ ENV \
     FLASK_APP=superset
 
 COPY superset_config.py /etc/superset/
+COPY create-editor-role.sql /
 
 COPY data-workspace-patches.js /usr/local/lib/python3.9/dist-packages/superset/static/assets/
 

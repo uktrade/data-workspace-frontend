@@ -93,12 +93,6 @@ Then run `docker compose` using the superset profile.
 docker compose --profile superset up
 ```
 
-Initially you will then need to set up the Editor role by running the following script, replacing container-id with the id of the data-workspace-postgres docker container:
-
-```bash
-docker exec -i <container-id> psql -U postgres -d superset < superset/create-editor-role.sql
-```
-
 You can then visit http://superset-edit.dataworkspace.test:8000/ or http://superset-admin.dataworkspace.test:8000/
 
 
