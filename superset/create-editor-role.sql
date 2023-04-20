@@ -174,6 +174,7 @@ WITH required_permissions(new_permission_view_role_id, permission_name, view_men
 		(nextval('ab_permission_view_role_id_seq'), 'can_delete', 'TabStateView'),
 		(nextval('ab_permission_view_role_id_seq'), 'can_delete_query', 'TabStateView'),
 		(nextval('ab_permission_view_role_id_seq'), 'can_execute_sql_query', 'SQLLab'),
+		(nextval('ab_permission_view_role_id_seq'), 'can_export_csv', 'SQLLab'),
 		(nextval('ab_permission_view_role_id_seq'), 'can_get_results', 'SQLLab'),
 		(nextval('ab_permission_view_role_id_seq'), 'can_migrate_query', 'TabStateView'),
 		(nextval('ab_permission_view_role_id_seq'), 'can_my_queries', 'SqlLab'),
