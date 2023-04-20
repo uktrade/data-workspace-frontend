@@ -13,6 +13,7 @@ from io import StringIO
 
 from typing import Optional, List
 
+import waffle
 from psycopg2 import sql
 
 from botocore.exceptions import ClientError
@@ -43,6 +44,7 @@ from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import SearchVector, SearchVectorField
 from django.utils.text import slugify
 from django.utils import timezone
+from requests import HTTPError
 
 from dataworkspace import datasets_db
 from dataworkspace.apps.core.boto3_client import get_s3_client
@@ -73,6 +75,7 @@ from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.core.charts.models import ChartBuilderChart
 from dataworkspace.apps.your_files.models import UploadedTable
 from dataworkspace.datasets_db import (
+    get_columns,
     get_earliest_tables_last_updated_date,
 )
 
@@ -1211,6 +1214,8 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     published_major_version = models.IntegerField(default=0)
     published_minor_version = models.IntegerField(default=0)
 
+    # Longer term this can be changed to a bool as we only ever
+    #   sync to the datasets db (via dataflow)
     external_database = models.ForeignKey(
         Database,
         null=True,
@@ -1441,17 +1446,84 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             self._drop_external_database_table(self.external_database.memorable_name)
         super().delete(**kwargs)
 
+    def _sync_to_datasets_db(self):
+        # pylint: disable=import-outside-toplevel
+        from dataworkspace.apps.core.utils import trigger_dataflow_dag
+
+        s3_path = f"{settings.DATAFLOW_IMPORTS_BUCKET_ROOT}/reference/{self.table_name}.csv"
+        column_config = [
+            {"header_name": col[0], "column_name": col[0], "data_type": col[1]}
+            for col in get_columns(
+                "default", schema="public", table=self.table_name, include_types=True
+            )
+        ]
+        headers = [col["header_name"] for col in column_config]
+        buffer = StringIO()
+        csv_writer = csv.DictWriter(
+            buffer,
+            fieldnames=headers,
+            quoting=csv.QUOTE_NONNUMERIC,
+        )
+        csv_writer.writeheader()
+        for record in self.get_records():
+            csv_writer.writerow({header: getattr(record, header) for header in headers})
+
+        # Write to S3
+        client = get_s3_client()
+        try:
+            client.put_object(
+                Body=buffer.getvalue(),
+                Bucket=settings.AWS_UPLOADS_BUCKET,
+                Key=s3_path,
+            )
+        except ClientError as ex:
+            # pylint: disable=raise-missing-from
+            raise Exception(
+                "Error syncing reference dataset: {}".format(ex.response["Error"]["Message"])
+            )
+        try:
+            trigger_dataflow_dag(
+                {
+                    "file_path": s3_path,
+                    "schema_name": "public",
+                    "table_name": self.table_name,
+                    "column_definitions": column_config,
+                },
+                settings.DATAFLOW_API_CONFIG["DATAFLOW_S3_IMPORT_DAG"],
+                f"{self.table_name}-{datetime.now().isoformat()}",
+            )
+        except HTTPError:
+            # pylint: disable=raise-missing-from
+            raise Exception("Error triggering data flow pipeline: {}")
+
+    def _delete_from_datasets_db(self):
+        # pylint: disable=import-outside-toplevel
+        from dataworkspace.apps.core.utils import trigger_dataflow_dag
+
+        trigger_dataflow_dag(
+            {
+                "schema_name": "public",
+                "table_name": self.table_name,
+            },
+            settings.DATAFLOW_API_CONFIG["DATAFLOW_DROP_TABLE_DAG"],
+            f"{self.table_name}-{datetime.now().isoformat()}",
+        )
+
     def _create_external_database_table(self, db_name):
-        with connections[db_name].schema_editor() as editor:
-            with external_model_class(self.get_record_model_class()) as mc:
-                editor.create_model(mc)
+        if not self._sync_via_data_flow:
+            with connections[db_name].schema_editor() as editor:
+                with external_model_class(self.get_record_model_class()) as mc:
+                    editor.create_model(mc)
 
     def _drop_external_database_table(self, db_name):
-        with connections[db_name].schema_editor() as editor:
-            try:
-                editor.delete_model(self.get_record_model_class())
-            except ProgrammingError:
-                pass
+        if self._sync_via_data_flow:
+            self._delete_from_datasets_db()
+        else:
+            with connections[db_name].schema_editor() as editor:
+                try:
+                    editor.delete_model(self.get_record_model_class())
+                except ProgrammingError:
+                    pass
 
     @property
     def field_names(self) -> List[str]:
@@ -1654,7 +1726,10 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             record = records.first()
         self.increment_minor_version()
         if sync_externally and self.external_database is not None:
-            self.sync_to_external_database(self.external_database.memorable_name)
+            if self._sync_via_data_flow:
+                self._sync_to_datasets_db()
+            else:
+                self.sync_to_external_database(self.external_database.memorable_name)
         return record
 
     @transaction.atomic
@@ -1667,8 +1742,11 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         self.increment_minor_version()
         self.get_record_by_internal_id(internal_id).delete()
         if self.external_database is not None:
-            self.sync_to_external_database(self.external_database.memorable_name)
-        self.modified_date = datetime.utcnow()
+            self.modified_date = datetime.utcnow()
+            if self._sync_via_data_flow:
+                self._sync_to_datasets_db()
+            else:
+                self.sync_to_external_database(self.external_database.memorable_name)
         self.save()
 
     @transaction.atomic
@@ -1690,9 +1768,12 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         :param external_database:
         :return:
         """
+        if self._sync_via_data_flow:
+            self._sync_to_datasets_db()
+            return
+
         model_class = self.get_record_model_class()
         saved_ids = []
-
         for record in self.get_records():
             record_data = {}
             for field in self.fields.all():
@@ -1727,8 +1808,12 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         self.minor_version += 1
         self.save()
 
+    @property
+    def _sync_via_data_flow(self):
+        return waffle.switch_is_active(settings.REFERENCE_DATASET_PIPELINE_SYNC)
+
     def get_database_names(self):
-        if self.external_database is not None:
+        if not self._sync_via_data_flow and self.external_database is not None:
             return ["default", self.external_database.memorable_name]
         return ["default"]
 
