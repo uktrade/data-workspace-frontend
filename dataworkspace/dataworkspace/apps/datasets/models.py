@@ -1488,6 +1488,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                     "schema_name": "public",
                     "table_name": self.table_name,
                     "column_definitions": column_config,
+                    "drop_swap_table": True,
                 },
                 settings.DATAFLOW_API_CONFIG["DATAFLOW_S3_IMPORT_DAG"],
                 f"{self.table_name}-{datetime.now().isoformat()}",
