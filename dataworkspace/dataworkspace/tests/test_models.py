@@ -770,7 +770,7 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
             relationship_name="link2",
             linked_reference_dataset_field=linked_to_dataset.fields.get(is_display_name=True),
         )
-        ds.save_record(
+        record1 = ds.save_record(
             None,
             {
                 "reference_dataset": ds,
@@ -781,7 +781,7 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
                 "link2_id": None,
             },
         )
-        ds.save_record(
+        record2 = ds.save_record(
             None,
             {
                 "reference_dataset": ds,
@@ -794,6 +794,7 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
         )
         assert ds.get_grid_data() == [
             {
+                "_id": record1.id,
                 field1.column_name: "Some text",
                 field2.column_name: 123,
                 field3.column_name: date(2020, 1, 1),
@@ -801,6 +802,7 @@ class TestReferenceDatasets(ReferenceDatasetsMixin, BaseModelsTests):
                 f"link2_{field5.linked_reference_dataset_field.column_name}": None,
             },
             {
+                "_id": record2.id,
                 field1.column_name: "More text",
                 field2.column_name: 321,
                 field3.column_name: date(2019, 12, 31),

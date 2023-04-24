@@ -509,7 +509,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
         factories.SourceTableFactory(dataset=master_dataset, schema="public", table="test_table1")
 
         with freeze_time("2020-01-01 00:02:00"):
-            reference_dataset = factories.ReferenceDatasetFactory(
+            reference_dataset = factories.ReferenceDatasetFactory.create(
                 information_asset_owner=factories.UserFactory(),
             )
 
