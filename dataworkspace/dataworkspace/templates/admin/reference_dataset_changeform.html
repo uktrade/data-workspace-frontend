@@ -4,10 +4,25 @@
   {% with adminform.form.instance as instance %}
     {{ instance.get_column_config|json_script:"column_data" }}
     <script nonce="{{ request.csp_nonce }}">
+      const columnDefs = JSON.parse(document.getElementById('column_data').textContent);
+      columnDefs.push({
+        field: "actions",
+        filter: false,
+        sortable: false,
+        cellRenderer: function (cellData) {
+          var editButton = document.createElement("a");
+          editButton.href = '/admin/app/referencedata/{{ instance.id }}/data/' + cellData.data._id + '/change/';
+          editButton.title = "Edit this record";
+          editButton.type = "button"
+          editButton.className = "button";
+          editButton.innerHTML = 'Edit record'
+          return editButton;
+        }
+      });
       document.addEventListener('DOMContentLoaded', () => {
         const gridDiv = document.querySelector('#data-grid');
         const gridOptions = {
-          columnDefs: JSON.parse(document.getElementById('column_data').textContent),
+          columnDefs: columnDefs,
           rowData: []
         };
         new agGrid.Grid(gridDiv, gridOptions);

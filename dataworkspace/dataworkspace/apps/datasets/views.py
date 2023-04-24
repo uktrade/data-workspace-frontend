@@ -2061,4 +2061,3 @@ class ReferenceDatasetGridDataView(View):
                 "records": ref_dataset.get_grid_data(),
             }
         )
-
