@@ -1076,7 +1076,7 @@ class TestSyncToolQueryLogs:
         queries = ToolQueryAuditLog.objects.all()
         tables = ToolQueryAuditLogTable.objects.all()
         assert queries.count() == log_count + 2
-        assert tables.count() == table_count + 1
+        assert tables.count() == table_count + 2  # 1 table for select, 1 for insert
         assert list(queries)[-2].query_sql == "SELECT * FROM dataset_test"
         assert list(queries)[-2].connection_from == "172.19.0.4"
         assert list(queries)[-1].query_sql == "INSERT INTO dataset_test VALUES(1);"
@@ -1106,7 +1106,7 @@ class TestSyncToolQueryLogs:
         queries = ToolQueryAuditLog.objects.all()
         tables = ToolQueryAuditLogTable.objects.all()
         assert queries.count() == log_count + 2
-        assert tables.count() == table_count + 1
+        assert tables.count() == table_count + 2  # 1 table for select, 1 for insert
         assert list(queries)[-2].query_sql == "SELECT * FROM dataset_test"
         assert list(queries)[-1].query_sql == "INSERT INTO dataset_test VALUES(1);"
 
