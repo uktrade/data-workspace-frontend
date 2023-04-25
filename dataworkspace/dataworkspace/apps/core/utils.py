@@ -1301,7 +1301,7 @@ def get_s3_csv_column_types(path):
 
 def trigger_dataflow_dag(conf, dag, dag_run_id):
     config = settings.DATAFLOW_API_CONFIG
-    trigger_url = f'{config["DATAFLOW_BASE_URL"]}/api/experimental/' f"dags/{dag}/dag_runs"
+    trigger_url = f'{config["DATAFLOW_BASE_URL"]}/api/experimental/dags/{dag}/dag_runs'
     hawk_creds = {
         "id": config["DATAFLOW_HAWK_ID"],
         "key": config["DATAFLOW_HAWK_KEY"],
