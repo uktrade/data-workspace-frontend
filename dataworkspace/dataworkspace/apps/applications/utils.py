@@ -1302,6 +1302,8 @@ def _do_sync_tool_query_logs():
     else:
         logs = _fetch_rds_pgaudit_logs(from_date, to_date)
 
+    db_users = DatabaseUser.objects.filter(deleted_date=None)
+
     for log in logs:
         try:
             database = databases.get(memorable_name=db_name_map.get(log["database_name"]))
@@ -1313,7 +1315,7 @@ def _do_sync_tool_query_logs():
             )
             continue
 
-        db_user = DatabaseUser.objects.filter(deleted_date=None, username=log["user_name"]).first()
+        db_user = db_users.filter(username=log["user_name"]).first()
         if not db_user:
             logger.info(
                 "Skipping log entry for user %s on db %s (%s) as no matching user could be found",
