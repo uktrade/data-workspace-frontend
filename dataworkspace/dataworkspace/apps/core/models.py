@@ -120,8 +120,11 @@ class DatabaseUser(TimeStampedModel):
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="db_user"
     )
-    username = models.CharField(max_length=256)
+    username = models.CharField(max_length=256, db_index=True)
     deleted_date = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ("created_date",)
 
 
 class HowSatisfiedType(models.TextChoices):
