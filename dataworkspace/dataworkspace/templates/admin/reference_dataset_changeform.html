@@ -23,6 +23,9 @@
         document.addEventListener('DOMContentLoaded', () => {
           const gridDiv = document.querySelector('#data-grid');
           const gridOptions = {
+            defaultColDef: {
+              resizable: true
+            },
             columnDefs: columnDefs,
             rowData: []
           };
@@ -35,6 +38,7 @@
             if (this.readyState === XMLHttpRequest.DONE) {
               if (this.status === 200) {
                 gridOptions.api.setRowData(JSON.parse(xhr.responseText).records);
+                autoSizeColumns(gridOptions.columnApi);
               }
               else {
                 gridOptions.overlayNoRowsTemplate =
