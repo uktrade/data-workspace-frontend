@@ -144,6 +144,11 @@ urlpatterns = [
         name="custom_dataset_query_data",
     ),
     path(
+        "reference/<int:object_id>/grid/data",
+        login_required(views.ReferenceDatasetGridDataView.as_view()),
+        name="reference_dataset_grid_data",
+    ),
+    path(
         "<uuid:dataset_uuid>/visualisation/<int:object_id>/",
         login_required(views.DatasetVisualisationView.as_view()),
         {"model_class": models.DataSet},

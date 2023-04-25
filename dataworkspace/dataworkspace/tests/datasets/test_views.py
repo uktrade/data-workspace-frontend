@@ -336,7 +336,7 @@ def test_find_datasets_by_source_table_name(client, dataset_db):
         table="dataset_test",
         database=factories.DatabaseFactory.create(memorable_name="my_database"),
     )
-    ref_ds = factories.ReferenceDatasetFactory()
+    ref_ds = factories.ReferenceDatasetFactory.create()
 
     # Source dataset: table name only
     response = client.get(reverse("datasets:find_datasets"), {"q": "dataset_test"})
@@ -910,7 +910,7 @@ def test_finding_datasets_doesnt_query_database_excessively(
     for datacut in datacuts:
         datacut.tags.set(random.sample(source_tags, 1) + random.sample(topic_tags, 1))
 
-    references = [factories.ReferenceDatasetFactory(published=True) for _ in range(10)]
+    references = [factories.ReferenceDatasetFactory.create(published=True) for _ in range(10)]
     for reference in references:
         reference.tags.set(
             random.sample(source_tags, random.randint(1, 3))

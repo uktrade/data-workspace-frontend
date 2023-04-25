@@ -1775,9 +1775,10 @@ class ReferenceDataset(DeletableTimestampedUserModel):
 
         model_class = self.get_record_model_class()
         saved_ids = []
+        fields = self.fields.all()
         for record in self.get_records():
             record_data = {}
-            for field in self.fields.all():
+            for field in fields:
                 if field.data_type != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
                     record_data[field.column_name] = getattr(record, field.column_name)
                 else:
@@ -1892,9 +1893,10 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         serializable format for use by ag-grid.
         """
         records = []
+        fields = self.fields.all()
         for record in self.get_records():
-            record_data = {}
-            for field in self.fields.all():
+            record_data = {"_id": record.id}
+            for field in fields:
                 if field.data_type != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
                     record_data[field.column_name] = getattr(record, field.column_name)
                     # ISO format dates for js compatibility
@@ -1921,9 +1923,10 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         us to include linked dataset fields in the hash.
         """
         hashed_data = hashlib.md5()
+        fields = self.fields.all()
         for record in self.get_records():
             data = {}
-            for field in self.fields.all():
+            for field in fields:
                 if field.data_type != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
                     data[field.column_name] = str(getattr(record, field.column_name))
                 else:
@@ -1946,6 +1949,9 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             "data_collections:dataset_select_collection_for_membership",
             args=(self.reference_dataset_inheriting_from_dataset.id,),
         )
+
+    def get_grid_data_url(self):
+        return reverse("datasets:reference_dataset_grid_data", args=(self.id,))
 
 
 @receiver(m2m_changed, sender=ReferenceDataset.tags.through)

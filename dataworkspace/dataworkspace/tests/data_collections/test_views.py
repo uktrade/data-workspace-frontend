@@ -73,7 +73,7 @@ def test_dataset_can_be_added(client, user):
 
 
 def test_reference_dataset_can_be_added(client, user):
-    reference_dataset = factories.ReferenceDatasetFactory(
+    reference_dataset = factories.ReferenceDatasetFactory.create(
         published=True, short_description="reference dataset example description"
     )
     reference_dataset.tags.set(
@@ -380,7 +380,7 @@ def test_authorised_user_attempting_to_add_new_collection_reference_dataset_memb
         owner=user,
     )
 
-    rds = factories.ReferenceDatasetFactory(
+    rds = factories.ReferenceDatasetFactory.create(
         published=True, description="reference dataset example description"
     )
 
