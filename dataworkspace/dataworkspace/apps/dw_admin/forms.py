@@ -171,7 +171,10 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
             self.fields["column_name"].disabled = True
             self.fields["relationship_name"].disabled = True
 
-        else:
+        if (
+            self.instance.id is None
+            or self.instance.data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
+        ):
             # Only allow linking to fields that:
             #   1. Do not belong to this reference dataset
             #   2. Are from a non-deleted reference dataset
@@ -200,10 +203,10 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
                 ("", "---------"),
             ] + [(field.id, str(field)) for field in fields]
 
-            # Hide the linked dataset add/edit buttons on the inline formset
-            self.fields["linked_reference_dataset_field"].widget.can_add_related = False
-            self.fields["linked_reference_dataset_field"].widget.can_change_related = False
-            self.fields["linked_reference_dataset_field"].widget.can_delete_related = False
+        # Hide the linked dataset add/edit buttons on the inline formset
+        self.fields["linked_reference_dataset_field"].widget.can_add_related = False
+        self.fields["linked_reference_dataset_field"].widget.can_change_related = False
+        self.fields["linked_reference_dataset_field"].widget.can_delete_related = False
 
     def clean_linked_reference_dataset_field(self):
         cleaned = self.cleaned_data
