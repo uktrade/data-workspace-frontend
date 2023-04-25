@@ -6,6 +6,7 @@ from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import get_user_model
 from django.core import validators
 from django.db import transaction
+from django.db.models import Q
 from django.forms.widgets import SelectMultiple
 from django.template.loader import get_template
 from django.utils.safestring import mark_safe
@@ -157,59 +158,52 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
         self.reference_dataset = kwargs.pop("parent", None)
         super().__init__(*args, **kwargs)
 
-        fields = ReferenceDatasetField.objects.all()
-
-        # Hide linked reference datasets fields that are themselves linked to
-        # other reference dataset fields
-        linked_reference_dataset_fields = fields.filter(
-            data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
-        ).values_list("id", flat=True)
-
-        # Hide all fields from reference datasets that have a linked field
-        # pointing to a field in the current dataset (circular link)
-        circular_reference_datasets_fields = []
-        if self.reference_dataset.id:
-            circular_reference_datasets = fields.filter(
-                linked_reference_dataset_field__reference_dataset=self.reference_dataset
-            ).values_list("reference_dataset_id", flat=True)
-            circular_reference_datasets_fields = fields.filter(
-                reference_dataset_id__in=circular_reference_datasets
-            ).values_list("id", flat=True)
-
-        # Hide fields belonging to deleted reference datasets
-        deleted_reference_dataset_fields = fields.filter(
-            reference_dataset__deleted=True
-        ).values_list("id", flat=True)
-
-        choices_to_hide = (
-            list(linked_reference_dataset_fields)
-            + list(circular_reference_datasets_fields)
-            + list(deleted_reference_dataset_fields)
-        )
-
-        self.fields["linked_reference_dataset_field"].choices = sorted(
-            [
-                x
-                for x in self.fields["linked_reference_dataset_field"].choices
-                if x[0] not in choices_to_hide
-            ],
-            key=lambda x: x[1],
-        )
-
-        # Hide the linked dataset add/edit buttons on the inline formset
-        self.fields["linked_reference_dataset_field"].widget.can_add_related = False
-        self.fields["linked_reference_dataset_field"].widget.can_change_related = False
-        self.fields["linked_reference_dataset_field"].widget.can_delete_related = False
-
-        if self.instance.id:
+        if self.instance.id is not None:
             # Do not allow changing the data type of a foreign key
             if self.instance.data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY:
                 self.fields["data_type"].disabled = True
             # Disable the relationship selector if the data type is not foreign key
             elif self.fields["linked_reference_dataset_field"].initial is None:
                 self.fields["linked_reference_dataset_field"].disabled = True
+                self.fields[
+                    "linked_reference_dataset_field"
+                ].queryset = ReferenceDatasetField.objects.none()
             self.fields["column_name"].disabled = True
             self.fields["relationship_name"].disabled = True
+
+        else:
+            # Only allow linking to fields that:
+            #   1. Do not belong to this reference dataset
+            #   2. Are from a non-deleted reference dataset
+            #   3. Are not, themselves, linked dataset fields
+            #   4. Do not contain links back to this reference dataset
+            fields = ReferenceDatasetField.objects.exclude(
+                Q(reference_dataset=self.reference_dataset)
+                | Q(reference_dataset__deleted=True)
+                | Q(data_type=ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY)
+            )
+
+            # Hide all fields from reference datasets that have a linked field
+            # pointing to a field in the current dataset (circular link)
+            circular_reference_datasets_fields = []
+            if self.reference_dataset.id:
+                circular_reference_datasets = fields.filter(
+                    linked_reference_dataset_field__reference_dataset=self.reference_dataset
+                ).values_list("reference_dataset_id", flat=True)
+                circular_reference_datasets_fields = fields.filter(
+                    reference_dataset_id__in=circular_reference_datasets
+                ).values_list("id", flat=True)
+
+            fields = fields.exclude(id__in=circular_reference_datasets_fields)
+
+            self.fields["linked_reference_dataset_field"].choices = [
+                ("", "---------"),
+            ] + [(field.id, str(field)) for field in fields]
+
+            # Hide the linked dataset add/edit buttons on the inline formset
+            self.fields["linked_reference_dataset_field"].widget.can_add_related = False
+            self.fields["linked_reference_dataset_field"].widget.can_change_related = False
+            self.fields["linked_reference_dataset_field"].widget.can_delete_related = False
 
     def clean_linked_reference_dataset_field(self):
         cleaned = self.cleaned_data
