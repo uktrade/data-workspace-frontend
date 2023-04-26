@@ -17,7 +17,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
-from django.db import DatabaseError, IntegrityError, connections, transaction
+from django.db import IntegrityError, connections
 from django.db.models import Q
 import gevent
 from psycopg2 import connect, sql
@@ -59,6 +59,7 @@ from dataworkspace.apps.datasets.models import (
     VisualisationCatalogueItem,
 )
 from dataworkspace.cel import celery_app
+from dataworkspace.datasets_db import extract_queried_tables_from_sql_query
 
 logger = logging.getLogger("app")
 
@@ -1302,6 +1303,8 @@ def _do_sync_tool_query_logs():
     else:
         logs = _fetch_rds_pgaudit_logs(from_date, to_date)
 
+    db_users = DatabaseUser.objects.filter(deleted_date=None)
+
     for log in logs:
         try:
             database = databases.get(memorable_name=db_name_map.get(log["database_name"]))
@@ -1313,7 +1316,7 @@ def _do_sync_tool_query_logs():
             )
             continue
 
-        db_user = DatabaseUser.objects.filter(deleted_date=None, username=log["user_name"]).first()
+        db_user = db_users.filter(username=log["user_name"]).first()
         if not db_user:
             logger.info(
                 "Skipping log entry for user %s on db %s (%s) as no matching user could be found",
@@ -1341,29 +1344,9 @@ def _do_sync_tool_query_logs():
             continue
 
         # Extract the queried tables
-        with connections[database.memorable_name].cursor() as cursor:
-            try:
-                with transaction.atomic():
-                    cursor.execute(
-                        f"""
-                        CREATE TEMPORARY VIEW get_audit_tables AS (
-                            SELECT 1 FROM ({audit_log.query_sql.strip().rstrip(';')}) sq
-                        )
-                        """
-                    )
-            except DatabaseError:
-                pass
-            else:
-                cursor.execute(
-                    """
-                    SELECT table_schema, table_name
-                    FROM information_schema.view_table_usage
-                    WHERE view_name = 'get_audit_tables'
-                    """
-                )
-                for table in cursor.fetchall():
-                    audit_log.tables.create(schema=table[0], table=table[1])
-                cursor.execute("DROP VIEW get_audit_tables")
+        tables = extract_queried_tables_from_sql_query(audit_log.query_sql.strip().rstrip(";"))
+        for table in tables:
+            audit_log.tables.create(schema=table[0], table=table[1])
 
         logger.info(
             "Created log record for user %s in db %s",
