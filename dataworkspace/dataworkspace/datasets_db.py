@@ -106,7 +106,7 @@ def get_all_tables_last_updated_date(tables: Tuple[Tuple[str, str, str]]):
     }
 
 
-def extract_queried_tables_from_sql_query(query):
+def extract_queried_tables_from_sql_query(query, log_errors=True):
     """
     Returns a list of (schema, table) tuples extracted from the passed PostgreSQL query
 
@@ -125,7 +125,8 @@ def extract_queried_tables_from_sql_query(query):
     try:
         statements = pglast.parse_sql(query)
     except pglast.parser.ParseError as e:  # pylint: disable=c-extension-no-member
-        logger.error(e)
+        if log_errors:
+            logger.error(e)
         return []
 
     tables = set()

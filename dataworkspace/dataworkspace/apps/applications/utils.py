@@ -1344,7 +1344,12 @@ def _do_sync_tool_query_logs():
             continue
 
         # Extract the queried tables
-        tables = extract_queried_tables_from_sql_query(audit_log.query_sql.strip().rstrip(";"))
+        # There is a chance that the query we are parsing
+        # is not parsable by pglast. This creates a lot of noise in the
+        # logs so we do not log the errors in this sql to sentry
+        tables = extract_queried_tables_from_sql_query(
+            audit_log.query_sql.strip().rstrip(";"), log_errors=False
+        )
         for table in tables:
             audit_log.tables.create(schema=table[0], table=table[1])
 
