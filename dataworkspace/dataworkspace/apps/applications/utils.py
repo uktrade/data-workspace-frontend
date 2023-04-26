@@ -1346,6 +1346,7 @@ def _do_sync_tool_query_logs():
         # Extract the queried tables
         tables = extract_queried_tables_from_sql_query(audit_log.query_sql.strip().rstrip(";"))
         for table in tables:
+            logger.info("Adding table %s.%s", *table)
             audit_log.tables.create(schema=table[0], table=table[1])
 
         logger.info(
