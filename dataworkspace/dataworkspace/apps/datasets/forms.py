@@ -539,9 +539,7 @@ class DatasetEditForm(GOVUKDesignSystemModelForm):
         ),
         required=False,
     )
-    restrictions_on_usage = GOVUKDesignSystemRichLinkField(
-        required=False
-    )
+    restrictions_on_usage = GOVUKDesignSystemRichLinkField(required=False)
 
     def __init__(self, request, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -643,9 +641,7 @@ class VisualisationCatalogueItemEditForm(GOVUKDesignSystemModelForm):
         ),
         required=False,
     )
-    restrictions_on_usage = GOVUKDesignSystemRichLinkField(
-        required=False
-    )
+    restrictions_on_usage = GOVUKDesignSystemRichLinkField(required=False)
 
     def __init__(self, request, *args, **kwargs):
         super().__init__(*args, **kwargs)

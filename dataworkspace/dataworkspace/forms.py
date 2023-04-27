@@ -225,7 +225,9 @@ class GOVUKDesignSystemFileField(GOVUKDesignSystemFieldMixin, forms.FileField):
 
 
 class GOVUKDesignSystemRichTextField(GOVUKDesignSystemFieldMixin, forms.CharField):
-    widget = GOVUKDesignSystemRichTextDescriptionWidget(data_attributes={"type": "rich-text-editor"})
+    widget = GOVUKDesignSystemRichTextDescriptionWidget(
+        data_attributes={"type": "rich-text-editor"}
+    )
 
 
 class GOVUKDesignSystemRichLinkField(GOVUKDesignSystemFieldMixin, forms.CharField):
