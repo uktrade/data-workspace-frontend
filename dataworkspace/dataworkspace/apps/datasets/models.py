@@ -21,7 +21,6 @@ from ckeditor.fields import RichTextField
 
 from django import forms
 from django.apps import apps
-from dataworkspace.apps.core.models import RichLinkField
 from django.db import (
     DatabaseError,
     models,
@@ -56,6 +55,7 @@ from dataworkspace.apps.core.models import (
     Database,
     DeletableQuerySet,
     MLFlowInstance,
+    RichLinkField,
 )
 from dataworkspace.apps.applications.models import (
     ApplicationTemplate,
