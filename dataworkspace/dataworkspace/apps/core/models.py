@@ -8,7 +8,7 @@ from django.db.models.signals import pre_delete, post_delete
 from django.core.validators import RegexValidator
 from django.conf import settings
 
-from dataworkspace.forms import AdminRichTextEditorWidget
+from dataworkspace.forms import AdminRichTextEditorWidget, AdminRichLinkEditorWidget
 
 
 class TimeStampedModel(models.Model):
@@ -85,6 +85,12 @@ class DeletableTimestampedUserModel(DeletableModel, TimeStampedUserModel):
 class RichTextField(models.TextField):
     def formfield(self, **kwargs):
         kwargs.update({"form_class": forms.CharField, "widget": AdminRichTextEditorWidget})
+        return super().formfield(**kwargs)
+
+
+class RichLinkField(models.TextField):
+    def formfield(self, **kwargs):
+        kwargs.update({"form_class": forms.CharField, "widget": AdminRichLinkEditorWidget})
         return super().formfield(**kwargs)
 
 

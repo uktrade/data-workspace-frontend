@@ -311,3 +311,18 @@ class AdminRichTextEditorWidget(AdminTextareaWidget):
             ),
             css={"all": ["admin/css/rich-text.css"]},
         )
+
+
+class AdminRichLinkEditorWidget(AdminTextareaWidget):
+    def __init__(self, attrs=None):
+        super().__init__(attrs={"data-type": "rich-text-editor", **(attrs or {})})
+
+    @property
+    def media(self):
+        return Media(
+            js=(
+                "assets/vendor/ckeditor5/ckeditor.js",
+                "js/link-text-editor.js",
+            ),
+            css={"all": ["admin/css/rich-text.css"]},
+        )
