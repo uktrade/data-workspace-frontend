@@ -23,6 +23,7 @@ from ...forms import (
     GOVUKDesignSystemTextareaField,
     GOVUKDesignSystemTextareaWidget,
     GOVUKDesignSystemRichTextField,
+    GOVUKDesignSystemRichLinkField,
 )
 
 logger = logging.getLogger("app")
@@ -538,12 +539,8 @@ class DatasetEditForm(GOVUKDesignSystemModelForm):
         ),
         required=False,
     )
-    restrictions_on_usage = GOVUKDesignSystemTextareaField(
-        label="Restrictions on usage",
-        widget=GOVUKDesignSystemTextareaWidget(
-            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
-        ),
-        required=False,
+    restrictions_on_usage = GOVUKDesignSystemRichLinkField(
+        required=False
     )
 
     def __init__(self, request, *args, **kwargs):
@@ -646,12 +643,8 @@ class VisualisationCatalogueItemEditForm(GOVUKDesignSystemModelForm):
         ),
         required=False,
     )
-    restrictions_on_usage = GOVUKDesignSystemTextareaField(
-        label="Restrictions on usage",
-        widget=GOVUKDesignSystemTextareaWidget(
-            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
-        ),
-        required=False,
+    restrictions_on_usage = GOVUKDesignSystemRichLinkField(
+        required=False
     )
 
     def __init__(self, request, *args, **kwargs):

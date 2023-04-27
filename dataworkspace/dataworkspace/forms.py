@@ -100,6 +100,30 @@ class GOVUKDesignSystemRichTextWidget(GOVUKDesignSystemTextareaWidget):
         )
 
 
+class GOVUKDesignSystemRichTextDescriptionWidget(GOVUKDesignSystemTextareaWidget):
+    def __init__(self, **kwargs):
+        kwargs["attrs"] = {"style": "display:none;"}
+        super().__init__(**kwargs)
+
+    class Media:
+        js = (
+            "assets/vendor/ckeditor5/ckeditor.js",
+            "js/description-text-editor.js",
+        )
+
+
+class GOVUKDesignSystemLinkWidget(GOVUKDesignSystemTextareaWidget):
+    def __init__(self, **kwargs):
+        kwargs["attrs"] = {"style": "display:none;"}
+        super().__init__(**kwargs)
+
+    class Media:
+        js = (
+            "assets/vendor/ckeditor5/ckeditor.js",
+            "js/link-text-editor.js",
+        )
+
+
 class GOVUKDesignSystemPlainTextareaWidget(GOVUKDesignSystemTextareaWidget):
     def format_value(self, value):
         value = super().format_value(value)
@@ -201,7 +225,11 @@ class GOVUKDesignSystemFileField(GOVUKDesignSystemFieldMixin, forms.FileField):
 
 
 class GOVUKDesignSystemRichTextField(GOVUKDesignSystemFieldMixin, forms.CharField):
-    widget = GOVUKDesignSystemRichTextWidget(data_attributes={"type": "rich-text-editor"})
+    widget = GOVUKDesignSystemRichTextDescriptionWidget(data_attributes={"type": "rich-text-editor"})
+
+
+class GOVUKDesignSystemRichLinkField(GOVUKDesignSystemFieldMixin, forms.CharField):
+    widget = GOVUKDesignSystemLinkWidget(data_attributes={"type": "rich-text-editor"})
 
 
 class GOVUKDesignSystemModelForm(forms.ModelForm):
