@@ -1,12 +1,12 @@
 import json
 import logging
 import uuid
-import bleach
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict, namedtuple
 from itertools import chain
 from typing import Set
 
+import bleach
 import psycopg2
 import waffle
 from botocore.exceptions import ClientError
