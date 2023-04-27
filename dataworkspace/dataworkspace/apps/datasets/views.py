@@ -598,10 +598,11 @@ class DatasetDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data()
-        allowed_tags = bleach.ALLOWED_TAGS + ["a"]
-        self.object.restrictions_on_usage = mark_safe(
-            bleach.clean(self.object.restrictions_on_usage, tags=allowed_tags, strip=True)
-        )
+        if self.object.restrictions_on_usage is not None:
+            allowed_tags = bleach.ALLOWED_TAGS + ["a"]
+            self.object.restrictions_on_usage = mark_safe(
+                bleach.clean(self.object.restrictions_on_usage, tags=allowed_tags, strip=True)
+            )
         ctx["model"] = self.object
         ctx["DATA_CUT_ENHANCED_PREVIEW_FLAG"] = settings.DATA_CUT_ENHANCED_PREVIEW_FLAG
         ctx["DATASET_CHANGELOG_PAGE_FLAG"] = settings.DATASET_CHANGELOG_PAGE_FLAG
