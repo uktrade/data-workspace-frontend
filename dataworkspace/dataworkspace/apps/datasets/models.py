@@ -55,6 +55,7 @@ from dataworkspace.apps.core.models import (
     Database,
     DeletableQuerySet,
     MLFlowInstance,
+    RichLinkField,
 )
 from dataworkspace.apps.applications.models import (
     ApplicationTemplate,
@@ -248,7 +249,7 @@ class DataSet(DeletableTimestampedUserModel):
     )
     retention_policy = models.TextField(null=True, blank=True)
     personal_data = models.CharField(null=True, blank=True, max_length=128)
-    restrictions_on_usage = models.TextField(null=True, blank=True)
+    restrictions_on_usage = RichLinkField(null=True, blank=True)
     user_access_type = models.CharField(
         max_length=64,
         choices=UserAccessType.choices,
@@ -1198,7 +1199,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
     )
     licence = models.CharField(null=False, blank=True, max_length=256)
-    restrictions_on_usage = models.TextField(null=True, blank=True)
+    restrictions_on_usage = RichLinkField(null=True, blank=True)
     valid_from = models.DateField(null=True, blank=True)
     valid_to = models.DateField(null=True, blank=True)
     published = models.BooleanField(default=False)
@@ -2438,7 +2439,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     licence = models.CharField(null=False, blank=True, max_length=256)
     retention_policy = models.TextField(null=True, blank=True)
     personal_data = models.CharField(null=True, blank=True, max_length=128)
-    restrictions_on_usage = models.TextField(null=True, blank=True)
+    restrictions_on_usage = RichLinkField(null=True, blank=True)
     published = models.BooleanField(default=False)
 
     published_at = models.DateField(null=True, blank=True)

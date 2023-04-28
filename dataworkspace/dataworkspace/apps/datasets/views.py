@@ -6,6 +6,7 @@ from collections import defaultdict, namedtuple
 from itertools import chain
 from typing import Set
 
+import bleach
 import psycopg2
 import waffle
 from botocore.exceptions import ClientError
@@ -41,6 +42,7 @@ from django.http import (
 )
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.utils.safestring import mark_safe
 from django.views.decorators.http import (
     require_GET,
     require_POST,
@@ -596,6 +598,18 @@ class DatasetDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data()
+        if self.object.restrictions_on_usage is not None:
+            allowed_tags = bleach.ALLOWED_TAGS + ["a"]
+            allowed_attrs = bleach.ALLOWED_ATTRIBUTES.copy()
+            allowed_attrs["a"] = ["href", "class"]
+            self.object.restrictions_on_usage = mark_safe(
+                bleach.clean(
+                    self.object.restrictions_on_usage,
+                    tags=allowed_tags,
+                    attributes=allowed_attrs,
+                    strip=True,
+                )
+            )
         ctx["model"] = self.object
         ctx["DATA_CUT_ENHANCED_PREVIEW_FLAG"] = settings.DATA_CUT_ENHANCED_PREVIEW_FLAG
         ctx["DATASET_CHANGELOG_PAGE_FLAG"] = settings.DATASET_CHANGELOG_PAGE_FLAG
