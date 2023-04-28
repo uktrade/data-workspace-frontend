@@ -603,7 +603,12 @@ class DatasetDetailView(DetailView):
             allowed_attrs = bleach.ALLOWED_ATTRIBUTES.copy()
             allowed_attrs["a"] = ["href", "class"]
             self.object.restrictions_on_usage = mark_safe(
-                bleach.clean(self.object.restrictions_on_usage, tags=allowed_tags, attributes=allowed_attrs, strip=True)
+                bleach.clean(
+                    self.object.restrictions_on_usage,
+                    tags=allowed_tags,
+                    attributes=allowed_attrs,
+                    strip=True,
+                )
             )
         ctx["model"] = self.object
         ctx["DATA_CUT_ENHANCED_PREVIEW_FLAG"] = settings.DATA_CUT_ENHANCED_PREVIEW_FLAG
