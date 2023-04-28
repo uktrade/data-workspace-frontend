@@ -67,6 +67,7 @@ Set the required variables:
 
 ```bash
 cp .envs/sample.env .envs/dev.env
+cp .envs/superset-sample.env .envs/superset.dev.env
 ```
 
 Start the application:
@@ -78,14 +79,6 @@ docker compose up --build
 The application should then visible at [http://dataworkspace.test:8000](http://dataworkspace.test:8000).
 
 ## Running Superset locally
-
-To get started you will need to create an env file:
-
-```bash
-cp .envs/superset-sample.env .envs/superset.dev.env
-```
-
-Update the new file with your DIT email address (must match your SSO email, or mock SSO credentials).
 
 Then run `docker compose` using the superset profile:
 
