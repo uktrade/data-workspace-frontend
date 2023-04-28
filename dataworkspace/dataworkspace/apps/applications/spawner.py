@@ -469,6 +469,7 @@ class FargateSpawner:
     def state(  # pylint: disable=too-many-return-statements
         spawner_options, created_date, spawner_application_id, proxy_url
     ):
+        close_admin_db_connection_if_not_in_atomic_block()
         try:
             logger.info(spawner_options)
             spawner_options = json.loads(spawner_options)
