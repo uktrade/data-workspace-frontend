@@ -684,7 +684,7 @@ class TestShareQuery:
             },
         )
         assert (
-            b"The user you are sharing with must have a DBT staff SSO account" in response.content
+            b"The user you are sharing with must have a DIT staff SSO account" in response.content
         )
         mock_send_email.assert_not_called()
 

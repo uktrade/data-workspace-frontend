@@ -918,7 +918,7 @@ def sync_quicksight_permissions(user_sso_ids_to_update=tuple()):
                     user_client.describe_user(
                         AwsAccountId=account_id,
                         Namespace=settings.QUICKSIGHT_NAMESPACE,
-                        # \/ This is the format of the user name created by DBT SSO \/
+                        # \/ This is the format of the user name created by DIT SSO \/
                         UserName=f"quicksight_federation{username_suffix}/{user_sso_id}",
                     )["User"]
                 )
