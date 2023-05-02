@@ -13,12 +13,7 @@ django-ckeditor
 django-compressor
 django-csp
 django-csp-helpers
-# Forked from django-db-geventpool to add Sentry exceptions when the pool is full
-# Ideally the fork will be merged upstream, but in the meantime, this commit is
-# from the develop branch in https://github.com/uktrade/django-db-geventpool
-# This is deliberately a commit ID rather than a branch name - to make sure that
-# old versions aren't cached anywhere if changes are made
-django-db-geventpool @ git+https://github.com/uktrade/django-db-geventpool@a5197b05baa84b4e6d01f17c2dd640d25750ce2b
+django-db-connection-pool[postgresql]
 django-dynamic-models-readonly
 django-environ
 django-extensions
@@ -42,7 +37,6 @@ plotly
 pglast
 psutil
 psycogreen
-psycopg2-binary
 python-dotenv
 redis
 pyjwt

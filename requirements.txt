@@ -88,7 +88,7 @@ django==3.2.18
     #   django-ckeditor
     #   django-csp
     #   django-csp-helpers
-    #   django-db-geventpool
+    #   django-db-connection-pool
     #   django-dynamic-models-readonly
     #   django-js-asset
     #   django-redis
@@ -108,7 +108,7 @@ django-csp==3.6
     # via -r requirements.in
 django-csp-helpers==0.6.2
     # via -r requirements.in
-django-db-geventpool @ git+https://github.com/uktrade/django-db-geventpool@a5197b05baa84b4e6d01f17c2dd640d25750ce2b
+django-db-connection-pool[postgresql]==1.2.2
     # via -r requirements.in
 django-dynamic-models-readonly==0.1.1
     # via -r requirements.in
@@ -203,11 +203,9 @@ prompt-toolkit==3.0.38
 psutil==5.7.2
     # via -r requirements.in
 psycogreen==1.0.2
-    # via
-    #   -r requirements.in
-    #   django-db-geventpool
-psycopg2-binary==2.9.6
     # via -r requirements.in
+psycopg2==2.9.6
+    # via django-db-connection-pool
 pycparser==2.20
     # via cffi
 pyjwt==2.4.0
@@ -274,9 +272,10 @@ six==1.15.0
     #   zenpy
 soupsieve==2.3.2.post1
     # via beautifulsoup4
-sqlalchemy==1.3.19
+sqlalchemy==2.0.12
     # via
     #   -r requirements.in
+    #   django-db-connection-pool
     #   geoalchemy2
     #   tabulator
 sqlparse==0.4.2
@@ -289,6 +288,8 @@ tenacity==6.2.0
     # via
     #   celery-redbeat
     #   plotly
+typing-extensions==4.5.0
+    # via sqlalchemy
 unicodecsv==0.14.1
     # via
     #   tableschema
