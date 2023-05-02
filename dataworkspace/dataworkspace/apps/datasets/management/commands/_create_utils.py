@@ -48,8 +48,10 @@ class TestData:
         model = get_user_model()
 
         email = self.fake.ascii_safe_email()
+        sso_id = self.fake.uuid4()
+
         user = model.objects.create(
-            username=email,
+            username=sso_id,
             is_staff=False,
             is_superuser=False,
             email=email,

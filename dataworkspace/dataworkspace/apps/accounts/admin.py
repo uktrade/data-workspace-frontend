@@ -51,7 +51,7 @@ class AppUserCreationForm(forms.ModelForm):
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.username = user.email
+        user.username = user.sso_id
         user.set_unusable_password()
         if commit:
             user.save()
@@ -307,7 +307,7 @@ class AppUserAdmin(UserAdmin):
 
     @transaction.atomic
     def save_model(self, request, obj, form, change):
-        obj.username = form.cleaned_data["email"]
+        obj.username = form.cleaned_data["sso_id"]
 
         def log_change(event_type, permission, message):
             log_permission_change(

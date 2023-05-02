@@ -639,7 +639,7 @@ class TestSyncActivityStreamSSOUsers:
         assert len(all_users) == 1
         assert str(all_users[0].profile.sso_id) == "00000000-0000-0000-0000-000000000000"
         assert all_users[0].email == "john.smith@trade.gov.uk"
-        assert all_users[0].username == "john.smith@trade.gov.uk"
+        assert all_users[0].username == "00000000-0000-0000-0000-000000000000"
         assert all_users[0].first_name == "John"
         assert all_users[0].last_name == "Smith"
 

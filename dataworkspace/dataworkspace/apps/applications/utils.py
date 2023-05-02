@@ -991,12 +991,13 @@ def create_user_from_sso(
     try:
         user = User.objects.get(profile__sso_id=sso_id)
     except User.DoesNotExist:
-        user, _ = User.objects.get_or_create(
-            email__in=[primary_email] + other_emails,
-            defaults={"email": primary_email, "username": primary_email},
+        user, _ = User.objects.create_user(
+            username=sso_id,
+            email=primary_email,
+            first_name=first_name,
+            last_name=last_name,
+            # defaults={"email": primary_email, "username": sso_id},
         )
-
-        user.save()
         user.profile.sso_id = sso_id
         try:
             user.save()
@@ -1010,10 +1011,6 @@ def create_user_from_sso(
             _check_tools_access(user)
 
     changed = False
-
-    if user.username != primary_email:
-        changed = True
-        user.username = primary_email
 
     if user.email != primary_email:
         changed = True
