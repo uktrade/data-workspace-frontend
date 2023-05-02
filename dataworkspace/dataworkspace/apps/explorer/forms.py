@@ -91,7 +91,7 @@ class ShareQueryForm(GOVUKDesignSystemForm):
         required=True,
         error_messages={
             "invalid_email": "Enter the email address in the correct format, for example name@digital.trade.gov.uk",
-            "invalid_choice": "The user you are sharing with must have a DIT staff SSO account",
+            "invalid_choice": "The user you are sharing with must have a DBT staff SSO account",
         },
     )
     message = GOVUKDesignSystemTextareaField(

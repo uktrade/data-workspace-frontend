@@ -66,7 +66,7 @@ GRID_ACRONYM_MAP = (
     ("export win", "export wins"),
     ("BOP", "Balance of Payments"),
     ("CSP", "Civil Service Pensions"),
-    ("DIT", "Department for International Trade"),
+    ("DBT", "Department for Business and Trade"),
     ("DMAS", "Digital Market Access Service"),
     ("DNB", "Dun and Bradstreet"),
     ("GA", "Google Analytics"),

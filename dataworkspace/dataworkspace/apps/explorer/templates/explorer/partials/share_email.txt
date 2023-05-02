@@ -9,4 +9,4 @@ You may need to request access to Data Explorer before you can use it: https://d
 
 {{ query }}
 
-Please note this query has been shared with you for internal (DIT) use only.
+Please note this query has been shared with you for internal (DBT) use only.

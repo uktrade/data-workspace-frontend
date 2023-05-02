@@ -88,7 +88,7 @@ class AppUserEditForm(forms.ModelForm):
     )
     can_access_quicksight = forms.BooleanField(
         label="Can access QuickSight",
-        help_text="Note: the user must also be given separate access to AWS QuickSight via DIT SSO",
+        help_text="Note: the user must also be given separate access to AWS QuickSight via DBT SSO",
         required=False,
     )
     authorized_master_datasets = forms.ModelMultipleChoiceField(
