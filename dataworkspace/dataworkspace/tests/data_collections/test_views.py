@@ -449,7 +449,7 @@ def test_add_user_email_provided_doesnt_exist(client, user):
     )
     assert response.status_code == 200
     assert (
-        "The user you are sharing with must have a DIT staff SSO account"
+        "The user you are sharing with must have a DBT staff SSO account"
         in response.content.decode(response.charset)
     )
 

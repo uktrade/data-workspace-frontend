@@ -90,7 +90,7 @@ class CollectionUserAddForm(GOVUKDesignSystemForm):
         user = get_user_model().objects.filter(email=self.cleaned_data["email"]).first()
         if user is None:
             raise forms.ValidationError(
-                "The user you are sharing with must have a DIT staff SSO account"
+                "The user you are sharing with must have a DBT staff SSO account"
             )
         if self.collection.owner == user:
             raise forms.ValidationError(f"{user.email} already has access to this collection")
