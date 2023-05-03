@@ -23,6 +23,7 @@ RUN apt-get update && \
         nginx-extras \
         openssl \
         build-essential \
+        libpq-dev \
         procps \
         python3 \
         python3-dev \

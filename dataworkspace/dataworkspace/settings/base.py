@@ -498,17 +498,25 @@ GITLAB_URL_FOR_TOOLS = env.get("GITLAB_URL_FOR_TOOLS", "")
 
 DATABASES = {
     "default": {
-        "ENGINE": "django_db_geventpool.backends.postgresql_psycopg2",
+        "ENGINE": "dj_db_conn_pool.backends.postgresql",
         "CONN_MAX_AGE": 0,
         **env["ADMIN_DB"],
-        "OPTIONS": {"sslmode": "require", "MAX_CONNS": int(env.get("DEFAULT_DB_MAX_CONNS", "20"))},
+        "POOL_OPTIONS": {
+            "POOL_SIZE": int(env.get("DEFAULT_DB_MAX_CONNS", "20")),
+            "MAX_OVERFLOW": 0,
+            "RECYCLE": 24 * 60 * 8,
+        },
     },
     **{
         database_name: {
-            "ENGINE": "django_db_geventpool.backends.postgresql_psycopg2",
+            "ENGINE": "dj_db_conn_pool.backends.postgresql",
             "CONN_MAX_AGE": 0,
             **database,
-            "OPTIONS": {"sslmode": "require", "MAX_CONNS": 100},
+            "POOL_OPTIONS": {
+                "POOL_SIZE": int(env.get("DEFAULT_DB_MAX_CONNS", "20")),
+                "MAX_OVERFLOW": 0,
+                "RECYCLE": 24 * 60 * 8,
+            },
             "TEST": {"MIGRATE": False},
         }
         for database_name, database in env["DATA_DB"].items()
