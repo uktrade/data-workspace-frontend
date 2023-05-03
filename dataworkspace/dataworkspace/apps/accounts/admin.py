@@ -51,7 +51,8 @@ class AppUserCreationForm(forms.ModelForm):
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.username = user.sso_id
+        if user.profile.sso_id:
+            user.username = user.profile.sso_id
         user.set_unusable_password()
         if commit:
             user.save()
@@ -578,3 +579,4 @@ class AppUserAdmin(UserAdmin):
 
     def stable_id_suffix(self, instance):
         return stable_identification_suffix(str(instance.profile.sso_id), short=True)
+

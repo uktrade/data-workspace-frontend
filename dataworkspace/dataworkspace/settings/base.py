@@ -127,6 +127,7 @@ if DEBUG:
 if ELASTIC_APM:
     INSTALLED_APPS.append("elasticapm.contrib.django")
 
+AUTH_USER_MODEL = 'core.DataWorkspaceUser'
 AUTHENTICATION_BACKENDS = ["dataworkspace.apps.accounts.backends.AuthbrokerBackendUsernameIsEmail"]
 AUTHBROKER_URL = env["AUTHBROKER_URL"]
 AUTHBROKER_CLIENT_ID = env["AUTHBROKER_CLIENT_ID"]

@@ -10,6 +10,13 @@ from django.conf import settings
 
 from dataworkspace.forms import AdminRichTextEditorWidget, AdminRichLinkEditorWidget
 
+from django.contrib.auth.models import User
+
+
+class DataWorkspaceUser(User):
+    def __str__(self):
+        return self.email
+
 
 class TimeStampedModel(models.Model):
     created_date = models.DateTimeField(auto_now_add=True)

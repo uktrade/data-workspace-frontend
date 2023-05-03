@@ -7,6 +7,7 @@ from dataworkspace.apps.core.models import (
     Team,
     TeamMembership,
     NewsletterSubscription,
+    DataWorkspaceUser,
 )
 
 
@@ -92,3 +93,12 @@ class MLFlowInstancesAdmin(admin.ModelAdmin):
         "name",
         "hostname",
     )
+
+from django.contrib.auth.models import User
+
+# admin.site.unregister(User)
+# from django.contrib.auth.admin import UserAdmin
+#
+# @admin.register(DataWorkspaceUser)
+# class CustomUserAdmin(UserAdmin):
+#     list_display = ('email', 'first_name', 'last_name', 'is_staff')
