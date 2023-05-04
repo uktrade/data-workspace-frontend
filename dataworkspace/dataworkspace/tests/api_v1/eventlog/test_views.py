@@ -3,6 +3,7 @@ import uuid
 import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from freezegun import freeze_time
 from rest_framework import status
 from rest_framework.fields import DateTimeField
 
@@ -89,3 +90,28 @@ class TestEventLogAPIView(BaseAPIViewTest):
         assert response.json()["results"][0]["related_object"]["id"] == str(vis_link.id)
         assert response.json()["results"][0]["related_object"]["name"] == str(vis_link.name)
         assert response.json()["results"][0]["related_object"]["type"] == "QUICKSIGHT"
+
+    @pytest.mark.parametrize(
+        "event_log_factory",
+        (
+            factories.DatasetLinkDownloadEventFactory,
+            factories.DatasetQueryDownloadEventFactory,
+            factories.ReferenceDatasetDownloadEventFactory,
+            factories.DatasetAccessRequestEventFactory,
+            factories.DatasetAccessGrantedEventFactory,
+            factories.DatasetAccessRevokedEventFactory,
+        ),
+    )
+    def test_timestamp_filter(self, unauthenticated_client, event_log_factory):
+        with freeze_time("2020-01-01 00:01:00"):
+            event_log_factory()
+        with freeze_time("2020-01-01 00:01:01"):
+            eventlog2 = event_log_factory()
+        with freeze_time("2020-01-01 00:02:00"):
+            eventlog3 = event_log_factory()
+        response = unauthenticated_client.get(self.url + "?since=2020-01-01 00:01:00")
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["results"] == sorted(
+            [self.expected_response(eventlog2), self.expected_response(eventlog3)],
+            key=lambda x: x["id"],
+        )
