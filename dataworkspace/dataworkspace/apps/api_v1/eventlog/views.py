@@ -1,12 +1,12 @@
 from rest_framework import viewsets
 
 from dataworkspace.apps.api_v1.eventlog.serializers import EventLogSerializer
-from dataworkspace.apps.api_v1.mixins import TimestampSinceFilterMixin
+from dataworkspace.apps.api_v1.mixins import TimestampFilterMixin
 from dataworkspace.apps.api_v1.pagination import TimestampCursorPagination
 from dataworkspace.apps.eventlog.models import EventLog
 
 
-class EventLogViewSet(TimestampSinceFilterMixin, viewsets.ModelViewSet):
+class EventLogViewSet(TimestampFilterMixin, viewsets.ModelViewSet):
     """
     API endpoint to list EvenLog items for consumption by data flow.
     """
