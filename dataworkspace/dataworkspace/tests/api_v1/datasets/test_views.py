@@ -628,3 +628,17 @@ class TestToolQueryAuditLogAPIView(BaseAPIViewTest):
         response = unauthenticated_client.get(self.url)
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["results"] == [self.expected_response(log)]
+
+    def test_timestamp_filter(self, unauthenticated_client):
+        with freeze_time("2020-01-01 00:06:00"):
+            log_1 = factories.ToolQueryAuditLogFactory.create(timestamp=datetime.now())
+        with freeze_time("2020-01-01 00:07:00"):
+            log_2 = factories.ToolQueryAuditLogFactory.create(timestamp=datetime.now())
+        factories.ToolQueryAuditLogTableFactory.create(audit_log=log_2)
+        factories.ToolQueryAuditLogTableFactory.create(audit_log=log_2)
+        response = unauthenticated_client.get(self.url + "?since=2020-01-01 00:01:00")
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["results"] == [
+            self.expected_response(log_1),
+            self.expected_response(log_2),
+        ]
