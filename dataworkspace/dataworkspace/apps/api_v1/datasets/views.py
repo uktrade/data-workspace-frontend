@@ -13,7 +13,7 @@ from django.contrib.postgres.fields import ArrayField
 from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
 
-from dataworkspace.apps.api_v1.mixins import TimestampSinceFilterMixin
+from dataworkspace.apps.api_v1.mixins import TimestampFilterMixin
 from dataworkspace.apps.api_v1.pagination import TimestampCursorPagination
 from dataworkspace.apps.core.utils import (
     database_dsn,
@@ -453,7 +453,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
     pagination_class = PageNumberPagination
 
 
-class ToolQueryAuditLogViewSet(TimestampSinceFilterMixin, viewsets.ModelViewSet):
+class ToolQueryAuditLogViewSet(TimestampFilterMixin, viewsets.ModelViewSet):
     """
     API endpoint to list tool query audit logs for ingestion by data flow
     """

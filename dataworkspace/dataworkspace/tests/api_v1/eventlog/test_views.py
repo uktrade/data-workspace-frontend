@@ -109,7 +109,11 @@ class TestEventLogAPIView(BaseAPIViewTest):
             eventlog2 = event_log_factory()
         with freeze_time("2020-01-01 00:02:00"):
             eventlog3 = event_log_factory()
-        response = unauthenticated_client.get(self.url + "?since=2020-01-01 00:01:00")
+        with freeze_time("2020-01-01 00:03:00"):
+            event_log_factory()
+        response = unauthenticated_client.get(
+            self.url + "?from=2020-01-01 00:01:01&to=2020-01-01 00:03:00"
+        )
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["results"] == sorted(
             [self.expected_response(eventlog2), self.expected_response(eventlog3)],
