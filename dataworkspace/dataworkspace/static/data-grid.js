@@ -404,16 +404,9 @@ function initDataGrid(
   }
 
   document
-    .querySelector("#data-grid-reset-filters")
+    .querySelector("#data-grid-reset-view")
     .addEventListener("click", function (e) {
       gridOptions.api.setFilterModel(null);
-      document.activeElement.blur();
-      return;
-    });
-
-  document
-    .querySelector("#data-grid-reset-columns")
-    .addEventListener("click", function (e) {
       gridOptions.columnApi.resetColumnState();
       document.activeElement.blur();
       return;
