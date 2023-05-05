@@ -39,10 +39,11 @@
 
 {% endblock footer_scripts %}
 {% block content %}
-  <div class="govuk-grid-row">
-  {% flag SECURITY_CLASSIFICATION_FLAG %}
+    <div class="govuk-width-container">
+    <div class="govuk-grid-row">
+    {% flag SECURITY_CLASSIFICATION_FLAG %}
     <div class="govuk-grid-column-full" style ="margin-bottom: 13px;">
-      {% if not object.dataset.government_security_classification %}
+    {% if not object.dataset.government_security_classification %}
         <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
       {% else %}
         {% if object.dataset.get_government_security_classification_display == "OFFICIAL" %}
@@ -58,9 +59,8 @@
         {% endif %}
       {% endif %}
     </div>
-  {% endflag %}
-    <div class="govuk-grid-column-full">
-    <div class="govuk-width-container">
+    {% endflag %}
+    </div>
       <h1 class="govuk-heading-xl">
         {{ object.name }}
       </h1>
@@ -123,7 +123,5 @@ margin: 0;">
       </div>
       <div id="data-grid" class="ag-theme-alpine"></div>
     </div>
-    </div>
-  </div>
   {% csrf_token %}
 {% endblock %}
