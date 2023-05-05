@@ -376,7 +376,7 @@ def find_datasets(request):
             "query": filters.query,
             "datasets": datasets,
             "data_type": dict(data_types),
-            "show_admin_filters": has_unpublished_dataset_access(request.user),
+            "show_admin_filters": has_unpublished_dataset_access(request.user) and request.user.is_superuser,
             "DATASET_FINDER_FLAG": settings.DATASET_FINDER_ADMIN_ONLY_FLAG,
             "ACCESSIBLE_AUTOCOMPLETE_FLAG": settings.ACCESSIBLE_AUTOCOMPLETE_FLAG,
             "search_type": "searchBar" if filters.query else "noSearch",
