@@ -1,12 +1,7 @@
-{% extends '_main.html' %}
-{% load static core_tags humanize waffle_tags %}
+{% extends '_main_no_container.html' %}
+{% load static core_tags humanize waffle_tags datasets_tags %}
 
-{% block page_title %}View {{ object.name }} - {{ block.super }}{% endblock %}
-{% block go_back %}
-  <a class="govuk-back-link" href="{% url "datasets:dataset_detail" dataset_uuid=model.uuid %}#{{ model.slug }}">
-    Back
-  </a>
-{% endblock %}
+{% block page_title %}View {{ model.name }} - {{ block.super }}{% endblock %}
 {% block footer_scripts %}
   <script src="{% static 'ag-grid-community.min.js' %}"></script>
   <script src="{% static 'dayjs.min.js' %}"></script>
@@ -33,73 +28,80 @@
   </script>
 {% endblock footer_scripts %}
 {% block content %}
-  <div class="govuk-grid-row">
-  {% flag SECURITY_CLASSIFICATION_FLAG %}
-    <div class="govuk-grid-column-full" style ="margin-bottom: 13px;">
-      {% if not model.government_security_classification %}
-        <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
-      {% else %}
-        {% if model.get_government_security_classification_display == "OFFICIAL" %}
-          <strong class="govuk-tag govuk-tag--blue">{{ model.get_government_security_classification_display }}</strong>
-        {% else %}
-          <strong class="govuk-tag govuk-tag--red">{{ model.get_government_security_classification_display }}
-            {% if model.sensitivity.all %}
-              {% for sensitivity in model.sensitivity.all %}
-                {% if not forloop.first %}and{% endif %}</span> {{ sensitivity }}
-              {% endfor %}
-            {% endif %} </strong>
-        {% endif %}
-      {% endif %}
-    </div>
-  {% endflag %}
-    <div class="govuk-grid-column-two-thirds">
-      <h1 class="govuk-heading-xl">{{ model.name }}</h1>
-      <p class="govuk-body">
-        Use this data grid to <a class="govuk-link" href="https://data-services-help.trade.gov.uk/data-workspace/how-to/start-using-data-workspace/filter-and-sort-data/">filter, sort and download data</a>. You can:
-        <ul class="govuk-list govuk-list--bullet">
-          <li>reorder columns by dragging and dropping them</li>
-          <li>remove columns you do not need by dragging them off the grid</li>
-          <li>filter rows by entering text into the box above each column</li>
-        </ul>
-      </p>
-    </div>
-  </div>
-  {% with model.fields.all as fields %}
-    {% if fields %}
-    <div class="govuk-grid-row">
-      <div class="govuk-grid-column-full">
-      <p class="govuk-body">
-        <a href="{% url "datasets:data_dictionary" source_uuid=model.uuid %}?dataset_uuid={{model.uuid}}" class="govuk-link">Data Dictionary</a>
-      </p>
-      </div>
-    </div>
-    {% endif %}
-
-    <div class="govuk-grid-row">
-      <div class="govuk-grid-column-full">
-        <div id="data-grid" class="ag-theme-alpine"></div>
-        <div class="govuk-!-margin-top-4 govuk-button-group">
-          <button class="govuk-button" data-module="govuk-button" id="data-grid-download">
-            Download data as CSV
-          </button>
-          &nbsp;
-          <button class="govuk-button" data-module="govuk-button" id="data-grid-json-download">
-            Download data as JSON
-          </button>
-          &nbsp;
-          <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-filters">
-            Reset filters
-          </button>
-          &nbsp;
-          <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-columns">
-            Reset columns
-          </button>
-          {% if model.enquiries_contact %}
-            <a href="mailto:{{ model.enquiries_contact.email }}?subject=Reporting an issue - {{ model.name }}" class="govuk-link govuk-link--no-visited-state govuk-!-padding-left-2">
-              {% include "partials/report_an_issue_icon.html" %}</a>
+  <div class="govuk-breadcrumbs govuk-!-padding-left-2 govuk-!-padding-bottom-2"
+       style="border-bottom: 1px solid #b1b4b6">
+    <ol class="govuk-breadcrumbs__list">
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="">Home</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link"
+           href="{% url "datasets:dataset_detail" dataset_uuid=model.uuid %}#{{ model.slug }}">{{ model }}</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">{{ model.name }}
+      </li>
+      {% flag SECURITY_CLASSIFICATION_FLAG %}
+        <div style="float: right">
+          {% if not model.government_security_classification %}
+            <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
+          {% else %}
+            {% if model.get_government_security_classification_display == "OFFICIAL" %}
+              <strong
+                class="govuk-tag govuk-tag--blue">{{ model.get_government_security_classification_display }}</strong>
+            {% else %}
+              <strong
+                class="govuk-tag govuk-tag--red">{{ model.get_government_security_classification_display }}
+                {% if model.sensitivity.all %}
+                  {% for sensitivity in model.sensitivity.all %}
+                    {% if not forloop.first %}and{% endif %}</span> {{ sensitivity }}
+                  {% endfor %}
+                {% endif %} </strong>
+            {% endif %}
           {% endif %}
         </div>
-      </div>
+      {% endflag %}
+    </ol>
+  </div>
+  <div class="govuk-!-padding-right-1 govuk-!-padding-left-1 govuk-!-padding-bottom-0">
+    <div class="govuk-grid-row govuk-!-padding-right-5">{% if model.enquiries_contact %}
+      <a href="mailto:{{ model.enquiries_contact.email }}?subject=Reporting an issue - {{ model.name }}"
+         class="govuk-link govuk-link--no-visited-state govuk-!-padding-left-2" style="float: right">
+        {% include "partials/report_an_issue_icon.html" %}</a>
+    {% endif %}
+    </div>
+  <span class="govuk-caption-xl">Data table (public.{{ model.table_name }})</span>
+      <h1 class="govuk-heading-xl">{{ model.name }}</h1>
+  {% with model.fields.all as fields %}
+    <div class="govuk-!-margin-top-4  govuk-!-padding-left-2 govuk-!-padding-top-2" style="border: 1px solid #b1b4b6; border-bottom: none; margin: 0; display: flex; flex-wrap: wrap">
+  <div class="govuk-button-group" style="order: 1; flex: 1 0 auto; margin-right: 10px">
+    <p class="govuk-body govuk-!-font-weight-bold" id="data-grid-rowcount" style="margin-right: 15px"> Loading data... </p>
+    {% flag CHART_BUILDER_BUILD_CHARTS_FLAG %}
+      <button class="govuk-button" id="data-grid-create-chart">Create a chart</button>
+      &nbsp;
+    {% endflag %}
+    <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-view">
+      Reset view
+    </button>
+    <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-download">
+      Download data as CSV
+    </button>
+    &nbsp;
+    <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-json-download">
+      Download data as JSON
+    </button>
+    {% if fields %}
+      <a href="{% url "datasets:data_dictionary" source_uuid=model.uuid %}?dataset_uuid={{model.uuid}}" class="govuk-link" target="_blank">Data Dictionary</a>
+    {% endif %}
+  </div>
+  <div style="order: 2; flex: 0 0 auto; margin-left: auto; margin-top: 10px; text-align: right" class="govuk-body govuk-!-padding-right-2">
+    <span class="govuk-!-font-weight-bold">
+      Data last updated:
+    </span>
+    {{ model.get_data_last_updated_date|gmt_date|default_if_none:"N/A" }}
+    {{ model.get_data_last_updated_date|time_with_gmt_offset|default_if_none:"N/A" }}
+  </div>
+</div>
+        <div id="data-grid" class="ag-theme-alpine"></div>
     </div>
   {% endwith %}
   {% csrf_token %}
