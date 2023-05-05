@@ -260,9 +260,7 @@ function initDataGrid(
                 }
                 if (dl_count) {
                   dl_count.innerText =
-                    "Download this data (Max " +
-                    downLoadLimit.toLocaleString() +
-                    " rows)";
+                    "Download this data";
                 }
               }
               if (rc <= downLoadLimit || (downLoadLimit == null && rc < 5000)) {
@@ -271,7 +269,7 @@ function initDataGrid(
                 }
                 if (dl_count) {
                   dl_count.innerText =
-                    "Download this data (" + rc.toLocaleString() + " rows)";
+                    "Download this data";
                 }
               }
               params.successCallback(
