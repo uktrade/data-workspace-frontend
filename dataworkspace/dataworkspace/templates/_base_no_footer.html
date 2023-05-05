@@ -1,0 +1,134 @@
+{% load static core_filters waffle_tags %}
+<!DOCTYPE html>
+<html lang="en-GB" class="govuk-template">
+
+<head>
+  <meta charset="utf-8">
+  <title>{% block page_title %}Data Workspace{% endblock %}</title>
+  <base href="{{ root_href }}">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0c0c">
+  <meta property="og:image" content="{% static 'assets/images/govuk-opengraph-image.png' %}">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <link rel="shortcut icon" sizes="16x16 32x32 48x48" href="{% static 'assets/images/favicon.ico' %}" type="image/x-icon">
+  <link rel="mask-icon" href="{% static 'assets/images/govuk-mask-icon.svg' %}" color="#0b0c0c">
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'assets/images/govuk-apple-touch-icon-180x180.png' %}">
+  <link rel="apple-touch-icon" sizes="167x167" href="{% static 'assets/images/govuk-apple-touch-icon-167x167.png' %}">
+  <link rel="apple-touch-icon" sizes="152x152" href="{% static 'assets/images/govuk-apple-touch-icon-152x152.png' %}">
+  <link rel="apple-touch-icon" href="{% static 'assets/images/govuk-apple-touch-icon.png' %}">
+  <link rel="stylesheet" href="{% static 'data-workspace.css' %}">
+  {# Fallback to standard tables if javascript is disabled#}
+  <noscript><style>.enhanced-table { display: table }</style></noscript>
+
+  {% if GTM_ENABLED %}
+    {% block initialGTMDataLayer %}
+      <script nonce="{{ request.csp_nonce }}">
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({
+          "event": "pageLoaded",
+          "user": {
+            "status": "logged-in",
+            "id": "{{ SSO_USER_ID }}"
+          },
+          "page": {
+            "type": "{{ GTM_PAGE_TYPE }}"
+          }
+        });
+      </script>
+    {% endblock %}
+  {% endif %}
+
+  {% include 'partials/gtm_head.html' %}
+
+  {% block head %}{% endblock %}
+</head>
+
+<body id="body" class="govuk-template__body">
+  {% include 'partials/gtm_body.html' %}
+
+  <script nonce="{{ request.csp_nonce }}">
+    document.body.className = document.body.className + ' js-enabled';
+  </script>
+
+  <a href="{{ request.path }}#main-content" class="govuk-skip-link">Skip to main content</a>
+  <header class="govuk-header" role="banner" data-module="govuk-header">
+    <div class="govuk-header__container govuk-width-container">
+      <div class="govuk-header__logotype">
+        <a href="{{ root_href }}" class="govuk-header__link govuk-header__link--service-name">
+          Data Workspace
+        </a>
+      </div>
+      <div class="app-header--suggestion">
+        <div class="govuk-header__navigation-item">
+          <a class="govuk-header__link" href="https://www.datahub.trade.gov.uk/?utm_source=Data%20Workspace&utm_medium=referral&utm_campaign=dataflow&utm_content=Switch%20to%20Data%20Hub">Switch to Data Hub</a>
+        </div>
+      </div>
+      <button type="button" class="govuk-header__menu-button govuk-js-header-toggle" aria-controls="navigation" aria-label="Show or hide Top Level Navigation">
+        Menu
+      </button>
+      <nav aria-label="Top Level Navigation">
+        <ul id="navigation" class="govuk-header__navigation">
+          <li class="govuk-header__navigation-item{% if request.get_full_path == '/' %} govuk-header__navigation-item--active{% endif %}">
+            <a class="govuk-header__link" href="{{ root_href }}">
+              Home
+            </a>
+          </li>
+          {% flag COLLECTIONS_FLAG %}
+            {% url 'data_collections:collections-list' as collections_homepage_url %}
+          <li class="govuk-header__navigation-item{% if request.get_full_path|startswith:collections_homepage_url %} govuk-header__navigation-item--active{% endif %}">
+            <a class="govuk-header__link" href="{{ collections_homepage_url }}">
+              Collections
+            </a>
+          </li>
+          {% endflag %}
+          {% url 'applications:tools' as tools_url %}
+          <li class="govuk-header__navigation-item{% if request.get_full_path == tools_url %} govuk-header__navigation-item--active{% endif %}">
+            <a class="govuk-header__link" href="{{ tools_url }}">
+              Tools
+            </a>
+          </li>
+          {% if can_see_visualisations_tab %}
+          {% url 'visualisations:root' as visualisations_root_url %}
+          <li class="govuk-header__navigation-item{% if request.get_full_path == visualisations_root_url %} govuk-header__navigation-item--active{% endif %}">
+            <a class="govuk-header__link" href="{{ visualisations_root_url }}">
+              Visualisations
+            </a>
+          </li>
+          {% endif %}
+          <li class="govuk-header__navigation-item">
+            <a class="govuk-header__link" href="https://data-services-help.trade.gov.uk/data-workspace" target="_blank" rel="noopener noreferrer">
+              Help centre <span class="govuk-visually-hidden">(opens in a new tab)</span>
+            </a>
+          </li>
+          <li class="govuk-header__navigation-item">
+            <a class="govuk-header__link" href="{% url 'support' %}">
+              Contact us
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <div class="govuk-width-container">
+    {% include 'partials/beta_banner.html' %}
+  </div>
+
+  <div class="govuk-width-container">
+    {% block breadcrumbs %}{% endblock %}
+    {% block go_back %}{% endblock %}
+  </div>
+
+  {% block main %}{% endblock %}
+
+  <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}govuk-frontend-3.14.0.min.js"></script>
+  <script nonce="{{ request.csp_nonce }}">
+    window.GOVUKFrontend.initAll();
+  </script>
+
+  {% block footer_scripts %}
+  {% endblock %}
+</body>
+</html>

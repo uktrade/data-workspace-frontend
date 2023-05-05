@@ -1,4 +1,4 @@
-{% extends '_main.html' %}
+{% extends '_main_no_container.html' %}
 {% load static core_tags humanize waffle_tags datasets_tags %}
 
 {% block page_title %}View {{ object.name }} - {{ block.super }}{% endblock %}data-grid
@@ -60,6 +60,7 @@
     </div>
   {% endflag %}
     <div class="govuk-grid-column-full">
+    <div class="govuk-width-container">
       <h1 class="govuk-heading-xl">
         {{ object.name }}
       </h1>
@@ -89,14 +90,16 @@
       <h2 class="govuk-heading-m govuk-!-margin-top-4">
         Data preview
       </h2>
-      <p class="govuk-body" id="data-grid-rowcount"> Loading data... </p>
-
-      <div id="data-grid" class="ag-theme-alpine"></div>
-      <div class="govuk-!-margin-top-4  govuk-button-group">
+        </div>
+<div class="govuk-!-padding-right-1 govuk-!-padding-left-1 govuk-!-padding-bottom-0">
+<div class="govuk-!-margin-top-4  govuk-button-group govuk-!-padding-2" style="border: 1px solid #b1b4b6;
+border-bottom: none;
+margin: 0;">
+<p class="govuk-body govuk-!-font-weight-bold" id="data-grid-rowcount" style="margin-right: 15px"> Loading data... </p>
         {% if object.data_grid_download_enabled %}
           <button class="govuk-button" data-module="govuk-button" id="data-grid-download">
             Download this data
-            {% if object.data_grid_download_limit %} 
+            {% if object.data_grid_download_limit %}
               (Max {{ object.data_grid_download_limit|intcomma }} rows)
             {% endif %}
           </button>
@@ -118,6 +121,8 @@
             {% include "partials/report_an_issue_icon.html" %}</a>
         {% endif %}
       </div>
+      <div id="data-grid" class="ag-theme-alpine"></div>
+    </div>
     </div>
   </div>
   {% csrf_token %}
