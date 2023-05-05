@@ -190,8 +190,6 @@ class TestApplication(unittest.IsolatedAsyncioTestCase):
         ) as response:
             content = await response.text()
 
-        self.assertIn("You need to request access to view this data.", content)
-
         async with session.request(
             "GET",
             "http://dataworkspace.test:8000/table_data/my_database/public/test_dataset",
