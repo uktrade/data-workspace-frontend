@@ -74,7 +74,7 @@
          href="mailto:{{ object.dataset.enquiries_contact.email }}?subject=Reporting an issue - {{ object.name }}">
         {% include "partials/report_an_issue_icon.html" %}</a>
     {% endif %}
-  <div class="govuk-!-padding-top-4">
+  <div class="govuk-!-padding-top-4 govuk-!-padding-left-1">
     <span class="govuk-caption-xl">Data table ({{ object.schema }}.{{ object.table }})</span>
     <h1 class="govuk-heading-xl">
       {{ object.name }}
@@ -85,12 +85,10 @@
     <p class="govuk-body govuk-!-font-weight-bold" id="data-grid-rowcount" style="margin-right: 15px"> Loading data... </p>
     {% flag CHART_BUILDER_BUILD_CHARTS_FLAG %}
       <button class="govuk-button" id="data-grid-create-chart">Create a chart</button>
-      &nbsp;
     {% endflag %}
     <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-view"> Reset view </button>
     {% if object.data_grid_download_enabled %}
       <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-download"> Download this data </button>
-      &nbsp;
     {% endif %}
     {# We only support data dictionaries for master and reference datasets currently #}
     {# reference datagrid uses reference_dataset_grid.html btw   #}
@@ -108,7 +106,7 @@
   </div>
 </div>
 
-    <div id="data-grid" class="ag-theme-alpine"></div>
+    <div id="data-grid" class="ag-theme-alpine" style="height: 100vh"></div>
   </div>
   {% csrf_token %}
 {% endblock %}
