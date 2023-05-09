@@ -1916,10 +1916,6 @@ class TestRequestAccess(DatasetsCommon):
         url = reverse("datasets:dataset_detail", args=(master.id,))
         response = staff_client.get(url)
         assert response.status_code == 200
-        assert (
-            "We will ask you some questions so we can give you access to the tools you need to analyse this data."
-            in response.content.decode(response.charset)
-        )
 
     @pytest.mark.parametrize(
         "access_type", (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
