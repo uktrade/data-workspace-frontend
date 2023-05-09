@@ -61,6 +61,10 @@
           {{ model.description | minimal_markup }}
         </div>
 
+        {% if not has_access %}
+          {% include 'partials/request_access.html' with type=dataset_type has_data_access=has_access %}
+        {% endif %}
+
       {% endwith %}
     </div>
     <div class="govuk-grid-column-one-third">

@@ -72,6 +72,9 @@
       <div class="govuk-body">
         {{ model.description | minimal_markup }}
       </div>
+      {% if datacut_links_info and not has_access %}
+        {% include 'partials/request_access.html' with type='datacut' has_data_access=has_access %}
+      {% endif %}
     </div>
     <div class="govuk-grid-column-one-third">
       {% if model.enquiries_contact %}
