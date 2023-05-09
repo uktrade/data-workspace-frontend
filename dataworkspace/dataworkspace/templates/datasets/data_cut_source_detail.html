@@ -47,7 +47,7 @@
       <li class="govuk-breadcrumbs__list-item">{{ object.name }}
       </li>
       {% flag SECURITY_CLASSIFICATION_FLAG %}
-        <div style="float: right">
+        <div style="float: right" class="govuk-!-padding-right-1">
           {% if not object.dataset.government_security_classification %}
             <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
           {% else %}
@@ -68,8 +68,8 @@
       {% endflag %}
     </ol>
   </div>
-  <div class="govuk-!-padding-right-1 govuk-!-padding-left-1 govuk-!-padding-bottom-0">
-    <div class="govuk-grid-row govuk-!-padding-right-5">{% if object.dataset.enquiries_contact %}
+  <div class="govuk-!-padding-right-1 govuk-!-padding-left-1 govuk-!-padding-bottom-0 govuk-!-padding-top-1">
+    <div class="govuk-!-padding-right-1">{% if object.dataset.enquiries_contact %}
       <a class="govuk-link govuk-link--no-visited-state govuk-!-padding-left-2" style="float: right"
          href="mailto:{{ object.dataset.enquiries_contact.email }}?subject=Reporting an issue - {{ object.name }}">
         {% include "partials/report_an_issue_icon.html" %}</a>
@@ -80,7 +80,7 @@
       {{ object.name }}
     </h1>
     <div class="govuk-!-margin-top-4  govuk-!-padding-left-2 govuk-!-padding-top-2" style="border: 1px solid #b1b4b6; border-bottom: none; margin: 0; display: flex; flex-wrap: wrap">
-  <div class="govuk-button-group" style="order: 1; flex: 1 0 auto; margin-right: 10px">
+  <div class="govuk-button-group" style="order: 1; flex: 1 0 auto; margin-right: 10px; margin-bottom: 0">
     <p class="govuk-body govuk-!-font-weight-bold" id="data-grid-rowcount" style="margin-right: 15px"> Loading data... </p>
     {% flag CHART_BUILDER_BUILD_CHARTS_FLAG %}
       <button class="govuk-button" id="data-grid-create-chart">Create a chart</button>
@@ -107,7 +107,7 @@
   </div>
 </div>
 
-    <div id="data-grid" class="ag-theme-alpine"></div>
+    <div style="height: 500px; position: relative;" id="data-grid" class="ag-theme-alpine"></div>
   </div>
   {% csrf_token %}
 {% endblock %}
