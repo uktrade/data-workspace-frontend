@@ -176,7 +176,7 @@ sqlalchemy==1.4.39
     # via
     #   alembic
     #   mlflow
-sqlparse==0.4.2
+sqlparse==0.4.4
     # via mlflow
 tabulate==0.8.10
     # via databricks-cli
