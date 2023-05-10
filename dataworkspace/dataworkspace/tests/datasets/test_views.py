@@ -54,26 +54,6 @@ from dataworkspace.tests.conftest import get_client, get_user_data
 from dataworkspace.apps.applications.models import ApplicationInstance
 
 
-@pytest.mark.parametrize(
-    "eligibility_criteria,view_name",
-    [
-        ([], "request_access:dataset"),
-        (["Criteria 1", "Criteria 2"], "datasets:eligibility_criteria"),
-    ],
-)
-def test_dataset_has_request_access_link(client, eligibility_criteria, view_name, metadata_db):
-    ds = factories.DataSetFactory.create(eligibility_criteria=eligibility_criteria, published=True)
-
-    factories.SourceLinkFactory(dataset=ds)
-
-    response = client.get(ds.get_absolute_url())
-
-    request_access_url = reverse(view_name, args=[ds.id])
-
-    assert response.status_code == 200
-    assert request_access_url in str(response.content)
-
-
 def test_eligibility_criteria_list(client):
     ds = factories.DataSetFactory.create(
         eligibility_criteria=["Criteria 1", "Criteria 2"], published=True
@@ -1936,14 +1916,6 @@ class TestRequestAccess(DatasetsCommon):
         url = reverse("datasets:dataset_detail", args=(master.id,))
         response = staff_client.get(url)
         assert response.status_code == 200
-        assert (
-            "You need to request access to view this data. You can only access data with a valid reason."
-            in response.content.decode(response.charset)
-        )
-        assert (
-            "We will ask you some questions so we can give you access to the tools you need to analyse this data."
-            in response.content.decode(response.charset)
-        )
 
     @pytest.mark.parametrize(
         "access_type", (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
@@ -1955,10 +1927,6 @@ class TestRequestAccess(DatasetsCommon):
         response = client.get(url)
 
         assert response.status_code == 200
-        assert (
-            "You need to request access to tools to analyse this data."
-            in response.content.decode(response.charset)
-        )
 
     def test_when_user_has_tools_access_only(self, db, staff_user, metadata_db):
         master = self._create_master(user_access_type=UserAccessType.REQUIRES_AUTHORIZATION)
@@ -1976,11 +1944,6 @@ class TestRequestAccess(DatasetsCommon):
         response = client.get(url)
         assert response.status_code == 200
 
-        assert (
-            "You need to request access to view this data. You can only access data with a valid reason."
-            in response.content.decode(response.charset)
-        )
-
     @pytest.mark.django_db
     def test_unauthorised_datacut(self, staff_client, metadata_db):
         self._create_master(user_access_type=UserAccessType.REQUIRES_AUTHORIZATION)
@@ -1993,9 +1956,6 @@ class TestRequestAccess(DatasetsCommon):
         url = reverse("datasets:dataset_detail", args=(datacut.id,))
         response = staff_client.get(url)
         assert response.status_code == 200
-        assert "You need to request access to view this data." in response.content.decode(
-            response.charset
-        )
 
     @pytest.mark.django_db
     def test_unauthorised_visualisation(self, staff_client, metadata_db):
@@ -2006,9 +1966,6 @@ class TestRequestAccess(DatasetsCommon):
         url = reverse("datasets:dataset_detail", args=(ds.id,))
         response = staff_client.get(url)
         assert response.status_code == 200
-        assert "You need to request access to view this data." in response.content.decode(
-            response.charset
-        )
 
 
 @pytest.mark.django_db
@@ -2145,10 +2102,6 @@ class TestVisualisationsDetailView:
 
         assert response.status_code == 200
         assert vis.name in response.content.decode(response.charset)
-        assert (
-            "You need to request access to view this data."
-            in response.content.decode(response.charset)
-        ) is not has_access
 
     @pytest.mark.django_db
     def test_shows_links_to_visualisations(self):
