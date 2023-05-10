@@ -126,22 +126,34 @@
           {% flag SECURITY_CLASSIFICATION_FLAG %}
           <div class="govuk-grid-column-one-half" style="text-align: right;">
             <div class="govuk-breadcrumbs" style="margin-top: 13px;">
-              {% if not catalogue_item.government_security_classification %}
-                <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
-              {% else %}
-                {% if catalogue_item.get_government_security_classification_display == "OFFICIAL" %}
-                  <strong
-                    class="govuk-tag govuk-tag--blue">{{ catalogue_item.get_government_security_classification_display }}</strong>
-                {% else %}
-                  <strong
-                    class="govuk-tag govuk-tag--red">{{ catalogue_item.get_government_security_classification_display }}
-                    {% if catalogue_item.sensitivity.all %}
-                      {% for sensitivity in catalogue_item.sensitivity.all %}
-                        {% if not forloop.first %}and{% endif %}</span> {{ sensitivity }}
-                      {% endfor %}
-                    {% endif %} </strong>
-                {% endif %}
-              {% endif %}
+              <ol class="govuk-breadcrumbs__list">
+                  <li class="govuk-breadcrumbs__list-item">
+                    {% if not catalogue_item.government_security_classification %}
+                        <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
+                    {% else %}
+                      {% if catalogue_item.get_government_security_classification_display == "OFFICIAL" %}
+                        <strong
+                          class="govuk-tag govuk-tag--blue">{{ catalogue_item.get_government_security_classification_display }}</strong>
+                      {% else %}
+                        <strong
+                          class="govuk-tag govuk-tag--red">{{ catalogue_item.get_government_security_classification_display }}
+                          {% if catalogue_item.sensitivity.all %}
+                            {% for sensitivity in catalogue_item.sensitivity.all %}
+                              {% if not forloop.first %}and{% endif %}</span> {{ sensitivity }}
+                            {% endfor %}
+                          {% endif %} </strong>
+                      {% endif %}
+                    {% endif %}
+                  </li> 
+                  <li class="govuk-breadcrumbs__list-item">
+                      <a class="govuk-breadcrumbs__link" href="{{ catalogue_item.get_absolute_url }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="18" width="18"><defs></defs><title>share</title><circle cx="5.25" cy="11.25" r="3.75" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5px"></circle><circle cx="18.75" cy="6" r="3.75" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5px"></circle><circle cx="18.75" cy="18" r="3.75" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5px"></circle><line x1="8.746" y1="9.891" x2="15.254" y2="7.36" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5px"></line><line x1="8.605" y1="12.928" x2="15.395" y2="16.323" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5px"></line></svg>
+                        <img alt="Collections" src="{% static 'assets/images/share.svg' %}"/>
+                        Share   
+                      </a>
+                      
+                  </li> 
+              </ol>
             </div>
           </div>
         {% endflag %}
