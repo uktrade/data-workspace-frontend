@@ -9,6 +9,12 @@
         You need to request access to tools to analyse this data.
       {% endif %}
     </strong>
+      {% if type == 'master' and not has_tools_access %}
+          <p class="govuk-body govuk-!-margin-top-4">
+            We will ask you some questions so we can give you access to the tools you need to analyse this data.
+            <br>
+          </p>
+      {% endif %}
 
     <p class="govuk-body govuk-!-margin-top-4">
       We will respond to your access request within 5 working days.
