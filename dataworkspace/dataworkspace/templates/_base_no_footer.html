@@ -1,6 +1,6 @@
 {% load static core_filters waffle_tags %}
 <!DOCTYPE html>
-<html lang="en-GB" class="govuk-template" style="overflow: hidden; height: 100vh">
+<html lang="en-GB" class="govuk-template" style="overflow: hidden; height: 100%">
 
 <head>
   <meta charset="utf-8">
@@ -45,7 +45,7 @@
   {% block head %}{% endblock %}
 </head>
 
-<body id="body" class="govuk-template__body" style="height: 100vh">
+<body id="body" class="govuk-template__body" style="overflow: hidden; height: 100%">
   {% include 'partials/gtm_body.html' %}
 
   <script nonce="{{ request.csp_nonce }}">

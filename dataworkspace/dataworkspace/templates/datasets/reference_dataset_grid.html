@@ -103,7 +103,7 @@
     {{ model.get_data_last_updated_date|time_with_gmt_offset|default_if_none:"N/A" }}
   </div>
 </div>
-        <div id="data-grid" class="ag-theme-alpine" style="height: 100vh"></div>
+        <div id="data-grid" class="ag-theme-alpine" style="height: 70vh"></div>
     </div>
   {% endwith %}
   {% csrf_token %}
