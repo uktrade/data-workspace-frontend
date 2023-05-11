@@ -126,8 +126,8 @@
           <div class="govuk-grid-column-one-half" style="text-align: right;">
             <div class="govuk-breadcrumbs" style="">
               <ol class="govuk-breadcrumbs__list">
-                                      <span style="color: #1d70b8"><img style="margin-bottom: -4px" alt="Share" src="{% static 'assets/images/share.svg' %}"/>
-                      <a class="govuk-link govuk-!-padding-right-5 govuk-!-padding-left-1" id="shareDashboardPopUp">Share</a></span>
+                                      <span style="color: #1d70b8; font-size: 19px"><img style="margin-bottom: -5px; width: 24px" alt="Share" src="{% static 'assets/images/share.svg' %}"/>
+                      <a class="govuk-link govuk-!-padding-right-3 govuk-!-padding-left-1" id="shareDashboardPopUp">Share</a></span>
                   {% flag SECURITY_CLASSIFICATION_FLAG %}
                     {% if not catalogue_item.government_security_classification %}
                         <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
@@ -161,7 +161,7 @@
   <h2 class="govuk-heading-m">Share Dashboard</h2>
       <div class="govuk-form-group">
   <p class="govuk-body">Press the button below to copy the link to this dashboard.</p>
-  <textarea class="govuk-textarea" id="share-dashboard" name="share-dashboard" rows="3" aria-describedby="share-dashboard-hint" style="resize: none" disabled></textarea>
+  <textarea class="govuk-textarea" id="share-dashboard" name="share-dashboard" rows="3" aria-describedby="share-dashboard-hint" style="resize: none; user-select: all" readonly></textarea>
 </div>
   <button class="govuk-button" id="copy-to-clipboard" data-module="govuk-button">Copy to clipboard</button>
   <button class="govuk-button govuk-button--secondary" id="closePopUp" data-module="govuk-button">Close</button>
