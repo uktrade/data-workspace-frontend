@@ -1,13 +1,8 @@
-{% extends '_main.html' %}
+{% extends '_main_no_container.html' %}
 {% load static core_tags humanize waffle_tags datasets_tags %}
 
 {% block page_title %}View {{ object.name }} - {{ block.super }}{% endblock %}data-grid
-{% block go_back %}
-  <a class="govuk-back-link"
-     href="{% url "datasets:dataset_detail" dataset_uuid=object.dataset.id %}#{{ object.dataset.slug }}">
-    Back
-  </a>
-{% endblock %}
+
 {% block footer_scripts %}
   <script src="{% static 'ag-grid-community.min.js' %}"></script>
   <script src="{% static 'dayjs.min.js' %}"></script>
@@ -39,86 +34,79 @@
 
 {% endblock footer_scripts %}
 {% block content %}
-  <div class="govuk-grid-row">
-  {% flag SECURITY_CLASSIFICATION_FLAG %}
-    <div class="govuk-grid-column-full" style ="margin-bottom: 13px;">
-      {% if not object.dataset.government_security_classification %}
-        <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
-      {% else %}
-        {% if object.dataset.get_government_security_classification_display == "OFFICIAL" %}
-          <strong
-            class="govuk-tag govuk-tag--blue">{{ object.dataset.get_government_security_classification_display }}</strong>
-        {% else %}
-          <strong class="govuk-tag govuk-tag--red">{{ object.dataset.get_government_security_classification_display }}
-            {% if object.dataset.sensitivity.all %}
-              {% for sensitivity in object.dataset.sensitivity.all %}
-                {% if not forloop.first %}and{% endif %}</span> {{ sensitivity }}
-              {% endfor %}
-            {% endif %} </strong>
-        {% endif %}
-      {% endif %}
-    </div>
-  {% endflag %}
-    <div class="govuk-grid-column-full">
-      <h1 class="govuk-heading-xl">
-        {{ object.name }}
-      </h1>
-      <p class="govuk-body">Use this data grid to 
-        <a class="govuk-link" href="https://data-services-help.trade.gov.uk/data-workspace/how-to/start-using-data-workspace/filter-and-sort-data/">
-        filter, sort and download data
-      </a>. You can:
-      </p>
-      <ul class="govuk-list govuk-list--bullet">
-        <li>reorder columns by dragging and dropping them</li>
-        <li>remove columns you do not need by dragging them off the grid</li>
-        <li>filter rows by entering text into the box above each column</li>
-      </ul>
-      {# We only support data dictionaries for master and reference datasets currently #}
-      {# reference datagrid uses reference_dataset_grid.html btw   #}
-      {% if object.type == 1 %}
-      {% if object.dataset.dictionary_published or request.user|can_edit_dataset:object.dataset %}
-      <p class="govuk-body govuk-body-m">
-        To gain a better understanding of each of the columns you can view the 
-        <a href="{% url "datasets:data_dictionary" source_uuid=object.id %}?dataset_uuid={{object.dataset.id}}"
-        class="govuk-link">
-        Data dictionary
-        </a>
-      </p> 
-      {% endif %}
-      {% endif %}
-      <h2 class="govuk-heading-m govuk-!-margin-top-4">
-        Data preview
-      </h2>
-      <p class="govuk-body" id="data-grid-rowcount"> Loading data... </p>
-
-      <div id="data-grid" class="ag-theme-alpine"></div>
-      <div class="govuk-!-margin-top-4  govuk-button-group">
-        {% if object.data_grid_download_enabled %}
-          <button class="govuk-button" data-module="govuk-button" id="data-grid-download">
-            Download this data
-            {% if object.data_grid_download_limit %} 
-              (Max {{ object.data_grid_download_limit|intcomma }} rows)
+  <div class="govuk-breadcrumbs govuk-!-padding-left-2 govuk-!-padding-bottom-2"
+       style="border-bottom: 1px solid #b1b4b6">
+    <ol class="govuk-breadcrumbs__list">
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="">Home</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link"
+           href="{% url "datasets:dataset_detail" dataset_uuid=object.dataset.id %}#{{ object.dataset.slug }}">{{ object.dataset }}</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">{{ object.name }}
+      </li>
+      {% flag SECURITY_CLASSIFICATION_FLAG %}
+        <div style="float: right" class="govuk-!-padding-right-3">
+          {% if not object.dataset.government_security_classification %}
+            <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
+          {% else %}
+            {% if object.dataset.get_government_security_classification_display == "OFFICIAL" %}
+              <strong
+                class="govuk-tag govuk-tag--blue">{{ object.dataset.get_government_security_classification_display }}</strong>
+            {% else %}
+              <strong
+                class="govuk-tag govuk-tag--red">{{ object.dataset.get_government_security_classification_display }}
+                {% if object.dataset.sensitivity.all %}
+                  {% for sensitivity in object.dataset.sensitivity.all %}
+                    {% if not forloop.first %}and{% endif %}</span> {{ sensitivity }}
+                  {% endfor %}
+                {% endif %} </strong>
             {% endif %}
-          </button>
-          &nbsp;
-        {% endif %}
-        {% flag CHART_BUILDER_BUILD_CHARTS_FLAG %}
-          <button class="govuk-button" id="data-grid-create-chart">Create a chart</button>
-          &nbsp;
-        {% endflag %}
-        <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-filters">
-          Reset filters
-        </button>
-        &nbsp;
-        <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-columns">
-          Reset columns
-        </button>
-        {% if object.dataset.enquiries_contact %}
-          <a class="govuk-link govuk-link--no-visited-state govuk-!-padding-left-2"href="mailto:{{ object.dataset.enquiries_contact.email }}?subject=Reporting an issue - {{ object.name }}">
-            {% include "partials/report_an_issue_icon.html" %}</a>
-        {% endif %}
-      </div>
-    </div>
+          {% endif %}
+        </div>
+      {% endflag %}
+    </ol>
+  </div>
+  <div class="govuk-!-padding-right-1 govuk-!-padding-left-1 govuk-!-padding-bottom-0 govuk-!-padding-top-1">
+    {% if object.dataset.enquiries_contact %}
+      <a class="govuk-link govuk-link--no-visited-state govuk-!-padding-right-3" style="float: right"
+         href="mailto:{{ object.dataset.enquiries_contact.email }}?subject=Reporting an issue - {{ object.name }}">
+        {% include "partials/report_an_issue_icon.html" %}</a>
+    {% endif %}
+  <div class="govuk-!-padding-top-4 govuk-!-padding-left-2">
+    <span class="govuk-caption-xl">Data table ({{ object.schema }}.{{ object.table }})</span>
+    <h1 class="govuk-heading-xl">
+      {{ object.name }}
+    </h1>
+  </div>
+    <div class="govuk-!-margin-top-4  govuk-!-padding-left-2 govuk-!-padding-top-3" style="border: 1px solid #b1b4b6; border-bottom: none; margin: 0; display: flex; flex-wrap: wrap">
+  <div class="govuk-button-group" style="order: 1; flex: 1 0 auto; margin-right: 10px; margin-bottom: 0">
+    <p class="govuk-body govuk-!-font-weight-bold" id="data-grid-rowcount" style="margin-right: 15px"> Loading data... </p>
+    {% flag CHART_BUILDER_BUILD_CHARTS_FLAG %}
+      <button class="govuk-button" id="data-grid-create-chart">Create a chart</button>
+    {% endflag %}
+    <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-view"> Reset view </button>
+    {% if object.data_grid_download_enabled %}
+      <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-download"> Download this data </button>
+    {% endif %}
+    {# We only support data dictionaries for master and reference datasets currently #}
+    {# reference datagrid uses reference_dataset_grid.html btw   #}
+    {% if object.type == 1 %}
+      {% if object.dataset.dictionary_published or request.user|can_edit_dataset:object.dataset %}
+        <a href="{% url "datasets:data_dictionary" source_uuid=object.id %}?dataset_uuid={{ object.dataset.id }}" target="_blank" class="govuk-link govuk-!-margin-top-1"> Data dictionary </a>
+      {% endif %}
+    {% endif %}
+  </div>
+  <div style="order: 2; flex: 0 0 auto; margin-left: auto; margin-top: 10px; text-align: right" class="govuk-body govuk-!-padding-right-3">
+   <span class="govuk-!-font-weight-bold">
+          Data last updated:
+        </span>
+    {{ object.get_data_last_updated_date|gmt_date|default_if_none:"N/A" }} {{ object.get_data_last_updated_date|time_with_gmt_offset|default_if_none:"N/A" }}
+  </div>
+</div>
+
+    <div id="data-grid" class="ag-theme-alpine"></div>
   </div>
   {% csrf_token %}
 {% endblock %}
