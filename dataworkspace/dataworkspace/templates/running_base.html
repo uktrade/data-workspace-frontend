@@ -124,10 +124,10 @@
             </div>
           </div>
           <div class="govuk-grid-column-one-half" style="text-align: right;">
-            <div class="govuk-breadcrumbs" style="margin-top: 13px;">
+            <div class="govuk-breadcrumbs" style="">
               <ol class="govuk-breadcrumbs__list">
-                                      <img alt="Share" src="{% static 'assets/images/share.svg' %}"/>
-                      <a class="govuk-breadcrumbs__link govuk-!-padding-right-5" id="shareDashboardPopUp">Share</a>
+                                      <span style="color: #1d70b8"><img style="margin-bottom: -4px" alt="Share" src="{% static 'assets/images/share.svg' %}"/>
+                      <a class="govuk-link govuk-!-padding-right-5 govuk-!-padding-left-1" id="shareDashboardPopUp">Share</a></span>
                   {% flag SECURITY_CLASSIFICATION_FLAG %}
                     {% if not catalogue_item.government_security_classification %}
                         <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
