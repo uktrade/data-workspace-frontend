@@ -123,11 +123,12 @@
               </ol>
             </div>
           </div>
-          {% flag SECURITY_CLASSIFICATION_FLAG %}
           <div class="govuk-grid-column-one-half" style="text-align: right;">
             <div class="govuk-breadcrumbs" style="margin-top: 13px;">
               <ol class="govuk-breadcrumbs__list">
-                  <li class="govuk-breadcrumbs__list-item">
+                                      <img alt="Share" src="{% static 'assets/images/share.svg' %}"/>
+                      <a class="govuk-breadcrumbs__link govuk-!-padding-right-5" onclick="showShareDashboardPopUp()">Share</a>
+                  {% flag SECURITY_CLASSIFICATION_FLAG %}
                     {% if not catalogue_item.government_security_classification %}
                         <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
                     {% else %}
@@ -144,19 +145,10 @@
                           {% endif %} </strong>
                       {% endif %}
                     {% endif %}
-                  </li> 
-                  <li class="govuk-breadcrumbs__list-item">
-                      <a class="govuk-breadcrumbs__link" href="{{ catalogue_item.get_absolute_url }}">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="18" width="18"><defs></defs><title>share</title><circle cx="5.25" cy="11.25" r="3.75" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5px"></circle><circle cx="18.75" cy="6" r="3.75" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5px"></circle><circle cx="18.75" cy="18" r="3.75" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5px"></circle><line x1="8.746" y1="9.891" x2="15.254" y2="7.36" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5px"></line><line x1="8.605" y1="12.928" x2="15.395" y2="16.323" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5px"></line></svg>
-                        <img alt="Collections" src="{% static 'assets/images/share.svg' %}"/>
-                        Share   
-                      </a>
-                      
-                  </li> 
+                          {% endflag %}
               </ol>
             </div>
           </div>
-        {% endflag %}
         </div>
       </div>
     {% endif %}
@@ -164,7 +156,20 @@
       {% block visualisation %}
       {% endblock visualisation %}
     </div>
-    {% block javascript %}
-    {% endblock javascript %}
+    <div id="popup-container">
+    <div id="popup" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #fff; padding: 20px; width: 600px; height: 250px; z-index: 1000;">
+  <h2 class="govuk-heading-m">Share Dashboard</h2>
+      <div class="govuk-form-group">
+  <p class="govuk-body">Press the button below to copy the link to this dashboard.</p>
+  <textarea class="govuk-textarea" id="share-dashboard" name="share-dashboard" rows="3" aria-describedby="share-dashboard-hint"></textarea>
+</div>
+  <button class="govuk-button" id="copy-to-clipboard" onclick="copyToClipboard()" data-module="govuk-button">Copy to clipboard</button>
+  <button class="govuk-button govuk-button--secondary" id="close" onclick="hidePopup()" data-module="govuk-button">Close</button>
+</div>
+      <div id="popup-background" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 999"></div>
+    </div>
+    {% block footer_scripts %}
+      <script src="{% static 'js/visualisation-share-utils.js' %}"></script>
+    {% endblock footer_scripts %}
   </body>
 </html>
