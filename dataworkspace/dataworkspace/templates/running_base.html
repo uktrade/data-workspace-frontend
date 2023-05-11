@@ -127,7 +127,7 @@
             <div class="govuk-breadcrumbs" style="margin-top: 13px;">
               <ol class="govuk-breadcrumbs__list">
                                       <img alt="Share" src="{% static 'assets/images/share.svg' %}"/>
-                      <a class="govuk-breadcrumbs__link govuk-!-padding-right-5" onclick="showShareDashboardPopUp()">Share</a>
+                      <a class="govuk-breadcrumbs__link govuk-!-padding-right-5" id="shareDashboardPopUp">Share</a>
                   {% flag SECURITY_CLASSIFICATION_FLAG %}
                     {% if not catalogue_item.government_security_classification %}
                         <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
@@ -163,15 +163,15 @@
   <p class="govuk-body">Press the button below to copy the link to this dashboard.</p>
   <textarea class="govuk-textarea" id="share-dashboard" name="share-dashboard" rows="3" aria-describedby="share-dashboard-hint" style="resize: none" disabled></textarea>
 </div>
-  <button class="govuk-button" id="copy-to-clipboard" onclick="copyToClipboard()" data-module="govuk-button">Copy to clipboard</button>
-  <button class="govuk-button govuk-button--secondary" id="close" onclick="hidePopup()" data-module="govuk-button">Close</button>
+  <button class="govuk-button" id="copy-to-clipboard" data-module="govuk-button">Copy to clipboard</button>
+  <button class="govuk-button govuk-button--secondary" id="closePopUp" data-module="govuk-button">Close</button>
 </div>
       <div id="popup-background" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 999"></div>
     </div>
     {% block javascript %}
     {% endblock %}
     {% block footer_scripts %}
-      <script src="{% static 'js/visualisation-share-utils.js' %}"></script>
+      <script nonce="{{ request.csp_nonce }}" src="{% static 'js/visualisation-share-utils.js' %}"></script>
     {% endblock footer_scripts %}
   </body>
 </html>

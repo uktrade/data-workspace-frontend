@@ -1,39 +1,43 @@
-function showShareDashboardPopUp() {
-  document.getElementById("popup").style.display = "block";
-  document.getElementById("popup-background").style.display = "block";
-  document.getElementById("share-dashboard").value = window.location.href;
-}
+document.getElementById("shareDashboardPopUp").addEventListener("click", function () {
+    document.getElementById("popup").style.display = "block";
+    document.getElementById("popup-background").style.display = "block";
+    document.getElementById("share-dashboard").value = window.location.href;
+  }
+);
 
-function hidePopup() {
-  document.getElementById("popup").style.display = "none";
-  document.getElementById("popup-background").style.display = "none";
-}
+document.getElementById("closePopUp").addEventListener("click", function () {
+    document.getElementById("popup").style.display = "none";
+    document.getElementById("popup-background").style.display = "none";
+  }
+);
 
-function copyToClipboard() {
-  const textAreaInput = document.getElementById("share-dashboard").innerText;
-  const copyButton = document.getElementById("copy-to-clipboard")
+document.getElementById("copy-to-clipboard").addEventListener("click", function () {
+    const textAreaInput = document.getElementById("share-dashboard").innerText;
+    const copyButton = document.getElementById("copy-to-clipboard")
 
-  if (navigator.clipboard) {
+    if (navigator.clipboard) {
 
-  navigator.clipboard.writeText(textAreaInput)
-    .then(() => {
+      navigator.clipboard.writeText(textAreaInput)
+        .then(() => {
+          copyButton.innerText = "Link copied";
+          copyButton.classList.add("govuk-button--disabled")
+          copyButton.disabled = true;
+          console.log("Text copied to clipboard with navigator")
+        })
+        .catch((error) => {
+          console.error("Error copying text to clipboard:", error);
+        });
+    } else {
+      const textarea = document.createElement("textarea");
+      textarea.value = textAreaInput;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      console.log("Text copied to clipboard");
       copyButton.innerText = "Link copied";
       copyButton.classList.add("govuk-button--disabled")
       copyButton.disabled = true;
-    })
-    .catch((error) => {
-      console.error("Error copying text to clipboard:", error);
-    });
-} else {
-    const textarea = document.createElement("textarea");
-    textarea.value = textAreaInput;
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand("copy");
-    document.body.removeChild(textarea);
-    console.log("Text copied to clipboard");
-    copyButton.innerText = "Link copied";
-    copyButton.classList.add("govuk-button--disabled")
-    copyButton.disabled = true;
+    }
   }
-  }
+);
