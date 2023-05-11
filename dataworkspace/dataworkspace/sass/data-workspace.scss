@@ -295,7 +295,7 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
 
 #data-grid {
   width: 100%;
-  height: 560px;
+  height: calc(100vh - 350px)
 }
 
 .case-study-quote .quote-heading {

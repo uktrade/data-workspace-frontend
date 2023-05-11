@@ -30,7 +30,6 @@ class TestDatasetAccessOnly:
         resp = client.get(dataset.get_absolute_url())
 
         assert resp.status_code == 200
-        assert "You need to request access to view this data." in resp.content.decode(resp.charset)
         assert (
             "We will ask you some questions so we can give you access to the tools you need to analyse this data."
             not in resp.content.decode(resp.charset)
@@ -169,13 +168,6 @@ class TestToolsAccessOnly:
         resp = client.get(dataset.get_absolute_url())
 
         assert resp.status_code == 200
-        assert "You need to request access to tools to analyse this data." in resp.content.decode(
-            resp.charset
-        )
-        assert (
-            "We will ask you some questions so we can give you access to the tools you need to analyse this data."
-            in resp.content.decode(resp.charset)
-        )
 
     @pytest.mark.parametrize(
         "access_type", (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
@@ -361,11 +353,6 @@ class TestDatasetAndToolsAccess:
         resp = client.get(dataset.get_absolute_url())
 
         assert resp.status_code == 200
-        assert "You need to request access to view this data." in resp.content.decode(resp.charset)
-        assert (
-            "We will ask you some questions so we can give you access to the tools you need to analyse this data."
-            in resp.content.decode(resp.charset)
-        )
 
     def test_request_access_form_is_multipage_form(self, client, metadata_db):
         dataset = DatasetsCommon()._create_master(

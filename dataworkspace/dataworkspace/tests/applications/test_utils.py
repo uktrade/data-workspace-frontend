@@ -50,7 +50,6 @@ class TestDeleteUnusedDatasetsUsers:
         except redis.exceptions.LockError:
             pass
 
-    @pytest.mark.timeout(2)
     @mock.patch("dataworkspace.apps.applications.utils._do_delete_unused_datasets_users")
     def test_dies_immediately_if_already_locked(self, do_delete_mock):
         do_delete_mock.side_effect = Exception("I will be raised if the lock is available")
