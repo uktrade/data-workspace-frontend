@@ -11,14 +11,29 @@ function hidePopup() {
 
 function copyToClipboard() {
   const textAreaInput = document.getElementById("share-dashboard").innerText;
+  const copyButton = document.getElementById("copy-to-clipboard")
+
+  if (navigator.clipboard) {
 
   navigator.clipboard.writeText(textAreaInput)
     .then(() => {
-      this.value = "Link copied";
-      this.classList.add("govuk-button--disabled")
-      this.disabled = true;
+      copyButton.innerText = "Link copied";
+      copyButton.classList.add("govuk-button--disabled")
+      copyButton.disabled = true;
     })
     .catch((error) => {
       console.error("Error copying text to clipboard:", error);
     });
-}
+} else {
+    const textarea = document.createElement("textarea");
+    textarea.value = textAreaInput;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textarea);
+    console.log("Text copied to clipboard");
+    copyButton.innerText = "Link copied";
+    copyButton.classList.add("govuk-button--disabled")
+    copyButton.disabled = true;
+  }
+  }
