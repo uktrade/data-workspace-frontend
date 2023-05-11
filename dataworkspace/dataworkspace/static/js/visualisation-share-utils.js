@@ -12,7 +12,7 @@ document.getElementById("closePopUp").addEventListener("click", function () {
 );
 
 document.getElementById("copy-to-clipboard").addEventListener("click", function () {
-    const textAreaInput = document.getElementById("share-dashboard").innerText;
+    const textAreaInput = document.getElementById("share-dashboard").value;
     const copyButton = document.getElementById("copy-to-clipboard")
 
     if (navigator.clipboard) {
