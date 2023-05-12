@@ -181,7 +181,7 @@ class AppUserEditForm(forms.ModelForm):
         ].queryset = VisualisationCatalogueItem.objects.live().order_by("name", "id")
 
 
-admin.site.unregister(django_get_user_model())
+# admin.site.unregister(django_get_user_model())
 
 
 class LocalToolsFilter(admin.SimpleListFilter):

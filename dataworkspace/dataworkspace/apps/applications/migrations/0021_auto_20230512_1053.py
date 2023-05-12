@@ -12,24 +12,18 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterField(
-            model_name="applicationinstance",
-            name="owner",
-            field=models.ForeignKey(
-                on_delete=django.db.models.deletion.PROTECT, to="core.dataworkspaceuser"
-            ),
+            model_name='applicationinstance',
+            name='owner',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='core.dataworkspaceuser'),
         ),
         migrations.AlterField(
-            model_name="usertoolconfiguration",
-            name="user",
-            field=models.ForeignKey(
-                on_delete=django.db.models.deletion.PROTECT, to="core.dataworkspaceuser"
-            ),
+            model_name='usertoolconfiguration',
+            name='user',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='core.dataworkspaceuser'),
         ),
         migrations.AlterField(
-            model_name="visualisationapproval",
-            name="approver",
-            field=models.ForeignKey(
-                on_delete=django.db.models.deletion.PROTECT, to="core.dataworkspaceuser"
-            ),
+            model_name='visualisationapproval',
+            name='approver',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='core.dataworkspaceuser'),
         ),
     ]

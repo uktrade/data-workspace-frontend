@@ -1,3 +1,5 @@
+from django.contrib.auth.admin import UserAdmin
+
 from dataworkspace.apps.api_v1.core.views import remove_superset_user_cached_credentials
 from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.explorer.schema import clear_schema_info_cache_for_user
