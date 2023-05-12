@@ -15,6 +15,7 @@ from dataworkspace.apps.applications.models import (
     ApplicationInstance,
     UserToolConfiguration,
 )
+from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import Pipeline
 from dataworkspace.tests import factories

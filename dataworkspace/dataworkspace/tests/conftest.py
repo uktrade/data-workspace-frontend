@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib.auth.models import Group
 from django.test import Client, TestCase, override_settings
 
+from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.tests import factories
 
