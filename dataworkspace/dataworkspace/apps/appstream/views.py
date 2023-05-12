@@ -1,7 +1,6 @@
 import logging
 import gevent
 
-from django.conf import settings
 from django.contrib import messages
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
@@ -15,12 +14,13 @@ from dataworkspace.apps.appstream.utils import (
     restart_fleet,
 )
 from dataworkspace.apps.appstream.forms import AppstreamAdminForm
+from dataworkspace.apps.core.models import get_user_model
 
 logger = logging.getLogger("app")
 
 
 def appstream_view(request):
-    User = settings.AUTH_USER_MODEL
+    User = get_user_model()
     fleet_status = get_fleet_status()
 
     for item in fleet_status["Fleets"]:

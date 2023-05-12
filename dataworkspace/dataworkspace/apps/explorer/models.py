@@ -8,6 +8,7 @@ from django.db import models
 from django.urls import reverse
 from dynamic_models.models import AbstractFieldSchema, AbstractModelSchema  # noqa: I202
 
+from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.explorer.constants import (
     QueryLogState,
 )
@@ -53,7 +54,7 @@ class PlaygroundSQL(models.Model):
     sql = models.TextField()
     created_at = models.DateTimeField(auto_now=True)
     created_by_user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, null=False, blank=False, on_delete=models.CASCADE
+        get_user_model(), null=False, blank=False, on_delete=models.CASCADE
     )
 
     def get_absolute_url(self):
@@ -65,7 +66,7 @@ class Query(models.Model):
     sql = models.TextField()
     description = models.TextField(null=True, blank=True)
     created_by_user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE
+        get_user_model(), null=True, blank=True, on_delete=models.CASCADE
     )
     created_at = models.DateTimeField(auto_now_add=True)
     last_run_date = models.DateTimeField(auto_now=True)
@@ -125,7 +126,7 @@ class QueryLog(models.Model):
     sql = models.TextField(null=True, blank=True)
     query = models.ForeignKey(Query, null=True, blank=True, on_delete=models.SET_NULL)
     run_by_user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE
+        get_user_model(), null=True, blank=True, on_delete=models.CASCADE
     )
     run_at = models.DateTimeField(auto_now_add=True)
     duration = models.FloatField(blank=True, null=True)  # milliseconds
