@@ -50,7 +50,8 @@ class AppUserCreationForm(forms.ModelForm):
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.username = user.email
+        if user.profile.sso_id:
+            user.username = user.profile.sso_id
         user.set_unusable_password()
         if commit:
             user.save()
@@ -178,9 +179,6 @@ class AppUserEditForm(forms.ModelForm):
         ].queryset = VisualisationCatalogueItem.objects.live().order_by("name", "id")
 
 
-# admin.site.unregister(django_get_user_model())
-
-
 class LocalToolsFilter(admin.SimpleListFilter):
     title = "Local tool access"
     parameter_name = "can_start_tools"
@@ -306,7 +304,7 @@ class AppUserAdmin(UserAdmin):
 
     @transaction.atomic
     def save_model(self, request, obj, form, change):
-        obj.username = form.cleaned_data["email"]
+        obj.username = form.cleaned_data["sso_id"]
 
         def log_change(event_type, permission, message):
             log_permission_change(

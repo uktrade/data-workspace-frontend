@@ -1,3 +1,5 @@
+import uuid
+
 import psycopg2
 import pytest
 
@@ -15,7 +17,7 @@ from dataworkspace.cel import celery_app
 @pytest.fixture
 def staff_user(db):
     staff_user = get_user_model().objects.create(
-        username="bob.testerson@test.com",
+        username=uuid.uuid4(),
         email="bob.testerson@test.com",
         is_staff=True,
         is_superuser=True,
@@ -54,7 +56,7 @@ def staff_client(staff_user_data):
 @pytest.fixture
 def user(db):
     user = get_user_model().objects.create(
-        username="frank.exampleson@test.com",
+        username=uuid.uuid4(),
         is_staff=False,
         is_superuser=False,
         email="frank.exampleson@test.com",
@@ -85,7 +87,7 @@ def client(user_data):
 def sme_user(db):
     sme_group = Group.objects.get(name="Subject Matter Experts")
     user = get_user_model().objects.create(
-        username="jane.sampledóttir@test.com",
+        username=uuid.uuid4(),
         email="jane.sampledóttir@test.com",
         is_staff=True,
         is_superuser=False,
@@ -118,7 +120,7 @@ def sme_client(sme_user, sme_user_data):
 @pytest.fixture
 def other_user(db):
     return get_user_model().objects.create(
-        username="other@test.com",
+        username=uuid.uuid4(),
         email="other@test.com",
         is_staff=True,
         is_superuser=False,
