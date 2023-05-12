@@ -2,10 +2,10 @@ import logging
 from datetime import datetime
 
 from django.contrib.auth.backends import ModelBackend
-from django.contrib.auth import get_user_model
 from sentry_sdk import set_user
 
 from dataworkspace.apps.applications.utils import create_user_from_sso
+from dataworkspace.apps.core.models import get_user_model
 
 logger = logging.getLogger("app")
 

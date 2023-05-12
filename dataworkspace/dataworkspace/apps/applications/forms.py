@@ -1,4 +1,3 @@
-from django.contrib.auth import get_user_model
 from django.contrib.postgres.forms import SplitArrayField, SplitArrayWidget
 from django.core.exceptions import ValidationError
 from django.forms import (
@@ -8,6 +7,7 @@ from django.forms import (
 )
 
 from dataworkspace.apps.applications.models import VisualisationApproval
+from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
 from dataworkspace.forms import (

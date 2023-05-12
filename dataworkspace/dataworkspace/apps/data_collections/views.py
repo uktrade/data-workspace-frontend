@@ -1,7 +1,6 @@
 import logging
 
 from csp.decorators import csp_update
-from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction, IntegrityError
 from django.db.models import Prefetch, Q

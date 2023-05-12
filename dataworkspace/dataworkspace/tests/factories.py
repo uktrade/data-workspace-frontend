@@ -5,9 +5,9 @@ from freezegun import freeze_time
 
 import factory.fuzzy
 
-from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 
+from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.datasets.constants import DataSetType, TagType
 from dataworkspace.apps.eventlog.models import EventLog
 

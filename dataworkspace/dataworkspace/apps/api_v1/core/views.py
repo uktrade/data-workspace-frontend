@@ -2,13 +2,13 @@ from datetime import timedelta
 from urllib.parse import urlparse
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.http import HttpResponse, JsonResponse
 from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
 
+from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.api_v1.core.serializers import (
     UserSatisfactionSurveySerializer,
     NewsletterSubscriptionSerializer,

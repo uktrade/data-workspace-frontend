@@ -12,7 +12,6 @@ import psycopg2
 import pytest
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -23,6 +22,7 @@ from freezegun import freeze_time
 from lxml import html
 from waffle.testutils import override_flag
 
+from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.core.charts.models import ChartBuilderChart
 from dataworkspace.apps.core.storage import ClamAVResponse
 from dataworkspace.apps.core.utils import database_dsn

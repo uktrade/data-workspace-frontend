@@ -7,7 +7,6 @@ import string
 
 import botocore
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
@@ -27,6 +26,7 @@ from dataworkspace.apps.applications.utils import (
     long_running_query_alert,
     sync_quicksight_permissions,
 )
+from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import ToolQueryAuditLog, ToolQueryAuditLogTable
 from dataworkspace.tests import factories

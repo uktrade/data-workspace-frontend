@@ -1,12 +1,12 @@
 import uuid
 
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.test import TransactionTestCase, TestCase
 from django.urls import reverse
 
 from dataworkspace.apps.applications.models import ApplicationInstance
+from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.datasets.models import ReferenceDataset
 
 

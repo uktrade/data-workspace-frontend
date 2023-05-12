@@ -700,8 +700,7 @@ async def add_user_to_team(user_sso_id: str, team_name: str):
     python_code = textwrap.dedent(
         f"""\
 
-        from django.contrib.auth import get_user_model
-        from dataworkspace.apps.core.models import Team, TeamMembership
+        from dataworkspace.apps.core.models import Team, TeamMembership, get_user_model
 
         User = get_user_model()
 
@@ -1110,7 +1109,7 @@ async def add_user_to_mlflow_instance(user_sso_id: str, instance_name: str):
     python_code = textwrap.dedent(
         f"""\
 
-        from django.contrib.auth import get_user_model
+        from dataworkspace.apps.core.utils import get_user_model
         from dataworkspace.apps.core.models import MLFlowInstance, MLFlowAuthorisedUser
 
         User = get_user_model()

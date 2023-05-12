@@ -30,7 +30,6 @@ from django.db import (
     ProgrammingError,
 )
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
@@ -61,6 +60,7 @@ from dataworkspace.apps.applications.models import (
     ApplicationTemplate,
     VisualisationTemplate,
 )
+from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.datasets.constants import (
     DataSetType,
     DataLinkType,

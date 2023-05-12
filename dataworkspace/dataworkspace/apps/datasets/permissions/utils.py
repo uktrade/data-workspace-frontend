@@ -1,10 +1,9 @@
-from django.contrib.auth import get_user_model
-
 from dataworkspace.apps.api_v1.core.views import (
     invalidate_superset_user_cached_credentials,
     remove_superset_user_cached_credentials,
 )
 from dataworkspace.apps.applications.utils import sync_quicksight_permissions
+from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.datasets.models import DataSetUserPermission, VisualisationUserPermission
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_permission_change

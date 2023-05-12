@@ -20,7 +20,6 @@ from urllib.parse import unquote
 import boto3
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.db import connections, connection
 from django.db.models import Q
@@ -37,7 +36,6 @@ import requests
 from tableschema import Schema
 import redis
 
-
 from dataworkspace.apps.core.boto3_client import get_s3_client, get_iam_client
 from dataworkspace.apps.core.constants import (
     DATA_FLOW_TASK_ERROR_MAP,
@@ -45,7 +43,7 @@ from dataworkspace.apps.core.constants import (
     SCHEMA_POSTGRES_DATA_TYPE_MAP,
     TABLESCHEMA_FIELD_TYPE_MAP,
 )
-from dataworkspace.apps.core.models import DatabaseUser, Team, TeamMembership
+from dataworkspace.apps.core.models import DatabaseUser, Team, TeamMembership, get_user_model
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import (
     DataSet,
@@ -106,7 +104,7 @@ def new_private_database_credentials(
     db_role_and_schema_suffix,
     source_tables,
     db_user,
-    dw_user: get_user_model(),
+    dw_user,
     valid_for: datetime.timedelta,
     force_create_for_databases: Tuple[str] = tuple(),
 ):

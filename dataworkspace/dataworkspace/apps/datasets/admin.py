@@ -12,7 +12,6 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib import messages
 from django.contrib.admin.options import BaseModelAdmin
-from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.forms import formset_factory
 from django.http import HttpResponse
@@ -28,6 +27,7 @@ from dataworkspace.apps.core.admin import (
     DeletableTimeStampedUserTabularInline,
     CSPRichTextEditorMixin,
 )
+from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.datasets.constants import TagType
 from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
