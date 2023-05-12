@@ -12,7 +12,7 @@ from dataworkspace.apps.datasets.models import ReferenceDataset
 
 class BaseTestCaseMixin:
     def setUp(self):
-        username = "bob.testerson@test.com"
+        username = uuid.uuid4()
         self.user = get_user_model().objects.create(
             username=username, is_staff=True, is_superuser=True, email=username
         )

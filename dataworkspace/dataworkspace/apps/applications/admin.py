@@ -228,7 +228,7 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
                 | Q(is_superuser=True)
             )
             .distinct()
-            .order_by("username")
+            .order_by("email")
         )
 
         try:

@@ -78,6 +78,7 @@ class ChartBuilderChart(TimeStampedUserModel):
         ordering = ("-created_date",)
 
     def __str__(self):
+        # pylint: disable=no-member
         return f"{self.title} ({self.created_by.get_full_name()})"
 
     def get_temp_table_name(self):

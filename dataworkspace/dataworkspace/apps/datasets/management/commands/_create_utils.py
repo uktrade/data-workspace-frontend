@@ -49,7 +49,7 @@ class TestData:
 
         email = self.fake.ascii_safe_email()
         user = model.objects.create(
-            username=email,
+            username=self.fake.uuid4(),
             is_staff=False,
             is_superuser=False,
             email=email,

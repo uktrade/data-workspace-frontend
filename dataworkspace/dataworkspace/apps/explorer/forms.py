@@ -21,7 +21,7 @@ class SqlField(Field):
         query = value.strip()
         try:
             # parse nodes are callable, to serialize it into dictionaries
-            sql = parser.parse_sql(query)[0]()
+            sql = parser.parse_sql(query)[0]()  # pylint: disable=c-extension-no-member
         except IndexError as ex:
             raise ValidationError(
                 "Enter a SQL statement starting with SELECT, WITH or EXPLAIN",
