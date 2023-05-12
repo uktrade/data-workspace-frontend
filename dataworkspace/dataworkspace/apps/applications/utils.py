@@ -14,7 +14,6 @@ import waffle
 from botocore.config import Config
 from botocore.exceptions import ClientError
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.db import IntegrityError, connections
@@ -26,6 +25,7 @@ from mohawk import Sender
 from pytz import utc
 import redis
 
+from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.applications.spawner import (
     get_spawner,
     stop,

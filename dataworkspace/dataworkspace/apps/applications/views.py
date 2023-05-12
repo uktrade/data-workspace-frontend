@@ -15,7 +15,6 @@ from csp.decorators import csp_exempt, csp_update
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin.models import LogEntry, CHANGE
-from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core import serializers
@@ -33,6 +32,7 @@ from dataworkspace.apps.datasets.models import Pipeline
 from dataworkspace.apps.core.utils import USER_SCHEMA_STEM
 from dataworkspace.apps.core.utils import db_role_schema_suffix_for_app
 
+from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.api_v1.views import (
     get_api_visible_application_instance_by_public_host,
 )

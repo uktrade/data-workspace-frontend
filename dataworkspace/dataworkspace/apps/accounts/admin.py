@@ -6,13 +6,12 @@ from django.contrib.admin.widgets import (
     AdminTextInputWidget,
     FilteredSelectMultiple,
 )
-from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core import serializers
 from django.db import transaction
-
+from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.accounts.utils import (
     SSOApiException,
     add_user_access_profile,
@@ -179,7 +178,7 @@ class AppUserEditForm(forms.ModelForm):
         ].queryset = VisualisationCatalogueItem.objects.live().order_by("name", "id")
 
 
-admin.site.unregister(get_user_model())
+# admin.site.unregister(django_get_user_model())
 
 
 class LocalToolsFilter(admin.SimpleListFilter):

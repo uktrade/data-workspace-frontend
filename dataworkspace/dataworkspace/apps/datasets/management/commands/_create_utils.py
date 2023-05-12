@@ -2,10 +2,10 @@ import uuid
 import datetime
 import random
 
-from django.contrib.auth import get_user_model
 from django.utils.text import slugify
 from faker import Faker  # noqa
 
+from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.datasets.constants import DataSetType, TagType
 from dataworkspace.apps.datasets.models import (
     MasterDataset,

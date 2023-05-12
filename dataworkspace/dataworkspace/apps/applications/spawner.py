@@ -14,8 +14,8 @@ from botocore.exceptions import ClientError
 import gevent
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
 
+from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.cel import celery_app
 from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.applications.models import (

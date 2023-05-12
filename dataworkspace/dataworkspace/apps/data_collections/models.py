@@ -1,12 +1,12 @@
 import uuid
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.db import models, transaction
 from django.db.models import Q
 from django.urls import reverse
 
 from dataworkspace.apps.core.models import DeletableTimestampedUserModel, RichTextField
+from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.datasets.models import DataSet, VisualisationCatalogueItem
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event

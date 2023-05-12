@@ -3,11 +3,11 @@ from urllib.parse import urlencode
 import pytest
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.test import Client, override_settings
 from django.urls import reverse
 from waffle.testutils import override_flag
 
+from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.finder.models import DatasetFinderQueryLog
 from dataworkspace.tests import factories
