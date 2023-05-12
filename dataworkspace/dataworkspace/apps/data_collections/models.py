@@ -1,6 +1,5 @@
 import uuid
 
-from django.conf import settings
 from django.db import models, transaction
 from django.db.models import Q
 from django.urls import reverse
@@ -16,9 +15,7 @@ class Collection(DeletableTimestampedUserModel):
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
     name = models.CharField(blank=False, null=False, max_length=128)
     description = models.TextField(null=True, blank=True)
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
-    )
+    owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=True, blank=True)
     datasets = models.ManyToManyField(DataSet, through="CollectionDatasetMembership")
     visualisation_catalogue_items = models.ManyToManyField(
         VisualisationCatalogueItem,
