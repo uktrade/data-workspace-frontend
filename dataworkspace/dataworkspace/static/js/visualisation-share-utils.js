@@ -1,7 +1,6 @@
 document.getElementById("shareDashboardPopUp").addEventListener("click", function () {
     document.getElementById("popup").style.display = "block";
     document.getElementById("popup-background").style.display = "block";
-    document.getElementById("share-dashboard").value = window.location.href;
   }
 );
 

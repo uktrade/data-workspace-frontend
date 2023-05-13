@@ -123,32 +123,32 @@
               </ol>
             </div>
           </div>
-          <div class="govuk-grid-column-one-half" style="text-align: right;">
-            <div class="govuk-breadcrumbs" style="">
-              <ol class="govuk-breadcrumbs__list">
-                                      <span style="color: #1d70b8; font-size: 19px"><img style="margin-bottom: -5px; width: 24px" alt="Share" src="{% static 'assets/images/share.svg' %}"/>
-                      <a class="govuk-link govuk-!-padding-right-3 govuk-!-padding-left-1" id="shareDashboardPopUp">Share</a></span>
-                  {% flag SECURITY_CLASSIFICATION_FLAG %}
-                    {% if not catalogue_item.government_security_classification %}
-                        <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
-                    {% else %}
-                      {% if catalogue_item.get_government_security_classification_display == "OFFICIAL" %}
-                        <strong
-                          class="govuk-tag govuk-tag--blue">{{ catalogue_item.get_government_security_classification_display }}</strong>
-                      {% else %}
-                        <strong
-                          class="govuk-tag govuk-tag--red">{{ catalogue_item.get_government_security_classification_display }}
-                          {% if catalogue_item.sensitivity.all %}
-                            {% for sensitivity in catalogue_item.sensitivity.all %}
-                              {% if not forloop.first %}and{% endif %}</span> {{ sensitivity }}
-                            {% endfor %}
-                          {% endif %} </strong>
-                      {% endif %}
-                    {% endif %}
-                          {% endflag %}
-              </ol>
+
+            <div class="govuk-grid-column-one-half govuk-!-text-align-right govuk-!-margin-top-3 govuk-!-padding-right-8">
+              
+                <a href="#" style = 'font-size: 18px' class="govuk-link govuk-!-padding-right-3 govuk-!-padding-left-1 govuk-link--no-visited-state" id="shareDashboardPopUp">
+                <img style="margin-bottom: -5px; width: 24px ; margin-right: 5px" alt="Share" src="{% static 'assets/images/share.svg' %}"/>Share</a>
+            {% flag SECURITY_CLASSIFICATION_FLAG %}
+              {% if not catalogue_item.government_security_classification %}
+                  <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
+              {% else %}
+                {% if catalogue_item.get_government_security_classification_display == "OFFICIAL" %}
+                  <strong
+                    class="govuk-tag govuk-tag--blue">{{ catalogue_item.get_government_security_classification_display }}</strong>
+                {% else %}
+                  <strong
+                    class="govuk-tag govuk-tag--red">{{ catalogue_item.get_government_security_classification_display }}
+                    {% if catalogue_item.sensitivity.all %}
+                      {% for sensitivity in catalogue_item.sensitivity.all %}
+                        {% if not forloop.first %}and{% endif %}</span> {{ sensitivity }}
+                      {% endfor %}
+                    {% endif %} </strong>
+                {% endif %}
+              {% endif %}
+                    {% endflag %}
+    
             </div>
-          </div>
+          
         </div>
       </div>
     {% endif %}
@@ -161,7 +161,7 @@
   <h2 class="govuk-heading-m">Share Dashboard</h2>
       <div class="govuk-form-group">
   <p class="govuk-body">Press the button below to copy the link to this dashboard.</p>
-  <textarea class="govuk-textarea" id="share-dashboard" name="share-dashboard" rows="3" aria-describedby="share-dashboard-hint" style="resize: none; user-select: all" readonly></textarea>
+  <textarea class="govuk-textarea" id="share-dashboard" name="share-dashboard" rows="3" aria-describedby="share-dashboard-hint" style="resize: none; user-select: all" readonly>{{ catalogue_item.get_absolute_url }}</textarea>
 </div>
   <button class="govuk-button" id="copy-to-clipboard" data-module="govuk-button">Copy to clipboard</button>
   <button class="govuk-button govuk-button--secondary" id="closePopUp" data-module="govuk-button">Close</button>
