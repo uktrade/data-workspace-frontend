@@ -988,9 +988,9 @@ def create_user_from_sso(
 ):
     user_model = get_user_model()
     try:
-        user = user_model.objects.get(profile__sso_id=sso_id)
+        user = user_model.objects.get(username=sso_id)
     except user_model.DoesNotExist:
-        user = user_model.objects.create_user(
+        user = user_model.objects.create(
             username=sso_id,
             email=primary_email,
             first_name=first_name,
@@ -1003,7 +1003,7 @@ def create_user_from_sso(
         user.save()
     except IntegrityError:
         # A concurrent request may have overtaken this one and created a user
-        user = user_model.objects.get(profile__sso_id=sso_id)
+        user = user_model.objects.get(username=sso_id)
         _check_tools_access(user)
     else:
         if check_tools_access_if_user_exists:

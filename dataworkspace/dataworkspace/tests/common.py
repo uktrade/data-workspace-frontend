@@ -31,7 +31,7 @@ class BaseTestCaseMixin:
             "HTTP_SSO_PROFILE_EMAIL": self.user.email,
             "HTTP_SSO_PROFILE_CONTACT_EMAIL": self.user.email,
             "HTTP_SSO_PROFILE_RELATED_EMAILS": "",
-            "HTTP_SSO_PROFILE_USER_ID": "aae8901a-082f-4f12-8c6c-fdf4aeba2d68",
+            "HTTP_SSO_PROFILE_USER_ID": username,
             "HTTP_SSO_PROFILE_LAST_NAME": "Bob",
             "HTTP_SSO_PROFILE_FIRST_NAME": "Testerson",
         }
@@ -108,7 +108,7 @@ def get_http_sso_data(user):
         "HTTP_SSO_PROFILE_EMAIL": user.email,
         "HTTP_SSO_PROFILE_CONTACT_EMAIL": user.email,
         "HTTP_SSO_PROFILE_RELATED_EMAILS": "",
-        "HTTP_SSO_PROFILE_USER_ID": user.profile.sso_id,
+        "HTTP_SSO_PROFILE_USER_ID": user.username,
         "HTTP_SSO_PROFILE_LAST_NAME": user.last_name,
         "HTTP_SSO_PROFILE_FIRST_NAME": user.first_name,
     }

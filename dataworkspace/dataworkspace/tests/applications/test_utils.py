@@ -647,51 +647,13 @@ class TestSyncActivityStreamSSOUsers:
     @override_settings(
         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
     )
-    def test_sync_updates_existing_users_sso_id(self, mock_hawk_request):
-        user = UserFactory.create(email="john.smith@trade.gov.uk")
-        # set the sso id to something different to what the activity stream
-        # will return to test that it gets updated
-        user.profile.sso_id = "00000000-0000-0000-0000-111111111111"
-        user.save()
-
-        with open(
-            os.path.join(
-                os.path.dirname(__file__),
-                "test_fixture_activity_stream_sso_john_smith.json",
-            ),
-            "r",
-        ) as file:
-            user_john_smith = (200, file.read())
-
-        with open(
-            os.path.join(
-                os.path.dirname(__file__),
-                "test_fixture_activity_stream_sso_empty.json",
-            ),
-            "r",
-        ) as file:
-            empty_result = (200, file.read())
-
-        mock_hawk_request.side_effect = [user_john_smith, empty_result]
-
-        _do_sync_activity_stream_sso_users()
-
-        User = get_user_model()
-        all_users = User.objects.all()
-
-        assert len(all_users) == 1
-        assert str(all_users[0].profile.sso_id) == "00000000-0000-0000-0000-000000000000"
-
-    @pytest.mark.django_db
-    @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
-    @override_settings(
-        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
-    )
     def test_sync_updates_existing_users_email(self, mock_hawk_request):
         # set the email to something different to what the activity stream
         # will return to test that it gets updated
-        user = UserFactory.create(email="john.smith@gmail.com")
-        user.profile.sso_id = "00000000-0000-0000-0000-000000000000"
+        user = UserFactory.create(
+            username="00000000-0000-0000-0000-000000000000", email="john.smith@gmail.com"
+        )
+        user.profile.sso_id = user.username
         user.save()
 
         with open(
@@ -723,49 +685,6 @@ class TestSyncActivityStreamSSOUsers:
         assert str(all_users[0].email) == "john.smith@trade.gov.uk"
 
     @pytest.mark.django_db
-    @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
-    @override_settings(
-        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
-    )
-    def test_sync_updates_existing_users_sso_id_and_email(self, mock_hawk_request):
-        # set the sso id to something different to what the activity stream
-        # will return and set the email to the third email in the list that
-        # the activity stream will return to test that it is able to look up
-        # the user and update both their email and sso id
-        user = UserFactory.create(email="john@trade.gov.uk")
-        user.profile.sso_id = "00000000-0000-0000-0000-111111111111"
-        user.save()
-
-        with open(
-            os.path.join(
-                os.path.dirname(__file__),
-                "test_fixture_activity_stream_sso_john_smith_multiple_emails.json",
-            ),
-            "r",
-        ) as file:
-            user_john_smith = (200, file.read())
-
-        with open(
-            os.path.join(
-                os.path.dirname(__file__),
-                "test_fixture_activity_stream_sso_empty.json",
-            ),
-            "r",
-        ) as file:
-            empty_result = (200, file.read())
-
-        mock_hawk_request.side_effect = [user_john_smith, empty_result]
-
-        _do_sync_activity_stream_sso_users()
-
-        User = get_user_model()
-        all_users = User.objects.all()
-
-        assert len(all_users) == 1
-        assert str(all_users[0].profile.sso_id) == "00000000-0000-0000-0000-000000000000"
-        assert str(all_users[0].email) == "john.smith@digital.trade.gov.uk"
-
-    @pytest.mark.django_db
     @mock.patch("dataworkspace.apps.applications.utils.create_tools_access_iam_role_task")
     @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
     @override_settings(
@@ -778,8 +697,10 @@ class TestSyncActivityStreamSSOUsers:
             codename="start_all_applications",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
-        user = UserFactory.create(email="john.smith@trade.gov.uk")
-        user.profile.sso_id = "00000000-0000-0000-0000-000000000000"
+        user = UserFactory.create(
+            username="00000000-0000-0000-0000-000000000000", email="john.smith@trade.gov.uk"
+        )
+        user.profile.sso_id = user.username
         user.save()
         user.user_permissions.add(can_access_tools_permission)
 
@@ -824,8 +745,10 @@ class TestSyncActivityStreamSSOUsers:
     def test_sync_doesnt_create_role_if_user_cant_access_tools(
         self, mock_hawk_request, create_tools_access_iam_role_task
     ):
-        user = UserFactory.create(email="john.smith@trade.gov.uk")
-        user.profile.sso_id = "00000000-0000-0000-0000-000000000000"
+        user = UserFactory.create(
+            username="00000000-0000-0000-0000-000000000000", email="john.smith@trade.gov.uk"
+        )
+        user.profile.sso_id = user.username
         user.save()
 
         with open(
@@ -869,9 +792,11 @@ class TestSyncActivityStreamSSOUsers:
             codename="start_all_applications",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
-        user = UserFactory.create(email="john.smith@trade.gov.uk")
+        user = UserFactory.create(
+            username="00000000-0000-0000-0000-000000000000", email="john.smith@trade.gov.uk"
+        )
         user.user_permissions.add(can_access_tools_permission)
-        user.profile.sso_id = "00000000-0000-0000-0000-000000000000"
+        user.profile.sso_id = user.username
         user.profile.tools_access_role_arn = "some-arn"
         user.save()
 
@@ -947,8 +872,10 @@ class TestCreateToolsAccessIAMRoleTask:
     @pytest.mark.django_db
     @mock.patch("dataworkspace.apps.applications.utils.create_tools_access_iam_role")
     def test_task_creates_iam_role(self, mock_create_tools_access_iam_role):
-        user = UserFactory.create(username="john.smith@trade.gov.uk")
-        user.profile.sso_id = "00000000-0000-0000-0000-000000000001"
+        user = UserFactory.create(
+            username="00000000-0000-0000-0000-000000000001", email="john.smith@trade.gov.uk"
+        )
+        user.profile.sso_id = user.username
         user.profile.home_directory_efs_access_point_id = "some-access-point-id"
         user.save()
 

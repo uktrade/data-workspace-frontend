@@ -601,7 +601,7 @@ class TestCreateTableViews:
             reverse("your-files:create-table-confirm-name"),
             data={
                 "path": "user/federated/abc/a-csv.csv",
-                "schema": "_user_40e80e4e",
+                "schema": "_user_35817d02",
                 "table_name": "a csv with a space",
             },
             follow=True,
@@ -624,7 +624,7 @@ class TestCreateTableViews:
             reverse("your-files:create-table-confirm-name"),
             data={
                 "path": "user/federated/abc/a-csv.csv",
-                "schema": "_user_40e80e4e",
+                "schema": "_user_35817d02",
                 "table_name": "a_very_long_table_name_which_is_over_fourty_two_chars",
             },
             follow=True,
