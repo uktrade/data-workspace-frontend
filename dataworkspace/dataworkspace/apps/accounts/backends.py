@@ -29,7 +29,7 @@ class AuthbrokerBackendUsernameIsEmail(ModelBackend):
             last_name,
             check_tools_access_if_user_exists=False,
         )
-        set_user({"id": str(user.profile.sso_id), "email": user.email})
+        set_user({"id": str(user.username), "email": user.email})
 
         if user.profile.first_login is None:
             user.profile.first_login = datetime.now()

@@ -1,5 +1,3 @@
-import uuid
-
 import psycopg2
 import pytest
 
@@ -7,7 +5,6 @@ from django.conf import settings
 from django.contrib.auth.models import Group
 from django.test import Client, TestCase, override_settings
 
-from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.tests import factories
 
@@ -16,8 +13,8 @@ from dataworkspace.cel import celery_app
 
 @pytest.fixture
 def staff_user(db):
-    staff_user = get_user_model().objects.create(
-        username=uuid.uuid4(),
+    staff_user = factories.UserFactory.create(
+        username="aae8901a-082f-4f12-8c6c-fdf4aeba2d68",
         email="bob.testerson@test.com",
         is_staff=True,
         is_superuser=True,
@@ -33,7 +30,7 @@ def get_user_data(staff_user):
         "HTTP_SSO_PROFILE_EMAIL": staff_user.email,
         "HTTP_SSO_PROFILE_CONTACT_EMAIL": staff_user.email,
         "HTTP_SSO_PROFILE_RELATED_EMAILS": "",
-        "HTTP_SSO_PROFILE_USER_ID": staff_user.profile.sso_id,
+        "HTTP_SSO_PROFILE_USER_ID": staff_user.username,
         "HTTP_SSO_PROFILE_LAST_NAME": "Testerson",
         "HTTP_SSO_PROFILE_FIRST_NAME": "Bob",
     }
@@ -44,8 +41,8 @@ def staff_user_data(db, staff_user):
     return get_user_data(staff_user)
 
 
-def get_client(staff_user_data):
-    return Client(**staff_user_data)
+def get_client(data):
+    return Client(**data)
 
 
 @pytest.fixture
@@ -55,8 +52,8 @@ def staff_client(staff_user_data):
 
 @pytest.fixture
 def user(db):
-    user = get_user_model().objects.create(
-        username=uuid.uuid4(),
+    user = factories.UserFactory.create(
+        username="72ccde8c-11a2-432d-9cdb-9b757cd75747",
         is_staff=False,
         is_superuser=False,
         email="frank.exampleson@test.com",
@@ -72,7 +69,7 @@ def user_data(db, user):
         "HTTP_SSO_PROFILE_EMAIL": user.email,
         "HTTP_SSO_PROFILE_CONTACT_EMAIL": user.email,
         "HTTP_SSO_PROFILE_RELATED_EMAILS": "",
-        "HTTP_SSO_PROFILE_USER_ID": "aae8901a-082f-4f12-8c6c-fdf4aeba2d69",
+        "HTTP_SSO_PROFILE_USER_ID": user.username,
         "HTTP_SSO_PROFILE_LAST_NAME": "Exampleson",
         "HTTP_SSO_PROFILE_FIRST_NAME": "Frank",
     }
@@ -86,8 +83,8 @@ def client(user_data):
 @pytest.fixture
 def sme_user(db):
     sme_group = Group.objects.get(name="Subject Matter Experts")
-    user = get_user_model().objects.create(
-        username=uuid.uuid4(),
+    user = factories.UserFactory.create(
+        username="e9fbe860-f95d-4d2e-98b9-fa125e5d82b0",
         email="jane.sampledóttir@test.com",
         is_staff=True,
         is_superuser=False,
@@ -104,7 +101,7 @@ def sme_user_data(db, sme_user):
         "HTTP_SSO_PROFILE_EMAIL": sme_user.email,
         "HTTP_SSO_PROFILE_CONTACT_EMAIL": sme_user.email,
         "HTTP_SSO_PROFILE_RELATED_EMAILS": "",
-        "HTTP_SSO_PROFILE_USER_ID": "aae8901a-082f-4f12-8c6c-fdf4aeba2d70",
+        "HTTP_SSO_PROFILE_USER_ID": sme_user.username,
         "HTTP_SSO_PROFILE_LAST_NAME": "Sampledóttir",
         "HTTP_SSO_PROFILE_FIRST_NAME": "Jane",
     }
@@ -119,8 +116,8 @@ def sme_client(sme_user, sme_user_data):
 
 @pytest.fixture
 def other_user(db):
-    return get_user_model().objects.create(
-        username=uuid.uuid4(),
+    return factories.UserFactory.create(
+        username="1ece7d19-7749-488e-9a76-3bdac376dce9",
         email="other@test.com",
         is_staff=True,
         is_superuser=False,
@@ -133,7 +130,7 @@ def other_user_data(db, other_user):
         "HTTP_SSO_PROFILE_EMAIL": other_user.email,
         "HTTP_SSO_PROFILE_CONTACT_EMAIL": other_user.email,
         "HTTP_SSO_PROFILE_RELATED_EMAILS": "",
-        "HTTP_SSO_PROFILE_USER_ID": "7b88631c-faca-4a0f-a5de-5e1bd62b8936",
+        "HTTP_SSO_PROFILE_USER_ID": other_user.username,
         "HTTP_SSO_PROFILE_LAST_NAME": "Mary",
         "HTTP_SSO_PROFILE_FIRST_NAME": "Poppins",
     }

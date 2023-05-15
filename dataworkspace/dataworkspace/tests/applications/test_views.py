@@ -151,7 +151,6 @@ class TestDataVisualisationUIApprovalPage:
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
         user = factories.UserFactory.create(
-            username="visualisation.creator@test.com",
             is_staff=False,
             is_superuser=False,
         )
@@ -189,7 +188,6 @@ class TestDataVisualisationUIApprovalPage:
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
         user = factories.UserFactory.create(
-            username="visualisation.creator@test.com",
             is_staff=False,
             is_superuser=False,
         )
@@ -231,7 +229,6 @@ class TestDataVisualisationUIApprovalPage:
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
         user = factories.UserFactory.create(
-            username="visualisation.creator@test.com",
             is_staff=False,
             is_superuser=False,
         )
@@ -475,7 +472,6 @@ class TestVisualisationLogs:
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
         user = factories.UserFactory.create(
-            username="visualisation.creator@test.com",
             is_staff=False,
             is_superuser=False,
         )
@@ -511,7 +507,6 @@ class TestVisualisationLogs:
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
         user = factories.UserFactory.create(
-            username="visualisation.creator@test.com",
             is_staff=False,
             is_superuser=False,
         )
@@ -548,7 +543,6 @@ class TestVisualisationLogs:
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
         user = factories.UserFactory.create(
-            username="visualisation.creator@test.com",
             is_staff=False,
             is_superuser=False,
         )
@@ -588,7 +582,6 @@ class TestVisualisationLogs:
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
         user = factories.UserFactory.create(
-            username="visualisation.creator@test.com",
             is_staff=False,
             is_superuser=False,
         )

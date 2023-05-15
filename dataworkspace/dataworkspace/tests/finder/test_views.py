@@ -3,15 +3,13 @@ from urllib.parse import urlencode
 import pytest
 
 from django.conf import settings
-from django.test import Client, override_settings
+from django.test import override_settings
 from django.urls import reverse
 from waffle.testutils import override_flag
 
-from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.finder.models import DatasetFinderQueryLog
 from dataworkspace.tests import factories
-from dataworkspace.tests.common import get_http_sso_data
 
 
 @override_flag(settings.DATASET_FINDER_ADMIN_ONLY_FLAG, active=True)
@@ -45,10 +43,7 @@ def test_find_datasets_with_no_results(client, mocker):
 
 @pytest.mark.django_db(transaction=True)
 @override_flag(settings.DATASET_FINDER_ADMIN_ONLY_FLAG, active=True)
-def test_find_datasets_with_results(client, mocker, dataset_finder_db):
-    user = get_user_model().objects.create(is_staff=True, is_superuser=True, email="test@test.com")
-    client = Client(**get_http_sso_data(user))
-
+def test_find_datasets_with_results(staff_client, staff_user, mocker, dataset_finder_db):
     master_dataset = factories.MasterDataSetFactory.create(
         published=True, deleted=False, name="master dataset"
     )
@@ -81,7 +76,7 @@ def test_find_datasets_with_results(client, mocker, dataset_finder_db):
     }
     assert DatasetFinderQueryLog.objects.all().count() == 0
 
-    response = client.get(reverse("finder:find_datasets"), {"q": "search"})
+    response = staff_client.get(reverse("finder:find_datasets"), {"q": "search"})
 
     assert response.status_code == 200
     assert len(response.context["results"]) == 1
@@ -94,7 +89,7 @@ def test_find_datasets_with_results(client, mocker, dataset_finder_db):
     assert DatasetFinderQueryLog.objects.all().count() == 1
     query_log = DatasetFinderQueryLog.objects.all().first()
     assert query_log.query == "search"
-    assert query_log.user == user
+    assert query_log.user == staff_user
 
 
 @pytest.mark.django_db(transaction=True)
