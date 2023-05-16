@@ -457,7 +457,7 @@ async def give_user_dataset_perms(name):
             DataSetUserPermission,
         )
         user = get_user_model().objects.get(
-            profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2"
+            username="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2"
         )
         dataset = DataSet.objects.get(
             name="{name}",
@@ -696,7 +696,7 @@ async def add_user_to_team(user_sso_id: str, team_name: str):
 
         User = get_user_model()
 
-        user = User.objects.get(profile__sso_id="{user_sso_id}")
+        user = User.objects.get(username=="{user_sso_id}")
 
         team, _ = Team.objects.get_or_create(name="{team_name}")
         membership, _ = TeamMembership.objects.get_or_create(user=user, team=team)
@@ -1102,7 +1102,7 @@ async def add_user_to_mlflow_instance(user_sso_id: str, instance_name: str):
 
         User = get_user_model()
 
-        user = User.objects.get(profile__sso_id="{user_sso_id}")
+        user = User.objects.get(username="{user_sso_id}")
 
         instance, _ = MLFlowInstance.objects.get_or_create(
             name="{instance_name}", hostname="mlflow--{instance_name}--internal.dataworkspace.test:8000"
