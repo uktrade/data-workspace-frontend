@@ -1,4 +1,6 @@
-document.getElementById("shareDashboardPopUp").addEventListener("click", function () {
+document.getElementById("shareDashboardPopUp").addEventListener("click", function (e) {
+    e.stopPropagation();
+    e.preventDefault();
     document.getElementById("popup").style.display = "block";
     document.getElementById("popup-background").style.display = "block";
   }

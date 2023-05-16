@@ -127,7 +127,7 @@
             <div class="govuk-grid-column-one-half govuk-!-text-align-right govuk-!-margin-top-3 govuk-!-padding-right-8">
               
                 <a href="#" style = 'font-size: 18px' class="govuk-link govuk-!-padding-right-3 govuk-!-padding-left-1 govuk-link--no-visited-state" id="shareDashboardPopUp">
-                <img style="margin-bottom: -5px; width: 24px ; margin-right: 5px" alt="Share" src="{% static 'assets/images/share.svg' %}"/>Share</a>
+                <img style="margin-bottom: -5px; width: 24px ; margin-right: 5px"  alt="Share" src="{% static 'assets/images/share.svg' %}"/>Share</a>
             {% flag SECURITY_CLASSIFICATION_FLAG %}
               {% if not catalogue_item.government_security_classification %}
                   <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
@@ -157,16 +157,17 @@
       {% endblock visualisation %}
     </div>
     <div id="popup-container">
-    <div id="popup" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #fff; padding: 20px; width: 600px; height: 250px; z-index: 1000;">
-  <h2 class="govuk-heading-m">Share Dashboard</h2>
-      <div class="govuk-form-group">
-  <p class="govuk-body">Press the button below to copy the link to this dashboard.</p>
-  <textarea class="govuk-textarea" id="share-dashboard" name="share-dashboard" rows="3" aria-describedby="share-dashboard-hint" style="resize: none; user-select: all" readonly>{{ catalogue_item.get_absolute_url }}</textarea>
-</div>
-  <button class="govuk-button" id="copy-to-clipboard" data-module="govuk-button">Copy to clipboard</button>
-  <button class="govuk-button govuk-button--secondary" id="closePopUp" data-module="govuk-button">Close</button>
-</div>
-      <div id="popup-background" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 999"></div>
+      <div id="popup" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #fff; padding: 20px; width: 600px; height: 250px; z-index: 1000;">
+            <h2 class="govuk-heading-m">Share dashboard</h2>
+            <div class="govuk-form-group">
+                  <p class="govuk-body">Press the button below to copy the link to this dashboard.</p>
+                  <textarea class="govuk-textarea" id="share-dashboard" name="share-dashboard" rows="3" aria-describedby="share-dashboard-hint" style="resize: none; user-select: all" 
+                  readonly>{{ root_href }}{{ catalogue_item.get_absolute_url }}</textarea>
+           </div>
+            <button class="govuk-button" id="copy-to-clipboard" data-module="govuk-button">Copy to clipboard</button>
+            <button class="govuk-button govuk-button--secondary" id="closePopUp" data-module="govuk-button">Close</button>
+      </div>
+            <div id="popup-background" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 999"></div>
     </div>
     {% block javascript %}
     {% endblock %}
