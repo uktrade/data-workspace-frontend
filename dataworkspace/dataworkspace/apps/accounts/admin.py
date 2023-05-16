@@ -1,6 +1,7 @@
 import logging
 
 from django import forms
+from django.contrib.auth import get_user_model as django_get_user_model
 from django.contrib import admin, messages
 from django.contrib.admin.widgets import (
     AdminTextInputWidget,
@@ -35,6 +36,7 @@ from dataworkspace.apps.applications.utils import (
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_permission_change
+from dataworkspace.apps.explorer.admin import clear_tool_cached_credentials
 from dataworkspace.apps.explorer.schema import clear_schema_info_cache_for_user
 from dataworkspace.apps.explorer.utils import (
     remove_data_explorer_user_cached_credentials,
@@ -179,6 +181,9 @@ class AppUserEditForm(forms.ModelForm):
         ].queryset = VisualisationCatalogueItem.objects.live().order_by("name", "id")
 
 
+admin.site.unregister(django_get_user_model())
+
+
 class LocalToolsFilter(admin.SimpleListFilter):
     title = "Local tool access"
     parameter_name = "can_start_tools"
@@ -246,6 +251,7 @@ class AppUserAdmin(UserAdmin):
     add_fieldsets = (
         (None, {"classes": ("wide",), "fields": ("email", "first_name", "last_name")}),
     )
+    list_display = ("email", "first_name", "last_name", "is_staff")
     list_filter = (
         "is_staff",
         "is_superuser",
@@ -256,6 +262,7 @@ class AppUserAdmin(UserAdmin):
         QuickSightfilter,
     )
     form = AppUserEditForm
+    actions = [clear_tool_cached_credentials]
     fieldsets = [
         (
             None,
@@ -304,8 +311,6 @@ class AppUserAdmin(UserAdmin):
 
     @transaction.atomic
     def save_model(self, request, obj, form, change):
-        obj.username = form.cleaned_data["sso_id"]
-
         def log_change(event_type, permission, message):
             log_permission_change(
                 request.user, obj, event_type, {"permission": permission}, message
@@ -575,3 +580,6 @@ class AppUserAdmin(UserAdmin):
 
     def stable_id_suffix(self, instance):
         return stable_identification_suffix(str(instance.profile.sso_id), short=True)
+
+    def has_add_permission(self, request):
+        return False
