@@ -29,7 +29,7 @@ def appstream_view(request):
     app_sessions = get_app_sessions()
 
     app_sessions_users = [
-        (app_session, User.objects.get(profile__sso_id=app_session["UserId"]))
+        (app_session, User.objects.get(username=app_session["UserId"]))
         for app_session in app_sessions["Sessions"]
     ]
 
