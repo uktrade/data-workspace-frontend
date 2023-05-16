@@ -30,7 +30,7 @@ class EventLogAdmin(admin.ModelAdmin):
     def user_link(self, obj):
         return format_html(
             '<a href="{}">{}</a>'.format(
-                reverse("admin:auth_user_change", args=(obj.user.id,)),
+                reverse("admin:core_dataworkspaceuser_change", args=(obj.user.id,)),
                 obj.user.get_full_name(),
             )
         )

@@ -282,14 +282,14 @@ def quicksight_start_polling_sync_and_redirect(request):
             IamArn=settings.QUICKSIGHT_AUTHOR_IAM_ARN,
             CustomPermissionsName=settings.QUICKSIGHT_AUTHOR_CUSTOM_PERMISSIONS,
             UserRole="AUTHOR",
-            SessionName=str(request.user.profile.sso_id),
+            SessionName=request.user.username,
             Email=request.user.email,
         )
     except botocore.exceptions.ClientError as e:
         if e.response["Error"]["Code"] != "ResourceExistsException":
             raise
 
-    sync_quicksight_permissions.delay(user_sso_ids_to_update=(request.user.profile.sso_id,))
+    sync_quicksight_permissions.delay(user_sso_ids_to_update=(request.user.username,))
 
     return redirect(settings.QUICKSIGHT_SSO_URL)
 

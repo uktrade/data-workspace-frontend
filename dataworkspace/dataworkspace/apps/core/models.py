@@ -14,6 +14,7 @@ from dataworkspace.forms import AdminRichTextEditorWidget, AdminRichLinkEditorWi
 class DataWorkspaceUser(django_get_user_model()):
     class Meta:
         proxy = True
+        verbose_name = "User"
 
     # Override __str__ to show email and not username on the admin site
     def __str__(self):
