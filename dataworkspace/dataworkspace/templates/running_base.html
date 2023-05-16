@@ -162,7 +162,7 @@
             <div class="govuk-form-group">
                   <p class="govuk-body">Press the button below to copy the link to this dashboard.</p>
                   <textarea class="govuk-textarea" id="share-dashboard" name="share-dashboard" rows="3" aria-describedby="share-dashboard-hint" style="resize: none; user-select: all" 
-                  readonly>{{ root_href }}{{ catalogue_item.get_absolute_url }}</textarea>
+                  readonly>{{ request.scheme }}://{{ request.get_host }}{{ catalogue_item.get_absolute_url }}</textarea>
            </div>
             <button class="govuk-button" id="copy-to-clipboard" data-module="govuk-button">Copy to clipboard</button>
             <button class="govuk-button govuk-button--secondary" id="closePopUp" data-module="govuk-button">Close</button>
