@@ -745,7 +745,7 @@ def do_store_custom_dataset_query_metadata():
                 try:
                     data_hash = get_data_hash(cursor, sql)
                 except DatabaseError as e:
-                    logger.error(
+                    logger.warning(
                         "Not adding metadata for query %s as get_data_hash failed with %s",
                         query.name,
                         e,
@@ -755,7 +755,7 @@ def do_store_custom_dataset_query_metadata():
                 try:
                     cursor.execute(f"SELECT * FROM ({sql}) sq LIMIT 0")
                 except DatabaseError as e:
-                    logger.error(
+                    logger.warning(
                         "Not adding metadata for query %s as querying for columns failed with %s",
                         query.name,
                         e,
@@ -767,7 +767,7 @@ def do_store_custom_dataset_query_metadata():
                 try:
                     data_rows_number = get_rows_number(cursor, sql)
                 except DatabaseError as e:
-                    logger.error(
+                    logger.warning(
                         "Not adding metadata for query %s get_rows_number %s",
                         query.name,
                         e,
