@@ -176,16 +176,18 @@
     </div>
       <dialog id="popup">
         <form>
-            <h2 class="govuk-heading-m" role="heading" style = 'font-size: 36px'>Share dashboard</h2>
-            <div class="govuk-form-group">
-              <div class="govuk-!-padding-bottom-2">
-                  <p class="govuk-label-wrapper" style="margin-bottom: 10px">Press the button below to copy the link to this dashboard.</p>
-                  <textarea class="govuk-textarea"style= margin-bottom: 30px id="share-dashboard" name="share-dashboard" rows="3" aria-describedby="share-dashboard-hint" style="resize: none; user-select: all" 
+            <h2 class="govuk-heading-l" role="heading">Share dashboard</h2>
+            
+            <div class="govuk-!-padding-bottom-2">
+                  <p class="govuk-body" style="margin-bottom: 10px">Press the button below to copy the link to this dashboard.</p>
+                  <textarea class="govuk-textarea govuk-!-margin-bottom-5" id="share-dashboard" name="share-dashboard" rows="3" aria-describedby="share-dashboard-hint" style="resize: none; user-select: all" 
                   readonly>{{ request.scheme }}://{{ request.get_host }}{{ catalogue_item.get_absolute_url }}</textarea>
-                </div>
-           </div>
-            <button class="govuk-button" style="margin-bottom: 30px" id="copy-to-clipboard" data-module="govuk-button">Copy to clipboard</button>
-            <button class="govuk-button govuk-button--secondary" style="margin-bottom: 30px" id="closePopUp" data-module="govuk-button">Close</button>
+            </div>
+           
+           <div class="govuk-button-group">
+            <button class="govuk-button" id="copy-to-clipboard" data-module="govuk-button">Copy to clipboard</button>
+            <button class="govuk-button govuk-button--secondary"  id="closePopUp" data-module="govuk-button">Close</button>
+          </div>
           </form>
       </dialog>
     {% block javascript %}
