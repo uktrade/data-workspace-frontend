@@ -1,18 +1,19 @@
 document.getElementById("shareDashboardPopUp").addEventListener("click", function (e) {
     e.stopPropagation();
     e.preventDefault();
-    document.getElementById("popup").style.display = "block";
-    document.getElementById("popup-background").style.display = "block";
+    //document.getElementById("popup").style.display = "block";
+    //document.getElementById("popup-background").style.display = "block";
     const copyButton = document.getElementById("copy-to-clipboard");
     copyButton.innerText = "Copy link to dashboard";
     copyButton.classList.remove("govuk-button--disabled");
     copyButton.disabled = false;
+    document.getElementById("popup").showModal();
   }
 );
 
 document.getElementById("closePopUp").addEventListener("click", function () {
-    document.getElementById("popup").style.display = "none";
-    document.getElementById("popup-background").style.display = "none";
+   document.getElementById("popup").close();
+    
   }
 );
 
