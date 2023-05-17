@@ -9,8 +9,10 @@ document.getElementById("shareDashboardPopUp").addEventListener("click", functio
   }
 );
 
-document.getElementById("closePopUp").addEventListener("click", function () {
-   document.getElementById("popup").close();
+document.getElementById("closePopUp").addEventListener("click", function (e) {
+  e.stopPropagation();
+  e.preventDefault(); 
+  document.getElementById("popup").close();
     
   }
 );
@@ -28,6 +30,7 @@ document.getElementById("copy-to-clipboard").addEventListener("click", function 
           copyButton.disabled = true;
         })
         .catch((error) => {
+          console("failed to copy link", error);
         });
     } else {
       const textarea = document.createElement("textarea");
