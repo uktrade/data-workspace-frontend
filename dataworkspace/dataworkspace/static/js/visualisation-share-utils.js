@@ -3,6 +3,10 @@ document.getElementById("shareDashboardPopUp").addEventListener("click", functio
     e.preventDefault();
     document.getElementById("popup").style.display = "block";
     document.getElementById("popup-background").style.display = "block";
+    const copyButton = document.getElementById("copy-to-clipboard");
+    copyButton.innerText = "Copy link to dashboard";
+    copyButton.classList.remove("govuk-button--disabled");
+    copyButton.disabled = false;
   }
 );
 
