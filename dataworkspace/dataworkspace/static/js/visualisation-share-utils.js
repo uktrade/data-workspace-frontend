@@ -30,7 +30,7 @@ document.getElementById("copy-to-clipboard").addEventListener("click", function 
           copyButton.disabled = true;
         })
         .catch((error) => {
-          console("failed to copy link", error);
+        console.error("failed to copy link", error);
         });
     } else {
       const textarea = document.createElement("textarea");
