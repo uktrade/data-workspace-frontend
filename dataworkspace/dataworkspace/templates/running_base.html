@@ -44,6 +44,7 @@
         background: rgba(36, 32, 20, 0.5) !important;
         backdrop-filter: blur(0.25rem);
       }
+      
   </style>
 
   {% if wrap == 'IFRAME_WITH_VISUALISATIONS_HEADER' %}
@@ -173,15 +174,19 @@
       {% block visualisation %}
       {% endblock visualisation %}
     </div>
-      <dialog id="popup" >
-            <h2 class="govuk-heading-m">Share dashboard</h2>
+      <dialog id="popup">
+        <form>
+            <h2 class="govuk-heading-m" role="heading" style = 'font-size: 36px'>Share dashboard</h2>
             <div class="govuk-form-group">
-                  <p class="govuk-body">Press the button below to copy the link to this dashboard.</p>
-                  <textarea class="govuk-textarea" id="share-dashboard" name="share-dashboard" rows="3" aria-describedby="share-dashboard-hint" style="resize: none; user-select: all" 
+              <div class="govuk-!-padding-bottom-2">
+                  <p class="govuk-label-wrapper" style="margin-bottom: 10px">Press the button below to copy the link to this dashboard.</p>
+                  <textarea class="govuk-textarea"style= margin-bottom: 30px id="share-dashboard" name="share-dashboard" rows="3" aria-describedby="share-dashboard-hint" style="resize: none; user-select: all" 
                   readonly>{{ request.scheme }}://{{ request.get_host }}{{ catalogue_item.get_absolute_url }}</textarea>
+                </div>
            </div>
-            <button class="govuk-button" id="copy-to-clipboard" data-module="govuk-button">Copy to clipboard</button>
-            <button class="govuk-button govuk-button--secondary" id="closePopUp" data-module="govuk-button">Close</button>
+            <button class="govuk-button" style="margin-bottom: 30px" id="copy-to-clipboard" data-module="govuk-button">Copy to clipboard</button>
+            <button class="govuk-button govuk-button--secondary" style="margin-bottom: 30px" id="closePopUp" data-module="govuk-button">Close</button>
+          </form>
       </dialog>
     {% block javascript %}
     {% endblock %}
