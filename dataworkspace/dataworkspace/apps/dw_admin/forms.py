@@ -57,8 +57,10 @@ class ReferenceDatasetForm(AutoCompleteUserFieldsMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["information_asset_owner"].required = True
-        self.fields["information_asset_manager"].required = True
+        if "information_asset_owner" in self.fields:
+            self.fields["information_asset_owner"].required = True
+        if "information_asset_manager" in self.fields:
+            self.fields["information_asset_manager"].required = True
         if "sort_field" in self.fields:
             self.fields["sort_field"].queryset = self.instance.fields.all()
 
