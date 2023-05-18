@@ -67,6 +67,12 @@
         {{ model.description | minimal_markup }}
       </div>
 
+        {% if master_datasets_info %}
+        {% if not has_tools_access or not has_access %}
+          {% include 'partials/request_access.html' with type='master' has_tools_access=has_tools_access has_data_access=has_access %}
+        {% endif %}
+        {% endif %}
+
     </div>
 
     <div class="govuk-grid-column-one-third">
