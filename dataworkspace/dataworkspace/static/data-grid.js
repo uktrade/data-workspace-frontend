@@ -260,9 +260,7 @@ function initDataGrid(
                 }
                 if (dl_count) {
                   dl_count.innerText =
-                    "Download this data (Max " +
-                    downLoadLimit.toLocaleString() +
-                    " rows)";
+                    "Download this data";
                 }
               }
               if (rc <= downLoadLimit || (downLoadLimit == null && rc < 5000)) {
@@ -271,7 +269,7 @@ function initDataGrid(
                 }
                 if (dl_count) {
                   dl_count.innerText =
-                    "Download this data (" + rc.toLocaleString() + " rows)";
+                    "Download this data";
                 }
               }
               params.successCallback(
@@ -404,16 +402,9 @@ function initDataGrid(
   }
 
   document
-    .querySelector("#data-grid-reset-filters")
+    .querySelector("#data-grid-reset-view")
     .addEventListener("click", function (e) {
       gridOptions.api.setFilterModel(null);
-      document.activeElement.blur();
-      return;
-    });
-
-  document
-    .querySelector("#data-grid-reset-columns")
-    .addEventListener("click", function (e) {
       gridOptions.columnApi.resetColumnState();
       document.activeElement.blur();
       return;
