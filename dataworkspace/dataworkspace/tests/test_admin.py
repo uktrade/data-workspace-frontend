@@ -559,6 +559,8 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "slug": ref_dataset_slug,
                 "external_database": "",
                 "short_description": "test description that is short",
+                "information_asset_manager": self.user.id,
+                "information_asset_owner": self.user.id,
                 "description": "test description",
                 "valid_from": "",
                 "valid_to": "",
@@ -865,6 +867,8 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "slug": reference_dataset.slug,
                 "external_database": "",
                 "short_description": "test description that is short",
+                "information_asset_manager": self.user.id,
+                "information_asset_owner": self.user.id,
                 "description": "",
                 "valid_from": "",
                 "valid_to": "",
@@ -921,6 +925,8 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "slug": "test-ref-1",
                 "external_database": "",
                 "short_description": reference_dataset.short_description,
+                "information_asset_manager": self.user.id,
+                "information_asset_owner": self.user.id,
                 "description": "",
                 "valid_from": "",
                 "valid_to": "",
@@ -976,6 +982,8 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "slug": "test-ref-1",
                 "external_database": "",
                 "short_description": "test description that is short",
+                "information_asset_manager": self.user.id,
+                "information_asset_owner": self.user.id,
                 "description": "",
                 "valid_from": "",
                 "valid_to": "",
@@ -1130,6 +1138,8 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "slug": "test-ref-1",
                 "external_database": "",
                 "short_description": "test description that is short",
+                "information_asset_manager": self.user.id,
+                "information_asset_owner": self.user.id,
                 "description": "",
                 "valid_from": "",
                 "valid_to": "",
@@ -1863,6 +1873,8 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "slug": "test-ref-1",
                 "external_database": "",
                 "short_description": "test description that is short",
+                "information_asset_manager": self.user.id,
+                "information_asset_owner": self.user.id,
                 "description": "",
                 "valid_from": "",
                 "valid_to": "",
@@ -1973,6 +1985,8 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "slug": "test-ref-link-non-external",
                 "external_database": db.id,
                 "short_description": "test description that is short",
+                "information_asset_manager": self.user.id,
+                "information_asset_owner": self.user.id,
                 "description": "",
                 "valid_from": "",
                 "valid_to": "",
@@ -2318,6 +2332,8 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "slug": "test-ref-1",
                 "external_database": "",
                 "short_description": "test description that is short",
+                "information_asset_manager": self.user.id,
+                "information_asset_owner": self.user.id,
                 "description": "",
                 "valid_from": "",
                 "valid_to": "",
@@ -2695,7 +2711,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
 
 
 class TestDatasetAdminPytest:
-    def test_sql_queries_must_be_reviewed_before_publishing(self, staff_client):
+    def test_sql_queries_must_be_reviewed_before_publishing(self, staff_client, user):
         dataset = factories.DataSetFactory.create(published=False)
         sql = factories.CustomDatasetQueryFactory.create(dataset=dataset, reviewed=False)
 
@@ -2709,6 +2725,8 @@ class TestDatasetAdminPytest:
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
+                "information_asset_manager": user.id,
+                "information_asset_owner": user.id,
                 "description": "test description",
                 "type": 2,
                 "sourcelink_set-TOTAL_FORMS": "0",
@@ -2764,9 +2782,10 @@ class TestDatasetAdminPytest:
         ),
     )
     @pytest.mark.django_db
-    def test_sql_query_tables_extracted_correctly(self, staff_client, query, expected_tables):
+    def test_sql_query_tables_extracted_correctly(
+        self, staff_client, user, query, expected_tables
+    ):
         dataset = factories.DataSetFactory.create(published=False)
-        user = factories.UserFactory()
         sql = factories.CustomDatasetQueryFactory.create(dataset=dataset, reviewed=False)
 
         # Login to admin site
@@ -2827,9 +2846,8 @@ class TestDatasetAdminPytest:
     )
     @pytest.mark.django_db
     def test_sql_queries_can_only_be_reviewed_by_superusers(
-        self, request_client, expected_response_code, can_review
+        self, user, request_client, expected_response_code, can_review
     ):
-        user = factories.UserFactory()
         dataset = factories.DataSetFactory.create(published=False)
         sql = factories.CustomDatasetQueryFactory.create(dataset=dataset, reviewed=False)
 
@@ -2890,10 +2908,9 @@ class TestDatasetAdminPytest:
     )
     @pytest.mark.django_db
     def test_datacut_can_only_be_published_by_superuser(
-        self, request_client, expected_response_code, should_publish
+        self, user, request_client, expected_response_code, should_publish
     ):
         dataset = factories.DataSetFactory.create(published=False)
-        user = factories.UserFactory()
         # Login to admin site
         request_client.post(reverse("admin:index"), follow=True)
 
@@ -2955,10 +2972,10 @@ class TestDatasetAdminPytest:
     )
     @pytest.mark.django_db
     def test_manage_dataset_permission_allows_viewing_but_not_editing_published_datasets(
-        self, manage_unpublished_permission, admin_change_view, DatasetFactory
+        self, user, manage_unpublished_permission, admin_change_view, DatasetFactory
     ):
         dataset = DatasetFactory(published=True)
-        user = get_user_model().objects.create(is_staff=True)
+        user.is_staff = True
         perm = Permission.objects.get(codename=manage_unpublished_permission)
         user.user_permissions.add(perm)
         user.save()
@@ -2980,11 +2997,11 @@ class TestDatasetAdminPytest:
             assert change_response.status_code == 403
 
     @pytest.mark.django_db
-    def test_manage_master_dataset_permission_allows_editing_unpublished_datasets(self):
+    def test_manage_master_dataset_permission_allows_editing_unpublished_datasets(self, user):
         dataset = factories.DataSetFactory.create(
             published=False, name="original", type=DataSetType.MASTER
         )
-        user = get_user_model().objects.create(is_staff=True)
+        user.is_staff = True
         perm = Permission.objects.get(codename="manage_unpublished_master_datasets")
         user.user_permissions.add(perm)
         user.save()
@@ -3023,13 +3040,11 @@ class TestDatasetAdminPytest:
         assert DataSet.objects.get(id=dataset.id).name == "changed"
 
     @pytest.mark.django_db
-    def test_manage_datacut_dataset_permission_allows_editing_unpublished_datasets(
-        self,
-    ):
+    def test_manage_datacut_dataset_permission_allows_editing_unpublished_datasets(self, user):
         dataset = factories.DataSetFactory.create(
             published=False, name="original", type=DataSetType.DATACUT
         )
-        user = get_user_model().objects.create(is_staff=True)
+        user.is_staff = True
         perm = Permission.objects.get(codename="manage_unpublished_datacut_datasets")
         user.user_permissions.add(perm)
         user.save()
@@ -3076,9 +3091,7 @@ class TestDatasetAdminPytest:
         assert DataSet.objects.get(id=dataset.id).name == "changed"
 
     @pytest.mark.django_db
-    def test_manage_reference_dataset_permission_allows_editing_unpublished_datasets(
-        self,
-    ):
+    def test_manage_reference_dataset_permission_allows_editing_unpublished_datasets(self, user):
         dataset = ReferenceDataset.objects.create(
             name="Test Reference Dataset 1",
             table_name="ref_test_dataset",
@@ -3093,8 +3106,7 @@ class TestDatasetAdminPytest:
             column_name="field_1",
             description="field 1 description",
         )
-
-        user = get_user_model().objects.create(is_staff=True)
+        user.is_staff = True
         perm = Permission.objects.get(codename="manage_unpublished_reference_datasets")
         user.user_permissions.add(perm)
         user.save()
@@ -3137,9 +3149,8 @@ class TestDatasetAdminPytest:
     @pytest.mark.parametrize("published, expected_reviewed_status", ((False, False), (True, True)))
     @pytest.mark.django_db
     def test_unpublished_datacut_query_review_flag_is_toggled_off_if_query_changed_when_already_reviewed(
-        self, staff_client, published, expected_reviewed_status
+        self, staff_client, user, published, expected_reviewed_status
     ):
-        user = factories.UserFactory()
         dataset = factories.DataSetFactory.create(published=published)
         sql = factories.CustomDatasetQueryFactory.create(
             dataset=dataset, reviewed=True, query="original query"
@@ -3194,7 +3205,7 @@ class TestDatasetAdminPytest:
 
     @mock.patch("dataworkspace.apps.datasets.permissions.utils.sync_quicksight_permissions")
     @pytest.mark.django_db
-    def test_master_dataset_permission_changes_calls_sync_job(self, mock_sync, staff_client):
+    def test_master_dataset_permission_changes_calls_sync_job(self, mock_sync, staff_client, user):
         dataset = factories.MasterDataSetFactory.create(
             published=True, user_access_type=UserAccessType.OPEN
         )
@@ -3249,7 +3260,7 @@ class TestDatasetAdminPytest:
     @mock.patch("dataworkspace.apps.datasets.permissions.utils.clear_schema_info_cache_for_user")
     @pytest.mark.django_db
     def test_master_dataset_authorized_user_changes_calls_sync_job_and_clears_explorer_cache(
-        self, mock_clear_cache, mock_sync, staff_client
+        self, mock_clear_cache, mock_sync, staff_client, user
     ):
         user_1 = factories.UserFactory()
         user_2 = factories.UserFactory()

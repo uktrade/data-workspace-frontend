@@ -45,12 +45,13 @@ class BaseTestCaseMixin:
     def _authenticated_put(self, url, data=None):
         return self.client.put(url, data=data, **self.user_data)
 
-    @staticmethod
-    def _create_reference_dataset(**kwargs):
+    def _create_reference_dataset(self, **kwargs):
         ref_data_fields = dict(
             name="Test Reference Dataset 1",
             table_name="ref_test_dataset",
             short_description="Testing...",
+            information_asset_manager=self.user,
+            information_asset_owner=self.user,
             slug="test-reference-dataset-1",
             published=True,
         )
