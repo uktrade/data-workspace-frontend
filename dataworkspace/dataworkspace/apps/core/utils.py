@@ -17,6 +17,7 @@ from timeit import default_timer as timer
 from typing import Tuple
 from urllib.parse import unquote
 
+import boto3
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -1337,7 +1338,7 @@ def trigger_dataflow_dag(conf, dag, dag_run_id):
 
 def copy_file_to_uploads_bucket(from_path, to_path):
     client = get_s3_client()
-    upload_config = client.transfer.TransferConfig(
+    upload_config = boto3.s3.transfer.TransferConfig(
         multipart_chunksize=1_048_576 * 1024,
         multipart_threshold=1_048_576 * 1024,
     )
