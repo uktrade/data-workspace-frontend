@@ -62,47 +62,52 @@
       {% endflag %}
     </ol>
   </div>
-  <div class="govuk-!-padding-right-1 govuk-!-padding-left-1 govuk-!-padding-bottom-0">
-    <div class="govuk-grid-row govuk-!-padding-right-5">{% if model.enquiries_contact %}
-      <a href="mailto:{{ model.enquiries_contact.email }}?subject=Reporting an issue - {{ model.name }}"
-         class="govuk-link govuk-link--no-visited-state govuk-!-padding-left-2" style="float: right">
-        {% include "partials/report_an_issue_icon.html" %}</a>
-    {% endif %}
+  <div>
+    <div>
+      {% if model.enquiries_contact %}
+        <a href="mailto:{{ model.enquiries_contact.email }}?subject=Reporting an issue - {{ model.name }}"
+           class="govuk-link govuk-link--no-visited-state govuk-!-padding-left-2" style="float: right">
+          {% include "partials/report_an_issue_icon.html" %}</a>
+      {% endif %}
     </div>
-  <div class="govuk-!-padding-top-4 govuk-!-padding-left-2">
-  <span class="govuk-caption-xl">Data table (public.{{ model.table_name }})</span>
+    <div class="govuk-!-padding-top-4 govuk-!-padding-left-2">
+      <span class="govuk-caption-xl">Data table (public.{{ model.table_name }})</span>
       <h1 class="govuk-heading-xl">{{ model.name }}</h1>
-  </div>
-  {% with model.fields.all as fields %}
-    <div class="govuk-!-margin-top-4  govuk-!-padding-left-2 govuk-!-padding-top-3" style="border: 1px solid #b1b4b6; border-bottom: none; margin: 0; display: flex; flex-wrap: wrap">
-  <div class="govuk-button-group" style="order: 1; flex: 1 0 auto; margin-right: 10px; margin-bottom: 0">
-    {% flag CHART_BUILDER_BUILD_CHARTS_FLAG %}
-      <button class="govuk-button" id="data-grid-create-chart">Create a chart</button>
-      &nbsp;
-    {% endflag %}
-    <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-view">
-      Reset view
-    </button>
-    <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-download">
-      Download data as CSV
-    </button>
-    &nbsp;
-    <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-json-download">
-      Download data as JSON
-    </button>
-    {% if fields %}
-      <a href="{% url "datasets:data_dictionary" source_uuid=model.uuid %}?dataset_uuid={{model.uuid}}" class="govuk-link" target="_blank">Data Dictionary</a>
-    {% endif %}
-  </div>
-  <div style="order: 2; flex: 0 0 auto; margin-left: auto; margin-top: 10px; text-align: right" class="govuk-body govuk-!-padding-right-3">
-    <span class="govuk-!-font-weight-bold">
-      Data last updated:
-    </span>
-    {{ model.get_data_last_updated_date|gmt_date|default_if_none:"N/A" }}
-    {{ model.get_data_last_updated_date|time_with_gmt_offset|default_if_none:"N/A" }}
-  </div>
-</div>
+    </div>
+    {% with model.fields.all as fields %}
+      <div class="app-compressed-grid">
+        <div class="app-grid-header">
+          <div class="grid-header-left">
+            <div class="govuk-button-group">
+              {% flag CHART_BUILDER_BUILD_CHARTS_FLAG %}
+                <button class="govuk-button" id="data-grid-create-chart">Create a chart</button>
+              {% endflag %}
+              <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-view">
+                Reset view
+              </button>
+              <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-download">
+                Download data as CSV
+              </button>
+              <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-json-download">
+                Download data as JSON
+              </button>
+              {% if fields %}
+                <a href="{% url "datasets:data_dictionary" source_uuid=model.uuid %}?dataset_uuid={{model.uuid}}" class="govuk-link" target="_blank">Data Dictionary</a>
+              {% endif %}
+            </div>
+          </div>
+          <div class="grid-header-right">
+            <div class="govuk-button-group">
+              <p class="govuk-body">
+                <span class="govuk-!-font-weight-bold">Data last updated:</span>
+                {{ model.data_last_updated|gmt_date|default_if_none:"N/A" }}
+                {{ model.data_last_updated|time_with_gmt_offset|default_if_none:"N/A" }}
+              </p>
+            </div>
+          </div>
+        </div>
         <div id="data-grid" class="ag-theme-alpine"></div>
+      </div>
     </div>
   {% endwith %}
   {% csrf_token %}

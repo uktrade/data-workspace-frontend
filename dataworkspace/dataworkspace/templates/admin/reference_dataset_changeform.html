@@ -23,8 +23,13 @@
         document.addEventListener('DOMContentLoaded', () => {
           const gridDiv = document.querySelector('#data-grid');
           const gridOptions = {
+            suppressMenuHide: true,
+            enableCellTextSelection: true,
             defaultColDef: {
-              resizable: true
+              resizable: true,
+              filterParams: {
+                buttons: ["reset"],
+              },
             },
             columnDefs: columnDefs,
             rowData: []
