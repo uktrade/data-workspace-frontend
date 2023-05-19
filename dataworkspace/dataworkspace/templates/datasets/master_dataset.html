@@ -66,13 +66,6 @@
       <div class="govuk-body dataset-description-richtext">
         {{ model.description | minimal_markup }}
       </div>
-
-        {% if master_datasets_info %}
-        {% if not has_access %}
-          {% include 'partials/request_access.html' with type='master' has_data_access=has_access %}
-        {% endif %}
-        {% endif %}
-
     </div>
 
     <div class="govuk-grid-column-one-third">
@@ -159,12 +152,15 @@
       <p class="govuk-body sidebar-section"></p>
     </div>
   </div>
-
   {% include "partials/dataset_charts.html" %}
-
+  {% if master_datasets_info %}
   <div class="govuk-grid-row" style="overflow-x: auto;" id="data">
     <div class="govuk-grid-column-full">
       <h2 class="govuk-heading-l">Data</h2>
+      {% if not has_access %}
+        {% include 'partials/request_access.html' with type='master' has_data_access=has_access %}
+      {% endif %}
+      {% endif %}
       <table class="govuk-table">
         <thead>
         <tr class="govuk-table__row">
