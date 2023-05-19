@@ -295,7 +295,7 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
 
 #data-grid {
   width: 100%;
-  height: calc(100vh - 350px)
+  height: calc(100vh - 317px)
 }
 .case-study-quote .quote-heading {
   overflow: hidden;
@@ -429,6 +429,11 @@ p.sidebar-section {
   align-items: flex-start;
 }
 
+.app-grid-breadcrumbs {
+  border-bottom: 1px solid #b1b4b6;
+  margin-bottom: 15px;
+}
+
 .enhanced-table-container {
   .ag-root-wrapper {
     border-width: 0;
@@ -532,7 +537,7 @@ p.sidebar-section {
   border-bottom: none;
 
   .app-grid-header {
-    padding: 8px 0 9px 10px;
+    padding: 12.5px 0 12.5px 10px;
     display: flex;
     flex-wrap: wrap;
 
@@ -566,7 +571,7 @@ p.sidebar-section {
       font-size: 19px;
 
       p {
-        margin-top: 4px;
+        margin-top: 10px;
       }
       .govuk-button-group {
         margin-right: 10px;
@@ -580,8 +585,8 @@ p.sidebar-section {
     }
 
     .govuk-button {
-      font-size: 16px;
-      padding: 5px 7px 4px;
+      font-size: 1rem;
+      padding: 8px 10px;
       margin-bottom: 0;
     }
     .govuk-body {
@@ -594,6 +599,20 @@ p.sidebar-section {
       .ag-icon-menu::before {
         content: "\f115" !important;
       }
+    }
+    .ag-header-cell-filtered {
+      .ag-header-cell-menu-button {
+        .ag-icon-menu::before {
+          display: inline-block;
+          content: url("/__django_static/assets/images/green-filter.svg") !important;
+          width: 12px;
+          padding-bottom: 4px;
+          margin-right: 2px;
+        }
+      }
+    }
+    .ag-icon-filter {
+      display: none;
     }
   }
 }

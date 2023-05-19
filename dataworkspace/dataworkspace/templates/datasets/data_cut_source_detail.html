@@ -34,8 +34,7 @@
 
 {% endblock footer_scripts %}
 {% block content %}
-  <div class="govuk-breadcrumbs govuk-!-padding-left-2 govuk-!-padding-bottom-2"
-       style="border-bottom: 1px solid #b1b4b6">
+  <div class="govuk-breadcrumbs govuk-!-padding-left-2 govuk-!-padding-bottom-2 app-grid-breadcrumbs">
     <ol class="govuk-breadcrumbs__list">
       <li class="govuk-breadcrumbs__list-item">
         <a class="govuk-breadcrumbs__link" href="">Home</a>
@@ -44,8 +43,7 @@
         <a class="govuk-breadcrumbs__link"
            href="{% url "datasets:dataset_detail" dataset_uuid=object.dataset.id %}#{{ object.dataset.slug }}">{{ object.dataset }}</a>
       </li>
-      <li class="govuk-breadcrumbs__list-item">{{ object.name }}
-      </li>
+      <li class="govuk-breadcrumbs__list-item">{{ object.name }}</li>
       {% flag SECURITY_CLASSIFICATION_FLAG %}
         <div style="float: right" class="govuk-!-padding-right-3">
           {% if not object.dataset.government_security_classification %}
@@ -77,7 +75,7 @@
       {% endif %}
       <div class="govuk-!-padding-top-4 govuk-!-padding-left-2">
         <span class="govuk-caption-xl">Data table</span>
-        <h1 class="govuk-heading-xl">{{ object.name }}</h1>
+        <h2 class="govuk-heading-l">{{ object.name }}</h2>
       </div>
      <div class="app-compressed-grid">
       <div class="app-grid-header">
