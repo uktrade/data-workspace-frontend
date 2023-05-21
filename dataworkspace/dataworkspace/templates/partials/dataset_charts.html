@@ -46,9 +46,11 @@
       </div>
     </div>
     {% endflag %}
-  {% else %}
+    {% else %}
+    {% if model.related_charts.count > 0%}
     <div class="govuk-grid-column-full">
       {% include 'partials/request_access_visuals.html' %}
     </div>
+    {% endif %}
   {% endif %}
 </div>
