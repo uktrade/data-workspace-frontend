@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 743.5 710.46">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #063;
+      }
+
+      .cls-2 {
+        fill: none;
+        stroke: #063;
+        stroke-miterlimit: 10;
+      }
+    </style>
+  </defs>
+  <g id="Layer_1-2" data-name="Layer 1">
+    <g id="filter">
+      <g>
+        <g>
+          <polygon class="cls-1" points="641.75 68 405.5 304.25 405.5 473 338 540.5 338 304.25 101.75 68 641.75 68"/>
+          <path class="cls-1" d="m743,.5v67.5l-270,270v168.75l-202.5,202.5v-371.25L.5,68V.5h742.5Zm-337.5,303.75l236.25-236.25H101.75l236.25,236.25v236.25l67.5-67.5v-168.75Z"/>
+        </g>
+        <g>
+          <polygon class="cls-2" points="743 68 473 338 473 506.75 270.5 709.25 270.5 338 .5 68 .5 .5 743 .5 743 68"/>
+          <polygon class="cls-2" points="101.75 68 338 304.25 338 540.5 405.5 473 405.5 304.25 641.75 68 101.75 68"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

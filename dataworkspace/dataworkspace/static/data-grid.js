@@ -47,7 +47,7 @@ function logDownloadEvent(
     item_type: itemType,
     item_id: itemId,
     data_format: dataFormat,
-    columns_total: columnApi.getAllColumns().length,
+    columns_total: columnApi.getColumns().length,
     columns_downloaded: columnApi.getAllDisplayedColumns().length,
     rows_total: null,
     rows_downloaded: rowsDownLoaded,
@@ -156,10 +156,12 @@ function initDataGrid(
 
   var gridOptions = {
     enableCellTextSelection: true,
+    suppressMenuHide: true,
     defaultColDef: {
+      suppressSizeToFit: false,
       resizable: true,
-      suppressMenu: true,
-      floatingFilter: true,
+      suppressMenu: false,
+      floatingFilter: false,
 
       // suppressHeaderKeyboardEvent: function(params){
       // We don't suppress TAB from the header because we are showing floatingFilters
@@ -205,8 +207,6 @@ function initDataGrid(
 
   var gridContainer = document.querySelector("#data-grid");
   new agGrid.Grid(gridContainer, gridOptions);
-  gridOptions.api.refreshView();
-  autoSizeColumns(gridOptions.columnApi);
 
   if (dataEndpoint) {
     var initialDataLoaded = false;
@@ -260,9 +260,7 @@ function initDataGrid(
                 }
                 if (dl_count) {
                   dl_count.innerText =
-                    "Download this data (Max " +
-                    downLoadLimit.toLocaleString() +
-                    " rows)";
+                    "Download this data";
                 }
               }
               if (rc <= downLoadLimit || (downLoadLimit == null && rc < 5000)) {
@@ -271,7 +269,7 @@ function initDataGrid(
                 }
                 if (dl_count) {
                   dl_count.innerText =
-                    "Download this data (" + rc.toLocaleString() + " rows)";
+                    "Download this data";
                 }
               }
               params.successCallback(
@@ -404,16 +402,9 @@ function initDataGrid(
   }
 
   document
-    .querySelector("#data-grid-reset-filters")
+    .querySelector("#data-grid-reset-view")
     .addEventListener("click", function (e) {
       gridOptions.api.setFilterModel(null);
-      document.activeElement.blur();
-      return;
-    });
-
-  document
-    .querySelector("#data-grid-reset-columns")
-    .addEventListener("click", function (e) {
       gridOptions.columnApi.resetColumnState();
       document.activeElement.blur();
       return;
