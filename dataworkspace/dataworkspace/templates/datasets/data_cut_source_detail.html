@@ -75,6 +75,7 @@
       {% endif %}
       <div class="govuk-!-padding-top-4 govuk-!-padding-left-2">
         <span class="govuk-caption-xl">Data table</span>
+        <span class="govuk-caption-xl">Data table{% if object.schema %} ({{ object.schema }}.{{ object.table }}){% endif %}</span>
         <h2 class="govuk-heading-l">{{ object.name }}</h2>
       </div>
      <div class="app-compressed-grid">
@@ -85,11 +86,11 @@
             {% flag CHART_BUILDER_BUILD_CHARTS_FLAG %}
               <button class="govuk-button" id="data-grid-create-chart">Create a chart</button>
             {% endflag %}
-            <button class="govuk-button govuk-button--secondary govuk-!-font-size-16" data-module="govuk-button" id="data-grid-reset-view">
+            <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-view">
               Reset view
             </button>
             {% if object.data_grid_download_enabled %}
-              <button class="govuk-button govuk-button--secondary govuk-!-font-size-16" data-module="govuk-button" id="data-grid-download">
+              <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-download">
                 Download this data
               </button>
             {% endif %}
