@@ -696,7 +696,7 @@ async def add_user_to_team(user_sso_id: str, team_name: str):
 
         User = get_user_model()
 
-        user = User.objects.get(username=="{user_sso_id}")
+        user = User.objects.get(username="{user_sso_id}")
 
         team, _ = Team.objects.get_or_create(name="{team_name}")
         membership, _ = TeamMembership.objects.get_or_create(user=user, team=team)
