@@ -1095,7 +1095,7 @@ def visualisation_datasets_html_GET(request, gitlab_project):
         application_template,
         _visualisation_branches(gitlab_project),
         current_menu_item="datasets",
-        template_specific_context={"datasets": datasets},
+        template_specific_context={"datasets": datasets, "pipelines": "mypipelines"},
         status=200,
     )
 

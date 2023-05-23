@@ -1,49 +1,93 @@
-{% extends '_visualisation.html' %}
-{% load core_tags %}
-
-{% block page_title %}Datasets - {{ block.super }}{% endblock %}
-
-{% block content %}
+{% extends '_visualisation.html' %} {% load core_tags %} {% block page_title
+%}Datasets - {{ block.super }}{% endblock %} {% block content %}
 
 <form method="POST" action="{{ request.path }}" novalidate>
-    {% csrf_token %}
+  {% csrf_token %}
 
-    <fieldset class="govuk-fieldset">
-        <legend class="govuk-fieldset__legend govuk-fieldset__legend--l govuk-!-margin-bottom-6">
-            <h1 class="govuk-fieldset__heading">
-                <span class="govuk-caption-l">{{ gitlab_project.name }}</span>
-                Datasets
-            </h1>
-        </legend>
+  <fieldset class="govuk-fieldset">
+    <legend
+      class="govuk-fieldset__legend govuk-fieldset__legend--l govuk-!-margin-bottom-6"
+    >
+      <h1 class="govuk-fieldset__heading">
+        <span class="govuk-caption-l">{{ gitlab_project.name }}</span>
+        Datasets
+      </h1>
+    </legend>
 
-        <p class="govuk-body">You can give this visualisation SQL access to any dataset that you have access to. You cannot remove access from datasets that are available to all Data Workspace users.</p>
+    <p class="govuk-body">
+      You can give this visualisation SQL access to any dataset that you have
+      access to. You cannot remove access from datasets that are available to
+      all Data Workspace users.
+    </p>
 
-        <p class="govuk-body">The tables of each dataset are listed in the format "schema"."table".</p>
+    <p class="govuk-body">
+      The tables of each dataset are listed in the format "schema"."table".
+    </p>
 
-        <div class="govuk-checkboxes">
-            {% for dataset, tables in datasets %}
-            <div class="govuk-checkboxes__item visualisation-dataset__item govuk-!-margin-top-5 govuk-!-padding-bottom-5 {% if forloop.last %} govuk-!-margin-bottom-5{% endif %}">
-                <input class="govuk-checkboxes__input" id="dataset-{{ dataset.id }}" name="dataset" type="checkbox" value="{{ dataset.id }}" aria-describedby="dataset-{{ dataset.id }}-hint"{% if not dataset.selectable %} disabled{% endif %}{% if dataset.selected %} checked{% endif %}>
-                <label class="govuk-label govuk-checkboxes__label visualisation-dataset__label" for="dataset-{{ dataset.id }}">
-                    {{ dataset.name }}
-                </label>
-                <span id="dataset-{{ dataset.id }}-hint" class="govuk-checkboxes__hint">
-                    <ul class="govuk-list govuk-!-margin-bottom-1">
-                        {% for table in tables %}
-                        <li>
-                            "{{ table.schema|zero_width_space_after:'_' }}"."{{ table.table|zero_width_space_after:'_' }}"
-                        </li>
-                        {% endfor %}
-                    </ul>
-                    <a href="{% url 'datasets:dataset_detail' dataset.id %}" class="govuk-link govuk-link--no-visited-state">View catalogue item<span class="govuk-visually-hidden"> for {{ dataset.name }}</span></a>
-                </span>
-            </div>
+    <div class="govuk-checkboxes">
+      {% for dataset, tables in datasets %}
+      <div
+        class="govuk-checkboxes__item visualisation-dataset__item govuk-!-margin-top-5 govuk-!-padding-bottom-5 {% if forloop.last %} govuk-!-margin-bottom-5{% endif %}"
+      >
+        <input
+          class="govuk-checkboxes__input"
+          id="dataset-{{ dataset.id }}"
+          name="dataset"
+          type="checkbox"
+          value="{{ dataset.id }}"
+          aria-describedby="dataset-{{ dataset.id }}-hint"
+          {%
+          if
+          not
+          dataset.selectable
+          %}
+          disabled{%
+          endif
+          %}{%
+          if
+          dataset.selected
+          %}
+          checked{%
+          endif
+          %}
+        />
+        <label
+          class="govuk-label govuk-checkboxes__label visualisation-dataset__label"
+          for="dataset-{{ dataset.id }}"
+        >
+          {{ dataset.name }}
+        </label>
+        <span id="dataset-{{ dataset.id }}-hint" class="govuk-checkboxes__hint">
+          <ul class="govuk-list govuk-!-margin-bottom-1">
+            {% for table in tables %}
+            <li>
+              "{{ table.schema|zero_width_space_after:'_' }}"."{{
+              table.table|zero_width_space_after:'_' }}"
+            </li>
             {% endfor %}
-        </div>
-    </fieldset>
+          </ul>
+          <a
+            href="{% url 'datasets:dataset_detail' dataset.id %}"
+            class="govuk-link govuk-link--no-visited-state"
+            >View catalogue item<span class="govuk-visually-hidden">
+              for {{ dataset.name }}</span
+            ></a
+          >
+        </span>
+      </div>
+      {% endfor %}
+    </div>
+  </fieldset>
 
-    <button class="govuk-button" data-module="govuk-button" type="submit" data-prevent-double-click="true">
-        Save datasets access
-    </button>
+  <button
+    class="govuk-button"
+    data-module="govuk-button"
+    type="submit"
+    data-prevent-double-click="true"
+  >
+    Save datasets access
+  </button>
+
+  {{ pipelines }}
 </form>
 {% endblock %}
