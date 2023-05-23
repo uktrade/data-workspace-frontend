@@ -22,12 +22,16 @@ from django.core import serializers
 from django.core.validators import EmailValidator
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
+from django.db.models import Q
 from django.http import HttpResponse, Http404
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.encoding import force_str
 from django.views.decorators.http import require_GET
 from django.views.generic.edit import UpdateView
+from dataworkspace.apps.datasets.models import Pipeline
+from dataworkspace.apps.core.utils import USER_SCHEMA_STEM
+from dataworkspace.apps.core.utils import db_role_schema_suffix_for_app
 
 from dataworkspace.apps.api_v1.views import (
     get_api_visible_application_instance_by_public_host,
@@ -1095,7 +1099,23 @@ def visualisation_datasets_html_GET(request, gitlab_project):
         application_template,
         _visualisation_branches(gitlab_project),
         current_menu_item="datasets",
-        template_specific_context={"datasets": datasets},
+        template_specific_context={
+            "datasets": datasets,
+            "pipelines": Pipeline.objects.filter(
+                Q(
+                    table_name__startswith=USER_SCHEMA_STEM
+                    + db_role_schema_suffix_for_app(application_template)
+                    + "."
+                )
+                | Q(
+                    table_name__startswith='"'
+                    + USER_SCHEMA_STEM
+                    + db_role_schema_suffix_for_app(application_template)
+                    + '"'
+                    + "."
+                )
+            ),
+        },
         status=200,
     )
 
