@@ -57,11 +57,11 @@ certifi==2022.12.7
 cffi==1.15.0
     # via cryptography
 chardet==3.0.4
-    # via
-    #   requests
-    #   tabulator
+    # via tabulator
 charset-normalizer==3.1.0
-    # via aiohttp
+    # via
+    #   aiohttp
+    #   requests
 click==8.0.3
     # via
     #   celery
@@ -149,9 +149,7 @@ geoalchemy2==0.8.4
 gevent==21.12.0
     # via -r requirements.in
 greenlet==1.1.0
-    # via
-    #   gevent
-    #   sqlalchemy
+    # via gevent
 hawk-server-asyncio==0.0.13
     # via -r requirements.in
 idna==2.10
@@ -236,7 +234,7 @@ redis==4.5.4
     #   -r requirements.in
     #   celery-redbeat
     #   django-redis
-requests==2.25.1
+requests==2.31.0
     # via
     #   -r requirements.in
     #   aws-requests-auth
