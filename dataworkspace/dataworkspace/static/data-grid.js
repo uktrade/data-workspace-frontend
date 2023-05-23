@@ -85,10 +85,12 @@ function submitFilterForm(action, fileName, gridOptions, columnDataTypeMap) {
   }
 
   // Add the current sort config to the form
-  var sortModel = gridOptions.api.getSortModel()[0];
-  if (sortModel) {
-    form.append(createInputFormField("sortDir", sortModel.sort));
-    form.append(createInputFormField("sortField", sortModel.colId));
+  const sortFields = gridOptions.columnApi.getColumnState().filter(function(c) {
+    return c.sort != null
+  });
+  if (sortFields.length > 0) {
+    form.append(createInputFormField("sortDir", sortFields[0].sort));
+    form.append(createInputFormField("sortField", sortFields[0].colId));
   }
 
   // Add the form to the page, submit it and then remove it
