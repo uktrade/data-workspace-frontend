@@ -231,6 +231,7 @@ def test_header_links(request_client):
             "&utm_medium=referral&utm_campaign=dataflow&utm_content=Switch%20to%20Data%20Hub",
         ),
         ("Home", "http://dataworkspace.test:8000/"),
+        ("Collections", "/collections/"),
         ("Tools", "/tools/"),
         (
             "Help centre (opens in a new tab)",

@@ -14,8 +14,6 @@ from django.views.decorators.http import require_http_methods
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.conf import settings
 
-from waffle.decorators import waffle_flag
-
 from dataworkspace.apps.data_collections.forms import (
     CollectionEditForm,
     CollectionNotesForm,
@@ -557,7 +555,6 @@ def remove_collection(request, collections_id):
     return HttpResponseRedirect(reverse("data_collections:collections-list"))
 
 
-@waffle_flag(settings.COLLECTIONS_FLAG)
 @require_http_methods(["GET"])
 def history_of_collection_changes(request, collections_id):
     collection = get_authorised_collection(request, collections_id)
