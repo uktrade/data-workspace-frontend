@@ -68,7 +68,7 @@
   </div>
     <div>
       {% if object.dataset.enquiries_contact %}
-        <a class="govuk-link govuk-link--no-visited-state" style="float: right"
+        <a class="govuk-link govuk-link--no-visited-state govuk-!-padding-right-3" style="float: right"
            href="mailto:{{ object.dataset.enquiries_contact.email }}?subject=Reporting an issue - {{ object.name }}">
           {% include "partials/report_an_issue_icon.html" %}</a>
       {% endif %}
