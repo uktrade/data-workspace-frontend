@@ -1,4 +1,5 @@
 import json
+import re
 
 import requests
 from mohawk import Sender
@@ -14,10 +15,18 @@ HAWK_CREDS = {
 }
 
 
+def split_schema_table(schema_table):
+    regex = r"^\"?([a-zA-Z_-][a-zA-Z0-9_-]+)\"?\.\"?([a-zA-Z_-][a-zA-Z0-9_-]+)\"?$"
+    try:
+        return re.match(regex, schema_table).groups()
+    except AttributeError:
+        raise ValueError("Invalid schema table name")
+
+
 def save_pipeline_to_dataflow(pipeline, method):
     url = f"{API_URL}/dag/{pipeline.dag_id}"
     content_type = "application/json"
-    schema_name, table_name = pipeline.table_name.split(".")
+    schema_name, table_name = split_schema_table(pipeline.table_name)
     body = json.dumps(
         {
             "schedule": "@daily",

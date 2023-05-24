@@ -18,13 +18,16 @@ from dataworkspace.forms import (
     GOVUKDesignSystemTextareaField,
     GOVUKDesignSystemTextareaWidget,
 )
+from dataworkspace.apps.datasets.pipelines.utils import split_schema_table
 
 
 def validate_schema_and_table(value):
     try:
-        schema, table = value.split(".")
+        schema, table = split_schema_table(value)
     except ValueError as ex:
-        raise ValidationError("Table name must be in the format <schema>.<table name>") from ex
+        raise ValidationError(
+            'Table name must be in the format schema.table or "schema"."table"'
+        ) from ex
     if len(schema) > 63:
         raise ValidationError("Schema name must be less than 63 characters")
     if len(table) > 42:
@@ -46,8 +49,8 @@ class BasePipelineCreateForm(GOVUKDesignSystemModelForm):
         error_messages={"required": "Enter a table name."},
         validators=(
             RegexValidator(
-                message="Table name must be in the format <schema>.<table name>",
-                regex=r"^[a-zA-Z_][a-zA-Z0-9_]*.[a-zA-Z_][a-zA-Z0-9_]*$",
+                message='Table name must be in the format schema.table or "schema"."table"',
+                regex=r"^((\"[a-zA-Z_-][a-zA-Z0-9_-]*\")|([a-zA-Z_-][a-zA-Z0-9_-]*))\.((\"[a-zA-Z_-][a-zA-Z0-9_-]*\")|([a-zA-Z_-][a-zA-Z0-9_-]*))$",
             ),
             validate_schema_and_table,
         ),
