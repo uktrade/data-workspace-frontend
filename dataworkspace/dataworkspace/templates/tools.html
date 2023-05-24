@@ -19,6 +19,37 @@
 
 {% block content %}
 
+{% with tools_count=RUNNING_TOOLS.count %}
+  
+  <div class="govuk-notification-banner" role="region"
+    aria-labelledby="govuk-notification-banner-title"
+    data-module="govuk-notification-banner">
+    <div class="govuk-notification-banner__header">
+      <h2 class="govuk-notification-banner__title" id="govuk-notification-banner-title">
+        Important
+      </h2>
+    </div>
+    <div class="govuk-notification-banner__content">
+    {% if tools_count > 0 %}    
+            <p class="govuk-notification-banner__heading" style="max-width: none;">
+                You {% if tools_count == 1 %}are running{% else %} have {% endif %}
+                {% if tools_count == 1 %} {{ RUNNING_TOOLS.0.application_template.nice_name }}. {% else %}
+                  {% for tool in RUNNING_TOOLS %}
+                   {{ tool.application_template.nice_name }}{% if forloop.revcounter == 2 %} and {% elif not forloop.last %}, {% endif %}
+                  
+                   {% endfor %} 
+                   running.
+
+                 {% endif %}              
+                You can end your session{{ tools_count|pluralize }} below if you are not using 
+
+                {% if tools_count == 1 %} it {% else %} them {% endif %}.
+              <a class="govuk-notification-banner__link" href=https://data-services-help.trade.gov.uk/data-workspace/how-to/use-tools/about-data-workspace-tools/ >Why close tools?</a>
+            </p>   
+    {% endif %}
+    </div>
+  </div>
+  {% endwith %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-xl">Tools</h1>
