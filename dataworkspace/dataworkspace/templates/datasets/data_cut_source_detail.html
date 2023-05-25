@@ -79,7 +79,7 @@
               <h2 class="govuk-heading-l govuk-!-margin-bottom-0">{{ object.name }} </h2>
             </div>
             <div class="govuk-grid-column-full">
-              <p class="govuk-body govuk-!-padding-top-2 govuk-!-padding-right-3 govuk-!-margin-bottom-2 govuk-!-text-align-right">
+              <p class="govuk-body govuk-!-padding-top-0 govuk-!-padding-right-3 govuk-!-margin-bottom-2 govuk-!-text-align-right">
               <span class="govuk-!-font-weight-bold">Data last updated:</span>
                 {{ object.get_data_last_updated_date|gmt_date|default_if_none:"N/A" }} {{ object.get_data_last_updated_date|time_with_gmt_offset|default_if_none:"N/A" }}
               </p>
