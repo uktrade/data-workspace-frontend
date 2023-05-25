@@ -20,7 +20,7 @@
 {% block content %}
 
 {% with tools_count=RUNNING_TOOLS.count %}
-  
+{% if tools_count > 0 %} 
   <div class="govuk-notification-banner" role="region"
     aria-labelledby="govuk-notification-banner-title"
     data-module="govuk-notification-banner">
@@ -29,8 +29,7 @@
         Important
       </h2>
     </div>
-    <div class="govuk-notification-banner__content">
-    {% if tools_count > 0 %}    
+    <div class="govuk-notification-banner__content">   
             <p class="govuk-notification-banner__heading" style="max-width: none;">
                 You {% if tools_count == 1 %}are running{% else %} have {% endif %}
                 {% if tools_count == 1 %} {{ RUNNING_TOOLS.0.application_template.nice_name }}. {% else %}
@@ -46,10 +45,11 @@
                 {% if tools_count == 1 %} it {% else %} them {% endif %}.
               <a class="govuk-notification-banner__link" href=https://data-services-help.trade.gov.uk/data-workspace/how-to/use-tools/about-data-workspace-tools/ >Why close tools?</a>
             </p>   
-    {% endif %}
+    
     </div>
   </div>
-  {% endwith %}
+  {% endif %}
+  {% endwith %}q
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-xl">Tools</h1>
