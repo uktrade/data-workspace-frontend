@@ -1,4 +1,5 @@
 from django.conf import settings
+from dataworkspace.apps.applications.models import ApplicationInstance
 
 
 def common(request):
@@ -40,6 +41,6 @@ def common(request):
         "IS_SUBSCRIBED_TO_NEWSLETTER": is_subscribed_to_newsletter,
         "SECURITY_CLASSIFICATION_FLAG": settings.SECURITY_CLASSIFICATION_FLAG,
         "RUNNING_TOOLS": request.user.applicationinstance_set.filter(
-            state__in=["SPAWNING", "RUNNING"]
-        ),
+            state__in=["SPAWNING", "RUNNING"] 
+        ) if not request.user.is_anonymous else ApplicationInstance.objects.none()
     }
