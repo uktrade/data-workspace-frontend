@@ -62,14 +62,14 @@
     </ol>
   </div>
   <div>
-    <div>
+    <div id="collapsible-header">
       {% if model.enquiries_contact %}
         <a href="mailto:{{ model.enquiries_contact.email }}?subject=Reporting an issue - {{ model.name }}"
            class="govuk-link govuk-link--no-visited-state govuk-!-padding-right-3" style="float: right">
           {% include "partials/report_an_issue_icon.html" %}</a>
       {% endif %}
     </div>
-      <div id="collapsible-header" class="govuk-!-padding-top-4 govuk-!-padding-left-2">
+      <div class="govuk-!-padding-top-4 govuk-!-padding-left-2">
         <span class="govuk-caption-xl">Data table (public.{{ model.table_name }})</span>
         <div class="govuk-grid-row">
           <div class="govuk-grid-column-full">      
@@ -106,7 +106,7 @@
             </div>
           </div>
           <div class="grid-header-right govuk-!-padding-right-3">
-              <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-maximise">Maximise</button>
+              <button id="maximise-button" class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-maximise">Maximise</button>
             </div>
         </div>
         <div id="data-grid" class="ag-theme-alpine"></div>

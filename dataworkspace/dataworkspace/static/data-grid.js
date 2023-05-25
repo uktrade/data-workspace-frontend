@@ -411,6 +411,18 @@ function initDataGrid(
       document.activeElement.blur();
       return;
     });
+
+  var maximiseButton = document.querySelector("#maximise-button");
+    if (maximiseButton !== null) {
+      maximiseButton.addEventListener("click", function (e) {
+        document.getElementById("collapsible-header").classList.toggle("govuk-visually-hidden");
+              if (maximiseButton.innerText === "Maximise") {
+                maximiseButton.innerText = "Minimise";
+              }
+              else {
+                maximiseButton.innerText = "Maximise";
+              }
+            })};
 }
 
 window.initDataGrid = initDataGrid;
