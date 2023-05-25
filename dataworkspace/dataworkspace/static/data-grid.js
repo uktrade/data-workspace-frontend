@@ -422,7 +422,8 @@ function initDataGrid(
               else {
                 maximiseButton.innerText = "Maximise";
               }
-            })};
+            })
+          };
 }
 
 window.initDataGrid = initDataGrid;
