@@ -17,6 +17,8 @@
     <link rel="stylesheet" type="text/css" href="{% static 'data-grid.css' %}"/>
     {{ model.get_column_config|json_script:"column_data" }}
     {{ model.get_grid_data|json_script:"grid_data" }}
+    {% saved_grid_config user model as grid_config %}
+    {{ grid_config|json_script:"grid-config" }}
     <script nonce="{{ request.csp_nonce }}">
       window.initDataGrid(
         JSON.parse(document.getElementById('column_data').textContent),
