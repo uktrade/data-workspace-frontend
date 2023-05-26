@@ -3,7 +3,7 @@ function cleanFilters(filterModel, dataTypeMap) {
   for (var key in filters) {
     if (
       dataTypeMap[key] != null &&
-      dataTypeMap[key] != filters[key].filterType
+      dataTypeMap[key] !== filters[key].filterType
     ) {
       filters[key].filterType = dataTypeMap[key];
     }
@@ -115,8 +115,20 @@ function initDataGrid(
 ) {
   totalDownloadableRows =
     totalDownloadableRows != null ? totalDownloadableRows : 0;
+  const userGridConfig = getGridConfig();
   for (var i = 0; i < columnConfig.length; i++) {
     var column = columnConfig[i];
+
+    // Apply initial sort if available
+    if (column.field === userGridConfig.sortColumn) {
+      console.log(userGridConfig.sortDirection !== null ? userGridConfig.sortDirection : 'asc');
+      column.sort = userGridConfig.sortDirection !== null ? userGridConfig.sortDirection : 'asc';
+    }
+    // Hide the column if it is not in the visible columns list for the user
+    if (userGridConfig.visibleColumns != null) {
+      column.initialHide = userGridConfig.visibleColumns.indexOf(column.field) === -1;
+    }
+
     // Try to determine filter types from the column config.
     // Grid itself defaults to text if data type not set or not recognised
     if (column.dataType === "numeric") {
@@ -322,6 +334,12 @@ function initDataGrid(
         xhr.send(JSON.stringify(qs));
       },
     };
+
+    // Apply any filers the user has saved
+    if (userGridConfig.filters != null) {
+      gridOptions.api.setFilterModel(userGridConfig.filters)
+    }
+
     gridOptions.api.setDatasource(dataSource);
   }
 
@@ -408,6 +426,10 @@ function initDataGrid(
     .addEventListener("click", function (e) {
       gridOptions.api.setFilterModel(null);
       gridOptions.columnApi.resetColumnState();
+      // Unset the saved column config
+      gridOptions.columnApi.getColumns().forEach((c) => {
+        gridOptions.columnApi.setColumnVisible(c.getColId(), true);
+      });
       document.activeElement.blur();
       return;
     });

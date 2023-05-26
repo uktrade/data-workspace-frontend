@@ -113,3 +113,9 @@ function tableResize(tableEl, api) {
     autoSizeColumns(api);
   }
 }
+
+
+function getGridConfig() {
+  const gridConfigScript = document.querySelector("#grid-config");
+  return gridConfigScript !== null ? JSON.parse(gridConfigScript.textContent) : {};
+}
