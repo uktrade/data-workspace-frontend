@@ -295,9 +295,8 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
 
 #data-grid {
   width: 100%;
-  height: 560px;
+  height: calc(100vh - 317px)
 }
-
 .case-study-quote .quote-heading {
   overflow: hidden;
   margin-left: 32px;
@@ -428,6 +427,194 @@ p.sidebar-section {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+}
+
+.app-grid-breadcrumbs {
+  border-bottom: 1px solid #b1b4b6;
+  margin-bottom: 15px;
+}
+
+.enhanced-table-container {
+  .ag-root-wrapper {
+    border-width: 0;
+    font-size: 1rem;
+  }
+  .ag-header {
+    background-color: transparent;
+    border-bottom: 1px solid #b1b4b6;
+  }
+  .ag-header-cell-text {
+    display: inline-block;
+    user-select: text;
+    white-space: nowrap;
+  }
+  .header-wrap {
+    position: relative;
+    color: rgb(29, 112, 184);
+    .ag-icon-none, .ag-icon-desc, .ag-icon-asc {
+      display: none;
+    }
+    button {
+      background-color: rgba(0,0,0,0);
+      border-width: 0;
+      -webkit-box-shadow: 0 0 0 0;
+      -moz-box-shadow: 0 0 0 0;
+      box-shadow: 0 0 0 0;
+      color: #005ea5;
+      cursor: default;
+      font-family: inherit;
+      font-weight: inherit;
+      padding: 0 10px 0 0;
+      position: relative;
+      text-align: inherit;
+      font-size: 1em;
+      margin: 0 4px 0 0;
+    }
+  }
+
+  .ag-header-cell-label {
+    text-transform: lowercase;
+    &.ag-header-cell-label::first-letter {
+      text-transform: uppercase;
+    }
+  }
+  .ag-grid-header-cell, .ag-header-cell-label, .ag-cell-label-container, .ag-header-cell-sortable  {
+    cursor: default;
+  }
+  .ag-header-cell-sorted-none button, .ag-header-cell-sorted-asc button, .ag-header-cell-sorted-desc button {
+    color: $govuk-link-colour;
+    cursor: pointer;
+  }
+  .ag-header-cell-sorted-none button:focus, .ag-header-cell-sorted-asc button:focus, .ag-header-cell-sorted-desc button:focus {
+    background-color: #fd0;
+    color: $govuk-link-colour;
+    box-shadow: 0 -2px #fd0, 0 4px #0b0c0c;
+    outline: none;
+  }
+  .sort-none:before {
+    content: " ▼";
+    position: absolute;
+    right: -3px;
+    top: 10px;
+    font-size: .5em;
+  }
+  .sort-none:after {
+    content: " ▲";
+    position: absolute;
+    right: -3px;
+    top: 2px;
+    font-size: .5em;
+  }
+  .sort-asc:after {
+    content: " ▲";
+    font-size: .8em;
+    position: absolute;
+    right: -5px;
+    top: 2px;
+  }
+  .sort-desc:after {
+    content: " ▼";
+    font-size: .8em;
+    position: absolute;
+    right: -5px;
+    top: 2px;
+  }
+  .ag-header-cell, .ag-cell {
+    padding-left: 5px;
+  }
+  .ag-header-cell-resize {
+    right: 1px;
+  }
+
+  .ag-row {
+    background-color: transparent;
+    border-bottom: 1px solid #b1b4b6;
+  }
+}
+
+.app-compressed-grid {
+  border: 1px solid #b1b4b6;
+  border-bottom: none;
+
+  .app-grid-header {
+    padding: 12.5px 0 12.5px 10px;
+    display: flex;
+    flex-wrap: wrap;
+
+    .govuk-link {
+      margin-top: 0;
+      margin-bottom: 0;
+      font-size: 1rem;
+    }
+
+    .grid-header-left {
+      order: 1;
+      flex: 1 0 auto;
+      margin-right: 0;
+      margin-bottom: 0;
+      font-size: 19px;
+
+      p {
+        margin-right: 15px;
+      }
+
+      .govuk-button-group {
+        margin-right: 0;
+      }
+    }
+
+    .grid-header-right {
+      order: 2;
+      flex: 0 0 auto;
+      margin-left: auto;
+      text-align: right;
+      font-size: 19px;
+
+      p {
+        margin-top: 10px;
+      }
+      .govuk-button-group {
+        margin-right: 10px;
+        margin-left: 0;
+      }
+    }
+
+    .govuk-button-group {
+      margin-bottom: 0;
+      margin-top: 0;
+    }
+
+    .govuk-button {
+      font-size: 1rem;
+      padding: 8px 10px;
+      margin-bottom: 0;
+    }
+    .govuk-body {
+      margin-bottom: 0;
+      font-size: 16px;
+    }
+  }
+  .ag-header {
+    .ag-header-cell-menu-button {
+      .ag-icon-menu::before {
+        content: "\f115" !important;
+      }
+    }
+    .ag-header-cell-filtered {
+      .ag-header-cell-menu-button {
+        .ag-icon-menu::before {
+          display: inline-block;
+          content: url("/__django_static/assets/images/green-filter.svg") !important;
+          width: 12px;
+          padding-bottom: 4px;
+          margin-right: 2px;
+        }
+      }
+    }
+    .ag-icon-filter {
+      display: none;
+    }
+  }
 }
 
 @import "filters";

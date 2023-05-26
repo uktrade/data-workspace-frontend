@@ -1,7 +1,6 @@
 import datetime
 from unittest.mock import patch
 from mock import mock
-from waffle.testutils import override_flag
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -866,7 +865,6 @@ def test_deleted_collection_presents_archived_page(client, user):
     assert "Sorry, this collection has been deleted" in response.content.decode(response.charset)
 
 
-@override_flag(settings.COLLECTIONS_FLAG, active=True)
 def test_collection_history_table_is_rendered(client, user):
     collection = factories.CollectionFactory.create(
         name="test-collections",

@@ -20,9 +20,9 @@
 
         <p class="govuk-body">The tables of each dataset are listed in the format "schema"."table".</p>
 
-        <div class="govuk-checkboxes">
+        <div class="govuk-checkboxes govuk-!-margin-bottom-5">
             {% for dataset, tables in datasets %}
-            <div class="govuk-checkboxes__item visualisation-dataset__item govuk-!-margin-top-5 govuk-!-padding-bottom-5 {% if forloop.last %} govuk-!-margin-bottom-5{% endif %}">
+            <div class="govuk-checkboxes__item visualisation-dataset__item govuk-!-margin-top-5 govuk-!-padding-bottom-5">
                 <input class="govuk-checkboxes__input" id="dataset-{{ dataset.id }}" name="dataset" type="checkbox" value="{{ dataset.id }}" aria-describedby="dataset-{{ dataset.id }}-hint"{% if not dataset.selectable %} disabled{% endif %}{% if dataset.selected %} checked{% endif %}>
                 <label class="govuk-label govuk-checkboxes__label visualisation-dataset__label" for="dataset-{{ dataset.id }}">
                     {{ dataset.name }}
@@ -36,6 +36,18 @@
                         {% endfor %}
                     </ul>
                     <a href="{% url 'datasets:dataset_detail' dataset.id %}" class="govuk-link govuk-link--no-visited-state">View catalogue item<span class="govuk-visually-hidden"> for {{ dataset.name }}</span></a>
+                </span>
+            </div>
+            {% endfor %}
+
+            {% for pipeline in pipelines %}
+            <div class="govuk-checkboxes__item visualisation-dataset__item govuk-!-margin-top-5 govuk-!-padding-bottom-5">
+                <input class="govuk-checkboxes__input" id="pipeline-{{ pipeline.id }}" name="pipeline" type="checkbox" value="{{ pipeline.id }}" aria-describedby="pipeline-{{ pipeline.id }}-hint" disabled checked>
+                <label class="govuk-label govuk-checkboxes__label visualisation-dataset__label" for="pipeline-{{ pipeline.id }}">
+                    {{ pipeline.table_name }}
+                </label>
+                <span id="dataset-{{ dataset.id }}-hint" class="govuk-checkboxes__hint">
+                    <pre>{{ pipeline.config.sql }}</pre>
                 </span>
             </div>
             {% endfor %}
