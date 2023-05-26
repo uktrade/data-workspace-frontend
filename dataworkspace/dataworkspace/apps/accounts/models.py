@@ -2,6 +2,7 @@ import uuid
 
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -50,15 +51,23 @@ class UserDataTableView(TimeStampedModel):
         get_user_model(), related_name="saved_grid_views", on_delete=models.CASCADE
     )
     source_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    source_object_id = models.UUIDField()
+    source_object_id = models.TextField()
     source = GenericForeignKey("source_content_type", "source_object_id")
-    visible_columns = models.JSONField(null=True, blank=True)
+    visible_columns = ArrayField(models.CharField(max_length=256), null=True, blank=True)
     sort_column = models.CharField(max_length=256, null=True, blank=True)
     sort_direction = models.CharField(max_length=20, null=True, blank=True)
     filters = models.JSONField(null=True, blank=True)
 
     class Meta:
         unique_together = ("user", "source_content_type", "source_object_id")
+
+    def grid_config(self):
+        return {
+            "visibleColumns": self.visible_columns,
+            "sortColumn": self.sort_column,
+            "sortDirection": self.sort_direction,
+            "filters": self.filters,
+        }
 
 
 @receiver(post_save, sender=UserDataTableView)
