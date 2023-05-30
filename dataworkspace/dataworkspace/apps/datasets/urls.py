@@ -5,6 +5,7 @@ from dataworkspace.apps.datasets import models, views
 from dataworkspace.apps.datasets.search import suggested_searches
 from dataworkspace.apps.datasets.subscriptions import views as subscription_views
 from dataworkspace.apps.datasets.data_dictionary import views as data_dictionary_views
+from dataworkspace.apps.datasets.views import save_data_grid_view
 from dataworkspace.apps.request_access.views import DatasetAccessRequest
 
 
@@ -331,5 +332,23 @@ urlpatterns = [
         "log_data_preview_load_time/<uuid:dataset_uuid>/<str:source_id>/",
         login_required(views.log_data_preview_load_time),
         name="log_data_preview_load_time",
+    ),
+    path(
+        "table/<str:source_id>/save-grid/",
+        login_required(save_data_grid_view),
+        {"model_class": models.SourceTable},
+        name="source_table_save_grid_view",
+    ),
+    path(
+        "query/<str:source_id>/save-grid/",
+        login_required(save_data_grid_view),
+        {"model_class": models.CustomDatasetQuery},
+        name="custom_dataset_query_save_grid_view",
+    ),
+    path(
+        "reference/<str:source_id>/save-grid/",
+        login_required(save_data_grid_view),
+        {"model_class": models.ReferenceDataset},
+        name="reference_dataset_save_grid_view",
     ),
 ]

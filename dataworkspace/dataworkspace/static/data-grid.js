@@ -85,12 +85,11 @@ function submitFilterForm(action, fileName, gridOptions, columnDataTypeMap) {
   }
 
   // Add the current sort config to the form
-  const sortFields = gridOptions.columnApi.getColumnState().filter(function(c) {
-    return c.sort != null
-  });
-  if (sortFields.length > 0) {
-    form.append(createInputFormField("sortDir", sortFields[0].sort));
-    form.append(createInputFormField("sortField", sortFields[0].colId));
+  const sort = getSortField(gridOptions.columnApi);
+  if (sort[0] !== null) {
+    form.append(createInputFormField("sortDir", sort[0]));
+    form.append(createInputFormField("sortField", sort[1]));
+
   }
 
   // Add the form to the page, submit it and then remove it
@@ -116,17 +115,22 @@ function initDataGrid(
   totalDownloadableRows =
     totalDownloadableRows != null ? totalDownloadableRows : 0;
   const userGridConfig = getGridConfig();
-  for (var i = 0; i < columnConfig.length; i++) {
-    var column = columnConfig[i];
+  const hasSavedConfig = Object.keys(userGridConfig).length > 0;
 
-    // Apply initial sort if available
-    if (column.field === userGridConfig.sortColumn) {
-      console.log(userGridConfig.sortDirection !== null ? userGridConfig.sortDirection : 'asc');
-      column.sort = userGridConfig.sortDirection !== null ? userGridConfig.sortDirection : 'asc';
-    }
-    // Hide the column if it is not in the visible columns list for the user
-    if (userGridConfig.visibleColumns != null) {
-      column.initialHide = userGridConfig.visibleColumns.indexOf(column.field) === -1;
+  columnConfig.forEach(function(column, i) {
+    column.position = i;
+    if (hasSavedConfig) {
+      const userColumnConfig = userGridConfig.columnDefs[column.field];
+      if (userColumnConfig !== undefined) {
+        column.sort = userColumnConfig.sort;
+        column.initialHide = !userColumnConfig.visible;
+        column.width = userColumnConfig.width;
+        column.position = userColumnConfig.position;
+      }
+      else {
+        column.initialHide = true;
+        column.position = Object.keys(userGridConfig.columnDefs).length + i;
+      }
     }
 
     // Try to determine filter types from the column config.
@@ -160,13 +164,7 @@ function initDataGrid(
 
     // Ensure ag-grid does not capitalise actual column names
     column.headerName = column.headerName ? column.headerName : column.field;
-  }
-
-  function suppressTabKey(params) {
-    var event = params.event;
-    var key = event.key;
-    if (key === "Tab") return true;
-  }
+  });
 
   var gridOptions = {
     enableCellTextSelection: true,
@@ -183,13 +181,19 @@ function initDataGrid(
       // ag-grid doesn't suppress the tab navigation between these text boxes
       // this is either by design or a bug in ag-grid
 
-      suppressKeyboardEvent: suppressTabKey,
+      suppressKeyboardEvent: function(params) {
+        var event = params.event;
+        var key = event.key;
+        if (key === "Tab") return true;
+      },
       filterParams: {
-        suppressAndOrCondition: true,
+        maxNumConditions: 1,
         buttons: ["reset"],
       },
     },
-    columnDefs: columnConfig,
+    columnDefs: columnConfig.sort(function(a, b) {
+      return a.position - b.position;
+    }),
     components: {
       loadingRenderer: function (params) {
         if (params.data != null) {
@@ -232,9 +236,10 @@ function initDataGrid(
           limit: params.endRow - params.startRow,
           filters: cleanFilters(params.filterModel, columnDataTypeMap),
         };
-        if (params.sortModel[0]) {
-          qs["sortField"] = params.sortModel[0].colId;
-          qs["sortDir"] = params.sortModel[0].sort;
+        const sort = getSortField(gridOptions.columnApi);
+        if (sort[0] !== null) {
+          qs["sortField"] = sort[0];
+          qs["sortDir"] = sort[1];
         }
         var xhr = new XMLHttpRequest();
         var startTime = Date.now();
@@ -292,10 +297,10 @@ function initDataGrid(
                   ? params.startRow + response.records.length
                   : -1
               );
-              if (!initialDataLoaded) {
+              if (!initialDataLoaded && !hasSavedConfig) {
                 autoSizeColumns(gridOptions.columnApi);
-                initialDataLoaded = true;
               }
+              initialDataLoaded = true;
 
               // log event in backend
               eventLogPOST.open("POST", eventLogEndpoint, true);
@@ -433,6 +438,49 @@ function initDataGrid(
       document.activeElement.blur();
       return;
     });
+
+  var saveViewButton = document.querySelector("#data-grid-save-view");
+  if (saveViewButton !== null) {
+    saveViewButton.addEventListener("click", function (e) {
+      saveViewButton.innerHTML = "Saving view";
+      saveViewButton.setAttribute("disabled", "disabled");
+      const sort = getSortField(gridOptions.columnApi);
+      const columnState = Object.fromEntries(gridOptions.columnApi.getColumnState().map(function(c, i) {
+        c.position = i;
+        return [c.colId, c];
+      }));
+      let gridConfig = {
+        sortColumn: sort[0],
+        sortDirection: sort[1],
+        filters: gridOptions.api.getFilterModel(),
+        columnDefs: gridOptions.columnApi.getColumns().map(function(c, i) {
+          const colState = columnState[c.colId];
+          return {
+            field: c.colId,
+            position: colState.position,
+            visible: c.visible,
+            width: colState.width,
+            sort: c.sort,
+          }
+        })
+      };
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", gridContainer.getAttribute("data-save-view-url"), true);
+      xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+      xhr.setRequestHeader("X-CSRFToken", getCsrfToken());
+      xhr.onreadystatechange = function () {
+        if (this.readyState === XMLHttpRequest.DONE) {
+          if (this.status === 200) {
+            // Show a success message - will be completed in 3rd ticket in the series
+          }
+          saveViewButton.innerHTML = "Save view";
+          saveViewButton.removeAttribute("disabled");
+        }
+      }
+      xhr.send(JSON.stringify(gridConfig));
+    });
+  }
+
 }
 
 window.initDataGrid = initDataGrid;

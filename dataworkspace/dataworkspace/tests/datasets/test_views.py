@@ -23,6 +23,7 @@ from freezegun import freeze_time
 from lxml import html
 from waffle.testutils import override_flag
 
+from dataworkspace.apps.accounts.models import UserDataTableView
 from dataworkspace.apps.core.charts.models import ChartBuilderChart
 from dataworkspace.apps.core.storage import ClamAVResponse
 from dataworkspace.apps.core.utils import database_dsn
@@ -4944,3 +4945,64 @@ class TestDatasetManagerViews:
         )
         assert response.status_code == 200
         assert expected_text in response.content
+
+
+class TestSaveDataGridView:
+    @pytest.mark.parametrize(
+        "source_factory",
+        [
+            factories.SourceTableFactory,
+            factories.CustomDatasetQueryFactory,
+            factories.ReferenceDatasetFactory,
+        ],
+    )
+    def test_update(self, user, client, source_factory):
+        source = source_factory.create()
+        view = factories.UserDataTableViewFactory(
+            user=user,
+            source_object_id=str(source.id),
+            source_content_type=ContentType.objects.get_for_model(source),
+            filters={"col1": {"value": "test filter"}},
+            column_defs=[{"col1": {"field": "col1", "position": 0, "visible": True}}],
+        )
+        response = client.post(
+            source.get_save_grid_view_url(),
+            content_type="application/json",
+            data={
+                "visibleColumns": ["col3"],
+                "filters": None,
+                "columnDefs": [{"field": "col1", "position": 1, "visible": False}],
+            },
+        )
+        assert response.status_code == 200
+        view.refresh_from_db()
+        assert view.grid_config() == {
+            "filters": None,
+            "columnDefs": {"col1": {"field": "col1", "position": 1, "visible": False}},
+        }
+
+    @pytest.mark.parametrize(
+        "source_factory",
+        [
+            factories.SourceTableFactory,
+            factories.CustomDatasetQueryFactory,
+            factories.ReferenceDatasetFactory,
+        ],
+    )
+    def test_create(self, user, client, source_factory):
+        source = source_factory.create()
+        response = client.post(
+            source.get_save_grid_view_url(),
+            content_type="application/json",
+            data={
+                "filters": {"a": "test"},
+                "columnDefs": [{"field": "col1", "position": 1, "visible": False}],
+            },
+        )
+        assert response.status_code == 200
+        view = UserDataTableView.objects.first()
+        assert view.user == user
+        assert view.grid_config() == {
+            "filters": {"a": "test"},
+            "columnDefs": {"col1": {"field": "col1", "position": 1, "visible": False}},
+        }
