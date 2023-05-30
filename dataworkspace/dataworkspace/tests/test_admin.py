@@ -13,7 +13,6 @@ from django.urls import reverse
 from django.test import Client
 import pytest
 
-from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType
 from dataworkspace.apps.datasets.models import (
     ReferenceDataset,
