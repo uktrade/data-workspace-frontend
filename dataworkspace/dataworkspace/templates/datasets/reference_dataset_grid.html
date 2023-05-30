@@ -65,6 +65,7 @@
   </div>
   <div>
     <div>
+      {% include "datasets/partials/grid-view-saved.html" %}
       {% if model.enquiries_contact %}
         <a href="mailto:{{ model.enquiries_contact.email }}?subject=Reporting an issue - {{ model.name }}"
            class="govuk-link govuk-link--no-visited-state govuk-!-padding-right-3" style="float: right">

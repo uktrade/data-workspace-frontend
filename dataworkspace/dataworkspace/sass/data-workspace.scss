@@ -617,6 +617,16 @@ p.sidebar-section {
   }
 }
 
+.grid-view-saved-banner {
+  .govuk-notification-banner__content, .govuk-notification-banner__content > * {
+    max-width:none;
+  }
+  .govuk-notification-banner__content .govuk-link {
+    font-size: 1rem;
+    color: #00703c;
+  }
+}
+
 @import "filters";
 @import "search";
 @import "site-search";

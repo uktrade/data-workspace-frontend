@@ -440,7 +440,6 @@ function initDataGrid(
     saveViewButton.addEventListener("click", function (e) {
       saveViewButton.innerHTML = "Saving view";
       saveViewButton.setAttribute("disabled", "disabled");
-      console.log(gridOptions.api.getFilterModel());
       const sort = getSortField(gridOptions.columnApi);
       let gridConfig = {
         "visibleColumns": gridOptions.columnApi.getColumns().filter(
@@ -457,13 +456,17 @@ function initDataGrid(
       xhr.onreadystatechange = function () {
         if (this.readyState === XMLHttpRequest.DONE) {
           if (this.status === 200) {
-            // Show a success message - will be completed in 3rd ticket in the series
+            document.getElementById("grid-saved-banner").classList.remove("govuk-visually-hidden");
           }
           saveViewButton.innerHTML = "Save view";
           saveViewButton.removeAttribute("disabled");
         }
       }
       xhr.send(JSON.stringify(gridConfig));
+    });
+    document.getElementById("dismiss-banner").addEventListener("click", function(e) {
+      e.preventDefault();
+      document.getElementById("grid-saved-banner").classList.add("govuk-visually-hidden");
     });
   }
 
