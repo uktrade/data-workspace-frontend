@@ -175,7 +175,10 @@ services:
     volumes:
       - db-logs-dev:/var/log/postgres
       - test-results:/test-results
-  
+      - .:/app
+      - ./dataworkspace:/dataworkspace
+      - ./dataworkspace/dataworkspace/static/js/stats:/dataworkspace/dataworkspace/static/js/stats/
+
   # Have a named volume since mounting a local directory isn't possible in CircleCI's
   # remote docker system. And docker compose run kills the container running the tests
   # proper, so to be able to copy out results, run a small container just to be able

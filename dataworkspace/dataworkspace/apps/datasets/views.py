@@ -52,6 +52,7 @@ from psycopg2 import sql
 from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace import datasets_db
+from dataworkspace.apps.accounts.models import UserDataTableView
 from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.api_v1.core.views import invalidate_superset_user_cached_credentials
 from dataworkspace.apps.applications.models import ApplicationInstance
@@ -2076,3 +2077,21 @@ class ReferenceDatasetGridDataView(View):
                 "records": ref_dataset.get_grid_data(),
             }
         )
+
+
+@require_POST
+def save_data_grid_view(request, model_class, source_id):
+    source = get_object_or_404(model_class, pk=source_id)
+    json_data = json.loads(request.body)
+    UserDataTableView.objects.update_or_create(
+        user=request.user,
+        source_object_id=str(source.id),
+        source_content_type=ContentType.objects.get_for_model(source),
+        defaults={
+            "visible_columns": json_data.get("visibleColumns"),
+            "sort_column": json_data.get("sortColumn"),
+            "sort_direction": json_data.get("sortDirection"),
+            "filters": json_data.get("filters"),
+        },
+    )
+    return HttpResponse(status=200)

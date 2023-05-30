@@ -232,9 +232,10 @@ function initDataGrid(
           limit: params.endRow - params.startRow,
           filters: cleanFilters(params.filterModel, columnDataTypeMap),
         };
-        if (params.sortModel[0]) {
-          qs["sortField"] = params.sortModel[0].colId;
-          qs["sortDir"] = params.sortModel[0].sort;
+        const sort = getSortField(gridOptions.columnApi);
+        if (sort[0] !== null) {
+          qs["sortField"] = sort[0];
+          qs["sortDir"] = sort[1];
         }
         var xhr = new XMLHttpRequest();
         var startTime = Date.now();
@@ -433,6 +434,39 @@ function initDataGrid(
       document.activeElement.blur();
       return;
     });
+
+  var saveViewButton = document.querySelector("#data-grid-save-view");
+  if (saveViewButton !== null) {
+    saveViewButton.addEventListener("click", function (e) {
+      saveViewButton.innerHTML = "Saving view";
+      saveViewButton.setAttribute("disabled", "disabled");
+      console.log(gridOptions.api.getFilterModel());
+      const sort = getSortField(gridOptions.columnApi);
+      let gridConfig = {
+        "visibleColumns": gridOptions.columnApi.getColumns().filter(
+          function(c) { return c.visible }
+        ).map(function(c) { return c.colId }),
+        "sortColumn": sort[0],
+        "sortDirection": sort[1],
+        "filters": gridOptions.api.getFilterModel(),
+      };
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", gridContainer.getAttribute("data-save-view-url"), true);
+      xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+      xhr.setRequestHeader("X-CSRFToken", getCsrfToken());
+      xhr.onreadystatechange = function () {
+        if (this.readyState === XMLHttpRequest.DONE) {
+          if (this.status === 200) {
+            // Show a success message - will be completed in 3rd ticket in the series
+          }
+          saveViewButton.innerHTML = "Save view";
+          saveViewButton.removeAttribute("disabled");
+        }
+      }
+      xhr.send(JSON.stringify(gridConfig));
+    });
+  }
+
 }
 
 window.initDataGrid = initDataGrid;

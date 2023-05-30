@@ -86,6 +86,9 @@
             {% flag CHART_BUILDER_BUILD_CHARTS_FLAG %}
               <button class="govuk-button" id="data-grid-create-chart">Create a chart</button>
             {% endflag %}
+            <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-save-view" data-prevent-double-click="true">
+              Save view
+            </button>
             <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-view">
               Reset view
             </button>
@@ -114,7 +117,11 @@
           </div>
         </div>
       </div>
-      <div id="data-grid" class="ag-theme-alpine"></div>
+      <div
+        id="data-grid"
+        class="ag-theme-alpine"
+        data-save-view-url="{{ object.get_save_grid_view_url }}"
+      ></div>
     </div>
   </div>
   {% csrf_token %}

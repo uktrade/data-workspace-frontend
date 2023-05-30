@@ -521,3 +521,10 @@ class CollectionUserMembershipFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = "data_collections.CollectionUserMembership"
+
+
+class UserDataTableViewFactory(factory.django.DjangoModelFactory):
+    user = factory.SubFactory(UserFactory)
+
+    class Meta:
+        model = "accounts.UserDataTableView"
