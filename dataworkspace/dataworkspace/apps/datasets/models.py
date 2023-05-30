@@ -2748,7 +2748,14 @@ class Pipeline(TimeStampedUserModel):
 
     @property
     def dag_id(self):
-        return f"DerivedPipeline-{self.table_name}"
+        # Strip double quotes from the table name to:
+        #
+        # a) not cause complications with URL encoding an authentication
+        # b) allow it to be an Airflow DAG ID
+        #
+        # Since we don't allow dots inside table or schema names when making a pipeline
+        # we don't risk a clash - we cannot have "schema.a"."table" or "schema"."a.table"
+        return "DerivedPipeline-" + self.table_name.replace('"', "")
 
     def get_absolute_url(self):
         return reverse(f"pipelines:edit-{self.type}", args=(self.id,))
