@@ -5,15 +5,14 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('datasets', '0144_migrate_auth_user_model'),
+        ("datasets", "0144_migrate_auth_user_model"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='dataset',
-            name='notes',
+            model_name="dataset",
+            name="notes",
             field=ckeditor.fields.RichTextField(blank=True, null=True),
         ),
     ]
