@@ -1157,6 +1157,14 @@ def _do_sync_activity_stream_sso_users():
             emails = obj["dit:emailAddress"]
             primary_email = obj["dit:StaffSSO:User:contactEmailAddress"] or emails[0]
 
+            if obj["dit:StaffSSO:User:status"] != "active":
+                logger.info(
+                    "Skipping user %s as their status is %s",
+                    primary_email,
+                    obj["dit:StaffSSO:User:status"],
+                )
+                continue
+
             try:
                 create_user_from_sso(
                     user_id,
