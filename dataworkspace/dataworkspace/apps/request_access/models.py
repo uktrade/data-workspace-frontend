@@ -1,8 +1,8 @@
+from django.conf import settings
 from django.db import models
 
 from dataworkspace.apps.core.models import (  # pylint: disable=import-error
     TimeStampedModel,
-    get_user_model,
 )
 from dataworkspace.apps.core import storage
 
@@ -13,7 +13,7 @@ class AccessRequest(TimeStampedModel):
     JOURNEY_DATASET_AND_TOOLS_ACCESS = "dataset_and_tools_access"
 
     requester = models.ForeignKey(
-        get_user_model(),
+        settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
         related_name="access_requests",
     )

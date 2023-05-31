@@ -1,9 +1,9 @@
 import datetime
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
-from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.core.utils import (
     db_role_schema_suffix_for_user,
     new_private_database_credentials,

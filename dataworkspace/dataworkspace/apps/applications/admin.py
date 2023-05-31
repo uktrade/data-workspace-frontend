@@ -5,6 +5,7 @@ from django import forms
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from django.contrib.admin.widgets import FilteredSelectMultiple
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.core import serializers
 from django.db import transaction
@@ -19,7 +20,6 @@ from dataworkspace.apps.applications.models import (
     ToolTemplate,
     VisualisationTemplate,
 )
-from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import (
     DataSet,
@@ -78,7 +78,7 @@ class ApplicationInstanceAdmin(admin.ModelAdmin):
 
         return "{0:.2f}% at {1}".format(
             max_cpu,
-            datetime.fromtimestamp(ts_at_max)
+            datetime.datetime.fromtimestamp(ts_at_max)
             .strftime("%-I:%M %p")
             .replace("AM", "a.m.")
             .replace("PM", "p.m"),
@@ -228,7 +228,7 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
                 | Q(is_superuser=True)
             )
             .distinct()
-            .order_by("email")
+            .order_by("username")
         )
 
         try:

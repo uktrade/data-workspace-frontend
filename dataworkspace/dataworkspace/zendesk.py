@@ -84,7 +84,7 @@ def create_zendesk_ticket(request, access_request, catalogue_item=None):
     )
 
     authorize_url = request.build_absolute_uri(
-        reverse("admin:core_dataworkspaceuser_change", args=[access_request.requester.id])
+        reverse("admin:auth_user_change", args=[access_request.requester.id])
     )
 
     ticket_description = build_ticket_description_text(

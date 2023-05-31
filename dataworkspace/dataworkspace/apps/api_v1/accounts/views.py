@@ -1,8 +1,8 @@
+from django.contrib.auth import get_user_model
 from rest_framework import viewsets
 from rest_framework.pagination import CursorPagination
 
 from dataworkspace.apps.api_v1.accounts.serializers import UserSerializer
-from dataworkspace.apps.core.models import get_user_model
 
 
 class UserCursorPagination(CursorPagination):

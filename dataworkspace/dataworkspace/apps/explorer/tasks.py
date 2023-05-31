@@ -4,12 +4,12 @@ import time
 
 import psycopg2
 from celery.utils.log import get_task_logger
+from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.db import connections, IntegrityError, transaction
 
 from pytz import utc
 
-from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.core.utils import (
     USER_SCHEMA_STEM,
     close_admin_db_connection_if_not_in_atomic_block,

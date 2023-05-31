@@ -6,6 +6,7 @@ from urllib.parse import urlencode
 import psycopg2
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.template import loader
 from django.contrib.auth.views import LoginView
 from django.contrib import messages
@@ -27,7 +28,6 @@ from waffle.mixins import WaffleFlagMixin
 from dataworkspace.apps.core.charts.models import ChartBuilderChart
 from dataworkspace.apps.core.charts.tasks import run_chart_builder_query
 from dataworkspace.apps.core.errors import DataExplorerQueryResultsPermissionError
-from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.apps.explorer.constants import QueryLogState

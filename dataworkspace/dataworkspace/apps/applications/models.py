@@ -3,9 +3,10 @@ from collections import namedtuple
 
 from django.conf import settings
 from django.db import models, transaction
+from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
 
-from dataworkspace.apps.core.models import Database, TimeStampedModel, get_user_model
+from dataworkspace.apps.core.models import Database, TimeStampedModel
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 

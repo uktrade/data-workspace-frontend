@@ -1,9 +1,8 @@
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
-
-from dataworkspace.apps.core.models import get_user_model
 
 
 class EventLog(models.Model):

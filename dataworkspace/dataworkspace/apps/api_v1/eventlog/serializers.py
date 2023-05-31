@@ -1,7 +1,6 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from django.contrib.auth import get_user_model as django_get_user_model
 
-from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.datasets.models import (
     DataSet,
     ReferenceDataset,
@@ -103,7 +102,7 @@ class EventLogRelatedObjectField(serializers.RelatedField):
             return EventLogVisualisationLinkSerializer(value).data
         if isinstance(value, Query):
             return EventLogDataExplorerQuerySerializer(value).data
-        if isinstance(value, (get_user_model(), django_get_user_model())):
+        if isinstance(value, get_user_model()):
             return EventLogDataUserSerializer(value).data
 
 

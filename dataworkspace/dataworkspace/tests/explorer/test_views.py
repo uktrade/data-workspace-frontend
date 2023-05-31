@@ -11,11 +11,11 @@ except ImportError:
 from django.conf import settings
 from django.core.cache import cache
 from django.db import connections
+from django.contrib.auth import get_user_model
 from django.forms.models import model_to_dict
 from lxml import html
 import pytest
 
-from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.core.charts.models import ChartBuilderChart
 from dataworkspace.apps.core.utils import USER_SCHEMA_STEM, stable_identification_suffix
 from dataworkspace.apps.eventlog.models import EventLog

@@ -337,7 +337,7 @@ class TestApplication(unittest.IsolatedAsyncioTestCase):
             f"http://testdbapplication-23b40dd9.dataworkspace.test:8000/my_database/_team_my_team/{team_table}",
         ) as response:
             received_status = response.status
-
+            await response.text()
         self.assertEqual(received_status, 200)
 
         # Get data from the team schema table
