@@ -237,6 +237,7 @@ class DataSet(DeletableTimestampedUserModel):
     short_description = models.CharField(blank=False, null=False, max_length=256)
     grouping = models.ForeignKey(DataGrouping, null=True, on_delete=models.CASCADE)
     description = RichTextField(null=False, blank=False)
+    notes = RichTextField(null=True, blank=True)
     acronyms = models.CharField(blank=True, default="", max_length=255)
     enquiries_contact = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
