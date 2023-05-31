@@ -2,30 +2,29 @@
 
 from django.db import IntegrityError, migrations
 
+from dataworkspace.apps.core.models import get_user_model
+
 
 def migrate_username_to_sso_id(apps, schema_editor):
-    user_model = apps.get_model("auth", "User")
-    profile_model = apps.get_model("accounts", "Profile")
-    for user in user_model.objects.exclude(username__icontains="duplicate"):
-        print(f"Migrating user {user.username}")
-        if not profile_model.objects.filter(user=user).exists():
-            print(f"Skipping user {user.username} as they have no profile")
+    dw_users = get_user_model()
+    for user in dw_users.objects.exclude(username__icontains="duplicate"):
+        try:
+            profile = user.profile
+        # pylint: disable=broad-except
+        except Exception:
+            print(f"Skipping user {user.email} as they have no profile")
             continue
-        profile = profile_model.objects.get(user=user)
         if profile.sso_id is not None:
-            if not user_model.objects.filter(username=profile.sso_id).exists():
-                user.username = str(profile.sso_id)
-                print(f"Saving user {user.username}")
+            user.username = profile.sso_id
+            try:
                 user.save()
-            else:
-                print(f"Skipping user {user.username} as they have duplicate accounts")
-                continue
-        print(f"User {user.username} migrated")
+            except IntegrityError:
+                print(f"Skipping user {user.email} as they have duplicate accounts")
 
 
 def unmigrate_username_to_sso_id(apps, schema_editor):
-    user_model = apps.get_model("auth", "User")
-    for user in user_model.objects.exclude(username__icontains="duplicate"):
+    dw_users = get_user_model()
+    for user in dw_users.objects.all():
         user.username = user.email
         try:
             user.save()
