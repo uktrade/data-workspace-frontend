@@ -2,10 +2,10 @@ import uuid
 import datetime
 import random
 
-from django.contrib.auth import get_user_model
 from django.utils.text import slugify
 from faker import Faker  # noqa
 
+from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.datasets.constants import DataSetType, TagType
 from dataworkspace.apps.datasets.models import (
     MasterDataset,
@@ -49,7 +49,7 @@ class TestData:
 
         email = self.fake.ascii_safe_email()
         user = model.objects.create(
-            username=email,
+            username=self.fake.uuid4(),
             is_staff=False,
             is_superuser=False,
             email=email,

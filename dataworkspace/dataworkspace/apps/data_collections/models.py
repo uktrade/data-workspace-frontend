@@ -1,12 +1,11 @@
 import uuid
 
-from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.db import models, transaction
 from django.db.models import Q
 from django.urls import reverse
 
 from dataworkspace.apps.core.models import DeletableTimestampedUserModel, RichTextField
+from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.datasets.models import DataSet, VisualisationCatalogueItem
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -16,9 +15,7 @@ class Collection(DeletableTimestampedUserModel):
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
     name = models.CharField(blank=False, null=False, max_length=128)
     description = models.TextField(null=True, blank=True)
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
-    )
+    owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=True, blank=True)
     datasets = models.ManyToManyField(DataSet, through="CollectionDatasetMembership")
     visualisation_catalogue_items = models.ManyToManyField(
         VisualisationCatalogueItem,

@@ -1,10 +1,10 @@
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.forms import CharField, Field, ModelForm, ValidationError
 from django.forms.widgets import HiddenInput, Select
 
 from pglast import parser
 
+from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.explorer.models import Query
 from dataworkspace.forms import (
     GOVUKDesignSystemBooleanField,
@@ -21,7 +21,7 @@ class SqlField(Field):
         query = value.strip()
         try:
             # parse nodes are callable, to serialize it into dictionaries
-            sql = parser.parse_sql(query)[0]()
+            sql = parser.parse_sql(query)[0]()  # pylint: disable=c-extension-no-member
         except IndexError as ex:
             raise ValidationError(
                 "Enter a SQL statement starting with SELECT, WITH or EXPLAIN",

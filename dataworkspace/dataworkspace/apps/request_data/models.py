@@ -1,8 +1,8 @@
-from django.conf import settings
 from django.db import models
 
 from dataworkspace.apps.core.models import (  # pylint: disable=import-error
     TimeStampedModel,
+    get_user_model,
 )
 
 
@@ -29,7 +29,7 @@ class DataRequestStatus(models.TextChoices):
 
 class DataRequest(TimeStampedModel):
     requester = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        get_user_model(),
         on_delete=models.PROTECT,
         related_name="data_requests",
     )

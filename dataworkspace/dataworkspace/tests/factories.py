@@ -5,9 +5,9 @@ from freezegun import freeze_time
 
 import factory.fuzzy
 
-from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 
+from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.datasets.constants import DataSetType, TagType
 from dataworkspace.apps.eventlog.models import EventLog
 
@@ -20,8 +20,8 @@ class UserProfileFactory(factory.django.DjangoModelFactory):
 
 
 class UserFactory(factory.django.DjangoModelFactory):
-    username = factory.LazyAttribute(lambda _: f"test.user+{uuid.uuid4()}@example.com")
-    email = factory.LazyAttribute(lambda o: o.username)
+    username = factory.LazyAttribute(lambda _: uuid.uuid4())
+    email = factory.LazyAttribute(lambda _: f"test.user+{uuid.uuid4()}@example.com")
     password = "12345"
 
     class Meta:

@@ -30,7 +30,6 @@ from django.db import (
     ProgrammingError,
 )
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
@@ -61,6 +60,7 @@ from dataworkspace.apps.applications.models import (
     ApplicationTemplate,
     VisualisationTemplate,
 )
+from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.datasets.constants import (
     DataSetType,
     DataLinkType,
@@ -108,7 +108,7 @@ class DataGrouping(DeletableTimestampedUserModel):
     description = models.TextField(blank=True, null=True)
 
     information_asset_owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        get_user_model(),
         on_delete=models.CASCADE,
         related_name="asset_owner",
         null=True,
@@ -116,7 +116,7 @@ class DataGrouping(DeletableTimestampedUserModel):
     )
 
     information_asset_manager = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        get_user_model(),
         on_delete=models.CASCADE,
         related_name="asset_manager",
         null=True,
@@ -178,7 +178,7 @@ class DataSetSubscriptionManager(models.Manager):
 
 class DataSetSubscription(TimeStampedUserModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     content_type = models.ForeignKey(ContentType, null=True, on_delete=models.SET_NULL)
     object_id = models.UUIDField(null=True)
     dataset = GenericForeignKey("content_type", "object_id")
@@ -194,6 +194,7 @@ class DataSetSubscription(TimeStampedUserModel):
         unique_together = ["user", "object_id"]
 
     def __str__(self):
+        # pylint: disable=no-member
         return f"{self.user.email} {self.object_id}"
 
     def is_active(self):
@@ -239,7 +240,7 @@ class DataSet(DeletableTimestampedUserModel):
     description = RichTextField(null=False, blank=False)
     acronyms = models.CharField(blank=True, default="", max_length=255)
     enquiries_contact = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
+        get_user_model(), on_delete=models.CASCADE, null=True, blank=True
     )
     licence = models.CharField(
         null=True, blank=True, max_length=256, help_text="Licence description"
@@ -262,14 +263,14 @@ class DataSet(DeletableTimestampedUserModel):
     number_of_downloads = models.PositiveIntegerField(default=0)
     tags = models.ManyToManyField(Tag, related_name="+", blank=True)
     information_asset_owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        get_user_model(),
         on_delete=models.CASCADE,
         related_name="info_asset_owned_datasets",
         null=True,
         blank=True,
     )
     information_asset_manager = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        get_user_model(),
         on_delete=models.CASCADE,
         related_name="info_asset_managed_datasets",
         null=True,
@@ -1196,7 +1197,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     description = RichTextField(null=True, blank=True)
     acronyms = models.CharField(blank=True, default="", max_length=255)
     enquiries_contact = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
+        get_user_model(), on_delete=models.CASCADE, null=True, blank=True
     )
     licence = models.CharField(null=False, blank=True, max_length=256)
     restrictions_on_usage = RichLinkField(null=True, blank=True)
@@ -1236,14 +1237,14 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     number_of_downloads = models.PositiveIntegerField(default=0)
     tags = models.ManyToManyField(Tag, related_name="+", blank=True)
     information_asset_owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        get_user_model(),
         on_delete=models.CASCADE,
         related_name="info_asset_owned_reference_datasets",
         null=True,
         blank=True,
     )
     information_asset_manager = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        get_user_model(),
         on_delete=models.CASCADE,
         related_name="info_asset_managed_reference_datasets",
         null=True,
@@ -2423,14 +2424,14 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     short_description = models.CharField(max_length=255)
     description = RichTextField(null=True, blank=True)
     enquiries_contact = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        get_user_model(),
         on_delete=models.CASCADE,
         null=True,
         blank=True,
         related_name="+",
     )
     secondary_enquiries_contact = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        get_user_model(),
         on_delete=models.CASCADE,
         null=True,
         blank=True,
@@ -2446,14 +2447,14 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     updated_at = models.DateField(null=True, blank=True)
 
     information_asset_owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        get_user_model(),
         on_delete=models.CASCADE,
         related_name="info_asset_owned_visualisations",
         null=True,
         blank=True,
     )
     information_asset_manager = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        get_user_model(),
         on_delete=models.CASCADE,
         related_name="info_asset_managed_visualisations",
         null=True,

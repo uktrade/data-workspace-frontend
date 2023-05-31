@@ -1,10 +1,10 @@
 import pytest
 import requests_mock
-from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.test import override_settings
 
 from dataworkspace.apps.applications.gitlab import gitlab_has_developer_access
+from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.utils import (
     dataset_type_to_manage_unpublished_permission_codename,

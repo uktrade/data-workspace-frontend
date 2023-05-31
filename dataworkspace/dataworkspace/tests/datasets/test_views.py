@@ -1,3 +1,4 @@
+import uuid
 from datetime import timedelta, date, datetime, timezone
 import json
 import random
@@ -12,7 +13,6 @@ import psycopg2
 import pytest
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -777,10 +777,10 @@ def test_find_datasets_order_by_relevance_prioritises_bookmarked_datasets(sort_f
     "access_type", (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
 )
 def test_datasets_and_visualisations_doesnt_return_duplicate_results(access_type, staff_client):
-    normal_user = get_user_model().objects.create(
+    normal_user = factories.UserFactory.create(
         username="bob.user@test.com", is_staff=False, is_superuser=False, email="bob.user@test.com"
     )
-    staff_user = get_user_model().objects.create(
+    staff_user = factories.UserFactory.create(
         username="bob.staff@test.com", is_staff=True, is_superuser=True, email="bob.staff@test.com"
     )
 
@@ -1399,7 +1399,7 @@ def test_find_datasets_includes_unpublished_results_based_on_permissions(
     permissions, result_dataset_names
 ):
     email = "test.user@example.com"
-    user = get_user_model().objects.create(is_staff=True, email=email, username=email)
+    user = factories.UserFactory.create(is_staff=True, email=email, username=uuid.uuid4())
     perms = Permission.objects.filter(codename__in=permissions).all()
     user.user_permissions.add(*perms)
     user.save()
@@ -1434,7 +1434,7 @@ def test_find_datasets_includes_unpublished_results_based_on_permissions(
 @pytest.mark.django_db
 def test_dataset_shows_external_link_warning(source_urls, show_warning):
     ds = factories.DataSetFactory.create(published=True)
-    user = get_user_model().objects.create(email="test@example.com")
+    user = factories.UserFactory.create(email="test@example.com")
     factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
 
     for source_url in source_urls:
@@ -1579,7 +1579,7 @@ class TestMasterDatasetDetailView(DatasetsCommon):
             published=True,
             user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
         )
-        user = get_user_model().objects.create(email="test@example.com", is_superuser=False)
+        user = factories.UserFactory.create(email="test@example.com", is_superuser=False)
         factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
         factories.SourceTableFactory.create(
             dataset=ds,
@@ -1664,7 +1664,7 @@ class TestMasterDatasetDetailView(DatasetsCommon):
             published=True,
             user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
         )
-        user = get_user_model().objects.create(email="test@example.com", is_superuser=False)
+        user = factories.UserFactory.create(email="test@example.com", is_superuser=False)
         factories.DataSetUserPermissionFactory.create(user=user, dataset=master)
 
         client = Client(**get_http_sso_data(user))
@@ -1690,7 +1690,7 @@ class TestDatacutDetailView(DatasetsCommon):
             name="A datacut",
             user_access_type="REQUIRES_AUTHORIZATION",
         )
-        user = get_user_model().objects.create(email="test@example.com", is_superuser=False)
+        user = factories.UserFactory.create(email="test@example.com", is_superuser=False)
         factories.DataSetUserPermissionFactory.create(user=user, dataset=datacut)
 
         client = Client(**get_http_sso_data(user))
@@ -1743,7 +1743,7 @@ class TestReferenceDatasetDetailView(DatasetsCommon):
     @pytest.mark.django_db
     @mock.patch("dataworkspace.apps.datasets.models.ReferenceDataset.sync_to_external_database")
     def test_reference_dataset_shows_code_snippets(self, mock_sync):
-        user = get_user_model().objects.create(email="test@example.com", is_superuser=False)
+        user = factories.UserFactory.create(email="test@example.com", is_superuser=False)
         rds = self._get_ref_dataset("ref_my_reference_table")
 
         client = Client(**get_http_sso_data(user))
@@ -1889,7 +1889,7 @@ class TestReferenceDatasetDetailView(DatasetsCommon):
         rds = factories.ReferenceDatasetFactory.create(
             published=True,
         )
-        user = get_user_model().objects.create(email="test@example.com", is_superuser=False)
+        user = factories.UserFactory.create(email="test@example.com", is_superuser=False)
 
         client = Client(**get_http_sso_data(user))
         url = reverse("datasets:dataset_detail", args=(rds.uuid,))
@@ -1971,7 +1971,7 @@ class TestRequestAccess(DatasetsCommon):
 @pytest.mark.django_db
 def test_datacut_dataset_shows_code_snippets_to_tool_user(metadata_db):
     ds = factories.DataSetFactory.create(type=DataSetType.DATACUT, published=True)
-    user = get_user_model().objects.create(email="test@example.com", is_superuser=False)
+    user = factories.UserFactory.create(email="test@example.com", is_superuser=False)
     factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
     factories.CustomDatasetQueryFactory.create(
         dataset=ds,
@@ -2008,7 +2008,7 @@ def test_dataset_shows_first_12_columns_of_source_table_with_link_to_the_rest(
     get_columns_mock, dataset_type, source_factory, source_type, metadata_db
 ):
     ds = factories.DataSetFactory.create(type=dataset_type, published=True)
-    user = get_user_model().objects.create(email="test@example.com", is_superuser=False)
+    user = factories.UserFactory.create(email="test@example.com", is_superuser=False)
     factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
     st = source_factory.create(
         dataset=ds,
@@ -2031,7 +2031,7 @@ def test_dataset_shows_first_12_columns_of_source_table_with_link_to_the_rest(
 @pytest.mark.django_db(transaction=True)
 def test_launch_master_dataset_in_data_explorer(metadata_db):
     ds = factories.DataSetFactory.create(type=DataSetType.MASTER, published=True)
-    user = get_user_model().objects.create(email="test@example.com", is_superuser=True)
+    user = factories.UserFactory.create(email="test@example.com", is_superuser=True)
     factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
     factories.SourceTableFactory.create(
         dataset=ds,

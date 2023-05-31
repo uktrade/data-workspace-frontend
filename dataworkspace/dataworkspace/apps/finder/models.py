@@ -1,5 +1,6 @@
-from django.contrib.auth import get_user_model
 from django.db import models
+
+from dataworkspace.apps.core.models import get_user_model
 
 
 class DatasetFinderQueryLog(models.Model):

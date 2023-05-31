@@ -2,13 +2,27 @@ import re
 import uuid
 
 from django import forms
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model as django_get_user_model
 from django.db import models
 from django.db.models.signals import pre_delete, post_delete
 from django.core.validators import RegexValidator
-from django.conf import settings
 
 from dataworkspace.forms import AdminRichTextEditorWidget, AdminRichLinkEditorWidget
+
+
+# Proxy model to allow us to use SSO ID as the username
+class DataWorkspaceUser(django_get_user_model()):
+    class Meta:
+        proxy = True
+        verbose_name = "User"
+
+    # Override __str__ to show email and not username on the admin site
+    def __str__(self):
+        return self.email
+
+
+def get_user_model():
+    return DataWorkspaceUser
 
 
 class TimeStampedModel(models.Model):
@@ -54,14 +68,14 @@ class DeletableModel(models.Model):
 
 class UserLogModel(models.Model):
     created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        get_user_model(),
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
         related_name="created+",
     )
     updated_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        get_user_model(),
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
@@ -123,9 +137,7 @@ class Database(TimeStampedModel):
 
 class DatabaseUser(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="db_user"
-    )
+    owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name="db_user")
     username = models.CharField(max_length=256, db_index=True)
     deleted_date = models.DateTimeField(null=True, blank=True)
 
@@ -162,7 +174,7 @@ class UserSatisfactionSurvey(TimeStampedModel):
 
 class NewsletterSubscription(TimeStampedModel):
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        get_user_model(),
         on_delete=models.CASCADE,
         related_name="newsletter_signups",
         unique=True,

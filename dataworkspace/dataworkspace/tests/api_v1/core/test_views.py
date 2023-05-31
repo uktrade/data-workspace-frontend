@@ -43,7 +43,7 @@ class TestGetSupersetCredentialsAPIView:
         user.user_permissions.add(tools_permission)
 
         headers = {
-            "HTTP_SSO_PROFILE_USER_ID": user.profile.sso_id,
+            "HTTP_SSO_PROFILE_USER_ID": user.username,
             "HTTP_HOST": f"superset-edit.{settings.APPLICATION_ROOT_DOMAIN}",
         }
         response = unauthenticated_client.get(
@@ -57,7 +57,7 @@ class TestGetSupersetCredentialsAPIView:
         assert mock_cache.set.call_args_list == [
             mock.call("superset_credentials_version", 1, nx=True, timeout=None),
             mock.call(
-                f"superset_credentials_1_edit_{user.profile.sso_id}",
+                f"superset_credentials_1_edit_{user.username}",
                 {"credentials": credentials[0], "dashboards": []},
                 timeout=mock.ANY,
             ),
@@ -85,7 +85,7 @@ class TestGetSupersetCredentialsAPIView:
         user = factories.UserFactory()
 
         header = {
-            "HTTP_SSO_PROFILE_USER_ID": user.profile.sso_id,
+            "HTTP_SSO_PROFILE_USER_ID": user.username,
             "HTTP_HOST": f"superset-edit.{settings.APPLICATION_ROOT_DOMAIN}",
         }
         response = unauthenticated_client.get(
@@ -122,7 +122,7 @@ class TestGetSupersetCredentialsAPIView:
         user = factories.UserFactory()
 
         header = {
-            "HTTP_SSO_PROFILE_USER_ID": user.profile.sso_id,
+            "HTTP_SSO_PROFILE_USER_ID": user.username,
             "HTTP_HOST": f"superset-edit.{settings.APPLICATION_ROOT_DOMAIN}",
         }
         response = unauthenticated_client.get(
@@ -165,7 +165,7 @@ class TestGetSupersetCredentialsAPIView:
         user.user_permissions.add(tools_permission)
 
         headers = {
-            "HTTP_SSO_PROFILE_USER_ID": user.profile.sso_id,
+            "HTTP_SSO_PROFILE_USER_ID": user.username,
             "HTTP_HOST": f"superset.{settings.APPLICATION_ROOT_DOMAIN}",
         }
         response = unauthenticated_client.get(
@@ -178,7 +178,7 @@ class TestGetSupersetCredentialsAPIView:
         assert mock_cache.set.call_args_list == [
             mock.call("superset_credentials_version", 1, nx=True, timeout=None),
             mock.call(
-                f"superset_credentials_1_view_{user.profile.sso_id}",
+                f"superset_credentials_1_view_{user.username}",
                 {"credentials": credentials, "dashboards": [visualisation.identifier]},
                 timeout=mock.ANY,
             ),

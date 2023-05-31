@@ -1,7 +1,6 @@
 import logging
 
 from csp.decorators import csp_update
-from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction, IntegrityError
 from django.db.models import Prefetch, Q
@@ -14,6 +13,7 @@ from django.views.decorators.http import require_http_methods
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.conf import settings
 
+from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.data_collections.forms import (
     CollectionEditForm,
     CollectionNotesForm,

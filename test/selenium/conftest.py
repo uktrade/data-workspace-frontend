@@ -137,14 +137,14 @@ def reset_data_explorer_credentials(user_sso_id):
     _code = textwrap.dedent(
         f"""
         import mock
-        from django.contrib.auth.models import User
+        from dataworkspace.apps.core.models import get_user_model
         from dataworkspace.apps.explorer.admin import clear_tool_cached_credentials
 
         clear_tool_cached_credentials(
             modeladmin=mock.Mock(),
             request=mock.Mock(),
-            queryset=User.objects.filter(
-                profile__sso_id='{user_sso_id}'
+            queryset=get_user_model().objects.filter(
+                username='{user_sso_id}'
             ),
         )
     """

@@ -248,10 +248,8 @@ async def flush_redis():
 async def give_user_superuser_perms():
     python_code = textwrap.dedent(
         """\
-        from django.contrib.auth.models import (
-            User,
-        )
-        user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
+        from dataworkspace.apps.core.models import get_user_model
+        user = User.objects.get(username="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
         user.is_superuser = True
         user.save()
         """
@@ -275,9 +273,7 @@ async def give_user_app_perms():
         from django.contrib.auth.models import (
             Permission,
         )
-        from django.contrib.auth.models import (
-            User,
-        )
+        from dataworkspace.apps.core.models import get_user_model
         from django.contrib.contenttypes.models import (
             ContentType,
         )
@@ -288,7 +284,7 @@ async def give_user_app_perms():
             codename='start_all_applications',
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
-        user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
+        user = get_user_model().objects.get(username="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
         user.user_permissions.add(permission)
         """
     ).encode("ascii")
@@ -311,9 +307,7 @@ async def give_user_visualisation_developer_perms():
         from django.contrib.auth.models import (
             Permission,
         )
-        from django.contrib.auth.models import (
-            User,
-        )
+        from dataworkspace.apps.core.models import get_user_model
         from django.contrib.contenttypes.models import (
             ContentType,
         )
@@ -324,7 +318,7 @@ async def give_user_visualisation_developer_perms():
             codename='develop_visualisations',
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
-        user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
+        user = get_user_model().objects.get(username="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
         user.user_permissions.add(permission)
         """
     ).encode("ascii")
@@ -457,14 +451,14 @@ async def create_visusalisation(visualisation_name, user_access_type, link_type,
 async def give_user_dataset_perms(name):
     python_code = textwrap.dedent(
         f"""\
-        from django.contrib.auth.models import (
-            User,
-        )
+        from dataworkspace.apps.core.models import get_user_model
         from dataworkspace.apps.datasets.models import (
             DataSet,
             DataSetUserPermission,
         )
-        user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
+        user = get_user_model().objects.get(
+            username="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2"
+        )
         dataset = DataSet.objects.get(
             name="{name}",
         )
@@ -519,12 +513,10 @@ async def dataset_finder_opt_in_dataset(schema, table, opted_in=True):
 async def give_user_visualisation_perms(name):
     python_code = textwrap.dedent(
         f"""\
-        from django.contrib.auth.models import (
-            User,
-        )
+        from dataworkspace.apps.core.models import get_user_model
         from dataworkspace.apps.applications.models import VisualisationTemplate
         from dataworkspace.apps.datasets.models import VisualisationUserPermission, VisualisationCatalogueItem
-        user = User.objects.get(profile__sso_id="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
+        user = get_user_model().objects.get(username="7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2")
         visualisationtemplate = VisualisationTemplate.objects.get(
             host_basename="{name}",
         )
@@ -700,12 +692,11 @@ async def add_user_to_team(user_sso_id: str, team_name: str):
     python_code = textwrap.dedent(
         f"""\
 
-        from django.contrib.auth import get_user_model
-        from dataworkspace.apps.core.models import Team, TeamMembership
+        from dataworkspace.apps.core.models import Team, TeamMembership, get_user_model
 
         User = get_user_model()
 
-        user = User.objects.get(profile__sso_id="{user_sso_id}")
+        user = User.objects.get(username="{user_sso_id}")
 
         team, _ = Team.objects.get_or_create(name="{team_name}")
         membership, _ = TeamMembership.objects.get_or_create(user=user, team=team)
@@ -729,9 +720,7 @@ async def add_user_to_team(user_sso_id: str, team_name: str):
 async def give_visualisation_dataset_perms(vis_name, dataset_name):
     python_code = textwrap.dedent(
         f"""\
-        from django.contrib.auth.models import (
-            User,
-        )
+        from dataworkspace.apps.core.models import get_user_model
         from dataworkspace.apps.applications.models import (
             ApplicationTemplate,
         )
@@ -951,14 +940,12 @@ async def create_application_db_user():
         '''
             import uuid
             from django.db import connections
-            from django.contrib.auth.models import User
             from dataworkspace.apps.core.models import DatabaseUser
             from dataworkspace.apps.datasets.models import Database
             from dataworkspace.apps.applications.utils import create_user_from_sso
             user = create_user_from_sso(
                 '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
                 'test@test.com',
-                [],
                 'Peter',
                 'Piper',
                 check_tools_access_if_user_exists=False,
@@ -1110,12 +1097,12 @@ async def add_user_to_mlflow_instance(user_sso_id: str, instance_name: str):
     python_code = textwrap.dedent(
         f"""\
 
-        from django.contrib.auth import get_user_model
+        from dataworkspace.apps.core.utils import get_user_model
         from dataworkspace.apps.core.models import MLFlowInstance, MLFlowAuthorisedUser
 
         User = get_user_model()
 
-        user = User.objects.get(profile__sso_id="{user_sso_id}")
+        user = User.objects.get(username="{user_sso_id}")
 
         instance, _ = MLFlowInstance.objects.get_or_create(
             name="{instance_name}", hostname="mlflow--{instance_name}--internal.dataworkspace.test:8000"

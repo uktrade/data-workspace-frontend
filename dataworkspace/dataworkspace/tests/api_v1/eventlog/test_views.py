@@ -1,7 +1,6 @@
 import uuid
 
 import pytest
-from django.contrib.auth import get_user_model
 from django.urls import reverse
 from freezegun import freeze_time
 from rest_framework import status
@@ -24,15 +23,21 @@ class TestEventLogAPIView(BaseAPIViewTest):
             "event_type": eventlog.get_event_type_display(),
             "id": eventlog.id,
             "related_object": {
-                "id": str(eventlog.related_object.id)
-                if isinstance(eventlog.related_object.id, uuid.UUID)
-                else eventlog.related_object.id,
-                "name": eventlog.related_object.get_full_name()
-                if isinstance(eventlog.related_object, get_user_model())
-                else eventlog.related_object.name,
-                "type": "User"
-                if isinstance(eventlog.related_object, get_user_model())
-                else eventlog.related_object.get_type_display(),
+                "id": (
+                    str(eventlog.related_object.id)
+                    if isinstance(eventlog.related_object.id, uuid.UUID)
+                    else eventlog.related_object.id
+                ),
+                "name": (
+                    eventlog.related_object.get_full_name()
+                    if hasattr(eventlog.related_object, "get_full_name")
+                    else eventlog.related_object.name
+                ),
+                "type": (
+                    "User"
+                    if hasattr(eventlog.related_object, "get_full_name")
+                    else eventlog.related_object.get_type_display()
+                ),
             },
             "timestamp": DateTimeField().to_representation(eventlog.timestamp),
             "user_id": eventlog.user.id,
