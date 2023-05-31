@@ -2,20 +2,14 @@
 
 from django.db import IntegrityError, migrations
 
-from dataworkspace.apps.accounts.models import Profile
 from dataworkspace.apps.core.models import get_user_model
 
 
 def migrate_username_to_sso_id(apps, schema_editor):
     dw_users = get_user_model()
     for user in dw_users.objects.all():
-        try:
-            profile = user.profile
-        except Profile.DoesNotExist:
-            print(f"Skipping user {user.email} as they have no profile")
-            continue
-        if profile.sso_id is not None:
-            user.username = profile.sso_id
+        if hasattr(user, "profile") and user.profile.sso_id:
+            user.username = user.profile.sso_id
             try:
                 user.save()
             except IntegrityError:
