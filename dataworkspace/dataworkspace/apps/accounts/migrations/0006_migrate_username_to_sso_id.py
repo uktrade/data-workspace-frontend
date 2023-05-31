@@ -7,7 +7,7 @@ from dataworkspace.apps.core.models import get_user_model
 
 def migrate_username_to_sso_id(apps, schema_editor):
     dw_users = get_user_model()
-    for user in dw_users.objects.exclude(username__icontains="duplicate"):
+    for user in dw_users.objects.all():
         try:
             profile = user.profile
         # pylint: disable=broad-except
