@@ -15,6 +15,7 @@ from csp.decorators import csp_exempt, csp_update
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin.models import LogEntry, CHANGE
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core import serializers
@@ -32,7 +33,6 @@ from dataworkspace.apps.datasets.models import Pipeline
 from dataworkspace.apps.core.utils import USER_SCHEMA_STEM
 from dataworkspace.apps.core.utils import db_role_schema_suffix_for_app
 
-from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.api_v1.views import (
     get_api_visible_application_instance_by_public_host,
 )
@@ -282,14 +282,14 @@ def quicksight_start_polling_sync_and_redirect(request):
             IamArn=settings.QUICKSIGHT_AUTHOR_IAM_ARN,
             CustomPermissionsName=settings.QUICKSIGHT_AUTHOR_CUSTOM_PERMISSIONS,
             UserRole="AUTHOR",
-            SessionName=request.user.username,
+            SessionName=str(request.user.profile.sso_id),
             Email=request.user.email,
         )
     except botocore.exceptions.ClientError as e:
         if e.response["Error"]["Code"] != "ResourceExistsException":
             raise
 
-    sync_quicksight_permissions.delay(user_sso_ids_to_update=(request.user.username,))
+    sync_quicksight_permissions.delay(user_sso_ids_to_update=(request.user.profile.sso_id,))
 
     return redirect(settings.QUICKSIGHT_SSO_URL)
 

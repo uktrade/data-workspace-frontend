@@ -3,6 +3,7 @@ import uuid
 
 from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
+from django.contrib.auth import get_user_model
 from django.core import validators
 from django.db import transaction
 from django.db.models import Q
@@ -13,7 +14,6 @@ from django.utils.safestring import mark_safe
 from adminsortable2.admin import CustomInlineFormSet
 from django_better_admin_arrayfield.forms.fields import DynamicArrayField
 
-from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import (
     DataSetChartBuilderChart,

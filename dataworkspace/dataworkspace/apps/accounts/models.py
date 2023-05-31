@@ -3,12 +3,8 @@ import uuid
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
-from dataworkspace.apps.core.models import get_user_model
-from dataworkspace.apps.core.utils import (
-    USER_SCHEMA_STEM,
-    stable_identification_suffix,
-)
+from django.contrib.auth import get_user_model
+from dataworkspace.apps.core.utils import USER_SCHEMA_STEM, stable_identification_suffix
 
 
 class Profile(models.Model):

@@ -50,7 +50,7 @@ class CaseStudyAdmin(CSPRichTextEditorMixin, TimeStampedUserAdmin):
 
     def _user_link(self, user):
         return format_html(
-            f'<a href="{reverse("admin:core_dataworkspaceuser_change", args=(user.id,))}">{user.get_full_name()}</a>'
+            f'<a href="{reverse("admin:auth_user_change", args=(user.id,))}">{user.get_full_name()}</a>'
         )
 
     def created_by_link(self, obj):

@@ -7,6 +7,7 @@ import string
 
 import botocore
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
@@ -26,7 +27,6 @@ from dataworkspace.apps.applications.utils import (
     long_running_query_alert,
     sync_quicksight_permissions,
 )
-from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import ToolQueryAuditLog, ToolQueryAuditLogTable
 from dataworkspace.tests import factories
@@ -72,7 +72,7 @@ class TestSyncQuickSightPermissions:
     @mock.patch("dataworkspace.apps.applications.utils.cache")
     def test_create_new_data_source(self, mock_cache, mock_boto3_client, mock_creds):
         # Arrange
-        user = UserFactory.create()
+        user = UserFactory.create(username="fake@email.com")
         SourceTableFactory(
             dataset=MasterDataSetFactory.create(
                 user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
@@ -84,9 +84,9 @@ class TestSyncQuickSightPermissions:
             "UserList": [
                 {
                     "Arn": "Arn",
-                    "Email": user.email,
+                    "Email": "fake@email.com",
                     "Role": "AUTHOR",
-                    "UserName": f"user/{user.email}/{user.username}",
+                    "UserName": f"user/fake@email.com/{user.profile.sso_id}",
                 }
             ]
         }
@@ -109,8 +109,8 @@ class TestSyncQuickSightPermissions:
                 Namespace=settings.QUICKSIGHT_NAMESPACE,
                 Role="AUTHOR",
                 CustomPermissionsName="author-custom-permissions-test",
-                UserName=f"user/{user.email}/{user.username}",
-                Email=user.email,
+                UserName=f"user/fake@email.com/{user.profile.sso_id}",
+                Email="fake@email.com",
             )
         ]
 
@@ -162,8 +162,8 @@ class TestSyncQuickSightPermissions:
     @mock.patch("dataworkspace.apps.applications.utils.cache")
     def test_list_user_pagination(self, mock_cache, mock_boto3_client, mock_creds):
         # Arrange
-        user1 = UserFactory.create()
-        user2 = UserFactory.create()
+        UserFactory.create(username="fake@email.com")
+        UserFactory.create(username="fake2@email.com")
         SourceTableFactory(
             dataset=MasterDataSetFactory.create(
                 user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
@@ -176,9 +176,9 @@ class TestSyncQuickSightPermissions:
                 "UserList": [
                     {
                         "Arn": "Arn",
-                        "Email": user1.email,
+                        "Email": "fake@email.com",
                         "Role": "AUTHOR",
-                        "UserName": f"user/{user1.username}",
+                        "UserName": "user/fake@email.com",
                     }
                 ],
                 "NextToken": "foo",
@@ -187,9 +187,9 @@ class TestSyncQuickSightPermissions:
                 "UserList": [
                     {
                         "Arn": "Arn2",
-                        "Email": user2.email,
+                        "Email": "fake2@email.com",
                         "Role": "AUTHOR",
-                        "UserName": f"user/{user2.username}",
+                        "UserName": "user/fake2@email.com",
                     }
                 ]
             },
@@ -213,16 +213,16 @@ class TestSyncQuickSightPermissions:
                 Namespace=settings.QUICKSIGHT_NAMESPACE,
                 Role="AUTHOR",
                 CustomPermissionsName="author-custom-permissions-test",
-                UserName=f"user/{user1.username}",
-                Email=user1.email,
+                UserName="user/fake@email.com",
+                Email="fake@email.com",
             ),
             mock.call(
                 AwsAccountId=mock.ANY,
                 Namespace=settings.QUICKSIGHT_NAMESPACE,
                 Role="AUTHOR",
                 CustomPermissionsName="author-custom-permissions-test",
-                UserName=f"user/{user2.username}",
-                Email=user2.email,
+                UserName="user/fake2@email.com",
+                Email="fake2@email.com",
             ),
         ]
 
@@ -232,7 +232,7 @@ class TestSyncQuickSightPermissions:
     @mock.patch("dataworkspace.apps.applications.utils.cache")
     def test_update_existing_data_source(self, mock_cache, mock_boto3_client, mock_creds):
         # Arrange
-        user = UserFactory.create()
+        user = UserFactory.create(username="fake@email.com")
         SourceTableFactory(
             dataset=MasterDataSetFactory.create(
                 user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
@@ -244,9 +244,9 @@ class TestSyncQuickSightPermissions:
             "UserList": [
                 {
                     "Arn": "Arn",
-                    "Email": user.email,
+                    "Email": "fake@email.com",
                     "Role": "AUTHOR",
-                    "UserName": f"user/{user.email}/{user.username}",
+                    "UserName": f"user/fake@email.com/{user.profile.sso_id}",
                 }
             ]
         }
@@ -279,8 +279,8 @@ class TestSyncQuickSightPermissions:
                 Namespace=settings.QUICKSIGHT_NAMESPACE,
                 Role="AUTHOR",
                 CustomPermissionsName="author-custom-permissions-test",
-                UserName=f"user/{user.email}/{user.username}",
-                Email=user.email,
+                UserName=f"user/fake@email.com/{user.profile.sso_id}",
+                Email="fake@email.com",
             )
         ]
         assert mock_data_client.create_data_source.call_args_list == [
@@ -346,8 +346,8 @@ class TestSyncQuickSightPermissions:
     @mock.patch("dataworkspace.apps.applications.utils.cache")
     def test_missing_user_handled_gracefully(self, mock_cache, mock_boto3_client, mock_creds):
         # Arrange
-        user = UserFactory.create()
-        user2 = UserFactory.create()
+        user = UserFactory.create(username="fake@email.com")
+        user2 = UserFactory.create(username="fake2@email.com")
         SourceTableFactory(
             dataset=MasterDataSetFactory.create(
                 user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
@@ -368,9 +368,9 @@ class TestSyncQuickSightPermissions:
             {
                 "User": {
                     "Arn": "Arn",
-                    "Email": user2.email,
+                    "Email": "fake2@email.com",
                     "Role": "ADMIN",
-                    "UserName": f"user/{user2.email}/{user2.username}",
+                    "UserName": f"user/fake2@email.com/{user2.profile.sso_id}",
                 }
             },
             botocore.exceptions.ClientError(
@@ -388,7 +388,7 @@ class TestSyncQuickSightPermissions:
 
         # Act
         sync_quicksight_permissions(
-            user_sso_ids_to_update=[str(user.username), str(user2.username)]
+            user_sso_ids_to_update=[str(user.profile.sso_id), str(user2.profile.sso_id)]
         )
         username_suffix = (
             ""
@@ -403,20 +403,20 @@ class TestSyncQuickSightPermissions:
                 Namespace=settings.QUICKSIGHT_NAMESPACE,
                 Role="ADMIN",
                 UnapplyCustomPermissions=True,
-                UserName=f"user/{user2.email}/{user2.username}",
-                Email=user2.email,
+                UserName=f"user/fake2@email.com/{user2.profile.sso_id}",
+                Email="fake2@email.com",
             )
         ]
         assert mock_user_client.describe_user.call_args_list == [
             mock.call(
                 AwsAccountId=mock.ANY,
                 Namespace=settings.QUICKSIGHT_NAMESPACE,
-                UserName=f"quicksight_federation{username_suffix}/{user.username}",
+                UserName=f"quicksight_federation{username_suffix}/{user.profile.sso_id}",
             ),
             mock.call(
                 AwsAccountId=mock.ANY,
                 Namespace=settings.QUICKSIGHT_NAMESPACE,
-                UserName=f"quicksight_federation{username_suffix}/{user2.username}",
+                UserName=f"quicksight_federation{username_suffix}/{user2.profile.sso_id}",
             ),
         ]
         assert len(mock_data_client.create_data_source.call_args_list) == 1
@@ -636,11 +636,51 @@ class TestSyncActivityStreamSSOUsers:
         all_users = User.objects.all()
 
         assert len(all_users) == 1
-        assert str(all_users[0].username) == "00000000-0000-0000-0000-000000000000"
+        assert str(all_users[0].profile.sso_id) == "00000000-0000-0000-0000-000000000000"
         assert all_users[0].email == "john.smith@trade.gov.uk"
-        assert all_users[0].username == "00000000-0000-0000-0000-000000000000"
+        assert all_users[0].username == "john.smith@trade.gov.uk"
         assert all_users[0].first_name == "John"
         assert all_users[0].last_name == "Smith"
+
+    @pytest.mark.django_db
+    @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
+    @override_settings(
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+    )
+    def test_sync_updates_existing_users_sso_id(self, mock_hawk_request):
+        user = UserFactory.create(email="john.smith@trade.gov.uk")
+        # set the sso id to something different to what the activity stream
+        # will return to test that it gets updated
+        user.profile.sso_id = "00000000-0000-0000-0000-111111111111"
+        user.save()
+
+        with open(
+            os.path.join(
+                os.path.dirname(__file__),
+                "test_fixture_activity_stream_sso_john_smith.json",
+            ),
+            "r",
+        ) as file:
+            user_john_smith = (200, file.read())
+
+        with open(
+            os.path.join(
+                os.path.dirname(__file__),
+                "test_fixture_activity_stream_sso_empty.json",
+            ),
+            "r",
+        ) as file:
+            empty_result = (200, file.read())
+
+        mock_hawk_request.side_effect = [user_john_smith, empty_result]
+
+        _do_sync_activity_stream_sso_users()
+
+        User = get_user_model()
+        all_users = User.objects.all()
+
+        assert len(all_users) == 1
+        assert str(all_users[0].profile.sso_id) == "00000000-0000-0000-0000-000000000000"
 
     @pytest.mark.django_db
     @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
@@ -650,9 +690,9 @@ class TestSyncActivityStreamSSOUsers:
     def test_sync_updates_existing_users_email(self, mock_hawk_request):
         # set the email to something different to what the activity stream
         # will return to test that it gets updated
-        UserFactory.create(
-            username="00000000-0000-0000-0000-000000000000", email="john.smith@gmail.com"
-        )
+        user = UserFactory.create(email="john.smith@gmail.com")
+        user.profile.sso_id = "00000000-0000-0000-0000-000000000000"
+        user.save()
 
         with open(
             os.path.join(
@@ -683,6 +723,49 @@ class TestSyncActivityStreamSSOUsers:
         assert str(all_users[0].email) == "john.smith@trade.gov.uk"
 
     @pytest.mark.django_db
+    @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
+    @override_settings(
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+    )
+    def test_sync_updates_existing_users_sso_id_and_email(self, mock_hawk_request):
+        # set the sso id to something different to what the activity stream
+        # will return and set the email to the third email in the list that
+        # the activity stream will return to test that it is able to look up
+        # the user and update both their email and sso id
+        user = UserFactory.create(email="john@trade.gov.uk")
+        user.profile.sso_id = "00000000-0000-0000-0000-111111111111"
+        user.save()
+
+        with open(
+            os.path.join(
+                os.path.dirname(__file__),
+                "test_fixture_activity_stream_sso_john_smith_multiple_emails.json",
+            ),
+            "r",
+        ) as file:
+            user_john_smith = (200, file.read())
+
+        with open(
+            os.path.join(
+                os.path.dirname(__file__),
+                "test_fixture_activity_stream_sso_empty.json",
+            ),
+            "r",
+        ) as file:
+            empty_result = (200, file.read())
+
+        mock_hawk_request.side_effect = [user_john_smith, empty_result]
+
+        _do_sync_activity_stream_sso_users()
+
+        User = get_user_model()
+        all_users = User.objects.all()
+
+        assert len(all_users) == 1
+        assert str(all_users[0].profile.sso_id) == "00000000-0000-0000-0000-000000000000"
+        assert str(all_users[0].email) == "john.smith@digital.trade.gov.uk"
+
+    @pytest.mark.django_db
     @mock.patch("dataworkspace.apps.applications.utils.create_tools_access_iam_role_task")
     @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
     @override_settings(
@@ -695,9 +778,9 @@ class TestSyncActivityStreamSSOUsers:
             codename="start_all_applications",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
-        user = UserFactory.create(
-            username="00000000-0000-0000-0000-000000000000", email="john.smith@trade.gov.uk"
-        )
+        user = UserFactory.create(email="john.smith@trade.gov.uk")
+        user.profile.sso_id = "00000000-0000-0000-0000-000000000000"
+        user.save()
         user.user_permissions.add(can_access_tools_permission)
 
         with open(
@@ -741,9 +824,9 @@ class TestSyncActivityStreamSSOUsers:
     def test_sync_doesnt_create_role_if_user_cant_access_tools(
         self, mock_hawk_request, create_tools_access_iam_role_task
     ):
-        UserFactory.create(
-            username="00000000-0000-0000-0000-000000000000", email="john.smith@trade.gov.uk"
-        )
+        user = UserFactory.create(email="john.smith@trade.gov.uk")
+        user.profile.sso_id = "00000000-0000-0000-0000-000000000000"
+        user.save()
 
         with open(
             os.path.join(
@@ -786,10 +869,9 @@ class TestSyncActivityStreamSSOUsers:
             codename="start_all_applications",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
-        user = UserFactory.create(
-            username="00000000-0000-0000-0000-000000000000", email="john.smith@trade.gov.uk"
-        )
+        user = UserFactory.create(email="john.smith@trade.gov.uk")
         user.user_permissions.add(can_access_tools_permission)
+        user.profile.sso_id = "00000000-0000-0000-0000-000000000000"
         user.profile.tools_access_role_arn = "some-arn"
         user.save()
 
@@ -865,9 +947,8 @@ class TestCreateToolsAccessIAMRoleTask:
     @pytest.mark.django_db
     @mock.patch("dataworkspace.apps.applications.utils.create_tools_access_iam_role")
     def test_task_creates_iam_role(self, mock_create_tools_access_iam_role):
-        user = UserFactory.create(
-            username="00000000-0000-0000-0000-000000000001", email="john.smith@trade.gov.uk"
-        )
+        user = UserFactory.create(username="john.smith@trade.gov.uk")
+        user.profile.sso_id = "00000000-0000-0000-0000-000000000001"
         user.profile.home_directory_efs_access_point_id = "some-access-point-id"
         user.save()
 

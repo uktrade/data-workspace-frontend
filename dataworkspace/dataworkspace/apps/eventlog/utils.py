@@ -1,9 +1,9 @@
 from django.contrib.admin.models import LogEntry, CHANGE
+from django.contrib.auth.models import User  # pylint: disable=imported-auth-user
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.encoding import force_text
 
-from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.eventlog.models import EventLog
 
 
@@ -14,7 +14,7 @@ def log_event(user, event_type, related_object=None, extra=None):
 
 
 def log_permission_change(
-    user: get_user_model(), obj: models.Model, event_type: int, extra: dict, message: str
+    user: User, obj: models.Model, event_type: int, extra: dict, message: str
 ):
     """
     Log permission chagne dto both the django user history and to our custom event log.

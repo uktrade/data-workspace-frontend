@@ -6,6 +6,7 @@ import mock
 from botocore.exceptions import ClientError
 
 from django.apps import apps
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -2974,7 +2975,7 @@ class TestDatasetAdminPytest:
         self, user, manage_unpublished_permission, admin_change_view, DatasetFactory
     ):
         dataset = DatasetFactory(published=True)
-        user = factories.UserFactory(is_staff=True)
+        user.is_staff = True
         perm = Permission.objects.get(codename=manage_unpublished_permission)
         user.user_permissions.add(perm)
         user.save()
@@ -3000,7 +3001,7 @@ class TestDatasetAdminPytest:
         dataset = factories.DataSetFactory.create(
             published=False, name="original", type=DataSetType.MASTER
         )
-        user = factories.UserFactory(is_staff=True)
+        user.is_staff = True
         perm = Permission.objects.get(codename="manage_unpublished_master_datasets")
         user.user_permissions.add(perm)
         user.save()
@@ -3043,7 +3044,7 @@ class TestDatasetAdminPytest:
         dataset = factories.DataSetFactory.create(
             published=False, name="original", type=DataSetType.DATACUT
         )
-        user = factories.UserFactory.create(is_staff=True)
+        user.is_staff = True
         perm = Permission.objects.get(codename="manage_unpublished_datacut_datasets")
         user.user_permissions.add(perm)
         user.save()
@@ -3105,8 +3106,7 @@ class TestDatasetAdminPytest:
             column_name="field_1",
             description="field 1 description",
         )
-
-        user = factories.UserFactory.create(is_staff=True)
+        user.is_staff = True
         perm = Permission.objects.get(codename="manage_unpublished_reference_datasets")
         user.user_permissions.add(perm)
         user.save()
@@ -3215,7 +3215,7 @@ class TestDatasetAdminPytest:
             table="my_table",
             dataset=dataset,
         )
-        user = factories.UserFactory.create(is_staff=True)
+        user = get_user_model().objects.create(is_staff=True)
         # Login to admin site
         staff_client.post(reverse("admin:index"), follow=True)
 
@@ -3504,7 +3504,7 @@ class TestDatasetAdminPytest:
         database = factories.DatabaseFactory()
         num_tables = SourceTable.objects.count()
 
-        user = factories.UserFactory.create(is_staff=True)
+        user = get_user_model().objects.create(is_staff=True)
 
         response = staff_client.post(
             reverse("admin:datasets_masterdataset_change", args=(dataset.id,)),
@@ -3553,7 +3553,7 @@ class TestDatasetAdminPytest:
         database = factories.DatabaseFactory()
         num_tables = SourceTable.objects.count()
 
-        user = factories.UserFactory.create(is_staff=True)
+        user = get_user_model().objects.create(is_staff=True)
 
         response = staff_client.post(
             reverse("admin:datasets_masterdataset_change", args=(dataset.id,)),

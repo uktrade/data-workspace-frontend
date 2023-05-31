@@ -1,3 +1,6 @@
+import uuid
+
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.test import TransactionTestCase, TestCase
@@ -5,30 +8,30 @@ from django.urls import reverse
 
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.datasets.models import ReferenceDataset
-from dataworkspace.tests.factories import UserFactory
 
 
 class BaseTestCaseMixin:
     def setUp(self):
-        self.user = UserFactory.create(
-            username="aae8901a-082f-4f12-8c6c-fdf4aeba2d68",
-            email="bob.testerson@test.com",
-            is_staff=True,
-            is_superuser=True,
-            first_name="Bob",
+        username = "bob.testerson@test.com"
+        self.user = get_user_model().objects.create(
+            username=username, is_staff=True, is_superuser=True, email=username
         )
+
         self.user.user_permissions.add(
             Permission.objects.get(
                 codename="start_all_applications",
                 content_type=ContentType.objects.get_for_model(ApplicationInstance),
             )
         )
+        self.user.profile.sso_id = uuid.uuid4()
+
+        self.user.profile.save()
 
         self.user_data = {
             "HTTP_SSO_PROFILE_EMAIL": self.user.email,
             "HTTP_SSO_PROFILE_CONTACT_EMAIL": self.user.email,
             "HTTP_SSO_PROFILE_RELATED_EMAILS": "",
-            "HTTP_SSO_PROFILE_USER_ID": self.user.username,
+            "HTTP_SSO_PROFILE_USER_ID": "aae8901a-082f-4f12-8c6c-fdf4aeba2d68",
             "HTTP_SSO_PROFILE_LAST_NAME": "Bob",
             "HTTP_SSO_PROFILE_FIRST_NAME": "Testerson",
         }
@@ -105,7 +108,7 @@ def get_http_sso_data(user):
         "HTTP_SSO_PROFILE_EMAIL": user.email,
         "HTTP_SSO_PROFILE_CONTACT_EMAIL": user.email,
         "HTTP_SSO_PROFILE_RELATED_EMAILS": "",
-        "HTTP_SSO_PROFILE_USER_ID": user.username,
+        "HTTP_SSO_PROFILE_USER_ID": user.profile.sso_id,
         "HTTP_SSO_PROFILE_LAST_NAME": user.last_name,
         "HTTP_SSO_PROFILE_FIRST_NAME": user.first_name,
     }

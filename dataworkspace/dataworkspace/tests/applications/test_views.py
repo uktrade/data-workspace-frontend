@@ -5,6 +5,7 @@ from unittest import mock
 import botocore
 import pytest
 from django.contrib.admin.models import LogEntry
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.test import Client, override_settings
@@ -150,6 +151,7 @@ class TestDataVisualisationUIApprovalPage:
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
         user = factories.UserFactory.create(
+            username="visualisation.creator@test.com",
             is_staff=False,
             is_superuser=False,
         )
@@ -187,6 +189,7 @@ class TestDataVisualisationUIApprovalPage:
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
         user = factories.UserFactory.create(
+            username="visualisation.creator@test.com",
             is_staff=False,
             is_superuser=False,
         )
@@ -228,6 +231,7 @@ class TestDataVisualisationUIApprovalPage:
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
         user = factories.UserFactory.create(
+            username="visualisation.creator@test.com",
             is_staff=False,
             is_superuser=False,
         )
@@ -299,38 +303,50 @@ class TestQuickSightPollAndRedirect:
     @pytest.mark.django_db
     @override_settings(QUICKSIGHT_SSO_URL="https://sso.quicksight")
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
-    def test_view_redirects_to_quicksight_sso_url(self, mock_boto_client, staff_client):
+    def test_view_redirects_to_quicksight_sso_url(self, mock_boto_client):
+        user = get_user_model().objects.create(is_staff=True, is_superuser=True)
+
+        # Login to admin site
+        client = Client(**get_http_sso_data(user))
+        client.post(reverse("admin:index"), follow=True)
+
         with mock.patch("dataworkspace.apps.applications.views.sync_quicksight_permissions"):
-            resp = staff_client.get(reverse("applications:quicksight_redirect"), follow=False)
+            resp = client.get(reverse("applications:quicksight_redirect"), follow=False)
 
         assert resp["Location"] == "https://sso.quicksight"
 
     @pytest.mark.django_db
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
-    def test_view_starts_celery_polling_job(self, mock_boto_client, staff_client, staff_user):
+    def test_view_starts_celery_polling_job(self, mock_boto_client):
+        user = get_user_model().objects.create(is_staff=True, is_superuser=True)
+
         # Login to admin site
-        staff_client.post(reverse("admin:index"), follow=True)
+        client = Client(**get_http_sso_data(user))
+        client.post(reverse("admin:index"), follow=True)
 
         with mock.patch(
             "dataworkspace.apps.applications.views.sync_quicksight_permissions"
         ) as sync_mock:
-            staff_client.get(reverse("applications:quicksight_redirect"), follow=False)
+            client.get(reverse("applications:quicksight_redirect"), follow=False)
 
         assert sync_mock.delay.call_args_list == [
             mock.call(
-                user_sso_ids_to_update=(staff_user.username,),
+                user_sso_ids_to_update=(user.profile.sso_id,),
             )
         ]
 
 
 class TestToolsPage:
     @pytest.mark.django_db
-    def test_user_with_no_size_config_shows_default_config(self, user, client):
+    def test_user_with_no_size_config_shows_default_config(self):
         group_name = "Visualisation Tools"
         template = factories.ApplicationTemplateFactory()
         template.group_name = group_name
         template.save()
 
+        user = get_user_model().objects.create()
+
+        client = Client(**get_http_sso_data(user))
         response = client.get(reverse("applications:tools"), follow=True)
 
         assert len(response.context["tools"][group_name]["tools"]) == 3
@@ -348,18 +364,20 @@ class TestToolsPage:
         assert tool.tool_configuration.size_config.memory == 8192
 
     @pytest.mark.django_db
-    def test_user_with_size_config_shows_correct_config(self, user, client):
+    def test_user_with_size_config_shows_correct_config(self):
         group_name = "Visualisation Tools"
         template = factories.ApplicationTemplateFactory()
         template.group_name = group_name
         template.save()
 
+        user = get_user_model().objects.create()
         UserToolConfiguration.objects.create(
             user=user,
             tool_template=template,
             size=UserToolConfiguration.SIZE_EXTRA_LARGE,
         )
 
+        client = Client(**get_http_sso_data(user))
         response = client.get(reverse("applications:tools"), follow=True)
 
         assert len(response.context["tools"][group_name]["tools"]) == 3
@@ -378,8 +396,11 @@ class TestToolsPage:
 
 class TestUserToolSizeConfigurationView:
     @pytest.mark.django_db
-    def test_get_shows_all_size_choices(self, user, client):
+    def test_get_shows_all_size_choices(self):
         tool = factories.ApplicationTemplateFactory()
+        user = get_user_model().objects.create()
+
+        client = Client(**get_http_sso_data(user))
         response = client.get(
             reverse(
                 "applications:configure_tool_size",
@@ -393,9 +414,13 @@ class TestUserToolSizeConfigurationView:
         assert b"Extra Large" in response.content
 
     @pytest.mark.django_db
-    def test_post_creates_new_tool_configuration(self, user, client):
+    def test_post_creates_new_tool_configuration(self):
         tool = factories.ApplicationTemplateFactory(nice_name="RStudio")
+        user = get_user_model().objects.create()
+
         assert not tool.user_tool_configuration.filter(user=user).first()
+
+        client = Client(**get_http_sso_data(user))
         response = client.post(
             reverse(
                 "applications:configure_tool_size",
@@ -412,11 +437,14 @@ class TestUserToolSizeConfigurationView:
         )
 
     @pytest.mark.django_db
-    def test_post_updates_existing_tool_configuration(self, user, client):
+    def test_post_updates_existing_tool_configuration(self):
         tool = factories.ApplicationTemplateFactory(nice_name="RStudio")
+        user = get_user_model().objects.create()
         UserToolConfiguration.objects.create(
             user=user, tool_template=tool, size=UserToolConfiguration.SIZE_EXTRA_LARGE
         )
+
+        client = Client(**get_http_sso_data(user))
         response = client.post(
             reverse(
                 "applications:configure_tool_size",
@@ -447,6 +475,7 @@ class TestVisualisationLogs:
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
         user = factories.UserFactory.create(
+            username="visualisation.creator@test.com",
             is_staff=False,
             is_superuser=False,
         )
@@ -482,6 +511,7 @@ class TestVisualisationLogs:
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
         user = factories.UserFactory.create(
+            username="visualisation.creator@test.com",
             is_staff=False,
             is_superuser=False,
         )
@@ -518,6 +548,7 @@ class TestVisualisationLogs:
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
         user = factories.UserFactory.create(
+            username="visualisation.creator@test.com",
             is_staff=False,
             is_superuser=False,
         )
@@ -557,6 +588,7 @@ class TestVisualisationLogs:
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
         )
         user = factories.UserFactory.create(
+            username="visualisation.creator@test.com",
             is_staff=False,
             is_superuser=False,
         )

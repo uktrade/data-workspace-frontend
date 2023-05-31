@@ -6,8 +6,8 @@ import waffle
 
 from django import forms
 from django.conf import settings
+from django.contrib.auth import get_user_model
 
-from dataworkspace.apps.core.models import get_user_model
 from dataworkspace.apps.datasets.constants import AggregationType, DataSetType, TagType
 from .models import DataSet, SourceLink, Tag, VisualisationCatalogueItem
 from .search import SORT_FIELD_MAP, SearchDatasetsFilters
