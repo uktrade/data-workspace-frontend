@@ -259,6 +259,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
                     "reference_code",
                     "short_description",
                     "description",
+                    "notes",
                     "enquiries_contact",
                     "information_asset_owner",
                     "information_asset_manager",
