@@ -422,8 +422,9 @@ function initDataGrid(
               else {
                 increaseGridButton.innerText = "Show more rows";
               }
-            })
-          };
+        document.getElementById("data-grid").classList.toggle("grid-maximised")
+      });
+    }
 }
 
 window.initDataGrid = initDataGrid;

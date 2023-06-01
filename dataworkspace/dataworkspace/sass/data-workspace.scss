@@ -343,6 +343,9 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
 .chart-preview-container img {
   width: 100%;
 }
+.grid-maximised {
+  height : calc(100vh - 160px) !important;
+}
 
 /* @include govuk-media-query($from: desktop) ... */
 @media (min-width: 48.0625em) {
