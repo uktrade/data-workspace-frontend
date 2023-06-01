@@ -412,15 +412,15 @@ function initDataGrid(
       return;
     });
 
-  var maximiseButton = document.querySelector("#maximise-button");
-    if (maximiseButton !== null) {
-      maximiseButton.addEventListener("click", function (e) {
+  var increaseGridButton = document.querySelector("#increase-grid-button");
+    if (increaseGridButton !== null) {
+      increaseGridButton.addEventListener("click", function (e) {
         document.getElementById("collapsible-header").classList.toggle("govuk-visually-hidden");
-              if (maximiseButton.innerText === "Maximise") {
-                maximiseButton.innerText = "Minimise";
+              if (increaseGridButton.innerText === "Show more rows") {
+                increaseGridButton.innerText = "Show less rows";
               }
               else {
-                maximiseButton.innerText = "Maximise";
+                increaseGridButton.innerText = "Show more rows";
               }
             })
           };
