@@ -446,6 +446,7 @@ class DataSet(DeletableTimestampedUserModel):
             self.user_access_type in [UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN]
             or self.datasetuserpermission_set.filter(user=user).exists()
             or user_email_domain in self.authorized_email_domains
+            or user.id in (self.information_asset_owner_id, self.information_asset_manager_id)
         )
 
     def user_has_bookmarked(self, user):
@@ -2573,6 +2574,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
             self.user_access_type in [UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN]
             or self.visualisationuserpermission_set.filter(user=user).exists()
             or user_email_domain in self.authorized_email_domains
+            or user.id in (self.information_asset_owner_id, self.information_asset_manager_id)
         )
 
     def user_has_bookmarked(self, user):
