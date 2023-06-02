@@ -28,7 +28,8 @@ from dataworkspace.apps.applications.utils import (
 from dataworkspace.apps.core.boto3_client import get_sts_client
 from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.apps.core.utils import create_tools_access_iam_role
-
+from dataworkspace.apps.eventlog.models import EventLog
+from dataworkspace.apps.eventlog.utils import log_event
 
 SCHEMA_STRING = {"dataType": "STRING", "semantics": {"conceptType": "DIMENSION"}}
 
@@ -183,6 +184,11 @@ def application_api_PUT(request, public_host):
     except IntegrityError:
         application_instance = get_api_visible_application_instance_by_public_host(public_host)
     else:
+        log_event(
+            request.user,
+            EventLog.TYPE_USER_TOOL_STARTED,
+            application_instance,
+        )
         spawn.delay(
             application_template.spawner,
             request.user.pk,

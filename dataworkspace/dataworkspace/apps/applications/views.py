@@ -228,6 +228,11 @@ def tools_html_POST(request):
     else:
         stop_spawner_and_application(application_instance)
         messages.success(request, "Stopped " + application_instance.application_template.nice_name)
+        log_event(
+            request.user,
+            EventLog.TYPE_USER_TOOL_STOPPED,
+            application_instance,
+        )
     return redirect(redirect_target)
 
 
