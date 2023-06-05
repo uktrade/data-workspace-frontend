@@ -2079,17 +2079,29 @@ class ReferenceDatasetGridDataView(View):
         )
 
 
-@require_POST
-def save_data_grid_view(request, model_class, source_id):
-    source = get_object_or_404(model_class, pk=source_id)
-    json_data = json.loads(request.body)
-    UserDataTableView.objects.update_or_create(
-        user=request.user,
-        source_object_id=str(source.id),
-        source_content_type=ContentType.objects.get_for_model(source),
-        defaults={
-            "filters": json_data.get("filters"),
-            "column_defs": {x["field"]: x for x in json_data.get("columnDefs", [])},
-        },
-    )
-    return HttpResponse(status=200)
+class SaveUserDataGridView(View):
+    def post(self, request, model_class, source_id):
+        source = get_object_or_404(model_class, pk=source_id)
+        json_data = json.loads(request.body)
+        UserDataTableView.objects.update_or_create(
+            user=request.user,
+            source_object_id=str(source.id),
+            source_content_type=ContentType.objects.get_for_model(source),
+            defaults={
+                "filters": json_data.get("filters"),
+                "column_defs": {x["field"]: x for x in json_data.get("columnDefs", [])},
+            },
+        )
+        return HttpResponse(status=200)
+
+    def delete(self, request, model_class, source_id):
+        source = get_object_or_404(model_class, pk=source_id)
+        try:
+            UserDataTableView.objects.get(
+                user=request.user,
+                source_object_id=str(source.id),
+                source_content_type=ContentType.objects.get_for_model(source),
+            ).delete()
+        except UserDataTableView.DoesNotExist:
+            pass
+        return HttpResponse(status=200)

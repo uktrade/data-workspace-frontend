@@ -115,9 +115,10 @@ function initDataGrid(
   totalDownloadableRows =
     totalDownloadableRows != null ? totalDownloadableRows : 0;
   const userGridConfig = getGridConfig();
-  const hasSavedConfig = Object.keys(userGridConfig).length > 0;
+  let hasSavedConfig = Object.keys(userGridConfig).length > 0;
 
   columnConfig.forEach(function(column, i) {
+    column.originalPosition = i;
     column.position = i;
     if (hasSavedConfig) {
       const userColumnConfig = userGridConfig.columnDefs[column.field];
@@ -434,9 +435,30 @@ function initDataGrid(
       // Unset the saved column config
       gridOptions.columnApi.getColumns().forEach((c) => {
         gridOptions.columnApi.setColumnVisible(c.getColId(), true);
+        gridOptions.columnApi.moveColumn(c.getColId(), c.colDef.originalPosition);
+        gridOptions.columnApi.applyColumnState({ defaultState: { sort: null } });
       });
       document.activeElement.blur();
-      return;
+      if (hasSavedConfig) {
+        const button = e.currentTarget;
+        button.innerHTML = "Resetting view";
+        button.setAttribute("disabled", "disabled");
+        var xhr = new XMLHttpRequest();
+        xhr.open("DELETE", gridContainer.getAttribute("data-save-view-url"), true);
+        xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        xhr.setRequestHeader("X-CSRFToken", getCsrfToken());
+        xhr.onreadystatechange = function () {
+          if (this.readyState === XMLHttpRequest.DONE) {
+            if (this.status === 200) {
+              // Show a success message - will be completed in 3rd ticket in the series
+            }
+            button.innerHTML = "Reset view";
+            button.removeAttribute("disabled");
+            hasSavedConfig = false;
+          }
+        }
+        xhr.send();
+      }
     });
 
   var saveViewButton = document.querySelector("#data-grid-save-view");
@@ -475,6 +497,7 @@ function initDataGrid(
           }
           saveViewButton.innerHTML = "Save view";
           saveViewButton.removeAttribute("disabled");
+          hasSavedConfig = true;
         }
       }
       xhr.send(JSON.stringify(gridConfig));

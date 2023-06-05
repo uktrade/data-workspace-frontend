@@ -5006,3 +5006,27 @@ class TestSaveDataGridView:
             "filters": {"a": "test"},
             "columnDefs": {"col1": {"field": "col1", "position": 1, "visible": False}},
         }
+
+    @pytest.mark.parametrize(
+        "source_factory",
+        [
+            factories.SourceTableFactory,
+            factories.CustomDatasetQueryFactory,
+            factories.ReferenceDatasetFactory,
+        ],
+    )
+    def test_delete(self, user, client, source_factory):
+        source = source_factory.create()
+        factories.UserDataTableViewFactory(
+            user=user,
+            source_object_id=str(source.id),
+            source_content_type=ContentType.objects.get_for_model(source),
+            filters={"col1": {"value": "test filter"}},
+            column_defs=[{"col1": {"field": "col1", "position": 0, "visible": True}}],
+        )
+        view_count = UserDataTableView.objects.count()
+        response = client.delete(
+            source.get_save_grid_view_url(),
+        )
+        assert response.status_code == 200
+        assert UserDataTableView.objects.count() == view_count - 1
