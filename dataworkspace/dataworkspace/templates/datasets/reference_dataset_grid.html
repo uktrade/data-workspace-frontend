@@ -61,8 +61,7 @@
       {% endflag %}
     </ol>
   </div>
-  <div>
-    <div id="collapsible-header" class="govuk-!-margin-top-4">
+  <div id="collapsible-header" class="govuk-!-margin-top-4">
       {% if model.enquiries_contact %}
         <a href="mailto:{{ model.enquiries_contact.email }}?subject=Reporting an issue - {{ model.name }}"
            class="govuk-link govuk-link--no-visited-state govuk-!-padding-right-3" style="float: right">
@@ -75,12 +74,12 @@
             <h2 class="govuk-heading-l govuk-!-margin-bottom-0">{{ model.name }} </h2>
           </div>
           <div class="govuk-grid-column-full">
-      <p class="govuk-body govuk-!-padding-top-0 govuk-!-padding-right-3 govuk-!-margin-bottom-2 govuk-!-text-align-right">
-        <span class="govuk-!-font-weight-bold">Data last updated:</span>
-        {{ model.data_last_updated|gmt_date|default_if_none:"N/A" }}
-        {{ model.data_last_updated|time_with_gmt_offset|default_if_none:"N/A" }}
-      </p>
-        </div>
+            <p class="govuk-body govuk-!-padding-top-0 govuk-!-padding-right-3 govuk-!-margin-bottom-2 govuk-!-text-align-right">
+              <span class="govuk-!-font-weight-bold">Data last updated:</span>
+              {{ model.data_last_updated|gmt_date|default_if_none:"N/A" }}
+              {{ model.data_last_updated|time_with_gmt_offset|default_if_none:"N/A" }}
+            </p>
+          </div>
       </div>
     </div>
   </div>

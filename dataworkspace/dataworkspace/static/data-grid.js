@@ -423,6 +423,7 @@ function initDataGrid(
                 increaseGridButton.innerText = "Show more rows";
               }
         document.getElementById("data-grid").classList.toggle("grid-maximised")
+        document.getElementsByClassName("app-compressed-grid")[0].classList.toggle("remove-border")
       });
     }
 }

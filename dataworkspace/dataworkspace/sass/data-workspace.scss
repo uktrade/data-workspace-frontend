@@ -344,7 +344,7 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   width: 100%;
 }
 .grid-maximised {
-  height : calc(100vh - 170px) !important;
+  height : calc(100vh - 175px) !important;
 }
 
 /* @include govuk-media-query($from: desktop) ... */
@@ -538,6 +538,7 @@ p.sidebar-section {
 .app-compressed-grid {
   border: 1px solid #b1b4b6;
   border-bottom: none;
+  &.remove-border { border: 0px }
 
   .app-grid-header {
     padding: 12.5px 0 12.5px 10px;
