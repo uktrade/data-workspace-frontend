@@ -829,6 +829,9 @@ class SourceTable(BaseSource):
             "-data_flow_execution_date"
         )
 
+    def get_save_grid_view_url(self):
+        return reverse("datasets:source_table_save_grid_view", args=(self.id,))
+
 
 class SourceTableFieldDefinition(models.Model):
     field = models.CharField(
@@ -1139,6 +1142,9 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
 
     def get_chart_builder_query(self):
         return self.query
+
+    def get_save_grid_view_url(self):
+        return reverse("datasets:custom_dataset_query_save_grid_view", args=(self.id,))
 
 
 class CustomDatasetQueryTable(models.Model):
@@ -1955,6 +1961,9 @@ class ReferenceDataset(DeletableTimestampedUserModel):
 
     def get_grid_data_url(self):
         return reverse("datasets:reference_dataset_grid_data", args=(self.id,))
+
+    def get_save_grid_view_url(self):
+        return reverse("datasets:reference_dataset_save_grid_view", args=(self.id,))
 
 
 @receiver(m2m_changed, sender=ReferenceDataset.tags.through)
