@@ -461,7 +461,7 @@ function initDataGrid(
       }
     });
 
-  var saveViewButton = document.querySelector("#data-grid-save-view");
+var saveViewButton = document.querySelector("#data-grid-save-view");
   if (saveViewButton !== null) {
     saveViewButton.addEventListener("click", function (e) {
       saveViewButton.innerHTML = "Saving view";
@@ -501,7 +501,21 @@ function initDataGrid(
       xhr.send(JSON.stringify(gridConfig));
     });
   }
-
 }
+
+var increaseGridButton = document.querySelector("#increase-grid-button");
+    if (increaseGridButton !== null) {
+      increaseGridButton.addEventListener("click", function (e) {
+        document.getElementById("collapsible-header").classList.toggle("govuk-visually-hidden");
+              if (increaseGridButton.innerText === "Show more rows") {
+                increaseGridButton.innerText = "Show less rows";
+              }
+              else {
+                increaseGridButton.innerText = "Show more rows";
+              }
+        document.getElementById("data-grid").classList.toggle("grid-maximised")
+        document.getElementsByClassName("app-compressed-grid")[0].classList.toggle("remove-border")
+      });
+    }
 
 window.initDataGrid = initDataGrid;
