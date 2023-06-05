@@ -227,6 +227,11 @@ function initDataGrid(
   var gridContainer = document.querySelector("#data-grid");
   new agGrid.Grid(gridContainer, gridOptions);
 
+  // Apply any filers the user has saved
+  if (userGridConfig.filters != null) {
+    gridOptions.api.setFilterModel(userGridConfig.filters)
+  }
+
   if (dataEndpoint) {
     var initialDataLoaded = false;
     var dataSource = {
@@ -340,11 +345,6 @@ function initDataGrid(
         xhr.send(JSON.stringify(qs));
       },
     };
-
-    // Apply any filers the user has saved
-    if (userGridConfig.filters != null) {
-      gridOptions.api.setFilterModel(userGridConfig.filters)
-    }
 
     gridOptions.api.setDatasource(dataSource);
   }
@@ -472,8 +472,6 @@ function initDataGrid(
         return [c.colId, c];
       }));
       let gridConfig = {
-        sortColumn: sort[0],
-        sortDirection: sort[1],
         filters: gridOptions.api.getFilterModel(),
         columnDefs: gridOptions.columnApi.getColumns().map(function(c, i) {
           const colState = columnState[c.colId];
