@@ -12,6 +12,7 @@ from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.redis import RedisIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
+from django.contrib import auth
 from django.conf.locale.en import formats as en_formats
 
 import sentry
@@ -35,6 +36,21 @@ ENVIRONMENT = env.get("ENVIRONMENT", "Dev")
 SECRET_KEY = env["SECRET_KEY"]
 LOCAL = "dataworkspace.test" in env["ALLOWED_HOSTS"]
 DEBUG = bool(strtobool(env.get("DEBUG", str(LOCAL))))
+
+
+# Monkey patch django's get_user_model() to override __str__().
+# As we are migrating usernames from email address to SSO ID
+# we need to override the string method for django's built in user
+# model so that it displays the users email address.
+def patched_get_user_model():
+    # pylint: disable=imported-auth-user,import-outside-toplevel
+    from django.contrib.auth.models import User
+
+    User.__str__ = lambda u: u.email
+    return User
+
+
+auth.get_user_model = patched_get_user_model
 
 
 def aws_fargate_private_ip():
@@ -737,7 +753,6 @@ CHART_BUILDER_PUBLISH_CHARTS_FLAG = "CHART_BUILDER_PUBLISH_CHARTS"
 DATA_UPLOADER_UI_FLAG = "DATA_UPLOADER_UI"
 ACCESSIBLE_AUTOCOMPLETE_FLAG = "ACCESSIBLE_AUTOCOMPLETE_FLAG"
 SUGGESTED_SEARCHES_FLAG = "SUGGESTED_SEARCHES_FLAG"
-COLLECTIONS_FLAG = "COLLECTIONS_FLAG"
 ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK = "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"
 SECURITY_CLASSIFICATION_FLAG = "SECURITY_CLASSIFICATION_FLAG"
 REFERENCE_DATASET_PIPELINE_SYNC = "REFERENCE_DATASET_PIPELINE_SYNC"

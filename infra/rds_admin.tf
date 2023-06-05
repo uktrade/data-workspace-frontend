@@ -1,7 +1,7 @@
 resource "aws_db_instance" "admin" {
   identifier = "${var.prefix}-admin"
 
-  allocated_storage = 60
+  allocated_storage = 100
   storage_type = "gp2"
   engine = "postgres"
   engine_version = var.admin_db_instance_version

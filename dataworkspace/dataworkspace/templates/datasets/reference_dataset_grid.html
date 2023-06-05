@@ -11,6 +11,8 @@
   <link rel="stylesheet" type="text/css" href="{% static 'data-grid.css' %}" />
   {{ model.get_column_config|json_script:"column_data" }}
   {{ model.get_grid_data|json_script:"grid_data" }}
+  {% saved_grid_config user model as grid_config %}
+  {{ grid_config|json_script:"grid-config" }}
   <script nonce="{{ request.csp_nonce }}">
     window.initDataGrid(
         JSON.parse(document.getElementById('column_data').textContent),
@@ -91,6 +93,9 @@
               {% flag CHART_BUILDER_BUILD_CHARTS_FLAG %}
                 <button class="govuk-button" id="data-grid-create-chart">Create a chart</button>
               {% endflag %}
+              <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-save-view" data-prevent-double-click="true">
+                Save view
+              </button>
               <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-view">
                 Reset view
               </button>
@@ -109,7 +114,11 @@
               <button id="increase-grid-button" class="govuk-button govuk-button--secondary" data-module="govuk-button">Show more rows</button>
             </div>
         </div>
-        <div id="data-grid" class="ag-theme-alpine"></div>
+        <div
+          id="data-grid"
+          class="ag-theme-alpine"
+          data-save-view-url="{{ model.get_save_grid_view_url }}"
+        ></div>
       </div>
     </div>
   {% endwith %}

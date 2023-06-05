@@ -17,6 +17,7 @@ from dataworkspace.apps.applications.models import (
     UserToolConfiguration,
 )
 from dataworkspace.apps.datasets.constants import UserAccessType
+from dataworkspace.apps.datasets.models import Pipeline
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data
 
@@ -266,6 +267,36 @@ class TestDataVisualisationUIApprovalPage:
         assert response.status_code == 200
         assert len(VisualisationApproval.objects.all()) == 1
         assert approval.approved is False
+
+
+class TestDataVisualisationUIDatasetsPage:
+    def test_shows_app_schema_pipelines_on_datasets_page_and_no_others(self, staff_client):
+        visualisation = factories.VisualisationCatalogueItemFactory.create(
+            short_description="summary",
+            published=False,
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
+            visualisation_template__gitlab_project_id=1,
+        )
+        app_schema = "_user_app_" + visualisation.visualisation_template.host_basename
+        Pipeline.objects.create(table_name="hidden.table_1", config={"sql": "SELECT 1"})
+        Pipeline.objects.create(table_name=f"{app_schema}.table_2", config={"sql": "SELECT 1"})
+        Pipeline.objects.create(table_name=f'"{app_schema}".table_3', config={"sql": "SELECT 1"})
+
+        # Login to admin site
+        staff_client.post(reverse("admin:index"), follow=True)
+
+        with _visualisation_ui_gitlab_mocks():
+            response = staff_client.get(
+                reverse(
+                    "visualisations:datasets",
+                    args=(visualisation.visualisation_template.gitlab_project_id,),
+                ),
+            )
+
+        assert b"table_1" not in response.content
+        assert b"table_2" in response.content
+        assert b"table_3" in response.content
+        assert response.status_code == 200
 
 
 class TestQuickSightPollAndRedirect:

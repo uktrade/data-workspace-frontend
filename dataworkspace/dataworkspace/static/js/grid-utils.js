@@ -113,3 +113,19 @@ function tableResize(tableEl, api) {
     autoSizeColumns(api);
   }
 }
+
+
+function getGridConfig() {
+  const gridConfigScript = document.querySelector("#grid-config");
+  return gridConfigScript !== null ? JSON.parse(gridConfigScript.textContent) : {};
+}
+
+function getSortField(columnApi) {
+  const sort = columnApi.getColumnState().filter(function(c) {
+    return c.sort != null
+  });
+  if (sort.length > 0) {
+    return [sort[0].colId, sort[0].sort]
+  }
+  return [null, null]
+}

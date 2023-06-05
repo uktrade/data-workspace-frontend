@@ -12,7 +12,11 @@ from dataworkspace.tests import factories
 @pytest.mark.parametrize(
     "table_name,expected_output,added_pipelines",
     (
-        ("no_dot", "Table name must be in the format &lt;schema&gt;.&lt;table name&gt;", 0),
+        (
+            "no_dot",
+            "Table name must be in the format schema.table or &quot;schema&quot;.&quot;table&quot;",
+            0,
+        ),
         (
             ("a" * 65) + ".table_name",
             "Schema name must be less than 63 characters",

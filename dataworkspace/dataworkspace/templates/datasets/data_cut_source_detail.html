@@ -11,6 +11,8 @@
   {# We *have* to include the stylesheet after the ag-grid js as it overrides the default styles #}
   <link rel="stylesheet" type="text/css" href="{% static 'data-grid.css' %}"/>
   {{ object.get_column_config|json_script:"column_data" }}
+  {% saved_grid_config user object as grid_config %}
+  {{ grid_config|json_script:"grid-config" }}
   <script nonce="{{ request.csp_nonce }}">
     window.initDataGrid(
       JSON.parse(document.getElementById('column_data').textContent),
@@ -31,7 +33,6 @@
       '{% url 'datasets:log_data_preview_load_time' object.dataset.id object.id %}'
     );
   </script>
-
 {% endblock footer_scripts %}
 {% block content %}
   <div class="govuk-breadcrumbs govuk-!-padding-left-2 govuk-!-padding-bottom-2 govuk-!-margin-bottom-0 app-grid-breadcrumbs">
@@ -95,6 +96,9 @@
             {% flag CHART_BUILDER_BUILD_CHARTS_FLAG %}
               <button class="govuk-button" id="data-grid-create-chart">Create a chart</button>
             {% endflag %}
+            <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-save-view" data-prevent-double-click="true">
+              Save view
+            </button>
             <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-view">
               Reset view
             </button>
@@ -118,7 +122,11 @@
           <button id="increase-grid-button" class="govuk-button govuk-button--secondary" data-module="govuk-button">Show more rows</button>
         </div>
       </div>
-      <div id="data-grid" class="ag-theme-alpine"></div>
+      <div
+        id="data-grid"
+        class="ag-theme-alpine"
+        data-save-view-url="{{ object.get_save_grid_view_url }}"
+      ></div>
     </div>
   {% csrf_token %}
 {% endblock %}

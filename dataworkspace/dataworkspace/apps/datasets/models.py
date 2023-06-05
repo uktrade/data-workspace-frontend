@@ -237,6 +237,7 @@ class DataSet(DeletableTimestampedUserModel):
     short_description = models.CharField(blank=False, null=False, max_length=256)
     grouping = models.ForeignKey(DataGrouping, null=True, on_delete=models.CASCADE)
     description = RichTextField(null=False, blank=False)
+    notes = RichTextField(null=True, blank=True)
     acronyms = models.CharField(blank=True, default="", max_length=255)
     enquiries_contact = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
@@ -445,6 +446,7 @@ class DataSet(DeletableTimestampedUserModel):
             self.user_access_type in [UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN]
             or self.datasetuserpermission_set.filter(user=user).exists()
             or user_email_domain in self.authorized_email_domains
+            or user.id in (self.information_asset_owner_id, self.information_asset_manager_id)
         )
 
     def user_has_bookmarked(self, user):
@@ -827,6 +829,9 @@ class SourceTable(BaseSource):
             "-data_flow_execution_date"
         )
 
+    def get_save_grid_view_url(self):
+        return reverse("datasets:source_table_save_grid_view", args=(self.id,))
+
 
 class SourceTableFieldDefinition(models.Model):
     field = models.CharField(
@@ -1137,6 +1142,9 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
 
     def get_chart_builder_query(self):
         return self.query
+
+    def get_save_grid_view_url(self):
+        return reverse("datasets:custom_dataset_query_save_grid_view", args=(self.id,))
 
 
 class CustomDatasetQueryTable(models.Model):
@@ -1954,6 +1962,9 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     def get_grid_data_url(self):
         return reverse("datasets:reference_dataset_grid_data", args=(self.id,))
 
+    def get_save_grid_view_url(self):
+        return reverse("datasets:reference_dataset_save_grid_view", args=(self.id,))
+
 
 @receiver(m2m_changed, sender=ReferenceDataset.tags.through)
 def save_reference_dataset_tags_on_m2m_changed(instance, **_):
@@ -2572,6 +2583,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
             self.user_access_type in [UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN]
             or self.visualisationuserpermission_set.filter(user=user).exists()
             or user_email_domain in self.authorized_email_domains
+            or user.id in (self.information_asset_owner_id, self.information_asset_manager_id)
         )
 
     def user_has_bookmarked(self, user):
@@ -2748,7 +2760,14 @@ class Pipeline(TimeStampedUserModel):
 
     @property
     def dag_id(self):
-        return f"DerivedPipeline-{self.table_name}"
+        # Strip double quotes from the table name to:
+        #
+        # a) not cause complications with URL encoding an authentication
+        # b) allow it to be an Airflow DAG ID
+        #
+        # Since we don't allow dots inside table or schema names when making a pipeline
+        # we don't risk a clash - we cannot have "schema.a"."table" or "schema"."a.table"
+        return "DerivedPipeline-" + self.table_name.replace('"', "")
 
     def get_absolute_url(self):
         return reverse(f"pipelines:edit-{self.type}", args=(self.id,))
