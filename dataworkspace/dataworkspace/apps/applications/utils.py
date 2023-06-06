@@ -1163,7 +1163,6 @@ def _do_sync_activity_stream_sso_users():
                     primary_email,
                     obj["dit:StaffSSO:User:status"],
                 )
-
                 continue
 
             try:

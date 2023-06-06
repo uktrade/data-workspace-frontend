@@ -57,6 +57,9 @@ class AppUserCreationForm(forms.ModelForm):
             user.save()
         return user
 
+    def sso_status(self, obj):
+        return obj.profile.get_sso_status_display()
+
 
 class AppUserEditForm(forms.ModelForm):
     tools_access_role_arn = forms.CharField(
@@ -260,9 +263,6 @@ class AppUserAdmin(UserAdmin):
         QuickSightfilter,
     )
     list_display = ("username", "email", "first_name", "last_name", "is_staff", "sso_status")
-
-    def sso_status(self, obj):
-        return obj.profile.get_sso_status_display()
 
     form = AppUserEditForm
     fieldsets = [
