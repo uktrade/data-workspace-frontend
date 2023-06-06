@@ -57,9 +57,6 @@ class AppUserCreationForm(forms.ModelForm):
             user.save()
         return user
 
-    def sso_status(self, obj):
-        return obj.profile.get_sso_status_display()
-
 
 class AppUserEditForm(forms.ModelForm):
     tools_access_role_arn = forms.CharField(
@@ -307,6 +304,9 @@ class AppUserAdmin(UserAdmin):
         ),
     ]
     readonly_fields = ["sso_id", "stable_id_suffix"]
+
+    def sso_status(self, obj):
+        return obj.profile.get_sso_status_display()
 
     class Media:
         css = {"all": ("data-workspace-admin.css",)}
