@@ -40,9 +40,18 @@
           </form>
         </div>
         <div class="govuk-grid-column-one-half">
-          <form action="{{ application_url }}" method="GET" style="display: inline-block" class="govuk-!-width-full" target="_blank">
-            <button class="govuk-button govuk-!-width-full">Resume {{ application_name }}</button>
-          </form>
+          <div class="govuk-grid-row">
+            <form action="{{ application_url }}" method="GET" style="display: inline-block" class="govuk-!-width-full" target="_blank">
+              <button class="govuk-button govuk-!-width-full">Resume {{ application_name }}</button>
+            </form>
+          </div>
+        {% if application_help_link %}
+          <div class="govuk-grid-row">
+            <p class="govuk-body govuk-!-text-align-right">
+              <a class="govuk-link" href="{{ application_help_link }}" target="_blank" rel="noopener noreferrer">Help with {{ application_name }}</a>
+            </p>
+          </div>
+          {% endif %}
         </div>
       </div>
     {% else %}
@@ -59,15 +68,33 @@
               </p>
             </div>
             <div class="govuk-grid-column-one-half">
-              <button class="govuk-button govuk-!-width-full">Start {{ application_name }}</button>
+              <div class="govuk-grid-row">
+                <button class="govuk-button govuk-!-width-full">Start {{ application_name }}</button>
+              </div>
             </div>
+            {% if application_help_link %}
+              <div class="govuk-grid-row">
+                <p class="govuk-body govuk-!-text-align-right">
+                  <a class="govuk-link" href="{{ application_help_link }}" target="_blank" rel="noopener noreferrer">Help with {{ application_name }}</a>
+                </p>
+              </div>
+            {% endif %}
           </form>
         {% else %}
           <div class="govuk-grid-column-one-half">
             <p class="govuk-body"></p>
           </div>
           <div class="govuk-grid-column-one-half">
-            <a class="govuk-button govuk-!-width-full" href="{{ application_url }}" target="_blank">Open {{ application_name }}</a>
+            <div class="govuk-grid-row">
+              <a class="govuk-button govuk-!-width-full" href="{{ application_url }}" target="_blank">Open {{ application_name }}</a>
+            </div>
+            {% if application_help_link %}
+            <div class="govuk-grid-row">
+              <p class="govuk-body govuk-!-text-align-right">
+                <a class="govuk-link" href="{{ application_help_link }}" target="_blank" rel="noopener noreferrer">Help with {{ application_name }}</a>
+              </p>
+            </div>
+            {% endif %}
           </div>
         {% endif %}
       </div>
