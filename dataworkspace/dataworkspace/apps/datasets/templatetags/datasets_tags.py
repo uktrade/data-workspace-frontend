@@ -9,6 +9,7 @@ from dateutil.relativedelta import relativedelta
 import pytz
 
 from django import template
+from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.safestring import mark_safe
@@ -148,3 +149,18 @@ def sensitivity_with_descriptor(value):
     }
 
     return sensitivity_with_descriptor_dict[str(value)]
+
+
+@register.simple_tag
+def saved_grid_config(user, source):
+    # pylint: disable=import-outside-toplevel
+    from dataworkspace.apps.accounts.models import UserDataTableView
+
+    try:
+        return UserDataTableView.objects.get(
+            user=user,
+            source_object_id=str(source.id),
+            source_content_type=ContentType.objects.get_for_model(source),
+        ).grid_config()
+    except UserDataTableView.DoesNotExist:
+        return {}

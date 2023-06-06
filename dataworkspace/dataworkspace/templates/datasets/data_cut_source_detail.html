@@ -11,6 +11,8 @@
   {# We *have* to include the stylesheet after the ag-grid js as it overrides the default styles #}
   <link rel="stylesheet" type="text/css" href="{% static 'data-grid.css' %}"/>
   {{ object.get_column_config|json_script:"column_data" }}
+  {% saved_grid_config user object as grid_config %}
+  {{ grid_config|json_script:"grid-config" }}
   <script nonce="{{ request.csp_nonce }}">
     window.initDataGrid(
       JSON.parse(document.getElementById('column_data').textContent),
@@ -31,10 +33,9 @@
       '{% url 'datasets:log_data_preview_load_time' object.dataset.id object.id %}'
     );
   </script>
-
 {% endblock footer_scripts %}
 {% block content %}
-  <div class="govuk-breadcrumbs govuk-!-padding-left-2 govuk-!-padding-bottom-2 app-grid-breadcrumbs">
+  <div class="govuk-breadcrumbs govuk-!-padding-left-2 govuk-!-padding-bottom-2 govuk-!-margin-bottom-0 app-grid-breadcrumbs">
     <ol class="govuk-breadcrumbs__list">
       <li class="govuk-breadcrumbs__list-item">
         <a class="govuk-breadcrumbs__link" href="">Home</a>
@@ -66,16 +67,26 @@
       {% endflag %}
     </ol>
   </div>
-  <div>
-    <div>
+    <div id="collapsible-header" class="govuk-!-margin-top-4">
       {% if object.dataset.enquiries_contact %}
         <a class="govuk-link govuk-link--no-visited-state govuk-!-padding-right-3" style="float: right"
            href="mailto:{{ object.dataset.enquiries_contact.email }}?subject=Reporting an issue - {{ object.name }}">
           {% include "partials/report_an_issue_icon.html" %}</a>
       {% endif %}
-      <div class="govuk-!-padding-top-4 govuk-!-padding-left-2">
-        <span class="govuk-caption-xl">Data table{% if object.schema %} ({{ object.schema }}.{{ object.table }}){% endif %}</span>
-        <h2 class="govuk-heading-l">{{ object.name }}</h2>
+          <div class="govuk-!-padding-top-3 govuk-!-padding-left-2">
+          <span class="govuk-caption-xl">Data table{% if object.schema %} ({{ object.schema }}.{{ object.table }}){% endif %} </span>
+          <div class="govuk-grid-row">
+            <div class="govuk-grid-column-full">
+              <h2 class="govuk-heading-l govuk-!-margin-bottom-0">{{ object.name }} </h2>
+            </div>
+            <div class="govuk-grid-column-full">
+              <p class="govuk-body govuk-!-padding-top-0 govuk-!-padding-right-3 govuk-!-margin-bottom-2 govuk-!-text-align-right">
+              <span class="govuk-!-font-weight-bold">Data last updated:</span>
+                {{ object.get_data_last_updated_date|gmt_date|default_if_none:"N/A" }} {{ object.get_data_last_updated_date|time_with_gmt_offset|default_if_none:"N/A" }}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
      <div class="app-compressed-grid">
       <div class="app-grid-header">
@@ -85,6 +96,9 @@
             {% flag CHART_BUILDER_BUILD_CHARTS_FLAG %}
               <button class="govuk-button" id="data-grid-create-chart">Create a chart</button>
             {% endflag %}
+            <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-save-view" data-prevent-double-click="true">
+              Save view
+            </button>
             <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-view">
               Reset view
             </button>
@@ -104,17 +118,15 @@
             {% endif %}
           </div>
         </div>
-        <div class="grid-header-right">
-          <div class="govuk-button-group">
-            <p class="govuk-body">
-             <span class="govuk-!-font-weight-bold">Data last updated:</span>
-              {{ object.get_data_last_updated_date|gmt_date|default_if_none:"N/A" }} {{ object.get_data_last_updated_date|time_with_gmt_offset|default_if_none:"N/A" }}
-            </p>
-          </div>
+        <div class="grid-header-right govuk-!-padding-right-3">
+          <button id="increase-grid-button" class="govuk-button govuk-button--secondary" data-module="govuk-button">Show more rows</button>
         </div>
       </div>
-      <div id="data-grid" class="ag-theme-alpine"></div>
+      <div
+        id="data-grid"
+        class="ag-theme-alpine"
+        data-save-view-url="{{ object.get_save_grid_view_url }}"
+      ></div>
     </div>
-  </div>
   {% csrf_token %}
 {% endblock %}

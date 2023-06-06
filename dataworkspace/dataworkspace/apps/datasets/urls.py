@@ -332,4 +332,22 @@ urlpatterns = [
         login_required(views.log_data_preview_load_time),
         name="log_data_preview_load_time",
     ),
+    path(
+        "table/<str:source_id>/save-grid/",
+        login_required(views.SaveUserDataGridView.as_view()),
+        {"model_class": models.SourceTable},
+        name="source_table_save_grid_view",
+    ),
+    path(
+        "query/<str:source_id>/save-grid/",
+        login_required(views.SaveUserDataGridView.as_view()),
+        {"model_class": models.CustomDatasetQuery},
+        name="custom_dataset_query_save_grid_view",
+    ),
+    path(
+        "reference/<str:source_id>/save-grid/",
+        login_required(views.SaveUserDataGridView.as_view()),
+        {"model_class": models.ReferenceDataset},
+        name="reference_dataset_save_grid_view",
+    ),
 ]
