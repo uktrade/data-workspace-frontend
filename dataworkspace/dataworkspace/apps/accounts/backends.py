@@ -30,6 +30,7 @@ class AuthbrokerBackendUsernameIsEmail(ModelBackend):
             emails,
             first_name,
             last_name,
+            "active",
             check_tools_access_if_user_exists=False,
         )
         set_user({"id": str(user.profile.sso_id), "email": user.email})

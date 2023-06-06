@@ -961,6 +961,7 @@ async def create_application_db_user():
                 [],
                 'Peter',
                 'Piper',
+                'active',
                 check_tools_access_if_user_exists=False,
             )
             user.is_staff = True
