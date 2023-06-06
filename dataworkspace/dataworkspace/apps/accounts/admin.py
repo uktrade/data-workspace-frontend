@@ -254,10 +254,13 @@ class AppUserAdmin(UserAdmin):
         "is_superuser",
         "is_active",
         "groups",
+        "profile__sso_status",
         LocalToolsFilter,
         AppStreamFilter,
         QuickSightfilter,
     )
+    list_display = ("username", "email", "first_name", "last_name", "is_staff", "sso_status")
+
     form = AppUserEditForm
     fieldsets = [
         (
@@ -301,6 +304,9 @@ class AppUserAdmin(UserAdmin):
         ),
     ]
     readonly_fields = ["sso_id", "stable_id_suffix"]
+
+    def sso_status(self, obj):
+        return obj.profile.get_sso_status_display()
 
     class Media:
         css = {"all": ("data-workspace-admin.css",)}
