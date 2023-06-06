@@ -23,7 +23,7 @@ from django.core.validators import EmailValidator
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.db.models import Q
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.encoding import force_str
@@ -232,6 +232,7 @@ def tools_html_POST(request):
             request.user,
             EventLog.TYPE_USER_TOOL_STOPPED,
             application_instance,
+            extra={"tool": application_instance.application_template.nice_name},
         )
     return redirect(redirect_target)
 
@@ -295,6 +296,12 @@ def quicksight_start_polling_sync_and_redirect(request):
             raise
 
     sync_quicksight_permissions.delay(user_sso_ids_to_update=(request.user.profile.sso_id,))
+
+    log_event(
+        request.user,
+        EventLog.TYPE_USER_TOOL_LINK_STARTED,
+        extra={"tool": "Quicksight"},
+    )
 
     return redirect(settings.QUICKSIGHT_SSO_URL)
 
@@ -1573,3 +1580,13 @@ def visualisation_latest_log_GET(request, gitlab_project_id, commit_id):
         filename,
         fetch_visualisation_log_events(settings.VISUALISATION_CLOUDWATCH_LOG_GROUP, log_stream),
     )
+
+
+@require_GET
+def data_explorer_redirect(request):
+    log_event(
+        request.user,
+        EventLog.TYPE_USER_TOOL_LINK_STARTED,
+        extra={"tool": "Data Explorer"},
+    )
+    return HttpResponseRedirect(reverse("explorer:index"))

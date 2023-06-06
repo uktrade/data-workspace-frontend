@@ -186,8 +186,9 @@ def application_api_PUT(request, public_host):
     else:
         log_event(
             request.user,
-            EventLog.TYPE_USER_TOOL_STARTED,
+            EventLog.TYPE_USER_TOOL_ECS_STARTED,
             application_instance,
+            extra={"tool": application_instance.application_template.nice_name},
         )
         spawn.delay(
             application_template.spawner,

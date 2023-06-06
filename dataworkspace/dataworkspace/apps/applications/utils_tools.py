@@ -86,7 +86,7 @@ def get_groups(request):
                     summary="The Data Explorer is a simple tool to explore and work with master datasets on "
                     "Data Workspace using SQL.",
                     help_link=None,
-                    link=reverse("explorer:index"),
+                    link=reverse("applications:data_explorer_redirect"),
                     has_access=request.user.has_perm("applications.start_all_applications"),
                 ),
                 ToolsViewModel(
