@@ -32,6 +32,7 @@ from django.views.generic.edit import UpdateView
 from dataworkspace.apps.datasets.models import Pipeline
 from dataworkspace.apps.core.utils import USER_SCHEMA_STEM
 from dataworkspace.apps.core.utils import db_role_schema_suffix_for_app
+from dataworkspace.datasets_db import extract_queried_tables_from_sql_query
 
 from dataworkspace.apps.api_v1.views import (
     get_api_visible_application_instance_by_public_host,
@@ -1091,6 +1092,27 @@ def visualisation_datasets_html_view(request, gitlab_project_id):
 def visualisation_datasets_html_GET(request, gitlab_project):
     application_template = _application_template(gitlab_project)
     datasets = _datasets(request.user, application_template)
+    pipeline_objects = Pipeline.objects.filter(
+        Q(
+            table_name__startswith=USER_SCHEMA_STEM
+            + db_role_schema_suffix_for_app(application_template)
+            + "."
+        )
+        | Q(
+            table_name__startswith='"'
+            + USER_SCHEMA_STEM
+            + db_role_schema_suffix_for_app(application_template)
+            + '"'
+            + "."
+        )
+    )
+    tables = [
+        extract_queried_tables_from_sql_query(pipeline_object.config["sql"])
+        if "sql" in pipeline_object.config
+        else []
+        for pipeline_object in pipeline_objects
+    ]
+    pipelines = zip(pipeline_objects, tables)
 
     return _render_visualisation(
         request,
@@ -1101,20 +1123,7 @@ def visualisation_datasets_html_GET(request, gitlab_project):
         current_menu_item="datasets",
         template_specific_context={
             "datasets": datasets,
-            "pipelines": Pipeline.objects.filter(
-                Q(
-                    table_name__startswith=USER_SCHEMA_STEM
-                    + db_role_schema_suffix_for_app(application_template)
-                    + "."
-                )
-                | Q(
-                    table_name__startswith='"'
-                    + USER_SCHEMA_STEM
-                    + db_role_schema_suffix_for_app(application_template)
-                    + '"'
-                    + "."
-                )
-            ),
+            "pipelines": pipelines,
         },
         status=200,
     )

@@ -40,14 +40,21 @@
             </div>
             {% endfor %}
 
-            {% for pipeline in pipelines %}
+            {% for pipeline, tables in pipelines %}
             <div class="govuk-checkboxes__item visualisation-dataset__item govuk-!-margin-top-5 govuk-!-padding-bottom-5">
                 <input class="govuk-checkboxes__input" id="pipeline-{{ pipeline.id }}" name="pipeline" type="checkbox" value="{{ pipeline.id }}" aria-describedby="pipeline-{{ pipeline.id }}-hint" disabled checked>
-                <label class="govuk-label govuk-checkboxes__label visualisation-dataset__label" for="pipeline-{{ pipeline.id }}">
+                <label class="govuk-label govuk-checkboxes__label visualisation-dataset__label govuk-!-margin-bottom-1" for="pipeline-{{ pipeline.id }}">
                     {{ pipeline.table_name }}
                 </label>
                 <span id="dataset-{{ dataset.id }}-hint" class="govuk-checkboxes__hint">
-                    <pre>{{ pipeline.config.sql }}</pre>
+                    <ul class="govuk-list govuk-!-margin-bottom-1">
+                        {% for schemaname, tablename in tables %}
+                        <li>
+                            "{{ schemaname|zero_width_space_after:'_' }}"."{{ tablename|zero_width_space_after:'_' }}"
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    <pre class="govuk-!-margin-top-1">{{ pipeline.config.sql }}</pre>
                 </span>
             </div>
             {% endfor %}

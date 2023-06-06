@@ -298,6 +298,32 @@ class TestDataVisualisationUIDatasetsPage:
         assert b"table_3" in response.content
         assert response.status_code == 200
 
+    def test_shows_parsed_schemas_and_tables(self, staff_client):
+        visualisation = factories.VisualisationCatalogueItemFactory.create(
+            short_description="summary",
+            published=False,
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
+            visualisation_template__gitlab_project_id=1,
+        )
+        app_schema = "_user_app_" + visualisation.visualisation_template.host_basename
+        Pipeline.objects.create(
+            table_name=f'"{app_schema}".table_1', config={"sql": "SELECT * FROM table_1"}
+        )
+
+        # Login to admin site
+        staff_client.post(reverse("admin:index"), follow=True)
+
+        with _visualisation_ui_gitlab_mocks():
+            response = staff_client.get(
+                reverse(
+                    "visualisations:datasets",
+                    args=(visualisation.visualisation_template.gitlab_project_id,),
+                ),
+            )
+
+        assert '"public"."table_\u200b1"' in response.content.decode(response.charset)
+        assert response.status_code == 200
+
 
 class TestQuickSightPollAndRedirect:
     @pytest.mark.django_db
