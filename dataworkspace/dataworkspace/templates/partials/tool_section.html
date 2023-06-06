@@ -11,12 +11,6 @@
   <div class="govuk-grid-column-one-half">
     <p class="govuk-body">
       {{ application_summary }}
-      {% if application_help_link %}
-      <a class="govuk-link" href="{{ application_help_link }}" target="_blank" rel="noopener noreferrer">
-        Read&nbsp;more
-        <span class="govuk-visually-hidden">about {{ application_name }}</span>
-      </a>
-      {% endif %}
     </p>
   </div>
 
@@ -47,7 +41,7 @@
           </div>
         {% if application_help_link %}
           <div class="govuk-grid-row">
-            <p class="govuk-body govuk-!-text-align-right">
+            <p class="govuk-body govuk-!-text-align-centre">
               <a class="govuk-link" href="{{ application_help_link }}" target="_blank" rel="noopener noreferrer">Help with {{ application_name }}</a>
             </p>
           </div>
@@ -71,14 +65,14 @@
               <div class="govuk-grid-row">
                 <button class="govuk-button govuk-!-width-full">Start {{ application_name }}</button>
               </div>
-            </div>
             {% if application_help_link %}
               <div class="govuk-grid-row">
-                <p class="govuk-body govuk-!-text-align-right">
+                <p class="govuk-body govuk-!-text-align-centre">
                   <a class="govuk-link" href="{{ application_help_link }}" target="_blank" rel="noopener noreferrer">Help with {{ application_name }}</a>
                 </p>
               </div>
             {% endif %}
+            </div>
           </form>
         {% else %}
           <div class="govuk-grid-column-one-half">
@@ -90,7 +84,7 @@
             </div>
             {% if application_help_link %}
             <div class="govuk-grid-row">
-              <p class="govuk-body govuk-!-text-align-right">
+              <p class="govuk-body govuk-!-text-align-centre">
                 <a class="govuk-link" href="{{ application_help_link }}" target="_blank" rel="noopener noreferrer">Help with {{ application_name }}</a>
               </p>
             </div>
