@@ -1590,3 +1590,13 @@ def data_explorer_redirect(request):
         extra={"tool": "Data Explorer"},
     )
     return HttpResponseRedirect(reverse("explorer:index"))
+
+
+@require_GET
+def superset_redirect(request):
+    log_event(
+        request.user,
+        EventLog.TYPE_USER_TOOL_LINK_STARTED,
+        extra={"tool": "Superset"},
+    )
+    return HttpResponseRedirect(settings.SUPERSET_DOMAINS["edit"])
