@@ -82,11 +82,14 @@
             </a>
           </li>
           {% url 'applications:tools' as tools_url %}
+          {% with tools_count=RUNNING_TOOLS.count %}
           <li class="govuk-header__navigation-item{% if request.get_full_path == tools_url %} govuk-header__navigation-item--active{% endif %}">
-            <a class="govuk-header__link" href="{{ tools_url }}">
-              Tools
-            </a>
+            <a class="govuk-header__link" href="{{ tools_url }}">Tools</a>
+              {% if tools_count > 0 %}
+              <span class="badge">{{ tools_count }}</span>  
+              {% endif %}         
           </li>
+          {% endwith %}
           {% if can_see_visualisations_tab %}
           {% url 'visualisations:root' as visualisations_root_url %}
           <li class="govuk-header__navigation-item{% if request.get_full_path == visualisations_root_url %} govuk-header__navigation-item--active{% endif %}">

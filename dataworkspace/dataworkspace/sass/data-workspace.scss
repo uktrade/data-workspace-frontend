@@ -619,6 +619,14 @@ p.sidebar-section {
       display: none;
     }
   }
+}  
+.badge {
+  top: 50px;
+  right: 730px;
+  padding: 0px 5px;
+  border-radius: 100%;
+  background-color:#d4351c;
+  color: white;
 }
 
 @import "filters";
