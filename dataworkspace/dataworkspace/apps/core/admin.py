@@ -52,7 +52,7 @@ class TeamAdmin(admin.ModelAdmin):
     readonly_fields = ["schema_name"]
     inlines = (TeamMembershipAdmin,)
 
-
+    
 class CSPRichTextEditorMixin:
     # We allow inline scripts to run on this page in order to support CKEditor,
     # which gives rich-text formatting but unfortunately uses inline scripts to
