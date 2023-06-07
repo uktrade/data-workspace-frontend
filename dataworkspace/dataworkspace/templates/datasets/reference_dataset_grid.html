@@ -63,7 +63,13 @@
       {% endflag %}
     </ol>
   </div>
+<<<<<<< HEAD
   <div id="collapsible-header" class="govuk-!-margin-top-4">
+=======
+  <div>
+    <div>
+      {% include "datasets/partials/grid-view-saved.html" %}
+>>>>>>> 08e995e8 (feat: show a success message on grid view save)
       {% if model.enquiries_contact %}
         <a href="mailto:{{ model.enquiries_contact.email }}?subject=Reporting an issue - {{ model.name }}"
            class="govuk-link govuk-link--no-visited-state govuk-!-padding-right-3" style="float: right">
