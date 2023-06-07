@@ -25,7 +25,7 @@ function logDownloadEvent(
   itemType,
   dataFormat,
   rowsDownLoaded,
-  referenceDataEndpoint,
+  referenceDataEndpoint
 ) {
   var columnApi = gridOptions.columnApi;
 
@@ -33,9 +33,12 @@ function logDownloadEvent(
   if (referenceDataEndpoint) {
     let eventLogPOST = new XMLHttpRequest();
     eventLogPOST.open("POST", referenceDataEndpoint, true);
-    eventLogPOST.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    eventLogPOST.setRequestHeader(
+      "Content-Type",
+      "application/json;charset=UTF-8"
+    );
     eventLogPOST.setRequestHeader("X-CSRFToken", getCsrfToken());
-    let eventLogData = JSON.stringify({"format": dataFormat})
+    let eventLogData = JSON.stringify({ format: dataFormat });
     eventLogPOST.send(eventLogData);
   }
 
@@ -89,7 +92,6 @@ function submitFilterForm(action, fileName, gridOptions, columnDataTypeMap) {
   if (sort[0] !== null) {
     form.append(createInputFormField("sortDir", sort[0]));
     form.append(createInputFormField("sortField", sort[1]));
-
   }
 
   // Add the form to the page, submit it and then remove it
@@ -110,14 +112,14 @@ function initDataGrid(
   itemName,
   itemType,
   totalDownloadableRows,
-  eventLogEndpoint,
+  eventLogEndpoint
 ) {
   totalDownloadableRows =
     totalDownloadableRows != null ? totalDownloadableRows : 0;
   const userGridConfig = getGridConfig();
   let hasSavedConfig = Object.keys(userGridConfig).length > 0;
 
-  columnConfig.forEach(function(column, i) {
+  columnConfig.forEach(function (column, i) {
     column.originalPosition = i;
     column.position = i;
     if (hasSavedConfig) {
@@ -127,8 +129,7 @@ function initDataGrid(
         column.initialHide = !userColumnConfig.visible;
         column.width = userColumnConfig.width;
         column.position = userColumnConfig.position;
-      }
-      else {
+      } else {
         column.initialHide = true;
         column.position = Object.keys(userGridConfig.columnDefs).length + i;
       }
@@ -182,7 +183,7 @@ function initDataGrid(
       // ag-grid doesn't suppress the tab navigation between these text boxes
       // this is either by design or a bug in ag-grid
 
-      suppressKeyboardEvent: function(params) {
+      suppressKeyboardEvent: function (params) {
         var event = params.event;
         var key = event.key;
         if (key === "Tab") return true;
@@ -192,7 +193,7 @@ function initDataGrid(
         buttons: ["reset"],
       },
     },
-    columnDefs: columnConfig.sort(function(a, b) {
+    columnDefs: columnConfig.sort(function (a, b) {
       return a.position - b.position;
     }),
     components: {
@@ -229,7 +230,7 @@ function initDataGrid(
 
   // Apply any filers the user has saved
   if (userGridConfig.filters != null) {
-    gridOptions.api.setFilterModel(userGridConfig.filters)
+    gridOptions.api.setFilterModel(userGridConfig.filters);
   }
 
   if (dataEndpoint) {
@@ -249,7 +250,7 @@ function initDataGrid(
         }
         var xhr = new XMLHttpRequest();
         var startTime = Date.now();
-        var datasetPath = window.location.pathname
+        var datasetPath = window.location.pathname;
         var eventLogPOST = new XMLHttpRequest();
         xhr.open("POST", dataEndpoint, true);
         xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
@@ -284,8 +285,7 @@ function initDataGrid(
                     "Over " + downLoadLimit.toLocaleString() + " rows";
                 }
                 if (dl_count) {
-                  dl_count.innerText =
-                    "Download this data";
+                  dl_count.innerText = "Download this data";
                 }
               }
               if (rc <= downLoadLimit || (downLoadLimit == null && rc < 5000)) {
@@ -293,8 +293,7 @@ function initDataGrid(
                   rowcount.innerText = rc.toLocaleString() + " rows";
                 }
                 if (dl_count) {
-                  dl_count.innerText =
-                    "Download this data";
+                  dl_count.innerText = "Download this data";
                 }
               }
               params.successCallback(
@@ -310,15 +309,17 @@ function initDataGrid(
 
               // log event in backend
               eventLogPOST.open("POST", eventLogEndpoint, true);
-              eventLogPOST.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+              eventLogPOST.setRequestHeader(
+                "Content-Type",
+                "application/json;charset=UTF-8"
+              );
               eventLogPOST.setRequestHeader("X-CSRFToken", getCsrfToken());
               let eventLogData = JSON.stringify({
-                "status_code": this.status,
-                "query_time_milliseconds": Date.now() - startTime,
-                "path": datasetPath
-              })
+                status_code: this.status,
+                query_time_milliseconds: Date.now() - startTime,
+                path: datasetPath,
+              });
               eventLogPOST.send(eventLogData);
-
             } else {
               gridOptions.overlayNoRowsTemplate =
                 this.status === 504
@@ -328,13 +329,16 @@ function initDataGrid(
 
               // log event in backend
               eventLogPOST.open("POST", eventLogEndpoint, true);
-              eventLogPOST.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+              eventLogPOST.setRequestHeader(
+                "Content-Type",
+                "application/json;charset=UTF-8"
+              );
               eventLogPOST.setRequestHeader("X-CSRFToken", getCsrfToken());
               let eventLogData = JSON.stringify({
-                "status_code": this.status,
-                "query_time_milliseconds": Date.now() - startTime,
-                "path": datasetPath
-              })
+                status_code: this.status,
+                query_time_milliseconds: Date.now() - startTime,
+                path: datasetPath,
+              });
               eventLogPOST.send(eventLogData);
 
               // hack to hide infinite spinner
@@ -375,7 +379,7 @@ function initDataGrid(
         dataEndpoint == null
           ? gridOptions.api.getDisplayedRowCount()
           : totalDownloadableRows,
-        referenceDataEndpoint,
+        referenceDataEndpoint
       );
       document.activeElement.blur();
       return;
@@ -435,8 +439,13 @@ function initDataGrid(
       // Unset the saved column config
       gridOptions.columnApi.getColumns().forEach((c) => {
         gridOptions.columnApi.setColumnVisible(c.getColId(), true);
-        gridOptions.columnApi.moveColumn(c.getColId(), c.colDef.originalPosition);
-        gridOptions.columnApi.applyColumnState({ defaultState: { sort: null } });
+        gridOptions.columnApi.moveColumn(
+          c.getColId(),
+          c.colDef.originalPosition
+        );
+        gridOptions.columnApi.applyColumnState({
+          defaultState: { sort: null },
+        });
       });
       document.activeElement.blur();
       if (hasSavedConfig) {
@@ -444,7 +453,11 @@ function initDataGrid(
         button.innerHTML = "Resetting view";
         button.setAttribute("disabled", "disabled");
         var xhr = new XMLHttpRequest();
-        xhr.open("DELETE", gridContainer.getAttribute("data-save-view-url"), true);
+        xhr.open(
+          "DELETE",
+          gridContainer.getAttribute("data-save-view-url"),
+          true
+        );
         xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         xhr.setRequestHeader("X-CSRFToken", getCsrfToken());
         xhr.onreadystatechange = function () {
@@ -453,24 +466,26 @@ function initDataGrid(
             button.removeAttribute("disabled");
             hasSavedConfig = false;
           }
-        }
+        };
         xhr.send();
       }
     });
 
-var saveViewButton = document.querySelector("#data-grid-save-view");
+  var saveViewButton = document.querySelector("#data-grid-save-view");
   if (saveViewButton !== null) {
     saveViewButton.addEventListener("click", function (e) {
       saveViewButton.innerHTML = "Saving view";
       saveViewButton.setAttribute("disabled", "disabled");
       const sort = getSortField(gridOptions.columnApi);
-      const columnState = Object.fromEntries(gridOptions.columnApi.getColumnState().map(function(c, i) {
-        c.position = i;
-        return [c.colId, c];
-      }));
+      const columnState = Object.fromEntries(
+        gridOptions.columnApi.getColumnState().map(function (c, i) {
+          c.position = i;
+          return [c.colId, c];
+        })
+      );
       let gridConfig = {
         filters: gridOptions.api.getFilterModel(),
-        columnDefs: gridOptions.columnApi.getColumns().map(function(c, i) {
+        columnDefs: gridOptions.columnApi.getColumns().map(function (c, i) {
           const colState = columnState[c.colId];
           return {
             field: c.colId,
@@ -478,8 +493,8 @@ var saveViewButton = document.querySelector("#data-grid-save-view");
             visible: c.visible,
             width: colState.width,
             sort: c.sort,
-          }
-        })
+          };
+        }),
       };
       var xhr = new XMLHttpRequest();
       xhr.open("POST", gridContainer.getAttribute("data-save-view-url"), true);
@@ -488,35 +503,44 @@ var saveViewButton = document.querySelector("#data-grid-save-view");
       xhr.onreadystatechange = function () {
         if (this.readyState === XMLHttpRequest.DONE) {
           if (this.status === 200) {
-            document.getElementById("grid-saved-banner").classList.remove("govuk-visually-hidden");
+            document
+              .getElementById("grid-saved-banner")
+              .classList.remove("govuk-visually-hidden");
           }
           saveViewButton.innerHTML = "Save view";
           saveViewButton.removeAttribute("disabled");
           hasSavedConfig = true;
         }
-      }
+      };
       xhr.send(JSON.stringify(gridConfig));
     });
-    document.getElementById("dismiss-banner").addEventListener("click", function(e) {
-      e.preventDefault();
-      document.getElementById("grid-saved-banner").classList.add("govuk-visually-hidden");
-    });
+    document
+      .getElementById("dismiss-banner")
+      .addEventListener("click", function (e) {
+        e.preventDefault();
+        document
+          .getElementById("grid-saved-banner")
+          .classList.add("govuk-visually-hidden");
+      });
   }
 }
 
 var increaseGridButton = document.querySelector("#increase-grid-button");
-    if (increaseGridButton !== null) {
-      increaseGridButton.addEventListener("click", function (e) {
-        document.getElementById("collapsible-header").classList.toggle("govuk-visually-hidden");
-              if (increaseGridButton.innerText === "Show more rows") {
-                increaseGridButton.innerText = "Show less rows";
-              }
-              else {
-                increaseGridButton.innerText = "Show more rows";
-              }
-        document.getElementById("data-grid").classList.toggle("grid-maximised")
-        document.getElementsByClassName("app-compressed-grid")[0].classList.toggle("remove-border")
-      });
+if (increaseGridButton !== null) {
+  increaseGridButton.addEventListener("click", function (e) {
+    document
+      .getElementById("collapsible-header")
+      .classList.toggle("govuk-visually-hidden");
+    if (increaseGridButton.innerText === "Show more rows") {
+      increaseGridButton.innerText = "Show less rows";
+    } else {
+      increaseGridButton.innerText = "Show more rows";
     }
+    document.getElementById("data-grid").classList.toggle("grid-maximised");
+    document
+      .getElementsByClassName("app-compressed-grid")[0]
+      .classList.toggle("remove-border");
+  });
+}
 
 window.initDataGrid = initDataGrid;
