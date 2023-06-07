@@ -29,7 +29,6 @@ from dataworkspace.apps.core.boto3_client import get_sts_client
 from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.apps.core.utils import create_tools_access_iam_role
 
-
 SCHEMA_STRING = {"dataType": "STRING", "semantics": {"conceptType": "DIMENSION"}}
 
 SCHEMA_STRING_DATE = {

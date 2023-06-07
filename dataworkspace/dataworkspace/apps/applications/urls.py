@@ -4,6 +4,8 @@ from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.applications.views import (
     application_spawning_html_view,
     application_running_html_view,
+    data_explorer_redirect,
+    superset_redirect,
     tools_html_view,
     quicksight_start_polling_sync_and_redirect,
     UserToolSizeConfigurationView,
@@ -19,9 +21,14 @@ urlpatterns = [
         name="quicksight_redirect",
     ),
     path(
-        "quicksight/redirect",
-        login_required(quicksight_start_polling_sync_and_redirect),
-        name="quicksight_redirect",
+        "explorer/redirect",
+        login_required(data_explorer_redirect),
+        name="data_explorer_redirect",
+    ),
+    path(
+        "superset/redirect",
+        login_required(superset_redirect),
+        name="superset_redirect",
     ),
     path(
         "configure-size/<str:tool_host_basename>/",

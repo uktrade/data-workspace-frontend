@@ -67,7 +67,7 @@ def get_groups(request):
                     summary="Use Superset to create advanced visuals and dashboards using data from Data Workspace. "
                     "Requires SQL knowledge.",
                     help_link=None,
-                    link=settings.SUPERSET_DOMAINS["edit"],
+                    link=reverse("applications:superset_redirect"),
                     has_access=request.user.has_perm("applications.start_all_applications"),
                     tag="New",
                     tag_extra_css_class="govuk-tag--green",
@@ -86,7 +86,7 @@ def get_groups(request):
                     summary="The Data Explorer is a simple tool to explore and work with master datasets on "
                     "Data Workspace using SQL.",
                     help_link=None,
-                    link=reverse("explorer:index"),
+                    link=reverse("applications:data_explorer_redirect"),
                     has_access=request.user.has_perm("applications.start_all_applications"),
                 ),
                 ToolsViewModel(

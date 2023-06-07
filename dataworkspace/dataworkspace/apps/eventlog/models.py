@@ -50,6 +50,9 @@ class EventLog(models.Model):
     TYPE_DATA_PREVIEW_TIMEOUT = 43
     TYPE_DATA_PREVIEW_COMPLETE = 44
     TYPE_DATA_TABLE_VIEW_SAVED = 45
+    TYPE_USER_TOOL_ECS_STARTED = 46
+    TYPE_USER_TOOL_STOPPED = 47
+    TYPE_USER_TOOL_LINK_STARTED = 48
 
     _TYPE_CHOICES = (
         (TYPE_DATASET_SOURCE_LINK_DOWNLOAD, "Dataset source link download"),
@@ -99,6 +102,9 @@ class EventLog(models.Model):
         (TYPE_DATA_PREVIEW_TIMEOUT, "Data table view load timeout"),
         (TYPE_DATA_PREVIEW_COMPLETE, "Data table view load complete"),
         (TYPE_DATA_TABLE_VIEW_SAVED, "Data table view saved"),
+        (TYPE_USER_TOOL_ECS_STARTED, "Tool started (ECS)"),
+        (TYPE_USER_TOOL_STOPPED, "Tool stopped by user"),
+        (TYPE_USER_TOOL_LINK_STARTED, "Tool started (Link)"),
     )
     user = models.ForeignKey(get_user_model(), on_delete=models.DO_NOTHING, related_name="events")
     id = models.BigAutoField(primary_key=True)

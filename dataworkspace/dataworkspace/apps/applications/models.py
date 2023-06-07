@@ -5,6 +5,8 @@ from django.conf import settings
 from django.db import models, transaction
 from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 from dataworkspace.apps.core.models import Database, TimeStampedModel
 from dataworkspace.apps.eventlog.models import EventLog
@@ -270,6 +272,17 @@ class ApplicationInstance(TimeStampedModel):
 
     def __str__(self):
         return f"{self.owner} / {self.public_host} / {self.state}"
+
+
+@receiver(post_save, sender=ApplicationInstance)
+def save_application_instance(instance, **kwargs):
+    if kwargs["created"] and instance.application_template.application_type == "TOOL":
+        log_event(
+            instance.owner,
+            EventLog.TYPE_USER_TOOL_ECS_STARTED,
+            instance,
+            extra={"tool": instance.application_template.nice_name},
+        )
 
 
 class ApplicationInstanceDbUsers(TimeStampedModel):
