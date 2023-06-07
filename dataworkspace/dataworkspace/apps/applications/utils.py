@@ -985,6 +985,7 @@ def create_user_from_sso(
     other_emails,
     first_name,
     last_name,
+    sso_status,
     check_tools_access_if_user_exists,
 ):
     User = get_user_model()
@@ -998,6 +999,7 @@ def create_user_from_sso(
 
         user.save()
         user.profile.sso_id = sso_id
+        user.profile.sso_status = sso_status
         try:
             user.save()
         except IntegrityError:
@@ -1030,6 +1032,10 @@ def create_user_from_sso(
     if user.has_usable_password():
         changed = True
         user.set_unusable_password()
+
+    if user.profile.sso_status != sso_status:
+        changed = True
+        user.profile.sso_status = sso_status
 
     if changed:
         user.save()
@@ -1157,14 +1163,6 @@ def _do_sync_activity_stream_sso_users():
             emails = obj["dit:emailAddress"]
             primary_email = obj["dit:StaffSSO:User:contactEmailAddress"] or emails[0]
 
-            if obj["dit:StaffSSO:User:status"] != "active":
-                logger.info(
-                    "Skipping user %s as their status is %s",
-                    primary_email,
-                    obj["dit:StaffSSO:User:status"],
-                )
-                continue
-
             try:
                 create_user_from_sso(
                     user_id,
@@ -1172,6 +1170,7 @@ def _do_sync_activity_stream_sso_users():
                     emails,
                     obj["dit:firstName"],
                     obj["dit:lastName"],
+                    obj["dit:StaffSSO:User:status"],
                     check_tools_access_if_user_exists=True,
                 )
             except IntegrityError:
