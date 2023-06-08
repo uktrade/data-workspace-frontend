@@ -3345,10 +3345,57 @@ class TestGridDataView:
             ("custom_query", "custom_dataset_query_data"),
         ),
     )
-    def test_contains_filter(self, client, fixture_name, url_name, request):
+    def test_no_count(self, client, fixture_name, url_name, request):
         source = request.getfixturevalue(fixture_name)
         response = client.post(
             reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)),
+            {
+                "sort_direction": "ASC",
+                "sort_field": "num",
+            },
+            content_type="application/json",
+        )
+        assert response.status_code == 200
+        assert response.json() == {
+            "rowcount": {"count": None},
+            "download_limit": None,
+            "records": [
+                {
+                    "date": "2019-01-01",
+                    "id": "488d06b6-032b-467a-b2c5-2820610b0ca6",
+                    "name": "the second record",
+                    "num": "2",
+                    "an_array": ["ghi", "jkl"],
+                },
+                {
+                    "name": "the first record",
+                    "num": "1",
+                    "date": None,
+                    "id": "896b4dde-f787-41be-a7bf-82be91805f24",
+                    "an_array": ["abc", "def"],
+                },
+                {
+                    "name": "the last record",
+                    "num": None,
+                    "date": "2020-01-01",
+                    "id": "a41da88b-ffa3-4102-928c-b3937fa5b58f",
+                    "an_array": None,
+                },
+            ],
+        }
+
+    @pytest.mark.django_db
+    @pytest.mark.parametrize(
+        "fixture_name, url_name",
+        (
+            ("source_table", "source_table_data"),
+            ("custom_query", "custom_dataset_query_data"),
+        ),
+    )
+    def test_contains_filter(self, client, fixture_name, url_name, request):
+        source = request.getfixturevalue(fixture_name)
+        response = client.post(
+            reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)) + "?count=1",
             {
                 "filters": {
                     "name": {
@@ -3386,7 +3433,7 @@ class TestGridDataView:
     def test_not_contains_filter(self, client, fixture_name, url_name, request):
         source = request.getfixturevalue(fixture_name)
         response = client.post(
-            reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)),
+            reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)) + "?count=1",
             data={
                 "filters": {
                     "name": {
@@ -3430,7 +3477,7 @@ class TestGridDataView:
     def test_equals_filter(self, client, fixture_name, url_name, request):
         source = request.getfixturevalue(fixture_name)
         response = client.post(
-            reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)),
+            reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)) + "?count=1",
             data={
                 "filters": {
                     "date": {
@@ -3468,7 +3515,7 @@ class TestGridDataView:
     def test_not_equals_filter(self, client, fixture_name, url_name, request):
         source = request.getfixturevalue(fixture_name)
         response = client.post(
-            reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)),
+            reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)) + "?count=1",
             data={
                 "filters": {
                     "date": {
@@ -3513,7 +3560,7 @@ class TestGridDataView:
     def test_starts_with_filter(self, client, fixture_name, url_name, request):
         source = request.getfixturevalue(fixture_name)
         response = client.post(
-            reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)),
+            reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)) + "?count=1",
             data={
                 "filters": {
                     "name": {
@@ -3550,7 +3597,7 @@ class TestGridDataView:
     def test_ends_with_filter(self, client, fixture_name, url_name, request):
         source = request.getfixturevalue(fixture_name)
         response = client.post(
-            reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)),
+            reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)) + "?count=1",
             data={
                 "filters": {
                     "name": {
@@ -3587,7 +3634,7 @@ class TestGridDataView:
     def test_range_filter(self, client, fixture_name, url_name, request):
         source = request.getfixturevalue(fixture_name)
         response = client.post(
-            reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)),
+            reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)) + "?count=1",
             data={
                 "filters": {
                     "date": {
@@ -3625,7 +3672,7 @@ class TestGridDataView:
     def test_less_than_filter(self, client, fixture_name, url_name, request):
         source = request.getfixturevalue(fixture_name)
         response = client.post(
-            reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)),
+            reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)) + "?count=1",
             data={
                 "filters": {
                     "date": {
@@ -3663,7 +3710,7 @@ class TestGridDataView:
     def test_greater_than_filter(self, client, fixture_name, url_name, request):
         source = request.getfixturevalue(fixture_name)
         response = client.post(
-            reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)),
+            reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)) + "?count=1",
             data={
                 "filters": {
                     "date": {
@@ -3702,7 +3749,7 @@ class TestGridDataView:
     def test_array_contains_filter(self, client, fixture_name, url_name, request):
         source = request.getfixturevalue(fixture_name)
         response = client.post(
-            reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)),
+            reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)) + "?count=1",
             {
                 "filters": {
                     "an_array": {
@@ -3740,7 +3787,7 @@ class TestGridDataView:
     def test_array_not_contains_filter(self, client, fixture_name, url_name, request):
         source = request.getfixturevalue(fixture_name)
         response = client.post(
-            reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)),
+            reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)) + "?count=1",
             {
                 "filters": {
                     "an_array": {
@@ -3785,7 +3832,7 @@ class TestGridDataView:
     def test_array_equals_filter(self, client, fixture_name, url_name, request):
         source = request.getfixturevalue(fixture_name)
         response = client.post(
-            reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)),
+            reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)) + "?count=1",
             {
                 "filters": {
                     "an_array": {
@@ -3823,7 +3870,7 @@ class TestGridDataView:
     def test_array_not_equals_filter(self, client, fixture_name, url_name, request):
         source = request.getfixturevalue(fixture_name)
         response = client.post(
-            reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)),
+            reverse(f"datasets:{url_name}", args=(source.dataset.id, source.id)) + "?count=1",
             {
                 "filters": {
                     "an_array": {
