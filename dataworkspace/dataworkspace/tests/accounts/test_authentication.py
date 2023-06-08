@@ -121,5 +121,5 @@ class TestCreateUserFromSSO:
                 check_tools_access_if_user_exists=False,
             )
         except IntegrityError as e:
-            assert False, f"Duplicate user {e}"
+            raise AssertionError(f"Duplicate user {e}") from e
         assert existing_user.id != new_user.id
