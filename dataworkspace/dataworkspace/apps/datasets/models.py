@@ -78,6 +78,8 @@ from dataworkspace.apps.your_files.models import UploadedTable
 from dataworkspace.datasets_db import (
     get_columns,
     get_earliest_tables_last_updated_date,
+    get_latest_row_count_for_query,
+    get_latest_row_count_for_table,
 )
 
 
@@ -780,6 +782,9 @@ class SourceTable(BaseSource):
             self.database.memorable_name, ((self.schema, self.table),)
         )
 
+    def get_metadata_row_count(self):
+        return get_latest_row_count_for_table(self)
+
     def get_grid_data_url(self):
         return reverse("datasets:source_table_data", args=(self.dataset_id, self.id))
 
@@ -1063,6 +1068,9 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
                 tuple((table.schema, table.table) for table in tables),
             )
         return None
+
+    def get_metadata_row_count(self):
+        return get_latest_row_count_for_query(self)
 
     def user_can_preview(self, user):
         return self.dataset.user_has_access(user) and (self.reviewed or user.is_superuser)

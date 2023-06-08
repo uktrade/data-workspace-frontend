@@ -293,3 +293,65 @@ def get_changelog_from_metadata_rows(rows):
             )
 
     return list(reversed(changelog))
+
+
+def get_latest_row_count_for_table(table):
+    with connections[table.database.memorable_name].cursor() as cursor:
+        try:
+            cursor.execute(
+                SQL(
+                    """
+                    WITH metadata AS (
+                        SELECT *
+                        FROM dataflow.metadata
+                        WHERE table_schema={}
+                        AND table_name={}
+                    )
+                    SELECT number_of_rows
+                    FROM metadata
+                    WHERE metadata.source_data_modified_utc = (
+                        SELECT MAX(source_data_modified_utc)
+                        FROM metadata
+                    );
+                    """
+                ).format(
+                    Literal(table.schema),
+                    Literal(table.table),
+                )
+            )
+        except Exception:  # pylint: disable=broad-except
+            logger.error("Failed to get row count for table", exc_info=True)
+            return None
+        result = cursor.fetchone()
+        return result[0] if result else None
+
+
+def get_latest_row_count_for_query(query):
+    with connections[query.database.memorable_name].cursor() as cursor:
+        try:
+            cursor.execute(
+                SQL(
+                    """
+                    WITH metadata AS (
+                        SELECT *
+                        FROM dataflow.metadata
+                        WHERE data_type = {}
+                        AND {} = any(data_ids)
+                    )
+                    SELECT number_of_rows
+                    FROM metadata
+                    WHERE metadata.source_data_modified_utc = (
+                        SELECT MAX(source_data_modified_utc)
+                        FROM metadata
+                    );
+                    """
+                ).format(
+                    Literal(DataSetType.DATACUT),
+                    Literal(str(query.id)),
+                )
+            )
+        except Exception:  # pylint: disable=broad-except
+            logger.error("Failed to get row count for query", exc_info=True)
+            return None
+        result = cursor.fetchone()
+        return result[0] if result else None

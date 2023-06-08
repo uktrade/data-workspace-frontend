@@ -234,9 +234,13 @@ function initDataGrid(
   }
 
   if (dataEndpoint) {
-    var initialDataLoaded = false;
+    let initialDataLoaded = false;
+    const initialRowCount = gridContainer.getAttribute(
+      "data-initial-row-count"
+    );
+    console.log(initialRowCount);
     var dataSource = {
-      rowCount: null,
+      rowCount: initialRowCount,
       getRows: function (params) {
         var qs = {
           start: params.startRow,
@@ -252,48 +256,66 @@ function initDataGrid(
         var startTime = Date.now();
         var datasetPath = window.location.pathname;
         var eventLogPOST = new XMLHttpRequest();
-        xhr.open("POST", dataEndpoint, true);
+        // Only fetch the row count if we don't already have it or if the filters are set
+        let rowCountRequired = true;
+        if (initialRowCount !== null && Object.keys(qs.filters).length === 0)
+          rowCountRequired = false;
+
+        if (rowCountRequired)
+          document.getElementById("data-grid-rowcount").innerText =
+            "Loading data...";
+
+        xhr.open(
+          "POST",
+          dataEndpoint + (rowCountRequired ? "?count=1" : ""),
+          true
+        );
         xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         xhr.setRequestHeader("X-CSRFToken", getCsrfToken());
         xhr.onreadystatechange = function () {
           if (this.readyState === XMLHttpRequest.DONE) {
             if (this.status === 200) {
-              var response = JSON.parse(xhr.responseText);
-              var rc = response.rowcount.count;
-              totalDownloadableRows = response.rowcount.count;
-              var downLoadLimit = response.download_limit;
-              if (
-                downLoadLimit != null &&
-                totalDownloadableRows > downLoadLimit
-              ) {
-                totalDownloadableRows = downLoadLimit;
-              }
-              const rowcount = document.getElementById("data-grid-rowcount");
-              const dl_count = document.getElementById("data-grid-download");
-              if (downLoadLimit == null && rc > 5000) {
-                if (rowcount) {
-                  rowcount.innerText =
-                    "Over " + Number("5000").toLocaleString() + " rows";
+              const response = JSON.parse(xhr.responseText);
+              const rc = response.rowcount.count;
+              if (rc !== null) {
+                totalDownloadableRows = rc;
+                var downLoadLimit = response.download_limit;
+                if (
+                  downLoadLimit != null &&
+                  totalDownloadableRows > downLoadLimit
+                ) {
+                  totalDownloadableRows = downLoadLimit;
                 }
-                if (dl_count) {
-                  dl_count.innerText = "Download this data";
+                const rowcount = document.getElementById("data-grid-rowcount");
+                const dl_count = document.getElementById("data-grid-download");
+                if (downLoadLimit == null && rc > 5000) {
+                  if (rowcount) {
+                    rowcount.innerText =
+                      "Over " + Number("5000").toLocaleString() + " rows";
+                  }
+                  if (dl_count) {
+                    dl_count.innerText = "Download this data";
+                  }
                 }
-              }
-              if (downLoadLimit != null && rc > downLoadLimit) {
-                if (rowcount) {
-                  rowcount.innerText =
-                    "Over " + downLoadLimit.toLocaleString() + " rows";
+                if (downLoadLimit != null && rc > downLoadLimit) {
+                  if (rowcount) {
+                    rowcount.innerText =
+                      "Over " + downLoadLimit.toLocaleString() + " rows";
+                  }
+                  if (dl_count) {
+                    dl_count.innerText = "Download this data";
+                  }
                 }
-                if (dl_count) {
-                  dl_count.innerText = "Download this data";
-                }
-              }
-              if (rc <= downLoadLimit || (downLoadLimit == null && rc < 5000)) {
-                if (rowcount) {
-                  rowcount.innerText = rc.toLocaleString() + " rows";
-                }
-                if (dl_count) {
-                  dl_count.innerText = "Download this data";
+                if (
+                  rc <= downLoadLimit ||
+                  (downLoadLimit == null && rc < 5000)
+                ) {
+                  if (rowcount) {
+                    rowcount.innerText = rc.toLocaleString() + " rows";
+                  }
+                  if (dl_count) {
+                    dl_count.innerText = "Download this data";
+                  }
                 }
               }
               params.successCallback(
