@@ -238,7 +238,22 @@ function initDataGrid(
     const initialRowCount = gridContainer.getAttribute(
       "data-initial-row-count"
     );
-    console.log(initialRowCount);
+
+    // When filters are reset, display the initial row count
+    gridOptions.api.eventService.addEventListener("filterChanged", (e) => {
+      if (
+        initialDataLoaded &&
+        initialRowCount !== null &&
+        Object.keys(gridOptions.api.getFilterModel()).length === 0
+      ) {
+        const rowCount = parseInt(initialRowCount);
+        document.getElementById("data-grid-rowcount").innerText =
+          rowCount > 5000
+            ? "Over " + Number("5000").toLocaleString() + " rows"
+            : rowCount.toLocaleString() + " rows";
+      }
+    });
+
     var dataSource = {
       rowCount: initialRowCount,
       getRows: function (params) {
