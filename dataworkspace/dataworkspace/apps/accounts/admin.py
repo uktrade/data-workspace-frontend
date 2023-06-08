@@ -259,7 +259,7 @@ class AppUserAdmin(UserAdmin):
         AppStreamFilter,
         QuickSightfilter,
     )
-    list_display = ("username", "email", "first_name", "last_name", "is_staff", "sso_status")
+    list_display = ("email", "first_name", "last_name", "is_staff", "sso_status")
 
     form = AppUserEditForm
     fieldsets = [
