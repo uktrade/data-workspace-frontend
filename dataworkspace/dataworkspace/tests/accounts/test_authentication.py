@@ -2,9 +2,11 @@ import uuid
 
 import pytest
 from mock import mock
+from django.db import IntegrityError
 from django.contrib.auth import get_user_model
 from django.test.client import RequestFactory
 from dataworkspace.apps.accounts.backends import AuthbrokerBackendUsernameIsEmail
+from dataworkspace.apps.applications.utils import create_user_from_sso
 from dataworkspace.tests import factories
 
 
@@ -101,3 +103,23 @@ class TestAuthbrokerBackend:
         assert authed_user.username == user1.email
         assert authed_user.email == user1.email
         assert authed_user.profile.sso_id == "ea4e3756-5102-46ef-9025-b89b245f1084"
+
+
+class TestCreateUserFromSSO:
+    @pytest.mark.xfail
+    @pytest.mark.django_db
+    def test_user_exists_with_different_sso_id(self):
+        existing_user = factories.UserFactory.create()
+        try:
+            new_user = create_user_from_sso(
+                uuid.uuid4(),
+                existing_user.email,
+                [],
+                "Bob",
+                "Bobson",
+                "active",
+                check_tools_access_if_user_exists=False,
+            )
+        except IntegrityError as e:
+            raise AssertionError(f"Duplicate user {e}") from e
+        assert existing_user.id != new_user.id
