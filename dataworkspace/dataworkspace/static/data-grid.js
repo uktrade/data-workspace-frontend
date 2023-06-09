@@ -55,7 +55,6 @@ function logDownloadEvent(
     columns_downloaded: columnApi.getAllDisplayedColumns().length,
     rows_total: gridContainer.getAttribute('data-initial-row-count'),
     rows_downloaded: rowsDownLoaded,
-    table_name: gridContainer.getAttribute('data-source-name'),
   });
 }
 
