@@ -139,6 +139,7 @@
           data-save-view-url="{{ object.get_save_grid_view_url }}"
           {% if row_count is not None %}
             data-initial-row-count="{{ row_count }}"
+            source-table= "{{ object.schema }}.{{ object.table }}"
           {% endif %}
         ></div>
       </div>

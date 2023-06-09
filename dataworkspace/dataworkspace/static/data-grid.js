@@ -52,8 +52,9 @@ function logDownloadEvent(
     data_format: dataFormat,
     columns_total: columnApi.getColumns().length,
     columns_downloaded: columnApi.getAllDisplayedColumns().length,
-    rows_total: null,
+    rows_total: data-initial-row-count,
     rows_downloaded: rowsDownLoaded,
+    table_name: source-table,
   });
 }
 
