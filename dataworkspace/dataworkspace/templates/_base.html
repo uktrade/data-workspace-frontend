@@ -38,12 +38,7 @@
         });
       </script>
     {% endblock %}
-    {% else %}
-      {% block initialGTMDataLayer %}
-      <script nonce="{{ request.csp_nonce }}">
-      window.dataLayer = window.dataLayer || [];
-      </script>
-      {% endblock %}
+    
   {% endif %}
 
   {% include 'partials/gtm_head.html' %}

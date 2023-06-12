@@ -42,7 +42,6 @@ function logDownloadEvent(
     eventLogPOST.send(eventLogData);
   }
 
-  var gridContainer = document.querySelector("#data-grid");
   // Google Analytics event
   if (window.dataLayer == null) return;
   window.dataLayer.push({
