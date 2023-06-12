@@ -53,7 +53,7 @@ function logDownloadEvent(
     data_format: dataFormat,
     columns_total: columnApi.getColumns().length,
     columns_downloaded: columnApi.getAllDisplayedColumns().length,
-    rows_total: gridContainer.getAttribute('data-initial-row-count'),
+    rows_total: null,
     rows_downloaded: rowsDownLoaded,
   });
 }
