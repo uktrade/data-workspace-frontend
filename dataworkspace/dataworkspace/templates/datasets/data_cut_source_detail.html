@@ -69,6 +69,9 @@
       </ol>
     </div>
     <div id="collapsible-header" class="govuk-!-margin-top-4">
+      {% if object.disable_data_grid_interaction %}
+        {% include "datasets/partials/grid-interaction-disabled.html" %}
+      {% endif %}
       {% include "datasets/partials/grid-view-saved.html" %}
       {% if object.dataset.enquiries_contact %}
         <a class="govuk-link govuk-link--no-visited-state govuk-!-padding-right-3" style="float: right"

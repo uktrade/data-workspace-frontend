@@ -629,7 +629,18 @@ p.sidebar-section {
   color: white;
 }
 
-.grid-view-saved-banner {
+.full-width-banner {
+  margin: 15px 15px 20px 15px;
+  font-size: 19px;
+
+  .govuk-notification-banner__heading {
+    margin-bottom: 0;
+    font-size: 19px;
+  }
+
+}
+
+.grid-view-saved-banner, .full-width-banner {
   .govuk-notification-banner__content, .govuk-notification-banner__content > * {
     max-width:none;
   }
