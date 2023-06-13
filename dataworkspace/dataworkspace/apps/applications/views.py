@@ -1101,10 +1101,8 @@ def visualisation_datasets_html_view(request, gitlab_project_id):
     return HttpResponse(status=405)
 
 
-def visualisation_datasets_html_GET(request, gitlab_project):
-    application_template = _application_template(gitlab_project)
-    datasets = _datasets(request.user, application_template)
-    pipeline_objects = Pipeline.objects.filter(
+def _get_pipeline_objects_for_application(application_template):
+    return Pipeline.objects.filter(
         Q(
             table_name__startswith=USER_SCHEMA_STEM
             + db_role_schema_suffix_for_app(application_template)
@@ -1118,6 +1116,12 @@ def visualisation_datasets_html_GET(request, gitlab_project):
             + "."
         )
     )
+
+
+def visualisation_datasets_html_GET(request, gitlab_project):
+    application_template = _application_template(gitlab_project)
+    datasets = _datasets(request.user, application_template)
+    pipeline_objects = _get_pipeline_objects_for_application(application_template)
     tables = [
         extract_queried_tables_from_sql_query(pipeline_object.config["sql"])
         if "sql" in pipeline_object.config
