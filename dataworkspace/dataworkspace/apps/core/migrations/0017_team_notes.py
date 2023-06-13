@@ -5,15 +5,14 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0016_auto_20230531_1549'),
+        ("core", "0016_auto_20230531_1549"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='team',
-            name='notes',
+            model_name="team",
+            name="notes",
             field=dataworkspace.apps.core.models.RichTextField(blank=True, null=True),
         ),
     ]
