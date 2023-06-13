@@ -41,7 +41,7 @@ def common(request):
         "IS_SUBSCRIBED_TO_NEWSLETTER": is_subscribed_to_newsletter,
         "SECURITY_CLASSIFICATION_FLAG": settings.SECURITY_CLASSIFICATION_FLAG,
         "RUNNING_TOOLS": request.user.applicationinstance_set.filter(
-            state__in=["SPAWNING", "RUNNING"]
+            state__in=["SPAWNING", "RUNNING"], application_template__application_type="TOOL"
         )
         if not request.user.is_anonymous
         else ApplicationInstance.objects.none(),
