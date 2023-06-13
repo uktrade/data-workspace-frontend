@@ -41,8 +41,8 @@ function logDownloadEvent(
     let eventLogData = JSON.stringify({ format: dataFormat });
     eventLogPOST.send(eventLogData);
   }
-  
-  let gridContainer = parseInt(document.querySelector("#data-grid").value);
+
+  let gridContainer = document.querySelector("#data-grid");
   const rowTotal = gridContainer.getAttribute('data-initial-row-count');
 
   // Google Analytics event
