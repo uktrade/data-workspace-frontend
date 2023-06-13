@@ -324,6 +324,172 @@ class TestDataVisualisationUIDatasetsPage:
         assert '"public"."table_\u200b1"' in response.content.decode(response.charset)
         assert response.status_code == 200
 
+    @pytest.mark.django_db
+    @mock.patch("dataworkspace.apps.applications.views.save_pipeline_to_dataflow")
+    def test_can_save_sql_if_reducing_tables(self, save_pipeline_to_dataflow, staff_client):
+        visualisation = factories.VisualisationCatalogueItemFactory.create(
+            short_description="summary",
+            published=False,
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
+            visualisation_template__gitlab_project_id=1,
+        )
+        app_schema = "_user_app_" + visualisation.visualisation_template.host_basename
+        pipeline = Pipeline.objects.create(
+            table_name=f'"{app_schema}".table_1', config={"sql": "SELECT 1 FROM table_1, table_2;"}
+        )
+
+        # Login to admin site
+        staff_client.post(reverse("admin:index"), follow=True)
+
+        with _visualisation_ui_gitlab_mocks():
+            staff_client.post(
+                reverse(
+                    "visualisations:datasets",
+                    args=(visualisation.visualisation_template.gitlab_project_id,),
+                ),
+                {
+                    "pipeline_id": str(pipeline.id),
+                    "sql": "SELECT 2 FROM table_1;",
+                },
+            )
+            response = staff_client.get(
+                reverse(
+                    "visualisations:datasets",
+                    args=(visualisation.visualisation_template.gitlab_project_id,),
+                ),
+            )
+
+        assert "SELECT 2 FROM table_1;" in response.content.decode(response.charset)
+        assert response.status_code == 200
+
+    @pytest.mark.django_db
+    @pytest.mark.parametrize(
+        "sql",
+        (
+            "This is not valid SQL;",
+            "SELECT 1 from table_1; SELECT 2 from table_1;",
+            "INSERT INTO my_table(col_a) VALUES ('a', 'b');",
+        ),
+    )
+    def test_cannot_save_sql_if_not_select(self, staff_client, sql):
+        visualisation = factories.VisualisationCatalogueItemFactory.create(
+            short_description="summary",
+            published=False,
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
+            visualisation_template__gitlab_project_id=1,
+        )
+        app_schema = "_user_app_" + visualisation.visualisation_template.host_basename
+        pipeline = Pipeline.objects.create(
+            table_name=f'"{app_schema}".table_1', config={"sql": "SELECT 1 FROM table_1;"}
+        )
+
+        # Login to admin site
+        staff_client.post(reverse("admin:index"), follow=True)
+
+        with _visualisation_ui_gitlab_mocks():
+            staff_client.post(
+                reverse(
+                    "visualisations:datasets",
+                    args=(visualisation.visualisation_template.gitlab_project_id,),
+                ),
+                {
+                    "pipeline_id": str(pipeline.id),
+                    "sql": sql,
+                },
+            )
+            response = staff_client.get(
+                reverse(
+                    "visualisations:datasets",
+                    args=(visualisation.visualisation_template.gitlab_project_id,),
+                ),
+            )
+
+        assert sql not in response.content.decode(response.charset)
+        assert response.status_code == 200
+
+    @pytest.mark.django_db
+    def test_cannot_save_sql_if_from_different_table(self, staff_client):
+        visualisation = factories.VisualisationCatalogueItemFactory.create(
+            short_description="summary",
+            published=False,
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
+            visualisation_template__gitlab_project_id=1,
+        )
+        app_schema = "_user_app_" + visualisation.visualisation_template.host_basename
+        pipeline = Pipeline.objects.create(
+            table_name=f'"{app_schema}".table_1', config={"sql": "SELECT 1 FROM table_1;"}
+        )
+
+        # Login to admin site
+        staff_client.post(reverse("admin:index"), follow=True)
+
+        with _visualisation_ui_gitlab_mocks():
+            staff_client.post(
+                reverse(
+                    "visualisations:datasets",
+                    args=(visualisation.visualisation_template.gitlab_project_id,),
+                ),
+                {
+                    "pipeline_id": str(pipeline.id),
+                    "sql": "SELECT 1 FROM table_1, table_2;",
+                },
+            )
+            response = staff_client.get(
+                reverse(
+                    "visualisations:datasets",
+                    args=(visualisation.visualisation_template.gitlab_project_id,),
+                ),
+            )
+
+        assert "SELECT 1 FROM table_1;" in response.content.decode(response.charset)
+        assert "SELECT 1 FROM table_1, table_2;" not in response.content.decode(response.charset)
+        assert response.status_code == 200
+
+    @pytest.mark.django_db
+    def test_cannot_save_sql_if_from_different_visualisation(self, staff_client):
+        visualisation_a = factories.VisualisationCatalogueItemFactory.create(
+            short_description="summary",
+            published=False,
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
+            visualisation_template__gitlab_project_id=1,
+        )
+        app_schema = "_user_app_" + visualisation_a.visualisation_template.host_basename
+        pipeline = Pipeline.objects.create(
+            table_name=f'"{app_schema}".table_1', config={"sql": "SELECT 1 FROM table_a;"}
+        )
+
+        visualisation_b = factories.VisualisationCatalogueItemFactory.create(
+            short_description="summary",
+            published=False,
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
+            visualisation_template__gitlab_project_id=2,
+        )
+
+        # Login to admin site
+        staff_client.post(reverse("admin:index"), follow=True)
+
+        with _visualisation_ui_gitlab_mocks():
+            staff_client.post(
+                reverse(
+                    "visualisations:datasets",
+                    args=(visualisation_b.visualisation_template.gitlab_project_id,),
+                ),
+                {
+                    "pipeline_id": str(pipeline.id),
+                    "sql": "SELECT 1 FROM table_b;",
+                },
+            )
+            response = staff_client.get(
+                reverse(
+                    "visualisations:datasets",
+                    args=(visualisation_a.visualisation_template.gitlab_project_id,),
+                ),
+            )
+
+        assert "SELECT 1 FROM table_a;" in response.content.decode(response.charset)
+        assert "SELECT 1 FROM table_b;" not in response.content.decode(response.charset)
+        assert response.status_code == 200
+
 
 class TestQuickSightPollAndRedirect:
     @pytest.mark.django_db

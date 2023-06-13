@@ -54,7 +54,8 @@
                         </li>
                         {% endfor %}
                     </ul>
-                    <pre class="govuk-!-margin-top-1">{{ pipeline.config.sql }}</pre>
+                    <input type="hidden" name="pipeline_id" value="{{ pipeline.id }}">
+                    <textarea name="sql" rows="10" class="govuk-textarea">{{ pipeline.config.sql }}</textarea>
                 </span>
             </div>
             {% endfor %}
