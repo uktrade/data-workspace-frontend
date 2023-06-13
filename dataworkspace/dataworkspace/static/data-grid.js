@@ -43,7 +43,7 @@ function logDownloadEvent(
   }
 
   let gridContainer = document.querySelector("#data-grid");
-  const rowTotal = gridContainer.getAttribute('data-initial-row-count');
+  const rowTotal = parseInt(gridContainer.getAttribute('data-initial-row-count'));
 
   // Google Analytics event
   if (window.dataLayer == null) return;
