@@ -763,6 +763,13 @@ class SourceTable(BaseSource):
             "(required if data grid download is enabled)"
         ),
     )
+    disable_data_grid_interaction = models.BooleanField(
+        default=False,
+        help_text=(
+            "Disable the sorting and filtering of records in the grid. Use this for"
+            " very large tables to stop timeouts."
+        ),
+    )
 
     class Meta:
         db_table = "app_sourcetable"

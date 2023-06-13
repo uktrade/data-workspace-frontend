@@ -52,6 +52,24 @@ function objectToQueryString(obj) {
   );
 }
 
+class NewBooleanFilterComponent {
+  init(params) {
+    this.eGui = document.createElement("div");
+    this.eGui.className = "ag-floating-filter-input";
+    this.eGui.innerHTML =
+      '<div class="ag-labeled ag-label-align-left ag-text-field ag-input-field">' +
+      '<div class="ag-wrapper ag-input-wrapper ag-text-field-input-wrapper">' +
+      '<select><option></option><option value="1">True</option><option value="0">False</option></select></div></div>';
+
+    this.currentValue = null;
+    this.eFilterInput = this.eGui.querySelector("select");
+    this.eFilterInput.style.color = params.color;
+  }
+
+  getGui() {
+    return this.eGui;
+  }
+}
 function getBooleanFilterComponent() {
   function BooleanFilterComponent() {}
 
