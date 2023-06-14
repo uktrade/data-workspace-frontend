@@ -9,6 +9,7 @@ from urllib.parse import urlsplit, urlencode
 
 import boto3
 import botocore
+import pglast
 import waffle
 from botocore.config import Config
 from csp.decorators import csp_exempt, csp_update
@@ -86,6 +87,7 @@ from dataworkspace.apps.datasets.models import (
     VisualisationUserPermission,
     VisualisationLink,
 )
+from dataworkspace.apps.datasets.pipelines.views import save_pipeline_to_dataflow
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.notify import decrypt_token, send_email
@@ -1101,10 +1103,8 @@ def visualisation_datasets_html_view(request, gitlab_project_id):
     return HttpResponse(status=405)
 
 
-def visualisation_datasets_html_GET(request, gitlab_project):
-    application_template = _application_template(gitlab_project)
-    datasets = _datasets(request.user, application_template)
-    pipeline_objects = Pipeline.objects.filter(
+def _get_pipeline_objects_for_application(application_template):
+    return Pipeline.objects.filter(
         Q(
             table_name__startswith=USER_SCHEMA_STEM
             + db_role_schema_suffix_for_app(application_template)
@@ -1118,6 +1118,12 @@ def visualisation_datasets_html_GET(request, gitlab_project):
             + "."
         )
     )
+
+
+def visualisation_datasets_html_GET(request, gitlab_project):
+    application_template = _application_template(gitlab_project)
+    datasets = _datasets(request.user, application_template)
+    pipeline_objects = _get_pipeline_objects_for_application(application_template)
     tables = [
         extract_queried_tables_from_sql_query(pipeline_object.config["sql"])
         if "sql" in pipeline_object.config
@@ -1144,6 +1150,59 @@ def visualisation_datasets_html_GET(request, gitlab_project):
 def visualisation_datasets_html_POST(request, gitlab_project):
     application_template = _application_template(gitlab_project)
     datasets = _datasets(request.user, application_template)
+
+    pipeline_ids = request.POST.getlist("pipeline_id")
+    pipeline_sqls = request.POST.getlist("sql")
+
+    # Ensure the user only submits pipelines for this visualisation
+    existing_pipeline_ids = set(
+        str(pipeline.id)
+        for pipeline in _get_pipeline_objects_for_application(application_template)
+    )
+    for pipeline_id in pipeline_ids:
+        if pipeline_id not in existing_pipeline_ids:
+            messages.error(request, "You can only save SQL pipelines for this visualisation")
+            return redirect("visualisations:datasets", gitlab_project_id=gitlab_project["id"])
+
+    # Ensure there is a single, valid SELECT statement in query
+    for sql in pipeline_sqls:
+        query = sql.strip().rstrip(";")
+        try:
+            statements = pglast.parse_sql(query)
+        except pglast.parser.ParseError as e:  # pylint: disable=c-extension-no-member
+            messages.error(request, e)
+            return redirect("visualisations:datasets", gitlab_project_id=gitlab_project["id"])
+        else:
+            if len(statements) > 1:
+                messages.error(request, "Enter a single statement")
+                return redirect("visualisations:datasets", gitlab_project_id=gitlab_project["id"])
+            statement_dict = statements[0].stmt()
+            if statement_dict["@"] != "SelectStmt":
+                messages.error(request, "Only SELECT statements are supported")
+                return redirect("visualisations:datasets", gitlab_project_id=gitlab_project["id"])
+
+    # Ensure that new tables are not added to any pipelines
+    tables_from_input = [set(extract_queried_tables_from_sql_query(sql)) for sql in pipeline_sqls]
+    tables_from_existing_pipelines = [
+        set(
+            extract_queried_tables_from_sql_query(
+                Pipeline.objects.get(id=int(pipeline_id)).config["sql"]
+            )
+        )
+        for pipeline_id in pipeline_ids
+    ]
+    for tables_input, tables_existing in zip(tables_from_input, tables_from_existing_pipelines):
+        if not tables_input.issubset(tables_existing):
+            messages.error(request, "You cannot add new tables to SQL pipelines")
+            return redirect("visualisations:datasets", gitlab_project_id=gitlab_project["id"])
+
+    # Save any changed pipelines
+    for pipeline_id, sql in zip(pipeline_ids, pipeline_sqls):
+        pipeline = Pipeline.objects.get(id=int(pipeline_id))
+        if pipeline.config["sql"] != sql:
+            pipeline.config["sql"] = sql
+            save_pipeline_to_dataflow(pipeline, "PUT")
+            pipeline.save()
 
     # Sets for O(1) lookup, and lists for deterministic looping
 
