@@ -983,29 +983,28 @@ def _check_tools_access(user):
 def create_user_from_sso(
     sso_id,
     primary_email,
-    other_emails,
     first_name,
     last_name,
     sso_status,
     check_tools_access_if_user_exists,
 ):
-    User = get_user_model()
+    user_model = get_user_model()
     try:
-        user = User.objects.get(profile__sso_id=sso_id)
-    except User.DoesNotExist:
-        user, _ = User.objects.get_or_create(
-            email__in=[primary_email] + other_emails,
-            defaults={"email": primary_email, "username": primary_email},
+        # Attempt to find a user with the given SSO ID
+        user = user_model.objects.get(Q(username=sso_id) | Q(profile__sso_id=sso_id))
+    except user_model.DoesNotExist:
+        # If the user doesn't exist we will have to create it
+        user = user_model.objects.create(
+            username=sso_id,
+            email=primary_email,
         )
-
-        user.save()
         user.profile.sso_id = sso_id
         user.profile.sso_status = sso_status
         try:
             user.save()
         except IntegrityError:
             # A concurrent request may have overtaken this one and created a user
-            user = User.objects.get(profile__sso_id=sso_id)
+            user = user_model.objects.get(Q(username=sso_id) | Q(profile__sso_id=sso_id))
 
         _check_tools_access(user)
     else:
@@ -1014,9 +1013,9 @@ def create_user_from_sso(
 
     changed = False
 
-    if user.username != primary_email:
+    if user.username != sso_id:
         changed = True
-        user.username = primary_email
+        user.username = sso_id
 
     if user.email != primary_email:
         changed = True
@@ -1168,7 +1167,6 @@ def _do_sync_activity_stream_sso_users():
                 create_user_from_sso(
                     user_id,
                     primary_email,
-                    emails,
                     obj["dit:firstName"],
                     obj["dit:lastName"],
                     obj["dit:StaffSSO:User:status"],

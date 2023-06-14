@@ -12,9 +12,9 @@ from dataworkspace.apps.datasets.models import ReferenceDataset
 
 class BaseTestCaseMixin:
     def setUp(self):
-        username = "bob.testerson@test.com"
+        username = "aae8901a-082f-4f12-8c6c-fdf4aeba2d68"
         self.user = get_user_model().objects.create(
-            username=username, is_staff=True, is_superuser=True, email=username
+            username=username, is_staff=True, is_superuser=True, email="bob.testerson@test.com"
         )
 
         self.user.user_permissions.add(
@@ -23,7 +23,7 @@ class BaseTestCaseMixin:
                 content_type=ContentType.objects.get_for_model(ApplicationInstance),
             )
         )
-        self.user.profile.sso_id = uuid.uuid4()
+        self.user.profile.sso_id = uuid.UUID("aae8901a-082f-4f12-8c6c-fdf4aeba2d68")
 
         self.user.profile.save()
 
@@ -31,7 +31,7 @@ class BaseTestCaseMixin:
             "HTTP_SSO_PROFILE_EMAIL": self.user.email,
             "HTTP_SSO_PROFILE_CONTACT_EMAIL": self.user.email,
             "HTTP_SSO_PROFILE_RELATED_EMAILS": "",
-            "HTTP_SSO_PROFILE_USER_ID": "aae8901a-082f-4f12-8c6c-fdf4aeba2d68",
+            "HTTP_SSO_PROFILE_USER_ID": self.user.username,
             "HTTP_SSO_PROFILE_LAST_NAME": "Bob",
             "HTTP_SSO_PROFILE_FIRST_NAME": "Testerson",
         }
