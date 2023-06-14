@@ -143,7 +143,6 @@
           {% if row_count is not None %}
             data-initial-row-count="{{ row_count }}"
           {% endif %}
-        add_table_name_and_row_count_to_GA
           data-source-name= "{{ object.name }}{% if object.schema %} ({{ object.schema }}.{{ object.table }}){% endif %}" 
           {% if object.disable_data_grid_interaction %}
             data-disable-interaction="true"
