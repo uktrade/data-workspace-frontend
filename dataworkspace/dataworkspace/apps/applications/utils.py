@@ -1746,17 +1746,27 @@ def sync_all_sso_users():
             for record in records:
                 obj = record["_source"]["object"]
                 logger.info("Syncing SSO record for user %s", obj["dit:StaffSSO:User:userId"])
+
+                user_model = get_user_model()
                 try:
-                    create_user_from_sso(
-                        obj["dit:StaffSSO:User:userId"],
-                        obj["dit:StaffSSO:User:contactEmailAddress"] or obj["dit:emailAddress"][0],
-                        obj["dit:emailAddress"],
-                        obj["dit:firstName"],
-                        obj["dit:lastName"],
-                        obj["dit:StaffSSO:User:status"],
-                        check_tools_access_if_user_exists=True,
-                    )
-                except IntegrityError:
-                    logger.exception("Failed to create user record")
+                    user = user_model.objects.get(profile__sso_id=obj["dit:StaffSSO:User:userId"])
+                except user_model.DoesNotExist:
+                    continue
+
+                changed = False
+                if user.first_name != obj["dit:firstName"]:
+                    changed = True
+                    user.first_name = obj["dit:firstName"]
+
+                if user.last_name != obj["dit:firstName"]:
+                    changed = True
+                    user.last_name = obj["dit:lastName"]
+
+                if user.profile.sso_status != obj["dit:StaffSSO:User:status"]:
+                    changed = True
+                    user.profile.sso_status = obj["dit:StaffSSO:User:status"]
+
+                if changed:
+                    user.save()
 
             query["search_after"] = records[-1]["sort"]
