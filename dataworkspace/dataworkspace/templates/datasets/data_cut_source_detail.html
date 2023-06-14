@@ -143,6 +143,7 @@
           {% if row_count is not None %}
             data-initial-row-count="{{ row_count }}"
           {% endif %}
+          data-source-name= "{{ object.name }}{% if object.schema %} ({{ object.schema }}.{{ object.table }}){% endif %}" 
           {% if object.disable_data_grid_interaction %}
             data-disable-interaction="true"
           {% endif %}

@@ -42,6 +42,9 @@ function logDownloadEvent(
     eventLogPOST.send(eventLogData);
   }
 
+  let gridContainer = document.querySelector("#data-grid");
+  const rowTotal = gridContainer.getAttribute('data-initial-row-count');
+
   // Google Analytics event
   if (window.dataLayer == null) return;
   window.dataLayer.push({
@@ -52,8 +55,9 @@ function logDownloadEvent(
     data_format: dataFormat,
     columns_total: columnApi.getColumns().length,
     columns_downloaded: columnApi.getAllDisplayedColumns().length,
-    rows_total: null,
+    rows_total: rowTotal == null ? null : parseInt(rowTotal),
     rows_downloaded: rowsDownLoaded,
+    table_name: gridContainer.getAttribute('data-source-name'),
   });
 }
 
