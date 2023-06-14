@@ -1606,37 +1606,6 @@ def remove_authorised_editor(request, pk, user_id):
     )
 
 
-# class DataCatalogueEditorsEditView(EditBaseView, UpdateView):
-#     form_class = DataCatalogueEditorsEditForm
-#     template_name = "datasets/edit_data_editors.html"
-#
-#     def get_model(self):
-#         model_type = self.kwargs.get("model_type")
-#         if model_type == "dataset":
-#             return DataSet
-#         elif model_type == "visualisation":
-#             return VisualisationCatalogueItem
-#         else:
-#             raise Http404("Invalid model type")
-#
-#     def get_object(self, queryset=None):
-#         model = self.get_model()
-#         pk = self.kwargs.get("pk")
-#         return get_object_or_404(model, pk=pk)
-#
-#     def get_form_kwargs(self):
-#         kwargs = super().get_form_kwargs()
-#         kwargs["request"] = self.request
-#         return kwargs
-#
-#     def get_success_url(self):
-#         return self.object.get_absolute_url()
-#
-#     def form_valid(self, form):
-#         messages.success(self.request, "Data catalogue editors updated")
-#         return super().form_valid(form)
-
-
 class UserSearchFormView(EditBaseView, FormView):
     form_class = UserSearchForm
     form: None
