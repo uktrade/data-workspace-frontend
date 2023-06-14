@@ -428,6 +428,11 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
             "schedule": 60 * 10,
             "args": (),
         },
+        "full-sso-user-sync": {
+            "task": "dataworkspace.apps.applications.utils.sync_all_sso_users",
+            "schedule": crontab(minute=0, hour=1),
+            "args": (),
+        },
     }
 
 CELERY_REDBEAT_REDIS_URL = env["REDIS_URL"]

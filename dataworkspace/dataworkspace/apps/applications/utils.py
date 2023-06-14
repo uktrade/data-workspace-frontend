@@ -1697,3 +1697,66 @@ def duplicate_tools_monitor():
             _run_duplicate_tools_monitor()
     except redis.exceptions.LockError:
         logger.info("duplicate_tools_alert: Unable to acquire lock to monitor for duplicate tools")
+
+
+@celery_app.task()
+@close_all_connections_if_not_in_atomic_block
+def sync_all_sso_users():
+    with cache.lock("activity_stream_sync_last_published_lock"):
+        query = {
+            "size": 1000,
+            "query": {
+                "bool": {
+                    "filter": [
+                        {"term": {"object.type": "dit:StaffSSO:User"}},
+                    ]
+                }
+            },
+            "sort": [{"published": "asc"}, {"id": "asc"}],
+        }
+        while True:
+            try:
+                logger.info("Calling activity stream with query %s", json.dumps(query))
+                status_code, response = hawk_request(
+                    "GET",
+                    f"{settings.ACTIVITY_STREAM_BASE_URL}/v3/activities/_search",
+                    json.dumps(query),
+                )
+            except HawkException as e:
+                logger.error("Failed to call activity stream with error %s", e)
+                break
+
+            if status_code != 200:
+                raise Exception(f"Failed to fetch SSO users: {response}")
+
+            response_json = json.loads(response)
+
+            if "failures" in response_json["_shards"]:
+                raise Exception(
+                    f"Failed to fetch SSO users: {json.dumps(response_json['_shards']['failures'])}"
+                )
+
+            records = response_json["hits"]["hits"]
+
+            if not records:
+                break
+
+            logger.info("Fetched %d record(s) from activity stream", len(records))
+
+            for record in records:
+                obj = record["_source"]["object"]
+                logger.info("Syncing SSO record for user %s", obj["dit:StaffSSO:User:userId"])
+                try:
+                    create_user_from_sso(
+                        obj["dit:StaffSSO:User:userId"],
+                        obj["dit:StaffSSO:User:contactEmailAddress"] or obj["dit:emailAddress"][0],
+                        obj["dit:emailAddress"],
+                        obj["dit:firstName"],
+                        obj["dit:lastName"],
+                        obj["dit:StaffSSO:User:status"],
+                        check_tools_access_if_user_exists=True,
+                    )
+                except IntegrityError:
+                    logger.exception("Failed to create user record")
+
+            query["search_after"] = records[-1]["sort"]
