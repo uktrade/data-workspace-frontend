@@ -42,15 +42,12 @@
             <div class="govuk-body">
               <a class="govuk-link" href="{% url 'datasets:search_authorised_editors' obj.id %}">Add another editor</a>
             </div>
-            <form method="POST">
-              {% csrf_token %}
               <div class="govuk-button-group">
-                <button class="govuk-button" data-module="govuk-button">
+                <a class="govuk-button" data-module="govuk-button" href="{{ obj.get_absolute_url }}">
                     Save and continue
-                </button>
+                </a>
                 <a class="govuk-link" href="{{ obj_edit_url }}">Cancel</a>
               </div>
-            </form>
         </div>
     </div>
 {% endblock %}
