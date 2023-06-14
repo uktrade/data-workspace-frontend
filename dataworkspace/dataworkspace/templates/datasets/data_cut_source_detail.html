@@ -69,6 +69,9 @@
       </ol>
     </div>
     <div id="collapsible-header" class="govuk-!-margin-top-4">
+      {% if object.disable_data_grid_interaction %}
+        {% include "datasets/partials/grid-interaction-disabled.html" %}
+      {% endif %}
       {% include "datasets/partials/grid-view-saved.html" %}
       {% if object.dataset.enquiries_contact %}
         <a class="govuk-link govuk-link--no-visited-state govuk-!-padding-right-3" style="float: right"
@@ -140,7 +143,11 @@
           {% if row_count is not None %}
             data-initial-row-count="{{ row_count }}"
           {% endif %}
+        add_table_name_and_row_count_to_GA
           data-source-name= "{{ object.name }}{% if object.schema %} ({{ object.schema }}.{{ object.table }}){% endif %}" 
+          {% if object.disable_data_grid_interaction %}
+            data-disable-interaction="true"
+          {% endif %}
         ></div>
       </div>
   {% endwith %}

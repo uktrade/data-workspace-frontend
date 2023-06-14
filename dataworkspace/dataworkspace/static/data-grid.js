@@ -118,11 +118,13 @@ function initDataGrid(
   totalDownloadableRows,
   eventLogEndpoint
 ) {
+  const gridContainer = document.querySelector("#data-grid");
   totalDownloadableRows =
     totalDownloadableRows != null ? totalDownloadableRows : 0;
   const userGridConfig = getGridConfig();
   let hasSavedConfig = Object.keys(userGridConfig).length > 0;
-
+  const disableInteraction =
+    gridContainer.getAttribute("data-disable-interaction") !== null;
   columnConfig.forEach(function (column, i) {
     column.originalPosition = i;
     column.position = i;
@@ -139,9 +141,13 @@ function initDataGrid(
       }
     }
 
+    if (disableInteraction) {
+      column.filter = false;
+      column.sortable = false;
+    }
     // Try to determine filter types from the column config.
     // Grid itself defaults to text if data type not set or not recognised
-    if (column.dataType === "numeric") {
+    else if (column.dataType === "numeric") {
       column.filter = "agNumberColumnFilter";
     } else if (column.dataType === "date") {
       column.filter = "agDateColumnFilter";
@@ -229,7 +235,6 @@ function initDataGrid(
     gridOptions.rowData = records;
   }
 
-  var gridContainer = document.querySelector("#data-grid");
   new agGrid.Grid(gridContainer, gridOptions);
 
   // Apply any filers the user has saved
@@ -517,7 +522,6 @@ function initDataGrid(
     saveViewButton.addEventListener("click", function (e) {
       saveViewButton.innerHTML = "Saving view";
       saveViewButton.setAttribute("disabled", "disabled");
-      const sort = getSortField(gridOptions.columnApi);
       const columnState = Object.fromEntries(
         gridOptions.columnApi.getColumnState().map(function (c, i) {
           c.position = i;

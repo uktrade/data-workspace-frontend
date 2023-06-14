@@ -188,6 +188,7 @@ class Team(TimeStampedModel):
     schema_name = models.CharField(max_length=63, unique=True)
 
     member = models.ManyToManyField(get_user_model(), through="TeamMembership")
+    notes = RichTextField(null=True, blank=True)
 
     class Meta:
         verbose_name = "Team"
