@@ -236,6 +236,31 @@ urlpatterns = [
         name="edit_visualisation_catalogue_item",
     ),
     path(
+        "<uuid:pk>/edit-data-catalogue-editors",
+        login_required(views.DataCatalogueEditorsView.as_view()),
+        name="edit_data_editors",
+    ),
+    path(
+        "<uuid:pk>/remove-authorised-editor/<int:user_id>",
+        views.remove_authorised_editor,
+        name="remove_authorised_editor",
+    ),
+    path(
+        "<uuid:pk>/search-authorised-editors",
+        login_required(views.DatasetAuthorisedEditorsSearchView.as_view()),
+        name="search_authorised_editors",
+    ),
+    path(
+        "<uuid:pk>/add-authorised-editor/<int:user_id>",
+        login_required(views.DatasetAddAuthorisedEditorView.as_view()),
+        name="add_authorised_editor",
+    ),
+    path(
+        "<uuid:pk>/add-authorised-users",
+        login_required(views.DatasetAddAuthorisedEditorsView.as_view()),
+        name="add_authorised_editors",
+    ),
+    path(
         "<uuid:pk>/search-enquiries-contact",
         login_required(views.DatasetEnquiriesContactSearchView.as_view()),
         name="search_enquiries_contact",

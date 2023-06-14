@@ -74,6 +74,12 @@
         <a href="{% url 'datasets:edit_visualisation_catalogue_item' model.id %}" class="govuk-link govuk-link--no-visited-state">Manage this page</a>
       </p>
       {% endif %}
+    {% if request.user.is_superuser or request.user == model.information_asset_owner or request.user == model.information_asset_manager %}
+      <p class="govuk-body sidebar-section">
+        <a href="{% url 'datasets:edit_data_editors' pk=model.id %}" class="govuk-link">Manage
+          editors</a>
+      </p>
+      {% endif %}
     </div>
   </div>
 

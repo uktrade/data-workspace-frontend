@@ -80,6 +80,12 @@
         <p class="govuk-body sidebar-section">
           <a href="{% url 'datasets:edit_dataset' model.id %}" class="govuk-link govuk-link--no-visited-state">Manage this dataset</a>
         </p>
+        {% if request.user.is_superuser or request.user == model.information_asset_owner or request.user == model.information_asset_manager %}
+          <p class="govuk-body sidebar-section">
+            <a href="{% url 'datasets:edit_data_editors' model.id %}" class="govuk-link">Manage
+              editors</a>
+          </p>
+        {% endif %}
         {% flag DATA_UPLOADER_UI_FLAG %}
           <p class="govuk-body sidebar-section">
             <a href="{{ request.path }}#data" class="govuk-link govuk-link--no-visited-state">

@@ -677,6 +677,85 @@ class VisualisationCatalogueItemEditForm(GOVUKDesignSystemModelForm):
         return json.dumps(self.cleaned_data["authorized_email_domains"].split(","))
 
 
+class DatasetEditForm(GOVUKDesignSystemModelForm):
+    class Meta:
+        model = DataSet
+        fields = [
+            "data_catalogue_editors",
+        ]
+
+    name = GOVUKDesignSystemCharField(
+        label="Dataset Name *",
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
+        ),
+        error_messages={"required": "You must provide a name for this dataset."},
+    )
+    short_description = GOVUKDesignSystemCharField(
+        label="Short description *",
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
+        ),
+        error_messages={"required": "You must provide a short description for this dataset."},
+    )
+    description = GOVUKDesignSystemRichTextField(
+        error_messages={"required": "You must provide a description for this dataset."},
+    )
+    enquiries_contact = GOVUKDesignSystemCharField(
+        label="Enquiries contact",
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
+        ),
+        required=False,
+    )
+    licence = GOVUKDesignSystemCharField(
+        label="Licence",
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
+        ),
+        required=False,
+    )
+    licence_url = GOVUKDesignSystemCharField(
+        label="Licence url",
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
+        ),
+        required=False,
+    )
+    retention_policy = GOVUKDesignSystemTextareaField(
+        label="Retention policy",
+        widget=GOVUKDesignSystemTextareaWidget(
+            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
+        ),
+        required=False,
+    )
+    personal_data = GOVUKDesignSystemCharField(
+        label="Personal data",
+        widget=GOVUKDesignSystemTextWidget(
+            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
+        ),
+        required=False,
+    )
+    restrictions_on_usage = GOVUKDesignSystemRichLinkField(required=False)
+
+    def __init__(self, request, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.request = request
+        if waffle.flag_is_active(self.request, settings.SECURITY_CLASSIFICATION_FLAG):
+            self.fields["government_security_classification"].required = True
+
+    def clean_enquiries_contact(self):
+        if self.cleaned_data["enquiries_contact"]:
+            try:
+                user = get_user_model().objects.get(email=self.cleaned_data["enquiries_contact"])
+            except get_user_model().DoesNotExist as e:
+                raise forms.ValidationError("User email address does not exist") from e
+            else:
+                return user
+        else:
+            return None
+
+
 class UserSearchForm(GOVUKDesignSystemForm):
     search = GOVUKDesignSystemTextareaField(
         label="Enter one or more email addresses on separate lines or search for a single user by name.",

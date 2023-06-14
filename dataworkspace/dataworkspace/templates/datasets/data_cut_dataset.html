@@ -87,6 +87,12 @@
           </p>
       {% endif %}
 
+      {% if request.user.is_superuser or request.user == model.information_asset_owner or request.user == model.information_asset_manager %}
+          <p class="govuk-body sidebar-section">
+            <a href="{% url 'datasets:edit_data_editors' model.id %}" class="govuk-link">Manage editors</a>
+          </p>
+      {% endif %}
+
       {% if related_data or related_visualisations %}
       <aside class="app-related-items" role="complementary">
         <p class="govuk-body sidebar-section">
