@@ -26,6 +26,7 @@ from mohawk import Sender
 from pytz import utc
 import redis
 
+from dataworkspace.apps.accounts.models import Profile
 from dataworkspace.apps.applications.spawner import (
     get_spawner,
     stop,
@@ -1703,6 +1704,9 @@ def duplicate_tools_monitor():
 @close_all_connections_if_not_in_atomic_block
 def sync_all_sso_users():
     with cache.lock("activity_stream_sync_last_published_lock"):
+        user_model = get_user_model()
+        all_users = user_model.objects.all()
+        seen_user_ids = []
         query = {
             "size": 1000,
             "query": {
@@ -1747,9 +1751,8 @@ def sync_all_sso_users():
                 obj = record["_source"]["object"]
                 logger.info("Syncing SSO record for user %s", obj["dit:StaffSSO:User:userId"])
 
-                user_model = get_user_model()
                 try:
-                    user = user_model.objects.get(profile__sso_id=obj["dit:StaffSSO:User:userId"])
+                    user = all_users.get(profile__sso_id=obj["dit:StaffSSO:User:userId"])
                 except user_model.DoesNotExist:
                     continue
 
@@ -1769,4 +1772,14 @@ def sync_all_sso_users():
                 if changed:
                     user.save()
 
+            seen_user_ids.append(user.id)
             query["search_after"] = records[-1]["sort"]
+
+        unseen_user_profiles = Profile.objects.exclude(user_id__in=seen_user_ids).filter(
+            sso_status="active"
+        )
+        logger.info(
+            "%s active users exist locally but not in SSO. Marking as inactive",
+            unseen_user_profiles.count(),
+        )
+        unseen_user_profiles.update(sso_status="inactive")
