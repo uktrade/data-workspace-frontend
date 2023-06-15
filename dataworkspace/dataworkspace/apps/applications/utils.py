@@ -1747,14 +1747,19 @@ def sync_all_sso_users():
 
             for record in records:
                 obj = record["_source"]["object"]
-                logger.info("Syncing SSO record for user %s", obj["dit:StaffSSO:User:userId"])
+                sso_id = obj["dit:StaffSSO:User:userId"]
+                logger.info("Syncing SSO record for user %s", sso_id)
 
                 try:
-                    user = all_users.get(profile__sso_id=obj["dit:StaffSSO:User:userId"])
+                    user = all_users.get(Q(username=sso_id) | Q(profile__sso_id=sso_id))
                 except user_model.DoesNotExist:
                     continue
 
                 changed = False
+
+                if user.username != sso_id:
+                    user.username = sso_id
+
                 if user.first_name != obj["dit:firstName"]:
                     changed = True
                     user.first_name = obj["dit:firstName"]
