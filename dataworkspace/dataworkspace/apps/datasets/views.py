@@ -1486,6 +1486,7 @@ class EditBaseView(View):
                 self.obj.information_asset_manager,
             ]
             and not request.user.is_superuser
+            and request.user not in self.obj.data_catalogue_editors.all()
         ):
             return HttpResponseForbidden()
         return super().dispatch(request, *args, **kwargs)
