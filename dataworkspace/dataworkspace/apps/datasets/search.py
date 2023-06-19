@@ -538,7 +538,6 @@ def _annotate_is_owner(datasets, user):
     @return: Annotated queryset
     """
 
-
     datasets = datasets.annotate(
         is_owner=BoolOr(
             Case(
@@ -576,7 +575,9 @@ def _sorted_datasets_and_visualisations_matching_query_for_user(query, user, sor
     )
 
     reference_datasets = _get_datasets_data_for_user_matching_query(
-        ReferenceDataset.objects.live().annotate(data_catalogue_editors=Value(None, output_field=CharField())),
+        ReferenceDataset.objects.live().annotate(
+            data_catalogue_editors=Value(None, output_field=CharField())
+        ),
         query,
         id_field="uuid",
         user=user,
