@@ -1259,6 +1259,13 @@ def clean_db_identifier(identifier):
     return re.sub(r"[-\s]+", "_", identifier)
 
 
+def clean_db_column_name(column_name):
+    """
+    Replace forward slashes in column names before cleaning for user
+    """
+    return clean_db_identifier(column_name.replace("/", ""))
+
+
 def get_s3_csv_column_types(path):
     client = get_s3_client()
 
@@ -1289,7 +1296,7 @@ def get_s3_csv_column_types(path):
         fields.append(
             {
                 "header_name": field["name"],
-                "column_name": clean_db_identifier(field["name"]),
+                "column_name": clean_db_column_name(field["name"]),
                 "data_type": SCHEMA_POSTGRES_DATA_TYPE_MAP.get(
                     TABLESCHEMA_FIELD_TYPE_MAP.get(field["type"], field["type"]),
                     PostgresDataTypes.TEXT,

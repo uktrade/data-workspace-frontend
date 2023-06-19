@@ -13,7 +13,7 @@ from dataworkspace.apps.core.constants import (
 )
 from dataworkspace.apps.core.utils import (
     USER_SCHEMA_STEM,
-    clean_db_identifier,
+    clean_db_column_name,
     db_role_schema_suffix_for_user,
 )
 
@@ -78,7 +78,7 @@ def _get_csv_column_types(rows):
         fields.append(
             {
                 "header_name": field["name"],
-                "column_name": clean_db_identifier(field["name"]),
+                "column_name": clean_db_column_name(field["name"]),
                 "data_type": SCHEMA_POSTGRES_DATA_TYPE_MAP.get(
                     TABLESCHEMA_FIELD_TYPE_MAP.get(field["type"], field["type"]),
                     PostgresDataTypes.TEXT,
