@@ -11,6 +11,7 @@ from django.db.models import (
     Count,
     Exists,
     F,
+    CharField,
     IntegerField,
     FloatField,
     Q,
@@ -531,20 +532,25 @@ def _annotate_has_access(datasets, user):
 def _annotate_is_owner(datasets, user):
     """
     Adds a boolean annotation to queryset which is set to True if the user
-    is an IAO or IAM of a dataset
-    @param datasets: django querysey
+    is an IAO, IAM or data catalogue editor of a dataset
+    @param datasets: Django queryset
     @param user: request.user
-    @return:
+    @return: Annotated queryset
     """
+
+
     datasets = datasets.annotate(
         is_owner=BoolOr(
             Case(
                 When(
-                    Q(information_asset_owner=user) | Q(information_asset_manager=user), then=True
+                    Q(information_asset_owner=user)
+                    | Q(information_asset_manager=user)
+                    | Q(data_catalogue_editors=user),
+                    then=True,
                 ),
                 default=False,
                 output_field=BooleanField(),
-            )
+            ),
         ),
     )
     return datasets
@@ -570,7 +576,7 @@ def _sorted_datasets_and_visualisations_matching_query_for_user(query, user, sor
     )
 
     reference_datasets = _get_datasets_data_for_user_matching_query(
-        ReferenceDataset.objects.live(),
+        ReferenceDataset.objects.live().annotate(data_catalogue_editors=Value(None, output_field=CharField())),
         query,
         id_field="uuid",
         user=user,
