@@ -3,10 +3,9 @@ from django.core.exceptions import PermissionDenied
 
 class BasePermissionDeniedError(PermissionDenied):
     def __init__(self, parameter_value=None):
+        self.redirect_url = "/error_403"
         if parameter_value:
             self.redirect_url = f"/error_403?param={parameter_value}"
-        else:
-            self.redirect_url = "/error_403"
         super().__init__()
 
 
