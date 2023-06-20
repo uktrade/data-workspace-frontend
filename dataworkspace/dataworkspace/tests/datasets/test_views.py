@@ -16,6 +16,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db.models import CharField, Value
 
 from django.urls import reverse
 from django.test import Client, override_settings
@@ -838,7 +839,9 @@ def test_datasets_and_visualisations_doesnt_return_duplicate_results(access_type
         assert len(datasets) == len(set(dataset["id"] for dataset in datasets))
 
         references = _get_datasets_data_for_user_matching_query(
-            ReferenceDataset.objects.live(), "", id_field="uuid", user=u
+            ReferenceDataset.objects.live().annotate(
+                data_catalogue_editors=Value(None, output_field=CharField())
+            ), "", id_field="uuid", user=u
         )
         assert len(references) == len(set(reference["uuid"] for reference in references))
 
