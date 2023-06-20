@@ -43,7 +43,7 @@ function logDownloadEvent(
   }
 
   let gridContainer = document.querySelector("#data-grid");
-  const rowTotal = gridContainer.getAttribute('data-initial-row-count');
+  const rowTotal = gridContainer.getAttribute("data-initial-row-count");
 
   // Google Analytics event
   if (window.dataLayer == null) return;
@@ -57,7 +57,7 @@ function logDownloadEvent(
     columns_downloaded: columnApi.getAllDisplayedColumns().length,
     rows_total: rowTotal == null ? null : parseInt(rowTotal),
     rows_downloaded: rowsDownLoaded,
-    table_name: gridContainer.getAttribute('data-source-name'),
+    table_name: gridContainer.getAttribute("data-source-name"),
   });
 }
 
@@ -152,10 +152,7 @@ function initDataGrid(
     } else if (column.dataType === "date") {
       column.filter = "agDateColumnFilter";
     } else if (column.dataType === "boolean") {
-      column.floatingFilterComponent = "booleanFloatingFilter";
-      column.floatingFilterComponentParams = {
-        suppressFilterButton: true,
-      };
+      column.filter = NewBooleanFilterComponent;
     } else if (column.dataType === "uuid") {
       column.filterParams = {
         filterOptions: ["equals", "notEqual"],
@@ -216,7 +213,6 @@ function initDataGrid(
         }
         return '<img src="/__django_static/assets/images/loading.gif">';
       },
-      booleanFloatingFilter: getBooleanFilterComponent(),
     },
   };
 
