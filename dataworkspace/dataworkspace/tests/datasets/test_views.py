@@ -841,7 +841,10 @@ def test_datasets_and_visualisations_doesnt_return_duplicate_results(access_type
         references = _get_datasets_data_for_user_matching_query(
             ReferenceDataset.objects.live().annotate(
                 data_catalogue_editors=Value(None, output_field=CharField())
-            ), "", id_field="uuid", user=u
+            ),
+            "",
+            id_field="uuid",
+            user=u,
         )
         assert len(references) == len(set(reference["uuid"] for reference in references))
 
