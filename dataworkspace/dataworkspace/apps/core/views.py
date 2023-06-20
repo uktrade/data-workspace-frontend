@@ -69,6 +69,7 @@ def public_error_403_html_view(request, exception=None):
         status=403,
     )
 
+
 def public_error_403_csrf_html_view(request, reason=None):
     return render(request, "errors/error_403_csrf.html", status=403)
 

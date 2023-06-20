@@ -2,10 +2,9 @@ from django.core.exceptions import PermissionDenied
 
 
 class BasePermissionDeniedError(PermissionDenied):
-    def __init__(self, parameter_value):
+    def __init__(self, parameter_value=None):
         self.redirect_url = f"/error_403?param={parameter_value}"
         super().__init__()
-
 
 
 class BaseDatasetPermissionDeniedError(BasePermissionDeniedError):
@@ -44,8 +43,9 @@ class PipelineBuilderPermissionDeniedError(BasePermissionDeniedError):
 class DeveloperPermissionRequiredError(BasePermissionDeniedError):
     template_name = "errors/developer_permission_required.html"
 
-    def __init__(self, project_name):
+    def __init__(self, project_name, gitlab_project_id):
         super().__init__()
+        self.parameter_value = gitlab_project_id
         self.template_context = {"project_name": project_name}
 
 
