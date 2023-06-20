@@ -246,6 +246,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
         "enquiries_contact",
         "information_asset_owner",
         "information_asset_manager",
+        "data_catalogue_editors",
     )
     fieldsets = [
         (
@@ -263,6 +264,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
                     "enquiries_contact",
                     "information_asset_owner",
                     "information_asset_manager",
+                    "data_catalogue_editors",
                     "licence",
                     "licence_url",
                     "retention_policy",
@@ -830,6 +832,7 @@ class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStamp
                     "secondary_enquiries_contact",
                     "information_asset_owner",
                     "information_asset_manager",
+                    "data_catalogue_editors",
                     "licence",
                     "licence_url",
                     "retention_policy",

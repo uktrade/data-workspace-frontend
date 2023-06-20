@@ -1,0 +1,53 @@
+{% extends '_main.html' %}
+{% load humanize static datasets_tags core_tags waffle_tags %}
+
+{% block page_title %}{{ obj.name }} - {{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-three-quarters">
+      <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="/">Home</a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            Manage Data Catalogue Editors
+          </li>
+        </ol>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block content %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <h1 class="govuk-heading-l">Manage Data Catalogue Editors</h1>
+            <table class="govuk-table">
+              <caption class="govuk-table__caption govuk-table__caption--m">Users with access</caption>
+              <tbody class="govuk-table__body">
+                {% if data_catalogue_editors.count == 0 %}
+                  <h2 class="govuk-heading-m">There are currently no data catalogue editors</h2>
+                {% endif %}
+                {% for editor in data_catalogue_editors %}
+                  <tr class="govuk-table__row">
+                    <td class="govuk-table__cell">{{ editor.first_name }} {{ editor.last_name }}</td>
+                    <td class="govuk-table__cell">{{ editor.email }}</td>
+                    <td class="govuk-table__cell"><a class="govuk-link" href="{% url 'datasets:remove_authorised_editor' obj.id editor.id %}">Remove</a></td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            <div class="govuk-body">
+              <a class="govuk-link" href="{% url 'datasets:search_authorised_editors' obj.id %}">Add another editor</a>
+            </div>
+              <div class="govuk-button-group">
+                <a class="govuk-button" data-module="govuk-button" href="{{ obj.get_absolute_url }}">
+                    Save and continue
+                </a>
+                <a class="govuk-link" href="{{ obj_edit_url }}">Cancel</a>
+              </div>
+        </div>
+    </div>
+{% endblock %}

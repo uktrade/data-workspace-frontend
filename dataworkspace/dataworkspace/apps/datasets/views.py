@@ -14,6 +14,7 @@ from csp.decorators import csp_update
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
 from django.core import serializers
 from django.core.exceptions import PermissionDenied
@@ -43,6 +44,7 @@ from django.http import (
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils.safestring import mark_safe
+from django.utils.decorators import method_decorator
 from django.views.decorators.http import (
     require_GET,
     require_POST,
@@ -1484,6 +1486,7 @@ class EditBaseView(View):
                 self.obj.information_asset_manager,
             ]
             and not request.user.is_superuser
+            and request.user not in self.obj.data_catalogue_editors.all()
         ):
             return HttpResponseForbidden()
         return super().dispatch(request, *args, **kwargs)
@@ -1574,6 +1577,36 @@ class VisualisationCatalogueItemEditView(EditBaseView, UpdateView):
         return super().form_valid(form)
 
 
+@method_decorator(login_required, name="dispatch")
+class DataCatalogueEditorsView(View):
+    template_name = "datasets/edit_data_editors.html"
+
+    def get(self, request, pk):
+        dataset = find_dataset(pk, request.user)
+        data_catalogue_editors = dataset.data_catalogue_editors.all()
+
+        context = {"data_catalogue_editors": data_catalogue_editors, "obj": dataset}
+
+        return render(request, self.template_name, context)
+
+
+def remove_authorised_editor(request, pk, user_id):
+    dataset = find_dataset(pk, request.user)
+
+    user = get_user_model().objects.get(id=user_id)
+
+    dataset.data_catalogue_editors.remove(user)
+
+    return HttpResponseRedirect(
+        reverse(
+            "datasets:edit_data_editors",
+            args=[
+                pk,
+            ],
+        )
+    )
+
+
 class UserSearchFormView(EditBaseView, FormView):
     form_class = UserSearchForm
     form: None
@@ -1583,6 +1616,8 @@ class UserSearchFormView(EditBaseView, FormView):
         search_query = self.request.POST["search"]
         self.request.session[
             f"search-query--edit-dataset-permissions--{self.obj.pk}--{self.summary.id}"
+            if self.summary
+            else f"search-query--edit-dataset-permissions--{self.obj.pk}"
         ] = search_query
 
         return super().form_valid(form)
@@ -1592,6 +1627,8 @@ class UserSearchFormView(EditBaseView, FormView):
         try:
             initial["search"] = self.request.session[
                 f"search-query--edit-dataset-permissions--{self.obj.pk}--{self.summary.id}"
+                if self.summary
+                else f"search-query--edit-dataset-permissions--{self.obj.pk}"
             ]
         except KeyError:
             pass
@@ -1601,6 +1638,8 @@ class UserSearchFormView(EditBaseView, FormView):
         context = super().get_context_data(**kwargs)
         search_query = self.request.session.get(
             f"search-query--edit-dataset-permissions--{self.obj.pk}--{self.summary.id}"
+            if self.summary
+            else f"search-query--edit-dataset-permissions--{self.obj.pk}"
         )
         if search_query:
             if "\n" in search_query:
@@ -1630,6 +1669,8 @@ class UserSearchFormView(EditBaseView, FormView):
             try:
                 search_query = self.request.session.pop(
                     f"search-query--edit-dataset-permissions--{self.obj.pk}--{self.summary.id}"
+                    if self.summary
+                    else f"search-query--edit-dataset-permissions--{self.obj.pk}"
                 )
             except KeyError:
                 search_query = None
@@ -1640,6 +1681,61 @@ class UserSearchFormView(EditBaseView, FormView):
             else reverse("datasets:edit_visualisation_catalogue_item", args=[self.obj.pk])
         )
         return context
+
+
+class DatasetAuthorisedEditorsSearchView(UserSearchFormView):
+    template_name = "datasets/search_authorised_editors.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["waffle_flag"] = waffle.flag_is_active(
+            self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"
+        )
+        return context
+
+    def get_success_url(self):
+        return reverse(
+            "datasets:search_authorised_editors",
+            args=[self.obj.pk],
+        )
+
+
+class DatasetAddAuthorisedEditorView(EditBaseView, View):
+    def get(self, request, *args, **kwargs):
+        user = get_user_model().objects.get(id=self.kwargs.get("user_id"))
+
+        dataset = find_dataset(self.kwargs.get("pk"), self.request.user)
+
+        if user not in dataset.data_catalogue_editors.all():
+            dataset.data_catalogue_editors.add(user.id)
+
+        return HttpResponseRedirect(
+            reverse(
+                "datasets:edit_data_editors",
+                args=[
+                    dataset.id,
+                ],
+            )
+        )
+
+
+class DatasetAddAuthorisedEditorsView(EditBaseView, View):
+    def post(self, request, *args, **kwargs):
+        dataset = find_dataset(self.kwargs.get("pk"), self.request.user)
+        selected_users = self.request.POST.getlist("selected-user")
+
+        for selected_user in selected_users:
+            user = get_object_or_404(get_user_model(), id=selected_user)
+            dataset.data_catalogue_editors.add(user)
+
+        return HttpResponseRedirect(
+            reverse(
+                "datasets:edit_data_editors",
+                args=[
+                    dataset.id,
+                ],
+            )
+        )
 
 
 class DatasetEnquiriesContactSearchView(UserSearchFormView):

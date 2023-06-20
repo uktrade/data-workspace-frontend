@@ -278,6 +278,11 @@ class DataSet(DeletableTimestampedUserModel):
         null=True,
         blank=True,
     )
+    data_catalogue_editors = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name="data_catalogue_edit_datasets",
+        blank=True,
+    )
     reference_code = models.ForeignKey(
         DatasetReferenceCode, null=True, blank=True, on_delete=models.SET_NULL
     )
@@ -448,7 +453,12 @@ class DataSet(DeletableTimestampedUserModel):
             self.user_access_type in [UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN]
             or self.datasetuserpermission_set.filter(user=user).exists()
             or user_email_domain in self.authorized_email_domains
-            or user.id in (self.information_asset_owner_id, self.information_asset_manager_id)
+            or user.id
+            in (
+                self.information_asset_owner_id,
+                self.information_asset_manager_id,
+            )
+            + tuple(self.data_catalogue_editors.values_list("id", flat=True))
         )
 
     def user_has_bookmarked(self, user):
@@ -2485,6 +2495,11 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         null=True,
         blank=True,
     )
+    data_catalogue_editors = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name="data_catalogue_edit_visualisations",
+        blank=True,
+    )
     eligibility_criteria = ArrayField(models.CharField(max_length=256), null=True)
     user_access_type = models.CharField(
         max_length=64,
@@ -2598,7 +2613,12 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
             self.user_access_type in [UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN]
             or self.visualisationuserpermission_set.filter(user=user).exists()
             or user_email_domain in self.authorized_email_domains
-            or user.id in (self.information_asset_owner_id, self.information_asset_manager_id)
+            or user.id
+            in (
+                self.information_asset_owner_id,
+                self.information_asset_manager_id,
+            )
+            + tuple(self.data_catalogue_editors.values_list("id", flat=True))
         )
 
     def user_has_bookmarked(self, user):
