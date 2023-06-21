@@ -41,85 +41,66 @@ function dateFilterComparator(filterDate, cellDate) {
   return 0;
 }
 
-function objectToQueryString(obj) {
-  return (
-    "?" +
-    Object.keys(obj)
-      .map(function (key) {
-        return key + "=" + encodeURIComponent(obj[key]);
-      })
-      .join("&")
-  );
-}
-
 class NewBooleanFilterComponent {
   init(params) {
-    this.eGui = document.createElement("div");
-    this.eGui.className = "ag-floating-filter-input";
+    this.filterActive = false;
+    this.currentValue = "";
+    this.eGui = document.createElement("form");
+    this.eGui.className = "ag-filter-wrapper ag-focus-managed";
     this.eGui.innerHTML =
-      '<div class="ag-labeled ag-label-align-left ag-text-field ag-input-field">' +
-      '<div class="ag-wrapper ag-input-wrapper ag-text-field-input-wrapper">' +
-      '<select><option></option><option value="1">True</option><option value="0">False</option></select></div></div>';
-
-    this.currentValue = null;
+      '<div class="ag-filter-body-wrapper ag-simple-filter-body-wrapper">' +
+      '<div class="ag-picker-field ag-labeled ag-label-align-left ag-select ag-filter-select" role="presentation">' +
+      '<div class="ag-wrapper ag-picker-field-wrapper" tabIndex="0" aria-expanded="false" role="listbox" aria-describedby="328-display" aria-label="Filtering operator">' +
+      '<div class="ag-picker-field-display" id="328-display">Equals</div></div></div>' +
+      '<div class="ag-picker-field ag-labeled ag-label-align-left ag-select ag-filter-select" role="presentation">' +
+      '<select class="ag-wrapper ag-picker-field-wrapper"><option value="">Filter...</option><option value="1">True</option><option value="0">False</option></select></div></div>' +
+      '<div class="ag-filter-apply-panel"><button type="button" class="ag-standard-button ag-filter-apply-panel-button">Reset</button></div>';
     this.eFilterInput = this.eGui.querySelector("select");
+    this.eFilterReset = this.eGui.querySelector("button");
+    this.filterChangedCallback = params.filterChangedCallback;
     this.eFilterInput.style.color = params.color;
+    const that = this;
+    this.eFilterInput.addEventListener("input", function (e) {
+      const value = e.target.options[e.target.selectedIndex].value;
+      if (value !== "") {
+        that.filterActive = true;
+        that.currentValue = Number(value);
+        that.filterChangedCallback();
+      } else {
+        that.clearFilter();
+      }
+    });
+    this.eFilterReset.addEventListener("click", function () {
+      that.clearFilter();
+    });
+  }
+
+  clearFilter() {
+    if (!this.isFilterActive()) return;
+    this.filterActive = false;
+    this.currentValue = "";
+    this.eFilterInput.value = this.currentValue;
+    this.filterChangedCallback();
+  }
+
+  isFilterActive() {
+    return this.filterActive;
   }
 
   getGui() {
     return this.eGui;
   }
-}
-function getBooleanFilterComponent() {
-  function BooleanFilterComponent() {}
 
-  BooleanFilterComponent.prototype.init = function (params) {
-    this.eGui = document.createElement("div");
-    this.eGui.className = "ag-floating-filter-input";
-    this.eGui.innerHTML =
-      '<div class="ag-labeled ag-label-align-left ag-text-field ag-input-field">' +
-      '<div class="ag-wrapper ag-input-wrapper ag-text-field-input-wrapper">' +
-      '<select><option></option><option value="1">True</option><option value="0">False</option></select></div></div>';
-
-    this.currentValue = null;
-    this.eFilterInput = this.eGui.querySelector("select");
-    this.eFilterInput.style.color = params.color;
-    var that = this;
-
-    function onSelectChanged() {
-      if (that.eFilterInput.value === "") {
-        params.parentFilterInstance(function (instance) {
-          instance.onFloatingFilterChanged(null, null);
-        });
-        return;
-      }
-
-      that.currentValue = Number(that.eFilterInput.value);
-      params.parentFilterInstance(function (instance) {
-        instance.onFloatingFilterChanged("equals", that.currentValue);
-      });
+  getModel() {
+    if (!this.isFilterActive()) {
+      return null;
     }
+    return { filter: this.currentValue, type: "equals" };
+  }
 
-    this.eFilterInput.addEventListener("input", onSelectChanged);
-  };
-
-  BooleanFilterComponent.prototype.onParentModelChanged = function (
-    parentModel
-  ) {
-    if (!parentModel) {
-      this.eFilterInput.value = "";
-      this.currentValue = null;
-    } else {
-      this.eFilterInput.value = parentModel.filter + "";
-      this.currentValue = parentModel.filter;
-    }
-  };
-
-  BooleanFilterComponent.prototype.getGui = function () {
-    return this.eGui;
-  };
-
-  return BooleanFilterComponent;
+  setModel(model) {
+    this.eFilterInput.value = model == null ? null : model.value;
+  }
 }
 
 // When the grid first loads or the page size
@@ -132,18 +113,19 @@ function tableResize(tableEl, api) {
   }
 }
 
-
 function getGridConfig() {
   const gridConfigScript = document.querySelector("#grid-config");
-  return gridConfigScript !== null ? JSON.parse(gridConfigScript.textContent) : {};
+  return gridConfigScript !== null
+    ? JSON.parse(gridConfigScript.textContent)
+    : {};
 }
 
 function getSortField(columnApi) {
-  const sort = columnApi.getColumnState().filter(function(c) {
-    return c.sort != null
+  const sort = columnApi.getColumnState().filter(function (c) {
+    return c.sort != null;
   });
   if (sort.length > 0) {
-    return [sort[0].colId, sort[0].sort]
+    return [sort[0].colId, sort[0].sort];
   }
-  return [null, null]
+  return [null, null];
 }
