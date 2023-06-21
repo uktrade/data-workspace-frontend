@@ -92,6 +92,8 @@ from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.notify import decrypt_token, send_email
 from dataworkspace.zendesk import update_zendesk_ticket
+import logging
+logger = logging.getLogger("app")
 
 TOOL_LOADING_MESSAGES = [
     {
@@ -440,6 +442,7 @@ def visualisation_branch_html_view(request, gitlab_project_id, branch_name):
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
+        logger.debug("Dev access %s", "visualisation_branch_html_view")
         raise DeveloperPermissionRequiredError(gitlab_project["name"])
 
     if request.method == "GET":
@@ -569,6 +572,7 @@ def visualisation_users_with_access_html_view(request, gitlab_project_id):
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
+        logger.debug("Dev access %s", "visualisation_users_with_access_html_view")
         raise DeveloperPermissionRequiredError(gitlab_project["name"])
 
     if request.method == "GET":
@@ -655,6 +659,7 @@ def visualisation_users_give_access_html_view(request, gitlab_project_id):
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
+        logger.debug("Dev access %s", "visualisation_users_give_access_html_view")
         raise DeveloperPermissionRequiredError(gitlab_project["name"])
 
     token = request.GET.get("token")
@@ -912,6 +917,7 @@ def visualisation_catalogue_item_html_view(request, gitlab_project_id):
 
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
+        logger.debug("Dev access %s", "visualisation_catalogue_item_html_view")
         raise DeveloperPermissionRequiredError(gitlab_project["name"])
 
     if request.method == "GET":
@@ -1005,6 +1011,7 @@ def visualisation_approvals_html_view(request, gitlab_project_id):
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
+        logger.debug("Dev access %s", "visualisation_approvals_html_view")
         raise DeveloperPermissionRequiredError(gitlab_project["name"])
 
     if request.method == "GET":
@@ -1092,6 +1099,7 @@ def visualisation_datasets_html_view(request, gitlab_project_id):
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
+        logger.debug("Dev access %s", "visualisation_datasets_html_view")
         raise DeveloperPermissionRequiredError(gitlab_project["name"])
 
     if request.method == "GET":
@@ -1372,6 +1380,7 @@ def visualisation_publish_html_view(request, gitlab_project_id):
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
+        logger.debug("Dev access %s", "visualisation_publish_html_view")
         raise DeveloperPermissionRequiredError(gitlab_project["name"])
 
     if request.method == "GET":
@@ -1625,6 +1634,7 @@ def visualisation_latest_log_GET(request, gitlab_project_id, commit_id):
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
+        logger.debug("Dev access %s", "visualisation_latest_log_GET")
         raise DeveloperPermissionRequiredError(gitlab_project["name"])
 
     application_template = _application_template(gitlab_project)
