@@ -2,7 +2,7 @@ from django.core.exceptions import PermissionDenied
 
 
 class BasePermissionDeniedError(PermissionDenied):
-    redirect_url = "/error_403"
+    redirect_url = "/error_403?param=9111"
 
 
 class BaseDatasetPermissionDeniedError(BasePermissionDeniedError):
