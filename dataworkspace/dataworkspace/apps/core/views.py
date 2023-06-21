@@ -53,6 +53,7 @@ def public_error_404_html_view(request, exception=None):
 
 
 def public_error_403_html_view(request, exception=None):
+    parameter_value = request.GET.get("param", None)
     default_template = "errors/error_403.html"
     if exception is None:
         return render(
@@ -64,7 +65,7 @@ def public_error_403_html_view(request, exception=None):
     return render(
         request,
         getattr(exception, "template_name", default_template),
-        getattr(exception, "template_context", {}),
+        {**getattr(exception, "template_context", {}), "param": parameter_value},
         status=403,
     )
 

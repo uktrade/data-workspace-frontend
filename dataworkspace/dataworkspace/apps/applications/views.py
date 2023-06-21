@@ -440,7 +440,7 @@ def visualisation_branch_html_view(request, gitlab_project_id, branch_name):
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
-        raise DeveloperPermissionRequiredError(gitlab_project["name"])
+        raise DeveloperPermissionRequiredError(gitlab_project["name"], gitlab_project_id)
 
     if request.method == "GET":
         return visualisation_branch_html_GET(request, gitlab_project, branch_name)
@@ -569,7 +569,7 @@ def visualisation_users_with_access_html_view(request, gitlab_project_id):
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
-        raise DeveloperPermissionRequiredError(gitlab_project["name"])
+        raise DeveloperPermissionRequiredError(gitlab_project["name"], gitlab_project_id)
 
     if request.method == "GET":
         return visualisation_users_with_access_html_GET(request, gitlab_project)
@@ -655,7 +655,7 @@ def visualisation_users_give_access_html_view(request, gitlab_project_id):
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
-        raise DeveloperPermissionRequiredError(gitlab_project["name"])
+        raise DeveloperPermissionRequiredError(gitlab_project["name"], gitlab_project_id)
 
     token = request.GET.get("token")
     token_data = decrypt_token(token.encode("utf-8")) if token else {}
@@ -912,7 +912,7 @@ def visualisation_catalogue_item_html_view(request, gitlab_project_id):
 
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
-        raise DeveloperPermissionRequiredError(gitlab_project["name"])
+        raise DeveloperPermissionRequiredError(gitlab_project["name"], gitlab_project_id)
 
     if request.method == "GET":
         return visualisation_catalogue_item_html_GET(request, gitlab_project)
@@ -1005,7 +1005,7 @@ def visualisation_approvals_html_view(request, gitlab_project_id):
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
-        raise DeveloperPermissionRequiredError(gitlab_project["name"])
+        raise DeveloperPermissionRequiredError(gitlab_project["name"], gitlab_project_id)
 
     if request.method == "GET":
         return visualisation_approvals_html_GET(request, gitlab_project)
@@ -1092,7 +1092,7 @@ def visualisation_datasets_html_view(request, gitlab_project_id):
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
-        raise DeveloperPermissionRequiredError(gitlab_project["name"])
+        raise DeveloperPermissionRequiredError(gitlab_project["name"], gitlab_project_id)
 
     if request.method == "GET":
         return visualisation_datasets_html_GET(request, gitlab_project)
@@ -1372,7 +1372,7 @@ def visualisation_publish_html_view(request, gitlab_project_id):
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
-        raise DeveloperPermissionRequiredError(gitlab_project["name"])
+        raise DeveloperPermissionRequiredError(gitlab_project["name"], gitlab_project_id)
 
     if request.method == "GET":
         return visualisation_publish_html_GET(request, gitlab_project)
@@ -1625,7 +1625,7 @@ def visualisation_latest_log_GET(request, gitlab_project_id, commit_id):
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
-        raise DeveloperPermissionRequiredError(gitlab_project["name"])
+        raise DeveloperPermissionRequiredError(gitlab_project["name"], gitlab_project_id)
 
     application_template = _application_template(gitlab_project)
     filename = f'{gitlab_project["name"]}-{commit_id}.log'
