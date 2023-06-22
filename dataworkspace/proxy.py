@@ -482,8 +482,10 @@ async def async_main():
             application = await response.json()
 
         if response.status != 200 and response.status != 404:
+            logger.error("this")
+            logger.error(f"{application}")
             raise UserException(
-                "Unable to start the application",
+                f"{application}",
                 response.status,
                 application.get("redirect_url", None),
             )
