@@ -485,7 +485,7 @@ async def async_main():
             raise UserException(
                 "Unable to start the application",
                 response.status,
-                "/error_403_visualisation",
+                "/error_403_visualisation/example",  # Update the parameter value here
             )
 
         if host_exists and application["state"] not in ["SPAWNING", "RUNNING"]:

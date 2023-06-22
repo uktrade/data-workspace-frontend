@@ -64,7 +64,7 @@ def public_error_403_html_view(request, exception=None):
     return render(
         request,
         getattr(exception, "template_name", default_template),
-        {**getattr(exception, "template_context", {})},
+        getattr(exception, "template_context", {}),
         status=403,
     )
 
@@ -76,7 +76,7 @@ def public_error_403_visualisation_html_view(request, exception=None):
         return render(
             request,
             default_template,
-            context={"peer_ip": request.META.get("HTTP_X_FORWARDED_FOR")},
+            context={"peer_ip": request.META.get("HTTP_X_FORWARDED_FOR"), "param": parameter_value},
             status=403,
         )
     return render(
