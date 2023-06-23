@@ -483,7 +483,7 @@ async def async_main():
 
         if response.status != 200 and response.status != 404:
             raise UserException(
-                "Unable to start the application&visualisation_catalogue_owner_id=example",
+                f"Unable to start the application&visualisation_catalogue_item={response}",
                 response.status,
                 "/error_403_visualisation",
             )
