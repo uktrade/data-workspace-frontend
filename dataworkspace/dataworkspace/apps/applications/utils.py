@@ -49,6 +49,7 @@ from dataworkspace.apps.core.utils import (
     create_tools_access_iam_role,
     database_dsn,
     stable_identification_suffix,
+    source_tables_for_app,
     source_tables_for_user,
     new_private_database_credentials,
     postgres_user,
@@ -253,19 +254,32 @@ def application_api_is_allowed(request, public_host):
             raise DatasetPermissionDenied(visualisation_catalogue_item)
         return vis_requires_auth
 
-    def is_visualisation_preview_and_has_gitlab_developer():
+    def is_visualisation_preview_and_has_gitlab_developer_and_has_dataset_access():
         is_vis_preview = is_preview and visualisation_catalogue_item
         if is_vis_preview and not gitlab_has_developer_access(
             request.user, application_template.gitlab_project_id
         ):
             raise ManageVisualisationsPermissionDeniedError()
+
+        user_source_tables = source_tables_for_user(request.user)
+        app_source_tables = source_tables_for_app(application_template)
+
+        user_authorised_datasets = set(
+            (source_table["dataset"]["id"] for source_table in user_source_tables)
+        )
+        app_authorised_datasets = set(
+            (source_table["dataset"]["id"] for source_table in app_source_tables)
+        )
+        if app_authorised_datasets - user_authorised_datasets:
+            raise ManageVisualisationsPermissionDeniedError()
+
         return is_vis_preview
 
     return (
         is_tool_and_correct_user_and_allowed_to_start()
         or is_published_visualisation_and_requires_authentication()
         or is_published_visualisation_and_requires_authorisation_and_has_authorisation()
-        or is_visualisation_preview_and_has_gitlab_developer()
+        or is_visualisation_preview_and_has_gitlab_developer_and_has_dataset_access()
     )
 
 

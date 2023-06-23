@@ -752,6 +752,42 @@ class TestApplication(unittest.IsolatedAsyncioTestCase):
         self.assertIn("testvisualisation [11372717]", application_content_1)
         self.assertIn("is loading...", application_content_1)
 
+        # Grant the visualisation access to a dataset that the user doesn't have access to
+        dataset_id_dataset_1 = "3be91019-ee77-4759-ba75-af9541601df4"
+        table_id = "e5c1318d-610a-4300-8b8d-2b96e9f6ab9c"
+        stdout, stderr, code = await create_private_dataset(
+            "test_external_db",
+            "MASTER",
+            dataset_id_dataset_1,
+            "dataset_121",
+            table_id,
+            "dataset_121",
+        )
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
+        self.assertEqual(code, 0)
+        stdout, stderr, code = await give_visualisation_dataset_perms(
+            "testvisualisation", "dataset_121"
+        )
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
+        self.assertEqual(code, 0)
+
+        # Ensure the user doesn't have access to the application since they
+        # don't have access to this dataset
+        async with session.request(
+            "GET", "http://testvisualisation--11372717.dataworkspace.test:8000/"
+        ) as response:
+            content = await response.text()
+        self.assertIn("You do not have access to this page", content)
+        self.assertEqual(response.status, 403)
+
+        # Give the user access to the dataset
+        stdout, stderr, code = await give_user_dataset_perms("dataset_121")
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
+        self.assertEqual(code, 0)
+
         await until_non_202(session, "http://testvisualisation--11372717.dataworkspace.test:8000/")
 
         sent_headers = {"from-downstream": "downstream-header-value"}
