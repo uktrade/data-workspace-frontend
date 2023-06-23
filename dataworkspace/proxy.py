@@ -483,9 +483,9 @@ async def async_main():
 
         if response.status != 200 and response.status != 404:
             raise UserException(
-                "Unable to start the application",
+                f"Unable to start the application&visualisation_catalogue_item={str(response.url).split('/')[-1]}",
                 response.status,
-                application.get("redirect_url", None),
+                "/error_403_visualisation",
             )
 
         if host_exists and application["state"] not in ["SPAWNING", "RUNNING"]:

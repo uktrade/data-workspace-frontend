@@ -1,0 +1,19 @@
+{% extends 'errors/base_error.html' %}
+{% block error_content %}
+  <p class="govuk-body">
+    Check you're signed into ZScaler. If you use another VPN client, check you're signed into it.
+  </p>
+  <p class="govuk-body">
+    Find out how to <a href="https://workspace.trade.gov.uk/working-at-dit/how-do-i/gain-access-to-a-trusted-network/">sign into ZScaler</a>.
+  </p>
+  <p class="govuk-body">
+    If you're already signed into ZScaler or another VPN client, <a class="govuk-link" {% if not param %}href="{% url 'support' %}">contact the Data Workspace Team{% else %}href="mailto:{{ param }}">contact the visualisation manager{% endif %}</a> for help accessing this page.
+  </p>
+  This template is successfully being rendered
+  {{ param }}
+  {% if peer_ip %}
+    <p class="govuk-body">
+      Peer IP: <code>{{ peer_ip }}</code>.
+    </p>
+  {% endif %}
+{% endblock error_content %}
