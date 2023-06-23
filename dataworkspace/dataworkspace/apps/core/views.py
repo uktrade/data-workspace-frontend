@@ -72,8 +72,7 @@ def public_error_403_html_view(request, exception=None):
 
 def public_error_403_visualisation_html_view(request, exception=None):
     default_template = "errors/error_403_visualisation.html"
-    query_string = request.META['QUERY_STRING']
-    parameter_value = parse_qs(query_string).get('visualisation_catalogue_owner_id', [''])[0]
+    parameter_value = request.META.get('QUERY_STRING', '')
     if exception is None:
         return render(
             request,
