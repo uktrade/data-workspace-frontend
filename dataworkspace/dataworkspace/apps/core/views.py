@@ -19,6 +19,7 @@ from django.urls import reverse
 from django.views import View
 from django.views.generic import FormView
 from requests import HTTPError
+from urllib.parse import parse_qs
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.forms import (
     NewsletterSubscriptionForm,
@@ -71,7 +72,7 @@ def public_error_403_html_view(request, exception=None):
 
 def public_error_403_visualisation_html_view(request, exception=None):
     default_template = "errors/error_403_visualisation.html"
-    parameter_value = request
+    parameter_value = parse_qs(request.split('?')[1]).get('visualisation_catalogue_owner_id', [''])[0]
     if exception is None:
         return render(
             request,
