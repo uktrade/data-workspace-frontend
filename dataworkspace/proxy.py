@@ -482,12 +482,11 @@ async def async_main():
             application = await response.json()
 
         if response.status != 200 and response.status != 404:
-            if response.status != 200 and response.status != 404:
-                raise UserException(
-                    "Unable to start the application&visualisation_catalogue_owner_id=example",
-                    response.status,
-                    "/error_403_visualisation",
-                )
+            raise UserException(
+                "Unable to start the application&visualisation_catalogue_owner_id=example",
+                response.status,
+                "/error_403_visualisation",
+            )
 
         if host_exists and application["state"] not in ["SPAWNING", "RUNNING"]:
             if "x-data-workspace-no-modify-application-instance" not in downstream_request.headers:
