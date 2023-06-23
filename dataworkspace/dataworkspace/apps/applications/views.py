@@ -93,6 +93,7 @@ from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.notify import decrypt_token, send_email
 from dataworkspace.zendesk import update_zendesk_ticket
 import logging
+
 logger = logging.getLogger("app")
 
 TOOL_LOADING_MESSAGES = [
