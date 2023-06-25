@@ -15,13 +15,13 @@ from dataworkspace.cel import celery_app
 @pytest.fixture
 def staff_user(db):
     staff_user = get_user_model().objects.create(
-        username="bob.testerson@test.com",
+        username="aae8901a-082f-4f12-8c6c-fdf4aeba2d68",
         email="bob.testerson@test.com",
         is_staff=True,
         is_superuser=True,
         first_name="Bob",
     )
-    staff_user.profile.sso_id = "aae8901a-082f-4f12-8c6c-fdf4aeba2d68"
+    staff_user.profile.sso_id = staff_user.username
     staff_user.profile.save()
     return staff_user
 
@@ -54,13 +54,14 @@ def staff_client(staff_user_data):
 @pytest.fixture
 def user(db):
     user = get_user_model().objects.create(
-        username="frank.exampleson@test.com",
+        username="aae8901a-082f-4f12-8c6c-fdf4aeba2d69",
         is_staff=False,
         is_superuser=False,
         email="frank.exampleson@test.com",
         first_name="Frank",
     )
-
+    user.profile.sso_id = user.username
+    user.profile.save()
     return user
 
 
@@ -70,7 +71,7 @@ def user_data(db, user):
         "HTTP_SSO_PROFILE_EMAIL": user.email,
         "HTTP_SSO_PROFILE_CONTACT_EMAIL": user.email,
         "HTTP_SSO_PROFILE_RELATED_EMAILS": "",
-        "HTTP_SSO_PROFILE_USER_ID": "aae8901a-082f-4f12-8c6c-fdf4aeba2d69",
+        "HTTP_SSO_PROFILE_USER_ID": user.username,
         "HTTP_SSO_PROFILE_LAST_NAME": "Exampleson",
         "HTTP_SSO_PROFILE_FIRST_NAME": "Frank",
     }
@@ -85,11 +86,13 @@ def client(user_data):
 def sme_user(db):
     sme_group = Group.objects.get(name="Subject Matter Experts")
     user = get_user_model().objects.create(
-        username="jane.sampledóttir@test.com",
+        username="aae8901a-082f-4f12-8c6c-fdf4aeba2d70",
         email="jane.sampledóttir@test.com",
         is_staff=True,
         is_superuser=False,
     )
+    user.profile.sso_id = user.username
+    user.profile.save()
     sme_group.user_set.add(user)
     sme_group.save()
 
@@ -102,7 +105,7 @@ def sme_user_data(db, sme_user):
         "HTTP_SSO_PROFILE_EMAIL": sme_user.email,
         "HTTP_SSO_PROFILE_CONTACT_EMAIL": sme_user.email,
         "HTTP_SSO_PROFILE_RELATED_EMAILS": "",
-        "HTTP_SSO_PROFILE_USER_ID": "aae8901a-082f-4f12-8c6c-fdf4aeba2d70",
+        "HTTP_SSO_PROFILE_USER_ID": sme_user.username,
         "HTTP_SSO_PROFILE_LAST_NAME": "Sampledóttir",
         "HTTP_SSO_PROFILE_FIRST_NAME": "Jane",
     }
@@ -118,7 +121,7 @@ def sme_client(sme_user, sme_user_data):
 @pytest.fixture
 def other_user(db):
     return get_user_model().objects.create(
-        username="other@test.com",
+        username="7b88631c-faca-4a0f-a5de-5e1bd62b8936",
         email="other@test.com",
         is_staff=True,
         is_superuser=False,
@@ -131,7 +134,7 @@ def other_user_data(db, other_user):
         "HTTP_SSO_PROFILE_EMAIL": other_user.email,
         "HTTP_SSO_PROFILE_CONTACT_EMAIL": other_user.email,
         "HTTP_SSO_PROFILE_RELATED_EMAILS": "",
-        "HTTP_SSO_PROFILE_USER_ID": "7b88631c-faca-4a0f-a5de-5e1bd62b8936",
+        "HTTP_SSO_PROFILE_USER_ID": other_user.username,
         "HTTP_SSO_PROFILE_LAST_NAME": "Mary",
         "HTTP_SSO_PROFILE_FIRST_NAME": "Poppins",
     }
