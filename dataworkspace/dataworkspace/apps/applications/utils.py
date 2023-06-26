@@ -983,28 +983,29 @@ def _check_tools_access(user):
 def create_user_from_sso(
     sso_id,
     primary_email,
+    other_emails,
     first_name,
     last_name,
     sso_status,
     check_tools_access_if_user_exists,
 ):
-    user_model = get_user_model()
+    User = get_user_model()
     try:
-        # Attempt to find a user with the given SSO ID
-        user = user_model.objects.get(Q(username=sso_id) | Q(profile__sso_id=sso_id))
-    except user_model.DoesNotExist:
-        # If the user doesn't exist we will have to create it
-        user = user_model.objects.create(
-            username=sso_id,
-            email=primary_email,
+        user = User.objects.get(profile__sso_id=sso_id)
+    except User.DoesNotExist:
+        user, _ = User.objects.get_or_create(
+            email__in=[primary_email] + other_emails,
+            defaults={"email": primary_email, "username": primary_email},
         )
+
+        user.save()
         user.profile.sso_id = sso_id
         user.profile.sso_status = sso_status
         try:
             user.save()
         except IntegrityError:
             # A concurrent request may have overtaken this one and created a user
-            user = user_model.objects.get(Q(username=sso_id) | Q(profile__sso_id=sso_id))
+            user = User.objects.get(profile__sso_id=sso_id)
 
         _check_tools_access(user)
     else:
@@ -1013,9 +1014,9 @@ def create_user_from_sso(
 
     changed = False
 
-    if user.username != sso_id:
+    if user.username != primary_email:
         changed = True
-        user.username = sso_id
+        user.username = primary_email
 
     if user.email != primary_email:
         changed = True
@@ -1167,6 +1168,7 @@ def _do_sync_activity_stream_sso_users():
                 create_user_from_sso(
                     user_id,
                     primary_email,
+                    emails,
                     obj["dit:firstName"],
                     obj["dit:lastName"],
                     obj["dit:StaffSSO:User:status"],
@@ -1747,19 +1749,14 @@ def sync_all_sso_users():
 
             for record in records:
                 obj = record["_source"]["object"]
-                sso_id = obj["dit:StaffSSO:User:userId"]
-                logger.info("Syncing SSO record for user %s", sso_id)
+                logger.info("Syncing SSO record for user %s", obj["dit:StaffSSO:User:userId"])
 
                 try:
-                    user = all_users.get(Q(username=sso_id) | Q(profile__sso_id=sso_id))
+                    user = all_users.get(profile__sso_id=obj["dit:StaffSSO:User:userId"])
                 except user_model.DoesNotExist:
                     continue
 
                 changed = False
-
-                if user.username != sso_id:
-                    user.username = sso_id
-
                 if user.first_name != obj["dit:firstName"]:
                     changed = True
                     user.first_name = obj["dit:firstName"]

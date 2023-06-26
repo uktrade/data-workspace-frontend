@@ -958,6 +958,7 @@ async def create_application_db_user():
             user = create_user_from_sso(
                 '7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2',
                 'test@test.com',
+                [],
                 'Peter',
                 'Piper',
                 'active',

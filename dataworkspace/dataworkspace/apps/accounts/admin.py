@@ -44,6 +44,20 @@ from dataworkspace.apps.explorer.utils import (
 logger = logging.getLogger("app")
 
 
+class AppUserCreationForm(forms.ModelForm):
+    class Meta:
+        model = get_user_model()
+        fields = ("email", "first_name", "last_name")
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.username = user.email
+        user.set_unusable_password()
+        if commit:
+            user.save()
+        return user
+
+
 class AppUserEditForm(forms.ModelForm):
     tools_access_role_arn = forms.CharField(
         label="Tools access IAM role arn",
@@ -231,6 +245,7 @@ class QuickSightfilter(admin.SimpleListFilter):
 @admin.register(get_user_model())
 class AppUserAdmin(UserAdmin):
     add_form_template = "admin/change_form.html"
+    add_form = AppUserCreationForm
     add_fieldsets = (
         (None, {"classes": ("wide",), "fields": ("email", "first_name", "last_name")}),
     )
@@ -296,11 +311,10 @@ class AppUserAdmin(UserAdmin):
     class Media:
         css = {"all": ("data-workspace-admin.css",)}
 
-    def has_add_permission(self, request):
-        return False
-
     @transaction.atomic
     def save_model(self, request, obj, form, change):
+        obj.username = form.cleaned_data["email"]
+
         def log_change(event_type, permission, message):
             log_permission_change(
                 request.user, obj, event_type, {"permission": permission}, message
