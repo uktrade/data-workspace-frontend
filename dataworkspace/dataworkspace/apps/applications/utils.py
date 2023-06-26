@@ -1751,14 +1751,11 @@ def sync_all_sso_users():
                 logger.info("Syncing SSO record for user %s", sso_id)
 
                 try:
-                    user = all_users.get(Q(username=sso_id) | Q(profile__sso_id=sso_id))
+                    user = all_users.get(username=sso_id)
                 except user_model.DoesNotExist:
                     continue
 
                 changed = False
-
-                if user.username != sso_id:
-                    user.username = sso_id
 
                 if user.first_name != obj["dit:firstName"]:
                     changed = True
