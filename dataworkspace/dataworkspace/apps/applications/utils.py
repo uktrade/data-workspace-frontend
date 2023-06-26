@@ -992,6 +992,8 @@ def create_user_from_sso(
     try:
         # Attempt to find a user with the given SSO ID
         user = user_model.objects.get(Q(username=sso_id) | Q(profile__sso_id=sso_id))
+    except user_model.MultipleObjectsReturned:
+        user = user_model.objects.get(profile__sso_id=sso_id)
     except user_model.DoesNotExist:
         # If the user doesn't exist we will have to create it
         user = user_model.objects.create(
