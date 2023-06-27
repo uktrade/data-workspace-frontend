@@ -72,30 +72,34 @@ def public_error_403_html_view(request, exception=None):
 
 def public_error_403_visualisation_html_view(request, exception=None):
     default_template = "errors/error_403_visualisation.html"
-    visualisation_catalogue_name = request.META.get("QUERY_STRING", "").split("%3D")[-1]
+    host_basename = request.GET.get("host")
 
+    contact_email = None
     try:
-        visualisation_catalogue_item = VisualisationTemplate.objects.get(
-            host_basename=visualisation_catalogue_name
-        ).visualisationcatalogueitem.information_asset_manager.email
+        vis_template = VisualisationTemplate.objects.get(host_basename=host_basename)
     except VisualisationTemplate.DoesNotExist:
-        visualisation_catalogue_item = None
+        pass
+    else:
+        catalogue_item = vis_template.visualisationcatalogueitem
+        if catalogue_item.enquiries_contact is not None:
+            contact_email = catalogue_item.enquiries_contact.email
+        elif catalogue_item.information_asset_manager is not None:
+            contact_email = catalogue_item.information_asset_manager.email
 
-    parameter_value = visualisation_catalogue_item
     if exception is None:
         return render(
             request,
             default_template,
             context={
                 "peer_ip": request.META.get("HTTP_X_FORWARDED_FOR"),
-                "param": parameter_value,
+                "contact_email": contact_email,
             },
             status=403,
         )
     return render(
         request,
         getattr(exception, "template_name", default_template),
-        {**getattr(exception, "template_context", {}), "param": parameter_value},
+        {**getattr(exception, "template_context", {}), "contact_email": contact_email},
         status=403,
     )
 
