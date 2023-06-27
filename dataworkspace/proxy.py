@@ -12,6 +12,7 @@ import sys
 import string
 import uuid
 import urllib
+from urllib.parse import urlencode
 
 import aiohttp
 import ecs_logging
@@ -447,12 +448,12 @@ async def async_main():
             params = {"message": exception.args[0]} if user_exception else {}
             status = exception.args[1] if user_exception else 500
             error_url = exception.args[2] if len(exception.args) > 2 else f"/error_{status}"
-
+            error_qs = exception.args[3] if len(exception.args) > 3 else {}
             return await handle_http(
                 downstream_request,
                 "GET",
                 CIMultiDict(admin_headers_request(downstream_request)),
-                URL(admin_root).with_path(error_url),
+                URL(admin_root).with_path(error_url).with_query(error_qs),
                 params,
                 b"",
                 default_http_timeout,
@@ -483,9 +484,10 @@ async def async_main():
 
         if response.status != 200 and response.status != 404:
             raise UserException(
-                f"Unable to start the application&visualisation_catalogue_item={str(response.url).split('/')[-1]}",
+                f"Unable to start the application",
                 response.status,
                 "/error_403_visualisation",
+                {"host": str(response.url).rsplit("/", maxsplit=1)[-1]},
             )
 
         if host_exists and application["state"] not in ["SPAWNING", "RUNNING"]:

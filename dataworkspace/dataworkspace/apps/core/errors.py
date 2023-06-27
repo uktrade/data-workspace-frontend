@@ -1,7 +1,11 @@
+import logging
 from django.core.exceptions import PermissionDenied
+
+logger = logging.getLogger("app")
 
 
 class BasePermissionDeniedError(PermissionDenied):
+    logger.debug("Logging is occurring")
     redirect_url = "/error_403"
 
 

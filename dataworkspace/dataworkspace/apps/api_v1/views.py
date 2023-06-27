@@ -103,10 +103,12 @@ def application_api_view(request, public_host):
     try:
         is_allowed = application_api_is_allowed(request, public_host)
     except PermissionDenied as e:
-        return JsonResponse({"redirect_url": getattr(e, "redirect_url", "/error_403")}, status=403)
+        return JsonResponse(
+            {"redirect_url": getattr(e, "redirect_url", "/error_403?param=1234")}, status=403
+        )
 
     return (
-        JsonResponse({"redirect_url": "/error_403"}, status=403)
+        JsonResponse({"redirect_url": "/error_403?param=5678"}, status=403)
         if not is_allowed
         else application_api_GET(request, public_host)
         if request.method == "GET"
