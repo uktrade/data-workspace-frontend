@@ -2604,7 +2604,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
 
         links += self.visualisationlink_set.all()
 
-        return links
+        return sorted(links, key=lambda x: x.name)
 
     def user_has_access(self, user):
         user_email_domain = user.email.split("@")[1]
