@@ -21,7 +21,6 @@ from django.views.generic import FormView
 from requests import HTTPError
 from dataworkspace.apps.applications.models import VisualisationTemplate
 from dataworkspace.apps.core.boto3_client import get_s3_client
-from dataworkspace.apps.applications.models import VisualisationTemplate
 from dataworkspace.apps.core.forms import (
     NewsletterSubscriptionForm,
     SupportForm,

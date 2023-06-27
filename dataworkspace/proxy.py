@@ -12,7 +12,6 @@ import sys
 import string
 import uuid
 import urllib
-from urllib.parse import urlencode
 
 import aiohttp
 import ecs_logging
@@ -484,7 +483,7 @@ async def async_main():
 
         if response.status != 200 and response.status != 404:
             raise UserException(
-                f"Unable to start the application",
+                "Unable to start the application",
                 response.status,
                 "/error_403_visualisation",
                 {"host": str(response.url).rsplit("/", maxsplit=1)[-1]},

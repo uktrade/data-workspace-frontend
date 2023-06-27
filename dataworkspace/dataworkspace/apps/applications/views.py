@@ -11,7 +11,6 @@ import boto3
 import botocore
 import pglast
 import waffle
-import logging
 
 from botocore.config import Config
 from csp.decorators import csp_exempt, csp_update
@@ -95,7 +94,6 @@ from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.notify import decrypt_token, send_email
 from dataworkspace.zendesk import update_zendesk_ticket
 
-logger = logging.getLogger("app")
 
 TOOL_LOADING_MESSAGES = [
     {
@@ -357,7 +355,6 @@ def visualisation_link_html_view(request, link_id):
 
 
 def visualisations_html_view(request):
-    logger.debug("Dev access %s", "90")
     if not request.user.has_perm("applications.develop_visualisations"):
         raise ManageVisualisationsPermissionDeniedError(
             "manage visualisations", "To request access"
@@ -437,9 +434,7 @@ def visualisations_html_GET(request):
 
 
 def visualisation_branch_html_view(request, gitlab_project_id, branch_name):
-    logger.debug("Dev access %s", "10")
     if not request.user.has_perm("applications.develop_visualisations"):
-        logger.debug("Dev access %s", "1")
         raise ManageVisualisationsPermissionDeniedError(
             "manage visualisations", "To request access"
         )
@@ -447,7 +442,6 @@ def visualisation_branch_html_view(request, gitlab_project_id, branch_name):
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
-        logger.debug("Dev access %s", "visualisation_branch_html_view")
         raise DeveloperPermissionRequiredError(gitlab_project["name"])
 
     if request.method == "GET":
@@ -569,9 +563,7 @@ def visualisation_branch_html_POST(request, gitlab_project, branch_name):
 
 
 def visualisation_users_with_access_html_view(request, gitlab_project_id):
-    logger.debug("Dev access %s", "20")
     if not request.user.has_perm("applications.develop_visualisations"):
-        logger.debug("Dev access %s", "2")
         raise ManageVisualisationsPermissionDeniedError(
             "manage visualisations", "To request access"
         )
@@ -579,7 +571,6 @@ def visualisation_users_with_access_html_view(request, gitlab_project_id):
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
-        logger.debug("Dev access %s", "visualisation_users_with_access_html_view")
         raise DeveloperPermissionRequiredError(gitlab_project["name"])
 
     if request.method == "GET":
@@ -658,9 +649,7 @@ def visualisation_users_with_access_html_POST(request, gitlab_project):
 
 
 def visualisation_users_give_access_html_view(request, gitlab_project_id):
-    logger.debug("Dev access %s", "30")
     if not request.user.has_perm("applications.develop_visualisations"):
-        logger.debug("Dev access %s", "3")
         raise ManageVisualisationsPermissionDeniedError(
             "manage visualisations", "To request access"
         )
@@ -668,7 +657,6 @@ def visualisation_users_give_access_html_view(request, gitlab_project_id):
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
-        logger.debug("Dev access %s", "visualisation_users_give_access_html_view")
         raise DeveloperPermissionRequiredError(gitlab_project["name"])
 
     token = request.GET.get("token")
@@ -919,16 +907,13 @@ def _render_visualisation(
 
 
 def visualisation_catalogue_item_html_view(request, gitlab_project_id):
-    logger.debug("Dev access %s", "40")
     if not request.user.has_perm("applications.develop_visualisations"):
-        logger.debug("Dev access %s", "4")
         raise ManageVisualisationsPermissionDeniedError(
             "manage visualisations", "To request access"
         )
 
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
-        logger.debug("Dev access %s", "visualisation_catalogue_item_html_view")
         raise DeveloperPermissionRequiredError(gitlab_project["name"])
 
     if request.method == "GET":
@@ -1014,9 +999,7 @@ def visualisation_catalogue_item_html_POST(request, gitlab_project):
 
 
 def visualisation_approvals_html_view(request, gitlab_project_id):
-    logger.debug("Dev access %s", "50")
     if not request.user.has_perm("applications.develop_visualisations"):
-        logger.debug("Dev access %s", "5")
         raise ManageVisualisationsPermissionDeniedError(
             "manage visualisations", "To request access"
         )
@@ -1024,7 +1007,6 @@ def visualisation_approvals_html_view(request, gitlab_project_id):
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
-        logger.debug("Dev access %s", "visualisation_approvals_html_view")
         raise DeveloperPermissionRequiredError(gitlab_project["name"])
 
     if request.method == "GET":
@@ -1104,9 +1086,7 @@ def visualisation_approvals_html_POST(request, gitlab_project):
 
 
 def visualisation_datasets_html_view(request, gitlab_project_id):
-    logger.debug("Dev access %s", "60")
     if not request.user.has_perm("applications.develop_visualisations"):
-        logger.debug("Dev access %s", "6")
         raise ManageVisualisationsPermissionDeniedError(
             "manage visualisations", "To request access"
         )
@@ -1114,7 +1094,6 @@ def visualisation_datasets_html_view(request, gitlab_project_id):
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
-        logger.debug("Dev access %s", "visualisation_datasets_html_view")
         raise DeveloperPermissionRequiredError(gitlab_project["name"])
 
     if request.method == "GET":
@@ -1387,9 +1366,7 @@ def _datasets(user, application_template):
 
 
 def visualisation_publish_html_view(request, gitlab_project_id):
-    logger.debug("Dev access %s", "7")
     if not request.user.has_perm("applications.develop_visualisations"):
-        logger.debug("Dev access %s", "70")
         raise ManageVisualisationsPermissionDeniedError(
             "manage visualisations", "To request access"
         )
@@ -1397,7 +1374,6 @@ def visualisation_publish_html_view(request, gitlab_project_id):
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
-        logger.debug("Dev access %s", "visualisation_publish_html_view")
         raise DeveloperPermissionRequiredError(gitlab_project["name"])
 
     if request.method == "GET":
@@ -1648,11 +1624,9 @@ def _download_log(filename, events):
 
 
 def visualisation_latest_log_GET(request, gitlab_project_id, commit_id):
-    logger.debug("Dev access %s", "80")
     gitlab_project = _visualisation_gitlab_project(gitlab_project_id)
 
     if not gitlab_has_developer_access(request.user, gitlab_project_id):
-        logger.debug("Dev access %s", "visualisation_latest_log_GET")
         raise DeveloperPermissionRequiredError(gitlab_project["name"])
 
     application_template = _application_template(gitlab_project)
