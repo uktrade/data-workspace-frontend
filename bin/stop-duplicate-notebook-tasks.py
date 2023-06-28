@@ -59,6 +59,10 @@ def main():
         f"Found {total_task_definitions} unique task definitions (out of {total_running_tasks} running tasks)"
     )
     if args.dry_run or (total_running_tasks - total_task_definitions) == 0:
+        for task_def_arn, task_details in running_tasks.items():
+            if len(task_details) <= 1:
+                continue
+            print(f"Task def {task_def_arn} has {len(task_details)} running tasks.")
         sys.exit()
 
     print("Stopping tasks...")
