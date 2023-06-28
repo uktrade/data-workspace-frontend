@@ -207,10 +207,7 @@
                       View/Download
                     </a>
                   {% else %}
-                    <a class="govuk-link"
-                       href="{% url "datasets:dataset_query_preview" dataset_uuid=dataset.id query_id=datacut_link.id %}">
-                      Preview
-                    </a>
+                    <p class="govuk-body">No preview available</p>
                   {% endif %}
                 {% else %}
                   <p class="govuk-body">No preview available</p>

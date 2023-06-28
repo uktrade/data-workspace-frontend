@@ -200,13 +200,8 @@
                        href="{% url "datasets:source_table_detail" dataset_uuid=dataset.id object_id=source_table.id %}">
                       View table
                     </a>
-                  {% else %}
-                    <a class="govuk-link"
-                       href="{% url "datasets:dataset_table_preview" dataset_uuid=dataset.id table_uuid=source_table.id %}">
-                      Preview
-                    </a>
+                    <br>
                   {% endif %}
-                  <br>
                   {% if model.dictionary_published or request.user|can_edit_dataset:model %}
                   <a href="{% url "datasets:data_dictionary" source_uuid=source_table.id %}?dataset_uuid={{dataset.id}}"
                   class="govuk-link">
