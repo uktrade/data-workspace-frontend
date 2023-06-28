@@ -816,7 +816,7 @@ class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStamp
     )
     list_filter = ("tags",)
     search_fields = ["name"]
-    autocomplete_fields = ["tags"]
+    autocomplete_fields = ["tags", "data_catalogue_editors"]
     fieldsets = [
         (
             None,
