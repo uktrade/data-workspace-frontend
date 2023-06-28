@@ -11,7 +11,6 @@ import boto3
 import botocore
 import pglast
 import waffle
-
 from botocore.config import Config
 from csp.decorators import csp_exempt, csp_update
 from django.conf import settings
@@ -93,7 +92,6 @@ from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.notify import decrypt_token, send_email
 from dataworkspace.zendesk import update_zendesk_ticket
-
 
 TOOL_LOADING_MESSAGES = [
     {
