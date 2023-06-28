@@ -49,7 +49,6 @@ urlpatterns = [
     path("error_403_csrf", public_error_403_csrf_html_view),
     path("error_403_tool_access", public_error_403_tool_permission_denied_html_view),
     path("error_403_tool_invalid", public_error_403_invalid_tool_user_html_view),
-    path("error_403_visualisation", public_error_403_visualisation_html_view),
     path("error_404", public_error_404_html_view),
     path("error_500", public_error_500_html_view),
     path("appstream/", login_required(appstream_view), name="appstream"),
