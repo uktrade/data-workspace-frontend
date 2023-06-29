@@ -19,6 +19,7 @@ from django.urls import reverse
 from django.views import View
 from django.views.generic import FormView
 from requests import HTTPError
+from dataworkspace.apps.applications.models import VisualisationTemplate
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.forms import (
     NewsletterSubscriptionForm,
@@ -65,6 +66,40 @@ def public_error_403_html_view(request, exception=None):
         request,
         getattr(exception, "template_name", default_template),
         getattr(exception, "template_context", {}),
+        status=403,
+    )
+
+
+def public_error_403_visualisation_html_view(request, exception=None):
+    default_template = "errors/error_403_visualisation.html"
+    host_basename = request.GET.get("host")
+
+    contact_email = None
+    try:
+        vis_template = VisualisationTemplate.objects.get(host_basename=host_basename)
+    except VisualisationTemplate.DoesNotExist:
+        pass
+    else:
+        catalogue_item = vis_template.visualisationcatalogueitem
+        if catalogue_item.enquiries_contact is not None:
+            contact_email = catalogue_item.enquiries_contact.email
+        elif catalogue_item.information_asset_manager is not None:
+            contact_email = catalogue_item.information_asset_manager.email
+
+    if exception is None:
+        return render(
+            request,
+            default_template,
+            context={
+                "peer_ip": request.META.get("HTTP_X_FORWARDED_FOR"),
+                "contact_email": contact_email,
+            },
+            status=403,
+        )
+    return render(
+        request,
+        getattr(exception, "template_name", default_template),
+        {**getattr(exception, "template_context", {}), "contact_email": contact_email},
         status=403,
     )
 
