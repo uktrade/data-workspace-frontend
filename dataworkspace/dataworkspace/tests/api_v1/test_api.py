@@ -45,7 +45,7 @@ class TestApplicationAPI(BaseTestCase):
         )
         # pylint: disable=maybe-no-member
         self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.json(), {"redirect_url": "/error_403?param=1234"})
+        self.assertEqual(response.json(), {"redirect_url": "/error_403"})
 
     @mock.patch("dataworkspace.apps.api_v1.views.application_api_is_allowed")
     def test_custom_403(self, mock_api_allowed):
