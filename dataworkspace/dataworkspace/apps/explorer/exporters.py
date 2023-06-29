@@ -1,10 +1,13 @@
 import csv
 import json
+import re
 import string
 import uuid
 from datetime import datetime
 from io import BytesIO, StringIO
+from numbers import Number
 
+import waffle
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils.module_loading import import_string
@@ -27,6 +30,16 @@ class BaseExporter:
         self.querylog = querylog
         self.request = request
         self.user = request.user
+
+    @staticmethod
+    def _escape_field(field):
+        if not waffle.switch_is_active(settings.EXPLORER_CSV_INJECTION_PROTECTION_FLAG):
+            return field
+        # Allow numbers or numbers that are prefixed with . or -
+        if isinstance(field, Number) or re.search(r"^([.\-]\d|-.\d|\d)", field):
+            return field
+        # Insert a ' as the first char if the string starts with =, +, - or @
+        return re.sub(r"^([=+\-@])", r"'\1", field)
 
     def get_output(self, **kwargs):
         value = self.get_file_output(**kwargs).getvalue()
@@ -66,7 +79,7 @@ class CSVExporter(BaseExporter):
         writer = csv.writer(csv_data, delimiter=delim)
         writer.writerow(headers)
         for row in data:
-            writer.writerow(row)
+            writer.writerow([self._escape_field(field) for field in row])
         return csv_data
 
 
@@ -121,7 +134,7 @@ class ExcelExporter(BaseExporter):
                 # JSON and Array fields
                 if isinstance(data_row, (dict, list)):
                     data_row = json.dumps(data_row)
-                ws.write(row, col, data_row)
+                ws.write(row, col, self._escape_field(data_row))
                 col += 1
             row += 1
             col = 0
