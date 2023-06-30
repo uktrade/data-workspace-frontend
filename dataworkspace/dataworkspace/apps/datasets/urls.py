@@ -31,16 +31,6 @@ urlpatterns = [
         name="dataset_query_download",
     ),
     path(
-        "<uuid:dataset_uuid>/query/<int:query_id>/preview",
-        login_required(views.CustomDatasetQueryPreviewView.as_view()),
-        name="dataset_query_preview",
-    ),
-    path(
-        "<uuid:dataset_uuid>/table/<uuid:table_uuid>/preview",
-        login_required(views.SourceTablePreviewView.as_view()),
-        name="dataset_table_preview",
-    ),
-    path(
         "<uuid:dataset_uuid>/table/<uuid:table_uuid>/columns",
         login_required(views.SourceTableColumnDetails.as_view()),
         name="source_table_column_details",

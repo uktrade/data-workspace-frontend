@@ -958,9 +958,6 @@ class SourceLink(ReferenceNumberedDatasetSource):
     def get_absolute_url(self):
         return reverse("datasets:dataset_source_link_download", args=(self.dataset_id, self.id))
 
-    def get_preview_url(self):
-        return reverse("datasets:data_cut_source_link_preview", args=(self.dataset_id, self.id))
-
     def show_column_filter(self):
         # this will be enabled in subsequent PR
         return False
@@ -1060,9 +1057,6 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
 
     def get_absolute_url(self):
         return reverse("datasets:dataset_query_download", args=(self.dataset_id, self.id))
-
-    def get_preview_url(self):
-        return reverse("datasets:data_cut_query_preview", args=(self.dataset_id, self.id))
 
     def show_column_filter(self):
         return True

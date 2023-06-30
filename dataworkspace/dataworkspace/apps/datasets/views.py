@@ -1,7 +1,6 @@
 import json
 import logging
 import uuid
-from abc import ABCMeta, abstractmethod
 from collections import defaultdict, namedtuple
 from itertools import chain
 from typing import Set
@@ -17,7 +16,6 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
 from django.core import serializers
-from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db import connections, ProgrammingError
 from django.db.models import (
@@ -69,7 +67,6 @@ from dataworkspace.apps.core.utils import (
     streaming_query_response,
     table_data,
     view_exists,
-    get_random_data_sample,
 )
 from dataworkspace.apps.core.models import (
     Database,
@@ -615,7 +612,6 @@ class DatasetDetailView(DetailView):
                 )
             )
         ctx["model"] = self.object
-        ctx["DATA_CUT_ENHANCED_PREVIEW_FLAG"] = settings.DATA_CUT_ENHANCED_PREVIEW_FLAG
         ctx["DATASET_CHANGELOG_PAGE_FLAG"] = settings.DATASET_CHANGELOG_PAGE_FLAG
         ctx["DATA_UPLOADER_UI_FLAG"] = settings.DATA_UPLOADER_UI_FLAG
 
@@ -865,94 +861,6 @@ class CustomDatasetQueryDownloadView(DetailView):
         )
 
 
-class DatasetPreviewView(DetailView, metaclass=ABCMeta):
-    @property
-    @abstractmethod
-    def model(self):
-        pass
-
-    @abstractmethod
-    def get_preview_data(self, dataset):
-        pass
-
-    def get(self, request, *args, **kwargs):
-        user = self.request.user
-        dataset = find_dataset(self.kwargs.get("dataset_uuid"), user)
-
-        if not dataset.user_has_access(user):
-            return HttpResponseForbidden()
-
-        source_object, columns, query = self.get_preview_data(dataset)
-
-        records = []
-        sample_size = settings.DATASET_PREVIEW_NUM_OF_ROWS
-        if columns:
-            rows = get_random_data_sample(
-                source_object.database.memorable_name,
-                sql.SQL(query),
-                sample_size,
-            )
-            for row in rows:
-                record_data = {}
-                for i, column in enumerate(columns):
-                    record_data[column] = row[i]
-                records.append(record_data)
-
-        can_download = source_object.can_show_link_for_user(user)
-
-        return render(
-            request,
-            "datasets/dataset_preview.html",
-            {
-                "dataset": dataset,
-                "source_object": source_object,
-                "fields": columns,
-                "records": records,
-                "preview_limit": sample_size,
-                "record_count": len(records),
-                "fixed_table_height_limit": 10,
-                "truncate_limit": 100,
-                "can_download": can_download,
-                "type": source_object.type,
-            },
-        )
-
-
-class SourceTablePreviewView(DatasetPreviewView):
-    model = SourceTable
-
-    def get_preview_data(self, dataset):
-        source_table_object = get_object_or_404(
-            self.model, id=self.kwargs.get("table_uuid"), dataset=dataset
-        )
-        database_name = source_table_object.database.memorable_name
-        table_name = source_table_object.table
-        schema_name = source_table_object.schema
-        columns = datasets_db.get_columns(database_name, schema=schema_name, table=table_name)
-        preview_query = f"""
-            select * from "{schema_name}"."{table_name}"
-        """
-        return source_table_object, columns, preview_query
-
-
-class CustomDatasetQueryPreviewView(DatasetPreviewView):
-    model = CustomDatasetQuery
-
-    def get_preview_data(self, dataset):
-        query_object = get_object_or_404(
-            self.model, id=self.kwargs.get("query_id"), dataset=dataset
-        )
-
-        if not query_object.reviewed and not self.request.user.is_superuser:
-            raise PermissionDenied()
-
-        database_name = query_object.database.memorable_name
-        columns = datasets_db.get_columns(database_name, query=query_object.query)
-        preview_query = query_object.query
-
-        return query_object, columns, preview_query
-
-
 class SourceTableColumnDetails(View):
     def get(self, request, dataset_uuid, table_uuid):
         dataset = find_dataset(dataset_uuid, request.user, MasterDataset)
@@ -1064,8 +972,7 @@ class RelatedVisualisationsView(View):
         return HttpResponse(status=500)
 
 
-class DataCutPreviewView(WaffleFlagMixin, DetailView):
-    waffle_flag = settings.DATA_CUT_ENHANCED_PREVIEW_FLAG
+class DataCutPreviewView(DetailView):
     template_name = "datasets/data_cut_preview.html"
 
     def dispatch(self, request, *args, **kwargs):

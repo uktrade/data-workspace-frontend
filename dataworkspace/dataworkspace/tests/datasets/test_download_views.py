@@ -10,97 +10,10 @@ from django.test import override_settings
 from django.urls import reverse
 
 from dataworkspace.apps.core.utils import database_dsn
-from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType
+from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import SourceLink, DataSet
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.tests import factories
-
-
-@pytest.mark.parametrize(
-    "access_type", (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
-)
-def test_master_dataset_with_access_preview(access_type, client, dataset_db):
-    ds = factories.DataSetFactory.create(
-        type=DataSetType.MASTER,
-        user_access_type=access_type,
-        published=True,
-    )
-    source_table = factories.SourceTableFactory(
-        dataset=ds,
-        name="source_table1",
-        database=dataset_db,
-        schema="public",
-        table="dataset_test",
-        data_grid_enabled=False,
-    )
-
-    response = client.get(ds.get_absolute_url())
-
-    assert response.status_code == 200
-    assert f'href="/datasets/{ds.id}/table/{source_table.id}/preview"' in response.rendered_content
-    assert "Preview" in response.rendered_content
-
-
-def test_master_dataset_no_access_preview(client, dataset_db):
-    ds = factories.DataSetFactory.create(
-        type=DataSetType.MASTER,
-        user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
-        published=True,
-    )
-    source_table = factories.SourceTableFactory(
-        dataset=ds,
-        name="source_table1",
-        database=dataset_db,
-        schema="public",
-        table="dataset_test",
-        data_grid_enabled=False,
-    )
-
-    response = client.get(ds.get_absolute_url())
-
-    assert response.status_code == 200
-    assert (
-        f'href="/datasets/{ds.id}/table/{source_table.id}/preview"'
-        not in response.rendered_content
-    )
-
-
-@pytest.mark.parametrize(
-    "access_type", (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
-)
-def test_query_data_cut_preview_staff_user(access_type, staff_client, dataset_db):
-    ds = factories.DataSetFactory.create(
-        user_access_type=access_type,
-        published=True,
-    )
-    cut = factories.CustomDatasetQueryFactory(
-        dataset=ds,
-        database=dataset_db,
-        query="SELECT id customid, name customname FROM dataset_test",
-        reviewed=False,
-    )
-    response = staff_client.get(ds.get_absolute_url())
-
-    # non reviewed query should have a preview link
-    assert f'href="/datasets/{ds.id}/query/{cut.id}/preview"' in response.rendered_content
-    assert "Preview" in response.rendered_content
-
-
-def test_query_data_cut_preview_staff_user_no_access(staff_client, dataset_db):
-    ds = factories.DataSetFactory.create(
-        user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
-        published=True,
-    )
-    cut = factories.CustomDatasetQueryFactory(
-        dataset=ds,
-        database=dataset_db,
-        query="SELECT id customid, name customname FROM dataset_test",
-        reviewed=False,
-    )
-    response = staff_client.get(ds.get_absolute_url())
-
-    # staff user with no access should not have a preview link
-    assert f'href="/datasets/{ds.id}/query/{cut.id}/preview"' not in response.rendered_content
 
 
 @pytest.mark.parametrize(
