@@ -33,6 +33,7 @@ class DataExplorerQueryResultsPermissionError(BasePermissionDeniedError):
 class ManageVisualisationsPermissionDeniedError(BasePermissionDeniedError):
     template_name = "errors/manage_visualisations_permission_denied.html"
 
+
 class DatasetsVisulaisationPermissionDeniedErrorM(BasePermissionDeniedError):
     template_name = "errors/dataset_error.html"
 
