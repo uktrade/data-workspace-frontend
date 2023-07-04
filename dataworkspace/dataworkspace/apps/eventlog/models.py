@@ -53,6 +53,8 @@ class EventLog(models.Model):
     TYPE_USER_TOOL_ECS_STARTED = 46
     TYPE_USER_TOOL_STOPPED = 47
     TYPE_USER_TOOL_LINK_STARTED = 48
+    TYPE_DATA_CATALOGUE_EDITOR_ADDED = 49
+    TYPE_DATA_CATALOGUE_EDITOR_REMOVED = 50
 
     _TYPE_CHOICES = (
         (TYPE_DATASET_SOURCE_LINK_DOWNLOAD, "Dataset source link download"),
@@ -105,6 +107,8 @@ class EventLog(models.Model):
         (TYPE_USER_TOOL_ECS_STARTED, "Tool started (ECS)"),
         (TYPE_USER_TOOL_STOPPED, "Tool stopped by user"),
         (TYPE_USER_TOOL_LINK_STARTED, "Tool started (Link)"),
+        (TYPE_DATA_CATALOGUE_EDITOR_ADDED, "Data Catalogue Editor user added"),
+        (TYPE_DATA_CATALOGUE_EDITOR_REMOVED, "Data Catalogue Editor user removed"),
     )
     user = models.ForeignKey(get_user_model(), on_delete=models.DO_NOTHING, related_name="events")
     id = models.BigAutoField(primary_key=True)

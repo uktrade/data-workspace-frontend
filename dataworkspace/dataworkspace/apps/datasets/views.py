@@ -1503,7 +1503,18 @@ def remove_authorised_editor(request, pk, user_id):
     user = get_user_model().objects.get(id=user_id)
 
     dataset.data_catalogue_editors.remove(user)
-
+    log_event(
+        request.user,
+        EventLog.TYPE_DATA_CATALOGUE_EDITOR_REMOVED,
+        dataset,
+        extra={
+            "removed_user": {
+                "id": user.id,  # pylint: disable=no-member
+                "email": user.email,  # pylint: disable=no-member
+                "name": user.get_full_name(),  # pylint: disable=no-member
+            }
+        },
+    )
     return HttpResponseRedirect(
         reverse(
             "datasets:edit_data_editors",
@@ -1634,6 +1645,18 @@ class DatasetAddAuthorisedEditorsView(EditBaseView, View):
         for selected_user in selected_users:
             user = get_object_or_404(get_user_model(), id=selected_user)
             dataset.data_catalogue_editors.add(user)
+            log_event(
+                request.user,
+                EventLog.TYPE_DATA_CATALOGUE_EDITOR_ADDED,
+                dataset,
+                extra={
+                    "added_user": {
+                        "id": user.id,  # pylint: disable=no-member
+                        "email": user.email,  # pylint: disable=no-member
+                        "name": user.get_full_name(),  # pylint: disable=no-member
+                    }
+                },
+            )
 
         return HttpResponseRedirect(
             reverse(
