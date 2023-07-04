@@ -72,6 +72,8 @@ from dataworkspace.apps.dw_admin.forms import (
     VisualisationCatalogueItemForm,
     VisualisationLinkForm,
 )
+from dataworkspace.apps.eventlog.models import EventLog
+from dataworkspace.apps.eventlog.utils import log_event
 
 logger = logging.getLogger("app")
 
@@ -327,6 +329,38 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
         authorized_users = set(
             form.cleaned_data.get("authorized_users", get_user_model().objects.none())
         )
+
+        for added_user in form.cleaned_data["data_catalogue_editors"].difference(
+            obj.data_catalogue_editors.all()
+        ):
+            log_event(
+                request.user,
+                EventLog.TYPE_DATA_CATALOGUE_EDITOR_ADDED,
+                obj,
+                extra={
+                    "added_user": {
+                        "id": added_user.id,  # pylint: disable=no-member
+                        "email": added_user.email,  # pylint: disable=no-member
+                        "name": added_user.get_full_name(),  # pylint: disable=no-member
+                    }
+                },
+            )
+
+        for removed_user in obj.data_catalogue_editors.difference(
+            form.cleaned_data["data_catalogue_editors"]
+        ):
+            log_event(
+                request.user,
+                EventLog.TYPE_DATA_CATALOGUE_EDITOR_REMOVED,
+                obj,
+                extra={
+                    "removed_user": {
+                        "id": removed_user.id,  # pylint: disable=no-member
+                        "email": removed_user.email,  # pylint: disable=no-member
+                        "name": removed_user.get_full_name(),  # pylint: disable=no-member
+                    }
+                },
+            )
 
         super().save_model(request, obj, form, change)
 
