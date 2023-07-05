@@ -36,10 +36,14 @@ class BaseExporter:
         if not waffle.switch_is_active(settings.EXPLORER_CSV_INJECTION_PROTECTION_FLAG):
             return field
         # Allow numbers or numbers that are prefixed with . or -
-        if isinstance(field, Number) or re.search(r"^([.\-]\d|-.\d|\d)", field):
+        if (
+            field is None
+            or isinstance(field, (Number, list, dict))
+            or re.search(r"^([.\-]\d|-.\d|\d)", str(field))
+        ):
             return field
         # Insert a ' as the first char if the string starts with =, +, - or @
-        return re.sub(r"^([=+\-@])", r"'\1", field)
+        return re.sub(r"^([=+\-@])", r"'\1", str(field))
 
     def get_output(self, **kwargs):
         value = self.get_file_output(**kwargs).getvalue()
