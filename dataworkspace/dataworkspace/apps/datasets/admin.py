@@ -330,9 +330,32 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
             form.cleaned_data.get("authorized_users", get_user_model().objects.none())
         )
 
-        for added_user in form.cleaned_data["data_catalogue_editors"].difference(
-            obj.data_catalogue_editors.all()
-        ):
+        added_users = (
+            form.cleaned_data["data_catalogue_editors"].difference(
+                obj.data_catalogue_editors.all()
+            )
+            if change
+            else form.cleaned_data["data_catalogue_editors"]
+        )
+
+        removed_users = (
+            obj.data_catalogue_editors.difference(form.cleaned_data["data_catalogue_editors"])
+            if change
+            else []
+        )
+
+        super().save_model(request, obj, form, change)
+
+        process_dataset_authorized_users_change(
+            authorized_users,
+            request.user,
+            obj,
+            "user_access_type" in form.changed_data,
+            "authorized_email_domains" in form.changed_data,
+            isinstance(self, MasterDatasetAdmin),
+        )
+
+        for added_user in added_users:
             log_event(
                 request.user,
                 EventLog.TYPE_DATA_CATALOGUE_EDITOR_ADDED,
@@ -346,9 +369,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
                 },
             )
 
-        for removed_user in obj.data_catalogue_editors.difference(
-            form.cleaned_data["data_catalogue_editors"]
-        ):
+        for removed_user in removed_users:
             log_event(
                 request.user,
                 EventLog.TYPE_DATA_CATALOGUE_EDITOR_REMOVED,
@@ -361,17 +382,6 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
                     }
                 },
             )
-
-        super().save_model(request, obj, form, change)
-
-        process_dataset_authorized_users_change(
-            authorized_users,
-            request.user,
-            obj,
-            "user_access_type" in form.changed_data,
-            "authorized_email_domains" in form.changed_data,
-            isinstance(self, MasterDatasetAdmin),
-        )
 
 
 @admin.register(MasterDataset)
