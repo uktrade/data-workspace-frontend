@@ -159,7 +159,14 @@ function initDataGrid(
       };
     } else if (column.dataType === "array") {
       column.filterParams = {
-        filterOptions: ["contains", "notContains", "equals", "notEqual"],
+        filterOptions: [
+          "contains",
+          "notContains",
+          "equals",
+          "notEqual",
+          "blank",
+          "notBlank",
+        ],
       };
     }
 
