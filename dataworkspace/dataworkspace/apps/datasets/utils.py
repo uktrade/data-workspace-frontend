@@ -505,10 +505,6 @@ def build_filtered_dataset_query(inner_query, download_limit, column_config, par
                             f"LOWER(STRING_TO_ARRAY(%({field})s, ',')::text) != LOWER({{}}::TEXT) or {{}} is NULL"
                         ).format(Identifier(field), Identifier(field))
                     )
-                if filter_data["type"] == "blank":
-                    where_clause.append(SQL("{{}} IS NULL").format(Identifier(field)))
-                if filter_data["type"] == "notBlank":
-                    where_clause.append(SQL("{{}} IS NOT NULL").format(Identifier(field)))
 
             elif data_type == "text" and filter_data["type"] == "contains":
                 query_params[field] = f"%{terms[0]}%"
@@ -563,11 +559,9 @@ def build_filtered_dataset_query(inner_query, download_limit, column_config, par
                 operator = "<" if filter_data["type"] == "lessThan" else "<="
                 where_clause.append(SQL(f"{{}} {operator} %({field})s").format(Identifier(field)))
             elif filter_data["type"] == "blank":
-                where_clause.append(SQL("COALESCE({{}}::TEXT, '') = ''").format(Identifier(field)))
+                where_clause.append(SQL("COALESCE({}::TEXT, '') = ''").format(Identifier(field)))
             elif filter_data["type"] == "notBlank":
-                where_clause.append(
-                    SQL("COALESCE({{}}::TEXT, '') != ''").format(Identifier(field))
-                )
+                where_clause.append(SQL("COALESCE({}::TEXT, '') != ''").format(Identifier(field)))
 
     if where_clause:
         where_clause = SQL(" WHERE ") + SQL(" AND ").join(where_clause)
