@@ -70,6 +70,9 @@ class ApplicationInstanceAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         return False
 
+    def has_delete_permission(self, request, obj=None):
+        return False
+
     def max_cpu(self, obj):
         try:
             max_cpu, ts_at_max = application_instance_max_cpu(obj)
