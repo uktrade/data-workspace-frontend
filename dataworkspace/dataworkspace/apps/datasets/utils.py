@@ -998,6 +998,7 @@ def send_notification_emails():
 
                     if not change:
                         logger.error("get_change_item returned None")
+                        continue
 
                     change_date = change["change_date"]
 
