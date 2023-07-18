@@ -1110,13 +1110,21 @@ def _do_create_tools_access_iam_role(user_id):
 @celery_app.task(autoretry_for=(redis.exceptions.LockError,))
 @close_all_connections_if_not_in_atomic_block
 def sync_activity_stream_sso_users():
-    with cache.lock("activity_stream_sync_last_published_lock", blocking_timeout=0, timeout=1800):
-        _do_sync_activity_stream_sso_users()
+    try:
+        with cache.lock(
+            "activity_stream_sync_last_published_lock", blocking_timeout=0, timeout=1800
+        ):
+            _do_sync_activity_stream_sso_users()
+    except redis.exceptions.LockError:
+        logger.info("Unable to acquire lock to sync activity stream sso users")
 
 
 def _do_sync_activity_stream_sso_users():
     last_published = cache.get(
         "activity_stream_sync_last_published", datetime.datetime.utcfromtimestamp(0)
+    )
+    logger.info(
+        "sync_activity_stream_sso_users: Starting with last published date of %s", last_published
     )
 
     endpoint = f"{settings.ACTIVITY_STREAM_BASE_URL}/v3/activities/_search"
@@ -1143,14 +1151,19 @@ def _do_sync_activity_stream_sso_users():
 
     while True:
         try:
-            logger.info("Calling activity stream with query %s", json.dumps(query))
+            logger.info(
+                "sync_activity_stream_sso_users: Calling activity stream with query %s",
+                json.dumps(query),
+            )
             status_code, response = hawk_request(
                 "GET",
                 endpoint,
                 json.dumps(query),
             )
         except HawkException as e:
-            logger.error("Failed to call activity stream with error %s", e)
+            logger.error(
+                "sync_activity_stream_sso_users: Failed to call activity stream with error %s", e
+            )
             break
 
         if status_code != 200:
@@ -1168,7 +1181,10 @@ def _do_sync_activity_stream_sso_users():
         if not records:
             break
 
-        logger.info("Fetched %d record(s) from activity stream", len(records))
+        logger.info(
+            "sync_activity_stream_sso_users: Fetched %d record(s) from activity stream",
+            len(records),
+        )
 
         for record in records:
             obj = record["_source"]["object"]
@@ -1176,6 +1192,7 @@ def _do_sync_activity_stream_sso_users():
             user_id = obj["dit:StaffSSO:User:userId"]
             emails = obj["dit:emailAddress"]
             primary_email = obj["dit:StaffSSO:User:contactEmailAddress"] or emails[0]
+            logger.info("sync_activity_stream_sso_users: processing user %s", primary_email)
 
             try:
                 create_user_from_sso(
@@ -1187,7 +1204,7 @@ def _do_sync_activity_stream_sso_users():
                     check_tools_access_if_user_exists=True,
                 )
             except IntegrityError:
-                logger.exception("Failed to create user record")
+                logger.exception("sync_activity_stream_sso_users: Failed to create user record")
 
         last_published_str = records[-1]["_source"]["published"]
         last_published = datetime.datetime.strptime(last_published_str, "%Y-%m-%dT%H:%M:%S.%fZ")
@@ -1195,6 +1212,10 @@ def _do_sync_activity_stream_sso_users():
         query["search_after"] = records[-1]["sort"]
 
     cache.set("activity_stream_sync_last_published", last_published)
+    logger.info(
+        "sync_activity_stream_sso_users: Finished with new last published date of %s",
+        last_published,
+    )
 
 
 def fetch_visualisation_log_events(log_group, log_stream):
