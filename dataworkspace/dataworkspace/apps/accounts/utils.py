@@ -6,6 +6,7 @@ from django.contrib.auth import (
     BACKEND_SESSION_KEY,
     HASH_SESSION_KEY,
     authenticate,
+    get_user_model,
 )
 from django.conf import settings
 from django.contrib.sessions.backends.base import CreateError
@@ -92,3 +93,13 @@ def _process_user_access_profile(user, access_profile_name, func):
     except Exception as e:
         logger.exception(e)
         raise SSOApiException from None
+
+
+def get_user_by_sso_id(sso_id):
+    user_model = get_user_model()
+    # Attempt to find a user with the given SSO ID as username
+    try:
+        return user_model.objects.get(username=sso_id)
+    except user_model.DoesNotExist:
+        # If username doesn't exist fall back to profile sso id.
+        return user_model.objects.get(profile__sso_id=sso_id)
