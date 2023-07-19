@@ -2,13 +2,13 @@ from datetime import timedelta
 from urllib.parse import urlparse
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.http import HttpResponse, JsonResponse
 from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
 
+from dataworkspace.apps.accounts.utils import get_user_by_sso_id
 from dataworkspace.apps.api_v1.core.serializers import (
     UserSatisfactionSurveySerializer,
     NewsletterSubscriptionSerializer,
@@ -62,9 +62,7 @@ def get_superset_credentials(request):
     )
     response = cache.get(cache_key, None)
     if not response:
-        dw_user = get_user_model().objects.get(
-            profile__sso_id=request.headers["sso-profile-user-id"]
-        )
+        dw_user = get_user_by_sso_id(request.headers["sso-profile-user-id"])
         if not dw_user.user_permissions.filter(
             codename="start_all_applications",
             content_type=ContentType.objects.get_for_model(ApplicationInstance),
@@ -131,7 +129,7 @@ def invalidate_superset_user_cached_credentials():
 
 
 def generate_mlflow_jwt(request):
-    user = get_user_model().objects.get(profile__sso_id=request.headers["sso-profile-user-id"])
+    user = get_user_by_sso_id(request.headers["sso-profile-user-id"])
     authorised_hosts = list(
         user.authorised_mlflow_instances.all().values_list("instance__hostname", flat=True)
     )

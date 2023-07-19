@@ -27,6 +27,7 @@ from pytz import utc
 import redis
 
 from dataworkspace.apps.accounts.models import Profile
+from dataworkspace.apps.accounts.utils import get_user_by_sso_id
 from dataworkspace.apps.applications.spawner import (
     get_spawner,
     stop,
@@ -864,7 +865,7 @@ def sync_quicksight_users(data_client, user_client, account_id, quicksight_user_
 
                     raise e
 
-                dw_user = get_user_model().objects.get(profile__sso_id=sso_id)
+                dw_user = get_user_by_sso_id(sso_id)
                 if not dw_user:
                     logger.error(
                         "Skipping %s - cannot match with Data Workspace user.",
@@ -1004,8 +1005,7 @@ def create_user_from_sso(
 ):
     user_model = get_user_model()
     try:
-        # Attempt to find a user with the given SSO ID
-        user = user_model.objects.get(Q(username=sso_id) | Q(profile__sso_id=sso_id))
+        user = get_user_by_sso_id(sso_id)
     except user_model.DoesNotExist:
         # If the user doesn't exist we will have to create it
         user = user_model.objects.create(
@@ -1018,7 +1018,7 @@ def create_user_from_sso(
             user.save()
         except IntegrityError:
             # A concurrent request may have overtaken this one and created a user
-            user = user_model.objects.get(Q(username=sso_id) | Q(profile__sso_id=sso_id))
+            user = get_user_by_sso_id(sso_id)
 
         _check_tools_access(user)
     else:
