@@ -1111,9 +1111,7 @@ def _do_create_tools_access_iam_role(user_id):
 @close_all_connections_if_not_in_atomic_block
 def sync_activity_stream_sso_users():
     try:
-        with cache.lock(
-            "activity_stream_sync_last_published_lock", blocking_timeout=0, timeout=1800
-        ):
+        with cache.lock("sso_sync_last_published_lock", blocking_timeout=0, timeout=1800):
             _do_sync_activity_stream_sso_users()
     except redis.exceptions.LockError:
         logger.info("Unable to acquire lock to sync activity stream sso users")
@@ -1736,7 +1734,7 @@ def duplicate_tools_monitor():
 @celery_app.task()
 @close_all_connections_if_not_in_atomic_block
 def sync_all_sso_users():
-    with cache.lock("activity_stream_sync_last_published_lock", blocking_timeout=0, timeout=3600):
+    with cache.lock("sso_sync_last_published_lock", blocking_timeout=0, timeout=3600):
         user_model = get_user_model()
         all_users = user_model.objects.all()
         seen_user_ids = []
