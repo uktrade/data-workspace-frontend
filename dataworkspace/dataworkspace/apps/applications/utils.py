@@ -1114,7 +1114,7 @@ def sync_activity_stream_sso_users():
         with cache.lock("sso_sync_last_published_lock", blocking_timeout=0, timeout=1800):
             _do_sync_activity_stream_sso_users()
     except redis.exceptions.LockError:
-        logger.info("Unable to acquire lock to sync activity stream sso users")
+        logger.info("sync_activity_stream_sso_users: Unable to acquire lock. Not running")
 
 
 def _do_sync_activity_stream_sso_users():
