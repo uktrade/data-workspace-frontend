@@ -336,7 +336,10 @@ def store_sql_query(visualisation_link, data_set_id, table_id, sql_query):
             table_id=table_id,
             sql_query=sql_query,
         )
-    except VisualisationLinkSqlQuery.DoesNotExist:
+    except (
+        VisualisationLinkSqlQuery.DoesNotExist,
+        VisualisationLinkSqlQuery.MultipleObjectsReturned,
+    ):
         visualisation_link.sql_queries.filter(
             is_latest=True, data_set_id=data_set_id, table_id=table_id
         ).update(is_latest=False)
