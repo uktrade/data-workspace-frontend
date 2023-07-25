@@ -960,7 +960,22 @@ def sync_quicksight_permissions(user_sso_ids_to_update=tuple()):
             if next_token:
                 list_user_args["NextToken"] = next_token
 
-            list_users_response = user_client.list_users(**list_user_args)
+            try:
+                list_users_response = user_client.list_users(**list_user_args)
+            except botocore.exceptions.ClientError as e:
+                # There is a bug in the Quicksight API where it throws a ResourceNotFound after
+                # a certain number of records. There is not much we can do at the moment other
+                # than catch it and process what we have
+                if (
+                    e.response["Error"]["Code"] == "ResourceNotFoundException"
+                    and len(quicksight_user_list) > 0
+                ):
+                    logger.error(
+                        "Failed to fetch all Quicksight users due to a known "
+                        "issue with the Quicksight API"
+                    )
+                    break
+                raise e
             quicksight_user_list.extend(list_users_response["UserList"])
             next_token = list_users_response.get("NextToken")
 
