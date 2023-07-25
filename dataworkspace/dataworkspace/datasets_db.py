@@ -129,6 +129,9 @@ def extract_queried_tables_from_sql_query(query, log_errors=True):
             logger.error(e)
         return []
 
+    if len(statements) == 0:
+        return []
+
     tables = set()
 
     node_ctenames = deque()
