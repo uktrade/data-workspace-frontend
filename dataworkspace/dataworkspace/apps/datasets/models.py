@@ -732,6 +732,7 @@ class BaseSource(ReferenceNumberedDatasetSource):
         blank=False,
         validators=[RegexValidator(regex=r"^[a-zA-Z][a-zA-Z0-9_\.]*$")],
         default="public",
+        db_index=True,
     )
     frequency = models.IntegerField(choices=_FREQ_CHOICES, default=FREQ_DAILY)
 
@@ -747,6 +748,7 @@ class SourceTable(BaseSource):
         max_length=1024,
         blank=False,
         validators=[RegexValidator(regex=r"^[a-zA-Z][a-zA-Z0-9_\.]*$")],
+        db_index=True,
     )
     dataset_finder_opted_in = models.BooleanField(
         default=False,
