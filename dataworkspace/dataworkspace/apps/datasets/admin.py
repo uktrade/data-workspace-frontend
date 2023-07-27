@@ -860,7 +860,15 @@ class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStamp
     )
     list_filter = ("tags",)
     search_fields = ["name"]
-    autocomplete_fields = ["tags", "data_catalogue_editors"]
+    autocomplete_fields = (
+        "tags",
+        "enquiries_contact",
+        "information_asset_owner",
+        "information_asset_manager",
+        "data_catalogue_editors",
+        "secondary_enquiries_contact",
+    )
+
     fieldsets = [
         (
             None,
