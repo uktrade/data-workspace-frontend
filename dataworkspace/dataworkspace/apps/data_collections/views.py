@@ -26,6 +26,7 @@ from dataworkspace.apps.data_collections.models import (
     CollectionDatasetMembership,
     CollectionUserMembership,
     CollectionVisualisationCatalogueItemMembership,
+    CollectionUserAccessType,
 )
 
 from dataworkspace.apps.datasets.constants import DataSetType, TagType
@@ -43,6 +44,7 @@ def get_authorised_collections(request):
         collections.filter(
             Q(owner=request.user)
             | Q(user_memberships__user=request.user, user_memberships__deleted=False)
+            | Q(user_access_type=CollectionUserAccessType.REQUIRES_AUTHENTICATION)
         )
         .order_by("name")
         .distinct()
@@ -55,6 +57,7 @@ def get_only_live_authorised_collections(request):
         collections.filter(
             Q(owner=request.user)
             | Q(user_memberships__user=request.user, user_memberships__deleted=False)
+            | Q(user_access_type=CollectionUserAccessType.REQUIRES_AUTHENTICATION)
         )
         .order_by("name")
         .distinct()

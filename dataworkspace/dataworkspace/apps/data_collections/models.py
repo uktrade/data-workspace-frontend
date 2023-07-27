@@ -10,6 +10,7 @@ from dataworkspace.apps.core.models import DeletableTimestampedUserModel, RichTe
 from dataworkspace.apps.datasets.models import DataSet, VisualisationCatalogueItem
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
+from dataworkspace.apps.data_collections.constants import CollectionUserAccessType
 
 
 class Collection(DeletableTimestampedUserModel):
@@ -25,6 +26,12 @@ class Collection(DeletableTimestampedUserModel):
         through="CollectionVisualisationCatalogueItemMembership",
     )
     notes = RichTextField(null=True, blank=True)
+
+    user_access_type = models.CharField(
+        max_length=64,
+        choices=CollectionUserAccessType.choices,
+        default=CollectionUserAccessType.REQUIRES_AUTHENTICATION,
+    )
 
     class Meta:
         verbose_name = "Collection"
@@ -47,6 +54,13 @@ class Collection(DeletableTimestampedUserModel):
 
     def notes_added(self):
         return bool(self.notes)
+
+    # pylint: disable=no-member
+    def user_has_access(self, user):
+        return (
+            self.user_access_type == CollectionUserAccessType.REQUIRES_AUTHORIZATION
+            and self.user_memberships.live().filter(user=user).exists()
+        ) or self.user_access_type == CollectionUserAccessType.REQUIRES_AUTHENTICATION
 
     notes_added.boolean = True
 
