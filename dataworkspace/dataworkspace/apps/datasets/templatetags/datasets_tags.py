@@ -126,7 +126,10 @@ def can_edit_dataset(user, dataset):
         user == dataset.information_asset_owner
         or user == dataset.information_asset_manager
         or user.is_superuser
-        or user in dataset.data_catalogue_editors.all()
+        or (
+            hasattr(dataset, "data_catalogue_editors")
+            and user in dataset.data_catalogue_editors.all()
+        )
     )
 
 
