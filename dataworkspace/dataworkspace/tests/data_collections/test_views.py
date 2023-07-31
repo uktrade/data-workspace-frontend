@@ -10,9 +10,10 @@ from dataworkspace.tests import factories
 from dataworkspace.tests.conftest import get_client, get_user_data
 from dataworkspace.apps.data_collections.models import CollectionUserMembership, Collection
 from dataworkspace.apps.eventlog.models import EventLog
+from dataworkspace.apps.data_collections.constants import CollectionUserAccessType
 
 
-def test_collection(client, user):
+def test_collection_authentication(client, user):
     c = factories.CollectionFactory.create(
         name="test-collections", description="test collections description", owner=user
     )
@@ -29,7 +30,9 @@ def test_collection(client, user):
 
 def test_unauthorised_user_raises_302(client):
     c = factories.CollectionFactory.create(
-        name="test-collections", description="test collections description"
+        name="test-collections",
+        description="test collections description",
+        user_access_type=CollectionUserAccessType.REQUIRES_AUTHORIZATION,
     )
 
     response = client.get(
@@ -139,6 +142,7 @@ def test_authorised_user_attempting_delete_dataset_membership(client, user, othe
         name="test-collections",
         description="test collections description",
         owner=user,
+        user_access_type=CollectionUserAccessType.REQUIRES_AUTHORIZATION,
     )
 
     # Create a dataset and add it to the collection
@@ -220,6 +224,7 @@ def test_authorised_user_attempting_delete_visualisation_membership(client, user
         name="test-collections",
         description="test collections description",
         owner=user,
+        user_access_type=CollectionUserAccessType.REQUIRES_AUTHORIZATION,
     )
 
     # Create a visualisation and add it to the collection
@@ -411,7 +416,9 @@ def test_user_page(client, user):
 
 def test_user_not_owner_raises_404(client):
     c = factories.CollectionFactory.create(
-        name="test-collections", description="test collections description"
+        name="test-collections",
+        description="test collections description",
+        user_access_type=CollectionUserAccessType.REQUIRES_AUTHORIZATION,
     )
 
     response = client.get(
@@ -486,7 +493,9 @@ def test_add_user_already_already_owner_of_collection(client, user):
 
 
 def test_add_user_not_the_owner(client, user):
-    c = factories.CollectionFactory.create(name="test-collections")
+    c = factories.CollectionFactory.create(
+        name="test-collections", user_access_type=CollectionUserAccessType.REQUIRES_AUTHORIZATION
+    )
     response = client.post(
         reverse(
             "data_collections:collection-users",
@@ -530,7 +539,9 @@ def test_add_user_success(mock_send_email, client, user):
 
 
 def test_remove_user_not_owner(client):
-    c = factories.CollectionFactory.create(name="test-collections")
+    c = factories.CollectionFactory.create(
+        name="test-collections", user_access_type=CollectionUserAccessType.REQUIRES_AUTHORIZATION
+    )
     member = factories.CollectionUserMembershipFactory.create(collection=c)
     response = client.post(
         reverse(
@@ -571,7 +582,9 @@ def test_user_successfully_removed(mock_send_email, client, user):
 
 
 def test_edit_note_not_the_owner(client, user):
-    c = factories.CollectionFactory.create(name="test-collections")
+    c = factories.CollectionFactory.create(
+        name="test-collections", user_access_type=CollectionUserAccessType.REQUIRES_AUTHORIZATION
+    )
     response = client.post(
         reverse(
             "data_collections:collection-notes",
@@ -597,7 +610,9 @@ def test_edit_note(client, user):
 
 
 def test_edit_collection_not_the_owner(client, user):
-    c = factories.CollectionFactory.create(name="test-collection")
+    c = factories.CollectionFactory.create(
+        name="test-collection", user_access_type=CollectionUserAccessType.REQUIRES_AUTHORIZATION
+    )
     response = client.post(
         reverse(
             "data_collections:collection-edit",
@@ -656,7 +671,9 @@ def test_member_view_collection(client, user):
 
 
 def test_deleted_member_view_collection(client, user):
-    c = factories.CollectionFactory.create(name="test-collection")
+    c = factories.CollectionFactory.create(
+        name="test-collection", user_access_type=CollectionUserAccessType.REQUIRES_AUTHORIZATION
+    )
     factories.CollectionUserMembershipFactory(user=user, collection=c, deleted=True)
     response = client.get(reverse("data_collections:collections_view", args=(c.id,)))
     assert response.status_code == 302
@@ -804,7 +821,9 @@ def test_collection_successfully_removed(client, user):
 
 
 def test_collection_cannot_be_removed_by_nonowner(client, user):
-    c = factories.CollectionFactory.create(name="test-collections")
+    c = factories.CollectionFactory.create(
+        name="test-collections", user_access_type=CollectionUserAccessType.REQUIRES_AUTHORIZATION
+    )
     collection_objects = Collection.objects.all().count()
     response = client.post(
         reverse(

@@ -110,7 +110,17 @@ class CollectionAdmin(CSPRichTextEditorMixin, DeletableTimeStampedUserAdmin):
     fieldsets = [
         (
             None,
-            {"fields": ["deleted", "name", "description", "owner", "id", "notes"]},
+            {
+                "fields": [
+                    "deleted",
+                    "name",
+                    "description",
+                    "owner",
+                    "id",
+                    "notes",
+                    "user_access_type",
+                ]
+            },
         ),
     ]
     autocomplete_fields = ("owner",)
