@@ -518,7 +518,7 @@ class CollectionListView(ListView):
                 for membership in collection.user_memberships.filter(deleted=False)
             ]
             number_of_user_ids = len(set(user_ids))
-            if number_of_user_ids == 1:
+            if number_of_user_ids == 1 and collection.owner == self.request.user:
                 personal_collections.append(collection)
             elif collection.owner == self.request.user:
                 shared_collections_from_user.append(collection)

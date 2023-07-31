@@ -30,7 +30,7 @@ class Collection(DeletableTimestampedUserModel):
     user_access_type = models.CharField(
         max_length=64,
         choices=CollectionUserAccessType.choices,
-        default=CollectionUserAccessType.REQUIRES_AUTHENTICATION,
+        default=CollectionUserAccessType.REQUIRES_AUTHORIZATION,
     )
 
     class Meta:
