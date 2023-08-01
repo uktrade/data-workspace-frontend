@@ -1143,8 +1143,8 @@ def get_s3_prefix(user_sso_id):
     return "user/federated/" + stable_identification_suffix(user_sso_id, short=False) + "/"
 
 
-def create_tools_access_iam_role(user_email_address, access_point_id):
-    user = get_user_model().objects.get(email=user_email_address)
+def create_tools_access_iam_role(user_id, user_email_address, access_point_id):
+    user = get_user_model().objects.get(id=user_id)
     s3_prefixes = get_user_s3_prefixes(user)
     if user.profile.tools_access_role_arn:
         return user.profile.tools_access_role_arn, s3_prefixes

@@ -302,7 +302,7 @@ class FargateSpawner:
             close_admin_db_connection_if_not_in_atomic_block()
 
             role_arn, s3_prefixes = create_tools_access_iam_role(
-                user_email, user_efs_access_point_id
+                user.id, user_email, user_efs_access_point_id
             )
 
             s3_env = {

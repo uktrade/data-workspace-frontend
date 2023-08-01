@@ -873,6 +873,7 @@ class TestCreateToolsAccessIAMRoleTask:
 
         assert mock_create_tools_access_iam_role.call_args_list == [
             mock.call(
+                user.id,
                 user.email,
                 "some-access-point-id",
             )

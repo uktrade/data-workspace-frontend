@@ -1116,6 +1116,7 @@ def _do_create_tools_access_iam_role(user_id):
         logger.exception("User id %d does not exist", user_id)
     else:
         create_tools_access_iam_role(
+            user.id,
             user.email,
             user.profile.home_directory_efs_access_point_id,
         )
