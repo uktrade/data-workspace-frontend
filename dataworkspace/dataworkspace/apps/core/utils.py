@@ -376,7 +376,7 @@ def new_private_database_credentials(
 
         # PostgreSQL doesn't handle concurrent GRANT/REVOKEs on the same objects well, so we lock
         with cache.lock(
-            "database-grant-v1",
+            "database-grant-v2",
             blocking_timeout=15,
             timeout=180,
         ), connections[database_memorable_name].cursor() as cur:
