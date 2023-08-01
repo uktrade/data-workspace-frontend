@@ -43,7 +43,10 @@ def get_authorised_collections(request):
     return (
         collections.filter(
             Q(owner=request.user)
-            | Q(user_memberships__user=request.user, user_memberships__deleted=False)
+            | Q(
+                Q(user_access_type=CollectionUserAccessType.REQUIRES_AUTHORIZATION)
+                & Q(user_memberships__user=request.user, user_memberships__deleted=False)
+            )
             | Q(user_access_type=CollectionUserAccessType.REQUIRES_AUTHENTICATION)
         )
         .order_by("name")
@@ -85,6 +88,9 @@ class CollectionsDetailView(DetailView):
         super().__init__(*args, **kwargs)
         self.object = None
 
+    def get_queryset(self):
+        return get_authorised_collections(self.request)
+
     def get_object(self, queryset=None):
         return get_authorised_collections_or_return_none(
             self.request, self.kwargs["collections_id"]
@@ -92,7 +98,33 @@ class CollectionsDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        authorised_collections = self.get_queryset()
+
+        personal_collections = []
+        shared_collections = []
+        collections_for_all = []
+
+        for collection in authorised_collections:
+            user_ids = ([collection.owner.id] if collection.owner else []) + [
+                membership.user.id
+                for membership in collection.user_memberships.filter(deleted=False)
+            ]
+            number_of_user_ids = len(set(user_ids))
+            if number_of_user_ids == 1 and collection.owner == self.request.user:
+                personal_collections.append(collection)
+            elif number_of_user_ids > 1 and (
+                collection.owner == self.request.user or self.request.user.id in user_ids
+            ):
+                shared_collections.append(collection)
+            else:
+                collections_for_all.append(collection)
+
+        context["personal_collections"] = personal_collections
+        context["shared_collections"] = shared_collections
+        context["collections_for_all"] = collections_for_all
+
         source_object = self.get_object()
+
         context["source_object"] = source_object
 
         context["dataset_collections"] = (
@@ -523,7 +555,9 @@ class CollectionListView(ListView):
             number_of_user_ids = len(set(user_ids))
             if number_of_user_ids == 1 and collection.owner == self.request.user:
                 personal_collections.append(collection)
-            elif number_of_user_ids > 1:
+            elif number_of_user_ids > 1 and (
+                collection.owner == self.request.user or self.request.user.id in user_ids
+            ):
                 shared_collections.append(collection)
             else:
                 collections_for_all.append(collection)

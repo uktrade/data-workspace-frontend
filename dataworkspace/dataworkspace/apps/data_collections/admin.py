@@ -105,6 +105,7 @@ class CollectionAdmin(CSPRichTextEditorMixin, DeletableTimeStampedUserAdmin):
         "notes_added",
         "owner",
         "deleted",
+        "user_access_type",
     )
     search_fields = ["name"]
     fieldsets = [
