@@ -262,19 +262,17 @@ def application_api_is_allowed(request, public_host):
         ):
             raise ManageVisualisationsPermissionDeniedError()
 
-        # FIXME: Testing latency on prod. Delete this
-        if request.user.email != "sekhar.panja@digital.trade.gov.uk":
-            user_source_tables = source_tables_for_user(request.user)
-            app_source_tables = source_tables_for_app(application_template)
+        user_source_tables = source_tables_for_user(request.user)
+        app_source_tables = source_tables_for_app(application_template)
 
-            user_authorised_datasets = set(
-                (source_table["dataset"]["id"] for source_table in user_source_tables)
-            )
-            app_authorised_datasets = set(
-                (source_table["dataset"]["id"] for source_table in app_source_tables)
-            )
-            if app_authorised_datasets - user_authorised_datasets:
-                raise ManageVisualisationsPermissionDeniedError()
+        user_authorised_datasets = set(
+            (source_table["dataset"]["id"] for source_table in user_source_tables)
+        )
+        app_authorised_datasets = set(
+            (source_table["dataset"]["id"] for source_table in app_source_tables)
+        )
+        if app_authorised_datasets - user_authorised_datasets:
+            raise ManageVisualisationsPermissionDeniedError()
 
         return is_vis_preview
 
