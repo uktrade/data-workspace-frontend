@@ -59,7 +59,7 @@
         <div class="govuk-grid-column-one-half govuk-!-text-align-right govuk-!-margin-top-3">
           <a href="{% url 'data_collections:history-of-collection-changes' collection.id %}"
              class="govuk-link govuk-!-margin-right-3" id="collection-history-link">Collection history</a>
-                {% if collections_for_all  %}
+                {% if collection_for_all  %}
                 <a class="govuk-body-s">This collection is read-only</a>
                   {% else %}  
                   <a href="{% url 'data_collections:collection-edit' collection.id %}" class="govuk-link">
@@ -76,15 +76,15 @@
         <div class="govuk-grid-row">
           <div class="govuk-grid-column-two-thirds">
           <span class="govuk-caption-xl">
-            {% if collections_for_all %}
-              Collections for all
+            {% if collection_for_all %}
+              Collection for all
             {% else %}
-              {% if shared_collections %}
-                Shared
-              {% else %}
-                Personal
-              {% endif %} collection
-              {% endif %}
+              {% if personal_collection %}
+                  Personal
+              {% elif shared_collection %}
+                  Shared
+                {% endif %} collection
+            {% endif %}
           </span>
             <h1 class="govuk-heading-xl">{{ source_object.name }}</h1>
             <p class="govuk-body">{{ source_object.description|linebreaksbr }}</p>
@@ -107,7 +107,7 @@
 
                            {{ dataset_collection.dataset.slug }}{% else %}{% url "datasets:dataset_detail" dataset_uuid=dataset_collection.dataset.id %}#{{ dataset_collection.dataset.slug }}{% endif %}">{{ dataset_collection.dataset.name }}</a>
                   </h3>
-                  {% if not collections_for_all %}
+                  {% if not collection_for_all %}
                   <a
                     href="{% url 'data_collections:collection_data_membership_confirm_removal' collections_id=source_object.id data_membership_id=dataset_collection.id %}"
                     class="govuk-link govuk-link--no-visited-state govuk-!-margin-top-1 govuk-!-margin-left-4">Remove</a>
@@ -142,7 +142,7 @@
                 </div>
               </div>
             {% endfor %}
-            {% if not collections_for_all %}
+            {% if not collection_for_all %}
             <p class="govuk-body" style="margin-bottom: 40px"><a class="govuk-link govuk-link--no-visited-state"
                                                                  href="{% url 'datasets:find_datasets' %}?q=&sort=relevance&data_type=1&data_type=2&data_type=0">Search
               for data</a> you'd like to add.</p>
@@ -155,7 +155,7 @@
                     <a class="govuk-link dataset-link"
                        href="{% url "datasets:dataset_detail" dataset_uuid=visualisation_collection.visualisation.id %}">{{ visualisation_collection.visualisation.name }}</a>
                   </h3>
-                  {% if not collections_for_all %}
+                  {% if not collection_for_all %}
                   <a
                     href="{% url 'data_collections:collection_visualisation_membership_confirm_removal' collections_id=source_object.id visualisation_membership_id=visualisation_collection.id %}"
                     class="govuk-link govuk-link--no-visited-state govuk-!-margin-top-1 govuk-!-margin-left-4">Remove</a>
@@ -190,14 +190,14 @@
                 </div>
               </div>
             {% endfor %}
-            {% if not collections_for_all %}
+            {% if not collection_for_all %}
             <p class="govuk-body"><a class="govuk-link govuk-link--no-visited-state"
                                      href="{% url 'datasets:find_datasets' %}?q=&sort=relevance&data_type=3">Search for
               dashboards</a> you'd like to add.</p>
             {% endif %}
             <h2 class="govuk-heading-l govuk-!-margin-bottom-3">Notes</h2>
             <p class="govuk-body govuk-!-margin-bottom-4">
-            {% if not collections_for_all %}
+            {% if not collection_for_all %}
               <a class="govuk-link govuk-link--no-visited-state"
                  href="{% url 'data_collections:collection-notes' source_object.id %}">Edit notes</a>
             </p>
@@ -223,7 +223,7 @@
           {% if user_memberships.count > 0 %}
             <div class="govuk-grid-column-one-third govuk-!-margin-bottom-2">
               <h2 class="govuk-heading-s govuk-!-margin-bottom-1">Collection 
-                {% if collections_for_all %} 
+                {% if source_object.user_access_type == "REQUIRES_AUTHENTICATION" %} 
                   editors
                 {% else %}
                   users
@@ -237,23 +237,27 @@
                   and {{ user_memberships.count| add:"-5"}} more
                 {% endif %}
               </p>
-              {% if collections_for_all %}
-                <p class="govuk-body-s">This is a collection for all users. You <b>cannot</b> make changes to this collection.
-                {% endif %}
-                </p>
+              {% if collection_for_all %}
+                <p class="govuk-body-s">This is a collection for all users. You <b>cannot</b> make changes to this collection.</p>
+              {% endif %}
             </div>
+              {% if not collection_for_all %}
+                <div class="govuk-grid-column-one-third govuk-!-margin-bottom-2">
+                  <p class="govuk-body-s"><a class="govuk-link govuk-link--no-visited-state"
+                                        href="{% url 'data_collections:collection-users' source_object.id %}">View and edit
+                      collection users</a></p>
+                {% endif %}
           {% endif %}
-          {% if not collections_for_all %}
-          <div class="govuk-grid-column-one-third govuk-!-margin-bottom-2">
-            <p class="govuk-body-s"><a class="govuk-link govuk-link--no-visited-state"
-                                     href="{% url 'data_collections:collection-users' source_object.id %}">View and edit
-              collection users</a></p>
+                {% if source_object.user_access_type == "REQUIRES_AUTHENTICATION" %}
+                  <p class="govuk-body-s">This collection has been shared with all users. 
+                    </p>
+                {% endif %}
+                </div>
           </div>
-          {% endif %}
-        </div>
       </main>
-    {% endif %}
     </div>
+    {% endif %}
+
 {% endblock %}
 {% block footer_scripts %}
   {{ block.super }}

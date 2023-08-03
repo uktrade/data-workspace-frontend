@@ -98,30 +98,6 @@ class CollectionsDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        authorised_collections = self.get_queryset()
-
-        personal_collections = []
-        shared_collections = []
-        collections_for_all = []
-
-        for collection in authorised_collections:
-            user_ids = ([collection.owner.id] if collection.owner else []) + [
-                membership.user.id
-                for membership in collection.user_memberships.filter(deleted=False)
-            ]
-            number_of_user_ids = len(set(user_ids))
-            if number_of_user_ids == 1 and collection.owner == self.request.user:
-                personal_collections.append(collection)
-            elif number_of_user_ids > 1 and (
-                collection.owner == self.request.user or self.request.user.id in user_ids
-            ):
-                shared_collections.append(collection)
-            else:
-                collections_for_all.append(collection)
-
-        context["personal_collections"] = personal_collections
-        context["shared_collections"] = shared_collections
-        context["collections_for_all"] = collections_for_all
 
         source_object = self.get_object()
 
@@ -172,6 +148,37 @@ class CollectionsDetailView(DetailView):
         context["user_memberships"] = source_object.user_memberships.live().order_by(
             "user__first_name", "user__last_name"
         )
+
+        print("dihgdfhd")
+        print(source_object.user_access_type)
+        print(self.request.user)
+        print(source_object.owner)
+        print(source_object.user_memberships)
+        print(source_object.user_has_access(self.request.user))
+
+        collection_user_ids = ([source_object.owner.id] if source_object.owner else []) + [
+            membership.user.id
+            for membership in source_object.user_memberships.filter(deleted=False)
+        ]
+        print(collection_user_ids)
+        print(self.request.user.id)
+        number_of_user_ids = len(set(collection_user_ids))
+        context["personal_collection"] = (
+            number_of_user_ids == 1 and source_object.owner == self.request.user
+        )
+
+        context["shared_collection"] = (
+            number_of_user_ids > 1 and self.request.user.id in collection_user_ids
+        )
+        context["collection_for_all"] = (
+            source_object.user_access_type == "REQUIRES_AUTHENTICATION"
+            and self.request.user.id not in collection_user_ids
+        )
+
+        print(dir(source_object))
+        print(context["personal_collection"])
+        print(context["collection_for_all"])
+        print(context["shared_collection"])
 
         log_event(
             self.request.user,
