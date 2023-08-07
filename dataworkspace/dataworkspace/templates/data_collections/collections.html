@@ -88,10 +88,10 @@
             <a>
               Collections for all users are collections made by colleagues to be viewed by everyone.
             </a>
-            <ul class="collection-buttons-cards-container collection-for-all">
+            <ul class="collection-buttons-cards-container">
               {% for collection in collections_for_all %}
                 <li class="collection-button__item">
-                  <a class="collection-button__link"
+                  <a class="collection-for-all-button__link"
                      href="{% url 'data_collections:collections_view' collections_id=collection.id %}" role="button">
                     <span class="collection-button__heading">{{ collection.name }}</span>
                     <span class="collection-button__text">{{ collection.description }}</span>

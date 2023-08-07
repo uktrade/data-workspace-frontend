@@ -149,19 +149,10 @@ class CollectionsDetailView(DetailView):
             "user__first_name", "user__last_name"
         )
 
-        print("dihgdfhd")
-        print(source_object.user_access_type)
-        print(self.request.user)
-        print(source_object.owner)
-        print(source_object.user_memberships)
-        print(source_object.user_has_access(self.request.user))
-
         collection_user_ids = ([source_object.owner.id] if source_object.owner else []) + [
             membership.user.id
             for membership in source_object.user_memberships.filter(deleted=False)
         ]
-        print(collection_user_ids)
-        print(self.request.user.id)
         number_of_user_ids = len(set(collection_user_ids))
         context["personal_collection"] = (
             number_of_user_ids == 1 and source_object.owner == self.request.user
@@ -174,11 +165,6 @@ class CollectionsDetailView(DetailView):
             source_object.user_access_type == "REQUIRES_AUTHENTICATION"
             and self.request.user.id not in collection_user_ids
         )
-
-        print(dir(source_object))
-        print(context["personal_collection"])
-        print(context["collection_for_all"])
-        print(context["shared_collection"])
 
         log_event(
             self.request.user,

@@ -220,8 +220,8 @@
                                               href="mailto:{{ source_object.owner.email }}">{{ source_object.owner.email }}</a>
                 ){% endif %}</p>
           </div>
-          {% if user_memberships.count > 0 %}
             <div class="govuk-grid-column-one-third govuk-!-margin-bottom-2">
+            {% if user_memberships.count > 0 %}
               <h2 class="govuk-heading-s govuk-!-margin-bottom-1">Collection 
                 {% if source_object.user_access_type == "REQUIRES_AUTHENTICATION" %} 
                   editors
@@ -239,19 +239,18 @@
               </p>
               {% if collection_for_all %}
                 <p class="govuk-body-s">This is a collection for all users. You <b>cannot</b> make changes to this collection.</p>
-              {% endif %}
-            </div>
-              {% if not collection_for_all %}
-                <div class="govuk-grid-column-one-third govuk-!-margin-bottom-2">
+              {% else %}
+                <div class="govuk-!-margin-bottom-2">
                   <p class="govuk-body-s"><a class="govuk-link govuk-link--no-visited-state"
                                         href="{% url 'data_collections:collection-users' source_object.id %}">View and edit
                       collection users</a></p>
                 {% endif %}
           {% endif %}
-                {% if source_object.user_access_type == "REQUIRES_AUTHENTICATION" %}
+                {% if not collection_for_all and source_object.user_access_type == "REQUIRES_AUTHENTICATION" %}
                   <p class="govuk-body-s">This collection has been shared with all users. 
                     </p>
                 {% endif %}
+                </div>
                 </div>
           </div>
       </main>
