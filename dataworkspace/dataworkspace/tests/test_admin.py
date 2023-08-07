@@ -564,7 +564,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "description": "test description",
                 "valid_from": "",
                 "valid_to": "",
-                "enquiries_contact": sel.user.id,
+                "enquiries_contact": self.user.id,
                 "licence": "",
                 "restrictions_on_usage": "",
                 "sort_field": "",
@@ -2367,6 +2367,60 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         reference_dataset.refresh_from_db()
         self.assertIsNone(reference_dataset.sort_field)
 
+    def test_create_reference_dataset_missing_enquiries_contact(self):
+        reference_dataset = self._create_reference_dataset()
+        field1 = factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=reference_dataset, data_type=1, is_identifier=True
+        )
+        field2 = factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=reference_dataset, data_type=2
+        )
+        reference_dataset.sort_field = field1
+        num_records = len(reference_dataset.get_records())
+        reference_dataset.save()
+        response = self._authenticated_post(
+            reverse("admin:datasets_referencedataset_change", args=(reference_dataset.id,)),
+            {
+                "id": reference_dataset.id,
+                "name": "test updated",
+                "table_name": reference_dataset.table_name,
+                "slug": "test-ref-1",
+                "external_database": "",
+                "short_description": "test description that is short",
+                "information_asset_manager": self.user.id,
+                "information_asset_owner": self.user.id,
+                "description": "",
+                "valid_from": "",
+                "valid_to": "",
+                "enquiries_contact": "",
+                "licence": "",
+                "restrictions_on_usage": "",
+                "sort_field": field1.id,
+                "sort_direction": ReferenceDataset.SORT_DIR_DESC,
+                "fields-TOTAL_FORMS": 2,
+                "fields-INITIAL_FORMS": 2,
+                "fields-MIN_NUM_FORMS": 1,
+                "fields-MAX_NUM_FORMS": 1000,
+                "fields-0-id": field1.id,
+                "fields-0-reference_dataset": reference_dataset.id,
+                "fields-0-name": "updated_field_1",
+                "fields-0-column_name": field1.column_name,
+                "fields-0-data_type": 2,
+                "fields-0-description": "Updated field 1",
+                "fields-0-DELETE": "on",
+                "fields-1-id": field2.id,
+                "fields-1-reference_dataset": reference_dataset.id,
+                "fields-1-name": "updated_field_2",
+                "fields-1-column_name": field2.column_name,
+                "fields-1-data_type": 2,
+                "fields-1-description": "Updated field 2",
+                "fields-1-is_identifier": "on",
+                "fields-1-is_display_name": "on",
+            },
+        )
+        self.assertContains(response, "This field is required")
+        self.assertEqual(num_records, len(reference_dataset.get_records()))
+
 
 class TestTagAdmin(BaseAdminTestCase):
     def test_tag_name_search(self):
@@ -2598,6 +2652,91 @@ class TestDatasetAdmin(BaseAdminTestCase):
         )
         self.assertContains(response, "was changed successfully")
         self.assertEqual(dataset.sourcelink_set.count(), link_count - 1)
+
+    def test_create_dataset_missing_enquiries_contact(self):
+        dataset = factories.DataSetFactory.create()
+        user1 = factories.UserFactory.create()
+
+        self.assertEqual(dataset.user_has_access(user1), False)
+
+        response = self._authenticated_post(
+            reverse("admin:datasets_datacutdataset_change", args=(dataset.id,)),
+            {
+                "published": dataset.published,
+                "name": dataset.name,
+                "slug": dataset.slug,
+                "short_description": "test short description",
+                "description": "test description",
+                "information_asset_owner": str(user1.id),
+                "information_asset_manager": str(user1.id),
+                "enquiries_contact": "",
+                "type": 2,
+                "user_access_type": UserAccessType.REQUIRES_AUTHORIZATION,
+                "sourcelink_set-TOTAL_FORMS": "0",
+                "sourcelink_set-INITIAL_FORMS": "0",
+                "sourcelink_set-MIN_NUM_FORMS": "0",
+                "sourcelink_set-MAX_NUM_FORMS": "1000",
+                "sourceview_set-TOTAL_FORMS": "0",
+                "sourceview_set-INITIAL_FORMS": "0",
+                "sourceview_set-MIN_NUM_FORMS": "0",
+                "sourceview_set-MAX_NUM_FORMS": "1000",
+                "customdatasetquery_set-TOTAL_FORMS": "0",
+                "customdatasetquery_set-INITIAL_FORMS": "0",
+                "customdatasetquery_set-MIN_NUM_FORMS": "0",
+                "customdatasetquery_set-MAX_NUM_FORMS": "1000",
+                "authorized_email_domains": ["example.com"],
+                "_continue": "Save and continue editing",
+                "charts-TOTAL_FORMS": "1",
+                "charts-INITIAL_FORMS": "0",
+                "charts-MIN_NUM_FORMS": "0",
+                "charts-MAX_NUM_FORMS": "1000",
+            },
+        )
+        dataset.refresh_from_db()
+        self.assertContains(response, "This field is required")
+
+    def test_create_master_dataset_missing_enquiries_contact(self):
+        dataset = factories.MasterDataSetFactory.create(
+            published=True, user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
+        )
+        database = factories.DatabaseFactory()
+        user = get_user_model().objects.create(is_staff=True)
+
+        response = self._authenticated_post(
+            reverse("admin:datasets_masterdataset_change", args=(dataset.id,)),
+            {
+                "published": True,
+                "name": dataset.name,
+                "slug": dataset.slug,
+                "short_description": "test short description",
+                "description": "test description",
+                "information_asset_owner": user.id,
+                "information_asset_manager": user.id,
+                "enquiries_contact": "",
+                "type": dataset.type,
+                "user_access_type": dataset.user_access_type,
+                "sourcetable_set-TOTAL_FORMS": "1",
+                "sourcetable_set-INITIAL_FORMS": "0",
+                "sourcetable_set-MIN_NUM_FORMS": "0",
+                "sourcetable_set-MAX_NUM_FORMS": "1000",
+                "visualisations-TOTAL_FORMS": "1",
+                "visualisations-INITIAL_FORMS": "0",
+                "visualisations-MIN_NUM_FORMS": "0",
+                "visualisations-MAX_NUM_FORMS": "1000",
+                "sourcetable_set-0-dataset": dataset.id,
+                "sourcetable_set-0-name": "reporting table",
+                "sourcetable_set-0-database": str(database.id),
+                "sourcetable_set-0-schema": "test_schema",
+                "sourcetable_set-0-frequency": 1,
+                "sourcetable_set-0-table": "test_table",
+                "sourcetable_set-0-data_grid_enabled": "on",
+                "charts-TOTAL_FORMS": "1",
+                "charts-INITIAL_FORMS": "0",
+                "charts-MIN_NUM_FORMS": "0",
+                "charts-MAX_NUM_FORMS": "1000",
+            },
+        )
+        self.assertContains(response, "This field is required")
 
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     def test_delete_local_source_link_aws_failure(self, mock_client):
@@ -3136,6 +3275,7 @@ class TestDatasetAdminPytest:
                 "short_description": "test description that is short",
                 "information_asset_owner": user.id,
                 "information_asset_manager": user.id,
+                "enquiries_contact": user.id,
                 "sort_direction": ReferenceDataset.SORT_DIR_DESC,
                 "fields-TOTAL_FORMS": 1,
                 "fields-INITIAL_FORMS": 1,
