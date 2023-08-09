@@ -6,7 +6,7 @@ from django.views.generic import CreateView, UpdateView, DetailView
 
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.datasets.constants import DataSetType
-from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
+from dataworkspace.apps.datasets.models import DataSet, VisualisationCatalogueItem
 from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -191,6 +191,18 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
                         catalogue_item,
                     )
                 )
+            elif (
+                isinstance(catalogue_item, DataSet)
+                and "approved by the IAM" in catalogue_item.eligibility_criteria
+            ):
+                access_request.zendesk_reference_number = (
+                    zendesk.notify_visualisation_access_request(
+                        request,
+                        access_request,
+                        catalogue_item,
+                    )
+                )
+
             else:
                 access_request.zendesk_reference_number = zendesk.create_zendesk_ticket(
                     request,

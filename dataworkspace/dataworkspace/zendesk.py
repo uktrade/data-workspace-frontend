@@ -136,6 +136,64 @@ def update_zendesk_ticket(ticket_id, comment=None, status=None):
     return ticket
 
 
+def notify_dataset_access_request(request, access_request, dataset):
+    dataset_url = request.build_absolute_uri(dataset.get_absolute_url())
+    catalogue_editors_emails = [editor.email for editor in dataset.data_catalogue_editors]
+    message = f"""
+An access request has been sent to the Information Asset Manager and Catalogue Editors to process.
+
+There is no need to action this ticket until a further notification is received.
+
+Data Set: {dataset.name} ({dataset_url})
+
+Requestor {request.user.email}
+People finder link: {get_people_url(request.user.get_full_name())}
+
+Requestor’s response to why access is needed:
+{access_request.reason_for_access}
+
+Information Asset Manager: {dataset.information_asset_manager.email if dataset.information_asset_manager else 'Not set'}
+
+Catalogue Editors: {", ".join(catalogue_editors_emails)}
+
+If access has not been granted to the requestor within 5 working days, this will trigger an update to this Zendesk ticket to resolve the request.
+    """
+
+    ticket_reference = create_support_request(
+        request.user,
+        request.user.email,
+        message,
+        subject=f"Data set access request received - {dataset.name}",
+        tag="dataset-access-request",
+    )
+
+    authorize_url = request.build_absolute_uri(
+        reverse("admin:auth_user_change", args=[access_request.requester.id])
+    )
+
+    contacts = set()
+    contacts.add(dataset.information_asset_manager.email)
+    if catalogue_editors_emails:
+        contacts.add(catalogue_editors_emails)
+    people_url = get_people_url(request.user.get_full_name())
+
+    for contact in contacts:
+        send_email(
+            settings.NOTIFY_DATASET_ACCESS_REQUEST_TEMPLATE_ID,
+            contact,
+            personalisation={
+                "dataset_name": dataset.name,
+                "dataset_url": dataset_url,
+                "user_email": access_request.contact_email,
+                "goal": access_request.reason_for_access,
+                "people_url": people_url,
+                "give_access_url": f"{authorize_url}",
+            },
+        )
+
+    return ticket_reference
+
+
 def notify_visualisation_access_request(request, access_request, dataset):
     dataset_url = request.build_absolute_uri(dataset.get_absolute_url())
     message = f"""
