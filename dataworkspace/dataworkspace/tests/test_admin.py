@@ -2458,6 +2458,21 @@ class TestSourceLinkAdmin(BaseAdminTestCase):
 
 
 class TestDatasetAdmin(BaseAdminTestCase):
+    def test_update_dataset_with_description_not_long_enough(self):
+        dataset = factories.DataSetFactory.create()
+        response = self._authenticated_post(
+            reverse("admin:datasets_datacutdataset_change", args=(dataset.id,)),
+            {
+                "published": dataset.published,
+                "name": dataset.name,
+                "slug": dataset.slug,
+                "short_description": "test short description",
+                "description": "not long enough description",
+                "type": 2,
+            },
+        )
+        self.assertContains(response, "Description must contain 30 or more words")
+
     def test_edit_dataset_authorized_users(self):
         dataset = factories.DataSetFactory.create()
         user1 = factories.UserFactory.create()
