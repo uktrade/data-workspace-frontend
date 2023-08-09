@@ -325,7 +325,7 @@ class DataSet(DeletableTimestampedUserModel):
         return self.name
 
     def clean(self):
-        if len(re.findall(r'\w+', self.description)) < 30:
+        if len(re.findall(r"\w+", self.description)) < 30:
             raise ValidationError("Description must contain 30 or more words")
 
     @transaction.atomic

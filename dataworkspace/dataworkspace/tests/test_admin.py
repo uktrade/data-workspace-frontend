@@ -30,7 +30,8 @@ from dataworkspace.tests import factories
 from dataworkspace.tests.common import BaseAdminTestCase, get_http_sso_data
 
 
-LONG_DATASET_DESCRIPTION = "This is a very long dataset description. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam."
+LONG_DATASET_DESCRIPTION = "This is a very long dataset description. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam."  # pylint: disable=line-too-long
+
 
 class TestCustomAdminSite(BaseAdminTestCase):
     def test_non_admin_access(self):
