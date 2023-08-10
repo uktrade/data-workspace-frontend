@@ -61,8 +61,6 @@ class ReferenceDatasetForm(AutoCompleteUserFieldsMixin, forms.ModelForm):
             self.fields["information_asset_owner"].required = True
         if "information_asset_manager" in self.fields:
             self.fields["information_asset_manager"].required = True
-        if "enquiries_contact" in self.fields:
-            self.fields["enquiries_contact"].required = True
         if "sort_field" in self.fields:
             self.fields["sort_field"].queryset = self.instance.fields.all()
 
@@ -533,7 +531,6 @@ class DataCutDatasetForm(BaseDatasetForm):
         super().__init__(*args, **kwargs)
         self.fields["information_asset_owner"].required = True
         self.fields["information_asset_manager"].required = True
-        self.fields["enquiries_contact"].required = True
 
     class Meta:
         model = MasterDataset
@@ -548,7 +545,6 @@ class MasterDatasetForm(BaseDatasetForm):
         super().__init__(*args, **kwargs)
         self.fields["information_asset_owner"].required = True
         self.fields["information_asset_manager"].required = True
-        self.fields["enquiries_contact"].required = True
 
     class Meta:
         model = MasterDataset
@@ -722,7 +718,6 @@ class VisualisationCatalogueItemForm(AutoCompleteUserFieldsMixin, forms.ModelFor
 
         self.fields["information_asset_owner"].required = True
         self.fields["information_asset_manager"].required = True
-        self.fields["enquiries_contact"].required = True
 
 
 class VisualisationLinkForm(forms.ModelForm):
