@@ -138,7 +138,7 @@ def update_zendesk_ticket(ticket_id, comment=None, status=None):
 
 def notify_dataset_access_request(request, access_request, dataset):
     dataset_url = request.build_absolute_uri(dataset.get_absolute_url())
-    catalogue_editors_emails = [editor.email for editor in dataset.data_catalogue_editors]
+    catalogue_editors_emails = [editor.email for editor in dataset.data_catalogue_editors.all()]
     message = f"""
 An access request has been sent to the Information Asset Manager and Catalogue Editors to process.
 
@@ -166,7 +166,6 @@ If access has not been granted to the requestor within 5 working days, this will
         subject=f"Data set access request received - {dataset.name}",
         tag="dataset-access-request",
     )
-
     authorize_url = request.build_absolute_uri(
         reverse("admin:auth_user_change", args=[access_request.requester.id])
     )
@@ -174,7 +173,8 @@ If access has not been granted to the requestor within 5 working days, this will
     contacts = set()
     contacts.add(dataset.information_asset_manager.email)
     if catalogue_editors_emails:
-        contacts.add(catalogue_editors_emails)
+        contacts.update(catalogue_editors_emails)
+
     people_url = get_people_url(request.user.get_full_name())
 
     for contact in contacts:

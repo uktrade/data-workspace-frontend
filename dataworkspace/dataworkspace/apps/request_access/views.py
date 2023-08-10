@@ -179,7 +179,6 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
                 if access_request.catalogue_item_id
                 else None
             )
-
             if (
                 isinstance(catalogue_item, VisualisationCatalogueItem)
                 and catalogue_item.visualisation_template is not None
@@ -193,15 +192,14 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
                 )
             elif (
                 isinstance(catalogue_item, DataSet)
-                and catalogue_item.eligibility_criteria
-                and "approved by the IAM" in catalogue_item.eligibility_criteria
+                and catalogue_item.eligibility_criteria is not None
+                and "Access has been explicitly approved by the IAM"
+                in catalogue_item.eligibility_criteria
             ):
-                access_request.zendesk_reference_number = (
-                    zendesk.notify_dataset_access_request(
-                        request,
-                        access_request,
-                        catalogue_item,
-                    )
+                access_request.zendesk_reference_number = zendesk.notify_dataset_access_request(
+                    request,
+                    access_request,
+                    catalogue_item,
                 )
             else:
                 access_request.zendesk_reference_number = zendesk.create_zendesk_ticket(
