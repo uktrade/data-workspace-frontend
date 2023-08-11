@@ -80,7 +80,7 @@ cryptography==41.0.3
     # via -r requirements.in
 dj-database-url==0.5.0
     # via -r requirements.in
-django==3.2.19
+django==3.2.20
     # via
     #   -r requirements.in
     #   django-admin-sortable2
@@ -149,7 +149,9 @@ geoalchemy2==0.8.4
 gevent==21.12.0
     # via -r requirements.in
 greenlet==1.1.0
-    # via gevent
+    # via
+    #   gevent
+    #   sqlalchemy
 hawk-server-asyncio==0.0.13
     # via -r requirements.in
 idna==2.10
