@@ -646,6 +646,46 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         self.assertContains(response, "Please select only one unique identifier field")
         self.assertEqual(num_datasets, ReferenceDataset.objects.count())
 
+    def test_create_reference_dataset_description_not_long_enough(self):
+        ref_dataset_slug = "test-ref-1"
+        num_datasets = ReferenceDataset.objects.count()
+        response = self._authenticated_post(
+            reverse("admin:datasets_referencedataset_add"),
+            {
+                "name": "test ref 1",
+                "table_name": "ref_test_create_ref_dataset_valid",
+                "slug": ref_dataset_slug,
+                "external_database": "",
+                "short_description": "test description that is short",
+                "information_asset_manager": self.user.id,
+                "information_asset_owner": self.user.id,
+                "description": "not long enough",
+                "valid_from": "",
+                "valid_to": "",
+                "enquiries_contact": "",
+                "licence": "",
+                "restrictions_on_usage": "",
+                "sort_field": "",
+                "sort_direction": ReferenceDataset.SORT_DIR_DESC,
+                "fields-TOTAL_FORMS": 2,
+                "fields-INITIAL_FORMS": 0,
+                "fields-MIN_NUM_FORMS": 1,
+                "fields-MAX_NUM_FORMS": 1000,
+                "fields-0-name": "field1",
+                "fields-0-column_name": "field1",
+                "fields-0-data_type": 2,
+                "fields-0-description": "A field",
+                "fields-0-is_identifier": "on",
+                "fields-0-is_display_name": "on",
+                "fields-1-name": "field2",
+                "fields-1-column_name": "field2",
+                "fields-1-data_type": 1,
+                "fields-1-description": "Another field",
+            },
+        )
+        self.assertContains(response, "Description must contain 30 or more words")
+        self.assertEqual(num_datasets, ReferenceDataset.objects.count())
+
     def test_edit_reference_dataset_duplicate_display_name(self):
         reference_dataset = self._create_reference_dataset()
         field1 = factories.ReferenceDatasetFieldFactory(
