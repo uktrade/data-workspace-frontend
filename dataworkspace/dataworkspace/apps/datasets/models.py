@@ -1377,6 +1377,10 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     def send_post_data_url(self):
         return reverse("datasets:reference_dataset_download", args=(self.uuid,))
 
+    def clean(self):
+        if len(re.findall(r"\w+", self.description)) < 30:
+            raise ValidationError("Description must contain 30 or more words")
+
     @transaction.atomic
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         create = self.pk is None
