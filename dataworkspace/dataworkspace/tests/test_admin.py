@@ -564,7 +564,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "short_description": "test description that is short",
                 "information_asset_manager": self.user.id,
                 "information_asset_owner": self.user.id,
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "valid_from": "",
                 "valid_to": "",
                 "enquiries_contact": self.user.id,
@@ -591,7 +591,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         self.assertContains(response, "was added successfully")
         self.assertEqual(num_datasets + 1, ReferenceDataset.objects.count())
         ref_dataset = ReferenceDataset.objects.get(slug=ref_dataset_slug)
-        self.assertEqual(ref_dataset.description, "test description")
+        self.assertEqual(ref_dataset.description, LONG_DATASET_DESCRIPTION)
 
     def test_edit_reference_dataset_duplicate_identifier(self):
         reference_dataset = self._create_reference_dataset()
@@ -872,7 +872,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "short_description": "test description that is short",
                 "information_asset_manager": self.user.id,
                 "information_asset_owner": self.user.id,
-                "description": "",
+                "description": LONG_DATASET_DESCRIPTION,
                 "valid_from": "",
                 "valid_to": "",
                 "enquiries_contact": self.user.id,
@@ -930,7 +930,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "short_description": reference_dataset.short_description,
                 "information_asset_manager": self.user.id,
                 "information_asset_owner": self.user.id,
-                "description": "",
+                "description": LONG_DATASET_DESCRIPTION,
                 "valid_from": "",
                 "valid_to": "",
                 "enquiries_contact": self.user.id,
@@ -987,7 +987,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "short_description": "test description that is short",
                 "information_asset_manager": self.user.id,
                 "information_asset_owner": self.user.id,
-                "description": "",
+                "description": LONG_DATASET_DESCRIPTION,
                 "valid_from": "",
                 "valid_to": "",
                 "enquiries_contact": self.user.id,
@@ -1143,7 +1143,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "short_description": "test description that is short",
                 "information_asset_manager": self.user.id,
                 "information_asset_owner": self.user.id,
-                "description": "",
+                "description": LONG_DATASET_DESCRIPTION,
                 "valid_from": "",
                 "valid_to": "",
                 "enquiries_contact": self.user.id,
@@ -1878,7 +1878,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "short_description": "test description that is short",
                 "information_asset_manager": self.user.id,
                 "information_asset_owner": self.user.id,
-                "description": "",
+                "description": LONG_DATASET_DESCRIPTION,
                 "valid_from": "",
                 "valid_to": "",
                 "enquiries_contact": self.user.id,
@@ -1990,7 +1990,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "short_description": "test description that is short",
                 "information_asset_manager": self.user.id,
                 "information_asset_owner": self.user.id,
-                "description": "",
+                "description": LONG_DATASET_DESCRIPTION,
                 "valid_from": "",
                 "valid_to": "",
                 "enquiries_contact": self.user.id,
@@ -2337,7 +2337,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "short_description": "test description that is short",
                 "information_asset_manager": self.user.id,
                 "information_asset_owner": self.user.id,
-                "description": "",
+                "description": LONG_DATASET_DESCRIPTION,
                 "valid_from": "",
                 "valid_to": "",
                 "enquiries_contact": self.user.id,
@@ -3271,7 +3271,7 @@ class TestDatasetAdminPytest:
             data_type=1,
             is_identifier=True,
             column_name="field_1",
-            description="field 1 description",
+            description=LONG_DATASET_DESCRIPTION,
         )
         user.is_staff = True
         perm = Permission.objects.get(codename="manage_unpublished_reference_datasets")
@@ -3291,6 +3291,7 @@ class TestDatasetAdminPytest:
                 "table_name": dataset.table_name,
                 "slug": dataset.slug,
                 "short_description": "test description that is short",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": user.id,
                 "information_asset_manager": user.id,
                 "enquiries_contact": user.id,
