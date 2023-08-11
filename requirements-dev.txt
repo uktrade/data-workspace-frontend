@@ -132,7 +132,7 @@ click-repl==0.2.0
     #   celery
 coverage==5.4
     # via pytest-cov
-cryptography==41.0.1
+cryptography==41.0.3
     # via
     #   -r requirements.txt
     #   pyopenssl
