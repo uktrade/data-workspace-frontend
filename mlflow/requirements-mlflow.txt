@@ -104,7 +104,7 @@ multidict==6.0.2
     # via
     #   aiohttp
     #   yarl
-numpy==1.22.0
+numpy==1.23.5
     # via
     #   contourpy
     #   matplotlib
