@@ -63,6 +63,8 @@ gitdb==4.0.9
     # via gitpython
 gitpython==3.1.30
     # via mlflow
+greenlet==2.0.2
+    # via sqlalchemy
 gunicorn==20.1.0
     # via mlflow
 idna==3.3
@@ -70,12 +72,7 @@ idna==3.3
     #   requests
     #   yarl
 importlib-metadata==4.12.0
-    # via
-    #   flask
-    #   markdown
-    #   mlflow
-importlib-resources==5.12.0
-    # via matplotlib
+    # via mlflow
 itsdangerous==2.1.2
     # via flask
 jinja2==3.1.2
@@ -166,7 +163,7 @@ scikit-learn==1.0.2
     # via
     #   mlflow
     #   sklearn
-scipy==1.7.3
+scipy==1.10.0
     # via
     #   mlflow
     #   scikit-learn
@@ -200,9 +197,7 @@ werkzeug==2.3.4
 yarl==1.7.2
     # via aiohttp
 zipp==3.8.0
-    # via
-    #   importlib-metadata
-    #   importlib-resources
+    # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
