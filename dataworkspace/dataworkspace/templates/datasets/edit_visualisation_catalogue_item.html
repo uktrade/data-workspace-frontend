@@ -53,7 +53,7 @@
                         </label>
                         {% if form.enquiries_contact.errors %}
                           <span id="id_enquiries_contact-error" class="govuk-error-message">
-                            <span class="govuk-visually-hidden">Error: </span> {{ form.enquiries_contact.errors.0 }}
+                            <span class="govuk-visually-hidden">Error: </span> Please choose the appropriate Government Security Classification
                           </span>
                         {% endif %}
                         <input class="govuk-input" type="hidden" name="enquiries_contact" id="id_user_access_type" value="{% if request.GET.enquiries_contact %}{{ request.GET.enquiries_contact }}{% else %}{{ form.enquiries_contact.value }}{% endif %}">

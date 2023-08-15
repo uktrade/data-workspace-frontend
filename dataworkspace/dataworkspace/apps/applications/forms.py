@@ -66,7 +66,7 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
         queryset=get_user_model().objects.all(),
         to_field_name="email",
         widget=GOVUKDesignSystemTextWidget(label_is_heading=False),
-        required=False,
+        required=True,
         error_messages={
             "invalid_email": "Enter a valid email address for the enquiries contact",
             "invalid_choice": "The enquiries contact must have previously visited Data Workspace",
