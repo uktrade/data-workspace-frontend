@@ -166,8 +166,9 @@ If access has not been granted to the requestor within 5 working days, this will
         subject=f"Data set access request received - {dataset.name}",
         tag="dataset-access-request",
     )
+
     authorize_url = request.build_absolute_uri(
-        reverse("admin:auth_user_change", args=[access_request.requester.id])
+        reverse("datasets:edit_permissions", args=[dataset.id])
     )
 
     contacts = set()
