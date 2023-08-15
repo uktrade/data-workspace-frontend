@@ -49,9 +49,12 @@ def _visualisation_ui_gitlab_mocks():
 
 class TestDataVisualisationUICataloguePage:
     def test_successful_post_data(self, staff_client):
+        user = factories.UserFactory.create()
+
         visualisation = factories.VisualisationCatalogueItemFactory.create(
             short_description="old",
             published=False,
+            enquiries_contact=user.email,
             visualisation_template__gitlab_project_id=1,
         )
 
@@ -92,9 +95,12 @@ class TestDataVisualisationUICataloguePage:
     )
     def test_can_set_user_access_type(self, staff_client, start_type, expected_type):
         log_count = LogEntry.objects.count()
+        user = factories.UserFactory.create()
+
         visualisation = factories.VisualisationCatalogueItemFactory.create(
             short_description="summary",
             published=False,
+            enquiries_contact=user.email,
             user_access_type=start_type,
             visualisation_template__gitlab_project_id=1,
         )
