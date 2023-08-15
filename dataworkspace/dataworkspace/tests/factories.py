@@ -372,7 +372,6 @@ class VisualisationCatalogueItemFactory(factory.django.DjangoModelFactory):
     slug = factory.LazyAttribute(lambda o: o.name.lower())
     published = True
     deleted = False
-    enquiries_contact = factory.SubFactory(UserFactory)
 
     class Meta:
         model = "datasets.VisualisationCatalogueItem"

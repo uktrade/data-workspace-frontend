@@ -49,13 +49,12 @@ def _visualisation_ui_gitlab_mocks():
 
 class TestDataVisualisationUICataloguePage:
     def test_successful_post_data(self, staff_client):
-        user = factories.UserFactory.create()
-
+        user = factories.UserFactory()
         visualisation = factories.VisualisationCatalogueItemFactory.create(
             short_description="old",
             published=False,
-            enquiries_contact=user.email,
             visualisation_template__gitlab_project_id=1,
+            enquiries_contact=user,
         )
 
         # Login to admin site
@@ -70,6 +69,7 @@ class TestDataVisualisationUICataloguePage:
                 {
                     "short_description": "summary",
                     "user_access_type": UserAccessType.OPEN,
+                    "enquiries_contact": user.email,
                 },
                 follow=True,
             )
@@ -95,14 +95,13 @@ class TestDataVisualisationUICataloguePage:
     )
     def test_can_set_user_access_type(self, staff_client, start_type, expected_type):
         log_count = LogEntry.objects.count()
-        user = factories.UserFactory.create()
-
+        user = factories.UserFactory()
         visualisation = factories.VisualisationCatalogueItemFactory.create(
             short_description="summary",
             published=False,
-            enquiries_contact=user.email,
             user_access_type=start_type,
             visualisation_template__gitlab_project_id=1,
+            enquiries_contact=user,
         )
 
         # Login to admin site
@@ -114,7 +113,11 @@ class TestDataVisualisationUICataloguePage:
                     "visualisations:catalogue-item",
                     args=(visualisation.visualisation_template.gitlab_project_id,),
                 ),
-                {"short_description": "summary", "user_access_type": expected_type},
+                {
+                    "short_description": "summary",
+                    "user_access_type": expected_type,
+                    "enquiries_contact": user.email,
+                },
                 follow=True,
             )
 
@@ -124,10 +127,12 @@ class TestDataVisualisationUICataloguePage:
         assert LogEntry.objects.count() == log_count + 1
 
     def test_bad_post_data_no_short_description(self, staff_client):
+        user = factories.UserFactory()
         visualisation = factories.VisualisationCatalogueItemFactory.create(
             short_description="old",
             published=False,
             visualisation_template__gitlab_project_id=1,
+            enquiries_contact=user,
         )
 
         # Login to admin site
@@ -139,7 +144,11 @@ class TestDataVisualisationUICataloguePage:
                     "visualisations:catalogue-item",
                     args=(visualisation.visualisation_template.gitlab_project_id,),
                 ),
-                {"summary": ""},
+                {
+                    "summary": "",
+                    "user_access_type": UserAccessType.OPEN,
+                    "enquiries_contact": user.email,
+                },
                 follow=True,
             )
 
