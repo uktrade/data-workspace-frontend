@@ -157,6 +157,38 @@ class TestDataVisualisationUICataloguePage:
         assert visualisation.short_description == "old"
         assert "The visualisation must have a summary" in response.content.decode(response.charset)
 
+    def test_bad_post_data_no_enquiries_contact(self, staff_client):
+        user = factories.UserFactory()
+        visualisation = factories.VisualisationCatalogueItemFactory.create(
+            short_description="old",
+            published=False,
+            visualisation_template__gitlab_project_id=1,
+            enquiries_contact=user,
+        )
+
+        # Login to admin site
+        staff_client.post(reverse("admin:index"), follow=True)
+
+        with _visualisation_ui_gitlab_mocks():
+            response = staff_client.post(
+                reverse(
+                    "visualisations:catalogue-item",
+                    args=(visualisation.visualisation_template.gitlab_project_id,),
+                ),
+                {
+                    "summary": "old",
+                    "user_access_type": UserAccessType.OPEN,
+                },
+                follow=True,
+            )
+
+        visualisation.refresh_from_db()
+        assert response.status_code == 400
+        assert visualisation.short_description == "old"
+        assert "The visualisation must have a enquiries contact" in response.content.decode(
+            response.charset
+        )
+
 
 class TestDataVisualisationUIApprovalPage:
     @pytest.mark.django_db
@@ -168,7 +200,6 @@ class TestDataVisualisationUIApprovalPage:
         user = factories.UserFactory.create(
             username="visualisation.creator@test.com",
             is_staff=False,
-            is_superuser=False,
         )
         user.user_permissions.add(develop_visualisations_permission)
         visualisation = factories.VisualisationCatalogueItemFactory.create(
