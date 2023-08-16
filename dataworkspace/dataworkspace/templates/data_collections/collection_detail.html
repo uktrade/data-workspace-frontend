@@ -237,6 +237,7 @@
                   and {{ user_memberships.count| add:"-5"}} more
                 {% endif %}
               </p>
+          {% endif %}
               {% if collection_for_all %}
                 <p class="govuk-body-s">This is a collection for all users. You <b>cannot</b> make changes to this collection.</p>
               {% else %}
@@ -245,7 +246,6 @@
                                         href="{% url 'data_collections:collection-users' source_object.id %}">View and edit
                       collection users</a></p>
                 {% endif %}
-          {% endif %}
                 {% if not collection_for_all and source_object.user_access_type == "REQUIRES_AUTHENTICATION" %}
                   <p class="govuk-body-s">This collection has been shared with all users. 
                     </p>
