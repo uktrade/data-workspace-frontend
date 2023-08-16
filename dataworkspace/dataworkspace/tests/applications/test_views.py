@@ -185,7 +185,7 @@ class TestDataVisualisationUICataloguePage:
         visualisation.refresh_from_db()
         assert response.status_code == 400
         assert visualisation.short_description == "old"
-        assert "The visualisation must have a enquiries contact" in response.content.decode(
+        assert "The visualisation must have an enquiries contact" in response.content.decode(
             response.charset
         )
 
