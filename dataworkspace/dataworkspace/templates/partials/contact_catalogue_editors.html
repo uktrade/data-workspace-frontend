@@ -1,0 +1,16 @@
+{% if as_section %}
+<h2 class="govuk-heading-l">Contact</h2>
+<p class="govuk-body">
+  Use this contact to ask questions about this data and how to use it.
+</p>
+{% endif %}
+
+{% for editor in data_catalogue_editors %}
+<p class="govuk-body">
+    {{ editor.first_name }} {{ editor.last_name }}
+    {% if editor.email %}
+        <br/>
+        <a class="govuk-link" href="mailto:{{ editor.email }}">{{ editor.email }}</a>
+    {% endif %}
+</p>
+{% endfor %}

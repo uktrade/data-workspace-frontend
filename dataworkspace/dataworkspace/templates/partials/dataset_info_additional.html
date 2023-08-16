@@ -48,12 +48,14 @@
           {% include 'partials/contact.html' with model=model.information_asset_owner %}
         </dd>
       </div>
-      <div class="govuk-summary-list__row">
-        <dt class="govuk-summary-list__key">Catalogue Editor</dt>
-        <dd class="govuk-summary-list__value">
-          {% include 'partials/contact.html' with model=(data_catalogue_editor for data_catalogue_editor in model.data_catalogue_editors) %}
-        </dd>
-      </div>
+      {% if data_catalogue_editors %}
+        <div class="govuk-summary-list__row">
+          <dt class="govuk-summary-list__key">Catalogue Editors</dt>
+          <dd class="govuk-summary-list__value">
+            {% include 'partials/contact_catalogue_editors.html' with editors=data_catalogue_editors %}
+          </dd>
+        </div>
+      {% endif %}
     </dl>
   </div>
 </details>
