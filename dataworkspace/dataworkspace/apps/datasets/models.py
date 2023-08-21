@@ -324,6 +324,10 @@ class DataSet(DeletableTimestampedUserModel):
     def __str__(self):
         return self.name
 
+    def clean(self):
+        if len(re.findall(r"\w+", self.description)) < 30:
+            raise ValidationError("Description must contain 30 or more words")
+
     @transaction.atomic
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         self.update_published_timestamp()

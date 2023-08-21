@@ -30,6 +30,9 @@ from dataworkspace.tests import factories
 from dataworkspace.tests.common import BaseAdminTestCase, get_http_sso_data
 
 
+LONG_DATASET_DESCRIPTION = "This is a very long dataset description. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam."  # pylint: disable=line-too-long
+
+
 class TestCustomAdminSite(BaseAdminTestCase):
     def test_non_admin_access(self):
         # Ensure non-admins get a 404 page
@@ -2509,6 +2512,21 @@ class TestSourceLinkAdmin(BaseAdminTestCase):
 
 
 class TestDatasetAdmin(BaseAdminTestCase):
+    def test_update_dataset_with_description_not_long_enough(self):
+        dataset = factories.DataSetFactory.create()
+        response = self._authenticated_post(
+            reverse("admin:datasets_datacutdataset_change", args=(dataset.id,)),
+            {
+                "published": dataset.published,
+                "name": dataset.name,
+                "slug": dataset.slug,
+                "short_description": "test short description",
+                "description": "not long enough description",
+                "type": 2,
+            },
+        )
+        self.assertContains(response, "Description must contain 30 or more words")
+
     def test_edit_dataset_authorized_users(self):
         dataset = factories.DataSetFactory.create()
         user1 = factories.UserFactory.create()
@@ -2525,7 +2543,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": str(user1.id),
                 "information_asset_manager": str(user1.id),
                 "enquiries_contact": str(user1.id),
@@ -2568,7 +2586,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": str(user1.id),
                 "information_asset_manager": str(user1.id),
                 "enquiries_contact": str(user1.id),
@@ -2612,7 +2630,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": str(user1.id),
                 "information_asset_manager": str(user1.id),
                 "enquiries_contact": str(user1.id),
@@ -2755,7 +2773,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": str(user1.id),
                 "information_asset_manager": str(user1.id),
                 "enquiries_contact": str(user1.id),
@@ -2810,7 +2828,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 "slug": dataset.slug,
                 "user_access_type": UserAccessType.OPEN,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": str(user.id),
                 "information_asset_manager": str(user.id),
                 "enquiries_contact": str(user.id),
@@ -2942,7 +2960,7 @@ class TestDatasetAdminPytest:
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": str(user.id),
                 "information_asset_manager": str(user.id),
                 "enquiries_contact": str(user.id),
@@ -3006,7 +3024,7 @@ class TestDatasetAdminPytest:
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": str(user.id),
                 "information_asset_manager": str(user.id),
                 "enquiries_contact": str(user.id),
@@ -3067,7 +3085,7 @@ class TestDatasetAdminPytest:
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": str(user.id),
                 "information_asset_manager": str(user.id),
                 "enquiries_contact": str(user.id),
@@ -3166,7 +3184,7 @@ class TestDatasetAdminPytest:
                 "slug": dataset.slug,
                 "user_access_type": dataset.user_access_type,
                 "short_description": "some description",
-                "description": "some description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": user.id,
                 "information_asset_manager": user.id,
                 "enquiries_contact": str(user.id),
@@ -3209,7 +3227,7 @@ class TestDatasetAdminPytest:
                 "name": "changed",
                 "slug": dataset.slug,
                 "short_description": "some description",
-                "description": "some description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": user.id,
                 "information_asset_manager": user.id,
                 "enquiries_contact": user.id,
@@ -3316,7 +3334,7 @@ class TestDatasetAdminPytest:
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": str(user.id),
                 "information_asset_manager": str(user.id),
                 "enquiries_contact": str(user.id),
@@ -3377,7 +3395,7 @@ class TestDatasetAdminPytest:
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": user.id,
                 "information_asset_manager": user.id,
                 "enquiries_contact": user.id,
@@ -3435,7 +3453,7 @@ class TestDatasetAdminPytest:
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": str(user_1.id),
                 "information_asset_manager": str(user_1.id),
                 "enquiries_contact": str(user_1.id),
@@ -3504,7 +3522,7 @@ class TestDatasetAdminPytest:
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": str(user.id),
                 "information_asset_manager": str(user.id),
                 "enquiries_contact": str(user.id),
@@ -3566,7 +3584,7 @@ class TestDatasetAdminPytest:
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": str(user.id),
                 "information_asset_manager": str(user.id),
                 "enquiries_contact": str(user.id),
@@ -3668,7 +3686,7 @@ class TestDatasetAdminPytest:
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": user.id,
                 "information_asset_manager": user.id,
                 "enquiries_contact": user.id,
@@ -3718,7 +3736,7 @@ class TestDatasetAdminPytest:
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": user.id,
                 "information_asset_manager": user.id,
                 "enquiries_contact": user.id,
