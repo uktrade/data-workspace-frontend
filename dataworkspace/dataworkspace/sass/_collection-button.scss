@@ -49,6 +49,34 @@ $background-colour: $govuk-brand-colour;
     }
 }
 
+.collection-for-all-button__link {
+    @extend .govuk-button;
+    @extend .govuk-button--start;
+    text-align: left;
+    background: white;
+    border: solid;
+    border-width: medium;
+    border-color: $background-colour;
+    color: $background-colour !important;
+    margin: 0;
+    box-sizing: border-box;
+    box-shadow: none;
+    min-height: govuk-em(70, 16);
+    height: 100%;
+    width: 100%;
+    display: block;
+
+    &:hover {
+        @extend .govuk-button:hover;
+        background-color: govuk-shade(white, 5);
+    }
+    padding: govuk-spacing(2);
+    @include mq($from: tablet) {
+        padding: govuk-spacing(3);
+    }
+}
+
+
 .collection-button__text {
     @include govuk-font($size: 14);
     display: block;
