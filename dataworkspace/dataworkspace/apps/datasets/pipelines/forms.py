@@ -76,10 +76,18 @@ class SQLPipelineCreateForm(BasePipelineCreateForm):
         ),
         error_messages={"required": "Enter an SQL query."},
     )
+    notes = GOVUKDesignSystemTextareaField(
+        label="SQL Query",
+        widget=GOVUKDesignSystemTextareaWidget(
+            label_is_heading=False,
+            extra_label_classes="govuk-!-font-weight-bold",
+            attrs={"rows": 5},
+        ),
+    )
 
     class Meta:
         model = Pipeline
-        fields = ["table_name", "sql", "type"]
+        fields = ["table_name", "sql", "type","notes"]
 
     def save(self, commit=True):
         pipeline = super().save(commit=False)

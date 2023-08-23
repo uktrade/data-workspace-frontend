@@ -2777,6 +2777,7 @@ class Pipeline(TimeStampedUserModel):
     table_name = models.CharField(max_length=256, unique=True)
     type = models.CharField(max_length=255, choices=PipelineType.choices)
     config = models.JSONField()
+    notes=models.textField()
 
     class Meta:
         ordering = ("table_name",)
