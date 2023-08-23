@@ -307,6 +307,7 @@ def application_instance_max_cpu(application_instance):
         "query": f'increase(precpu_stats__cpu_usage__total_usage{{instance="{instance}"}}[30s])[2h:30s]'
     }
     try:
+        logger.info("kill_idle_fargate: finding CPU usage for %s", instance)
         response = requests.get(url, params)
     except requests.RequestException:
         # pylint: disable=raise-missing-from
