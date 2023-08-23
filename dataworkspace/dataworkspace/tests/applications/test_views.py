@@ -49,10 +49,12 @@ def _visualisation_ui_gitlab_mocks():
 
 class TestDataVisualisationUICataloguePage:
     def test_successful_post_data(self, staff_client):
+        user = factories.UserFactory()
         visualisation = factories.VisualisationCatalogueItemFactory.create(
             short_description="old",
             published=False,
             visualisation_template__gitlab_project_id=1,
+            enquiries_contact=user,
         )
 
         # Login to admin site
@@ -67,6 +69,7 @@ class TestDataVisualisationUICataloguePage:
                 {
                     "short_description": "summary",
                     "user_access_type": UserAccessType.OPEN,
+                    "enquiries_contact": user.email,
                 },
                 follow=True,
             )
@@ -92,11 +95,13 @@ class TestDataVisualisationUICataloguePage:
     )
     def test_can_set_user_access_type(self, staff_client, start_type, expected_type):
         log_count = LogEntry.objects.count()
+        user = factories.UserFactory()
         visualisation = factories.VisualisationCatalogueItemFactory.create(
             short_description="summary",
             published=False,
             user_access_type=start_type,
             visualisation_template__gitlab_project_id=1,
+            enquiries_contact=user,
         )
 
         # Login to admin site
@@ -108,7 +113,11 @@ class TestDataVisualisationUICataloguePage:
                     "visualisations:catalogue-item",
                     args=(visualisation.visualisation_template.gitlab_project_id,),
                 ),
-                {"short_description": "summary", "user_access_type": expected_type},
+                {
+                    "short_description": "summary",
+                    "user_access_type": expected_type,
+                    "enquiries_contact": user.email,
+                },
                 follow=True,
             )
 
@@ -118,10 +127,12 @@ class TestDataVisualisationUICataloguePage:
         assert LogEntry.objects.count() == log_count + 1
 
     def test_bad_post_data_no_short_description(self, staff_client):
+        user = factories.UserFactory()
         visualisation = factories.VisualisationCatalogueItemFactory.create(
             short_description="old",
             published=False,
             visualisation_template__gitlab_project_id=1,
+            enquiries_contact=user,
         )
 
         # Login to admin site
@@ -133,7 +144,11 @@ class TestDataVisualisationUICataloguePage:
                     "visualisations:catalogue-item",
                     args=(visualisation.visualisation_template.gitlab_project_id,),
                 ),
-                {"summary": ""},
+                {
+                    "summary": "",
+                    "user_access_type": UserAccessType.OPEN,
+                    "enquiries_contact": user.email,
+                },
                 follow=True,
             )
 
@@ -141,6 +156,38 @@ class TestDataVisualisationUICataloguePage:
         assert response.status_code == 400
         assert visualisation.short_description == "old"
         assert "The visualisation must have a summary" in response.content.decode(response.charset)
+
+    def test_bad_post_data_no_enquiries_contact(self, staff_client):
+        user = factories.UserFactory()
+        visualisation = factories.VisualisationCatalogueItemFactory.create(
+            short_description="old",
+            published=False,
+            visualisation_template__gitlab_project_id=1,
+            enquiries_contact=user,
+        )
+
+        # Login to admin site
+        staff_client.post(reverse("admin:index"), follow=True)
+
+        with _visualisation_ui_gitlab_mocks():
+            response = staff_client.post(
+                reverse(
+                    "visualisations:catalogue-item",
+                    args=(visualisation.visualisation_template.gitlab_project_id,),
+                ),
+                {
+                    "summary": "old",
+                    "user_access_type": UserAccessType.OPEN,
+                },
+                follow=True,
+            )
+
+        visualisation.refresh_from_db()
+        assert response.status_code == 400
+        assert visualisation.short_description == "old"
+        assert "The visualisation must have an enquiries contact" in response.content.decode(
+            response.charset
+        )
 
 
 class TestDataVisualisationUIApprovalPage:
@@ -153,7 +200,6 @@ class TestDataVisualisationUIApprovalPage:
         user = factories.UserFactory.create(
             username="visualisation.creator@test.com",
             is_staff=False,
-            is_superuser=False,
         )
         user.user_permissions.add(develop_visualisations_permission)
         visualisation = factories.VisualisationCatalogueItemFactory.create(
