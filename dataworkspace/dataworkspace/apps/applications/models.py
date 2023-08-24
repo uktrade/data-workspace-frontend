@@ -262,6 +262,7 @@ class ApplicationInstance(TimeStampedModel):
             models.Index(fields=["created_date"]),
             models.Index(fields=["owner", "created_date"]),
             models.Index(fields=["public_host", "state"]),
+            models.Index(fields=["state"]),
         ]
         permissions = [
             ("start_all_applications", "Can start all applications"),
