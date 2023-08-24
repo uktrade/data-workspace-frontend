@@ -3,28 +3,27 @@ import base64
 import json
 import logging
 import os
+import requests
 import sys
 import urllib.parse
 
-from lowhaio import Pool, buffered
+import httpx
 
 
 async def async_main(logger, target_file, url, username, password):
-    request, _ = Pool()
-
     while True:
         await asyncio.sleep(10)
         try:
             logger.debug("Fetching from %s", url)
-            headers = (
-                (
-                    b"Authorization",
-                    b"Basic " + base64.b64encode(f"{username}:{password}".encode("ascii")),
-                ),
-            )
-            code, _, body = await request(b"GET", url, headers=headers)
-            logger.debug("Code %s", code)
-            raw_json = await buffered(body)
+            headers = {
+                b"Authorization": b"Basic "
+                + base64.b64encode(f"{username}:{password}".encode("ascii"))
+            }
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url, headers=headers)
+            response.raise_for_status()
+            logger.debug("Code %s", response.status_code)
+            raw_json = response.json()
             logger.debug("Received %s", raw_json)
             applications = json.loads(raw_json)["applications"]
             logger.debug("Found %s", applications)
