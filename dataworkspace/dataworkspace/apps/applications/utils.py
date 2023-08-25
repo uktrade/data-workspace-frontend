@@ -160,7 +160,7 @@ def application_options(application_template):
 
 def api_application_dict(application_instance, ignore_spawner_state=False):
     if ignore_spawner_state:
-        api_state = None
+        api_state = application_instance.state
     else:
         spawner_state = get_spawner(application_instance.application_template.spawner).state(
             application_instance.spawner_application_template_options,
