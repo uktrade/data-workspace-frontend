@@ -158,18 +158,21 @@ def application_options(application_template):
     }
 
 
-def api_application_dict(application_instance):
-    spawner_state = get_spawner(application_instance.application_template.spawner).state(
-        application_instance.spawner_application_template_options,
-        application_instance.created_date.replace(tzinfo=None),
-        application_instance.spawner_application_instance_id,
-        application_instance.public_host,
-    )
+def api_application_dict(application_instance, ignore_spawner_state=False):
+    if ignore_spawner_state:
+        api_state = application_instance.state
+    else:
+        spawner_state = get_spawner(application_instance.application_template.spawner).state(
+            application_instance.spawner_application_template_options,
+            application_instance.created_date.replace(tzinfo=None),
+            application_instance.spawner_application_instance_id,
+            application_instance.public_host,
+        )
 
-    # Only pass through the database state if the spawner is running,
-    # Otherwise, we are in an error condition, and so return the spawner
-    # state, so the client (i.e. the proxy) knows to take action
-    api_state = application_instance.state if spawner_state == "RUNNING" else spawner_state
+        # Only pass through the database state if the spawner is running,
+        # Otherwise, we are in an error condition, and so return the spawner
+        # state, so the client (i.e. the proxy) knows to take action
+        api_state = application_instance.state if spawner_state == "RUNNING" else spawner_state
 
     sso_id_hex_short = stable_identification_suffix(
         str(application_instance.owner.profile.sso_id), short=True
