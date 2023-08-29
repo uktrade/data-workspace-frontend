@@ -494,6 +494,7 @@ class PipelineFactory(factory.django.DjangoModelFactory):
     type = "sql"
     table_name = factory.fuzzy.FuzzyText(length=20, prefix="schema.")
     config = {}
+    notes = ""
 
     class Meta:
         model = "datasets.Pipeline"
