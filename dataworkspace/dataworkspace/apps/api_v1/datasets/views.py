@@ -340,6 +340,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         "security_classification_display",
         "sensitivity_name",
         "quicksight_id",
+        "catalogue_editors",
     ]
     queryset = (
         DataSet.objects.live()
@@ -371,6 +372,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         )
         .annotate(sensitivity_name=ArrayAgg("sensitivity__name", distinct=True))
         .annotate(quicksight_id=Value([], output_field=ArrayField(models.TextField())))
+        .annotate(catalogue_editors=ArrayAgg("data_catalogue_editors__id", distinct=True))
         .exclude(type=DataSetType.REFERENCE)
         .values(*fields)
         .union(
@@ -402,6 +404,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
             )
             .annotate(sensitivity_name=ArrayAgg("sensitivity__name", distinct=True))
             .annotate(quicksight_id=Value([], output_field=ArrayField(models.TextField())))
+            .annotate(catalogue_editors=Value([], output_field=ArrayField(models.IntegerField())))
             .values(*_replace(fields, "id", "uuid"))
         )
         .union(
@@ -441,6 +444,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
                     distinct=True,
                 )
             )
+            .annotate(catalogue_editors=ArrayAgg("data_catalogue_editors__id", distinct=True))
             .values(
                 *fields,
             )

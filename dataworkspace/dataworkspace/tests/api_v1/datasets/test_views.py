@@ -434,9 +434,12 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
         retention_policy=None,
         eligibility_criteria=None,
         userids=None,
+        data_catalogue_editors=None,
     ):
         if userids is None:
             userids = []
+        if data_catalogue_editors is None:
+            data_catalogue_editors = []
         return {
             "id": str(dataset.uuid) if isinstance(dataset, ReferenceDataset) else str(dataset.id),
             "name": dataset.name,
@@ -453,6 +456,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             "information_asset_manager": dataset.information_asset_manager.id
             if dataset.information_asset_manager
             else None,
+            "data_catalogue_editors": data_catalogue_editors,
             "enquiries_contact": dataset.enquiries_contact.id
             if dataset.enquiries_contact
             else None,
@@ -483,9 +487,11 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             "quicksight_id": None,
             "security_classification_display": None,
             "sensitivity_name": [None],
+        
         }
 
     def test_success(self, unauthenticated_client):
+        catalogue_editor= factories.UserFactory.create()
         with freeze_time("2020-01-01 00:00:00"):
             datacut = factories.DatacutDataSetFactory(
                 information_asset_owner=factories.UserFactory(),
@@ -494,6 +500,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
                 personal_data="personal",
                 retention_policy="retention",
                 eligibility_criteria=["eligibility"],
+                data_catalogue_editors=[catalogue_editor.id]
             )
         datacut.tags.set([factories.SourceTagFactory()])
 
@@ -501,6 +508,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             master_dataset = factories.MasterDataSetFactory(
                 information_asset_owner=factories.UserFactory(),
                 information_asset_manager=factories.UserFactory(),
+                data_catalogue_editors=[catalogue_editor.id],
                 personal_data="personal",
                 retention_policy="retention",
                 dictionary_published=True,
