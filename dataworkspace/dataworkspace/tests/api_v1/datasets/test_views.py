@@ -438,9 +438,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
     ):
         if userids is None:
             userids = []
-        if data_catalogue_editors is None:
-            data_catalogue_editors = []
-        return {
+        response = {
             "id": str(dataset.uuid) if isinstance(dataset, ReferenceDataset) else str(dataset.id),
             "name": dataset.name,
             "short_description": dataset.short_description,
@@ -456,7 +454,6 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             "information_asset_manager": dataset.information_asset_manager.id
             if dataset.information_asset_manager
             else None,
-            "data_catalogue_editors": data_catalogue_editors,
             "enquiries_contact": dataset.enquiries_contact.id
             if dataset.enquiries_contact
             else None,
@@ -487,11 +484,13 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             "quicksight_id": None,
             "security_classification_display": None,
             "sensitivity_name": [None],
-        
         }
+        if data_catalogue_editors is not None:
+            response["catalogue_editors"] = data_catalogue_editors
+        return response
 
     def test_success(self, unauthenticated_client):
-        catalogue_editor= factories.UserFactory.create()
+        catalogue_editor = factories.UserFactory.create()
         with freeze_time("2020-01-01 00:00:00"):
             datacut = factories.DatacutDataSetFactory(
                 information_asset_owner=factories.UserFactory(),
@@ -500,15 +499,14 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
                 personal_data="personal",
                 retention_policy="retention",
                 eligibility_criteria=["eligibility"],
-                data_catalogue_editors=[catalogue_editor.id]
             )
+        datacut.data_catalogue_editors.set([catalogue_editor])
         datacut.tags.set([factories.SourceTagFactory()])
 
         with freeze_time("2020-01-01 00:01:00"):
             master_dataset = factories.MasterDataSetFactory(
                 information_asset_owner=factories.UserFactory(),
                 information_asset_manager=factories.UserFactory(),
-                data_catalogue_editors=[catalogue_editor.id],
                 personal_data="personal",
                 retention_policy="retention",
                 dictionary_published=True,
@@ -539,6 +537,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
                 datacut.personal_data,
                 datacut.retention_policy,
                 datacut.eligibility_criteria,
+                data_catalogue_editors=[catalogue_editor.id],
             ),
             self.expected_response(
                 master_dataset,

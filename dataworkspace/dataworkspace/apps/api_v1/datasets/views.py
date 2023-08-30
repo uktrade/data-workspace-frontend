@@ -372,7 +372,11 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         )
         .annotate(sensitivity_name=ArrayAgg("sensitivity__name", distinct=True))
         .annotate(quicksight_id=Value([], output_field=ArrayField(models.TextField())))
-        .annotate(catalogue_editors=ArrayAgg("data_catalogue_editors__id", distinct=True))
+        .annotate(
+            catalogue_editors=ArrayAgg(
+                "data_catalogue_editors__id", distinct=True, default=Value([])
+            )
+        )
         .exclude(type=DataSetType.REFERENCE)
         .values(*fields)
         .union(
@@ -444,7 +448,11 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
                     distinct=True,
                 )
             )
-            .annotate(catalogue_editors=ArrayAgg("data_catalogue_editors__id", distinct=True))
+            .annotate(
+                catalogue_editors=ArrayAgg(
+                    "data_catalogue_editors__id", distinct=True, default=Value([])
+                )
+            )
             .values(
                 *fields,
             )
