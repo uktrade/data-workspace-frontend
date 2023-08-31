@@ -554,7 +554,7 @@ class DatasetDetailView(DetailView):
         total_record_count = records.count()
         preview_limit = self.get_preview_limit(total_record_count)
         records = records[:preview_limit]
-        code_snippets = get_code_snippets_for_reference_table(self.object.table_name)
+        code_snippets = get_code_snippets_for_reference_table(self.object)
         columns = None
         if self.object.external_database:
             columns = datasets_db.get_columns(
