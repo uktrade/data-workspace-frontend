@@ -415,7 +415,7 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
         },
         "send-notification-emails": {
             "task": "dataworkspace.apps.datasets.utils.send_notification_emails",
-            "schedule": 60 * 5,
+            "schedule": 60 * 60,
             "args": (),
         },
         "update-search-popularity": {
