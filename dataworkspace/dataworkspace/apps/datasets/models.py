@@ -2758,10 +2758,12 @@ class ToolQueryAuditLogTable(models.Model):
         max_length=63,
         validators=[RegexValidator(regex=r"^[a-zA-Z][a-zA-Z0-9_\.]*$")],
         default="public",
+        db_index=True,
     )
     table = models.CharField(
         max_length=63,
         validators=[RegexValidator(regex=r"^[a-zA-Z][a-zA-Z0-9_\.]*$")],
+        db_index=True,
     )
 
 
