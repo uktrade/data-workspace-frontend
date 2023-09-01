@@ -1638,7 +1638,10 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         """
         records = self.get_records()
         if records.exists():
-            return records.latest("updated_date").updated_date
+            try:
+                return records.latest("updated_date").updated_date
+            except ProgrammingError:
+                pass
         return None
 
     @property
