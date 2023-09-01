@@ -37,11 +37,15 @@ def connection_schema_cache_key(user, connection_alias):
 
 
 def schema_info(user, connection_alias):
+    logger.info("schema_info: getting schema info for %s", user.email)
+
     key = connection_schema_cache_key(user, connection_alias)
     ret = cache.get(key)
     if ret:
+        logger.info("schema_info: using cached schema info for %s", user.email)
         return ret
 
+    logger.info("schema_info: running sql query to get schema info for %s", user.email)
     ret = build_schema_info(user, connection_alias)
     cache.set(key, ret)
 
@@ -80,6 +84,8 @@ def build_schema_info(user, connection_alias):
 
     """
 
+    if user.email in ["nick.ross@digital.trade.gov.uk", "sekhar.panja@digital.trade.gov.uk"]:
+        return []
     connection = get_user_explorer_connection_settings(user, connection_alias)
     with psycopg2.connect(
         f'postgresql://{connection["db_user"]}:{connection["db_password"]}'
@@ -127,6 +133,8 @@ def build_schema_info(user, connection_alias):
 
 
 def get_user_schema_info(request):
+    print("*" * 80)
+
     schema = schema_info(user=request.user, connection_alias=settings.EXPLORER_DEFAULT_CONNECTION)
     tables_columns = [".".join(schema_table) for schema_table, _ in schema]
     return schema, tables_columns
