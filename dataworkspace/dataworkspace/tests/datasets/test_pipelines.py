@@ -138,6 +138,49 @@ def test_edit_sql_pipeline(mock_sync, staff_client):
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize(
+    "intial_notes,edited_notes",
+    (
+        (
+            "sql pipeline notes",
+            "edited sql pipeline notes",
+        ),
+        (
+            "",
+            "edited sql pipeline notes",
+        ),
+        (
+            "sql pipeline notes",
+            "",
+        ),
+    ),
+)
+@mock.patch("dataworkspace.apps.datasets.pipelines.views.save_pipeline_to_dataflow")
+def test_edit_sql_pipeline_with_notes(
+    mock_sync,
+    staff_client,
+    intial_notes,
+    edited_notes,
+):
+    pipeline = factories.PipelineFactory.create(config={"sql": "SELECT 1"}, notes=intial_notes)
+    staff_client.post(reverse("admin:index"), follow=True)
+    resp = staff_client.post(
+        reverse("pipelines:edit-sql", args=(pipeline.id,)),
+        data={
+            "type": "sql",
+            "table_name": pipeline.table_name,
+            "sql": "SELECT 2",
+            "notes": edited_notes,
+        },
+        follow=True,
+    )
+    assert "Pipeline updated successfully" in resp.content.decode(resp.charset)
+    pipeline.refresh_from_db()
+    assert pipeline.config["sql"] == "SELECT 2"
+    assert pipeline.notes == edited_notes
+
+
+@pytest.mark.django_db
 @mock.patch("dataworkspace.apps.datasets.pipelines.views.save_pipeline_to_dataflow")
 def test_edit_sharepoint_pipeline(mock_sync, staff_client):
     pipeline = factories.PipelineFactory.create(
@@ -157,6 +200,48 @@ def test_edit_sharepoint_pipeline(mock_sync, staff_client):
     assert "Pipeline updated successfully" in resp.content.decode(resp.charset)
     pipeline.refresh_from_db()
     assert pipeline.config == {"site_name": "site2", "list_name": "list2"}
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "intial_notes,edited_notes",
+    (
+        (
+            "sharepoint pipeline notes",
+            "edited sharepoint pipeline notes",
+        ),
+        (
+            "",
+            "edited sharepoint pipeline notes",
+        ),
+        (
+            "sharepoint pipeline notes",
+            "",
+        ),
+    ),
+)
+@mock.patch("dataworkspace.apps.datasets.pipelines.views.save_pipeline_to_dataflow")
+def test_edit_sharepoint_pipeline_with_notes(mock_sync, staff_client, intial_notes, edited_notes):
+    pipeline = factories.PipelineFactory.create(
+        type="sharepoint",
+        config={"site_name": "site1", "list_name": "list1", "notes": intial_notes},
+    )
+    staff_client.post(reverse("admin:index"), follow=True)
+    resp = staff_client.post(
+        reverse("pipelines:edit-sharepoint", args=(pipeline.id,)),
+        data={
+            "type": "sql",
+            "table_name": pipeline.table_name,
+            "site_name": "site2",
+            "list_name": "list2",
+            "notes": edited_notes,
+        },
+        follow=True,
+    )
+    assert "Pipeline updated successfully" in resp.content.decode(resp.charset)
+    pipeline.refresh_from_db()
+    assert pipeline.config == {"site_name": "site2", "list_name": "list2"}
+    assert pipeline.notes == edited_notes
 
 
 @pytest.mark.django_db
