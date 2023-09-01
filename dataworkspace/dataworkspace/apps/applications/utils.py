@@ -17,6 +17,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError, connections
 from django.db.models import Q
 import gevent
@@ -869,7 +870,11 @@ def sync_quicksight_users(data_client, user_client, account_id, quicksight_user_
 
                     raise e
 
-                dw_user = get_user_by_sso_id(sso_id)
+                try:
+                    dw_user = get_user_by_sso_id(sso_id)
+                except ValidationError:
+                    dw_user = None
+
                 if not dw_user:
                     logger.error(
                         "Skipping %s - cannot match with Data Workspace user.",
