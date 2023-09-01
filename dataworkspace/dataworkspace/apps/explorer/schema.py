@@ -102,7 +102,7 @@ def build_schema_info(user, connection_alias):
             WHERE
               pg_namespace.nspname != 'pg_toast' AND
               pg_namespace.nspname NOT SIMILAR TO 'pg_temp_%|pg_toast_temp_%' AND
-              pg_class.relname NOT SIMILAR TO '%_swap|%_idx|_tmp%|%_pkey|%_seq|_data_explorer_tmp%' AND
+              pg_class.relname NOT SIMILAR TO '%_swap|%_idx|_tmp%|%_pkey|%_seq|_data_explorer_tmp%|%000000' AND
               has_schema_privilege(pg_namespace.nspname, 'USAGE') AND
               has_table_privilege(
                 quote_ident(pg_namespace.nspname) || '.' || quote_ident(pg_class.relname),
