@@ -750,6 +750,7 @@ def _fargate_task_stop(cluster_name, task_arn):
         try:
             client.stop_task(cluster=cluster_name, task=task_arn)
         except Exception:  # pylint: disable=broad-except
+            logger.exception("stop_task failed for %s - Retrying", task_arn)
             gevent.sleep(sleep_time)
             sleep_time = sleep_time * 2
         else:
