@@ -1,4 +1,5 @@
 import logging
+import time
 from collections import namedtuple
 from itertools import groupby
 
@@ -40,9 +41,17 @@ def schema_info(user, connection_alias):
     key = connection_schema_cache_key(user, connection_alias)
     ret = cache.get(key)
     if ret:
+        logger.info("Returning cached schema information for user %s", user.email)
         return ret
 
+    logger.info("Building schema information for user %s", user.email)
+    start_time = time.time()
     ret = build_schema_info(user, connection_alias)
+    logger.info(
+        "Building schema information for user %s took %s seconds",
+        user.email,
+        round(time.time() - start_time, 2),
+    )
     cache.set(key, ret)
 
     return ret
