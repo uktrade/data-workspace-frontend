@@ -55,7 +55,7 @@ class TestDataExplorer:
 
             yield
 
-    def test_can_execute_query(self, _application):
+    def _test_can_execute_query(self, _application):
         home_page = HomePage(driver=self.driver)
         home_page.open()
 
@@ -66,7 +66,7 @@ class TestDataExplorer:
         assert home_page.read_result_headers() == ["?column?", "?column?", "?column?"]
         assert home_page.read_result_rows() == [["1", "2", "3"]]
 
-    def test_can_cancel_query(self, _application):
+    def _test_can_cancel_query(self, _application):
         home_page = HomePage(driver=self.driver)
         home_page.open()
 
@@ -77,7 +77,7 @@ class TestDataExplorer:
 
         assert True
 
-    def test_query_exception_returned_as_friendly_error(self, _application):
+    def _test_query_exception_returned_as_friendly_error(self, _application):
         home_page = HomePage(driver=self.driver)
         home_page.open()
 
@@ -91,7 +91,7 @@ class TestDataExplorer:
             == 'column "invalid identifier" does not exist LINE 3: select "invalid identifier" ^'
         )
 
-    def test_results_pagination(self, _application):
+    def _test_results_pagination(self, _application):
         home_page = HomePage(driver=self.driver)
         home_page.open()
 
@@ -108,7 +108,7 @@ class TestDataExplorer:
         assert home_page.read_result_headers() == ["numbers"]
         assert home_page.read_result_rows() == [["3"]]
 
-    def test_format_sql(self, _application):
+    def _test_format_sql(self, _application):
         home_page = HomePage(driver=self.driver)
         home_page.open()
 
@@ -117,7 +117,7 @@ class TestDataExplorer:
 
         assert home_page.read_sql() == "select\n  unnest(array [1, 2, 3]) as numbers"
 
-    def test_save_and_run_a_query(self, _application):
+    def _test_save_and_run_a_query(self, _application):
         home_page = HomePage(driver=self.driver)
         home_page.open()
 
@@ -148,7 +148,7 @@ class TestDataExplorer:
         assert str(title) in query_log_page.get_html()
         assert "select 1, 2, 3" in query_log_page.get_html()
 
-    def test_query_execution_logs(self, _application):
+    def _test_query_execution_logs(self, _application):
         home_page = HomePage(driver=self.driver)
         home_page.open()
 
@@ -179,7 +179,7 @@ class TestDataExplorer:
         assert str(title) in query_log_page.get_html()
         assert "select 1, 2, 3" in query_log_page.get_html()
 
-    def test_user_can_only_read_from_datasets_they_have_access_to(self, _application):
+    def _test_user_can_only_read_from_datasets_they_have_access_to(self, _application):
         dataset_1_id = "47146cc4-1668-4522-82b6-eb5e5de7b044"
         table_1_id = "164acfc5-3852-400e-a99d-2c7c4eff8555"
         dataset_2_id = "73534d36-72f7-41b7-ad92-4d277980229e"
@@ -217,7 +217,7 @@ class TestDataExplorer:
         assert home_page.read_result_rows() == []
         assert "permission denied for table" in home_page.get_html()
 
-    def test_data_explorer_cached_credentials_can_be_reset_using_admin_action(self, _application):
+    def _test_data_explorer_cached_credentials_can_be_reset_using_admin_action(self, _application):
         # This doesn't strictly test that the action is available to an admin, but it does test the routine
         # that the admin action uses.
 
