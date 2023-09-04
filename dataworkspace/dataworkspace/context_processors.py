@@ -45,4 +45,5 @@ def common(request):
         )
         if not request.user.is_anonymous
         else ApplicationInstance.objects.none(),
+        "DEFER_SCHEMA_TAB_LOAD_FLAG": settings.DEFER_SCHEMA_TAB_LOAD_FLAG,
     }
