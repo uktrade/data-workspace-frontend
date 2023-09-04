@@ -142,7 +142,8 @@ def new_private_database_credentials(
         # - a private and permanent schema where they can manage tables and rows as needed
         # - a permanent database role that is the owner of the schema
         # - temporary database users, each of which are GRANTed the role
-
+        start_time = time.time()
+        logger.info("Getting new credentials for permanent role %s", db_role_and_schema_suffix)
         db_password = postgres_password()
         db_role = f"{USER_SCHEMA_STEM}{db_role_and_schema_suffix}"
         db_schema = f"{USER_SCHEMA_STEM}{db_role_and_schema_suffix}"
@@ -224,29 +225,25 @@ def new_private_database_credentials(
 
         with connections[database_memorable_name].cursor() as cur:
             # Find existing permissions
+            logger.info("Querying for all tables permanent role %s has access to", db_role)
             cur.execute(
                 sql.SQL(
                     """
-                SELECT DISTINCT
-                    table_schema as schema, table_name as name
-                FROM
-                    information_schema.table_privileges
-                WHERE
-                    grantee = {role}
-                    AND privilege_type IN ('SELECT', 'INSERT', 'UPDATE', 'DELETE', 'TRUNCATE', 'REFERENCES', 'TRIGGER')
-                    AND table_name !~ '_\\d{{8}}t\\d{{6}}'
-                    AND table_schema NOT IN ('information_schema', 'pg_catalog', 'pg_toast', {schema})
-                    AND table_schema NOT LIKE 'pg_temp_%'
-                    AND table_schema NOT LIKE 'pg_toast_temp_%'
-                    AND table_schema NOT LIKE '_team_%'
-                ORDER BY
-                    schema, name;
-            """
+                    SELECT table_schema as schema, table_name as name
+                    FROM information_schema.table_privileges
+                    WHERE grantee = {role}
+                    AND table_schema NOT IN ('information_schema', 'pg_catalog', 'pg_toast', '_data_explorer_charts')
+                    AND table_schema NOT SIMILAR TO 'pg_temp_%|pg_toast_temp_%|pg_toast_temp_%|_user_%|_team_%'
+                    AND table_name NOT SIMILAR TO '_\\d{{8}}t\\d{{6}}|%_swap|%0000|_tmp%'
+                    """
                 ).format(role=sql.Literal(db_role), schema=sql.Literal(db_schema))
             )
-            tables_with_existing_privs = cur.fetchall()
-            tables_with_existing_privs_set = set(tables_with_existing_privs)
-
+            tables_with_existing_privs_set = set(cur.fetchall())
+            logger.info(
+                "Found %d tables with existing permissions for permanent role %s",
+                len(tables_with_existing_privs_set),
+                db_role,
+            )
             cur.execute(
                 sql.SQL(
                     """
@@ -288,7 +285,7 @@ def new_private_database_credentials(
 
             tables_to_revoke = [
                 (schema, table)
-                for (schema, table) in tables_with_existing_privs
+                for (schema, table) in tables_with_existing_privs_set
                 if (schema, table) not in allowed_tables_that_exist_set
             ]
             tables_to_grant = [
@@ -524,6 +521,11 @@ def new_private_database_credentials(
                 )
             )
 
+        logger.info(
+            "Generated new credentials for permanent role %s in %s seconds",
+            db_role,
+            round(time.time() - start_time, 2),
+        )
         return {
             "memorable_name": database_memorable_name,
             "db_name": database_data["NAME"],
