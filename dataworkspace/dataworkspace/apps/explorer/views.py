@@ -34,10 +34,7 @@ from dataworkspace.apps.explorer.constants import QueryLogState
 from dataworkspace.apps.explorer.exporters import get_exporter_class
 from dataworkspace.apps.explorer.forms import QueryForm, ShareQueryForm
 from dataworkspace.apps.explorer.models import Query, QueryLog, PlaygroundSQL
-from dataworkspace.apps.explorer.schema import (
-    get_user_schema_info,
-    match_datasets_with_schema_info,
-)
+from dataworkspace.apps.explorer.schema import get_user_schema_info
 from dataworkspace.notify import send_email
 from dataworkspace.apps.explorer.tasks import submit_query_for_execution
 from dataworkspace.apps.explorer.utils import (
