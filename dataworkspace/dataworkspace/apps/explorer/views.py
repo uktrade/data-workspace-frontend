@@ -23,7 +23,6 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView
 from django.views.generic.base import RedirectView, TemplateView, View
 from django.views.generic.edit import CreateView, DeleteView, FormView, UpdateView
-from waffle import flag_is_active
 from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace.apps.core.charts.models import ChartBuilderChart
