@@ -242,8 +242,8 @@ class PlayQueryView(View):
 
         # schema, tables_columns = get_user_schema_info(request)
         # schema = match_datasets_with_schema_info(schema)
-        schema = None
-        tables_columns = None
+        schema = []
+        tables_columns = []
         return render(
             self.request,
             "explorer/home.html",
@@ -352,9 +352,9 @@ class PlayQueryView(View):
             page=page,
             form=form,
         )
-        schema, tables_columns = get_user_schema_info(request)
-        context["schema"] = schema
-        context["schema_tables"] = tables_columns
+        # schema, tables_columns = get_user_schema_info(request)
+        context["schema"] = []
+        context["schema_tables"] = []
         context["form_action"] = self.get_form_action(request)
 
         if download_failed and request.method == "GET":
