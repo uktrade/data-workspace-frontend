@@ -243,8 +243,10 @@ class PlayQueryView(View):
         if play_sql:
             initial_data["sql"] = play_sql.sql
 
-        schema, tables_columns = get_user_schema_info(request)
-        schema = match_datasets_with_schema_info(schema)
+        # schema, tables_columns = get_user_schema_info(request)
+        # schema = match_datasets_with_schema_info(schema)
+        schema = None
+        tables_columns = None
         return render(
             self.request,
             "explorer/home.html",
