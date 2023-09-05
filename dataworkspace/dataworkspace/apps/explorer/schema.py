@@ -142,6 +142,7 @@ def get_user_schema_info(request):
 
 
 def match_datasets_with_schema_info(schema):
+    start_time = time.time()
     # For each table in schema, find if the corresponding SourceTable has its dictionary_published
     schema_table_names = [
         Func(Value(s.name.schema), Value(s.name.name), function="Row") for s in schema
@@ -178,4 +179,8 @@ def match_datasets_with_schema_info(schema):
 
     for s in schema:
         s.name.dictionary_published = dictionary_published.get((s.name.schema, s.name.name), False)
+    logger.info(
+        "match_datasets_with_schema_info: schema matching took %s seconds",
+        round(time.time() - start_time, 2),
+    )
     return schema
