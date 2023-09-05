@@ -77,6 +77,7 @@ def process_dataset_authorized_users_change(
         for user in changed_users:
             remove_data_explorer_user_cached_credentials(user)
             remove_superset_user_cached_credentials(user)
+            clear_table_permissions_cache_for_user(user)
 
     if is_master_dataset:
         if changed_users:
