@@ -1537,7 +1537,10 @@ def team_membership_post_delete(instance, **_):
 
 def legacy_table_permissions_for_role(db_role, db_schema, database_name):
     start_time = time.time()
-    logger.info("Querying for all tables permanent role %s has access to", db_role)
+    logger.info(
+        "table_perms: Querying for all table permissions for permanent role %s",
+        db_role,
+    )
     with connections[database_name].cursor() as cur:
         cur.execute(
             sql.SQL(
@@ -1554,13 +1557,13 @@ def legacy_table_permissions_for_role(db_role, db_schema, database_name):
             ).format(role=sql.Literal(db_role), schema=sql.Literal(db_schema))
         )
         logger.info(
-            "Querying table permissions for role %s took %s seconds",
+            "table_perms: Querying table permissions for role %s took %s seconds",
             db_role,
             round(time.time() - start_time, 2),
         )
         tables_with_perms = cur.fetchall()
         logger.info(
-            "Permanent role %s has permissions for the following tables: %s",
+            "table_perms: Permanent role %s has permissions for the following tables: %s",
             db_role,
             tables_with_perms,
         )
@@ -1578,12 +1581,11 @@ def table_permissions_for_role(db_role, db_schema, database_name):
     key = table_permissions_cache_key(db_role)
     tables_with_perms = cache.get(key)
     if tables_with_perms:
-        logger.info("Returning cached table permissions for role %s", db_role)
+        logger.info("table_perms: Returning cached table permissions for role %s", db_role)
         return tables_with_perms
 
-    logger.info("Building and caching table permissions for role %s", db_role)
+    logger.info("table_perms: Querying and caching table permissions for role %s", db_role)
     start_time = time.time()
-    logger.info("Querying for all tables permanent role %s has access to", db_role)
     with connections[database_name].cursor() as cur:
         cur.execute(
             sql.SQL(
@@ -1599,12 +1601,12 @@ def table_permissions_for_role(db_role, db_schema, database_name):
         )
     tables_with_perms = cur.fetchall()
     logger.info(
-        "Querying table permissions for role %s took %s seconds",
+        "table_perms: Querying table permissions for role %s took %s seconds",
         db_role,
         round(time.time() - start_time, 2),
     )
     logger.info(
-        "Permanent role %s has permissions for the following tables: %s",
+        "table_perms: Permanent role %s has permissions for the following tables: %s",
         db_role,
         tables_with_perms,
     )
@@ -1614,5 +1616,9 @@ def table_permissions_for_role(db_role, db_schema, database_name):
 
 def clear_table_permissions_cache_for_user(user):
     db_role = f"{USER_SCHEMA_STEM}{db_role_schema_suffix_for_user(user)}"
-    logger.info("Deleting cached table permissions for user %s (db role %s)", user.email, db_role)
+    logger.info(
+        "table_perms: Deleting cached table permissions for user %s (db role %s)",
+        user.email,
+        db_role,
+    )
     cache.delete(table_permissions_cache_key(db_role))
