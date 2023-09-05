@@ -1,0 +1,52 @@
+<div id="js-tables">
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-one-half">
+      <p class="">
+        <label for="schema-search" class="govuk-label">Search</label>
+        <input id="schema-search" class="govuk-input js-search" placeholder="Enter a table or column name" />
+      </p>
+    </div>
+    <div class="govuk-grid-column-full">
+      <div class="govuk-accordion" data-module="govuk-accordion" id="schema-accordion">
+        <div class=" js-list">
+          {% for table, columns in schema %}
+            <div class="govuk-accordion__section">
+              <div class="govuk-accordion__section-header">
+                <h2 class="govuk-accordion__section-heading">
+                  <span id="accordion-heading-{{ forloop.counter }}" class="govuk-accordion__section-button js-schema-table">{{ table.schema }}.{{ table.name }}</span>
+                </h2>
+              </div>
+              <div class="govuk-accordion__section-content" aria-labelledby="accordion-heading-{{ forloop.counter }}">
+                <table class="govuk-table">
+                  <caption class="govuk-table__caption">Columns in {{ table.schema }}.{{ table.name }}</caption>
+                  {% if table.dictionary_published %}
+                  <p class="govuk-body govuk-body-m">
+                    <a class="govuk-link govuk-link--no-visited-state"
+                    href="{% url "datasets:find_data_dictionary" schema_name=table.schema table_name=table.name %}">
+                    Data dictionary
+                  </a>
+                  </p>
+                  {% endif %}
+                  <thead class="govuk-table__head">
+                    <tr class="govuk-table__row">
+                      <th scope="col" class="govuk-table__header">Name</th>
+                      <th scope="col" class="govuk-table__header">Format</th>
+                    </tr>
+                  </thead>
+                  <tbody class="govuk-table__body">
+                    {% for column_name, column_type in columns %}
+                      <tr class="govuk-table__row">
+                        <th scope="row" class="govuk-table__header js-schema-column-{{ forloop.counter }}">{{ column_name }}</th>
+                        <td class="govuk-table__cell">{{ column_type }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

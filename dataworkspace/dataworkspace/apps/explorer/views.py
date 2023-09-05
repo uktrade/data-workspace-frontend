@@ -23,7 +23,6 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView
 from django.views.generic.base import RedirectView, TemplateView, View
 from django.views.generic.edit import CreateView, DeleteView, FormView, UpdateView
-from waffle import flag_is_active
 from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace.apps.core.charts.models import ChartBuilderChart
@@ -224,11 +223,8 @@ class DeleteQueryView(DeleteView):
 
 
 def _get_schema_and_columns(request):
-    schema = []
-    tables_columns = []
-    if flag_is_active(request, settings.DEFER_SCHEMA_TAB_LOAD_FLAG):
-        schema, tables_columns = get_user_schema_info(request)
-        schema = match_datasets_with_schema_info(schema)
+    schema, tables_columns = get_user_schema_info(request)
+    schema = match_datasets_with_schema_info(schema)
     return schema, tables_columns
 
 
@@ -697,3 +693,16 @@ class QueryLogUpdateView(UpdateView):
 
     def get_success_url(self):
         return reverse("explorer:running_query", kwargs={"query_log_id": self.get_object().id})
+
+
+class UserSchemaAccordian(View):
+    def get(self, request):
+        schema, tables_columns = _get_schema_and_columns(request)
+        return render(
+            request,
+            "explorer/schema_deferred.html",
+            {
+                "schema": schema,
+                "schema_tables": tables_columns,
+            },
+        )

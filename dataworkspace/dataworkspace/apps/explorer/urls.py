@@ -16,6 +16,7 @@ from dataworkspace.apps.explorer.views import (
     ShareQueryConfirmationView,
     ShareQueryView,
     QueryLogUpdateView,
+    UserSchemaAccordian,
 )
 
 urlpatterns = [
@@ -71,6 +72,11 @@ urlpatterns = [
         "query/<int:pk>/update/",
         login_required(QueryLogUpdateView.as_view()),
         name="update_query_state",
+    ),
+    path(
+        "schema/",
+        login_required(UserSchemaAccordian.as_view()),
+        name="user_schema",
     ),
 ]
 
