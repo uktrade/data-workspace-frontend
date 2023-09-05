@@ -1599,7 +1599,7 @@ def table_permissions_for_role(db_role, db_schema, database_name):
                 """
             ).format(role=sql.Literal(db_role))
         )
-    tables_with_perms = cur.fetchall()
+        tables_with_perms = cur.fetchall()
     logger.info(
         "table_perms: Querying table permissions for role %s took %s seconds",
         db_role,
