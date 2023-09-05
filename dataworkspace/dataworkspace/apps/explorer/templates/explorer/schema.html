@@ -2,12 +2,22 @@
 {% flag DEFER_SCHEMA_TAB_LOAD_FLAG %}
   <script nonce="{{ request.csp_nonce }}">
     function loadSchemaAccordian() {
-      var request = new XMLHttpRequest();
+      const request = new XMLHttpRequest();
       request.onreadystatechange = function () {
-        if (this.status === 200) {
-          document.getElementById("schema-loader").innerHTML = request.responseText;
-          initSchemaSearch();
-          window.GOVUKFrontend.initAll();
+        if ((this.readyState === XMLHttpRequest.DONE) && (this.status === 200)) {
+          const child = document.createElement("div");
+          child.innerHTML = request.responseText;
+          let observed = false;
+          const observer = new MutationObserver(function () {
+            if (!observed) {
+              window.GOVUKFrontend.initAll();
+              window.initSchemaSearch()
+            }
+            observed = true;
+          });
+          observer.observe(document.getElementById("accordion-wrap"), { subtree: true, childList: true });
+          document.getElementById("schema-loader").style.display = "none";
+          document.getElementById("accordion-wrap").appendChild(child);
         }
       }
       request.open('GET', "{% url 'explorer:user_schema' %}");
@@ -33,6 +43,7 @@
       </div>
     </div>
   </div>
+  <div id="accordion-wrap"></div>
 {% else %}
   <div id="js-tables">
     <div class="govuk-grid-row">
