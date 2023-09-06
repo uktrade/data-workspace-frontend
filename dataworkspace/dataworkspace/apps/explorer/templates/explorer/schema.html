@@ -7,14 +7,13 @@
         if ((this.readyState === XMLHttpRequest.DONE) && (this.status === 200)) {
           const child = document.createElement("div");
           child.innerHTML = request.responseText;
-          let observed = false;
-          const observer = new MutationObserver(function () {
-            if (!observed) {
-              window.GOVUKFrontend.initAll();
-              window.initSchemaSearch()
-            }
-            observed = true;
-          });
+          const observer = new MutationObserver(function (mutations, observer) {
+            observer.disconnect();
+            window.GOVUKFrontend.initAll({
+              scope: document.getElementById("accordion-wrap")
+            });
+            window.initSchemaSearch()
+          })
           observer.observe(document.getElementById("accordion-wrap"), { subtree: true, childList: true });
           document.getElementById("schema-loader").style.display = "none";
           document.getElementById("accordion-wrap").appendChild(child);
