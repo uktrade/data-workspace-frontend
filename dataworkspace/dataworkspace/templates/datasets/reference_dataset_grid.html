@@ -100,11 +100,8 @@
               <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-view">
                 Reset view
               </button>
-              <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-download">
-                Download data as CSV
-              </button>
-              <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-json-download">
-                Download data as JSON
+              <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="downloadData">
+                Download this data
               </button>
               {% if fields %}
                 <a href="{% url "datasets:data_dictionary" source_uuid=model.uuid %}?dataset_uuid={{model.uuid}}" class="govuk-link" target="_blank">Data dictionary</a>
@@ -122,6 +119,7 @@
         ></div>
       </div>
     </div>
+    {% include "datasets/partials/dialog-reference-data.html" %}
   {% endwith %}
   {% csrf_token %}
 {% endblock %}

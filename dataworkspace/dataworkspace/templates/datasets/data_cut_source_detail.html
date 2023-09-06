@@ -117,7 +117,7 @@
                 Reset view
               </button>
               {% if object.data_grid_download_enabled %}
-                <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-download">
+              <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="downloadData">
                   Download this data
                 </button>
               {% endif %}
@@ -149,6 +149,7 @@
           {% endif %}
         ></div>
       </div>
+      {% include "datasets/partials/dialog-data-cut.html" %}
   {% endwith %}
   {% csrf_token %}
 {% endblock %}
