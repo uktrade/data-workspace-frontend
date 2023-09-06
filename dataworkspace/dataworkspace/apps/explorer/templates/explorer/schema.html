@@ -12,7 +12,7 @@
             window.GOVUKFrontend.initAll({
               scope: document.getElementById("accordion-wrap")
             });
-            window.initSchemaSearch()
+            window.initSchemaSearch();
           })
           observer.observe(document.getElementById("accordion-wrap"), { subtree: true, childList: true });
           document.getElementById("schema-loader").style.display = "none";
@@ -29,7 +29,7 @@
       else {
         document.getElementById("tab_database-tab").addEventListener("click", function() {
           loadSchemaAccordian();
-        });
+        }, {once: true});
       }
     });
   </script>
