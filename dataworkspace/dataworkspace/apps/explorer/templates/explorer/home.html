@@ -209,9 +209,14 @@
   <script nonce="{{ request.csp_nonce }}" src="{% static 'assets/vendor/sql-formatter/sql-formatter-2.3.3.min.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}" src="{% static 'explorer_schema.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}" src="{% static 'explorer_query.js' %}"></script>
-  <script nonce="{{ request.csp_nonce }}">
-    window.initSchemaSearch();
-  </script>
+
+  {% flag DEFER_SCHEMA_TAB_LOAD_FLAG %}
+    {# Schema loading is deferred   #}
+  {% else %}
+    <script nonce="{{ request.csp_nonce }}">
+      window.initSchemaSearch();
+    </script>
+  {% endflag %}
   {% if query_log %}
     <script nonce="{{ request.csp_nonce }}" src="{% static 'explorer_async.js' %}"></script>
     <script nonce="{{ request.csp_nonce }}">
