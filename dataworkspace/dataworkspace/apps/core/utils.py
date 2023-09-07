@@ -1610,7 +1610,7 @@ def table_permissions_for_role(db_role, db_schema, database_name):
         db_role,
         tables_with_perms,
     )
-    cache.set(key, tables_with_perms)
+    cache.set(key, tables_with_perms, timeout=datetime.timedelta(days=7).total_seconds())
     return tables_with_perms
 
 
