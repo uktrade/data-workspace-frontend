@@ -1,3 +1,4 @@
+import datetime
 import logging
 import time
 from collections import namedtuple
@@ -52,7 +53,7 @@ def schema_info(user, connection_alias):
         user.email,
         round(time.time() - start_time, 2),
     )
-    cache.set(key, ret)
+    cache.set(key, ret, timeout=datetime.timedelta(days=7).total_seconds())
 
     return ret
 
