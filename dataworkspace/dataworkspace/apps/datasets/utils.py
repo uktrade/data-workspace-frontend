@@ -17,6 +17,7 @@ from django.db.utils import DatabaseError
 from django.http import Http404
 from django.urls import reverse
 from psycopg2.sql import Identifier, Literal, SQL, Composed
+from waffle import switch_is_active
 from redis.exceptions import LockError, LockNotOwnedError
 
 from dataworkspace.apps.core.utils import (
@@ -52,7 +53,7 @@ from dataworkspace.datasets_db import (
 )
 from dataworkspace.notify import EmailSendFailureException, send_email
 from dataworkspace.utils import TYPE_CODES_REVERSED
-from waffle import switch_is_active
+
 
 logger = logging.getLogger("app")
 
