@@ -52,7 +52,7 @@ from dataworkspace.datasets_db import (
 )
 from dataworkspace.notify import EmailSendFailureException, send_email
 from dataworkspace.utils import TYPE_CODES_REVERSED
-
+from waffle import switch_is_active
 
 logger = logging.getLogger("app")
 
@@ -120,7 +120,9 @@ def get_code_snippets_for_table(source_table):
 
 
 def get_code_snippets_for_reference_table(dataset):
-    if dataset.has_foriegn_key_fields():
+    if dataset.has_foriegn_key_fields() and switch_is_active(
+        settings.DATA_GRID_REFERENCE_DATASET_FLAG
+    ):
         query = get_sql_snippet_for_reference_dataset(dataset, 50)
     else:
         query = get_sql_snippet("public", dataset.table_name, 50)
