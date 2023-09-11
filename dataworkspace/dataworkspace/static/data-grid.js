@@ -413,11 +413,13 @@ function initDataGrid(
           gridOptions,
           columnDataTypeMap
         );
+        document.getElementById("popup").close();
       } else {
         // Download a csv locally using javascript
         gridOptions.api.exportDataAsCsv({
           fileName: exportFileName,
         });
+        document.getElementById("popup").close();
       }
       logDownloadEvent(
         gridOptions,
@@ -451,6 +453,7 @@ function initDataGrid(
         linkElement.setAttribute("href", dataUri);
         linkElement.setAttribute("download", exportFileDefaultName);
         linkElement.click();
+        document.getElementById("popup").close();
         logDownloadEvent(
           gridOptions,
           itemId,
@@ -590,5 +593,21 @@ if (increaseGridButton !== null) {
       .classList.toggle("remove-border");
   });
 }
+
+document.addEventListener("DOMContentLoaded", function () {
+  document
+    .getElementById("downloadData")
+    .addEventListener("click", function (e) {
+      e.stopPropagation();
+      e.preventDefault();
+      document.getElementById("popup").showModal();
+    });
+
+  document.getElementById("closePopUp").addEventListener("click", function (e) {
+    e.stopPropagation();
+    e.preventDefault();
+    document.getElementById("popup").close();
+  });
+});
 
 window.initDataGrid = initDataGrid;
