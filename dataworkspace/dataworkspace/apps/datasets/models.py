@@ -61,6 +61,7 @@ from dataworkspace.apps.applications.models import (
     ApplicationTemplate,
     VisualisationTemplate,
 )
+from dataworkspace.apps.core.utils import clear_table_permissions_cache_for_user
 from dataworkspace.apps.datasets.constants import (
     DataSetType,
     DataLinkType,
@@ -74,6 +75,7 @@ from dataworkspace.apps.datasets.constants import (
 from dataworkspace.apps.datasets.model_utils import external_model_class
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.core.charts.models import ChartBuilderChart
+from dataworkspace.apps.explorer.schema import clear_schema_info_cache_for_user
 from dataworkspace.apps.your_files.models import UploadedTable
 from dataworkspace.datasets_db import (
     get_columns,
@@ -1548,11 +1550,28 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             f"{self.table_name}-{datetime.now().isoformat()}",
         )
 
+    def _bust_table_permissions_cache(self):
+        """
+        Bust the table permissions and schema cache for all active users.
+        This is necessary as publishing/unpublishing a reference dataset
+        will cause all users available tables to change.
+        """
+        for user in (
+            get_user_model()
+            .objects.exclude(
+                profile__first_login=None,
+            )
+            .filter(profile__sso_status="active")
+        ):
+            clear_schema_info_cache_for_user(user)
+            clear_table_permissions_cache_for_user(user)
+
     def _create_external_database_table(self, db_name):
         if not self._sync_via_data_flow:
             with connections[db_name].schema_editor() as editor:
                 with external_model_class(self.get_record_model_class()) as mc:
                     editor.create_model(mc)
+        self._bust_table_permissions_cache()
 
     def _drop_external_database_table(self, db_name):
         if self._sync_via_data_flow:
@@ -1563,6 +1582,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                     editor.delete_model(self.get_record_model_class())
                 except ProgrammingError:
                     pass
+        self._bust_table_permissions_cache()
 
     @property
     def field_names(self) -> List[str]:
