@@ -1,4 +1,5 @@
 import json
+import sqlparse
 import logging
 import operator
 import os
@@ -124,7 +125,7 @@ def get_code_snippets_for_reference_table(dataset):
     if dataset.has_foriegn_key_fields() and switch_is_active(
         settings.DATA_GRID_REFERENCE_DATASET_FLAG
     ):
-        query = get_sql_snippet_for_reference_dataset(dataset, 50)
+        query = get_sql_snippet_for_reference_dataset("public", dataset, 50)
     else:
         query = get_sql_snippet("public", dataset.table_name, 50)
     return {
@@ -146,7 +147,7 @@ def get_sql_snippet(schema, table_name, limit=50):
     return f'SELECT * FROM "{schema}"."{table_name}" LIMIT {limit}'
 
 
-def get_sql_snippet_for_reference_dataset(dataset, limit):
+def get_sql_snippet_for_reference_dataset(schema, dataset, limit):
     col_defs = []
     for field in dataset.fields.all():
         if field.data_type == field.DATA_TYPE_FOREIGN_KEY:
@@ -162,12 +163,13 @@ def get_sql_snippet_for_reference_dataset(dataset, limit):
 
     base_table = dataset.table_name
     fields = f"{base_table}.*"
-    joins = None
+    joins = ""
     for col_def in col_defs:
         fields = fields + ", " + f'{col_def["table"]}.{col_def["ext_field"]}'
-        joins = f' INNER JOIN {col_def["table"]} ON {base_table}.{col_def["field"]}_id = {col_def["table"]}.id'
-    sql = f"SELECT {fields} FROM {base_table}{joins} LIMIT {limit}"
-    return sql
+        joins= joins + f' INNER JOIN "{schema}"."{col_def["table"]}" ON {base_table}.{col_def["field"]}_id = {col_def["table"]}.id'
+    sql = f'SELECT {fields} FROM "{schema}"."{base_table}"{joins} LIMIT {limit}'
+    formated_sql = sqlparse.format(sql, reindent=True, keyword_case="upper")
+    return formated_sql
 
 
 def get_python_snippet(query):
