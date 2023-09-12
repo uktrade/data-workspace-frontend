@@ -21,6 +21,7 @@ from ckeditor.fields import RichTextField
 
 from django import forms
 from django.apps import apps
+from django.core.cache import cache
 from django.db import (
     DatabaseError,
     models,
@@ -61,7 +62,6 @@ from dataworkspace.apps.applications.models import (
     ApplicationTemplate,
     VisualisationTemplate,
 )
-from dataworkspace.apps.core.utils import clear_table_permissions_cache_for_user
 from dataworkspace.apps.datasets.constants import (
     DataSetType,
     DataLinkType,
@@ -75,7 +75,6 @@ from dataworkspace.apps.datasets.constants import (
 from dataworkspace.apps.datasets.model_utils import external_model_class
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.core.charts.models import ChartBuilderChart
-from dataworkspace.apps.explorer.schema import clear_schema_info_cache_for_user
 from dataworkspace.apps.your_files.models import UploadedTable
 from dataworkspace.datasets_db import (
     get_columns,
@@ -1556,6 +1555,10 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         This is necessary as publishing/unpublishing a reference dataset
         will cause all users available tables to change.
         """
+        # pylint: disable=import-outside-toplevel, reimported
+        from dataworkspace.apps.core.utils import clear_table_permissions_cache_for_user
+        from dataworkspace.apps.explorer.connections import connections
+
         for user in (
             get_user_model()
             .objects.exclude(
@@ -1563,7 +1566,11 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             )
             .filter(profile__sso_status="active")
         ):
-            clear_schema_info_cache_for_user(user)
+            # clear_schema_info_cache_for_user(user)
+            for conn in connections.values():
+                cache_key = f"_explorer_cache_key_{user.profile.sso_id}_{conn}"
+                cache.delete(cache_key)
+
             clear_table_permissions_cache_for_user(user)
 
     def _create_external_database_table(self, db_name):
