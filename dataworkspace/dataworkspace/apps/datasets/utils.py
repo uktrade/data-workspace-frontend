@@ -1,11 +1,11 @@
 import json
-import sqlparse
 import logging
 import operator
 import os
 from functools import reduce
 from uuid import UUID
 
+import sqlparse
 import boto3
 import botocore
 import requests
