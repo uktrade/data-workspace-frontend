@@ -166,7 +166,10 @@ def get_sql_snippet_for_reference_dataset(schema, dataset, limit):
     joins = ""
     for col_def in col_defs:
         fields = fields + ", " + f'{col_def["table"]}.{col_def["ext_field"]}'
-        joins= joins + f' INNER JOIN "{schema}"."{col_def["table"]}" ON {base_table}.{col_def["field"]}_id = {col_def["table"]}.id'
+        joins = (
+            joins
+            + f' INNER JOIN "{schema}"."{col_def["table"]}" ON {base_table}.{col_def["field"]}_id = {col_def["table"]}.id'
+        )
     sql = f'SELECT {fields} FROM "{schema}"."{base_table}"{joins} LIMIT {limit}'
     formated_sql = sqlparse.format(sql, reindent=True, keyword_case="upper")
     return formated_sql
