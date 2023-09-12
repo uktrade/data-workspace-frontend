@@ -374,7 +374,9 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         .annotate(quicksight_id=Value([], output_field=ArrayField(models.TextField())))
         .annotate(
             catalogue_editors=ArrayAgg(
-                "data_catalogue_editors__id", distinct=True, default=Value([])
+                "data_catalogue_editors__id",
+                distinct=True,
+                filter=Q(data_catalogue_editors__isnull=False),
             )
         )
         .exclude(type=DataSetType.REFERENCE)
@@ -450,7 +452,9 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
             )
             .annotate(
                 catalogue_editors=ArrayAgg(
-                    "data_catalogue_editors__id", distinct=True, default=Value([])
+                    "data_catalogue_editors__id",
+                    distinct=True,
+                    filter=Q(data_catalogue_editors__isnull=False),
                 )
             )
             .values(

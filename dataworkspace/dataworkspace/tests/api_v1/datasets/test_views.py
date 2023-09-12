@@ -438,7 +438,9 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
     ):
         if userids is None:
             userids = []
-        response = {
+        if data_catalogue_editors is None:
+            data_catalogue_editors = []
+        return {
             "id": str(dataset.uuid) if isinstance(dataset, ReferenceDataset) else str(dataset.id),
             "name": dataset.name,
             "short_description": dataset.short_description,
@@ -465,6 +467,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             "personal_data": personal_data,
             "retention_policy": retention_policy,
             "eligibility_criteria": list(eligibility_criteria) if eligibility_criteria else None,
+            "catalogue_editors": data_catalogue_editors,
             "source_tables": [
                 {"id": str(x.id), "name": x.name, "schema": x.schema, "table": x.table}
                 for x in dataset.sourcetable_set.all()
@@ -485,9 +488,6 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             "security_classification_display": None,
             "sensitivity_name": [None],
         }
-        if data_catalogue_editors is not None:
-            response["catalogue_editors"] = data_catalogue_editors
-        return response
 
     def test_success(self, unauthenticated_client):
         catalogue_editor = factories.UserFactory.create()
