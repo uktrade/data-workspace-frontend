@@ -1566,7 +1566,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             )
             .filter(profile__sso_status="active")
         ):
-            # clear_schema_info_cache_for_user(user)
+            # repeat of clear_schema_info_cache_for_user, to avoid circular imports
             for conn in connections.values():
                 cache_key = f"_explorer_cache_key_{user.profile.sso_id}_{conn}"
                 cache.delete(cache_key)
