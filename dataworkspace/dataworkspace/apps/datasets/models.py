@@ -21,6 +21,7 @@ from ckeditor.fields import RichTextField
 
 from django import forms
 from django.apps import apps
+from django.core.cache import cache
 from django.db import (
     DatabaseError,
     models,
@@ -1548,11 +1549,36 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             f"{self.table_name}-{datetime.now().isoformat()}",
         )
 
+    def _bust_table_permissions_cache(self):
+        """
+        Bust the table permissions and schema cache for all active users.
+        This is necessary as publishing/unpublishing a reference dataset
+        will cause all users available tables to change.
+        """
+        # pylint: disable=import-outside-toplevel, reimported
+        from dataworkspace.apps.core.utils import clear_table_permissions_cache_for_user
+        from dataworkspace.apps.explorer.connections import connections
+
+        for user in (
+            get_user_model()
+            .objects.exclude(
+                profile__first_login=None,
+            )
+            .filter(profile__sso_status="active")
+        ):
+            # repeat of clear_schema_info_cache_for_user, to avoid circular imports
+            for conn in connections.values():
+                cache_key = f"_explorer_cache_key_{user.profile.sso_id}_{conn}"
+                cache.delete(cache_key)
+
+            clear_table_permissions_cache_for_user(user)
+
     def _create_external_database_table(self, db_name):
         if not self._sync_via_data_flow:
             with connections[db_name].schema_editor() as editor:
                 with external_model_class(self.get_record_model_class()) as mc:
                     editor.create_model(mc)
+        self._bust_table_permissions_cache()
 
     def _drop_external_database_table(self, db_name):
         if self._sync_via_data_flow:
@@ -1563,6 +1589,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                     editor.delete_model(self.get_record_model_class())
                 except ProgrammingError:
                     pass
+        self._bust_table_permissions_cache()
 
     @property
     def field_names(self) -> List[str]:
