@@ -1,14 +1,13 @@
 {% load humanize datasets_tags waffle_tags %}
-
 <dl class="govuk-summary-list">
-  <div class="govuk-summary-list__row">
-    <dt class="govuk-summary-list__key">Summary</dt>
-    <dd class="govuk-summary-list__value">{{ model.short_description }}</dd>
+  <div class="govuk-summary-list__row__stacked">
+    <dt class="govuk-summary-list__key__stacked">Summary</dt>
+    <dd class="govuk-summary-list__value__stacked">{{ model.short_description }}</dd>
   </div>
   {% flag SECURITY_CLASSIFICATION_FLAG %}
-    <div class="govuk-summary-list__row">
-      <dt class="govuk-summary-list__key">Government Security Classification</dt>
-      <dd class="govuk-summary-list__value">
+    <div class="govuk-summary-list__row__stacked">
+      <dt class="govuk-summary-list__key__stacked">Government Security Classification</dt>
+      <dd class="govuk-summary-list__value__stacked">
         {% if not model.government_security_classification %}
           <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
         {% else %}
@@ -34,19 +33,19 @@
       </dd>
     </div>
   {% endflag %}
-  <div class="govuk-summary-list__row">
-    <dt class="govuk-summary-list__key">Personal data</dt>
-    <dd class="govuk-summary-list__value">{{ model.personal_data|default:'' }}</dd>
+  <div class="govuk-summary-list__row__stacked">
+    <dt class="govuk-summary-list__key__stacked">Personal data</dt>
+    <dd class="govuk-summary-list__value__stacked">{{ model.personal_data|default:'' }}</dd>
   </div>
 
-  <div class="govuk-summary-list__row">
-    <dt class="govuk-summary-list__key">Usage restrictions</dt>
-    <dd class="govuk-summary-list__value">{{ model.restrictions_on_usage | linebreaksbr }}</dd>
+  <div class="govuk-summary-list__row__stacked">
+    <dt class="govuk-summary-list__key__stacked">Usage restrictions</dt>
+    <dd class="govuk-summary-list__value__stacked">{{ model.restrictions_on_usage | linebreaksbr }}</dd>
   </div>
 
-  <div class="govuk-summary-list__row">
-    <dt class="govuk-summary-list__key">Date added</dt>
-    <dd class="govuk-summary-list__value">{{ model.published_at|format_date_uk }}</dd>
+  <div class="govuk-summary-list__row__stacked">
+    <dt class="govuk-summary-list__key__stacked">Date added</dt>
+    <dd class="govuk-summary-list__value__stacked">{{ model.published_at|format_date_uk }}</dd>
   </div>
 
   <div class="govuk-summary-list__row">
