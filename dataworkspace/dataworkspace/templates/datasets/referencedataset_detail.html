@@ -64,13 +64,6 @@
         </ol>
       </div>
     </div>
-    <div class="govuk-grid-column-one-half govuk-!-margin-top-2" style="text-align: right;">
-      {% flag NOTIFY_ON_REFERENCE_DATASET_CHANGE_FLAG %}
-      {% include "partials/subscription_link.html" with subscription=subscription dataset=model dataset_uuid=model.uuid %}
-      &nbsp;&nbsp;&nbsp;
-      {% endflag %}
-      {% include "partials/bookmark-link.html" with dataset_uuid=model.uuid is_bookmarked=is_bookmarked %}
-    </div>
   </div>
 {% endblock %}
 
@@ -96,103 +89,99 @@
     <div class="govuk-grid-column-two-thirds">
       <span class="govuk-caption-xl">Reference dataset</span>
       <h1 class="govuk-heading-xl">{{ model.name }}</h1>
-      {% include "data_collections/partials/add_dataset_link.html"%}
+      {% include "data_collections/partials/header_action_links.html" with dataType="reference" %}
     </div>
   </div>
 
   <div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
-      <dl class="govuk-summary-list">
-      <div class="govuk-summary-list__row">
-          <dt class="govuk-summary-list__key">Summary</dt>
-          <dd class="govuk-summary-list__value">{{ model.short_description }}</dd>
-        </div>
-      {% flag SECURITY_CLASSIFICATION_FLAG %}
-    <div class="govuk-summary-list__row">
-      <dt class="govuk-summary-list__key">Government Security Classification</dt>
-      <dd class="govuk-summary-list__value">
-        {% if not model.government_security_classification %}
-          <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
-        {% else %}
-          {% if model.get_government_security_classification_display == "OFFICIAL" %}
-            <strong
-              class="govuk-tag govuk-tag--blue">{{ model.get_government_security_classification_display }}</strong>
-          {% else %}
-            {% if model.sensitivity.all %}
-              {% for sensitivity in model.sensitivity.all %}
-                <strong
-                  class="govuk-tag govuk-tag--red govuk-!-margin-bottom-1">{{ model.get_government_security_classification_display }} {{ sensitivity }}</strong>
-              {% endfor %}
-            {% else %}
-              <strong
-                class="govuk-tag govuk-tag--red">{{ model.get_government_security_classification_display }}</strong>
-            {% endif %}
-          {% endif %}
-        {% endif %}
-      <br>
-        <a
-          href="https://workspace.trade.gov.uk/working-at-dit/policies-and-guidance/guidance/information-classification-and-handling/"
-          class="govuk-link govuk-!-font-size-16">About security classifications</a>
-      </dd>
-    </div>
-  {% endflag %}
-      <div class="govuk-summary-list__row">
-          <dt class="govuk-summary-list__key">Usage restrictions</dt>
-          <dd class="govuk-summary-list__value">{{ model.restrictions_on_usage }}</dd>
-        </div>
-        <div class="govuk-summary-list__row">
-          <dt class="govuk-summary-list__key">Date added</dt>
-          <dd class="govuk-summary-list__value">{{ model.published_at|format_date_uk }}</dd>
-        </div>
-
-        <div class="govuk-summary-list__row">
-          <dt class="govuk-summary-list__key">Source</dt>
-          <dd class="govuk-summary-list__value">N/A</dd>
-        </div>
-
-        <div class="govuk-summary-list__row">
-          <dt class="govuk-summary-list__key">Licence</dt>
-          <dd class="govuk-summary-list__value">
-            {% if model.licence_url %}
-              <a class="govuk-link" href="{{ model.licence_url }}">{{ model.licence }}</a>
-            {% else %}
-              {{ model.licence|default:"" }}
-            {% endif %}
-          </dd>
-        </div>
-
-        <div class="govuk-summary-list__row">
-          <dt class="govuk-summary-list__key">Contact</dt>
-          <dd class="govuk-summary-list__value">
-            {% if model.enquiries_contact %}
-              Contact
-              <a class="govuk-link"
-                href="mailto:{{ model.enquiries_contact.email }}">{{ model.enquiries_contact.email }}</a>
-                to ask questions about how to use this data and the visuals.
-              {% endif %}
-          </dd>
-        </div>
-      </dl>
-
+    <div class="govuk-grid-column-one-half">
       <div class="govuk-body dataset-description-richtext">
         {{ model.description | minimal_markup }}
       </div>
     </div>
 
-    <div class="govuk-grid-column-one-third">
-      {% if model.enquiries_contact %}
-      <p class="govuk-body sidebar-section">
-        <a href="mailto:{{ model.enquiries_contact.email }}?subject=Reporting an issue - {{ model.name }}" class="govuk-link govuk-link--no-visited-state">
-          {% include "partials/report_an_issue_icon.html" %}
-        </a>
-      </p>
-      {% endif %}
+    <div class="govuk-grid-column-one-half">
+      <dl class="govuk-summary-list">
+        <div class="govuk-summary-list__row__stacked">
+            <dt class="govuk-summary-list__key__stacked">Summary</dt>
+            <dd class="govuk-summary-list__value__stacked">{{ model.short_description }}</dd>
+          </div>
+      {% flag SECURITY_CLASSIFICATION_FLAG %}
+        <div class="govuk-summary-list__row__stacked">
+          <dt class="govuk-summary-list__key__stacked">Government Security Classification</dt>
+          <dd class="govuk-summary-list__value__stacked">
+            {% if not model.government_security_classification %}
+              <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
+            {% else %}
+              {% if model.get_government_security_classification_display == "OFFICIAL" %}
+                <strong
+                  class="govuk-tag govuk-tag--blue">{{ model.get_government_security_classification_display }}</strong>
+              {% else %}
+                {% if model.sensitivity.all %}
+                  {% for sensitivity in model.sensitivity.all %}
+                    <strong
+                      class="govuk-tag govuk-tag--red govuk-!-margin-bottom-1">{{ model.get_government_security_classification_display }} {{ sensitivity }}</strong>
+                  {% endfor %}
+                {% else %}
+                  <strong
+                    class="govuk-tag govuk-tag--red">{{ model.get_government_security_classification_display }}</strong>
+                {% endif %}
+              {% endif %}
+            {% endif %}
+          <br>
+            <a
+              href="https://workspace.trade.gov.uk/working-at-dit/policies-and-guidance/guidance/information-classification-and-handling/"
+              class="govuk-link govuk-!-font-size-16">About security classifications</a>
+          </dd>
+        </div>
+      {% endflag %}
+
+      <div class="govuk-summary-list__row__stacked">
+        <dt class="govuk-summary-list__key__stacked">Usage restrictions</dt>
+        <dd class="govuk-summary-list__value__stacked">{{ model.restrictions_on_usage }}</dd>
+      </div>
+      <div class="govuk-summary-list__row__stacked">
+        <dt class="govuk-summary-list__key__stacked">Date added</dt>
+        <dd class="govuk-summary-list__value__stacked">{{ model.published_at|format_date_uk }}</dd>
+      </div>
+
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Source</dt>
+        <dd class="govuk-summary-list__value">N/A</dd>
+      </div>
+
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Licence</dt>
+        <dd class="govuk-summary-list__value">
+          {% if model.licence_url %}
+            <a class="govuk-link" href="{{ model.licence_url }}">{{ model.licence }}</a>
+          {% else %}
+            {{ model.licence|default:"" }}
+          {% endif %}
+        </dd>
+      </div>
+
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Contact</dt>
+        <dd class="govuk-summary-list__value">
+          {% if model.enquiries_contact %}
+            Contact
+            <a class="govuk-link"
+              href="mailto:{{ model.enquiries_contact.email }}">{{ model.enquiries_contact.email }}</a>
+              to ask questions about how to use this data and the visuals.
+            {% endif %}
+        </dd>
+      </div>
+    </dl>
+
+
+
     </div>
   </div>
 
   <div class="govuk-grid-row" style="overflow-x: auto;">
     <div class="govuk-grid-column-full">
-      <h2 class="govuk-heading-l">Data</h2>
+      <h2 class="govuk-heading-l">Data tables</h2>
       <table class="govuk-table">
         <thead>
         <tr class="govuk-table__row">
