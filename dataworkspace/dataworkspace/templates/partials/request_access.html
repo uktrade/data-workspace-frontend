@@ -1,38 +1,39 @@
-<div class="govuk-warning-text">
-  <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
-  <div class="govuk-warning-text__text">
-    <strong>
-      <span class="govuk-warning-text__assistive">Warning</span>
-      {% if not has_data_access %}
-        You need to request access to view this data. You can only access data with a valid reason.
-      {% elif type == 'master' and not has_tools_access %}
-        You need to request access to tools to analyse this data.
-      {% endif %}
-    </strong>
-      {% if type == 'master' and not has_tools_access %}
-          <p class="govuk-body govuk-!-margin-top-4">
-            We will ask you some questions so we can give you access to the tools you need to analyse this data.
-            <br>
-          </p>
-      {% endif %}
+<div class="govuk-warning-text__container">
+  <div class="govuk-warning-text">
+    <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+    <div class="govuk-warning-text__text">
+      <strong>
+        <span class="govuk-warning-text__assistive">Warning</span>
+        {% if not has_data_access %}
+          You need to request access to view this data. You can only access data with a valid reason.
+        {% elif type == 'master' and not has_tools_access %}
+          You need to request access to tools to analyse this data.
+        {% endif %}
+      </strong>
+        {% if type == 'master' and not has_tools_access %}
+            <p class="govuk-body">
+              We will ask you some questions so we can give you access to the tools you need to analyse this data.
+              <br>
+            </p>
+        {% endif %}
 
-    <p class="govuk-body govuk-!-margin-top-4">
-      We will respond to your access request within 5 working days.
-    </p>
+      <p class="govuk-body">
+        We will respond to your access request within 5 working days.
+      </p>
 
-    {% if model.eligibility_criteria %}
-      <p class="govuk-body govuk-!-margin-top-4">
-        <a class="govuk-button"
-           href="{% url 'datasets:eligibility_criteria' model.id %}">Request access</a>
-      </p>
-    {% else %}
-      <p class="govuk-body govuk-!-margin-top-4">
-        <a class="govuk-button"
-           href="{% url 'request_access:dataset' model.id %}">Request access</a>
-      </p>
-    {% endif %}
+      {% if model.eligibility_criteria %}
+        <p class="govuk-body">
+          <a class="govuk-button"
+            href="{% url 'datasets:eligibility_criteria' model.id %}">Request access</a>
+        </p>
+      {% else %}
+        <p class="govuk-body">
+          <a class="govuk-button"
+            href="{% url 'request_access:dataset' model.id %}">Request access</a>
+        </p>
+      {% endif %}
+    </div>
   </div>
-
 </div>
 
 
