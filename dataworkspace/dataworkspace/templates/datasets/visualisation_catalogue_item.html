@@ -28,9 +28,6 @@
         </ol>
       </div>
     </div>
-    <div class="govuk-grid-column-one-quarter govuk-!-margin-top-2" style="text-align: right;">
-      {% include "partials/bookmark-link.html" with dataset_uuid=model.id is_bookmarked=is_bookmarked %}
-    </div>
   </div>
 {% endblock %}
 
@@ -39,60 +36,34 @@
     {% include 'partials/unpublished_banner.html' with type='visualisation' %}
   {% endif %}
   <div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
+    <div class="govuk-grid-column-full">
       <span class="govuk-caption-xl">Dashboard</span>
       <h1 class="govuk-heading-xl">{{ model.name }}</h1>
-      {% include "data_collections/partials/add_dataset_link.html"%}
-    </div>
-    <div class="govuk-grid-column-one-third">
-
+      {% include "data_collections/partials/header_action_links.html" with dataType="visualisation" %}
     </div>
   </div>
 
   <div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
-      {% with dataset_type='visualisation' %}
-
-        {% include "partials/dataset_info.html" with model=model type=dataset_type %}
-
-        {% include "partials/dataset_info_additional.html" with model=model show_usage_history=True %}
-
+    <div class="govuk-grid-column-one-half">
         <div class="govuk-body dataset-description-richtext">
           {{ model.description | minimal_markup }}
         </div>
     </div>
-    <div class="govuk-grid-column-one-third">
-      {% if model.enquiries_contact %}
-      <p class="govuk-body sidebar-section">
-        <a href="mailto:{{ model.enquiries_contact.email }}?subject=Reporting an issue - {{ model.name }}" class="govuk-link govuk-link--no-visited-state">
-          {% include "partials/report_an_issue_icon.html" %}
-        </a>
-      </p>
-      {% endif %}
-      {% if request.user == model.information_asset_owner or request.user == model.information_asset_manager or request.user.is_superuser or request.user in model.data_catalogue_editors.all %}
-      <p class="govuk-body sidebar-section">
-        <a href="{% url 'datasets:edit_visualisation_catalogue_item' model.id %}" class="govuk-link govuk-link--no-visited-state">Manage this page</a>
-      </p>
-      {% endif %}
-    {% if request.user.is_superuser or request.user == model.information_asset_owner or request.user == model.information_asset_manager %}
-      <p class="govuk-body sidebar-section">
-        <a href="{% url 'datasets:edit_data_editors' pk=model.id %}" class="govuk-link">Manage
-          editors</a>
-      </p>
-      {% endif %}
+    <div class="govuk-grid-column-one-half">
+      {% with dataset_type='visualisation' %}
+        {% include "partials/dataset_info.html" with model=model type=dataset_type %}
     </div>
   </div>
 
   <div class="govuk-grid-row" style="overflow-x: auto;">
-    <div class="govuk-grid-column-two-thirds">
-      <h2 class="govuk-heading-l govuk-!-margin-top-8">Data</h2>
-      
+    <div class="govuk-grid-column-full">
+      <h2 class="govuk-heading-l govuk-!-margin-top-8">Visualisations</h2>
       {% if not has_access %}
         {%include 'partials/request_access.html' with type=dataset_type has_data_access=has_access %}
       {% endif %}
       {% endwith %}
-
     </div>
+
 
     <div class="govuk-grid-column-full">
       <table class="govuk-table">
@@ -131,6 +102,12 @@
         </tbody>
       </table>
 
+    </div>
+  </div>
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+    {% include "partials/dataset_info_additional.html" with model=model show_usage_history=True %}
     </div>
   </div>
 
