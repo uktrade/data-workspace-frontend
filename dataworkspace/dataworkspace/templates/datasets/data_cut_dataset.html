@@ -38,17 +38,9 @@
             <li class="govuk-breadcrumbs__list-item">
               <a href="{{ model.get_admin_edit_url }}" class="govuk-breadcrumbs__link">[Edit]</a>
             </li>
-
           {% endif %}
         </ol>
       </div>
-    </div>
-    <div class="govuk-grid-column-one-half govuk-!-margin-top-2" style="text-align: right;">
-      {% flag NOTIFY_ON_DATACUT_CHANGE_FLAG %}
-      {% include "partials/subscription_link.html" with subscription=subscription dataset=dataset dataset_uuid=dataset.id %}
-      &nbsp;&nbsp;&nbsp;
-      {% endflag %}
-      {% include "partials/bookmark-link.html" with dataset_uuid=model.id is_bookmarked=is_bookmarked %}
     </div>
   </div>
 {% endblock %}
@@ -58,105 +50,35 @@
     {% include 'partials/unpublished_banner.html' with type='dataset' %}
   {% endif %}
   <div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
+    <div class="govuk-grid-column-full">
       <span class="govuk-caption-xl">Data cut</span>
       <h1 class="govuk-heading-xl">{{ model.name }}</h1>
-      {% include "data_collections/partials/add_dataset_link.html"%}
+      {% include "data_collections/partials/header_action_links.html" with dataType="cut" %}
     </div>
   </div>
   <div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
-      {% include "partials/dataset_info.html" with model=model %}
-      {% include "partials/dataset_info_additional.html" with model=model show_usage_history=True %}
-
+    <div class="govuk-grid-column-one-half">
       <div class="govuk-body">
         {{ model.description | minimal_markup }}
       </div>
-    </div>
-    <div class="govuk-grid-column-one-third">
-      {% if model.enquiries_contact %}
-      <p class="govuk-body sidebar-section">
-        <a href="mailto:{{ model.enquiries_contact.email }}?subject=Reporting an issue - {{ model.name }}" class="govuk-link govuk-link--no-visited-state">
-          {% include "partials/report_an_issue_icon.html" %}
-        </a>
-      </p>
-      {% endif %}
-      {% if request.user.is_superuser or request.user == model.information_asset_owner or request.user == model.information_asset_manager or request.user in model.data_catalogue_editors.all %}
-          <p class="govuk-body sidebar-section">
-            <a href="{% url 'datasets:edit_dataset' model.id %}" class="govuk-link">Manage this dataset</a>
-          </p>
-      {% endif %}
-
-      {% if request.user.is_superuser or request.user == model.information_asset_owner or request.user == model.information_asset_manager %}
-          <p class="govuk-body sidebar-section">
-            <a href="{% url 'datasets:edit_data_editors' model.id %}" class="govuk-link">Manage editors</a>
-          </p>
-      {% endif %}
-
-      {% if related_data or related_visualisations %}
-      <aside class="app-related-items" role="complementary">
-        <p class="govuk-body sidebar-section">
-          {% if related_data %}
-            <h3 class="govuk-heading-s govuk-!-margin-top-2">Source datasets</h3>
-            <nav role="navigation">
-              <ul class="govuk-list">
-                {% for master in related_data %}
-                  <li>
-                    {% include "partials/related_data_link.html" with dataset=master %}
-                  </li>
-                {% endfor %}
-              </ul>
-            </nav>
-        </p>
-      </aside> 
-      {% endif %}
-        <aside class="app-related-items" role="complementary">
-          <h3 class="govuk-heading-s govuk-!-margin-top-2">Related dashboards</h3>
-          {% if related_visualisations %}
-            <nav role="navigation">
-              <ul class="govuk-list">
-                {% for master in related_visualisations|slice:":4" %}
-                  <li>
-                    {% include "partials/related_data_link.html" with dataset=master css_classname="related-dashboard" %}
-                  </lusingi>
-                {% endfor %}
-
-                {% if related_visualiations|length > 4 %}
-                  <li class="govuk-!-margin-top-4">
-                    <a href="{% url "datasets:related_visualisations" dataset_uuid=model.id %}"
-                      class="govuk-link govuk-link--no-visited-state">
-                      Show all related dashboards
-                    </a>
-                  </li>
-                {% endif %}
-              </ul>
-            </nav>
-            {% else %}
-            <p class="govuk-body">
-              This data currently has no related dashboards.
-            </p>
-          {% endif %}
-          <p class="govuk-body">
-            <small>If you'd like to create a dashboard using this data then you can see                   
-            <a href="https://data-services-help.trade.gov.uk/data-workspace/how-to/see-tools-specific-guidance/quicksight/create-a-dashboard/" 
-            class="govuk-link govuk-link--no-visited-state" target="_blank">
-            how to create a dashboard with Quicksight.</a></small>
-          </p>
-          {% endif %}
-        </aside> 
-      <p class="govuk-body sidebar-section"></p>
+    </div>    <div class="govuk-grid-column-one-half">
+      <div class="govuk-body">
+        {% include "partials/dataset_info.html" with model=model %}
+      </div>
     </div>
   </div>
+
   {% if model.customdatasetquery_set.count %}
   {% include "partials/dataset_charts.html" %}
   {% endif %}
   <div class="govuk-grid-row" style="overflow-x: auto;">
-    <div class="govuk-grid-column-two-thirds">
-      <h2 class="govuk-heading-l govuk-!-margin-top-8">Data</h2> 
+    <div class="govuk-grid-column-full">
+      <h2 class="govuk-heading-l govuk-!-margin-top-8">Data tables</h2> 
       {% if datacut_links_info and not has_access %}
           {% include 'partials/request_access.html' with type='datacut' has_data_access=has_access %}
       {% endif %}
       {% if datacut_links_info and has_access and data_hosted_externally %}
+      <div class="govuk-warning-text__container">
         <div class="govuk-warning-text">
           <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
           <div class="govuk-warning-text__text">
@@ -166,10 +88,9 @@
             </strong>
           </div>
         </div>
+      </div>
       {% endif %}
     </div>
-
-
     <div class="govuk-grid-column-full" style="overflow-x: auto;">
       <table class="govuk-table">
         <thead>
@@ -266,6 +187,69 @@
         </tbody>
       </table>
     </div>
+  </div>
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+    {% include "partials/dataset_info_additional.html" with model=model show_usage_history=True %}
+    </div>
+  </div>
+
+
+  <div class="govuk-grid-row">
+      {% if related_data or related_visualisations %}
+        {% if related_data %}
+          <div class="govuk-grid-column-one-half govuk-!-margin-top-8">
+            <aside role="complementary">
+                  <h3 class="govuk-heading-m">Source datasets</h3>
+                  <nav role="navigation">
+                    <ul class="govuk-list">
+                      {% for master in related_data %}
+                        <li>
+                          {% include "partials/related_data_link.html" with dataset=master %}
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  </nav>
+            </aside> 
+          </div>
+        {% endif %}
+        <div class="govuk-grid-column-one-half govuk-!-margin-top-8">
+          <aside role="complementary">
+            <h3 class="govuk-heading-m">Related dashboards</h3>
+            {% if related_visualisations %}
+              <nav role="navigation">
+                <ul class="govuk-list">
+                  {% for master in related_visualisations|slice:":4" %}
+                    <li>
+                      {% include "partials/related_data_link.html" with dataset=master css_classname="related-dashboard" %}
+                    </li>
+                  {% endfor %}
+
+                  {% if related_visualiations|length > 4 %}
+                    <li class="govuk-!-margin-top-4">
+                      <a href="{% url "datasets:related_visualisations" dataset_uuid=model.id %}"
+                        class="govuk-link govuk-link--no-visited-state">
+                        Show all related dashboards
+                      </a>
+                    </li>
+                  {% endif %}
+                </ul>
+              </nav>
+              {% else %}
+              <p class="govuk-body">
+                This data currently has no related dashboards.
+              </p>
+            {% endif %}
+            <p class="govuk-body">
+              <small>If you'd like to create a dashboard using this data then you can see                   
+              <a href="https://data-services-help.trade.gov.uk/data-workspace/how-to/see-tools-specific-guidance/quicksight/create-a-dashboard/" 
+              class="govuk-link govuk-link--no-visited-state" target="_blank">
+              how to create a dashboard with Quicksight.</a></small>
+            </p>
+          </aside> 
+      </div>
+      {% endif %}
   </div>
 
 {% endblock %}

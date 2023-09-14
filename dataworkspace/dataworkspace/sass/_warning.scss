@@ -1,0 +1,11 @@
+.govuk-warning-text__container {
+    border: 1px solid $govuk-border-colour;
+    padding: govuk-spacing(3);
+    .govuk-warning-text {
+        margin-bottom: 0;
+    }
+    .govuk-button {
+        margin-bottom: 0;
+    }
+    margin-bottom: govuk-spacing(6);
+}

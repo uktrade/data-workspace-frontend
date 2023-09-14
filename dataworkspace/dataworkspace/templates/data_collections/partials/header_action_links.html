@@ -1,0 +1,160 @@
+{% load waffle_tags %}
+<div class="govuk-!-margin-bottom-4"{% if not model.published %} title="Unpublished catalogue items cannot be added to collection"{% endif %}>
+    <ul class="govuk-list govuk-list--inline">
+        {% if dataType == "cut" %}
+            {% if model.published %}
+                <li>
+                <a class="govuk-link govuk-link--no-visited-state govuk-body"
+                    href="{{ model.get_select_collection_for_membership_url }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15.999" height="16" viewBox="0 0 15.999 16" style="padding-right: 5px; position: relative; top: 1px">
+                    <path id="Union_1" data-name="Union 1" d="M-3723-4651v-6.5h-6.5v-3h6.5v-6.5h3v6.5h6.5v3h-6.5v6.5Z"
+                            transform="translate(3729.5 4667)" fill="#386eb3"/>
+                    </svg>Add to collection
+                </a>
+                </li>
+                {% else %}
+                <li>
+                <svg xmlns="http://www.w3.org/2000/svg" width="15.999" height="16" viewBox="0 0 15.999 16" style="padding-right: 5px; position: relative; top: 1px">
+                    <path id="Union_1" data-name="Union 1" d="M-3723-4651v-6.5h-6.5v-3h6.5v-6.5h3v6.5h6.5v3h-6.5v6.5Z"
+                        transform="translate(3729.5 4667)" fill="#b1b4b6"/>
+                <span class="govuk-body" style="color:#b1b4b6; cursor: default;">
+                    Add to collection
+                </span>
+                </li>
+                {% endif %}
+                <li>
+                    {% include "partials/bookmark-link.html" with dataset_uuid=model.id is_bookmarked=is_bookmarked %}
+                </li>
+                {% flag NOTIFY_ON_DATACUT_CHANGE_FLAG %}
+                <li>
+                    {% include "partials/subscription_link.html" with subscription=subscription dataset=dataset dataset_uuid=dataset.id %}
+                </li>
+            {% endflag %}
+                {% if model.enquiries_contact %}
+                <li>
+                <a href="mailto:{{ model.enquiries_contact.email }}?subject=Reporting an issue - {{ model.name }}" class="govuk-link govuk-link--no-visited-state">
+                    {% include "partials/report_an_issue_icon.html" %}
+                </a>
+                </li>
+                {% endif %}
+                {% if request.user.is_superuser or request.user == model.information_asset_owner or request.user == model.information_asset_manager or request.user in model.data_catalogue_editors.all %}
+                <li>
+                    <a href="{% url 'datasets:edit_dataset' model.id %}" class="govuk-link">Manage this dataset</a>
+                </li>
+                {% endif %}
+
+                {% if request.user.is_superuser or request.user == model.information_asset_owner or request.user == model.information_asset_manager %}
+                <li>
+                    <a href="{% url 'datasets:edit_data_editors' model.id %}" class="govuk-link">Manage editors</a>
+                </li>   
+            {% endif %}
+        {% endif %}
+        {% if dataType == "reference" %}
+            {% if model.published %}
+            <li>
+            <a class="govuk-link govuk-link--no-visited-state govuk-body"
+                href="{{ model.get_select_collection_for_membership_url }}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15.999" height="16" viewBox="0 0 15.999 16" style="padding-right: 5px; position: relative; top: 1px">
+                <path id="Union_1" data-name="Union 1" d="M-3723-4651v-6.5h-6.5v-3h6.5v-6.5h3v6.5h6.5v3h-6.5v6.5Z"
+                        transform="translate(3729.5 4667)" fill="#386eb3"/>
+                </svg>Add to collection
+            </a>
+            </li>
+            {% else %}
+            <li>
+            <svg xmlns="http://www.w3.org/2000/svg" width="15.999" height="16" viewBox="0 0 15.999 16" style="padding-right: 5px; position: relative; top: 1px">
+                <path id="Union_1" data-name="Union 1" d="M-3723-4651v-6.5h-6.5v-3h6.5v-6.5h3v6.5h6.5v3h-6.5v6.5Z"
+                    transform="translate(3729.5 4667)" fill="#b1b4b6"/>
+            <span class="govuk-body" style="color:#b1b4b6; cursor: default;">
+                Add to collection
+            </span>
+            </li>
+            {% endif %}
+            <li>
+                {% include "partials/bookmark-link.html" with dataset_uuid=model.uuid is_bookmarked=is_bookmarked %}
+            </li>
+            {% flag NOTIFY_ON_REFERENCE_DATASET_CHANGE_FLAG %}
+                <li>
+                    {% include "partials/subscription_link.html" with subscription=subscription dataset=model dataset_uuid=model.uuid %}
+                </li>
+            {% endflag %}
+            {% if model.enquiries_contact %}
+            <li>
+            <a href="mailto:{{ model.enquiries_contact.email }}?subject=Reporting an issue - {{ model.name }}" class="govuk-link govuk-link--no-visited-state">
+                {% include "partials/report_an_issue_icon.html" %}
+            </a>
+            </li>
+            {% endif %}
+        {% endif %}
+        {% if dataType == "source" %}
+            {% if model.published %}
+            <li>
+            <a class="govuk-link govuk-link--no-visited-state govuk-body"
+                href="{{ model.get_select_collection_for_membership_url }}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15.999" height="16" viewBox="0 0 15.999 16" style="padding-right: 5px; position: relative; top: 1px">
+                <path id="Union_1" data-name="Union 1" d="M-3723-4651v-6.5h-6.5v-3h6.5v-6.5h3v6.5h6.5v3h-6.5v6.5Z"
+                        transform="translate(3729.5 4667)" fill="#386eb3"/>
+                </svg>Add to collection
+            </a>
+            </li>
+            {% else %}
+            <li>
+            <svg xmlns="http://www.w3.org/2000/svg" width="15.999" height="16" viewBox="0 0 15.999 16" style="padding-right: 5px; position: relative; top: 1px">
+                <path id="Union_1" data-name="Union 1" d="M-3723-4651v-6.5h-6.5v-3h6.5v-6.5h3v6.5h6.5v3h-6.5v6.5Z"
+                    transform="translate(3729.5 4667)" fill="#b1b4b6"/>
+            <span class="govuk-body" style="color:#b1b4b6; cursor: default;">
+                Add to collection
+            </span>
+            </li>
+            {% endif %}
+            <li>
+                {% include "partials/bookmark-link.html" with dataset_uuid=model.id is_bookmarked=is_bookmarked %}
+            </li>
+            {% flag NOTIFY_ON_MASTER_DATASET_CHANGE_FLAG %}
+                <li>
+                    {% include "partials/subscription_link.html" with subscription=subscription dataset=dataset dataset_uuid=dataset.id %}
+                </li>
+            {% endflag %}
+            {% if model.enquiries_contact %}
+            <li>
+            <a href="mailto:{{ model.enquiries_contact.email }}?subject=Reporting an issue - {{ model.name }}" class="govuk-link govuk-link--no-visited-state">
+                {% include "partials/report_an_issue_icon.html" %}
+            </a>
+            </li>
+            {% endif %}
+            {% if request.user.is_superuser or request.user == model.information_asset_owner or request.user == model.information_asset_manager or request.user in model.data_catalogue_editors.all %}
+            <li>
+                <a href="{% url 'datasets:edit_dataset' model.id %}" class="govuk-link">Manage this dataset</a>
+            </li>
+            {% endif %}
+        
+            {% if request.user.is_superuser or request.user == model.information_asset_owner or request.user == model.information_asset_manager %}
+            <li>
+                <a href="{% url 'datasets:edit_data_editors' model.id %}" class="govuk-link">Manage editors</a>
+            </li>   
+            {% endif %}
+        {% endif %}
+        {% if dataType == "visualisation" %}
+            <li>
+                {% include "partials/bookmark-link.html" with dataset_uuid=model.id is_bookmarked=is_bookmarked %}
+            </li>
+            {% if model.enquiries_contact %}
+                <li>
+                    <a href="mailto:{{ model.enquiries_contact.email }}?subject=Reporting an issue - {{ model.name }}" class="govuk-link govuk-link--no-visited-state">
+                        {% include "partials/report_an_issue_icon.html" %}
+                    </a>
+                </li>
+            {% endif %}
+            {% if request.user == model.information_asset_owner or request.user == model.information_asset_manager or request.user.is_superuser or request.user in model.data_catalogue_editors.all %}
+                <li>
+                    <a href="{% url 'datasets:edit_visualisation_catalogue_item' model.id %}" class="govuk-link govuk-link--no-visited-state">Manage this page</a>
+                </li>
+            {% endif %}
+            {% if request.user.is_superuser or request.user == model.information_asset_owner or request.user == model.information_asset_manager %}
+                <li>
+                    <a href="{% url 'datasets:edit_data_editors' pk=model.id %}" class="govuk-link">Manage editors</a>
+                </li>
+            {% endif %}
+        {% endif %}
+    </ul>
+</div>

@@ -1,9 +1,9 @@
 {% if subscription.current_user_is_subscribed %}
   <a href="{% url 'datasets:email_preferences' %}" class="govuk-link">
-    {% include "partials/subscription_icon.html" with text="Change your email preferences" %}
+    {% include "partials/subscription_icon.html" with text="Email options" %}
   </a>
 {% else %}
   <a href="{% url 'datasets:subscription_start' dataset_uuid %}" class="govuk-link">
-    {% include "partials/subscription_icon.html" with text="Get updated when this dataset changes" %}
+    {% include "partials/subscription_icon.html" with text="Get updates" %}
   </a>
 {% endif %}
