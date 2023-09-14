@@ -1,0 +1,24 @@
+.govuk-summary-list__row__stacked {
+    display: block;
+    width: 200%;
+    border-bottom: 1px solid $govuk-border-colour;
+    @include govuk-media-query($until: tablet) {
+        margin-bottom: govuk-spacing(3);
+        width: 100%;
+      }
+  }
+
+.govuk-summary-list__key__stacked {
+    padding-top: govuk-spacing(2);
+    font-weight: 700;
+    @include govuk-media-query($until: tablet) {
+        padding-top: 0;
+    }
+}
+
+.govuk-summary-list__key__stacked, .govuk-summary-list__value__stacked {
+    display: block;
+    width: 100%;
+    padding-bottom: govuk-spacing(2);
+    margin: 0;
+}

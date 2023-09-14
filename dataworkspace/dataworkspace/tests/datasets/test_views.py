@@ -2059,11 +2059,9 @@ def test_launch_master_dataset_in_data_explorer(metadata_db):
     )
 
 
-def get_govuk_summary_list_value(doc, key_text):
+def get_govuk_summary_list_value(doc, key_text, selector):
     # xpath hint ... the first dd child of the parent of the dt element containing key_text
-    match = doc.xpath(
-        f'//dt[@class="govuk-summary-list__key" and text()="{key_text}"]/../dd/text()'
-    )
+    match = doc.xpath(f'//dt[@class="{selector}" and text()="{key_text}"]/../dd/text()')
 
     if match:
         return match[0]
@@ -2090,8 +2088,14 @@ class TestVisualisationsDetailView:
 
         assert "to ask any questions about this dashboard." in response_content
 
-        assert get_govuk_summary_list_value(doc, "Update frequency") == "N/A"
-        assert get_govuk_summary_list_value(doc, "Summary") == vis.short_description
+        assert (
+            get_govuk_summary_list_value(doc, "Update frequency", "govuk-summary-list__key")
+            == "N/A"
+        )
+        assert (
+            get_govuk_summary_list_value(doc, "Summary", "govuk-summary-list__key__stacked")
+            == vis.short_description
+        )
 
     @pytest.mark.parametrize("has_access", (True, False))
     @pytest.mark.django_db

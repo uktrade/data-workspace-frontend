@@ -1,15 +1,7 @@
 {% load humanize datasets_tags %}
 
-<details class="govuk-details" data-module="govuk-details">
-  <summary class="govuk-details__summary">
-                    <span class="govuk-details__summary-text">
-                      Additional information
-                    </span>
-  </summary>
-  <div class="govuk-details__text">
-
+  <h3 class="govuk-heading-l govuk-!-margin-top-8">Governance</h3>
     <dl class="govuk-summary-list">
-
       <div class="govuk-summary-list__row">
         <dt class="govuk-summary-list__key">Licence</dt>
         <dd class="govuk-summary-list__value">
@@ -48,7 +40,5 @@
           {% include 'partials/contact.html' with model=model.information_asset_owner %}
         </dd>
       </div>
-
     </dl>
-  </div>
-</details>
+
