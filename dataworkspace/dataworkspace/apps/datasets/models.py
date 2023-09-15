@@ -1922,6 +1922,12 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     def bookmark_count(self):
         return self.referencedatasetbookmark_set.count()
 
+    def has_foriegn_key_fields(self):
+        for field in self.fields.all():
+            if field.data_type == field.DATA_TYPE_FOREIGN_KEY:
+                return True
+        return False
+
     def get_column_config(self):
         """
         Return column configuration for the reference dataset in the
