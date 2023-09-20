@@ -71,6 +71,7 @@ locals {
     zendesk_token = "${var.zendesk_token}"
     zendesk_service_field_id = "${var.zendesk_service_field_id}"
     zendesk_service_field_value = "${var.zendesk_service_field_value}"
+    zenpy_force_netloc = "${var.zenpy_force_netloc}"
 
     prometheus_domain = "${var.prometheus_domain}"
     metrics_service_discovery_basic_auth_user = "${var.metrics_service_discovery_basic_auth_user}"
