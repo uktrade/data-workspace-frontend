@@ -131,8 +131,8 @@ def can_edit_dataset(user, dataset):
             and user in dataset.data_catalogue_editors.all()
         )
         or (
-            hasattr(dataset, "request_approver")
-            and user in dataset.request_approver.all()
+            hasattr(dataset, "request_approvers")
+            and user in dataset.request_approvers.all()
         )
     )
 

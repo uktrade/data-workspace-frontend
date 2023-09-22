@@ -249,7 +249,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
         "information_asset_owner",
         "information_asset_manager",
         "data_catalogue_editors",
-        "request_approver",
+        "request_approvers",
     )
     fieldsets = [
         (
@@ -288,7 +288,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
                     "eligibility_criteria",
                     "authorized_email_domains",
                     "authorized_users",
-                    "request_approver",
+                    "request_approvers",
                 ]
             },
         ),
@@ -869,6 +869,7 @@ class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStamp
         "information_asset_manager",
         "data_catalogue_editors",
         "secondary_enquiries_contact",
+        "request_approvers",
     )
 
     fieldsets = [
@@ -905,6 +906,7 @@ class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStamp
                     "eligibility_criteria",
                     "authorized_email_domains",
                     "authorized_users",
+                    "request_approvers",
                 ]
             },
         ),
