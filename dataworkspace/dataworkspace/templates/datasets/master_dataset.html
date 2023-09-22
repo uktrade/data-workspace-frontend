@@ -58,9 +58,9 @@
   </div>
 
   {% if master_datasets_info %}
-  <div class="govuk-grid-row" style="overflow-x: auto; margin-top: 90px;" id="data">
+  <div class="govuk-grid-row govuk-!-margin-top-4" style="overflow-x: auto;" id="data">
     <div class="govuk-grid-column-full">
-      <h2 class="govuk-heading-l">Data Tables</h2>
+      <h2 class="govuk-heading-m">Data tables</h2>
       {% if not has_access %}
         {% include 'partials/request_access.html' with type='master' has_data_access=has_access %}
       {% endif %}
@@ -68,92 +68,53 @@
       <table class="govuk-table">
         <thead>
         <tr class="govuk-table__row">
-          <th class="govuk-table__header">Name</th>
-          <th class="govuk-table__header">Identifier</th>
-          <th class="govuk-table__header">Last updated</th>
-          <th class="govuk-table__header">Action</th>
-          {% flag DATASET_CHANGELOG_PAGE_FLAG %}
-            <th class="govuk-table__header">History</th>
-          {% endflag %}
+          <th class="govuk-table__header govuk-!-width-one-third">Name</th>
+          <th class="govuk-table__header govuk-!-width-one-third">Table name</th>
+          <th class="govuk-table__header govuk-!-width-one-third">Last updated</th>
         </tr>
         </thead>
         <tbody>
 
         {% for source_table, code_snippets, columns, tools_links, pipeline_info in master_datasets_info %}
           <tr class="govuk-table__row">
-            <td class="govuk-table__cell app-table_cell--no-border">{{ source_table.name }}</td>
-            <td class="govuk-table__cell app-table_cell--no-border">
-              "{{ source_table.schema }}"."{{ source_table.table }}"
-            </td>
-            <td class="govuk-table__cell app-table_cell--no-border">
-              {{ source_table.get_data_last_updated_date|gmt_date|default_if_none:"N/A" }}
-              <br>
-              {{ source_table.get_data_last_updated_date|time_with_gmt_offset|default_if_none:"N/A" }}
-            </td>
-            <td class="govuk-table__cell app-table_cell--no-border">
+            <td class="govuk-table__cell">
               {% if source_table.type == source_table_type %}
                 {% if has_access %}
                   {% if source_table.data_grid_enabled %}
-                    <a class="govuk-link"
-                       href="{% url "datasets:source_table_detail" dataset_uuid=dataset.id object_id=source_table.id %}">
-                      View table
-                    </a>
-                    <br>
-                  {% endif %}
-                  {% if model.dictionary_published or request.user|can_edit_dataset:model %}
-                  <a href="{% url "datasets:data_dictionary" source_uuid=source_table.id %}?dataset_uuid={{dataset.id}}"
-                  class="govuk-link">
-                  Data dictionary
+                  <a class="govuk-link" href="{% url "datasets:source_table_detail" dataset_uuid=dataset.id object_id=source_table.id %}">
+                    {{ source_table.name }}
                   </a>
+                {% endif %}
+                {% else %}
+                  {{ source_table.name }}
+                {% endif %}
+              {% endif %}
+            </td>
+            <td class="govuk-table__cell">
+              {{ source_table.schema }}.{{ source_table.table }}
+              {% if source_table.type == source_table_type %}
+                {% if not has_access %}
+                  {% if model.dictionary_published or request.user|can_edit_dataset:model %}
+                    (<a href="{% url "datasets:data_dictionary" source_uuid=source_table.id %}?dataset_uuid={{dataset.id}}" class="govuk-link">Data dictionary</a>)
                   {% endif %}
+                {% endif %}
+              {% endif %}
+            </td>
+            <td class="govuk-table__cell">
+              {{ source_table.get_data_last_updated_date|gmt_date|default_if_none:"N/A" }}, {{ source_table.get_data_last_updated_date|time_with_gmt_offset|default_if_none:"N/A" }}<br />
+              {% if source_table.type == source_table_type %}
+                {% if has_access %}
                   {% if request.user|can_edit_dataset:model %}
-                    <br>
                     <a class="govuk-link govuk-link--no-visited-state"
                        href="{% url "datasets:manager:manage-source-table" pk=dataset.id source_uuid=source_table.id %}">
                       Update or restore table
                     </a>
                   {% endif %}
-                {% else %}
-                  <p class="govuk-body">No preview available</p>
                 {% endif %}
-              {% else %}
-                No preview available
               {% endif %}
             </td>
-            {% flag DATASET_CHANGELOG_PAGE_FLAG %}
-              <td class="govuk-table__cell app-table_cell--no-border">
-                <a class="govuk-link govuk-link--no-visited-state"
-                   href="{% url 'datasets:source_table_changelog' dataset_uuid=dataset.id source_id=source_table.id %}">
-                  Changelog
-                </a>
-              </td>
-            {% endflag %}
           </tr>
-          {% if code_snippets or columns %}
-            <tr class="govuk-table__row">
-              <td colspan="{% flag DATASET_CHANGELOG_PAGE_FLAG %}5{% else %}4{% endflag %}" class="govuk-table__cell">
-                {% if has_access %}
-                  <details class="govuk-details govuk-!-margin-bottom-6" data-module="govuk-details">
-                    <summary class="govuk-details__summary">
-                      <span class="govuk-details__summary-text">
-                        Use this data for analysis<span class="govuk-visually-hidden">for "{{ source_table.schema }}"."{{ source_table.table }}"</span>
-                      </span>
-                    </summary>
-                    <div class="govuk-details__text">
-                      {% include 'partials/code_snippets.html' with code_snippets=code_snippets source_table=source_table tools_links=tools_links %}
-                    </div>
-                  </details>
-                {% endif %}
-              </td>
-            </tr>
-          {% endif %}
-
         {% endfor %}
-        {% if not master_datasets_info %}
-          <tr class="govuk-table__row">
-            <td colspan="4" class="govuk-table__cell">No data available</td>
-          </tr>
-        {% endif %}
         </tbody>
       </table>
     </div>
@@ -164,8 +125,6 @@
       {% include "partials/dataset_info_additional.html" with model=model show_usage_history=True %}
     </div>
   </div>
-
-  {% include "partials/dataset_charts.html" %}
 
   <div class="govuk-grid-row">
       {% if related_data %}

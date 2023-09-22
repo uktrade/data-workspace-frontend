@@ -1,7 +1,21 @@
 {% load humanize datasets_tags %}
 
-  <h3 class="govuk-heading-l govuk-!-margin-top-8">Governance</h3>
+  <h3 class="govuk-heading-m govuk-!-margin-top-8">Governance</h3>
     <dl class="govuk-summary-list">
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Information Asset Manager</dt>
+        <dd class="govuk-summary-list__value">
+          {% include 'partials/contact.html' with model=model.information_asset_manager %}
+        </dd>
+      </div>
+
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Information Asset Owner</dt>
+        <dd class="govuk-summary-list__value">
+          {% include 'partials/contact.html' with model=model.information_asset_owner %}
+        </dd>
+      </div>
+
       <div class="govuk-summary-list__row">
         <dt class="govuk-summary-list__key">Licence</dt>
         <dd class="govuk-summary-list__value">
@@ -18,27 +32,5 @@
         <dd class="govuk-summary-list__value">{{ model.retention_policy | linebreaksbr }}</dd>
       </div>
 
-      {% if show_usage_history %}
-        <div class="govuk-summary-list__row">
-          <dt class="govuk-summary-list__key">Usage history</dt>
-          <dd class="govuk-summary-list__value">
-            <a class="govuk-link" href="{{ model.get_usage_history_url }}">View
-              history</a> to see how often this data is accessed
-          </dd>
-        </div>
-      {% endif %}
-
-      <div class="govuk-summary-list__row">
-        <dt class="govuk-summary-list__key">Information Asset Manager</dt>
-        <dd class="govuk-summary-list__value">
-          {% include 'partials/contact.html' with model=model.information_asset_manager %}
-        </dd>
-      </div>
-      <div class="govuk-summary-list__row">
-        <dt class="govuk-summary-list__key">Information Asset Owner</dt>
-        <dd class="govuk-summary-list__value">
-          {% include 'partials/contact.html' with model=model.information_asset_owner %}
-        </dd>
-      </div>
     </dl>
 
