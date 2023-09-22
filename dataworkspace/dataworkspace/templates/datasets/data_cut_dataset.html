@@ -68,125 +68,100 @@
     </div>
   </div>
 
-  {% if model.customdatasetquery_set.count %}
-  {% include "partials/dataset_charts.html" %}
+  {% if not has_access and has_datacut_tables and has_datacut_links %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full govuk-!-margin-top-6">
+          {% include 'partials/request_access.html' with type='datacut' has_data_access=has_access %}
+    </div>
+  </div>
   {% endif %}
-  <div class="govuk-grid-row" style="overflow-x: auto;">
+
+  {% if has_datacut_tables %}
+  <div class="govuk-grid-row govuk-!-margin-top-4">
     <div class="govuk-grid-column-full">
-      <h2 class="govuk-heading-l govuk-!-margin-top-8">Data tables</h2> 
-      {% if datacut_links_info and not has_access %}
+      <h2 class="govuk-heading-m">Data tables</h2> 
+      {% if not has_access and has_datacut_tables and not has_datacut_links %}
           {% include 'partials/request_access.html' with type='datacut' has_data_access=has_access %}
       {% endif %}
-      {% if datacut_links_info and has_access and data_hosted_externally %}
-      <div class="govuk-warning-text__container">
-        <div class="govuk-warning-text">
-          <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
-          <div class="govuk-warning-text__text">
-            <strong>
-              <span class="govuk-warning-text__assistive">Warning</span>
-              This data set is on an external website.
-            </strong>
-          </div>
-        </div>
-      </div>
-      {% endif %}
-    </div>
-    <div class="govuk-grid-column-full" style="overflow-x: auto;">
       <table class="govuk-table">
         <thead>
         <tr class="govuk-table__row">
-          <th class="govuk-table__header">Name</th>
-          <th class="govuk-table__header">Format</th>
-          <th class="govuk-table__header">Last updated</th>
-          <th class="govuk-table__header">Action</th>
-          {% flag DATASET_CHANGELOG_PAGE_FLAG %}
-            <th class="govuk-table__header">History</th>
-          {% endflag %}
+          <th class="govuk-table__header govuk-!-width-two-thirds">Name</th>
+          <th class="govuk-table__header govuk-!-width-one-third">Last updated</th>
         </tr>
         </thead>
         <tbody>
-
         {% for datacut_link, can_show_link, code_snippets, columns, tools_links in datacut_links_info %}
-          <tr class="govuk-table__row">
-            <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
-              {{ datacut_link.name }}
-
-            </td>
-            <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
-              {% if datacut_link.format %}{{ datacut_link.format }}{% else %}CSV{% endif %}
-            </td>
-            <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
-              {{ datacut_link.get_data_last_updated_date|date_with_gmt_offset|default_if_none:"N/A" }}
-            </td>
-
-            <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
-              {% if can_show_link and datacut_link.type == custom_dataset_query_type %}
-                {% if has_access %}
-                  {% if datacut_link.data_grid_enabled %}
-                    <a class="govuk-link"
-                       href="{% url "datasets:custom_dataset_query_detail" dataset_uuid=dataset.id object_id=datacut_link.id %}">
-                      View/Download
-                    </a>
+          {% if can_show_link and datacut_link.type == custom_dataset_query_type %}
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell">
+                {% if has_access and datacut_link.data_grid_enabled %}
+                    <a class="govuk-link govuk-link--no-visited-state govuk-body"
+                    href="{% url "datasets:custom_dataset_query_detail" dataset_uuid=dataset.id object_id=datacut_link.id %}">
+                    {{ datacut_link.name }}</a>
                   {% else %}
-                    <p class="govuk-body">No preview available</p>
-                  {% endif %}
-                {% else %}
-                  <p class="govuk-body">No preview available</p>
+                    {{ datacut_link.name }}
                 {% endif %}
-              {% else %}
-                {% if has_access %}
-                  <a class="govuk-link external-link" href="{{ datacut_link.get_absolute_url }}">
-                    Visit
-                  </a>
-                {% endif %}
-              {% endif %}
-            </td>
-            {% flag DATASET_CHANGELOG_PAGE_FLAG %}
-              <td class="govuk-table__cell app-table_cell--no-border">
-                <a class="govuk-link govuk-link--no-visited-state"
-                  href="{% url 'datasets:custom_dataset_query_changelog' dataset_uuid=dataset.id source_id=datacut_link.id %}">
-                  Changelog
-                </a>
               </td>
-            {% endflag %}
-
-            {% if columns or code_snippets and has_access %}
-              <tr class="govuk-table__row">
-                <td colspan="6" class="govuk-table__cell">
-                  {% if columns %}
-                    {% include "partials/column_list.html" with columns=columns dataset=dataset source=datacut_link %}
-                  {% endif %}
-                  {% if code_snippets and has_access %}
-                    <details class="govuk-details govuk-!-margin-bottom-2" data-module="govuk-details">
-                      <summary class="govuk-details__summary">
-                                  <span class="govuk-details__summary-text">
-                                    Use this data for analysis<span
-                                    class="govuk-visually-hidden"> "{{ source_table.schema }}"."{{ source_table.table }}"</span>
-                                  </span>
-                      </summary>
-                      <div class="govuk-details__text">
-                        {% include 'partials/code_snippets.html' with code_snippets=code_snippets source_table=datacut_link tools_links=tools_links %}
-                      </div>
-                    </details>
-                  {% endif %}
-                </td>
-              </tr>
-            {% endif %}
-
+              <td class="govuk-table__cell">
+                {{ datacut_link.get_data_last_updated_date|date_with_gmt_offset|default_if_none:"N/A" }}
+              </td>
+            </tr>
+          {% endif %}
         {% endfor %}
-
-        {% if not datacut_links_info %}
-          <tr class="govuk-table__row">
-            <td colspan="4" class="govuk-table__cell">
-              No data available
-            </td>
-          </tr>
-        {% endif %}
-
         </tbody>
       </table>
     </div>
   </div>
+  {% endif %}
+
+  {% if has_datacut_links %}
+    {% if has_datacut_tables and has_datacut_links %}
+    <div class="govuk-grid-row govuk-!-margin-top-8">
+    {% else %}
+    <div class="govuk-grid-row govuk-!-margin-top-4">
+    {% endif %}
+      <div class="govuk-grid-column-full">
+        <h2 class="govuk-heading-m">Links</h2> 
+        {% if not has_access and has_datacut_links and not has_datacut_tables %}
+          {% include 'partials/request_access.html' with type='datacut' has_data_access=has_access %}
+       {% endif %}
+        <table class="govuk-table">
+          <thead>
+          <tr class="govuk-table__row">
+            <th class="govuk-table__header govuk-!-width-one-half">Name</th>
+            <th class="govuk-table__header govuk-!-width-one-quarter">Format</th>
+            <th class="govuk-table__header govuk-!-width-one-quarter">Last updated</th>
+          </tr>
+          </thead>
+          <tbody>
+            {% for datacut_link, can_show_link, code_snippets, columns, tools_links in datacut_links_info %}
+              {% if can_show_link and datacut_link.type != custom_dataset_query_type %}
+              <tr class="govuk-table__row">
+                <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
+                  {% if has_access %}
+                  <a href="{{ datacut_link.get_absolute_url }}" class="govuk-link govuk-link--no-visited-state govuk-body">
+                    {{ datacut_link.name}}
+                  </a>&nbsp;{% include "partials/icons/open_externally_icon.html" %}
+                  {% else %}
+                    {{ datacut_link.name}}
+                  {% endif %}
+                </td>
+                <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
+                  {{ datacut_link.format}}
+                </td>
+                <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
+                  {{ datacut_link.get_data_last_updated_date|date_with_gmt_offset|default_if_none:"N/A" }}
+                </td>
+              </tr>
+              {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {% endif %}
 
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
@@ -200,7 +175,7 @@
         {% if related_data %}
           <div class="govuk-grid-column-one-half govuk-!-margin-top-8">
             <aside role="complementary">
-                  <h3 class="govuk-heading-m">Source datasets</h3>
+                  <h3 class="govuk-heading-m">Related data</h3>
                   <nav role="navigation">
                     <ul class="govuk-list">
                       {% for master in related_data %}

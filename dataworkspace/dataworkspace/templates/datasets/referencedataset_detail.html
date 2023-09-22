@@ -86,7 +86,7 @@
     {% include 'partials/unpublished_banner.html' with type='dataset' %}
   {% endif %}
   <div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
+    <div class="govuk-grid-column-full">
       <span class="govuk-caption-xl">Reference dataset</span>
       <h1 class="govuk-heading-xl">{{ model.name }}</h1>
       {% include "data_collections/partials/header_action_links.html" with dataType="reference" %}
@@ -165,10 +165,8 @@
         <dt class="govuk-summary-list__key">Contact</dt>
         <dd class="govuk-summary-list__value">
           {% if model.enquiries_contact %}
-            Contact
             <a class="govuk-link"
               href="mailto:{{ model.enquiries_contact.email }}">{{ model.enquiries_contact.email }}</a>
-              to ask questions about how to use this data and the visuals.
             {% endif %}
         </dd>
       </div>
@@ -179,95 +177,32 @@
     </div>
   </div>
 
-  <div class="govuk-grid-row" style="overflow-x: auto;">
+  <div class="govuk-grid-row govuk-!-margin-top-4">
     <div class="govuk-grid-column-full">
-      <h2 class="govuk-heading-l">Data tables</h2>
+      <h2 class="govuk-heading-m ">Data tables</h2>
       <table class="govuk-table">
         <thead>
         <tr class="govuk-table__row">
           <th class="govuk-table__header">Name</th>
-          <th class="govuk-table__header">Format</th>
-          <th class="govuk-table__header">Version</th>
+          <th class="govuk-table__header">Table name</th>
           <th class="govuk-table__header">Last updated</th>
-          <th class="govuk-table__header">Action</th>
-          {% flag DATASET_CHANGELOG_PAGE_FLAG %}
-            <th class="govuk-table__header">History</th>
-          {% endflag %}
         </tr>
         </thead>
         <tbody>
         <tr class="govuk-table__row">
-          <td class="govuk-table__cell app-table_cell--no-border">
-            {{ model.slug }}-{{ model.published_version }}
-          </td>
-          <td class="govuk-table__cell app-table_cell--no-border">CSV, JSON</td>
-          <td class="govuk-table__cell app-table_cell--no-border">{{ model.published_version }}</td>
-          <td
-            class="govuk-table__cell app-table_cell--no-border">{{ model.data_last_updated|date_with_gmt_offset }}</td>
-          <td class="govuk-table__cell app-table_cell--no-border">
+          <td class="govuk-table__cell">
             <a class="govuk-link"
-               href="{% url "datasets:reference_dataset_detail" dataset_uuid=model.uuid %}">
-              View table
-            </a>
-            <br>
-
-            <a href="{% url "datasets:data_dictionary" source_uuid=model.uuid %}?dataset_uuid={{model.uuid}}"
-              class="govuk-link">
-              Data dictionary
-            </a>
-
-
+            href="{% url "datasets:reference_dataset_grid" dataset_uuid=model.uuid %}">
+            {{ model.name }} 
+          </a>
+           
           </td>
-          {% flag DATASET_CHANGELOG_PAGE_FLAG %}
-            <td class="govuk-table__cell app-table_cell--no-border">
-              <a class="govuk-link govuk-link--no-visited-state"
-                 href="{% url 'datasets:reference_dataset_changelog' dataset_uuid=model.uuid %}">
-                Changelog
-              </a>
-            </td>
-          {% endflag %}
+          <td class="govuk-table__cell">{{ model.slug }}</td>
+          <td
+            class="govuk-table__cell">{{ model.data_last_updated|date_with_gmt_offset }}</td>
         </tr>
         </tbody>
       </table>
-      {% if code_snippets or columns %}
-        {% if columns %}
-          <details class="govuk-details govuk"
-                   data-module="govuk-details">
-            <summary class="govuk-details__summary">
-              <span class="govuk-details__summary-text">
-                View data structure <span class="govuk-visually-hidden">for "{{ model.name }}"</span>
-              </span>
-            </summary>
-            <div class="govuk-details__text">
-              <ul class="govuk-list govuk-list--bullet">
-                {% for column, data_type in columns|slice:":12" %}
-                  <li>
-                    <strong>{{ column }}</strong> ({{ data_type }})
-                  </li>
-                {% endfor %}
-                {% if columns|length > 12 %}
-                  <a class="govuk-link"
-                     href="{% url 'datasets:reference_dataset_column_details' dataset_uuid=model.uuid %}">
-                    View all columns <span class="govuk-visually-hidden">for "{{ model.name }}"</span>
-                  </a>
-                {% endif %}
-              </ul>
-            </div>
-          </details>
-        {% endif %}
-        {% if model.external_database %}
-          <details class="govuk-details govuk" data-module="govuk-details">
-            <summary class="govuk-details__summary">
-              <span class="govuk-details__summary-text">
-                Use this data <span class="govuk-visually-hidden">for "{{ model.name }}"</span>
-              </span>
-            </summary>
-            <div class="govuk-details__text">
-              {% include 'partials/code_snippets.html' with code_snippets=code_snippets %}
-            </div>
-          </details>
-        {% endif %}
-      {% endif %}
     </div>
   </div>
   {% csrf_token %}

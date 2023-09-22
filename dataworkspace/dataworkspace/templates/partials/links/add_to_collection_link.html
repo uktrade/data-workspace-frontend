@@ -1,0 +1,8 @@
+{% if model.published %}
+<a
+  class="govuk-link govuk-link--no-visited-state govuk-body"
+  href="{{ model.get_select_collection_for_membership_url }}"
+>{% include "partials/icons/plus_icon.html" with text="Add to collection" %}</a>
+{% else %} 
+  {% include "partials/icons/plus_icon.html" with text="Add to collection" %}
+{% endif %}
