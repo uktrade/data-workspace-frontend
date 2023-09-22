@@ -521,6 +521,17 @@ class DatasetDetailView(DetailView):
             for datacut_link in datacut_links
         ]
 
+        datacut_tables = [
+            table
+            for table in datacut_links_info
+            if table.datacut_link.type == DataLinkType.CUSTOM_QUERY
+        ]
+        datacut_links = [
+            link
+            for link in datacut_links_info
+            if link.datacut_link.type == DataLinkType.SOURCE_LINK
+        ]
+
         subscription = self.object.subscriptions.filter(user=self.request.user)
 
         ctx.update(
@@ -545,6 +556,8 @@ class DatasetDetailView(DetailView):
                     and subscription.first().is_active(),
                     "details": subscription.first(),
                 },
+                "has_datacut_tables": bool(datacut_tables),
+                "has_datacut_links": bool(datacut_links),
             }
         )
         return ctx
