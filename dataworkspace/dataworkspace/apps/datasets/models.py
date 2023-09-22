@@ -293,6 +293,11 @@ class DataSet(DeletableTimestampedUserModel):
         default=list,
         help_text="Comma-separated list of domain names without spaces, e.g trade.gov.uk,fco.gov.uk",
     )
+    request_approver = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name="data_catalogue_request_approver",
+        blank=True,
+    )
     search_vector_english = SearchVectorField(null=True, blank=True)
     search_vector_english_name = SearchVectorField(null=True, blank=True)
     search_vector_english_short_description = SearchVectorField(null=True, blank=True)
@@ -459,6 +464,7 @@ class DataSet(DeletableTimestampedUserModel):
                 self.information_asset_manager_id,
             )
             + tuple(self.data_catalogue_editors.values_list("id", flat=True))
+            +tuple(self.request_approver.values_list("id", flat=True))
         )
 
     def user_has_bookmarked(self, user):

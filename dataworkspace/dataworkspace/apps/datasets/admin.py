@@ -249,6 +249,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
         "information_asset_owner",
         "information_asset_manager",
         "data_catalogue_editors",
+        "request_approver",
     )
     fieldsets = [
         (
@@ -287,6 +288,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
                     "eligibility_criteria",
                     "authorized_email_domains",
                     "authorized_users",
+                    "request_approver",
                 ]
             },
         ),
