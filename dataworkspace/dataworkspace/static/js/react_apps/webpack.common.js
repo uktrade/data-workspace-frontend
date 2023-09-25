@@ -3,12 +3,6 @@ const path = require("path");
 module.exports = {
   context: __dirname,
   entry: {
-    builder: [
-      path.join(__dirname, './src/chart-builder/index')
-    ],
-    viewer: [
-      path.join(__dirname, './src/chart-viewer/index')
-    ],
     yourfiles: [
       path.join(__dirname, './src/your-files/index')
     ],
