@@ -21,13 +21,10 @@ from django.http import (
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView
-from django.views.generic.base import RedirectView, TemplateView, View
+from django.views.generic.base import TemplateView, View
 from django.views.generic.edit import CreateView, DeleteView, FormView, UpdateView
 from waffle import flag_is_active
-from waffle.mixins import WaffleFlagMixin
 
-from dataworkspace.apps.core.charts.models import ChartBuilderChart
-from dataworkspace.apps.core.charts.tasks import run_chart_builder_query
 from dataworkspace.apps.core.errors import DataExplorerQueryResultsPermissionError
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -673,20 +670,6 @@ class RunningQueryView(View):
             "page": url_get_page(request),
         }
         return render(request, "explorer/home.html", context)
-
-
-class CreateChartView(WaffleFlagMixin, RedirectView):
-    waffle_flag = settings.CHART_BUILDER_BUILD_CHARTS_FLAG
-
-    def get_redirect_url(self, *args, **kwargs):
-        query_log = get_object_or_404(QueryLog, pk=kwargs["query_log_id"])
-        if query_log.run_by_user != self.request.user:
-            raise DataExplorerQueryResultsPermissionError()
-        chart = ChartBuilderChart.objects.create_from_sql(
-            query_log.sql, self.request.user, query_log.connection
-        )
-        run_chart_builder_query.delay(chart.id)
-        return f"{chart.get_edit_url()}?prev={self.request.META.get('HTTP_REFERER')}"
 
 
 class QueryLogUpdateView(UpdateView):

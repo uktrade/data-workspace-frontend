@@ -408,11 +408,6 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
             "schedule": 60 * 5,
             "args": (),
         },
-        "refresh-published-chart-data": {
-            "task": "dataworkspace.apps.core.charts.tasks.refresh_published_chart_data",
-            "schedule": crontab(minute=0, hour=6),
-            "args": (),
-        },
         "send-notification-emails": {
             "task": "dataworkspace.apps.datasets.utils.send_notification_emails",
             "schedule": 60 * 60,
@@ -752,7 +747,6 @@ NOTIFY_ON_MASTER_DATASET_CHANGE_FLAG = "NOTIFY_ON_MASTER_DATASET_CHANGE_FLAG"
 NOTIFY_ON_DATACUT_CHANGE_FLAG = "NOTIFY_ON_DATACUT_CHANGE_FLAG"
 NOTIFY_ON_REFERENCE_DATASET_CHANGE_FLAG = "NOTIFY_ON_REFERENCE_DATASET_CHANGE_FLAG"
 DATASET_CHANGELOG_PAGE_FLAG = "DATASET_CHANGELOG_PAGE"
-CHART_BUILDER_BUILD_CHARTS_FLAG = "CHART_BUILDER_BUILD_CHARTS"
 CHART_BUILDER_PUBLISH_CHARTS_FLAG = "CHART_BUILDER_PUBLISH_CHARTS"
 DATA_UPLOADER_UI_FLAG = "DATA_UPLOADER_UI"
 ACCESSIBLE_AUTOCOMPLETE_FLAG = "ACCESSIBLE_AUTOCOMPLETE_FLAG"

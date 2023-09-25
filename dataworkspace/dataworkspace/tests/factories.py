@@ -500,15 +500,6 @@ class PipelineFactory(factory.django.DjangoModelFactory):
         model = "datasets.Pipeline"
 
 
-class DataSetChartBuilderChartFactory(factory.django.DjangoModelFactory):
-    dataset = factory.SubFactory(DataSetFactory)
-    name = factory.fuzzy.FuzzyText()
-    summary = factory.fuzzy.FuzzyText()
-
-    class Meta:
-        model = "datasets.DataSetChartBuilderChart"
-
-
 class CollectionFactory(factory.django.DjangoModelFactory):
     name = factory.fuzzy.FuzzyText()
     description = factory.fuzzy.FuzzyText()
