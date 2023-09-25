@@ -4,14 +4,13 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('datasets', '0152_delete_datasetchartbuilderchart'),
-        ('core', '0017_team_notes'),
+        ("datasets", "0152_delete_datasetchartbuilderchart"),
+        ("core", "0017_team_notes"),
     ]
 
     operations = [
         migrations.DeleteModel(
-            name='ChartBuilderChart',
+            name="ChartBuilderChart",
         ),
     ]
