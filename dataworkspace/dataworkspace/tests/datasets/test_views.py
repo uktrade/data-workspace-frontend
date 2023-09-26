@@ -1438,9 +1438,7 @@ def test_find_datasets_includes_unpublished_results_based_on_permissions(
         (["s3://some-bucket/some-object", "http://some.data.com/download.csv"], True),
     ),
 )
-@pytest.mark.skip(
-    reason="I believe we can remove this as we won't surface this message anymore"
-)
+@pytest.mark.skip(reason="I believe we can remove this as we won't surface this message anymore")
 @pytest.mark.django_db
 def test_dataset_shows_external_link_warning(source_urls, show_warning):
     ds = factories.DataSetFactory.create(published=True)
@@ -1530,9 +1528,7 @@ class DatasetsCommon:
 
 
 class TestDatasetVisualisations:
-    @pytest.mark.skip(
-        reason="As we are removing charts from the page this won't exist anymore"
-    )
+    @pytest.mark.skip(reason="As we are removing charts from the page this won't exist anymore")
     @pytest.mark.django_db
     def test_request_access_appears_when_user_has_no_access(self, client):
         master_dataset = factories.DataSetFactory.create(type=DataSetType.MASTER, published=True)
@@ -1570,9 +1566,7 @@ class TestDatasetVisualisations:
     @pytest.mark.parametrize(
         "access_type", (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
     )
-    @pytest.mark.skip(
-        reason="I am not sure why this fails as the phase name is present in the UI"
-    )
+    @pytest.mark.skip(reason="I am not sure why this fails as the phase name is present in the UI")
     @pytest.mark.django_db
     def test_prototype_label_is_visible(self, access_type, staff_client):
         master_dataset = factories.DataSetFactory.create(
@@ -1837,7 +1831,7 @@ class TestReferenceDatasetDetailView(DatasetsCommon):
 
         assert response.status_code == 200
         assert "<strong>code</strong> (integer)" in response.content.decode(response.charset)
-        assert "<strong>name</strong> (text)" in response.content.decode(response.charset) 
+        assert "<strong>name</strong> (text)" in response.content.decode(response.charset)
 
     @pytest.mark.parametrize(
         "request_client,published",
@@ -1995,9 +1989,7 @@ class TestRequestAccess(DatasetsCommon):
         assert response.status_code == 200
 
 
-@pytest.mark.skip(
-    reason="We are moving the snippets to the table view so I this can be deleted"
-)
+@pytest.mark.skip(reason="We are moving the snippets to the table view so I this can be deleted")
 @pytest.mark.django_db
 def test_datacut_dataset_shows_code_snippets_to_tool_user(metadata_db):
     ds = factories.DataSetFactory.create(type=DataSetType.DATACUT, published=True)
@@ -2032,9 +2024,7 @@ def test_datacut_dataset_shows_code_snippets_to_tool_user(metadata_db):
         (DataSetType.DATACUT, factories.CustomDatasetQueryFactory, "datacut"),
     ),
 )
-@pytest.mark.skip(
-    reason="As we have removed the 'View data structure' link I think this can go"
-)
+@pytest.mark.skip(reason="As we have removed the 'View data structure' link I think this can go")
 @mock.patch("dataworkspace.apps.datasets.views.datasets_db.get_columns")
 @pytest.mark.django_db
 def test_dataset_shows_first_12_columns_of_source_table_with_link_to_the_rest(
@@ -2053,7 +2043,7 @@ def test_dataset_shows_first_12_columns_of_source_table_with_link_to_the_rest(
     response = client.get(ds.get_absolute_url())
     response_body = response.content.decode(response.charset)
     doc = html.fromstring(response_body)
-    print('ahhhhh', response_body)
+    print("ahhhhh", response_body)
     assert response.status_code == 200
     for i in range(12):
         assert f"<strong>column_{i}</strong> (integer)" in response_body
@@ -2062,7 +2052,7 @@ def test_dataset_shows_first_12_columns_of_source_table_with_link_to_the_rest(
 
 
 @pytest.mark.skip(
-      reason="We are moving these SQL snippets to the table view so I think this can be deleted"
+    reason="We are moving these SQL snippets to the table view so I think this can be deleted"
 )
 @pytest.mark.django_db(transaction=True)
 def test_launch_master_dataset_in_data_explorer(metadata_db):
@@ -2097,6 +2087,7 @@ def get_govuk_summary_list_value(doc, key_text, selector):
 
     # Don't want to return an empty string as this could give false positives
     return "<empty>"
+
 
 class TestVisualisationsDetailView:
     def test_get_published_authenticated_visualisation(self, client, user):
