@@ -56,6 +56,11 @@ urlpatterns = [
         name="eligibility_criteria",
     ),
     path(
+        "<uuid:dataset_uuid>/eligibility-criteria",
+        login_required(views.eligibility_criteria_view),
+        name="request_approvers",
+    ),
+    path(
         "<uuid:dataset_uuid>/eligibility-criteria-not-met",
         login_required(DatasetAccessRequest.as_view()),
         name="eligibility_criteria_not_met",

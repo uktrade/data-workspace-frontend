@@ -434,6 +434,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
         retention_policy=None,
         eligibility_criteria=None,
         userids=None,
+        request_approvers=None,
     ):
         if userids is None:
             userids = []
@@ -464,6 +465,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             "personal_data": personal_data,
             "retention_policy": retention_policy,
             "eligibility_criteria": list(eligibility_criteria) if eligibility_criteria else None,
+            "request_approvers": list(request_approvers) if request_approvers else None,
             "source_tables": [
                 {"id": str(x.id), "name": x.name, "schema": x.schema, "table": x.table}
                 for x in dataset.sourcetable_set.all()
@@ -494,6 +496,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
                 personal_data="personal",
                 retention_policy="retention",
                 eligibility_criteria=["eligibility"],
+                request_approvers=["approvers"],
             )
         datacut.tags.set([factories.SourceTagFactory()])
 
@@ -531,6 +534,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
                 datacut.personal_data,
                 datacut.retention_policy,
                 datacut.eligibility_criteria,
+                datacut.request_approvers,
             ),
             self.expected_response(
                 master_dataset,

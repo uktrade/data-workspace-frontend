@@ -293,11 +293,7 @@ class DataSet(DeletableTimestampedUserModel):
         default=list,
         help_text="Comma-separated list of domain names without spaces, e.g trade.gov.uk,fco.gov.uk",
     )
-    request_approvers = models.ManyToManyField(
-        settings.AUTH_USER_MODEL,
-        related_name="data_catalogue_request_approvers",
-        blank=True,
-    )
+    request_approvers = ArrayField(models.CharField(max_length=256), null=True)
     search_vector_english = SearchVectorField(null=True, blank=True)
     search_vector_english_name = SearchVectorField(null=True, blank=True)
     search_vector_english_short_description = SearchVectorField(null=True, blank=True)
@@ -464,7 +460,6 @@ class DataSet(DeletableTimestampedUserModel):
                 self.information_asset_manager_id,
             )
             + tuple(self.data_catalogue_editors.values_list("id", flat=True))
-            +tuple(self.request_approvers.values_list("id", flat=True))
         )
 
     def user_has_bookmarked(self, user):
@@ -2520,12 +2515,8 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         default=list,
         help_text="Comma-separated list of domain names without spaces, e.g trade.gov.uk,fco.gov.uk",
     )
-    
-    request_approvers = models.ManyToManyField(
-        settings.AUTH_USER_MODEL,
-        related_name="data_catalogue_request_approvers",
-        blank=True,
-    )
+
+    request_approvers = ArrayField(models.CharField(max_length=256), null=True)
 
     licence_url = models.CharField(
         null=True, blank=True, max_length=1024, help_text="Link to license (optional)"
@@ -2627,7 +2618,6 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
                 self.information_asset_manager_id,
             )
             + tuple(self.data_catalogue_editors.values_list("id", flat=True))
-            +tuple(self.request_approvers.values_list("id", flat=True))
         )
 
     def user_has_bookmarked(self, user):

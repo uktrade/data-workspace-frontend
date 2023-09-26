@@ -249,7 +249,6 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
         "information_asset_owner",
         "information_asset_manager",
         "data_catalogue_editors",
-        "request_approvers",
     )
     fieldsets = [
         (
@@ -307,6 +306,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
         form_class = super().get_form(request, obj=None, **kwargs)
         form_class.base_fields["authorized_email_domains"].widget.attrs["style"] = "width: 30em;"
         form_class.base_fields["eligibility_criteria"].widget.attrs["style"] = "width: 30em;"
+        form_class.base_fields["request_approvers"].widget.attrs["style"] = "width: 30em;"
         return functools.partial(form_class, user=request.user)
 
     def get_tags(self, obj):
@@ -869,7 +869,6 @@ class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStamp
         "information_asset_manager",
         "data_catalogue_editors",
         "secondary_enquiries_contact",
-        "request_approvers",
     )
 
     fieldsets = [
@@ -927,6 +926,7 @@ class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStamp
         form_class = super().get_form(request, obj=None, **kwargs)
         form_class.base_fields["authorized_email_domains"].widget.attrs["style"] = "width: 30em;"
         form_class.base_fields["eligibility_criteria"].widget.attrs["style"] = "width: 30em;"
+        form_class.base_fields["request_approvers"].widget.attrs["style"] = "width: 30em;"
         return functools.partial(form_class, user=request.user)
 
     def get_tags(self, obj):

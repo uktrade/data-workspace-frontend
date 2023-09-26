@@ -89,6 +89,18 @@ def test_submit_eligibility_criteria(client, test_case, meet_criteria, redirect_
     test_case.assertRedirects(response, reverse(redirect_view, kwargs={"dataset_uuid": ds.id}))
 
 
+def test_request_approvers_list(client):
+    ds = factories.DataSetFactory.create(
+        request_approvers=["data@mail.com", "team@mail.com"], published=True
+    )
+
+    response = client.get(reverse("datasets:request_approvers", kwargs={"dataset_uuid": ds.id}))
+
+    assert response.status_code == 200
+    assert "data@mail.com" in str(response.content)
+    assert "team@mail.com" in str(response.content)
+
+
 @pytest.mark.django_db
 def test_toggle_bookmark_on_dataset():
     user = factories.UserFactory.create(is_superuser=False)

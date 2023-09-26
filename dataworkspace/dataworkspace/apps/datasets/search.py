@@ -544,8 +544,7 @@ def _annotate_is_owner(datasets, user):
                 When(
                     Q(information_asset_owner=user)
                     | Q(information_asset_manager=user)
-                    | Q(data_catalogue_editors=user)
-                    | Q(request_approvers=user),
+                    | Q(data_catalogue_editors=user),
                     then=True,
                 ),
                 default=False,

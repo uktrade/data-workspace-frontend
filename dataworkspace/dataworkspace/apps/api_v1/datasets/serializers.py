@@ -56,6 +56,7 @@ class CatalogueItemSerializer(serializers.Serializer):
     security_classification_display = serializers.CharField()
     sensitivity_name = serializers.ListField()
     quicksight_id = serializers.ListField(allow_null=True)
+    request_approvers = serializers.ListField()
 
     def to_representation(self, instance):
         instance = super().to_representation(instance)
