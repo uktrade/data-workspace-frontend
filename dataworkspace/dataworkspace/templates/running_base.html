@@ -29,21 +29,25 @@
       padding-right: 15px;
     }
     dialog {
-        border: 0.125rem solid var(--border-color);
-        border-radius: 0.5px;
-        box-shadow:
-        0 11px 15px -7px #0003,
-        0 24px 38px 3px #00000024,
-        0 9px 46px 8px #0000001f;
-        font-size: 1rem;
-        max-width: min(50rem, 90vw);
-        max-height: 280px;
-        overflow: hidden;
+      border: 0.125rem solid var(--border-color);
+      border-radius: 0.5px;
+      box-shadow:
+      0 11px 15px -7px #0003,
+      0 24px 38px 3px #00000024,
+      0 9px 46px 8px #0000001f;
+      font-size: 1rem;
+      max-width: MIN(50rem, 90vw);
+      max-height: 280px;
+      overflow: hidden;
+      padding: 30px 30px 15px;
+      .govuk-button-group {
+        margin-bottom: 0;
       }
-      dialog::backdrop {
-        background: rgba(36, 32, 20, 0.5) !important;
-        backdrop-filter: blur(0.25rem);
-      }
+    }
+    dialog::backdrop {
+      background: rgba(36, 32, 20, 0.5) !important;
+      backdrop-filter: blur(0.25rem);
+    }
       
   </style>
 

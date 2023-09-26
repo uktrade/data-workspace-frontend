@@ -87,7 +87,7 @@ def applications_api_GET(request):
     return JsonResponse(
         {
             "applications": [
-                api_application_dict(application)
+                api_application_dict(application, ignore_spawner_state=True)
                 for application in ApplicationInstance.objects.filter(
                     state__in=["RUNNING", "SPAWNING"]
                 )

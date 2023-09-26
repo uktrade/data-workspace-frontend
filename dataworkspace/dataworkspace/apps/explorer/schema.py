@@ -1,4 +1,6 @@
+import datetime
 import logging
+import time
 from collections import namedtuple
 from itertools import groupby
 
@@ -40,10 +42,18 @@ def schema_info(user, connection_alias):
     key = connection_schema_cache_key(user, connection_alias)
     ret = cache.get(key)
     if ret:
+        logger.info("Returning cached schema information for user %s", user.email)
         return ret
 
+    logger.info("Building schema information for user %s", user.email)
+    start_time = time.time()
     ret = build_schema_info(user, connection_alias)
-    cache.set(key, ret)
+    logger.info(
+        "Building schema information for user %s took %s seconds",
+        user.email,
+        round(time.time() - start_time, 2),
+    )
+    cache.set(key, ret, timeout=datetime.timedelta(days=7).total_seconds())
 
     return ret
 
@@ -102,7 +112,7 @@ def build_schema_info(user, connection_alias):
             WHERE
               pg_namespace.nspname != 'pg_toast' AND
               pg_namespace.nspname NOT SIMILAR TO 'pg_temp_%|pg_toast_temp_%' AND
-              pg_class.relname NOT SIMILAR TO '%_swap|%_idx|_tmp%|%_pkey|%_seq|_data_explorer_tmp%' AND
+              pg_class.relname NOT SIMILAR TO '%_swap|%_idx|_tmp%|%_pkey|%_seq|_data_explorer_tmp%|%000000' AND
               has_schema_privilege(pg_namespace.nspname, 'USAGE') AND
               has_table_privilege(
                 quote_ident(pg_namespace.nspname) || '.' || quote_ident(pg_class.relname),
@@ -133,6 +143,7 @@ def get_user_schema_info(request):
 
 
 def match_datasets_with_schema_info(schema):
+    start_time = time.time()
     # For each table in schema, find if the corresponding SourceTable has its dictionary_published
     schema_table_names = [
         Func(Value(s.name.schema), Value(s.name.name), function="Row") for s in schema
@@ -169,4 +180,8 @@ def match_datasets_with_schema_info(schema):
 
     for s in schema:
         s.name.dictionary_published = dictionary_published.get((s.name.schema, s.name.name), False)
+    logger.info(
+        "match_datasets_with_schema_info: schema matching took %s seconds",
+        round(time.time() - start_time, 2),
+    )
     return schema

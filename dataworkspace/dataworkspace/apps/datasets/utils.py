@@ -5,6 +5,7 @@ import os
 from functools import reduce
 from uuid import UUID
 
+import sqlparse
 import boto3
 import botocore
 import requests
@@ -17,6 +18,7 @@ from django.db.utils import DatabaseError
 from django.http import Http404
 from django.urls import reverse
 from psycopg2.sql import Identifier, Literal, SQL, Composed
+from waffle import switch_is_active
 from redis.exceptions import LockError, LockNotOwnedError
 
 from dataworkspace.apps.core.utils import (
@@ -119,8 +121,13 @@ def get_code_snippets_for_table(source_table):
     }
 
 
-def get_code_snippets_for_reference_table(table):
-    query = get_sql_snippet("public", table, 50)
+def get_code_snippets_for_reference_table(dataset):
+    if dataset.has_foriegn_key_fields() and switch_is_active(
+        settings.DATA_GRID_REFERENCE_DATASET_FLAG
+    ):
+        query = get_sql_snippet_for_reference_dataset("public", dataset, 50)
+    else:
+        query = get_sql_snippet("public", dataset.table_name, 50)
     return {
         "python": get_python_snippet(query),
         "r": get_r_snippet(query),
@@ -138,6 +145,39 @@ def get_code_snippets_for_query(query):
 
 def get_sql_snippet(schema, table_name, limit=50):
     return f'SELECT * FROM "{schema}"."{table_name}" LIMIT {limit}'
+
+
+def get_sql_snippet_for_reference_dataset(schema, dataset, limit):
+    col_defs = []
+    for field in dataset.fields.all():
+        if field.data_type == field.DATA_TYPE_FOREIGN_KEY:
+            column_name = field.relationship_name
+            ext_column_name = field.linked_reference_dataset_field.column_name
+            tables = field.linked_reference_dataset_field.reference_dataset.table_name
+            col_def = {
+                "field": column_name,
+                "ext_field": ext_column_name,
+                "table": tables,
+            }
+            col_defs.append(col_def)
+
+    base_table = dataset.table_name
+    fields = f"{base_table}.*"
+    joins = ""
+    unique_tables = []
+    for col_def in col_defs:
+        fields = fields + ", " + f'{col_def["table"]}.{col_def["ext_field"]}'
+        if col_def["table"] not in unique_tables:
+            unique_tables.append(col_def["table"])
+            joins = (
+                joins
+                + f""" INNER JOIN "{schema}"."{col_def["table"]}" \
+                ON {base_table}.{col_def["field"]}_id = {col_def["table"]}.id"""
+            )
+
+    sql = f'SELECT {fields} FROM "{schema}"."{base_table}"{joins} LIMIT {limit}'
+    formated_sql = sqlparse.format(sql, reindent=True, keyword_case="upper")
+    return formated_sql
 
 
 def get_python_snippet(query):

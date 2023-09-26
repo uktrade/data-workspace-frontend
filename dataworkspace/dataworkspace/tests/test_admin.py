@@ -30,6 +30,9 @@ from dataworkspace.tests import factories
 from dataworkspace.tests.common import BaseAdminTestCase, get_http_sso_data
 
 
+LONG_DATASET_DESCRIPTION = "This is a very long dataset description. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam."  # pylint: disable=line-too-long
+
+
 class TestCustomAdminSite(BaseAdminTestCase):
     def test_non_admin_access(self):
         # Ensure non-admins get a 404 page
@@ -561,10 +564,10 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "short_description": "test description that is short",
                 "information_asset_manager": self.user.id,
                 "information_asset_owner": self.user.id,
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "valid_from": "",
                 "valid_to": "",
-                "enquiries_contact": "",
+                "enquiries_contact": self.user.id,
                 "licence": "",
                 "restrictions_on_usage": "",
                 "sort_field": "",
@@ -588,7 +591,7 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
         self.assertContains(response, "was added successfully")
         self.assertEqual(num_datasets + 1, ReferenceDataset.objects.count())
         ref_dataset = ReferenceDataset.objects.get(slug=ref_dataset_slug)
-        self.assertEqual(ref_dataset.description, "test description")
+        self.assertEqual(ref_dataset.description, LONG_DATASET_DESCRIPTION)
 
     def test_edit_reference_dataset_duplicate_identifier(self):
         reference_dataset = self._create_reference_dataset()
@@ -641,6 +644,46 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
             },
         )
         self.assertContains(response, "Please select only one unique identifier field")
+        self.assertEqual(num_datasets, ReferenceDataset.objects.count())
+
+    def test_create_reference_dataset_description_not_long_enough(self):
+        ref_dataset_slug = "test-ref-1"
+        num_datasets = ReferenceDataset.objects.count()
+        response = self._authenticated_post(
+            reverse("admin:datasets_referencedataset_add"),
+            {
+                "name": "test ref 1",
+                "table_name": "ref_test_create_ref_dataset_valid",
+                "slug": ref_dataset_slug,
+                "external_database": "",
+                "short_description": "test description that is short",
+                "information_asset_manager": self.user.id,
+                "information_asset_owner": self.user.id,
+                "description": "not long enough",
+                "valid_from": "",
+                "valid_to": "",
+                "enquiries_contact": "",
+                "licence": "",
+                "restrictions_on_usage": "",
+                "sort_field": "",
+                "sort_direction": ReferenceDataset.SORT_DIR_DESC,
+                "fields-TOTAL_FORMS": 2,
+                "fields-INITIAL_FORMS": 0,
+                "fields-MIN_NUM_FORMS": 1,
+                "fields-MAX_NUM_FORMS": 1000,
+                "fields-0-name": "field1",
+                "fields-0-column_name": "field1",
+                "fields-0-data_type": 2,
+                "fields-0-description": "A field",
+                "fields-0-is_identifier": "on",
+                "fields-0-is_display_name": "on",
+                "fields-1-name": "field2",
+                "fields-1-column_name": "field2",
+                "fields-1-data_type": 1,
+                "fields-1-description": "Another field",
+            },
+        )
+        self.assertContains(response, "Description must contain 30 or more words")
         self.assertEqual(num_datasets, ReferenceDataset.objects.count())
 
     def test_edit_reference_dataset_duplicate_display_name(self):
@@ -869,10 +912,10 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "short_description": "test description that is short",
                 "information_asset_manager": self.user.id,
                 "information_asset_owner": self.user.id,
-                "description": "",
+                "description": LONG_DATASET_DESCRIPTION,
                 "valid_from": "",
                 "valid_to": "",
-                "enquiries_contact": "",
+                "enquiries_contact": self.user.id,
                 "licence": "",
                 "sort_direction": ReferenceDataset.SORT_DIR_DESC,
                 "restrictions_on_usage": "",
@@ -927,10 +970,10 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "short_description": reference_dataset.short_description,
                 "information_asset_manager": self.user.id,
                 "information_asset_owner": self.user.id,
-                "description": "",
+                "description": LONG_DATASET_DESCRIPTION,
                 "valid_from": "",
                 "valid_to": "",
-                "enquiries_contact": "",
+                "enquiries_contact": self.user.id,
                 "licence": "",
                 "restrictions_on_usage": "",
                 "sort_field": field1.id,
@@ -984,10 +1027,10 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "short_description": "test description that is short",
                 "information_asset_manager": self.user.id,
                 "information_asset_owner": self.user.id,
-                "description": "",
+                "description": LONG_DATASET_DESCRIPTION,
                 "valid_from": "",
                 "valid_to": "",
-                "enquiries_contact": "",
+                "enquiries_contact": self.user.id,
                 "licence": "",
                 "restrictions_on_usage": "",
                 "sort_field": "",
@@ -1140,10 +1183,10 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "short_description": "test description that is short",
                 "information_asset_manager": self.user.id,
                 "information_asset_owner": self.user.id,
-                "description": "",
+                "description": LONG_DATASET_DESCRIPTION,
                 "valid_from": "",
                 "valid_to": "",
-                "enquiries_contact": "",
+                "enquiries_contact": self.user.id,
                 "licence": "",
                 "restrictions_on_usage": "",
                 "sort_field": field2.id,
@@ -1875,10 +1918,10 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "short_description": "test description that is short",
                 "information_asset_manager": self.user.id,
                 "information_asset_owner": self.user.id,
-                "description": "",
+                "description": LONG_DATASET_DESCRIPTION,
                 "valid_from": "",
                 "valid_to": "",
-                "enquiries_contact": "",
+                "enquiries_contact": self.user.id,
                 "licence": "",
                 "restrictions_on_usage": "",
                 "sort_field": "",
@@ -1987,10 +2030,10 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "short_description": "test description that is short",
                 "information_asset_manager": self.user.id,
                 "information_asset_owner": self.user.id,
-                "description": "",
+                "description": LONG_DATASET_DESCRIPTION,
                 "valid_from": "",
                 "valid_to": "",
-                "enquiries_contact": "",
+                "enquiries_contact": self.user.id,
                 "licence": "",
                 "restrictions_on_usage": "",
                 "sort_field": "",
@@ -2334,6 +2377,61 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "short_description": "test description that is short",
                 "information_asset_manager": self.user.id,
                 "information_asset_owner": self.user.id,
+                "description": LONG_DATASET_DESCRIPTION,
+                "valid_from": "",
+                "valid_to": "",
+                "enquiries_contact": self.user.id,
+                "licence": "",
+                "restrictions_on_usage": "",
+                "sort_field": field1.id,
+                "sort_direction": ReferenceDataset.SORT_DIR_DESC,
+                "fields-TOTAL_FORMS": 2,
+                "fields-INITIAL_FORMS": 2,
+                "fields-MIN_NUM_FORMS": 1,
+                "fields-MAX_NUM_FORMS": 1000,
+                "fields-0-id": field1.id,
+                "fields-0-reference_dataset": reference_dataset.id,
+                "fields-0-name": "updated_field_1",
+                "fields-0-column_name": field1.column_name,
+                "fields-0-data_type": 2,
+                "fields-0-description": "Updated field 1",
+                "fields-0-DELETE": "on",
+                "fields-1-id": field2.id,
+                "fields-1-reference_dataset": reference_dataset.id,
+                "fields-1-name": "updated_field_2",
+                "fields-1-column_name": field2.column_name,
+                "fields-1-data_type": 2,
+                "fields-1-description": "Updated field 2",
+                "fields-1-is_identifier": "on",
+                "fields-1-is_display_name": "on",
+            },
+        )
+        self.assertContains(response, "was changed successfully")
+        reference_dataset.refresh_from_db()
+        self.assertIsNone(reference_dataset.sort_field)
+
+    def test_create_reference_dataset_missing_enquiries_contact(self):
+        reference_dataset = self._create_reference_dataset()
+        field1 = factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=reference_dataset, data_type=1, is_identifier=True
+        )
+        field2 = factories.ReferenceDatasetFieldFactory.create(
+            reference_dataset=reference_dataset, data_type=2
+        )
+        reference_dataset.sort_field = field1
+        num_records = len(reference_dataset.get_records())
+        reference_dataset.save()
+        response = self._authenticated_post(
+            reverse("admin:datasets_referencedataset_change", args=(reference_dataset.id,)),
+            {
+                "id": reference_dataset.id,
+                "name": "test updated",
+                "table_name": reference_dataset.table_name,
+                "slug": "test-ref-1",
+                "external_database": "",
+                "short_description": "test description that is short",
+                "information_asset_manager": self.user.id,
+                "information_asset_owner": self.user.id,
                 "description": "",
                 "valid_from": "",
                 "valid_to": "",
@@ -2363,9 +2461,8 @@ class TestReferenceDatasetAdmin(BaseAdminTestCase):
                 "fields-1-is_display_name": "on",
             },
         )
-        self.assertContains(response, "was changed successfully")
-        reference_dataset.refresh_from_db()
-        self.assertIsNone(reference_dataset.sort_field)
+        self.assertContains(response, "This field is required")
+        self.assertEqual(num_records, len(reference_dataset.get_records()))
 
 
 class TestTagAdmin(BaseAdminTestCase):
@@ -2455,6 +2552,21 @@ class TestSourceLinkAdmin(BaseAdminTestCase):
 
 
 class TestDatasetAdmin(BaseAdminTestCase):
+    def test_update_dataset_with_description_not_long_enough(self):
+        dataset = factories.DataSetFactory.create()
+        response = self._authenticated_post(
+            reverse("admin:datasets_datacutdataset_change", args=(dataset.id,)),
+            {
+                "published": dataset.published,
+                "name": dataset.name,
+                "slug": dataset.slug,
+                "short_description": "test short description",
+                "description": "not long enough description",
+                "type": 2,
+            },
+        )
+        self.assertContains(response, "Description must contain 30 or more words")
+
     def test_edit_dataset_authorized_users(self):
         dataset = factories.DataSetFactory.create()
         user1 = factories.UserFactory.create()
@@ -2471,9 +2583,10 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": str(user1.id),
                 "information_asset_manager": str(user1.id),
+                "enquiries_contact": str(user1.id),
                 "type": 2,
                 "user_access_type": UserAccessType.REQUIRES_AUTHORIZATION,
                 "sourcelink_set-TOTAL_FORMS": "0",
@@ -2513,9 +2626,10 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": str(user1.id),
                 "information_asset_manager": str(user1.id),
+                "enquiries_contact": str(user1.id),
                 "type": 2,
                 "user_access_type": UserAccessType.REQUIRES_AUTHORIZATION,
                 "sourcelink_set-TOTAL_FORMS": "0",
@@ -2556,9 +2670,10 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": str(user1.id),
                 "information_asset_manager": str(user1.id),
+                "enquiries_contact": str(user1.id),
                 "type": 2,
                 "user_access_type": UserAccessType.OPEN,
                 "sourcelink_set-TOTAL_FORMS": "1",
@@ -2596,6 +2711,91 @@ class TestDatasetAdmin(BaseAdminTestCase):
         self.assertContains(response, "was changed successfully")
         self.assertEqual(dataset.sourcelink_set.count(), link_count - 1)
 
+    def test_create_dataset_missing_enquiries_contact(self):
+        dataset = factories.DataSetFactory.create()
+        user1 = factories.UserFactory.create()
+
+        self.assertEqual(dataset.user_has_access(user1), False)
+
+        response = self._authenticated_post(
+            reverse("admin:datasets_datacutdataset_change", args=(dataset.id,)),
+            {
+                "published": dataset.published,
+                "name": dataset.name,
+                "slug": dataset.slug,
+                "short_description": "test short description",
+                "description": "test description",
+                "information_asset_owner": str(user1.id),
+                "information_asset_manager": str(user1.id),
+                "enquiries_contact": "",
+                "type": 2,
+                "user_access_type": UserAccessType.REQUIRES_AUTHORIZATION,
+                "sourcelink_set-TOTAL_FORMS": "0",
+                "sourcelink_set-INITIAL_FORMS": "0",
+                "sourcelink_set-MIN_NUM_FORMS": "0",
+                "sourcelink_set-MAX_NUM_FORMS": "1000",
+                "sourceview_set-TOTAL_FORMS": "0",
+                "sourceview_set-INITIAL_FORMS": "0",
+                "sourceview_set-MIN_NUM_FORMS": "0",
+                "sourceview_set-MAX_NUM_FORMS": "1000",
+                "customdatasetquery_set-TOTAL_FORMS": "0",
+                "customdatasetquery_set-INITIAL_FORMS": "0",
+                "customdatasetquery_set-MIN_NUM_FORMS": "0",
+                "customdatasetquery_set-MAX_NUM_FORMS": "1000",
+                "authorized_email_domains": ["example.com"],
+                "_continue": "Save and continue editing",
+                "charts-TOTAL_FORMS": "1",
+                "charts-INITIAL_FORMS": "0",
+                "charts-MIN_NUM_FORMS": "0",
+                "charts-MAX_NUM_FORMS": "1000",
+            },
+        )
+        dataset.refresh_from_db()
+        self.assertContains(response, "This field is required")
+
+    def test_create_master_dataset_missing_enquiries_contact(self):
+        dataset = factories.MasterDataSetFactory.create(
+            published=True, user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
+        )
+        database = factories.DatabaseFactory()
+        user = get_user_model().objects.create(is_staff=True)
+
+        response = self._authenticated_post(
+            reverse("admin:datasets_masterdataset_change", args=(dataset.id,)),
+            {
+                "published": True,
+                "name": dataset.name,
+                "slug": dataset.slug,
+                "short_description": "test short description",
+                "description": "test description",
+                "information_asset_owner": user.id,
+                "information_asset_manager": user.id,
+                "enquiries_contact": "",
+                "type": dataset.type,
+                "user_access_type": dataset.user_access_type,
+                "sourcetable_set-TOTAL_FORMS": "1",
+                "sourcetable_set-INITIAL_FORMS": "0",
+                "sourcetable_set-MIN_NUM_FORMS": "0",
+                "sourcetable_set-MAX_NUM_FORMS": "1000",
+                "visualisations-TOTAL_FORMS": "1",
+                "visualisations-INITIAL_FORMS": "0",
+                "visualisations-MIN_NUM_FORMS": "0",
+                "visualisations-MAX_NUM_FORMS": "1000",
+                "sourcetable_set-0-dataset": dataset.id,
+                "sourcetable_set-0-name": "reporting table",
+                "sourcetable_set-0-database": str(database.id),
+                "sourcetable_set-0-schema": "test_schema",
+                "sourcetable_set-0-frequency": 1,
+                "sourcetable_set-0-table": "test_table",
+                "sourcetable_set-0-data_grid_enabled": "on",
+                "charts-TOTAL_FORMS": "1",
+                "charts-INITIAL_FORMS": "0",
+                "charts-MIN_NUM_FORMS": "0",
+                "charts-MAX_NUM_FORMS": "1000",
+            },
+        )
+        self.assertContains(response, "This field is required")
+
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     def test_delete_local_source_link_aws_failure(self, mock_client):
         dataset = factories.DataSetFactory.create()
@@ -2613,9 +2813,10 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": str(user1.id),
                 "information_asset_manager": str(user1.id),
+                "enquiries_contact": str(user1.id),
                 "type": 2,
                 "user_access_type": UserAccessType.OPEN,
                 "sourcelink_set-TOTAL_FORMS": "1",
@@ -2667,9 +2868,10 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 "slug": dataset.slug,
                 "user_access_type": UserAccessType.OPEN,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": str(user.id),
                 "information_asset_manager": str(user.id),
+                "enquiries_contact": str(user.id),
                 "type": 2,
                 "sourcelink_set-TOTAL_FORMS": "1",
                 "sourcelink_set-INITIAL_FORMS": "1",
@@ -2798,9 +3000,10 @@ class TestDatasetAdminPytest:
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": str(user.id),
                 "information_asset_manager": str(user.id),
+                "enquiries_contact": str(user.id),
                 "type": 2,
                 "user_access_type": dataset.user_access_type,
                 "sourcelink_set-TOTAL_FORMS": "0",
@@ -2861,9 +3064,10 @@ class TestDatasetAdminPytest:
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": str(user.id),
                 "information_asset_manager": str(user.id),
+                "enquiries_contact": str(user.id),
                 "type": 2,
                 "user_access_type": dataset.user_access_type,
                 "sourcelink_set-TOTAL_FORMS": "0",
@@ -2921,9 +3125,10 @@ class TestDatasetAdminPytest:
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": str(user.id),
                 "information_asset_manager": str(user.id),
+                "enquiries_contact": str(user.id),
                 "type": 2,
                 "user_access_type": dataset.user_access_type,
                 "sourcelink_set-TOTAL_FORMS": "0",
@@ -3019,9 +3224,10 @@ class TestDatasetAdminPytest:
                 "slug": dataset.slug,
                 "user_access_type": dataset.user_access_type,
                 "short_description": "some description",
-                "description": "some description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": user.id,
                 "information_asset_manager": user.id,
+                "enquiries_contact": str(user.id),
                 "type": 1,
                 "sourcetable_set-TOTAL_FORMS": "0",
                 "sourcetable_set-INITIAL_FORMS": "0",
@@ -3061,9 +3267,10 @@ class TestDatasetAdminPytest:
                 "name": "changed",
                 "slug": dataset.slug,
                 "short_description": "some description",
-                "description": "some description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": user.id,
                 "information_asset_manager": user.id,
+                "enquiries_contact": user.id,
                 "type": 2,
                 "user_access_type": dataset.user_access_type,
                 "sourcelink_set-TOTAL_FORMS": "0",
@@ -3104,7 +3311,7 @@ class TestDatasetAdminPytest:
             data_type=1,
             is_identifier=True,
             column_name="field_1",
-            description="field 1 description",
+            description=LONG_DATASET_DESCRIPTION,
         )
         user.is_staff = True
         perm = Permission.objects.get(codename="manage_unpublished_reference_datasets")
@@ -3124,8 +3331,10 @@ class TestDatasetAdminPytest:
                 "table_name": dataset.table_name,
                 "slug": dataset.slug,
                 "short_description": "test description that is short",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": user.id,
                 "information_asset_manager": user.id,
+                "enquiries_contact": user.id,
                 "sort_direction": ReferenceDataset.SORT_DIR_DESC,
                 "fields-TOTAL_FORMS": 1,
                 "fields-INITIAL_FORMS": 1,
@@ -3166,9 +3375,10 @@ class TestDatasetAdminPytest:
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": str(user.id),
                 "information_asset_manager": str(user.id),
+                "enquiries_contact": str(user.id),
                 "type": 2,
                 "user_access_type": dataset.user_access_type,
                 "sourcelink_set-TOTAL_FORMS": "0",
@@ -3226,9 +3436,10 @@ class TestDatasetAdminPytest:
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": user.id,
                 "information_asset_manager": user.id,
+                "enquiries_contact": user.id,
                 "type": dataset.type,
                 "user_access_type": UserAccessType.REQUIRES_AUTHORIZATION,
                 "sourcetable_set-TOTAL_FORMS": "1",
@@ -3283,9 +3494,10 @@ class TestDatasetAdminPytest:
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": str(user_1.id),
                 "information_asset_manager": str(user_1.id),
+                "enquiries_contact": str(user_1.id),
                 "type": dataset.type,
                 "user_access_type": dataset.user_access_type,
                 "authorized_users": [str(user_1.id), str(user_2.id)],
@@ -3351,9 +3563,10 @@ class TestDatasetAdminPytest:
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": str(user.id),
                 "information_asset_manager": str(user.id),
+                "enquiries_contact": str(user.id),
                 "type": dataset.type,
                 "user_access_type": UserAccessType.REQUIRES_AUTHENTICATION,
                 "sourcetable_set-TOTAL_FORMS": "1",
@@ -3412,9 +3625,10 @@ class TestDatasetAdminPytest:
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": str(user.id),
                 "information_asset_manager": str(user.id),
+                "enquiries_contact": str(user.id),
                 "type": dataset.type,
                 "user_access_type": UserAccessType.REQUIRES_AUTHORIZATION,
                 "authorized_users": str(user.id),
@@ -3513,9 +3727,10 @@ class TestDatasetAdminPytest:
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": user.id,
                 "information_asset_manager": user.id,
+                "enquiries_contact": user.id,
                 "type": dataset.type,
                 "user_access_type": dataset.user_access_type,
                 "sourcetable_set-TOTAL_FORMS": "1",
@@ -3562,9 +3777,10 @@ class TestDatasetAdminPytest:
                 "name": dataset.name,
                 "slug": dataset.slug,
                 "short_description": "test short description",
-                "description": "test description",
+                "description": LONG_DATASET_DESCRIPTION,
                 "information_asset_owner": user.id,
                 "information_asset_manager": user.id,
+                "enquiries_contact": user.id,
                 "type": dataset.type,
                 "user_access_type": dataset.user_access_type,
                 "sourcetable_set-TOTAL_FORMS": "1",

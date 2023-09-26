@@ -57,6 +57,7 @@ class CatalogueItemSerializer(serializers.Serializer):
     sensitivity_name = serializers.ListField()
     quicksight_id = serializers.ListField(allow_null=True)
     request_approvers = serializers.ListField()
+    catalogue_editors = serializers.ListField()
 
     def to_representation(self, instance):
         instance = super().to_representation(instance)
@@ -73,6 +74,7 @@ class CatalogueItemSerializer(serializers.Serializer):
         instance["user_access_type"] = instance["user_access_type"]
         instance["authorized_email_domains"] = instance["authorized_email_domains"]
         instance["quicksight_id"] = instance["quicksight_id"] or None
+        instance["catalogue_editors"] = instance["catalogue_editors"] or []
         return instance
 
     def get_source_tables(self, instance):

@@ -417,7 +417,7 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
         },
         "send-notification-emails": {
             "task": "dataworkspace.apps.datasets.utils.send_notification_emails",
-            "schedule": 60 * 5,
+            "schedule": 60 * 60,
             "args": (),
         },
         "update-search-popularity": {
@@ -581,7 +581,7 @@ WAFFLE_FLAG_DEFAULT = bool(strtobool(env.get("WAFFLE_FLAG_DEFAULT", "False")))
 
 WAFFLE_CREATE_MISSING_SWITCHES = True
 WAFFLE_SWITCH_DEFAULT = False
-
+WAFFLE_OVERRIDE = bool(strtobool(env.get("WAFFLE_OVERRIDE", "False")))
 
 # ----------------------
 # Data Explorer Settings
@@ -763,6 +763,8 @@ ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK = "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK
 SECURITY_CLASSIFICATION_FLAG = "SECURITY_CLASSIFICATION_FLAG"
 REFERENCE_DATASET_PIPELINE_SYNC = "REFERENCE_DATASET_PIPELINE_SYNC"
 EXPLORER_CSV_INJECTION_PROTECTION_FLAG = "EXPLORER_CSV_INJECTION_PROTECTION_FLAG"
+DEFER_SCHEMA_TAB_LOAD_FLAG = "DEFER_SCHEMA_TAB_LOAD_FLAG"
+CACHE_USER_TABLE_PERMISSIONS = "CACHE_USER_TABLE_PERMISSIONS"
 
 DATASET_FINDER_SEARCH_RESULTS_PER_PAGE = 200
 

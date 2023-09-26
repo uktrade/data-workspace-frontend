@@ -4807,6 +4807,7 @@ class TestDatasetManagerViews:
                 published=True,
                 user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
                 information_asset_manager=user,
+                enquiries_contact=user,
             ),
             schema="test",
             table="table1",

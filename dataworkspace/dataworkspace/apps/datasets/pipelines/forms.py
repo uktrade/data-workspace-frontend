@@ -55,10 +55,19 @@ class BasePipelineCreateForm(GOVUKDesignSystemModelForm):
             validate_schema_and_table,
         ),
     )
+    notes = GOVUKDesignSystemTextareaField(
+        label="Notes",
+        required=False,
+        widget=GOVUKDesignSystemTextareaWidget(
+            label_is_heading=False,
+            extra_label_classes="govuk-!-font-weight-bold",
+            attrs={"rows": 5},
+        ),
+    )
 
     class Meta:
         model = Pipeline
-        fields = ["table_name"]
+        fields = ["table_name", "notes"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -79,7 +88,7 @@ class SQLPipelineCreateForm(BasePipelineCreateForm):
 
     class Meta:
         model = Pipeline
-        fields = ["table_name", "sql", "type"]
+        fields = ["table_name", "sql", "type", "notes"]
 
     def save(self, commit=True):
         pipeline = super().save(commit=False)
@@ -146,7 +155,7 @@ class SharepointPipelineCreateForm(BasePipelineCreateForm):
 
     class Meta:
         model = Pipeline
-        fields = ["table_name", "site_name", "list_name", "type"]
+        fields = ["table_name", "site_name", "list_name", "type", "notes"]
 
     def save(self, commit=True):
         pipeline = super().save(commit=False)

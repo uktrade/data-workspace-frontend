@@ -86,6 +86,7 @@ class DataSetFactory(factory.django.DjangoModelFactory):
     type = DataSetType.DATACUT
     information_asset_owner = factory.SubFactory(UserFactory)
     information_asset_manager = factory.SubFactory(UserFactory)
+    enquiries_contact = factory.SubFactory(UserFactory)
 
     class Meta:
         model = "datasets.DataSet"
@@ -493,6 +494,7 @@ class PipelineFactory(factory.django.DjangoModelFactory):
     type = "sql"
     table_name = factory.fuzzy.FuzzyText(length=20, prefix="schema.")
     config = {}
+    notes = ""
 
     class Meta:
         model = "datasets.Pipeline"

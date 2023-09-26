@@ -5,23 +5,6 @@ const BundleTracker = require("webpack-bundle-tracker");
 
 module.exports = merge(common, {
   mode: 'development',
-  entry: {
-    builder: [
-      'react-hot-loader/patch',
-      'webpack-dev-server/client?http://0.0.0.0:3000',
-      'webpack/hot/only-dev-server',
-    ],
-    viewer: [
-      'react-hot-loader/patch',
-      'webpack-dev-server/client?http://0.0.0.0:3000',
-      'webpack/hot/only-dev-server',
-    ],
-    yourfiles: [
-      'react-hot-loader/patch',
-      // 'webpack-dev-server/client?http://0.0.0.0:3000',
-      'webpack/hot/only-dev-server',
-    ]
-  },
   output: {
     publicPath: 'http://0.0.0.0:3000/js/builds/',
   },

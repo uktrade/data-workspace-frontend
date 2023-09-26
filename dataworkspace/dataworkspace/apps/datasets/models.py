@@ -21,6 +21,7 @@ from ckeditor.fields import RichTextField
 
 from django import forms
 from django.apps import apps
+from django.core.cache import cache
 from django.db import (
     DatabaseError,
     models,
@@ -324,6 +325,10 @@ class DataSet(DeletableTimestampedUserModel):
 
     def __str__(self):
         return self.name
+
+    def clean(self):
+        if len(re.findall(r"\w+", self.description)) < 30:
+            raise ValidationError("Description must contain 30 or more words")
 
     @transaction.atomic
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
@@ -1374,6 +1379,10 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     def send_post_data_url(self):
         return reverse("datasets:reference_dataset_download", args=(self.uuid,))
 
+    def clean(self):
+        if len(re.findall(r"\w+", self.description)) < 30:
+            raise ValidationError("Description must contain 30 or more words")
+
     @transaction.atomic
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         create = self.pk is None
@@ -1541,11 +1550,36 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             f"{self.table_name}-{datetime.now().isoformat()}",
         )
 
+    def _bust_table_permissions_cache(self):
+        """
+        Bust the table permissions and schema cache for all active users.
+        This is necessary as publishing/unpublishing a reference dataset
+        will cause all users available tables to change.
+        """
+        # pylint: disable=import-outside-toplevel, reimported
+        from dataworkspace.apps.core.utils import clear_table_permissions_cache_for_user
+        from dataworkspace.apps.explorer.connections import connections
+
+        for user in (
+            get_user_model()
+            .objects.exclude(
+                profile__first_login=None,
+            )
+            .filter(profile__sso_status="active")
+        ):
+            # repeat of clear_schema_info_cache_for_user, to avoid circular imports
+            for conn in connections.values():
+                cache_key = f"_explorer_cache_key_{user.profile.sso_id}_{conn}"
+                cache.delete(cache_key)
+
+            clear_table_permissions_cache_for_user(user)
+
     def _create_external_database_table(self, db_name):
         if not self._sync_via_data_flow:
             with connections[db_name].schema_editor() as editor:
                 with external_model_class(self.get_record_model_class()) as mc:
                     editor.create_model(mc)
+        self._bust_table_permissions_cache()
 
     def _drop_external_database_table(self, db_name):
         if self._sync_via_data_flow:
@@ -1556,6 +1590,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                     editor.delete_model(self.get_record_model_class())
                 except ProgrammingError:
                     pass
+        self._bust_table_permissions_cache()
 
     @property
     def field_names(self) -> List[str]:
@@ -1631,7 +1666,10 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         """
         records = self.get_records()
         if records.exists():
-            return records.latest("updated_date").updated_date
+            try:
+                return records.latest("updated_date").updated_date
+            except ProgrammingError:
+                pass
         return None
 
     @property
@@ -1884,6 +1922,12 @@ class ReferenceDataset(DeletableTimestampedUserModel):
 
     def bookmark_count(self):
         return self.referencedatasetbookmark_set.count()
+
+    def has_foriegn_key_fields(self):
+        for field in self.fields.all():
+            if field.data_type == field.DATA_TYPE_FOREIGN_KEY:
+                return True
+        return False
 
     def get_column_config(self):
         """
@@ -2753,10 +2797,12 @@ class ToolQueryAuditLogTable(models.Model):
         max_length=63,
         validators=[RegexValidator(regex=r"^[a-zA-Z][a-zA-Z0-9_\.]*$")],
         default="public",
+        db_index=True,
     )
     table = models.CharField(
         max_length=63,
         validators=[RegexValidator(regex=r"^[a-zA-Z][a-zA-Z0-9_\.]*$")],
+        db_index=True,
     )
 
 
@@ -2780,6 +2826,7 @@ class Pipeline(TimeStampedUserModel):
     table_name = models.CharField(max_length=256, unique=True)
     type = models.CharField(max_length=255, choices=PipelineType.choices)
     config = models.JSONField()
+    notes = models.TextField(null=True, blank=True)
 
     class Meta:
         ordering = ("table_name",)

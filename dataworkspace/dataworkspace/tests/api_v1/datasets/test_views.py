@@ -435,9 +435,12 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
         eligibility_criteria=None,
         userids=None,
         request_approvers=None,
+        data_catalogue_editors=None,
     ):
         if userids is None:
             userids = []
+        if data_catalogue_editors is None:
+            data_catalogue_editors = []
         return {
             "id": str(dataset.uuid) if isinstance(dataset, ReferenceDataset) else str(dataset.id),
             "name": dataset.name,
@@ -466,6 +469,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             "retention_policy": retention_policy,
             "eligibility_criteria": list(eligibility_criteria) if eligibility_criteria else None,
             "request_approvers": list(request_approvers) if request_approvers else None,
+            "catalogue_editors": data_catalogue_editors,
             "source_tables": [
                 {"id": str(x.id), "name": x.name, "schema": x.schema, "table": x.table}
                 for x in dataset.sourcetable_set.all()
@@ -488,6 +492,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
         }
 
     def test_success(self, unauthenticated_client):
+        catalogue_editor = factories.UserFactory.create()
         with freeze_time("2020-01-01 00:00:00"):
             datacut = factories.DatacutDataSetFactory(
                 information_asset_owner=factories.UserFactory(),
@@ -498,6 +503,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
                 eligibility_criteria=["eligibility"],
                 request_approvers=["approvers"],
             )
+        datacut.data_catalogue_editors.set([catalogue_editor])
         datacut.tags.set([factories.SourceTagFactory()])
 
         with freeze_time("2020-01-01 00:01:00"):
@@ -535,6 +541,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
                 datacut.retention_policy,
                 datacut.eligibility_criteria,
                 datacut.request_approvers,
+                data_catalogue_editors=[catalogue_editor.id],
             ),
             self.expected_response(
                 master_dataset,

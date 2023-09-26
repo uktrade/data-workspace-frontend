@@ -23,6 +23,7 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView
 from django.views.generic.base import RedirectView, TemplateView, View
 from django.views.generic.edit import CreateView, DeleteView, FormView, UpdateView
+from waffle import flag_is_active
 from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace.apps.core.charts.models import ChartBuilderChart
@@ -222,6 +223,13 @@ class DeleteQueryView(DeleteView):
         return Query.objects.filter(created_by_user=self.request.user).all()
 
 
+def _get_schema_and_columns(request, match_with_datasets=True):
+    schema, tables_columns = get_user_schema_info(request)
+    if match_with_datasets:
+        schema = match_datasets_with_schema_info(schema)
+    return schema, tables_columns
+
+
 class PlayQueryView(View):
     def get(self, request):
         if url_get_query_id(request):
@@ -243,8 +251,11 @@ class PlayQueryView(View):
         if play_sql:
             initial_data["sql"] = play_sql.sql
 
-        schema, tables_columns = get_user_schema_info(request)
-        schema = match_datasets_with_schema_info(schema)
+        schema, tables_columns = _get_schema_and_columns(
+            request,
+            match_with_datasets=not flag_is_active(request, settings.DEFER_SCHEMA_TAB_LOAD_FLAG),
+        )
+
         return render(
             self.request,
             "explorer/home.html",
@@ -353,7 +364,10 @@ class PlayQueryView(View):
             page=page,
             form=form,
         )
-        schema, tables_columns = get_user_schema_info(request)
+        schema, tables_columns = _get_schema_and_columns(
+            request,
+            match_with_datasets=not flag_is_active(request, settings.DEFER_SCHEMA_TAB_LOAD_FLAG),
+        )
         context["schema"] = schema
         context["schema_tables"] = tables_columns
         context["form_action"] = self.get_form_action(request)
@@ -642,7 +656,10 @@ class RunningQueryView(View):
                 Query, pk=query_id, created_by_user=self.request.user
             )
         form = QueryForm(initial={"sql": query_log.sql}, instance=query_instance)
-        schema, tables_columns = get_user_schema_info(request)
+        schema, tables_columns = _get_schema_and_columns(
+            request,
+            match_with_datasets=not flag_is_active(request, settings.DEFER_SCHEMA_TAB_LOAD_FLAG),
+        )
         context = {
             "title": query_instance.title if query_instance else "Playground",
             "query": query_log.query,
@@ -687,3 +704,16 @@ class QueryLogUpdateView(UpdateView):
 
     def get_success_url(self):
         return reverse("explorer:running_query", kwargs={"query_log_id": self.get_object().id})
+
+
+class UserSchemaAccordian(View):
+    def get(self, request):
+        schema, tables_columns = _get_schema_and_columns(request, match_with_datasets=True)
+        return render(
+            request,
+            "explorer/schema_deferred.html",
+            {
+                "schema": schema,
+                "schema_tables": tables_columns,
+            },
+        )

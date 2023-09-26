@@ -478,8 +478,8 @@ class FargateSpawner:
 
             now = datetime.datetime.now()
             thirty_minutes_ago = now - datetime.timedelta(minutes=30)
-            two_minutes_ago = now - datetime.timedelta(minutes=2)
-            four_minutes_ago = now - datetime.timedelta(minutes=4)
+            five_minutes_ago = now - datetime.timedelta(minutes=5)
+            eight_minutes_ago = now - datetime.timedelta(minutes=8)
 
             task_arn = spawner_application_id_parsed.get("task_arn")
             pipeline_id = spawner_application_id_parsed.get("pipeline_id")
@@ -505,24 +505,24 @@ class FargateSpawner:
             else:
                 task_should_be_created = created_date
 
-            # ... give two minutes to create the task...
+            # ... give five minutes to create the task...
             if not task_arn:
-                if task_should_be_created > two_minutes_ago:
+                if task_should_be_created > five_minutes_ago:
                     return "RUNNING"
                 logger.exception(
-                    "Task not created within sixty seconds: %s %s",
+                    "Task not created within five minutes: %s %s",
                     spawner_application_id_parsed,
                     proxy_url,
                 )
                 return "STOPPED"
 
-            # .... give four minutes to get the task itself (to mitigate eventual consistency)...
+            # .... give eight minutes to get the task itself (to mitigate eventual consistency)...
             task = _fargate_task_describe(cluster_name, task_arn)
-            if task is None and task_should_be_created > four_minutes_ago:
+            if task is None and task_should_be_created > eight_minutes_ago:
                 return "RUNNING"
             if task is None:
                 logger.exception(
-                    "Task not running within 3 minute: %s %s",
+                    "Task not running within 8 minutes: %s %s",
                     spawner_application_id_parsed,
                     proxy_url,
                 )
@@ -750,6 +750,7 @@ def _fargate_task_stop(cluster_name, task_arn):
         try:
             client.stop_task(cluster=cluster_name, task=task_arn)
         except Exception:  # pylint: disable=broad-except
+            logger.exception("stop_task failed for %s - Retrying", task_arn)
             gevent.sleep(sleep_time)
             sleep_time = sleep_time * 2
         else:

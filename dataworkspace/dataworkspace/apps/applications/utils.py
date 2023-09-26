@@ -17,6 +17,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError, connections
 from django.db.models import Q
 import gevent
@@ -158,18 +159,21 @@ def application_options(application_template):
     }
 
 
-def api_application_dict(application_instance):
-    spawner_state = get_spawner(application_instance.application_template.spawner).state(
-        application_instance.spawner_application_template_options,
-        application_instance.created_date.replace(tzinfo=None),
-        application_instance.spawner_application_instance_id,
-        application_instance.public_host,
-    )
+def api_application_dict(application_instance, ignore_spawner_state=False):
+    if ignore_spawner_state:
+        api_state = application_instance.state
+    else:
+        spawner_state = get_spawner(application_instance.application_template.spawner).state(
+            application_instance.spawner_application_template_options,
+            application_instance.created_date.replace(tzinfo=None),
+            application_instance.spawner_application_instance_id,
+            application_instance.public_host,
+        )
 
-    # Only pass through the database state if the spawner is running,
-    # Otherwise, we are in an error condition, and so return the spawner
-    # state, so the client (i.e. the proxy) knows to take action
-    api_state = application_instance.state if spawner_state == "RUNNING" else spawner_state
+        # Only pass through the database state if the spawner is running,
+        # Otherwise, we are in an error condition, and so return the spawner
+        # state, so the client (i.e. the proxy) knows to take action
+        api_state = application_instance.state if spawner_state == "RUNNING" else spawner_state
 
     sso_id_hex_short = stable_identification_suffix(
         str(application_instance.owner.profile.sso_id), short=True
@@ -307,6 +311,7 @@ def application_instance_max_cpu(application_instance):
         "query": f'increase(precpu_stats__cpu_usage__total_usage{{instance="{instance}"}}[30s])[2h:30s]'
     }
     try:
+        logger.info("kill_idle_fargate: finding CPU usage for %s", instance)
         response = requests.get(url, params)
     except requests.RequestException:
         # pylint: disable=raise-missing-from
@@ -865,7 +870,11 @@ def sync_quicksight_users(data_client, user_client, account_id, quicksight_user_
 
                     raise e
 
-                dw_user = get_user_by_sso_id(sso_id)
+                try:
+                    dw_user = get_user_by_sso_id(sso_id)
+                except ValidationError:
+                    dw_user = None
+
                 if not dw_user:
                     logger.error(
                         "Skipping %s - cannot match with Data Workspace user.",

@@ -341,6 +341,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         "sensitivity_name",
         "quicksight_id",
         "request_approvers",
+        "catalogue_editors",
     ]
     queryset = (
         DataSet.objects.live()
@@ -372,6 +373,13 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         )
         .annotate(sensitivity_name=ArrayAgg("sensitivity__name", distinct=True))
         .annotate(quicksight_id=Value([], output_field=ArrayField(models.TextField())))
+        .annotate(
+            catalogue_editors=ArrayAgg(
+                "data_catalogue_editors__id",
+                distinct=True,
+                filter=Q(data_catalogue_editors__isnull=False),
+            )
+        )
         .exclude(type=DataSetType.REFERENCE)
         .values(*fields)
         .union(
@@ -404,6 +412,7 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
             )
             .annotate(sensitivity_name=ArrayAgg("sensitivity__name", distinct=True))
             .annotate(quicksight_id=Value([], output_field=ArrayField(models.TextField())))
+            .annotate(catalogue_editors=Value([], output_field=ArrayField(models.IntegerField())))
             .values(*_replace(fields, "id", "uuid"))
         )
         .union(
@@ -441,6 +450,13 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
                     filter=Q(visualisationlink__visualisation_type="QUICKSIGHT"),
                     default=None,
                     distinct=True,
+                )
+            )
+            .annotate(
+                catalogue_editors=ArrayAgg(
+                    "data_catalogue_editors__id",
+                    distinct=True,
+                    filter=Q(data_catalogue_editors__isnull=False),
                 )
             )
             .values(

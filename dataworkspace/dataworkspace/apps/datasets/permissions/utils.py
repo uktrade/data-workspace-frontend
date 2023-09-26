@@ -5,6 +5,7 @@ from dataworkspace.apps.api_v1.core.views import (
     remove_superset_user_cached_credentials,
 )
 from dataworkspace.apps.applications.utils import sync_quicksight_permissions
+from dataworkspace.apps.core.utils import clear_table_permissions_cache_for_user
 from dataworkspace.apps.datasets.models import DataSetUserPermission, VisualisationUserPermission
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_permission_change
@@ -40,6 +41,7 @@ def process_dataset_authorized_users_change(
         )
         changed_users.add(user)
         clear_schema_info_cache_for_user(user)
+        clear_table_permissions_cache_for_user(user)
 
     for user in current_authorized_users - authorized_users:
         DataSetUserPermission.objects.filter(dataset=dataset, user=user).delete()
@@ -52,6 +54,7 @@ def process_dataset_authorized_users_change(
         )
         changed_users.add(user)
         clear_schema_info_cache_for_user(user)
+        clear_table_permissions_cache_for_user(user)
 
     if access_type_changed or authorized_email_domains_changed:
         log_permission_change(
@@ -74,6 +77,7 @@ def process_dataset_authorized_users_change(
         for user in changed_users:
             remove_data_explorer_user_cached_credentials(user)
             remove_superset_user_cached_credentials(user)
+            clear_table_permissions_cache_for_user(user)
 
     if is_master_dataset:
         if changed_users:
