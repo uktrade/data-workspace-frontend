@@ -88,6 +88,7 @@ def test_submit_eligibility_criteria(client, test_case, meet_criteria, redirect_
 
     test_case.assertRedirects(response, reverse(redirect_view, kwargs={"dataset_uuid": ds.id}))
 
+
 @pytest.mark.django_db
 def test_toggle_bookmark_on_dataset():
     user = factories.UserFactory.create(is_superuser=False)
