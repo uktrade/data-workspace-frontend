@@ -671,7 +671,6 @@ def eligibility_criteria_view(request, dataset_uuid):
         {"dataset": dataset, "access_request": request.GET.get("access_request")},
     )
 
-
 @require_GET
 def toggle_bookmark(request, dataset_uuid):
     dataset = find_dataset(dataset_uuid, request.user)
