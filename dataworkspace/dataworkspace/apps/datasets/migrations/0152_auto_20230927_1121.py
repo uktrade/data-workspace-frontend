@@ -5,20 +5,23 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('datasets', '0151_auto_20230901_1347'),
+        ("datasets", "0151_auto_20230901_1347"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='dataset',
-            name='request_approvers',
-            field=django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=256), null=True, size=None),
+            model_name="dataset",
+            name="request_approvers",
+            field=django.contrib.postgres.fields.ArrayField(
+                base_field=models.CharField(max_length=256), null=True, size=None
+            ),
         ),
         migrations.AddField(
-            model_name='visualisationcatalogueitem',
-            name='request_approvers',
-            field=django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=256), null=True, size=None),
+            model_name="visualisationcatalogueitem",
+            name="request_approvers",
+            field=django.contrib.postgres.fields.ArrayField(
+                base_field=models.CharField(max_length=256), null=True, size=None
+            ),
         ),
     ]
