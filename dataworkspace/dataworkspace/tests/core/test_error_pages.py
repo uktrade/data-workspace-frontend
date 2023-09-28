@@ -43,15 +43,6 @@ from dataworkspace.tests.explorer.factories import QueryLogFactory
             ),
         ),
         (
-            "datasets:request_approvers",
-            (
-                factories.MasterDataSetFactory,
-                factories.DatacutDataSetFactory,
-                factories.ReferenceDatasetFactory,
-                factories.VisualisationCatalogueItemFactory,
-            ),
-        ),
-        (
             "datasets:eligibility_criteria_not_met",
             (
                 factories.MasterDataSetFactory,
