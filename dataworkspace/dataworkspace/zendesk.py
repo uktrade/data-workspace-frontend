@@ -138,7 +138,9 @@ def update_zendesk_ticket(ticket_id, comment=None, status=None):
 
 def notify_dataset_access_request(request, access_request, dataset):
     dataset_url = request.build_absolute_uri(dataset.get_absolute_url())
-    request_approvers_emails = [email for email in list(dataset.request_approvers.all())]
+    request_approvers_emails = [email for email in dataset.request_approvers.all()]
+    print("££££££££££££££££££££££££££££")
+    print(request_approvers_emails)
     message = f"""
 An access request has been sent to the relevent person or team to assess you request.
 
