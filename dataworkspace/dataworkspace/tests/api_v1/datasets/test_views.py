@@ -435,6 +435,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
         eligibility_criteria=None,
         userids=None,
         data_catalogue_editors=None,
+        request_approvers=None,
     ):
         if userids is None:
             userids = []
@@ -466,7 +467,8 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             "source_tags": [t.name for t in dataset.tags.all()] if dataset.tags.all() else None,
             "personal_data": personal_data,
             "retention_policy": retention_policy,
-            "eligibility_criteria": list(eligibility_criteria) if eligibility_criteria else None,
+            "eligibility_criteria": list(request_approvers) if request_approvers else None,
+            "request_approvers": list(eligibility_criteria) if eligibility_criteria else None,
             "catalogue_editors": data_catalogue_editors,
             "source_tables": [
                 {"id": str(x.id), "name": x.name, "schema": x.schema, "table": x.table}
