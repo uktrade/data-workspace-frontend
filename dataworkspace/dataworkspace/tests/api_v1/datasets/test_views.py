@@ -501,6 +501,7 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
                 personal_data="personal",
                 retention_policy="retention",
                 eligibility_criteria=["eligibility"],
+                request_approvers=None,
             )
         datacut.data_catalogue_editors.set([catalogue_editor])
         datacut.tags.set([factories.SourceTagFactory()])
