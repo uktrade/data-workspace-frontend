@@ -959,19 +959,21 @@ def send_notification_emails():
     """
 
     def create_notifications():
-        logger.info("Creating notifications")
+        logger.info("send_notification_emails: Creating notifications")
         for notifiable_object in (
             list(SourceTable.objects.order_by("id"))
             + list(CustomDatasetQuery.objects.order_by("id"))
             + list(ReferenceDataset.objects.order_by("id"))
         ):
             logger.info(
-                "Creating notification for %s %s", type(notifiable_object), notifiable_object.id
+                "send_notification_emails: Creating notification for %s %s",
+                type(notifiable_object),
+                notifiable_object.id,
             )
             changelog = get_detailed_changelog(notifiable_object)
             if len(changelog) == 0:
                 logger.info(
-                    "No changelog records found for %s %s",
+                    "send_notification_emails: No changelog records found for %s %s",
                     type(notifiable_object),
                     notifiable_object.id,
                 )
@@ -995,7 +997,7 @@ def send_notification_emails():
                     else notifiable_object.dataset
                 )
                 logger.info(
-                    "Processing notifications for dataset %s",
+                    "send_notification_emails: Processing notifications for dataset %s",
                     dataset.name,
                 )
                 queryset = DataSetSubscription.objects.none()
@@ -1014,10 +1016,13 @@ def send_notification_emails():
                     )
             else:
                 logger.info(
-                    "Notification already exists for change_id %s, skipping", change["change_id"]
+                    "send_notification_emails: Notification already exists for change_id %s, skipping",
+                    change["change_id"],
                 )
+        logger.info("send_notification_emails: Finished creating notifications")
 
     def send_notifications():
+        logger.info("send_notification_emails: Sending notifications")
         user_notification_ids = list(
             UserNotification.objects.filter(email_id=None).values_list("id", flat=True)
         )
@@ -1040,7 +1045,7 @@ def send_notification_emails():
                     )
 
                     if not change:
-                        logger.error("get_change_item returned None")
+                        logger.error("send_notification_emails: get_change_item returned None")
                         continue
 
                     change_date = change["change_date"]
@@ -1062,7 +1067,8 @@ def send_notification_emails():
                         "datasets:email_preferences"
                     )
                     logger.info(
-                        "Sending notification about dataset %s changing structure at %s to user %s",
+                        "send_notification_emails: Sending notification about dataset %s changing "
+                        "structure at %s to user %s",
                         dataset_name,
                         change_date,
                         email_address,
@@ -1080,12 +1086,15 @@ def send_notification_emails():
                             },
                         )
                     except EmailSendFailureException:
-                        logger.exception("Failed to send email")
+                        logger.exception("send_notification_emails: Failed to send email")
                     else:
                         user_notification.email_id = email_id
                         user_notification.save(update_fields=["email_id"])
             except IntegrityError as e:
-                logger.error("Exception when sending notifications: %s", e)
+                logger.error(
+                    "send_notification_emails: Exception when sending notifications: %s", e
+                )
+            logger.info("send_notification_emails: Finished sending notifications")
 
     try:
         with cache.lock("send_notification_emails", blocking_timeout=0, timeout=3600):
@@ -1097,9 +1106,11 @@ def send_notification_emails():
             else:
                 send_notifications()
     except LockNotOwnedError:
-        logger.info("delete_unused_datasets_users: Lock not owned - running on another instance?")
+        logger.info("send_notification_emails: Lock not owned - running on another instance?")
     except LockError as e:
-        logger.warning("Failed to acquire lock for send_notification_emails: %s", e)
+        logger.warning(
+            "send_notification_emails: Failed to acquire lock for send_notification_emails: %s", e
+        )
 
 
 def get_dataset_table(obj):
