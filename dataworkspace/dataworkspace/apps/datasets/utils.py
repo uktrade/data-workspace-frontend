@@ -2,6 +2,7 @@ import json
 import logging
 import operator
 import os
+import time
 from functools import reduce
 from uuid import UUID
 
@@ -1096,6 +1097,8 @@ def send_notification_emails():
                 )
             logger.info("send_notification_emails: Finished sending notifications")
 
+    start_time = time.time()
+    logger.info("send_notification_emails: Notification task starting")
     try:
         with cache.lock("send_notification_emails", blocking_timeout=0, timeout=3600):
             try:
@@ -1111,6 +1114,10 @@ def send_notification_emails():
         logger.warning(
             "send_notification_emails: Failed to acquire lock for send_notification_emails: %s", e
         )
+    logger.info(
+        "send_notification_emails: Notification task finished in %s seconds",
+        round(time.time() - start_time, 2),
+    )
 
 
 def get_dataset_table(obj):
