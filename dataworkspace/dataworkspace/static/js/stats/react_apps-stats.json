@@ -13,9 +13,56 @@
     }
   },
   "chunks": {
-    "yourfiles": [
-      "yourfiles.70fed0402f7640f5dcc1.js"
-    ]
+    "data-cut.c8f0103b832ddaf58ad5.js": {
+      "name": "data-cut.c8f0103b832ddaf58ad5.js",
+      "path": "data-cut.c8f0103b832ddaf58ad5.js",
+      "publicPath": "/__django_static/js/bundles/data-cut.c8f0103b832ddaf58ad5.js"
+    },
+    "data-cut.c8f0103b832ddaf58ad5.js.LICENSE.txt": {
+      "name": "data-cut.c8f0103b832ddaf58ad5.js.LICENSE.txt",
+      "path": "data-cut.c8f0103b832ddaf58ad5.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/data-cut.c8f0103b832ddaf58ad5.js.LICENSE.txt"
+    },
+    "reference-dataset.142a54b2d4dbdc6ed5cb.js": {
+      "name": "reference-dataset.142a54b2d4dbdc6ed5cb.js",
+      "path": "reference-dataset.142a54b2d4dbdc6ed5cb.js",
+      "publicPath": "/__django_static/js/bundles/reference-dataset.142a54b2d4dbdc6ed5cb.js"
+    },
+    "reference-dataset.142a54b2d4dbdc6ed5cb.js.LICENSE.txt": {
+      "name": "reference-dataset.142a54b2d4dbdc6ed5cb.js.LICENSE.txt",
+      "path": "reference-dataset.142a54b2d4dbdc6ed5cb.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/reference-dataset.142a54b2d4dbdc6ed5cb.js.LICENSE.txt"
+    },
+    "source-dataset.e75b2015a75a4a30948b.js": {
+      "name": "source-dataset.e75b2015a75a4a30948b.js",
+      "path": "source-dataset.e75b2015a75a4a30948b.js",
+      "publicPath": "/__django_static/js/bundles/source-dataset.e75b2015a75a4a30948b.js"
+    },
+    "source-dataset.e75b2015a75a4a30948b.js.LICENSE.txt": {
+      "name": "source-dataset.e75b2015a75a4a30948b.js.LICENSE.txt",
+      "path": "source-dataset.e75b2015a75a4a30948b.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/source-dataset.e75b2015a75a4a30948b.js.LICENSE.txt"
+    },
+    "visualisations.b546b024d856f997bad7.js": {
+      "name": "visualisations.b546b024d856f997bad7.js",
+      "path": "visualisations.b546b024d856f997bad7.js",
+      "publicPath": "/__django_static/js/bundles/visualisations.b546b024d856f997bad7.js"
+    },
+    "visualisations.b546b024d856f997bad7.js.LICENSE.txt": {
+      "name": "visualisations.b546b024d856f997bad7.js.LICENSE.txt",
+      "path": "visualisations.b546b024d856f997bad7.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/visualisations.b546b024d856f997bad7.js.LICENSE.txt"
+    },
+    "yourfiles.d5d879cc34df041445e0.js": {
+      "name": "yourfiles.d5d879cc34df041445e0.js",
+      "path": "yourfiles.d5d879cc34df041445e0.js",
+      "publicPath": "/__django_static/js/bundles/yourfiles.d5d879cc34df041445e0.js"
+    },
+    "yourfiles.d5d879cc34df041445e0.js.LICENSE.txt": {
+      "name": "yourfiles.d5d879cc34df041445e0.js.LICENSE.txt",
+      "path": "yourfiles.d5d879cc34df041445e0.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/yourfiles.d5d879cc34df041445e0.js.LICENSE.txt"
+    }
   },
   "publicPath": "/__django_static/js/bundles/"
 }
