@@ -76,10 +76,7 @@
   min-width: 80px;
 }
 
-.scrollable-table
-  table
-  thead
-  th.ref-data-col-universal-unique-identifier-field {
+.scrollable-table table thead th.ref-data-col-universal-unique-identifier-field {
   min-width: 300px;
 }
 
@@ -295,7 +292,7 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
 
 #data-grid {
   width: 100%;
-  height: calc(100vh - 317px)
+  height: calc(100vh - 317px);
 }
 .case-study-quote .quote-heading {
   overflow: hidden;
@@ -344,7 +341,7 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   width: 100%;
 }
 .grid-maximised {
-  height : calc(100vh - 175px) !important;
+  height: calc(100vh - 175px) !important;
 }
 
 /* @include govuk-media-query($from: desktop) ... */
@@ -408,18 +405,17 @@ p.sidebar-section {
 }
 
 .sticky-button-container {
-  position:sticky;
-  bottom:20px;
+  position: sticky;
+  bottom: 20px;
 
   .sticky-button-contents {
     padding: 1rem 1rem 0 1rem;
     //set a negative horizontal margin to widen the container
     //margin:0 -4rem;
-    background-color:govuk-colour("light-grey");
+    background-color: govuk-colour("light-grey");
     border: solid 1px $govuk-border-colour;
-    overflow:hidden;
+    overflow: hidden;
   }
-
 }
 
 .govuk-breadcrumbs__list-item-white:before {
@@ -454,11 +450,13 @@ p.sidebar-section {
   .header-wrap {
     position: relative;
     color: rgb(29, 112, 184);
-    .ag-icon-none, .ag-icon-desc, .ag-icon-asc {
+    .ag-icon-none,
+    .ag-icon-desc,
+    .ag-icon-asc {
       display: none;
     }
     button {
-      background-color: rgba(0,0,0,0);
+      background-color: rgba(0, 0, 0, 0);
       border-width: 0;
       -webkit-box-shadow: 0 0 0 0;
       -moz-box-shadow: 0 0 0 0;
@@ -481,17 +479,26 @@ p.sidebar-section {
       text-transform: uppercase;
     }
   }
-  .ag-grid-header-cell, .ag-header-cell-label, .ag-cell-label-container, .ag-header-cell-sortable  {
+  .ag-grid-header-cell,
+  .ag-header-cell-label,
+  .ag-cell-label-container,
+  .ag-header-cell-sortable {
     cursor: default;
   }
-  .ag-header-cell-sorted-none button, .ag-header-cell-sorted-asc button, .ag-header-cell-sorted-desc button {
+  .ag-header-cell-sorted-none button,
+  .ag-header-cell-sorted-asc button,
+  .ag-header-cell-sorted-desc button {
     color: $govuk-link-colour;
     cursor: pointer;
   }
-  .ag-header-cell-sorted-none button:focus, .ag-header-cell-sorted-asc button:focus, .ag-header-cell-sorted-desc button:focus {
+  .ag-header-cell-sorted-none button:focus,
+  .ag-header-cell-sorted-asc button:focus,
+  .ag-header-cell-sorted-desc button:focus {
     background-color: #fd0;
     color: $govuk-link-colour;
-    box-shadow: 0 -2px #fd0, 0 4px #0b0c0c;
+    box-shadow:
+      0 -2px #fd0,
+      0 4px #0b0c0c;
     outline: none;
   }
   .sort-none:before {
@@ -499,30 +506,31 @@ p.sidebar-section {
     position: absolute;
     right: -3px;
     top: 10px;
-    font-size: .5em;
+    font-size: 0.5em;
   }
   .sort-none:after {
     content: " ▲";
     position: absolute;
     right: -3px;
     top: 2px;
-    font-size: .5em;
+    font-size: 0.5em;
   }
   .sort-asc:after {
     content: " ▲";
-    font-size: .8em;
+    font-size: 0.8em;
     position: absolute;
     right: -5px;
     top: 2px;
   }
   .sort-desc:after {
     content: " ▼";
-    font-size: .8em;
+    font-size: 0.8em;
     position: absolute;
     right: -5px;
     top: 2px;
   }
-  .ag-header-cell, .ag-cell {
+  .ag-header-cell,
+  .ag-cell {
     padding-left: 5px;
   }
   .ag-header-cell-resize {
@@ -538,7 +546,9 @@ p.sidebar-section {
 .app-compressed-grid {
   border: 1px solid #b1b4b6;
   border-bottom: none;
-  &.remove-border { border: 0px }
+  &.remove-border {
+    border: 0px;
+  }
 
   .app-grid-header {
     padding: 12.5px 0 12.5px 10px;
@@ -619,13 +629,13 @@ p.sidebar-section {
       display: none;
     }
   }
-}  
+}
 .badge {
   top: 50px;
   right: 730px;
   padding: 0px 5px;
   border-radius: 100%;
-  background-color:#d4351c;
+  background-color: #d4351c;
   color: white;
 }
 
@@ -637,12 +647,13 @@ p.sidebar-section {
     margin-bottom: 0;
     font-size: 19px;
   }
-
 }
 
-.grid-view-saved-banner, .full-width-banner {
-  .govuk-notification-banner__content, .govuk-notification-banner__content > * {
-    max-width:none;
+.grid-view-saved-banner,
+.full-width-banner {
+  .govuk-notification-banner__content,
+  .govuk-notification-banner__content > * {
+    max-width: none;
   }
   .govuk-notification-banner__content .govuk-link {
     font-size: 1rem;
@@ -659,3 +670,5 @@ p.sidebar-section {
 @import "summary-list";
 @import "list";
 @import "warning";
+@import "pipeline-error-message";
+@import "helpers";

@@ -398,7 +398,10 @@ class DatasetDetailView(DetailView):
     def get_object(self, queryset=None):
         return find_dataset(self.kwargs["dataset_uuid"], self.request.user)
 
-    @csp_update(frame_src=settings.QUICKSIGHT_DASHBOARD_HOST)
+    @csp_update(
+        frame_src=settings.QUICKSIGHT_DASHBOARD_HOST,
+        SCRIPT_SRC=settings.REACT_SCRIPT_SRC,
+    )
     def get(self, request, *args, **kwargs):
         log_event(
             request.user,
