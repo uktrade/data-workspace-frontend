@@ -1,5 +1,7 @@
 {% extends '_main.html' %}
 {% load humanize static datasets_tags waffle_tags %}
+{% load static %}
+{% load render_bundle from webpack_loader %}
 {% load core_filters %}
 {% block page_title %}{{ model.name }} - {{ block.super }}{% endblock %}
 
@@ -42,6 +44,9 @@
         </ol>
       </div>
     </div>
+    <div class="govuk-grid-column-one-half">
+      {% include './partials/pipeline-error-message.html' %}
+    </div>
   </div>
 {% endblock %}
 
@@ -49,6 +54,7 @@
   {% if not model.published %}
     {% include 'partials/unpublished_banner.html' with type='dataset' %}
   {% endif %}
+  
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
       <span class="govuk-caption-xl">Data cut</span>
@@ -105,6 +111,7 @@
               </td>
               <td class="govuk-table__cell">
                 {{ datacut_link.get_data_last_updated_date|date_with_gmt_offset|default_if_none:"N/A" }}
+                <p class="govuk-body-s govuk-error-colour">Update failed: Data is not up to date. The issue is currently in the process of being resolved.</p>
               </td>
             </tr>
           {% endif %}
@@ -169,9 +176,15 @@
     </div>
   </div>
 
-
   <div class="govuk-grid-row">
-      {% if related_data or related_visualisations %}
+    <div class="govuk-grid-column-full">
+      <div id="data-usage"></div>
+    </div>
+  </div>
+
+
+  {% if related_data or related_visualisations %}
+    <div class="govuk-grid-row">
         {% if related_data %}
           <div class="govuk-grid-column-one-half govuk-!-margin-top-8">
             <aside role="complementary">
@@ -223,8 +236,8 @@
             </p>
           </aside> 
       </div>
-      {% endif %}
-  </div>
+    </div>
+    {% endif %}
 
 {% endblock %}
 {% block footer_scripts %}
@@ -238,4 +251,7 @@
       new Copy($codeBlock).init()
     });
   </script>
+
+  
+  {% render_bundle "data-cut" "js" %}
 {% endblock %}

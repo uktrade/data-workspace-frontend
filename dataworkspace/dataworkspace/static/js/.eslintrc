@@ -1,0 +1,45 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "plugins": [
+    "react",
+    "@typescript-eslint",
+    "simple-import-sort",
+    "jsx-a11y",
+    "react-hooks"
+  ],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:jsx-a11y/recommended"
+  ],
+  "ignorePatterns": ["node_modules"],
+  "rules": {
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "off",
+    "no-multiple-empty-lines": [
+      "error",
+      {
+        "max": 1
+      }
+    ],
+    "no-undef": "error",
+    "no-console": ["error", { "allow": ["assert"] }],
+    "simple-import-sort/imports": [
+      "error",
+      {
+        "groups": [["^react"], ["^antd"], ["^@?\\w"], ["@/(.*)"], ["^[./]"]]
+      }
+    ]
+  },
+  "parserOptions": {
+    "warnOnUnsupportedTypeScriptVersion": false
+  },
+  "overrides": [
+    {
+      "files": ["**/*.{js,jsx,tsx,ts}"]
+    }
+  ],
+  "env": { "browser": true, "jest": true, "node": true }
+}

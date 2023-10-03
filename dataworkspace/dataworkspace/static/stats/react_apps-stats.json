@@ -1,0 +1,8 @@
+{
+  "status": "error",
+  "assets": {},
+  "chunks": {},
+  "publicPath": "/__django_static/js/bundles/",
+  "error": "ModuleNotFoundError",
+  "message": "Module not found: Error: Can't resolve '/Users/ianleggett/apps/data-workspace/dataworkspace/dataworkspace/static/js/src/modules/data-cut/index' in '/Users/ianleggett/apps/data-workspace/dataworkspace/dataworkspace/static/js'"
+}
