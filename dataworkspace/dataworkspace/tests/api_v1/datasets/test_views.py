@@ -467,8 +467,8 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             "source_tags": [t.name for t in dataset.tags.all()] if dataset.tags.all() else None,
             "personal_data": personal_data,
             "retention_policy": retention_policy,
-            "eligibility_criteria": list(request_approvers) if request_approvers else None,
-            "request_approvers": list(eligibility_criteria) if eligibility_criteria else None,
+            "eligibility_criteria": list(eligibility_criteria) if eligibility_criteria else None,
+            "request_approvers": list(request_approvers) if request_approvers else None,
             "catalogue_editors": data_catalogue_editors,
             "source_tables": [
                 {"id": str(x.id), "name": x.name, "schema": x.schema, "table": x.table}
@@ -501,7 +501,6 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
                 personal_data="personal",
                 retention_policy="retention",
                 eligibility_criteria=["eligibility"],
-                request_approvers=None,
             )
         datacut.data_catalogue_editors.set([catalogue_editor])
         datacut.tags.set([factories.SourceTagFactory()])
