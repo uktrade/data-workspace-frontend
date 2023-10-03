@@ -611,9 +611,12 @@ class DatasetDetailView(DetailView):
                     strip=True,
                 )
             )
+
         ctx["model"] = self.object
         ctx["DATASET_CHANGELOG_PAGE_FLAG"] = settings.DATASET_CHANGELOG_PAGE_FLAG
         ctx["DATA_UPLOADER_UI_FLAG"] = settings.DATA_UPLOADER_UI_FLAG
+        if not self._is_reference_dataset():
+            ctx["data_catalogue_editors"] = self.object.data_catalogue_editors.all()
 
         if self._is_reference_dataset():
             return self._get_context_data_for_reference_dataset(ctx, **kwargs)
