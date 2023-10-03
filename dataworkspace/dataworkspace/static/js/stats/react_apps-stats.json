@@ -1,46 +1,72 @@
 {
   "status": "done",
   "assets": {
-    "builder.58dd439c3a0d51aa7543.js.LICENSE.txt": {
-      "name": "builder.58dd439c3a0d51aa7543.js.LICENSE.txt",
-      "path": "builder.58dd439c3a0d51aa7543.js.LICENSE.txt",
-      "publicPath": "/__django_static/js/bundles/builder.58dd439c3a0d51aa7543.js.LICENSE.txt"
+    "data-cut.c8f0103b832ddaf58ad5.js": {
+      "name": "data-cut.c8f0103b832ddaf58ad5.js",
+      "path": "data-cut.c8f0103b832ddaf58ad5.js",
+      "publicPath": "/__django_static/js/bundles/data-cut.c8f0103b832ddaf58ad5.js"
     },
-    "viewer.08734df7339e28c342cc.js.LICENSE.txt": {
-      "name": "viewer.08734df7339e28c342cc.js.LICENSE.txt",
-      "path": "viewer.08734df7339e28c342cc.js.LICENSE.txt",
-      "publicPath": "/__django_static/js/bundles/viewer.08734df7339e28c342cc.js.LICENSE.txt"
+    "data-cut.c8f0103b832ddaf58ad5.js.LICENSE.txt": {
+      "name": "data-cut.c8f0103b832ddaf58ad5.js.LICENSE.txt",
+      "path": "data-cut.c8f0103b832ddaf58ad5.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/data-cut.c8f0103b832ddaf58ad5.js.LICENSE.txt"
     },
-    "yourfiles.c93bfed2dd8a9c6f4718.js.LICENSE.txt": {
-      "name": "yourfiles.c93bfed2dd8a9c6f4718.js.LICENSE.txt",
-      "path": "yourfiles.c93bfed2dd8a9c6f4718.js.LICENSE.txt",
-      "publicPath": "/__django_static/js/bundles/yourfiles.c93bfed2dd8a9c6f4718.js.LICENSE.txt"
+    "reference-dataset.142a54b2d4dbdc6ed5cb.js": {
+      "name": "reference-dataset.142a54b2d4dbdc6ed5cb.js",
+      "path": "reference-dataset.142a54b2d4dbdc6ed5cb.js",
+      "publicPath": "/__django_static/js/bundles/reference-dataset.142a54b2d4dbdc6ed5cb.js"
     },
-    "builder.58dd439c3a0d51aa7543.js": {
-      "name": "builder.58dd439c3a0d51aa7543.js",
-      "path": "builder.58dd439c3a0d51aa7543.js",
-      "publicPath": "/__django_static/js/bundles/builder.58dd439c3a0d51aa7543.js"
+    "reference-dataset.142a54b2d4dbdc6ed5cb.js.LICENSE.txt": {
+      "name": "reference-dataset.142a54b2d4dbdc6ed5cb.js.LICENSE.txt",
+      "path": "reference-dataset.142a54b2d4dbdc6ed5cb.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/reference-dataset.142a54b2d4dbdc6ed5cb.js.LICENSE.txt"
     },
-    "viewer.08734df7339e28c342cc.js": {
-      "name": "viewer.08734df7339e28c342cc.js",
-      "path": "viewer.08734df7339e28c342cc.js",
-      "publicPath": "/__django_static/js/bundles/viewer.08734df7339e28c342cc.js"
+    "source-dataset.e75b2015a75a4a30948b.js": {
+      "name": "source-dataset.e75b2015a75a4a30948b.js",
+      "path": "source-dataset.e75b2015a75a4a30948b.js",
+      "publicPath": "/__django_static/js/bundles/source-dataset.e75b2015a75a4a30948b.js"
     },
-    "yourfiles.c93bfed2dd8a9c6f4718.js": {
-      "name": "yourfiles.c93bfed2dd8a9c6f4718.js",
-      "path": "yourfiles.c93bfed2dd8a9c6f4718.js",
-      "publicPath": "/__django_static/js/bundles/yourfiles.c93bfed2dd8a9c6f4718.js"
+    "source-dataset.e75b2015a75a4a30948b.js.LICENSE.txt": {
+      "name": "source-dataset.e75b2015a75a4a30948b.js.LICENSE.txt",
+      "path": "source-dataset.e75b2015a75a4a30948b.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/source-dataset.e75b2015a75a4a30948b.js.LICENSE.txt"
+    },
+    "visualisations.b546b024d856f997bad7.js": {
+      "name": "visualisations.b546b024d856f997bad7.js",
+      "path": "visualisations.b546b024d856f997bad7.js",
+      "publicPath": "/__django_static/js/bundles/visualisations.b546b024d856f997bad7.js"
+    },
+    "visualisations.b546b024d856f997bad7.js.LICENSE.txt": {
+      "name": "visualisations.b546b024d856f997bad7.js.LICENSE.txt",
+      "path": "visualisations.b546b024d856f997bad7.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/visualisations.b546b024d856f997bad7.js.LICENSE.txt"
+    },
+    "yourfiles.d5d879cc34df041445e0.js": {
+      "name": "yourfiles.d5d879cc34df041445e0.js",
+      "path": "yourfiles.d5d879cc34df041445e0.js",
+      "publicPath": "/__django_static/js/bundles/yourfiles.d5d879cc34df041445e0.js"
+    },
+    "yourfiles.d5d879cc34df041445e0.js.LICENSE.txt": {
+      "name": "yourfiles.d5d879cc34df041445e0.js.LICENSE.txt",
+      "path": "yourfiles.d5d879cc34df041445e0.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/yourfiles.d5d879cc34df041445e0.js.LICENSE.txt"
     }
   },
   "chunks": {
-    "builder": [
-      "builder.58dd439c3a0d51aa7543.js"
+    "data-cut": [
+      "data-cut.c8f0103b832ddaf58ad5.js"
     ],
-    "viewer": [
-      "viewer.08734df7339e28c342cc.js"
+    "reference-dataset": [
+      "reference-dataset.142a54b2d4dbdc6ed5cb.js"
+    ],
+    "source-dataset": [
+      "source-dataset.e75b2015a75a4a30948b.js"
+    ],
+    "visualisations": [
+      "visualisations.b546b024d856f997bad7.js"
     ],
     "yourfiles": [
-      "yourfiles.c93bfed2dd8a9c6f4718.js"
+      "yourfiles.d5d879cc34df041445e0.js"
     ]
   },
   "publicPath": "/__django_static/js/bundles/"
