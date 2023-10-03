@@ -53,6 +53,7 @@
     "sass-loader": "^13.0.2",
     "style-loader": "^3.0.0",
     "terser-webpack-plugin": "^5.3.6",
+    "ts-jest": "^29.1.1",
     "ts-loader": "^9.4.4",
     "typescript": "^5.2.0",
     "webpack": "^5.76.0",
