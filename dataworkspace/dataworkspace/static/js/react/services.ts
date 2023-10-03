@@ -41,7 +41,7 @@ const mockTwo = [
 ];
 
 export const getDataCut = async () => {
-  await new Promise((resolve) => setTimeout(resolve, 30000));
+  await new Promise((resolve) => setTimeout(resolve, 3000));
   return mockOne;
 };
 
