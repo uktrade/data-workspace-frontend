@@ -173,14 +173,16 @@ def get_source_table_changelog(source_table):
                 SELECT id, source_data_modified_utc, table_schema||'.'||table_name, table_structure, data_hash_v1
                 FROM dataflow.metadata
                 WHERE data_type = {}
-                AND {} = any(data_ids)
+                AND table_schema = {}
+                AND table_name = {}
                 AND source_data_modified_utc IS NOT NULL
                 AND table_structure IS NOT NULL
                 ORDER BY id ASC;
                 """
             ).format(
                 Literal(DataSetType.MASTER),
-                Literal(str(source_table.id)),
+                Literal(source_table.schema),
+                Literal(source_table.table),
             )
         )
         return get_changelog_from_metadata_rows(cursor.fetchall())
@@ -197,7 +199,8 @@ def get_custom_dataset_query_changelog(query):
                 AND {} = any(data_ids)
                 AND source_data_modified_utc IS NOT NULL
                 AND table_structure IS NOT NULL
-                ORDER BY id ASC;
+                ORDER BY id ASC
+                LIMIT 10;
                 """
             ).format(
                 Literal(DataSetType.DATACUT),
@@ -216,14 +219,15 @@ def get_reference_dataset_changelog(dataset):
                 SELECT id, source_data_modified_utc, table_schema||'.'||table_name, table_structure, data_hash_v1
                 FROM dataflow.metadata
                 WHERE data_type = {}
-                AND {} = any(data_ids)
+                AND table_schema = 'public'
+                AND table_name = {}
                 AND source_data_modified_utc IS NOT NULL
                 AND table_structure IS NOT NULL
                 ORDER BY id ASC;
                 """
             ).format(
                 Literal(DataSetType.REFERENCE),
-                Literal(str(dataset.id)),
+                Literal(dataset.table_name),
             )
         )
         return get_changelog_from_metadata_rows(cursor.fetchall())
