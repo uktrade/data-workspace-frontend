@@ -193,7 +193,7 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
             elif (
                 isinstance(catalogue_item, DataSet)
                 and catalogue_item.request_approvers is not None
-                and "@" in catalogue_item.request_approvers
+                and len(catalogue_item.request_approvers) > 0
             ):
                 access_request.zendesk_reference_number = zendesk.notify_dataset_access_request(
                     request,
