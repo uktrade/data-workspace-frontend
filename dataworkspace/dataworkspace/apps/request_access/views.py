@@ -200,6 +200,16 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
                     access_request,
                     catalogue_item,
                 )
+            elif (
+                isinstance(catalogue_item, VisualisationCatalogueItem)
+                and catalogue_item.request_approvers is not None
+                and len(catalogue_item.request_approvers) > 0
+            ):
+                access_request.zendesk_reference_number = zendesk.notify_dataset_access_request(
+                    request,
+                    access_request,
+                    catalogue_item,
+                )
             else:
                 access_request.zendesk_reference_number = zendesk.create_zendesk_ticket(
                     request,
