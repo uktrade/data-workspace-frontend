@@ -650,10 +650,13 @@ def _get_detailed_changelog(changelog, initial_change_type):
         elif record["previous_table_name"] != record["table_name"]:
             record["summary"] = f"Table renamed from {record['previous_table_name']}"
         elif record["previous_table_structure"] != record["table_structure"]:
-            column_names = [c[0] for c in record["table_structure"]]
-            previous_column_names = [c[0] for c in record["previous_table_structure"]]
+            column_names = [c[0] for c in record["table_structure"] if c[0] is not None]
+            previous_column_names = [
+                c[0] for c in record["previous_table_structure"] if c[0] is not None
+            ]
             a = list(set(column_names) - set(previous_column_names))
             b = list(set(previous_column_names) - set(column_names))
+            logger.info("changelog previous/new columns: %s => %s", a, b)
             if not a and not b:
                 record["summary"] = "N/A"
                 continue
