@@ -42,7 +42,7 @@ redis==4.5.4
     # via -r requirements.in
 six==1.16.0
     # via click-repl
-tornado==6.3.2
+tornado==6.3.3
     # via flower
 vine==5.0.0
     # via
