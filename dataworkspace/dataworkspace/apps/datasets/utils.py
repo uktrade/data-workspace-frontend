@@ -961,14 +961,27 @@ def send_notification_emails():
 
     def create_notifications():
         logger.info("send_notification_emails: Creating notifications")
-        for notifiable_object in (
-            list(SourceTable.objects.order_by("id"))
-            + list(CustomDatasetQuery.objects.order_by("id"))
-            + list(ReferenceDataset.objects.order_by("id"))
-        ):
+        source_objects = (
+            list(
+                SourceTable.objects.filter(
+                    dataset__deleted=False, dataset__published=True
+                ).order_by("id")
+            )
+            + list(
+                CustomDatasetQuery.objects.filter(
+                    dataset__deleted=False, dataset__published=True
+                ).order_by("id")
+            )
+            + list(ReferenceDataset.objects.filter(deleted=False, published=True).order_by("id"))
+        )
+        logger.info(
+            "send_notification_emails: Creating notifications for %d source objects",
+            len(source_objects),
+        )
+        for notifiable_object in source_objects:
             logger.info(
                 "send_notification_emails: Creating notification for %s %s",
-                type(notifiable_object),
+                notifiable_object.__class__.__name__,
                 notifiable_object.id,
             )
             changelog = get_detailed_changelog(notifiable_object)
@@ -1001,7 +1014,6 @@ def send_notification_emails():
                     "send_notification_emails: Processing notifications for dataset %s",
                     dataset.name,
                 )
-                queryset = DataSetSubscription.objects.none()
                 queryset = (
                     dataset.subscriptions.filter(notify_on_schema_change=True)
                     if schema_change
