@@ -108,6 +108,7 @@ INSTALLED_APPS = [
     "dataworkspace.apps.datasets",
     "dataworkspace.apps.dw_admin",
     "dataworkspace.apps.api_v1",
+    "dataworkspace.apps.api_v2",
     "dataworkspace.apps.eventlog",
     "dataworkspace.apps.request_data",
     "dataworkspace.apps.request_access",
