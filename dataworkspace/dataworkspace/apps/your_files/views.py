@@ -69,7 +69,7 @@ def your_files_home(request, s3_path=None):
             "home_prefix": home_prefix,
             "initial_prefix": initial_prefix,
             "bucket": settings.NOTEBOOKS_BUCKET,
-            "aws_endpoint": settings.S3_LOCAL_ENDPOINT_URL,
+            "aws_endpoint": settings.S3_LOCAL_FRONTEND_ENDPOINT_URL,
         },
         status=200,
     )

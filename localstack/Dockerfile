@@ -1,2 +1,2 @@
-FROM localstack/localstack-full:latest
-COPY ./init/* /docker-entrypoint-initaws.d/
+FROM localstack/localstack:latest
+COPY ./init/* /etc/localstack/init/ready.d/
