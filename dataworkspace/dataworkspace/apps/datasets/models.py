@@ -81,8 +81,10 @@ from dataworkspace.apps.your_files.models import UploadedTable
 from dataworkspace.datasets_db import (
     get_columns,
     get_earliest_tables_last_updated_date,
+    get_last_run_state_for_pipeline,
     get_latest_row_count_for_query,
     get_latest_row_count_for_table,
+    get_pipeline_id_for_source_table,
 )
 
 
@@ -874,6 +876,15 @@ class SourceTable(BaseSource):
 
     def get_save_grid_view_url(self):
         return reverse("datasets:source_table_save_grid_view", args=(self.id,))
+
+    def get_metadata_pipeline_name(self):
+        return get_pipeline_id_for_source_table(self)
+
+    def get_pipeline_last_run_state(self):
+        pipeline_name = self.get_metadata_pipeline_name()
+        if pipeline_name is None:
+            return None
+        return get_last_run_state_for_pipeline(pipeline_name)
 
 
 class SourceTableFieldDefinition(models.Model):
