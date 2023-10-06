@@ -55,6 +55,8 @@ class EventLog(models.Model):
     TYPE_USER_TOOL_LINK_STARTED = 48
     TYPE_DATA_CATALOGUE_EDITOR_ADDED = 49
     TYPE_DATA_CATALOGUE_EDITOR_REMOVED = 50
+    TYPE_DATASET_BOOKMARKED = 51
+    TYPE_DATASET_UNBOOKMARKED = 52
     TYPE_USER_TOOL_FAILED = 53
     TYPE_USER_DATACUT_GRID_VIEW_FAILED = 54
 
@@ -111,6 +113,8 @@ class EventLog(models.Model):
         (TYPE_USER_TOOL_LINK_STARTED, "Tool started (Link)"),
         (TYPE_DATA_CATALOGUE_EDITOR_ADDED, "Data Catalogue Editor user added"),
         (TYPE_DATA_CATALOGUE_EDITOR_REMOVED, "Data Catalogue Editor user removed"),
+        (TYPE_DATASET_BOOKMARKED, "Dataset bookmarked"),
+        (TYPE_DATASET_UNBOOKMARKED, "Dataset bookmark removed"),
         (TYPE_USER_TOOL_FAILED, "Tool failed to start for user"),
         (TYPE_USER_DATACUT_GRID_VIEW_FAILED, "Datacut grid failed to load for user"),
     )
