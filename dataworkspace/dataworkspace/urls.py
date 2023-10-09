@@ -11,6 +11,7 @@ from dataworkspace.apps.core.views import (
     RestoreTableDAGTaskStatusView,
     TechnicalSupportView,
     about_page_view,
+    public_error_500_application_view,
     welcome_page_view,
     public_error_403_csrf_html_view,
     public_error_403_html_view,
@@ -51,6 +52,7 @@ urlpatterns = [
     path("error_403_tool_invalid", public_error_403_invalid_tool_user_html_view),
     path("error_404", public_error_404_html_view),
     path("error_500", public_error_500_html_view),
+    path("error_500_application", public_error_500_application_view),
     path("appstream/", login_required(appstream_view), name="appstream"),
     path("appstream-admin/", login_required(appstream_admin_view), name="appstream_admin"),
     path(
