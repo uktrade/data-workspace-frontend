@@ -180,7 +180,6 @@ def api_application_dict(application_instance, ignore_spawner_state=False):
     )
 
     return {
-        "id": application_instance.id,
         "proxy_url": application_instance.proxy_url,
         "state": api_state,
         "user": sso_id_hex_short,
