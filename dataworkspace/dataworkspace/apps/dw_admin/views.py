@@ -1,5 +1,6 @@
 import csv
 import os
+from datetime import datetime, timedelta
 
 from botocore.exceptions import ClientError
 
@@ -9,13 +10,17 @@ from django.contrib import messages
 from django.contrib.admin import helpers
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.core.exceptions import ValidationError
+from django.db.models import Avg, F, Func
 from django.http import Http404, HttpResponseServerError, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from django.views.generic import FormView, CreateView
+from django.utils.timesince import timesince
+from django.views.generic import FormView, CreateView, TemplateView
 
+from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.datasets.models import (
+    Notification,
     ReferenceDataset,
     ReferenceDatasetField,
     SourceLink,
@@ -30,6 +35,7 @@ from dataworkspace.apps.dw_admin.forms import (
     ReferenceDataRecordUploadForm,
     clean_identifier,
 )
+from dataworkspace.apps.eventlog.models import EventLog
 
 
 class ReferenceDataRecordMixin(UserPassesTestMixin):
@@ -385,3 +391,73 @@ class SourceLinkUploadView(UserPassesTestMixin, CreateView):  # pylint: disable=
     def get_success_url(self):
         messages.success(self.request, "Source link uploaded successfully")
         return self._get_dataset().get_admin_edit_url()
+
+
+class DataWorkspaceStatsView(UserPassesTestMixin, TemplateView):
+    template_name = "admin/data_workspace_stats.html"
+
+    def test_func(self):
+        return self.request.user.is_superuser
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        events_last_24_hours = EventLog.objects.filter(
+            timestamp__gte=datetime.now() - timedelta(hours=24),
+        )
+        running_tools = ApplicationInstance.objects.filter(
+            application_template__application_type="TOOL", state="RUNNING"
+        )
+        tool_instances_last_7_days = ApplicationInstance.objects.filter(
+            application_template__application_type="TOOL",
+            spawner_created_at__gte=datetime.now() - timedelta(days=7),
+        )
+
+        # Running tools
+        ctx["currently_running_tools"] = running_tools.count()
+
+        # Tools failed to load in the last 24 hours
+        ctx["tools_started_24_hours"] = running_tools.filter(
+            spawner_created_at__gte=datetime.now() - timedelta(hours=24),
+        ).count()
+
+        # Failed tools
+        ctx["failed_tools_24_hours"] = events_last_24_hours.filter(
+            event_type=EventLog.TYPE_USER_TOOL_FAILED,
+        ).count()
+
+        # Oldest running tool
+        if running_tools.exists():
+            oldest_tool_date = running_tools.earliest("spawner_created_at").spawner_created_at
+            ctx["oldest_running_tool_date"] = oldest_tool_date
+            ctx["oldest_running_tool_since"] = timesince(oldest_tool_date, depth=1)
+
+        # Average time to start a tool
+        logged_tool_instances = tool_instances_last_7_days.exclude(successfully_started_at=None)
+        if logged_tool_instances.exists():
+            ctx["tool_start_duration_7_days"] = (
+                logged_tool_instances.annotate(
+                    start_duration=Func(
+                        F("successfully_started_at"), F("spawner_created_at"), function="age"
+                    )
+                )
+                .aggregate(Avg("start_duration"))["start_duration__avg"]
+                .total_seconds()
+                * 1000
+            )
+
+        # Grid timeouts
+        ctx["data_grid_timeouts_24_hours"] = events_last_24_hours.filter(
+            event_type=EventLog.TYPE_DATA_PREVIEW_TIMEOUT,
+        ).count()
+
+        # Number of failed datacut query grid loads (from the metadata syncer)
+        ctx["datacut_grid_errors_24_hours"] = events_last_24_hours.filter(
+            event_type=EventLog.TYPE_USER_DATACUT_GRID_VIEW_FAILED
+        ).count()
+
+        # Notifications sent today
+        ctx["notifications_sent_today"] = Notification.objects.filter(
+            created_date__gte=datetime.now().date()
+        ).count()
+
+        return ctx

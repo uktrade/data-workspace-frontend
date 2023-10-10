@@ -1,6 +1,7 @@
 from django.urls import path
 
 from dataworkspace.apps.dw_admin.views import (
+    DataWorkspaceStatsView,
     ReferenceDatasetAdminEditView,
     ReferenceDatasetAdminDeleteView,
     ReferenceDatasetAdminDeleteAllView,
@@ -43,5 +44,10 @@ urlpatterns = [
         "app/dataset/<str:dataset_id>/sourcelink/upload/",
         view=SourceLinkUploadView.as_view(),
         name="source-link-upload",
+    ),
+    path(
+        "stats",
+        view=DataWorkspaceStatsView.as_view(),
+        name="data-workspace-stats",
     ),
 ]
