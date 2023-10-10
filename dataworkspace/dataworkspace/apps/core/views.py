@@ -19,7 +19,7 @@ from django.urls import reverse
 from django.views import View
 from django.views.generic import FormView
 from requests import HTTPError
-from dataworkspace.apps.applications.models import VisualisationTemplate
+from dataworkspace.apps.applications.models import ApplicationInstance, VisualisationTemplate
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.forms import (
     NewsletterSubscriptionForm,
@@ -119,6 +119,23 @@ def public_error_403_invalid_tool_user_html_view(request):
 def public_error_500_html_view(request):
     message = request.GET.get("message", None)
     return render(request, "errors/error_500.html", {"message": message}, status=500)
+
+
+def public_error_500_application_view(request):
+    application = ApplicationInstance.objects.get(pk=request.GET.get("application_id"))
+    log_event(
+        request.user,
+        EventLog.TYPE_USER_TOOL_FAILED,
+        application,
+        extra={
+            "tool": application.application_template.nice_name,
+            "started": application.spawner_created_at,
+            "failure_message": request.GET.get("failure_message", None),
+        },
+    )
+    return render(
+        request, "errors/error_500.html", {"message": request.GET.get("message", None)}, status=500
+    )
 
 
 def healthcheck_view(request):

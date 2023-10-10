@@ -481,7 +481,7 @@ async def async_main():
             host_exists = response.status == 200
             application = await response.json()
 
-        if response.status != 200 and response.status != 404:
+        if response.status not in (200, 404):
             raise UserException(
                 "Unable to start the application",
                 response.status,
@@ -497,7 +497,15 @@ async def async_main():
                     headers=CIMultiDict(admin_headers_request(downstream_request)),
                 ) as delete_response:
                     await delete_response.read()
-            raise UserException("Application " + application["state"], 500)
+            raise UserException(
+                "Application " + application["state"],
+                500,
+                "/error_500_application",
+                {
+                    "failure_message": "Application " + application["state"],
+                    "application_id": application["id"],
+                },
+            )
 
         if not host_exists:
             if "x-data-workspace-no-modify-application-instance" not in downstream_request.headers:
@@ -509,15 +517,36 @@ async def async_main():
                     host_exists = response.status == 200
                     application = await response.json()
             else:
-                raise UserException("Application stopped while starting", 500)
+                raise UserException(
+                    "Application stopped while starting",
+                    500,
+                    "/error_500_application",
+                    {
+                        "failure_message": "Application stopped while starting",
+                        "application_id": application["id"],
+                    },
+                )
 
         if response.status != 200:
-            raise UserException("Unable to start the application", response.status)
+            raise UserException(
+                "Unable to start the application",
+                500,
+                "/error_500_application",
+                {
+                    "failure_message": "Unable to start the application",
+                    "application_id": application["id"],
+                },
+            )
 
         if application["state"] not in ["SPAWNING", "RUNNING"]:
             raise UserException(
-                "Attempted to start the application, but it " + application["state"],
+                f"Attempted to start the application, but it {application['state']}",
                 500,
+                "/error_500_application",
+                {
+                    "failure_message": f"Attempted to start the application, but it {application['state']}",
+                    "application_id": application["id"],
+                },
             )
 
         if not application["proxy_url"]:
