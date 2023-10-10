@@ -22,6 +22,7 @@ from ckeditor.fields import RichTextField
 from django import forms
 from django.apps import apps
 from django.core.cache import cache
+from django.core import serializers
 from django.db import (
     DatabaseError,
     models,
@@ -75,6 +76,7 @@ from dataworkspace.apps.datasets.constants import (
 from dataworkspace.apps.datasets.model_utils import external_model_class
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.core.charts.models import ChartBuilderChart
+from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.apps.your_files.models import UploadedTable
 from dataworkspace.datasets_db import (
     get_columns,
@@ -471,18 +473,30 @@ class DataSet(DeletableTimestampedUserModel):
 
     def toggle_bookmark(self, user):
         if self.user_has_bookmarked(user):
-            self.datasetbookmark_set.filter(user=user).delete()
+            self.unset_bookmark(user)
         else:
-            self.datasetbookmark_set.create(user=user)
+            self.set_bookmark(user)
 
     def set_bookmark(self, user):
         if self.user_has_bookmarked(user):
             return
+        log_event(
+            user,
+            EventLog.TYPE_DATASET_BOOKMARKED,
+            self,
+            extra={"user": serializers.serialize("python", [user])[0]},
+        )
         self.datasetbookmark_set.create(user=user)
 
     def unset_bookmark(self, user):
         if not self.user_has_bookmarked(user):
             return
+        log_event(
+            user,
+            EventLog.TYPE_DATASET_UNBOOKMARKED,
+            self,
+            extra={"user": serializers.serialize("python", [user])[0]},
+        )
         self.datasetbookmark_set.filter(user=user).delete()
 
     def bookmark_count(self):
@@ -1905,18 +1919,30 @@ class ReferenceDataset(DeletableTimestampedUserModel):
 
     def toggle_bookmark(self, user):
         if self.user_has_bookmarked(user):
-            self.referencedatasetbookmark_set.filter(user=user).delete()
+            self.unset_bookmark(user)
         else:
-            self.referencedatasetbookmark_set.create(user=user)
+            self.set_bookmark(user)
 
     def set_bookmark(self, user):
         if self.user_has_bookmarked(user):
             return
+        log_event(
+            user,
+            EventLog.TYPE_DATASET_BOOKMARKED,
+            self,
+            extra={"user": serializers.serialize("python", [user])[0]},
+        )
         self.referencedatasetbookmark_set.create(user=user)
 
     def unset_bookmark(self, user):
         if not self.user_has_bookmarked(user):
             return
+        log_event(
+            user,
+            EventLog.TYPE_DATASET_UNBOOKMARKED,
+            self,
+            extra={"user": serializers.serialize("python", [user])[0]},
+        )
         self.referencedatasetbookmark_set.filter(user=user).delete()
 
     def bookmark_count(self):
@@ -2666,18 +2692,30 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
 
     def toggle_bookmark(self, user):
         if self.user_has_bookmarked(user):
-            self.visualisationbookmark_set.filter(user=user).delete()
+            self.unset_bookmark(user)
         else:
-            self.visualisationbookmark_set.create(user=user)
+            self.set_bookmark(user)
 
     def set_bookmark(self, user):
         if self.user_has_bookmarked(user):
             return
+        log_event(
+            user,
+            EventLog.TYPE_DATASET_BOOKMARKED,
+            self,
+            extra={"user": serializers.serialize("python", [user])[0]},
+        )
         self.visualisationbookmark_set.create(user=user)
 
     def unset_bookmark(self, user):
         if not self.user_has_bookmarked(user):
             return
+        log_event(
+            user,
+            EventLog.TYPE_DATASET_UNBOOKMARKED,
+            self,
+            extra={"user": serializers.serialize("python", [user])[0]},
+        )
         self.visualisationbookmark_set.filter(user=user).delete()
 
     def bookmark_count(self):

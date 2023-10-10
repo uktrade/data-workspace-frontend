@@ -1175,6 +1175,14 @@ class DataGridDataView(DetailView):
             post_data["limit"] = min(post_data.get("limit", 100), 100)
             column_config = source.get_column_config()
 
+        if len(column_config) == 0:
+            log_event(
+                request.user,
+                EventLog.TYPE_USER_DATACUT_GRID_VIEW_FAILED,
+                source,
+                extra={"details": "Query to determine datacut columns failed to return any data"},
+            )
+
         original_query = source.get_data_grid_query()
         download_limit = source.data_grid_download_limit
         if download_limit is None:

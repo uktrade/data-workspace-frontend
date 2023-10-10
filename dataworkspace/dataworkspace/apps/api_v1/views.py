@@ -1,8 +1,10 @@
 import json
 import logging
 import re
+from datetime import datetime
 
 import gevent
+import pytz
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
@@ -204,8 +206,12 @@ def application_api_PATCH(request, public_host):
     if state != "RUNNING":
         return JsonResponse({}, status=400)
 
+    update_fields = ["state"]
     application_instance.state = state
-    application_instance.save(update_fields=["state"])
+    if application_instance.successfully_started_at is None:
+        update_fields.append("successfully_started_at")
+        application_instance.successfully_started_at = datetime.now().replace(tzinfo=pytz.UTC)
+    application_instance.save(update_fields=update_fields)
 
     return JsonResponse({}, status=200)
 
