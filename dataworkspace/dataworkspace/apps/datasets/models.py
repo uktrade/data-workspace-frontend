@@ -22,6 +22,7 @@ from ckeditor.fields import RichTextField
 from django import forms
 from django.apps import apps
 from django.core.cache import cache
+from django.core import serializers
 from django.db import (
     DatabaseError,
     models,
@@ -483,7 +484,7 @@ class DataSet(DeletableTimestampedUserModel):
             user,
             EventLog.TYPE_DATASET_BOOKMARKED,
             self,
-            extra={"user": user},
+            extra={"user": serializers.serialize("python", [user])[0]},
         )
         self.datasetbookmark_set.create(user=user)
 
@@ -494,7 +495,7 @@ class DataSet(DeletableTimestampedUserModel):
             user,
             EventLog.TYPE_DATASET_UNBOOKMARKED,
             self,
-            extra={"user": user},
+            extra={"user": serializers.serialize("python", [user])[0]},
         )
         self.datasetbookmark_set.filter(user=user).delete()
 
@@ -1929,7 +1930,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             user,
             EventLog.TYPE_DATASET_BOOKMARKED,
             self,
-            extra={"user": user},
+            extra={"user": serializers.serialize("python", [user])[0]},
         )
         self.referencedatasetbookmark_set.create(user=user)
 
@@ -1940,7 +1941,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             user,
             EventLog.TYPE_DATASET_UNBOOKMARKED,
             self,
-            extra={"user": user},
+            extra={"user": serializers.serialize("python", [user])[0]},
         )
         self.referencedatasetbookmark_set.filter(user=user).delete()
 
@@ -2702,7 +2703,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
             user,
             EventLog.TYPE_DATASET_BOOKMARKED,
             self,
-            extra={"user": user},
+            extra={"user": serializers.serialize("python", [user])[0]},
         )
         self.visualisationbookmark_set.create(user=user)
 
@@ -2713,7 +2714,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
             user,
             EventLog.TYPE_DATASET_UNBOOKMARKED,
             self,
-            extra={"user": user},
+            extra={"user": serializers.serialize("python", [user])[0]},
         )
         self.visualisationbookmark_set.filter(user=user).delete()
 
