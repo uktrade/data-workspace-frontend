@@ -10,7 +10,8 @@ from django.contrib import messages
 from django.contrib.admin import helpers
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.core.exceptions import ValidationError
-from django.db.models import Avg, F, Func
+from django.db.models import Avg, F, Func, Value
+from django.db.models.functions import Concat
 from django.http import Http404, HttpResponseServerError, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -27,6 +28,7 @@ from dataworkspace.apps.datasets.models import (
     DataSet,
     ReferenceDatasetUploadLog,
     ReferenceDatasetUploadLogRecord,
+    SourceTable,
 )
 from dataworkspace.apps.dw_admin.forms import (
     ReferenceDataRowDeleteForm,
@@ -36,6 +38,7 @@ from dataworkspace.apps.dw_admin.forms import (
     clean_identifier,
 )
 from dataworkspace.apps.eventlog.models import EventLog
+from dataworkspace.datasets_db import get_all_source_tables
 
 
 class ReferenceDataRecordMixin(UserPassesTestMixin):
@@ -459,5 +462,15 @@ class DataWorkspaceStatsView(UserPassesTestMixin, TemplateView):
         ctx["notifications_sent_today"] = Notification.objects.filter(
             created_date__gte=datetime.now().date()
         ).count()
+
+        # Source tables that don't exist in the datasets db
+        try:
+            ctx["num_missing_dataset_source_tables"] = (
+                SourceTable.objects.filter(dataset__published=True, dataset__deleted=False)
+                .annotate(full_table_name=Concat("schema", Value("."), "table"))
+                .exclude(full_table_name__in=get_all_source_tables())
+            ).count()
+        except Exception:  # pylint: disable=broad-except
+            ctx["num_missing_dataset_source_tables"] = "Unknown"
 
         return ctx

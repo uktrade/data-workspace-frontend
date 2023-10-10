@@ -1,5 +1,5 @@
 {% extends "admin/base_site.html" %}
-{% load static explorer_tags %}
+{% load static explorer_tags admin_urls %}
 
 {% block extrastyle %}
   {{ block.super }}
@@ -44,7 +44,10 @@
     .stats-container > .stat h3 {
       padding-top: 0;
     }
-
+    .stats-container .stat a, .stats-container .stat a:hover, .stats-container .stat a:visited {
+      text-decoration: none;
+      color: inherit;
+    }
   </style>
 {% endblock %}
 {% block breadcrumbs %}
@@ -54,28 +57,44 @@
   </div>
 {% endblock breadcrumbs %}
 {% block content %}
+  {% url 'admin:eventlog_eventlog_changelist' as eventlog_url %}
   <div class="content-main">
     <h1>Data Workspace Stats</h1>
     <div class="stats-container">
       {% if currently_running_tools is not None %}
         <div class="stat">
-          <h2>Currently running tools</h2>
-          <h1>{{ currently_running_tools }}</h1>
-          <h3>As of {% now "d/m/y H:i" %}</h3>
+          <a
+            target="_blank"
+            href="{% url 'admin:applications_applicationinstance_changelist' %}?state__exact=RUNNING"
+          >
+            <h2>Currently running tools</h2>
+            <h1>{{ currently_running_tools }}</h1>
+            <h3>As of {% now "d/m/y H:i" %}</h3>
+          </a>
         </div>
       {% endif %}
       {% if failed_tools_24_hours is not None %}
         <div class="stat{% if failed_tools_24_hours > 0 %} bad-news{% endif %}">
-          <h2>Tools failed to start</h2>
-          <h1>{{ failed_tools_24_hours }}</h1>
-          <h3>In the past 24 hours</h3>
+          <a
+            target="_blank"
+            href="{{ eventlog_url }}?event_type__exact={{ eventlog_model.TYPE_USER_TOOL_FAILED }}"
+          >
+            <h2>Tools failed to start</h2>
+            <h1>{{ failed_tools_24_hours }}</h1>
+            <h3>In the past 24 hours</h3>
+          </a>
         </div>
       {% endif %}
       {% if oldest_running_tool_since is not None %}
         <div class="stat">
-          <h2>Oldest running tool</h2>
-          <h1>{{ oldest_running_tool_since }}</h1>
-          <h3>Started: {{ oldest_running_tool_date|date:"d/m/y H:i" }}</h3>
+          <a
+            target="_blank"
+            href="{% url 'admin:applications_applicationinstance_changelist' %}?o=3&state__exact=RUNNING"
+          >
+            <h2>Oldest running tool</h2>
+            <h1>{{ oldest_running_tool_since }}</h1>
+            <h3>Started: {{ oldest_running_tool_date|date:"d/m/y H:i" }}</h3>
+          </a>
         </div>
       {% endif %}
       {% if tool_start_duration_7_days is not None %}
@@ -87,16 +106,33 @@
       {% endif %}
       {% if data_grid_timeouts_24_hours is not None %}
         <div class="stat{% if data_grid_timeouts_24_hours > 0 %} bad-news{% endif %}">
-          <h2>Data grid timeouts (504)</h2>
-          <h1>{{ data_grid_timeouts_24_hours }}</h1>
-          <h3>In the past 24 hours</h3>
+          <a
+            target="_blank"
+            href="{{ eventlog_url }}?event_type__exact={{ eventlog_model.TYPE_DATA_PREVIEW_TIMEOUT }}"
+          >
+            <h2>Data grid timeouts (504)</h2>
+            <h1>{{ data_grid_timeouts_24_hours }}</h1>
+            <h3>In the past 24 hours</h3>
+          </a>
         </div>
       {% endif %}
       {% if datacut_grid_errors_24_hours is not None %}
         <div class="stat{% if datacut_grid_errors_24_hours > 0 %} bad-news{% endif %}">
-          <h2>Data grid query failures (500)</h2>
-          <h1>{{ datacut_grid_errors_24_hours }}</h1>
-          <h3>In the past 24 hours</h3>
+          <a
+            target="_blank"
+            href="{{ eventlog_url }}?event_type__exact={{ eventlog_model.TYPE_USER_DATACUT_GRID_VIEW_FAILED }}"
+          >
+            <h2>Data grid query failures (500)</h2>
+            <h1>{{ datacut_grid_errors_24_hours }}</h1>
+            <h3>In the past 24 hours</h3>
+          </a>
+        </div>
+      {% endif %}
+      {% if num_missing_dataset_source_tables is not None %}
+        <div class="stat{% if num_missing_dataset_source_tables > 0 %} bad-news{% endif %}">
+          <h2>Missing source tables</h2>
+          <h1>{{ num_missing_dataset_source_tables }}</h1>
+          <h3>{{ num_missing_dataset_source_tables }} table{{ num_missing_dataset_source_tables|pluralize }} missing from the DB</h3>
         </div>
       {% endif %}
       {% if notifications_sent_today is not None %}

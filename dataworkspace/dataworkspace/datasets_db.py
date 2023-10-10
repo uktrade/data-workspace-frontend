@@ -6,6 +6,7 @@ from typing import Tuple
 
 import pglast
 import psycopg2
+from psycopg2 import sql
 from psycopg2.sql import Literal, SQL
 import pytz
 from django.conf import settings
@@ -362,3 +363,28 @@ def get_latest_row_count_for_query(query):
             return None
         result = cursor.fetchone()
         return result[0] if result else None
+
+
+def get_all_source_tables():
+    """
+    Returns a list of all source tables in the datasets db.
+    """
+    db_conf = list(settings.DATABASES_DATA.items())[0][1]
+    with psycopg2.connect(
+        f"""
+        host={db_conf["HOST"]} port={db_conf["PORT"]}
+        dbname={db_conf["NAME"]} user={db_conf["USER"]}
+        password={db_conf["PASSWORD"]} sslmode=require
+        """,
+        options="-c idle_in_transaction_session_timeout=5s -c statement_timeout=5s",
+    ) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                sql.SQL(
+                    """
+                    SELECT table_schema || '.' || table_name FROM information_schema.tables
+                    WHERE table_schema NOT IN ('information_schema', 'pg_catalog', 'pg_toast')
+                    """
+                )
+            )
+            return [x[0] for x in cur.fetchall()]
