@@ -99,6 +99,13 @@
           <h3>In the past 24 hours</h3>
         </div>
       {% endif %}
+      {% if num_missing_dataset_source_tables is not None %}
+        <div class="stat{% if num_missing_dataset_source_tables > 0 %} bad-news{% endif %}">
+          <h2>Missing source tables</h2>
+          <h1>{{ num_missing_dataset_source_tables }}</h1>
+          <h3>{{ num_missing_dataset_source_tables }} table{{ num_missing_dataset_source_tables|pluralize }} missing from the DB</h3>
+        </div>
+      {% endif %}
       {% if notifications_sent_today is not None %}
         <div class="stat">
           <h2>Dataset notifications sent</h2>
