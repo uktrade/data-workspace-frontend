@@ -256,6 +256,9 @@ class ApplicationInstance(TimeStampedModel):
 
     commit_id = models.CharField(null=True, max_length=8)
 
+    # Used to log how long it takes from spawner start to the app being available
+    successfully_started_at = models.DateTimeField(null=True)
+
     class Meta:
         db_table = "app_applicationinstance"
         indexes = [
