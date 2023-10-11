@@ -408,11 +408,12 @@ class DataWorkspaceStatsView(UserPassesTestMixin, TemplateView):
         events_last_24_hours = EventLog.objects.filter(
             timestamp__gte=datetime.now() - timedelta(hours=24),
         )
-        running_tools = ApplicationInstance.objects.filter(
-            application_template__application_type="TOOL", state="RUNNING"
-        )
-        tool_instances_last_7_days = ApplicationInstance.objects.filter(
+        all_tools = ApplicationInstance.objects.filter(
             application_template__application_type="TOOL",
+            application_template__include_in_dw_stats=True,
+        )
+        running_tools = all_tools.filter(state="RUNNING")
+        tool_instances_last_7_days = all_tools.filter(
             spawner_created_at__gte=datetime.now() - timedelta(days=7),
         )
 

@@ -117,6 +117,8 @@ class ApplicationTemplate(TimeStampedModel):
         default="Data Analysis Tools",
     )
 
+    include_in_dw_stats = models.BooleanField(default=False)
+
     class Meta:
         db_table = "app_applicationtemplate"
         indexes = [

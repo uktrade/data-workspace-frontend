@@ -521,6 +521,19 @@ class DatasetDetailView(DetailView):
             for datacut_link in datacut_links
         ]
 
+        # If one or more queries to generate source columns failed raise an event
+        for link_info in datacut_links_info:
+            if link_info.columns is not None and len(link_info.columns) == 0:
+                log_event(
+                    self.request.user,
+                    EventLog.TYPE_USER_DATACUT_GRID_VIEW_FAILED,
+                    self.object,
+                    extra={
+                        "details": "Query to determine datacut columns failed to return any data"
+                    },
+                )
+                break
+
         subscription = self.object.subscriptions.filter(user=self.request.user)
 
         ctx.update(

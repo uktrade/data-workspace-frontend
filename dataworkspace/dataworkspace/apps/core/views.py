@@ -123,16 +123,17 @@ def public_error_500_html_view(request):
 
 def public_error_500_application_view(request):
     application = ApplicationInstance.objects.get(pk=request.GET.get("application_id"))
-    log_event(
-        request.user,
-        EventLog.TYPE_USER_TOOL_FAILED,
-        application,
-        extra={
-            "tool": application.application_template.nice_name,
-            "started": application.spawner_created_at,
-            "failure_message": request.GET.get("failure_message", None),
-        },
-    )
+    if application.application_template.include_in_dw_stats:
+        log_event(
+            request.user,
+            EventLog.TYPE_USER_TOOL_FAILED,
+            application,
+            extra={
+                "tool": application.application_template.nice_name,
+                "started": application.spawner_created_at,
+                "failure_message": request.GET.get("failure_message", None),
+            },
+        )
     return render(
         request, "errors/error_500.html", {"message": request.GET.get("message", None)}, status=500
     )
