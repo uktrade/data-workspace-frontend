@@ -8,6 +8,8 @@ from dataworkspace.apps.core.errors import DjangoAdminPermissionDeniedError
 
 
 class DataWorkspaceAdminSite(admin.AdminSite):
+    index_template = "admin/admin_home.html"
+
     @never_cache
     def login(self, request, extra_context=None):
         """
