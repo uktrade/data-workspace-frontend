@@ -137,9 +137,14 @@
       {% endif %}
       {% if notifications_sent_today is not None %}
         <div class="stat">
-          <h2>Dataset notifications sent</h2>
-          <h1>{{ notifications_sent_today }}</h1>
-          <h3>Today</h3>
+          <a
+            target="_blank"
+            href="{{ eventlog_url }}?event_type__exact={{ eventlog_model.TYPE_DATASET_NOTIFICATION_SENT_TO_USER }}"
+          >
+            <h2>Dataset notifications sent</h2>
+            <h1>{{ notifications_sent_today }}</h1>
+            <h3>Today</h3>
+          </a>
         </div>
       {% endif %}
     </div>

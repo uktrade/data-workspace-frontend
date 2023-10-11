@@ -43,6 +43,7 @@ from dataworkspace.apps.datasets.models import (
     VisualisationLinkSqlQuery,
 )
 from dataworkspace.apps.eventlog.models import EventLog
+from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.cel import celery_app
 from dataworkspace.datasets_db import (
     extract_queried_tables_from_sql_query,
@@ -1106,6 +1107,13 @@ def send_notification_emails():
                     else:
                         user_notification.email_id = email_id
                         user_notification.save(update_fields=["email_id"])
+                        log_event(
+                            user_notification.subscription.user,
+                            EventLog.TYPE_DATASET_NOTIFICATION_SENT_TO_USER,
+                            user_notification.notification.related_object,
+                            extra={"summary": change["summary"]},
+                        )
+
             except IntegrityError as e:
                 logger.error(
                     "send_notification_emails: Exception when sending notifications: %s", e
