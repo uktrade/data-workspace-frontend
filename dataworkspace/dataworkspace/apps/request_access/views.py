@@ -6,7 +6,7 @@ from django.views.generic import CreateView, UpdateView, DetailView
 
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.datasets.constants import DataSetType
-from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
+from dataworkspace.apps.datasets.models import DataSet, VisualisationCatalogueItem
 from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -179,7 +179,6 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
                 if access_request.catalogue_item_id
                 else None
             )
-
             if (
                 isinstance(catalogue_item, VisualisationCatalogueItem)
                 and catalogue_item.visualisation_template is not None
@@ -190,6 +189,26 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
                         access_request,
                         catalogue_item,
                     )
+                )
+            elif (
+                isinstance(catalogue_item, DataSet)
+                and catalogue_item.request_approvers is not None
+                and len(catalogue_item.request_approvers) > 0
+            ):
+                access_request.zendesk_reference_number = zendesk.notify_dataset_access_request(
+                    request,
+                    access_request,
+                    catalogue_item,
+                )
+            elif (
+                isinstance(catalogue_item, VisualisationCatalogueItem)
+                and catalogue_item.request_approvers is not None
+                and len(catalogue_item.request_approvers) > 0
+            ):
+                access_request.zendesk_reference_number = zendesk.notify_dataset_access_request(
+                    request,
+                    access_request,
+                    catalogue_item,
                 )
             else:
                 access_request.zendesk_reference_number = zendesk.create_zendesk_ticket(

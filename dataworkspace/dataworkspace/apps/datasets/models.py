@@ -296,6 +296,7 @@ class DataSet(DeletableTimestampedUserModel):
         default=list,
         help_text="Comma-separated list of domain names without spaces, e.g trade.gov.uk,fco.gov.uk",
     )
+    request_approvers = ArrayField(models.CharField(max_length=256), null=True)
     search_vector_english = SearchVectorField(null=True, blank=True)
     search_vector_english_name = SearchVectorField(null=True, blank=True)
     search_vector_english_short_description = SearchVectorField(null=True, blank=True)
@@ -2584,6 +2585,8 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         default=list,
         help_text="Comma-separated list of domain names without spaces, e.g trade.gov.uk,fco.gov.uk",
     )
+
+    request_approvers = ArrayField(models.CharField(max_length=256), null=True)
 
     licence_url = models.CharField(
         null=True, blank=True, max_length=1024, help_text="Link to license (optional)"

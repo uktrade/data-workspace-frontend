@@ -484,6 +484,7 @@ def clean_identifier(form):
 class BaseDatasetForm(AutoCompleteUserFieldsMixin, forms.ModelForm):
     type = forms.HiddenInput()
     eligibility_criteria = DynamicArrayField(base_field=forms.CharField(), required=False)
+    request_approvers = DynamicArrayField(base_field=forms.CharField(), required=False)
     authorized_users = forms.ModelMultipleChoiceField(
         required=False,
         widget=FilteredSelectMultiple("users", False),
@@ -682,6 +683,7 @@ class SourceTableForm(forms.ModelForm):
 
 class VisualisationCatalogueItemForm(AutoCompleteUserFieldsMixin, forms.ModelForm):
     eligibility_criteria = DynamicArrayField(base_field=forms.CharField(), required=False)
+    request_approvers = DynamicArrayField(base_field=forms.CharField(), required=False)
     authorized_users = forms.ModelMultipleChoiceField(
         required=False,
         widget=FilteredSelectMultiple("users", False),

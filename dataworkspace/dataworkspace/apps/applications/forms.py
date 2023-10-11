@@ -151,6 +151,23 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
         label="Eligibility criteria",
     )
 
+    request_approvers = DWSplitArrayField(
+        CharField(required=False),
+        widget=BulletListSplitArrayWidget(
+            label="Request Approvers",
+            input_prefix="Request Approvers prefix",
+            widget=GOVUKDesignSystemTextWidget(
+                label_is_heading=False,
+                extra_label_classes="govuk-visually-hidden",
+            ),
+            size=5,
+        ),
+        required=False,
+        size=5,
+        remove_trailing_nulls=True,
+        label="Request Approvers",
+    )
+
     class Meta:
         model = VisualisationCatalogueItem
         fields = [
@@ -168,6 +185,7 @@ class VisualisationsUICatalogueItemForm(GOVUKDesignSystemModelForm):
             "restrictions_on_usage",
             "user_access_type",
             "eligibility_criteria",
+            "request_approvers",
         ]
         widgets = {"retention_policy": Textarea, "restrictions_on_usage": Textarea}
 
