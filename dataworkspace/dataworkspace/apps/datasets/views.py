@@ -441,7 +441,8 @@ class DatasetDetailView(DetailView):
         source_tables = sorted(self.object.sourcetable_set.all(), key=lambda x: x.name)
 
         MasterDatasetInfo = namedtuple(
-            "MasterDatasetInfo", ("source_table", "code_snippets", "columns", "tools_links", "pipeline_info")
+            "MasterDatasetInfo",
+            ("source_table", "code_snippets", "columns", "tools_links", "pipeline_info"),
         )
         master_datasets_info = [
             MasterDatasetInfo(
