@@ -174,7 +174,6 @@
       </div>
     {% endif %}
   </div>
-  {{ tool_start_chart_data.items }}
   {% if tool_start_chart_data is not None %}
     <script src="{% static 'admin/js/vendor/chart.min.js' %}"></script>
     <script nonce="{{ request.csp_nonce }}">
