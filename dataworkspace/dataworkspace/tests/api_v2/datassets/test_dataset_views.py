@@ -59,7 +59,7 @@ def test_dataset_detail(client, user, dataset_factory):
     [
         factories.DatacutDataSetFactory,
         factories.MasterDataSetFactory,
-        factories.MasterDataSetFactory,
+        factories.ReferenceDatasetFactory,
         factories.VisualisationCatalogueItemFactory,
     ],
 )
@@ -80,6 +80,10 @@ def test_dataset_stats(client, user, dataset_factory):
     for _ in range(num_collections):
         if dataset.type == DataSetType.VISUALISATION:
             factories.CollectionFactory().visualisation_catalogue_items.add(dataset)
+        elif dataset.type == DataSetType.REFERENCE:
+            factories.CollectionFactory().datasets.add(
+                dataset.reference_dataset_inheriting_from_dataset
+            )
         else:
             factories.CollectionFactory().datasets.add(dataset)
 

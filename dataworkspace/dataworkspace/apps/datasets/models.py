@@ -547,6 +547,9 @@ class DataSet(DeletableTimestampedUserModel):
     def get_usage_history_url(self):
         return reverse("datasets:usage_history", args=(self.id,))
 
+    def get_stats_url(self):
+        return reverse("api-v2:datasets:dataset-stats", args=(self.id,))
+
     def get_related_source(self, source_id):
         for related_object in self.related_objects():
             if str(related_object.id) == str(source_id):
@@ -1918,6 +1921,9 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     def get_admin_edit_url(self):
         return reverse("admin:datasets_referencedataset_change", args=(self.id,))
 
+    def get_stats_url(self):
+        return reverse("api-v2:datasets:reference-stats", args=(self.id,))
+
     @staticmethod
     def get_type_display():
         """
@@ -2630,6 +2636,9 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
 
     def get_absolute_url(self):
         return "{}#{}".format(reverse("datasets:dataset_detail", args=(self.id,)), self.slug)
+
+    def get_stats_url(self):
+        return reverse("api-v2:datasets:visualisation-stats", args=(self.id,))
 
     def update_published_and_updated_timestamps(self):
         if not self.published:
