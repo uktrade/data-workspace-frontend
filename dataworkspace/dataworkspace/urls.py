@@ -160,6 +160,10 @@ urlpatterns = [
         include(("dataworkspace.apps.api_v1.urls", "api_v1"), namespace="api-v1"),
     ),
     path(
+        "api/v2/",
+        include(("dataworkspace.apps.api_v2.urls", "api_v2"), namespace="api-v2"),
+    ),
+    path(
         "admin/",
         include(("dataworkspace.apps.dw_admin.urls", "dw_admin"), namespace="dw-admin"),
     ),

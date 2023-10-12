@@ -81,8 +81,10 @@ from dataworkspace.apps.your_files.models import UploadedTable
 from dataworkspace.datasets_db import (
     get_columns,
     get_earliest_tables_last_updated_date,
+    get_last_run_state_for_pipeline,
     get_latest_row_count_for_query,
     get_latest_row_count_for_table,
+    get_pipeline_id_for_source_table,
 )
 
 
@@ -546,6 +548,9 @@ class DataSet(DeletableTimestampedUserModel):
     def get_usage_history_url(self):
         return reverse("datasets:usage_history", args=(self.id,))
 
+    def get_stats_url(self):
+        return reverse("api-v2:datasets:dataset-stats", args=(self.id,))
+
     def get_related_source(self, source_id):
         for related_object in self.related_objects():
             if str(related_object.id) == str(source_id):
@@ -875,6 +880,15 @@ class SourceTable(BaseSource):
 
     def get_save_grid_view_url(self):
         return reverse("datasets:source_table_save_grid_view", args=(self.id,))
+
+    def get_metadata_pipeline_name(self):
+        return get_pipeline_id_for_source_table(self)
+
+    def get_pipeline_last_run_state(self):
+        pipeline_name = self.get_metadata_pipeline_name()
+        if pipeline_name is None:
+            return None
+        return get_last_run_state_for_pipeline(pipeline_name)
 
 
 class SourceTableFieldDefinition(models.Model):
@@ -1908,6 +1922,9 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     def get_admin_edit_url(self):
         return reverse("admin:datasets_referencedataset_change", args=(self.id,))
 
+    def get_stats_url(self):
+        return reverse("api-v2:datasets:reference-stats", args=(self.id,))
+
     @staticmethod
     def get_type_display():
         """
@@ -2622,6 +2639,9 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
 
     def get_absolute_url(self):
         return "{}#{}".format(reverse("datasets:dataset_detail", args=(self.id,)), self.slug)
+
+    def get_stats_url(self):
+        return reverse("api-v2:datasets:visualisation-stats", args=(self.id,))
 
     def update_published_and_updated_timestamps(self):
         if not self.published:

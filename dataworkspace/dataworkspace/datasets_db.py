@@ -388,3 +388,69 @@ def get_all_source_tables():
                 )
             )
             return [x[0] for x in cur.fetchall()]
+
+
+def get_pipeline_id_for_source_table(source_table):
+    with connections[source_table.database.memorable_name].cursor() as cursor:
+        try:
+            cursor.execute(
+                SQL(
+                    """
+                  WITH metadata AS (
+                        SELECT *
+                        FROM dataflow.metadata
+                        where table_schema = {}
+                        and table_name = {}
+                        and pipeline_name is not null
+                    )
+                    SELECT pipeline_name
+                    FROM metadata
+                    WHERE metadata.source_data_modified_utc = (
+                        SELECT MAX(source_data_modified_utc)
+                        FROM metadata
+                    );
+                    """
+                ).format(
+                    Literal(DataSetType.DATACUT),
+                    Literal(source_table.schema),
+                    Literal(source_table.table),
+                )
+            )
+        except Exception:  # pylint: disable=broad-except
+            logger.error("Failed to get pipeline id for table", exc_info=True)
+            return None
+        result = cursor.fetchone()
+        return result[0] if result else None
+
+
+def get_last_run_state_for_pipeline(pipeline_name):
+    with connections[list(settings.DATABASES_DATA.items())[0][0]].cursor() as cursor:
+        try:
+            cursor.execute(
+                SQL(
+                    """
+                    WITH dag_runs AS (
+                        SELECT *
+                        FROM dataflow.pipeline_dag_runs_v2
+                        WHERE pipeline_name = {}
+                        AND pipeline_active = 'active'
+                    )
+                    SELECT final_state
+                    FROM dag_runs
+                    WHERE dag_runs.run_end_date = (
+                        SELECT MAX(run_end_date)
+                        FROM dag_runs
+                    );
+                    """
+                ).format(
+                    Literal(DataSetType.DATACUT),
+                    Literal(pipeline_name),
+                )
+            )
+        except Exception:  # pylint: disable=broad-except
+            logger.error(
+                "Failed to get last run state for pipeline %s", pipeline_name, exc_info=True
+            )
+            return None
+        result = cursor.fetchone()
+        return result[0] if result else None
