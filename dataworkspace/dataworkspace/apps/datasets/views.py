@@ -433,7 +433,9 @@ class DatasetDetailView(DetailView):
 
     def _get_pipeline_info(self, source_table):
         last_success_date = get_pipeline_last_success_date(source_table)
-        return abs((last_success_date - datetime.now()).days)
+        if last_success_date:
+            return abs((last_success_date - datetime.now()).days)
+        return 0
 
     def _get_context_data_for_master_dataset(self, ctx, **kwargs):
         source_tables = sorted(self.object.sourcetable_set.all(), key=lambda x: x.name)
