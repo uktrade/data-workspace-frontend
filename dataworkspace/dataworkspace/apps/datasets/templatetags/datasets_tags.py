@@ -168,3 +168,8 @@ def saved_grid_config(user, source):
         ).grid_config()
     except UserDataTableView.DoesNotExist:
         return {}
+
+
+@register.filter
+def timedelta_to_minutes(td):
+    return round(td.total_seconds() / 60, 2)
