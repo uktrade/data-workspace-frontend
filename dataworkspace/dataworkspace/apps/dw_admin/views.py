@@ -3,15 +3,17 @@ import os
 from datetime import datetime, timedelta
 
 from botocore.exceptions import ClientError
+from dateutil.rrule import DAILY, rrule
 
 from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin import helpers
 from django.contrib.auth.mixins import UserPassesTestMixin
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db.models import Avg, F, Func, Value
-from django.db.models.functions import Concat
+from django.db.models.functions import Concat, TruncDate
 from django.http import Http404, HttpResponseServerError, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -410,10 +412,10 @@ class DataWorkspaceStatsView(UserPassesTestMixin, TemplateView):
         )
         all_tools = ApplicationInstance.objects.filter(
             application_template__application_type="TOOL",
-            application_template__include_in_dw_stats=True,
         )
         running_tools = all_tools.filter(state="RUNNING")
         tool_instances_last_7_days = all_tools.filter(
+            application_template__include_in_dw_stats=True,
             spawner_created_at__gte=datetime.now() - timedelta(days=7),
         )
 
@@ -450,6 +452,23 @@ class DataWorkspaceStatsView(UserPassesTestMixin, TemplateView):
                 * 1000
             )
 
+            # Tool start time chart data
+            tool_start_chart_data = {
+                x["date"]: x["start_duration__avg"]
+                for x in logged_tool_instances.annotate(
+                    start_duration=Func(
+                        F("successfully_started_at"), F("spawner_created_at"), function="age"
+                    )
+                )
+                .values(date=TruncDate("successfully_started_at"))
+                .annotate(Avg("start_duration"))
+                .values("date", "start_duration__avg")
+            }
+            for day in rrule(freq=DAILY, count=7, dtstart=datetime.today() - timedelta(days=6)):
+                if day.date() not in tool_start_chart_data:
+                    tool_start_chart_data[day.date()] = timedelta()
+            ctx["tool_start_chart_data"] = sorted(tool_start_chart_data.items())
+
         # Grid timeouts
         ctx["data_grid_timeouts_24_hours"] = events_last_24_hours.filter(
             event_type=EventLog.TYPE_DATA_PREVIEW_TIMEOUT,
@@ -466,13 +485,21 @@ class DataWorkspaceStatsView(UserPassesTestMixin, TemplateView):
         ).count()
 
         # Source tables that don't exist in the datasets db
-        try:
-            ctx["num_missing_dataset_source_tables"] = (
-                SourceTable.objects.filter(dataset__published=True, dataset__deleted=False)
-                .annotate(full_table_name=Concat("schema", Value("."), "table"))
-                .exclude(full_table_name__in=get_all_source_tables())
-            ).count()
-        except Exception:  # pylint: disable=broad-except
-            ctx["num_missing_dataset_source_tables"] = "Unknown"
+        ctx["num_missing_dataset_source_tables"] = cache.get("stats_missing_source_tables")
+        if ctx["num_missing_dataset_source_tables"] is None:
+            try:
+                ctx["num_missing_dataset_source_tables"] = (
+                    SourceTable.objects.filter(dataset__published=True, dataset__deleted=False)
+                    .annotate(full_table_name=Concat("schema", Value("."), "table"))
+                    .exclude(full_table_name__in=get_all_source_tables())
+                ).count()
+            except Exception:  # pylint: disable=broad-except
+                ctx["num_missing_dataset_source_tables"] = "Error!"
+            else:
+                cache.set(
+                    "stats_missing_source_tables",
+                    ctx["num_missing_dataset_source_tables"],
+                    timeout=3600,
+                )
 
         return ctx

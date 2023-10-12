@@ -1,5 +1,5 @@
 {% extends "admin/base_site.html" %}
-{% load static explorer_tags admin_urls %}
+{% load static explorer_tags datasets_tags %}
 
 {% block extrastyle %}
   {{ block.super }}
@@ -10,6 +10,7 @@
       grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       grid-auto-rows: 240px;
       grid-auto-flow: dense;
+      margin-bottom: 40px;
     }
     .stats-container .stat.bad-news {
       background: var(--message-error-bg);
@@ -47,6 +48,22 @@
     .stats-container .stat a, .stats-container .stat a:hover, .stats-container .stat a:visited {
       text-decoration: none;
       color: inherit;
+    }
+    .chart-container {
+      display: grid;
+      grid-gap: 40px 60px;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      grid-auto-rows: 500px;
+      grid-auto-flow: row;
+      margin-bottom: 40px;
+    }
+    .chart-container .chart {
+      min-height:500px;
+      width:100%;
+    }
+    canvas {
+      background-color: var(--darkened-bg);
+      padding: 10px;
     }
   </style>
 {% endblock %}
@@ -148,5 +165,58 @@
         </div>
       {% endif %}
     </div>
+    {% if tool_start_chart_data is not None %}
+      <h1>Tool start times</h1>
+      <div class="chart-container">
+        <div class="chart">
+          <canvas id="tool-start-times-chart"></canvas>
+        </div>
+      </div>
+    {% endif %}
   </div>
+  {% if tool_start_chart_data is not None %}
+    <script src="{% static 'admin/js/vendor/chart.min.js' %}"></script>
+    <script nonce="{{ request.csp_nonce }}">
+      const ctx = document.getElementById('tool-start-times-chart');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [
+            {% for point in tool_start_chart_data %}
+              "{{ point.0|date:'D, j M' }}",
+            {% endfor %}
+          ],
+          datasets: [{
+            label: 'Average start time (minutes)',
+            data: [
+              {% for point in tool_start_chart_data %}
+                {{ point.1|timedelta_to_minutes }},
+              {% endfor %}
+            ],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          },
+          plugins: {
+            title: {
+                display: true,
+                text: 'Average tool start time for the past 7 days'
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `${context.formattedValue} minutes`;
+                }
+              }
+            }
+          }
+        }
+      });
+    </script>
+  {% endif %}
 {% endblock %}
