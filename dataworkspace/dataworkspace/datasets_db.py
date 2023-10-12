@@ -454,4 +454,3 @@ def get_last_run_state_for_pipeline(pipeline_name):
             return None
         result = cursor.fetchone()
         return result[0] if result else None
-
