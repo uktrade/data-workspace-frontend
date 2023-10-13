@@ -303,33 +303,34 @@ def get_changelog_from_metadata_rows(rows):
     return list(reversed(changelog))
 
 
-def get_pipeline_last_success_date(table):
-    with connections[table.database.memorable_name].cursor() as cursor:
+def get_pipeline_last_success_date(pipeline_name):
+    with connections[list(settings.DATABASES_DATA.items())[0][0]].cursor() as cursor:
         try:
             cursor.execute(
                 SQL(
                     """
-                    SELECT last_success_of_day
-                    FROM dataflow.pipeline_dag_runs_v2
-                    WHERE dataflow.pipeline_dag_runs_v2.pipeline_name=(
-                        SELECT metadata.pipeline_name
-                            FROM dataflow.metadata
-                            WHERE table_schema={}
-                            AND table_name={}
-                            AND metadata.pipeline_name IS NOT NULL
-                        ORDER BY source_data_modified_utc DESC
-                        LIMIT 1
+                    WITH dag_runs AS (
+                        SELECT *
+                        FROM dataflow.pipeline_dag_runs_v2
+                        WHERE pipeline_name = {}
+                        AND pipeline_active = 'active'
                     )
-                    ORDER BY run_end_date DESC
-                    LIMIT 1
+                    SELECT last_success_of_day
+                    FROM dag_runs
+                    WHERE dag_runs.run_end_date = (
+                        SELECT MAX(run_end_date)
+                        FROM dag_runs
+                    );
                     """
                 ).format(
-                    Literal(table.schema),
-                    Literal(table.table),
+                    Literal(DataSetType.DATACUT),
+                    Literal(pipeline_name),
                 )
             )
         except Exception:  # pylint: disable=broad-except
-            logger.error("Failed to get pipeline status for table", exc_info=True)
+            logger.error(
+                "Failed to get last success date for pipeline %s", pipeline_name, exc_info=True
+            )
             return None
         result = cursor.fetchone()
         return result[0] if result else None
