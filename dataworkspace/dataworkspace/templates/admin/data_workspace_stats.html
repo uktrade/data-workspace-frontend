@@ -90,6 +90,18 @@
           </a>
         </div>
       {% endif %}
+      {% if tools_started_24_hours is not None %}
+        <div class="stat">
+          <a
+            target="_blank"
+            href="{% url 'admin:applications_applicationinstance_changelist' %}?state__exact=RUNNING"
+          >
+            <h2>Tools successfully started</h2>
+            <h1>{{ tools_started_24_hours }}</h1>
+            <h3>In the past 24 hours</h3>
+          </a>
+        </div>
+      {% endif %}
       {% if failed_tools_24_hours is not None %}
         <div class="stat{% if failed_tools_24_hours > 0 %} bad-news{% endif %}">
           <a
