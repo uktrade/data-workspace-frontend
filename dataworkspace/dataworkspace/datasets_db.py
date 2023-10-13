@@ -323,7 +323,7 @@ def get_pipeline_last_success_date(pipeline_name):
                     );
                     """
                 ).format(
-                    Literal(DataSetType.DATACUT),
+                    Literal(DataSetType.MASTER),
                     Literal(pipeline_name),
                 )
             )
