@@ -499,7 +499,7 @@ class DataWorkspaceStatsView(UserPassesTestMixin, TemplateView):
                 cache.set(
                     "stats_missing_source_tables",
                     ctx["num_missing_dataset_source_tables"],
-                    timeout=3600,
+                    timeout=timedelta(hours=6).total_seconds(),
                 )
 
         return ctx
