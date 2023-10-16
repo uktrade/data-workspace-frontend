@@ -1126,7 +1126,7 @@ class DataSourcesetDetailView(DetailView):
         )
         return ctx
 
-    def get_object(self):
+    def get_object(self, queryset=None):
         dataset = find_dataset(self.kwargs["dataset_uuid"], self.request.user)
         table_object = get_object_or_404(
             self.kwargs["model_class"],
