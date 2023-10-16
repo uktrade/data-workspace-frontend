@@ -1126,6 +1126,37 @@ class DataSourcesetDetailView(DetailView):
         )
         return ctx
 
+    def dispatch(self, request, *args, **kwargs):
+        source = self.get_object()
+        if not source.data_grid_enabled:
+            raise DatasetPreviewDisabledError(source.dataset)
+
+        if not source.dataset.user_has_access(self.request.user):
+            raise DatasetPermissionDenied(source.dataset)
+
+        log_event(
+            self.request.user,
+            EventLog.TYPE_DATA_TABLE_VIEW,
+            source,
+            extra={
+                "path": self.request.get_full_path(),
+                "data_table_name": source.name,
+                "data_table_id": source.id,
+                "dataset": source.dataset.name,
+                **(
+                    {"data_table_tablename": f"{source.schema}.{source.table}"}
+                    if hasattr(source, "schema")
+                    else {
+                        "data_table_sourcetables": [
+                            f"{s.schema}.{s.table}" for s in source.tables.all()
+                        ]
+                    }
+                ),
+            },
+        )
+
+        return super().dispatch(request, *args, **kwargs)
+
     def get_object(self, queryset=None):
         dataset = find_dataset(self.kwargs["dataset_uuid"], self.request.user)
         table_object = get_object_or_404(
