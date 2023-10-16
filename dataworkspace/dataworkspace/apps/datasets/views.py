@@ -924,6 +924,15 @@ class ReferenceDatasetColumnDetails(View):
 class ReferenceDatasetGridView(View):
     def get(self, request, dataset_uuid):
         dataset = find_dataset(dataset_uuid, request.user, ReferenceDataset)
+        code_snippets = get_code_snippets_for_reference_table(dataset)
+        columns = None
+        if dataset.external_database:
+            columns = datasets_db.get_columns(
+                dataset.external_database.memorable_name,
+                schema="public",
+                table=dataset.table_name,
+                include_types=True,
+            )
         log_event(
             self.request.user,
             EventLog.TYPE_DATA_TABLE_VIEW,
@@ -936,8 +945,12 @@ class ReferenceDatasetGridView(View):
         )
         return render(
             request,
-            "datasets/reference_dataset_grid.html",
-            context={"model": dataset},
+            "datasets/data-preview/reference_dataset_preview.html",
+            context={
+                "model": dataset,
+                "code_snippets": code_snippets,
+                "columns": columns,
+            },
         )
 
 
@@ -1089,8 +1102,62 @@ class DatasetUsageHistoryView(View):
         )
 
 
+class DataSourcesetDetailView(DetailView):
+    template_name = "datasets/data-preview/data_sourceset_preview.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["model"] = self.object
+        source_table = self.object.dataset.sourcetable_set.filter(id=self.object.id).first()
+        columns = datasets_db.get_columns(
+            source_table.database.memorable_name,
+            schema=source_table.schema,
+            table=source_table.table,
+            include_types=True,
+        )
+
+        ctx.update(
+            {
+                "has_access": self.object.dataset.user_has_access(self.request.user),
+                "tools_links": get_tools_links_for_user(self.request.user, self.request.scheme),
+                "code_snippets": get_code_snippets_for_table(source_table),
+                "columns": columns,
+            }
+        )
+        return ctx
+
+    def get_object(self):
+        dataset = find_dataset(self.kwargs["dataset_uuid"], self.request.user)
+        table_object = get_object_or_404(
+            self.kwargs["model_class"],
+            dataset=dataset,
+            pk=self.kwargs["object_id"],
+        )
+
+        return table_object
+
+
 class DataCutSourceDetailView(DetailView):
-    template_name = "datasets/data_cut_source_detail.html"
+    template_name = "datasets/data-preview/data_cut_source_preview.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["model"] = self.object
+        custom_queries = self.object.dataset.customdatasetquery_set.all().prefetch_related(
+            "tables"
+        )
+
+        data_cut_info = custom_queries.filter(id=self.object.id).first()
+        code_snippet = get_code_snippets_for_query(data_cut_info.query)
+
+        ctx.update(
+            {
+                "has_access": self.object.dataset.user_has_access(self.request.user),
+                "tools_links": get_tools_links_for_user(self.request.user, self.request.scheme),
+                "code_snippets": code_snippet,
+            }
+        )
+        return ctx
 
     def dispatch(self, request, *args, **kwargs):
         source = self.get_object()

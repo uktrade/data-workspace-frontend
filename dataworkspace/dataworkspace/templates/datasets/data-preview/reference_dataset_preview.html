@@ -74,7 +74,48 @@
         <span class="govuk-caption-xl">Data table (public.{{ model.table_name }})</span>
         <div class="govuk-grid-row">
           <div class="govuk-grid-column-full">      
-            <h2 class="govuk-heading-l govuk-!-margin-bottom-0">{{ model.name }} </h2>
+            <h2 class="govuk-heading-l">{{ model.name }} </h2>
+          </div>
+          <div class="govuk-grid-column-full">
+            {% if code_snippets or columns %}
+            {% if columns %}
+              <details class="govuk-details govuk"
+                       data-module="govuk-details">
+                <summary class="govuk-details__summary">
+                  <span class="govuk-details__summary-text">
+                    View data structure <span class="govuk-visually-hidden">for "{{ model.name }}"</span>
+                  </span>
+                </summary>
+                <div class="govuk-details__text">
+                  <ul class="govuk-list govuk-list--bullet">
+                    {% for column, data_type in columns|slice:":12" %}
+                      <li>
+                        <strong>{{ column }}</strong> ({{ data_type }})
+                      </li>
+                    {% endfor %}
+                    {% if columns|length > 12 %}
+                      <a class="govuk-link"
+                         href="{% url 'datasets:reference_dataset_column_details' dataset_uuid=model.uuid %}">
+                        View all columns <span class="govuk-visually-hidden">for "{{ model.name }}"</span>
+                      </a>
+                    {% endif %}
+                  </ul>
+                </div>
+              </details>
+            {% endif %}
+            {% if model.external_database %}
+              <details class="govuk-details govuk" data-module="govuk-details">
+                <summary class="govuk-details__summary">
+                  <span class="govuk-details__summary-text">
+                    Use this data <span class="govuk-visually-hidden">for "{{ model.name }}"</span>
+                  </span>
+                </summary>
+                <div class="govuk-details__text">
+                  {% include 'partials/code_snippets.html' with code_snippets=code_snippets %}
+                </div>
+              </details>
+            {% endif %}
+          {% endif %}
           </div>
           <div class="govuk-grid-column-full">
             <p class="govuk-body govuk-!-padding-top-0 govuk-!-padding-right-3 govuk-!-margin-bottom-2 govuk-!-text-align-right">

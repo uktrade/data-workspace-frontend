@@ -85,7 +85,27 @@
         </span>
         <div class="govuk-grid-row">
           <div class="govuk-grid-column-full">
-            <h2 class="govuk-heading-l govuk-!-margin-bottom-0">{{ object.name }} </h2>
+            <h2 class="govuk-heading-l">{{ object.name }}</h2>
+          </div>
+          <div class="govuk-grid-column-full">
+              {% if columns or code_snippets and has_access %}
+                {% if columns %}
+                  {% include "partials/column_list.html" with columns=columns dataset=dataset source=datacut_link %}
+                {% endif %}
+                {% if code_snippets and has_access %}
+                  <details class="govuk-details govuk-!-margin-bottom-2" data-module="govuk-details">
+                    <summary class="govuk-details__summary">
+                                <span class="govuk-details__summary-text">
+                                  Use this data for analysis<span
+                                  class="govuk-visually-hidden"> "{{ source_table.schema }}"."{{ source_table.table }}"</span>
+                                </span>
+                    </summary>
+                    <div class="govuk-details__text">
+                      {% include 'partials/code_snippets.html' with code_snippets=code_snippets source_table=datacut_link tools_links=tools_links %}
+                    </div>
+                  </details>
+                {% endif %}
+              {% endif %}
           </div>
           <div class="govuk-grid-column-full">
             <p class="govuk-body govuk-!-padding-top-0 govuk-!-padding-right-3 govuk-!-margin-bottom-2 govuk-!-text-align-right">
