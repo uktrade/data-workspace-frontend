@@ -85,6 +85,7 @@ from dataworkspace.datasets_db import (
     get_latest_row_count_for_query,
     get_latest_row_count_for_table,
     get_pipeline_id_for_source_table,
+    get_pipeline_last_success_date,
 )
 
 
@@ -889,6 +890,12 @@ class SourceTable(BaseSource):
         if pipeline_name is None:
             return None
         return get_last_run_state_for_pipeline(pipeline_name)
+
+    def get_pipeline_last_success_date(self):
+        pipeline_name = self.get_metadata_pipeline_name()
+        if pipeline_name is None:
+            return None
+        return get_pipeline_last_success_date(pipeline_name)
 
 
 class SourceTableFieldDefinition(models.Model):

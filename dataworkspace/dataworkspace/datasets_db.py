@@ -303,6 +303,39 @@ def get_changelog_from_metadata_rows(rows):
     return list(reversed(changelog))
 
 
+def get_pipeline_last_success_date(pipeline_name):
+    with connections[list(settings.DATABASES_DATA.items())[0][0]].cursor() as cursor:
+        try:
+            cursor.execute(
+                SQL(
+                    """
+                    WITH dag_runs AS (
+                        SELECT *
+                        FROM dataflow.pipeline_dag_runs_v2
+                        WHERE pipeline_name = {}
+                        AND pipeline_active = 'active'
+                    )
+                    SELECT last_success_of_day
+                    FROM dag_runs
+                    WHERE dag_runs.run_end_date = (
+                        SELECT MAX(run_end_date)
+                        FROM dag_runs
+                    );
+                    """
+                ).format(
+                    Literal(DataSetType.MASTER),
+                    Literal(pipeline_name),
+                )
+            )
+        except Exception:  # pylint: disable=broad-except
+            logger.error(
+                "Failed to get last success date for pipeline %s", pipeline_name, exc_info=True
+            )
+            return None
+        result = cursor.fetchone()
+        return result[0] if result else None
+
+
 def get_latest_row_count_for_table(table):
     with connections[table.database.memorable_name].cursor() as cursor:
         try:
