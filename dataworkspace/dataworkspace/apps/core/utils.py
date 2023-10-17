@@ -240,6 +240,14 @@ def new_private_database_credentials(
             db_role,
         )
         with connections[database_memorable_name].cursor() as cur:
+            # Get a list of all tables in the database
+            cur.execute(sql.SQL("SELECT table_schema, table_name FROM information_schema.tables"))
+            existing_db_tables = list(cur.fetchall())
+            logger.info(
+                "Found %d existing tables in the %s db",
+                len(existing_db_tables),
+                database_memorable_name,
+            )
             # Find existing permissions
             cur.execute(
                 sql.SQL(
@@ -284,23 +292,31 @@ def new_private_database_credentials(
                 (schema, table)
                 for (schema, table) in tables_with_existing_privs_set
                 if (schema, table) not in allowed_tables_that_exist_set
+                and (schema, table) in existing_db_tables
             ]
+            logger.info("Got %s tables to revoke for role %s", len(tables_to_revoke), db_role)
             tables_to_grant = [
                 (schema, table)
                 for (schema, table) in allowed_tables_that_exist
                 if (schema, table) not in tables_with_existing_privs_set
+                and (schema, table) in existing_db_tables
             ]
+            logger.info("Got %s tables to grant for role %s", len(tables_to_grant), db_role)
 
             schemas_to_revoke = [
                 schema
                 for schema in schemas_with_existing_privs
                 if schema not in allowed_schemas_that_exist_set
+                and schema in [x[0] for x in existing_db_tables]
             ]
+            logger.info("Got %s schemas to revoke for role %s", len(schemas_to_revoke), db_role)
             schemas_to_grant = [
                 schema
                 for schema in allowed_schemas_that_exist
                 if schema not in schemas_with_existing_privs_set
+                and schema in [x[0] for x in existing_db_tables]
             ]
+            logger.info("Got %s schemas to grant for role %s", len(schemas_to_grant), db_role)
 
             db_shared_roles_to_revoke = [
                 db_shared_role
