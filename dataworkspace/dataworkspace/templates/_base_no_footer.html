@@ -74,6 +74,8 @@
   <script nonce="{{ request.csp_nonce }}">
     window.GOVUKFrontend.initAll();
   </script>
+  <script src="{% static 'assets/vendor/highlight/highlight.pack.js' %}"></script>
+  <script nonce="{{ request.csp_nonce }}">hljs.initHighlightingOnLoad();</script>
 
   {% block footer_scripts %}
   {% endblock %}
