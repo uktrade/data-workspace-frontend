@@ -598,6 +598,7 @@ class DatasetDetailView(DetailView):
                 "DATA_GRID_REFERENCE_DATASET_FLAG": settings.DATA_GRID_REFERENCE_DATASET_FLAG,
                 "code_snippets": code_snippets,
                 "columns": columns,
+                "tools_links": get_tools_links_for_user(self.request.user, self.request.scheme),
                 "subscription": {
                     "current_user_is_subscribed": subscription.exists()
                     and subscription.first().is_active(),
@@ -950,6 +951,7 @@ class ReferenceDatasetGridView(View):
                 "model": dataset,
                 "code_snippets": code_snippets,
                 "columns": columns,
+                "tools_links": get_tools_links_for_user(self.request.user, self.request.scheme),
             },
         )
 
