@@ -1108,11 +1108,10 @@ class DataSourcesetDetailView(DetailView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["model"] = self.object
-        source_table = self.object.dataset.sourcetable_set.filter(id=self.object.id).first()
         columns = datasets_db.get_columns(
-            source_table.database.memorable_name,
-            schema=source_table.schema,
-            table=source_table.table,
+            self.object.database.memorable_name,
+            schema=self.object.schema,
+            table=self.object.table,
             include_types=True,
         )
 
@@ -1120,7 +1119,7 @@ class DataSourcesetDetailView(DetailView):
             {
                 "has_access": self.object.dataset.user_has_access(self.request.user),
                 "tools_links": get_tools_links_for_user(self.request.user, self.request.scheme),
-                "code_snippets": get_code_snippets_for_table(source_table),
+                "code_snippets": get_code_snippets_for_table(self.object),
                 "columns": columns,
             }
         )
@@ -1174,18 +1173,21 @@ class DataCutSourceDetailView(DetailView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["model"] = self.object
-        custom_queries = self.object.dataset.customdatasetquery_set.all().prefetch_related(
-            "tables"
-        )
 
-        data_cut_info = custom_queries.filter(id=self.object.id).first()
-        code_snippet = get_code_snippets_for_query(data_cut_info.query)
+        code_snippet = get_code_snippets_for_query(self.object.query)
+
+        columns = datasets_db.get_columns(
+            database_name=self.object.database.memorable_name,
+            query=self.object.query,
+            include_types=True,
+        )
 
         ctx.update(
             {
                 "has_access": self.object.dataset.user_has_access(self.request.user),
                 "tools_links": get_tools_links_for_user(self.request.user, self.request.scheme),
                 "code_snippets": code_snippet,
+                "columns": columns,
             }
         )
         return ctx
