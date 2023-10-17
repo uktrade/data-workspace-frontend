@@ -4,6 +4,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 
+from dataworkspace.apps.eventlog.constants import SystemStatLogEventType
+
 
 class EventLog(models.Model):
     TYPE_DATASET_SOURCE_LINK_DOWNLOAD = 1
@@ -139,3 +141,27 @@ class EventLog(models.Model):
             self.user.get_full_name(),  # pylint: disable=no-member
             self.get_event_type_display(),
         )
+
+
+class SystemEventLogManager(models.Manager):
+    def log_permissions_query_runtime(self, runtime, extra=None):
+        return SystemStatLog.objects.create(
+            type=SystemStatLogEventType.PERMISSIONS_QUERY_RUNTIME, stat=runtime, extra=extra
+        )
+
+
+class SystemStatLog(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    timestamp = models.DateTimeField(auto_now=True, db_index=True)
+    type = models.IntegerField(choices=SystemStatLogEventType.choices)
+    stat = models.FloatField(null=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.SET_NULL)
+    object_id = models.CharField(max_length=255, null=True)
+    related_object = GenericForeignKey("content_type", "object_id")
+    extra = models.JSONField(null=True, encoder=DjangoJSONEncoder)
+
+    objects = SystemEventLogManager()
+
+    class Meta:
+        ordering = ("-timestamp",)
+        get_latest_by = "timestamp"
