@@ -53,6 +53,7 @@ from dataworkspace.apps.datasets.models import (
     ReferenceDataset,
     AdminVisualisationUserPermission,
 )
+from dataworkspace.apps.eventlog.models import SystemStatLog
 from dataworkspace.cel import celery_app
 
 logger = logging.getLogger("app")
@@ -1572,17 +1573,16 @@ def legacy_table_permissions_for_role(db_role, db_schema, database_name):
                 """
             ).format(role=sql.Literal(db_role), schema=sql.Literal(db_schema))
         )
+        run_time = round(time.time() - start_time, 2)
+        SystemStatLog.objects.log_permissions_query_runtime(
+            run_time, extra={"role": db_role, "query_type": "information_schema", "legacy": True}
+        )
         logger.info(
             "table_perms: Querying table permissions for role %s took %s seconds",
             db_role,
-            round(time.time() - start_time, 2),
+            run_time,
         )
         tables_with_perms = cur.fetchall()
-        logger.info(
-            "table_perms: Permanent role %s has permissions for the following tables: %s",
-            db_role,
-            tables_with_perms,
-        )
         return tables_with_perms
 
 
@@ -1632,15 +1632,19 @@ def table_permissions_for_role(db_role, db_schema, database_name):
             ).format(role=sql.Literal(db_role))
         )
         tables_with_perms = cur.fetchall()
-    logger.info(
-        "table_perms: Querying table permissions for role %s took %s seconds",
-        db_role,
-        round(time.time() - start_time, 2),
+    run_time = round(time.time() - start_time, 2)
+    SystemStatLog.objects.log_permissions_query_runtime(
+        run_time,
+        extra={
+            "role": db_role,
+            "query_type": "pg_class"
+            if settings.USE_PG_CLASS_FOR_TABLE_PERMISSIONS
+            else "information_schema",
+            "legacy": False,
+        },
     )
     logger.info(
-        "table_perms: Permanent role %s has permissions for the following tables: %s",
-        db_role,
-        tables_with_perms,
+        "table_perms: Querying table permissions for role %s took %s seconds", db_role, run_time
     )
     cache.set(key, tables_with_perms, timeout=datetime.timedelta(days=7).total_seconds())
     return tables_with_perms
