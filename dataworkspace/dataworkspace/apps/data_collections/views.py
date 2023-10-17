@@ -70,6 +70,14 @@ def get_only_live_authorised_collections(request):
     )
 
 
+def get_editable_live_authorised_collections(request):
+    # Only admins or the collection owner can edit an "OPEN" collection
+    live_collections = get_only_live_authorised_collections(request)
+    if request.user.is_superuser:
+        return live_collections
+    return live_collections.filter(owner=request.user)
+
+
 def get_authorised_collection(request, collection_id):
     return get_object_or_404(get_authorised_collections(request), id=collection_id)
 
@@ -284,7 +292,8 @@ def select_collection_for_membership(
     request, dataset_class, membership_model_class, membership_model_relationship_name, dataset_id
 ):
     dataset = get_object_or_404(dataset_class.objects.live().filter(published=True), pk=dataset_id)
-    user_collections = get_only_live_authorised_collections(request)
+    user_collections = get_editable_live_authorised_collections(request)
+
     if request.method == "POST":
         form = SelectCollectionForMembershipForm(
             request.POST,

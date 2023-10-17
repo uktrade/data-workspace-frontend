@@ -319,6 +319,11 @@ def test_collection_selection_page(user, client):
         owner=user,
         deleted=True,
     )
+    c4 = factories.CollectionFactory.create(
+        name="test-collections-4",
+        description="test collections 4",
+        user_access_type=CollectionUserAccessType.REQUIRES_AUTHENTICATION,
+    )
     visualisation = factories.VisualisationCatalogueItemFactory(
         published=True, name="Visualisation catalogue item"
     )
@@ -332,6 +337,57 @@ def test_collection_selection_page(user, client):
     assert c1.name in response.content.decode(response.charset)
     assert c2.name in response.content.decode(response.charset)
     assert c3.name not in response.content.decode(response.charset)
+    # Open collections are not editable by non owner/admin users
+    assert c4.name not in response.content.decode(response.charset)
+
+
+def test_collection_selection_page_owner_user(user, client):
+    # Normal users can add to an open collection if they own it
+    c1 = factories.CollectionFactory.create(
+        name="test-collections-1",
+        description="test collections 1",
+        owner=user,
+    )
+    c2 = factories.CollectionFactory.create(
+        name="test-collections-2",
+        description="test collections 2",
+        owner=user,
+        user_access_type=CollectionUserAccessType.REQUIRES_AUTHENTICATION,
+    )
+    response = client.get(
+        reverse(
+            "data_collections:visualisation_select_collection_for_membership",
+            kwargs={
+                "dataset_id": factories.VisualisationCatalogueItemFactory(
+                    published=True, name="Visualisation catalogue item"
+                ).id
+            },
+        )
+    )
+    assert response.status_code == 200
+    assert c1.name in response.content.decode(response.charset)
+    assert c2.name in response.content.decode(response.charset)
+
+
+def test_collection_selection_page_admin_user(staff_client):
+    # Admin users can add to an open collection
+    c1 = factories.CollectionFactory.create(
+        name="test-collections-1",
+        description="test collections 1",
+        user_access_type=CollectionUserAccessType.REQUIRES_AUTHENTICATION,
+    )
+    response = staff_client.get(
+        reverse(
+            "data_collections:visualisation_select_collection_for_membership",
+            kwargs={
+                "dataset_id": factories.VisualisationCatalogueItemFactory(
+                    published=True, name="Visualisation catalogue item"
+                ).id
+            },
+        )
+    )
+    assert response.status_code == 200
+    assert c1.name in response.content.decode(response.charset)
 
 
 def test_authorised_user_attempting_to_add_new_catalogue_membership(user, client):
@@ -932,3 +988,13 @@ def test_collection_history_table_is_rendered(client, user):
         response.charset
     )
     assert user.email in response.content.decode(response.charset)
+
+
+#
+# def test_non_admin_edit_open_collection():
+#     pass
+#
+# def test_open_collection_edit():
+#     # User can see their own collections but not others
+#     # User can see
+#     pass
