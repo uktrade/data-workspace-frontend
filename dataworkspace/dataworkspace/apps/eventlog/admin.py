@@ -8,7 +8,7 @@ from django.http import HttpResponse
 from django.urls import reverse, NoReverseMatch
 from django.utils.html import format_html
 
-from dataworkspace.apps.eventlog.models import EventLog
+from dataworkspace.apps.eventlog.models import EventLog, SystemStatLog
 
 
 @admin.register(EventLog)
@@ -96,3 +96,48 @@ class EventLogAdmin(admin.ModelAdmin):
         return response
 
     export_events.short_description = "Export Selected"
+
+
+@admin.register(SystemStatLog)
+class SystemStatLogAdmin(admin.ModelAdmin):
+    list_display = ("timestamp", "type", "stat", "related_object_link")
+    list_filter = ("type",)
+    list_display_links = ["timestamp"]
+    fields = (
+        "timestamp",
+        "type",
+        "related_object_link",
+        "event_data",
+    )
+    list_per_page = 50
+
+    def related_object_link(self, obj):
+        if obj.related_object is None:
+            return None
+
+        try:
+            try:
+                url = reverse(
+                    admin_urlname(obj.related_object._meta, "change"),
+                    args=(obj.related_object.id,),
+                )
+            except NoReverseMatch:
+                url = reverse("datasets:dataset_detail", args=(obj.related_object.id,))
+        except NoReverseMatch:
+            return str(obj.related_object)
+        else:
+            return format_html(f'<a href="{url}">{obj.related_object}</a>')
+
+    related_object_link.short_description = "Related Object"
+
+    def event_data(self, obj):
+        return format_html("<pre>{0}</pre>", json.dumps(obj.extra, indent=2))
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
