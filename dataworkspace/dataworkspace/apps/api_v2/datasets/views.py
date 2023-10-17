@@ -64,7 +64,7 @@ class ReferenceDatasetViewSet(DatasetViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        qs = super().get_queryset()
+        qs = self.queryset
         qs_filter = Q(published=True)
         if user.has_perm(
             dataset_type_to_manage_unpublished_permission_codename(DataSetType.REFERENCE)
@@ -80,7 +80,7 @@ class VisualisationViewSet(DatasetViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        qs = super().get_queryset()
+        qs = self.queryset
         qs_filter = Q(published=True)
         if user.has_perm(
             dataset_type_to_manage_unpublished_permission_codename(DataSetType.VISUALISATION)
