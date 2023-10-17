@@ -523,7 +523,7 @@ async def async_main():
                     "/error_500_application",
                     {
                         "failure_message": "Application stopped while starting",
-                        "application_id": application["id"],
+                        "application_id": None,
                     },
                 )
 
