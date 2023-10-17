@@ -1584,19 +1584,35 @@ def table_permissions_for_role(db_role, db_schema, database_name):
         logger.info("table_perms: Returning cached table permissions for role %s", db_role)
         return tables_with_perms
 
+    info_schema_query = """
+        SELECT table_schema as schema, table_name as name
+        FROM information_schema.table_privileges
+        WHERE grantee = {role}
+        AND table_schema NOT IN ('information_schema', 'pg_catalog', 'pg_toast', '_data_explorer_charts')
+        AND table_schema NOT SIMILAR TO 'pg_temp_%|pg_toast_temp_%|pg_toast_temp_%|_user_%|_team_%'
+        AND table_name NOT SIMILAR TO '_\\d{{8}}t\\d{{6}}|%_swap|%0000|_tmp%'
+    """
+    pg_class_query = """
+        SELECT relnamespace::regnamespace::text AS schema, relname AS name
+        FROM pg_class, aclexplode(relacl) acl
+        WHERE acl.grantee = {role}::regrole::oid
+        AND relkind in ('r', 'p')
+        AND acl.privilege_type in (
+            'SELECT', 'INSERT', 'UPDATE', 'DELETE', 'TRUNCATE', 'REFERENCES', 'TRIGGER'
+        )
+        AND relnamespace::regnamespace::text NOT SIMILAR TO
+            'pg_toast|pg_temp_%|pg_toast_temp_%|_team_%|_user_%'
+        AND relname NOT SIMILAR TO
+            '_\\d{{8}}t\\d{{6}}|%_swap|%_idx|_tmp%|%_pkey|%_seq|_data_explorer_tmp%|%000000|_tmp_%';
+    """
     logger.info("table_perms: Querying and caching table permissions for role %s", db_role)
     start_time = time.time()
     with connections[database_name].cursor() as cur:
         cur.execute(
             sql.SQL(
-                """
-                SELECT table_schema as schema, table_name as name
-                FROM information_schema.table_privileges
-                WHERE grantee = {role}
-                AND table_schema NOT IN ('information_schema', 'pg_catalog', 'pg_toast', '_data_explorer_charts')
-                AND table_schema NOT SIMILAR TO 'pg_temp_%|pg_toast_temp_%|pg_toast_temp_%|_user_%|_team_%'
-                AND table_name NOT SIMILAR TO '_\\d{{8}}t\\d{{6}}|%_swap|%0000|_tmp%'
-                """
+                pg_class_query
+                if settings.USE_PG_CLASS_FOR_TABLE_PERMISSIONS
+                else info_schema_query
             ).format(role=sql.Literal(db_role))
         )
         tables_with_perms = cur.fetchall()
