@@ -52,14 +52,14 @@
     .chart-container {
       display: grid;
       grid-gap: 40px 60px;
-      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-      grid-auto-rows: 500px;
+      grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+      grid-auto-rows: 450px;
       grid-auto-flow: row;
       margin-bottom: 40px;
     }
     .chart-container .chart {
       min-height:500px;
-      width:100%;
+      width: 100%;
     }
     canvas {
       background-color: var(--darkened-bg);
@@ -75,6 +75,7 @@
 {% endblock breadcrumbs %}
 {% block content %}
   {% url 'admin:eventlog_eventlog_changelist' as eventlog_url %}
+  {% url 'admin:eventlog_systemstatlog_changelist' as statslog_url %}
   <div class="content-main">
     <h1>Data Workspace Stats</h1>
     <div class="stats-container">
@@ -127,7 +128,7 @@
         </div>
       {% endif %}
       {% if tool_start_duration_7_days is not None %}
-        <div class="stat{% if tool_start_duration_7_days >= 3_600_000 %} smaller-stat{% endif %}{% if tool_start_duration_7_days > 180_000 %} bad-news{% endif %}">
+        <div class="stat{% if tool_start_duration_7_days >= 3_600_000 %} smaller-stat{% endif %}{% if tool_start_duration_7_days > 120_000 %} bad-news{% endif %}">
           <h2>Average tool load time</h2>
           <h1>{{ tool_start_duration_7_days|format_duration_short }}</h1>
           <h3>In the past 7 days</h3>
@@ -176,6 +177,18 @@
           </a>
         </div>
       {% endif %}
+      {% if perm_query_runtime_7_days is not None %}
+        <div class="stat">
+          <a
+            target="_blank"
+            href="{{ statslog_url }}?type__exact={{ stat_types.PERMISSIONS_QUERY_RUNTIME }}"
+          >
+            <h2>Average DB perms query runtime</h2>
+            <h1>{{ perm_query_runtime_7_days|format_duration_short }}</h1>
+            <h3>In the past 7 days</h3>
+          </a>
+        </div>
+      {% endif %}
     </div>
     {% if tool_start_chart_data is not None %}
       <h1>Tool start times</h1>
@@ -183,14 +196,16 @@
         <div class="chart">
           <canvas id="tool-start-times-chart"></canvas>
         </div>
+        <div class="chart">
+          <canvas id="perm-query-runtime-chart"></canvas>
+        </div>
       </div>
     {% endif %}
   </div>
+  <script src="{% static 'admin/js/vendor/chart.min.js' %}"></script>
   {% if tool_start_chart_data is not None %}
-    <script src="{% static 'admin/js/vendor/chart.min.js' %}"></script>
     <script nonce="{{ request.csp_nonce }}">
-      const ctx = document.getElementById('tool-start-times-chart');
-      new Chart(ctx, {
+      new Chart(document.getElementById('tool-start-times-chart'), {
         type: 'line',
         data: {
           labels: [
@@ -223,6 +238,49 @@
               callbacks: {
                 label: function(context) {
                   return `${context.formattedValue} minutes`;
+                }
+              }
+            }
+          }
+        }
+      });
+    </script>
+  {% endif %}
+  {% if perm_query_chart_data is not None %}
+    <script nonce="{{ request.csp_nonce }}">
+      new Chart(document.getElementById('perm-query-runtime-chart'), {
+        type: 'line',
+        data: {
+          labels: [
+            {% for point in perm_query_chart_data %}
+              "{{ point.0|date:'D, j M' }}",
+            {% endfor %}
+          ],
+          datasets: [{
+            label: 'Average query runtime (seconds)',
+            data: [
+              {% for point in perm_query_chart_data %}
+                {{ point.1 }},
+              {% endfor %}
+            ],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          },
+          plugins: {
+            title: {
+                display: true,
+                text: 'Average permissions query runtime for the past 7 days'
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `${context.formattedValue} seconds`;
                 }
               }
             }

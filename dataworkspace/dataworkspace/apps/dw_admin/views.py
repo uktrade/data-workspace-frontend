@@ -39,7 +39,8 @@ from dataworkspace.apps.dw_admin.forms import (
     ReferenceDataRecordUploadForm,
     clean_identifier,
 )
-from dataworkspace.apps.eventlog.models import EventLog
+from dataworkspace.apps.eventlog.constants import SystemStatLogEventType
+from dataworkspace.apps.eventlog.models import EventLog, SystemStatLog
 from dataworkspace.datasets_db import get_all_source_tables
 
 
@@ -407,6 +408,7 @@ class DataWorkspaceStatsView(UserPassesTestMixin, TemplateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["eventlog_model"] = EventLog
+        ctx["stats_types"] = SystemStatLogEventType
         events_last_24_hours = EventLog.objects.filter(
             timestamp__gte=datetime.now() - timedelta(hours=24),
         )
@@ -501,5 +503,25 @@ class DataWorkspaceStatsView(UserPassesTestMixin, TemplateView):
                     ctx["num_missing_dataset_source_tables"],
                     timeout=timedelta(hours=6).total_seconds(),
                 )
+
+        # Time in seconds to run the table permissions query
+        # on tool start
+        perms_query_runtimes_7_days = SystemStatLog.objects.filter(
+            timestamp__gte=datetime.now() - timedelta(days=7),
+        )
+        if perms_query_runtimes_7_days.exists():
+            ctx["perm_query_runtime_7_days"] = (
+                perms_query_runtimes_7_days.aggregate(Avg("stat"))["stat__avg"] * 1000
+            )
+            perm_query_chart_data = {
+                x["date"]: x["stat__avg"]
+                for x in perms_query_runtimes_7_days.values(date=TruncDate("timestamp"))
+                .annotate(Avg("stat"))
+                .values("date", "stat__avg")
+            }
+            for day in rrule(freq=DAILY, count=7, dtstart=datetime.today() - timedelta(days=6)):
+                if day.date() not in perm_query_chart_data:
+                    perm_query_chart_data[day.date()] = 0
+            ctx["perm_query_chart_data"] = sorted(perm_query_chart_data.items())
 
         return ctx
