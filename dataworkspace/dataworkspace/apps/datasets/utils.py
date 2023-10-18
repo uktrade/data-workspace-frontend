@@ -884,15 +884,20 @@ def store_reference_dataset_metadata():
         with connections[db_name].cursor() as cursor:
             cursor.execute(
                 SQL(
-                    "SELECT DISTINCT ON(source_data_modified_utc)"
-                    "source_data_modified_utc::TIMESTAMP AT TIME ZONE 'UTC' "
-                    "FROM dataflow.metadata "
-                    "WHERE {} = any(data_ids) "
-                    "AND data_type = {} "
-                    "ORDER BY source_data_modified_utc DESC"
+                    """
+                    SELECT DISTINCT ON(source_data_modified_utc)
+                        source_data_modified_utc::TIMESTAMP AT TIME ZONE 'UTC'
+                    FROM dataflow.metadata
+                    WHERE {} = any(data_ids)
+                    AND data_type = {}
+                    AND table_schema = 'public'
+                    AND table_name = {}
+                    ORDER BY source_data_modified_utc DESC
+                    """
                 ).format(
                     Literal(str(reference_dataset.id)),
                     Literal(int(DataSetType.REFERENCE)),
+                    Literal(reference_dataset.table_name),
                 )
             )
             metadata = cursor.fetchone()
