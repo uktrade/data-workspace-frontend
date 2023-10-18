@@ -34,7 +34,7 @@ cachelib==0.4.1
     # via apache-superset
 celery==5.2.7
     # via apache-superset
-certifi==2023.07.22
+certifi==2023.7.22
     # via sentry-sdk
 cffi==1.14.0
     # via
@@ -65,7 +65,7 @@ cron-descriptor==1.2.24
     # via apache-superset
 croniter==1.0.13
     # via apache-superset
-cryptography==41.0.3
+cryptography==39.0.2
     # via
     #   apache-superset
     #   paramiko
@@ -311,7 +311,7 @@ typing-extensions==4.5.0
     #   apache-superset
     #   flask-limiter
     #   limits
-urllib3==1.26.15
+urllib3==1.26.18
     # via
     #   selenium
     #   sentry-sdk
