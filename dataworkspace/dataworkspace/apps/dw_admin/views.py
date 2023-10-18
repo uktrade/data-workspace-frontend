@@ -408,7 +408,7 @@ class DataWorkspaceStatsView(UserPassesTestMixin, TemplateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["eventlog_model"] = EventLog
-        ctx["stats_types"] = SystemStatLogEventType
+        ctx["stat_types"] = SystemStatLogEventType
         events_last_24_hours = EventLog.objects.filter(
             timestamp__gte=datetime.now() - timedelta(hours=24),
         )
