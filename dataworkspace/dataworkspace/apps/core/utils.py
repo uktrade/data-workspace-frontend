@@ -227,12 +227,16 @@ def new_private_database_credentials(
         if switch_is_active(settings.CACHE_USER_TABLE_PERMISSIONS):
             logging.info("Caching switch is active. Trying to get cached table permissions")
             tables_with_existing_privs_set = set(
-                table_permissions_for_role(db_role, db_schema, database_memorable_name)
+                table_permissions_for_role(
+                    db_role, db_schema, database_memorable_name, log_stats=dw_user is not None
+                )
             )
         else:
             logging.info("Caching switch is inactive. Running legacy table permissions query")
             tables_with_existing_privs_set = set(
-                legacy_table_permissions_for_role(db_role, db_schema, database_memorable_name)
+                legacy_table_permissions_for_role(
+                    db_role, db_schema, database_memorable_name, log_stats=dw_user is not None
+                )
             )
 
         logger.info(
@@ -1552,7 +1556,7 @@ def team_membership_post_delete(instance, **_):
         update_tools_access_policy_task.delay(instance.user_id)
 
 
-def legacy_table_permissions_for_role(db_role, db_schema, database_name):
+def legacy_table_permissions_for_role(db_role, db_schema, database_name, log_stats=False):
     start_time = time.time()
     logger.info(
         "table_perms: Querying for all table permissions for permanent role %s",
@@ -1574,9 +1578,11 @@ def legacy_table_permissions_for_role(db_role, db_schema, database_name):
             ).format(role=sql.Literal(db_role), schema=sql.Literal(db_schema))
         )
         run_time = round(time.time() - start_time, 2)
-        SystemStatLog.objects.log_permissions_query_runtime(
-            run_time, extra={"role": db_role, "query_type": "information_schema", "legacy": True}
-        )
+        if log_stats:
+            SystemStatLog.objects.log_permissions_query_runtime(
+                run_time,
+                extra={"role": db_role, "query_type": "information_schema", "legacy": True},
+            )
         logger.info(
             "table_perms: Querying table permissions for role %s took %s seconds",
             db_role,
@@ -1590,7 +1596,7 @@ def table_permissions_cache_key(db_role):
     return f"_table_permissions_cache_key{db_role}"
 
 
-def table_permissions_for_role(db_role, db_schema, database_name):
+def table_permissions_for_role(db_role, db_schema, database_name, log_stats=False):
     """
     Return a (cached) list of tables that the given role has SELECT/UPDATE/DELETE/ETC perms for.
     """
@@ -1633,16 +1639,17 @@ def table_permissions_for_role(db_role, db_schema, database_name):
         )
         tables_with_perms = cur.fetchall()
     run_time = round(time.time() - start_time, 2)
-    SystemStatLog.objects.log_permissions_query_runtime(
-        run_time,
-        extra={
-            "role": db_role,
-            "query_type": "pg_class"
-            if settings.USE_PG_CLASS_FOR_TABLE_PERMISSIONS
-            else "information_schema",
-            "legacy": False,
-        },
-    )
+    if log_stats:
+        SystemStatLog.objects.log_permissions_query_runtime(
+            run_time,
+            extra={
+                "role": db_role,
+                "query_type": "pg_class"
+                if settings.USE_PG_CLASS_FOR_TABLE_PERMISSIONS
+                else "information_schema",
+                "legacy": False,
+            },
+        )
     logger.info(
         "table_perms: Querying table permissions for role %s took %s seconds", db_role, run_time
     )
