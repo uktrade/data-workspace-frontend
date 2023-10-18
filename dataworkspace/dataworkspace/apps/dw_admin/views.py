@@ -510,9 +510,9 @@ class DataWorkspaceStatsView(UserPassesTestMixin, TemplateView):
             timestamp__gte=datetime.now() - timedelta(days=7),
         )
         if perms_query_runtimes_7_days.exists():
-            ctx["perm_query_runtime_7_days"] = (
-                perms_query_runtimes_7_days.aggregate(Avg("stat"))["stat__avg"] * 1000
-            )
+            ctx["perm_query_runtime_7_days"] = perms_query_runtimes_7_days.aggregate(Avg("stat"))[
+                "stat__avg"
+            ]
             perm_query_chart_data = {
                 x["date"]: x["stat__avg"]
                 for x in perms_query_runtimes_7_days.values(date=TruncDate("timestamp"))

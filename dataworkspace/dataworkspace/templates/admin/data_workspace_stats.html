@@ -184,7 +184,7 @@
             href="{{ statslog_url }}?type__exact={{ stat_types.PERMISSIONS_QUERY_RUNTIME }}"
           >
             <h2>Average DB perms query runtime</h2>
-            <h1>{{ perm_query_runtime_7_days|format_duration_short }}</h1>
+            <h1>{{ perm_query_runtime_7_days|floatformat }}s</h1>
             <h3>In the past 7 days</h3>
           </a>
         </div>
@@ -260,7 +260,7 @@
             label: 'Average query runtime (seconds)',
             data: [
               {% for point in perm_query_chart_data %}
-                {{ point.1 }},
+                {{ point.1|floatformat }},
               {% endfor %}
             ],
             borderWidth: 1
