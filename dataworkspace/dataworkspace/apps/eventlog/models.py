@@ -165,3 +165,4 @@ class SystemStatLog(models.Model):
     class Meta:
         ordering = ("-timestamp",)
         get_latest_by = "timestamp"
+        verbose_name_plural = "System stats"
