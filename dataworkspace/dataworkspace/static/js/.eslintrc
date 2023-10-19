@@ -25,13 +25,14 @@
       }
     ],
     "no-undef": "error",
-    "no-console": ["error", { "allow": ["assert"] }],
+    "no-console": ["error", { "allow": ["assert", "info"] }],
     "simple-import-sort/imports": [
       "error",
       {
         "groups": [["^react"], ["^antd"], ["^@?\\w"], ["@/(.*)"], ["^[./]"]]
       }
-    ]
+    ],
+    "@typescript-eslint/ban-ts-comment": "off"
   },
   "parserOptions": {
     "warnOnUnsupportedTypeScriptVersion": false
