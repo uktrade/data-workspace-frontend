@@ -443,7 +443,6 @@ def get_pipeline_id_for_source_table(source_table):
                     );
                     """
                 ).format(
-                    Literal(DataSetType.DATACUT),
                     Literal(source_table.schema),
                     Literal(source_table.table),
                 )
@@ -475,7 +474,6 @@ def get_last_run_state_for_pipeline(pipeline_name):
                     );
                     """
                 ).format(
-                    Literal(DataSetType.DATACUT),
                     Literal(pipeline_name),
                 )
             )

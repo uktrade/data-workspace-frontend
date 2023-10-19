@@ -185,17 +185,44 @@ def metadata_db(db):
                 data_type INTEGER NOT NULL,
                 data_hash_v1 TEXT,
                 primary_keys TEXT[],
-                number_of_rows INTEGER
+                number_of_rows INTEGER,
+                pipeline_name TEXT,
+                input_tables TEXT[]
             );
             TRUNCATE TABLE dataflow.metadata;
             INSERT INTO dataflow.metadata (
-                table_schema, table_name, source_data_modified_utc, dataflow_swapped_tables_utc, table_structure, data_type
+                table_schema,
+                table_name,
+                source_data_modified_utc,
+                dataflow_swapped_tables_utc,
+                table_structure,
+                data_type,
+                pipeline_name
             )
             VALUES
-                ('public','table1','2020-09-02 00:01:00.0','2020-09-02 00:01:00.0','{"field1":"int","field2":"varchar"}',1),
-                ('public','table2','2020-09-01 00:01:00.0','2020-09-02 00:01:00.0',NULL,1),
-                ('public','table1','2020-01-01 00:01:00.0','2020-09-02 00:01:00.0',NULL,1),
-                ('public','table4', NULL,'2021-12-01 00:00:00.0',NULL,1);
+                ('public','table1','2020-09-02 00:01:00.0','2020-09-02 00:01:00.0',
+                '{"field1":"int","field2":"varchar"}',1,'Pipeline1'),
+                ('public','table2','2020-09-01 00:01:00.0','2020-09-02 00:01:00.0',NULL,1,'Pipeline2'),
+                ('public','table1','2020-01-01 00:01:00.0','2020-09-02 00:01:00.0',NULL,1,'Pipeline1'),
+                ('public','table4', NULL,'2021-12-01 00:00:00.0',NULL,1,NULL);
+
+            CREATE TABLE IF NOT EXISTS dataflow.pipeline_dag_runs_v2 (
+                pipeline_name TEXT,
+                pipeline_active TEXT,
+                final_state TEXT,
+                last_success_of_day TIMESTAMP,
+                run_end_date DATE
+            );
+            TRUNCATE TABLE dataflow.pipeline_dag_runs_v2;
+            INSERT INTO dataflow.pipeline_dag_runs_v2 (
+                pipeline_name,
+                pipeline_active,
+                final_state,
+                last_success_of_day,
+                run_end_date
+            ) VALUES
+                ('Pipeline1', 'active', 'success', '2020-09-02 00:01:00.0', '2020-09-02 00:01:00.0'),
+                ('Pipeline2', 'active', 'failed', '2020-09-02 00:01:00.0', '2020-09-02 00:01:00.0');
             """
         )
         conn.commit()

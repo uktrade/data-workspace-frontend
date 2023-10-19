@@ -5084,3 +5084,37 @@ class TestSaveDataGridView:
         )
         assert response.status_code == 200
         assert UserDataTableView.objects.count() == view_count - 1
+
+
+@pytest.mark.django_db
+def test_master_dataset_detail_page_shows_pipeline_failures(client, metadata_db):
+    dataset = factories.DataSetFactory.create(
+        type=DataSetType.MASTER,
+        published=True,
+        user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
+    )
+    factories.SourceTableFactory(
+        dataset=dataset, database=metadata_db, schema="public", table="table1"
+    )
+    factories.SourceTableFactory(
+        dataset=dataset, database=metadata_db, schema="public", table="table2"
+    )
+
+    url = reverse("datasets:dataset_detail", args=(dataset.id,))
+    response = client.get(url)
+    assert response.status_code == 200
+    assert not response.context["all_pipeline_last_runs_succeeded"]
+    assert (
+        len(
+            [
+                x
+                for x in response.context["master_datasets_info"]
+                if not x.pipeline_last_run_succeeded
+            ]
+        )
+        == 1
+    )
+    assert (
+        len([x for x in response.context["master_datasets_info"] if x.pipeline_last_run_succeeded])
+        == 1
+    )

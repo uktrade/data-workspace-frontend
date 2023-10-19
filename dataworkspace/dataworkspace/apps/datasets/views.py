@@ -1,6 +1,5 @@
 import json
 import logging
-from datetime import datetime
 import uuid
 from collections import defaultdict, namedtuple
 from itertools import chain
@@ -430,18 +429,18 @@ class DatasetDetailView(DetailView):
 
         return user_has_tools_access
 
-    def _get_pipeline_info(self, source_table):
-        last_success_date = source_table.get_pipeline_last_success_date()
-        if last_success_date is not None:
-            return abs((last_success_date - datetime.now()).days)
-        return 0
-
     def _get_context_data_for_master_dataset(self, ctx, **kwargs):
         source_tables = sorted(self.object.sourcetable_set.all(), key=lambda x: x.name)
 
         MasterDatasetInfo = namedtuple(
             "MasterDatasetInfo",
-            ("source_table", "code_snippets", "columns", "tools_links", "pipeline_info"),
+            (
+                "source_table",
+                "code_snippets",
+                "columns",
+                "tools_links",
+                "pipeline_last_run_succeeded",
+            ),
         )
         master_datasets_info = [
             MasterDatasetInfo(
@@ -454,7 +453,8 @@ class DatasetDetailView(DetailView):
                     include_types=True,
                 ),
                 tools_links=get_tools_links_for_user(self.request.user, self.request.scheme),
-                pipeline_info=self._get_pipeline_info(source_table),
+                pipeline_last_run_succeeded=source_table.get_pipeline_last_run_state()
+                == "success",
             )
             for source_table in sorted(source_tables, key=lambda x: x.name)
         ]
@@ -484,6 +484,9 @@ class DatasetDetailView(DetailView):
                     and subscription.first().is_active(),
                     "details": subscription.first(),
                 },
+                "all_pipeline_last_runs_succeeded": all(
+                    (x.pipeline_last_run_succeeded for x in master_datasets_info)
+                ),
             }
         )
         return ctx
