@@ -43,7 +43,7 @@ urlpatterns = [
     path(
         "<uuid:dataset_uuid>/grid",
         login_required(views.ReferenceDatasetGridView.as_view()),
-        name="reference_dataset_grid",
+        name="reference_dataset_detail",
     ),
     path(
         "<uuid:dataset_uuid>/reference/download",
@@ -111,7 +111,7 @@ urlpatterns = [
     ),
     path(
         "<uuid:dataset_uuid>/table/<uuid:object_id>/grid",
-        login_required(views.DataCutSourceDetailView.as_view()),
+        login_required(views.DataSourcesetDetailView.as_view()),
         {"model_class": models.SourceTable},
         name="source_table_detail",
     ),
