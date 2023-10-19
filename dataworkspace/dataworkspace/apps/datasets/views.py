@@ -125,7 +125,6 @@ from dataworkspace.apps.datasets.utils import (
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event, log_permission_change
 from dataworkspace.apps.explorer.utils import invalidate_data_explorer_user_cached_credentials
-from dataworkspace.datasets_db import get_pipeline_last_success_date
 
 logger = logging.getLogger("app")
 
@@ -432,8 +431,8 @@ class DatasetDetailView(DetailView):
         return user_has_tools_access
 
     def _get_pipeline_info(self, source_table):
-        last_success_date = get_pipeline_last_success_date(source_table)
-        if last_success_date:
+        last_success_date = source_table.get_pipeline_last_success_date()
+        if last_success_date is not None:
             return abs((last_success_date - datetime.now()).days)
         return 0
 
