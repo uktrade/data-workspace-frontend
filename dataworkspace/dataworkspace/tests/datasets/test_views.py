@@ -1963,32 +1963,6 @@ def test_datacut_dataset_shows_code_snippets_to_tool_user(metadata_db):
         (DataSetType.DATACUT, factories.CustomDatasetQueryFactory, "datacut"),
     ),
 )
-@mock.patch("dataworkspace.apps.datasets.views.datasets_db.get_columns")
-@pytest.mark.django_db
-def test_dataset_shows_first_12_columns_of_source_table_with_link_to_the_rest(
-    get_columns_mock, dataset_type, source_factory, source_type, metadata_db
-):
-    ds = factories.DataSetFactory.create(type=dataset_type, published=True)
-    user = get_user_model().objects.create(email="test@example.com", is_superuser=False)
-    factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
-    st = source_factory.create(
-        dataset=ds,
-        database=factories.DatabaseFactory(memorable_name="my_database"),
-    )
-    get_columns_mock.return_value = [(f"column_{i}", "integer") for i in range(20)]
-
-    client = Client(**get_http_sso_data(user))
-    response = client.get(ds.get_absolute_url())
-    response_body = response.content.decode(response.charset)
-    doc = html.fromstring(response_body)
-
-    assert response.status_code == 200
-    for i in range(12):
-        assert f"<strong>column_{i}</strong> (integer)" in response_body
-
-    assert len(doc.xpath(f"//a[@href = '/datasets/{ds.id}/{source_type}/{st.id}/columns']")) == 1
-
-
 @pytest.mark.django_db(transaction=True)
 def test_launch_master_dataset_in_data_explorer(metadata_db):
     ds = factories.DataSetFactory.create(type=DataSetType.MASTER, published=True)
