@@ -78,36 +78,11 @@
           </div>
           <div class="govuk-grid-column-full">
             {% if code_snippets or columns %}
-            {% if columns %}
-              <details class="govuk-details govuk"
-                       data-module="govuk-details">
-                <summary class="govuk-details__summary">
-                  <span class="govuk-details__summary-text">
-                    View data structure <span class="govuk-visually-hidden">for "{{ model.name }}"</span>
-                  </span>
-                </summary>
-                <div class="govuk-details__text">
-                  <ul class="govuk-list govuk-list--bullet">
-                    {% for column, data_type in columns|slice:":12" %}
-                      <li>
-                        <strong>{{ column }}</strong> ({{ data_type }})
-                      </li>
-                    {% endfor %}
-                    {% if columns|length > 12 %}
-                      <a class="govuk-link"
-                         href="{% url 'datasets:reference_dataset_column_details' dataset_uuid=model.uuid %}">
-                        View all columns <span class="govuk-visually-hidden">for "{{ model.name }}"</span>
-                      </a>
-                    {% endif %}
-                  </ul>
-                </div>
-              </details>
-            {% endif %}
             {% if model.external_database %}
-              <details class="govuk-details govuk" data-module="govuk-details">
+              <details class="govuk-details govuk govuk-!-margin-bottom-2" data-module="govuk-details">
                 <summary class="govuk-details__summary">
                   <span class="govuk-details__summary-text">
-                    Use this data <span class="govuk-visually-hidden">for "{{ model.name }}"</span>
+                    Use this data for analysis
                   </span>
                 </summary>
                 <div class="govuk-details__text">
