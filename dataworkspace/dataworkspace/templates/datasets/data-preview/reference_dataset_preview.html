@@ -69,6 +69,7 @@
         <a href="mailto:{{ model.enquiries_contact.email }}?subject=Reporting an issue - {{ model.name }}"
            class="govuk-link govuk-link--no-visited-state govuk-!-padding-right-3" style="float: right">
            {% include "partials/icons/report_an_issue_icon.html" with text="Report an issue" %}
+        </a>
       {% endif %}
       <div class="govuk-!-padding-top-4 govuk-!-padding-left-2">
         <span class="govuk-caption-xl">Data table (public.{{ model.table_name }})</span>
