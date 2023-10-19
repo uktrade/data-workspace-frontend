@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 
 import DataDisplay from '../../components/DataDisplay';
-import { getVisualisationData } from '../../services';
+import { fetchDataUsage } from '../../services';
 
-const Container = () => {
-  const [data, setData] = useState<{ title: string; value: string }[]>([]);
+const Container = ({ id }: { id: string }) => {
+  const [data, setData] = useState<{ title: string; value: number }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
-      const response = await getVisualisationData();
+      const response = await fetchDataUsage(id);
       setData(response);
       setLoading(false);
     }

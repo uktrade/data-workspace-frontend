@@ -118,7 +118,7 @@ const ErrorMessage = styled('p')`
 
 export type Data = {
   title: string;
-  value: string;
+  value: number;
 }[];
 
 type DataDisplayProps = {
