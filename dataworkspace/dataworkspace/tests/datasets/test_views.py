@@ -2043,7 +2043,7 @@ def test_dataset_shows_first_12_columns_of_source_table_with_link_to_the_rest(
     response = client.get(ds.get_absolute_url())
     response_body = response.content.decode(response.charset)
     doc = html.fromstring(response_body)
-    print("ahhhhh", response_body)
+
     assert response.status_code == 200
     for i in range(12):
         assert f"<strong>column_{i}</strong> (integer)" in response_body
