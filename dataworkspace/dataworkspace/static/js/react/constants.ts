@@ -1,4 +1,6 @@
-export const ERROR_COLOUR: string = '#d4351c';
+export const API_BASE_URL = 'api/v2';
+
+export const ERROR_COLOUR = '#d4351c';
 
 export const DATA_USAGE_KEYS = {
   page_views: 'Page Views',
@@ -7,4 +9,4 @@ export const DATA_USAGE_KEYS = {
   collection_count: 'Added to Collections',
   bookmark_count: 'Bookmarked by Users',
   dashboard_views: 'Dashboard views'
-};
+} as const;

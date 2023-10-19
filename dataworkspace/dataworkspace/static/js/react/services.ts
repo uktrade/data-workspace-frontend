@@ -1,4 +1,4 @@
-import { DATA_USAGE_KEYS } from './constants';
+import { API_BASE_URL, DATA_USAGE_KEYS } from './constants';
 
 type DataUsageKeys = keyof typeof DATA_USAGE_KEYS;
 
@@ -8,6 +8,8 @@ type TransformedDataUsageResponse = {
   title: string;
   value: number;
 };
+
+type DataType = 'datasets' | 'visualisation' | 'reference';
 
 export const transformDataUsageResponse = (
   response: DataUsage
@@ -19,8 +21,8 @@ export const transformDataUsageResponse = (
     })
   );
 
-export const fetchDataUsage = async (id: string) => {
-  const response = await fetch(`/api/v2/visualisation/${id}/stats/`);
+export const fetchDataUsage = async (dataType: DataType, id: string) => {
+  const response = await fetch(`/${API_BASE_URL}/${dataType}/${id}/stats/`);
   const dataUsage = await response.json();
   return transformDataUsageResponse(dataUsage);
 };
