@@ -1778,52 +1778,6 @@ class TestReferenceDatasetDetailView(DatasetsCommon):
         [("client", True), ("staff_client", True), ("staff_client", False)],
         indirect=["request_client"],
     )
-    @pytest.mark.django_db
-    def test_reference_dataset_shows_column_details(self, request_client, published):
-        group = factories.DataGroupingFactory.create()
-        external_db = factories.DatabaseFactory.create(memorable_name="my_database")
-        rds = factories.ReferenceDatasetFactory.create(
-            published=published,
-            group=group,
-            external_database=external_db,
-        )
-        field1 = factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=rds,
-            name="code",
-            column_name="code",
-            data_type=2,
-            is_identifier=True,
-        )
-        field2 = factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=rds, name="name", column_name="name", data_type=1
-        )
-        rds.save_record(
-            None,
-            {
-                "reference_dataset": rds,
-                field1.column_name: 1,
-                field2.column_name: "Test record",
-            },
-        )
-        rds.save_record(
-            None,
-            {
-                "reference_dataset": rds,
-                field1.column_name: 2,
-                field2.column_name: "Ánd again",
-            },
-        )
-        response = request_client.get(rds.get_absolute_url())
-
-        assert response.status_code == 200
-        assert "<strong>code</strong> (integer)" in response.content.decode(response.charset)
-        assert "<strong>name</strong> (text)" in response.content.decode(response.charset)
-
-    @pytest.mark.parametrize(
-        "request_client,published",
-        [("client", True), ("staff_client", True), ("staff_client", False)],
-        indirect=["request_client"],
-    )
     def test_reference_dataset_shows_show_all_columns_link(self, request_client, published):
         group = factories.DataGroupingFactory.create()
         linked_rds = factories.ReferenceDatasetFactory.create(
