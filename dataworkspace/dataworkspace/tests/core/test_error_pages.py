@@ -72,7 +72,7 @@ from dataworkspace.tests.explorer.factories import QueryLogFactory
             (factories.VisualisationCatalogueItemFactory,),
         ),
         (
-            "datasets:reference_dataset_detail",
+            "datasets:reference_dataset_grid",
             (factories.ReferenceDatasetFactory,),
         ),
     ),

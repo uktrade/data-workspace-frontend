@@ -118,7 +118,7 @@
                 {% for master in related_visualisations|slice:":4" %}
                   <li>
                     {% include "partials/related_data_link.html" with dataset=master css_classname="related-dashboard" %}
-                  </li>
+                  </lusingi>
                 {% endfor %}
 
                 {% if related_visualiations|length > 4 %}
@@ -245,6 +245,7 @@
                       </summary>
                       <div class="govuk-details__text">
                         {% include 'partials/code_snippets.html' with code_snippets=code_snippets source_table=datacut_link tools_links=tools_links %}
+
                       </div>
                     </details>
                   {% endif %}

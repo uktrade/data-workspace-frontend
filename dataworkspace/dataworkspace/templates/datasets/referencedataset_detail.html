@@ -217,7 +217,7 @@
             class="govuk-table__cell app-table_cell--no-border">{{ model.data_last_updated|date_with_gmt_offset }}</td>
           <td class="govuk-table__cell app-table_cell--no-border">
             <a class="govuk-link"
-               href="{% url "datasets:reference_dataset_detail" dataset_uuid=model.uuid %}">
+               href="{% url "datasets:reference_dataset_grid" dataset_uuid=model.uuid %}">
               View table
             </a>
             <br>
@@ -266,6 +266,7 @@
             </div>
           </details>
         {% endif %}
+
         {% if model.external_database %}
           <details class="govuk-details govuk" data-module="govuk-details">
             <summary class="govuk-details__summary">
