@@ -9,7 +9,7 @@ const Container = ({ id }: { id: string }) => {
 
   useEffect(() => {
     async function fetchData() {
-      const response = await fetchDataUsage(id);
+      const response = await fetchDataUsage('datasets', id);
       setData(response);
       setLoading(false);
     }
