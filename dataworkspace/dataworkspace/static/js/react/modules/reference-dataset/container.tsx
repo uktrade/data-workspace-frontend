@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 
 import DataDisplay from '../../components/DataDisplay';
-import { getRefData } from '../../services';
+import { fetchDataUsage } from '../../services';
 
-const Container = () => {
-  const [data, setData] = useState<{ title: string; value: string }[]>([]);
+const Container = ({ id }: { id: string }) => {
+  const [data, setData] = useState<{ title: string; value: number }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
-      const response = await getRefData();
+      const response = await fetchDataUsage(id);
       setData(response);
       setLoading(false);
     }
@@ -20,7 +20,6 @@ const Container = () => {
     <DataDisplay
       data={data}
       loading={loading}
-      error="There seems to be an issue"
       footerNote={<a href="/">Find out more about the metrics above</a>}
     />
   );

@@ -178,7 +178,7 @@
 
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
-      <div id="data-usage"></div>
+        {% include "partials/react-slot.html" with mount_id="data-usage" id=model.id %}
     </div>
   </div>
 
