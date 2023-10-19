@@ -5,11 +5,11 @@ import DataDisplay, { Data } from '.';
 const data: Data = [
   {
     title: 'Title 1',
-    value: '100'
+    value: 100
   },
   {
     title: 'Title 2',
-    value: '200'
+    value: 200
   }
 ];
 describe('Data display', () => {

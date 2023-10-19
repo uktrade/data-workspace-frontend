@@ -1,61 +1,26 @@
-const mockOne = [
-  {
-    title: 'Page views',
-    value: '4,200'
-  },
-  {
-    title: 'Table Queried by users',
-    value: '1545'
-  },
-  {
-    title: 'Table Views',
-    value: '2150'
-  },
-  {
-    title: 'Added to collections',
-    value: '0'
-  },
-  {
-    title: 'Bookmarked by users',
-    value: '1556'
-  }
-];
+import { DATA_USAGE_KEYS } from './constants';
 
-const mockTwo = [
-  {
-    title: 'Page views',
-    value: '4,200'
-  },
-  {
-    title: 'Added to Collections',
-    value: '42'
-  },
-  {
-    title: 'Dashboard Views',
-    value: '14,500'
-  },
-  {
-    title: 'Bookmarked by users',
-    value: '1,545'
-  }
-];
+type DataUsageKeys = keyof typeof DATA_USAGE_KEYS;
 
-export const getDataCut = async () => {
-  await new Promise((resolve) => setTimeout(resolve, 3000));
-  return mockOne;
+type DataUsage = Record<string, number>;
+
+type TransformedDataUsageResponse = {
+  title: string;
+  value: number;
 };
 
-export const getSourceData = async () => {
-  await new Promise((resolve) => setTimeout(resolve, 3000));
-  return mockOne;
-};
+export const transformDataUsageResponse = (
+  response: DataUsage
+): TransformedDataUsageResponse[] =>
+  Object.keys(response).map(
+    (key): TransformedDataUsageResponse => ({
+      title: DATA_USAGE_KEYS[key as DataUsageKeys],
+      value: response[key] as number
+    })
+  );
 
-export const getRefData = async () => {
-  await new Promise((resolve) => setTimeout(resolve, 3000));
-  return mockOne;
-};
-
-export const getVisualisationData = async () => {
-  await new Promise((resolve) => setTimeout(resolve, 3000));
-  return mockTwo;
+export const fetchDataUsage = async (id: string) => {
+  const response = await fetch(`/api/v2/visualisation/${id}/stats/`);
+  const dataUsage = await response.json();
+  return transformDataUsageResponse(dataUsage);
 };
