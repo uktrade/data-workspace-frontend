@@ -8,6 +8,7 @@ import { getBreadcrumbs, getFolderName } from "./utils";
 import { AddFolderPopup, UploadFilesPopup } from "./popups";
 import { DeleteObjectsPopup } from "./popups/DeleteObjects";
 import { ErrorModal } from "./popups/ErrorModal";
+import { TeamsPrefixMessage } from "./TeamsPrefixMessage";
 
 const popupTypes = {
   ADD_FOLDER: "addFolder",
@@ -251,8 +252,8 @@ export default class App extends React.Component {
 
       const teamsFolders =
         params.Prefix === rootPrefix
-          ? this.props.config.teamsPrefixes.map((prefix) => ({
-              Prefix: prefix,
+          ? this.props.config.teamsPrefixes.map((team) => ({
+              Prefix: team.prefix,
               isSharedFolder: true,
               isSelected: false,
             }))
@@ -501,6 +502,11 @@ export default class App extends React.Component {
               bucketName={this.state.bucketName}
             />
           ) : null}
+          {this.state.currentPrefix.startsWith("teams/") ?
+            <TeamsPrefixMessage
+              team={this.props.config.teamsPrefixes.find(t => this.state.currentPrefix.startsWith(t.prefix))}
+              bucketName={this.state.bucketName}
+            /> : null}
         </div>
       </div>
     );

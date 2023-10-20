@@ -1489,7 +1489,14 @@ def get_user_s3_prefixes(user):
 
 
 def get_team_prefixes(user):
-    return [f'teams/{x["schema_name"]}/' for x in get_team_schemas_for_user(user)]
+    return [
+        {
+            "name": x["name"],
+            "env_var": f"S3_PREFIX_TEAM_{clean_db_identifier(x['name']).upper()}",
+            "prefix": f'teams/{x["schema_name"]}/',
+        }
+        for x in get_team_schemas_for_user(user)
+    ]
 
 
 def update_user_tool_access_policy(user, access_point_id):
