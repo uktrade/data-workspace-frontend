@@ -1778,52 +1778,6 @@ class TestReferenceDatasetDetailView(DatasetsCommon):
         [("client", True), ("staff_client", True), ("staff_client", False)],
         indirect=["request_client"],
     )
-    @pytest.mark.django_db
-    def test_reference_dataset_shows_column_details(self, request_client, published):
-        group = factories.DataGroupingFactory.create()
-        external_db = factories.DatabaseFactory.create(memorable_name="my_database")
-        rds = factories.ReferenceDatasetFactory.create(
-            published=published,
-            group=group,
-            external_database=external_db,
-        )
-        field1 = factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=rds,
-            name="code",
-            column_name="code",
-            data_type=2,
-            is_identifier=True,
-        )
-        field2 = factories.ReferenceDatasetFieldFactory.create(
-            reference_dataset=rds, name="name", column_name="name", data_type=1
-        )
-        rds.save_record(
-            None,
-            {
-                "reference_dataset": rds,
-                field1.column_name: 1,
-                field2.column_name: "Test record",
-            },
-        )
-        rds.save_record(
-            None,
-            {
-                "reference_dataset": rds,
-                field1.column_name: 2,
-                field2.column_name: "Ánd again",
-            },
-        )
-        response = request_client.get(rds.get_absolute_url())
-
-        assert response.status_code == 200
-        assert "<strong>code</strong> (integer)" in response.content.decode(response.charset)
-        assert "<strong>name</strong> (text)" in response.content.decode(response.charset)
-
-    @pytest.mark.parametrize(
-        "request_client,published",
-        [("client", True), ("staff_client", True), ("staff_client", False)],
-        indirect=["request_client"],
-    )
     def test_reference_dataset_shows_show_all_columns_link(self, request_client, published):
         group = factories.DataGroupingFactory.create()
         linked_rds = factories.ReferenceDatasetFactory.create(
@@ -2000,39 +1954,6 @@ def test_datacut_dataset_shows_code_snippets_to_tool_user(metadata_db):
 
     assert response.status_code == 200
     assert """SELECT * FROM foo""" in response.content.decode(response.charset)
-
-
-@pytest.mark.parametrize(
-    "dataset_type, source_factory,source_type",
-    (
-        (DataSetType.MASTER, factories.SourceTableFactory, "table"),
-        (DataSetType.DATACUT, factories.CustomDatasetQueryFactory, "datacut"),
-    ),
-)
-@mock.patch("dataworkspace.apps.datasets.views.datasets_db.get_columns")
-@pytest.mark.django_db
-def test_dataset_shows_first_12_columns_of_source_table_with_link_to_the_rest(
-    get_columns_mock, dataset_type, source_factory, source_type, metadata_db
-):
-    ds = factories.DataSetFactory.create(type=dataset_type, published=True)
-    user = get_user_model().objects.create(email="test@example.com", is_superuser=False)
-    factories.DataSetUserPermissionFactory.create(user=user, dataset=ds)
-    st = source_factory.create(
-        dataset=ds,
-        database=factories.DatabaseFactory(memorable_name="my_database"),
-    )
-    get_columns_mock.return_value = [(f"column_{i}", "integer") for i in range(20)]
-
-    client = Client(**get_http_sso_data(user))
-    response = client.get(ds.get_absolute_url())
-    response_body = response.content.decode(response.charset)
-    doc = html.fromstring(response_body)
-
-    assert response.status_code == 200
-    for i in range(12):
-        assert f"<strong>column_{i}</strong> (integer)" in response_body
-
-    assert len(doc.xpath(f"//a[@href = '/datasets/{ds.id}/{source_type}/{st.id}/columns']")) == 1
 
 
 @pytest.mark.django_db(transaction=True)

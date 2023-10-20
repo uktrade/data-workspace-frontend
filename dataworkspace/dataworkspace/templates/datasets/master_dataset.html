@@ -234,12 +234,6 @@
           {% if code_snippets or columns %}
             <tr class="govuk-table__row">
               <td colspan="{% flag DATASET_CHANGELOG_PAGE_FLAG %}5{% else %}4{% endflag %}" class="govuk-table__cell">
-                {% if columns %}
-                  <div class="govuk-!-margin-bottom-6">
-                  {% include "partials/column_list.html" with columns=columns dataset=dataset source=source_table %}
-                  </div>
-                {% endif %}
-
                 {% if has_access %}
                   <details class="govuk-details govuk-!-margin-bottom-6" data-module="govuk-details">
                     <summary class="govuk-details__summary">
