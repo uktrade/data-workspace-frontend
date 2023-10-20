@@ -1712,21 +1712,18 @@ class UserSearchFormView(EditBaseView, FormView):
                 context["non_matches"] = non_email_matches
 
             else:
-                email_filter = Q(email__icontains=search_query.strip())
-                name_filter = Q(first_name__icontains=search_query.strip()) | Q(
-                    last_name__icontains=search_query.strip()
+                search_query = search_query.strip()
+                email_filter = Q(email__icontains=search_query)
+                name_filter = Q(first_name__icontains=search_query) | Q(
+                    last_name__icontains=search_query
                 )
                 users = get_user_model().objects.filter(Q(email_filter | name_filter))
+                if not users.exists() and len(search_query.split("@")) != 1:
+                    users = get_user_model().objects.filter(
+                        email__istartswith=search_query.split("@")[0]
+                    )
                 context["search_results"] = users
             context["search_query"] = search_query
-            try:
-                search_query = self.request.session.pop(
-                    f"search-query--edit-dataset-permissions--{self.obj.pk}--{self.summary.id}"
-                    if self.summary
-                    else f"search-query--edit-dataset-permissions--{self.obj.pk}"
-                )
-            except KeyError:
-                search_query = None
         context["obj"] = self.obj
         context["obj_edit_url"] = (
             reverse("datasets:edit_dataset", args=[self.obj.pk])
