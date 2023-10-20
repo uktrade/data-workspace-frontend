@@ -28,6 +28,11 @@
         </ol>
       </div>
     </div>
+    {% if not all_pipeline_last_runs_succeeded %}
+    <div class="govuk-grid-column-one-half">
+        {% include './partials/pipeline-error-message.html' %}
+    </div>
+    {% endif %}
   </div>
 {% endblock %}
 
@@ -76,7 +81,7 @@
         </thead>
         <tbody>
 
-        {% for source_table, code_snippets, columns, tools_links, pipeline_info in master_datasets_info %}
+        {% for source_table, code_snippets, columns, tools_links, pipeline_last_run_succeeded in master_datasets_info %}
           <tr class="govuk-table__row">
             <td class="govuk-table__cell">
               {% if source_table.type == source_table_type %}
@@ -112,6 +117,9 @@
                     </a>
                   {% endif %}
                 {% endif %}
+              {% endif %}
+              {% if not pipeline_last_run_succeeded %}
+              <p class="govuk-body-s govuk-error-colour govuk-!-margin-top-2">Update failed: Data is not up to date. The issue is currently in the process of being resolved.</p>
               {% endif %}
             </td>
           </tr>
