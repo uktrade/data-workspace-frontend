@@ -1,46 +1,20 @@
 {
   "status": "done",
   "assets": {
-    "builder.58dd439c3a0d51aa7543.js.LICENSE.txt": {
-      "name": "builder.58dd439c3a0d51aa7543.js.LICENSE.txt",
-      "path": "builder.58dd439c3a0d51aa7543.js.LICENSE.txt",
-      "publicPath": "/__django_static/js/bundles/builder.58dd439c3a0d51aa7543.js.LICENSE.txt"
+    "yourfiles.70fed0402f7640f5dcc1.js": {
+      "name": "yourfiles.70fed0402f7640f5dcc1.js",
+      "path": "yourfiles.70fed0402f7640f5dcc1.js",
+      "publicPath": "/__django_static/js/bundles/yourfiles.70fed0402f7640f5dcc1.js"
     },
-    "viewer.08734df7339e28c342cc.js.LICENSE.txt": {
-      "name": "viewer.08734df7339e28c342cc.js.LICENSE.txt",
-      "path": "viewer.08734df7339e28c342cc.js.LICENSE.txt",
-      "publicPath": "/__django_static/js/bundles/viewer.08734df7339e28c342cc.js.LICENSE.txt"
-    },
-    "yourfiles.c93bfed2dd8a9c6f4718.js.LICENSE.txt": {
-      "name": "yourfiles.c93bfed2dd8a9c6f4718.js.LICENSE.txt",
-      "path": "yourfiles.c93bfed2dd8a9c6f4718.js.LICENSE.txt",
-      "publicPath": "/__django_static/js/bundles/yourfiles.c93bfed2dd8a9c6f4718.js.LICENSE.txt"
-    },
-    "builder.58dd439c3a0d51aa7543.js": {
-      "name": "builder.58dd439c3a0d51aa7543.js",
-      "path": "builder.58dd439c3a0d51aa7543.js",
-      "publicPath": "/__django_static/js/bundles/builder.58dd439c3a0d51aa7543.js"
-    },
-    "viewer.08734df7339e28c342cc.js": {
-      "name": "viewer.08734df7339e28c342cc.js",
-      "path": "viewer.08734df7339e28c342cc.js",
-      "publicPath": "/__django_static/js/bundles/viewer.08734df7339e28c342cc.js"
-    },
-    "yourfiles.c93bfed2dd8a9c6f4718.js": {
-      "name": "yourfiles.c93bfed2dd8a9c6f4718.js",
-      "path": "yourfiles.c93bfed2dd8a9c6f4718.js",
-      "publicPath": "/__django_static/js/bundles/yourfiles.c93bfed2dd8a9c6f4718.js"
+    "yourfiles.70fed0402f7640f5dcc1.js.LICENSE.txt": {
+      "name": "yourfiles.70fed0402f7640f5dcc1.js.LICENSE.txt",
+      "path": "yourfiles.70fed0402f7640f5dcc1.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/yourfiles.70fed0402f7640f5dcc1.js.LICENSE.txt"
     }
   },
   "chunks": {
-    "builder": [
-      "builder.58dd439c3a0d51aa7543.js"
-    ],
-    "viewer": [
-      "viewer.08734df7339e28c342cc.js"
-    ],
     "yourfiles": [
-      "yourfiles.c93bfed2dd8a9c6f4718.js"
+      "yourfiles.70fed0402f7640f5dcc1.js"
     ]
   },
   "publicPath": "/__django_static/js/bundles/"
