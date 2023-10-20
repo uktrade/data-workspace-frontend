@@ -19,7 +19,7 @@
       '{{ object.get_grid_data_url }}',
       '?download=1',
       null,
-      '{{ object.name }}-custom-export.csv',
+      '{{ object.get_custom_export_file_name }}',
       {% flag CHART_BUILDER_BUILD_CHARTS_FLAG %}
         '{% url 'datasets:create_chart_from_grid' object.dataset.id object.id %}',
         {% else %}

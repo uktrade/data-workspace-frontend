@@ -723,7 +723,11 @@ class ReferenceNumberedDatasetSource(TimeStampedModel):
         return None
 
     def get_filename(self, extension=".csv"):
-        filename = slugify(self.name) + extension  # pylint: disable=no-member
+        sec_class = self.dataset.get_government_security_classification_display()
+        # pylint: disable=no-member
+        filename = (
+            f"{slugify(self.name)}{f'-{sec_class}' if sec_class is not None else ''}{extension}"
+        )
         if self.source_reference is not None:
             return f"{self.source_reference}-{filename}"
         return filename
@@ -900,6 +904,10 @@ class SourceTable(BaseSource):
     def pipeline_last_run_success(self):
         return self.get_pipeline_last_run_state() in ["success", None]
 
+    def get_custom_export_file_name(self):
+        sec_class = self.dataset.get_government_security_classification_display()
+        return f"{self.name}-custom-export{f'-{sec_class}' if sec_class is not None else ''}.csv"
+
 
 class SourceTableFieldDefinition(models.Model):
     field = models.CharField(
@@ -1016,7 +1024,6 @@ class SourceLink(ReferenceNumberedDatasetSource):
             native_extension = os.path.splitext(self.url)[1]
             extension = native_extension if native_extension else ".csv"
             return super().get_filename(extension=extension)
-
         return super().get_filename()
 
     @property
@@ -1210,6 +1217,10 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
 
     def get_save_grid_view_url(self):
         return reverse("datasets:custom_dataset_query_save_grid_view", args=(self.id,))
+
+    def get_custom_export_file_name(self):
+        sec_class = self.dataset.get_government_security_classification_display()
+        return f"{self.name}-custom-export{f'-{sec_class}' if sec_class is not None else ''}.csv"
 
 
 class CustomDatasetQueryTable(models.Model):
@@ -2083,6 +2094,10 @@ class ReferenceDataset(DeletableTimestampedUserModel):
 
     def get_save_grid_view_url(self):
         return reverse("datasets:reference_dataset_save_grid_view", args=(self.id,))
+
+    def get_custom_export_file_name(self):
+        sec_class = self.get_government_security_classification_display()
+        return f"{self.slug}-{self.published_version}-custom-export{f'-{sec_class}' if sec_class is not None else ''}.csv"
 
 
 @receiver(m2m_changed, sender=ReferenceDataset.tags.through)
