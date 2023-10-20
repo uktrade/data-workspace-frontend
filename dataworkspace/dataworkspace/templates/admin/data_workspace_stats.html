@@ -189,6 +189,18 @@
           </a>
         </div>
       {% endif %}
+      {% if failed_celery_tasks_24_hours is not None %}
+        <div class="stat{% if failed_celery_tasks_24_hours > 0 %} bad-news{% endif %}">
+          <a
+            target="_blank"
+            href="{% url 'admin:django_celery_results_taskresult_changelist' %}?status__exact=FAILURE"
+          >
+            <h2>Failed celery tasks</h2>
+            <h1>{{ failed_celery_tasks_24_hours }}</h1>
+            <h3>In the past 24 hours</h3>
+          </a>
+        </div>
+      {% endif %}
     </div>
     {% if tool_start_chart_data is not None %}
       <h1>Tool start times</h1>
