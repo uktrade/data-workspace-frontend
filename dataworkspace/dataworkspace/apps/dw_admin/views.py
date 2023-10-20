@@ -3,6 +3,7 @@ import os
 from datetime import datetime, timedelta
 
 from botocore.exceptions import ClientError
+from celery import states
 from dateutil.rrule import DAILY, rrule
 
 from django import forms
@@ -19,6 +20,7 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils.timesince import timesince
 from django.views.generic import FormView, CreateView, TemplateView
+from django_celery_results.models import TaskResult
 
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.core.boto3_client import get_s3_client
@@ -523,5 +525,10 @@ class DataWorkspaceStatsView(UserPassesTestMixin, TemplateView):
                 if day.date() not in perm_query_chart_data:
                     perm_query_chart_data[day.date()] = 0
             ctx["perm_query_chart_data"] = sorted(perm_query_chart_data.items())
+
+        # Number of failed celery tasks in the last 24 hours
+        ctx["failed_celery_tasks_24_hours"] = TaskResult.objects.filter(
+            date_done__gte=datetime.now() - timedelta(hours=24), status=states.FAILURE
+        ).count()
 
         return ctx
