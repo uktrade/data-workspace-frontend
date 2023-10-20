@@ -121,6 +121,7 @@ INSTALLED_APPS = [
     "csp_helpers",
     "webpack_loader",
     "dataworkspace.apps.data_collections",
+    "django_celery_results",
 ]
 
 MIDDLEWARE = [
@@ -327,7 +328,8 @@ NOTIFY_COLLECTIONS_NOTIFICATION_USER_REMOVED_ID = "a6c40ab6-eaa5-4f60-93da-92525
 NOTIFY_COLLECTIONS_USER_REQUESTED_ACCESS = "935a456d-c724-4c68-9756-fceeefa4704e"
 
 CELERY_BROKER_URL = env["REDIS_URL"]
-CELERY_RESULT_BACKEND = env["REDIS_URL"]
+CELERY_RESULT_BACKEND = "django-db"
+CELERY_RESULT_EXTENDED = True
 
 CELERY_ROUTES = {
     "dataworkspace.apps.explorer.tasks._run_querylog_query": {"queue": "explorer.tasks"},
