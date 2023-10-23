@@ -1,28 +1,19 @@
-import { useEffect, useState } from 'react';
+import React from 'react';
 
 import DataDisplay from '../../components/DataDisplay';
-import { fetchDataUsage } from '../../services';
+import FetchDataContainer from '../../components/FetchDataContainer';
 
-const Container = ({ id }: { id: string }) => {
-  const [data, setData] = useState<{ title: string; value: number }[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchData() {
-      const response = await fetchDataUsage('reference', id);
-      setData(response);
-      setLoading(false);
-    }
-    fetchData();
-  }, []);
-
-  return (
-    <DataDisplay
-      data={data}
-      loading={loading}
-      footerNote={<a href="/">Find out more about the metrics above</a>}
-    />
-  );
-};
+const Container = ({ id }: { id: string }): React.ReactNode => (
+  <FetchDataContainer id={id} dataType="reference">
+    {({ data, error, loading }) => (
+      <DataDisplay
+        data={data}
+        error={error}
+        loading={loading}
+        footerNote={<a href="/">Find out more about the metrics above</a>}
+      />
+    )}
+  </FetchDataContainer>
+);
 
 export default Container;

@@ -125,7 +125,7 @@ type DataDisplayProps = {
   data: Data;
   loading?: boolean;
   secondary?: boolean;
-  error?: string;
+  error?: string | null;
   footerNote?: React.ReactNode;
 };
 
@@ -134,7 +134,7 @@ const DataDisplay: React.FC<DataDisplayProps> = ({
   loading = false,
   secondary = false,
   footerNote = null,
-  error
+  error = null
 }) => {
   return (
     <DataDisplayContainer>
