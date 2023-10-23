@@ -1152,6 +1152,11 @@ async def async_main():
             if me_profile:
                 return await handler_with_sso_headers()
 
+            request["logger"].info(
+                "Making request to SSO - %s%s",
+                sso_base_url,
+                me_path,
+            )
             async with client_session.get(
                 f"{sso_base_url}{me_path}",
                 headers={"Authorization": f"Bearer {token}"},
