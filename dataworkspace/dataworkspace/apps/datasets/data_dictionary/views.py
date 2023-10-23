@@ -63,14 +63,15 @@ class DataDictionaryEditView(View):
     def dispatch(self, request, *args, **kwargs):
         dataset_uuid = self.kwargs.get("dataset_uuid")
         dataset = find_dataset(dataset_uuid, self.request.user)
-        if (
-            request.user
-            not in [
-                dataset.information_asset_owner,
-                dataset.information_asset_manager,
-            ]
-            and not request.user.is_superuser
-        ):
+        valid_users = [
+            dataset.information_asset_owner,
+            dataset.information_asset_manager,
+        ] + (
+            list(dataset.data_catalogue_editors.all())
+            if hasattr(dataset, "data_catalogue_editors")
+            else []
+        )
+        if request.user not in valid_users and not request.user.is_superuser:
             return HttpResponseForbidden()
         return super().dispatch(request, *args, **kwargs)
 
