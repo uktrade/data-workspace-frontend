@@ -11,7 +11,7 @@ type FetchDataContainerProps = {
     loading,
     error
   }: {
-    data: { title: string; value: number }[];
+    data: { label: string; value: number }[];
     loading: boolean;
     error: string | null;
   }) => React.ReactNode;
@@ -22,7 +22,7 @@ const FetchDataContainer = ({
   dataType,
   children
 }: FetchDataContainerProps) => {
-  const [data, setData] = useState<{ title: string; value: number }[]>([]);
+  const [data, setData] = useState<{ label: string; value: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<null | string>(null);
 
