@@ -4,11 +4,11 @@ import DataDisplay, { Data } from '.';
 
 const data: Data = [
   {
-    title: 'Title 1',
+    label: 'Title 1',
     value: 100
   },
   {
-    title: 'Title 2',
+    label: 'Title 2',
     value: 200
   }
 ];

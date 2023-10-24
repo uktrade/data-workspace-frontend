@@ -117,7 +117,7 @@ const ErrorMessage = styled('p')`
 `;
 
 export type Data = {
-  title: string;
+  label: string;
   value: number;
 }[];
 
@@ -147,10 +147,10 @@ const DataDisplay: React.FC<DataDisplayProps> = ({
         ) : (
           <>
             <DataDisplayList>
-              {data.map(({ title, value }, index) => (
+              {data.map(({ label, value }, index) => (
                 <DataDisplayListItem key={index} secondary={secondary}>
                   {value}
-                  <span>{title}</span>
+                  <span>{label}</span>
                 </DataDisplayListItem>
               ))}
             </DataDisplayList>
