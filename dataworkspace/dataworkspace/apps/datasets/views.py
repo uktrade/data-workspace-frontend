@@ -453,8 +453,7 @@ class DatasetDetailView(DetailView):
                     include_types=True,
                 ),
                 tools_links=get_tools_links_for_user(self.request.user, self.request.scheme),
-                pipeline_last_run_succeeded=source_table.get_pipeline_last_run_state()
-                == "success",
+                pipeline_last_run_succeeded=source_table.pipeline_last_run_success(),
             )
             for source_table in sorted(source_tables, key=lambda x: x.name)
         ]
