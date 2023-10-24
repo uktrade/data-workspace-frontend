@@ -1,5 +1,4 @@
-#FROM debian:bullseye
-FROM debian:buster
+FROM debian:bullseye
 
 ENV R_BASE_VERSION 4.3.1
 
@@ -19,31 +18,6 @@ ENV \
 	LANG=en_GB.UTF-8 \
 	LANGUAGE=en_GB.UTF-8
 
-#RUN rm -rf /var/lib/apt/lists/* && \
-#    rm -rf /etc/apt/sources.list && \
-#    echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ bullseye main" > /etc/apt/sources.list
-#
-#RUN apt-get update \
-#        && apt-get install -y --no-install-recommends \
-#            libopenblas0-pthread \
-#		littler \
-#                r-cran-docopt \
-#                r-cran-littler \
-#		r-base \
-#		r-base-dev \
-#        r-base-core \
-#		r-recommended \
-#	&& chown root:staff "/usr/local/lib/R/site-library" \
-#	&& chmod g+ws "/usr/local/lib/R/site-library" \
-#	&& ln -s /usr/lib/R/site-library/littler/examples/install.r /usr/local/bin/install.r \
-#	&& ln -s /usr/lib/R/site-library/littler/examples/install2.r /usr/local/bin/install2.r \
-#	&& ln -s /usr/lib/R/site-library/littler/examples/installBioc.r /usr/local/bin/installBioc.r \
-#	&& ln -s /usr/lib/R/site-library/littler/examples/installDeps.r /usr/local/bin/installDeps.r \
-#	&& ln -s /usr/lib/R/site-library/littler/examples/installGithub.r /usr/local/bin/installGithub.r \
-#	&& ln -s /usr/lib/R/site-library/littler/examples/testInstalled.r /usr/local/bin/testInstalled.r \
-#	&& rm -rf /tmp/downloaded_packages/ /tmp/*.rds \
-#	&& rm -rf /var/lib/apt/lists/*
-
 RUN \
 	apt-get update && \
 	apt-get install -y --no-install-recommends \
@@ -51,8 +25,7 @@ RUN \
 		dirmngr \
 		gnupg2 && \
 	rm -rf /var/lib/apt/lists/* && \
-    echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ buster main" > /etc/apt/sources.list && \
-	echo "deb http://cloud.r-project.org/bin/linux/debian buster-cran40/" >> /etc/apt/sources.list && \
+    echo "deb https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/debian/ bullseye main" > /etc/apt/sources.list && \
 	echo "Acquire{Check-Valid-Until false; Retries 10;}" >> /etc/apt/apt.conf && \
 	until apt-key adv --keyserver keyserver.ubuntu.com --recv-key '95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7'; do sleep 10; done && \
     gpg --armor --export '95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7' | tee /etc/apt/trusted.gpg.d/cran_debian_key.asc && \
@@ -60,7 +33,7 @@ RUN \
 	apt-get update && \
     apt-get install -y \
         r-base \
-		r-recommended && \
+        r-recommended && \
 	rm -rf /var/lib/apt/lists/* && \
 	# Remove the last line from sources: the CRAN debian repo that has R itself, which we don't mirror
 	sed -i '$d' /etc/apt/sources.list && \
