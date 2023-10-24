@@ -31,7 +31,14 @@ RUN \
     gpg --armor --export '95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7' | tee /etc/apt/trusted.gpg.d/cran_debian_key.asc && \
     rm -rf /var/lib/apt/lists/* && \
 	apt-get update && \
-    apt-get install -y \
+    apt-get install -y --allow-downgrades \
+        libc6=2.31-13+deb11u6 \
+        libcurl4-openssl-dev \
+        libicu-dev \
+        libpq-dev \
+        libssl-dev \
+        libssh2-1-dev \
+        zlib1g-dev \
         r-base \
         r-recommended && \
 	rm -rf /var/lib/apt/lists/* && \
