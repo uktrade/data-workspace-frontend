@@ -40,10 +40,9 @@ RUN \
         libssh2-1-dev \
         zlib1g-dev \
         r-base \
-        r-recommended && \
+        r-recommended \
+        r-cran-magrittr && \
 	rm -rf /var/lib/apt/lists/* && \
-	# Remove the last line from sources: the CRAN debian repo that has R itself, which we don't mirror
-	sed -i '$d' /etc/apt/sources.list && \
 	echo 'local({' >> /usr/lib/R/etc/Rprofile.site && \
 	echo '  r = getOption("repos")' >> /usr/lib/R/etc/Rprofile.site && \
 	echo '  r["CRAN"] = "https://s3-eu-west-2.amazonaws.com/mirrors.notebook.uktrade.io/cran-binary-rv4/"' >> /usr/lib/R/etc/Rprofile.site && \
