@@ -6,7 +6,7 @@ type DataUsageValues = (typeof DATA_USAGE_KEYS)[keyof typeof DATA_USAGE_KEYS];
 type DataUsage = Record<string, number>;
 
 export type TransformedDataUsageResponse = {
-  title: DataUsageValues;
+  label: DataUsageValues;
   value: number;
 };
 
@@ -17,7 +17,7 @@ export const transformDataUsageResponse = (
 ): TransformedDataUsageResponse[] =>
   Object.keys(response).map(
     (key): TransformedDataUsageResponse => ({
-      title: DATA_USAGE_KEYS[key as DataUsageKeys],
+      label: DATA_USAGE_KEYS[key as DataUsageKeys],
       value: response[key] as number
     })
   );
@@ -37,6 +37,6 @@ export const fetchDataUsage = async (
   } catch (error: unknown) {
     return error instanceof Error
       ? error
-      : new Error('Error: something has gone wrong.');
+      : new Error('Oops! Something went wrong!');
   }
 };
