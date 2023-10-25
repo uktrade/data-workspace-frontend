@@ -110,6 +110,8 @@ const DataListFooterNote = styled('p')`
   ${typography.font({ size: 19 })};
 `;
 
+const NoDataMessage = DataListFooterNote;
+
 type DataDisplayProps = {
   data: TransformedDataUsageResponse[];
   secondary?: boolean;
@@ -124,16 +126,22 @@ const DataDisplay: React.FC<DataDisplayProps> = ({
   return (
     <DataDisplayContainer>
       <H3>Data usage</H3>
-      <DataDisplayList>
-        {data.map(({ label, value }, index) => (
-          <DataDisplayListItem key={index} secondary={secondary}>
-            {value}
-            <span>{label}</span>
-          </DataDisplayListItem>
-        ))}
-      </DataDisplayList>
+      {data.length ? (
+        <>
+          <DataDisplayList data-testid={secondary ? 'secondary' : 'primary'}>
+            {data.map(({ label, value }, index) => (
+              <DataDisplayListItem key={index} secondary={secondary}>
+                {value}
+                <span>{label}</span>
+              </DataDisplayListItem>
+            ))}
+          </DataDisplayList>
+        </>
+      ) : (
+        <NoDataMessage>Currently no data to display</NoDataMessage>
+      )}
       {footerNote && (
-        <DataListFooterNote data-testid="data-usage-footer-note">
+        <DataListFooterNote data-testid="data-display-footer-note">
           {footerNote}
         </DataListFooterNote>
       )}
