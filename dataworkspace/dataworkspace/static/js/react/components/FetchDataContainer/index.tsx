@@ -5,8 +5,7 @@ import LoadingBox from '@govuk-react/loading-box';
 import styled from 'styled-components';
 
 import { ERROR_COLOUR } from '../../constants';
-import { fetchDataUsage } from '../../services';
-import { DataType } from '../../services';
+import { DataUsageResponse, TransformedDataUsageResponse } from '../../types';
 
 const ErrorMessage = styled('p')`
   ${typography.font({ size: 19 })};
@@ -14,27 +13,25 @@ const ErrorMessage = styled('p')`
 `;
 
 type FetchDataContainerProps = {
-  id: string;
-  dataType: DataType;
+  fetchApi: () => DataUsageResponse;
   children: ({
     data
   }: {
-    data: { label: string; value: number }[];
+    data: TransformedDataUsageResponse[];
   }) => React.ReactNode;
 };
 
 const FetchDataContainer = ({
-  id,
-  dataType,
+  fetchApi,
   children
 }: FetchDataContainerProps) => {
-  const [data, setData] = useState<{ label: string; value: number }[]>([]);
+  const [data, setData] = useState<TransformedDataUsageResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<null | string>(null);
 
   useEffect(() => {
     async function fetchData() {
-      const response = await fetchDataUsage(dataType, id);
+      const response = await fetchApi();
       response instanceof Error
         ? setError(response.message)
         : setData(response);
