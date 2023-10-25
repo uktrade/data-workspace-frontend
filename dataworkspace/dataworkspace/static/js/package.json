@@ -9,7 +9,7 @@
     "format": "prettier '**/*.{ts,tsx}' --write",
     "lint": "eslint --ext .ts,.tsx .",
     "lint-staged": "npm run format && npm run lint",
-    "test": "jest"
+    "test": "jest --coverage=true"
   },
   "dependencies": {
     "aws-sdk": "^2.1193.0",
