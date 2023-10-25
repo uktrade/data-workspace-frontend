@@ -8,11 +8,8 @@ import {
   SPACING_POINTS
 } from '@govuk-react/constants';
 import { typography } from '@govuk-react/lib';
-import LoadingBox from '@govuk-react/loading-box';
 import { H3, UnorderedList } from 'govuk-react';
 import styled, { css } from 'styled-components';
-
-import { ERROR_COLOUR } from '../../constants';
 
 const PrimaryLayout = css`
   &:first-child {
@@ -111,11 +108,6 @@ const DataListFooterNote = styled('p')`
   ${typography.font({ size: 19 })};
 `;
 
-const ErrorMessage = styled('p')`
-  ${typography.font({ size: 19 })};
-  color: ${ERROR_COLOUR};
-`;
-
 export type Data = {
   label: string;
   value: number;
@@ -123,45 +115,31 @@ export type Data = {
 
 type DataDisplayProps = {
   data: Data;
-  loading?: boolean;
   secondary?: boolean;
-  error?: string | null;
   footerNote?: React.ReactNode;
 };
 
 const DataDisplay: React.FC<DataDisplayProps> = ({
   data = [],
-  loading = false,
   secondary = false,
-  footerNote = null,
-  error = null
+  footerNote = null
 }) => {
   return (
     <DataDisplayContainer>
       <H3>Data usage</H3>
-      <LoadingBox loading={loading}>
-        {error ? (
-          <ErrorMessage data-testid="data-usage-error">
-            Error: {error}
-          </ErrorMessage>
-        ) : (
-          <>
-            <DataDisplayList>
-              {data.map(({ label, value }, index) => (
-                <DataDisplayListItem key={index} secondary={secondary}>
-                  {value}
-                  <span>{label}</span>
-                </DataDisplayListItem>
-              ))}
-            </DataDisplayList>
-            {footerNote && (
-              <DataListFooterNote data-testid="data-usage-footer-note">
-                {footerNote}
-              </DataListFooterNote>
-            )}
-          </>
-        )}
-      </LoadingBox>
+      <DataDisplayList>
+        {data.map(({ label, value }, index) => (
+          <DataDisplayListItem key={index} secondary={secondary}>
+            {value}
+            <span>{label}</span>
+          </DataDisplayListItem>
+        ))}
+      </DataDisplayList>
+      {footerNote && (
+        <DataListFooterNote data-testid="data-usage-footer-note">
+          {footerNote}
+        </DataListFooterNote>
+      )}
     </DataDisplayContainer>
   );
 };
