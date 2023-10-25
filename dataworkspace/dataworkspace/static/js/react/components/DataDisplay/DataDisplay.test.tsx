@@ -1,14 +1,15 @@
 import { render } from '@testing-library/react';
 
-import DataDisplay, { Data } from '.';
+import { TransformedDataUsageResponse } from '../../types';
+import DataDisplay from '.';
 
-const data: Data = [
+const data: TransformedDataUsageResponse[] = [
   {
-    label: 'Title 1',
+    label: 'Dashboard views',
     value: 100
   },
   {
-    label: 'Title 2',
+    label: 'Bookmarked by Users',
     value: 200
   }
 ];

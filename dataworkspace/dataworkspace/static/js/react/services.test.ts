@@ -66,11 +66,12 @@ describe('fetchDataUsage', () => {
   it('should throw a detailed error when the response returns an error', async () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: false,
-      statusText: 'status text message',
+      status: 404,
+      statusText: 'Not found',
       json: async () => {}
     });
     const response = await fetchDataUsage('datasets', '123');
-    expect(response).toEqual(new Error('status text message'));
+    expect(response).toEqual(new Error('404 Not found'));
   });
   it('should throw a generic error when response fails', async () => {
     global.fetch = jest.fn().mockRejectedValue(() => Promise.reject());

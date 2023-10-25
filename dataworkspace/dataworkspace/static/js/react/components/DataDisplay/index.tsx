@@ -11,6 +11,8 @@ import { typography } from '@govuk-react/lib';
 import { H3, UnorderedList } from 'govuk-react';
 import styled, { css } from 'styled-components';
 
+import { TransformedDataUsageResponse } from '../../types';
+
 const PrimaryLayout = css`
   &:first-child {
     grid-column-start: 3;
@@ -108,13 +110,8 @@ const DataListFooterNote = styled('p')`
   ${typography.font({ size: 19 })};
 `;
 
-export type Data = {
-  label: string;
-  value: number;
-}[];
-
 type DataDisplayProps = {
-  data: Data;
+  data: TransformedDataUsageResponse[];
   secondary?: boolean;
   footerNote?: React.ReactNode;
 };

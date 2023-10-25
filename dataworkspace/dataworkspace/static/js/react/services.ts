@@ -3,14 +3,14 @@ import { API_BASE_URL, DATA_USAGE_KEYS } from './constants';
 type DataUsageKeys = keyof typeof DATA_USAGE_KEYS;
 type DataUsageValues = (typeof DATA_USAGE_KEYS)[keyof typeof DATA_USAGE_KEYS];
 
+type DataType = 'datasets' | 'visualisation' | 'reference';
+
 type DataUsage = Record<string, number>;
 
 export type TransformedDataUsageResponse = {
   label: DataUsageValues;
   value: number;
 };
-
-export type DataType = 'datasets' | 'visualisation' | 'reference';
 
 export const transformDataUsageResponse = (
   response: DataUsage
@@ -30,7 +30,8 @@ export const fetchDataUsage = async (
     const response = await fetch(`/${API_BASE_URL}/${dataType}/${id}/stats/`);
     const data = await response.json();
     if (!response.ok) {
-      throw new Error(response.statusText);
+      const errorMessage = `${response.status} ${response.statusText}`;
+      throw new Error(errorMessage);
     } else {
       return transformDataUsageResponse(data);
     }

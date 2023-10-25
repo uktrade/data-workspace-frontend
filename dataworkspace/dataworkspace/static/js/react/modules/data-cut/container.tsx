@@ -1,10 +1,10 @@
 import React from 'react';
 
-import DataDisplay from '../../components/DataDisplay';
-import FetchDataContainer from '../../components/FetchDataContainer';
+import { DataDisplay, FetchDataContainer } from '../../components';
+import { fetchDataUsage } from '../../services';
 
 const Container = ({ id }: { id: string }): React.ReactNode => (
-  <FetchDataContainer id={id} dataType="datasets">
+  <FetchDataContainer fetchApi={() => fetchDataUsage('datasets', id)}>
     {({ data }) => (
       <DataDisplay
         data={data}
