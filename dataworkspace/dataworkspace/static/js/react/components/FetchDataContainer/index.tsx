@@ -1,19 +1,25 @@
 import React, { useEffect, useState } from 'react';
 
+import { typography } from '@govuk-react/lib';
+import LoadingBox from '@govuk-react/loading-box';
+import styled from 'styled-components';
+
+import { ERROR_COLOUR } from '../../constants';
 import { fetchDataUsage } from '../../services';
 import { DataType } from '../../services';
+
+const ErrorMessage = styled('p')`
+  ${typography.font({ size: 19 })};
+  color: ${ERROR_COLOUR};
+`;
 
 type FetchDataContainerProps = {
   id: string;
   dataType: DataType;
   children: ({
-    data,
-    loading,
-    error
+    data
   }: {
     data: { label: string; value: number }[];
-    loading: boolean;
-    error: string | null;
   }) => React.ReactNode;
 };
 
@@ -26,12 +32,6 @@ const FetchDataContainer = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<null | string>(null);
 
-  const childProps = {
-    data,
-    loading,
-    error
-  };
-
   useEffect(() => {
     async function fetchData() {
       const response = await fetchDataUsage(dataType, id);
@@ -43,7 +43,19 @@ const FetchDataContainer = ({
     fetchData();
   }, []);
 
-  return children(childProps);
+  return (
+    <LoadingBox loading={loading}>
+      <>
+        {error ? (
+          <ErrorMessage data-testid="data-usage-error">
+            Error: {error}
+          </ErrorMessage>
+        ) : (
+          children({ data })
+        )}
+      </>
+    </LoadingBox>
+  );
 };
 
 export default FetchDataContainer;
