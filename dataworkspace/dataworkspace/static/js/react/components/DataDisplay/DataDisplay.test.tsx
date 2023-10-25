@@ -16,9 +16,9 @@ const data: TransformedDataUsageResponse[] = [
 describe('Data display', () => {
   it('should display data', () => {
     const { getByText } = render(<DataDisplay data={data} />);
-    expect(getByText('Title 1')).toBeInTheDocument();
+    expect(getByText('Dashboard views')).toBeInTheDocument();
     expect(getByText('100')).toBeInTheDocument();
-    expect(getByText('Title 2')).toBeInTheDocument();
+    expect(getByText('Bookmarked by Users')).toBeInTheDocument();
     expect(getByText('200')).toBeInTheDocument();
   });
   it('should NOT display a footer note', () => {
