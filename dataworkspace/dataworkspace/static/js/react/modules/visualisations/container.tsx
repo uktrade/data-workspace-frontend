@@ -5,11 +5,9 @@ import FetchDataContainer from '../../components/FetchDataContainer';
 
 const Container = ({ id }: { id: string }): React.ReactNode => (
   <FetchDataContainer id={id} dataType="visualisation">
-    {({ data, error, loading }) => (
+    {({ data }) => (
       <DataDisplay
         data={data}
-        error={error}
-        loading={loading}
         footerNote={<a href="/">Find out more about the metrics above</a>}
       />
     )}
