@@ -5,7 +5,8 @@ import LoadingBox from '@govuk-react/loading-box';
 import styled from 'styled-components';
 
 import { ERROR_COLOUR } from '../../constants';
-import { DataUsageResponse, TransformedDataUsageResponse } from '../../types';
+import { APIResponse } from '../../types';
+import { TransformedDataUsageResponse } from '../../types/dataUsage.types';
 
 const ErrorMessage = styled('p')`
   ${typography.font({ size: 19 })};
@@ -13,7 +14,7 @@ const ErrorMessage = styled('p')`
 `;
 
 type FetchDataContainerProps = {
-  fetchApi: () => DataUsageResponse;
+  fetchApi: () => APIResponse;
   children: ({
     data
   }: {

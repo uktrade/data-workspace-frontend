@@ -11,7 +11,7 @@ import { typography } from '@govuk-react/lib';
 import { H3, UnorderedList } from 'govuk-react';
 import styled, { css } from 'styled-components';
 
-import { TransformedDataUsageResponse } from '../../types';
+import { TransformedDataUsageResponse } from '../../types/dataUsage.types';
 
 const PrimaryLayout = css`
   &:first-child {
