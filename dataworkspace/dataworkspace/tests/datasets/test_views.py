@@ -5024,7 +5024,7 @@ def test_master_dataset_detail_page_shows_pipeline_failures(client, metadata_db)
     url = reverse("datasets:dataset_detail", args=(dataset.id,))
     response = client.get(url)
     assert response.status_code == 200
-    assert not response.context["all_pipeline_last_runs_succeeded"]
+    assert response.context["show_pipeline_failed_message"]
     assert (
         len(
             [
