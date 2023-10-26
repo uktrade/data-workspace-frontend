@@ -503,7 +503,7 @@ async def async_main():
                 "/error_500_application",
                 {
                     "failure_message": "Application " + application["state"],
-                    "application_id": application["id"],
+                    "application_id": application.get("id"),
                 },
             )
 
@@ -534,7 +534,7 @@ async def async_main():
                 "/error_500_application",
                 {
                     "failure_message": "Unable to start the application",
-                    "application_id": application["id"],
+                    "application_id": application.get("id"),
                 },
             )
 
@@ -545,7 +545,7 @@ async def async_main():
                 "/error_500_application",
                 {
                     "failure_message": f"Attempted to start the application, but it {application['state']}",
-                    "application_id": application["id"],
+                    "application_id": application.get("id"),
                 },
             )
 
