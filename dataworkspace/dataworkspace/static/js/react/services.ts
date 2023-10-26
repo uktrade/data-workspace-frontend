@@ -1,24 +1,17 @@
 import { API_BASE_URL, DATA_USAGE_KEYS } from './constants';
-
-type DataUsageKeys = keyof typeof DATA_USAGE_KEYS;
-type DataUsageValues = (typeof DATA_USAGE_KEYS)[keyof typeof DATA_USAGE_KEYS];
-
-type DataType = 'datasets' | 'visualisation' | 'reference';
-
-type DataUsage = Record<string, number>;
-
-export type TransformedDataUsageResponse = {
-  label: DataUsageValues;
-  value: number;
-};
+import {
+  DataType,
+  DataUsageKeys,
+  TransformedDataUsageResponse
+} from './types/dataUsage.types';
 
 export const transformDataUsageResponse = (
-  response: DataUsage
+  response: Record<string, number>
 ): TransformedDataUsageResponse[] =>
   Object.keys(response).map(
     (key): TransformedDataUsageResponse => ({
       label: DATA_USAGE_KEYS[key as DataUsageKeys],
-      value: response[key] as number
+      value: response[key]
     })
   );
 
