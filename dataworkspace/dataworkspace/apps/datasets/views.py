@@ -483,7 +483,7 @@ class DatasetDetailView(DetailView):
                     and subscription.first().is_active(),
                     "details": subscription.first(),
                 },
-                "all_pipeline_last_runs_succeeded": all(
+                "show_pipeline_failed_message": not all(
                     (x.pipeline_last_run_succeeded for x in master_datasets_info)
                 ),
             }

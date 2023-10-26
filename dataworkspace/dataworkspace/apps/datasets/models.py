@@ -898,8 +898,7 @@ class SourceTable(BaseSource):
         return get_pipeline_last_success_date(pipeline_name)
 
     def pipeline_last_run_success(self):
-        last_state = self.get_pipeline_last_run_state()
-        return last_state == "success" if last_state is not None else None
+        return self.get_pipeline_last_run_state() in ["success", None]
 
 
 class SourceTableFieldDefinition(models.Model):
