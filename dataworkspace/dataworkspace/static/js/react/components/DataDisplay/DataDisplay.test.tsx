@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react';
 
-import { TransformedDataUsageResponse } from '../../types';
+import { TransformedDataUsageResponse } from '../../types/dataUsage.types';
 import DataDisplay from '.';
 
 const data: TransformedDataUsageResponse[] = [
