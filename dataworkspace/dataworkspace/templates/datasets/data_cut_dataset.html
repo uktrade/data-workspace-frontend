@@ -84,11 +84,11 @@
     <div class="govuk-grid-column-full">
       <h2 class="govuk-heading-m">
         {% if has_datacut_tables and has_datacut_links %}
-        Data Tables & Links
+        Data tables & links
         {% elif has_datacut_tables and not has_datacut_links %}
         Data tables
         {% elif not has_datacut_tables and has_datacut_links %}
-        Links
+        Data links
         {% endif %}
       </h2> 
       {% if not has_access and has_datacut_tables and not has_datacut_links %}
