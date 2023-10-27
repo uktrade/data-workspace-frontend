@@ -70,7 +70,6 @@
       {% if not has_access %}
         {% include 'partials/request_access.html' with type='master' has_data_access=has_access %}
       {% endif %}
-      {% endif %}
       <table class="govuk-table">
         <thead>
         <tr class="govuk-table__row">
@@ -128,6 +127,7 @@
       </table>
     </div>
   </div>
+  {% endif %}
 
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
