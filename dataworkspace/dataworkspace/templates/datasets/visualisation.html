@@ -14,10 +14,9 @@
           <li class="govuk-breadcrumbs__list-item">
             <a class="govuk-link" href="{% url "datasets:dataset_detail" dataset_uuid=visualisation.dataset.id %}#{{ visualisation.dataset.slug }}">{{ visualisation.dataset.name }}</a>
           </li>
-          <li class="govuk-breadcrumbs__list-item">
-            {{ visualisation.name }}
+          <li class="govuk-breadcrumbs__list-item" title="{{visualisation.name}}">
+            {{ visualisation.name|truncatechars_html:30 }}
           </li>
-          
         </ol>
       </div>
     </div>
