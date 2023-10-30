@@ -79,18 +79,11 @@
   </div>
   {% endif %}
 
+  <!-- Data section -->
   {% if has_datacut_tables or has_datacut_links %}
   <div class="govuk-grid-row govuk-!-margin-top-4">
     <div class="govuk-grid-column-full">
-      <h2 class="govuk-heading-m">
-        {% if has_datacut_tables and has_datacut_links %}
-        Data tables & links
-        {% elif has_datacut_tables and not has_datacut_links %}
-        Data tables
-        {% elif not has_datacut_tables and has_datacut_links %}
-        Data links
-        {% endif %}
-      </h2> 
+      <h2 class="govuk-heading-m">Data</h2> 
       {% if not has_access and has_datacut_tables and not has_datacut_links %}
           {% include 'partials/request_access.html' with type='datacut' has_data_access=has_access %}
       {% endif %}
@@ -113,20 +106,22 @@
               <tr class="govuk-table__row">
                 <td class="govuk-table__cell">
                   {% if has_access and datacut_link.data_grid_enabled %}
-                      <a class="govuk-link govuk-link--no-visited-state govuk-body"
-                      href="{% url "datasets:custom_dataset_query_detail" dataset_uuid=dataset.id object_id=datacut_link.id %}">
+                    <a 
+                      class="govuk-link govuk-link--no-visited-state govuk-body"
+                      href="{% url "datasets:custom_dataset_query_detail" dataset_uuid=dataset.id object_id=datacut_link.id %}"
+                    >
                       {{ datacut_link.name }}</a>
-                    {% else %}
+                  {% else %}
                       {{ datacut_link.name }}
                   {% endif %}
                 </td>
                 {% if has_datacut_links %}
                 <td class="govuk-table__cell">
-                  -
+                  Data table
                 </td>
                 {% endif %}
                 <td class="govuk-table__cell">
-                  {{ datacut_link.get_data_last_updated_date|date_with_gmt_offset|default_if_none:"N/A" }}
+                  {{ datacut_link.get_data_last_updated_date|date_with_gmt_offset|default_if_none:"N/A" }} 
                 </td>
               </tr>
             {% endif %}
@@ -134,27 +129,49 @@
         {% endif %}
         {% if has_datacut_links %}
           {% for datacut_link, can_show_link, code_snippets, columns, tools_links in datacut_links_info %}
-              {% if can_show_link and datacut_link.type != custom_dataset_query_type %}
-              <tr class="govuk-table__row">
-                <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
-                  {% if has_access %}
-                  <a href="{{ datacut_link.get_absolute_url }}" class="govuk-link govuk-link--no-visited-state govuk-body">
-                    {{ datacut_link.name}}
-                  </a>&nbsp;{% include "partials/icons/open_externally_icon.html" %}
-                  {% else %}
-                    {{ datacut_link.name}}
-                  {% endif %}
-                </td>
-                <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
-                  {{ datacut_link.format}}
-                </td>
-                <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
-                  {{ datacut_link.get_data_last_updated_date|date_with_gmt_offset|default_if_none:"N/A" }}
-                </td>
-              </tr>
-              {% endif %}
-            {% endfor %}
-          {% endif %}
+            {% if can_show_link and datacut_link.type != custom_dataset_query_type %}
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
+                {% if has_access %}
+                <a  
+                  href=""
+                  class="govuk-link govuk-link--no-visited-state govuk-body openModalLink"
+                  data-modal-id="{{ datacut_link.id }}"
+                  >
+                  {{ datacut_link.name}}
+                </a>
+                <dialog id="modal{{ datacut_link.id }}">
+                  {% include "datasets/partials/dialog-download-message.html" %}
+                    <div class="govuk-button-group">
+                      <a 
+                        class="govuk-button govuk-button--primary" 
+                        data-module="govuk-button" 
+                        href="{{ datacut_link.get_absolute_url }}"
+                        >
+                          Download data as {{ datacut_link.format }}
+                      </a>
+                      <button 
+                        class="govuk-button govuk-button--secondary closePopUp"  
+                        data-modal-id="{{ datacut_link.id }}"
+                        >
+                          Close
+                        </button>
+                    </div>
+                </dialog>
+                {% else %}
+                  {{ datacut_link.name}}
+                {% endif %}
+              </td>
+              <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
+                {{ datacut_link.format}} download
+              </td>
+              <td class="govuk-table__cell {% if code_snippets %}app-table_cell--no-border{% endif %}">
+                {{ datacut_link.get_data_last_updated_date|date_with_gmt_offset|default_if_none:"N/A" }}
+              </td>
+            </tr>
+            {% endif %}
+          {% endfor %}
+        {% endif %}
         </tbody>
       </table>
     </div>
@@ -243,6 +260,30 @@
     });
   </script>
 
-  
+  <script nonce="{{ request.csp_nonce }}">
+    document.addEventListener("DOMContentLoaded", function () {
+        // Use event delegation for opening modals
+        document.addEventListener("click", function (e) {
+            if (e.target.classList.contains("openModalLink")) {
+                e.stopPropagation();
+                e.preventDefault();
+                const modalId = e.target.getAttribute("data-modal-id");
+                const modal = document.getElementById(`modal${modalId}`);
+                modal.showModal();
+            }
+        });
+
+        // Use event delegation for closing modals
+        document.addEventListener("click", function (e) {
+            if (e.target.classList.contains("closePopUp")) {
+                e.stopPropagation();
+                e.preventDefault();
+                const modalId = e.target.getAttribute("data-modal-id");
+                const modal = document.getElementById(`modal${modalId}`);
+                modal.close();
+            }
+        });
+    });
+  </script>     
   {% render_bundle "data-cut" "js" %}
 {% endblock %}
