@@ -269,7 +269,7 @@
                 e.preventDefault(); // negate <a> tag href attribute
                 const modalId = e.target.getAttribute("data-modal-id"); // datacut link id hand over
                 const modal = document.getElementById(`modal${modalId}`); // get modal by associated datacut link id 
-                modal.showModal();
+                modal.showModal(); // show the modal
             }
         });
 
@@ -280,7 +280,7 @@
                 e.preventDefault(); // negate <a> tag href attribute
                 const modalId = e.target.getAttribute("data-modal-id"); // datacut link id hand over
                 const modal = document.getElementById(`modal${modalId}`); // get modal by associated datacut link id 
-                modal.close();
+                modal.close(); // hide/close the modal
             }
         });
     });
