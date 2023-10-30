@@ -101,13 +101,13 @@ def search_and_replace_model(model):
 
 
 def search_and_replace_catalogue_items(apps, _):
-    model = apps.get_model("datasets", "app_dataset").objects.all()
+    model = apps.get_model("datasets", "app_dataset")
     search_and_replace_model(model)
 
-    model = apps.get_model("datasets", "datasets_visualisationcatalogueitem").objects.all()
+    model = apps.get_model("datasets", "datasets_visualisationcatalogueitem")
     search_and_replace_model(model)
 
-    model = apps.get_model("datasets", "app_referencedataset").objects.all()
+    model = apps.get_model("datasets", "app_referencedataset")
     search_and_replace_model(model)
 
 
