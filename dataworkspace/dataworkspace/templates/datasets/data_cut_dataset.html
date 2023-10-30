@@ -154,8 +154,8 @@
                         class="govuk-button govuk-button--secondary closePopUp"  
                         data-modal-id="{{ datacut_link.id }}"
                         >
-                          Close
-                        </button>
+                        Close
+                      </button>
                     </div>
                 </dialog>
                 {% else %}
@@ -262,24 +262,24 @@
 
   <script nonce="{{ request.csp_nonce }}">
     document.addEventListener("DOMContentLoaded", function () {
-        // Use event delegation for opening modals
+        // use event delegation for opening modals
         document.addEventListener("click", function (e) {
-            if (e.target.classList.contains("openModalLink")) {
-                e.stopPropagation();
-                e.preventDefault();
-                const modalId = e.target.getAttribute("data-modal-id");
-                const modal = document.getElementById(`modal${modalId}`);
+            if (e.target.classList.contains("openModalLink")) { // find target element containing class name
+                e.stopPropagation(); 
+                e.preventDefault(); // negate <a> tag href attribute
+                const modalId = e.target.getAttribute("data-modal-id"); // datacut link id hand over
+                const modal = document.getElementById(`modal${modalId}`); // get modal by associated datacut link id 
                 modal.showModal();
             }
         });
 
-        // Use event delegation for closing modals
+        // use event delegation for closing modals
         document.addEventListener("click", function (e) {
-            if (e.target.classList.contains("closePopUp")) {
+            if (e.target.classList.contains("closePopUp")) { // find target element containing class name
                 e.stopPropagation();
-                e.preventDefault();
-                const modalId = e.target.getAttribute("data-modal-id");
-                const modal = document.getElementById(`modal${modalId}`);
+                e.preventDefault(); // negate <a> tag href attribute
+                const modalId = e.target.getAttribute("data-modal-id"); // datacut link id hand over
+                const modal = document.getElementById(`modal${modalId}`); // get modal by associated datacut link id 
                 modal.close();
             }
         });
