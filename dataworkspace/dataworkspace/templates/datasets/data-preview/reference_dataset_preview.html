@@ -39,7 +39,7 @@
         <a class="govuk-breadcrumbs__link"
            href="{% url "datasets:dataset_detail" dataset_uuid=model.uuid %}#{{ model.slug }}">{{ model.name }}</a>
       </li>
-      <li class="govuk-breadcrumbs__list-item" title={{model.name}}>{{ model.name|truncatechars_html:30 }}
+      <li class="govuk-breadcrumbs__list-item" {% if model.name|length > 30 %} title="{{model.name}}" {% endif %}>{{ model.name|truncatechars_html:30 }}
       </li>
       {% flag SECURITY_CLASSIFICATION_FLAG %}
         <div style="float: right" class="govuk-!-padding-right-3">
