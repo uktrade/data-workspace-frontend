@@ -16,8 +16,8 @@
           <li class="govuk-breadcrumbs__list-item">
             <a class="govuk-breadcrumbs__link" href="/">Home</a>
           </li>
-          <li class="govuk-breadcrumbs__list-item" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden; max-width: 330px">
-            {{ model.name }}
+          <li class="govuk-breadcrumbs__list-item" {% if model.name|length > 30 %} title="{{model.name}}" {% endif %}>
+            {{ model.name|truncatechars_html:30 }}
           </li>
           {% if perms.datasets_dataset.change %}
             <li class="govuk-breadcrumbs__list-item">

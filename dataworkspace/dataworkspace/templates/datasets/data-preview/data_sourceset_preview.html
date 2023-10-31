@@ -1,5 +1,5 @@
 {% extends '_main_no_container.html' %}
-{% load static core_tags humanize waffle_tags datasets_tags %}
+{% load static core_tags humanize waffle_tags datasets_tags core_filters %}
 
 {% block page_title %}View {{ object.name }} - {{ block.super }}{% endblock %}data-grid
 
@@ -43,30 +43,30 @@
         </li>
         <li class="govuk-breadcrumbs__list-item">
           <a class="govuk-breadcrumbs__link"
-             href="{% url "datasets:dataset_detail" dataset_uuid=object.dataset.id %}#{{ object.dataset.slug }}">{{ object.dataset }}</a>
+             href="{% url "datasets:dataset_detail" dataset_uuid=object.dataset.id %}#{{ object.dataset.slug }}">{{ object.dataset.name }}</a>
         </li>
-        <li class="govuk-breadcrumbs__list-item">{{ object.name }}</li>
-        {% flag SECURITY_CLASSIFICATION_FLAG %}
-          <div style="float: right" class="govuk-!-padding-right-3">
-            {% if not object.dataset.government_security_classification %}
-              <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
-            {% else %}
-              {% if object.dataset.get_government_security_classification_display == "OFFICIAL" %}
-                <strong
-                  class="govuk-tag govuk-tag--blue">{{ object.dataset.get_government_security_classification_display }}</strong>
-              {% else %}
-                <strong
-                  class="govuk-tag govuk-tag--red">{{ object.dataset.get_government_security_classification_display }}
-                  {% if object.dataset.sensitivity.all %}
-                    {% for sensitivity in object.dataset.sensitivity.all %}
-                      {% if not forloop.first %}and{% endif %}</span> {{ sensitivity }}
-                    {% endfor %}
-                  {% endif %} </strong>
-              {% endif %}
-            {% endif %}
-          </div>
-        {% endflag %}
+        <li class="govuk-breadcrumbs__list-item" {% if object.name|length > 30 %} title="{{object.name}}" {% endif %}>{{ object.name|truncatechars_html:30 }}</li>
       </ol>
+      {% flag SECURITY_CLASSIFICATION_FLAG %}
+      <div class="security-classification">
+        {% if not object.dataset.government_security_classification %}
+          <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
+        {% else %}
+          {% if object.dataset.get_government_security_classification_display == "OFFICIAL" %}
+            <strong
+              class="govuk-tag govuk-tag--blue">{{ object.dataset.get_government_security_classification_display }}</strong>
+          {% else %}
+            <strong
+              class="govuk-tag govuk-tag--red">{{ object.dataset.get_government_security_classification_display }}
+              {% if object.dataset.sensitivity.all %}
+                {% for sensitivity in object.dataset.sensitivity.all %}
+                  {% if not forloop.first %}and{% endif %}</span> {{ sensitivity }}
+                {% endfor %}
+              {% endif %} </strong>
+          {% endif %}
+        {% endif %}
+      </div>
+    {% endflag %}
     </div>
     <div id="collapsible-header" class="govuk-!-margin-top-4">
       {% if object.disable_data_grid_interaction %}
