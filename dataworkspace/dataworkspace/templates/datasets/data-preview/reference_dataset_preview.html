@@ -41,27 +41,27 @@
       </li>
       <li class="govuk-breadcrumbs__list-item" {% if model.name|length > 30 %} title="{{model.name}}" {% endif %}>{{ model.name|truncatechars_html:30 }}
       </li>
-      {% flag SECURITY_CLASSIFICATION_FLAG %}
-        <div style="float: right" class="govuk-!-padding-right-3">
-          {% if not model.government_security_classification %}
-            <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
-          {% else %}
-            {% if model.get_government_security_classification_display == "OFFICIAL" %}
-              <strong
-                class="govuk-tag govuk-tag--blue">{{ model.get_government_security_classification_display }}</strong>
-            {% else %}
-              <strong
-                class="govuk-tag govuk-tag--red">{{ model.get_government_security_classification_display }}
-                {% if model.sensitivity.all %}
-                  {% for sensitivity in model.sensitivity.all %}
-                    {% if not forloop.first %}and{% endif %}</span> {{ sensitivity }}
-                  {% endfor %}
-                {% endif %} </strong>
-            {% endif %}
-          {% endif %}
-        </div>
-      {% endflag %}
     </ol>
+    {% flag SECURITY_CLASSIFICATION_FLAG %}
+    <div class="security-classification">
+    {% if not model.government_security_classification %}
+      <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
+    {% else %}
+      {% if model.get_government_security_classification_display == "OFFICIAL" %}
+        <strong
+          class="govuk-tag govuk-tag--blue">{{ model.get_government_security_classification_display }}</strong>
+      {% else %}
+        <strong
+          class="govuk-tag govuk-tag--red">{{ model.get_government_security_classification_display }}
+          {% if model.sensitivity.all %}
+            {% for sensitivity in model.sensitivity.all %}
+              {% if not forloop.first %}and{% endif %}</span> {{ sensitivity }}
+            {% endfor %}
+          {% endif %} </strong>
+      {% endif %}
+    {% endif %}
+  </div>
+{% endflag %}
   </div>
   <div id="collapsible-header" class="govuk-!-margin-top-4">
       {% include "datasets/partials/grid-view-saved.html" %}

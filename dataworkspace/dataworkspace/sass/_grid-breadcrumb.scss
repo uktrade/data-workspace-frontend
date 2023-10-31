@@ -1,0 +1,8 @@
+.app-grid-breadcrumbs {
+    border-bottom: 1px solid #b1b4b6;
+    margin-bottom: govuk-spacing(3);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    padding: 0 govuk-spacing(2) govuk-spacing(2);
+    grid-gap: govuk-spacing(2);
+}
