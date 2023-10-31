@@ -135,7 +135,7 @@
                 {% if has_access %}
                 <a  
                   href="#"
-                  class="govuk-link govuk-link--no-visited-state govuk-body openModalLink"
+                  class="govuk-link govuk-link--no-visited-state govuk-body"
                   data-modal-id="{{ datacut_link.id }}"
                   >
                   {{ datacut_link.name}}
@@ -151,7 +151,7 @@
                           Download data as {{ datacut_link.format }}
                       </a>
                       <button 
-                        class="govuk-button govuk-button--secondary closePopUp"  
+                        class="govuk-button govuk-button--secondary"  
                         data-modal-id="{{ datacut_link.id }}"
                         >
                         Close
@@ -260,30 +260,6 @@
     });
   </script>
 
-  <script nonce="{{ request.csp_nonce }}">
-    document.addEventListener("DOMContentLoaded", function () {
-        // use event delegation for opening modals
-        document.addEventListener("click", function (e) {
-            if (e.target.classList.contains("openModalLink")) { // find target element containing class name
-                e.stopPropagation(); 
-                e.preventDefault(); // negate <a> tag href attribute
-                const modalId = e.target.getAttribute("data-modal-id"); // datacut link id hand over
-                const modal = document.getElementById(`modal${modalId}`); // get modal by associated datacut link id 
-                modal.showModal(); // show the modal
-            }
-        });
-
-        // use event delegation for closing modals
-        document.addEventListener("click", function (e) {
-            if (e.target.classList.contains("closePopUp")) { // find target element containing class name
-                e.stopPropagation();
-                e.preventDefault(); // negate <a> tag href attribute
-                const modalId = e.target.getAttribute("data-modal-id"); // datacut link id hand over
-                const modal = document.getElementById(`modal${modalId}`); // get modal by associated datacut link id 
-                modal.close(); // hide/close the modal
-            }
-        });
-    });
-  </script>     
+  <script src="{% static 'dialog.js' %}" nonce="{{ request.csp_nonce }}"></script>
   {% render_bundle "data-cut" "js" %}
 {% endblock %}
