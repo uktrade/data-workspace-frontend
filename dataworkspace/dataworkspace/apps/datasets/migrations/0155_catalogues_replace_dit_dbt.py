@@ -27,7 +27,7 @@ def replace_func(field_name, find_str, replace_str):
     return Func(F(field_name), Value(find_str), Value(replace_str), function="replace")
 
 
-def search_and_replace_model(model):
+def search_and_replace_all_fields(model):
     model.objects.exclude(name__in=skip_items).update(
         name=replace_func("name", dit, dbt),
         short_description=replace_func("short_description", dit, dbt),
@@ -76,15 +76,15 @@ def search_and_replace_specific_fields(model):
 
 def search_and_replace_catalogue_items(apps, _):
     model = apps.get_model("datasets", "DataSet")
-    search_and_replace_model(model)
+    search_and_replace_all_fields(model)
     search_and_replace_specific_fields(model)
 
     model = apps.get_model("datasets", "VisualisationCatalogueItem")
-    search_and_replace_model(model)
+    search_and_replace_all_fields(model)
     search_and_replace_specific_fields(model)
 
     model = apps.get_model("datasets", "ReferenceDataset")
-    search_and_replace_model(model)
+    search_and_replace_all_fields(model)
 
 
 class Migration(migrations.Migration):
