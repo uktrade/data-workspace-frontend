@@ -49,15 +49,21 @@
 
 {% block content %}
   {% if model.is_draft %}
-    <div class="govuk-warning-text">
-      <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
-      <div class="govuk-warning-text__text">
-        <strong>
-          <span class="govuk-warning-text__assistive">Warning</span>
-            You are viewing a draft reference dataset.
-        </strong>
-        <p class="govuk-body govuk-!-margin-top-4">
-          This reference dataset has not been approved for use by the DBT Reference Data Board.
+      <div class="govuk-notification-banner" role="region"
+      aria-labelledby="govuk-notification-banner-title"
+      data-module="govuk-notification-banner">
+      <div class="govuk-notification-banner__header">
+        <h2 class="govuk-notification-banner__title" id="govuk-notification-banner-title">
+          Important
+        </h2>
+      </div>
+      <div class="govuk-notification-banner__content">
+        <p class="govuk-notification-banner__heading">
+          Do not use this dataset
+        </p>
+        <p class="govuk-body">
+          This is a draft reference dataset. It is being reviewed by the DBT Reference Data Board.<br>
+          <a class="govuk-notification-banner__link" href="#">Find out more about draft reference datasets.</a>
         </p>
       </div>
     </div>

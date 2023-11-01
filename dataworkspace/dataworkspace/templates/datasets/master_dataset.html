@@ -35,12 +35,36 @@
   </div>
 {% endblock %}
 
+
+
 {% block content %}
   {% browser_is_internet_explorer as is_ie %}
 
   {% if not model.published %}
     {% include 'partials/unpublished_banner.html' with type='dataset' %}
   {% endif %}
+
+  {% if not False %}
+  <div class="govuk-notification-banner" role="region"
+    aria-labelledby="govuk-notification-banner-title"
+    data-module="govuk-notification-banner">
+      <div class="govuk-notification-banner__header">
+        <h2 class="govuk-notification-banner__title" id="govuk-notification-banner-title">
+          Important
+        </h2>
+      </div>
+      <div class="govuk-notification-banner__content">
+        <p class="govuk-notification-banner__heading">
+          This dataset is no longer updated
+        </p>
+        <p class="govuk-body">
+          It was last update on 22 October 2022 at 8:31am. Although it is no longer updated,
+          it is still available for use as it may be linked to exisiting dashboards or reports.
+        </p>
+      </div>
+  </div>
+  {% endif %}
+
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
       <span class="govuk-caption-xl">Source dataset</span>
@@ -48,7 +72,6 @@
       {% include "data_collections/partials/header_action_links.html" with dataType="source" %}
     </div>
   </div>
-
 
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-one-half">
