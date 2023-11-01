@@ -57,7 +57,7 @@ describe('FetchDataContainer', () => {
 
   it('should render a component with data from an api', async () => {
     const { findByText } = setUp();
-    expect(await findByText('Page Views')).toBeInTheDocument();
+    expect(await findByText('Page views')).toBeInTheDocument();
   });
 
   it('should render an error message when the api fails', async () => {

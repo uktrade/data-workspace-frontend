@@ -9,7 +9,7 @@ const data: TransformedDataUsageResponse[] = [
     value: 100
   },
   {
-    label: 'Bookmarked by Users',
+    label: 'Bookmarked by users',
     value: 200
   }
 ];
@@ -26,7 +26,7 @@ describe('Data display', () => {
     const { getByText } = render(<DataDisplay data={data} />);
     expect(getByText('Dashboard views')).toBeInTheDocument();
     expect(getByText('100')).toBeInTheDocument();
-    expect(getByText('Bookmarked by Users')).toBeInTheDocument();
+    expect(getByText('Bookmarked by users')).toBeInTheDocument();
     expect(getByText('200')).toBeInTheDocument();
   });
   it('should display a message if no data is returned', () => {

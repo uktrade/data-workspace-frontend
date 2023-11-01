@@ -12,23 +12,23 @@ describe('transformDataUsageResponse', () => {
   it('should transform a data usage response', () => {
     const expected = [
       {
-        label: 'Page Views',
+        label: 'Page views',
         value: 666
       },
       {
-        label: 'Table Queried by users',
+        label: 'Table queried by users',
         value: 0
       },
       {
-        label: 'Table Views',
+        label: 'Table views',
         value: 0
       },
       {
-        label: 'Added to Collections',
+        label: 'Added to collections',
         value: 1
       },
       {
-        label: 'Bookmarked by Users',
+        label: 'Bookmarked by users',
         value: 0
       },
       {
@@ -43,11 +43,11 @@ describe('transformDataUsageResponse', () => {
 describe('fetchDataUsage', () => {
   it('should return a response', async () => {
     const expected = [
-      { label: 'Page Views', value: 713 },
-      { label: 'Table Queried by users', value: 0 },
-      { label: 'Table Views', value: 0 },
-      { label: 'Added to Collections', value: 1 },
-      { label: 'Bookmarked by Users', value: 0 }
+      { label: 'Page views', value: 713 },
+      { label: 'Table queried by users', value: 0 },
+      { label: 'Table views', value: 0 },
+      { label: 'Added to collections', value: 1 },
+      { label: 'Bookmarked by users', value: 0 }
     ];
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
