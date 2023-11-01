@@ -21,6 +21,7 @@ dit = "DIT"
 dbt = "DBT"
 dit_full = "Department for International Trade"
 dbt_full = "Department for Business and Trade"
+dit_full_low = "department for international trade"
 
 
 def replace_func(field_name, find_str, replace_str):
@@ -35,13 +36,19 @@ def search_and_replace_all_fields(model):
         licence=replace_func("licence", dit, dbt),
         restrictions_on_usage=replace_func("restrictions_on_usage", dit, dbt),
     )
-
     model.objects.exclude(name__in=skip_items).update(
         name=replace_func("name", dit_full, dbt_full),
         short_description=replace_func("short_description", dit_full, dbt_full),
         description=replace_func("description", dit_full, dbt_full),
         licence=replace_func("licence", dit_full, dbt_full),
         restrictions_on_usage=replace_func("restrictions_on_usage", dit_full, dbt_full),
+    )
+    model.objects.exclude(name__in=skip_items).update(
+        name=replace_func("name", dit_full_low, dbt_full),
+        short_description=replace_func("short_description", dit_full_low, dbt_full),
+        description=replace_func("description", dit_full_low, dbt_full),
+        licence=replace_func("licence", dit_full_low, dbt_full),
+        restrictions_on_usage=replace_func("restrictions_on_usage", dit_full_low, dbt_full),
     )
 
 
@@ -53,6 +60,10 @@ def search_and_replace_specific_fields(model):
     model.objects.exclude(name__in=skip_items).update(
         retention_policy=replace_func("retention_policy", dit_full, dbt_full),
         personal_data=replace_func("personal_data", dit_full, dbt_full),
+    )
+    model.objects.exclude(name__in=skip_items).update(
+        retention_policy=replace_func("retention_policy", dit_full_low, dbt_full),
+        personal_data=replace_func("personal_data", dit_full_low, dbt_full),
     )
     for dataset in model.objects.exclude(name__in=skip_items).all():
         if dataset.eligibility_criteria:
