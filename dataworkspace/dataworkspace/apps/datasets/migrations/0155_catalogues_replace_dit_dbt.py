@@ -1,4 +1,3 @@
-import re
 from django.db import migrations
 from django.db.models import F, Func, Value
 
