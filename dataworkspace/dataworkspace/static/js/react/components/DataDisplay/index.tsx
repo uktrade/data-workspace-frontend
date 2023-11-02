@@ -65,7 +65,7 @@ const SecondaryLayout = css`
 
 const DataDisplayList = styled(UnorderedList)`
   padding: 0;
-  margin-bottom: ${SPACING_POINTS[9]}px;
+  margin: ${SPACING_POINTS[9]}px 0 ${SPACING_POINTS[9]}px;
   list-style: none;
 
   ${MEDIA_QUERIES.DESKTOP} {
@@ -105,12 +105,10 @@ const DataDisplayContainer = styled('div')`
   margin-top: ${SPACING_POINTS['8']}px;
 `;
 
-const DataListFooterNote = styled('p')`
+const StyledParagraph = styled('p')`
   margin: ${SPACING.SCALE_3} 0;
   ${typography.font({ size: 19 })};
 `;
-
-const NoDataMessage = DataListFooterNote;
 
 type DataDisplayProps = {
   data: TransformedDataUsageResponse[];
@@ -126,6 +124,11 @@ const DataDisplay: React.FC<DataDisplayProps> = ({
   return (
     <DataDisplayContainer>
       <H3>Data usage</H3>
+      <StyledParagraph>
+        The data below has been captured since this catalogue item was initially
+        published.
+      </StyledParagraph>
+
       {data.length ? (
         <>
           <DataDisplayList data-testid={secondary ? 'secondary' : 'primary'}>
@@ -138,12 +141,12 @@ const DataDisplay: React.FC<DataDisplayProps> = ({
           </DataDisplayList>
         </>
       ) : (
-        <NoDataMessage>Currently no data to display</NoDataMessage>
+        <StyledParagraph>Currently no data to display</StyledParagraph>
       )}
       {footerNote && (
-        <DataListFooterNote data-testid="data-display-footer-note">
+        <StyledParagraph data-testid="data-display-footer-note">
           {footerNote}
-        </DataListFooterNote>
+        </StyledParagraph>
       )}
     </DataDisplayContainer>
   );
