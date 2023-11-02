@@ -24,7 +24,7 @@
       null,
       null,
       JSON.parse(document.getElementById('grid_data').textContent),
-      '{{ model.slug }}-{{ model.published_version }}-custom-export.csv',
+      '{{ model.get_custom_export_file_name }}',
       null,
       '{{ model.send_post_data_url}}',
       '{{ model.id }}',
