@@ -67,11 +67,12 @@ def search_and_replace_specific_fields(model):
     )
     for dataset in model.objects.exclude(name__in=skip_items).all():
         if dataset.eligibility_criteria:
-            eligibility_criteria = list(dataset.eligibility_criteria)
             eligibility_criteria = [
                 re.sub(criteria, dit, dbt, flags=re.IGNORECASE)
-                for criteria in eligibility_criteria
+                for criteria in list(dataset.eligibility_criteria)
             ]
+            dataset.eligibility_criteria = eligibility_criteria
+            dataset.save()
             eligibility_criteria = [
                 re.sub(
                     criteria,
@@ -79,7 +80,7 @@ def search_and_replace_specific_fields(model):
                     dbt_full,
                     flags=re.IGNORECASE,
                 )
-                for criteria in eligibility_criteria
+                for criteria in list(dataset.eligibility_criteria)
             ]
             dataset.eligibility_criteria = eligibility_criteria
             dataset.save()
