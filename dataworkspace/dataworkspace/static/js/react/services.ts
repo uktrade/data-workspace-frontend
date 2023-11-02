@@ -11,7 +11,7 @@ export const transformDataUsageResponse = (
   Object.keys(response).map(
     (key): TransformedDataUsageResponse => ({
       label: DATA_USAGE_KEYS[key as DataUsageKeys],
-      value: response[key]
+      value: Math.round(response[key] * 1000) / 1000
     })
   );
 
