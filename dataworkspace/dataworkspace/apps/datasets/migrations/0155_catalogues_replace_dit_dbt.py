@@ -1,4 +1,3 @@
-import re
 from django.db import migrations
 from django.db.models import F, Func, Value
 
@@ -65,25 +64,6 @@ def search_and_replace_specific_fields(model):
         retention_policy=replace_func("retention_policy", dit_full_low, dbt_full),
         personal_data=replace_func("personal_data", dit_full_low, dbt_full),
     )
-    for dataset in model.objects.exclude(name__in=skip_items).all():
-        if dataset.eligibility_criteria:
-            eligibility_criteria = [
-                re.sub(criteria, dit, dbt, flags=re.IGNORECASE)
-                for criteria in list(dataset.eligibility_criteria)
-            ]
-            dataset.eligibility_criteria = eligibility_criteria
-            dataset.save()
-            eligibility_criteria = [
-                re.sub(
-                    criteria,
-                    dit_full,
-                    dbt_full,
-                    flags=re.IGNORECASE,
-                )
-                for criteria in list(dataset.eligibility_criteria)
-            ]
-            dataset.eligibility_criteria = eligibility_criteria
-            dataset.save()
 
 
 def search_and_replace_catalogue_items(apps, _):
