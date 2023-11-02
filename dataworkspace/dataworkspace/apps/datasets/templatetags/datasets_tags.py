@@ -134,6 +134,25 @@ def can_edit_dataset(user, dataset):
 
 
 @register.filter
+def can_manage_editors(user, model):
+    return (
+        user.is_superuser
+        or user == model.information_asset_owner
+        or user == model.information_asset_manager
+    )
+
+
+@register.filter
+def can_manage_data(user, model):
+    return (
+        user.is_superuser
+        or user == model.information_asset_owner
+        or user == model.information_asset_manager
+        or user in model.data_catalogue_editors.all()
+    )
+
+
+@register.filter
 def to_json(data):
     def handler(obj):
         if hasattr(obj, "isoformat"):

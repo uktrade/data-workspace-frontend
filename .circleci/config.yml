@@ -1,6 +1,19 @@
 version: 2
 
 jobs:
+  docker-test-unit-js:
+    docker:
+      - image: circleci/node:16
+    steps:
+      - checkout
+      - run:
+          name: Run lint and unit tests
+          command: |
+            cd ./dataworkspace/dataworkspace/static/js
+             npm install
+             npm run lint
+             npm run test
+
   docker-test-unit:
     docker:
       - image: cimg/python:3.9
@@ -14,7 +27,7 @@ jobs:
           name: Build docker containers
           command: |
             touch .envs/dev.env
-            touch .envs/superset.dev.env      
+            touch .envs/superset.dev.env
             make docker-build
       - run:
           name: Check all docker-test-unit-local migrations have been generated
@@ -42,7 +55,7 @@ jobs:
           name: Build docker containers
           command: |
             touch .envs/dev.env
-            touch .envs/superset.dev.env      
+            touch .envs/superset.dev.env
             make docker-build
       - run:
           name: Run test
@@ -83,6 +96,7 @@ workflows:
   version: 2
   build:
     jobs:
+      - docker-test-unit-js
       - docker-test-unit
       - docker-test-integration
       - check-linting

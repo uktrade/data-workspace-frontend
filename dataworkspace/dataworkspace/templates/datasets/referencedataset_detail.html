@@ -1,5 +1,6 @@
 {% extends '_main.html' %}
 {% load static humanize core_tags datasets_tags waffle_tags core_filters %}
+{% load render_bundle from webpack_loader %}
 
 {% block page_title %}{{ model.name }} - {{ block.super }}{% endblock %}
 
@@ -11,29 +12,8 @@
   <script src="{% static 'ag-grid-community.min.js' %}"></script>
   <script src="{% static 'dayjs.min.js' %}"></script>
   <script src="{% static 'js/grid-utils.js' %}"></script>
-  <script src="{% static 'data-grid.js' %}"></script>
   {# We *have* to include the stylesheet after the ag-grid js as it overrides the default styles #}
   <link rel="stylesheet" type="text/css" href="{% static 'data-grid.css' %}"/>
-  {{ model.get_column_config|json_script:"column_data" }}
-  {{ model.get_grid_data|json_script:"grid_data" }}
-  {% saved_grid_config user model as grid_config %}
-  {{ grid_config|json_script:"grid-config" }}
-  <script nonce="{{ request.csp_nonce }}">
-    window.initDataGrid(
-      JSON.parse(document.getElementById('column_data').textContent),
-      null,
-      null,
-      JSON.parse(document.getElementById('grid_data').textContent),
-      '{{ model.get_custom_export_file_name }}',
-      null,
-      '{{ model.send_post_data_url}}',
-      '{{ model.id }}',
-      '{{ model.name }}',
-      '{{ model.get_type_display }}'
-    );
-  </script>
-  <script src="{% static 'assets/vendor/highlight/highlight.pack.js' %}"></script>
-  <script nonce="{{ request.csp_nonce }}">hljs.initHighlightingOnLoad();</script>
 
   <script src="{% static 'app-copy.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}">
@@ -64,27 +44,31 @@
         </ol>
       </div>
     </div>
-    <div class="govuk-grid-column-one-half govuk-!-margin-top-2" style="text-align: right;">
-      {% flag NOTIFY_ON_REFERENCE_DATASET_CHANGE_FLAG %}
-      {% include "partials/subscription_link.html" with subscription=subscription dataset=model dataset_uuid=model.uuid %}
-      &nbsp;&nbsp;&nbsp;
-      {% endflag %}
-      {% include "partials/bookmark-link.html" with dataset_uuid=model.uuid is_bookmarked=is_bookmarked %}
-    </div>
   </div>
 {% endblock %}
 
 {% block content %}
   {% if model.is_draft %}
-    <div class="govuk-warning-text">
-      <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
-      <div class="govuk-warning-text__text">
-        <strong>
-          <span class="govuk-warning-text__assistive">Warning</span>
-            You are viewing a draft reference dataset.
-        </strong>
-        <p class="govuk-body govuk-!-margin-top-4">
-          This reference dataset has not been approved for use by the DBT Reference Data Board.
+      <div class="govuk-notification-banner" role="region"
+      aria-labelledby="govuk-notification-banner-title"
+      data-module="govuk-notification-banner">
+      <div class="govuk-notification-banner__header">
+        <h2 class="govuk-notification-banner__title" id="govuk-notification-banner-title">
+          Important
+        </h2>
+      </div>
+      <div class="govuk-notification-banner__content">
+        <p class="govuk-notification-banner__heading">
+          Do not use this dataset
+        </p>
+        <p class="govuk-body">
+          This is a draft reference dataset. It is being reviewed by the DBT Reference Data Board.<br>
+          <a 
+          class="govuk-notification-banner__link" 
+          href="https://data-services-help.trade.gov.uk/data-workspace/policies-and-standards/standards/reference-data-principles/"
+          >
+            Find out more about reference datasets.
+          </a>
         </p>
       </div>
     </div>
@@ -93,168 +77,133 @@
     {% include 'partials/unpublished_banner.html' with type='dataset' %}
   {% endif %}
   <div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
+    <div class="govuk-grid-column-full">
       <span class="govuk-caption-xl">Reference dataset</span>
       <h1 class="govuk-heading-xl">{{ model.name }}</h1>
-      {% include "data_collections/partials/add_dataset_link.html"%}
+      {% include "data_collections/partials/header_action_links.html" with dataType="reference" %}
     </div>
   </div>
 
   <div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
-      <dl class="govuk-summary-list">
-      <div class="govuk-summary-list__row">
-          <dt class="govuk-summary-list__key">Summary</dt>
-          <dd class="govuk-summary-list__value">{{ model.short_description }}</dd>
-        </div>
-      {% flag SECURITY_CLASSIFICATION_FLAG %}
-    <div class="govuk-summary-list__row">
-      <dt class="govuk-summary-list__key">Government Security Classification</dt>
-      <dd class="govuk-summary-list__value">
-        {% if not model.government_security_classification %}
-          <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
-        {% else %}
-          {% if model.get_government_security_classification_display == "OFFICIAL" %}
-            <strong
-              class="govuk-tag govuk-tag--blue">{{ model.get_government_security_classification_display }}</strong>
-          {% else %}
-            {% if model.sensitivity.all %}
-              {% for sensitivity in model.sensitivity.all %}
-                <strong
-                  class="govuk-tag govuk-tag--red govuk-!-margin-bottom-1">{{ model.get_government_security_classification_display }} {{ sensitivity }}</strong>
-              {% endfor %}
-            {% else %}
-              <strong
-                class="govuk-tag govuk-tag--red">{{ model.get_government_security_classification_display }}</strong>
-            {% endif %}
-          {% endif %}
-        {% endif %}
-      <br>
-        <a
-          href="https://workspace.trade.gov.uk/working-at-dit/policies-and-guidance/guidance/information-classification-and-handling/"
-          class="govuk-link govuk-!-font-size-16">About security classifications</a>
-      </dd>
-    </div>
-  {% endflag %}
-      <div class="govuk-summary-list__row">
-          <dt class="govuk-summary-list__key">Usage restrictions</dt>
-          <dd class="govuk-summary-list__value">{{ model.restrictions_on_usage }}</dd>
-        </div>
-        <div class="govuk-summary-list__row">
-          <dt class="govuk-summary-list__key">Date added</dt>
-          <dd class="govuk-summary-list__value">{{ model.published_at|format_date_uk }}</dd>
-        </div>
-
-        <div class="govuk-summary-list__row">
-          <dt class="govuk-summary-list__key">Source</dt>
-          <dd class="govuk-summary-list__value">N/A</dd>
-        </div>
-
-        <div class="govuk-summary-list__row">
-          <dt class="govuk-summary-list__key">Licence</dt>
-          <dd class="govuk-summary-list__value">
-            {% if model.licence_url %}
-              <a class="govuk-link" href="{{ model.licence_url }}">{{ model.licence }}</a>
-            {% else %}
-              {{ model.licence|default:"" }}
-            {% endif %}
-          </dd>
-        </div>
-
-        <div class="govuk-summary-list__row">
-          <dt class="govuk-summary-list__key">Contact</dt>
-          <dd class="govuk-summary-list__value">
-            {% if model.enquiries_contact %}
-              Contact
-              <a class="govuk-link"
-                href="mailto:{{ model.enquiries_contact.email }}">{{ model.enquiries_contact.email }}</a>
-                to ask questions about how to use this data and the visuals.
-              {% endif %}
-          </dd>
-        </div>
-      </dl>
-
+    <div class="govuk-grid-column-one-half">
       <div class="govuk-body dataset-description-richtext">
         {{ model.description | minimal_markup }}
       </div>
     </div>
 
-    <div class="govuk-grid-column-one-third">
-      {% if model.enquiries_contact %}
-      <p class="govuk-body sidebar-section">
-        <a href="mailto:{{ model.enquiries_contact.email }}?subject=Reporting an issue - {{ model.name }}" class="govuk-link govuk-link--no-visited-state">
-          {% include "partials/report_an_issue_icon.html" %}
-        </a>
-      </p>
-      {% endif %}
+    <div class="govuk-grid-column-one-half">
+      <dl class="govuk-summary-list">
+        <div class="govuk-summary-list__row__stacked">
+            <dt class="govuk-summary-list__key__stacked">Summary</dt>
+            <dd class="govuk-summary-list__value__stacked">{{ model.short_description }}</dd>
+          </div>
+      {% flag SECURITY_CLASSIFICATION_FLAG %}
+        <div class="govuk-summary-list__row__stacked">
+          <dt class="govuk-summary-list__key__stacked">Government Security Classification</dt>
+          <dd class="govuk-summary-list__value__stacked">
+            {% if not model.government_security_classification %}
+              <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
+            {% else %}
+              {% if model.get_government_security_classification_display == "OFFICIAL" %}
+                <strong
+                  class="govuk-tag govuk-tag--blue">{{ model.get_government_security_classification_display }}</strong>
+              {% else %}
+                {% if model.sensitivity.all %}
+                  {% for sensitivity in model.sensitivity.all %}
+                    <strong
+                      class="govuk-tag govuk-tag--red govuk-!-margin-bottom-1">{{ model.get_government_security_classification_display }} {{ sensitivity }}</strong>
+                  {% endfor %}
+                {% else %}
+                  <strong
+                    class="govuk-tag govuk-tag--red">{{ model.get_government_security_classification_display }}</strong>
+                {% endif %}
+              {% endif %}
+            {% endif %}
+          <br>
+            <a
+              href="https://workspace.trade.gov.uk/working-at-dit/policies-and-guidance/guidance/information-classification-and-handling/"
+              class="govuk-link govuk-!-font-size-16">About security classifications</a>
+          </dd>
+        </div>
+      {% endflag %}
+
+      <div class="govuk-summary-list__row__stacked">
+        <dt class="govuk-summary-list__key__stacked">Usage restrictions</dt>
+        <dd class="govuk-summary-list__value__stacked">{{ model.restrictions_on_usage }}</dd>
+      </div>
+      <div class="govuk-summary-list__row__stacked">
+        <dt class="govuk-summary-list__key__stacked">Date added</dt>
+        <dd class="govuk-summary-list__value__stacked">{{ model.published_at|format_date_uk }}</dd>
+      </div>
+
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Source</dt>
+        <dd class="govuk-summary-list__value">N/A</dd>
+      </div>
+
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Licence</dt>
+        <dd class="govuk-summary-list__value">
+          {% if model.licence_url %}
+            <a class="govuk-link" href="{{ model.licence_url }}">{{ model.licence }}</a>
+          {% else %}
+            {{ model.licence|default:"" }}
+          {% endif %}
+        </dd>
+      </div>
+
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Contact</dt>
+        <dd class="govuk-summary-list__value">
+          {% if model.enquiries_contact %}
+            <a class="govuk-link"
+              href="mailto:{{ model.enquiries_contact.email }}">{{ model.enquiries_contact.email }}</a>
+            {% endif %}
+        </dd>
+      </div>
+    </dl>
+
+
+
     </div>
   </div>
 
-  <div class="govuk-grid-row" style="overflow-x: auto;">
+  <div class="govuk-grid-row govuk-!-margin-top-4">
     <div class="govuk-grid-column-full">
-      <h2 class="govuk-heading-l">Data</h2>
+      <h2 class="govuk-heading-m ">Data tables</h2>
       <table class="govuk-table">
         <thead>
         <tr class="govuk-table__row">
           <th class="govuk-table__header">Name</th>
-          <th class="govuk-table__header">Format</th>
-          <th class="govuk-table__header">Version</th>
+          <th class="govuk-table__header">Table name</th>
           <th class="govuk-table__header">Last updated</th>
-          <th class="govuk-table__header">Action</th>
-          {% flag DATASET_CHANGELOG_PAGE_FLAG %}
-            <th class="govuk-table__header">History</th>
-          {% endflag %}
         </tr>
         </thead>
         <tbody>
         <tr class="govuk-table__row">
-          <td class="govuk-table__cell app-table_cell--no-border">
-            {{ model.slug }}-{{ model.published_version }}
-          </td>
-          <td class="govuk-table__cell app-table_cell--no-border">CSV, JSON</td>
-          <td class="govuk-table__cell app-table_cell--no-border">{{ model.published_version }}</td>
-          <td
-            class="govuk-table__cell app-table_cell--no-border">{{ model.data_last_updated|date_with_gmt_offset }}</td>
-          <td class="govuk-table__cell app-table_cell--no-border">
+          <td class="govuk-table__cell">
             <a class="govuk-link"
-               href="{% url "datasets:reference_dataset_detail" dataset_uuid=model.uuid %}">
-              View table
-            </a>
-            <br>
-
-            <a href="{% url "datasets:data_dictionary" source_uuid=model.uuid %}?dataset_uuid={{model.uuid}}"
-              class="govuk-link">
-              Data dictionary
-            </a>
-
-
+            href="{% url "datasets:reference_dataset_detail" dataset_uuid=model.uuid %}">
+            {{ model.name }} 
+          </a>
+           
           </td>
-          {% flag DATASET_CHANGELOG_PAGE_FLAG %}
-            <td class="govuk-table__cell app-table_cell--no-border">
-              <a class="govuk-link govuk-link--no-visited-state"
-                 href="{% url 'datasets:reference_dataset_changelog' dataset_uuid=model.uuid %}">
-                Changelog
-              </a>
-            </td>
-          {% endflag %}
+          <td class="govuk-table__cell">{{ model.slug }}</td>
+          <td
+            class="govuk-table__cell">{{ model.data_last_updated|date_with_gmt_offset }}</td>
         </tr>
         </tbody>
       </table>
-      {% if code_snippets or columns %}
-        {% if model.external_database %}
-          <details class="govuk-details govuk" data-module="govuk-details">
-            <summary class="govuk-details__summary">
-              <span class="govuk-details__summary-text">
-                Use this data for analysis
-              </span>
-            </summary>
-            <div class="govuk-details__text">
-              {% include 'partials/code_snippets.html' with code_snippets=code_snippets %}
-            </div>
-          </details>
-        {% endif %}
-      {% endif %}
     </div>
   </div>
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      {% include "partials/react-slot.html" with mount_id="data-usage" id=model.id %}
+    </div>
+  </div>
+
+  {% render_bundle "reference-dataset" "js" %}
+  
   {% csrf_token %}
 {% endblock %}

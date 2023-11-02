@@ -1,0 +1,104 @@
+{% load waffle_tags %}
+{% load datasets_tags %}
+<div class="govuk-!-margin-bottom-4"{% if not model.published %} title="Unpublished catalogue items cannot be added to collection"{% endif %}>
+    <ul class="govuk-list govuk-list--inline">
+        {% if dataType == "cut" %}
+                <li>
+                    {% include "partials/links/add_to_collection_link.html" %}
+                </li>
+                <li>
+                    {% include "partials/links/bookmark_link.html" with dataset_uuid=model.id is_bookmarked=is_bookmarked %}
+                </li>
+                {% flag NOTIFY_ON_DATACUT_CHANGE_FLAG %}
+                <li>
+                    {% include "partials/links/subscription_link.html" with subscription=subscription dataset=dataset dataset_uuid=dataset.id %}
+                </li>
+                {% endflag %}
+                {% if model.enquiries_contact %}
+                <li>
+                {% include "partials/links/report_an_issue_link.html" %}
+                </li>
+                {% endif %}
+                {% if request.user|can_manage_data:model %}
+                <li>
+                    {% include "partials/links/manage_dataset_link.html" %}
+                </li>
+                {% endif %}
+
+                {% if request.user|can_manage_editors:model %}
+                <li>
+                    {% include "partials/links/manage_editors_link.html" %}
+                </li>  
+                {% endif %}
+        {% endif %}
+        {% if dataType == "reference" %}
+            <li>
+                {% include "partials/links/add_to_collection_link.html" %}
+            </li>
+            <li>
+                {% include "partials/links/bookmark_link.html" with dataset_uuid=model.uuid is_bookmarked=is_bookmarked %}
+            </li>
+            {% flag NOTIFY_ON_REFERENCE_DATASET_CHANGE_FLAG %}
+                <li>
+                    {% include "partials/links/subscription_link.html" with subscription=subscription dataset=model dataset_uuid=model.uuid %}
+                </li>
+            {% endflag %}
+            {% if model.enquiries_contact %}
+            <li>
+                {% include "partials/links/report_an_issue_link.html" %}
+            </li>
+            {% endif %}
+        {% endif %}
+        {% if dataType == "source" %}
+            <li>
+                {% include "partials/links/add_to_collection_link.html" %}
+            </li>
+            <li>
+                {% include "partials/links/bookmark_link.html" with dataset_uuid=model.id is_bookmarked=is_bookmarked %}
+            </li>
+            {% flag NOTIFY_ON_MASTER_DATASET_CHANGE_FLAG %}
+                <li>
+                    {% include "partials/links/subscription_link.html" with subscription=subscription dataset=dataset dataset_uuid=dataset.id %}
+                </li>
+            {% endflag %}
+            {% if model.enquiries_contact %}
+            <li>
+                {% include "partials/links/report_an_issue_link.html" %}
+            </li>
+            {% endif %}
+            {% if request.user|can_manage_data:model %}
+            <li>
+                {% include "partials/links/manage_dataset_link.html" %}
+            </li>
+            {% endif %}
+            {% if request.user|can_manage_editors:model %}
+            <li>
+                {% include "partials/links/manage_editors_link.html" %}
+            </li> 
+            {% endif %}
+        {% endif %}
+        {% if dataType == "visualisation" %}
+            <li>
+                {% include "partials/links/add_to_collection_link.html" %}
+            </li>
+            <li>
+                {% include "partials/links/bookmark_link.html" with dataset_uuid=model.id is_bookmarked=is_bookmarked %}
+            </li>
+            {% if model.enquiries_contact %}
+                <li>
+                    {% include "partials/links/report_an_issue_link.html" %}
+                </li>
+            {% endif %}
+            {% if request.user|can_manage_data:model %}
+                <li>
+                    {% include "partials/links/manage_this_page_link.html" %}
+                </li>
+            {% endif %}
+            {% if request.user|can_manage_editors:model %}
+                <li>
+                    {% include "partials/links/manage_editors_link.html" %}
+                </li>
+            {% endif %}
+        {% endif %}
+    </ul>
+</div>
