@@ -71,21 +71,14 @@
     </div>
   </div>
 
-  {% if not has_access and has_datacut_tables and has_datacut_links %}
-  <div class="govuk-grid-row">
-    <div class="govuk-grid-column-full govuk-!-margin-top-6">
-          {% include 'partials/request_access.html' with type='datacut' has_data_access=has_access %}
-    </div>
-  </div>
-  {% endif %}
-
-
   {% if has_datacut_tables or has_datacut_links %}
   <div class="govuk-grid-row govuk-!-margin-top-4">
     <div class="govuk-grid-column-full">
       <h2 class="govuk-heading-m">Data</h2> 
-      {% if not has_access and has_datacut_tables and not has_datacut_links %}
-          {% include 'partials/request_access.html' with type='datacut' has_data_access=has_access %}
+      {% if not has_access %}
+        {% if has_datacut_tables or has_datacut_links %}
+            {% include 'partials/request_access.html' with type='datacut' has_data_access=has_access %}
+        {% endif %}
       {% endif %}
       <table class="govuk-table">
         <thead>
