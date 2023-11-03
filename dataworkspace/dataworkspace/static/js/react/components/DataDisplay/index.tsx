@@ -112,23 +112,27 @@ const StyledParagraph = styled('p')`
 
 type DataDisplayProps = {
   data: TransformedDataUsageResponse[];
+  title?: string;
+  subTitle?: string | null;
   secondary?: boolean;
   footerNote?: React.ReactNode;
 };
 
 const DataDisplay: React.FC<DataDisplayProps> = ({
   data = [],
+  title = 'Data usage',
+  subTitle = null,
   secondary = false,
   footerNote = null
 }) => {
   return (
     <DataDisplayContainer>
-      <H3>Data usage</H3>
-      <StyledParagraph>
-        The data below has been captured since this catalogue item was initially
-        published.
-      </StyledParagraph>
-
+      <H3>{title}</H3>
+      {subTitle && (
+        <StyledParagraph data-testid="data-usage-subtitle">
+          {subTitle}
+        </StyledParagraph>
+      )}
       {data.length ? (
         <>
           <DataDisplayList data-testid={secondary ? 'secondary' : 'primary'}>
