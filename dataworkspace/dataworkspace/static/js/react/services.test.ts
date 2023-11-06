@@ -16,7 +16,7 @@ describe('transformDataUsageResponse', () => {
         value: 666
       },
       {
-        label: 'Table queried by users',
+        label: 'Average daily users',
         value: 0
       },
       {
@@ -44,7 +44,7 @@ describe('fetchDataUsage', () => {
   it('should return a response', async () => {
     const expected = [
       { label: 'Page views', value: 713 },
-      { label: 'Table queried by users', value: 0 },
+      { label: 'Average daily users', value: 0 },
       { label: 'Table views', value: 0 },
       { label: 'Added to collections', value: 1 },
       { label: 'Bookmarked by users', value: 0 }

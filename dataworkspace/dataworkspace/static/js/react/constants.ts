@@ -4,7 +4,7 @@ export const ERROR_COLOUR = '#d4351c';
 
 export const DATA_USAGE_KEYS = {
   page_views: 'Page views',
-  table_queries: 'Table queried by users',
+  table_queries: 'Average daily users',
   table_views: 'Table views',
   collection_count: 'Added to collections',
   bookmark_count: 'Bookmarked by users',
