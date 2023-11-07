@@ -5,6 +5,7 @@
 {% load core_tags %}
 {% load datasets_tags %}
 {% load waffle_tags %}
+{% load render_bundle from webpack_loader %}
 
 {% block head %}
   {{ block.super }}
@@ -36,7 +37,7 @@
 {% block content %}
   {% csrf_token %}
   {% flag HOME_PAGE_FLAG %}
-  <div id="home"></div>
+  <div id="home-page"></div>
   {% else %}
   <form id="live-search-form" action="{% url 'datasets:find_datasets' %}" method="get">
 
@@ -339,7 +340,6 @@
         accessibleAutocompleteOptions(dropdownData, dataSearchURL, new GTMDatasetSearchSupport(), form)
       {% endflag %}
     });
-
-
   </script>
+  {% render_bundle "home-page" "js" %}
 {% endblock %}

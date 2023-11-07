@@ -11,6 +11,16 @@
       "path": "data-cut.ea58f5ee02506c320dc6.js.LICENSE.txt",
       "publicPath": "/__django_static/js/bundles/data-cut.ea58f5ee02506c320dc6.js.LICENSE.txt"
     },
+    "home-page.6de28ab9d1a2703b8194.js": {
+      "name": "home-page.6de28ab9d1a2703b8194.js",
+      "path": "home-page.6de28ab9d1a2703b8194.js",
+      "publicPath": "/__django_static/js/bundles/home-page.6de28ab9d1a2703b8194.js"
+    },
+    "home-page.6de28ab9d1a2703b8194.js.LICENSE.txt": {
+      "name": "home-page.6de28ab9d1a2703b8194.js.LICENSE.txt",
+      "path": "home-page.6de28ab9d1a2703b8194.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/home-page.6de28ab9d1a2703b8194.js.LICENSE.txt"
+    },
     "reference-dataset.8504376a740d5009615e.js": {
       "name": "reference-dataset.8504376a740d5009615e.js",
       "path": "reference-dataset.8504376a740d5009615e.js",
@@ -41,20 +51,23 @@
       "path": "visualisations.da4cb117d6b5e13813b5.js.LICENSE.txt",
       "publicPath": "/__django_static/js/bundles/visualisations.da4cb117d6b5e13813b5.js.LICENSE.txt"
     },
-    "yourfiles.f83694c7601df3857a6f.js": {
-      "name": "yourfiles.f83694c7601df3857a6f.js",
-      "path": "yourfiles.f83694c7601df3857a6f.js",
-      "publicPath": "/__django_static/js/bundles/yourfiles.f83694c7601df3857a6f.js"
+    "yourfiles.6f9e8486c9d8dce576ca.js": {
+      "name": "yourfiles.6f9e8486c9d8dce576ca.js",
+      "path": "yourfiles.6f9e8486c9d8dce576ca.js",
+      "publicPath": "/__django_static/js/bundles/yourfiles.6f9e8486c9d8dce576ca.js"
     },
-    "yourfiles.f83694c7601df3857a6f.js.LICENSE.txt": {
-      "name": "yourfiles.f83694c7601df3857a6f.js.LICENSE.txt",
-      "path": "yourfiles.f83694c7601df3857a6f.js.LICENSE.txt",
-      "publicPath": "/__django_static/js/bundles/yourfiles.f83694c7601df3857a6f.js.LICENSE.txt"
+    "yourfiles.6f9e8486c9d8dce576ca.js.LICENSE.txt": {
+      "name": "yourfiles.6f9e8486c9d8dce576ca.js.LICENSE.txt",
+      "path": "yourfiles.6f9e8486c9d8dce576ca.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/yourfiles.6f9e8486c9d8dce576ca.js.LICENSE.txt"
     }
   },
   "chunks": {
     "data-cut": [
       "data-cut.ea58f5ee02506c320dc6.js"
+    ],
+    "home-page": [
+      "home-page.6de28ab9d1a2703b8194.js"
     ],
     "reference-dataset": [
       "reference-dataset.8504376a740d5009615e.js"
@@ -66,7 +79,7 @@
       "visualisations.da4cb117d6b5e13813b5.js"
     ],
     "yourfiles": [
-      "yourfiles.f83694c7601df3857a6f.js"
+      "yourfiles.6f9e8486c9d8dce576ca.js"
     ]
   },
   "publicPath": "/__django_static/js/bundles/"

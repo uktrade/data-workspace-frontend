@@ -14,7 +14,10 @@ module.exports = {
       __dirname,
       './react/modules/reference-dataset/index'
     ),
-    visualisations: path.join(__dirname, './react/modules/visualisations/index')
+    visualisations: path.join(__dirname, './react/modules/visualisations/index'),
+    'home-page': path.join(
+      __dirname,
+      './react/modules/home-page/index')
   },
   output: {
     path: path.resolve('./bundles/'),

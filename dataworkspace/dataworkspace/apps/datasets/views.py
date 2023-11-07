@@ -192,6 +192,9 @@ def _get_tags_as_dict():
     return tags_dict
 
 
+@csp_update(
+    SCRIPT_SRC=settings.REACT_SCRIPT_SRC
+)
 @require_GET
 def find_datasets(request):
     ###############
