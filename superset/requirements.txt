@@ -324,7 +324,7 @@ wcwidth==0.2.5
     # via prompt-toolkit
 webencodings==0.5.1
     # via bleach
-werkzeug==2.2.3
+werkzeug==3.0.1
     # via
     #   flask
     #   flask-jwt-extended
