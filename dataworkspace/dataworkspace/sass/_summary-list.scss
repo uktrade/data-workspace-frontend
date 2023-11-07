@@ -9,8 +9,16 @@
     @include govuk-media-query($until: tablet) {
         margin-bottom: govuk-spacing(3);
         width: 100%;
-      }
-  }
+    }
+}
+
+.govuk-summary-list__key {
+    width: 35%;
+    font-weight: normal;
+    @include govuk-media-query($until: tablet) {
+        width: 100%;
+    }
+}
 
 .govuk-summary-list__key__stacked {
     padding-top: govuk-spacing(2);
@@ -20,7 +28,8 @@
     }
 }
 
-.govuk-summary-list__key__stacked, .govuk-summary-list__value__stacked {
+.govuk-summary-list__key__stacked,
+.govuk-summary-list__value__stacked {
     display: block;
     width: 100%;
     padding-bottom: govuk-spacing(2);
