@@ -36,7 +36,7 @@ class DatasetStatsSerializer(serializers.ModelSerializer):
         return obj.events.filter(event_type=EventLog.TYPE_DATASET_VIEW).count()
 
     def get_table_queries(self, obj):
-        return obj.average_unique_users_daily
+        return f"{obj.average_unique_users_daily:.3f}"
 
     def get_table_views(self, obj):
         return obj.events.filter(event_type=EventLog.TYPE_DATA_TABLE_VIEW).count()
