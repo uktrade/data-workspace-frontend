@@ -186,7 +186,7 @@ tabulate==0.8.10
     # via databricks-cli
 threadpoolctl==3.1.0
     # via scikit-learn
-urllib3==1.26.9
+urllib3==1.26.18
     # via
     #   botocore
     #   requests
