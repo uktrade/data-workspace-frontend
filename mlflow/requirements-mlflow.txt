@@ -121,7 +121,7 @@ packaging==21.3
     #   mlflow
 pandas==1.3.5
     # via mlflow
-pillow==9.5.0
+pillow==10.0.1
     # via matplotlib
 protobuf==4.22.3
     # via
