@@ -35,6 +35,9 @@
 
 {% block content %}
   {% csrf_token %}
+  {% flag HOME_PAGE_FLAG %}
+  <div id="home"></div>
+  {% else %}
   <form id="live-search-form" action="{% url 'datasets:find_datasets' %}" method="get">
 
     <div class="govuk-grid-row">
@@ -314,6 +317,7 @@
       </div>
     </div>
   </form>
+  {% endflag %}
 {% endblock %}
 
 {% block footer_scripts %}
