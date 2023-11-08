@@ -3,21 +3,21 @@
   <h3 class="govuk-heading-m govuk-!-margin-top-8">Governance</h3>
     <dl class="govuk-summary-list">
       <div class="govuk-summary-list__row">
-        <dt class="govuk-summary-list__key">Information Asset Manager (IAM)<div><a href="https://workspace.trade.gov.uk/working-at-dbt/policies-and-guidance/guidance/information-assets/#information-asset-managers-iams" class="govuk-link govuk-link--no-visited-state govuk-!-font-size-16">Find out more about IAM's</a></div></dt>
+        <dt class="govuk-summary-list__key govuk-!-font-weight-regular">Information Asset Manager (IAM)<div><a href="https://workspace.trade.gov.uk/working-at-dbt/policies-and-guidance/guidance/information-assets/#information-asset-managers-iams" class="govuk-link govuk-link--no-visited-state govuk-!-font-size-16">Find out more about IAM's</a></div></dt>
         <dd class="govuk-summary-list__value">
           {% include 'partials/contact.html' with model=model.information_asset_manager %}
         </dd>
       </div>
 
       <div class="govuk-summary-list__row">
-        <dt class="govuk-summary-list__key">Information Asset Owner (IAO)<div><a href="https://workspace.trade.gov.uk/working-at-dbt/policies-and-guidance/guidance/information-assets/#information-asset-owners-iaos" class="govuk-link govuk-link--no-visited-state govuk-!-font-size-16">Find out more about IAO's</a></div></dt>
+        <dt class="govuk-summary-list__key govuk-!-font-weight-regular">Information Asset Owner (IAO)<div><a href="https://workspace.trade.gov.uk/working-at-dbt/policies-and-guidance/guidance/information-assets/#information-asset-owners-iaos" class="govuk-link govuk-link--no-visited-state govuk-!-font-size-16">Find out more about IAO's</a></div></dt>
         <dd class="govuk-summary-list__value">
           {% include 'partials/contact.html' with model=model.information_asset_owner %}
         </dd>
       </div>
 
       <div class="govuk-summary-list__row">
-        <dt class="govuk-summary-list__key">Licence</dt>
+        <dt class="govuk-summary-list__key govuk-!-font-weight-regular">Licence</dt>
         <dd class="govuk-summary-list__value">
           {% if model.licence_url %}
             <a class="govuk-link" href="{{ model.licence_url }}">{{ model.licence }}</a>
@@ -28,7 +28,7 @@
       </div>
 
       <div class="govuk-summary-list__row">
-        <dt class="govuk-summary-list__key">Retention period details</dt>
+        <dt class="govuk-summary-list__key govuk-!-font-weight-regular">Retention period details</dt>
         <dd class="govuk-summary-list__value">{{ model.retention_policy | linebreaksbr }}</dd>
       </div>
 

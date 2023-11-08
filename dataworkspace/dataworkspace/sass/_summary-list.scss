@@ -14,7 +14,7 @@
 
 .govuk-summary-list__key {
     width: 35%;
-    font-weight: normal;
+    font-weight: 700;
     @include govuk-media-query($until: tablet) {
         width: 100%;
     }
