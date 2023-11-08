@@ -8,7 +8,7 @@
     "build": "./node_modules/.bin/webpack build --config webpack.prod.js",
     "format": "prettier '**/*.{ts,tsx}' --write",
     "lint": "eslint --ext .ts,.tsx .",
-    "lint-staged": "npm run format && npm run lint",
+    "lint-staged": "npm run lint",
     "test": "jest --coverage=true",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
