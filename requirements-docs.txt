@@ -64,7 +64,7 @@ requests==2.31.0
     # via mkdocs-material
 six==1.16.0
     # via python-dateutil
-urllib3==1.26.15
+urllib3==2.0.7
     # via requests
 watchdog==3.0.0
     # via mkdocs

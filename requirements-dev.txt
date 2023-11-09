@@ -601,7 +601,7 @@ unicodecsv==0.14.1
     #   -r requirements.txt
     #   tableschema
     #   tabulator
-urllib3[secure,socks]==1.26.15
+urllib3[secure,socks]==1.26.18
     # via
     #   -r requirements.txt
     #   botocore
