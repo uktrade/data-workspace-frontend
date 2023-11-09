@@ -3,7 +3,7 @@ import React from 'react';
 import { DataDisplay, FetchDataContainer } from '../../components';
 import { fetchDataUsage } from '../../services';
 
-const DataCutContainer = ({ id }: { id: string }): React.ReactNode => (
+const DataCut = ({ id }: { id: string }): React.ReactNode => (
   <FetchDataContainer fetchApi={() => fetchDataUsage('datasets', id)}>
     {({ data }) => (
       <DataDisplay
@@ -14,4 +14,4 @@ const DataCutContainer = ({ id }: { id: string }): React.ReactNode => (
   </FetchDataContainer>
 );
 
-export default DataCutContainer;
+export default DataCut;

@@ -3,7 +3,7 @@ import React from 'react';
 import { DataDisplay, FetchDataContainer } from '../../components';
 import { fetchDataUsage } from '../../services';
 
-const Container = ({ id }: { id: string }): React.ReactNode => (
+const Visualisations = ({ id }: { id: string }): React.ReactNode => (
   <FetchDataContainer fetchApi={() => fetchDataUsage('visualisation', id)}>
     {({ data }) => (
       <DataDisplay
@@ -15,4 +15,4 @@ const Container = ({ id }: { id: string }): React.ReactNode => (
   </FetchDataContainer>
 );
 
-export default Container;
+export default Visualisations;
