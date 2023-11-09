@@ -563,6 +563,16 @@ class DataSet(DeletableTimestampedUserModel):
             "data_collections:dataset_select_collection_for_membership", args=(self.id,)
         )
 
+    def data_is_actively_updated(self):
+        return (
+            self.sourcetable_set.exclude(frequency=SourceTable.FREQ_NO_LONGER_UPDATED).count() > 0
+            or self.customdatasetquery_set.exclude(
+                frequency=CustomDatasetQuery.FREQ_NO_LONGER_UPDATED
+            ).count()
+            > 0
+            or self.sourcelink_set.exclude(frequency="No longer updated").count() > 0
+        )
+
 
 class DataSetVisualisation(DeletableTimestampedUserModel):
     name = models.CharField(max_length=255)
@@ -2103,6 +2113,9 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         sec_class = self.get_government_security_classification_display()
         return f"{self.slug}-{self.published_version}-custom-export{f'-{sec_class}' if sec_class is not None else ''}.csv"
 
+    def data_is_actively_updated(self):
+        return True
+
 
 @receiver(m2m_changed, sender=ReferenceDataset.tags.through)
 def save_reference_dataset_tags_on_m2m_changed(instance, **_):
@@ -2784,6 +2797,9 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         return reverse(
             "data_collections:visualisation_select_collection_for_membership", args=(self.id,)
         )
+
+    def data_is_actively_updated(self):
+        return True
 
     def __str__(self):
         return self.name
