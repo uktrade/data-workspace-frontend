@@ -88,3 +88,5 @@ dataworkspace/dataworkspace/static/*.css.map
 .local
 .localstack
 test-results/
+localstack/data
+localstack/cache

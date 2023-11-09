@@ -95,9 +95,6 @@ services:
     networks:
       - data-infrastructure-shared-network
     ports:
-      - "127.0.0.1:53:53"
-      - "127.0.0.1:53:53/udp"
-      - "127.0.0.1:443:443"
       - '4563-4599:4563-4599'
     environment:
       - AWS_DEFAULT_REGION=eu-west-2
@@ -105,8 +102,11 @@ services:
       - SERVICES=s3,sts,iam
       - EXTRA_CORS_ALLOWED_ORIGINS=http://dataworkspace.test:8000
       - DATA_DIR=/tmp/localstack/data
+      - DISABLE_CORS_CHECKS=1
+      - DISABLE_CUSTOM_CORS_S3=1
     volumes:
       - "./.localstack:/tmp/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
 
   # Superset profile services
 
@@ -189,6 +189,15 @@ services:
     tty: true
     volumes:
       - test-results:/test-results
+
+  data-workspace-frontend:
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile
+    volumes:
+      - ./dataworkspace/dataworkspace/static:/frontend
+    ports:
+      - "3000:3000"
 
 volumes:
   db-data-dev:
