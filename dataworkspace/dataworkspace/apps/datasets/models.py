@@ -563,6 +563,16 @@ class DataSet(DeletableTimestampedUserModel):
             "data_collections:dataset_select_collection_for_membership", args=(self.id,)
         )
 
+    def data_is_actively_updated(self):
+        return (
+            self.sourcetable_set.exclude(frequency=SourceTable.FREQ_NO_LONGER_UPDATED).count() > 0
+            or self.customdatasetquery_set.exclude(
+                frequency=CustomDatasetQuery.FREQ_NO_LONGER_UPDATED
+            ).count()
+            > 0
+            or self.sourcelink_set.exclude(frequency="No longer updated").count() > 0
+        )
+
 
 class DataSetVisualisation(DeletableTimestampedUserModel):
     name = models.CharField(max_length=255)
@@ -741,6 +751,7 @@ class BaseSource(ReferenceNumberedDatasetSource):
     FREQ_ANNUALLY = 5
     FREQ_6_MONTHLY = 6
     FREQ_ADHOC = 7
+    FREQ_NO_LONGER_UPDATED = 8
     _FREQ_CHOICES = (
         (FREQ_DAILY, "Daily"),
         (FREQ_WEEKLY, "Weekly"),
@@ -749,6 +760,7 @@ class BaseSource(ReferenceNumberedDatasetSource):
         (FREQ_6_MONTHLY, "6-monthly"),
         (FREQ_ANNUALLY, "Annually"),
         (FREQ_ADHOC, "Ad hoc"),
+        (FREQ_NO_LONGER_UPDATED, "No longer updated"),
     )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(
@@ -1084,12 +1096,14 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
     FREQ_MONTHLY = 3
     FREQ_QUARTERLY = 4
     FREQ_ANNUALLY = 5
+    FREQ_NO_LONGER_UPDATED = 6
     _FREQ_CHOICES = (
         (FREQ_DAILY, "Daily"),
         (FREQ_WEEKLY, "Weekly"),
         (FREQ_MONTHLY, "Monthly"),
         (FREQ_QUARTERLY, "Quarterly"),
         (FREQ_ANNUALLY, "Annually"),
+        (FREQ_NO_LONGER_UPDATED, "No longer updated"),
     )
     name = models.CharField(max_length=255)
     database = models.ForeignKey(Database, on_delete=models.CASCADE)
@@ -2099,6 +2113,9 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         sec_class = self.get_government_security_classification_display()
         return f"{self.slug}-{self.published_version}-custom-export{f'-{sec_class}' if sec_class is not None else ''}.csv"
 
+    def data_is_actively_updated(self):
+        return True
+
 
 @receiver(m2m_changed, sender=ReferenceDataset.tags.through)
 def save_reference_dataset_tags_on_m2m_changed(instance, **_):
@@ -2780,6 +2797,9 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
         return reverse(
             "data_collections:visualisation_select_collection_for_membership", args=(self.id,)
         )
+
+    def data_is_actively_updated(self):
+        return True
 
     def __str__(self):
         return self.name

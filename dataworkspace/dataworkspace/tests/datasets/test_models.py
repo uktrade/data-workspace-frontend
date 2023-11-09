@@ -9,7 +9,7 @@ from botocore.response import StreamingBody
 from pytz import UTC
 
 from dataworkspace.apps.datasets.constants import UserAccessType
-from dataworkspace.apps.datasets.models import SourceLink
+from dataworkspace.apps.datasets.models import CustomDatasetQuery, SourceLink, SourceTable
 from dataworkspace.tests import factories
 
 
@@ -292,3 +292,35 @@ def test_pipeline_versions():
     pipeline.save()
     assert pipeline.pipelineversion_set.count() == 2
     assert pipeline.pipelineversion_set.latest().config == {"sql": "SELECT 1, 2, 3"}
+
+
+@pytest.mark.django_db
+def test_no_longer_updated_datasets():
+    master_dataset = factories.MasterDataSetFactory.create()
+    source_table = factories.SourceTableFactory(
+        dataset=master_dataset, frequency=SourceTable.FREQ_DAILY
+    )
+    factories.SourceTableFactory(
+        dataset=master_dataset, frequency=SourceTable.FREQ_NO_LONGER_UPDATED
+    )
+    assert master_dataset.data_is_actively_updated()
+    source_table.frequency = SourceTable.FREQ_NO_LONGER_UPDATED
+    source_table.save()
+    assert not master_dataset.data_is_actively_updated()
+
+    datacut_dataset = factories.DatacutDataSetFactory.create()
+    source_query = factories.CustomDatasetQueryFactory(
+        dataset=datacut_dataset, frequency=CustomDatasetQuery.FREQ_ANNUALLY
+    )
+    factories.SourceLinkFactory(dataset=datacut_dataset, frequency="No longer updated")
+    assert datacut_dataset.data_is_actively_updated()
+    source_query.frequency = CustomDatasetQuery.FREQ_NO_LONGER_UPDATED
+    source_query.save()
+    assert not datacut_dataset.data_is_actively_updated()
+
+    # Visualisations and reference datasets are always "updated"
+    visualisation_dataset = factories.VisualisationCatalogueItemFactory.create()
+    assert visualisation_dataset.data_is_actively_updated()
+
+    reference_dataset = factories.ReferenceDatasetFactory.create()
+    assert reference_dataset.data_is_actively_updated()
