@@ -464,6 +464,7 @@ def visualisation_branch_html_GET(request, gitlab_project, branch_name):
     current_branch = matching_branches[0]
     latest_commit = current_branch["commit"]
     latest_commit_link = f'{gitlab_project["web_url"]}/commit/{latest_commit["id"]}'
+    latest_build_logs_link = f'{gitlab_project["web_url"]}/-/jobs'
     latest_commit_preview_link = (
         f'{request.scheme}://{application_template.host_basename}--{latest_commit["short_id"]}'
         f".{settings.APPLICATION_ROOT_DOMAIN}/"
@@ -523,6 +524,7 @@ def visualisation_branch_html_GET(request, gitlab_project, branch_name):
             "current_branch": current_branch,
             "latest_commit": latest_commit,
             "latest_commit_link": latest_commit_link,
+            "latest_build_logs_link": latest_build_logs_link,
             "latest_commit_preview_link": latest_commit_preview_link,
             "latest_commit_date": latest_commit_date,
             "can_release_latest_commit": can_release_latest_commit,

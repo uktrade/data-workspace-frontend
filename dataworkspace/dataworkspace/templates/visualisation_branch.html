@@ -69,6 +69,11 @@
                 View<span class="govuk-visually-hidden"> latest</span> commit<span class="govuk-visually-hidden">{{ latest_commit.short_id }}</span> in GitLab
             </a>
         </li>
+        <li>
+            <a class="govuk-link govuk-link--no-visited-state" href="{{ latest_build_logs_link }}">
+                View GitLab build logs
+            </a>
+        </li>
         <li{% if not can_download_logs %} class="govuk-!-margin-bottom-0"{% endif %}>
             <a class="govuk-link govuk-link--no-visited-state" href="{{ latest_commit_preview_link }}">
                 Preview visualisation<span class="govuk-visually-hidden"> at<span class="govuk-visually-hidden"> latest</span> commit {{ latest_commit.short_id }}</span>
