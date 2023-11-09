@@ -780,6 +780,7 @@ class TestApplication(unittest.IsolatedAsyncioTestCase):
         ) as response:
             content = await response.text()
         self.assertIn("You do not have access to this page", content)
+        self.assertIn("You do not have permission to manage visualisations.", content)
         self.assertEqual(response.status, 403)
 
         # Give the user access to the dataset
