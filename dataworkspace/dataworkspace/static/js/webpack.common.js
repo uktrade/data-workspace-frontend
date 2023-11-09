@@ -4,20 +4,21 @@ const path = require('path');
 module.exports = {
   context: __dirname,
   entry: {
-    yourfiles: path.join(__dirname, './react/modules/your-files/index'),
-    'data-cut': path.join(__dirname, './react/modules/data-cut/index'),
+    yourfiles: path.join(__dirname, './react/features/your-files/index'),
+    'data-cut': path.join(__dirname, './react/features/data-cut/index'),
     'source-dataset': path.join(
       __dirname,
-      './react/modules/source-dataset/index'
+      './react/features/source-dataset/index'
     ),
     'reference-dataset': path.join(
       __dirname,
-      './react/modules/reference-dataset/index'
+      './react/features/reference-dataset/index'
     ),
-    visualisations: path.join(__dirname, './react/modules/visualisations/index'),
-    'home-page': path.join(
+    visualisations: path.join(
       __dirname,
-      './react/modules/home-page/index')
+      './react/features/visualisations/index'
+    ),
+    'home-page': path.join(__dirname, './react/features/home-page/index')
   },
   output: {
     path: path.resolve('./bundles/'),

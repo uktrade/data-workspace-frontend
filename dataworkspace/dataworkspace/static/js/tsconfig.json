@@ -60,5 +60,5 @@
     "types": ["node", "jest", "@testing-library/jest-dom"]
   },
   "include": ["./**/*"],
-  "exclude": ["./node_modules", "./react/modules/your-files/**/*"]
+  "exclude": ["./node_modules", "react/features/your-files/**/*"]
 }
