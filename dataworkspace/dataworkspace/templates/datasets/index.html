@@ -36,7 +36,7 @@
 
 {% block content %}
   {% csrf_token %}
-  {% flag HOME_PAGE_FLAG %}
+  {% flag 'HOME_PAGE_FLAG' %}
   <div id="home-page"></div>
   {% else %}
   <form id="live-search-form" action="{% url 'datasets:find_datasets' %}" method="get">
@@ -341,5 +341,7 @@
       {% endflag %}
     });
   </script>
-  {% render_bundle "home-page" "js" %}
+  {% flag 'HOME_PAGE_FLAG' %}
+    {% render_bundle "home-page" "js" %}
+  {% endflag %}
 {% endblock %}

@@ -16,6 +16,8 @@
   ],
   "ignorePatterns": ["node_modules"],
   "rules": {
+    "semi": ["error", "always"],
+    "quotes": ["error", "single"],
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "off",
     "no-multiple-empty-lines": [
