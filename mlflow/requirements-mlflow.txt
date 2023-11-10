@@ -39,7 +39,7 @@ cloudpickle==2.1.0
     # via mlflow
 contourpy==1.0.7
     # via matplotlib
-cryptography==41.0.3
+cryptography==41.0.5
     # via -r requirements-mlflow.in
 cycler==0.11.0
     # via matplotlib
@@ -61,10 +61,8 @@ frozenlist==1.3.0
     #   aiosignal
 gitdb==4.0.9
     # via gitpython
-gitpython==3.1.32
+gitpython==3.1.40
     # via mlflow
-greenlet==3.0.1
-    # via sqlalchemy
 gunicorn==20.1.0
     # via mlflow
 idna==3.3
@@ -72,7 +70,12 @@ idna==3.3
     #   requests
     #   yarl
 importlib-metadata==4.12.0
-    # via mlflow
+    # via
+    #   flask
+    #   markdown
+    #   mlflow
+importlib-resources==6.1.1
+    # via matplotlib
 itsdangerous==2.1.2
     # via flask
 jinja2==3.1.2
@@ -197,7 +200,9 @@ werkzeug==3.0.1
 yarl==1.7.2
     # via aiohttp
 zipp==3.8.0
-    # via importlib-metadata
+    # via
+    #   importlib-metadata
+    #   importlib-resources
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
