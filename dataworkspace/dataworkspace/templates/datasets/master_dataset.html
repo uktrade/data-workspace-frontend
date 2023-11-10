@@ -44,7 +44,7 @@
     {% include 'partials/unpublished_banner.html' with type='dataset' %}
   {% endif %}
 
-  <!-- {% if not False %}
+  {% if not model.data_is_actively_updated %}
   <div class="govuk-notification-banner" role="region"
     aria-labelledby="govuk-notification-banner-title"
     data-module="govuk-notification-banner">
@@ -58,12 +58,11 @@
           This dataset is no longer updated
         </p>
         <p class="govuk-body">
-          It was last update on 22 October 2022 at 8:31am. Although it is no longer updated,
-          it is still available for use as it may be linked to exisiting dashboards or reports.
+          Although this dataset is no longer updated it is still available for use as it may be linked to existing dashboards or reports.
         </p>
       </div>
   </div>
-  {% endif %} -->
+  {% endif %}
 
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
