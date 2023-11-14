@@ -1,16 +1,10 @@
-from django.db.models import Q
 from rest_framework import viewsets, serializers
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 from dataworkspace.apps.api_v2.pagination import LastModifiedCursorPagination
-from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.data_collections.models import Collection
-from dataworkspace.apps.datasets.utils import (
-    dataset_type_to_manage_unpublished_permission_codename,
-)
 
-from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.api_v2.datasets.serializers import (
     DatasetSerializer,
     VisualisationDatasetSerializer,
