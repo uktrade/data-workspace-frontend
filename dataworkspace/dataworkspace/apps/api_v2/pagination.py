@@ -5,3 +5,7 @@ class CreatedDateCursorPagination(CursorPagination):
     ordering = ("created_date", "id")
     page_size_query_param = "page_size"
     max_page_size = 100
+
+
+class LastModifiedCursorPagination(CreatedDateCursorPagination):
+    ordering = ("-modified_date", "id")
