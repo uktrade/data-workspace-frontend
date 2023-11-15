@@ -3,13 +3,18 @@ import React, { ReactNode } from 'react';
 import {
     SPACING_POINTS
   } from '@govuk-react/constants';
-import { H2 } from 'govuk-react';
+import { H3 } from 'govuk-react';
 import styled from 'styled-components';
+
+import {
+    MID_GREY,
+    WHITE
+} from '../../constants';
 
 const TileStyling = styled('div')`
     padding:${SPACING_POINTS['6']}px;
-    border: 1px solid #b1b4b6;
-    background-color: #ffffff;
+    border: 1px solid ${MID_GREY};
+    background-color: ${WHITE};
 `;
 
 interface TileProps {
@@ -23,7 +28,7 @@ const Tile: React.FC<TileProps> = ({
 }) => {
     return (
         <TileStyling>
-            <H2 size={27}>{title}</H2>
+            <H3 size={27}>{title}</H3>
             {children}
         </TileStyling>
     );

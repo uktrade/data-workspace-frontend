@@ -10,8 +10,10 @@ const TestComponent: React.FC = () => {
 
 describe('Tile', () => {
     it('renders with test content', () => {
-        const { getByText } = render(<Tile title="Test Title"><TestComponent /></Tile>);
-        expect(getByText('Test Title')).toBeInTheDocument();
-        expect(getByText('Test Content')).toBeInTheDocument();
+        const { getByRole, getByText } = render(<Tile title="Test Title"><TestComponent /></Tile>);
+        const header = getByRole('heading', { level: 3, name: 'Test Title' });
+        const content = getByText('Test Content');
+        expect(header).toBeInTheDocument();
+        expect(content).toBeInTheDocument();
     });
 });
