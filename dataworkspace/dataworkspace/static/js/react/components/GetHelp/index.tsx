@@ -23,8 +23,12 @@ const LinkList = styled(UnorderedList)`
 `;
 
 const LinkListItem = styled('li')`
-    margin: ${SPACING_POINTS[2]}px 0;
+    margin: ${SPACING_POINTS[4]}px 0;
     ${typography.font({ size: 16 })};
+
+    &:last-child {
+        margin-bottom: 0;
+    }
 `;
 
 const GetHelp: React.FC = () => {

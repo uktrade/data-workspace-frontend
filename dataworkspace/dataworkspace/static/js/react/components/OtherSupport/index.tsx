@@ -2,7 +2,6 @@ import React from 'react';
 
 import {
     SPACING,
-    // SPACING_POINTS
 } from '@govuk-react/constants';
 import { typography } from '@govuk-react/lib';
 import Link from '@govuk-react/link';
