@@ -1,7 +1,7 @@
 import React from 'react';
 
 import {
-    SPACING,
+    SPACING_POINTS 
 } from '@govuk-react/constants';
 import { typography } from '@govuk-react/lib';
 import Link from '@govuk-react/link';
@@ -11,7 +11,7 @@ import styled from 'styled-components';
 import Tile from '../Tile';
 
 const StyledParagraph = styled('p')`
-    margin: 0 0 ${SPACING.SCALE_5} 0;
+    margin: 0 0 ${SPACING_POINTS[5]}px 0;
     ${typography.font({ size: 16 })};
 
     &:last-child {

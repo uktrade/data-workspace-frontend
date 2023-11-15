@@ -1,7 +1,6 @@
 import React from 'react';
 
 import {
-    SPACING,
     SPACING_POINTS
 } from '@govuk-react/constants';
 import { typography } from '@govuk-react/lib';
@@ -12,7 +11,7 @@ import styled from 'styled-components';
 import Tile from '../Tile';
 
 const StyledParagraph = styled('p')`
-    margin: ${SPACING.SCALE_5} 0;
+    margin: ${SPACING_POINTS[6]}px 0;
     ${typography.font({ size: 16 })};
 `;
 
