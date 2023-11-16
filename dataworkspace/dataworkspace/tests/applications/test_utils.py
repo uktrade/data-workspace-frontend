@@ -555,7 +555,7 @@ class TestSyncActivityStreamSSOUsers:
 
         mock_hawk_request.side_effect = [user_john_smith, empty_result]
 
-        _do_sync_activity_stream_sso_users()
+        _do_sync_activity_stream_sso_users(page_size=1)
 
         assert mock_hawk_request.call_args_list == [
             mock.call(
@@ -563,7 +563,7 @@ class TestSyncActivityStreamSSOUsers:
                 "http://activity.stream/v3/activities/_search",
                 json.dumps(
                     {
-                        "size": 1000,
+                        "size": 1,
                         "query": {
                             "bool": {
                                 "filter": [
@@ -581,7 +581,7 @@ class TestSyncActivityStreamSSOUsers:
                 "http://activity.stream/v3/activities/_search",
                 json.dumps(
                     {
-                        "size": 1000,
+                        "size": 1,
                         "query": {
                             "bool": {
                                 "filter": [

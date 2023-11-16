@@ -370,7 +370,7 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
         },
         "sync-sso-users-from-activity-stream": {
             "task": "dataworkspace.apps.applications.utils.sync_activity_stream_sso_users",
-            "schedule": 60,
+            "schedule": 60 * 2,
             "args": (),
         },
         "sync-tool-query-logs": {
