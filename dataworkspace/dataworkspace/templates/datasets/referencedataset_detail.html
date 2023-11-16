@@ -199,6 +199,12 @@
 
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
+      {% include "partials/dataset_info_additional.html" with model=model show_usage_history=True %}
+    </div>
+  </div>
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
       {% include "partials/react-slot.html" with mount_id="data-usage" id=model.id %}
     </div>
   </div>
