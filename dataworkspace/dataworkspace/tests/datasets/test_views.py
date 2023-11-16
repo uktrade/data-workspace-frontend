@@ -5139,3 +5139,66 @@ def test_master_dataset_detail_page_shows_pipeline_failures(client, metadata_db)
         len([x for x in response.context["master_datasets_info"] if x.pipeline_last_run_succeeded])
         == 1
     )
+
+
+@pytest.mark.django_db
+@mock.patch("dataworkspace.apps.datasets.views.datasets_db.get_columns")
+def test_dictionary_visibility(mock_get_columns, user, client, dataset_db):
+    mock_get_columns.return_value = [(f"column_{i}", "integer") for i in range(20)]
+
+    dataset = factories.MasterDataSetFactory(published=True)
+    table = factories.SourceTableFactory(
+        dataset=dataset,
+        schema="public",
+        table="test_table1",
+        database=factories.DatabaseFactory.create(memorable_name="my_database"),
+    )
+
+    # A user with permission does not see a link on the dataset catalogue page
+    # when the dataset doesn't have a data dictionary published
+    dataset.user_access_type = UserAccessType.REQUIRES_AUTHENTICATION
+    dataset.dictionary_published = False
+    dataset.save()
+    response = client.get(reverse("datasets:dataset_detail", args=(dataset.id,)))
+    assert "Data dictionary" not in response.content.decode(response.charset)
+
+    # A user with permission does not see a link on the source grid page
+    # when the dataset doesn't have a data dictionary published
+    dataset.user_access_type = UserAccessType.REQUIRES_AUTHENTICATION
+    dataset.dictionary_published = False
+    dataset.save()
+    response = client.get(reverse("datasets:source_table_detail", args=(dataset.id, table.id)))
+    assert "Data dictionary" not in response.content.decode(response.charset)
+
+    # A user with permission to the dataset sees a link on the data grid
+    # page when the dataset has a published dictionary
+    dataset.user_access_type = UserAccessType.REQUIRES_AUTHENTICATION
+    dataset.dictionary_published = True
+    dataset.save()
+    response = client.get(reverse("datasets:source_table_detail", args=(dataset.id, table.id)))
+    assert "Data dictionary" in response.content.decode(response.charset)
+
+    # A user without permission does not see a link when the dataset
+    # doesn't have a data dictionary published
+    dataset.user_access_type = UserAccessType.REQUIRES_AUTHORIZATION
+    dataset.dictionary_published = False
+    dataset.save()
+    response = client.get(reverse("datasets:dataset_detail", args=(dataset.id,)))
+    assert "Data dictionary" not in response.content.decode(response.charset)
+
+    # A user without permission to the dataset sees a link to the data dictionary
+    # on the dataset catalogue page when the dataset has a published dictionary
+    dataset.user_access_type = UserAccessType.REQUIRES_AUTHORIZATION
+    dataset.dictionary_published = True
+    dataset.save()
+    response = client.get(reverse("datasets:dataset_detail", args=(dataset.id,)))
+    assert "Data dictionary" in response.content.decode(response.charset)
+
+    # A user who is a manager of a dataset can view the data dictionary
+    # link when there is no data dictionary
+    dataset.user_access_type = UserAccessType.REQUIRES_AUTHORIZATION
+    dataset.information_asset_owner = user
+    dataset.dictionary_published = False
+    dataset.save()
+    response = client.get(reverse("datasets:source_table_detail", args=(dataset.id, table.id)))
+    assert "Data dictionary" in response.content.decode(response.charset)
