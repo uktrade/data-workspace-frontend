@@ -27,7 +27,7 @@ from dataworkspace.apps.core.views import (
     UserSatisfactionSurveyView,
     ServeS3UploadedFileView,
 )
-from dataworkspace.apps.datasets.views import find_datasets
+from dataworkspace.apps.datasets.views import find_datasets, search_datasets
 from dataworkspace.apps.appstream.views import (
     appstream_view,
     appstream_admin_view,
@@ -43,6 +43,7 @@ admin.site.login = login_required(admin.site.login)
 
 urlpatterns = [
     path("", login_required(find_datasets), name="root"),
+    path("search-results/", login_required(search_datasets), name="search-results"),
     path("about/", login_required(about_page_view), name="about"),
     path("welcome/", login_required(welcome_page_view), name="welcome"),
     path("error_403", public_error_403_html_view),

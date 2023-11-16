@@ -33,16 +33,9 @@
 {% endblock %}
 
 {% block page_title %}Search - {{ block.super }}{% endblock %}
-{% block search_bar %}
-{% flag 'HOME_PAGE_FLAG' %}
-  {% include 'partials/search_bar.html' %}
-{% endflag %}
-{% endblock %}
+
 {% block content %}
   {% csrf_token %}
-  {% flag 'HOME_PAGE_FLAG' %}
-  <div id="home-page"></div>
-  {% else %}
   <form id="live-search-form" action="{% url 'datasets:find_datasets' %}" method="get">
 
     <div class="govuk-grid-row">
@@ -87,7 +80,6 @@
     </div>
 
     <div id="live-search-wrapper">
-
       <div class="govuk-grid-row">
         <div class="govuk-grid-column-one-third">&nbsp;
         </div>
@@ -322,25 +314,12 @@
       </div>
     </div>
   </form>
-  {% endflag %}
 {% endblock %}
 
 {% block footer_scripts %}
   {% if form.source.field.choices %}
     {{ form.media }}
   {% endif %}
-  {% flag 'HOME_PAGE_FLAG' %}
-    <script nonce="{{ request.csp_nonce }}">
-        document.addEventListener("DOMContentLoaded", function () {
-            const btn = document.getElementById("search-form");
-            btn.addEventListener("submit", (e)=> {
-              e.preventDefault();
-              window.location.href = '{% url "search-results" %}?q=' + document.getElementById("search").value;
-            })
-        })
-      </script>
-    {% render_bundle "home-page" "js" %}
-  {% else %}
   <script nonce="{{ request.csp_nonce }}" src="{% static 'search-v2.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}">
     $(document).ready(function () {
@@ -357,5 +336,4 @@
       {% endflag %}
     });
   </script>
-  {% endflag %}
 {% endblock %}

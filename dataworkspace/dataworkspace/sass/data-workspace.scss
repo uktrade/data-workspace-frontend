@@ -80,101 +80,6 @@
   min-width: 300px;
 }
 
-.search-field {
-  position: relative;
-}
-
-.search-field__label {
-  font-size: 16px;
-  line-height: 2.5;
-}
-
-@media (min-width: 40.0625em) {
-  .search-field__label {
-    font-size: 19px;
-    line-height: 2.1052631579;
-  }
-}
-
-.js-enabled .search-field__label {
-  position: absolute;
-  left: 15px;
-  top: 1px;
-  z-index: 1;
-  color: #6f777b;
-}
-
-.search-field-wrapper {
-  display: table;
-  width: 100%;
-  background: #ffffff;
-}
-
-.search-field__item {
-  position: relative;
-  display: table-cell;
-  vertical-align: top;
-}
-
-.search-field__input[type="search"]:focus,
-.search-field__input[type="search"].focus {
-  z-index: 2;
-}
-
-.search-field__input[type="search"] {
-  border-right-width: 0;
-}
-
-.search-field__input[type="search"]:focus {
-  border-right-width: 2px;
-}
-
-.search-field-submit-wrapper {
-  width: 1%;
-}
-
-.search-field__submit {
-  border: 0;
-  cursor: pointer;
-  border-radius: 0;
-  position: relative;
-  padding: 0;
-  width: 40px;
-  height: 40px;
-  background-image: url("/__django_static/assets/images/search-button.png");
-  background-repeat: no-repeat;
-  background-position: 2px 50%;
-  text-indent: -5000px;
-  overflow: hidden;
-  background-color: #1d70b8;
-  color: #ffffff;
-}
-
-@media only screen and (-webkit-min-device-pixel-ratio: 2),
-  only screen and (min-device-pixel-ratio: 2),
-  only screen and (min-resolution: 192dpi),
-  only screen and (min-resolution: 2dppx) {
-  .search-field__submit {
-    background-size: 52.5px auto;
-    background-position: 115% 50%;
-  }
-}
-
-.search-field__submit:focus {
-  z-index: 2;
-  outline: 3px solid $govuk-focus-colour;
-  outline-offset: 0;
-  box-shadow: inset 0 0 0 4px #0b0c0c;
-}
-
-.search-field__submit::-moz-focus-inner {
-  border: 0;
-}
-
-.search-field__submit:hover {
-  background-color: #207dce;
-}
-
 .pagination {
   float: right;
 }
@@ -658,6 +563,7 @@ p.sidebar-section {
 
 @import "filters";
 @import "search";
+@import "search-bar";
 @import "site-search";
 @import "rich-text";
 @import "collection-button";

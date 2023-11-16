@@ -192,6 +192,7 @@ def _get_tags_as_dict():
     return tags_dict
 
 
+# Once new home page (HOME_PAGE_FLAG) is complete REMOVE
 @csp_update(SCRIPT_SRC=settings.REACT_SCRIPT_SRC)
 @require_GET
 def find_datasets(request):
@@ -371,6 +372,201 @@ def find_datasets(request):
     return render(
         request,
         "datasets/index.html",
+        {
+            "form": form,
+            "recently_viewed_catalogue_pages": get_recently_viewed_catalogue_pages(request),
+            "query": filters.query,
+            "datasets": datasets,
+            "data_type": dict(data_types),
+            "show_admin_filters": has_unpublished_dataset_access(request.user)
+            and request.user.is_superuser,
+            "DATASET_FINDER_FLAG": settings.DATASET_FINDER_ADMIN_ONLY_FLAG,
+            "ACCESSIBLE_AUTOCOMPLETE_FLAG": settings.ACCESSIBLE_AUTOCOMPLETE_FLAG,
+            "search_type": "searchBar" if filters.query else "noSearch",
+            "has_filters": filters.has_filters(),
+        },
+    )
+
+
+@csp_update(SCRIPT_SRC=settings.REACT_SCRIPT_SRC)
+@require_GET
+def search_datasets(request):
+    ###############
+    # Validate form
+
+    form = DatasetSearchForm(request, request.GET)
+
+    if not form.is_valid():
+        logger.warning(form.errors)
+        return HttpResponseRedirect(reverse("datasets:find_datasets"))
+
+    data_types = form.fields[
+        "data_type"
+    ].choices  # Cache these now, as we annotate them with result numbers later which we don't want here.
+
+    ###############################################
+    # Find all results, and matching filter numbers
+
+    filters = form.get_filters()
+
+    all_visible_datasets, matched_datasets = search_for_datasets(
+        request.user, filters, _matches_filters
+    )
+
+    form.annotate_and_update_filters(
+        all_visible_datasets,
+        matcher=_matches_filters,
+    )
+
+    ####################################
+    # Select the current page of results
+
+    paginator = Paginator(
+        matched_datasets,
+        settings.SEARCH_RESULTS_DATASETS_PER_PAGE,
+    )
+
+    datasets = paginator.get_page(request.GET.get("page"))
+
+    ########################################################
+    # Augment results with tags, avoiding queries-per-result
+
+    tags_dict = _get_tags_as_dict()
+    for dataset in datasets:
+        dataset["sources"] = [
+            tags_dict.get(str(source_id)) for source_id in dataset["source_tag_ids"]
+        ]
+        dataset["topics"] = [tags_dict.get(str(topic_id)) for topic_id in dataset["topic_tag_ids"]]
+        dataset["publishers"] = [
+            tags_dict.get(str(publisher_id)) for publisher_id in dataset["publisher_tag_ids"]
+        ]
+
+    ######################################################################
+    # Augment results with last updated dates, avoiding queries-per-result
+
+    # Data structures to quickly look up datasets as needed further down
+
+    datasets_by_type = defaultdict(list)
+    datasets_by_type_id = {}
+    for dataset in datasets:
+        datasets_by_type[dataset["data_type"]].append(dataset)
+        datasets_by_type_id[(dataset["data_type"], dataset["id"])] = dataset
+
+    # Reference datasets
+
+    reference_datasets = ReferenceDataset.objects.filter(
+        uuid__in=tuple(dataset["id"] for dataset in datasets_by_type[DataSetType.REFERENCE.value])
+    )
+    for reference_dataset in reference_datasets:
+        dataset = datasets_by_type_id[(DataSetType.REFERENCE.value, reference_dataset.uuid)]
+        try:
+            # If the reference dataset csv table doesn't exist we
+            # get an unhandled relation does not exist error
+            # this is currently only a problem with integration tests
+            dataset["last_updated"] = reference_dataset.data_last_updated
+        except ProgrammingError as e:
+            logger.error(e)
+            dataset["last_updated"] = None
+
+    # Master datasets and datacuts together to minimise metadata table queries
+
+    master_datasets = MasterDataset.objects.filter(
+        id__in=tuple(dataset["id"] for dataset in datasets_by_type[DataSetType.MASTER.value])
+    ).prefetch_related("sourcetable_set")
+    datacut_datasets = DataCutDataset.objects.filter(
+        id__in=tuple(dataset["id"] for dataset in datasets_by_type[DataSetType.DATACUT.value])
+    ).prefetch_related(
+        Prefetch(
+            "customdatasetquery_set",
+            queryset=CustomDatasetQuery.objects.prefetch_related("tables"),
+        )
+    )
+    databases = {database.id: database for database in Database.objects.all()}
+
+    tables_and_last_updated_dates = datasets_db.get_all_tables_last_updated_date(
+        [
+            (databases[table.database_id].memorable_name, table.schema, table.table)
+            for master_dataset in master_datasets
+            for table in master_dataset.sourcetable_set.all()
+        ]
+        + [
+            (databases[query.database_id].memorable_name, table.schema, table.table)
+            for datacut_dataset in datacut_datasets
+            for query in datacut_dataset.customdatasetquery_set.all()
+            for table in query.tables.all()
+        ]
+    )
+
+    if form.cleaned_data["q"]:
+        log_event(
+            request.user,
+            EventLog.TYPE_DATASET_FIND_FORM_QUERY,
+            extra={
+                "query": form.cleaned_data["q"],
+                "number_of_results": len(matched_datasets),
+            },
+        )
+
+    def _without_none(it):
+        return (val for val in it if val is not None)
+
+    for master_dataset in master_datasets:
+        dataset = datasets_by_type_id[(DataSetType.MASTER.value, master_dataset.id)]
+        dataset["last_updated"] = max(
+            _without_none(
+                (
+                    tables_and_last_updated_dates[databases[table.database_id].memorable_name].get(
+                        (table.schema, table.table)
+                    )
+                    for table in master_dataset.sourcetable_set.all()
+                )
+            ),
+            default=None,
+        )
+
+    for datacut_dataset in datacut_datasets:
+        dataset = datasets_by_type_id[(DataSetType.DATACUT.value, datacut_dataset.id)]
+        last_updated_dates_for_queries = (
+            (
+                tables_and_last_updated_dates[databases[query.database_id].memorable_name].get(
+                    (table.schema, table.table)
+                )
+                for table in query.tables.all()
+            )
+            for query in datacut_dataset.customdatasetquery_set.all()
+        )
+        dataset["last_updated"] = max(
+            _without_none(
+                (
+                    min(_without_none(last_updated_dates_for_query), default=None)
+                    for last_updated_dates_for_query in last_updated_dates_for_queries
+                )
+            ),
+            default=None,
+        )
+
+    # Visualisations
+
+    visualisation_datasets = VisualisationCatalogueItem.objects.filter(
+        id__in=tuple(
+            dataset["id"] for dataset in datasets_by_type[DataSetType.VISUALISATION.value]
+        )
+    ).prefetch_related("visualisationlink_set")
+    for visualisation_dataset in visualisation_datasets:
+        dataset = datasets_by_type_id[(DataSetType.VISUALISATION.value, visualisation_dataset.id)]
+        dataset["last_updated"] = max(
+            _without_none(
+                (
+                    link.data_source_last_updated
+                    for link in visualisation_dataset.visualisationlink_set.all()
+                )
+            ),
+            default=None,
+        )
+
+    return render(
+        request,
+        "datasets/search_results.html",
         {
             "form": form,
             "recently_viewed_catalogue_pages": get_recently_viewed_catalogue_pages(request),
