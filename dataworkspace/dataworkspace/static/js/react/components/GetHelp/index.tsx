@@ -1,18 +1,17 @@
 import React from 'react';
 
 import {
-    SPACING,
     SPACING_POINTS
 } from '@govuk-react/constants';
 import { typography } from '@govuk-react/lib';
 import Link from '@govuk-react/link';
-import { H3, UnorderedList } from 'govuk-react';
+import { H4, UnorderedList } from 'govuk-react';
 import styled from 'styled-components';
 
 import Tile from '../Tile';
 
 const StyledParagraph = styled('p')`
-    margin: ${SPACING.SCALE_5} 0;
+    margin: ${SPACING_POINTS[6]}px 0;
     ${typography.font({ size: 16 })};
 `;
 
@@ -23,8 +22,12 @@ const LinkList = styled(UnorderedList)`
 `;
 
 const LinkListItem = styled('li')`
-    margin: ${SPACING_POINTS[2]}px 0;
+    margin: ${SPACING_POINTS[4]}px 0;
     ${typography.font({ size: 16 })};
+
+    &:last-child {
+        margin-bottom: 0;
+    }
 `;
 
 const GetHelp: React.FC = () => {
@@ -34,9 +37,9 @@ const GetHelp: React.FC = () => {
                 Find documentation, guidance, standards, 
                 training and updates on the <Link href='https://data-services-help.trade.gov.uk/data-workspace/'>Data Services Help Centre</Link>
             </StyledParagraph>
-            <H3 size={'SMALL'}>
+            <H4 size={'SMALL'}>
                 Suggested articles
-            </H3>
+            </H4>
             <LinkList>
                 <LinkListItem><Link href='#'>How to start using tools</Link></LinkListItem>
                 <LinkListItem><Link href='#'>Share and collaborate</Link></LinkListItem>

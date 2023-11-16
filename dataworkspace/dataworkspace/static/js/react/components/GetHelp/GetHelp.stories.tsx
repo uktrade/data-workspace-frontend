@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import GetHelp from '.';
 
 const meta = {
-    title: 'Get Help card',
+    title: 'Get Help tile',
     component: GetHelp
 } satisfies Meta<typeof GetHelp>;
 
