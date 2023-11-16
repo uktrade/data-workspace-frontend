@@ -1143,7 +1143,7 @@ def sync_activity_stream_sso_users():
         logger.info("sync_activity_stream_sso_users: Unable to acquire lock. Not running")
 
 
-def _do_sync_activity_stream_sso_users():
+def _do_sync_activity_stream_sso_users(page_size=1000):
     last_published = cache.get(
         "activity_stream_sync_last_published", datetime.datetime.utcfromtimestamp(0)
     )
@@ -1155,7 +1155,7 @@ def _do_sync_activity_stream_sso_users():
     ten_seconds_before_last_published = last_published - datetime.timedelta(seconds=10)
 
     query = {
-        "size": 1000,
+        "size": page_size,
         "query": {
             "bool": {
                 "filter": [
@@ -1232,6 +1232,10 @@ def _do_sync_activity_stream_sso_users():
 
         last_published_str = records[-1]["_source"]["published"]
         last_published = datetime.datetime.strptime(last_published_str, "%Y-%m-%dT%H:%M:%S.%fZ")
+
+        if len(records) < page_size:
+            break
+
         # paginate to next batch of records
         query["search_after"] = records[-1]["sort"]
 
