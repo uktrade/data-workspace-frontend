@@ -5,7 +5,7 @@ import {
 } from '@govuk-react/constants';
 import { typography } from '@govuk-react/lib';
 import Link from '@govuk-react/link';
-import { H3 } from 'govuk-react';
+import { H4 } from 'govuk-react';
 import styled from 'styled-components';
 
 import Tile from '../Tile';
@@ -35,17 +35,17 @@ const hrefToTeamsChannel = `
 const OtherSupport: React.FC = () => {
     return (
         <Tile title='Other ways of support'>
-            <H3 size={'SMALL'}>Message</H3>
+            <H4 size={'SMALL'}>Message</H4>
             <StyledParagraph>
                 <Link href={hrefToSupport}>Contact us</Link> if you have a 
                 question, problem or suggestion.
             </StyledParagraph>
-            <H3 size={'SMALL'}>Community</H3>
+            <H4 size={'SMALL'}>Community</H4>
             <StyledParagraph>
                 Join the <Link href={hrefToCommunityChannel}>Data Workspace community channel</Link> on
                 Microsoft Teams to connect with colleagues.
             </StyledParagraph>
-            <H3 size={'SMALL'}>Work</H3>
+            <H4 size={'SMALL'}>Work</H4>
             <StyledParagraph>
                 Find out what we are working on by visiting <Link href={hrefToTeamsChannel}>What's new page</Link>
             </StyledParagraph>

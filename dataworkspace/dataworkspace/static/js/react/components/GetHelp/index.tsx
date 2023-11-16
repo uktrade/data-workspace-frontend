@@ -5,7 +5,7 @@ import {
 } from '@govuk-react/constants';
 import { typography } from '@govuk-react/lib';
 import Link from '@govuk-react/link';
-import { H3, UnorderedList } from 'govuk-react';
+import { H4, UnorderedList } from 'govuk-react';
 import styled from 'styled-components';
 
 import Tile from '../Tile';
@@ -37,9 +37,9 @@ const GetHelp: React.FC = () => {
                 Find documentation, guidance, standards, 
                 training and updates on the <Link href='https://data-services-help.trade.gov.uk/data-workspace/'>Data Services Help Centre</Link>
             </StyledParagraph>
-            <H3 size={'SMALL'}>
+            <H4 size={'SMALL'}>
                 Suggested articles
-            </H3>
+            </H4>
             <LinkList>
                 <LinkListItem><Link href='#'>How to start using tools</Link></LinkListItem>
                 <LinkListItem><Link href='#'>Share and collaborate</Link></LinkListItem>
