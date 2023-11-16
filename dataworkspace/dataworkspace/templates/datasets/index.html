@@ -335,7 +335,7 @@
             const btn = document.getElementById("search-form");
             btn.addEventListener("submit", (e)=> {
               e.preventDefault();
-              window.location.href = '{% url "search-results" %}?q=' + document.getElementById("search").value;
+              window.location.href = '{% url "datasets:find_datasets" %}?q=' + document.getElementById("search").value;
             })
         })
       </script>

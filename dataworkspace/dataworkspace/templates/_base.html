@@ -76,7 +76,7 @@
             </a>
           </li>
           {% flag 'HOME_PAGE_FLAG' %}
-            {% url 'search-results' as search_results_url %}
+            {% url 'datasets:find_datasets' as search_results_url %}
             <li class="govuk-header__navigation-item{% if request.path == search_results_url %} govuk-header__navigation-item--active{% endif %}">
               <a class="govuk-header__link" href="{{ search_results_url }}">
                 Search results
