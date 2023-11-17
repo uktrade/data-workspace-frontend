@@ -1,0 +1,15 @@
+<div class="search-container">
+    <div class="govuk-width-container">
+        <h1 class="search-field__header govuk-heading-l">Search Data Workspace</h1>
+        <label class="govuk-visually-hidden" for="app-site-search__input">Search by dataset name or description</label>
+        <form id="search-form" method="get" action='{% url "datasets:find_datasets" %}'>
+            <div class="search-field search-field--secondary govuk-!-margin-bottom-4">
+                <input type="input" id="search" class="search-field__item search-field__item--secondary govuk-input" placeholder="Search by dataset name or description" />
+                <input class="search-field__submit search-field__submit--secondary" type="submit" />          
+            </div>
+        </form>
+        <p class="govuk-body govuk-!-margin-bottom-0">
+            <a href="https://data.trade.gov.uk/welcome/" class="search-field__footer__link">Getting started as a new user</a>
+        </p>
+    </div>
+</div>

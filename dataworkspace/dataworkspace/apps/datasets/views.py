@@ -193,6 +193,14 @@ def _get_tags_as_dict():
 
 
 @csp_update(SCRIPT_SRC=settings.REACT_SCRIPT_SRC)
+def home_view(request):
+    if not waffle.flag_is_active(request, "HOME_PAGE_FLAG"):
+        return find_datasets(request)
+    else:
+        return render(request, "datasets/index.html")
+
+
+@csp_update(SCRIPT_SRC=settings.REACT_SCRIPT_SRC)
 @require_GET
 def find_datasets(request):
     ###############
@@ -370,7 +378,7 @@ def find_datasets(request):
 
     return render(
         request,
-        "datasets/index.html",
+        "datasets/search_results.html",
         {
             "form": form,
             "recently_viewed_catalogue_pages": get_recently_viewed_catalogue_pages(request),

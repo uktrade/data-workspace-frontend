@@ -1,5 +1,11 @@
+import SupportYou from '../support-you/SupportYou';
+
 const HomePage = () => {
-  return <div>{/* React Components go here */}</div>;
+  return (
+    <>
+      <SupportYou />
+    </>
+  );
 };
 
 export default HomePage;
