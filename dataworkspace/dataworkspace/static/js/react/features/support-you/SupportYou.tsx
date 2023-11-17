@@ -13,20 +13,12 @@ const SupportYouContainer = styled('div')`
 `;
 
 const TilesContainer = styled('div')`
-  ${MEDIA_QUERIES.DESKTOP} {
-    display: grid;
-    grid-template-rows: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-gap: ${SPACING_POINTS[3]}px;
+  ${MEDIA_QUERIES.TABLET} {
     grid-template-columns: repeat(2, 1fr);
-    column-gap: ${SPACING_POINTS[6]}px;
-  }
-
-  &:first-child {
-    grid-column-start: 1;
-    grid-column-end: 1;
-  }
-  &:nth-child(2) {
-    grid-column-start: 2;
-    grid-column-end: 2;
+    grid-gap: ${SPACING_POINTS[6]}px;
   }
 `;
 
