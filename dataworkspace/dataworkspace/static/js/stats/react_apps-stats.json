@@ -11,15 +11,15 @@
       "path": "data-cut.7045d2b3ec8c90b61142.js.LICENSE.txt",
       "publicPath": "/__django_static/js/bundles/data-cut.7045d2b3ec8c90b61142.js.LICENSE.txt"
     },
-    "home-page.ba063ce64a81aff9f8f7.js": {
-      "name": "home-page.ba063ce64a81aff9f8f7.js",
-      "path": "home-page.ba063ce64a81aff9f8f7.js",
-      "publicPath": "/__django_static/js/bundles/home-page.ba063ce64a81aff9f8f7.js"
+    "home-page.cd5e94fe0aa6a2519e83.js": {
+      "name": "home-page.cd5e94fe0aa6a2519e83.js",
+      "path": "home-page.cd5e94fe0aa6a2519e83.js",
+      "publicPath": "/__django_static/js/bundles/home-page.cd5e94fe0aa6a2519e83.js"
     },
-    "home-page.ba063ce64a81aff9f8f7.js.LICENSE.txt": {
-      "name": "home-page.ba063ce64a81aff9f8f7.js.LICENSE.txt",
-      "path": "home-page.ba063ce64a81aff9f8f7.js.LICENSE.txt",
-      "publicPath": "/__django_static/js/bundles/home-page.ba063ce64a81aff9f8f7.js.LICENSE.txt"
+    "home-page.cd5e94fe0aa6a2519e83.js.LICENSE.txt": {
+      "name": "home-page.cd5e94fe0aa6a2519e83.js.LICENSE.txt",
+      "path": "home-page.cd5e94fe0aa6a2519e83.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/home-page.cd5e94fe0aa6a2519e83.js.LICENSE.txt"
     },
     "reference-dataset.6ef9c65e0b8fb280cfb4.js": {
       "name": "reference-dataset.6ef9c65e0b8fb280cfb4.js",
@@ -67,7 +67,7 @@
       "data-cut.7045d2b3ec8c90b61142.js"
     ],
     "home-page": [
-      "home-page.ba063ce64a81aff9f8f7.js"
+      "home-page.cd5e94fe0aa6a2519e83.js"
     ],
     "reference-dataset": [
       "reference-dataset.6ef9c65e0b8fb280cfb4.js"
