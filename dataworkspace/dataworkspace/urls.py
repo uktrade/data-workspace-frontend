@@ -27,7 +27,7 @@ from dataworkspace.apps.core.views import (
     UserSatisfactionSurveyView,
     ServeS3UploadedFileView,
 )
-from dataworkspace.apps.datasets.views import find_datasets, home_view
+from dataworkspace.apps.datasets.views import home_view
 from dataworkspace.apps.appstream.views import (
     appstream_view,
     appstream_admin_view,
