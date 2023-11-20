@@ -1,25 +1,24 @@
 /* eslint-disable */
 const path = require('path');
 
+const REACT_APPS = [
+  'home-page',
+  'data-cut',
+  'source-dataset',
+  'reference-dataset',
+  'visualisations',
+  'your-files'
+].reduce(
+  (prev, acc) => ({
+    ...prev,
+    [acc]: path.join(__dirname, `./react/features/${acc}/index`)
+  }),
+  {}
+);
+
 module.exports = {
   context: __dirname,
-  entry: {
-    yourfiles: path.join(__dirname, './react/features/your-files/index'),
-    'data-cut': path.join(__dirname, './react/features/data-cut/index'),
-    'source-dataset': path.join(
-      __dirname,
-      './react/features/source-dataset/index'
-    ),
-    'reference-dataset': path.join(
-      __dirname,
-      './react/features/reference-dataset/index'
-    ),
-    visualisations: path.join(
-      __dirname,
-      './react/features/visualisations/index'
-    ),
-    'home-page': path.join(__dirname, './react/features/home-page/index')
-  },
+  entry: REACT_APPS,
   output: {
     path: path.resolve('./bundles/'),
     filename: '[name].[contenthash].js',

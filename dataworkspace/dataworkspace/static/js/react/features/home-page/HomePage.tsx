@@ -1,4 +1,4 @@
-import SupportYou from '../support-you/SupportYou';
+import SupportYou from '../support/Support';
 
 const HomePage = () => {
   return (
