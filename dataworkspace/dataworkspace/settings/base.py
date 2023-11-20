@@ -496,6 +496,7 @@ CKEDITOR_CONFIGS = {
         "format_tags": "p;h3;h4;h5;h6",
         "linkShowAdvancedTab": False,
         "extraPlugins": "codesnippet",
+        "removePlugins": "exportpdf",
         "codeSnippet_languages": {
             "bash": "Bash",
             "json": "JSON",
