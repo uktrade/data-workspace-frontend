@@ -6,7 +6,7 @@ import Link from '@govuk-react/link';
 import { H4, UnorderedList } from 'govuk-react';
 import styled from 'styled-components';
 
-import Tile from '../Tile';
+import { Tile } from '../../../../components';
 
 const StyledParagraph = styled('p')`
   margin: ${SPACING_POINTS[4]}px 0;

@@ -4,11 +4,11 @@ import { MEDIA_QUERIES, SPACING_POINTS } from '@govuk-react/constants';
 import { H2 } from 'govuk-react';
 import styled from 'styled-components';
 
-import GetHelp from '../../components/GetHelp';
-import OtherSupport from '../../components/OtherSupport';
 import { WHITE } from '../../constants';
+import GetHelp from './components/GetHelp';
+import OtherSupport from './components/OtherSupport';
 
-const SupportYouContainer = styled('div')`
+const SupportContainer = styled('div')`
   background-color: ${WHITE};
 `;
 
@@ -24,13 +24,13 @@ const TilesContainer = styled('div')`
 
 const SupportYou: React.FC = () => {
   return (
-    <SupportYouContainer>
+    <SupportContainer>
       <H2>How can we support you?</H2>
       <TilesContainer>
         <GetHelp />
         <OtherSupport />
       </TilesContainer>
-    </SupportYouContainer>
+    </SupportContainer>
   );
 };
 
