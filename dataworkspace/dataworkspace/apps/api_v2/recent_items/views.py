@@ -22,4 +22,8 @@ class RecentItemsViewSet(TimestampFilterMixin, viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return super().get_queryset().filter(event_type=EventLog.TYPE_DATASET_VIEW)
+        return (
+            super()
+            .get_queryset()
+            .filter(user=self.request.user, event_type=EventLog.TYPE_DATASET_VIEW)
+        )
