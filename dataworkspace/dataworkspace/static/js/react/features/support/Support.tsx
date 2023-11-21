@@ -6,7 +6,7 @@ import styled from 'styled-components';
 
 import { WHITE } from '../../constants';
 import GetHelp from './components/GetHelp';
-import OtherSupport from './components/OtherSupport';
+import GetInTouch from './components/GetInTouch';
 
 const SupportContainer = styled('div')`
   background-color: ${WHITE};
@@ -28,7 +28,7 @@ const SupportYou: React.FC = () => {
       <H2>How can we support you?</H2>
       <TilesContainer>
         <GetHelp />
-        <OtherSupport />
+        <GetInTouch />
       </TilesContainer>
     </SupportContainer>
   );

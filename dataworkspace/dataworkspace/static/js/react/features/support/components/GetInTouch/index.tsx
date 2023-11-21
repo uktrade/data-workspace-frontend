@@ -32,7 +32,7 @@ const hrefToTeamsChannel = `
 
 const OtherSupport: React.FC = () => {
   return (
-    <Tile title="Other ways of support">
+    <Tile title="Get in touch">
       <H4 size={'SMALL'}>Message</H4>
       <StyledParagraph>
         <Link href={hrefToSupport}>Contact us</Link> if you have a question,
@@ -48,8 +48,8 @@ const OtherSupport: React.FC = () => {
       </StyledParagraph>
       <H4 size={'SMALL'}>Work</H4>
       <StyledParagraph>
-        Find out what we are working on by visiting{' '}
-        <Link href={hrefToTeamsChannel}>What's new page</Link>
+        Find out what we are working on by visiting our{' '}
+        <Link href={hrefToTeamsChannel}>updates page</Link>
       </StyledParagraph>
     </Tile>
   );

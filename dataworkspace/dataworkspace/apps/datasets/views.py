@@ -378,7 +378,7 @@ def find_datasets(request):
 
     return render(
         request,
-        "datasets/search_results.html",
+        "datasets/data_catalogue.html",
         {
             "form": form,
             "recently_viewed_catalogue_pages": get_recently_viewed_catalogue_pages(request),

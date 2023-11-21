@@ -40,16 +40,24 @@ const GetHelp: React.FC = () => {
       <H4 size={'SMALL'}>Suggested articles</H4>
       <LinkList>
         <LinkListItem>
-          <Link href="#">How to start using tools</Link>
+          <Link href="https://data-services-help.trade.gov.uk/data-workspace/how-to/use-tools/">
+            How to start using tools
+          </Link>
         </LinkListItem>
         <LinkListItem>
-          <Link href="#">Share and collaborate</Link>
+          <Link href="https://data-services-help.trade.gov.uk/data-workspace/how-to/share-and-collaborate/">
+            Share and collaborate
+          </Link>
         </LinkListItem>
         <LinkListItem>
-          <Link href="#">Getting started on Data Workspace</Link>
+          <Link href="https://data-services-help.trade.gov.uk/data-workspace/how-to/start-using-data-workspace/">
+            Getting started on Data Workspace
+          </Link>
         </LinkListItem>
         <LinkListItem>
-          <Link href="#">How to add data on Data Workspace</Link>
+          <Link href="https://data-services-help.trade.gov.uk/data-workspace/how-to/4-manage-your-data/">
+            How to add data on Data Workspace
+          </Link>
         </LinkListItem>
       </LinkList>
     </Tile>
