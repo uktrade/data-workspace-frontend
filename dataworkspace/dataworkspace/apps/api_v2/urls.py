@@ -8,4 +8,10 @@ urlpatterns = [
             ("dataworkspace.apps.api_v2.data_collections.urls", "api_v2"), namespace="collections"
         ),
     ),
+    path(
+        "",
+        include(
+            ("dataworkspace.apps.api_v2.recent_items.urls", "api_v2"), namespace="recent_items"
+        ),
+    ),
 ]
