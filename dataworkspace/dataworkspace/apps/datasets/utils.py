@@ -1188,7 +1188,3 @@ def get_recently_viewed_catalogue_pages(request):
                 }
             )
     return user_event_choice_list
-
-
-def get_user_bookmarks(request):
-    pass
