@@ -42,7 +42,7 @@ def test_create_sql_pipeline(
     staff_client.post(reverse("admin:index"), follow=True)
     resp = staff_client.post(
         reverse("pipelines:create-sql"),
-        data={"type": "sql", "table_name": table_name, "sql": "SELECT 1"},
+        data={"type": "sql", "table_name": table_name, "schedule": "@yearly", "sql": "SELECT 1"},
         follow=True,
     )
     assert expected_output in resp.content.decode(resp.charset)
@@ -58,6 +58,7 @@ def test_create_sharepoint_pipeline(mock_sync, staff_client):
         data={
             "type": "sharepoint",
             "table_name": "test.sharepoint1",
+            "schedule": "@monthly",
             "site_name": "A Site",
             "list_name": "A List",
         },
@@ -72,7 +73,12 @@ def test_create_pipeline_validates_valid_sql(mock_sync, staff_client):
     staff_client.post(reverse("admin:index"), follow=True)
     resp = staff_client.post(
         reverse("pipelines:create-sql"),
-        data={"type": "sql", "table_name": "test", "sql": "SELECT bar as 1;"},
+        data={
+            "type": "sql",
+            "table_name": "test",
+            "schedule": "@daily",
+            "sql": "SELECT bar as 1;",
+        },
         follow=True,
     )
     assert b"syntax error" in resp.content
@@ -83,7 +89,12 @@ def test_create_pipeline_validates_single_statement(mock_sync, staff_client):
     staff_client.post(reverse("admin:index"), follow=True)
     resp = staff_client.post(
         reverse("pipelines:create-sql"),
-        data={"type": "sql", "table_name": "test", "sql": "SELECT 1; SELECT 2;"},
+        data={
+            "type": "sql",
+            "table_name": "test",
+            "schedule": "@monthly",
+            "sql": "SELECT 1; SELECT 2;",
+        },
         follow=True,
     )
     assert b"Enter a single statement" in resp.content
@@ -94,7 +105,12 @@ def test_create_pipeline_validates_drop_statement(mock_sync, staff_client):
     staff_client.post(reverse("admin:index"), follow=True)
     resp = staff_client.post(
         reverse("pipelines:create-sql"),
-        data={"type": "sql", "table_name": "test", "sql": "DROP TABLE foo;"},
+        data={
+            "type": "sql",
+            "table_name": "test",
+            "schedule": "@weekly",
+            "sql": "DROP TABLE foo;",
+        },
         follow=True,
     )
     assert b"Only SELECT statements are supported" in resp.content
@@ -105,7 +121,12 @@ def test_create_pipeline_validates_create_statement(mock_sync, staff_client):
     staff_client.post(reverse("admin:index"), follow=True)
     resp = staff_client.post(
         reverse("pipelines:create-sql"),
-        data={"type": "sql", "table_name": "test", "sql": "CREATE TABLE foo (f1 int);"},
+        data={
+            "type": "sql",
+            "table_name": "test",
+            "schedule": "@yearly",
+            "sql": "CREATE TABLE foo (f1 int);",
+        },
         follow=True,
     )
     assert b"Only SELECT statements are supported" in resp.content
@@ -116,7 +137,12 @@ def test_create_pipeline_validates_duplicate_column_names(mock_sync, staff_clien
     staff_client.post(reverse("admin:index"), follow=True)
     resp = staff_client.post(
         reverse("pipelines:create-sql"),
-        data={"type": "sql", "table_name": "test", "sql": "SELECT 1 AS foo, 2 AS foo;"},
+        data={
+            "type": "sql",
+            "table_name": "test",
+            "schedule": "@monthly",
+            "sql": "SELECT 1 AS foo, 2 AS foo;",
+        },
         follow=True,
     )
     assert b"Duplicate column names found" in resp.content
@@ -129,7 +155,12 @@ def test_edit_sql_pipeline(mock_sync, staff_client):
     staff_client.post(reverse("admin:index"), follow=True)
     resp = staff_client.post(
         reverse("pipelines:edit-sql", args=(pipeline.id,)),
-        data={"type": "sql", "table_name": pipeline.table_name, "sql": "SELECT 2"},
+        data={
+            "type": "sql",
+            "table_name": pipeline.table_name,
+            "schedule": "@daily",
+            "sql": "SELECT 2",
+        },
         follow=True,
     )
     assert "Pipeline updated successfully" in resp.content.decode(resp.charset)
@@ -169,6 +200,7 @@ def test_edit_sql_pipeline_with_notes(
         data={
             "type": "sql",
             "table_name": pipeline.table_name,
+            "schedule": "@yearly",
             "sql": "SELECT 2",
             "notes": edited_notes,
         },
@@ -192,6 +224,7 @@ def test_edit_sharepoint_pipeline(mock_sync, staff_client):
         data={
             "type": "sql",
             "table_name": pipeline.table_name,
+            "schedule": "@daily",
             "site_name": "site2",
             "list_name": "list2",
         },
@@ -232,6 +265,7 @@ def test_edit_sharepoint_pipeline_with_notes(mock_sync, staff_client, intial_not
         data={
             "type": "sql",
             "table_name": pipeline.table_name,
+            "schedule": "@monthly",
             "site_name": "site2",
             "list_name": "list2",
             "notes": edited_notes,
@@ -320,7 +354,11 @@ def test_query_fails_to_run(mock_sync, staff_client):
     staff_client.post(reverse("admin:index"), follow=True)
     resp = staff_client.post(
         reverse("pipelines:create-sql"),
-        data={"table_name": "test", "sql": "SELECT * from doesnt_exist;"},
+        data={
+            "table_name": "test",
+            "sql": "SELECT * from doesnt_exist;",
+            "schedule": "@monthly",
+        },
         follow=True,
     )
     assert b"Error running query" in resp.content

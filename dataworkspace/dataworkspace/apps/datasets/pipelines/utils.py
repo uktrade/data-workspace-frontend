@@ -19,8 +19,8 @@ def split_schema_table(schema_table):
     regex = r"^\"?([a-zA-Z_-][a-zA-Z0-9_-]+)\"?\.\"?([a-zA-Z_-][a-zA-Z0-9_-]+)\"?$"
     try:
         return re.match(regex, schema_table).groups()
-    except AttributeError:
-        raise ValueError("Invalid schema table name")
+    except AttributeError as ex:
+        raise ValueError("Invalid schema table name") from ex
 
 
 def save_pipeline_to_dataflow(pipeline, method):
@@ -29,7 +29,7 @@ def save_pipeline_to_dataflow(pipeline, method):
     schema_name, table_name = split_schema_table(pipeline.table_name)
     body = json.dumps(
         {
-            "schedule": "@daily",
+            "schedule": pipeline.schedule,
             "schema_name": schema_name,
             "table_name": table_name,
             "type": pipeline.type,

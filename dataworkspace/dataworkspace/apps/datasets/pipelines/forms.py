@@ -6,14 +6,16 @@ from django.core.validators import RegexValidator
 from django.db import connections
 from django.forms import ChoiceField, widgets
 
-from dataworkspace.apps.datasets.constants import PipelineType
+from dataworkspace.apps.datasets.constants import PipelineScheduleType, PipelineType
 from dataworkspace.apps.datasets.models import Pipeline
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
+    GOVUKDesignSystemChoiceField,
     GOVUKDesignSystemForm,
     GOVUKDesignSystemModelForm,
     GOVUKDesignSystemRadioField,
     GOVUKDesignSystemRadiosWidget,
+    GOVUKDesignSystemSelectWidget,
     GOVUKDesignSystemTextWidget,
     GOVUKDesignSystemTextareaField,
     GOVUKDesignSystemTextareaWidget,
@@ -50,9 +52,17 @@ class BasePipelineCreateForm(GOVUKDesignSystemModelForm):
         validators=(
             RegexValidator(
                 message='Table name must be in the format schema.table or "schema"."table"',
-                regex=r"^((\"[a-zA-Z_-][a-zA-Z0-9_-]*\")|([a-zA-Z_-][a-zA-Z0-9_-]*))\.((\"[a-zA-Z_-][a-zA-Z0-9_-]*\")|([a-zA-Z_-][a-zA-Z0-9_-]*))$",
+                regex=r"^((\"[a-zA-Z_-][a-zA-Z0-9_-]*\")|([a-zA-Z_-][a-zA-Z0-9_-]*))"
+                r"\.((\"[a-zA-Z_-][a-zA-Z0-9_-]*\")|([a-zA-Z_-][a-zA-Z0-9_-]*))$",
             ),
             validate_schema_and_table,
+        ),
+    )
+    schedule = GOVUKDesignSystemChoiceField(
+        label="Schedule to run the pipeline on",
+        choices=PipelineScheduleType.choices,
+        widget=GOVUKDesignSystemSelectWidget(
+            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
         ),
     )
     notes = GOVUKDesignSystemTextareaField(
@@ -67,7 +77,7 @@ class BasePipelineCreateForm(GOVUKDesignSystemModelForm):
 
     class Meta:
         model = Pipeline
-        fields = ["table_name", "notes"]
+        fields = ["table_name", "notes", "schedule"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -88,7 +98,7 @@ class SQLPipelineCreateForm(BasePipelineCreateForm):
 
     class Meta:
         model = Pipeline
-        fields = ["table_name", "sql", "type", "notes"]
+        fields = ["table_name", "sql", "type", "notes", "schedule"]
 
     def save(self, commit=True):
         pipeline = super().save(commit=False)
@@ -155,7 +165,7 @@ class SharepointPipelineCreateForm(BasePipelineCreateForm):
 
     class Meta:
         model = Pipeline
-        fields = ["table_name", "site_name", "list_name", "type", "notes"]
+        fields = ["table_name", "site_name", "list_name", "type", "notes", "schedule"]
 
     def save(self, commit=True):
         pipeline = super().save(commit=False)
