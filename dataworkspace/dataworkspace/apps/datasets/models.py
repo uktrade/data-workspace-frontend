@@ -75,7 +75,7 @@ from dataworkspace.apps.datasets.constants import (
     UserAccessType,
 )
 from dataworkspace.apps.datasets.model_utils import external_model_class
-
+from dataworkspace.apps.datasets.pipelines.utils import split_schema_table
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.core.charts.models import ChartBuilderChart
 from dataworkspace.apps.eventlog.utils import log_event
@@ -2973,6 +2973,29 @@ class Pipeline(TimeStampedUserModel):
             self._original_table_name = self.table_name
             self._original_config = self.config
         super().save(force_insert, force_update, using, update_fields)
+        self.save_dataflow_pipeline_config()
+
+    def get_config_file_path(self):
+        return f"{settings.DATAFLOW_PIPELINES_PREFIX}/pipeline-{self.id}.json"
+
+    def save_dataflow_pipeline_config(self):
+        schema_name, table_name = split_schema_table(self.table_name)
+        client = get_s3_client()
+        client.put_object(
+            Bucket=settings.AWS_UPLOADS_BUCKET,
+            Key=self.get_config_file_path(),
+            Body=json.dumps(
+                {
+                    "id": self.id,
+                    "type": self.type,
+                    "schedule": self.schedule,
+                    "schema": schema_name,
+                    "table": table_name,
+                    "config": self.config,
+                    "enabled": True,
+                }
+            ),
+        )
 
 
 class PipelineVersion(TimeStampedModel):
