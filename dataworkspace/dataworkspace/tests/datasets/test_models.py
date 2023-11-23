@@ -279,7 +279,8 @@ class TestSourceLinkPreview:
 
 
 @pytest.mark.django_db
-def test_pipeline_versions():
+@mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
+def test_pipeline_versions(mock_s3_client):
     pipeline = factories.PipelineFactory.create(
         table_name="schema.original_table_name", config={"sql": "SELECT 1, 2, 3"}
     )

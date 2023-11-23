@@ -316,7 +316,10 @@ class TestDataVisualisationUIApprovalPage:
 
 
 class TestDataVisualisationUIDatasetsPage:
-    def test_shows_app_schema_pipelines_on_datasets_page_and_no_others(self, staff_client):
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
+    def test_shows_app_schema_pipelines_on_datasets_page_and_no_others(
+        self, mock_s3_client, staff_client
+    ):
         visualisation = factories.VisualisationCatalogueItemFactory.create(
             short_description="summary",
             published=False,
@@ -344,7 +347,8 @@ class TestDataVisualisationUIDatasetsPage:
         assert b"table_3" in response.content
         assert response.status_code == 200
 
-    def test_shows_parsed_schemas_and_tables(self, staff_client):
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
+    def test_shows_parsed_schemas_and_tables(self, mock_s3_client, staff_client):
         visualisation = factories.VisualisationCatalogueItemFactory.create(
             short_description="summary",
             published=False,
@@ -372,7 +376,10 @@ class TestDataVisualisationUIDatasetsPage:
 
     @pytest.mark.django_db
     @mock.patch("dataworkspace.apps.applications.views.save_pipeline_to_dataflow")
-    def test_can_save_sql_if_reducing_tables(self, save_pipeline_to_dataflow, staff_client):
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
+    def test_can_save_sql_if_reducing_tables(
+        self, mock_s3_client, save_pipeline_to_dataflow, staff_client
+    ):
         visualisation = factories.VisualisationCatalogueItemFactory.create(
             short_description="summary",
             published=False,
@@ -417,7 +424,8 @@ class TestDataVisualisationUIDatasetsPage:
             "INSERT INTO my_table(col_a) VALUES ('a', 'b');",
         ),
     )
-    def test_cannot_save_sql_if_not_select(self, staff_client, sql):
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
+    def test_cannot_save_sql_if_not_select(self, mock_s3_client, staff_client, sql):
         visualisation = factories.VisualisationCatalogueItemFactory.create(
             short_description="summary",
             published=False,
@@ -454,7 +462,8 @@ class TestDataVisualisationUIDatasetsPage:
         assert response.status_code == 200
 
     @pytest.mark.django_db
-    def test_cannot_save_sql_if_from_different_table(self, staff_client):
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
+    def test_cannot_save_sql_if_from_different_table(self, mock_s3_client, staff_client):
         visualisation = factories.VisualisationCatalogueItemFactory.create(
             short_description="summary",
             published=False,
@@ -492,7 +501,8 @@ class TestDataVisualisationUIDatasetsPage:
         assert response.status_code == 200
 
     @pytest.mark.django_db
-    def test_cannot_save_sql_if_from_different_visualisation(self, staff_client):
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
+    def test_cannot_save_sql_if_from_different_visualisation(self, mock_s3_client, staff_client):
         visualisation_a = factories.VisualisationCatalogueItemFactory.create(
             short_description="summary",
             published=False,
