@@ -18,26 +18,26 @@ def test_ordering_and_filtering_bookmarked_items(client, user):
     user_event1 = factories.EventLogFactory(
         user=user,
         event_type=EventLog.TYPE_DATASET_BOOKMARKED,
-        related_object=factories.DataSetFactor.create(),
+        related_object=factories.ReferenceDataSetFactory.create(),
     )
     user_event2 = factories.EventLogFactory(
         user=user,
         event_type=EventLog.TYPE_DATASET_BOOKMARKED,
-        related_object=factories.DataSetFactor.create(),
+        related_object=factories.ReferenceDatasetFactory.create(),
     )
     user_event3 = factories.EventLogFactory(
         user=user,
         event_type=EventLog.TYPE_DATASET_BOOKMARKED,
-        related_object=factories.DataSetFactor.create(),
+        related_object=factories.ReferenceDatasetFactory.create(),
     )
     factories.EventLogFactory(
         event_type=EventLog.TYPE_DATASET_BOOKMARKED,
-        related_object=factories.DataSetFactor.create(),
+        related_object=factories.ReferenceDatasetFactory.create(),
     )
     factories.EventLogFactory(
         user=user,
         event_type=EventLog.TYPE_DATASET_FIND_FORM_QUERY,
-        related_object=factories.DataSetFactor.create(),
+        related_object=factories.ReferenceDatasetFactory.create(),
     )
 
     response = client.get(reverse("api-v2:your_bookmarks:dataset-list"))
