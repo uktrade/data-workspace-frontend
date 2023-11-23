@@ -560,7 +560,7 @@ class FargateSpawner:
                     application_instance.save(update_fields=["spawner_stopped_at"])
                     break
             except Exception:  # pylint: disable=broad-except
-                pass
+                logger.exception("Failed to describe fargate task when stopping tool")
             gevent.sleep(sleep_time)
             sleep_time = sleep_time * 2
 
