@@ -12,7 +12,6 @@ $light_label_color: govuk-colour("dark-grey");
 }
 
 .search-result dl {
-
   dt {
     display: block;
     color: $light_label_color;
@@ -22,7 +21,6 @@ $light_label_color: govuk-colour("dark-grey");
     margin-left: 0;
     margin-bottom: 1rem;
   }
-
 }
 
 @include govuk-media-query($from: desktop) {
@@ -36,7 +34,6 @@ $light_label_color: govuk-colour("dark-grey");
     display: block;
   }
 }
-
 
 .filter-button {
   margin-bottom: 1rem;
@@ -58,7 +55,9 @@ $light_label_color: govuk-colour("dark-grey");
 }
 .bookmark-toggle:focus {
   background-color: #fd0;
-  box-shadow: 0 -2px $govuk-focus-colour, 0 4px $govuk-focus-text-colour;
+  box-shadow:
+    0 -2px $govuk-focus-colour,
+    0 4px $govuk-focus-text-colour;
 }
 .is-bookmarked-icon {
   display: none;

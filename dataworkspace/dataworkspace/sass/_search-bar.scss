@@ -1,119 +1,337 @@
-.search-container {
-    background-color: #1d70b8;
-    padding: 20px 0;
+/*
+Lifted from GOV.UK Design System
+
+https://github.com/alphagov/govuk-design-system/blob/main/src/stylesheets/components/_site-search.scss
+ */
+// Site search using Accessible autocomplete
+// below styles are based on the default accessible autocomplete stylesheet
+
+@function encode-hex($hex) {
+  // Turn colour into a string
+  $output: inspect($hex);
+  // Slice the '#' from the start of the string so we can add it back on encoded.
+  $output: str-slice($output, 2);
+  // Add the '#' back on the start, but as an encoded character for embedding.
+  @return "%23" + $output;
 }
 
-.search-field {
-    position: relative;
-    &--secondary {
-        display: grid;
-        grid-template-columns: 1fr auto;
+$icon-size: 40px;
+
+.app-site-search {
+  width: 100%;
+  padding-bottom: govuk-spacing(6);
+  display: table;
+
+  .no-js & {
+    display: none;
+
+    @include govuk-media-query($from: tablet) {
+      display: block;
     }
-}
 
-.search-field__header {
-    color: #ffffff;
-}
-
-.search-field__footer__link {
-    color: #ffffff;
-}
-
-.search-field__label {
-    font-size: 16px;
-    line-height: 2.5;
-}
-
-@media (min-width: 40.0625em) {
-    .search-field__label {
-        font-size: 19px;
-        line-height: 2.1052631579;
+    @include govuk-media-query($from: desktop) {
+      text-align: right;
     }
+  }
 }
 
-.js-enabled .search-field__label {
-    position: absolute;
-    left: 15px;
-    top: 1px;
-    z-index: 1;
-    color: #6f777b;
+.app-site-search__hint,
+.app-site-search__input {
+  box-sizing: border-box;
+  width: 100%;
+  height: govuk-px-to-rem($icon-size);
+  margin-bottom: 0; // BUG: Safari 10 on macOS seems to add an implicit margin.
+  padding: govuk-spacing(1);
+  padding-left: $icon-size - govuk-spacing(1);
+  border: $govuk-border-width-form-element solid govuk-colour("white");
+  border-radius: 0; // Safari 10 on iOS adds implicit border rounding.
+  -webkit-appearance: none;
+}
+
+.app-site-search__hint {
+  position: absolute;
+  color: govuk-colour("mid-grey");
+}
+
+.app-site-search__input {
+  position: relative;
+  //background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36' width='40' height='40'%3E%3Cpath d='M25.7 24.8L21.9 21c.7-1 1.1-2.2 1.1-3.5 0-3.6-2.9-6.5-6.5-6.5S10 13.9 10 17.5s2.9 6.5 6.5 6.5c1.6 0 3-.6 4.1-1.5l3.7 3.7 1.4-1.4zM12 17.5c0-2.5 2-4.5 4.5-4.5s4.5 2 4.5 4.5-2 4.5-4.5 4.5-4.5-2-4.5-4.5z' fill='#{encode-hex(govuk-colour("dark-grey"))}'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center left -2px;
+  background-size: $icon-size $icon-size;
+  border-color: $govuk-focus-text-colour;
+  border-right: none;
+  z-index: 1;
+
+  &::placeholder {
+    color: govuk-colour("dark-grey");
+  }
+}
+
+.app-site-search__input--focused {
+  border-color: $govuk-focus-text-colour;
+  outline: $govuk-focus-width solid $govuk-focus-colour;
+  outline-offset: 0;
+  box-shadow: inset 0 0 0 $govuk-border-width-form-element;
+}
+
+.app-site-search__input--show-all-values {
+  padding: govuk-spacing(1);
+  cursor: pointer;
+}
+
+.app-site-search__dropdown-arrow-down {
+  display: inline-block;
+  position: absolute;
+  z-index: -1;
+  top: govuk-spacing(2);
+  right: 8px;
+  width: 24px;
+  height: 24px;
+}
+
+.app-site-search__menu {
+  width: 100%;
+  max-height: 342px;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  border-top: 0;
+  color: govuk-colour("black");
+  background-color: govuk-colour("white");
+}
+
+.app-site-search__menu--visible {
+  display: block;
+}
+
+.app-site-search__menu--hidden {
+  display: none;
+}
+
+.app-site-search__menu--overlay {
+  position: absolute;
+  z-index: 100;
+  top: 100%;
+  left: 0;
+  box-shadow: rgba(govuk-colour("black"), 0.256863) 0 2px 6px; // stylelint-disable-line number-max-precision
+}
+
+.app-site-search__menu--inline {
+  position: relative;
+}
+
+.app-site-search__option {
+  display: block;
+  position: relative;
+  padding: 10px 10px 10px 20px;
+  border-bottom: solid govuk-colour("mid-grey");
+  border-width: 1px 0;
+  cursor: pointer;
+  margin-bottom: 0;
+}
+
+.app-site-search__option > * {
+  pointer-events: none;
+}
+
+.app-site-search__option:first-of-type {
+  border-top-width: 0;
+}
+
+.app-site-search__option:last-of-type {
+  border-bottom-width: 0;
+}
+
+.app-site-search__option:nth-child(even) {
+  $_app-site-search-option-background-color: #fafafa;
+  background-color: $_app-site-search-option-background-color;
+}
+.app-site-search__option--focused:nth-child(even).app-site-search__option--focused {
+  background-color: govuk-colour("blue") !important;
+}
+
+.app-site-search__option--focused,
+.app-site-search__option:hover {
+  border-color: govuk-colour("blue");
+  // Add a transparent outline for when users change their colours.
+  outline: 3px solid transparent;
+  outline-offset: -3px;
+  color: govuk-colour("white");
+  background-color: govuk-colour("blue");
+
+  .app-site-search--section {
+    color: inherit;
+  }
+}
+
+.app-site-search__option--no-results {
+  color: govuk-colour("dark-grey");
+  background-color: govuk-colour("white");
+  cursor: not-allowed;
+}
+
+.app-site-search__hint,
+.app-site-search__input,
+.app-site-search__option {
+  @include govuk-font($size: 19);
+}
+
+.app-site-search__link {
+  display: none;
+
+  .no-js & {
+    @include govuk-media-query($from: tablet) {
+      display: inline-block;
+      margin-top: 10px;
+      color: govuk-colour("white");
+
+      &:focus {
+        color: govuk-colour("black");
+      }
+    }
+  }
+}
+
+.app-site-search--section {
+  display: block;
+  @include govuk-font($size: 16);
+  color: $govuk-secondary-text-colour;
+}
+
+.app-site-search__aliases {
+  margin-left: govuk-spacing(1);
+
+  &:before {
+    content: "(";
+  }
+
+  &:after {
+    content: ")";
+  }
+}
+
+.app-site-search__separator {
+  display: inline-block;
+  margin-right: govuk-spacing(1);
+  margin-left: govuk-spacing(1);
+}
+
+.app-site-search__recently-viewed-header {
+  background-color: #fff;
+  pointer-events: none;
+  padding-top: 12px;
+  padding-bottom: 6px;
+  padding-left: 12px;
+  margin: -12px -12px 6px -20px;
+}
+
+#iconClock {
+  display: inline;
+  text-align: right;
+  height: 14px;
+}
+
+#recentlyViewedDataHeader {
+  display: inline;
+  font: bold 16px Arial;
+  color: #0b0c0c;
+  padding-left: 5px;
 }
 
 .search-field-wrapper {
-    display: table;
-    width: 100%;
-    background: #ffffff;
-}
-
-.search-field__item {
-    position: relative;
-    display: table-cell;
-    vertical-align: top;
-    &--secondary {
-        border: none;
-    }
-}
-
-.search-field__input[type="search"]:focus,
-.search-field__input[type="search"].focus {
-    z-index: 2;
-}
-
-.search-field__input[type="search"] {
-    border-right-width: 0;
-}
-
-.search-field__input[type="search"]:focus {
-    border-right-width: 2px;
-}
-
-.search-field-submit-wrapper {
-    width: 1%;
+  position: relative;
+  display: table;
+  width: 100%;
 }
 
 .search-field__submit {
-    border: 0;
-    cursor: pointer;
-    border-radius: 0;
-    position: relative;
-    padding: 0;
-    width: 40px;
-    height: 40px;
-    background-image: url("/__django_static/assets/images/search-button.png");
-    background-repeat: no-repeat;
-    background-position: 2px 50%;
-    text-indent: -5000px;
-    overflow: hidden;
-    background-color: #1d70b8;
-    color: #ffffff;
+  border: 0;
+  cursor: pointer;
+  border-radius: 0;
+  position: relative;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  background-image: url("/__django_static/assets/images/search-button.png");
+  background-repeat: no-repeat;
+  background-position: 2px 50%;
+  text-indent: -5000px;
+  overflow: hidden;
+  background-color: #1d70b8;
+  color: #ffffff;
+  &:hover {
+    background-color: #207dce;
+  }
+  &--secondary {
+    background-color: #1e1e1e;
     &:hover {
-        background-color: #207dce;
+      background-color: #313030;
     }
-    &--secondary {
-        background-color: #1e1e1e;
-        &:hover {
-            background-color: #313030;
-        }
-    }
+  }
+}
+
+.search-field-wrapper {
+  display: table-cell;
+  padding: 0;
+}
+
+.search-field__submit {
+  display: table-cell;
+  top: -1px;
 }
 
 @media only screen and (-webkit-min-device-pixel-ratio: 2),
-    only screen and (min-device-pixel-ratio: 2),
-    only screen and (min-resolution: 192dpi),
-    only screen and (min-resolution: 2dppx) {
-    .search-field__submit {
-        background-size: 52.5px auto;
-        background-position: 115% 50%;
-    }
+  only screen and (min-device-pixel-ratio: 2),
+  only screen and (min-resolution: 192dpi),
+  only screen and (min-resolution: 2dppx) {
+  .search-field__submit {
+    background-size: 52.5px auto;
+    background-position: 115% 50%;
+  }
 }
 
 .search-field__submit:focus {
-    z-index: 2;
-    outline: 3px solid $govuk-focus-colour;
-    outline-offset: 0;
-    box-shadow: inset 0 0 0 4px #0b0c0c;
+  z-index: 2;
+  outline: 3px solid $govuk-focus-colour;
+  outline-offset: 0;
+  box-shadow: inset 0 0 0 4px #0b0c0c;
 }
 
 .search-field__submit::-moz-focus-inner {
-    border: 0;
+  border: 0;
+}
+
+// Overrides for homepage
+
+.app-site-search__container {
+  background-color: #1d70b8;
+  padding: 20px 0;
+
+  .app-site-search {
+    margin-bottom: govuk-spacing(4);
+    padding-bottom: 0;
+  }
+
+  .search-field__header {
+    color: govuk-colour("white");
+  }
+
+  .app-site-search__input {
+    border: none;
+  }
+
+  .search-field__submit {
+    background-color: #1e1e1e;
+    &:hover {
+      background-color: #313030;
+    }
+  }
+
+  .search-field__footer-link {
+    margin: 0;
+    a {
+      color: govuk-colour("white");
+    }
+  }
 }

@@ -1,15 +1,35 @@
-<div class="search-container">
-    <div class="govuk-width-container">
-        <h1 class="search-field__header govuk-heading-l">Search Data Workspace</h1>
-        <label class="govuk-visually-hidden" for="app-site-search__input">Search by dataset name or description</label>
-        <form id="search-form" method="get" action='{% url "datasets:find_datasets" %}'>
-            <div class="search-field search-field--secondary govuk-!-margin-bottom-4">
-                <input type="input" id="search" class="search-field__item search-field__item--secondary govuk-input" placeholder="Search by dataset name or description" />
-                <input class="search-field__submit search-field__submit--secondary" type="submit" />          
-            </div>
-        </form>
-        <p class="govuk-body govuk-!-margin-bottom-0">
-            <a href="https://data.trade.gov.uk/welcome/" class="search-field__footer__link">Getting started as a new user</a>
-        </p>
+{% load waffle_tags %}
+<h1 class="search-field__header govuk-heading-l">Search Data Workspace</h1>
+{% if subTitle %}
+<p class="govuk-body-l">
+    {{subTitle}}
+</p>
+{% endif %}
+<div class="search-field">
+    {% flag ACCESSIBLE_AUTOCOMPLETE_FLAG %}
+    <div class="app-site-search" data-module="app-search">
+      <label class="govuk-visually-hidden" for="app-site-search__input">Search by dataset name or description</label>
+      <div class="search-field-wrapper" id="my-autocomplete-container"></div>
+      <input class="search-field__submit" type="submit" value="Search">
     </div>
+    {% if gettingStartedLink %}
+    <p class="govuk-body search-field__footer-link">
+        <a href="https://data.trade.gov.uk/welcome/" class="search-field__footer__link">Getting started as a new user</a>
+      </p>
+    {% endif %}
+    {% else %}
+    <div class="search-field-wrapper govuk-!-padding-bottom-6">
+      <input type="text" name="q" id="search" title="Search" class="govuk-input search-field__item search-field__input js-class-toggle" value="{{ query }}" aria-controls="search-summary-accessible-hint-wrapper" placeholder="Search by dataset name or description">
+      <div class="search-field-submit-wrapper search-field__item">
+        <input class="search-field__submit" type="submit" value="Search">
+      </div>
+    </div>
+    {% endflag %}
+    {% flag DATASET_FINDER_FLAG %}
+      <p class="govuk-body">
+        <a href="{% url 'finder:find_datasets' %}" class="govuk-link govuk-link--no-visited-state">Find
+          datasets</a> containing a specific word or phrase.
+      </p>
+    {% endflag %}
 </div>
+
