@@ -8,7 +8,7 @@ from dataworkspace.apps.eventlog.models import EventLog
 
 @pytest.mark.django_db
 def test_unauthenticated_your_bookmarks(unauthenticated_client):
-    response = unauthenticated_client.get(reverse("api-v2:your_bookmarks:eventlog-list"))
+    response = unauthenticated_client.get(reverse("api-v2:your_bookmarks:dataset-list"))
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
@@ -40,7 +40,7 @@ def test_ordering_and_filtering_bookmarked_items(client, user):
         related_object=factories.ReferenceDatasetFactory.create(),
     )
 
-    response = client.get(reverse("api-v2:your_bookmarks:eventlog-list"))
+    response = client.get(reverse("api-v2:your_bookmarks:dataset-list"))
     bookmarks = response.json()
     assert len(bookmarks["results"]) == 3
     assert bookmarks["results"][0]["id"] == user_event3.id
