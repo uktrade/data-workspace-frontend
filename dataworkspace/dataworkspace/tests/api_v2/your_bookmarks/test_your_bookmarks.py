@@ -1,32 +1,49 @@
-from django.test import TestCase
-from rest_framework.test import APIClient
+import pytest
 from django.urls import reverse
-from django.contrib.auth.models import User
-from dataworkspace.apps.datasets.models import DataSet
+from rest_framework import status
+
+from dataworkspace.tests import factories
 from dataworkspace.apps.eventlog.models import EventLog
 
 
-class YourBookmarksViewSetTestCase(TestCase):
-    def setUp(self):
-        self.client = APIClient()
-        self.user = User.objects.create_user(username="testuser", password="testpassword")
-        self.client.force_authenticate(user=self.user)
+@pytest.mark.django_db
+def test_unauthenticated_your_bookmarks(unauthenticated_client):
+    response = unauthenticated_client.get(reverse("api-v2:your_bookmarks:dataset-list"))
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    def test_get_bookmarks(self):
-        dataset = DataSet.objects.create(name="Test Dataset")
-        EventLog.objects.create(
-            user_has_bookmarked=self.user,
-            event_type=EventLog.TYPE_DATASET_BOOKMARKED,
-            content_object=dataset,
-        )
 
-        response = self.client.get(reverse("api-v2:recent_items:eventlog-list"))
+@pytest.mark.django_db
+def test_ordering_and_filtering_bookmarked_items(client, user):
+    client.force_login(user)
+    user_event1 = factories.EventLogFactory(
+        user=user,
+        event_type=EventLog.TYPE_DATASET_BOOKMARKED,
+        related_object=factories.DataSetFactor.create(),
+    )
+    user_event2 = factories.EventLogFactory(
+        user=user,
+        event_type=EventLog.TYPE_DATASET_BOOKMARKED,
+        related_object=factories.DataSetFactor.create(),
+    )
+    user_event3 = factories.EventLogFactory(
+        user=user,
+        event_type=EventLog.TYPE_DATASET_BOOKMARKED,
+        related_object=factories.DataSetFactor.create(),
+    )
+    factories.EventLogFactory(
+        event_type=EventLog.TYPE_DATASET_BOOKMARKED,
+        related_object=factories.DataSetFactor.create(),
+    )
+    factories.EventLogFactory(
+        user=user,
+        event_type=EventLog.TYPE_DATASET_FIND_FORM_QUERY,
+        related_object=factories.DataSetFactor.create(),
+    )
 
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["results"][0]["name"], "Test Dataset")
-
-    def test_empty_bookmarks(self):
-        response = self.client.get(reverse("api-v2:recent_items:eventlog-list"))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["results"], [])
+    response = client.get(reverse("api-v2:your_bookmarks:dataset-list"))
+    bookmarks = response.json()
+    assert len(bookmarks["results"]) == 3
+    assert bookmarks["results"][0]["id"] == user_event3.id
+    assert bookmarks["results"][1]["id"] == user_event2.id
+    assert bookmarks["results"][2]["id"] == user_event1.id
+    assert response.status_code == status.HTTP_200_OK
