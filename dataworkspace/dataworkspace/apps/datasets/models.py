@@ -2975,6 +2975,10 @@ class Pipeline(TimeStampedUserModel):
         super().save(force_insert, force_update, using, update_fields)
         self.save_dataflow_pipeline_config()
 
+    def delete(self, using=None, keep_parents=False):
+        self.delete_dataflow_pipeline_config()
+        super().delete(using, keep_parents)
+
     def get_config_file_path(self):
         return f"{settings.DATAFLOW_PIPELINES_PREFIX}/pipeline-{self.id}.json"
 
@@ -2987,6 +2991,7 @@ class Pipeline(TimeStampedUserModel):
             Body=json.dumps(
                 {
                     "id": self.id,
+                    "dag_id": self.dag_id,
                     "type": self.type,
                     "schedule": self.schedule,
                     "schema": schema_name,
@@ -2996,6 +3001,15 @@ class Pipeline(TimeStampedUserModel):
                 }
             ),
         )
+
+    def delete_dataflow_pipeline_config(self):
+        client = get_s3_client()
+        try:
+            client.delete_object(
+                Bucket=settings.AWS_UPLOADS_BUCKET, Key=self.get_config_file_path()
+            )
+        except ClientError:
+            pass
 
 
 class PipelineVersion(TimeStampedModel):
