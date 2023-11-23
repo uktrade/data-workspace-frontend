@@ -12,9 +12,3 @@ export const DATA_USAGE_KEYS = {
   bookmark_count: 'Bookmarked by users',
   dashboard_views: 'Dashboard views'
 } as const;
-
-export const YOUR_BOOKMARK_KEYS = {
-  id: 'ID',
-  name: 'Name',
-  url: 'URL'
-} as const;
