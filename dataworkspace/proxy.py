@@ -446,8 +446,16 @@ async def async_main():
 
             params = {"message": exception.args[0]} if user_exception else {}
             status = exception.args[1] if user_exception else 500
-            error_url = exception.args[2] if len(exception.args) > 2 else f"/error_{status}"
-            error_qs = exception.args[3] if len(exception.args) > 3 else {}
+            error_url = (
+                exception.args[2]
+                if len(exception.args) > 2 and exception.args[2] is not None
+                else f"/error_{status}"
+            )
+            error_qs = (
+                exception.args[3]
+                if len(exception.args) > 3 and exception.args[3] is not None
+                else {}
+            )
             return await handle_http(
                 downstream_request,
                 "GET",
