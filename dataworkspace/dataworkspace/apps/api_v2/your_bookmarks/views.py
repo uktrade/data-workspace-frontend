@@ -9,7 +9,7 @@ from dataworkspace.apps.eventlog.models import EventLog
 
 
 class YourBookmarkPageNumberPagination(PageNumberPagination):
-    ordering = ("-timestamp", "id")
+    ordering = ("-timestamp", "name")
     page_size_query_param = "page_size"
     max_page_size = 10_000
 
