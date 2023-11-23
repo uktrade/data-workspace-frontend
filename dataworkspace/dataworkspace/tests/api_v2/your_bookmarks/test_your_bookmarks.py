@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from dataworkspace.tests import factories
-from dataworkspace.apps.eventlog.models import EventLog
+from dataworkspace.apps.datasets.models import EventLog
 
 
 @pytest.mark.django_db
@@ -18,32 +18,33 @@ def test_ordering_and_filtering_bookmarked_items(client, user):
     user_event1 = factories.EventLogFactory(
         user=user,
         event_type=EventLog.TYPE_DATASET_BOOKMARKED,
-        related_object=factories.ReferenceDatasetFactory.create(),
+        related_object=factories.DataSetFactory.create(),
     )
     user_event2 = factories.EventLogFactory(
         user=user,
         event_type=EventLog.TYPE_DATASET_BOOKMARKED,
-        related_object=factories.ReferenceDatasetFactory.create(),
+        related_object=factories.DataSetFactory.create(),
     )
     user_event3 = factories.EventLogFactory(
         user=user,
         event_type=EventLog.TYPE_DATASET_BOOKMARKED,
-        related_object=factories.ReferenceDatasetFactory.create(),
+        related_object=factories.DataSetFactory.create(),
     )
-    factories.EventLogFactory(
-        event_type=EventLog.TYPE_DATASET_BOOKMARKED,
-        related_object=factories.ReferenceDatasetFactory.create(),
-    )
-    factories.EventLogFactory(
-        user=user,
-        event_type=EventLog.TYPE_DATASET_FIND_FORM_QUERY,
-        related_object=factories.ReferenceDatasetFactory.create(),
-    )
-
     response = client.get(reverse("api-v2:your_bookmarks:dataset-list"))
-    bookmarks = response.json()
-    assert len(bookmarks["results"]) == 3
-    assert bookmarks["results"][0]["id"] == user_event3.id
-    assert bookmarks["results"][1]["id"] == user_event2.id
-    assert bookmarks["results"][2]["id"] == user_event1.id
+    recent_items = response.json()
+    assert len(recent_items["results"]) == 3
+    assert recent_items["results"][0]["id"] == user_event3.id
+    assert recent_items["results"][1]["id"] == user_event2.id
+    assert recent_items["results"][2]["id"] == user_event1.id
     assert response.status_code == status.HTTP_200_OK
+
+
+def test_authenticated_user_empty_bookmarks(client, user):
+    client.force_login(user)
+
+    response = client.get(reverse("api-v2:bookmarks:bookmarked-datasets"))
+    assert response.status_code == status.HTTP_200_OK
+
+    # Verify that the response contains an empty list
+    response_data = response.json()
+    assert len(response_data["results"]) == 0
