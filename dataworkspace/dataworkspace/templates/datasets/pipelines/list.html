@@ -64,6 +64,9 @@
                           </form>
                         {% endif %}
                       {% endwith %}
+                      <strong class="govuk-tag govuk-tag--grey" style="font-size: 0.7em" title="{{ object.get_schedule_display }}">
+                        {{ object.schedule }}
+                      </strong>
                     </dd>
                 </div>
                 {% endfor %}

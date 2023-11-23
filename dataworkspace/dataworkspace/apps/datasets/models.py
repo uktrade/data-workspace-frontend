@@ -68,12 +68,14 @@ from dataworkspace.apps.datasets.constants import (
     DataLinkType,
     GRID_DATA_TYPE_MAP,
     GRID_ACRONYM_MAP,
+    PipelineScheduleType,
     SecurityClassificationAndHandlingInstructionType,
     PipelineType,
     TagType,
     UserAccessType,
 )
 from dataworkspace.apps.datasets.model_utils import external_model_class
+
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.core.charts.models import ChartBuilderChart
 from dataworkspace.apps.eventlog.utils import log_event
@@ -2930,6 +2932,9 @@ class Pipeline(TimeStampedUserModel):
     type = models.CharField(max_length=255, choices=PipelineType.choices)
     config = models.JSONField()
     notes = models.TextField(null=True, blank=True)
+    schedule = models.TextField(
+        choices=PipelineScheduleType.choices, default=PipelineScheduleType.DAILY
+    )
 
     class Meta:
         ordering = ("table_name",)

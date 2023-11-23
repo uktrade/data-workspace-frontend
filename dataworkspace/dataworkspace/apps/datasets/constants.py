@@ -139,3 +139,10 @@ class AggregationType(models.TextChoices):
 class SecurityClassificationAndHandlingInstructionType(models.IntegerChoices):
     OFFICIAL = 1, "OFFICIAL"
     OFFICIAL_SENSITIVE = 2, "OFFICIAL-SENSITIVE"
+
+
+class PipelineScheduleType(models.TextChoices):
+    DAILY = "@daily", "Run once a day at midnight"
+    WEEKLY = "@weekly", "Run once a week at midnight on Sunday morning"
+    MONTHLY = "@monthly", "Run once a month at midnight of the first day of the month"
+    YEARLY = "@yearly", "Run once a year at midnight of January 1"
