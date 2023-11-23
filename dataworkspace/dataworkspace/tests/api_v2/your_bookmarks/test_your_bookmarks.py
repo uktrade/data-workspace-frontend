@@ -32,7 +32,7 @@ def test_ordering_and_filtering_bookmarked_items(client, user):
     )
     factories.EventLogFactory(
         event_type=EventLog.TYPE_DATASET_BOOKMARKED,
-        related_object=factories.ReferenceReferenceDatasetFactory.create(),
+        related_object=factories.ReferenceDatasetFactory.create(),
     )
 
     response = client.get(reverse("api-v2:your_bookmarks"))
