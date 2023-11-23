@@ -10,9 +10,14 @@ from dataworkspace.apps.eventlog.models import EventLog
 
 
 class DatasetSerializer(serializers.ModelSerializer):
+    url = serializers.SerializerMethodField()
+
     class Meta:
         model = DataSet
-        fields = ("id", "name")
+        fields = ("id", "name", "url")
+
+    def get_url(self, obj):
+        return obj.get_absolute_url()
 
 
 class DatasetStatsSerializer(serializers.ModelSerializer):
