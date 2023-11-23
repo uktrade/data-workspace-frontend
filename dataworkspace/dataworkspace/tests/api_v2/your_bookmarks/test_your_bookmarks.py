@@ -31,11 +31,11 @@ def test_ordering_and_filtering_bookmarked_items(client, user):
         related_object=factories.DataSetFactory.create(),
     )
     response = client.get(reverse("api-v2:your_bookmarks:dataset-list"))
-    recent_items = response.json()
-    assert len(recent_items["results"]) == 3
-    assert recent_items["results"][0]["id"] == user_event3.id
-    assert recent_items["results"][1]["id"] == user_event2.id
-    assert recent_items["results"][2]["id"] == user_event1.id
+    your_bookmarks = response.json()
+    assert len(your_bookmarks["results"]) == 3
+    assert your_bookmarks["results"][0]["id"] == user_event3.id
+    assert your_bookmarks["results"][1]["id"] == user_event2.id
+    assert your_bookmarks["results"][2]["id"] == user_event1.id
     assert response.status_code == status.HTTP_200_OK
 
 
