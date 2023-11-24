@@ -37,48 +37,13 @@
 {% block content %}
   {% csrf_token %}
   <form id="live-search-form" action="{% url 'datasets:find_datasets' %}" method="get">
-
-    <div class="govuk-grid-row">
-      <div class="govuk-grid-column-full">
-        <h1 class="govuk-heading-l">Search Data Workspace</h1>
-        <p class="govuk-body-l">
-          Discover, access and analyse DBT data.
-        </p>
-      </div>
-    </div>
-
     <div class="govuk-grid-row">
       <div class="govuk-grid-column-full">
         <div class="search-field govuk-!-margin-bottom-2">
-        {% flag ACCESSIBLE_AUTOCOMPLETE_FLAG %}
-          <div class="app-site-search govuk-!-padding-bottom-6" data-module="app-search" style="float: none; width: 100%; display: table">
-            <label class="govuk-visually-hidden" for="app-site-search__input">Search by dataset name or
-              description</label>
-            <div class="search-field-wrapper" id="my-autocomplete-container"
-                 style="display:table-cell; padding: 0">
-            </div>
-            <input class="search-field__submit" type="submit" value="Search" style="display: table-cell; top: -2px">
-          </div>
-          {% else %}
-          <div class="search-field-wrapper govuk-!-padding-bottom-6">
-            <input type="text" name="q" id="search" title="Search"
-                   class="govuk-input search-field__item search-field__input js-class-toggle" value="{{ query }}"
-                   aria-controls="search-summary-accessible-hint-wrapper" placeholder="Search by dataset name or description">
-            <div class="search-field-submit-wrapper search-field__item">
-              <input class="search-field__submit" type="submit" value="Search">
-            </div>
-          </div>
-        {% endflag %}
-          {% flag DATASET_FINDER_FLAG %}
-            <p class="govuk-body">
-              <a href="{% url 'finder:find_datasets' %}" class="govuk-link govuk-link--no-visited-state">Find
-                datasets</a> containing a specific word or phrase.
-            </p>
-          {% endflag %}
+          {% include 'partials/search_bar.html' with subTitle="Discover, access and analyse DBT data." %}
         </div>
       </div>
     </div>
-
     <div id="live-search-wrapper">
       <div class="govuk-grid-row">
         <div class="govuk-grid-column-one-third">&nbsp;
