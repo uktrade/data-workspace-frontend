@@ -42,9 +42,8 @@ def test_ordering_and_filtering_bookmarked_items(client, user):
 def test_authenticated_user_empty_bookmarks(client, user):
     client.force_login(user)
 
-    response = client.get(reverse("api-v2:bookmarks:bookmarked-datasets"))
+    response = client.get(reverse("api-v2:your_bookmarks:dataset-list"))
     assert response.status_code == status.HTTP_200_OK
 
-    # Verify that the response contains an empty list
     response_data = response.json()
     assert len(response_data["results"]) == 0
