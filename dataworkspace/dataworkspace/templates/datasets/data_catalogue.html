@@ -299,9 +299,6 @@
         var dataSearchURL = '{% url "datasets:find_suggested_searches" %}'
         accessibleAutocompleteOptions(dropdownData, dataSearchURL, new GTMDatasetSearchSupport(), form)
       {% endflag %}
-      const searchQuery = new URLSearchParams(window.location.search).get("q");
-      const searchField = document.getElementById("app-site-search__input");
-      searchField.value = searchQuery
     });
   </script>
 {% endblock %}
