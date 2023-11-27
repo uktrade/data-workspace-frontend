@@ -1,0 +1,13 @@
+.data-dictionary__table {
+    table-layout: fixed;
+    th,
+    td {
+        word-wrap: break-word;
+    }
+    th:nth-child(2) {
+        width: 10%;
+    }
+    th:nth-child(3) {
+        width: 50%;
+    }
+}
