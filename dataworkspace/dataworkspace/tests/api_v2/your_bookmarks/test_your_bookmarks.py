@@ -29,6 +29,8 @@ def test_bookmarking_and_return_only_bookmarked_datasets(client, user):
     d2.toggle_bookmark(user)
 
     d3 = factories.DataSetFactory.create()
+    d3.toggle_bookmark(user)
+    d3.toggle_bookmark(user)
 
     response = client.get(reverse("api-v2:your_bookmarks:dataset-list"))
     your_bookmarks = response.json()
