@@ -14,7 +14,6 @@ def _dataset_detail(dataset):
     return {
         "id": dataset.id if dataset.type == DataSetType.REFERENCE else str(dataset.id),
         "name": dataset.name,
-        "url": dataset.get_absolute_url(),
     }
 
 
