@@ -821,3 +821,7 @@ WEBPACK_LOADER = {
 
 JWT_PRIVATE_KEY = env.get("JWT_PRIVATE_KEY", "")
 MLFLOW_PORT = env.get("MLFLOW_PORT", "")
+
+# These pipelines can output data to any table so should not be relied
+# upon for source table pipeline metadata
+DYNAMIC_PIPELINES = ("DataWorkspaceS3ImportPipeline", "DSSGenericPipeline")

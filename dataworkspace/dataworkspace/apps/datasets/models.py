@@ -905,13 +905,13 @@ class SourceTable(BaseSource):
 
     def get_pipeline_last_run_state(self):
         pipeline_name = self.get_metadata_pipeline_name()
-        if pipeline_name is None:
+        if pipeline_name is None or pipeline_name in settings.DYNAMIC_PIPELINES:
             return None
         return get_last_run_state_for_pipeline(pipeline_name)
 
     def get_pipeline_last_success_date(self):
         pipeline_name = self.get_metadata_pipeline_name()
-        if pipeline_name is None:
+        if pipeline_name is None or pipeline_name in settings.DYNAMIC_PIPELINES:
             return None
         return get_pipeline_last_success_date(pipeline_name)
 
