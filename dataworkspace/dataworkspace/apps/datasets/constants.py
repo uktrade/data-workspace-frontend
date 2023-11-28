@@ -142,7 +142,9 @@ class SecurityClassificationAndHandlingInstructionType(models.IntegerChoices):
 
 
 class PipelineScheduleType(models.TextChoices):
+    ONCE = "@once", "Run once and manually thereafter"
     DAILY = "@daily", "Run once a day at midnight"
-    WEEKLY = "@weekly", "Run once a week at midnight on Sunday morning"
+    WEEKLY = "@weekly", "Run once a week at midnight on Sunday"
+    FRIDAYS = "0 0 * * 6", "Run once a week at midnight on Friday"
     MONTHLY = "@monthly", "Run once a month at midnight of the first day of the month"
     YEARLY = "@yearly", "Run once a year at midnight of January 1"
