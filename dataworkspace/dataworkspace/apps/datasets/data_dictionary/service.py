@@ -124,7 +124,7 @@ class DataDictionaryService:
     ):
         logger.debug("updating reference dataset")
         for row in rows:
-            field = dataset.fields.filter(column_name=row.name).first()
+            field = dataset.fields.filter(name=row.name).first()
             if field and field.description != row.definition:
                 logger.debug("Updating %s %s", dataset.name, field.name)
                 field.description = row.definition
