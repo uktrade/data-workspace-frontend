@@ -40,11 +40,11 @@
             {% if object.journey == object.JOURNEY_TOOLS_ACCESS or object.journey == object.JOURNEY_DATASET_AND_TOOLS_ACCESS %}
               {% include 'request_access/partials/summary-list-row.html' with title='Security and Data Protection training evidence' description='Uploaded' change_link='request_access:tools-1' object_id=object.id %}
               {% if object.spss_and_stata %}
-                {% include 'request_access/partials/summary-list-row.html' with title='Request SPSS and Stata' description='Yes' change_link='request_access:tools-2' object_id=object.id %}
+                {% include 'request_access/partials/summary-list-row.html' with title='Request Stata' description='Yes' change_link='request_access:tools-2' object_id=object.id %}
                 {% include 'request_access/partials/summary-list-row.html' with title='Line manager&apos;s email address' description=object.line_manager_email_address change_link='request_access:tools-3' object_id=object.id %}
-                {% include 'request_access/partials/summary-list-row.html' with title='Reason for needing SPSS and Stata' description=object.reason_for_spss_and_stata change_link='request_access:tools-3' object_id=object.id %}
+                {% include 'request_access/partials/summary-list-row.html' with title='Reason for needing Stata' description=object.reason_for_spss_and_stata change_link='request_access:tools-3' object_id=object.id %}
               {% else %}
-                {% include 'request_access/partials/summary-list-row.html' with title='Request SPSS and Stata' description='No' change_link='request_access:tools-2' object_id=object.id %}
+                {% include 'request_access/partials/summary-list-row.html' with title='Request Stata' description='No' change_link='request_access:tools-2' object_id=object.id %}
               {% endif %}
             {% endif %}
           </dl>

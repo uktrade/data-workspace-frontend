@@ -326,11 +326,11 @@ def test_quicksight_link_only_shown_to_user_with_permission(
 @pytest.mark.parametrize(
     "has_appstream_update, expected_href, expected_text",
     (
-        (True, "https://appstream", "Open SPSS / STATA"),
+        (True, "https://appstream", "Open STATA"),
         (
             False,
             "/request-access/",
-            "Request access to SPSS / STATA",
+            "Request access to STATA",
         ),
     ),
 )
