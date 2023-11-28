@@ -749,6 +749,11 @@ def _fargate_task_stop(cluster_name, task_arn):
     for _ in range(0, 6):
         try:
             client.stop_task(cluster=cluster_name, task=task_arn)
+        except ClientError as e:
+            if e.response["Error"]["Code"] == "InvalidParameterException":
+                logger.info("Task with arn %s does not exist", task_arn)
+                return
+            raise
         except Exception:  # pylint: disable=broad-except
             logger.exception("stop_task failed for %s - Retrying", task_arn)
             gevent.sleep(sleep_time)
