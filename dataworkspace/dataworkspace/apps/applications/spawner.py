@@ -548,10 +548,9 @@ class FargateSpawner:
         application_instance = ApplicationInstance.objects.get(id=application_instance_id)
         options = json.loads(application_instance.spawner_application_template_options)
         cluster_name = options["CLUSTER_NAME"]
+        task_arn = json.loads(application_instance.spawner_application_instance_id).get("task_arn")
         # If there is no task arn for the application mark it as stopped
-        try:
-            task_arn = json.loads(application_instance.spawner_application_instance_id)["task_arn"]
-        except KeyError:
+        if task_arn is None:
             if application_instance.state != "STOPPED":
                 application_instance.state = "STOPPED"
                 application_instance.single_running_or_spawning_integrity = str(
