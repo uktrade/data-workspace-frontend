@@ -548,7 +548,20 @@ class FargateSpawner:
         application_instance = ApplicationInstance.objects.get(id=application_instance_id)
         options = json.loads(application_instance.spawner_application_template_options)
         cluster_name = options["CLUSTER_NAME"]
-        task_arn = json.loads(application_instance.spawner_application_instance_id)["task_arn"]
+        # If there is no task arn for the application mark it as stopped
+        try:
+            task_arn = json.loads(application_instance.spawner_application_instance_id)["task_arn"]
+        except KeyError:
+            if application_instance.state != "STOPPED":
+                application_instance.state = "STOPPED"
+                application_instance.single_running_or_spawning_integrity = str(
+                    application_instance.id
+                )
+                application_instance.save(
+                    update_fields=["state", "single_running_or_spawning_integrity"]
+                )
+            return
+
         _fargate_task_stop(cluster_name, task_arn)
 
         sleep_time = 1
@@ -749,6 +762,11 @@ def _fargate_task_stop(cluster_name, task_arn):
     for _ in range(0, 6):
         try:
             client.stop_task(cluster=cluster_name, task=task_arn)
+        except ClientError as e:
+            if e.response["Error"]["Code"] == "InvalidParameterException":
+                logger.info("Task with arn %s does not exist", task_arn)
+                return
+            raise
         except Exception:  # pylint: disable=broad-except
             logger.exception("stop_task failed for %s - Retrying", task_arn)
             gevent.sleep(sleep_time)
