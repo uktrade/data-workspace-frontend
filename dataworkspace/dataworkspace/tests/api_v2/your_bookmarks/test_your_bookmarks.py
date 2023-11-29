@@ -25,15 +25,18 @@ def test_bookmarking_and_return_only_bookmarked_datasets(client, user):
     d1 = factories.DataSetFactory.create()
     d1.toggle_bookmark(user)
 
-    d2 = factories.DataSetFactory.create()
+    d2 = factories.ReferenceDatasetFactory.create()
     d2.toggle_bookmark(user)
 
-    d3 = factories.DataSetFactory.create()
+    d3 = factories.VisualisationCatalogueItemFactory.create()
     d3.toggle_bookmark(user)
-    d3.toggle_bookmark(user)
+
+    d4 = factories.DataSetFactory.create()
+    d4.toggle_bookmark(user)
+    d4.toggle_bookmark(user)
 
     response = client.get(reverse("api-v2:your_bookmarks:dataset-list"))
     your_bookmarks = response.json()
 
-    assert len(your_bookmarks["results"]) == 2
+    assert len(your_bookmarks["results"]) == 3
     assert response.status_code == status.HTTP_200_OK
