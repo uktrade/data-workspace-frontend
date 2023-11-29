@@ -438,6 +438,12 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
             "schedule": crontab(minute=0, hour=1),
             "args": (),
         },
+        "orphaned-tools-monitor": {
+            "task": "dataworkspace.apps.applications.utils.orphaned_tools_monitor",
+            "schedule": 60 * 5,
+            # "schedule": crontab(minute=0, hour=23),
+            "args": (),
+        },
     }
 
 CELERY_REDBEAT_REDIS_URL = env["REDIS_URL"]

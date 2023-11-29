@@ -33,6 +33,7 @@ from dataworkspace.apps.applications.spawner import (
     get_spawner,
     stop,
     _fargate_task_describe,
+    _fargate_task_stop,
 )
 from dataworkspace.apps.applications.models import (
     ApplicationInstance,
@@ -1846,3 +1847,75 @@ def sync_all_sso_users():
             unseen_user_profiles.count(),
         )
         unseen_user_profiles.update(sso_status="inactive")
+
+
+def _run_orphaned_tools_monitor():
+    """
+    Find and stop any running application instances that meet one of:
+
+    1. Is owned by a user that does not have tool access
+    2. Has `None` as a task_arn
+    3. Does not have a running task on ECS
+    """
+    tools = ApplicationInstance.objects.filter(
+        spawner="FARGATE",
+        state="RUNNING",
+        created_date__lt=datetime.datetime.now(datetime.timezone.utc)
+        - datetime.timedelta(hours=2),
+    )
+    for tool in tools:
+        is_tool = tool.application_template.application_type == "TOOL"
+        cluster = json.loads(tool.spawner_application_template_options)["CLUSTER_NAME"]
+        task_arn = json.loads(tool.spawner_application_instance_id).get("task_arn")
+
+        # If the application instance is running but the task arn is null mark it as stopped
+        if task_arn is None:
+            logger.info("orphaned_tools_monitor: Stopping tool due to null task arn %s", tool)
+            tool.state = "STOPPED"
+            tool.single_running_or_spawning_integrity = str(tool.id)
+            tool.save(update_fields=["state", "single_running_or_spawning_integrity"])
+            continue
+
+        # If the user who started the tool does not have tool access stop the tool
+        if is_tool and not tool.owner.has_perm("applications.start_all_applications"):
+            logger.info(
+                "orphaned_tools_monitor: Stopping tool due to user not having permission %s", tool
+            )
+            try:
+                _fargate_task_stop(cluster, task_arn)
+            except Exception:  # pylint: disable=broad-except
+                logger.exception(
+                    "orphaned_tools_monitor: Failed to stop illegally running tool %s", tool
+                )
+            continue
+
+        # If the tool doesn't exist on ECS we should mark it as stopped locally
+        try:
+            task = _fargate_task_describe(cluster, task_arn)
+        except Exception:  # pylint: disable=broad-except
+            logger.exception("orphaned_tools_monitor: failed to describe task for tool %s", tool)
+            continue
+
+        if task is None:
+            logger.info(
+                "orphaned_tools_monitor: Marking tool as stopped as no task exists on ECS %s",
+                tool,
+            )
+            tool.state = "STOPPED"
+            tool.single_running_or_spawning_integrity = str(tool.id)
+            tool.save(update_fields=["state", "single_running_or_spawning_integrity"])
+            continue
+
+
+@celery_app.task()
+@close_all_connections_if_not_in_atomic_block
+def orphaned_tools_monitor():
+    if not waffle.switch_is_active("enable_orphaned_tools_monitor"):
+        return
+    try:
+        with cache.lock("orphaned_tools_monitor", blocking_timeout=0, timeout=1800):
+            _run_orphaned_tools_monitor()
+    except redis.exceptions.LockError:
+        logger.info(
+            "orphaned_tools_monitor: Unable to acquire lock to monitor for duplicate tools"
+        )
