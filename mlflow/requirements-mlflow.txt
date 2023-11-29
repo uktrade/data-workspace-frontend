@@ -127,7 +127,7 @@ protobuf==4.22.3
     #   mlflow
 psycopg2==2.9.3
     # via -r requirements-mlflow.in
-pyarrow==11.0.0
+pyarrow==14.0.1
     # via mlflow
 pycparser==2.21
     # via cffi
