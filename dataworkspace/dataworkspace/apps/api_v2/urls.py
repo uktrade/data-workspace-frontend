@@ -14,4 +14,10 @@ urlpatterns = [
             ("dataworkspace.apps.api_v2.recent_items.urls", "api_v2"), namespace="recent_items"
         ),
     ),
+    path(
+        "",
+        include(
+            ("dataworkspace.apps.api_v2.your_bookmarks.urls", "api_v2"), namespace="your_bookmarks"
+        ),
+    ),
 ]

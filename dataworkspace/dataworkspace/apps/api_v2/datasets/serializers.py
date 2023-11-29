@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.urls import reverse
 from rest_framework import serializers
 
 from dataworkspace.apps.datasets.models import (
@@ -93,3 +94,15 @@ class VisualisationDatasetStatsSerializer(DatasetStatsSerializer):
             | Q(event_type=EventLog.TYPE_VIEW_SUPERSET_VISUALISATION)
             | Q(event_type=EventLog.TYPE_VIEW_VISUALISATION_TEMPLATE)
         ).count()
+
+
+class BookmarkedDatasetSerializer(serializers.Serializer):
+    id = serializers.SerializerMethodField()
+    name = serializers.CharField()
+    url = serializers.SerializerMethodField()
+
+    def get_id(self, obj):
+        return obj["dataset_id"]
+
+    def get_url(self, obj):
+        return f"{reverse('datasets:dataset_detail', args=(obj['dataset_id'],))}#{obj['slug']}"
