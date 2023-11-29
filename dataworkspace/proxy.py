@@ -489,14 +489,6 @@ async def async_main():
             host_exists = response.status == 200
             application = await response.json()
 
-        if response.status not in (200, 404):
-            raise UserException(
-                "Unable to start the application",
-                response.status,
-                "/error_403_visualisation",
-                {"host": str(response.url).rsplit("/", maxsplit=1)[-1]},
-            )
-
         if host_exists and application["state"] not in ["SPAWNING", "RUNNING"]:
             if "x-data-workspace-no-modify-application-instance" not in downstream_request.headers:
                 async with client_session.request(
