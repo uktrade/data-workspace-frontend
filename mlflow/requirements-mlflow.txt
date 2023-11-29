@@ -39,7 +39,7 @@ cloudpickle==2.1.0
     # via mlflow
 contourpy==1.0.7
     # via matplotlib
-cryptography==41.0.5
+cryptography==41.0.6
     # via -r requirements-mlflow.in
 cycler==0.11.0
     # via matplotlib
