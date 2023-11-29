@@ -1911,6 +1911,7 @@ def _run_orphaned_tools_monitor():
 @close_all_connections_if_not_in_atomic_block
 def orphaned_tools_monitor():
     if not waffle.switch_is_active("enable_orphaned_tools_monitor"):
+        logger.info("orphaned_tools_monitor: Skipping run as waffle switch is inactive")
         return
     try:
         with cache.lock("orphaned_tools_monitor", blocking_timeout=0, timeout=1800):
