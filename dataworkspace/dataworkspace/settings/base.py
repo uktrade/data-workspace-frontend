@@ -440,8 +440,7 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
         },
         "orphaned-tools-monitor": {
             "task": "dataworkspace.apps.applications.utils.orphaned_tools_monitor",
-            "schedule": 60 * 5,
-            # "schedule": crontab(minute=0, hour=23),
+            "schedule": 60 * 60 * 2,
             "args": (),
         },
     }
