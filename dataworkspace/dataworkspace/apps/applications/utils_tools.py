@@ -92,7 +92,7 @@ def get_groups(request):
                 ToolsViewModel(
                     name="STATA",
                     host_basename=None,
-                    summary="STATA is statistical software package supplied by IBM and StataCorp respectively. "
+                    summary="STATA is a statistical software package supplied by StataCorp. "
                     "Use it to view, manage and analyse data, as well as create graphical outputs.",
                     link=settings.APPSTREAM_URL,
                     has_access=request.user.has_perm("applications.access_appstream"),
