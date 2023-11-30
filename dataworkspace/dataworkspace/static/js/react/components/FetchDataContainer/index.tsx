@@ -5,37 +5,42 @@ import LoadingBox from '@govuk-react/loading-box';
 import styled from 'styled-components';
 
 import { ERROR_COLOUR } from '../../constants';
-import { APIResponse } from '../../types';
-import { TransformedDataUsageResponse } from '../../types/dataUsage.types';
+import { ApiError } from '../../services';
 
 const ErrorMessage = styled('p')`
   ${typography.font({ size: 19 })};
   color: ${ERROR_COLOUR};
 `;
 
-type FetchDataContainerProps = {
-  fetchApi: () => APIResponse;
-  children: ({
-    data
-  }: {
-    data: TransformedDataUsageResponse[];
-  }) => React.ReactNode;
+type FetchDataContainerProps<Result> = {
+  fetchApi: () => Promise<Result>;
+  children: (data: Result) => React.ReactNode;
 };
 
-const FetchDataContainer = ({
+type FetchDataContainer = <Result>({
   fetchApi,
   children
-}: FetchDataContainerProps) => {
-  const [data, setData] = useState<TransformedDataUsageResponse[]>([]);
+}: FetchDataContainerProps<Result>) => React.ReactNode;
+
+const FetchDataContainer: FetchDataContainer = ({ fetchApi, children }) => {
+  type ApiReturn = ReturnType<typeof fetchApi>;
+  type Result = Awaited<ApiReturn>;
+  const [data, setData] = useState<unknown>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<null | string>(null);
 
   useEffect(() => {
     async function fetchData() {
-      const response = await fetchApi();
-      response instanceof Error
-        ? setError(response.message)
-        : setData(response);
+      try {
+        const response = await fetchApi();
+        setData(response);
+      } catch (error) {
+        if (error instanceof ApiError) {
+          setError(`${error.response.status} ${error.response.statusText}`);
+        } else {
+          throw error;
+        }
+      }
       setLoading(false);
     }
     fetchData();
@@ -49,7 +54,7 @@ const FetchDataContainer = ({
             Error: {error}
           </ErrorMessage>
         ) : (
-          children({ data })
+          children(data as Result)
         )}
       </>
     </LoadingBox>

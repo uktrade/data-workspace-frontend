@@ -11,7 +11,7 @@ import { typography } from '@govuk-react/lib';
 import { H3, UnorderedList } from 'govuk-react';
 import styled, { css } from 'styled-components';
 
-import { TransformedDataUsageResponse } from '../../types/dataUsage.types';
+import { TransformedDataUsageResponse } from '../../types/index';
 
 const PrimaryLayout = css`
   &:first-child {
@@ -111,7 +111,7 @@ const StyledParagraph = styled('p')`
 `;
 
 type DataDisplayProps = {
-  data: TransformedDataUsageResponse[];
+  data: TransformedDataUsageResponse;
   title?: string;
   subTitle?: string | null;
   secondary?: boolean;

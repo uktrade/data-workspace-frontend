@@ -39,7 +39,7 @@ describe('FetchDataContainer', () => {
       <FetchDataContainer
         fetchApi={() => fetchDataUsage('visualisation', '123')}
       >
-        {({ data }) => <DataDisplay data={data} />}
+        {(data) => <DataDisplay data={data} />}
       </FetchDataContainer>
     );
 

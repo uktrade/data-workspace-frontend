@@ -1,9 +1,9 @@
 import { render } from '@testing-library/react';
 
-import { TransformedDataUsageResponse } from '../../types/dataUsage.types';
+import { TransformedDataUsageResponse } from '../../types/index';
 import DataDisplay from '.';
 
-const data: TransformedDataUsageResponse[] = [
+const data: TransformedDataUsageResponse = [
   {
     label: 'Dashboard views',
     value: 100

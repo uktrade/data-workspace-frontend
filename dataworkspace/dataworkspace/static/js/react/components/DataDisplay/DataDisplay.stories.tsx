@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import type { TransformedDataUsageResponse } from '../../types/dataUsage.types';
+import type { TransformedDataUsageResponse } from '../../types/index';
 import { DataDisplay } from '../index';
 
 const meta = {
@@ -29,7 +29,7 @@ const primaryData = [
     label: 'Added to collections',
     value: 4
   }
-] as TransformedDataUsageResponse[];
+] as TransformedDataUsageResponse;
 
 const secondaryData = [
   {
@@ -48,7 +48,7 @@ const secondaryData = [
     label: 'Bookmarked by users',
     value: 25
   }
-] as TransformedDataUsageResponse[];
+] as TransformedDataUsageResponse;
 
 type Story = StoryObj<typeof DataDisplay>;
 

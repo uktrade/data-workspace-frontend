@@ -32,10 +32,4 @@ class DataCollectionViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return (
-            super()
-            .get_queryset()
-            .filter(
-                owner=self.request.user,
-            )
-        )
+        return super().get_queryset().filter(owner=self.request.user, deleted=False)
