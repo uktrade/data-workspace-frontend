@@ -73,7 +73,7 @@ class AppUserEditForm(forms.ModelForm):
         required=False,
     )
     can_access_appstream = forms.BooleanField(
-        label="Can access AppStream", help_text="For SPSS and STATA", required=False
+        label="Can access AppStream", help_text="For STATA", required=False
     )
     can_access_quicksight = forms.BooleanField(
         label="Can access QuickSight",

@@ -90,11 +90,10 @@ def get_groups(request):
                     has_access=request.user.has_perm("applications.start_all_applications"),
                 ),
                 ToolsViewModel(
-                    name="SPSS / STATA",
+                    name="STATA",
                     host_basename=None,
-                    summary="SPSS and STATA are statistical software packages supplied by IBM and StataCorp "
-                    "respectively. Use them to view, manage and analyse data, as well as create graphical "
-                    "outputs.",
+                    summary="STATA is a statistical software package supplied by StataCorp. "
+                    "Use it to view, manage and analyse data, as well as create graphical outputs.",
                     link=settings.APPSTREAM_URL,
                     has_access=request.user.has_perm("applications.access_appstream"),
                     help_link="https://data-services-help.trade.gov.uk/data-workspace/how-to/"
