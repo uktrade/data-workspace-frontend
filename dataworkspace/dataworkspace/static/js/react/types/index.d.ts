@@ -1,5 +1,36 @@
-import { TransformedDataUsageResponse } from './dataUsage.types';
+import { DATA_USAGE_KEYS } from '../constants';
 
-type Responses = TransformedDataUsageResponse[];
+export type DataUsageKeys = keyof typeof DATA_USAGE_KEYS;
+export type DataUsageValues =
+  (typeof DATA_USAGE_KEYS)[keyof typeof DATA_USAGE_KEYS];
 
-export type APIResponse = Promise<Responses | Error>;
+export type DataType =
+  | 'datasets'
+  | 'visualisation'
+  | 'reference'
+  | 'collections';
+
+export type DataUsageResponse = {
+  page_views: number;
+  table_queries: string;
+  table_views: number;
+  collection_count: number;
+  bookmark_count: number;
+};
+
+export type TransformedDataUsageResponse = {
+  label: (typeof DATA_USAGE_KEYS)[keyof typeof DATA_USAGE_KEYS];
+  value: number;
+}[];
+
+export type RecentCollectionResponse = {
+  results: {
+    name: string;
+    collection_url: string;
+  }[];
+};
+
+export type TransformedRecentCollectionResponse = {
+  title: string;
+  url: string;
+}[];

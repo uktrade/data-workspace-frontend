@@ -5,7 +5,7 @@ import { fetchDataUsage } from '../../services';
 
 const DataCut = ({ id }: { id: string }): React.ReactNode => (
   <FetchDataContainer fetchApi={() => fetchDataUsage('datasets', id)}>
-    {({ data }) => (
+    {(data) => (
       <DataDisplay
         data={data}
         subTitle="The data below has been captured since this catalogue item was initially published."

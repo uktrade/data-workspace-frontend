@@ -1,13 +1,9 @@
 {% extends '_base.html' %}
-
-{% load static waffle_tags %}
-
 {% block main %}
 {% block search_bar %}{% endblock %}
 <div class="govuk-width-container">
   <main class="govuk-main-wrapper" id="main-content" role="main">
     {% include 'partials/messages.html' %}
-
     {% block content %}{% endblock %}
   </main>
 </div>
