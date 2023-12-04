@@ -11,9 +11,7 @@ def move_schema_dit_dbt(apps, _):
     source_table.objects.filter(schema="dit").update(schema="dbt")
 
     data_cut = apps.get_model("datasets", "CustomDatasetQuery")
-    data_cut.objects.update(
-        name=replace_func("query", "dit.", "dbt.")
-    )
+    data_cut.objects.update(name=replace_func("query", "dit.", "dbt."))
 
 
 class Migration(migrations.Migration):
@@ -22,7 +20,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(
-            move_schema_dit_dbt, reverse_code=migrations.RunPython.noop
-        ),
+        migrations.RunPython(move_schema_dit_dbt, reverse_code=migrations.RunPython.noop),
     ]
