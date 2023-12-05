@@ -1,6 +1,7 @@
 {
   "status": "done",
   "assets": {
+<<<<<<< HEAD
     "data-cut.87aa46d837911efcb943.js": {
       "name": "data-cut.87aa46d837911efcb943.js",
       "path": "data-cut.87aa46d837911efcb943.js",
@@ -50,6 +51,57 @@
       "name": "visualisations.6881e4e0ef152460e1fd.js.LICENSE.txt",
       "path": "visualisations.6881e4e0ef152460e1fd.js.LICENSE.txt",
       "publicPath": "/__django_static/js/bundles/visualisations.6881e4e0ef152460e1fd.js.LICENSE.txt"
+=======
+    "data-cut.fbbf751a6eed5c44da9b.js": {
+      "name": "data-cut.fbbf751a6eed5c44da9b.js",
+      "path": "data-cut.fbbf751a6eed5c44da9b.js",
+      "publicPath": "/__django_static/js/bundles/data-cut.fbbf751a6eed5c44da9b.js"
+    },
+    "data-cut.fbbf751a6eed5c44da9b.js.LICENSE.txt": {
+      "name": "data-cut.fbbf751a6eed5c44da9b.js.LICENSE.txt",
+      "path": "data-cut.fbbf751a6eed5c44da9b.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/data-cut.fbbf751a6eed5c44da9b.js.LICENSE.txt"
+    },
+    "home-page.186b05ab425ee0280085.js": {
+      "name": "home-page.186b05ab425ee0280085.js",
+      "path": "home-page.186b05ab425ee0280085.js",
+      "publicPath": "/__django_static/js/bundles/home-page.186b05ab425ee0280085.js"
+    },
+    "home-page.186b05ab425ee0280085.js.LICENSE.txt": {
+      "name": "home-page.186b05ab425ee0280085.js.LICENSE.txt",
+      "path": "home-page.186b05ab425ee0280085.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/home-page.186b05ab425ee0280085.js.LICENSE.txt"
+    },
+    "reference-dataset.024f44c9783d85e6786c.js": {
+      "name": "reference-dataset.024f44c9783d85e6786c.js",
+      "path": "reference-dataset.024f44c9783d85e6786c.js",
+      "publicPath": "/__django_static/js/bundles/reference-dataset.024f44c9783d85e6786c.js"
+    },
+    "reference-dataset.024f44c9783d85e6786c.js.LICENSE.txt": {
+      "name": "reference-dataset.024f44c9783d85e6786c.js.LICENSE.txt",
+      "path": "reference-dataset.024f44c9783d85e6786c.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/reference-dataset.024f44c9783d85e6786c.js.LICENSE.txt"
+    },
+    "source-dataset.b4c1e4118f72bdf3516f.js": {
+      "name": "source-dataset.b4c1e4118f72bdf3516f.js",
+      "path": "source-dataset.b4c1e4118f72bdf3516f.js",
+      "publicPath": "/__django_static/js/bundles/source-dataset.b4c1e4118f72bdf3516f.js"
+    },
+    "source-dataset.b4c1e4118f72bdf3516f.js.LICENSE.txt": {
+      "name": "source-dataset.b4c1e4118f72bdf3516f.js.LICENSE.txt",
+      "path": "source-dataset.b4c1e4118f72bdf3516f.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/source-dataset.b4c1e4118f72bdf3516f.js.LICENSE.txt"
+    },
+    "visualisations.54f400cd476f2aa6f773.js": {
+      "name": "visualisations.54f400cd476f2aa6f773.js",
+      "path": "visualisations.54f400cd476f2aa6f773.js",
+      "publicPath": "/__django_static/js/bundles/visualisations.54f400cd476f2aa6f773.js"
+    },
+    "visualisations.54f400cd476f2aa6f773.js.LICENSE.txt": {
+      "name": "visualisations.54f400cd476f2aa6f773.js.LICENSE.txt",
+      "path": "visualisations.54f400cd476f2aa6f773.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/visualisations.54f400cd476f2aa6f773.js.LICENSE.txt"
+>>>>>>> ae962d74 (feat: add JS bundles)
     },
     "your-files.60c3183effbcac74f3d8.js": {
       "name": "your-files.60c3183effbcac74f3d8.js",
@@ -64,6 +116,7 @@
   },
   "chunks": {
     "data-cut": [
+<<<<<<< HEAD
       "data-cut.87aa46d837911efcb943.js"
     ],
     "home-page": [
@@ -77,6 +130,21 @@
     ],
     "visualisations": [
       "visualisations.6881e4e0ef152460e1fd.js"
+=======
+      "data-cut.fbbf751a6eed5c44da9b.js"
+    ],
+    "home-page": [
+      "home-page.186b05ab425ee0280085.js"
+    ],
+    "reference-dataset": [
+      "reference-dataset.024f44c9783d85e6786c.js"
+    ],
+    "source-dataset": [
+      "source-dataset.b4c1e4118f72bdf3516f.js"
+    ],
+    "visualisations": [
+      "visualisations.54f400cd476f2aa6f773.js"
+>>>>>>> ae962d74 (feat: add JS bundles)
     ],
     "your-files": [
       "your-files.60c3183effbcac74f3d8.js"
