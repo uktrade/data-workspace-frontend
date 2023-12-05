@@ -8,9 +8,10 @@ import {
   Tile
 } from '../../components';
 import { GREY_4 } from '../../constants';
-import { fetchRecentCollections } from '../../services';
+import { fetchRecentCollections, fetchRecentItems } from '../../services';
 import SupportYou from '../support/Support';
 import RecentCollections from './components/RecentCollections';
+import RecentItems from './components/RecentItems';
 
 const StyledMain = styled(Main)`
   background-color: ${GREY_4};
@@ -25,20 +26,26 @@ const StyledMain = styled(Main)`
   }
 `;
 
+const StyledInnerContainer = styled(InnerContainer)`
+  margin-bottom: ${SPACING_POINTS['9']}px;
+`;
+
 const HomePage = () => {
   return (
     <>
       <StyledMain>
-        <Tile title="Placeholder">Some place holder text</Tile>
+        <FetchDataContainer fetchApi={() => fetchRecentItems()}>
+          {(data) => <RecentItems items={data} />}
+        </FetchDataContainer>
         <FetchDataContainer fetchApi={() => fetchRecentCollections()}>
           {(data) => <RecentCollections collections={data} />}
         </FetchDataContainer>
         <Tile title="Placeholder">Some place holder text</Tile>
         <Tile title="Placeholder">Some place holder text</Tile>
       </StyledMain>
-      <InnerContainer>
+      <StyledInnerContainer>
         <SupportYou />
-      </InnerContainer>
+      </StyledInnerContainer>
     </>
   );
 };

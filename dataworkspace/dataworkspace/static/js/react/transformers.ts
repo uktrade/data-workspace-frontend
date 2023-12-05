@@ -3,8 +3,10 @@ import type {
   DataUsageKeys,
   DataUsageResponse,
   RecentCollectionResponse,
+  RecentIemsResponse,
   TransformedDataUsageResponse,
-  TransformedRecentCollectionResponse
+  TransformedRecentCollectionResponse,
+  TransformedRecentItemsResponse
 } from './types/';
 
 export const transformDataUsageResponse = (
@@ -21,4 +23,12 @@ export const transformRecentCollectionsResponse = (
   response.results.map(({ name, collection_url }) => ({
     title: name,
     url: collection_url
+  }));
+
+export const transformRecentItemsResponse = (
+  response: RecentIemsResponse
+): TransformedRecentItemsResponse =>
+  response.results.map(({ related_object, extra }) => ({
+    title: related_object.name,
+    url: extra.path
   }));

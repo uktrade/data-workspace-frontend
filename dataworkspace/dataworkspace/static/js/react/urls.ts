@@ -4,7 +4,8 @@ const URLS = {
   external: {
     dataServices: {
       dataWorkspace: {
-        collections: `${dataServicesHelp}/data-workspace/how-to/start-using-data-workspace/collections/`
+        collections: `${dataServicesHelp}/data-workspace/how-to/start-using-data-workspace/collections/`,
+        policiesAndStandardsDataTypes: `${dataServicesHelp}/data-workspace/policies-and-standards/standards/data-types/`
       }
     }
   },

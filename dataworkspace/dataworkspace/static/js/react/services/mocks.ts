@@ -43,3 +43,86 @@ export const recentCollections = {
     }
   ]
 };
+
+export const recentItems = {
+  count: 5,
+  next: null,
+  previous: null,
+  results: [
+    {
+      id: 8,
+      timestamp: '2023-12-01T12:21:36.555002Z',
+      event_type: 'Dataset view',
+      user_id: 1,
+      related_object: {
+        id: '001122',
+        type: 'Data cut',
+        name: 'Tables and Links 1'
+      },
+      extra: {
+        path: '/datasets/001122',
+        reference_dataset_version: '2023-12-01'
+      }
+    },
+    {
+      id: 7,
+      timestamp: '2023-12-01T12:05:11.070687Z',
+      event_type: 'Dataset view',
+      user_id: 1,
+      related_object: {
+        id: '001122',
+        type: 'Data cut',
+        name: 'Tables and Links 1'
+      },
+      extra: {
+        path: '/datasets/001122',
+        reference_dataset_version: '2023-12-01'
+      }
+    },
+    {
+      id: 6,
+      timestamp: '2023-12-01T12:04:32.777435Z',
+      event_type: 'Dataset view',
+      user_id: 1,
+      related_object: {
+        id: '001122',
+        type: 'Data cut',
+        name: 'Tables and Links 1'
+      },
+      extra: {
+        path: '/datasets/001122',
+        reference_dataset_version: '2023-12-01'
+      }
+    },
+    {
+      id: 4,
+      timestamp: '2023-12-01T12:01:05.727580Z',
+      event_type: 'Dataset view',
+      user_id: 1,
+      related_object: {
+        id: '003344',
+        type: 'Source dataset',
+        name: 'Source data set 1'
+      },
+      extra: {
+        path: '/datasets/003344',
+        reference_dataset_version: '2023-12-01'
+      }
+    },
+    {
+      id: 1,
+      timestamp: '2023-12-01T12:00:43.643389Z',
+      event_type: 'Dataset view',
+      user_id: 1,
+      related_object: {
+        id: '003344',
+        type: 'Source dataset',
+        name: 'Source data set 1'
+      },
+      extra: {
+        path: '/datasets/003344',
+        reference_dataset_version: '2023-12-01'
+      }
+    }
+  ]
+};

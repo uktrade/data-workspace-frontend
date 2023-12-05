@@ -20,7 +20,7 @@ describe('RecentCollections', () => {
     }
   ];
 
-  describe('Results returned', () => {
+  describe('With results', () => {
     it('should render a title', () => {
       const { getByRole } = render(
         <RecentCollections collections={collections} />
@@ -75,7 +75,7 @@ describe('RecentCollections', () => {
       ).toHaveAttribute('href', '/collections');
     });
   });
-  describe('No results returned', () => {
+  describe('No results', () => {
     it('should render a title', () => {
       const { getByRole } = render(<RecentCollections collections={[]} />);
       expect(
@@ -107,7 +107,7 @@ describe('RecentCollections', () => {
     it('should render a link to find out more about collections', () => {
       const { getByRole } = render(<RecentCollections collections={[]} />);
       expect(
-        getByRole('button', { name: 'Find out more about collections' })
+        getByRole('link', { name: 'Find out more about collections' })
       ).toHaveAttribute(
         'href',
         'https://data-services-help.trade.gov.uk/data-workspace/how-to/start-using-data-workspace/collections/'

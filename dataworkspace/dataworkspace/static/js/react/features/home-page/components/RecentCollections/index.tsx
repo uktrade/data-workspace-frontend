@@ -17,12 +17,11 @@ export type Collection = {
 
 const CollectionTilesContainer = styled('div')`
   margin: ${SPACING_POINTS['5']}px 0 ${SPACING_POINTS['4']}px;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-gap: ${SPACING_POINTS['4']}px;
+  word-break: break-word;
   a {
-    margin-right: ${SPACING_POINTS['4']}px;
-    display: block;
-    max-width: 143px;
-    width: 100%;
     background-color: ${LINK_COLOUR};
     box-shadow: 0 2px 0 ${LINK_HOVER_COLOUR};
     padding: ${SPACING_POINTS['2']}px;
@@ -41,6 +40,12 @@ const CollectionTilesContainer = styled('div')`
 
 const StyledParagraph = styled('p')`
   ${typography.font({ size: 16 })};
+`;
+
+const StyledButtonContainer = styled('div')`
+  a {
+    margin-bottom: ${SPACING_POINTS['4']}px;
+  }
 `;
 
 const CollectionTile: React.FC<Collection> = ({ url, title }) => (
@@ -74,17 +79,14 @@ const RecentCollections: React.FC<Record<'collections', Collection[]>> = ({
           You've currently not created a collection, or you're not apart of an
           existing collection.
         </StyledParagraph>
-        <Button as="a" href={URLS.collections.create}>
-          Create a collection
-        </Button>
-        <div>
-          <Link
-            href={URLS.external.dataServices.dataWorkspace.collections}
-            role="button"
-          >
-            Find out more about collections
-          </Link>
-        </div>
+        <StyledButtonContainer>
+          <Button as="a" href={URLS.collections.create}>
+            Create a collection
+          </Button>
+        </StyledButtonContainer>
+        <Link href={URLS.external.dataServices.dataWorkspace.collections}>
+          Find out more about collections
+        </Link>
       </>
     )}
   </Tile>
