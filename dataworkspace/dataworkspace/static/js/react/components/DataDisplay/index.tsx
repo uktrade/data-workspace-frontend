@@ -8,7 +8,7 @@ import {
   SPACING_POINTS
 } from '@govuk-react/constants';
 import { typography } from '@govuk-react/lib';
-import { H3, UnorderedList } from 'govuk-react';
+import { H3, Link, UnorderedList } from 'govuk-react';
 import styled, { css } from 'styled-components';
 
 import { TransformedDataUsageResponse } from '../../types/index';
@@ -113,6 +113,7 @@ const StyledParagraph = styled('p')`
 type DataDisplayProps = {
   data: TransformedDataUsageResponse;
   title?: string;
+  historyUrl?: string;
   subTitle?: string | null;
   secondary?: boolean;
   footerNote?: React.ReactNode;
@@ -122,6 +123,7 @@ const DataDisplay: React.FC<DataDisplayProps> = ({
   data = [],
   title = 'Data usage',
   subTitle = null,
+  historyUrl,
   secondary = false,
   footerNote = null
 }) => {
@@ -143,6 +145,12 @@ const DataDisplay: React.FC<DataDisplayProps> = ({
               </DataDisplayListItem>
             ))}
           </DataDisplayList>
+          {historyUrl && (
+            <StyledParagraph>
+              To see who has used this item,{' '}
+              <Link href={historyUrl}>go to usage history</Link>
+            </StyledParagraph>
+          )}
         </>
       ) : (
         <StyledParagraph>Currently no data to display</StyledParagraph>
