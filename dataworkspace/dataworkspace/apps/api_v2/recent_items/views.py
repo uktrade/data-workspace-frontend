@@ -2,6 +2,8 @@ from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
+from django.db.models import Subquery, OuterRef
+
 
 from dataworkspace.apps.api_v1.eventlog.serializers import EventLogSerializer
 from dataworkspace.apps.api_v1.mixins import TimestampFilterMixin
@@ -15,7 +17,8 @@ class TimestampPageNumberPagination(PageNumberPagination):
 
 
 class RecentItemsViewSet(TimestampFilterMixin, viewsets.ModelViewSet):
-    queryset = EventLog.objects.all()
+    sq = EventLog.objects.filter(object_id=OuterRef("object_id")).order_by("-timestamp")
+    queryset = EventLog.objects.filter(pk=Subquery(sq.values("pk")[:1]))
     serializer_class = EventLogSerializer
     pagination_class = TimestampPageNumberPagination
     authentication_classes = [SessionAuthentication]

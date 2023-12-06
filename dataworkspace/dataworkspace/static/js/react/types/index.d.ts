@@ -34,3 +34,19 @@ export type TransformedRecentCollectionResponse = {
   title: string;
   url: string;
 }[];
+
+export type RecentIemsResponse = {
+  results: {
+    related_object: {
+      name: string;
+    };
+    extra: {
+      path: string;
+    };
+  }[];
+};
+
+export type TransformedRecentItemsResponse = {
+  title: string;
+  url: string;
+}[];
