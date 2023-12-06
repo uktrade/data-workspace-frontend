@@ -11,7 +11,7 @@ import { DIVIDER_COLOUR, LINK_COLOUR } from '../../../../constants';
 const YourBookmarksList = styled('ol')`
   list-style: none;
   padding: 0;
-  margin: 0;
+  margin: 0 0 15px;
   li {
     border-bottom: 1px solid ${DIVIDER_COLOUR};
     &:first-child a {
@@ -21,7 +21,7 @@ const YourBookmarksList = styled('ol')`
 `;
 
 const YourBookmarksLink = styled('a')`
-  ${typography.font({ size: 19, weight: 'bold' })};
+  ${typography.font({ size: 16, weight: 'bold' })};
   color: ${LINK_COLOUR};
   text-decoration: none;
   display: block;
@@ -32,27 +32,33 @@ const StyledParagraph = styled('p')`
   ${typography.font({ size: 16 })};
 `;
 
-export type YourBookmarkProps = {
+const bookmarkingMoreInfo = `
+    https://data-services-help.trade.gov.uk/
+    data-workspace/policies-and-standards/st
+    andards/data-types/
+`;
+
+export type YourBookmarksProps = {
     name: string;
     url: string;
 };
 
-const YourBookmarkListItem: React.FC<YourBookmarkProps> = ({ name, url }) => (
+const YourBookmarkListItem: React.FC<YourBookmarksProps> = ({ name, url }) => (
     <li>
         <YourBookmarksLink href={url}>{name}</YourBookmarksLink>
     </li>
 );
 
-const YourBookmarks: React.FC<Record<'bookmarks', YourBookmarkProps[]>> = ({
+const YourBookmarks: React.FC<Record<'bookmarks', YourBookmarksProps[]>> = ({
     bookmarks
 }) => (
     <Tile title="Your bookmarks">
-        <StyledParagraph>
-            Bookmarks are easy ways for you to access 
-            data you regularly use quicker.
-        </StyledParagraph>
         {bookmarks?.length ? (
             <>
+                <StyledParagraph>
+                    Bookmarks are easy ways for you to access 
+                    data you regularly use quicker.
+                </StyledParagraph>
                 <YourBookmarksList>
                     {bookmarks.slice(0, 5).map(({ url, name }, index) => (
                         <YourBookmarkListItem
@@ -81,7 +87,7 @@ const YourBookmarks: React.FC<Record<'bookmarks', YourBookmarkProps[]>> = ({
                     For more information on bookmarking data
                     <br />
                     <Link
-                        href='#'
+                        href={bookmarkingMoreInfo}
                     >
                         How to bookmark data on Data Workspace
                     </Link>
