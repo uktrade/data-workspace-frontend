@@ -7,6 +7,7 @@ import styled from 'styled-components';
 
 import { Tile } from '../../../../components';
 import { DIVIDER_COLOUR, LINK_COLOUR } from '../../../../constants';
+import URLS from '../../../../urls';
 
 const YourBookmarksList = styled('ol')`
   list-style: none;
@@ -30,12 +31,6 @@ const YourBookmarksLink = styled('a')`
 
 const StyledParagraph = styled('p')`
   ${typography.font({ size: 16 })};
-`;
-
-const bookmarkingMoreInfo = `
-    https://data-services-help.trade.gov.uk/
-    data-workspace/policies-and-standards/st
-    andards/data-types/
 `;
 
 export type YourBookmarksProps = {
@@ -87,7 +82,10 @@ const YourBookmarks: React.FC<Record<'bookmarks', YourBookmarksProps[]>> = ({
                     For more information on bookmarking data
                     <br />
                     <Link
-                        href={bookmarkingMoreInfo}
+                        href={
+                            URLS.external.dataServices.dataWorkspace
+                                .policiesAndStandardsDataTypes
+                        }
                     >
                         How to bookmark data on Data Workspace
                     </Link>
