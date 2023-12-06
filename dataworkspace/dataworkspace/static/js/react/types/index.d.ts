@@ -50,3 +50,15 @@ export type TransformedRecentItemsResponse = {
   title: string;
   url: string;
 }[];
+
+export type YourBookmarksResponse = {
+  results: {
+    name: string;
+    url: string;
+  }[];
+};
+
+export type TransformedYourBookmarksResponse = {
+  name: string;
+  url: string;
+}[];
