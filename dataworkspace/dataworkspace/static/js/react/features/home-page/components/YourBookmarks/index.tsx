@@ -7,6 +7,7 @@ import styled from 'styled-components';
 
 import { Tile } from '../../../../components';
 import { DIVIDER_COLOUR, LINK_COLOUR } from '../../../../constants';
+import BookmarkIcon from '../../../../icons/BookmarkIcon';
 import URLS from '../../../../urls';
 
 const YourBookmarksList = styled('ol')`
@@ -25,8 +26,12 @@ const YourBookmarksLink = styled('a')`
   ${typography.font({ size: 16, weight: 'bold' })};
   color: ${LINK_COLOUR};
   text-decoration: none;
-  display: block;
+  display: flex;
   padding: ${SPACING_POINTS['3']}px 0;
+`;
+
+const BookmarkIconWrapper = styled.span`
+  margin-right: 8px; /* Adjust spacing between the icon and text */
 `;
 
 const StyledParagraph = styled('p')`
@@ -40,7 +45,12 @@ export type YourBookmarksProps = {
 
 const YourBookmarkListItem: React.FC<YourBookmarksProps> = ({ name, url }) => (
     <li>
-        <YourBookmarksLink href={url}>{name}</YourBookmarksLink>
+        <YourBookmarksLink href={url}>
+            <BookmarkIconWrapper>
+                <BookmarkIcon /> 
+            </BookmarkIconWrapper>
+                {name}
+        </YourBookmarksLink>
     </li>
 );
 
