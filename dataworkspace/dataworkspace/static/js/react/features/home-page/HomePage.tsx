@@ -12,6 +12,7 @@ import { fetchRecentCollections, fetchRecentItems } from '../../services';
 import SupportYou from '../support/Support';
 import RecentCollections from './components/RecentCollections';
 import RecentItems from './components/RecentItems';
+import YourBookmarks from './components/YourBookmarks';
 
 const StyledMain = styled(Main)`
   background-color: ${GREY_4};

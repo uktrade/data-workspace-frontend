@@ -69,7 +69,7 @@ const YourBookmarks: React.FC<Record<'bookmarks', YourBookmarksProps[]>> = ({
                     data you regularly use quicker.
                 </StyledParagraph>
                 <YourBookmarksList>
-                    {bookmarks.slice(0, 5).map(({ url, name }, index) => (
+                    {bookmarks.map(({ url, name }, index) => (
                         <YourBookmarkListItem
                             url={url}
                             key={`${url}-${index}`}

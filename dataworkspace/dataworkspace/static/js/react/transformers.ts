@@ -6,7 +6,9 @@ import type {
   RecentIemsResponse,
   TransformedDataUsageResponse,
   TransformedRecentCollectionResponse,
-  TransformedRecentItemsResponse
+  TransformedRecentItemsResponse,
+  TransformedYourBookmarksResponse,
+  YourBookmarksResponse
 } from './types/';
 
 export const transformDataUsageResponse = (
@@ -31,4 +33,12 @@ export const transformRecentItemsResponse = (
   response.results.map(({ related_object, extra }) => ({
     title: related_object.name,
     url: extra.path
+  }));
+
+export const transformYourBookmarksResponse = (
+  response: YourBookmarksResponse
+): TransformedYourBookmarksResponse =>
+  response.results.map(({ name, url }) => ({
+    name: name,
+    url: url
   }));
