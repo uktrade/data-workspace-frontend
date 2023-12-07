@@ -17,19 +17,19 @@ const bookmarks: YourBookmarksProps[] = [
     },
     {
         url: '/some-url',
-        name: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua'
+        name: 'Lorem ipsum dolor sit amet'
     },
     {
         url: '/some-url',
-        name: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua'
+        name: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do'
     },
     {
         url: '/some-url',
-        name: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua'
+        name: 'Lorem ipsum '
     },
     {
         url: '/some-url',
-        name: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua'
+        name: 'Lorem ipsum dolor sit amet, consectetur'
     },
 ];
 
