@@ -11,7 +11,10 @@ const URLS = {
   },
   collections: {
     base: '/collections',
-    create: '/collections/create'
+    create: '/collections/create',
+    filtered: {
+      bookmarked: '/datasets/?q=&sort=relevance&my_datasets=bookmarked'
+    }
   }
 } as const;
 

@@ -78,7 +78,9 @@ const YourBookmarks: React.FC<Record<'bookmarks', YourBookmarksProps[]>> = ({
                     ))}
                 </YourBookmarksList>
                 <Link
-                    href='#'
+                    href={
+                        URLS.collections.filtered.bookmarked
+                    }
                 >
                         View all bookmarks
                 </Link>
