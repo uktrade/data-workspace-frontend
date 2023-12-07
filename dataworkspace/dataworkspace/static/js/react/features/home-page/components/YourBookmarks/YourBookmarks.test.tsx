@@ -52,7 +52,7 @@ describe('YourBookmarks', () => {
             const { getByText } = render(<YourBookmarks bookmarks={[]} />);
             expect(
                 getByText(
-                    'You do not have any bookmarks yet. Select the bookmark icon to bookmark data.'
+                    'You do not have any bookmarks yet. When searching for data, select the bookmark icon to bookmark data.'
                 )
             ).toBeInTheDocument();
         });

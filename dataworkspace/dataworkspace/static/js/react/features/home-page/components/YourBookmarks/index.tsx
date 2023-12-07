@@ -91,20 +91,8 @@ const YourBookmarks: React.FC<Record<'bookmarks', YourBookmarksProps[]>> = ({
                     Bookmarks help you get the data you regularly use.
                 </StyledParagraph>
                 <StyledParagraph>
-                You do not have any bookmarks yet. Select the bookmark
-                 icon to bookmark data.
-                </StyledParagraph>
-                <StyledParagraph>
-                    For more information on bookmarking data
-                    <br />
-                    <Link
-                        href={
-                            URLS.external.dataServices.dataWorkspace
-                                .policiesAndStandardsDataTypes
-                        }
-                    >
-                        How to bookmark data on Data Workspace
-                    </Link>
+                You do not have any bookmarks yet. When searching for data,
+                 select the bookmark icon to bookmark data.
                 </StyledParagraph>
             </>
         )}
