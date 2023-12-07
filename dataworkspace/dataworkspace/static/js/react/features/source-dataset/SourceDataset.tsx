@@ -9,6 +9,7 @@ const SourceDataset = ({ id }: { id: string }): React.ReactNode => (
       <DataDisplay
         data={data}
         subTitle="The data below has been captured since this catalogue item was initially published."
+        historyUrl={`/datasets/${id}/data-cut-usage-history`}
       />
     )}
   </FetchDataContainer>
