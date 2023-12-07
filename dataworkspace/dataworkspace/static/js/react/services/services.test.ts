@@ -2,9 +2,10 @@ import {
   ApiError,
   fetchDataUsage,
   fetchRecentCollections,
-  fetchRecentItems
+  fetchRecentItems,
+  fetchYourBookmarks
 } from './';
-import { dataUsage, recentCollections, recentItems } from './mocks';
+import { dataUsage, recentCollections, recentItems, yourBookmarks } from './mocks';
 
 describe('fetchDataUsage', () => {
   it('should return a transformed response', async () => {
@@ -89,5 +90,30 @@ describe('fetchRecentItems', () => {
       ok: false
     });
     expect(fetchRecentItems()).rejects.toBeInstanceOf(ApiError);
+  });
+});
+
+describe('fetchYourBookmarks', () => {
+  it('should return a transformed response', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      statusText: 'status text message',
+      json: async () => yourBookmarks
+    });
+    const expected = [
+      { name: 'Dummy bookmark 1', url: '/some-url1' },
+      { name: 'Dummy bookmark 2', url: '/some-url2' },
+      { name: 'Dummy bookmark 3', url: '/some-url3' },
+      { name: 'Dummy bookmark 4', url: '/some-url4' },
+      { name: 'Dummy bookmark 5', url: '/some-url5' },
+    ];
+    const response = await fetchYourBookmarks();
+    expect(response).toEqual(expected);
+  });
+  it('should return an error', () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false
+    });
+    expect(fetchYourBookmarks()).rejects.toBeInstanceOf(ApiError);
   });
 });
