@@ -31,11 +31,15 @@ const YourBookmarksLink = styled('a')`
 `;
 
 const BookmarkIconWrapper = styled.span`
-  margin-right: 8px; /* Adjust spacing between the icon and text */
+  margin-right: 8px;
 `;
 
 const StyledParagraph = styled('p')`
   ${typography.font({ size: 16 })};
+
+  &:last-child {
+    margin-bottom: 0;
+  }
 `;
 
 export type YourBookmarksProps = {
@@ -57,7 +61,7 @@ const YourBookmarkListItem: React.FC<YourBookmarksProps> = ({ name, url }) => (
 const YourBookmarks: React.FC<Record<'bookmarks', YourBookmarksProps[]>> = ({
     bookmarks
 }) => (
-    <Tile title="Your bookmarks">
+    <Tile title='Your bookmarks'>
         {bookmarks?.length ? (
             <>
                 <StyledParagraph>
