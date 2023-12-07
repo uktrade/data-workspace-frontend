@@ -68,4 +68,19 @@ describe('Data display', () => {
     expect(queryByTestId('data-display-footer-note')).toBeInTheDocument();
     expect(getByText('Some footer note')).toBeInTheDocument();
   });
+  it('should render a usgae history url', () => {
+    const { getByRole } = render(
+      <DataDisplay data={data} historyUrl="/some-url" />
+    );
+    expect(getByRole('link', { name: 'go to usage history' })).toHaveAttribute(
+      'href',
+      '/some-url'
+    );
+  });
+  it('should NOT render a usgae history url', () => {
+    const { queryByRole } = render(<DataDisplay data={data} />);
+    expect(
+      queryByRole('link', { name: 'go to usage history' })
+    ).not.toBeInTheDocument();
+  });
 });
