@@ -19,6 +19,9 @@ const YourBookmarksList = styled('ol')`
     &:first-child a {
       padding-top: 5px;
     }
+    &:last-child {
+        margin-bottom: 20px;
+      }
   }
 `;
 
