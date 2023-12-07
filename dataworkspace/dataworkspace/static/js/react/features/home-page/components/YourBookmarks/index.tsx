@@ -51,7 +51,7 @@ const YourBookmarkListItem: React.FC<YourBookmarksProps> = ({ name, url }) => (
     <li>
         <YourBookmarksLink href={url}>
             <BookmarkIconWrapper>
-                <BookmarkIcon /> 
+                <BookmarkIcon isBookmarked={true} /> 
             </BookmarkIconWrapper>
             {name}
         </YourBookmarksLink>
