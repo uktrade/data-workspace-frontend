@@ -100,6 +100,7 @@ class BookmarkedDatasetSerializer(serializers.Serializer):
     id = serializers.SerializerMethodField()
     name = serializers.CharField()
     url = serializers.SerializerMethodField()
+    created = serializers.DateTimeField()
 
     def get_id(self, obj):
         return obj["dataset_id"]
