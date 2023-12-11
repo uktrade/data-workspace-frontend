@@ -7,8 +7,8 @@ import styled from 'styled-components';
 
 import { Tile } from '../../../../components';
 import { DIVIDER_COLOUR, LINK_COLOUR } from '../../../../constants';
-import BookmarkIcon from '../../../../icons/BookmarkIcon';
 import URLS from '../../../../urls';
+import BookmarkIcon from '../../icons/BookmarkIcon';
 
 const YourBookmarksList = styled('ol')`
   list-style: none;
@@ -20,8 +20,8 @@ const YourBookmarksList = styled('ol')`
       padding-top: 5px;
     }
     &:last-child {
-        margin-bottom: 20px;
-      }
+      margin-bottom: 20px;
+    }
   }
 `;
 
@@ -46,60 +46,56 @@ const StyledParagraph = styled('p')`
 `;
 
 export type YourBookmarksProps = {
-    name: string;
-    url: string;
+  name: string;
+  url: string;
 };
 
 const YourBookmarkListItem: React.FC<YourBookmarksProps> = ({ name, url }) => (
-    <li>
-        <YourBookmarksLink href={url}>
-            <BookmarkIconWrapper>
-                <BookmarkIcon isBookmarked={true} /> 
-            </BookmarkIconWrapper>
-            {name}
-        </YourBookmarksLink>
-    </li>
+  <li>
+    <YourBookmarksLink href={url}>
+      <BookmarkIconWrapper>
+        <BookmarkIcon isBookmarked={true} />
+      </BookmarkIconWrapper>
+      {name}
+    </YourBookmarksLink>
+  </li>
 );
 
 const YourBookmarks: React.FC<Record<'bookmarks', YourBookmarksProps[]>> = ({
-    bookmarks
+  bookmarks
 }) => (
-    <Tile title='Your bookmarks'>
-        {bookmarks?.length ? (
-            <>
-                <StyledParagraph>
-                    Bookmarks are easy ways for you to access 
-                    data you regularly use quicker.
-                </StyledParagraph>
-                <YourBookmarksList>
-                    {bookmarks.map(({ url, name }, index) => (
-                        <YourBookmarkListItem
-                            url={url}
-                            key={`${url}-${index}`}
-                            name={name}
-                        />
-                    ))}
-                </YourBookmarksList>
-                <Link
-                    href={
-                        URLS.collections.filtered.bookmarked
-                    }
-                >
-                        View all bookmarks
-                </Link>
-            </>
-        ) : (
-            <>
-                <StyledParagraph>
-                    Bookmarks help you get the data you regularly use.
-                </StyledParagraph>
-                <StyledParagraph>
-                You do not have any bookmarks yet. When searching for data,
-                 select the bookmark icon to bookmark data.
-                </StyledParagraph>
-            </>
-        )}
-    </Tile>
+  <Tile title="Your bookmarks">
+    {bookmarks?.length ? (
+      <>
+        <StyledParagraph>
+          Bookmarks are easy ways for you to access data you regularly use
+          quicker.
+        </StyledParagraph>
+        <YourBookmarksList>
+          {bookmarks.map(({ url, name }, index) => (
+            <YourBookmarkListItem
+              url={url}
+              key={`${url}-${index}`}
+              name={name}
+            />
+          ))}
+        </YourBookmarksList>
+        <Link href={URLS.collections.filtered.bookmarked}>
+          View all bookmarks
+        </Link>
+      </>
+    ) : (
+      <>
+        <StyledParagraph>
+          Bookmarks help you get the data you regularly use.
+        </StyledParagraph>
+        <StyledParagraph>
+          You do not have any bookmarks yet. When searching for data, select the
+          bookmark icon to bookmark data.
+        </StyledParagraph>
+      </>
+    )}
+  </Tile>
 );
 
 export default YourBookmarks;
