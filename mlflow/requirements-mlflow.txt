@@ -96,7 +96,7 @@ markupsafe==2.1.1
     #   werkzeug
 matplotlib==3.7.1
     # via mlflow
-mlflow==2.8.1
+mlflow==2.9.0
     # via -r requirements-mlflow.in
 multidict==6.0.2
     # via
