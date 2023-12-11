@@ -15,7 +15,6 @@ from dataworkspace.apps.datasets.models import (
 
 
 class YourBookmarkPageNumberPagination(PageNumberPagination):
-    ordering = "-created"
     page_size_query_param = "page_size"
     max_page_size = 10_000
 
