@@ -31,17 +31,18 @@ def migrate_bookmark_created_dates(apps, _):
                 f"with id {bookmark.id} created at {bookmark.created_date}"
             )
             bookmarked_object = getattr(bookmark, foreign_key)
-            try:
-                event = all_events.get(
-                    user=bookmark.user,
-                    object_id=bookmarked_object.id,
-                    content_type_id=ContentType.objects.get_for_model(bookmarked_object).id,
-                )
-            except eventlog_model.DoesNotExist:
+            matching_events = all_events.filter(
+                user=bookmark.user,
+                object_id=bookmarked_object.id,
+                content_type_id=ContentType.objects.get_for_model(bookmarked_object).id,
+            )
+            if not matching_events.exists():
                 print("No matching event found. Setting created to 1 Oct 2023")
                 bookmark.created_date = default_event_date
             else:
-                print(f"Found a matching event. Setting created to {event.timestamp}")
+                print(f"found {matching_events.count()} matching events")
+                event = matching_events.latest("timestamp")
+                print(f"Setting created to {event.timestamp}")
                 bookmark.created_date = event.timestamp
             bookmark.save()
 
