@@ -611,6 +611,7 @@ class DataSetUserPermission(models.Model):
 class DataSetBookmark(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
+    created_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "app_datasetbookmark"
@@ -2127,6 +2128,7 @@ def save_reference_dataset_tags_on_m2m_changed(instance, **_):
 class ReferenceDataSetBookmark(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     reference_dataset = models.ForeignKey(ReferenceDataset, on_delete=models.CASCADE)
+    created_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "app_referencedatasetbookmark"
@@ -2828,6 +2830,7 @@ class VisualisationUserPermission(models.Model):
 class VisualisationBookmark(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     visualisation = models.ForeignKey(VisualisationCatalogueItem, on_delete=models.CASCADE)
+    created_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "app_visualisationbookmark"
