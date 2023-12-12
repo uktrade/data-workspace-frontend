@@ -1920,3 +1920,9 @@ def orphaned_tools_monitor():
         logger.info(
             "orphaned_tools_monitor: Unable to acquire lock to monitor for duplicate tools"
         )
+
+
+def get_tool_url_for_user(user: get_user_model(), application_template: ApplicationTemplate):
+    user_prefix = stable_identification_suffix(str(user.profile.sso_id), short=True)
+    hostname = application_template.host_basename
+    return f"https://{hostname}-{user_prefix}.{settings.APPLICATION_ROOT_DOMAIN}/"
