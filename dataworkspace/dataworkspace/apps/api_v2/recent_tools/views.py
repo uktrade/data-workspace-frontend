@@ -12,7 +12,7 @@ from dataworkspace.apps.eventlog.models import EventLog
 class TimestampPageNumberPagination(PageNumberPagination):
     ordering = ("-timestamp", "id")
     page_size_query_param = "page_size"
-    max_page_size = 10_000
+    max_page_size = 100
 
 
 class RecentToolsViewSet(TimestampFilterMixin, viewsets.ModelViewSet):
