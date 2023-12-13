@@ -10,7 +10,10 @@ from rest_framework.fields import DateTimeField
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.tests.api_v1.base import BaseAPIViewTest
 from dataworkspace.tests import factories
-from dataworkspace.tests.factories import EventLogFactory, VisualisationLinkFactory
+from dataworkspace.tests.factories import (
+    EventLogFactory,
+    VisualisationLinkFactory,
+)
 
 
 @pytest.mark.django_db

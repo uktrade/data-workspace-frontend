@@ -112,7 +112,14 @@ class EventLogSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EventLog
-        fields = ("id", "timestamp", "event_type", "user_id", "related_object", "extra")
+        fields = (
+            "id",
+            "timestamp",
+            "event_type",
+            "user_id",
+            "related_object",
+            "extra",
+        )
 
     def get_event_type(self, obj):
         return obj.get_event_type_display()
