@@ -1,6 +1,5 @@
 import React from 'react';
 
-// 
 export type BookmarkIconProps = {
   isBookmarked: boolean;
 };
