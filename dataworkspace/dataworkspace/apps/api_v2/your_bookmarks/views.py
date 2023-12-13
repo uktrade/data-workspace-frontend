@@ -15,9 +15,8 @@ from dataworkspace.apps.datasets.models import (
 
 
 class YourBookmarkPageNumberPagination(PageNumberPagination):
-    ordering = ("-created", "name")
     page_size_query_param = "page_size"
-    max_page_size = 100
+    max_page_size = 10_000
 
 
 class YourBookmarksViewSet(viewsets.ModelViewSet):
@@ -55,4 +54,4 @@ class YourBookmarksViewSet(viewsets.ModelViewSet):
                     self.request.user,
                 ).values(*fields)
             )
-        )
+        ).order_by("-created")

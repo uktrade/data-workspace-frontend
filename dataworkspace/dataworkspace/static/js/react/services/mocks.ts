@@ -126,3 +126,28 @@ export const recentItems = {
     }
   ]
 };
+
+export const yourBookmarks = {
+  results: [
+    {
+      name: 'Dummy bookmark 1',
+      url: '/some-url1'
+    },
+    {
+      name: 'Dummy bookmark 2',
+      url: '/some-url2'
+    },
+    {
+      name: 'Dummy bookmark 3',
+      url: '/some-url3'
+    },
+    {
+      name: 'Dummy bookmark 4',
+      url: '/some-url4'
+    },
+    {
+      name: 'Dummy bookmark 5',
+      url: '/some-url5'
+    }
+  ]
+};

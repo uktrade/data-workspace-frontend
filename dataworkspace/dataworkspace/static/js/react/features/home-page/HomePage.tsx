@@ -8,10 +8,11 @@ import {
   Tile
 } from '../../components';
 import { GREY_4 } from '../../constants';
-import { fetchRecentCollections, fetchRecentItems } from '../../services';
+import { fetchRecentCollections, fetchRecentItems, fetchYourBookmarks } from '../../services';
 import SupportYou from '../support/Support';
 import RecentCollections from './components/RecentCollections';
 import RecentItems from './components/RecentItems';
+import YourBookmarks from './components/YourBookmarks';
 
 const StyledMain = styled(Main)`
   background-color: ${GREY_4};
@@ -41,7 +42,9 @@ const HomePage = () => {
           {(data) => <RecentCollections collections={data} />}
         </FetchDataContainer>
         <Tile title="Placeholder">Some place holder text</Tile>
-        <Tile title="Placeholder">Some place holder text</Tile>
+        <FetchDataContainer fetchApi={() => fetchYourBookmarks()}>
+          {(data) => <YourBookmarks bookmarks={data} />}
+        </FetchDataContainer>
       </StyledMain>
       <StyledInnerContainer>
         <SupportYou />

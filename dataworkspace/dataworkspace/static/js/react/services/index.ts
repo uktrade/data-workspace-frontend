@@ -2,17 +2,19 @@ import { API_BASE_URL } from '../constants';
 import {
   transformDataUsageResponse,
   transformRecentCollectionsResponse,
-  transformRecentItemsResponse
+  transformRecentItemsResponse,
+  transformYourBookmarksResponse
 } from '../transformers';
-import type {
-  DataType,
-  DataUsageResponse,
-  RecentCollectionResponse,
-  RecentIemsResponse,
-  TransformedDataUsageResponse,
-  TransformedRecentCollectionResponse,
-  TransformedRecentItemsResponse
-} from '../types/index';
+import {
+  type DataType,
+  type DataUsageResponse,
+  type RecentCollectionResponse,
+  type RecentIemsResponse,
+  type TransformedDataUsageResponse,
+  type TransformedRecentCollectionResponse,
+  type TransformedRecentItemsResponse,
+  type TransformedYourBookmarksResponse,
+  type YourBookmarksResponse} from '../types/index';
 
 export class ApiError {
   constructor(public response: Response) {}
@@ -37,6 +39,7 @@ export const fetchDataUsage = async (dataType: DataType, id: string) => {
     transformDataUsageResponse
   );
 };
+
 export const fetchRecentCollections = async () => {
   return handleResponse<
     RecentCollectionResponse,
@@ -51,5 +54,12 @@ export const fetchRecentItems = async () => {
   return handleResponse<RecentIemsResponse, TransformedRecentItemsResponse>(
     `/${API_BASE_URL}/recent_items?page_size=5`,
     transformRecentItemsResponse
+  );
+};
+
+export const fetchYourBookmarks = async () => {
+  return handleResponse<YourBookmarksResponse, TransformedYourBookmarksResponse>(
+    `/${API_BASE_URL}/your_bookmarks?page_size=5`,
+    transformYourBookmarksResponse
   );
 };
