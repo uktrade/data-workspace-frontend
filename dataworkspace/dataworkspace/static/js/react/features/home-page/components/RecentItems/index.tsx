@@ -31,6 +31,9 @@ const RecentItemsLink = styled('a')`
 
 const StyledParagraph = styled('p')`
   ${typography.font({ size: 16 })};
+  &:last-child {
+    margin-bottom: 0;
+  }
 `;
 
 export type RecentItemProps = {

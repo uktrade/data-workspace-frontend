@@ -1,17 +1,18 @@
 import { MEDIA_QUERIES, SPACING_POINTS } from '@govuk-react/constants';
 import styled from 'styled-components';
 
-import {
-  FetchDataContainer,
-  InnerContainer,
-  Main,
-  Tile
-} from '../../components';
+import { FetchDataContainer, InnerContainer, Main } from '../../components';
 import { GREY_4 } from '../../constants';
-import { fetchRecentCollections, fetchRecentItems, fetchYourBookmarks } from '../../services';
+import {
+  fetchRecentCollections,
+  fetchRecentItems,
+  fetchYourBookmarks,
+  fetchYourRecentTools
+} from '../../services';
 import SupportYou from '../support/Support';
 import RecentCollections from './components/RecentCollections';
 import RecentItems from './components/RecentItems';
+import RecentTools from './components/RecentTools';
 import YourBookmarks from './components/YourBookmarks';
 
 const StyledMain = styled(Main)`
@@ -41,7 +42,9 @@ const HomePage = () => {
         <FetchDataContainer fetchApi={() => fetchRecentCollections()}>
           {(data) => <RecentCollections collections={data} />}
         </FetchDataContainer>
-        <Tile title="Placeholder">Some place holder text</Tile>
+        <FetchDataContainer fetchApi={() => fetchYourRecentTools()}>
+          {(data) => <RecentTools tools={data} />}
+        </FetchDataContainer>
         <FetchDataContainer fetchApi={() => fetchYourBookmarks()}>
           {(data) => <YourBookmarks bookmarks={data} />}
         </FetchDataContainer>

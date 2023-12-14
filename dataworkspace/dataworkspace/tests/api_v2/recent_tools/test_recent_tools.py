@@ -16,36 +16,40 @@ def test_unauthenticated_recent_tools(unauthenticated_client):
 def test_ordering_and_filtering_recent_tools(client, user):
     client.force_login(user)
 
-    user_event1 = EventLogFactory(
+    EventLogFactory.create(
         user=user, event_type=EventLog.TYPE_USER_TOOL_LINK_STARTED, extra={"tool": "Superset"}
     )
 
-    user_event2 = EventLogFactory(
+    EventLogFactory.create(
         user=user, event_type=EventLog.TYPE_USER_TOOL_LINK_STARTED, extra={"tool": "Quicksight"}
     )
 
-    user_event3 = EventLogFactory(
+    EventLogFactory.create(
         user=user, event_type=EventLog.TYPE_USER_TOOL_LINK_STARTED, extra={"tool": "Data Explorer"}
     )
 
-    user_event4 = EventLogFactory(
-        user=user,
-        event_type=EventLog.TYPE_USER_TOOL_ECS_STARTED,
-        related_object=ApplicationInstanceFactory.create(),
+    EventLogFactory.create(
+        event_type=EventLog.TYPE_USER_TOOL_LINK_STARTED, extra={"tool": "Someones tool"}
     )
 
-    EventLogFactory(
+    EventLogFactory.create(
+        user=user, event_type=EventLog.TYPE_USER_TOOL_LINK_STARTED, extra={"tool": "Data Explorer"}
+    )
+
+    EventLogFactory.create(
+        user=user,
+        extra={"tool": "ECS Tool"},
         event_type=EventLog.TYPE_USER_TOOL_ECS_STARTED,
         related_object=ApplicationInstanceFactory.create(),
     )
 
     response = client.get(reverse("api-v2:recent_tools:eventlog-list"))
-    recent_tools = response.json()
-    assert len(recent_tools["results"]) == 4
-    assert recent_tools["results"][0]["id"] == user_event4.id
-    assert recent_tools["results"][1]["id"] == user_event3.id
-    assert recent_tools["results"][2]["id"] == user_event2.id
-    assert recent_tools["results"][3]["id"] == user_event1.id
+    recent_tools = response.json()["results"]
+    assert len(recent_tools) == 4
+    assert recent_tools[0]["extra"]["tool"] == "ECS Tool"
+    assert recent_tools[1]["extra"]["tool"] == "Data Explorer"
+    assert recent_tools[2]["extra"]["tool"] == "Quicksight"
+    assert recent_tools[3]["extra"]["tool"] == "Superset"
     assert response.status_code == status.HTTP_200_OK
 
 

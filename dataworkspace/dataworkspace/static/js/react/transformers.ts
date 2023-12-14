@@ -8,7 +8,9 @@ import type {
   TransformedRecentCollectionResponse,
   TransformedRecentItemsResponse,
   TransformedYourBookmarksResponse,
-  YourBookmarksResponse
+  TransformedYourRecentToolsResponse,
+  YourBookmarksResponse,
+  YourRecentToolsResponse
 } from './types/';
 
 export const transformDataUsageResponse = (
@@ -41,4 +43,12 @@ export const transformYourBookmarksResponse = (
   response.results.map(({ name, url }) => ({
     name: name,
     url: url
+  }));
+
+export const transformRecentToolsResponse = (
+  response: YourRecentToolsResponse
+): TransformedYourRecentToolsResponse =>
+  response.results.map(({ extra, tool_url }) => ({
+    title: extra.tool,
+    url: tool_url
   }));

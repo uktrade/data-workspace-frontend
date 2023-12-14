@@ -3,9 +3,16 @@ import {
   fetchDataUsage,
   fetchRecentCollections,
   fetchRecentItems,
-  fetchYourBookmarks
+  fetchYourBookmarks,
+  fetchYourRecentTools
 } from './';
-import { dataUsage, recentCollections, recentItems, yourBookmarks } from './mocks';
+import {
+  dataUsage,
+  recentCollections,
+  recentItems,
+  yourBookmarks,
+  yourRecentTools
+} from './mocks';
 
 describe('fetchDataUsage', () => {
   it('should return a transformed response', async () => {
@@ -105,7 +112,7 @@ describe('fetchYourBookmarks', () => {
       { name: 'Dummy bookmark 2', url: '/some-url2' },
       { name: 'Dummy bookmark 3', url: '/some-url3' },
       { name: 'Dummy bookmark 4', url: '/some-url4' },
-      { name: 'Dummy bookmark 5', url: '/some-url5' },
+      { name: 'Dummy bookmark 5', url: '/some-url5' }
     ];
     const response = await fetchYourBookmarks();
     expect(response).toEqual(expected);
@@ -115,5 +122,37 @@ describe('fetchYourBookmarks', () => {
       ok: false
     });
     expect(fetchYourBookmarks()).rejects.toBeInstanceOf(ApiError);
+  });
+});
+
+describe('fetchYourRecentTools', () => {
+  it('should return a transformed response', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      statusText: 'status text message',
+      json: async () => yourRecentTools
+    });
+    const expected = [
+      {
+        title: 'Superset',
+        url: '/tools/superset/redirect'
+      },
+      {
+        title: 'Data Explorer',
+        url: '/tools/explorer/redirect'
+      },
+      {
+        title: 'Data Explorer',
+        url: '/tools/explorer/redirect'
+      }
+    ];
+    const response = await fetchYourRecentTools();
+    expect(response).toEqual(expected);
+  });
+  it('should return an error', () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false
+    });
+    expect(fetchYourRecentTools()).rejects.toBeInstanceOf(ApiError);
   });
 });
