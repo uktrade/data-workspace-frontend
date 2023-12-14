@@ -5,10 +5,12 @@ const URLS = {
     dataServices: {
       dataWorkspace: {
         collections: `${dataServicesHelp}/data-workspace/how-to/start-using-data-workspace/collections/`,
-        policiesAndStandardsDataTypes: `${dataServicesHelp}/data-workspace/policies-and-standards/standards/data-types/`
+        policiesAndStandardsDataTypes: `${dataServicesHelp}/data-workspace/policies-and-standards/standards/data-types/`,
+        aboutTools: `${dataServicesHelp}/data-workspace/how-to/use-tools/about-data-workspace-tools/`
       }
     }
   },
+  tools: '/tools',
   collections: {
     base: '/collections',
     create: '/collections/create',

@@ -151,3 +151,29 @@ export const yourBookmarks = {
     }
   ]
 };
+
+export const yourRecentTools = {
+  count: 5,
+  next: null,
+  previous: null,
+  results: [
+    {
+      id: 140,
+      timestamp: '2023-12-12T17:24:58.125084Z',
+      extra: { tool: 'Superset' },
+      tool_url: '/tools/superset/redirect'
+    },
+    {
+      id: 139,
+      timestamp: '2023-12-12T17:24:41.992511Z',
+      extra: { tool: 'Data Explorer' },
+      tool_url: '/tools/explorer/redirect'
+    },
+    {
+      id: 138,
+      timestamp: '2023-12-11T13:46:03.340096Z',
+      extra: { tool: 'Data Explorer' },
+      tool_url: '/tools/explorer/redirect'
+    }
+  ]
+};

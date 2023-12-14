@@ -62,3 +62,19 @@ export type TransformedYourBookmarksResponse = {
   name: string;
   url: string;
 }[];
+
+export type YourRecentToolsResponse = {
+  results: {
+    id: string;
+    timestamp: string;
+    extra: {
+      tool: string;
+    };
+    tool_url: string | null;
+  }[];
+};
+
+export type TransformedYourRecentToolsResponse = {
+  title: string;
+  url: string | null;
+}[];

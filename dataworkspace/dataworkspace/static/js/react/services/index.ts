@@ -3,6 +3,7 @@ import {
   transformDataUsageResponse,
   transformRecentCollectionsResponse,
   transformRecentItemsResponse,
+  transformRecentToolsResponse,
   transformYourBookmarksResponse
 } from '../transformers';
 import {
@@ -14,7 +15,10 @@ import {
   type TransformedRecentCollectionResponse,
   type TransformedRecentItemsResponse,
   type TransformedYourBookmarksResponse,
-  type YourBookmarksResponse} from '../types/index';
+  type TransformedYourRecentToolsResponse,
+  type YourBookmarksResponse,
+  type YourRecentToolsResponse
+} from '../types/index';
 
 export class ApiError {
   constructor(public response: Response) {}
@@ -58,8 +62,18 @@ export const fetchRecentItems = async () => {
 };
 
 export const fetchYourBookmarks = async () => {
-  return handleResponse<YourBookmarksResponse, TransformedYourBookmarksResponse>(
+  return handleResponse<
+    YourBookmarksResponse,
+    TransformedYourBookmarksResponse
+  >(
     `/${API_BASE_URL}/your_bookmarks?page_size=5`,
     transformYourBookmarksResponse
   );
+};
+
+export const fetchYourRecentTools = async () => {
+  return handleResponse<
+    YourRecentToolsResponse,
+    TransformedYourRecentToolsResponse
+  >(`/${API_BASE_URL}/recent_tools?page_size=2`, transformRecentToolsResponse);
 };
