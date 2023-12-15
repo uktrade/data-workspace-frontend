@@ -1,6 +1,8 @@
 import logging
 import time
+from datetime import datetime
 
+import pytz
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
@@ -13,6 +15,7 @@ from dataworkspace.apps.core.utils import (
     close_all_connections_if_not_in_atomic_block,
     get_s3_prefix,
 )
+from dataworkspace.apps.your_files.models import YourFilesUserPrefixStats
 
 from dataworkspace.cel import celery_app
 
@@ -51,6 +54,26 @@ def _collect_your_files_stats():
                 "your_files_stats: User %s has no files stored currently. Skipping", user.email
             )
             continue
+
+        try:
+            latest_stat = user.your_files_stats.latest()
+        except YourFilesUserPrefixStats.DoesNotExist:
+            latest_stat = None
+
+        # If we don't have any stats for this user, or the stats have changed since the last run,
+        # create a new record
+        if latest_stat is None or latest_stat.total_size_bytes != total_size:
+            YourFilesUserPrefixStats.objects.create(
+                user=user,
+                prefix=user_home_prefix,
+                total_size_bytes=total_size,
+                num_files=total_files,
+                num_large_files=num_large_files,
+            )
+        # If no change since the last run just update the last checked date
+        elif latest_stat:
+            latest_stat.last_checked_date = datetime.now(tz=pytz.utc)
+            latest_stat.save(update_fields=["last_checked_date"])
 
         logger.info(
             "your_files_stats: User %s has %d files with a total size of %d bytes (%d > 5 GB)",

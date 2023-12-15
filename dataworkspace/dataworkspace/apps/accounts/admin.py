@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 from django import forms
 from django.contrib import admin, messages
@@ -12,6 +13,8 @@ from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core import serializers
 from django.db import transaction
+from django.template.defaultfilters import filesizeformat
+from django.utils.html import format_html
 
 from dataworkspace.apps.accounts.utils import (
     SSOApiException,
@@ -43,6 +46,7 @@ from dataworkspace.apps.explorer.schema import clear_schema_info_cache_for_user
 from dataworkspace.apps.explorer.utils import (
     remove_data_explorer_user_cached_credentials,
 )
+from dataworkspace.apps.your_files.models import YourFilesUserPrefixStats
 
 logger = logging.getLogger("app")
 
@@ -260,6 +264,7 @@ class AppUserAdmin(UserAdmin):
                     "stable_id_suffix",
                     "tools_access_role_arn",
                     "home_directory_efs_access_point_id",
+                    "your_files_stats",
                     "first_name",
                     "last_name",
                     "groups",
@@ -291,7 +296,7 @@ class AppUserAdmin(UserAdmin):
             },
         ),
     ]
-    readonly_fields = ["sso_id", "stable_id_suffix"]
+    readonly_fields = ["sso_id", "stable_id_suffix", "your_files_stats"]
 
     def sso_status(self, obj):
         return obj.profile.get_sso_status_display()
@@ -574,3 +579,15 @@ class AppUserAdmin(UserAdmin):
 
     def stable_id_suffix(self, instance):
         return stable_identification_suffix(str(instance.profile.sso_id), short=True)
+
+    def your_files_stats(self, instance):
+        try:
+            latest_stats = instance.your_files_stats.latest()
+        except YourFilesUserPrefixStats.DoesNotExist:
+            return "N/A"
+
+        return format_html(
+            f"Total size: {filesizeformat(latest_stats.total_size_bytes)} "
+            f"({latest_stats.num_files} files)<br><small>last checked: "
+            f"{datetime.strftime(latest_stats.last_checked_date, '%d/%m/%Y %H:%M:%S')}</small>"
+        )
