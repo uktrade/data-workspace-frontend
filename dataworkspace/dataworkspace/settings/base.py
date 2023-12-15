@@ -443,6 +443,11 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
             "schedule": 60 * 60 * 2,
             "args": (),
         },
+        "your-files-stats-collection": {
+            "task": "dataworkspace.apps.your_files.tasks.collect_your_files_stats",
+            "schedule": crontab(minute="30"),
+            "args": (),
+        },
     }
 
 CELERY_REDBEAT_REDIS_URL = env["REDIS_URL"]
