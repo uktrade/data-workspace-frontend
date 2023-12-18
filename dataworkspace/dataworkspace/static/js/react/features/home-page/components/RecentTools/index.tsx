@@ -10,7 +10,7 @@ import { DIVIDER_COLOUR } from '../../../../constants';
 import URLS from '../../../../urls';
 
 export type RecentToolsProps = {
-  title: string;
+  name: string;
   url: string | null;
 };
 
@@ -46,12 +46,12 @@ const RecentToolsLink = styled(Link)`
   display: inline-block;
 `;
 
-const RecentToolsItem: React.FC<RecentToolsProps> = ({ url, title }) => {
+const RecentToolsItem: React.FC<RecentToolsProps> = ({ url, name }) => {
   if (url === null) return;
   return (
     <RecentToolsListItem>
       <RecentToolsLink href={url} target="_blank">
-        {title}
+        {name}
       </RecentToolsLink>
     </RecentToolsListItem>
   );
@@ -60,15 +60,15 @@ const RecentToolsItem: React.FC<RecentToolsProps> = ({ url, title }) => {
 const RecentTools: React.FC<Record<'tools', RecentToolsProps[]>> = ({
   tools
 }) => (
-  <Tile title="Your recent tools">
+  <Tile as="article" title="Your recent tools">
     <StyledParagraph>
       We have a range of tools you can use with datasets.
     </StyledParagraph>
     {tools?.length ? (
       <>
         <RecentToolsList>
-          {tools.map(({ url, title }) => (
-            <RecentToolsItem title={title} url={url} key={url} />
+          {tools.map(({ url, name }) => (
+            <RecentToolsItem name={name} url={url} key={url} />
           ))}
         </RecentToolsList>
         <div>

@@ -6,11 +6,11 @@ import RecentTools from '.';
 const tools: RecentToolsProps[] = [
   {
     url: '/url-1',
-    title: 'Tool 1'
+    name: 'Tool 1'
   },
   {
     url: '/url-2',
-    title: 'Tool 2'
+    name: 'Tool 2'
   }
 ];
 
@@ -18,7 +18,7 @@ describe('RecentTools', () => {
   describe('with tools', () => {
     it('should display a title', () => {
       const { getByRole } = render(<RecentTools tools={tools} />);
-      expect(getByRole('heading', { level: 3, name: 'Your recent tools' }));
+      expect(getByRole('heading', { level: 2, name: 'Your recent tools' }));
     });
     it('should render generic content', () => {
       const { getByText } = render(<RecentTools tools={tools} />);
@@ -64,7 +64,7 @@ describe('RecentTools', () => {
   describe('without tools', () => {
     it('should display a title', () => {
       const { getByRole } = render(<RecentTools tools={[]} />);
-      expect(getByRole('heading', { level: 3, name: 'Your recent tools' }));
+      expect(getByRole('heading', { level: 2, name: 'Your recent tools' }));
     });
     it('should render generic content', () => {
       const { getByText } = render(<RecentTools tools={[]} />);

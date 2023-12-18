@@ -32,7 +32,7 @@ const hrefToTeamsChannel = `
 
 const OtherSupport: React.FC = () => {
   return (
-    <Tile title="Get in touch">
+    <Tile as="article" headerLevel={3} title="Get in touch">
       <H4 size={'SMALL'}>Message</H4>
       <StyledParagraph>
         <Link href={hrefToSupport}>Contact us</Link> if you have a question,
