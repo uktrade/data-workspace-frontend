@@ -1,4 +1,4 @@
-FROM debian:bullseye-20220509-slim AS base
+FROM node:16-bullseye AS base
 
 ENV \
 	LC_ALL=en_US.UTF-8 \
@@ -76,12 +76,13 @@ FROM test as dev
 
 USER root
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends nodejs npm && \
-    rm -rf /tmp/* && \
-    rm -rf /var/lib/apt/lists/*
-
 RUN npm install --global --unsafe-perm nodemon
+
+WORKDIR /dataworkspace/dataworkspace/static/js
+
+RUN npm install
+
+RUN npm run build
 
 USER django
 

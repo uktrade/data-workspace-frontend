@@ -64,6 +64,7 @@ const SecondaryLayout = css`
 `;
 
 const DataDisplayList = styled(UnorderedList)`
+  border: 2px solid red;
   padding: 0;
   margin: ${SPACING_POINTS[9]}px 0 ${SPACING_POINTS[9]}px;
   list-style: none;
@@ -102,6 +103,7 @@ const DataDisplayListItem = styled.li<{ secondary: boolean }>`
 `;
 
 const DataDisplayContainer = styled('div')`
+  border: 2px solid red;
   margin-top: ${SPACING_POINTS['8']}px;
 `;
 
