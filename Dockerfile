@@ -78,12 +78,6 @@ USER root
 
 RUN npm install --global --unsafe-perm nodemon
 
-WORKDIR /dataworkspace/dataworkspace/static/js
-
-RUN npm install
-
-RUN npm run build
-
 USER django
 
 CMD ["/dataworkspace/start-dev.sh"]
@@ -95,6 +89,12 @@ COPY dataworkspace /dataworkspace
 RUN cd dataworkspace
 
 COPY etc /etc
+
+WORKDIR /dataworkspace/dataworkspace/static/js
+
+RUN npm install
+
+RUN npm run build
 
 CMD ["/dataworkspace/start.sh"]
 
