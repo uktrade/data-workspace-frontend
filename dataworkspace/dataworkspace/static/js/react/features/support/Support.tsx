@@ -25,7 +25,7 @@ const TilesContainer = styled('div')`
 const SupportYou: React.FC = () => {
   return (
     <SupportContainer>
-      <H2>How we can support you?</H2>
+      <H2>How we can support you</H2>
       <TilesContainer>
         <GetHelp />
         <GetInTouch />

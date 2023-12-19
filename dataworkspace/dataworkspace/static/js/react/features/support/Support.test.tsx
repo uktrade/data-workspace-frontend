@@ -7,7 +7,7 @@ describe('Support', () => {
     const { getByRole } = render(<Support />);
     const header = getByRole('heading', {
       level: 2,
-      name: 'How we can support you?'
+      name: 'How we can support you'
     });
     expect(header).toBeInTheDocument();
   });
