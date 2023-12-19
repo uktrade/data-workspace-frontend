@@ -4,4 +4,5 @@ set -e
 
 export ARANGO_ROOT_PASSWORD=arango
 
-/entrypoint.sh "$@"
+/entrypoint.sh
+arangod
