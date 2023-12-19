@@ -2,14 +2,14 @@ import { DATA_USAGE_KEYS } from './constants';
 import type {
   DataUsageKeys,
   DataUsageResponse,
-  RecentCollectionResponse,
-  RecentIemsResponse,
   TransformedDataUsageResponse,
-  TransformedRecentCollectionResponse,
-  TransformedRecentItemsResponse,
   TransformedYourBookmarksResponse,
+  TransformedYourRecentCollectionResponse,
+  TransformedYourRecentItemsResponse,
   TransformedYourRecentToolsResponse,
   YourBookmarksResponse,
+  YourRecentCollectionResponse,
+  YourRecentIemsResponse,
   YourRecentToolsResponse
 } from './types/';
 
@@ -22,18 +22,18 @@ export const transformDataUsageResponse = (
   }));
 
 export const transformRecentCollectionsResponse = (
-  response: RecentCollectionResponse
-): TransformedRecentCollectionResponse =>
+  response: YourRecentCollectionResponse
+): TransformedYourRecentCollectionResponse =>
   response.results.map(({ name, collection_url }) => ({
-    title: name,
+    name: name,
     url: collection_url
   }));
 
 export const transformRecentItemsResponse = (
-  response: RecentIemsResponse
-): TransformedRecentItemsResponse =>
+  response: YourRecentIemsResponse
+): TransformedYourRecentItemsResponse =>
   response.results.map(({ related_object, extra }) => ({
-    title: related_object.name,
+    name: related_object.name,
     url: extra.path
   }));
 
@@ -49,6 +49,6 @@ export const transformRecentToolsResponse = (
   response: YourRecentToolsResponse
 ): TransformedYourRecentToolsResponse =>
   response.results.map(({ extra, tool_url }) => ({
-    title: extra.tool,
+    name: extra.tool,
     url: tool_url
   }));

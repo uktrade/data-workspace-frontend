@@ -30,7 +30,7 @@ const LinkListItem = styled('li')`
 
 const GetHelp: React.FC = () => {
   return (
-    <Tile title="Get help">
+    <Tile as="article" headerLevel={3} title="Get help">
       <StyledParagraph>
         Find documentation, guidance, standards, training and updates on the{' '}
         <Link href="https://data-services-help.trade.gov.uk/data-workspace/">

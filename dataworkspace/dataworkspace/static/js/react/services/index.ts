@@ -9,14 +9,14 @@ import {
 import {
   type DataType,
   type DataUsageResponse,
-  type RecentCollectionResponse,
-  type RecentIemsResponse,
   type TransformedDataUsageResponse,
-  type TransformedRecentCollectionResponse,
-  type TransformedRecentItemsResponse,
   type TransformedYourBookmarksResponse,
+  type TransformedYourRecentCollectionResponse,
+  type TransformedYourRecentItemsResponse,
   type TransformedYourRecentToolsResponse,
   type YourBookmarksResponse,
+  type YourRecentCollectionResponse,
+  type YourRecentIemsResponse,
   type YourRecentToolsResponse
 } from '../types/index';
 
@@ -46,8 +46,8 @@ export const fetchDataUsage = async (dataType: DataType, id: string) => {
 
 export const fetchRecentCollections = async () => {
   return handleResponse<
-    RecentCollectionResponse,
-    TransformedRecentCollectionResponse
+    YourRecentCollectionResponse,
+    TransformedYourRecentCollectionResponse
   >(
     `/${API_BASE_URL}/collections/?page_size=3`,
     transformRecentCollectionsResponse
@@ -55,10 +55,10 @@ export const fetchRecentCollections = async () => {
 };
 
 export const fetchRecentItems = async () => {
-  return handleResponse<RecentIemsResponse, TransformedRecentItemsResponse>(
-    `/${API_BASE_URL}/recent_items?page_size=5`,
-    transformRecentItemsResponse
-  );
+  return handleResponse<
+    YourRecentIemsResponse,
+    TransformedYourRecentItemsResponse
+  >(`/${API_BASE_URL}/recent_items?page_size=5`, transformRecentItemsResponse);
 };
 
 export const fetchYourBookmarks = async () => {

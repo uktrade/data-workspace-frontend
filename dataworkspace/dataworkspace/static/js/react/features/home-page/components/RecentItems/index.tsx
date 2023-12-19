@@ -38,31 +38,27 @@ const StyledParagraph = styled('p')`
 
 export type RecentItemProps = {
   url: string;
-  title: string;
+  name: string;
 };
 
-const RecentItemsListItem: React.FC<RecentItemProps> = ({ url, title }) => (
+const RecentItemsListItem: React.FC<RecentItemProps> = ({ url, name }) => (
   <li>
-    <RecentItemsLink href={url}>{title}</RecentItemsLink>
+    <RecentItemsLink href={url}>{name}</RecentItemsLink>
   </li>
 );
 
 const RecentItems: React.FC<Record<'items', RecentItemProps[]>> = ({
   items
 }) => (
-  <Tile title="Your recent items">
+  <Tile as="article" title="Your recent items">
     <StyledParagraph>
       This might be a Source dataset, Reference dataset, Data cut, or
       Visualisation.
     </StyledParagraph>
     {items?.length ? (
       <RecentItemsList>
-        {items.map(({ url, title }, index) => (
-          <RecentItemsListItem
-            url={url}
-            key={`${url}-${index}`}
-            title={title}
-          />
+        {items.map(({ url, name }, index) => (
+          <RecentItemsListItem url={url} key={`${url}-${index}`} name={name} />
         ))}
       </RecentItemsList>
     ) : (

@@ -23,19 +23,19 @@ export type TransformedDataUsageResponse = {
   value: number;
 }[];
 
-export type RecentCollectionResponse = {
+export type YourRecentCollectionResponse = {
   results: {
     name: string;
     collection_url: string;
   }[];
 };
 
-export type TransformedRecentCollectionResponse = {
-  title: string;
+export type TransformedYourRecentCollectionResponse = {
+  name: string;
   url: string;
 }[];
 
-export type RecentIemsResponse = {
+export type YourRecentIemsResponse = {
   results: {
     related_object: {
       name: string;
@@ -46,8 +46,8 @@ export type RecentIemsResponse = {
   }[];
 };
 
-export type TransformedRecentItemsResponse = {
-  title: string;
+export type TransformedYourRecentItemsResponse = {
+  name: string;
   url: string;
 }[];
 
@@ -75,6 +75,6 @@ export type YourRecentToolsResponse = {
 };
 
 export type TransformedYourRecentToolsResponse = {
-  title: string;
+  name: string;
   url: string | null;
 }[];

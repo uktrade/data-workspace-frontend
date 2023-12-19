@@ -12,11 +12,11 @@ type Story = StoryObj<typeof RecentTools>;
 
 const tools: RecentToolsProps[] = [
   {
-    title: 'RStudio (R version 4)',
+    name: 'RStudio (R version 4)',
     url: '/url-1'
   },
   {
-    title: 'JupyterLab Python',
+    name: 'JupyterLab Python',
     url: '/url-2'
   }
 ];

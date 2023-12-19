@@ -1,7 +1,7 @@
 import { MEDIA_QUERIES, SPACING_POINTS } from '@govuk-react/constants';
 import styled from 'styled-components';
 
-import { FetchDataContainer, InnerContainer, Main } from '../../components';
+import { FetchDataContainer, InnerContainer } from '../../components';
 import { GREY_4 } from '../../constants';
 import {
   fetchRecentCollections,
@@ -15,45 +15,59 @@ import RecentItems from './components/RecentItems';
 import RecentTools from './components/RecentTools';
 import YourBookmarks from './components/YourBookmarks';
 
-const StyledMain = styled(Main)`
+const YourSection = styled('div')`
+  padding: ${SPACING_POINTS['6']}px 0 ${SPACING_POINTS['8']}px 0;
   background-color: ${GREY_4};
-  margin-bottom: ${SPACING_POINTS['6']}px;
   > div {
-    display: grid;
-    grid-template-columns: 1fr;
-    ${MEDIA_QUERIES.TABLET} {
-      grid-template-columns: 1fr 1fr;
+    > div > div {
+      margin-bottom: 15px;
     }
-    grid-gap: ${SPACING_POINTS['6']}px;
+    ${MEDIA_QUERIES.TABLET} {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-gap: 30px;
+      > div > div {
+        margin-bottom: ${SPACING_POINTS['6']}px;
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
   }
 `;
 
-const StyledInnerContainer = styled(InnerContainer)`
-  margin-bottom: ${SPACING_POINTS['9']}px;
+const SupportSection = styled('section')`
+  padding: ${SPACING_POINTS['6']}px 0 ${SPACING_POINTS['9']}px 0;
 `;
 
-const HomePage = () => {
-  return (
-    <>
-      <StyledMain>
-        <FetchDataContainer fetchApi={() => fetchRecentItems()}>
-          {(data) => <RecentItems items={data} />}
-        </FetchDataContainer>
-        <FetchDataContainer fetchApi={() => fetchRecentCollections()}>
-          {(data) => <RecentCollections collections={data} />}
-        </FetchDataContainer>
-        <FetchDataContainer fetchApi={() => fetchYourRecentTools()}>
-          {(data) => <RecentTools tools={data} />}
-        </FetchDataContainer>
-        <FetchDataContainer fetchApi={() => fetchYourBookmarks()}>
-          {(data) => <YourBookmarks bookmarks={data} />}
-        </FetchDataContainer>
-      </StyledMain>
-      <StyledInnerContainer>
+const HomePage = () => (
+  <main role="main" id="main-content">
+    <YourSection>
+      <InnerContainer>
+        <div>
+          <FetchDataContainer fetchApi={() => fetchRecentItems()}>
+            {(data) => <RecentItems items={data} />}
+          </FetchDataContainer>
+          <FetchDataContainer fetchApi={() => fetchYourRecentTools()}>
+            {(data) => <RecentTools tools={data} />}
+          </FetchDataContainer>
+        </div>
+        <div>
+          <FetchDataContainer fetchApi={() => fetchRecentCollections()}>
+            {(data) => <RecentCollections collections={data} />}
+          </FetchDataContainer>
+          <FetchDataContainer fetchApi={() => fetchYourBookmarks()}>
+            {(data) => <YourBookmarks bookmarks={data} />}
+          </FetchDataContainer>
+        </div>
+      </InnerContainer>
+    </YourSection>
+    <SupportSection>
+      <InnerContainer>
         <SupportYou />
-      </StyledInnerContainer>
-    </>
-  );
-};
+      </InnerContainer>
+    </SupportSection>
+  </main>
+);
 
 export default HomePage;

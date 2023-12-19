@@ -11,7 +11,7 @@ import { LINK_COLOUR, LINK_HOVER_COLOUR, WHITE } from '../../../../constants';
 import URLS from '../../../../urls';
 
 export type Collection = {
-  title: string;
+  name: string;
   url: string;
 };
 
@@ -48,14 +48,14 @@ const StyledButtonContainer = styled('div')`
   }
 `;
 
-const CollectionTile: React.FC<Collection> = ({ url, title }) => (
-  <a href={url}>{title}</a>
+const CollectionTile: React.FC<Collection> = ({ url, name }) => (
+  <a href={url}>{name}</a>
 );
 
 const RecentCollections: React.FC<Record<'collections', Collection[]>> = ({
   collections
 }) => (
-  <Tile title="Your recent collections">
+  <Tile as="article" title="Your recent collections">
     {collections.length ? (
       <>
         <StyledParagraph>

@@ -5,16 +5,15 @@ import RecentCollections from '.';
 
 const collections: Collection[] = [
   {
-    title:
-      'Interactions and service deliveries for companies between 2010 and 2023',
+    name: 'Interactions and service deliveries for companies between 2010 and 2023',
     url: '/some-collection-url'
   },
   {
-    title: 'Data Workspace feedback banner results',
+    name: 'Data Workspace feedback banner results',
     url: '/some-collection-url'
   },
   {
-    title: 'Jonathan’s personal collection',
+    name: 'Jonathan’s personal collection',
     url: '/some-collection-url'
   }
 ];

@@ -6,11 +6,11 @@ import RecentItems from '.';
 const items: RecentItemProps[] = [
   {
     url: '/url-1',
-    title: 'Title 1'
+    name: 'Title 1'
   },
   {
     url: '/url-2',
-    title: 'Title 2'
+    name: 'Title 2'
   }
 ];
 
@@ -18,7 +18,7 @@ describe('RecentItems', () => {
   describe('With results', () => {
     it('should render a title', () => {
       const { getByRole } = render(<RecentItems items={items} />);
-      expect(getByRole('heading', { level: 3, name: 'Your recent items' }));
+      expect(getByRole('heading', { level: 2, name: 'Your recent items' }));
     });
     it('should render generic content', () => {
       const { getByText } = render(<RecentItems items={items} />);
@@ -60,7 +60,7 @@ describe('RecentItems', () => {
   describe('No results', () => {
     it('should render a title', () => {
       const { getByRole } = render(<RecentItems items={[]} />);
-      expect(getByRole('heading', { level: 3, name: 'Your recent items' }));
+      expect(getByRole('heading', { level: 2, name: 'Your recent items' }));
     });
     it('should render generic content', () => {
       const { getByText } = render(<RecentItems items={[]} />);
