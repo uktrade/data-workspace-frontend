@@ -55,6 +55,19 @@ services:
       - db-data-dev:/var/lib/postgresql/data
       - db-logs-dev:/var/log/postgres
 
+  data-workspace-arango:
+    build:
+      context: arango
+      dockerfile: Dockerfile
+    image: data-workspace-arango
+    networks:
+      - data-infrastructure-shared-network
+      - test
+    ports:
+      - "8529:8529"
+    volumes:
+      - db-data-dev:/var/lib/arangodb3
+
   data-workspace-redis:
     build:
       context: redis
