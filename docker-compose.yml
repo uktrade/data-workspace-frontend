@@ -60,13 +60,15 @@ services:
       context: arango
       dockerfile: Dockerfile
     image: data-workspace-arango
+    environment:
+      ARANGO_ROOT_PASSWORD: arango
     networks:
       - data-infrastructure-shared-network
       - test
     ports:
       - "8529:8529"
     volumes:
-      - db-data-dev:/var/lib/arangodb3
+      - db-arango-dev:/var/lib/arango3
 
   data-workspace-redis:
     build:
@@ -205,6 +207,7 @@ services:
 
 volumes:
   db-data-dev:
+  db-arango-dev:
   db-logs-dev:
   # Test volume config
   test-results:

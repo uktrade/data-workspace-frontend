@@ -1,5 +1,4 @@
 FROM arangodb:3.11.6
 
-COPY /custom-entrypoint.sh /
-
-ENTRYPOINT /custom-entrypoint.sh
+# Example init script skeleton
+COPY /1-init-db.sh /docker-entrypoint-initdb.d/
