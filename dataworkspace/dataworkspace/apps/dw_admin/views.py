@@ -691,7 +691,8 @@ class DataWorkspaceTrendsView(DataWorkspaceStatsView):
             for x in all_events.filter(event_type=EventLog.TYPE_USER_TOOL_FAILED)
             .extra({"date": "date(timestamp)"})
             .values("date")
-            .annotate(tools_failed=Count("id"))
+            .annotate(tools_failed=Count("timestamp__date"))
+            .order_by()
         }
         ctx["tool_fail_count_data"] = sorted(
             {**integer_chart_data, **num_tools_failed_chart_data}.items()
@@ -704,6 +705,7 @@ class DataWorkspaceTrendsView(DataWorkspaceStatsView):
             .extra({"date": "date(timestamp)"})
             .values("date")
             .annotate(datacuts_failed=Count("object_id"))
+            .order_by()
         }
         ctx["grid_fail_count_data"] = sorted(
             {**integer_chart_data, **num_datacuts_failed_load_data}.items()
