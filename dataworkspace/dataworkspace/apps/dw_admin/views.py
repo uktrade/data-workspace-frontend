@@ -44,6 +44,7 @@ from dataworkspace.apps.dw_admin.forms import (
 )
 from dataworkspace.apps.eventlog.constants import SystemStatLogEventType
 from dataworkspace.apps.eventlog.models import EventLog, SystemStatLog
+from dataworkspace.apps.explorer.templatetags.explorer_tags import format_duration_short
 from dataworkspace.datasets_db import get_all_source_tables
 
 
@@ -496,7 +497,7 @@ class DataWorkspaceStatsView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
         ctx["current_stats"].append(
             {
                 "title": "Average tool load time",
-                "stat": tool_start_duration,
+                "stat": format_duration_short(tool_start_duration),
                 "subtitle": "In the past 7 days",
                 "small_text": tool_start_duration >= 3_600_000,
             }
