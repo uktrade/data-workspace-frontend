@@ -4,7 +4,7 @@
 #
 #    pip-compile requirements.in
 #
-aiohttp==3.8.5
+aiohttp==3.9.0
     # via
     #   -r requirements.in
     #   elasticsearch
@@ -60,9 +60,7 @@ cffi==1.15.0
 chardet==3.0.4
     # via tabulator
 charset-normalizer==3.1.0
-    # via
-    #   aiohttp
-    #   requests
+    # via requests
 click==8.1.7
     # via
     #   celery
@@ -153,7 +151,9 @@ geoalchemy2==0.8.4
 gevent==23.9.1
     # via -r requirements.in
 greenlet==3.0.1
-    # via gevent
+    # via
+    #   gevent
+    #   sqlalchemy
 hawk-server-asyncio==0.0.13
     # via -r requirements.in
 idna==2.10

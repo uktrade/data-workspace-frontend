@@ -5,7 +5,7 @@
 #    pip-compile requirements-mlflow.in
 #
 aiohttp==3.9.0
-    # via -r requirements-mlflow.in
+    # via -r mlflow/requirements-mlflow.in
 aiosignal==1.2.0
     # via aiohttp
 alembic==1.8.0
@@ -17,7 +17,7 @@ attrs==21.4.0
 blinker==1.6.2
     # via flask
 boto3==1.24.17
-    # via -r requirements-mlflow.in
+    # via -r mlflow/requirements-mlflow.in
 botocore==1.27.17
     # via
     #   boto3
@@ -38,7 +38,7 @@ cloudpickle==2.1.0
 contourpy==1.0.7
     # via matplotlib
 cryptography==41.0.6
-    # via -r requirements-mlflow.in
+    # via -r mlflow/requirements-mlflow.in
 cycler==0.11.0
     # via matplotlib
 databricks-cli==0.17.0
@@ -46,7 +46,7 @@ databricks-cli==0.17.0
 docker==5.0.3
     # via mlflow
 ecs-logging==2.0.0
-    # via -r requirements-mlflow.in
+    # via -r mlflow/requirements-mlflow.in
 entrypoints==0.4
     # via mlflow
 flask==2.3.2
@@ -70,7 +70,12 @@ idna==3.3
     #   requests
     #   yarl
 importlib-metadata==4.12.0
-    # via mlflow
+    # via
+    #   flask
+    #   markdown
+    #   mlflow
+importlib-resources==6.1.1
+    # via matplotlib
 itsdangerous==2.1.2
     # via flask
 jinja2==3.1.2
@@ -97,7 +102,7 @@ markupsafe==2.1.1
 matplotlib==3.7.1
     # via mlflow
 mlflow==2.9.2
-    # via -r requirements-mlflow.in
+    # via -r mlflow/requirements-mlflow.in
 multidict==6.0.2
     # via
     #   aiohttp
@@ -123,10 +128,10 @@ pillow==10.0.1
     # via matplotlib
 protobuf==4.22.3
     # via
-    #   -r requirements-mlflow.in
+    #   -r mlflow/requirements-mlflow.in
     #   mlflow
 psycopg2==2.9.3
-    # via -r requirements-mlflow.in
+    # via -r mlflow/requirements-mlflow.in
 pyarrow==14.0.1
     # via mlflow
 pycparser==2.21
@@ -171,7 +176,7 @@ six==1.16.0
     #   python-dateutil
     #   querystring-parser
 sklearn==0.0
-    # via -r requirements-mlflow.in
+    # via -r mlflow/requirements-mlflow.in
 smmap==5.0.0
     # via gitdb
 sqlalchemy==1.4.39
@@ -195,7 +200,9 @@ werkzeug==3.0.1
 yarl==1.7.2
     # via aiohttp
 zipp==3.8.0
-    # via importlib-metadata
+    # via
+    #   importlib-metadata
+    #   importlib-resources
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
