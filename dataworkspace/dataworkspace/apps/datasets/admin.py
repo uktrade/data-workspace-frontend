@@ -6,7 +6,7 @@ from datetime import datetime
 
 import boto3
 import botocore
-from adminsortable2.admin import SortableInlineAdminMixin
+from adminsortable2.admin import SortableAdminBase, SortableInlineAdminMixin
 from django import forms
 from django.conf import settings
 from django.contrib import admin
@@ -467,7 +467,7 @@ class ReferenceDataFieldInline(
 
 
 @admin.register(ReferenceDataset)
-class ReferenceDatasetAdmin(CSPRichTextEditorMixin, PermissionedDatasetAdmin):
+class ReferenceDatasetAdmin(CSPRichTextEditorMixin, SortableAdminBase, PermissionedDatasetAdmin):
     form = ReferenceDatasetForm
     list_select_related = [
         "enquiries_contact",
