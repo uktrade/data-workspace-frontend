@@ -1,0 +1,12 @@
+<div class="stat{% if stat.small_text %} smaller-stat{% endif %}{% if stat.bad_news %} bad-news{% endif %}">
+  {% if stat.url %}
+    <a
+      target="_blank"
+      href="{{ stat.url }}"
+    >
+  {% endif %}
+    <h2>{{ stat.title }}</h2>
+    <h1>{{ stat.stat }}</h1>
+    <h3>{{ stat.subtitle }}</h3>
+  </a>
+</div>

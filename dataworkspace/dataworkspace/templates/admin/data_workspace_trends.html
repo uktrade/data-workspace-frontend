@@ -1,0 +1,205 @@
+{% extends "admin/data_workspace_stats_base.html" %}
+{% load static explorer_tags datasets_tags %}
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; Data Workspace Trends
+  </div>
+{% endblock breadcrumbs %}
+{% block content %}
+  <div class="content-main">
+    <h1>
+      Data Workspace Trends
+      <small>
+        <br><a href="{% url 'dw-admin:data-workspace-stats' %}">View stats</a>
+      </small>
+    </h1>
+    <div id="changelist" class="change-list">
+      <div class="xfull">
+        <ul class="toplinks">
+          {% for k, v in period_map.items %}
+            <li>
+              {% if period != k %}<a href="?p={{ k }}">{% endif %}
+                {{ v }}
+              {% if period != k %}</a>{% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+        <br class="clear">
+      </div>
+    </div>
+    <div class="chart-container {% if period == "1" or period == "2" %}chart-container-small{% else %}chart-container-large{% endif %}">
+      <div class="chart">
+        <h1>Tool start times</h1>
+        <canvas id="tool-start-times-chart"></canvas>
+      </div>
+      <div class="chart">
+        <h1>Tools successfully started</h1>
+        <canvas id="tools-started-chart"></canvas>
+      </div>
+      <div class="chart">
+        <h1>Tools failed to start</h1>
+        <canvas id="tools-failed-chart"></canvas>
+      </div>
+      <div class="chart">
+        <h1>Failed datacut grid loads</h1>
+        <canvas id="data-grid-query-failures-chart"></canvas>
+      </div>
+    </div>
+  </div>
+  <script src="{% static 'admin/js/vendor/chart.min.js' %}"></script>
+  <script nonce="{{ request.csp_nonce }}">
+    const dateLabels = [
+      {% for point in tool_start_time_data %}
+        "{{ point.0|date:'D, j M' }}",
+      {% endfor %}
+    ];
+    new Chart(document.getElementById('tool-start-times-chart'), {
+      type: 'line',
+      data: {
+        labels: dateLabels,
+        datasets: [{
+          label: 'Average start time (minutes)',
+          data: [
+            {% for point in tool_start_time_data %}
+              {{ point.1|timedelta_to_minutes }},
+            {% endfor %}
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        },
+        plugins: {
+          title: {
+              display: true,
+              text: 'Average tool start time for the past {{ period_name }}'
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `${context.formattedValue} minutes`;
+              }
+            }
+          }
+        }
+      }
+    });
+
+    new Chart(document.getElementById('tools-started-chart'), {
+      type: 'line',
+      data: {
+        labels: dateLabels,
+        datasets: [{
+          label: 'Number of tools started',
+          data: [
+            {% for point in tool_start_count_data %}
+              {{ point.1 }},
+            {% endfor %}
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        },
+        plugins: {
+          title: {
+              display: true,
+              text: 'Number of tools started for the past {{ period_name }}'
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `${context.formattedValue} tools started`;
+              }
+            }
+          }
+        }
+      }
+    });
+
+    new Chart(document.getElementById('tools-failed-chart'), {
+      type: 'line',
+      data: {
+        labels: dateLabels,
+        datasets: [{
+          label: 'Number of tools failed to start',
+          data: [
+            {% for point in tool_fail_count_data %}
+              {{ point.1 }},
+            {% endfor %}
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        },
+        plugins: {
+          title: {
+              display: true,
+              text: 'Number of tools failed to start for the past {{ period_name }}'
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `${context.formattedValue} tools failed`;
+              }
+            }
+          }
+        }
+      }
+    });
+
+    new Chart(document.getElementById('data-grid-query-failures-chart'), {
+      type: 'line',
+      data: {
+        labels: dateLabels,
+        datasets: [{
+          label: 'Number of datacut grid failures',
+          data: [
+            {% for point in grid_fail_count_data %}
+              {{ point.1 }},
+            {% endfor %}
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        },
+        plugins: {
+          title: {
+              display: true,
+              text: 'Number of failed data cut queries for the past {{ period_name }}'
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `${context.formattedValue} queries failed`;
+              }
+            }
+          }
+        }
+      }
+    });
+  </script>
+{% endblock %}

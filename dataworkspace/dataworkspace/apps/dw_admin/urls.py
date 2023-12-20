@@ -2,6 +2,7 @@ from django.urls import path
 
 from dataworkspace.apps.dw_admin.views import (
     DataWorkspaceStatsView,
+    DataWorkspaceTrendsView,
     ReferenceDatasetAdminEditView,
     ReferenceDatasetAdminDeleteView,
     ReferenceDatasetAdminDeleteAllView,
@@ -49,5 +50,10 @@ urlpatterns = [
         "stats",
         view=DataWorkspaceStatsView.as_view(),
         name="data-workspace-stats",
+    ),
+    path(
+        "trends",
+        view=DataWorkspaceTrendsView.as_view(),
+        name="data-workspace-trends",
     ),
 ]

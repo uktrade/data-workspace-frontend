@@ -4,16 +4,17 @@ from datetime import datetime, timedelta
 
 from botocore.exceptions import ClientError
 from celery import states
+from dateutil.relativedelta import relativedelta
 from dateutil.rrule import DAILY, rrule
 
 from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin import helpers
-from django.contrib.auth.mixins import UserPassesTestMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.db.models import Avg, F, Func, Value
+from django.db.models import Avg, Count, F, Func, Value
 from django.db.models.functions import Concat, TruncDate
 from django.http import Http404, HttpResponseServerError, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -401,51 +402,88 @@ class SourceLinkUploadView(UserPassesTestMixin, CreateView):  # pylint: disable=
         return self._get_dataset().get_admin_edit_url()
 
 
-class DataWorkspaceStatsView(UserPassesTestMixin, TemplateView):
+class DataWorkspaceStatsView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
     template_name = "admin/data_workspace_stats.html"
 
     def test_func(self):
         return self.request.user.is_superuser
 
+    def get_login_url(self):
+        return reverse("admin:index")
+
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["eventlog_model"] = EventLog
         ctx["stat_types"] = SystemStatLogEventType
-        events_last_24_hours = EventLog.objects.filter(
-            timestamp__gte=datetime.now() - timedelta(hours=24),
-        )
+        ctx["current_stats"] = []
+        ctx["historic_stats"] = []
         all_tools = ApplicationInstance.objects.filter(
             application_template__application_type="TOOL",
         )
         running_tools = all_tools.filter(state="RUNNING")
+        events_last_24_hours = EventLog.objects.filter(
+            timestamp__gte=datetime.now() - timedelta(hours=24),
+        )
         tool_instances_last_7_days = all_tools.filter(
             application_template__include_in_dw_stats=True,
             spawner_created_at__gte=datetime.now() - timedelta(days=7),
         )
+        logged_tool_instances = tool_instances_last_7_days.exclude(successfully_started_at=None)
 
-        # Running tools
-        ctx["currently_running_tools"] = running_tools.count()
+        # Currently running tools
+        ctx["current_stats"].append(
+            {
+                "title": "Currently running tools",
+                "stat": running_tools.count(),
+                "subtitle": f"As of {datetime.strftime(datetime.now(), '%d/%m/%Y %H:%M')}",
+                "url": f"{reverse('admin:applications_applicationinstance_changelist')}?state__exact=RUNNING",
+            }
+        )
 
-        # Tools failed to load in the last 24 hours
-        ctx["tools_started_24_hours"] = running_tools.filter(
-            spawner_created_at__gte=datetime.now() - timedelta(hours=24),
-        ).count()
+        # Tools successfully started
+        ctx["current_stats"].append(
+            {
+                "title": "Tools successfully started",
+                "stat": running_tools.filter(
+                    spawner_created_at__gte=datetime.now() - timedelta(hours=24),
+                ).count(),
+                "subtitle": "In the past 24 hours",
+                "url": f"{reverse('admin:applications_applicationinstance_changelist')}?state__exact=RUNNING",
+            }
+        )
 
-        # Failed tools
-        ctx["failed_tools_24_hours"] = events_last_24_hours.filter(
+        # Tools failed to start
+        failed_tool_events = events_last_24_hours.filter(
             event_type=EventLog.TYPE_USER_TOOL_FAILED,
         ).count()
+        ctx["current_stats"].append(
+            {
+                "title": "Tools failed to start",
+                "stat": failed_tool_events,
+                "subtitle": "In the past 24 hours",
+                "url": f"{reverse('admin:eventlog_eventlog_changelist')}?"
+                f"event_type__exact={EventLog.TYPE_USER_TOOL_FAILED}",
+                "bad_news": failed_tool_events > 0,
+            }
+        )
 
         # Oldest running tool
         if running_tools.exists():
             oldest_tool_date = running_tools.earliest("spawner_created_at").spawner_created_at
-            ctx["oldest_running_tool_date"] = oldest_tool_date
-            ctx["oldest_running_tool_since"] = timesince(oldest_tool_date, depth=1)
+            ctx["current_stats"].append(
+                {
+                    "title": "Oldest running tool",
+                    "stat": timesince(oldest_tool_date, depth=1),
+                    "subtitle": f"Started: {datetime.strftime(oldest_tool_date, '%d/%m/%Y %H:%M')}",
+                    "url": f"{reverse('admin:applications_applicationinstance_changelist')}?"
+                    "?o=3&state__exact=RUNNING",
+                }
+            )
 
-        # Average time to start a tool
-        logged_tool_instances = tool_instances_last_7_days.exclude(successfully_started_at=None)
+        # Average tool load time
+        tool_start_duration = 0
         if logged_tool_instances.exists():
-            ctx["tool_start_duration_7_days"] = (
+            tool_start_duration = (
                 logged_tool_instances.annotate(
                     start_duration=Func(
                         F("successfully_started_at"), F("spawner_created_at"), function="age"
@@ -455,80 +493,219 @@ class DataWorkspaceStatsView(UserPassesTestMixin, TemplateView):
                 .total_seconds()
                 * 1000
             )
-
-            # Tool start time chart data
-            tool_start_chart_data = {
-                x["date"]: x["start_duration__avg"]
-                for x in logged_tool_instances.annotate(
-                    start_duration=Func(
-                        F("successfully_started_at"), F("spawner_created_at"), function="age"
-                    )
-                )
-                .values(date=TruncDate("successfully_started_at"))
-                .annotate(Avg("start_duration"))
-                .values("date", "start_duration__avg")
+        ctx["current_stats"].append(
+            {
+                "title": "Average tool load time",
+                "stat": tool_start_duration,
+                "subtitle": "In the past 7 days",
+                "small_text": tool_start_duration >= 3_600_000,
             }
-            for day in rrule(freq=DAILY, count=7, dtstart=datetime.today() - timedelta(days=6)):
-                if day.date() not in tool_start_chart_data:
-                    tool_start_chart_data[day.date()] = timedelta()
-            ctx["tool_start_chart_data"] = sorted(tool_start_chart_data.items())
+        )
 
-        # Grid timeouts
-        ctx["data_grid_timeouts_24_hours"] = events_last_24_hours.filter(
+        # Data grid timeouts
+        grid_timeouts = events_last_24_hours.filter(
             event_type=EventLog.TYPE_DATA_PREVIEW_TIMEOUT,
         ).count()
+        ctx["current_stats"].append(
+            {
+                "title": "Data grid timeouts (504)",
+                "stat": grid_timeouts,
+                "subtitle": "In the past 24 hours",
+                "bad_news": grid_timeouts > 0,
+                "url": f"{reverse('admin:eventlog_eventlog_changelist')}?"
+                f"event_type__exact={EventLog.TYPE_DATA_PREVIEW_TIMEOUT}",
+            }
+        )
 
         # Number of failed datacut query grid loads (from the metadata syncer)
-        ctx["datacut_grid_errors_24_hours"] = events_last_24_hours.filter(
+        grid_errors = events_last_24_hours.filter(
             event_type=EventLog.TYPE_USER_DATACUT_GRID_VIEW_FAILED
         ).count()
-
-        # Notifications sent today
-        ctx["notifications_sent_today"] = Notification.objects.filter(
-            created_date__gte=datetime.now().date()
-        ).count()
+        ctx["current_stats"].append(
+            {
+                "title": "Data grid query failures (500)",
+                "stat": grid_errors,
+                "subtitle": "In the past 24 hours",
+                "bad_news": grid_errors > 0,
+                "url": f"{reverse('admin:eventlog_eventlog_changelist')}?"
+                f"event_type__exact={EventLog.TYPE_USER_DATACUT_GRID_VIEW_FAILED}",
+            }
+        )
 
         # Source tables that don't exist in the datasets db
-        ctx["num_missing_dataset_source_tables"] = cache.get("stats_missing_source_tables")
-        if ctx["num_missing_dataset_source_tables"] is None:
+        missing_source_tables = cache.get("stats_missing_source_tables")
+        if missing_source_tables is None:
             try:
-                ctx["num_missing_dataset_source_tables"] = (
+                missing_source_tables = (
                     SourceTable.objects.filter(dataset__published=True, dataset__deleted=False)
                     .annotate(full_table_name=Concat("schema", Value("."), "table"))
                     .exclude(full_table_name__in=get_all_source_tables())
                 ).count()
             except Exception:  # pylint: disable=broad-except
-                ctx["num_missing_dataset_source_tables"] = "Error!"
+                missing_source_tables = "Error!"
             else:
                 cache.set(
                     "stats_missing_source_tables",
-                    ctx["num_missing_dataset_source_tables"],
+                    missing_source_tables,
                     timeout=timedelta(hours=6).total_seconds(),
                 )
+        ctx["current_stats"].append(
+            {
+                "title": "Missing source tables",
+                "stat": missing_source_tables,
+                "subtitle": f"{missing_source_tables } table{'s' if missing_source_tables != 1 else ''} "
+                "missing from the DB",
+                "bad_news": missing_source_tables > 0,
+            }
+        )
 
-        # Time in seconds to run the table permissions query
-        # on tool start
-        perms_query_runtimes_7_days = SystemStatLog.objects.filter(
+        # Dataset notifications sent
+        ctx["current_stats"].append(
+            {
+                "title": "Dataset notifications sent",
+                "stat": Notification.objects.filter(
+                    created_date__gte=datetime.now().date()
+                ).count(),
+                "subtitle": "Today",
+                "url": f"{reverse('admin:eventlog_eventlog_changelist')}?"
+                f"event_type__exact={EventLog.TYPE_DATASET_NOTIFICATION_SENT_TO_USER}",
+            }
+        )
+
+        # Average DB perms query runtime
+        perms_query_runtimes = SystemStatLog.objects.filter(
             timestamp__gte=datetime.now() - timedelta(days=7),
         )
-        if perms_query_runtimes_7_days.exists():
-            ctx["perm_query_runtime_7_days"] = perms_query_runtimes_7_days.aggregate(Avg("stat"))[
-                "stat__avg"
-            ]
-            perm_query_chart_data = {
-                x["date"]: x["stat__avg"]
-                for x in perms_query_runtimes_7_days.values(date=TruncDate("timestamp"))
-                .annotate(Avg("stat"))
-                .values("date", "stat__avg")
+        ctx["current_stats"].append(
+            {
+                "title": "Average DB perms query runtime",
+                "stat": f"{round(perms_query_runtimes.aggregate(Avg('stat'))['stat__avg'], 1)}s"
+                if perms_query_runtimes.exists()
+                else "N/A",
+                "subtitle": "In the past 7 days",
+                "url": f"{reverse('admin:eventlog_systemstatlog_changelist')}?"
+                f"admin:type__exact={SystemStatLogEventType.PERMISSIONS_QUERY_RUNTIME}",
             }
-            for day in rrule(freq=DAILY, count=7, dtstart=datetime.today() - timedelta(days=6)):
-                if day.date() not in perm_query_chart_data:
-                    perm_query_chart_data[day.date()] = 0
-            ctx["perm_query_chart_data"] = sorted(perm_query_chart_data.items())
+        )
 
         # Number of failed celery tasks in the last 24 hours
-        ctx["failed_celery_tasks_24_hours"] = TaskResult.objects.filter(
+        failed_tasks = TaskResult.objects.filter(
             date_done__gte=datetime.now() - timedelta(hours=24), status=states.FAILURE
         ).count()
+        ctx["current_stats"].append(
+            {
+                "title": "Failed celery tasks",
+                "stat": failed_tasks,
+                "subtitle": "In the past 24 hours",
+                "bad_news": failed_tasks > 0,
+                "url": f"{reverse('admin:django_celery_results_taskresult_changelist')}?"
+                f"status__exact=FAILURE",
+            }
+        )
+        return ctx
+
+
+class DataWorkspaceTrendsView(DataWorkspaceStatsView):
+    template_name = "admin/data_workspace_trends.html"
+    period_map = {
+        "1": "7 days",
+        "2": "14 days",
+        "3": "1 month",
+        "4": "3 months",
+        "5": "6 months",
+    }
+    delta_map = {
+        "1": relativedelta(days=7),
+        "2": relativedelta(days=14),
+        "3": relativedelta(months=1),
+        "4": relativedelta(months=3),
+        "5": relativedelta(months=6),
+    }
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        period = self.request.GET.get("p", "1")
+        if period not in self.period_map.keys():
+            period = "1"
+        ctx["period_map"] = self.period_map
+        ctx["period"] = period
+        ctx["period_name"] = self.period_map[period]
+
+        rdelta = self.delta_map[period]
+
+        today = datetime.today()
+
+        all_tools = ApplicationInstance.objects.filter(
+            application_template__include_in_dw_stats=True,
+            application_template__application_type="TOOL",
+            spawner_created_at__gte=today - rdelta,
+        )
+        all_events = EventLog.objects.filter(timestamp__gte=today - rdelta)
+
+        timedelta_chart_data = {
+            day.date(): timedelta()
+            for day in rrule(
+                freq=DAILY, dtstart=today - rdelta, count=(today - (today - rdelta)).days
+            )
+        }
+
+        integer_chart_data = {
+            day.date(): 0
+            for day in rrule(
+                freq=DAILY, dtstart=today - rdelta, count=(today - (today - rdelta)).days
+            )
+        }
+
+        # Tool start time chart data
+        logged_tool_instances = all_tools.exclude(successfully_started_at=None)
+        tool_start_times_chart_data = {
+            x["date"]: x["start_duration__avg"]
+            for x in logged_tool_instances.annotate(
+                start_duration=Func(
+                    F("successfully_started_at"), F("spawner_created_at"), function="age"
+                )
+            )
+            .values(date=TruncDate("successfully_started_at"))
+            .annotate(Avg("start_duration"))
+            .values("date", "start_duration__avg")
+        }
+        ctx["tool_start_time_data"] = sorted(
+            {**timedelta_chart_data, **tool_start_times_chart_data}.items()
+        )
+
+        # Tools started chart
+        num_tools_started_chart_data = {
+            x["date"]: x["tools_started"]
+            for x in logged_tool_instances.extra({"date": "date(successfully_started_at)"})
+            .values("date")
+            .annotate(tools_started=Count("id"))
+        }
+        ctx["tool_start_count_data"] = sorted(
+            {**integer_chart_data, **num_tools_started_chart_data}.items()
+        )
+
+        # Tools failed chart
+        num_tools_failed_chart_data = {
+            x["date"]: x["tools_failed"]
+            for x in all_events.filter(event_type=EventLog.TYPE_USER_TOOL_FAILED)
+            .extra({"date": "date(timestamp)"})
+            .values("date")
+            .annotate(tools_failed=Count("id"))
+        }
+        ctx["tool_fail_count_data"] = sorted(
+            {**integer_chart_data, **num_tools_failed_chart_data}.items()
+        )
+
+        # Grids failed to load
+        num_datacuts_failed_load_data = {
+            x["date"]: x["datacuts_failed"]
+            for x in all_events.filter(event_type=EventLog.TYPE_USER_DATACUT_GRID_VIEW_FAILED)
+            .extra({"date": "date(timestamp)"})
+            .values("date")
+            .annotate(datacuts_failed=Count("object_id"))
+        }
+        ctx["grid_fail_count_data"] = sorted(
+            {**integer_chart_data, **num_datacuts_failed_load_data}.items()
+        )
 
         return ctx
