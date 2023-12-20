@@ -568,6 +568,12 @@ class FargateSpawner:
         for _ in range(0, 8):
             try:
                 task = _fargate_task_describe(cluster_name, task_arn)
+                if task is None:
+                    application_instance.spawner_stopped_at = datetime.datetime.now(
+                        datetime.timezone.utc
+                    )
+                    application_instance.save(update_fields=["spawner_stopped_at"])
+                    break
                 if "stoppedAt" in task:
                     application_instance.spawner_stopped_at = task["stoppedAt"]
                     application_instance.save(update_fields=["spawner_stopped_at"])
