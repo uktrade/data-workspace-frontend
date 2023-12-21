@@ -413,11 +413,6 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
             "schedule": 60 * 5,
             "args": (),
         },
-        "refresh-published-chart-data": {
-            "task": "dataworkspace.apps.core.charts.tasks.refresh_published_chart_data",
-            "schedule": crontab(minute=0, hour=6),
-            "args": (),
-        },
         "send-notification-emails": {
             "task": "dataworkspace.apps.datasets.utils.send_notification_emails",
             "schedule": 60 * 60,

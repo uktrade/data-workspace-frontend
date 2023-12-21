@@ -173,10 +173,6 @@ urlpatterns = [
         include(("dataworkspace.apps.datasets.pipelines.urls", "datasets"), namespace="pipelines"),
     ),
     path(
-        "charts/",
-        include(("dataworkspace.apps.core.charts.urls", "charts"), namespace="charts"),
-    ),
-    path(
         "collections/",
         include(
             ("dataworkspace.apps.data_collections.urls", "data_collections"),

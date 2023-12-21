@@ -93,11 +93,6 @@
                         <li class="govuk-header__navigation-item{% if active_menu == 'logs' %} govuk-header__navigation-item--active{% endif %}">
                             <a class="govuk-header__link" href="{% url 'explorer:explorer_logs' %}">Logs</a>
                         </li>
-                        {% flag CHART_BUILDER_BUILD_CHARTS_FLAG %}
-                            <li class="govuk-header__navigation-item{% if active_menu == 'charts' %} govuk-header__navigation-item--active{% endif %}">
-                                <a class="govuk-header__link" href="{% url 'charts:list-charts' %}">Charts</a>
-                            </li>
-                        {% endflag %}
                         {% block additional_nav %}{% endblock %}
                     </ul>
                 </nav>
