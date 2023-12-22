@@ -8,7 +8,6 @@ from django.db.utils import ProgrammingError
 from django.conf import settings
 from django.http import (
     Http404,
-    HttpResponse,
     HttpResponseForbidden,
     HttpResponseRedirect,
     HttpResponseBadRequest,
@@ -49,10 +48,6 @@ from dataworkspace.apps.your_files.utils import (
 logger = logging.getLogger("app")
 
 
-def file_browser_html_view(request):
-    return file_browser_html_GET(request) if request.method == "GET" else HttpResponse(status=405)
-
-
 @csp_update(
     CONNECT_SRC=settings.YOUR_FILES_CONNECT_SRC,
     SCRIPT_SRC=settings.REACT_SCRIPT_SRC,
@@ -68,25 +63,6 @@ def your_files_home(request, s3_path=None):
             "teams_folders_prefixes": teams_folders_prefixes,
             "home_prefix": home_prefix,
             "initial_prefix": initial_prefix,
-            "bucket": settings.NOTEBOOKS_BUCKET,
-            "aws_endpoint": settings.S3_LOCAL_ENDPOINT_URL,
-        },
-        status=200,
-    )
-
-
-@csp_update(
-    CONNECT_SRC=settings.YOUR_FILES_CONNECT_SRC,
-    SCRIPT_SRC=settings.REACT_SCRIPT_SRC,
-)
-def file_browser_html_GET(request):
-    prefix = get_s3_prefix(str(request.user.profile.sso_id))
-
-    return render(
-        request,
-        "your_files/files.html",
-        {
-            "prefix": prefix,
             "bucket": settings.NOTEBOOKS_BUCKET,
             "aws_endpoint": settings.S3_LOCAL_ENDPOINT_URL,
         },
