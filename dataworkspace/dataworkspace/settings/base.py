@@ -115,7 +115,6 @@ INSTALLED_APPS = [
     "dataworkspace.apps.your_files",
     "django_extensions",
     "dataworkspace.apps.explorer",
-    "dataworkspace.apps.finder",
     "dynamic_models",
     "dataworkspace.apps.case_studies",
     "csp_helpers",

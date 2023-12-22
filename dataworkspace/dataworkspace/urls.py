@@ -112,10 +112,6 @@ urlpatterns = [
             namespace="your-files",
         ),
     ),
-    path(
-        "finder/",
-        include(("dataworkspace.apps.finder.urls", "finder"), namespace="finder"),
-    ),
     path("healthcheck", healthcheck_view),  # No authentication
     path("support-and-feedback/", login_required(SupportView.as_view()), name="support"),
     path(

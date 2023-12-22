@@ -455,14 +455,6 @@ class ToolQueryAuditLogTableFactory(factory.django.DjangoModelFactory):
         model = "datasets.ToolQueryAuditLogTable"
 
 
-class DatasetFinderQueryLogFactory(factory.django.DjangoModelFactory):
-    user = factory.SubFactory(UserFactory)
-    query = "find something"
-
-    class Meta:
-        model = "finder.DatasetFinderQueryLog"
-
-
 class CaseStudyFactory(factory.django.DjangoModelFactory):
     published = True
     name = factory.fuzzy.FuzzyText(length=50)
