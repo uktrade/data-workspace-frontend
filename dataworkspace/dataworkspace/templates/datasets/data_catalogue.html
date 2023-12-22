@@ -111,38 +111,38 @@
 
               {% for value, text in form.my_datasets.field.choices %}
                 {% if value|stringformat:"s" in form.my_datasets.value %}
-                  {% include "datasets/filter_button.html" with id=value text=text tag_type=form.my_datasets.name %}
+                  {% include "./partials/filter_button.html" with id=value text=text tag_type=form.my_datasets.name %}
                 {% endif %}
               {% endfor %}
 
               {% for value, text in form.topic.field.choices %}
                 {# value is *not* a string but a ModelChoiceIteratorValue. Convert to string first!  #}
                 {% if value|stringformat:"s" in form.topic.value %}
-                  {% include "datasets/filter_button.html" with id=value text=text tag_type=form.topic.name label="Topic" %}
+                  {% include "./partials/filter_button.html" with id=value text=text tag_type=form.topic.name label="Topic" %}
                 {% endif %}
               {% endfor %}
 
               {% for value, text in form.source.field.choices %}
                 {% if value|stringformat:"s" in form.source.value %}
-                  {% include "datasets/filter_button.html" with id=value text=text tag_type=form.source.name label="Source" %}
+                  {% include "./partials/filter_button.html" with id=value text=text tag_type=form.source.name label="Source" %}
                 {% endif %}
               {% endfor %}
 
               {% for value, text in form.publisher.field.choices %}
                 {% if value|stringformat:"s" in form.publisher.value %}
-                  {% include "datasets/filter_button.html" with id=value text=text tag_type=form.publisher.name label="Publisher" %}
+                  {% include "./partials/filter_button.html" with id=value text=text tag_type=form.publisher.name label="Publisher" %}
                 {% endif %}
               {% endfor %}
 
               {% for value, text in form.data_type.field.choices %}
                 {% if value|stringformat:"s" in form.data_type.value %}
-                  {% include "datasets/filter_button.html" with id=value text=text tag_type=form.data_type.name label="Type" %}
+                  {% include "./partials/filter_button.html" with id=value text=text tag_type=form.data_type.name label="Type" %}
                 {% endif %}
               {% endfor %}
 
               {% for value, text in form.user_access.field.choices %}
                 {% if value|stringformat:"s" in form.user_access.value %}
-                  {% include "datasets/filter_button.html" with id=value text=text tag_type=form.user_access.name label="Access" %}
+                  {% include "./partials/filter_button.html" with id=value text=text tag_type=form.user_access.name label="Access" %}
                 {% endif %}
               {% endfor %}
 

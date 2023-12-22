@@ -36,11 +36,6 @@ urlpatterns = [
         name="source_table_column_details",
     ),
     path(
-        "<uuid:dataset_uuid>/columns",
-        login_required(views.ReferenceDatasetColumnDetails.as_view()),
-        name="reference_dataset_column_details",
-    ),
-    path(
         "<uuid:dataset_uuid>/grid",
         login_required(views.ReferenceDatasetGridView.as_view()),
         name="reference_dataset_detail",
@@ -184,24 +179,6 @@ urlpatterns = [
         "<str:subscription_id>/unsubscribe",
         login_required(subscription_views.DataSetSubscriptionUnsubscribe.as_view()),
         name="subscription_unsubscribe",
-    ),
-    path(
-        "<uuid:dataset_uuid>/<uuid:source_id>/changelog/",
-        login_required(views.SourceChangelogView.as_view()),
-        {"model_class": models.SourceTable},
-        name="source_table_changelog",
-    ),
-    path(
-        "<uuid:dataset_uuid>/<str:source_id>/changelog/",
-        login_required(views.SourceChangelogView.as_view()),
-        {"model_class": models.CustomDatasetQuery},
-        name="custom_dataset_query_changelog",
-    ),
-    path(
-        "reference/<uuid:dataset_uuid>/changelog/",
-        login_required(views.SourceChangelogView.as_view()),
-        {"model_class": models.ReferenceDataset},
-        name="reference_dataset_changelog",
     ),
     path(
         "<uuid:pk>/edit-dataset",

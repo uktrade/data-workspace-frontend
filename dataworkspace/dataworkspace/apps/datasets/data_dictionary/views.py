@@ -84,7 +84,7 @@ class DataDictionaryEditView(View):
 
         return render(
             request,
-            "datasets/edit_data_dictionary.html",
+            "datasets/manage_data_dictionary/edit_dictionary.html",
             context={
                 "dataset": create_dataset_view_model(dataset),
                 "dictionary": dictionary,

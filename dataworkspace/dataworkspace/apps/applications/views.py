@@ -146,7 +146,7 @@ def application_spawning_html_GET(request, public_host):
             random.randint(0, len(TOOL_LOADING_MESSAGES) - 1)
         ],
     }
-    return render(request, "spawning.html", context, status=202)
+    return render(request, "applications/spawning.html", context, status=202)
 
 
 @csp_exempt
@@ -189,7 +189,7 @@ def application_running_html_GET(request, public_host):
         "wrap": application_instance.application_template.wrap,
     }
 
-    return render(request, "running.html", context, status=200)
+    return render(request, "applications/running.html", context, status=200)
 
 
 def tools_html_view(request):
@@ -207,7 +207,7 @@ def tools_html_GET(request):
 
     return render(
         request,
-        "tools.html",
+        "applications/tools.html",
         {"tools": tools},
     )
 
@@ -257,7 +257,7 @@ def _get_embedded_quicksight_dashboard(request, dashboard_id, catalogue_item):
         "catalogue_item": catalogue_item,
     }
 
-    return render(request, "quicksight_running.html", context, status=200)
+    return render(request, "applications/quicksight_running.html", context, status=200)
 
 
 @csp_update(frame_src=settings.SUPERSET_DOMAINS["view"])
@@ -268,7 +268,7 @@ def _get_embedded_superset_dashboard(request, dashboard_id, catalogue_item):
         "wrap": "IFRAME_WITH_VISUALISATIONS_HEADER",
         "catalogue_item": catalogue_item,
     }
-    return render(request, "superset_running.html", context, status=200)
+    return render(request, "applications/superset_running.html", context, status=200)
 
 
 @require_GET
@@ -421,7 +421,7 @@ def visualisations_html_GET(request):
 
     return render(
         request,
-        "visualisations.html",
+        "applications/visualisations.html",
         {
             "has_gitlab_user": has_gitlab_user,
             "gitlab_url": gitlab_url,
@@ -510,7 +510,7 @@ def visualisation_branch_html_GET(request, gitlab_project, branch_name):
 
     return _render_visualisation(
         request,
-        "visualisation_branch.html",
+        "applications/visualisation_branch.html",
         gitlab_project,
         application_template,
         branches,
@@ -595,7 +595,7 @@ def visualisation_users_with_access_html_GET(request, gitlab_project):
 
     return _render_visualisation(
         request,
-        "visualisation_users_with_access.html",
+        "applications/visualisation_users_with_access.html",
         gitlab_project,
         application_template,
         branches,
@@ -675,7 +675,7 @@ def visualisation_users_give_access_html_GET(request, gitlab_project, token_data
 
     return _render_visualisation(
         request,
-        "visualisation_users_give_access.html",
+        "applications/visualisation_users_give_access.html",
         gitlab_project,
         application_template,
         branches,
@@ -699,7 +699,7 @@ def visualisation_users_give_access_html_POST(request, gitlab_project, token_dat
     def error(email_address_error):
         return _render_visualisation(
             request,
-            "visualisation_users_give_access.html",
+            "applications/visualisation_users_give_access.html",
             gitlab_project,
             application_template,
             branches,
@@ -950,7 +950,7 @@ def visualisation_catalogue_item_html_GET(request, gitlab_project):
 
     return _render_visualisation(
         request,
-        "visualisation_catalogue_item.html",
+        "applications/visualisation_catalogue_item.html",
         gitlab_project,
         catalogue_item.visualisation_template,
         _visualisation_branches(gitlab_project),
@@ -986,7 +986,7 @@ def visualisation_catalogue_item_html_POST(request, gitlab_project):
 
     return _render_visualisation(
         request,
-        "visualisation_catalogue_item.html",
+        "applications/visualisation_catalogue_item.html",
         gitlab_project,
         catalogue_item.visualisation_template,
         _visualisation_branches(gitlab_project),
@@ -1035,7 +1035,7 @@ def visualisation_approvals_html_GET(request, gitlab_project):
 
     return _render_visualisation(
         request,
-        "visualisation_approvals.html",
+        "applications/visualisation_approvals.html",
         gitlab_project,
         application_template,
         _visualisation_branches(gitlab_project),
@@ -1073,7 +1073,7 @@ def visualisation_approvals_html_POST(request, gitlab_project):
 
     return _render_visualisation(
         request,
-        "visualisation_approvals.html",
+        "applications/visualisation_approvals.html",
         gitlab_project,
         application_template,
         _visualisation_branches(gitlab_project),
@@ -1134,7 +1134,7 @@ def visualisation_datasets_html_GET(request, gitlab_project):
 
     return _render_visualisation(
         request,
-        "visualisation_datasets.html",
+        "applications/visualisation_datasets.html",
         gitlab_project,
         application_template,
         _visualisation_branches(gitlab_project),
@@ -1428,7 +1428,7 @@ def _render_visualisation_publish_html(request, gitlab_project, catalogue_item=N
     catalogue_item_complete = _visualisation_catalogue_item_is_complete(catalogue_item)
     return _render_visualisation(
         request,
-        "visualisation_publish.html",
+        "applications/visualisation_publish.html",
         gitlab_project,
         application_template,
         _visualisation_branches(gitlab_project),
@@ -1576,7 +1576,7 @@ def _without_duplicates_preserve_order(seq, key):
 class UserToolSizeConfigurationView(SuccessMessageMixin, UpdateView):
     model = UserToolConfiguration
     fields = ["size"]
-    template_name = "user_tool_size_configuration_form.html"
+    template_name = "applications/user_tool_size_configuration_form.html"
     success_message = "Saved %(tool_template)s size"
 
     def get_object(self, queryset=None):
