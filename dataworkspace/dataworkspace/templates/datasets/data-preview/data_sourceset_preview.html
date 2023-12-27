@@ -20,11 +20,7 @@
       '?download=1',
       null,
       '{{ object.get_custom_export_file_name }}',
-      {% flag CHART_BUILDER_BUILD_CHARTS_FLAG %}
-        '{% url 'datasets:create_chart_from_grid' object.dataset.id object.id %}',
-        {% else %}
-        null,
-      {% endflag %}
+      null,
       null,
       '{{ object.dataset.id }}',
       '{{ object.dataset.name }}',
@@ -124,9 +120,6 @@
                   Loading data...
                 {% endif %}
               </p>
-              {% flag CHART_BUILDER_BUILD_CHARTS_FLAG %}
-                <button class="govuk-button" id="data-grid-create-chart">Create a chart</button>
-              {% endflag %}
               <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-save-view" data-prevent-double-click="true">
                 Save view
               </button>
