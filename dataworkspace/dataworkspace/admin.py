@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.contrib.admin.apps import AdminConfig
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 
 from dataworkspace.apps.core.errors import DjangoAdminPermissionDeniedError
@@ -10,7 +11,7 @@ from dataworkspace.apps.core.errors import DjangoAdminPermissionDeniedError
 class DataWorkspaceAdminSite(admin.AdminSite):
     index_template = "admin/admin_home.html"
 
-    @never_cache
+    @method_decorator(never_cache)
     def login(self, request, extra_context=None):
         """
         If user is an admin redirect to admin homepage.

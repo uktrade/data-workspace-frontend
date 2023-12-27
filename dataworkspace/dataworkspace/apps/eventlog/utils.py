@@ -2,7 +2,7 @@ from django.contrib.admin.models import LogEntry, CHANGE
 from django.contrib.auth.models import User  # pylint: disable=imported-auth-user
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 
 from dataworkspace.apps.eventlog.models import EventLog
 
@@ -29,7 +29,7 @@ def log_permission_change(
         user_id=user.pk,
         content_type_id=ContentType.objects.get_for_model(obj).pk,
         object_id=obj.id,
-        object_repr=force_text(obj),
+        object_repr=force_str(obj),
         action_flag=CHANGE,
         change_message=message,
     )

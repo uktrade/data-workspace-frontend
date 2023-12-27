@@ -130,7 +130,7 @@ class PipelineDeleteView(IsAdminMixin, DeleteView):
     def get_success_url(self):
         return reverse("pipelines:index")
 
-    def delete(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         try:
             delete_pipeline_from_dataflow(self.get_object())
         except RequestException as e:

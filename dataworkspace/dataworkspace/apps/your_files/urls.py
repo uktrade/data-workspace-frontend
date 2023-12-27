@@ -18,12 +18,10 @@ from dataworkspace.apps.your_files.views import (
     RestoreTableViewInProgress,
     RestoreTableViewSuccess,
     UploadedTableListView,
-    file_browser_html_view,
     your_files_home,
 )
 
 urlpatterns = [
-    path("legacy", login_required(file_browser_html_view), name="files_legacy"),
     path(
         "create-table/confirm",
         login_required(CreateTableView.as_view()),
