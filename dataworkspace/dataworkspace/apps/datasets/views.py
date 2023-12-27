@@ -50,7 +50,6 @@ from django.views.decorators.http import (
 )
 from django.views.generic import DetailView, FormView, TemplateView, UpdateView, View
 from psycopg2 import sql
-from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace import datasets_db
 from dataworkspace.apps.accounts.models import UserDataTableView
