@@ -110,16 +110,6 @@ def parse_date_string(date_string: Optional[str]) -> Optional[str]:
     return parser.parse(date_string)
 
 
-@register.simple_tag()
-def chart_link_or_plain_text(text, condition, dataset_uuid, object_id):
-    if condition:
-        url = reverse("datasets:dataset_chart", args=[dataset_uuid, object_id])
-        return mark_safe(
-            f"<a class='govuk-link govuk-link--no-visited-state' href='{url}'>{text}</a>"
-        )
-    return text
-
-
 @register.filter
 def can_edit_dataset(user, dataset):
     return (

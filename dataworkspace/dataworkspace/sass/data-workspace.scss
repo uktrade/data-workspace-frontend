@@ -220,49 +220,8 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   margin-bottom: 20px;
 }
 
-.visualisation-container {
-  padding: 1rem;
-  display: block;
-  width: 100%;
-  min-height: 300px;
-}
-
-.visualisation-preview-container,
-.chart-preview-container {
-  overflow: hidden;
-  display: block;
-  text-align: center;
-  font-family: arial, sans-serif;
-}
-
-.visualisation-preview-container svg {
-  width: 100%;
-  height: auto;
-}
-.chart-preview-container {
-  border: 1px solid $govuk-border-colour;
-}
-.chart-preview-container img {
-  width: 100%;
-}
 .grid-maximised {
   height: calc(100vh - 175px) !important;
-}
-
-/* @include govuk-media-query($from: desktop) ... */
-@media (min-width: 48.0625em) {
-  .visualisation-preview-container,
-  .chart-preview-container {
-    width: 280px;
-    height: 175px;
-    line-height: 175px;
-  }
-
-  .visualisation-preview-container svg,
-  .chart-preview-container img {
-    width: 280px;
-    height: 175px;
-  }
 }
 
 @mixin sidebar-border {

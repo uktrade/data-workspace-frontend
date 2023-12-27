@@ -44,7 +44,7 @@
     {% include 'partials/unpublished_banner.html' with type='dataset' %}
   {% endif %}
 
-  {% if not model.data_is_actively_updated %}
+  {% if not model.data_is_actively_updated and not master_datasets_info %}
   <div class="govuk-notification-banner" role="region"
     aria-labelledby="govuk-notification-banner-title"
     data-module="govuk-notification-banner">

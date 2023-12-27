@@ -455,14 +455,6 @@ class ToolQueryAuditLogTableFactory(factory.django.DjangoModelFactory):
         model = "datasets.ToolQueryAuditLogTable"
 
 
-class DatasetFinderQueryLogFactory(factory.django.DjangoModelFactory):
-    user = factory.SubFactory(UserFactory)
-    query = "find something"
-
-    class Meta:
-        model = "finder.DatasetFinderQueryLog"
-
-
 class CaseStudyFactory(factory.django.DjangoModelFactory):
     published = True
     name = factory.fuzzy.FuzzyText(length=50)
@@ -498,15 +490,6 @@ class PipelineFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = "datasets.Pipeline"
-
-
-class DataSetChartBuilderChartFactory(factory.django.DjangoModelFactory):
-    dataset = factory.SubFactory(DataSetFactory)
-    name = factory.fuzzy.FuzzyText()
-    summary = factory.fuzzy.FuzzyText()
-
-    class Meta:
-        model = "datasets.DataSetChartBuilderChart"
 
 
 class CollectionFactory(factory.django.DjangoModelFactory):

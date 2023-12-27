@@ -77,7 +77,6 @@ from dataworkspace.apps.datasets.constants import (
 from dataworkspace.apps.datasets.model_utils import external_model_class
 
 from dataworkspace.apps.eventlog.models import EventLog
-from dataworkspace.apps.core.charts.models import ChartBuilderChart
 from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.apps.your_files.models import UploadedTable
 from dataworkspace.datasets_db import (
@@ -441,18 +440,6 @@ class DataSet(DeletableTimestampedUserModel):
         else:
             raise ValueError(f"Not implemented for {self.type}")
 
-    def related_charts(self):
-        # Group dataset visualisations and chart builder charts so they
-        # can be shown on the same page
-        fields = ["id", "name", "summary", "gds_phase_name", "type"]
-        # pylint: disable=no-member
-        return (
-            self.charts.all()
-            .annotate(type=models.Value("chart"))
-            .values(*fields)
-            .union(self.visualisations.live().annotate(type=models.Value("vega")).values(*fields))
-        )
-
     def update_published_timestamp(self):
         if not self.published:
             return
@@ -586,17 +573,6 @@ class DataSetVisualisation(DeletableTimestampedUserModel):
     dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE, related_name="visualisations")
 
     gds_phase_name = models.CharField(max_length=25, default="", blank=True)
-
-
-class DataSetChartBuilderChart(TimeStampedUserModel):
-    name = models.CharField(max_length=255)
-    summary = models.TextField()
-    chart = models.ForeignKey(ChartBuilderChart, on_delete=models.PROTECT, related_name="datasets")
-    dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE, related_name="charts")
-    gds_phase_name = models.CharField(max_length=25, default="", blank=True)
-
-    def __str__(self):
-        return self.name
 
 
 class DataSetUserPermission(models.Model):
@@ -882,12 +858,6 @@ class SourceTable(BaseSource):
         return reverse(
             "datasets:source_table_column_details",
             args=(self.dataset_id, self.id),
-        )
-
-    def get_chart_builder_url(self):
-        return reverse(
-            "charts:create-chart-from-source-table",
-            args=(self.id,),
         )
 
     def get_chart_builder_query(self):
@@ -1221,12 +1191,6 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
         return reverse(
             "datasets:custom_query_column_details",
             args=(self.dataset_id, self.id),
-        )
-
-    def get_chart_builder_url(self):
-        return reverse(
-            "charts:create-chart-from-data-cut-query",
-            args=(self.id,),
         )
 
     def get_chart_builder_query(self):

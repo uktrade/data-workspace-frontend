@@ -115,7 +115,6 @@ INSTALLED_APPS = [
     "dataworkspace.apps.your_files",
     "django_extensions",
     "dataworkspace.apps.explorer",
-    "dataworkspace.apps.finder",
     "dynamic_models",
     "dataworkspace.apps.case_studies",
     "csp_helpers",
@@ -411,11 +410,6 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
         "store-reference-dataset-metadata": {
             "task": "dataworkspace.apps.datasets.utils.store_reference_dataset_metadata",
             "schedule": 60 * 5,
-            "args": (),
-        },
-        "refresh-published-chart-data": {
-            "task": "dataworkspace.apps.core.charts.tasks.refresh_published_chart_data",
-            "schedule": crontab(minute=0, hour=6),
             "args": (),
         },
         "send-notification-emails": {

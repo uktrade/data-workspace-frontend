@@ -18,7 +18,6 @@ from test.utility_functions import (
     create_sentry,
     create_server,
     create_sso,
-    dataset_finder_opt_in_dataset,
     create_query_logs,
     find_search_filter_labels,
     flush_database,
@@ -26,8 +25,6 @@ from test.utility_functions import (
     give_user_app_perms,
     give_user_dataset_perms,
     give_user_visualisation_developer_perms,
-    set_waffle_flag,
-    setup_elasticsearch_indexes,
     sync_query_logs,
     until_succeeds,
 )
@@ -35,7 +32,6 @@ from test.utility_functions import (
 from aiohttp import web
 import aiopg
 import mohawk
-from django.conf import settings
 
 from test.pages import (  # pylint: disable=wrong-import-order
     HomePage,
@@ -826,129 +822,6 @@ class TestApplication(unittest.IsolatedAsyncioTestCase):
             ), "Encoding incorrectly sent to SSO token endpoint"
 
         await sso_site.stop()
-
-    async def test_dataset_finder(self):
-        await flush_database()
-        await flush_redis()
-
-        session, cleanup_session = client_session()
-        self.addAsyncCleanup(cleanup_session)
-
-        cleanup_application = await create_application()
-        self.addAsyncCleanup(cleanup_application)
-
-        is_logged_in = True
-        codes = iter(["some-code", "some-other-code"])
-        tokens = iter(["token-1", "token-2"])
-        auth_to_me = {
-            # No token-1
-            "Bearer token-2": {
-                "email": "test@test.com",
-                "contact_email": "test@test.com",
-                "related_emails": [],
-                "first_name": "Peter",
-                "last_name": "Piper",
-                "user_id": "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2",
-            }
-        }
-        sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
-        self.addAsyncCleanup(sso_cleanup)
-
-        await set_waffle_flag(settings.DATASET_FINDER_ADMIN_ONLY_FLAG)
-
-        await until_succeeds("http://dataworkspace.test:8000/healthcheck")
-        await until_succeeds("http://data-workspace-es:9200/_cat/indices")
-        await setup_elasticsearch_indexes()
-
-        # Hit Data Workspace to create user
-        async with session.request(
-            "GET",
-            "http://dataworkspace.test:8000/",
-        ) as response:
-            content = await response.text()
-
-        async with session.request(
-            "GET",
-            "http://dataworkspace.test:8000/finder",
-        ) as response:
-            content = await response.text()
-
-        self.assertEqual(response.status, 200)
-        self.assertIn("Search all our data", content)
-
-        dataset_id_test_dataset = "70ce6fdd-1791-4806-bbe0-4cf880a9cc37"
-        table_id = "5a2ee5dd-f025-4939-b0a1-bb85ab7504d7"
-        stdout, stderr, code = await create_private_dataset(
-            "my_database",
-            "MASTER",
-            dataset_id_test_dataset,
-            "test_dataset",
-            table_id,
-            "test_dataset",
-        )
-        self.assertEqual(stdout, b"")
-        self.assertEqual(stderr, b"")
-        self.assertEqual(code, 0)
-
-        # Dataset not discoverable because IAO/IAM hasn't opted in
-        async with session.request(
-            "GET",
-            "http://dataworkspace.test:8000/finder?q=data",
-        ) as response:
-            content = await response.text()
-
-        self.assertIn("There are no matches for the phrase “data”.", content)
-
-        # Toggle the opt-in to make it discoverable even without the user having access
-        stdout, stderr, code = await dataset_finder_opt_in_dataset(
-            schema="public", table="test_dataset"
-        )
-        self.assertEqual(stdout, b"")
-        self.assertEqual(stderr, b"")
-        self.assertEqual(code, 0)
-
-        # Users can now see results for the dataset even if they don't have access
-        async with session.request(
-            "GET",
-            "http://dataworkspace.test:8000/finder?q=data",
-        ) as response:
-            content = await response.text()
-
-        self.assertIn("1 results", content)
-        self.assertIn('<strong>100</strong> matching rows in "public"."test_dataset"', content)
-
-        # Revoke the opt-in but give them access - should still be visible in results
-        stdout, stderr, code = await dataset_finder_opt_in_dataset(
-            schema="public", table="test_dataset", opted_in=False
-        )
-        self.assertEqual(stdout, b"")
-        self.assertEqual(stderr, b"")
-        self.assertEqual(code, 0)
-
-        stdout, stderr, code = await give_user_dataset_perms("test_dataset")
-        self.assertEqual(stdout, b"")
-        self.assertEqual(stderr, b"")
-        self.assertEqual(code, 0)
-
-        # Users can still see results for the dataset even if the IAO/IAM hasn't opted in - because they have explicit
-        # access
-        async with session.request(
-            "GET",
-            "http://dataworkspace.test:8000/finder?q=data",
-        ) as response:
-            content = await response.text()
-
-        self.assertIn("1 results", content)
-        self.assertIn('<strong>100</strong> matching rows in "public"."test_dataset"', content)
-
-        # Users shouldn't be able to see results for indexes that aren't covered by the correct alias (e.g. new indexes
-        # currently being written to by data-flow).
-        async with session.request(
-            "GET",
-            "http://dataworkspace.test:8000/finder?q=new",
-        ) as response:
-            content = await response.text()
-        self.assertIn("There are no matches for the phrase “new”.", content)
 
     async def test_mlflow(self):
         await flush_database()
