@@ -40,8 +40,8 @@ class SearchableChoice:
 
 
 class FilterWidget(forms.widgets.CheckboxSelectMultiple):
-    template_name = "datasets/filter.html"
-    option_template_name = "datasets/filter_option.html"
+    template_name = "datasets/partials/filter.html"
+    option_template_name = "datasets/partials/filter_option.html"
 
     def __init__(
         self,
@@ -71,13 +71,13 @@ class FilterWidget(forms.widgets.CheckboxSelectMultiple):
 
 
 class AccordionFilterWidget(FilterWidget):
-    template_name = "datasets/accordion_filter.html"
-    option_template_name = "datasets/accordion_filter_option.html"
+    template_name = "datasets/partials/accordion_filter.html"
+    option_template_name = "datasets/partials/accordion_filter_option.html"
 
 
 class SortSelectWidget(forms.widgets.Select):
-    template_name = "datasets/select.html"
-    option_template_name = "datasets/select_option.html"
+    template_name = "datasets/partials/select.html"
+    option_template_name = "datasets/partials/select_option.html"
 
     def __init__(
         self,

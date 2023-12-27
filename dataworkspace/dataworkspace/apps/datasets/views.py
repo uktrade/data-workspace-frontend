@@ -50,7 +50,6 @@ from django.views.decorators.http import (
 )
 from django.views.generic import DetailView, FormView, TemplateView, UpdateView, View
 from psycopg2 import sql
-from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace import datasets_db
 from dataworkspace.apps.accounts.models import UserDataTableView
@@ -112,7 +111,6 @@ from dataworkspace.apps.datasets.utils import (
     get_code_snippets_for_table,
     get_code_snippets_for_query,
     get_code_snippets_for_reference_table,
-    get_detailed_changelog,
     get_tools_links_for_user,
     get_recently_viewed_catalogue_pages,
 )
@@ -675,13 +673,13 @@ class DatasetDetailView(DetailView):
 
     def get_template_names(self):
         if self._is_reference_dataset():
-            return ["datasets/referencedataset_detail.html"]
+            return ["datasets/details/reference_dataset.html"]
         elif self.object.type == DataSetType.MASTER:
-            return ["datasets/master_dataset.html"]
+            return ["datasets/details/sourceset_dataset.html"]
         elif self.object.type == DataSetType.DATACUT:
-            return ["datasets/data_cut_dataset.html"]
+            return ["datasets/details/data_cut_dataset.html"]
         elif self._is_visualisation():
-            return ["datasets/visualisation_catalogue_item.html"]
+            return ["datasets/details/visualisation_dataset.html"]
 
         raise RuntimeError(f"Unknown template for {self}")
 
@@ -926,22 +924,6 @@ class SourceTableColumnDetails(View):
         )
 
 
-class ReferenceDatasetColumnDetails(View):
-    def get(self, request, dataset_uuid):
-        dataset = find_dataset(dataset_uuid, request.user, ReferenceDataset)
-        columns = datasets_db.get_columns(
-            dataset.external_database.memorable_name,
-            schema="public",
-            table=dataset.table_name,
-            include_types=True,
-        )
-        return render(
-            request,
-            "datasets/referencedataset_column_details.html",
-            context={"dataset": dataset, "columns": columns},
-        )
-
-
 class ReferenceDatasetGridView(View):
     def get(self, request, dataset_uuid):
         dataset = find_dataset(dataset_uuid, request.user, ReferenceDataset)
@@ -996,7 +978,7 @@ class RelatedDataView(View):
 
             return render(
                 request,
-                "datasets/related_data.html",
+                "datasets/related_content/related_data.html",
                 context={
                     "dataset": dataset,
                     "related_data": related_datasets,
@@ -1019,7 +1001,7 @@ class RelatedVisualisationsView(View):
 
             return render(
                 request,
-                "datasets/related_visualisations.html",
+                "datasets/related_content/related_visualisations.html",
                 context={
                     "dataset": dataset,
                     "related_visualisations": related_visualisations,
@@ -1458,27 +1440,6 @@ class CustomQueryColumnDetails(View):
         )
 
 
-class SourceChangelogView(WaffleFlagMixin, DetailView):
-    waffle_flag = settings.DATASET_CHANGELOG_PAGE_FLAG
-    template_name = "datasets/source_changelog.html"
-    context_object_name = "source"
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx["changelog"] = get_detailed_changelog(self.get_object())
-        return ctx
-
-    def get_object(self, queryset=None):
-        dataset = find_dataset(self.kwargs["dataset_uuid"], self.request.user)
-        if self.kwargs["model_class"] == ReferenceDataset:
-            return dataset
-        return get_object_or_404(
-            self.kwargs["model_class"],
-            dataset=dataset,
-            pk=self.kwargs["source_id"],
-        )
-
-
 class EditBaseView(View):
     obj = None
     summary: str = None
@@ -1515,7 +1476,7 @@ class EditBaseView(View):
 class DatasetEditView(EditBaseView, UpdateView):
     model = DataSet
     form_class = DatasetEditForm
-    template_name = "datasets/edit_dataset.html"
+    template_name = "datasets/manage_datasets/edit_dataset.html"
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -1556,7 +1517,7 @@ class DatasetEditView(EditBaseView, UpdateView):
 class VisualisationCatalogueItemEditView(EditBaseView, UpdateView):
     model = VisualisationCatalogueItem
     form_class = VisualisationCatalogueItemEditForm
-    template_name = "datasets/edit_visualisation_catalogue_item.html"
+    template_name = "datasets/manage_datasets/edit_visualisation_catalogue_item.html"
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -1599,7 +1560,7 @@ class VisualisationCatalogueItemEditView(EditBaseView, UpdateView):
 
 @method_decorator(login_required, name="dispatch")
 class DataCatalogueEditorsView(View):
-    template_name = "datasets/edit_data_editors.html"
+    template_name = "datasets/manage_editors/edit_editors.html"
 
     def get(self, request, pk):
         dataset = find_dataset(pk, request.user)
@@ -1836,7 +1797,7 @@ class DatasetEditPermissionsView(EditBaseView, View):
 
 
 class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
-    template_name = "datasets/edit_permissions_summary.html"
+    template_name = "datasets/manage_permissions/edit_summary.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
