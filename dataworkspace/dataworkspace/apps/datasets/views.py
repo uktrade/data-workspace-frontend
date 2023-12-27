@@ -1439,6 +1439,8 @@ class CustomQueryColumnDetails(View):
                 ),
             },
         )
+
+
 class EditBaseView(View):
     obj = None
     summary: str = None
