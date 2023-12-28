@@ -14,7 +14,14 @@ from django.contrib.admin import helpers
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.db.models import Avg, Count, F, Func, Value
+from django.db.models import (
+    Avg,
+    Count,
+    DurationField,
+    ExpressionWrapper,
+    F,
+    Value,
+)
 from django.db.models.functions import Concat, TruncDate
 from django.http import Http404, HttpResponseServerError, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -486,10 +493,12 @@ class DataWorkspaceStatsView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
         if logged_tool_instances.exists():
             tool_start_duration = (
                 logged_tool_instances.annotate(
-                    start_duration=Func(
-                        F("successfully_started_at"), F("spawner_created_at"), function="age"
-                    )
+                    start_duration=ExpressionWrapper(
+                        F("successfully_started_at") - F("spawner_created_at"),
+                        output_field=DurationField(),
+                    ),
                 )
+                .filter(start_duration__lt=timedelta(minutes=8))
                 .aggregate(Avg("start_duration"))["start_duration__avg"]
                 .total_seconds()
                 * 1000
@@ -662,10 +671,12 @@ class DataWorkspaceTrendsView(DataWorkspaceStatsView):
         tool_start_times_chart_data = {
             x["date"]: x["start_duration__avg"]
             for x in logged_tool_instances.annotate(
-                start_duration=Func(
-                    F("successfully_started_at"), F("spawner_created_at"), function="age"
-                )
+                start_duration=ExpressionWrapper(
+                    F("successfully_started_at") - F("spawner_created_at"),
+                    output_field=DurationField(),
+                ),
             )
+            .filter(start_duration__lt=timedelta(minutes=8))
             .values(date=TruncDate("successfully_started_at"))
             .annotate(Avg("start_duration"))
             .values("date", "start_duration__avg")
