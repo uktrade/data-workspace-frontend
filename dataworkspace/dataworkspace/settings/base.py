@@ -646,6 +646,7 @@ STATICFILES_FINDERS = [
 
 STATICFILES_DIRS += [
     os.path.join(BASE_DIR, "static", "assets"),
+    os.path.join(BASE_DIR, "static", "css"),
 ]
 
 ENABLE_DEBUG_TOOLBAR = bool(env.get("ENABLE_DEBUG_TOOLBAR", DEBUG))

@@ -1,18 +1,14 @@
-document.addEventListener("DOMContentLoaded", function () {
-  const links = document.querySelectorAll("a[data-modal-id]");
-
-  links.forEach(function (link) {
-    link.addEventListener("click", function (e) {
+document.addEventListener("DOMContentLoaded", () =>
+  document.querySelectorAll(".modal-link").forEach((link) =>
+    link.addEventListener("click", (e) => {
       e.preventDefault();
-      const modalId = e.target.getAttribute("data-modal-id");
-      const modal = document.getElementById(`modal${modalId}`);
-
+      const modal = e.target.nextElementSibling;
       modal.showModal();
-
-      button = modal.querySelector("button[data-modal-id]");
-      button.addEventListener("click", function () {
-        modal.close();
-      });
-    });
-  });
-});
+      const closeButton =
+        modal.getElementsByTagName("button")[
+          modal.getElementsByTagName("button").length - 1
+        ];
+      closeButton.addEventListener("click", () => modal.close());
+    })
+  )
+);

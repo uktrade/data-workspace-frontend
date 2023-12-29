@@ -128,29 +128,11 @@
                 {% if has_access %}
                 <a  
                   href="#"
-                  class="govuk-link govuk-link--no-visited-state govuk-body"
-                  data-modal-id="{{ datacut_link.id }}"
+                  class="govuk-link govuk-link--no-visited-state govuk-body modal-link"
                   >
                   {{ datacut_link.name}}
                 </a>
-                <dialog id="modal{{ datacut_link.id }}">
-                  {% include "datasets/partials/dialog-download-message.html" %}
-                    <div class="govuk-button-group">
-                      <a 
-                        class="govuk-button govuk-button--primary" 
-                        data-module="govuk-button" 
-                        href="{{ datacut_link.get_absolute_url }}"
-                        >
-                          Download data as {{ datacut_link.format }}
-                      </a>
-                      <button 
-                        class="govuk-button govuk-button--secondary"  
-                        data-modal-id="{{ datacut_link.id }}"
-                        >
-                        Close
-                      </button>
-                    </div>
-                </dialog>
+                {% include "datasets/partials/dialog.html" with format=datacut_link.format link=datacut_link.get_absolute_url %}
                 {% else %}
                   {{ datacut_link.name}}
                 {% endif %}
@@ -245,15 +227,6 @@
 {% block footer_scripts %}
   <script src="{% static 'assets/vendor/highlight/highlight.pack.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}">hljs.initHighlightingOnLoad();</script>
-
-  <script src="{% static 'app-copy.js' %}"></script>
-  <script nonce="{{ request.csp_nonce }}">
-    let $codeBlocks = document.querySelectorAll('[data-module="app-copy"]')
-    nodeListForEach($codeBlocks, function ($codeBlock) {
-      new Copy($codeBlock).init()
-    });
-  </script>
-
   <script src="{% static 'dialog.js' %}" nonce="{{ request.csp_nonce }}"></script>
   {% render_bundle "data-cut" "js" %}
 {% endblock %}

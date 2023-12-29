@@ -1172,7 +1172,7 @@ class DataSourcesetDetailView(DetailView):
 
 
 class DataCutSourceDetailView(DetailView):
-    template_name = "datasets/data-preview/data_cut_source_preview.html"
+    template_name = "datasets/data-preview/data_cut_preview.html"
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
