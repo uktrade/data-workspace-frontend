@@ -1,6 +1,6 @@
 import csv
 import os
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from botocore.exceptions import ClientError
 from celery import states
@@ -632,6 +632,21 @@ class DataWorkspaceTrendsView(DataWorkspaceStatsView):
         "5": relativedelta(months=6),
     }
 
+    def _annotate_tool_start_times(self, tool_instances, remove_abandoned):
+        filters = {"start_duration__lt": timedelta(minutes=8)} if remove_abandoned else {}
+        return (
+            tool_instances.annotate(
+                start_duration=ExpressionWrapper(
+                    F("successfully_started_at") - F("spawner_created_at"),
+                    output_field=DurationField(),
+                ),
+            )
+            .filter(**filters)
+            .values(date=TruncDate("successfully_started_at"))
+            .annotate(Avg("start_duration"))
+            .values("date", "start_duration__avg")
+        )
+
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         period = self.request.GET.get("p", "1")
@@ -668,18 +683,16 @@ class DataWorkspaceTrendsView(DataWorkspaceStatsView):
 
         # Tool start time chart data
         logged_tool_instances = all_tools.exclude(successfully_started_at=None)
+
+        # Show old stats to 27 Dec 2023
+        # From 28 Dec onwards filter out tools that were abandoned while spawning
+        pre_bug_tools = logged_tool_instances.filter(spawner_created_at__lte=date(2023, 12, 27))
+        post_bug_tools = logged_tool_instances.filter(spawner_created_at__gt=date(2023, 12, 27))
         tool_start_times_chart_data = {
             x["date"]: x["start_duration__avg"]
-            for x in logged_tool_instances.annotate(
-                start_duration=ExpressionWrapper(
-                    F("successfully_started_at") - F("spawner_created_at"),
-                    output_field=DurationField(),
-                ),
+            for x in self._annotate_tool_start_times(pre_bug_tools, False).union(
+                self._annotate_tool_start_times(post_bug_tools, True)
             )
-            .filter(start_duration__lt=timedelta(minutes=8))
-            .values(date=TruncDate("successfully_started_at"))
-            .annotate(Avg("start_duration"))
-            .values("date", "start_duration__avg")
         }
         ctx["tool_start_time_data"] = sorted(
             {**timedelta_chart_data, **tool_start_times_chart_data}.items()
