@@ -670,14 +670,14 @@ class DataWorkspaceTrendsView(DataWorkspaceStatsView):
         timedelta_chart_data = {
             day.date(): timedelta()
             for day in rrule(
-                freq=DAILY, dtstart=today - rdelta, count=(today - (today - rdelta)).days
+                freq=DAILY, dtstart=today - rdelta, count=(today - (today - rdelta)).days + 1
             )
         }
 
         integer_chart_data = {
             day.date(): 0
             for day in rrule(
-                freq=DAILY, dtstart=today - rdelta, count=(today - (today - rdelta)).days
+                freq=DAILY, dtstart=today - rdelta, count=(today - (today - rdelta)).days + 1
             )
         }
 
