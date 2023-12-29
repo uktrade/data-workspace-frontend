@@ -14,14 +14,6 @@
   <script src="{% static 'js/grid-utils.js' %}"></script>
   {# We *have* to include the stylesheet after the ag-grid js as it overrides the default styles #}
   <link rel="stylesheet" type="text/css" href="{% static 'data-grid.css' %}"/>
-
-  <script src="{% static 'app-copy.js' %}"></script>
-  <script nonce="{{ request.csp_nonce }}">
-    let $codeBlocks = document.querySelectorAll('[data-module="app-copy"]')
-    nodeListForEach($codeBlocks, function ($codeBlock) {
-      new Copy($codeBlock).init()
-    });
-  </script>
 {% endblock footer_scripts %}
 {% block breadcrumbs %}
   <div class="govuk-grid-row">

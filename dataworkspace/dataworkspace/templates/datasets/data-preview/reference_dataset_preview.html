@@ -7,6 +7,8 @@
   <script src="{% static 'dayjs.min.js' %}"></script>
   <script src="{% static 'js/grid-utils.js' %}"></script>
   <script src="{% static 'data-grid.js' %}"></script>
+  <script src="{% static 'dialog.js' %}"></script>
+  <script src="{% static 'app-copy.js' %}"></script>
   {# We *have* to include the stylesheet after the ag-grid js as it overrides the default styles #}
   <link rel="stylesheet" type="text/css" href="{% static 'data-grid.css' %}" />
   {{ model.get_column_config|json_script:"column_data" }}
@@ -108,22 +110,23 @@
         <div class="app-grid-header">
           <div class="grid-header-left">
             <div class="govuk-button-group">
-              <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-save-view" data-prevent-double-click="true">
+              <button class="govuk-button app-grid__button govuk-button--secondary" data-module="govuk-button" id="data-grid-save-view" data-prevent-double-click="true">
                 Save view
               </button>
-              <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-view">
+              <button class="govuk-button app-grid__button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-view">
                 Reset view
               </button>
-              <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="downloadData">
+              <button class="govuk-button app-grid__button govuk-button--secondary modal-link" data-module="govuk-button" id="downloadData">
                 Download this data
               </button>
+              {% include "datasets/partials/dialog.html" with JSON=True %}
               {% if fields %}
                 <a href="{% url "datasets:data_dictionary" source_uuid=model.uuid %}?dataset_uuid={{model.uuid}}" class="govuk-link" target="_blank">Data dictionary</a>
               {% endif %}
             </div>
           </div>
           <div class="grid-header-right govuk-!-padding-right-3">
-              <button id="increase-grid-button" class="govuk-button govuk-button--secondary" data-module="govuk-button">Show more rows</button>
+              <button id="increase-grid-button" class="govuk-button app-grid__button govuk-button--secondary" data-module="govuk-button">Show more rows</button>
             </div>
         </div>
         <div
@@ -133,7 +136,6 @@
         ></div>
       </div>
     </div>
-    {% include "datasets/partials/dialog-reference-data.html" %}
   {% endwith %}
   {% csrf_token %}
 {% endblock %}

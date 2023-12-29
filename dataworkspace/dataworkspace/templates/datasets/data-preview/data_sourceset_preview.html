@@ -8,6 +8,8 @@
   <script src="{% static 'dayjs.min.js' %}"></script>
   <script src="{% static 'js/grid-utils.js' %}"></script>
   <script src="{% static 'data-grid.js' %}"></script>
+  <script src="{% static 'dialog.js' %}"></script>
+  <script src="{% static 'app-copy.js' %}"></script>
   {# We *have* to include the stylesheet after the ag-grid js as it overrides the default styles #}
   <link rel="stylesheet" type="text/css" href="{% static 'data-grid.css' %}"/>
   {{ object.get_column_config|json_script:"column_data" }}
@@ -113,23 +115,24 @@
         <div class="app-grid-header">
           <div class="grid-header-left">
             <div class="govuk-button-group">
-              <p class="govuk-body govuk-!-font-weight-bold" id="data-grid-rowcount">
+              <p class="govuk-body row-count govuk-!-font-weight-bold" id="data-grid-rowcount">
                 {% if row_count is not None %}
                   {% if row_count > 5000 %}Over 5,000{% else %}{{ row_count|intcomma }}{% endif %} rows
                 {% else %}
                   Loading data...
                 {% endif %}
               </p>
-              <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-save-view" data-prevent-double-click="true">
+              <button class="govuk-button app-grid__button govuk-button--secondary" data-module="govuk-button" id="data-grid-save-view" data-prevent-double-click="true">
                 Save view
               </button>
-              <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-view">
+              <button class="govuk-button app-grid__button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-view">
                 Reset view
               </button>
               {% if object.data_grid_download_enabled %}
-              <button class="govuk-button govuk-button--secondary" data-module="govuk-button" id="downloadData">
+              <button class="govuk-button app-grid__button govuk-button--secondary modal-link" data-module="govuk-button" id="downloadData">
                   Download this data
                 </button>
+              {% include "datasets/partials/dialog.html" %}
               {% endif %}
               {# We only support data dictionaries for master and reference datasets currently #}
               {# reference datagrid uses reference_dataset_grid.html btw   #}
@@ -143,7 +146,7 @@
             </div>
           </div>
           <div class="grid-header-right govuk-!-padding-right-3">
-            <button id="increase-grid-button" class="govuk-button govuk-button--secondary" data-module="govuk-button">Show more rows</button>
+            <button id="increase-grid-button" class="govuk-button app-grid__button govuk-button--secondary" data-module="govuk-button">Show more rows</button>
           </div>
         </div>
         <div
@@ -159,7 +162,6 @@
           {% endif %}
         ></div>
       </div>
-      {% include "datasets/partials/dialog-data-cut.html" %}
   {% endwith %}
   {% csrf_token %}
 {% endblock %}

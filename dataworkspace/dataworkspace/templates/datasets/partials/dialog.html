@@ -1,0 +1,24 @@
+<dialog>
+    <div>
+        <h2 class="govuk-heading-l" role="heading">Confirm data download</h2>
+        <div class="govuk-!-padding-bottom-2" tabindex="0">
+              <p class="govuk-body" style="margin-bottom: 10px">Downloading this data will create a copy on your device which will no longer be updated and can be changed.</p>
+              <p class="govuk-body" style="margin-bottom: 10px">By downloading this data, you are aware of the security classification of this data and are responsible for keeping the data secure.</p>
+        </div>
+    </div>
+       <div class="govuk-button-group">
+        {% if link %}
+            <a class="govuk-button govuk-button--primary" data-module="govuk-button" href="{{ link }}">Download data as {{ format|default:"CSV"}}</a>
+        {% else %}
+            <button class="govuk-button govuk-button--primary" data-module="govuk-button" id="data-grid-download">
+                Download data as {{ format|default:"CSV"}}
+            </button>
+          {% endif %}
+          {% if JSON %}
+            <button class="govuk-button govuk-button--primary" data-module="govuk-button" id="data-grid-json-download">
+                Download data as JSON
+            </button>
+          {% endif %}
+          <button class="govuk-button govuk-button--secondary" data-module="govuk-button">Close</button>
+      </div>
+  </dialog>

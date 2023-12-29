@@ -594,21 +594,4 @@ if (increaseGridButton !== null) {
   });
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-  var downloadDataButton = document.getElementById("downloadData");
-  if (downloadDataButton !== null) {
-    downloadDataButton.addEventListener("click", function (e) {
-        e.stopPropagation();
-        e.preventDefault();
-        document.getElementById("popup").showModal();
-      });
-
-    document.getElementById("closePopUp").addEventListener("click", function (e) {
-      e.stopPropagation();
-      e.preventDefault();
-      document.getElementById("popup").close();
-    });
-  }
-});
-
 window.initDataGrid = initDataGrid;
