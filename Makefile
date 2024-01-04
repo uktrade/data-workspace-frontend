@@ -41,6 +41,9 @@ docker-test-integration: docker-build
 .PHONY: docker-test
 docker-test: docker-test-integration docker-test-unit
 
+.PHONY: docker-test-e2e
+docker-test-e2e: docker-build
+	docker compose --profile test -p data-workspace-test-e2e up
 
 .PHONY: docker-clean
 docker-clean:

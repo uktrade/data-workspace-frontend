@@ -14,6 +14,11 @@ set -e
     django-admin ensure_databases_configured
     django-admin ensure_application_template_models
 
+    django-admin loaddata --ignorenonexistent --verbosity=2 \
+      users \
+      profiles \
+      datasets
+
     # nginx is configured to log to stdout/stderr, _except_ before
     # it manages to read its config file. To avoid errors on startup,
     # we configure its prefix to be a writable location
