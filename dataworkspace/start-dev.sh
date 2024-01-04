@@ -16,7 +16,8 @@ set -e
 
     django-admin loaddata --ignorenonexistent --verbosity=2 \
       users \
-      profiles
+      profiles \
+      datasets
 
     # nginx is configured to log to stdout/stderr, _except_ before
     # it manages to read its config file. To avoid errors on startup,
