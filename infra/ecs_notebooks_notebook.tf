@@ -183,6 +183,16 @@ data "aws_iam_policy_document" "notebook_s3_access_template" {
 
   statement {
     actions = [
+      "s3:ListBucket",
+    ]
+
+    resources = [
+      "arn:aws:s3:::${var.mirrors_data_bucket_name != "" ? var.mirrors_data_bucket_name : var.mirrors_bucket_name}",
+    ]
+  }
+
+  statement {
+    actions = [
       "elasticfilesystem:ClientMount",
       "elasticfilesystem:ClientWrite",
     ]
@@ -277,6 +287,21 @@ data "aws_iam_policy_document" "aws_vpc_endpoint_s3_notebooks" {
 
   statement {
     principals {
+      type = "*"
+      identifiers = ["*"]
+    }
+
+    actions = [
+      "s3:ListBucket",
+    ]
+
+    resources = [
+      "arn:aws:s3:::${var.mirrors_data_bucket_name != "" ? var.mirrors_data_bucket_name : var.mirrors_bucket_name}",
+    ]
+  }
+
+  statement {
+    principals {
       type = "AWS"
       identifiers = ["*"]
     }
@@ -319,6 +344,16 @@ data "aws_iam_policy_document" "jupyterhub_notebook_task_boundary" {
 
     resources = [
       "${aws_s3_bucket.notebooks.arn}/*",
+    ]
+  }
+
+  statement {
+    actions = [
+      "s3:ListBucket",
+    ]
+
+    resources = [
+      "arn:aws:s3:::${var.mirrors_data_bucket_name != "" ? var.mirrors_data_bucket_name : var.mirrors_bucket_name}",
     ]
   }
 
