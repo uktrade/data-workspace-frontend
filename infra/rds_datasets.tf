@@ -11,6 +11,8 @@ resource "aws_rds_cluster" "datasets" {
   storage_encrypted             = "${var.datasets_rds_cluster_storage_encryption_enabled}"
   vpc_security_group_ids        = ["${aws_security_group.datasets.id}"]
   skip_final_snapshot           = true
+  deletion_protection           = true
+  enable_global_write_forwarding  = false
   enabled_cloudwatch_logs_exports = ["postgresql"]
 
   lifecycle {
@@ -26,8 +28,9 @@ resource "aws_rds_cluster_instance" "datasets" {
   instance_class                = "${var.datasets_rds_cluster_instance_class}"
   performance_insights_enabled  = "${var.datasets_rds_cluster_instance_performance_insights_enabled}"
   promotion_tier                = 1
-  db_parameter_group_name       = "aurora-postgresql-10-pgaudit-db-parameter-group"
+  db_parameter_group_name       = "aurora-postgresql-14-pgaudit-instance-parameter-group"
 
+  timeouts {}
   lifecycle {
     ignore_changes = ["engine_version"]
   }
