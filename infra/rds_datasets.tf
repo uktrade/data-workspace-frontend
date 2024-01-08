@@ -12,9 +12,9 @@ resource "aws_rds_cluster" "datasets" {
   vpc_security_group_ids        = ["${aws_security_group.datasets.id}"]
   skip_final_snapshot           = true
   deletion_protection           = true
-  enable_global_write_forwarding  = false
   enabled_cloudwatch_logs_exports = ["postgresql"]
 
+  timeouts {}
   lifecycle {
     ignore_changes = ["master_password", "engine_version"]
   }
@@ -30,7 +30,6 @@ resource "aws_rds_cluster_instance" "datasets" {
   promotion_tier                = 1
   db_parameter_group_name       = "aurora-postgresql-14-pgaudit-instance-parameter-group"
 
-  timeouts {}
   lifecycle {
     ignore_changes = ["engine_version"]
   }
