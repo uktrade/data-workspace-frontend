@@ -1,7 +1,7 @@
 resource "aws_db_instance" "admin" {
   identifier = "${var.prefix}-admin"
 
-  allocated_storage = 100
+  allocated_storage = 200
   storage_type = "gp2"
   engine = "postgres"
   engine_version = var.admin_db_instance_version
@@ -17,11 +17,13 @@ resource "aws_db_instance" "admin" {
   password = "${random_string.aws_db_instance_admin_password.result}"
 
   final_snapshot_identifier = "${var.prefix}-admin-final-snapshot"
+  copy_tags_to_snapshot = true
 
   vpc_security_group_ids = ["${aws_security_group.admin_db.id}"]
   db_subnet_group_name = "${aws_db_subnet_group.admin.name}"
 
-  performance_insights_enabled = true
+  performance_insights_enabled = false
+  storage_encrypted = true
 
   lifecycle {
     ignore_changes = [
