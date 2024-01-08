@@ -147,6 +147,7 @@ resource "aws_lb" "flower" {
   internal           = true
   security_groups    = ["${aws_security_group.flower_lb.id}"]
   subnets            = "${aws_subnet.private_without_egress.*.id}"
+  enable_deletion_protection = true
 }
 
 resource "aws_lb_listener" "flower_80" {
