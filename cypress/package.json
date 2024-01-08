@@ -1,0 +1,30 @@
+{
+  "name": "cypress-e2e-testing",
+  "version": "1.0.0",
+  "description": "E2E testing",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "private": true,
+  "scripts": {
+    "cypress:run": "cypress run --record"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/uktrade/data-workspace.git"
+  },
+  "keywords": [],
+  "author": "Department for International Trade",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/uktrade/data-workspace/issues"
+  },
+  "homepage": "https://github.com/uktrade/data-workspace#readme",
+  "devDependencies": {
+    "axe-core": "^4.8.3",
+    "cypress-axe": "^1.5.0",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.2.2"
+  }
+}

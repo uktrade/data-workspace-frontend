@@ -1,11 +1,11 @@
 FROM debian:bullseye-20220509-slim AS base
 
 ENV \
-	LC_ALL=en_US.UTF-8 \
-	LANG=en_US.UTF-8 \
-	LANGUAGE=en_US.UTF-8 \
-	PYTHONPATH=/dataworkspace \
-	DJANGO_SETTINGS_MODULE=dataworkspace.settings.base
+    LC_ALL=en_US.UTF-8 \
+    LANG=en_US.UTF-8 \
+    LANGUAGE=en_US.UTF-8 \
+    PYTHONPATH=/dataworkspace \
+    DJANGO_SETTINGS_MODULE=dataworkspace.settings.base
 
 RUN apt-get update && \
     apt-get update && \
@@ -17,18 +17,18 @@ RUN apt-get update && \
     cd / && \
     rm -rf parallel-20190522 parallel-20190522.tar.bz2 && \
     apt-get install -y --no-install-recommends \
-        locales \
-        git \
-        nginx \
-        nginx-extras \
-        openssl \
-        build-essential \
-        libpq-dev \
-        procps \
-        python3 \
-        python3-dev \
-        python3-pip \
-        python3-setuptools && \
+    locales \
+    git \
+    nginx \
+    nginx-extras \
+    openssl \
+    build-essential \
+    libpq-dev \
+    procps \
+    python3 \
+    python3-dev \
+    python3-pip \
+    python3-setuptools && \
     echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && \
     locale-gen en_US.utf8 && \
     rm /etc/nginx/nginx.conf && \
@@ -39,18 +39,18 @@ RUN apt-get update && \
 
 COPY requirements.txt requirements.txt
 RUN python3 -m pip install --upgrade pip wheel && \
-	python3 -m pip install -r requirements.txt
+    python3 -m pip install -r requirements.txt
 
 FROM base AS test
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        gcc \
-        musl-dev \
-        chromium \
-        chromium-driver \
-        libxml2-dev \
-        libxslt1-dev && \
+    gcc \
+    musl-dev \
+    chromium \
+    chromium-driver \
+    libxml2-dev \
+    libxslt1-dev && \
     echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && \
     locale-gen en_US.utf8 && \
     rm -rf /tmp/* && \
@@ -86,6 +86,12 @@ RUN npm install --global --unsafe-perm nodemon
 USER django
 
 CMD ["/dataworkspace/start-dev.sh"]
+
+FROM dev as e2e
+
+USER django
+
+CMD ["/dataworkspace/start-e2e.sh"]
 
 FROM base AS live
 

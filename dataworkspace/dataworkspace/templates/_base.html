@@ -117,16 +117,15 @@
         </ul>
       </nav>
     </div>
+
   </header>
 
-  <div class="govuk-width-container">
-    {% include 'partials/beta_banner.html' %}
-  </div>
 
-  <div class="govuk-width-container">
+  <nav class="govuk-width-container">
+    {% include 'partials/beta_banner.html' %}
     {% block breadcrumbs %}{% endblock %}
     {% block go_back %}{% endblock %}
-  </div>
+  </nav>
 
   {% block main %}{% endblock %}
 

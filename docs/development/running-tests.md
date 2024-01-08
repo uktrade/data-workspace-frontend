@@ -65,3 +65,9 @@ We have some Selenium integration tests that launch a (headless) browser in orde
 1. Download the latest [Selenium Server](https://www.selenium.dev/downloads/) and run it in the background, e.g. `java -jar ~/Downloads/selenium-server-standalone-3.141.59 &`.
 
 2. Run the selenium tests via docker-compose, exposing the Data Workspace port and the mock-SSO port and setting the `REMOTE_SELENIUM_URL` environment variable, e.g. `docker compose --profile test -p data-workspace-test run -e REMOTE_SELENIUM_URL=http://host.docker.internal:4444/wd/hub -p 8000:8000 -p 8005:8005 --rm data-workspace-test pytest -vvvs test/test_selenium.py`.
+
+## E2E tests
+
+The E2E tests can be run locally using the make command `make docker-e2e-build-run`. This will spin up the data workspace app pointing at a dedicated e2e database, that will install some E2E specific fixtures. This DB will not interfere with any local test data you have
+
+The cypress tests are run using the `data-workspace-cypress` docker container. This container will start as soon as it detects the data workspace app is available on port 8000, and as soon as the test complete the docker containers will be closed. To view any tests that failed, browse the e2e-data-workspace-cypress-1 docker container, where the logs will show a summary of all tests. Any failed tests will also have their screenshots saved in the cypress/screenshots folder in your local environment.
