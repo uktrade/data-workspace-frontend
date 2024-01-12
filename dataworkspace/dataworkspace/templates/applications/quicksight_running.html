@@ -1,24 +1,37 @@
 {% extends 'running_base.html' %}
 {% load static %}
 {% block extra_head %}
-  <script nonce="{{ request.csp_nonce }}" src="{% static 'quicksight-embedding-js-sdk-1.0.17.min.js' %}"></script>
+  <script nonce="{{ request.csp_nonce }}" src="{% static 'quicksight-embedding-js-sdk-2.5.0.min.js' %}"></script>
 {% endblock extra_head %}
 {% block javascript %}
   <script nonce="{{ request.csp_nonce }}">
-    dashboard = QuickSightEmbedding.embedDashboard({
+    window.addEventListener('load', async () => {
+      const embeddingContext = await QuickSightEmbedding.createEmbeddingContext();
+      await embeddingContext.embedDashboard({
         url: '{{ visualisation_src|safe }}' + window.location.hash,
         container: document.getElementById('visualisation'),
+        resizeHeightOnSizeChangedEvent: true,
+      }, {
         locale: "en-gb",
-        printEnabled: true,
-        height: "AutoFit",
-        iframeResizeOnSheetChange: true,
-        loadingHeight: "1000px"
-    });
-
-    dashboard.on("SHOW_MODAL_EVENT", function() {
-        window.scrollTo({
-            top: 0 // iFrame top position
-        });
+        toolbarOptions: {
+          export: true,
+          undoRedo: true,
+          reset: true,
+        },
+        sheetOptions: {
+          emitSizeChangedEventOnSheetChange: true,
+        },
+        onMessage: async (messageEvent, experienceMetadata) => {
+          switch (messageEvent.eventName) {
+            case 'MODAL_OPENED': {
+              window.scrollTo({
+                  top: 0 // iframe top position
+              });
+              break;
+            }
+          }
+        },
+      });
     });
   </script>
 {% endblock javascript %}
