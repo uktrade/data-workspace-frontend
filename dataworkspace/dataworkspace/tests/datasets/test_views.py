@@ -270,6 +270,7 @@ def expected_search_result(catalogue_item, **kwargs):
         "last_updated": mock.ANY,
         "average_unique_users_daily": mock.ANY,
         "is_owner": False,
+        "is_contact": False,
     }
     result.update(**kwargs)
     return result
@@ -1297,6 +1298,27 @@ def test_find_datasets_filters_by_access_and_use_only_returns_the_dataset_once(
 
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [expected_search_result(access_granted_master)]
+
+
+@pytest.mark.django_db
+def test_find_datasets_filters_by_enquires_contact(user, client):
+    ds1 = factories.DataSetFactory.create(
+        name="Dataset",
+        enquiries_contact=user,
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+    )
+    ds2 = factories.ReferenceDatasetFactory.create(name="Reference")
+    ds3 = factories.VisualisationCatalogueItemFactory.create(
+        name="Visualisation", user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
+    )
+
+    response = client.get(reverse("datasets:find_datasets"))
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(ds1, is_contact=True),
+        expected_search_result(ds2),
+        expected_search_result(ds3),
+    ]
 
 
 @pytest.mark.django_db

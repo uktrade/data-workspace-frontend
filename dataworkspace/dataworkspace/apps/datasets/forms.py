@@ -155,6 +155,7 @@ class DatasetSearchForm(forms.Form):
     SUBSCRIBED = "subscribed"
     BOOKMARKED = "bookmarked"
     OWNED = "owned"
+    CONTACT = "enquiries_contact"
 
     q = forms.CharField(required=False)
 
@@ -183,6 +184,7 @@ class DatasetSearchForm(forms.Form):
             (BOOKMARKED, "My bookmarks"),
             (SUBSCRIBED, "My subscriptions"),
             (OWNED, "Data I own or manage"),
+            (CONTACT, "Data I am a contact for"),
         ],
         required=False,
         widget=AccordionFilterWidget("My datasets"),
