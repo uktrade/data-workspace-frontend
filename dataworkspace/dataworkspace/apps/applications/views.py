@@ -257,7 +257,17 @@ def _get_embedded_quicksight_dashboard(request, dashboard_id, catalogue_item):
         "catalogue_item": catalogue_item,
     }
 
-    return render(request, "applications/quicksight_running.html", context, status=200)
+    response = render(request, "applications/quicksight_running.html", context, status=200)
+    # Quicksight uses https://stackoverflow.com/a/40593743/1319998 to open popups - using the
+    # return value of window.open() to set the popup's location. Django's default of "same-origin",
+    # combined with the fact that Quicksight is in a cross-domain iframe means that window.open()
+    # returns null https://stackoverflow.com/q/77812102/1319998. This results in the popup
+    # opening, but remaining blank and an error appearing in the console because Quicksight's
+    # Javascript attempts to access properties on a null object before the popup's location is set.
+    # To avoid this, at Quicksight's own suggestion, we use "same-origin-allow-popups". Ideally
+    # Quicksight will eventually use a different, more modern, method, and this can be removed
+    response["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups"
+    return response
 
 
 @csp_update(frame_src=settings.SUPERSET_DOMAINS["view"])
