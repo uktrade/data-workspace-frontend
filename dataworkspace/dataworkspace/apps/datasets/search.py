@@ -198,6 +198,8 @@ def _get_datasets_data_for_user_matching_query(
 
     datasets = _annotate_is_owner(datasets, user)
 
+    datasets = _annotate_is_contact(datasets, user)
+
     return datasets.values(
         id_field,
         "name",
@@ -222,6 +224,7 @@ def _get_datasets_data_for_user_matching_query(
         "published_date",
         "average_unique_users_daily",
         "is_owner",
+        "is_contact",
     )
 
 
@@ -529,6 +532,30 @@ def _annotate_has_access(datasets, user):
     return datasets
 
 
+def _annotate_is_contact(datasets, user):
+    """
+    Adds a boolean annotation to queryset which is set to True if the user
+    is an IAO, IAM or data catalogue editor of a dataset
+    @param datasets: Django queryset
+    @param user: request.user
+    @return: Annotated queryset
+    """
+
+    datasets = datasets.annotate(
+        is_contact=BoolOr(
+            Case(
+                When(
+                    Q(enquiries_contact=user),
+                    then=True,
+                ),
+                default=False,
+                output_field=BooleanField(),
+            ),
+        ),
+    )
+    return datasets
+
+
 def _annotate_is_owner(datasets, user):
     """
     Adds a boolean annotation to queryset which is set to True if the user
@@ -565,6 +592,7 @@ def _sorted_datasets_and_visualisations_matching_query_for_user(query, user, sor
 
     @return:
     """
+
     master_and_datacut_datasets = _get_datasets_data_for_user_matching_query(
         # Exclude ReferenceDatasetInheritingFromDataSet as
         # ReferenceDatasets are added below.
@@ -573,6 +601,8 @@ def _sorted_datasets_and_visualisations_matching_query_for_user(query, user, sor
         id_field="id",
         user=user,
     )
+
+    print("result", master_and_datacut_datasets)
 
     reference_datasets = _get_datasets_data_for_user_matching_query(
         ReferenceDataset.objects.live().annotate(

@@ -142,6 +142,8 @@ def _matches_filters(
         users_datasets.add("subscribed")
     if data["is_owner"]:
         users_datasets.add("owned")
+    if data["is_contact"]:
+        users_datasets.add("enquiries_contact")
 
     return (
         (
