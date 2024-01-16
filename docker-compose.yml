@@ -176,6 +176,44 @@ services:
       - db-logs-dev:/var/log/postgres
       - test-results:/test-results
   
+  data-workspace-e2e-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: test-e2e
+    image: data-workspace-e2e-test
+    profiles:
+      - test
+    networks:
+      - test
+    env_file:
+      - ./.envs/test.env
+    ports:
+      - "8000"
+    links:
+      - "data-workspace-postgres"
+      - "data-workspace-redis"
+      - "data-workspace-es"
+    depends_on:
+      - "data-workspace-test-results"
+    extra_hosts:
+      - "dataworkspace.test:127.0.0.1"
+      - "superset.dataworkspace.test:127.0.0.1"
+      - "superset-edit.dataworkspace.test:127.0.0.1"
+      - "testapplication-23b40dd9.dataworkspace.test:127.0.0.1"
+      - "testdbapplication-23b40dd9.dataworkspace.test:127.0.0.1"
+      - "testvisualisation.dataworkspace.test:127.0.0.1"
+      - "testvisualisation--8888.dataworkspace.test:127.0.0.1"
+      - "testvisualisation--11372717.dataworkspace.test:127.0.0.1"
+      - "testvisualisation--11372717--8888.dataworkspace.test:127.0.0.1"
+      - "testvisualisation-a.dataworkspace.test:127.0.0.1"
+      - "testvisualisation-b.dataworkspace.test:127.0.0.1"
+      - "api.ecr.my-region-1.amazonaws.com:127.0.0.1"
+      - "mlflow--data-science.dataworkspace.test:127.0.0.1"
+    volumes:
+      - ./dataworkspace:/dataworkspace
+      - db-logs-dev:/var/log/postgres
+
   # Have a named volume since mounting a local directory isn't possible in CircleCI's
   # remote docker system. And docker compose run kills the container running the tests
   # proper, so to be able to copy out results, run a small container just to be able

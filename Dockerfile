@@ -87,6 +87,10 @@ USER django
 
 CMD ["/dataworkspace/start-dev.sh"]
 
+FROM dev as test-e2e
+
+CMD ["/dataworkspace/start-test-e2e.sh"]
+
 FROM base AS live
 
 COPY dataworkspace /dataworkspace
