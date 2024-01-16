@@ -246,6 +246,8 @@ $icon-size: 40px;
 }
 
 .search-field__submit {
+  display: table-cell;
+  vertical-align: middle;
   border: 0;
   cursor: pointer;
   border-radius: 0;
@@ -273,12 +275,8 @@ $icon-size: 40px;
 
 .search-field-wrapper {
   display: table-cell;
+  vertical-align: middle;
   padding: 0;
-}
-
-.search-field__submit {
-  display: table-cell;
-  top: -1px;
 }
 
 @media only screen and (-webkit-min-device-pixel-ratio: 2),
