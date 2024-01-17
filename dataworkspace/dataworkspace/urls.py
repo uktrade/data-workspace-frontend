@@ -2,7 +2,7 @@ import logging
 
 from django.conf import settings
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 
 from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.core.views import (
@@ -192,6 +192,7 @@ urlpatterns = [
         login_required(RestoreTableDAGTaskStatusView.as_view()),
         name="restore-table-task-status",
     ),
+    re_path(r"^maintenance-mode/", include("maintenance_mode.urls")),
 ]
 
 if settings.DEBUG:

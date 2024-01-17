@@ -181,6 +181,7 @@ kombu==5.3.2
     # via celery
 linear-tsv==1.1.0
     # via tabulator
+django-maintenance-mode==0.21.0
 markupsafe==2.1.2
     # via werkzeug
 mohawk==1.1.0
