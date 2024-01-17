@@ -14,4 +14,5 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
 WORKDIR app
 COPY . cypress
 COPY ./package.json .
+COPY ./cypress.config.ts .
 RUN npm install

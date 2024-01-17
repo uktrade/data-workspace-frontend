@@ -8,7 +8,7 @@
   },
   "private": true,
   "scripts": {
-    "cypress:run": "cypress run --record"
+    "cypress:run": "cypress run"
   },
   "repository": {
     "type": "git",
@@ -23,6 +23,7 @@
   "homepage": "https://github.com/uktrade/data-workspace#readme",
   "devDependencies": {
     "axe-core": "^4.8.3",
+    "cypress": "12.8.1",
     "cypress-axe": "^1.5.0",
     "ts-jest": "^29.1.1",
     "typescript": "^5.2.2"

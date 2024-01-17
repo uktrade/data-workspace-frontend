@@ -9,6 +9,6 @@ describe("Source dataset catalogue page", () => {
   });
 
   it("should have a title", () => {
-    cy.contains("h1", "Test data cut dataset wromg");
+    cy.contains("h1", "Test data cut dataset");
   });
 });

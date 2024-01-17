@@ -68,6 +68,6 @@ We have some Selenium integration tests that launch a (headless) browser in orde
 
 ## E2E tests
 
-The E2E tests can be run locally using the make command `make docker-e2e-build-run`. This will spin up the data workspace app pointing at a dedicated e2e database, that will install some E2E specific fixtures. This DB will not interfere with any local test data you have
+The E2E tests can be run locally using the make command `make docker-e2e-build-run`. This will spin up the data workspace app pointing at a dedicated E2E database, that will install some E2E specific fixtures. This DB will not interfere with any local test data you have
 
-The cypress tests are run using the `data-workspace-cypress` docker container. This container will start as soon as it detects the data workspace app is available on port 8000, and as soon as the test complete the docker containers will be closed. To view any tests that failed, browse the e2e-data-workspace-cypress-1 docker container, where the logs will show a summary of all tests. Any failed tests will also have their screenshots saved in the cypress/screenshots folder in your local environment.
+The cypress tests are run using the `data-workspace-e2e-test` docker container. This container will start as soon as it detects the data workspace app is available on port 8000, and as soon as the test complete the docker containers will be closed. To view any tests that failed, browse the `e2e-data-workspace-cypress-1` docker container, where the logs will show a summary of all tests. Any failed tests will also have their screenshots saved in the `cypress/screenshots` folder in your local environment.

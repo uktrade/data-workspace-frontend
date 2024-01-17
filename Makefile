@@ -43,15 +43,15 @@ docker-test: docker-test-integration docker-test-unit
 
 .PHONY: docker-e2e-build
 docker-e2e-build:
-	docker compose -f docker-compose.e2e.yml -p e2e build
+	docker compose -f docker-compose.yml -f docker-compose.e2e.yml -p e2e --profile e2e build
 
 .PHONY: docker-e2e-run
 docker-e2e-run:
-	docker compose -f docker-compose.e2e.yml -p e2e up --exit-code-from data-workspace-cypress
+	docker compose -f docker-compose.yml -f docker-compose.e2e.yml -p e2e --profile e2e up --exit-code-from data-workspace-e2e-test
 
 .PHONY: docker-e2e-build-run
 docker-e2e-build-run:
-	docker compose -f docker-compose.e2e.yml -p e2e up --build --force-recreate --exit-code-from data-workspace-cypress
+	docker compose -f docker-compose.yml -f docker-compose.e2e.yml -p e2e --profile e2e up --build --force-recreate --exit-code-from data-workspace-e2e-test
 
 .PHONY: docker-clean
 docker-clean:

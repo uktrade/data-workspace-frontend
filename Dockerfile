@@ -89,8 +89,6 @@ CMD ["/dataworkspace/start-dev.sh"]
 
 FROM dev as e2e
 
-USER django
-
 CMD ["/dataworkspace/start-e2e.sh"]
 
 FROM base AS live
