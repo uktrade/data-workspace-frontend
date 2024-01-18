@@ -189,10 +189,7 @@ def _get_tags_as_dict():
 
 @csp_update(SCRIPT_SRC=settings.REACT_SCRIPT_SRC)
 def home_view(request):
-    if not waffle.flag_is_active(request, "HOME_PAGE_FLAG"):
-        return find_datasets(request)
-    else:
-        return render(request, "datasets/index.html")
+    return render(request, "datasets/index.html")
 
 
 @csp_update(SCRIPT_SRC=settings.REACT_SCRIPT_SRC)
