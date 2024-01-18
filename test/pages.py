@@ -34,8 +34,8 @@ class _BasePage:
         return await self._page.content()
 
 
-class HomePage(_BasePage):
-    _url_path = "/"
+class DataCataloguePage(_BasePage):
+    _url_path = "/datasets/"
 
     async def toggle_filter(self, label) -> "_BasePage":
         if not self._page:
