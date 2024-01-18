@@ -199,13 +199,10 @@ services:
       - e2e  
     networks:
       - data-infrastructure-shared-network
-    # volumes:
-    #   - ./cypress:/app/cypress
-    #   - ./cypress.config.ts:/app/cypress.config.ts
     depends_on:
       - data-workspace
     environment:
-      - CYPRESS_baseUrl=http://dataworkspace.test:8000 #Todo update config in cypress to read this
+      - CYPRESS_baseUrl=http://dataworkspace.test:8000
     entrypoint: dockerize -wait tcp://data-workspace:8000 -timeout 3m -wait-retry-interval 5s
     command: npm run cypress:run
     
