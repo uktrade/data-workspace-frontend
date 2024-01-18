@@ -1,0 +1,10 @@
+{
+  "name": "cypress-e2e-testing",
+  "version": "1.0.0",
+  "description": "This file is only needed for the docker container built from the .Dockerfile in this folder. To run any cypress commands use the package.json file in the root of this repo",  
+  "devDependencies": {
+    "axe-core": "^4.8.3",    
+    "cypress-axe": "^1.5.0",
+    "typescript": "^5.2.2"
+  }
+}

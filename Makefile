@@ -41,6 +41,22 @@ docker-test-integration: docker-build
 .PHONY: docker-test
 docker-test: docker-test-integration docker-test-unit
 
+.PHONY: docker-e2e-build
+docker-e2e-build:
+	docker compose -f docker-compose.yml -f docker-compose.e2e.yml -p e2e --profile e2e build
+
+.PHONY: docker-e2e-run
+docker-e2e-run:
+	docker compose -f docker-compose.yml -f docker-compose.e2e.yml -p e2e --profile e2e up --exit-code-from data-workspace-e2e-test
+
+.PHONY: docker-e2e-build-run
+docker-e2e-build-run:
+	docker compose -f docker-compose.yml -f docker-compose.e2e.yml -p e2e --profile e2e up --build --force-recreate --exit-code-from data-workspace-e2e-test -d
+
+.PHONY: docker-e2e-start
+docker-e2e-start:
+	docker compose -f docker-compose.yml -f docker-compose.e2e.yml -p e2e --profile e2e up --build --force-recreate -d
+
 
 .PHONY: docker-clean
 docker-clean:

@@ -811,7 +811,7 @@ CLAMAV_URL = env.get("CLAMAV_URL", "")
 CLAMAV_USER = env.get("CLAMAV_USER", "")
 CLAMAV_PASSWORD = env.get("CLAMAV_PASSWORD", "")
 
-WEBPACK_STATS_FILE = "react_apps-stats.json" if not DEBUG else "react_apps-stats-hot.json"
+WEBPACK_STATS_FILE = "react_apps-stats.json"
 WEBPACK_LOADER = {
     "DEFAULT": {
         "CACHE": not DEBUG,

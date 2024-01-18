@@ -65,3 +65,19 @@ We have some Selenium integration tests that launch a (headless) browser in orde
 1. Download the latest [Selenium Server](https://www.selenium.dev/downloads/) and run it in the background, e.g. `java -jar ~/Downloads/selenium-server-standalone-3.141.59 &`.
 
 2. Run the selenium tests via docker-compose, exposing the Data Workspace port and the mock-SSO port and setting the `REMOTE_SELENIUM_URL` environment variable, e.g. `docker compose --profile test -p data-workspace-test run -e REMOTE_SELENIUM_URL=http://host.docker.internal:4444/wd/hub -p 8000:8000 -p 8005:8005 --rm data-workspace-test pytest -vvvs test/test_selenium.py`.
+
+## E2E tests
+
+There are 2 ways to run the E2E tests locally. The easiest way is to use [docker](#running-the-e2e-tests-locally-using-cypress-docker-image), however this option should only be used to run and view the test results. Due to docker caching images, if any tests need to be updated or new ones added it is better to use [npm](#running-the-e2e-tests-locally-using-npm) as any test changes are immidiately accessible
+
+### Running the E2E tests locally using cypress docker image
+
+The E2E tests can be run locally using the make command `make docker-e2e-build-run` from the root. This will spin up the data workspace app pointing at a dedicated E2E database, that will install some E2E specific fixtures. This DB will not interfere with any local test data you have.
+
+The cypress tests are run using the `data-workspace-e2e-test` docker container. This container will start as soon as it detects the data workspace app is available on port 8000, and as soon as the test complete the docker containers will be closed. To view any tests that failed, browse the `e2e-data-workspace-cypress-1` docker container, where the logs will show a summary of all tests. Any failed tests will also have their screenshots saved in the `cypress/screenshots` folder in your local environment.
+
+### Running the E2E tests locally using npm
+
+Before running the tests, to get the E2E data workspace app run the make command `make docker-e2e-start` from the root, which will spin up the data workspace app pointing at a dedicated E2E database.
+
+Once the containers have started, you can use either `npm run cypress:run` to run the tests in headless mode, or `npm run cypress:open` to use the Cypress test runner app.

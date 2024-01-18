@@ -8,28 +8,29 @@ services:
       context: .
       dockerfile: Dockerfile
       target: dev
-    image: data-workspace
     networks:
       - data-infrastructure-shared-network
     ports:
       - "8000:8000"
       - "4444:4444"
     env_file: .envs/dev.env
-    links:
-      - "data-workspace-postgres"
-      - "data-workspace-redis"
-      - "data-workspace-es"
+    depends_on:
+      - data-workspace-postgres
+      - data-workspace-redis
+      - data-workspace-es
     volumes:
       - .:/app
       - ./dataworkspace:/dataworkspace
       - ./dataworkspace/dataworkspace/static/js/stats:/dataworkspace/dataworkspace/static/js/stats/
+    hostname: dataworkspace.test
+    extra_hosts:
+      - "dataworkspace.test:127.0.0.1"
   
   data-workspace-celery:
     build:
       context: .
       dockerfile: Dockerfile
       target: dev
-    image: data-workspace
     networks:
       - data-infrastructure-shared-network
     env_file: .envs/dev.env
@@ -45,7 +46,6 @@ services:
     build:
       context: postgres
       dockerfile: Dockerfile
-    image: data-workspace-postgres
     networks:
       - data-infrastructure-shared-network
       - test
@@ -59,7 +59,6 @@ services:
     build:
       context: redis
       dockerfile: Dockerfile
-    image: data-workspace-redis
     networks:
       - data-infrastructure-shared-network
       - test
@@ -94,6 +93,8 @@ services:
       dockerfile: Dockerfile
     networks:
       - data-infrastructure-shared-network
+    profiles:
+      - localstack
     ports:
       - "127.0.0.1:53:53"
       - "127.0.0.1:53:53/udp"
@@ -189,6 +190,22 @@ services:
     tty: true
     volumes:
       - test-results:/test-results
+
+  data-workspace-e2e-test:
+    build:
+      context: .
+      dockerfile: cypress/Dockerfile
+    profiles:
+      - e2e  
+    networks:
+      - data-infrastructure-shared-network
+    depends_on:
+      - data-workspace
+    environment:
+      - CYPRESS_baseUrl=http://dataworkspace.test:8000
+    entrypoint: dockerize -wait tcp://data-workspace:8000 -timeout 3m -wait-retry-interval 5s
+    command: cypress run
+    
 
 volumes:
   db-data-dev:

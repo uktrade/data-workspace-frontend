@@ -1,0 +1,10 @@
+version: "3.4"
+services:
+
+  data-workspace:
+    build:
+      target: e2e
+    env_file: .envs/test-e2e.env
+
+  data-workspace-celery:
+    env_file: .envs/test-e2e.env
