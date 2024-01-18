@@ -72,7 +72,7 @@ USER django
 
 COPY test /test
 
-FROM test as dev
+FROM test AS dev
 
 USER root
 
@@ -87,7 +87,7 @@ USER django
 
 CMD ["/dataworkspace/start-dev.sh"]
 
-FROM dev as e2e
+FROM dev AS e2e
 
 CMD ["/dataworkspace/start-e2e.sh"]
 

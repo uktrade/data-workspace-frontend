@@ -72,12 +72,12 @@ There are 2 ways to run the E2E tests locally. The easiest way is to use [docker
 
 ### Running the E2E tests locally using cypress docker image
 
-The E2E tests can be run locally using the make command `make docker-e2e-build-run`. This will spin up the data workspace app pointing at a dedicated E2E database, that will install some E2E specific fixtures. This DB will not interfere with any local test data you have.
+The E2E tests can be run locally using the make command `make docker-e2e-build-run` from the root. This will spin up the data workspace app pointing at a dedicated E2E database, that will install some E2E specific fixtures. This DB will not interfere with any local test data you have.
 
 The cypress tests are run using the `data-workspace-e2e-test` docker container. This container will start as soon as it detects the data workspace app is available on port 8000, and as soon as the test complete the docker containers will be closed. To view any tests that failed, browse the `e2e-data-workspace-cypress-1` docker container, where the logs will show a summary of all tests. Any failed tests will also have their screenshots saved in the `cypress/screenshots` folder in your local environment.
 
 ### Running the E2E tests locally using npm
 
-Before running the tests, to get the E2E data workspace app run the make command `make docker-e2e-start`, which will spin up the data workspace app pointing at a dedicated E2E database.
+Before running the tests, to get the E2E data workspace app run the make command `make docker-e2e-start` from the root, which will spin up the data workspace app pointing at a dedicated E2E database.
 
-Once the containers have started, you can use either `npm run cypress:run` to run the tests in headless mode, or `npm run cypress:open` to use the Cypress test runner app
+Once the containers have started, you can use either `npm run cypress:run` to run the tests in headless mode, or `npm run cypress:open` to use the Cypress test runner app.
