@@ -11,7 +11,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build:css": "node-sass dataworkspace/dataworkspace/sass --output dataworkspace/dataworkspace/static/css --include-path node_modules --output-style compressed",
     "debug:css": "node-sass dataworkspace/dataworkspace/sass --output dataworkspace/dataworkspace/static/css --source-map true --source-map-contents --include-path node_modules",
-    "preinstall": "npx npm-force-resolutions"
+    "preinstall": "npx npm-force-resolutions",
+    "cypress:run": "cypress run",
+    "cypress:open": "cypress open"
   },
   "resolutions": {
     "scss-tokenizer": "0.4.3"
@@ -28,6 +30,7 @@
   },
   "homepage": "https://github.com/uktrade/data-workspace#readme",
   "devDependencies": {
+    "cypress": "12.8.1",
     "govuk-frontend": "3.14",
     "husky": "^8.0.0",
     "jest": "^29.7.0",

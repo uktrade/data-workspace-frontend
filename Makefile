@@ -53,6 +53,11 @@ docker-e2e-run:
 docker-e2e-build-run:
 	docker compose -f docker-compose.yml -f docker-compose.e2e.yml -p e2e --profile e2e up --build --force-recreate --exit-code-from data-workspace-e2e-test
 
+.PHONY: docker-e2e-start
+docker-e2e-start:
+	docker compose -f docker-compose.yml -f docker-compose.e2e.yml -p e2e --profile e2e up --build --force-recreate
+
+
 .PHONY: docker-clean
 docker-clean:
 	docker compose --profile test -p data-workspace-test down -v

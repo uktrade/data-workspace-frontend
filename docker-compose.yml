@@ -193,8 +193,8 @@ services:
 
   data-workspace-e2e-test:
     build:
-      context: cypress
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: cypress/Dockerfile
     profiles:
       - e2e  
     networks:

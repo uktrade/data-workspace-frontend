@@ -12,7 +12,9 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
     && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
 WORKDIR app
-COPY . cypress
-COPY ./package.json .
-COPY ./cypress.config.ts .
+
+COPY ./cypress cypress
+COPY ./cypress/package.json .
+COPY cypress.config.ts .
+
 RUN npm install
