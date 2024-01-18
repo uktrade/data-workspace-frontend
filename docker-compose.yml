@@ -204,7 +204,7 @@ services:
     environment:
       - CYPRESS_baseUrl=http://dataworkspace.test:8000
     entrypoint: dockerize -wait tcp://data-workspace:8000 -timeout 3m -wait-retry-interval 5s
-    command: npm run cypress:run
+    command: cypress run
     
 
 volumes:

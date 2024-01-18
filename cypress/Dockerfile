@@ -1,4 +1,4 @@
-FROM cypress/included:12.8.1
+FROM cypress/included:13.6.3
 
 ENV DOCKERIZE_VERSION      v0.6.1
 

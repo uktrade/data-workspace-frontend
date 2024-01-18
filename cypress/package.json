@@ -1,31 +1,10 @@
 {
   "name": "cypress-e2e-testing",
   "version": "1.0.0",
-  "description": "E2E testing",
-  "directories": {
-    "doc": "docs",
-    "test": "test"
-  },
-  "private": true,
-  "scripts": {
-    "cypress:run": "cypress run"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/uktrade/data-workspace.git"
-  },
-  "keywords": [],
-  "author": "Department for International Trade",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/uktrade/data-workspace/issues"
-  },
-  "homepage": "https://github.com/uktrade/data-workspace#readme",
+  "description": "This file is only needed for the docker container built from the .Dockerfile in this folder. To run any cypress commands use the package.json file in the root of this repo",  
   "devDependencies": {
-    "axe-core": "^4.8.3",
-    "cypress": "12.8.1",
+    "axe-core": "^4.8.3",    
     "cypress-axe": "^1.5.0",
-    "ts-jest": "^29.1.1",
     "typescript": "^5.2.2"
   }
 }
