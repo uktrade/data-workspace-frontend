@@ -85,6 +85,7 @@ SITE_ID = 1
 
 INSTALLED_APPS = [
     "maintenance_mode",
+    "dataworkspace.apps.maintenance",
     "dataworkspace.admin.DataWorkspaceAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -832,3 +833,5 @@ MLFLOW_PORT = env.get("MLFLOW_PORT", "")
 DYNAMIC_PIPELINES = ("DataWorkspaceS3ImportPipeline", "DSSGenericPipeline")
 
 MAINTENANCE_MODE = None
+MAINTENANCE_MODE_IGNORE_ADMIN_SITE = True
+MAINTENANCE_MODE_GET_CONTEXT = 'dataworkspace.apps.maintenance.maintenance.maintenance_context'
