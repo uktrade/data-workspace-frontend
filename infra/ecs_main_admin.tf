@@ -110,6 +110,7 @@ resource "aws_ecs_service" "admin" {
   launch_type                = "FARGATE"
   platform_version           = "1.4.0"
   deployment_maximum_percent = 600
+  timeouts {}
 
   network_configuration {
     subnets         = "${aws_subnet.private_with_egress.*.id}"
@@ -631,6 +632,8 @@ resource "aws_alb" "admin" {
   name            = "${var.prefix}-admin"
   subnets         = "${aws_subnet.public.*.id}"
   security_groups = ["${aws_security_group.admin_alb.id}"]
+  enable_deletion_protection = true
+  timeouts {}
 
   access_logs {
     bucket  = "${aws_s3_bucket.alb_access_logs.id}"
