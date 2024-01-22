@@ -125,7 +125,7 @@ urlpatterns = [
         login_required(TechnicalSupportView.as_view()),
         name="technical-support",
     ),
-    path("contact-us", login_required(ContactUsView.as_view()), name="contact-us"),
+    path("contact-us/", login_required(ContactUsView.as_view()), name="contact-us"),
     path(
         "feedback/",
         login_required(UserSatisfactionSurveyView.as_view()),

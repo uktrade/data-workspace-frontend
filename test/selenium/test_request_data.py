@@ -12,6 +12,7 @@ from test.selenium.conftest import (  # pylint: disable=wrong-import-order
     create_zendesk,
 )
 from test.selenium.workspace_pages import (  # pylint: disable=wrong-import-order
+    ContactUsPage,
     HomePage,
     RequestDataOwnerOrManagerPage,
     RequestDataDescriptionPage,
@@ -19,7 +20,6 @@ from test.selenium.workspace_pages import (  # pylint: disable=wrong-import-orde
     RequestDataSecurityClassificationPage,
     RequestDataLocationPage,
     RequestDataCheckAnswersPage,
-    SupportPage,
     RequestDataLicencePage,
 )
 
@@ -71,7 +71,9 @@ class TestRequestData:
         home_page.open()
 
         # Get to the "Request data" starting page
-        support_page = home_page.click_header_link("Contact us", SupportPage)
+        contact_us_page = home_page.click_header_link("Contact us", ContactUsPage)
+
+        support_page = contact_us_page.select_get_help_option()
         request_data_page = support_page.select_new_dataset_option()
 
         who_are_you_page = request_data_page.click_start()

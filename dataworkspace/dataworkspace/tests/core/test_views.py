@@ -521,30 +521,24 @@ class TestContactUsViews(BaseTestCase):
         self.assertContains(response, "Give feedback")
 
     def test_missing_contact_type_returns_expected_error(self):
-        response = self._authenticated_post(
-            reverse("contact-us"), {'contact_type': ''}
-        )
+        response = self._authenticated_post(reverse("contact-us"), {"contact_type": ""})
         assert response.status_code == 200
         self.assertContains(response, "Please select what you would like to do.")
 
     def test_invalid_contact_type_returns_expected_error(self):
-        response = self._authenticated_post(
-            reverse("contact-us"), {'contact_type': 'NOT_REAL'}
-        )
+        response = self._authenticated_post(reverse("contact-us"), {"contact_type": "NOT_REAL"})
         assert response.status_code == 200
         print(response.content)
-        self.assertContains(response, "Select a valid choice. NOT_REAL is not one of the available choices.")
+        self.assertContains(
+            response, "Select a valid choice. NOT_REAL is not one of the available choices."
+        )
 
     def test_get_help_redirects_to_support_page(self):
-        response = self._authenticated_post(
-            reverse("contact-us"), {'contact_type': 'help'}
-        )
+        response = self._authenticated_post(reverse("contact-us"), {"contact_type": "help"})
         assert response.status_code == 200
         self.assertRedirects(response, reverse("support"))
 
     def test_get_help_redirects_to_feedback_page(self):
-        response = self._authenticated_post(
-            reverse("contact-us"), {'contact_type': 'feedback'}
-        )
+        response = self._authenticated_post(reverse("contact-us"), {"contact_type": "feedback"})
         assert response.status_code == 200
         self.assertRedirects(response, reverse("feedback"))

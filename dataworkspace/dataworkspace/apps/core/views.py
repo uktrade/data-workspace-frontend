@@ -412,9 +412,9 @@ class RestoreTableDAGTaskStatusView(View):
 class ContactUsView(FormView):
     form_class = ContactUsForm
     template_name = "core/contact-us.html"
-    
+
     def form_valid(self, form):
         cleaned = form.cleaned_data
         if cleaned["contact_type"] == form.ContactTypes.GET_HELP:
-            return HttpResponseRedirect(reverse("support"))   
+            return HttpResponseRedirect(reverse("support"))
         return HttpResponseRedirect(reverse("feedback"))
