@@ -24,6 +24,7 @@ SQLALCHEMY_DATABASE_URI = (
 
 LANGUAGES = {"en": {"flag": "gb", "name": "English"}}
 SESSION_COOKIE_NAME = "superset_session"
+SESSION_COOKIE_SECURE = True
 
 ADMIN_USERS = os.environ["ADMIN_USERS"].split(",")
 SECRET_KEY = "secret"
