@@ -20,11 +20,13 @@ from django.db.models import (
     DurationField,
     ExpressionWrapper,
     F,
+    Sum,
     Value,
 )
 from django.db.models.functions import Concat, TruncDate
 from django.http import Http404, HttpResponseServerError, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
+from django.template.defaultfilters import filesizeformat
 from django.urls import reverse
 from django.utils.timesince import timesince
 from django.views.generic import FormView, CreateView, TemplateView
@@ -52,6 +54,7 @@ from dataworkspace.apps.dw_admin.forms import (
 from dataworkspace.apps.eventlog.constants import SystemStatLogEventType
 from dataworkspace.apps.eventlog.models import EventLog, SystemStatLog
 from dataworkspace.apps.explorer.templatetags.explorer_tags import format_duration_short
+from dataworkspace.apps.your_files.models import YourFilesUserPrefixStats
 from dataworkspace.datasets_db import get_all_source_tables
 
 
@@ -612,6 +615,27 @@ class DataWorkspaceStatsView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
                 f"status__exact=FAILURE",
             }
         )
+
+        ctx["current_stats"].append(
+            {
+                "title": "S3 storage space used",
+                "subtitle": "(Excludes /bigdata directory)",
+                "stat": (
+                    filesizeformat(
+                        YourFilesUserPrefixStats.objects.filter(
+                            id__in=YourFilesUserPrefixStats.objects.order_by(
+                                "user_id", "-created_date"
+                            )
+                            .distinct("user_id")
+                            .values_list("id", flat=True)
+                        )
+                        .values("user_id", "total_size_bytes")
+                        .aggregate(Sum("total_size_bytes"))["total_size_bytes__sum"]
+                    )
+                ),
+            }
+        )
+
         return ctx
 
 
