@@ -32,7 +32,7 @@ class SupportPage(_BaseWorkspacePage):
 
 
 class ContactUsPage(_BaseWorkspacePage):
-    _url_path = "/contact_us/"
+    _url_path = "/contact-us/"
 
     def select_get_help_option(self) -> "SupportPage":
         self.select_radio_button("id_contact_type_0")
