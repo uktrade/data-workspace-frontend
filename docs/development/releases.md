@@ -26,17 +26,13 @@ git push origin v2024-01-19
 1. View the current [tags in Data Workspace](https://github.com/uktrade/data-workspace/tags)
 
 - Click on the tag that you just created/pushed
-- Compare your tag with the previous. This will give you a list off all the changes to be released
-- Copy all the commits as you will need these for the release notes
+- [Compare your tag with the previous](https://github.com/uktrade/data-workspace/compare). This will give you a list of all the changes to be released
 - View the current [releases in Data Workspace](https://github.com/uktrade/data-workspace/releases)
 - Click "Draft a new release"
-- Fill out the form in the format below and save
-
-**Example of how to Compare tags**
-
-```
-git log --oneline <previous tag>..<new tag>
-```
+- Click the "[Generate release notes](https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes)" option
+- Check that the form is in the format below
+- Check the option "Set as latest release"
+- Click "Save as draft"
 
 **Example of release notes**
 
@@ -62,6 +58,9 @@ The main change today was a fix to an issue where external links in Quicksight d
 - Check the changes in [staging](https://data.trade.staging.uktrade.digital/)
 - Click "proceed" to production
 - Check the changes in [production](https://data.trade.gov.uk/)
+- Go back to the [releases in Github](https://github.com/uktrade/data-workspace/releases)
+- Click on the draft release you created earlier
+- Click "Publish release"
 
 ##Post in the DW channel
 
