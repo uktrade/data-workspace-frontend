@@ -19,7 +19,7 @@ def maintenance_context(request):
 
 def update_maintenance_status():
     """
-    Update the maintenance mode state file with the current maintenance status.
+    Update maintenance mode state with the current maintenance settings.
     """
     settings = get_maintenance_settings()
     maintenance_toggle = settings.maintenance_toggle if settings else False
