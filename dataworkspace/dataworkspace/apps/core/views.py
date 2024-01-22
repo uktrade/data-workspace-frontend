@@ -22,6 +22,7 @@ from requests import HTTPError
 from dataworkspace.apps.applications.models import ApplicationInstance, VisualisationTemplate
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.forms import (
+    ContactUsForm,
     NewsletterSubscriptionForm,
     SupportForm,
     TechnicalSupportForm,
@@ -406,3 +407,14 @@ class RestoreTableDAGTaskStatusView(View):
             )
         except HTTPError as e:
             return JsonResponse({}, status=e.response.status_code)
+
+
+class ContactUsView(FormView):
+    form_class = ContactUsForm
+    template_name = "core/contact-us.html"
+    
+    def form_valid(self, form):
+        cleaned = form.cleaned_data
+        if cleaned["contact_type"] == form.ContactTypes.GET_HELP:
+            return HttpResponseRedirect(reverse("support"))   
+        return HttpResponseRedirect(reverse("feedback"))

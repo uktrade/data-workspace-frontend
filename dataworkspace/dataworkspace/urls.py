@@ -26,6 +26,7 @@ from dataworkspace.apps.core.views import (
     table_data_view,
     UserSatisfactionSurveyView,
     ServeS3UploadedFileView,
+    ContactUsView,
 )
 from dataworkspace.apps.datasets.views import home_view
 from dataworkspace.apps.appstream.views import (
@@ -124,6 +125,7 @@ urlpatterns = [
         login_required(TechnicalSupportView.as_view()),
         name="technical-support",
     ),
+    path("contact-us", login_required(ContactUsView.as_view()), name="contact-us"),
     path(
         "feedback/",
         login_required(UserSatisfactionSurveyView.as_view()),

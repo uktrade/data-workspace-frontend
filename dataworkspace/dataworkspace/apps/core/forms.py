@@ -125,3 +125,16 @@ class TechnicalSupportForm(GOVUKDesignSystemForm):
             and not cleaned["what_should_have_happened"]
         ):
             raise forms.ValidationError("Please add some detail to the support request")
+
+
+class ContactUsForm(GOVUKDesignSystemForm):
+    class ContactTypes(models.TextChoices):
+        GET_HELP = "help", "Get help"
+        GIVE_FEEDBACK = "feedback", "Give feedback"
+
+    contact_type = GOVUKDesignSystemRadioField(
+        label="What would you like to do?",
+        choices=ContactTypes.choices,
+        widget=ConditionalSupportTypeRadioWidget(heading="h2"),
+        error_messages={"required": "Please select what you would like to do."},
+    )
