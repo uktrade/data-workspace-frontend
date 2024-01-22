@@ -137,6 +137,7 @@ MIDDLEWARE = [
     "dataworkspace.middleware.disable_client_side_caching",
     "csp.middleware.CSPMiddleware",
     "django.contrib.redirects.middleware.RedirectFallbackMiddleware",
+    "dataworkspace.apps.maintenance.maintenance.MaintenanceMiddleware",
     "maintenance_mode.middleware.MaintenanceModeMiddleware",
 ]
 
