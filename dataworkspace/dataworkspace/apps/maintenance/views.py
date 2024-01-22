@@ -1,6 +1,6 @@
 from rest_framework import viewsets
 
-from dataworkspace.dataworkspace.apps.maintenance.models import MaintenanceSettings
+from dataworkspace.apps.maintenance.models import MaintenanceSettings
 from dataworkspace.apps.maintenance.serializers import MaintenanceSettingsSerializer
 
 
