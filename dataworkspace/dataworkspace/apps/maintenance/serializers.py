@@ -6,4 +6,4 @@ from dataworkspace.apps.maintenance.models import MaintenanceSettings
 class MaintenanceSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = MaintenanceSettings
-        fields = '__all__'
+        fields = "__all__"

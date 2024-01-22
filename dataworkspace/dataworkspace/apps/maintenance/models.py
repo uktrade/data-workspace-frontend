@@ -6,7 +6,7 @@ class MaintenanceSettings(models.Model):
     maintenance_toggle = models.BooleanField()
 
     def __str__(self):
-        return 'Maintenance Settings'
+        return "Maintenance Settings"
 
     class Meta:
         verbose_name_plural = "settings"

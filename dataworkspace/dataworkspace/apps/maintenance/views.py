@@ -8,5 +8,6 @@ class MaintenanceSettingsViewSet(viewsets.ModelViewSet):
     """
     API Endpoint to return maintenance settings
     """
+
     queryset = MaintenanceSettingsAdmin.objects.all()
     serializer_class = MaintenanceSettingsSerializer
