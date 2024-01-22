@@ -105,6 +105,7 @@ module "jupyterhub" {
   zendesk_token               = "REPLACE_ME"
   zendesk_service_field_id    = "REPLACE_ME"
   zendesk_service_field_value = "REPLACE_ME"
+  zenpy_force_netloc          = "REPLACE_ME"
 
   prometheus_whitelist = []
   metrics_service_discovery_basic_auth_user     = "REPLACE_ME"

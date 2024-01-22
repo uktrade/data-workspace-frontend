@@ -83,6 +83,7 @@ variable zendesk_subdomain {}
 variable zendesk_token {}
 variable zendesk_service_field_id {}
 variable zendesk_service_field_value {}
+variable zenpy_force_netloc {}
 
 variable prometheus_whitelist {
   type = list

@@ -937,6 +937,10 @@
       "value": "${zendesk_service_field_value}"
     },
     {
+      "name": "ZENPY_FORCE_NETLOC",
+      "value": "${zenpy_force_netloc}"
+    },
+    {
       "name": "QUICKSIGHT_NAMESPACE",
       "value": "${quicksight_namespace}"
     },
