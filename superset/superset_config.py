@@ -244,7 +244,8 @@ def app_mutator(app):
                 )
             search_columns = [filter_field.field_name] if filter_field else None
             filters = datamodel.get_filters(search_columns)
-            base_filters = self.filter_rel_fields.get(column_name)
+            if base_filters := self.base_related_field_filters.get(column_name):
+                filters.add_filter_list(base_filters)
             if base_filters:
                 filters.add_filter_list(base_filters)
             if filter_field:
