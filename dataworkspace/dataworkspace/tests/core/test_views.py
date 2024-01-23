@@ -238,7 +238,7 @@ def test_header_links(request_client):
             "Help centre (opens in a new tab)",
             "https://data-services-help.trade.gov.uk/data-workspace",
         ),
-        ("Contact us", "/support-and-feedback/"),
+        ("Contact us", "/contact-us/"),
     ]
 
     assert link_labels == expected_links
@@ -258,7 +258,7 @@ def test_footer_links(request_client):
         ("Tools", "/tools/"),
         ("About", "/about/"),
         ("Our Work", "/case-studies/"),
-        ("Contact us", "/support-and-feedback/"),
+        ("Contact us", "/contact-us/"),
         (
             "Help centre (opens in a new tab)",
             "https://data-services-help.trade.gov.uk/data-workspace",
@@ -510,3 +510,35 @@ class TestNewsletterViews(BaseTestCase):
         subscription = NewsletterSubscription.objects.filter(user=self.user)
         assert subscription.exists()
         assert not subscription.first().is_active
+
+
+class TestContactUsViews(BaseTestCase):
+    def test_contact_us_page_displays_expected_options(self):
+        response = self._authenticated_get(reverse("contact-us"))
+        # pylint: disable=no-member
+        assert response.status_code == 200
+        self.assertContains(response, "Get help")
+        self.assertContains(response, "Give feedback")
+
+    def test_missing_contact_type_returns_expected_error(self):
+        response = self._authenticated_post(reverse("contact-us"), {"contact_type": ""})
+        assert response.status_code == 200
+        self.assertContains(response, "Select an option for what you would like to do")
+
+    def test_invalid_contact_type_returns_expected_error(self):
+        response = self._authenticated_post(reverse("contact-us"), {"contact_type": "NOT_REAL"})
+        assert response.status_code == 200
+        print(response.content)
+        self.assertContains(
+            response, "Select a valid choice. NOT_REAL is not one of the available choices."
+        )
+
+    def test_get_help_redirects_to_support_page(self):
+        response = self._authenticated_post(reverse("contact-us"), {"contact_type": "help"})
+        assert response.status_code == 200
+        self.assertRedirects(response, reverse("support"))
+
+    def test_get_help_redirects_to_feedback_page(self):
+        response = self._authenticated_post(reverse("contact-us"), {"contact_type": "feedback"})
+        assert response.status_code == 200
+        self.assertRedirects(response, reverse("feedback"))

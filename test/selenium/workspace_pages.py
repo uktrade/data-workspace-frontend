@@ -31,6 +31,16 @@ class SupportPage(_BaseWorkspacePage):
         return self._check_url_and_return_page(RequestDataPage)
 
 
+class ContactUsPage(_BaseWorkspacePage):
+    _url_path = "/contact-us/"
+
+    def select_get_help_option(self) -> "SupportPage":
+        self.select_radio_button("id_contact_type_0")
+        self._submit("Continue")
+
+        return self._check_url_and_return_page(SupportPage)
+
+
 class RequestDataPage(_BaseWorkspacePage):
     _url_path = "/request-data/"
 

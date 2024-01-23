@@ -90,3 +90,4 @@ dataworkspace/dataworkspace/static/*.css.map
 test-results/
 cypress/screenshots/
 cypress/videos/
+.vscode/settings.json
