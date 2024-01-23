@@ -133,8 +133,14 @@ class ContactUsForm(GOVUKDesignSystemForm):
         GIVE_FEEDBACK = "feedback", "Give feedback"
 
     contact_type = GOVUKDesignSystemRadioField(
+        required=False,
         label="What would you like to do?",
         choices=ContactTypes.choices,
         widget=ConditionalSupportTypeRadioWidget(heading="h2"),
-        error_messages={"required": "Please select what you would like to do."},
     )
+    
+    def clean_contact_type(self):
+        contact_type = self.cleaned_data.get("contact_type")
+        if not contact_type:
+            raise forms.ValidationError("Please select what you would like to do.")
+        return contact_type
