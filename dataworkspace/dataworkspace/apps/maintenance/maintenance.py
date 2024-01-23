@@ -1,5 +1,6 @@
+from maintenance_mode.core import set_maintenance_mode
+
 from dataworkspace.apps.maintenance.models import MaintenanceSettings
-from maintenance_mode import set_maintenance_mode
 
 
 def get_maintenance_settings():
