@@ -91,3 +91,4 @@ test-results/
 cypress/screenshots/
 cypress/videos/
 .vscode/settings.json
+maintenance_mode_state.txt
