@@ -142,5 +142,5 @@ class ContactUsForm(GOVUKDesignSystemForm):
     def clean_contact_type(self):
         contact_type = self.cleaned_data.get("contact_type")
         if not contact_type:
-            raise forms.ValidationError("Please select what you would like to do.")
+            raise forms.ValidationError("Select an option for what you would like to do")
         return contact_type

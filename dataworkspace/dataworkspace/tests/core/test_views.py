@@ -523,7 +523,7 @@ class TestContactUsViews(BaseTestCase):
     def test_missing_contact_type_returns_expected_error(self):
         response = self._authenticated_post(reverse("contact-us"), {"contact_type": ""})
         assert response.status_code == 200
-        self.assertContains(response, "Please select what you would like to do.")
+        self.assertContains(response, "Select an option for what you would like to do")
 
     def test_invalid_contact_type_returns_expected_error(self):
         response = self._authenticated_post(reverse("contact-us"), {"contact_type": "NOT_REAL"})
