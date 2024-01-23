@@ -153,19 +153,21 @@ class TryingToDoType(models.TextChoices):
     looking = "looking", "Looking for data"
     access_data = "access-data", "Trying to access data"
     analyse_data = "analyse-data", "Analyse data"
-    use_tool = "use-tool", "Use a tool"
-    create_visualisation = "create-visualisation", "Create a data visualisation"
     share_date = "share-date", "Share data"
+    use_tool = "use-tool", "Use tools"
+    create_visualisation = "create-visualisation", "Create a data visualisation"
     share_visualisation = "share-visualisation", "Share a data visualisation"
     view_visualisation = "view-visualisation", "View a data visualisation"
+    support_guidance = "support-guidance", "Looking for support or guidance"
     other = "other", "Other"
-    dont_know = "dont-know", "Don’t know"
 
 
 class UserSatisfactionSurvey(TimeStampedModel):
     how_satisfied = models.CharField(max_length=32, choices=HowSatisfiedType.choices)
     trying_to_do = models.TextField(null=True, blank=True, choices=TryingToDoType.choices)
+    trying_to_do_other_message = models.TextField(null=True, blank=True)
     improve_service = models.TextField(null=True, blank=True)
+    describe_experience = models.TextField(null=True, blank=True)
 
 
 class NewsletterSubscription(TimeStampedModel):

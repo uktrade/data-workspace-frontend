@@ -544,3 +544,29 @@ class TestContactUsViews(BaseTestCase):
         response = self._authenticated_post(reverse("contact-us"), {"contact_type": "feedback"})
         assert response.status_code == 200
         self.assertRedirects(response, reverse("feedback"))
+
+
+class TestFeedbackViews(BaseTestCase):
+    def test_missing_trying_to_do_returns_expected_error_message(self):
+        response = self._authenticated_post(reverse("feedback"), {})
+        assert response.status_code == 200
+        self.assertContains(
+            response, "Select one or more options that explain what you were trying to do today."
+        )
+
+    def test_missing_how_satisfied_returns_expected_error_message(self):
+        response = self._authenticated_post(reverse("feedback"), {})
+        assert response.status_code == 200
+        self.assertContains(
+            response, "Select an option for how Data workspace made you feel today."
+        )
+        
+    def test_trying_to_do_value_is_other_and_missing_other_message_value_returns_expected_error_message(self):
+        response = self._authenticated_post(reverse("feedback"), {'trying_to_do':'other', 'trying_to_do_other_message':'' })
+        assert response.status_code == 200
+        self.assertContains(
+            response, "Explain"
+        )
+        
+    def test_trying_to_do_value_is_other_and_other_message_value_present_returns_expected_success_message(self):
+        pass
