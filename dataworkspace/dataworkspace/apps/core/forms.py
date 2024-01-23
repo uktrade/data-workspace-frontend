@@ -138,7 +138,7 @@ class ContactUsForm(GOVUKDesignSystemForm):
         choices=ContactTypes.choices,
         widget=ConditionalSupportTypeRadioWidget(heading="h2"),
     )
-    
+
     def clean_contact_type(self):
         contact_type = self.cleaned_data.get("contact_type")
         if not contact_type:
