@@ -50,7 +50,7 @@ extra_css:
 plugins:
   - material/search
   - material/tags:
-      tags_file: 'architecture/ADRs/README.md'
+      tags_file: "architecture/ADRs/README.md"
 extra:
   tags:
     Draft: draft
@@ -60,25 +60,26 @@ extra:
     Deprecated: deprecated
     Rejected: rejected
 nav:
-    - Home:
-      - 'index.md'
-    - Development:
-      - Running locally: 'development/running-locally.md'
-      - Running tests: 'development/running-tests.md'
-      - Database migrations: 'development/database-migrations.md'
-      - Updating dependencies: 'development/updating-dependencies.md'
-      - Remote debugging: 'development/remotedebugging.md'
-      - Enhanced tables: 'development/enhancedtables.md'
-    - Deployment: 
-      - To AWS: 'deployment/aws.md'
-      - To other platforms: 'deployment/other-platforms.md'
-    - Data ingestion: 'data-ingestion.md'
-    - Architecture: 
-      - Components: 'architecture/components.md'
-      - Application lifecycle: 'architecture/application-lifecycle.md'
-      - Comparison with JupyterHub: 'architecture/comparison-with-jupyterhub.md'
+  - Home:
+      - "index.md"
+  - Development:
+      - Running locally: "development/running-locally.md"
+      - Running tests: "development/running-tests.md"
+      - Database migrations: "development/database-migrations.md"
+      - Updating dependencies: "development/updating-dependencies.md"
+      - Remote debugging: "development/remotedebugging.md"
+      - Enhanced tables: "development/enhancedtables.md"
+      - Releases: "development/releases.md"
+  - Deployment:
+      - To AWS: "deployment/aws.md"
+      - To other platforms: "deployment/other-platforms.md"
+  - Data ingestion: "data-ingestion.md"
+  - Architecture:
+      - Components: "architecture/components.md"
+      - Application lifecycle: "architecture/application-lifecycle.md"
+      - Comparison with JupyterHub: "architecture/comparison-with-jupyterhub.md"
       - ADRs:
-          - 'architecture/ADRs/README.md'
-          - 'architecture/ADRs/0001.md'
-          - 'architecture/ADRs/0002.md'
-    - Contributing: 'contributing.md'
+          - "architecture/ADRs/README.md"
+          - "architecture/ADRs/0001.md"
+          - "architecture/ADRs/0002.md"
+  - Contributing: "contributing.md"
