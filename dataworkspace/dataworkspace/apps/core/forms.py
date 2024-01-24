@@ -116,7 +116,7 @@ class UserSatisfactionSurveyForm(GOVUKDesignSystemForm):
         trying_to_do = self.cleaned_data.get("trying_to_do")
         trying_to_do_other_message = self.cleaned_data.get("trying_to_do_other_message")
         if not trying_to_do_other_message and trying_to_do and "other" in trying_to_do:
-            raise forms.ValidationError("Explain")
+            raise forms.ValidationError("'Tell us what you were doing' cannot be blank")
         return trying_to_do_other_message
 
 
