@@ -278,7 +278,7 @@ class GOVUKDesignSystemForm(forms.Form):
         Prepare a data structure containing all of the errors in order to render an `error summary` GOV.UK Design
         System component.
         """
-        field_errors = [(field.id_for_label, field.errors[0]) for field in self if field.errors]
+        field_errors = [(field.id_for_label if field.id_for_label else field.auto_id, field.errors[0]) for field in self if field.errors]
         non_field_errors = [(None, e) for e in self.non_field_errors()]
 
         return non_field_errors + field_errors
