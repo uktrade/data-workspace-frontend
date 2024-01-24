@@ -594,4 +594,10 @@ class TestFeedbackViews(BaseTestCase):
             },
         )
         assert response.status_code == 200
-        assert UserSatisfactionSurvey.objects.filter(trying_to_do="other").exists()
+        
+        survey_entry = UserSatisfactionSurvey.objects.first()
+        assert survey_entry.how_satisfied == "very-satified"
+        assert survey_entry.trying_to_do == "other"
+        assert survey_entry.trying_to_do_other_message == "Hello"
+        assert survey_entry.improve_service == "abc"
+        assert survey_entry.describe_experience == "def"
