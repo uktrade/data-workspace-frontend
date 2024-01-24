@@ -10,7 +10,6 @@ from dataworkspace.forms import (
     GOVUKDesignSystemEmailWidget,
     GOVUKDesignSystemForm,
     GOVUKDesignSystemMultipleChoiceField,
-    GOVUKDesignSystemPlainTextareaField,
     GOVUKDesignSystemRadioField,
     GOVUKDesignSystemRadiosWidget,
     GOVUKDesignSystemTextWidget,
