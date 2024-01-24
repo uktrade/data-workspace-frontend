@@ -79,7 +79,9 @@ class UserSatisfactionSurveyForm(GOVUKDesignSystemForm):
         help_text="Select all options that are relevant to you.",
         widget=ConditionalSupportTypeCheckboxWidget(heading="h2", label_size="m", small=True),
         choices=[(t.value, t.label) for t in TryingToDoType],
-        error_messages={"required": "Select one or more options that explain what you were trying to do today."},
+        error_messages={
+            "required": "Select one or more options that explain what you were trying to do today."
+        },
     )
 
     trying_to_do_other_message = GOVUKDesignSystemCharField(
@@ -93,7 +95,9 @@ class UserSatisfactionSurveyForm(GOVUKDesignSystemForm):
         label="2. How do you feel about your experience of using Data Workspace today?",
         widget=GOVUKDesignSystemRadiosWidget(heading="h2", label_size="m", small=True),
         choices=[(t.value, t.label) for t in HowSatisfiedType],
-        error_messages={"required": "Select an option for how Data workspace made you feel today."},
+        error_messages={
+            "required": "Select an option for how Data workspace made you feel today."
+        },
     )
 
     describe_experience = GOVUKDesignSystemTextareaField(

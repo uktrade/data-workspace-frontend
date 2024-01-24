@@ -594,4 +594,4 @@ class TestFeedbackViews(BaseTestCase):
             },
         )
         assert response.status_code == 200
-        assert UserSatisfactionSurvey.objects.filter(trying_to_do='other').exists()
+        assert UserSatisfactionSurvey.objects.filter(trying_to_do="other").exists()
