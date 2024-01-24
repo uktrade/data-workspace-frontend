@@ -29,6 +29,7 @@ def test_link_data_cut_doesnt_have_preview(access_type, client):
     # assert 'No preview available' in response.rendered_content
 
 
+@pytest.mark.django_db
 class TestDatasetViews:
     def test_homepage_unauth(self, unauthenticated_client):
         response = unauthenticated_client.get(reverse("root"))
