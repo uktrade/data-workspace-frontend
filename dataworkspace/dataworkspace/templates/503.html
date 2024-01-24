@@ -1,0 +1,21 @@
+{% extends '_main.html' %}
+{% load static %}
+
+{% block page_title %}About - {{ block.super }}{% endblock %}
+
+{% block navigation %}{% endblock %}
+
+{% block content %}
+<div class="govuk-width-container">
+    <main class="govuk-main-wrapper govuk-main-wrapper--l" id="main-content" role="main">
+      <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+          <h1 class="govuk-heading-l">Sorry, the service is unavailable</h1>
+          <p class="govuk-body">
+            {{ maintenance_text }}
+          </p>
+        </div>
+      </div>
+    </main>
+  </div>
+  {% endblock %}

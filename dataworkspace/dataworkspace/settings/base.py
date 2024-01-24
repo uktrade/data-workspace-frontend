@@ -84,6 +84,8 @@ ELASTIC_APM = (
 SITE_ID = 1
 
 INSTALLED_APPS = [
+    "maintenance_mode",
+    "dataworkspace.apps.maintenance",
     "dataworkspace.admin.DataWorkspaceAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -135,6 +137,8 @@ MIDDLEWARE = [
     "dataworkspace.middleware.disable_client_side_caching",
     "csp.middleware.CSPMiddleware",
     "django.contrib.redirects.middleware.RedirectFallbackMiddleware",
+    "dataworkspace.apps.maintenance.maintenance.MaintenanceMiddleware",
+    "maintenance_mode.middleware.MaintenanceModeMiddleware",
 ]
 
 if DEBUG:
@@ -828,3 +832,8 @@ MLFLOW_PORT = env.get("MLFLOW_PORT", "")
 # These pipelines can output data to any table so should not be relied
 # upon for source table pipeline metadata
 DYNAMIC_PIPELINES = ("DataWorkspaceS3ImportPipeline", "DSSGenericPipeline")
+
+MAINTENANCE_MODE = None
+MAINTENANCE_MODE_IGNORE_ADMIN_SITE = True
+MAINTENANCE_MODE_GET_CONTEXT = "dataworkspace.apps.maintenance.maintenance.maintenance_context"
+MAINTENANCE_MODE_STATE_BACKEND = "maintenance_mode.backends.CacheBackend"

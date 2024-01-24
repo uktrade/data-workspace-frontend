@@ -245,6 +245,7 @@ def test_header_links(request_client):
 
 
 @pytest.mark.parametrize("request_client", ("client", "staff_client"), indirect=["request_client"])
+@pytest.mark.django_db
 def test_footer_links(request_client):
     response = request_client.get(reverse("root"))
 
@@ -354,6 +355,7 @@ def test_appstream_link_only_shown_to_user_with_permission(
     assert quicksight_link.get("href") == expected_href
 
 
+@pytest.mark.django_db
 def test_media_serve_unauthenticated(mocker, unauthenticated_client):
     mock_client = mocker.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     mock_client().head_object.side_effect = [

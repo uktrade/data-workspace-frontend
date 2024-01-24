@@ -17,6 +17,7 @@ django-db-connection-pool[postgresql]
 django-dynamic-models-readonly
 django-environ
 django-extensions
+django-maintenance-mode
 django-redis
 django-staff-sso-client
 django-waffle
