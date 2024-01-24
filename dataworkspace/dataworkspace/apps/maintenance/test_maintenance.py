@@ -1,5 +1,6 @@
 from unittest import mock
 from django.test import TestCase, RequestFactory
+import pytest
 from dataworkspace.apps.maintenance.models import MaintenanceSettings
 from dataworkspace.apps.maintenance.maintenance import (
     get_maintenance_settings,
@@ -9,6 +10,7 @@ from dataworkspace.apps.maintenance.maintenance import (
 )
 
 
+@pytest.mark.django_db
 class TestMaintenance(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
