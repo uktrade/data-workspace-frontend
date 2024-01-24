@@ -836,3 +836,4 @@ DYNAMIC_PIPELINES = ("DataWorkspaceS3ImportPipeline", "DSSGenericPipeline")
 MAINTENANCE_MODE = None
 MAINTENANCE_MODE_IGNORE_ADMIN_SITE = True
 MAINTENANCE_MODE_GET_CONTEXT = "dataworkspace.apps.maintenance.maintenance.maintenance_context"
+MAINTENANCE_MODE_STATE_BACKEND = "maintenance_mode.backends.CacheBackend"
