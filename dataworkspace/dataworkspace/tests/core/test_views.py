@@ -569,7 +569,7 @@ class TestFeedbackViews(BaseTestCase):
             reverse("feedback"), {"trying_to_do": "other", "trying_to_do_other_message": ""}
         )
         assert response.status_code == 200
-        self.assertContains(response, "Explain")
+        self.assertContains(response, "Tell us what you were doing")
 
     def test_trying_to_do_value_is_other_and_trying_to_do_other_message_value_present_doesnt_return_error(
         self,
@@ -578,7 +578,7 @@ class TestFeedbackViews(BaseTestCase):
             reverse("feedback"), {"trying_to_do": "other", "trying_to_do_other_message": "Hello"}
         )
         assert response.status_code == 200
-        self.assertNotContains(response, "Explain")
+        self.assertNotContains(response, "'Tell us what you were doing' cannot be blank")
 
     def test_submitting_valid_form_adds_expected_entry_to_django(
         self,
