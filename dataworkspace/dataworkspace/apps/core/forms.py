@@ -23,9 +23,11 @@ from dataworkspace.forms import (
 class ConditionalSupportTypeRadioWidget(GOVUKDesignSystemWidgetMixin, forms.widgets.RadioSelect):
     template_name = "design_system/radio.html"
     option_template_name = "core/partial/support_type_radio_option.html"
-    
-    
-class ConditionalSupportTypeCheckboxWidget(GOVUKDesignSystemCheckboxesWidget, forms.widgets.CheckboxSelectMultiple):
+
+
+class ConditionalSupportTypeCheckboxWidget(
+    GOVUKDesignSystemCheckboxesWidget, forms.widgets.CheckboxSelectMultiple
+):
     template_name = "design_system/checkbox.html"
     option_template_name = "core/partial/support_type_checkbox_option.html"
 
@@ -72,24 +74,26 @@ class SupportForm(GOVUKDesignSystemForm):
 
 class UserSatisfactionSurveyForm(GOVUKDesignSystemForm):
     trying_to_do = GOVUKDesignSystemMultipleChoiceField(
-        required=False,
+        required=True,
         label="1. What were you trying to do today?",
         help_text="Select all options that are relevant to you.",
         widget=ConditionalSupportTypeCheckboxWidget(heading="h2", label_size="m", small=True),
         choices=[(t.value, t.label) for t in TryingToDoType],
+        error_messages={"required": "Select one or more options that explain what you were trying to do today."},
     )
 
-    how_satisfied = GOVUKDesignSystemRadioField(
-        required=False,
-        label="2. How do you feel about your experience of using Data Workspace today?",
-        widget=GOVUKDesignSystemRadiosWidget(heading="h2", label_size="m", small=True),
-        choices=[(t.value, t.label) for t in HowSatisfiedType],
-    )
-
-    trying_to_do_other_message = GOVUKDesignSystemPlainTextareaField(
+    trying_to_do_other_message = GOVUKDesignSystemCharField(
         required=False,
         label="Tell us what you were doing",
         widget=GOVUKDesignSystemTextWidget(label_is_heading=False, label_size="m"),
+    )
+
+    how_satisfied = GOVUKDesignSystemRadioField(
+        required=True,
+        label="2. How do you feel about your experience of using Data Workspace today?",
+        widget=GOVUKDesignSystemRadiosWidget(heading="h2", label_size="m", small=True),
+        choices=[(t.value, t.label) for t in HowSatisfiedType],
+        error_messages={"required": "Select an option for how Data workspace made you feel today."},
     )
 
     describe_experience = GOVUKDesignSystemTextareaField(
@@ -103,24 +107,7 @@ class UserSatisfactionSurveyForm(GOVUKDesignSystemForm):
         label="4. How could we improve the service? (optional)",
         help_html=render_to_string("core/partial/user-survey-improve-service-hint.html"),
         widget=GOVUKDesignSystemTextareaWidget(heading="h2", label_size="m"),
-    ) 
-    
-
-    def clean_trying_to_do(self):
-        trying_to_do = self.cleaned_data.get("trying_to_do")
-        if not trying_to_do:
-            raise forms.ValidationError(
-                "Select one or more options that explain what you were trying to do today."
-            )
-        return trying_to_do
-
-    def clean_how_satisfied(self):
-        how_satisfied = self.cleaned_data.get("how_satisfied")
-        if not how_satisfied:
-            raise forms.ValidationError(
-                "Select an option for how Data workspace made you feel today."
-            )
-        return how_satisfied
+    )
 
     def clean_trying_to_do_other_message(self):
         trying_to_do = self.cleaned_data.get("trying_to_do")

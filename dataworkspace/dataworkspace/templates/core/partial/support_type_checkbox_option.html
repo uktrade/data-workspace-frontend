@@ -5,7 +5,6 @@
          {% if widget.value != None %}value="{{ widget.value|stringformat:'s' }}"{% endif %}
          {% if widget.value == 'other' %}data-aria-controls="conditional-message"{% endif %}
          {% include "django/forms/widgets/attrs.html" %}>
-
   <label class="govuk-label govuk-checkboxes__label"
          for="{{ widget.attrs.id }}">{{ widget.label }}</label>
 </div>

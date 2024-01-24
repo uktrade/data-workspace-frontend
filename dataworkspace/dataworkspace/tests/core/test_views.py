@@ -13,7 +13,7 @@ from django.contrib.auth.models import Permission
 from django.test import override_settings, Client
 from django.urls import reverse
 
-from dataworkspace.apps.core.models import NewsletterSubscription
+from dataworkspace.apps.core.models import NewsletterSubscription, UserSatisfactionSurvey
 from dataworkspace.tests.common import (
     BaseTestCase,
     get_http_sso_data,
@@ -546,6 +546,7 @@ class TestContactUsViews(BaseTestCase):
         self.assertRedirects(response, reverse("feedback"))
 
 
+@pytest.mark.django_db
 class TestFeedbackViews(BaseTestCase):
     def test_missing_trying_to_do_returns_expected_error_message(self):
         response = self._authenticated_post(reverse("feedback"), {})
@@ -560,13 +561,37 @@ class TestFeedbackViews(BaseTestCase):
         self.assertContains(
             response, "Select an option for how Data workspace made you feel today."
         )
-        
-    def test_trying_to_do_value_is_other_and_missing_other_message_value_returns_expected_error_message(self):
-        response = self._authenticated_post(reverse("feedback"), {'trying_to_do':'other', 'trying_to_do_other_message':'' })
-        assert response.status_code == 200
-        self.assertContains(
-            response, "Explain"
+
+    def test_trying_to_do_value_is_other_and_trying_to_do_other_message_missing_returns_expected_error_message(
+        self,
+    ):
+        response = self._authenticated_post(
+            reverse("feedback"), {"trying_to_do": "other", "trying_to_do_other_message": ""}
         )
-        
-    def test_trying_to_do_value_is_other_and_other_message_value_present_returns_expected_success_message(self):
-        pass
+        assert response.status_code == 200
+        self.assertContains(response, "Explain")
+
+    def test_trying_to_do_value_is_other_and_trying_to_do_other_message_value_present_doesnt_return_error(
+        self,
+    ):
+        response = self._authenticated_post(
+            reverse("feedback"), {"trying_to_do": "other", "trying_to_do_other_message": "Hello"}
+        )
+        assert response.status_code == 200
+        self.assertNotContains(response, "Explain")
+
+    def test_submitting_valid_form_adds_expected_entry_to_django(
+        self,
+    ):
+        response = self._authenticated_post(
+            reverse("feedback"),
+            {
+                "how_satisfied": "very-satified",
+                "trying_to_do": "other",
+                "trying_to_do_other_message": "Hello",
+                "improve_service": "abc",
+                "describe_experience": "def",
+            },
+        )
+        assert response.status_code == 200
+        assert UserSatisfactionSurvey.objects.filter(trying_to_do='other').exists()
