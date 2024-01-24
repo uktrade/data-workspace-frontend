@@ -307,7 +307,13 @@ def application_instance_max_cpu(application_instance):
     if application_instance.proxy_url is None:
         raise ExpectedMetricsException("Unknown")
 
-    instance = urllib.parse.urlsplit(application_instance.proxy_url).hostname + ":8889"
+    hostname = urllib.parse.urlsplit(application_instance.proxy_url).hostname
+
+    # If the tool failed to start we then hostname can be None
+    if hostname is None:
+        raise ExpectedMetricsException("Unknown")
+
+    instance = hostname + ":8889"
     url = f"https://{settings.PROMETHEUS_DOMAIN}/api/v1/query"
     params = {
         "query": f'increase(precpu_stats__cpu_usage__total_usage{{instance="{instance}"}}[30s])[2h:30s]'
