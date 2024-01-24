@@ -594,7 +594,7 @@ class TestFeedbackViews(BaseTestCase):
             },
         )
         assert response.status_code == 200
-        
+
         survey_entry = UserSatisfactionSurvey.objects.first()
         assert survey_entry.how_satisfied == "very-satified"
         assert survey_entry.trying_to_do == "other"
