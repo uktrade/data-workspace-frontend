@@ -38,7 +38,7 @@ RUN apt-get update && \
     chown -R django /var/log/nginx
 
 COPY requirements.txt requirements.txt
-RUN python3 -m pip install --upgrade pip wheel && \
+RUN python3 -m pip install --upgrade pip wheel pip-tools && \
     python3 -m pip install -r requirements.txt
 
 FROM base AS test
