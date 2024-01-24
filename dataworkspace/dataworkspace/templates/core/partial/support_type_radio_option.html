@@ -1,13 +1,9 @@
 <div class="govuk-radios__item">
-  <input
-    class="govuk-radios__input"
-    name="{{ widget.name }}"
-    type="radio"
-    {% if widget.value != None %}value="{{ widget.value|stringformat:'s' }}"{% endif %}
-    {% if widget.value == 'other' %}data-aria-controls="conditional-message"{% endif %}
-    {% include "django/forms/widgets/attrs.html" %}
-  >
-  <label class="govuk-label govuk-radios__label" for="{{ widget.attrs.id }}">
-    {{ widget.label }}
-  </label>
+  <input class="govuk-radios__input"
+         name="{{ widget.name }}"
+         type="radio"
+         {% if widget.value != None %}value="{{ widget.value|stringformat:'s' }}"{% endif %}
+         {% if widget.value == 'other' %}data-aria-controls="conditional-message"{% endif %}
+         {% include "django/forms/widgets/attrs.html" %}>
+  <label class="govuk-label govuk-radios__label" for="{{ widget.attrs.id }}">{{ widget.label }}</label>
 </div>
