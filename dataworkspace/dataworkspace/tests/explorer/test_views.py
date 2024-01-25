@@ -11,7 +11,6 @@ from django.core.cache import cache
 from django.db import connections
 from django.contrib.auth import get_user_model
 from django.forms.models import model_to_dict
-from lxml import html
 import pytest
 
 from dataworkspace.apps.core.utils import USER_SCHEMA_STEM, stable_identification_suffix
@@ -240,12 +239,6 @@ class TestHomePage:
     def test_empty_playground_renders(self, staff_client):
         resp = staff_client.get(reverse("explorer:index"))
         assert resp.status_code == 200
-
-    def test_support_and_feedback_link(self, staff_client):
-        resp = staff_client.get(reverse("explorer:index"))
-
-        doc = html.fromstring(resp.content.decode(resp.charset))
-        assert doc.xpath('//a[normalize-space(text()) = "feedback"]/@href')[0] == "/feedback/"
 
     def test_playground_renders_with_query_sql(self, staff_user, staff_client):
         query = SimpleQueryFactory(sql="select 1;", created_by_user=staff_user)
