@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.core import serializers
 from django.db import transaction
-from django.db.models import Count, Max, Min, Sum, F, Func, Value, Q
+from django.db.models import Count, FloatField, Max, Min, Sum, F, Func, Value, Q
 from django.db.models.functions import Least
 from django.forms import Textarea
 
@@ -188,15 +188,18 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
             "num_with_runtime": Count(F("spawner_stopped_at") - F("spawner_created_at")),
             "min_runtime": Min(
                 Func(Value("second"), F("spawner_stopped_at"), function="date_trunc")
-                - Func(Value("second"), F("spawner_created_at"), function="date_trunc")
+                - Func(Value("second"), F("spawner_created_at"), function="date_trunc"),
+                output_field=FloatField(),
             ),
             "max_runtime": Max(
                 Func(Value("second"), F("spawner_stopped_at"), function="date_trunc")
-                - Func(Value("second"), F("spawner_created_at"), function="date_trunc")
+                - Func(Value("second"), F("spawner_created_at"), function="date_trunc"),
+                output_field=FloatField(),
             ),
             "total_runtime": Sum(
                 Func(Value("second"), F("spawner_stopped_at"), function="date_trunc")
-                - Func(Value("second"), F("spawner_created_at"), function="date_trunc")
+                - Func(Value("second"), F("spawner_created_at"), function="date_trunc"),
+                output_field=FloatField(),
             ),
         }
 
@@ -216,7 +219,12 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
             .annotate(**metrics)
             .order_by(
                 *(
-                    ["-has_runtime", "-total_runtime", "-num_launched", "-max_runtime"]
+                    [
+                        "-has_runtime",
+                        "-total_runtime",
+                        "-num_launched",
+                        "-max_runtime",
+                    ]
                     + group_by_fields
                 )
             )
