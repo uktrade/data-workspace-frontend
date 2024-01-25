@@ -4,6 +4,7 @@ from django.db import models
 class MaintenanceSettings(models.Model):
     maintenance_text = models.CharField()
     maintenance_toggle = models.BooleanField()
+    contact_email = models.EmailField()
 
     def __str__(self):
         return "Maintenance Settings"
