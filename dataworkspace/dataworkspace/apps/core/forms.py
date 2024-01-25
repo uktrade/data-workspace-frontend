@@ -79,7 +79,7 @@ class UserSatisfactionSurveyForm(GOVUKDesignSystemForm):
         widget=ConditionalSupportTypeCheckboxWidget(heading="h2", label_size="m", small=True),
         choices=[(t.value, t.label) for t in TryingToDoType],
         error_messages={
-            "required": "Select one or more options that explain what you were trying to do today."
+            "required": "Select at least one option for what were you trying to do today"
         },
     )
 
@@ -95,7 +95,7 @@ class UserSatisfactionSurveyForm(GOVUKDesignSystemForm):
         widget=GOVUKDesignSystemRadiosWidget(heading="h2", label_size="m", small=True),
         choices=[(t.value, t.label) for t in HowSatisfiedType],
         error_messages={
-            "required": "Select an option for how Data workspace made you feel today."
+            "required": "Select how Data Workspace made you feel today"
         },
     )
 
@@ -116,7 +116,7 @@ class UserSatisfactionSurveyForm(GOVUKDesignSystemForm):
         trying_to_do = self.cleaned_data.get("trying_to_do")
         trying_to_do_other_message = self.cleaned_data.get("trying_to_do_other_message")
         if not trying_to_do_other_message and trying_to_do and "other" in trying_to_do:
-            raise forms.ValidationError("'Tell us what you were doing' cannot be blank")
+            raise forms.ValidationError("Enter a description for what you were doing")
         return trying_to_do_other_message
 
 

@@ -552,14 +552,14 @@ class TestFeedbackViews(BaseTestCase):
         response = self._authenticated_post(reverse("feedback"), {})
         assert response.status_code == 200
         self.assertContains(
-            response, "Select one or more options that explain what you were trying to do today."
+            response, "Select at least one option for what were you trying to do today"
         )
 
     def test_missing_how_satisfied_returns_expected_error_message(self):
         response = self._authenticated_post(reverse("feedback"), {})
         assert response.status_code == 200
         self.assertContains(
-            response, "Select an option for how Data workspace made you feel today."
+            response, "Select how Data Workspace made you feel today"
         )
 
     def test_trying_to_do_value_is_other_and_trying_to_do_other_message_missing_returns_expected_error_message(
@@ -569,7 +569,7 @@ class TestFeedbackViews(BaseTestCase):
             reverse("feedback"), {"trying_to_do": "other", "trying_to_do_other_message": ""}
         )
         assert response.status_code == 200
-        self.assertContains(response, "Tell us what you were doing")
+        self.assertContains(response, "Enter a description for what you were doing")
 
     def test_trying_to_do_value_is_other_and_trying_to_do_other_message_value_present_doesnt_return_error(
         self,
@@ -578,7 +578,7 @@ class TestFeedbackViews(BaseTestCase):
             reverse("feedback"), {"trying_to_do": "other", "trying_to_do_other_message": "Hello"}
         )
         assert response.status_code == 200
-        self.assertNotContains(response, "'Tell us what you were doing' cannot be blank")
+        self.assertNotContains(response, "Enter a description for what you were doing")
 
     def test_submitting_valid_form_adds_expected_entry_to_django(
         self,
