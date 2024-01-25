@@ -3,9 +3,8 @@ title: Releases
 ---
 
 ## Notify the team
-1. Post a message into Data Workspace channel in the Data Infrastructure (DDaT) Team
+1. Post a message into di-dev channel in the Data Infrastructure (DDaT) Team saying that you want to do a release and ask if there are any objections. If no objections, proceed with the following steps.
 
- the #data-hub-core-dev channel saying that you want to do a Data Hub frontend release and ask if there are any objections. If no objections, proceed with the following steps.
 
 ## Tag your release
 
@@ -59,10 +58,11 @@ The main change today was a fix to an issue where external links in Quicksight d
 1. Visit the [build job](https://jenkins.ci.uktrade.digital/view/Data/job/data-workspace/) in Jenkins
 
 - Click "build with parameters" and enter the new tag you have created.
-- Wait until the release:staging job is in a paused state
-- Click "proceed"
+- Wait until the `release:staging`` job is in a paused state
+- Hover over this stage, and click the "Proceed" button
+- Wait for the `release: data-workspace`` job is complete
 - Check the changes in [staging](https://data.trade.staging.uktrade.digital/)
-- Click "proceed" to production
+- Click "Proceed" on the `release: prod`` job
 - Check the changes in [production](https://data.trade.gov.uk/)
 - Go back to the [releases in Github](https://github.com/uktrade/data-workspace/releases)
 - Click on the draft release you created earlier
