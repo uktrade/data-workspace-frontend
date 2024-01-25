@@ -94,9 +94,7 @@ class UserSatisfactionSurveyForm(GOVUKDesignSystemForm):
         label="2. How do you feel about your experience of using Data Workspace today?",
         widget=GOVUKDesignSystemRadiosWidget(heading="h2", label_size="m", small=True),
         choices=[(t.value, t.label) for t in HowSatisfiedType],
-        error_messages={
-            "required": "Select how Data Workspace made you feel today"
-        },
+        error_messages={"required": "Select how Data Workspace made you feel today"},
     )
 
     describe_experience = GOVUKDesignSystemTextareaField(

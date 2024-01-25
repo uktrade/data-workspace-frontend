@@ -558,9 +558,7 @@ class TestFeedbackViews(BaseTestCase):
     def test_missing_how_satisfied_returns_expected_error_message(self):
         response = self._authenticated_post(reverse("feedback"), {})
         assert response.status_code == 200
-        self.assertContains(
-            response, "Select how Data Workspace made you feel today"
-        )
+        self.assertContains(response, "Select how Data Workspace made you feel today")
 
     def test_trying_to_do_value_is_other_and_trying_to_do_other_message_missing_returns_expected_error_message(
         self,
