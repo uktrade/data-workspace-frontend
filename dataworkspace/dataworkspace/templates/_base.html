@@ -79,6 +79,7 @@
       <div class="govuk-header__logotype">
         <a href="{{ root_href }}"
            class="govuk-header__link govuk-header__link--service-name">Data Workspace</a>
+           <strong class="govuk-tag govuk-phase-banner__content__tag ">Beta</strong>
       </div>
       <div class="app-header--suggestion">
         <div class="govuk-header__navigation-item">
@@ -138,7 +139,6 @@
 
 
   <nav class="govuk-width-container">
-    {% include 'partials/beta_banner.html' %}
     {% block breadcrumbs %}{% endblock %}
     {% block go_back %}{% endblock %}
   </nav>
