@@ -9,15 +9,12 @@
 <div class="govuk-width-container">
     <div class="govuk-grid-row">
       <div class="govuk-grid-column-two-thirds">
-        <h1 class="govuk-heading-xl">Sorry, the service is unavailable</h1>
+        <h1 class="govuk-heading-l">Sorry, the service is unavailable</h1>
         <p class="govuk-body">
-          {{ maintenance_text }}
+          {{ maintenance_text|safe }}
           <br><br>
-          For further assistance, please contact us.
-          <br><br>
-          Email:
-          <br>
-          <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>
+          If you need help, 
+          <a href="mailto:{{ contact_email }}">contact us</a>.
         </p>
       </div>
     </div>
