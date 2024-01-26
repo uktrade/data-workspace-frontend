@@ -88,6 +88,15 @@ docker compose --profile superset up
 
 You can then visit [http://superset-edit.dataworkspace.test:8000/](http://superset-edit.dataworkspace.test:8000/) or [http://superset-admin.dataworkspace.test:8000/](http://superset-admin.dataworkspace.test:8000/).
 
+## Using a virtual environment
+Although the application should be run using docker, there are benefits when developing to installing dataworkspace into a local virtual environment. The main benefit is that VS Code can highlight import issues, and the Go To Definition works as expected.
+
+1. Make sure you have python version 3.9 available locally, as this is the version the virtual environment will use
+1. Run the command `python -m venv venv`, this will create a new folder called `venv` on your machine
+1. Activate the venv by using the command `source venv/bin/activate`
+1. Run `pip install --upgrade pip wheel pip-tools`
+1. Run `pip install -r requirements-dev.txt`
+
 
 ## Front end static assets
 

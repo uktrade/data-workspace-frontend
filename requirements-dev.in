@@ -2,6 +2,7 @@
 
 aiopg
 black
+djlint
 factory_boy
 flake8
 flake8-bugbear
