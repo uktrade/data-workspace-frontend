@@ -13,6 +13,13 @@
   <script nonce="{{ request.csp_nonce }}" src="{% static 'gtm-support.js' %}"></script>
 {% endblock %}
 
+
+{% block header %}
+  <div class="home-header">
+    {{ block.super }}
+  </div>
+{% endblock %}
+
 {% block initialGTMDataLayer %}
   {{ block.super }}
   <script nonce="{{ request.csp_nonce }}">

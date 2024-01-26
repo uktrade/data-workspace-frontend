@@ -74,69 +74,70 @@
   </script>
 
   <a href="{{ request.path }}#main-content" class="govuk-skip-link">Skip to main content</a>
-  <header class="govuk-header" role="banner" data-module="govuk-header">
-    <div class="govuk-header__container govuk-width-container">
-      <div class="govuk-header__logotype">
-        <a href="{{ root_href }}"
-           class="govuk-header__link govuk-header__link--service-name">Data Workspace</a>
-           <strong class="govuk-tag govuk-phase-banner__content__tag ">Beta</strong>
-      </div>
-      <div class="app-header--suggestion">
-        <div class="govuk-header__navigation-item">
-          <a class="govuk-header__link"
-             href="https://www.datahub.trade.gov.uk/?utm_source=Data%20Workspace&utm_medium=referral&utm_campaign=dataflow&utm_content=Switch%20to%20Data%20Hub">Switch to Data Hub</a>
+  {% url 'applications:tools' as tools_url %}
+  {% block header %}
+    <header class="govuk-header" role="banner" data-module="govuk-header">
+      <div class="govuk-header__container govuk-width-container">
+        <div class="govuk-header__logotype">
+          <a href="{{ root_href }}"
+            class="govuk-header__link govuk-header__link--service-name">Data Workspace</a>
+            <strong class="govuk-tag govuk-phase-banner__content__tag ">Beta</strong>
         </div>
+        <div class="app-header--suggestion">
+          <div class="govuk-header__navigation-item">
+            <a class="govuk-header__link"
+              href="https://www.datahub.trade.gov.uk/?utm_source=Data%20Workspace&utm_medium=referral&utm_campaign=dataflow&utm_content=Switch%20to%20Data%20Hub">Switch to Data Hub</a>
+          </div>
+        </div>
+        {% block navigation %}
+          <button type="button"
+                  class="govuk-header__menu-button govuk-js-header-toggle"
+                  aria-controls="navigation"
+                  aria-label="Show or hide Top Level Navigation">Menu</button>
+          <nav aria-label="Top Level Navigation">
+            <ul id="navigation" class="govuk-header__navigation">
+              <li class="govuk-header__navigation-item{% if request.get_full_path == '/' %} govuk-header__navigation-item--active{% endif %}">
+                <a class="govuk-header__link" href="{{ root_href }}">Home</a>
+              </li>
+              {% url 'datasets:find_datasets' as data_catalogue_url %}
+              <li class="govuk-header__navigation-item{% if request.path == data_catalogue_url %} govuk-header__navigation-item--active{% endif %}">
+                <a class="govuk-header__link" href="{{ data_catalogue_url }}">Data catalogue</a>
+              </li>
+              {% url 'data_collections:collections-list' as collections_homepage_url %}
+              <li class="govuk-header__navigation-item{% if request.get_full_path|startswith:collections_homepage_url %} govuk-header__navigation-item--active{% endif %}">
+                <a class="govuk-header__link" href="{{ collections_homepage_url }}">Collections</a>
+              </li>
+              {% with tools_count=RUNNING_TOOLS.count %}
+                <li class="govuk-header__navigation-item{% if request.get_full_path == tools_url %} govuk-header__navigation-item--active{% endif %}">
+                  <a class="govuk-header__link" href="{{ tools_url }}">Tools</a>
+                  {% if tools_count > 0 %}<span class="badge">{{ tools_count }}</span>{% endif %}
+  
+                </li>
+              {% endwith %}
+              {% if can_see_visualisations_tab %}
+                {% url 'visualisations:root' as visualisations_root_url %}
+                <li class="govuk-header__navigation-item{% if request.get_full_path == visualisations_root_url %} govuk-header__navigation-item--active{% endif %}">
+                  <a class="govuk-header__link" href="{{ visualisations_root_url }}">Visualisations</a>
+                </li>
+              {% endif %}
+              <li class="govuk-header__navigation-item">
+                <a class="govuk-header__link"
+                  href="https://data-services-help.trade.gov.uk/data-workspace"
+                  target="_blank"
+                  rel="noopener noreferrer">
+                  Help centre <span class="govuk-visually-hidden">(opens in a new tab)</span>
+                </a>
+              </li>
+              <li class="govuk-header__navigation-item">
+                <a class="govuk-header__link" href="{% url 'contact-us' %}">Contact us</a>
+              </li>
+            </ul>
+          </nav>
+        {% endblock %}
       </div>
-      {% url 'applications:tools' as tools_url %}
-      {% block navigation %}
-        <button type="button"
-                class="govuk-header__menu-button govuk-js-header-toggle"
-                aria-controls="navigation"
-                aria-label="Show or hide Top Level Navigation">Menu</button>
-        <nav aria-label="Top Level Navigation">
-          <ul id="navigation" class="govuk-header__navigation">
-            <li class="govuk-header__navigation-item{% if request.get_full_path == '/' %} govuk-header__navigation-item--active{% endif %}">
-              <a class="govuk-header__link" href="{{ root_href }}">Home</a>
-            </li>
-            {% url 'datasets:find_datasets' as data_catalogue_url %}
-            <li class="govuk-header__navigation-item{% if request.path == data_catalogue_url %} govuk-header__navigation-item--active{% endif %}">
-              <a class="govuk-header__link" href="{{ data_catalogue_url }}">Data catalogue</a>
-            </li>
-            {% url 'data_collections:collections-list' as collections_homepage_url %}
-            <li class="govuk-header__navigation-item{% if request.get_full_path|startswith:collections_homepage_url %} govuk-header__navigation-item--active{% endif %}">
-              <a class="govuk-header__link" href="{{ collections_homepage_url }}">Collections</a>
-            </li>
-            {% with tools_count=RUNNING_TOOLS.count %}
-              <li class="govuk-header__navigation-item{% if request.get_full_path == tools_url %} govuk-header__navigation-item--active{% endif %}">
-                <a class="govuk-header__link" href="{{ tools_url }}">Tools</a>
-                {% if tools_count > 0 %}<span class="badge">{{ tools_count }}</span>{% endif %}
- 
-              </li>
-            {% endwith %}
-            {% if can_see_visualisations_tab %}
-              {% url 'visualisations:root' as visualisations_root_url %}
-              <li class="govuk-header__navigation-item{% if request.get_full_path == visualisations_root_url %} govuk-header__navigation-item--active{% endif %}">
-                <a class="govuk-header__link" href="{{ visualisations_root_url }}">Visualisations</a>
-              </li>
-            {% endif %}
-            <li class="govuk-header__navigation-item">
-              <a class="govuk-header__link"
-                 href="https://data-services-help.trade.gov.uk/data-workspace"
-                 target="_blank"
-                 rel="noopener noreferrer">
-                Help centre <span class="govuk-visually-hidden">(opens in a new tab)</span>
-              </a>
-            </li>
-            <li class="govuk-header__navigation-item">
-              <a class="govuk-header__link" href="{% url 'contact-us' %}">Contact us</a>
-            </li>
-          </ul>
-        </nav>
-      {% endblock %}
-    </div>
 
-  </header>
-
+    </header>
+  {% endblock %}
 
   <nav class="govuk-width-container">
     {% block breadcrumbs %}{% endblock %}
