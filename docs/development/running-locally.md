@@ -95,7 +95,7 @@ Although the application should be run using docker, there are benefits when dev
 1. Run the command `python -m venv venv`, this will create a new folder called `venv` on your machine
 1. Activate the venv by using the command `source venv/bin/activate`
 1. Run `pip install --upgrade pip wheel pip-tools`
-1. Run `pip install -r requirement-devs.txt`
+1. Run `pip install -r requirements-dev.txt`
 
 
 ## Front end static assets
