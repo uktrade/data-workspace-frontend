@@ -2,33 +2,42 @@
 
 {% load waffle_tags %}
 
-{% block page_title %}Leave feedback - {{ block.super }}{% endblock page_title %}
+{% block page_title %}
+    Leave feedback - {{ block.super }}
+{% endblock page_title %}
 {% block go_back %}
-    {% if 'success' not in request.GET %}
-        <a href="{{ referer }}" class="govuk-back-link">Back</a>
-    {% endif %}
+    {% if 'success' not in request.GET %}<a href="{{ referer }}" class="govuk-back-link">Back</a>{% endif %}
 {% endblock %}
 {% block content %}
-<div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
-        {% if 'success' in request.GET %}
-            <h1 class="govuk-heading-l">Thank you for your feedback!</h1>
-            <p class="govuk-body-m">We are working hard to constantly improving our sevice and your feedback is valuable to us.</p>
-            <a class="govuk-button" href="{% url 'root' %}">Return home</a>
-        {% else %}
-            <h1 class="govuk-heading-xl">Leave feedback</h1>
-            <p class="govuk-body-m">Fill in this short form to tell us about your experience of using this website.</p>
-            <p class="govuk-body-m">This form has 3 questions. It should take you less than 3 minutes to complete.</p>
-            <form method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-                <fieldset class="govuk-fieldset">
-                    {{ form.how_satisfied }}
-                    {{ form.trying_to_do }}
-                    {{ form.improve_service }}
-                </fieldset>
-                <button type="submit" class="govuk-button">Leave feedback</button>
-            </form>
-        {% endif %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            {% include 'design_system/error_summary.html' with form=form %}
+            {% if 'success' in request.GET %}
+                <h1 class="govuk-heading-l">Thank you for your feedback!</h1>
+                <p class="govuk-body-m">We are working hard to constantly improving our sevice and your feedback is valuable to us.</p>
+                <a class="govuk-button" href="{% url 'root' %}">Return home</a>
+            {% else %}
+                <h1 class="govuk-heading-xl">Leave feedback</h1>
+                <p class="govuk-body-m">
+                    Fill in this short form to tell us about your experience of using this website. This form has 4 questions. It should take you less than 3 minutes to complete.
+                </p>
+                <p class="govuk-body-m">
+                    We are unable to respond to any feedback you leave here. For a response, fill out the <a class="govuk-link govuk-link--no-visited-state"
+    href="{% url 'support' %}">support form.</a>
+                </p>
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+                    <fieldset class="govuk-fieldset">
+                        <div class="govuk-checkboxes" data-module="govuk-checkboxes">
+                            {{ form.trying_to_do }}
+                            <div class="govuk-checkboxes__conditional govuk-checkboxes__conditional_input govuk-checkboxes__conditional--hidden"
+                                 id="conditional-message">{{ form.trying_to_do_other_message }}</div>
+                        </div>
+                        {{ form.how_satisfied }} {{ form.describe_experience }} {{ form.improve_service }}
+                    </fieldset>
+                    <button type="submit" class="govuk-button">Submit feedback</button>
+                </form>
+            {% endif %}
+        </div>
     </div>
-</div>
 {% endblock %}

@@ -24,6 +24,13 @@ class ConditionalSupportTypeRadioWidget(GOVUKDesignSystemWidgetMixin, forms.widg
     option_template_name = "core/partial/support_type_radio_option.html"
 
 
+class ConditionalSupportTypeCheckboxWidget(
+    GOVUKDesignSystemCheckboxesWidget, forms.widgets.CheckboxSelectMultiple
+):
+    template_name = "design_system/checkbox.html"
+    option_template_name = "core/partial/support_type_checkbox_option.html"
+
+
 class SupportForm(GOVUKDesignSystemForm):
     class SupportTypes(models.TextChoices):
         TECH_SUPPORT = "tech", "I would like to have technical support"
@@ -65,27 +72,50 @@ class SupportForm(GOVUKDesignSystemForm):
 
 
 class UserSatisfactionSurveyForm(GOVUKDesignSystemForm):
-    how_satisfied = GOVUKDesignSystemRadioField(
+    trying_to_do = GOVUKDesignSystemMultipleChoiceField(
         required=True,
-        label="1. Overall how satisfied are you with the current Data Workspace?",
-        widget=GOVUKDesignSystemRadiosWidget(heading="h2", label_size="m", small=True),
-        choices=[(t.value, t.label) for t in HowSatisfiedType],
+        label="1. What were you trying to do today?",
+        help_text="Select all options that are relevant to you.",
+        widget=ConditionalSupportTypeCheckboxWidget(heading="h2", label_size="m", small=True),
+        choices=[(t.value, t.label) for t in TryingToDoType],
+        error_messages={
+            "required": "Select at least one option for what were you trying to do today"
+        },
     )
 
-    trying_to_do = GOVUKDesignSystemMultipleChoiceField(
+    trying_to_do_other_message = GOVUKDesignSystemCharField(
         required=False,
-        label="2. What were you trying to do today? (optional)",
-        help_text="Select all options that are relevant to you.",
-        widget=GOVUKDesignSystemCheckboxesWidget(heading="h2", label_size="m", small=True),
-        choices=[(t.value, t.label) for t in TryingToDoType],
+        label="Tell us what you were doing",
+        widget=GOVUKDesignSystemTextWidget(label_is_heading=False, label_size="m"),
+    )
+
+    how_satisfied = GOVUKDesignSystemRadioField(
+        required=True,
+        label="2. How do you feel about your experience of using Data Workspace today?",
+        widget=GOVUKDesignSystemRadiosWidget(heading="h2", label_size="m", small=True),
+        choices=[(t.value, t.label) for t in HowSatisfiedType],
+        error_messages={"required": "Select how Data Workspace made you feel today"},
+    )
+
+    describe_experience = GOVUKDesignSystemTextareaField(
+        required=False,
+        label="3. Describe your experience (optional)",
+        widget=GOVUKDesignSystemTextareaWidget(heading="h2", label_size="m"),
     )
 
     improve_service = GOVUKDesignSystemTextareaField(
         required=False,
-        label="3. How could we improve the service? (optional)",
+        label="4. How could we improve the service? (optional)",
         help_html=render_to_string("core/partial/user-survey-improve-service-hint.html"),
         widget=GOVUKDesignSystemTextareaWidget(heading="h2", label_size="m"),
     )
+
+    def clean_trying_to_do_other_message(self):
+        trying_to_do = self.cleaned_data.get("trying_to_do")
+        trying_to_do_other_message = self.cleaned_data.get("trying_to_do_other_message")
+        if not trying_to_do_other_message and trying_to_do and "other" in trying_to_do:
+            raise forms.ValidationError("Enter a description for what you were doing")
+        return trying_to_do_other_message
 
 
 class NewsletterSubscriptionForm(forms.Form):
