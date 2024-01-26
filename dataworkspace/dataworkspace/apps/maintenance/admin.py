@@ -5,4 +5,4 @@ from dataworkspace.apps.maintenance.models import MaintenanceSettings
 
 @admin.register(MaintenanceSettings)
 class MaintenanceSettingsAdmin(admin.ModelAdmin):
-    list_display = ("maintenance_toggle", "maintenance_text", "contact_email")
+    list_display = ("maintenance_text", "maintenance_toggle", "contact_email")
