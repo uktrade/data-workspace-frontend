@@ -51,12 +51,27 @@ docker-e2e-run:
 
 .PHONY: docker-e2e-build-run
 docker-e2e-build-run:
-	docker compose -f docker-compose.yml -f docker-compose.e2e.yml -p e2e --profile e2e up --build --force-recreate --exit-code-from data-workspace-e2e-test -d
+	docker compose -f docker-compose.yml -f docker-compose.e2e.yml -p e2e --profile e2e up --build --force-recreate --exit-code-from data-workspace-e2e-test
 
 .PHONY: docker-e2e-start
 docker-e2e-start:
 	docker compose -f docker-compose.yml -f docker-compose.e2e.yml -p e2e --profile e2e up --build --force-recreate -d
 
+.PHONY: docker-a11y-build
+docker-a11y-build:
+	docker compose -f docker-compose.yml -f docker-compose.a11y.yml -p a11y --profile a11y build
+
+.PHONY: docker-a11y-run
+docker-a11y-run:
+	docker compose -f docker-compose.yml -f docker-compose.a11y.yml -p a11y --profile a11y up --exit-code-from data-workspace-e2e-test
+
+.PHONY: docker-a11y-build-run
+docker-a11y-build-run:
+	docker compose -f docker-compose.yml -f docker-compose.a11y.yml -p a11y --profile a11y up --build --force-recreate --exit-code-from data-workspace-e2e-test
+
+.PHONY: docker-a11y-start
+docker-a11y-start:
+	docker compose -f docker-compose.yml -f docker-compose.a11y.yml -p a11y --profile a11y up --build --force-recreate -d
 
 .PHONY: docker-clean
 docker-clean:

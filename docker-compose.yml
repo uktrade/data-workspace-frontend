@@ -195,8 +195,10 @@ services:
     build:
       context: .
       dockerfile: cypress/Dockerfile
+      target: e2e
     profiles:
-      - e2e  
+      - e2e
+      - a11y
     networks:
       - data-infrastructure-shared-network
     depends_on:
