@@ -525,6 +525,12 @@ p.sidebar-section {
   margin-top: -30px;  
 }
 
+.home-header {
+  .govuk-header {
+    border-bottom: none;
+  }
+}
+
 @import "filters";
 @import "search-bar";
 @import "search-results";
