@@ -1,4 +1,4 @@
-FROM cypress/included:13.6.3
+FROM cypress/included:13.6.3 AS base
 
 ENV DOCKERIZE_VERSION      v0.6.1
 
@@ -15,6 +15,13 @@ WORKDIR app
 
 COPY ./cypress cypress
 COPY ./cypress/package.json .
-COPY cypress.config.ts .
 
 RUN npm install
+
+FROM base AS e2e
+
+COPY cypress.config.ts ./cypress.config.ts
+
+FROM base AS a11y
+
+COPY cypress.a11y.config.ts ./cypress.config.ts
