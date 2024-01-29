@@ -1,0 +1,50 @@
+[
+  {
+    "model": "data_collections.collection",
+    "pk": "616c6a6a-0e82-4a02-8e3b-9821eadb16bc",
+    "fields": {
+      "created_date": "2024-01-29T10:34:14.531Z",
+      "modified_date": "2024-01-29T10:34:14.531Z",
+      "deleted": false,
+      "created_by": 2,
+      "updated_by": null,
+      "name": "Collection a",
+      "description": "This is a collection description.",
+      "owner": 2,
+      "notes": null,
+      "user_access_type": "REQUIRES_AUTHORIZATION"
+    }
+  },
+  {
+    "model": "data_collections.collection",
+    "pk": "83583644-36a5-4841-b62b-9df6dbbd5512",
+    "fields": {
+      "created_date": "2024-01-29T10:34:35.735Z",
+      "modified_date": "2024-01-29T10:34:35.736Z",
+      "deleted": false,
+      "created_by": 2,
+      "updated_by": null,
+      "name": "Collection b",
+      "description": "This is a collection description.",
+      "owner": 2,
+      "notes": null,
+      "user_access_type": "REQUIRES_AUTHORIZATION"
+    }
+  },
+  {
+    "model": "data_collections.collection",
+    "pk": "fbf1d333-128a-4d59-8eae-25e955d713b8",
+    "fields": {
+      "created_date": "2024-01-29T10:35:01.133Z",
+      "modified_date": "2024-01-29T10:35:01.133Z",
+      "deleted": false,
+      "created_by": 2,
+      "updated_by": null,
+      "name": "Collection c",
+      "description": "This is a collection description.",
+      "owner": 2,
+      "notes": null,
+      "user_access_type": "REQUIRES_AUTHORIZATION"
+    }
+  }
+]

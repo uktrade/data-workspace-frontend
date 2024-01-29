@@ -17,7 +17,11 @@ set -e
     django-admin loaddata --ignorenonexistent --verbosity=2 \
       users \
       profiles \
-      datasets
+      datasets \
+      data_collections \
+      eventlog
+
+
 
     django-admin waffle_flag HOME_PAGE_FLAG --everyone --create
     django-admin waffle_flag ACCESSIBLE_AUTOCOMPLETE_FLAG --everyone --create
