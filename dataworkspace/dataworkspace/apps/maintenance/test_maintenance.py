@@ -11,7 +11,7 @@ from dataworkspace.apps.maintenance.maintenance import (
 
 
 @pytest.mark.django_db
-class TestMaintenance(TestCase):
+class TestMaintenanceWithSetup(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
         self.patcher = mock.patch.object(MaintenanceSettings, "objects")
@@ -27,9 +27,13 @@ class TestMaintenance(TestCase):
         self.mock_objects.first.assert_called_once()
 
     def test_maintenance_context(self):
-        self.mock_objects.first.return_value = MaintenanceSettings(maintenance_text="Test text")
+        self.mock_objects.first.return_value = MaintenanceSettings(
+            maintenance_text="Test text", contact_email="test@gov.uk"
+        )
         context = maintenance_context(self.factory.get("/"))
-        self.assertEqual(context, {"maintenance_text": "Test text"})
+        self.assertEqual(
+            context, {"maintenance_text": "Test text", "contact_email": "test@gov.uk"}
+        )
 
     @mock.patch("dataworkspace.apps.maintenance.maintenance.set_maintenance_mode")
     def test_update_maintenance_status(self, mock_set_maintenance_mode):
@@ -42,3 +46,24 @@ class TestMaintenance(TestCase):
         middleware = MaintenanceMiddleware(lambda request: None)
         middleware(self.factory.get("/"))
         mock_update_maintenance_status.assert_called_once()
+
+
+@pytest.mark.django_db
+class TestMaintenanceWithoutSetup(TestCase):
+    def test_break_tags_are_not_stripped_from_maintenance_text(self):
+        MaintenanceSettings.objects.create(
+            maintenance_text="<br>Test text<br>",
+            maintenance_toggle=True,
+            contact_email="test@gov.uk",
+        )
+        updated_maintenance_settings = get_maintenance_settings()
+        self.assertHTMLEqual(updated_maintenance_settings.maintenance_text, "<br>Test text<br>")
+
+    def test_html_tags_are_stripped_from_maintenance_text(self):
+        MaintenanceSettings.objects.create(
+            maintenance_text="<p>Test text</p>",
+            maintenance_toggle=True,
+            contact_email="test@gov.uk",
+        )
+        updated_maintenance_settings = get_maintenance_settings()
+        self.assertHTMLEqual(updated_maintenance_settings.maintenance_text, "Test text")
