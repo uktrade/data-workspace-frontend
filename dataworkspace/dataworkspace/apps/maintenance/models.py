@@ -7,7 +7,7 @@ class MaintenanceSettings(models.Model):
         help_text="This is the main content of the maintenance page. You can use HTML &lt;br&gt; tags to format the text."
     )
     maintenance_toggle = models.BooleanField()
-    contact_email = models.EmailField()
+    # contact_email = models.EmailField()
 
     def save(self, *args, **kwargs):
         self.maintenance_text = bleach.clean(self.maintenance_text, tags=["br"], strip=True)

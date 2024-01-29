@@ -15,7 +15,7 @@ def maintenance_context(request):
     """
     settings = get_maintenance_settings()
     maintenance_text = settings.maintenance_text if settings else ""
-    contact_email = settings.contact_email if settings else ""
+    contact_email = "Test"
     return {"maintenance_text": maintenance_text, "contact_email": contact_email}
 
 
