@@ -1,0 +1,1517 @@
+[
+  {
+    "model": "eventlog.eventlog",
+    "pk": 1,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-12T10:17:06.627Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "d7094267-ddfc-40f3-a4a8-ca4f30a0992f",
+      "extra": {
+        "path": "/datasets/d7094267-ddfc-40f3-a4a8-ca4f30a0992f",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 2,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-12T10:51:55.564Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "3112a785-6bd9-4e56-bc67-10b6cccb5db7",
+      "extra": {
+        "path": "/datasets/3112a785-6bd9-4e56-bc67-10b6cccb5db7",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 3,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-12T10:52:19.236Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "d7094267-ddfc-40f3-a4a8-ca4f30a0992f",
+      "extra": {
+        "path": "/datasets/d7094267-ddfc-40f3-a4a8-ca4f30a0992f",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 4,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-12T10:53:16.504Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "3112a785-6bd9-4e56-bc67-10b6cccb5db7",
+      "extra": {
+        "path": "/datasets/3112a785-6bd9-4e56-bc67-10b6cccb5db7",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 5,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-12T12:06:44.617Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "3112a785-6bd9-4e56-bc67-10b6cccb5db7",
+      "extra": {
+        "path": "/datasets/3112a785-6bd9-4e56-bc67-10b6cccb5db7",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 6,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-12T13:48:52.259Z",
+      "event_type": 10,
+      "content_type": 4,
+      "object_id": "1",
+      "extra": {
+        "pk": "3112a785-6bd9-4e56-bc67-10b6cccb5db7",
+        "model": "datasets.masterdataset",
+        "fields": {
+          "name": "source data set a",
+          "slug": "source-data-set-a",
+          "tags": [],
+          "type": 1,
+          "notes": "",
+          "deleted": false,
+          "licence": null,
+          "acronyms": "",
+          "grouping": null,
+          "published": true,
+          "created_by": 2,
+          "updated_by": 2,
+          "description": "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>",
+          "licence_url": null,
+          "sensitivity": [],
+          "created_date": "2024-01-12T09:24:49.567Z",
+          "published_at": "2024-01-12",
+          "modified_date": "2024-01-12T13:30:00.032Z",
+          "personal_data": null,
+          "reference_code": null,
+          "retention_policy": "",
+          "user_access_type": "REQUIRES_AUTHORIZATION",
+          "enquiries_contact": 2,
+          "request_approvers": null,
+          "short_description": "This is a short description",
+          "number_of_downloads": 0,
+          "dictionary_published": false,
+          "eligibility_criteria": null,
+          "restrictions_on_usage": "",
+          "search_vector_english": "'ad':30 'adipisc':15 'aliqua':27 'aliquip':40 'amet':13 'commodo':43 'consectetur':14 'consequat':44 'data':2A 'descript':8B 'dolor':11,25 'ea':42 'eiusmod':19 'elit':16 'enim':29 'et':24 'ex':41 'exercit':35 'incididunt':21 'ipsum':10 'labor':23 'labori':37 'lorem':9 'magna':26 'minim':31 'nisi':38 'nostrud':34 'qui':33 'sed':17 'set':3A 'short':7B 'sit':12 'sourc':1A 'tempor':20 'ullamco':36 'ut':22,28,39 'veniam':32",
+          "data_catalogue_editors": [],
+          "information_asset_owner": 1,
+          "authorized_email_domains": "[]",
+          "information_asset_manager": 1,
+          "average_unique_users_daily": 0.0,
+          "search_vector_english_name": "'data':2 'set':3 'sourc':1",
+          "search_vector_english_tags": "",
+          "search_vector_english_description": "'ad':22 'adipisc':7 'aliqua':19 'aliquip':32 'amet':5 'commodo':35 'consectetur':6 'consequat':36 'dolor':3,17 'ea':34 'eiusmod':11 'elit':8 'enim':21 'et':16 'ex':33 'exercit':27 'incididunt':13 'ipsum':2 'labor':15 'labori':29 'lorem':1 'magna':18 'minim':23 'nisi':30 'nostrud':26 'qui':25 'sed':9 'sit':4 'tempor':12 'ullamco':28 'ut':14,20,31 'veniam':24",
+          "government_security_classification": 1,
+          "search_vector_english_short_description": "'descript':5 'short':4"
+        },
+        "message": "Added dataset source data set a permission"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 7,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-12T13:48:52.283Z",
+      "event_type": 10,
+      "content_type": 4,
+      "object_id": "1",
+      "extra": {
+        "pk": "d7094267-ddfc-40f3-a4a8-ca4f30a0992f",
+        "model": "datasets.masterdataset",
+        "fields": {
+          "name": "source data set b",
+          "slug": "source-data-set-b",
+          "tags": [],
+          "type": 1,
+          "notes": "",
+          "deleted": false,
+          "licence": "No licence",
+          "acronyms": "",
+          "grouping": null,
+          "published": true,
+          "created_by": 2,
+          "updated_by": 2,
+          "description": "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>",
+          "licence_url": "No licence url",
+          "sensitivity": [2],
+          "created_date": "2024-01-12T10:16:35.298Z",
+          "published_at": "2024-01-12",
+          "modified_date": "2024-01-12T13:30:00.053Z",
+          "personal_data": null,
+          "reference_code": null,
+          "retention_policy": "",
+          "user_access_type": "REQUIRES_AUTHORIZATION",
+          "enquiries_contact": 2,
+          "request_approvers": null,
+          "short_description": "This is a short description",
+          "number_of_downloads": 0,
+          "dictionary_published": false,
+          "eligibility_criteria": null,
+          "restrictions_on_usage": "",
+          "search_vector_english": "'ad':31 'adipisc':16 'aliqua':28 'aliquip':41 'amet':14 'b':4A 'commodo':44 'consectetur':15 'consequat':45 'data':2A 'descript':9B 'dolor':12,26 'ea':43 'eiusmod':20 'elit':17 'enim':30 'et':25 'ex':42 'exercit':36 'incididunt':22 'ipsum':11 'labor':24 'labori':38 'lorem':10 'magna':27 'minim':32 'nisi':39 'nostrud':35 'qui':34 'sed':18 'set':3A 'short':8B 'sit':13 'sourc':1A 'tempor':21 'ullamco':37 'ut':23,29,40 'veniam':33",
+          "data_catalogue_editors": [],
+          "information_asset_owner": 1,
+          "authorized_email_domains": "[]",
+          "information_asset_manager": 1,
+          "average_unique_users_daily": 0.0,
+          "search_vector_english_name": "'b':4 'data':2 'set':3 'sourc':1",
+          "search_vector_english_tags": "",
+          "search_vector_english_description": "'ad':22 'adipisc':7 'aliqua':19 'aliquip':32 'amet':5 'commodo':35 'consectetur':6 'consequat':36 'dolor':3,17 'ea':34 'eiusmod':11 'elit':8 'enim':21 'et':16 'ex':33 'exercit':27 'incididunt':13 'ipsum':2 'labor':15 'labori':29 'lorem':1 'magna':18 'minim':23 'nisi':30 'nostrud':26 'qui':25 'sed':9 'sit':4 'tempor':12 'ullamco':28 'ut':14,20,31 'veniam':24",
+          "government_security_classification": 2,
+          "search_vector_english_short_description": "'descript':5 'short':4"
+        },
+        "message": "Added dataset source data set b permission"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 8,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-12T13:57:25.086Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "406291aa-e35e-41a9-ab05-6355c5cc92d6",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 9,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-12T13:57:25.127Z",
+      "event_type": 54,
+      "content_type": 32,
+      "object_id": "406291aa-e35e-41a9-ab05-6355c5cc92d6",
+      "extra": {
+        "details": "Query to determine datacut columns failed to return any data"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 10,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-12T13:57:31.823Z",
+      "event_type": 42,
+      "content_type": 40,
+      "object_id": "1",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6/table/1/grid",
+        "dataset": "Data cut",
+        "data_table_id": 1,
+        "data_table_name": "Some report",
+        "data_table_sourcetables": ["public.datasets_sourceview"]
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 11,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-12T13:57:34.181Z",
+      "event_type": 54,
+      "content_type": 40,
+      "object_id": "1",
+      "extra": {
+        "details": "Query to determine datacut columns failed to return any data"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 12,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-12T13:57:36.226Z",
+      "event_type": 43,
+      "content_type": 40,
+      "object_id": "1",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6/table/1/grid",
+        "dataset": "Data cut",
+        "status_code": 500,
+        "data_table_id": 1,
+        "data_table_name": "Some report",
+        "data_table_sourcetables": ["public.datasets_sourceview"],
+        "query_time_milliseconds": 2006
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 13,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-12T13:58:38.311Z",
+      "event_type": 42,
+      "content_type": 40,
+      "object_id": "1",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6/table/1/grid",
+        "dataset": "Data cut",
+        "data_table_id": 1,
+        "data_table_name": "Some report",
+        "data_table_sourcetables": []
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 14,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-12T13:58:40.506Z",
+      "event_type": 54,
+      "content_type": 40,
+      "object_id": "1",
+      "extra": {
+        "details": "Query to determine datacut columns failed to return any data"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 15,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-12T13:58:42.565Z",
+      "event_type": 43,
+      "content_type": 40,
+      "object_id": "1",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6/table/1/grid",
+        "dataset": "Data cut",
+        "status_code": 500,
+        "data_table_id": 1,
+        "data_table_name": "Some report",
+        "data_table_sourcetables": [],
+        "query_time_milliseconds": 2031
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 16,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-12T13:59:28.781Z",
+      "event_type": 42,
+      "content_type": 40,
+      "object_id": "1",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6/table/1/grid",
+        "dataset": "Data cut",
+        "data_table_id": 1,
+        "data_table_name": "Some report",
+        "data_table_sourcetables": []
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 17,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-12T13:59:30.976Z",
+      "event_type": 54,
+      "content_type": 40,
+      "object_id": "1",
+      "extra": {
+        "details": "Query to determine datacut columns failed to return any data"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 18,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-12T13:59:33.025Z",
+      "event_type": 43,
+      "content_type": 40,
+      "object_id": "1",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6/table/1/grid",
+        "dataset": "Data cut",
+        "status_code": 500,
+        "data_table_id": 1,
+        "data_table_name": "Some report",
+        "data_table_sourcetables": [],
+        "query_time_milliseconds": 2045
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 19,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-12T14:00:41.663Z",
+      "event_type": 42,
+      "content_type": 40,
+      "object_id": "1",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6/table/1/grid",
+        "dataset": "Data cut",
+        "data_table_id": 1,
+        "data_table_name": "Some report",
+        "data_table_sourcetables": []
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 20,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-12T14:00:43.788Z",
+      "event_type": 54,
+      "content_type": 40,
+      "object_id": "1",
+      "extra": {
+        "details": "Query to determine datacut columns failed to return any data"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 21,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-12T14:00:46.393Z",
+      "event_type": 43,
+      "content_type": 40,
+      "object_id": "1",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6/table/1/grid",
+        "dataset": "Data cut",
+        "status_code": 500,
+        "data_table_id": 1,
+        "data_table_name": "Some report",
+        "data_table_sourcetables": [],
+        "query_time_milliseconds": 2583
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 22,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-12T14:03:52.878Z",
+      "event_type": 42,
+      "content_type": 40,
+      "object_id": "1",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6/table/1/grid",
+        "dataset": "Data cut",
+        "data_table_id": 1,
+        "data_table_name": "Some report",
+        "data_table_sourcetables": ["public.test_dataset"]
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 23,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-12T14:03:59.521Z",
+      "event_type": 44,
+      "content_type": 40,
+      "object_id": "1",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6/table/1/grid",
+        "dataset": "Data cut",
+        "status_code": 200,
+        "data_table_id": 1,
+        "data_table_name": "Some report",
+        "data_table_sourcetables": ["public.test_dataset"],
+        "query_time_milliseconds": 2341
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 24,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-12T14:18:50.052Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "161d4b68-4b0d-4d96-80dc-d2f9867ff515",
+      "extra": {
+        "path": "/datasets/161d4b68-4b0d-4d96-80dc-d2f9867ff515",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 25,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-12T14:42:14.790Z",
+      "event_type": 28,
+      "content_type": 47,
+      "object_id": "496d9192-1658-45e2-8e35-b174d28bdf46",
+      "extra": {
+        "path": "/datasets/496d9192-1658-45e2-8e35-b174d28bdf46",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 26,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-12T14:42:20.206Z",
+      "event_type": 17,
+      "content_type": 47,
+      "object_id": "496d9192-1658-45e2-8e35-b174d28bdf46",
+      "extra": {
+        "pk": "f06c90c5-bfb3-49a4-b8fd-fd84fc363b14",
+        "model": "datasets.visualisationlink",
+        "fields": {
+          "name": "Visualisation",
+          "identifier": "522e5600-e29a-41c4-a716-443478440200",
+          "created_date": "2024-01-12T14:41:56.132Z",
+          "modified_date": "2024-01-12T14:41:56.132Z",
+          "visualisation_type": "QUICKSIGHT",
+          "data_source_last_updated": null,
+          "visualisation_catalogue_item": "496d9192-1658-45e2-8e35-b174d28bdf46"
+        }
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 27,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-12T14:42:23.803Z",
+      "event_type": 28,
+      "content_type": 47,
+      "object_id": "496d9192-1658-45e2-8e35-b174d28bdf46",
+      "extra": {
+        "path": "/datasets/496d9192-1658-45e2-8e35-b174d28bdf46",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 28,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-16T14:33:08.384Z",
+      "event_type": 29,
+      "content_type": null,
+      "object_id": null,
+      "extra": {
+        "query": "data",
+        "number_of_results": 5
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 29,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-16T14:33:34.153Z",
+      "event_type": 29,
+      "content_type": null,
+      "object_id": null,
+      "extra": {
+        "query": "source data set a",
+        "number_of_results": 2
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 30,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-16T17:09:03.754Z",
+      "event_type": 29,
+      "content_type": null,
+      "object_id": null,
+      "extra": {
+        "query": "data",
+        "number_of_results": 5
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 31,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-16T17:09:30.204Z",
+      "event_type": 29,
+      "content_type": null,
+      "object_id": null,
+      "extra": {
+        "query": "data",
+        "number_of_results": 5
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 32,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-16T18:06:28.502Z",
+      "event_type": 29,
+      "content_type": null,
+      "object_id": null,
+      "extra": {
+        "query": "data",
+        "number_of_results": 5
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 33,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-23T14:44:17.214Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "406291aa-e35e-41a9-ab05-6355c5cc92d6",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 34,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-25T15:59:41.074Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "406291aa-e35e-41a9-ab05-6355c5cc92d6",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 35,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-26T15:54:08.793Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "406291aa-e35e-41a9-ab05-6355c5cc92d6",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 36,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-26T15:54:47.457Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "406291aa-e35e-41a9-ab05-6355c5cc92d6",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 37,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-26T15:56:26.127Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "406291aa-e35e-41a9-ab05-6355c5cc92d6",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 38,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-26T15:59:08.332Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "406291aa-e35e-41a9-ab05-6355c5cc92d6",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 39,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-26T16:01:03.392Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "406291aa-e35e-41a9-ab05-6355c5cc92d6",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 40,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-26T16:01:21.472Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "406291aa-e35e-41a9-ab05-6355c5cc92d6",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 41,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-26T16:04:14.009Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "b603337f-0073-43ac-9dc4-05a8d5cf635d",
+      "extra": {
+        "path": "/datasets/b603337f-0073-43ac-9dc4-05a8d5cf635d",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 42,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-26T16:04:27.564Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "406291aa-e35e-41a9-ab05-6355c5cc92d6",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 43,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-26T16:05:02.328Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "406291aa-e35e-41a9-ab05-6355c5cc92d6",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 44,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-26T16:05:23.663Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "406291aa-e35e-41a9-ab05-6355c5cc92d6",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 45,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-26T16:06:04.342Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "406291aa-e35e-41a9-ab05-6355c5cc92d6",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 46,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T09:12:06.564Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "406291aa-e35e-41a9-ab05-6355c5cc92d6",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 47,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T09:12:41.563Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "406291aa-e35e-41a9-ab05-6355c5cc92d6",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 48,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T09:14:02.479Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "406291aa-e35e-41a9-ab05-6355c5cc92d6",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 49,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T09:22:41.908Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "406291aa-e35e-41a9-ab05-6355c5cc92d6",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 50,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T09:23:10.681Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "b603337f-0073-43ac-9dc4-05a8d5cf635d",
+      "extra": {
+        "path": "/datasets/b603337f-0073-43ac-9dc4-05a8d5cf635d",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 51,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T09:23:56.624Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "b603337f-0073-43ac-9dc4-05a8d5cf635d",
+      "extra": {
+        "path": "/datasets/b603337f-0073-43ac-9dc4-05a8d5cf635d",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 52,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T09:26:52.413Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "406291aa-e35e-41a9-ab05-6355c5cc92d6",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 53,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T09:27:20.935Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "406291aa-e35e-41a9-ab05-6355c5cc92d6",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 54,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T09:28:53.021Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "d7094267-ddfc-40f3-a4a8-ca4f30a0992f",
+      "extra": {
+        "path": "/datasets/d7094267-ddfc-40f3-a4a8-ca4f30a0992f",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 55,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T09:29:28.553Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "3112a785-6bd9-4e56-bc67-10b6cccb5db7",
+      "extra": {
+        "path": "/datasets/3112a785-6bd9-4e56-bc67-10b6cccb5db7",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 56,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T09:30:13.926Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "3112a785-6bd9-4e56-bc67-10b6cccb5db7",
+      "extra": {
+        "path": "/datasets/3112a785-6bd9-4e56-bc67-10b6cccb5db7",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 57,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T10:20:03.151Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "161d4b68-4b0d-4d96-80dc-d2f9867ff515",
+      "extra": {
+        "path": "/datasets/161d4b68-4b0d-4d96-80dc-d2f9867ff515",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 58,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T10:20:38.639Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "406291aa-e35e-41a9-ab05-6355c5cc92d6",
+      "extra": {
+        "path": "/datasets/406291aa-e35e-41a9-ab05-6355c5cc92d6",
+        "reference_dataset_version": "2024-01-12"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 59,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T10:34:14.527Z",
+      "event_type": 37,
+      "content_type": 84,
+      "object_id": "616c6a6a-0e82-4a02-8e3b-9821eadb16bc",
+      "extra": null
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 60,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T10:34:16.880Z",
+      "event_type": 39,
+      "content_type": 84,
+      "object_id": "616c6a6a-0e82-4a02-8e3b-9821eadb16bc",
+      "extra": null
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 61,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T10:34:35.730Z",
+      "event_type": 37,
+      "content_type": 84,
+      "object_id": "83583644-36a5-4841-b62b-9df6dbbd5512",
+      "extra": null
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 62,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T10:34:37.780Z",
+      "event_type": 39,
+      "content_type": 84,
+      "object_id": "83583644-36a5-4841-b62b-9df6dbbd5512",
+      "extra": null
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 63,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T10:35:01.129Z",
+      "event_type": 37,
+      "content_type": 84,
+      "object_id": "fbf1d333-128a-4d59-8eae-25e955d713b8",
+      "extra": null
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 64,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T10:35:03.068Z",
+      "event_type": 39,
+      "content_type": 84,
+      "object_id": "fbf1d333-128a-4d59-8eae-25e955d713b8",
+      "extra": null
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 65,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T10:35:12.593Z",
+      "event_type": 51,
+      "content_type": 32,
+      "object_id": "161d4b68-4b0d-4d96-80dc-d2f9867ff515",
+      "extra": {
+        "user": {
+          "pk": 1,
+          "model": "auth.user",
+          "fields": {
+            "email": "vyvyan.holland@contact-email.com",
+            "groups": [],
+            "is_staff": true,
+            "password": "!6qO4aUXaZebNmiIAaqH7x02dTFra15iVoyi9jhtP",
+            "username": "20a0353f-a7d1-4851-9af8-1bcaff152b60",
+            "is_active": true,
+            "last_name": "Holland",
+            "first_name": "Vyvyan",
+            "last_login": null,
+            "date_joined": "2024-01-08T09:40:35.207Z",
+            "is_superuser": true,
+            "user_permissions": []
+          }
+        }
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 66,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T10:35:17.879Z",
+      "event_type": 52,
+      "content_type": 32,
+      "object_id": "161d4b68-4b0d-4d96-80dc-d2f9867ff515",
+      "extra": {
+        "user": {
+          "pk": 1,
+          "model": "auth.user",
+          "fields": {
+            "email": "vyvyan.holland@contact-email.com",
+            "groups": [],
+            "is_staff": true,
+            "password": "!6qO4aUXaZebNmiIAaqH7x02dTFra15iVoyi9jhtP",
+            "username": "20a0353f-a7d1-4851-9af8-1bcaff152b60",
+            "is_active": true,
+            "last_name": "Holland",
+            "first_name": "Vyvyan",
+            "last_login": null,
+            "date_joined": "2024-01-08T09:40:35.207Z",
+            "is_superuser": true,
+            "user_permissions": []
+          }
+        }
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 67,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T10:35:19.877Z",
+      "event_type": 51,
+      "content_type": 32,
+      "object_id": "b603337f-0073-43ac-9dc4-05a8d5cf635d",
+      "extra": {
+        "user": {
+          "pk": 1,
+          "model": "auth.user",
+          "fields": {
+            "email": "vyvyan.holland@contact-email.com",
+            "groups": [],
+            "is_staff": true,
+            "password": "!6qO4aUXaZebNmiIAaqH7x02dTFra15iVoyi9jhtP",
+            "username": "20a0353f-a7d1-4851-9af8-1bcaff152b60",
+            "is_active": true,
+            "last_name": "Holland",
+            "first_name": "Vyvyan",
+            "last_login": null,
+            "date_joined": "2024-01-08T09:40:35.207Z",
+            "is_superuser": true,
+            "user_permissions": []
+          }
+        }
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 68,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T10:35:24.284Z",
+      "event_type": 51,
+      "content_type": 33,
+      "object_id": "1",
+      "extra": {
+        "user": {
+          "pk": 1,
+          "model": "auth.user",
+          "fields": {
+            "email": "vyvyan.holland@contact-email.com",
+            "groups": [],
+            "is_staff": true,
+            "password": "!6qO4aUXaZebNmiIAaqH7x02dTFra15iVoyi9jhtP",
+            "username": "20a0353f-a7d1-4851-9af8-1bcaff152b60",
+            "is_active": true,
+            "last_name": "Holland",
+            "first_name": "Vyvyan",
+            "last_login": null,
+            "date_joined": "2024-01-08T09:40:35.207Z",
+            "is_superuser": true,
+            "user_permissions": []
+          }
+        }
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 69,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T10:35:26.317Z",
+      "event_type": 51,
+      "content_type": 32,
+      "object_id": "3112a785-6bd9-4e56-bc67-10b6cccb5db7",
+      "extra": {
+        "user": {
+          "pk": 1,
+          "model": "auth.user",
+          "fields": {
+            "email": "vyvyan.holland@contact-email.com",
+            "groups": [],
+            "is_staff": true,
+            "password": "!6qO4aUXaZebNmiIAaqH7x02dTFra15iVoyi9jhtP",
+            "username": "20a0353f-a7d1-4851-9af8-1bcaff152b60",
+            "is_active": true,
+            "last_name": "Holland",
+            "first_name": "Vyvyan",
+            "last_login": null,
+            "date_joined": "2024-01-08T09:40:35.207Z",
+            "is_superuser": true,
+            "user_permissions": []
+          }
+        }
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 70,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T10:35:28.490Z",
+      "event_type": 51,
+      "content_type": 47,
+      "object_id": "496d9192-1658-45e2-8e35-b174d28bdf46",
+      "extra": {
+        "user": {
+          "pk": 1,
+          "model": "auth.user",
+          "fields": {
+            "email": "vyvyan.holland@contact-email.com",
+            "groups": [],
+            "is_staff": true,
+            "password": "!6qO4aUXaZebNmiIAaqH7x02dTFra15iVoyi9jhtP",
+            "username": "20a0353f-a7d1-4851-9af8-1bcaff152b60",
+            "is_active": true,
+            "last_name": "Holland",
+            "first_name": "Vyvyan",
+            "last_login": null,
+            "date_joined": "2024-01-08T09:40:35.207Z",
+            "is_superuser": true,
+            "user_permissions": []
+          }
+        }
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 71,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-18T13:39:15.309Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "7519f281-ed5f-4c9d-b113-c1d4a60c0d1e",
+      "extra": {
+        "path": "/datasets/7519f281-ed5f-4c9d-b113-c1d4a60c0d1e",
+        "reference_dataset_version": "2024-01-04"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 72,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-18T13:39:15.669Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "7519f281-ed5f-4c9d-b113-c1d4a60c0d1e",
+      "extra": {
+        "path": "/datasets/7519f281-ed5f-4c9d-b113-c1d4a60c0d1e",
+        "reference_dataset_version": "2024-01-04"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 73,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-18T13:39:28.622Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "7519f281-ed5f-4c9d-b113-c1d4a60c0d1e",
+      "extra": {
+        "path": "/datasets/7519f281-ed5f-4c9d-b113-c1d4a60c0d1e",
+        "reference_dataset_version": "2024-01-04"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 74,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-18T13:39:28.977Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "7519f281-ed5f-4c9d-b113-c1d4a60c0d1e",
+      "extra": {
+        "path": "/datasets/7519f281-ed5f-4c9d-b113-c1d4a60c0d1e",
+        "reference_dataset_version": "2024-01-04"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 75,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-18T13:40:04.246Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "7519f281-ed5f-4c9d-b113-c1d4a60c0d1e",
+      "extra": {
+        "path": "/datasets/7519f281-ed5f-4c9d-b113-c1d4a60c0d1e",
+        "reference_dataset_version": "2024-01-04"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 76,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-18T13:40:04.693Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "7519f281-ed5f-4c9d-b113-c1d4a60c0d1e",
+      "extra": {
+        "path": "/datasets/7519f281-ed5f-4c9d-b113-c1d4a60c0d1e",
+        "reference_dataset_version": "2024-01-04"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 77,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-18T13:40:17.872Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "7519f281-ed5f-4c9d-b113-c1d4a60c0d1e",
+      "extra": {
+        "path": "/datasets/7519f281-ed5f-4c9d-b113-c1d4a60c0d1e",
+        "reference_dataset_version": "2024-01-04"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 78,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-18T13:40:18.236Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "7519f281-ed5f-4c9d-b113-c1d4a60c0d1e",
+      "extra": {
+        "path": "/datasets/7519f281-ed5f-4c9d-b113-c1d4a60c0d1e",
+        "reference_dataset_version": "2024-01-04"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 79,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-18T16:01:52.506Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "7519f281-ed5f-4c9d-b113-c1d4a60c0d1e",
+      "extra": {
+        "path": "/datasets/7519f281-ed5f-4c9d-b113-c1d4a60c0d1e",
+        "reference_dataset_version": "2024-01-04"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 80,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-18T16:01:52.852Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "7519f281-ed5f-4c9d-b113-c1d4a60c0d1e",
+      "extra": {
+        "path": "/datasets/7519f281-ed5f-4c9d-b113-c1d4a60c0d1e",
+        "reference_dataset_version": "2024-01-04"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 81,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T10:57:45.322Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "7519f281-ed5f-4c9d-b113-c1d4a60c0d1e",
+      "extra": {
+        "path": "/datasets/7519f281-ed5f-4c9d-b113-c1d4a60c0d1e",
+        "reference_dataset_version": "2024-01-04"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 82,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T10:59:37.262Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "7519f281-ed5f-4c9d-b113-c1d4a60c0d1e",
+      "extra": {
+        "path": "/datasets/7519f281-ed5f-4c9d-b113-c1d4a60c0d1e",
+        "reference_dataset_version": "2024-01-04"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 83,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T11:04:35.781Z",
+      "event_type": 28,
+      "content_type": 32,
+      "object_id": "7519f281-ed5f-4c9d-b113-c1d4a60c0d1e",
+      "extra": {
+        "path": "/datasets/7519f281-ed5f-4c9d-b113-c1d4a60c0d1e",
+        "reference_dataset_version": "2024-01-04"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 84,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T11:15:30.580Z",
+      "event_type": 51,
+      "content_type": 32,
+      "object_id": "161d4b68-4b0d-4d96-80dc-d2f9867ff515",
+      "extra": {
+        "user": {
+          "pk": 2,
+          "model": "auth.user",
+          "fields": {
+            "email": "vyvyan.holland@contact-email.com",
+            "groups": [],
+            "is_staff": false,
+            "password": "!AMMmXzwuY0vGu4xD1m6vEcexPpy5JL1c7w8GiiDi",
+            "username": "20a0353f-a7d1-4851-9af8-1bcaff152b60",
+            "is_active": true,
+            "last_name": "Holland",
+            "first_name": "Vyvyan",
+            "last_login": null,
+            "date_joined": "2024-01-18T13:30:59.210Z",
+            "is_superuser": false,
+            "user_permissions": []
+          }
+        }
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 85,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-01-29T11:17:18.494Z",
+      "event_type": 51,
+      "content_type": 32,
+      "object_id": "406291aa-e35e-41a9-ab05-6355c5cc92d6",
+      "extra": {
+        "user": {
+          "pk": 2,
+          "model": "auth.user",
+          "fields": {
+            "email": "vyvyan.holland@contact-email.com",
+            "groups": [],
+            "is_staff": false,
+            "password": "!AMMmXzwuY0vGu4xD1m6vEcexPpy5JL1c7w8GiiDi",
+            "username": "20a0353f-a7d1-4851-9af8-1bcaff152b60",
+            "is_active": true,
+            "last_name": "Holland",
+            "first_name": "Vyvyan",
+            "last_login": null,
+            "date_joined": "2024-01-18T13:30:59.210Z",
+            "is_superuser": false,
+            "user_permissions": []
+          }
+        }
+      }
+    }
+  }
+]
