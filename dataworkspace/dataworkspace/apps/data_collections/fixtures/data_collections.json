@@ -6,11 +6,11 @@
       "created_date": "2024-01-29T10:34:14.531Z",
       "modified_date": "2024-01-29T10:34:14.531Z",
       "deleted": false,
-      "created_by": 1,
+      "created_by": 2,
       "updated_by": null,
       "name": "Collection a",
       "description": "This is a collection description.",
-      "owner": 1,
+      "owner": 2,
       "notes": null,
       "user_access_type": "REQUIRES_AUTHORIZATION"
     }
@@ -22,11 +22,11 @@
       "created_date": "2024-01-29T10:34:35.735Z",
       "modified_date": "2024-01-29T10:34:35.736Z",
       "deleted": false,
-      "created_by": 1,
+      "created_by": 2,
       "updated_by": null,
       "name": "Collection b",
       "description": "This is a collection description.",
-      "owner": 1,
+      "owner": 2,
       "notes": null,
       "user_access_type": "REQUIRES_AUTHORIZATION"
     }
@@ -38,11 +38,11 @@
       "created_date": "2024-01-29T10:35:01.133Z",
       "modified_date": "2024-01-29T10:35:01.133Z",
       "deleted": false,
-      "created_by": 1,
+      "created_by": 2,
       "updated_by": null,
       "name": "Collection c",
       "description": "This is a collection description.",
-      "owner": 1,
+      "owner": 2,
       "notes": null,
       "user_access_type": "REQUIRES_AUTHORIZATION"
     }
