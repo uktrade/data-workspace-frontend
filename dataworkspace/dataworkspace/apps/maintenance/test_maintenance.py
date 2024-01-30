@@ -67,3 +67,14 @@ class TestMaintenanceWithoutSetup(TestCase):
         )
         updated_maintenance_settings = get_maintenance_settings()
         self.assertHTMLEqual(updated_maintenance_settings.maintenance_text, "Test text")
+
+
+@pytest.mark.django_db
+class TestMaintenanceBaseSettings(TestCase):
+    def test_healthcheck_page_returns_ok_when_maintenance_mode_is_on(self):
+        MaintenanceSettings.objects.create(
+            maintenance_text="Test text", maintenance_toggle=True, contact_email="test@gov.uk"
+        )
+        response = self.client.get("/healthcheck")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b"OK")
