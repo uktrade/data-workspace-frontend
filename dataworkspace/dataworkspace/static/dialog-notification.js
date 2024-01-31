@@ -53,4 +53,5 @@ addButtonListener("feedback-link", feedbackLinkCookie);
 
 if (getCookie("feedbackLinkClicked") && document.referrer.includes("feedback")) {
   showFeedbackBanner();
+  document.getElementById("download-dialog").showModal();
 }
