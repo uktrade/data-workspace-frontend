@@ -1,14 +1,13 @@
-document.addEventListener("DOMContentLoaded", () =>
+document.addEventListener("DOMContentLoaded", () => {
+  const modal = document.getElementById("download-dialog");
+  const closeButton = modal.querySelector('button:last-child');
+
+  closeButton.addEventListener("click", () => modal.close());
+
   document.querySelectorAll(".modal-link").forEach((link) =>
     link.addEventListener("click", (e) => {
       e.preventDefault();
-      const modal = e.target.nextElementSibling;
       modal.showModal();
-      const closeButton =
-        modal.getElementsByTagName("button")[
-          modal.getElementsByTagName("button").length - 1
-        ];
-      closeButton.addEventListener("click", () => modal.close());
     })
-  )
-);
+  );
+});
