@@ -55,7 +55,7 @@ function TableRowBigDataFolder(props) {
           ></path>
         </svg>
       </td>
-      <td className="govuk-table__cell">
+      <td className="govuk-table__cell govuk-table__cell--word-wrapper">
         <a
           draggable="false"
           className="folder govuk-link govuk-link--no-visited"
@@ -214,7 +214,7 @@ M322.909729,176.471893
 z"/>
 </svg>
       </td>
-      <td className="govuk-table__cell">
+      <td className="govuk-table__cell govuk-table__cell--word-wrapper">
         <a
           draggable="false"
           className="folder govuk-link govuk-link--no-visited"
@@ -259,7 +259,7 @@ function TableRowFolder(props) {
           </div>
         </div>
       </td>
-      <td className="govuk-table__cell">
+      <td className="govuk-table__cell govuk-table__cell--word-wrapper">
         <a
           className="folder govuk-link govuk-link--no-visited"
           onClick={(e) => {
@@ -313,7 +313,7 @@ function TableRowFile(props) {
           </div>
         </div>
       </td>
-      <td className="govuk-table__cell">
+      <td className="govuk-table__cell govuk-table__cell--word-wrapper">
         <a
           className="file govuk-link govuk-link--no-visited"
           onClick={(e) => {

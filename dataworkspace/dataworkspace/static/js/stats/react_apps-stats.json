@@ -51,15 +51,15 @@
       "path": "visualisations.efc6a58d2f8460a240a9.js.LICENSE.txt",
       "publicPath": "/__django_static/js/bundles/visualisations.efc6a58d2f8460a240a9.js.LICENSE.txt"
     },
-    "your-files.60c3183effbcac74f3d8.js": {
-      "name": "your-files.60c3183effbcac74f3d8.js",
-      "path": "your-files.60c3183effbcac74f3d8.js",
-      "publicPath": "/__django_static/js/bundles/your-files.60c3183effbcac74f3d8.js"
+    "your-files.f2770a2e3a7198bdf1e9.js": {
+      "name": "your-files.f2770a2e3a7198bdf1e9.js",
+      "path": "your-files.f2770a2e3a7198bdf1e9.js",
+      "publicPath": "/__django_static/js/bundles/your-files.f2770a2e3a7198bdf1e9.js"
     },
-    "your-files.60c3183effbcac74f3d8.js.LICENSE.txt": {
-      "name": "your-files.60c3183effbcac74f3d8.js.LICENSE.txt",
-      "path": "your-files.60c3183effbcac74f3d8.js.LICENSE.txt",
-      "publicPath": "/__django_static/js/bundles/your-files.60c3183effbcac74f3d8.js.LICENSE.txt"
+    "your-files.f2770a2e3a7198bdf1e9.js.LICENSE.txt": {
+      "name": "your-files.f2770a2e3a7198bdf1e9.js.LICENSE.txt",
+      "path": "your-files.f2770a2e3a7198bdf1e9.js.LICENSE.txt",
+      "publicPath": "/__django_static/js/bundles/your-files.f2770a2e3a7198bdf1e9.js.LICENSE.txt"
     }
   },
   "chunks": {
@@ -79,7 +79,7 @@
       "visualisations.efc6a58d2f8460a240a9.js"
     ],
     "your-files": [
-      "your-files.60c3183effbcac74f3d8.js"
+      "your-files.f2770a2e3a7198bdf1e9.js"
     ]
   },
   "publicPath": "/__django_static/js/bundles/"
