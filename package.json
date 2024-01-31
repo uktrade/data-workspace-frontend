@@ -30,6 +30,7 @@
   },
   "homepage": "https://github.com/uktrade/data-workspace#readme",
   "devDependencies": {
+    // IMPORTANT - If you add any cypress packages they must be copied to the cypress/package/json file
     "@testing-library/cypress": "^10.0.1",
     "axe-core": "^4.8.3",
     "cypress": "13.6.3",

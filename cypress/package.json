@@ -1,7 +1,7 @@
 {
   "name": "cypress-e2e-testing",
   "version": "1.0.0",
-  "description": "This file is only needed for the docker container built from the .Dockerfile in this folder. To run any cypress commands use the package.json file in the root of this repo",
+  "description": "This file is only needed for the docker container built from the .Dockerfile in this folder. To run any cypress commands use the package.json file in the root of this repo. The reason there are duplicate package.json files, is the cypress/included docker image has an issue with the node-saas module used in the root package.json file",
   "devDependencies": {
     "@testing-library/cypress": "^10.0.1",
     "axe-core": "^4.8.3",
