@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 
 jobs:
   docker-test-unit-js:
@@ -99,19 +99,11 @@ jobs:
     resource_class: xlarge
     steps:
       - checkout
-      - run:
-          name: Copy sample config
-          command: cp .envs/sample.env .envs/dev.env
-      - run:
-          name: Build docker containers
-          command: |
-            make docker-e2e-build
-      - run:
-          name: Run the e2e tests
-          command: |
-            make docker-e2e-run
-      - store_artifacts:
-          path: cypress/screenshots
+      - run_e2e:
+          build_cmd_name: docker-e2e-build
+          run_cmd_name: docker-e2e-run
+      - store_cypress_artifacts:
+          docker_project_name: e2e
 
   docker-test-a11y:
     machine:
@@ -120,19 +112,50 @@ jobs:
     resource_class: xlarge
     steps:
       - checkout
+      - run_e2e:
+          build_cmd_name: docker-a11y-build
+          run_cmd_name: docker-a11y-run
+      - store_cypress_artifacts:
+          docker_project_name: a11y
+
+commands:
+  run_e2e:
+    description: Run the E2E tests
+    parameters:
+      build_cmd_name:
+        type: string
+      run_cmd_name:
+        type: string
+    steps:
       - run:
           name: Copy sample config
           command: cp .envs/sample.env .envs/dev.env
       - run:
           name: Build docker containers
           command: |
-            make docker-a11y-build
+            make << parameters.build_cmd_name >>
       - run:
-          name: Run the a11y tests
+          name: Run the tests
           command: |
-            make docker-a11y-run
+            make << parameters.run_cmd_name >>
+  store_cypress_artifacts:
+    description: Upload the cypress screenshots and test results
+    parameters:
+      docker_project_name:
+        type: string        
+    steps:
+      - run:
+          name: Copy cypress outputs from container
+          when: always
+          command: | 
+            docker cp << parameters.docker_project_name >>-data-workspace-e2e-test-1:/app/test-results test-results
       - store_artifacts:
-          path: cypress/screenshots
+          path: test-results/screenshots
+      - store_artifacts:
+          path: test-results/videos
+      - store_test_results:
+          path: test-results/test-results.xml
+
 
 workflows:
   version: 2

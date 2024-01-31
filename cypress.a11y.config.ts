@@ -5,6 +5,8 @@ export default defineConfig({
     specPattern: "cypress/a11y/**/*.cy.{js,jsx,ts,tsx}",
     supportFile: "cypress/support/a11y.ts",
     baseUrl: "http://dataworkspace.test:8000",
+    screenshotsFolder: "test-results/screenshots",
+    videosFolder: "test-results/screenshots",
     viewportWidth: 1200,
     viewportHeight: 900,
     setupNodeEvents(on, config) {
