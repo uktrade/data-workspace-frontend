@@ -1,11 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
     <Name>notebooks.analysisworkspace.dev.uktrade.io</Name>
-    <Prefix>user/federated/23d142d14acc12905ad26fdde4f8fe0214eb8325ef7b893bfed679536f32c143/</Prefix>
+    <Prefix>user/</Prefix>
     <KeyCount>4</KeyCount>
     <MaxKeys>1000</MaxKeys>
     <Delimiter>/</Delimiter>
     <IsTruncated>false</IsTruncated>
+    <Contents>
+        <Key>/test_file.rtf</Key>
+        <LastModified>2012-01-30T10:03:44.000Z</LastModified>
+        <ETag></ETag>
+        <Size>220</Size>
+        <StorageClass>STANDARD</StorageClass>
+    </Contents>
     <Contents>
         <Key>/second_test_file.rtf</Key>
         <LastModified>2024-01-30T14:31:21.000Z</LastModified>
@@ -15,14 +22,7 @@
     </Contents>
     <Contents>
         <Key>/third_test_file.rtf</Key>
-        <LastModified>2024-01-30T12:20:10.000Z</LastModified>
-        <ETag></ETag>
-        <Size>220</Size>
-        <StorageClass>STANDARD</StorageClass>
-    </Contents>
-    <Contents>
-        <Key>/test_file.rtf</Key>
-        <LastModified>2024-01-30T10:03:44.000Z</LastModified>
+        <LastModified>2018-01-30T12:20:10.000Z</LastModified>
         <ETag></ETag>
         <Size>220</Size>
         <StorageClass>STANDARD</StorageClass>

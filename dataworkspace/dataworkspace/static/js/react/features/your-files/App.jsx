@@ -251,7 +251,7 @@ export default class App extends React.Component {
       }));
 
       files.sort(function(a, b) {
-        return new Date(b.formattedDate) - new Date(a.formattedDate);
+        return b.formattedDate - a.formattedDate;
       });
 
       const teamsFolders =
