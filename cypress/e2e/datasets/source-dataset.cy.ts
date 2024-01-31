@@ -6,6 +6,6 @@ describe("Source dataset catalogue page", () => {
   });
 
   it("should have a title", () => {
-    cy.contains("h1", "Data cut - links");
+    cy.contains("h1", "Data cut - links - FORCE FAIL");
   });
 });
