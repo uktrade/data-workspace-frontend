@@ -1,7 +1,7 @@
 {% load static %}
 
-<dialog>
-    <div id="feedbackNotification" class="govuk-notification-banner" style="display: none;" role="region" aria-labelledby="govuk-notification-banner-title" data-module="govuk-notification-banner">
+<dialog id="download-dialog">
+    <div id="feedback-notification" class="govuk-notification-banner" style="display: none;" role="region" aria-labelledby="govuk-notification-banner-title" data-module="govuk-notification-banner">
       <div class="govuk-notification-banner__header">
         <h2 class="govuk-notification-banner__title" id="govuk-notification-banner-title">
           Important
@@ -12,7 +12,7 @@
           A copy of this data should now be downloading.
         </p>
         <p class="govuk-body">
-          Tell us what went well and what can be improved, by completing our short <a class="govuk-link" style="font-size: 19px;" href="/feedback">feedback form.</a>
+          Tell us what went well and what can be improved, by completing our short <a id="feedback-link" class="govuk-link" style="font-size: 19px;" href="/feedback">feedback form.</a>
         </p>
       </div>
     </div>
