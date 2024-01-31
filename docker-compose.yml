@@ -206,7 +206,7 @@ services:
     environment:
       - CYPRESS_baseUrl=http://dataworkspace.test:8000
     entrypoint: dockerize -wait tcp://data-workspace:8000 -timeout 3m -wait-retry-interval 5s
-    command: cypress run
+    command: cypress run --reporter cypress-multi-reporters --reporter-options configFile=cypress-reporter-config.json
     
 
 volumes:

@@ -15,6 +15,7 @@ WORKDIR app
 
 COPY ./cypress cypress
 COPY ./cypress/package.json .
+COPY ./cypress/cypress-reporter-config.json .
 
 RUN npm install
 
