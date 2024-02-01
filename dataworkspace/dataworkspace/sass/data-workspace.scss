@@ -531,6 +531,15 @@ p.sidebar-section {
   }
 }
 
+#download-dialog {
+  .govuk-link {
+    font-size: 19px;
+  }
+  .text--margin {
+    margin-bottom: 10px
+  }
+}
+
 @import "filters";
 @import "search-bar";
 @import "search-results";
