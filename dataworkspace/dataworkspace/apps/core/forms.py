@@ -76,7 +76,8 @@ class UserSatisfactionSurveyForm(GOVUKDesignSystemForm):
         trying_to_do_initial = kwargs.pop("trying_to_do_initial", None)
         super().__init__(*args, **kwargs)
 
-        if trying_to_do_initial is not None:
+        if 'csat-link' in trying_to_do_initial:
+            print
             self.fields["trying_to_do"].initial = "analyse-data"
 
     trying_to_do = GOVUKDesignSystemMultipleChoiceField(
