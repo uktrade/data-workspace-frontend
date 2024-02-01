@@ -250,6 +250,10 @@ export default class App extends React.Component {
         isSelected: false,
       }));
 
+      files.sort(function(a, b) {
+        return b.formattedDate - a.formattedDate;
+      });
+
       const teamsFolders =
         params.Prefix === rootPrefix
           ? this.props.config.teamsPrefixes.map((team) => ({
