@@ -72,6 +72,13 @@ class SupportForm(GOVUKDesignSystemForm):
 
 
 class UserSatisfactionSurveyForm(GOVUKDesignSystemForm):
+    def __init__(self, *args, **kwargs):
+        trying_to_do_initial = kwargs.pop("trying_to_do_initial", None)
+        super().__init__(*args, **kwargs)
+
+        if trying_to_do_initial is not None:
+            self.fields["trying_to_do"].initial = "analyse-data"
+
     trying_to_do = GOVUKDesignSystemMultipleChoiceField(
         required=True,
         label="1. What were you trying to do today?",

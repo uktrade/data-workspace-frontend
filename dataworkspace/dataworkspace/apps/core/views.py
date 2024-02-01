@@ -255,6 +255,11 @@ class UserSatisfactionSurveyView(FormView):
     form_class = UserSatisfactionSurveyForm
     template_name = "core/user-satisfaction-survey.html"
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["trying_to_do_initial"] = self.request.GET.getlist("from")
+        return kwargs
+
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data()
         ctx["referer"] = self.request.META.get("HTTP_REFERER")
