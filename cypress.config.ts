@@ -4,7 +4,7 @@ export default defineConfig({
   e2e: {
     baseUrl: "http://dataworkspace.test:8000",
     screenshotsFolder: "test-results/screenshots",
-    video:true,
+    video: true,
     videosFolder: "test-results/videos",
     viewportWidth: 1200,
     viewportHeight: 900,
