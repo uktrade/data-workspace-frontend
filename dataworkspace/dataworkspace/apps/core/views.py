@@ -273,6 +273,7 @@ class UserSatisfactionSurveyView(FormView):
             improve_service=cleaned["improve_service"],
             trying_to_do_other_message=cleaned["trying_to_do_other_message"],
             describe_experience=cleaned["describe_experience"],
+            survey_source=cleaned["survey_source"],
         )
 
         return HttpResponseRedirect(f'{reverse("feedback")}?success=1')
