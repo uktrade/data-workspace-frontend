@@ -18,10 +18,9 @@ set -e
       users \
       profiles \
       datasets \
+      datasets_bookmark \
       data_collections \
       eventlog
-
-
 
     django-admin waffle_flag HOME_PAGE_FLAG --everyone --create
     django-admin waffle_flag ACCESSIBLE_AUTOCOMPLETE_FLAG --everyone --create
