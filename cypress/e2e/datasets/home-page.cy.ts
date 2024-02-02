@@ -10,6 +10,7 @@ describe("Homepage dashboard", () => {
     beforeEach(() => {
       cy.visit("/");
     });
+
     it("should show a search bar with a link to getting started", () => {
       cy.findByTestId("search-form")
         .first()
@@ -21,12 +22,14 @@ describe("Homepage dashboard", () => {
         .findByRole("link", { name: "Getting started as a new user" })
         .should("have.attr", "href", "/welcome");
     });
+
     it("should show a support title", () => {
       cy.findByRole("heading", {
         level: 2,
         name: "How we can support you",
       }).should("exist");
     });
+
     it("should show a 'Get help' article", () => {
       cy.findByRole("heading", {
         level: 3,
@@ -37,6 +40,7 @@ describe("Homepage dashboard", () => {
         name: "Suggested articles",
       }).should("exist");
     });
+
     it("should show a 'Get in touch' article", () => {
       cy.findByRole("heading", {
         level: 3,
@@ -50,6 +54,7 @@ describe("Homepage dashboard", () => {
       });
     });
   });
+
   context("When a user visits the page for the first time", () => {
     beforeEach(() => {
       cy.intercept(endpoints.recentItems, { results: [] }).as("recentItems");
@@ -62,6 +67,7 @@ describe("Homepage dashboard", () => {
       );
       cy.visit("/");
     });
+
     it("should show the 'Your recent items' section with NO items", () => {
       cy.wait("@recentItems");
       cy.findByRole("heading", {
@@ -74,6 +80,7 @@ describe("Homepage dashboard", () => {
       );
       cy.findByRole("link", { name: "Data cut - links" }).should("not.exist");
     });
+
     it("should show the 'Your recent collections' section with NO collections", () => {
       cy.wait("@recentCollections");
       cy.findByRole("heading", {
@@ -88,6 +95,7 @@ describe("Homepage dashboard", () => {
         name: "Collection a",
       }).should("not.exist");
     });
+
     it("should show the 'Your recent tools' section with NO tools", () => {
       cy.wait("@recentTools");
       cy.findByRole("heading", {
@@ -100,6 +108,7 @@ describe("Homepage dashboard", () => {
       );
       cy.findByRole("link", { name: "Superset" }).should("not.exist");
     });
+
     it("should show the 'Your bookmarks' section with NO bookmarks", () => {
       cy.wait("@yourBookmarks");
       cy.findByRole("heading", {
@@ -110,6 +119,7 @@ describe("Homepage dashboard", () => {
       cy.findByRole("link", { name: "View all bookmarks" }).should("not.exist");
     });
   });
+
   context("When an exisiting user visits the page", () => {
     beforeEach(() => {
       cy.intercept(endpoints.recentItems).as("recentItems");
@@ -118,6 +128,7 @@ describe("Homepage dashboard", () => {
       cy.intercept(endpoints.yourBookmarks).as("yourBookmarks");
       cy.visit("/");
     });
+
     it("should show the 'Your recent items' section with items", () => {
       cy.wait("@recentItems");
       cy.findByRole("heading", {
@@ -129,6 +140,7 @@ describe("Homepage dashboard", () => {
         "not.exist"
       );
     });
+
     it("should show the 'Your recent collections' section with collections", () => {
       cy.wait("@recentCollections");
       cy.findByRole("heading", {
@@ -145,6 +157,7 @@ describe("Homepage dashboard", () => {
         name: "Collection a",
       }).should("exist");
     });
+
     it("should show the 'Your recent tools' section with tools", () => {
       cy.wait("@recentTools");
       cy.findByRole("heading", {
@@ -157,6 +170,7 @@ describe("Homepage dashboard", () => {
       );
       cy.findByRole("link", { name: "Superset" }).should("exist");
     });
+
     it("should show the 'Your bookmarks' section with bookmarks", () => {
       cy.wait("@yourBookmarks");
       cy.findByRole("heading", {
