@@ -349,6 +349,12 @@ class DataSet(DeletableTimestampedUserModel):
 
         self.acronyms = " ".join(acronyms)
 
+        if self.request_approvers:
+            for request_approver in self.request_approvers:
+                matching_user = get_user_model().objects.filter(email = request_approver).first()
+                if matching_user:
+                    self.data_catalogue_editors.add(matching_user)
+
         super().save(force_insert, force_update, using, update_fields)
 
         # If the model's reference code has changed as part of this update reset the reference
