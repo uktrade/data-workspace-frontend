@@ -50,6 +50,17 @@ export const recentItems = {
   previous: null,
   results: [
     {
+      id: 9,
+      timestamp: '2023-12-01T12:21:36.555002Z',
+      event_type: 'Dataset view',
+      user_id: 1,
+      related_object: null,
+      extra: {
+        path: '/datasets/001122',
+        reference_dataset_version: '2023-12-01'
+      }
+    },
+    {
       id: 8,
       timestamp: '2023-12-01T12:21:36.555002Z',
       event_type: 'Dataset view',
