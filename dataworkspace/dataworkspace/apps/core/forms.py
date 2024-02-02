@@ -76,9 +76,13 @@ class UserSatisfactionSurveyForm(GOVUKDesignSystemForm):
         trying_to_do_initial = kwargs.pop("trying_to_do_initial", None)
         super().__init__(*args, **kwargs)
 
-        if 'csat-link' in trying_to_do_initial:
-            print
+        self.fields["survey_source"].initial = "contact-us"
+
+        if "csat-link" in trying_to_do_initial:
             self.fields["trying_to_do"].initial = "analyse-data"
+            self.fields["survey_source"].initial = "csat-download-link"
+
+    survey_source = forms.CharField(widget=forms.HiddenInput())
 
     trying_to_do = GOVUKDesignSystemMultipleChoiceField(
         required=True,
