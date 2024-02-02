@@ -32,10 +32,12 @@ export const transformRecentCollectionsResponse = (
 export const transformRecentItemsResponse = (
   response: YourRecentIemsResponse
 ): TransformedYourRecentItemsResponse =>
-  response.results.map(({ related_object, extra }) => ({
-    name: related_object.name,
-    url: extra.path
-  }));
+  response.results
+    .filter((result) => result.related_object)
+    .map(({ related_object, extra }) => ({
+      name: related_object.name,
+      url: extra.path
+    }));
 
 export const transformYourBookmarksResponse = (
   response: YourBookmarksResponse
