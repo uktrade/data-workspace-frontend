@@ -325,7 +325,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
 
         if form.cleaned_data["request_approvers"]:
             request_approvers_emails = [
-                request_approver for request_approver in form.cleaned_data["request_approvers"]
+                request_approver for request_approver in list(form.cleaned_data["request_approvers"])
             ]
             existing_data_catalogue_editors_emails = (
                 [item.email for item in form.cleaned_data["data_catalogue_editors"]]
