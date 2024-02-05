@@ -8,7 +8,7 @@ from django.test import override_settings
 from freezegun import freeze_time
 import pytest
 
-from dataworkspace.apps.core.utils import database_dsn
+from dataworkspace.apps.core.utils import database_dsn, get_s3_csv_column_types
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import (
     Notification,
@@ -2102,3 +2102,39 @@ class TestStoreReferenceDatasetMetadata:
             '[["link", "integer"], ["field1", "integer"]]',
             "\\x6777518eb5a5d30aa2e7267bdb11bb60",
         )
+
+
+import io
+from io import BytesIO
+import json
+import botocore.session
+from botocore.stub import Stubber
+from botocore.response import StreamingBody
+from pathlib import Path
+
+@patch("dataworkspace.apps.core.utils.get_s3_client")
+def test_get_columns(mock_get_s3_client):
+    file_path = Path(__file__).resolve().parent / "test_data/all_ints.csv"
+    f = open(file_path, "r")
+    contents = f.read()
+
+    raw_stream = StreamingBody(io.BytesIO(contents.encode()), len(contents))
+
+    response = {"Body": raw_stream}
+
+    expected_params = {
+        "Bucket": "notebooks.dataworkspace.local",
+        "Key": "key",
+        "Range": "bytes=0-102400",
+    }
+
+    s3 = botocore.session.get_session().create_client("s3")
+    stubber = Stubber(s3)
+
+    mock_get_s3_client.return_value = s3
+
+    stubber.add_response("get_object", response, expected_params)
+    stubber.activate()
+
+    columns = get_s3_csv_column_types("key")
+    print(columns)
