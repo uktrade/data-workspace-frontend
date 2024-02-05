@@ -1,0 +1,12 @@
+[
+  {
+    "model": "core.database",
+    "pk": "ac99394d-336c-4de9-8c9f-c5bd38d0b670",
+    "fields": {
+      "created_date": "2024-01-08T09:40:24.143Z",
+      "modified_date": "2024-01-08T09:40:24.143Z",
+      "memorable_name": "datasets_e2e",
+      "is_public": false
+    }
+  }
+]
