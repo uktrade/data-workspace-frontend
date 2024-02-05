@@ -41,7 +41,7 @@ from dataworkspace.apps.datasets.search import (
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.your_files.models import UploadedTable
 from dataworkspace.tests import factories
-from dataworkspace.tests.common import get_http_sso_data, MatchUnorderedMembers
+from dataworkspace.tests.common import BaseTestCase, get_http_sso_data, MatchUnorderedMembers
 from dataworkspace.tests.factories import (
     VisualisationCatalogueItemFactory,
     UserFactory,
@@ -4879,3 +4879,85 @@ def test_master_dataset_detail_page_shows_pipeline_failures(client, metadata_db)
         len([x for x in response.context["master_datasets_info"] if x.pipeline_last_run_succeeded])
         == 1
     )
+
+
+class TestRemoveAuthorisedEditor(BaseTestCase):
+    @mock.patch("dataworkspace.apps.datasets.views.log_event")
+    def test_user_is_removed_from_data_catalogue_editors_when_request_approvers_missing(
+        self, mock_log_event
+    ):
+        ds = factories.DataSetFactory(published=True)
+        remaining_user = UserFactory()
+
+        ds.data_catalogue_editors.set([self.user.id, remaining_user.id])
+
+        self._authenticated_get(
+            reverse(
+                "datasets:remove_authorised_editor",
+                args=(
+                    ds.id,
+                    self.user.id,
+                ),
+            )
+        )
+
+        mock_log_event.assert_called()
+        updated_ds = DataSet.objects.filter(pk=ds.id).first()
+
+        assert updated_ds.data_catalogue_editors.count() == 1
+        assert updated_ds.data_catalogue_editors.filter(pk=self.user.id).exists() is False
+
+    @mock.patch("dataworkspace.apps.datasets.views.log_event")
+    def test_user_is_removed_from_data_catalogue_editors_only_when_not_present_in_request_approvers(
+        self, mock_log_event
+    ):
+        remaining_user = UserFactory()
+        ds = factories.DataSetFactory(published=True, request_approvers=[remaining_user.email])
+
+        ds.data_catalogue_editors.set([self.user.id, remaining_user.id])
+
+        self._authenticated_get(
+            reverse(
+                "datasets:remove_authorised_editor",
+                args=(
+                    ds.id,
+                    self.user.id,
+                ),
+            )
+        )
+
+        updated_ds = DataSet.objects.filter(pk=ds.id).first()
+
+        assert updated_ds.data_catalogue_editors.count() == 1
+        assert updated_ds.data_catalogue_editors.filter(pk=self.user.id).exists() is False
+
+        assert updated_ds.request_approvers == [remaining_user.email]
+
+    @mock.patch("dataworkspace.apps.datasets.views.log_event")
+    def test_user_is_removed_from_data_catalogue_editors_and_request_approvers_when_present(
+        self, mock_log_event
+    ):
+        remaining_user = UserFactory()
+        ds = factories.DataSetFactory(
+            published=True, request_approvers=[self.user.email, remaining_user.email]
+        )
+
+        ds.data_catalogue_editors.set([self.user.id, remaining_user.id])
+
+        self._authenticated_get(
+            reverse(
+                "datasets:remove_authorised_editor",
+                args=(
+                    ds.id,
+                    self.user.id,
+                ),
+            )
+        )
+
+        mock_log_event.assert_called()
+        updated_ds = DataSet.objects.filter(pk=ds.id).first()
+
+        assert updated_ds.data_catalogue_editors.count() == 1
+        assert updated_ds.data_catalogue_editors.filter(pk=self.user.id).exists() is False
+
+        assert updated_ds.request_approvers == [remaining_user.email]

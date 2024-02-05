@@ -2,6 +2,7 @@ from functools import partial
 import inspect
 import sys
 import mock
+import factory
 
 from botocore.exceptions import ClientError
 
@@ -2552,6 +2553,37 @@ class TestSourceLinkAdmin(BaseAdminTestCase):
 
 
 class TestDatasetAdmin(BaseAdminTestCase):
+    def _valid_dataset(self, dataset, user):
+        return {
+            "published": dataset.published,
+            "name": dataset.name,
+            "slug": dataset.slug,
+            "short_description": "test short description",
+            "description": LONG_DATASET_DESCRIPTION,
+            "information_asset_owner": str(user.id),
+            "information_asset_manager": str(user.id),
+            "enquiries_contact": str(user.id),
+            "type": 2,
+            "user_access_type": UserAccessType.OPEN,
+            "sourcelink_set-TOTAL_FORMS": "0",
+            "sourcelink_set-INITIAL_FORMS": "0",
+            "sourcelink_set-MIN_NUM_FORMS": "0",
+            "sourcelink_set-MAX_NUM_FORMS": "1000",
+            "sourceview_set-TOTAL_FORMS": "0",
+            "sourceview_set-INITIAL_FORMS": "0",
+            "sourceview_set-MIN_NUM_FORMS": "0",
+            "sourceview_set-MAX_NUM_FORMS": "1000",
+            "customdatasetquery_set-TOTAL_FORMS": "0",
+            "customdatasetquery_set-INITIAL_FORMS": "0",
+            "customdatasetquery_set-MIN_NUM_FORMS": "0",
+            "customdatasetquery_set-MAX_NUM_FORMS": "1000",
+            "_continue": "Save and continue editing",
+            "charts-TOTAL_FORMS": "0",
+            "charts-INITIAL_FORMS": "0",
+            "charts-MIN_NUM_FORMS": "0",
+            "charts-MAX_NUM_FORMS": "1000",
+        }
+
     def test_update_dataset_with_description_not_long_enough(self):
         dataset = factories.DataSetFactory.create()
         response = self._authenticated_post(
@@ -2910,6 +2942,116 @@ class TestDatasetAdmin(BaseAdminTestCase):
         mock_client().delete_object.assert_called_once_with(
             Bucket=settings.AWS_UPLOADS_BUCKET, Key="s3://sourcelink/a-file.txt"
         )
+
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
+    def test_request_approvers_with_unknown_email_address_not_added_to_data_catalogue_editors(
+        self, mock_client
+    ):
+        dataset = factories.DataSetFactory()
+        user = factories.UserFactory()
+        data = self._valid_dataset(dataset, user)
+        data["request_approvers"] = ["not_real"]
+
+        self._authenticated_post(
+            reverse("admin:datasets_datacutdataset_change", args=(dataset.id,)),
+            data,
+        )
+
+        reloaded_dataset = DataSet.objects.filter(pk=dataset.id).first()
+        assert reloaded_dataset.data_catalogue_editors.count() == 0
+
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
+    def test_request_approvers_with_new_email_address_added_to_data_catalogue_editors(
+        self, mock_client
+    ):
+        dataset = factories.DataSetFactory()
+        user = factories.UserFactory()
+        data = self._valid_dataset(dataset, user)
+        # data['data_catalogue_editors'] = [user.id]
+
+        self._authenticated_post(
+            reverse("admin:datasets_datacutdataset_change", args=(dataset.id,)),
+            data,
+        )
+
+        data["request_approvers"] = [user.email]
+
+        self._authenticated_post(
+            reverse("admin:datasets_datacutdataset_change", args=(dataset.id,)),
+            data,
+        )
+
+        reloaded_dataset = DataSet.objects.filter(pk=dataset.id).first()
+        assert reloaded_dataset.data_catalogue_editors.count() == 1
+
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
+    def test_request_approvers_with_existing_email_address_in_data_catalogue_editors_not_added_again_to_data_catalogue_editors(
+        self, mock_client
+    ):
+        dataset = factories.DataSetFactory()
+        user = factories.UserFactory()
+        data = self._valid_dataset(dataset, user)
+        data["data_catalogue_editors"] = [user.id]
+
+        self._authenticated_post(
+            reverse("admin:datasets_datacutdataset_change", args=(dataset.id,)),
+            data,
+        )
+
+        data["request_approvers"] = [user.email]
+
+        self._authenticated_post(
+            reverse("admin:datasets_datacutdataset_change", args=(dataset.id,)),
+            data,
+        )
+
+        reloaded_dataset = DataSet.objects.filter(pk=dataset.id).first()
+        assert reloaded_dataset.data_catalogue_editors.count() == 1
+
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
+    def test_request_approvers_and_data_catalogue_editors_containing_same_email_only_added_once_to_data_catalogue_editors(
+        self, mock_client
+    ):
+        dataset = factories.DataSetFactory()
+        user = factories.UserFactory()
+        data = self._valid_dataset(dataset, user)
+        data["data_catalogue_editors"] = [user.id]
+        data["request_approvers"] = [user.email]
+
+        self._authenticated_post(
+            reverse("admin:datasets_datacutdataset_change", args=(dataset.id,)),
+            data,
+        )
+
+        reloaded_dataset = DataSet.objects.filter(pk=dataset.id).first()
+        assert reloaded_dataset.data_catalogue_editors.count() == 1
+
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
+    def test_request_approvers_with_new_known_email_addresses_added_to_existing_data_catalogue_editors(
+        self, mock_client
+    ):
+        dataset = factories.DataSetFactory()
+        user = factories.UserFactory()
+        matching_request_approvers = ["new_user1@example.com", "new_user2@example.com"]
+        factories.UserFactory.create_batch(
+            len(matching_request_approvers), email=factory.Iterator(matching_request_approvers)
+        )
+        data = self._valid_dataset(dataset, user)
+        data["data_catalogue_editors"] = [user.id]
+        self._authenticated_post(
+            reverse("admin:datasets_datacutdataset_change", args=(dataset.id,)),
+            data,
+        )
+
+        data["request_approvers"] = matching_request_approvers + ["not_real"]
+
+        self._authenticated_post(
+            reverse("admin:datasets_datacutdataset_change", args=(dataset.id,)),
+            data,
+        )
+
+        reloaded_dataset = DataSet.objects.filter(pk=dataset.id).first()
+        assert reloaded_dataset.data_catalogue_editors.count() == 3
 
 
 class TestDatasetAdminPytest:

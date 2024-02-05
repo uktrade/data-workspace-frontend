@@ -323,6 +323,24 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
             form.cleaned_data.get("authorized_users", get_user_model().objects.none())
         )
 
+        if form.cleaned_data["request_approvers"]:
+            request_approvers_emails = [
+                request_approver for request_approver in form.cleaned_data["request_approvers"]
+            ]
+            existing_data_catalogue_editors_emails = (
+                [item.email for item in form.cleaned_data["data_catalogue_editors"]]
+                if form.cleaned_data["data_catalogue_editors"]
+                else []
+            )
+            combined_emails = set().union(
+                request_approvers_emails, existing_data_catalogue_editors_emails
+            )
+
+            valid_request_approver_users = get_user_model().objects.filter(
+                email__in=combined_emails
+            )
+            form.cleaned_data["data_catalogue_editors"] = valid_request_approver_users
+
         added_users = (
             form.cleaned_data["data_catalogue_editors"].difference(
                 obj.data_catalogue_editors.all()

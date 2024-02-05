@@ -1,4 +1,3 @@
-import factory
 import io
 from collections import OrderedDict
 from datetime import datetime
@@ -325,51 +324,3 @@ def test_no_longer_updated_datasets():
 
     reference_dataset = factories.ReferenceDatasetFactory.create()
     assert reference_dataset.data_is_actively_updated()
-
-
-@pytest.mark.django_db
-def test_request_approvers_with_unknown_email_address_not_added_to_data_catalogue_editors():
-    master_dataset = factories.MasterDataSetFactory()
-    
-    master_dataset.request_approvers = ["not_real"]
-    master_dataset.save()
-    assert not master_dataset.data_catalogue_editors.exists()
-
-
-@pytest.mark.django_db
-def test_request_approvers_with_existing_email_address_in_data_catalogue_editors_not_added_again_to_data_catalogue_editors():
-    user = factories.UserFactory()
-    master_dataset = factories.MasterDataSetFactory()
-    
-    master_dataset.data_catalogue_editors.add(user)
-    master_dataset.save()
-    master_dataset.request_approvers = [user.email]
-    master_dataset.save()
-    assert master_dataset.data_catalogue_editors.filter(email=user.email).count() == 1
-
-
-@pytest.mark.django_db
-def test_request_approvers_and_data_catalogue_editors_containing_same_email_only_added_once_to_data_catalogue_editors():
-    user = factories.UserFactory()
-    master_dataset = factories.MasterDataSetFactory()
-    
-    master_dataset.data_catalogue_editors.add(user)
-    master_dataset.request_approvers = [user.email]
-    master_dataset.save()
-    assert master_dataset.data_catalogue_editors.filter(email=user.email).count() == 1
-
-
-@pytest.mark.django_db
-def test_request_approvers_with_new_known_email_addresses_added_to_data_catalogue_editors():
-    user = factories.UserFactory()
-    master_dataset = factories.MasterDataSetFactory()
-    request_approvers = ["new_user1@example.com","new_user2@example.com"]
-    factories.UserFactory.create_batch(len(request_approvers), email=factory.Iterator(request_approvers))
-    
-    master_dataset.data_catalogue_editors.add(user)
-    master_dataset.save()
-    assert master_dataset.data_catalogue_editors.count() == 1
-    
-    master_dataset.request_approvers = request_approvers
-    master_dataset.save()
-    assert master_dataset.data_catalogue_editors.count() == 3

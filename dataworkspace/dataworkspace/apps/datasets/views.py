@@ -1576,6 +1576,10 @@ def remove_authorised_editor(request, pk, user_id):
     user = get_user_model().objects.get(id=user_id)
 
     dataset.data_catalogue_editors.remove(user)
+    if dataset.request_approvers and user.email in dataset.request_approvers:
+        dataset.request_approvers.remove(user.email)
+        dataset.save()
+
     log_event(
         request.user,
         EventLog.TYPE_DATA_CATALOGUE_EDITOR_REMOVED,
