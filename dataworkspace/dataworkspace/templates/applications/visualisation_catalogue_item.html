@@ -52,6 +52,13 @@
   {{ form.secondary_enquiries_contact }}
   {{ form.information_asset_manager }}
   {{ form.information_asset_owner }}
+    <div class="govuk-warning-text">
+      <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+      <strong class="govuk-warning-text__text">
+        <span class="govuk-warning-text__assistive">Warning</span>
+        The Information Asset Owner must be a senior civil servant.
+      </strong>
+    </div>
   {{ form.licence }}
   {% flag SECURITY_CLASSIFICATION_FLAG %}
     <div
