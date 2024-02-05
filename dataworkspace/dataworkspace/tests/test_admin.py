@@ -2985,7 +2985,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
         assert reloaded_dataset.data_catalogue_editors.count() == 1
 
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
-    def test_request_approvers_with_existing_email_address_in_data_catalogue_editors_not_added_again_to_data_catalogue_editors(
+    def test_request_approvers_with_existing_email_address_in_data_catalogue_editors_not_added_again_to_data_catalogue_editors( # pylint: disable=line-too-long
         self, mock_client
     ):
         dataset = factories.DataSetFactory()
