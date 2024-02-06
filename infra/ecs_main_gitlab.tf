@@ -368,7 +368,12 @@ resource "aws_rds_cluster_instance" "gitlab" {
   engine             = "${aws_rds_cluster.gitlab.engine}"
   engine_version     = "${aws_rds_cluster.gitlab.engine_version}"
   instance_class     = "${var.gitlab_db_instance_class}"
-  promotion_tier     = 1
+
+  lifecycle {
+    ignore_changes = [
+      "engine_version",
+    ]
+  }
 }
 
 resource "aws_db_subnet_group" "gitlab" {
