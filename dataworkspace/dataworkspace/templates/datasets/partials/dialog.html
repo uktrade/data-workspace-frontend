@@ -25,7 +25,7 @@
     </div>
     <div class="govuk-button-group">
         {% if link %}
-            <a class="govuk-button govuk-button--primary" data-module="govuk-button" href="{{ link }}">Download data as {{ format|default:"CSV"}}</a>
+            <a class="govuk-button govuk-button--primary" data-module="govuk-button" id="data-link-download" href="{{ link }}">Download data as {{ format|default:"CSV"}}</a>
         {% else %}
             <button class="govuk-button govuk-button--primary" data-module="govuk-button" id="data-grid-download">
                 Download data as {{ format|default:"CSV"}}

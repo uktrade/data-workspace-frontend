@@ -19,7 +19,28 @@ describe("Dialog notification", () => {
 
       cy.wait("@getDownload")
 
-      cy.get('download-dialog').should('be.visible');
+      cy.findByRole("dialog").should('be.visible');
+      cy.findByText("Important").should("be.visible");
     });
+
+    it("should create a cookie when one does not exist", () => {
+      cy.intercept("GET", "**/download.csv", {
+        statusCode: 200,
+        body: '',
+        headers: {
+          'Content-Type': 'text/csv',
+          'Content-Disposition': 'attachment; filename=source_link1.csv'
+        }
+      }).as("getDownload");
+      
+      cy.visit(`/datasets/${datacutWithLinks}`);
+      cy.findByRole("link", { name: "source_link1" }).click();
+      cy.findByRole("link", { name: "Download data as csv" }).click();
+
+      cy.wait("@getDownload")
+
+      cy.getCookie("notificationLastShown").should("exist");
+    });
+
   });
 });
