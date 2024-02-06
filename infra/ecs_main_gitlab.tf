@@ -632,7 +632,7 @@ resource "aws_launch_configuration" "gitlab_runner_tap" {
   }
 
   root_block_device {
-    volume_size = "${var.gitlab_runner_root_volume_size}"
+    volume_size = "${var.gitlab_runner_team_root_volume_size}"
     encrypted = true
   }
 

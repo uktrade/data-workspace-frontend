@@ -123,7 +123,8 @@ module "jupyterhub" {
   gitlab_runner_visualisations_deployment_project_token = "REPLACE_ME"
   gitlab_instance_type                                  = "t3a.xlarge"
   gitlab_runner_instance_type                           = "t3a.medium"
-  gitlab_runner_root_volume_size                        = "128"
+  gitlab_runner_root_volume_size                        = "256"
+  gitlab_runner_team_root_volume_size                   = "128"
   gitlab_cpu                                            = "4096"
   gitlab_memory                                         = "8192"
 
