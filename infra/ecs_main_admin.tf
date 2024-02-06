@@ -202,7 +202,10 @@ resource "aws_ecs_service" "admin_celery" {
 
 resource "aws_ecs_task_definition" "admin_celery" {
   family                   = "${var.prefix}-admin-celery"
-  container_definitions    = "${data.template_file.admin_celery_container_definitions.rendered}"
+  container_definitions    = templatefile(
+    "${path.module}/ecs_main_admin_container_definitions.json",
+    merge(local.admin_container_vars, tomap({"container_command" = "[\"/dataworkspace/start-celery.sh\"]"}))
+  )
   execution_role_arn       = "${aws_iam_role.admin_task_execution.arn}"
   task_role_arn            = "${aws_iam_role.admin_task.arn}"
   network_mode             = "awsvpc"
@@ -215,12 +218,6 @@ resource "aws_ecs_task_definition" "admin_celery" {
       "revision",
     ]
   }
-}
-
-data "template_file" "admin_celery_container_definitions" {
-  template = "${file("${path.module}/ecs_main_admin_container_definitions.json")}"
-
-  vars = "${merge(local.admin_container_vars, tomap({"container_command" = "[\"/dataworkspace/start-celery.sh\"]"}))}"
 }
 
 resource "random_string" "admin_secret_key" {
