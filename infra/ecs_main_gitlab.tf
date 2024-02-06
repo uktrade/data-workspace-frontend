@@ -246,6 +246,7 @@ data "aws_iam_policy_document" "gitlab_task_ecs_tasks_assume_role" {
 resource "aws_lb" "gitlab" {
   name               = "${var.prefix}-gitlab"
   load_balancer_type = "network"
+  enable_deletion_protection = true
 
   subnet_mapping {
     subnet_id     = "${aws_subnet.public.*.id[0]}"
@@ -348,6 +349,10 @@ resource "aws_rds_cluster" "gitlab" {
   vpc_security_group_ids = ["${aws_security_group.gitlab_db.id}"]
   db_subnet_group_name   = "${aws_db_subnet_group.gitlab.name}"
   #ca_cert_identifier     = "rds-ca-2019"
+
+  copy_tags_to_snapshot               = true
+  enable_global_write_forwarding      = false
+  timeouts {}
 }
 
 resource "aws_rds_cluster_instance" "gitlab" {
