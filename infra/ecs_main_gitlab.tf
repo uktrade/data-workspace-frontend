@@ -5,6 +5,7 @@ resource "aws_ecs_service" "gitlab" {
   desired_count   = 1
   launch_type     = "EC2"
   deployment_maximum_percent = 200
+  timeouts {}
 
   network_configuration {
     subnets         = ["${aws_subnet.private_with_egress.*.id[0]}"]
@@ -521,6 +522,8 @@ resource "aws_autoscaling_group" "gitlab_runner" {
   health_check_type         = "EC2"
   launch_configuration      = "${aws_launch_configuration.gitlab_runner.name}"
   vpc_zone_identifier       = "${aws_subnet.private_without_egress.*.id}"
+  force_delete_warm_pool    = false
+  timeouts {}
 
   tag {
     key                 = "Name"

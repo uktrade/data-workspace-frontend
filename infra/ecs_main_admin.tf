@@ -192,6 +192,7 @@ resource "aws_ecs_service" "admin_celery" {
   launch_type                = "FARGATE"
   platform_version           = "1.4.0"
   deployment_maximum_percent = 600
+  timeouts {}
 
   network_configuration {
     subnets         = "${aws_subnet.private_with_egress.*.id}"

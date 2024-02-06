@@ -82,6 +82,7 @@ resource "aws_ecs_task_definition" "mlflow_service" {
   cpu                      = "${local.mlflow_container_cpu}"
   memory                   = "${local.mlflow_container_memory}"
   requires_compatibilities = ["FARGATE"]
+  tags = {}
 
   lifecycle {
     ignore_changes = [

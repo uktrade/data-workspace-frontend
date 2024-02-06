@@ -430,6 +430,8 @@ resource "aws_cloudwatch_event_target" "mirrors_sync_cran_binary_rv4_scheduled_t
     task_count          = 1
     task_definition_arn = "${aws_ecs_task_definition.mirrors_sync_cran_binary_rv4.*.arn[count.index]}"
     launch_type = "FARGATE"
+    propagate_tags = "TASK_DEFINITION"
+
     network_configuration {
       # In a public subnet to KISS and minimise costs. NAT traffic is more expensive
       subnets = "${aws_subnet.public.*.id}"
