@@ -517,11 +517,11 @@ resource "aws_autoscaling_group" "gitlab_runner" {
   launch_configuration      = "${aws_launch_configuration.gitlab_runner.name}"
   vpc_zone_identifier       = "${aws_subnet.private_without_egress.*.id}"
 
-  tags = [{
+  tag {
     key                 = "Name"
     value               = "${var.prefix}-gitlab-runner-asg"
     propagate_at_launch = true
-  }]
+  }
 
   lifecycle {
     create_before_destroy = true
@@ -598,11 +598,11 @@ resource "aws_autoscaling_group" "gitlab_runner_tap" {
   launch_configuration      = "${aws_launch_configuration.gitlab_runner_tap.name}"
   vpc_zone_identifier       = "${aws_subnet.private_without_egress.*.id}"
 
-  tags = [{
+  tag {
     key                 = "Name"
     value               = "${var.prefix}-gitlab-runner-tap-asg"
     propagate_at_launch = true
-  }]
+  }
 
   lifecycle {
     create_before_destroy = true

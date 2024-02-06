@@ -11,7 +11,7 @@ locals {
 
     root_domain               = "${var.admin_domain}"
     admin_db__host            = "${aws_db_instance.admin.address}"
-    admin_db__name            = "${aws_db_instance.admin.name}"
+    admin_db__name            = "${aws_db_instance.admin.db_name}"
     admin_db__password        = "${random_string.aws_db_instance_admin_password.result}"
     admin_db__port            = "${aws_db_instance.admin.port}"
     admin_db__user            = "${aws_db_instance.admin.username}"
