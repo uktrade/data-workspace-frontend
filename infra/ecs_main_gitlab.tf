@@ -485,7 +485,7 @@ resource "aws_instance" "gitlab" {
 
 resource "aws_ebs_volume" "gitlab" {
   availability_zone = "${var.aws_availability_zones[0]}"
-  size              = 512
+  size              = 1024
   encrypted         = true
 
   lifecycle {
