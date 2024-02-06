@@ -47,6 +47,7 @@ function feedbackLinkCookie() {
   setCookie("feedbackLinkClicked", currentTime, oneMinute);
 }
 
+addButtonListener("data-link-download");
 addButtonListener("data-grid-download");
 addButtonListener("data-grid-json-download");
 addButtonListener("feedback-link", feedbackLinkCookie);
