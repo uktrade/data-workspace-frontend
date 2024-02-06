@@ -51,4 +51,13 @@ data "aws_iam_policy_document" "uploads_bucket" {
 resource "aws_s3_bucket" "logging" {
   bucket = "${var.uploads_bucket}-logging"
   acl    = "log-delivery-write"
+
+  server_side_encryption_configuration {
+    rule {
+      bucket_key_enabled = true
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
 }
