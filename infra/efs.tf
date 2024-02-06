@@ -64,6 +64,9 @@ resource "aws_vpc_endpoint" "efs_notebooks" {
   security_group_ids = ["${aws_security_group.efs_notebooks.id}"]
 
   policy = "${data.aws_iam_policy_document.aws_vpc_endpoint_s3_notebooks.json}"
+
+  timeouts {}
+
 }
 
 data "aws_iam_policy_document" "aws_vpc_endpoint_efs" {
