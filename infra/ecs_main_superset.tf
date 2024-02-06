@@ -222,12 +222,12 @@ resource "aws_rds_cluster" "superset" {
 }
 
 resource "aws_rds_cluster_instance" "superset" {
-  count              = 1
-  identifier_prefix  = "${var.prefix}-superset"
+  identifier         = "${var.prefix}-superset"
   cluster_identifier = "${aws_rds_cluster.superset.id}"
   engine             = "${aws_rds_cluster.superset.engine}"
   engine_version     = "${aws_rds_cluster.superset.engine_version}"
   instance_class     = "${var.superset_db_instance_class}"
+  promotion_tier     = 1
 }
 
 resource "aws_db_subnet_group" "superset" {
