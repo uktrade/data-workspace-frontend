@@ -723,6 +723,7 @@ data "aws_iam_policy_document" "gitlab_runner" {
     resources = [
       "${aws_ecr_repository.visualisation_base.arn}",
       "${aws_ecr_repository.visualisation_base_r.arn}",
+      "${aws_ecr_repository.visualisation_base_rv4.arn}",
     ]
   }
 
