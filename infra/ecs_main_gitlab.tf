@@ -354,6 +354,12 @@ resource "aws_rds_cluster" "gitlab" {
   copy_tags_to_snapshot               = true
   enable_global_write_forwarding      = false
   timeouts {}
+
+  lifecycle {
+    ignore_changes = [
+      "engine_version",
+    ]
+  }
 }
 
 resource "aws_rds_cluster_instance" "gitlab" {
