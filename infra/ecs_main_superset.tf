@@ -163,6 +163,7 @@ resource "aws_lb" "superset" {
   internal           = true
   security_groups    = ["${aws_security_group.superset_lb.id}"]
   subnets            = "${aws_subnet.private_without_egress.*.id}"
+  enable_deletion_protection  = true
 }
 
 resource "aws_lb_listener" "superset_443" {
@@ -215,6 +216,9 @@ resource "aws_rds_cluster" "superset" {
   db_subnet_group_name   = "${aws_db_subnet_group.superset.name}"
 
   final_snapshot_identifier  = "${var.prefix}-superset"
+
+  copy_tags_to_snapshot          = true
+  enable_global_write_forwarding = false
 }
 
 resource "aws_rds_cluster_instance" "superset" {
