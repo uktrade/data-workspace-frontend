@@ -149,15 +149,6 @@ variable quicksight_author_iam_arn {}
 
 variable shared_keypair_public_key {}
 
-variable datasets_finder_instance_type {}
-variable datasets_finder_instance_num {
-  type = number
-  default = 2
-}
-variable datasets_finder_ebs_size {
-  type = number
-  default = 100
-}
 variable flower_username {}
 variable flower_password {}
 

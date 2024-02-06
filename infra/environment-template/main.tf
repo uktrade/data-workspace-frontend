@@ -166,9 +166,6 @@ module "jupyterhub" {
 
   shared_keypair_public_key = "REPLACE_ME"
 
-  datasets_finder_instance_type = "r5.large.elasticsearch"
-  datasets_finder_instance_num = "5"
-
   superset_dw_user_username = "REPLACE_ME"
   superset_dw_user_password = "REPLACE_ME"
 
@@ -183,4 +180,3 @@ module "jupyterhub" {
   mlflow_instances_long = ["REPLACE_ME"]
   mlflow_db_instance_class = "db.t3.medium"
 }
-
