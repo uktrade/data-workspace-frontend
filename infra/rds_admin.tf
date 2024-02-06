@@ -12,7 +12,7 @@ resource "aws_db_instance" "admin" {
   backup_retention_period = 31
   backup_window = "03:29-03:59"
 
-  name = "jupyterhub_admin"
+  db_name = "jupyterhub_admin"
   username = "jupyterhub_admin_master"
   password = "${random_string.aws_db_instance_admin_password.result}"
 
