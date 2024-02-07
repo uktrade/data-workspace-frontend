@@ -679,6 +679,27 @@ resource "aws_launch_configuration" "gitlab_runner_tap" {
   EOF
 }
 
+resource "aws_autoscaling_group" "gitlab_runner_data_science" {
+  name_prefix               = "${var.prefix}-gitlab-runner-tap-"
+  max_size                  = 2
+  min_size                  = 1
+  desired_capacity          = 1
+  health_check_grace_period = 120
+  health_check_type         = "EC2"
+  launch_configuration      = "${aws_launch_configuration.gitlab_runner_data_science.name}"
+  vpc_zone_identifier       = "${aws_subnet.private_without_egress.*.id}"
+
+  tags = [{
+    key                 = "Name"
+    value               = "${var.prefix}-gitlab-runner-tap-asg"
+    propagate_at_launch = true
+  }]
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
 resource "aws_launch_configuration" "gitlab_runner_data_science" {
   name_prefix     = "${var.prefix}-gitlab-runner-data_science-"
   # This is the ECS optimized image, although we're not running ECS. It's
