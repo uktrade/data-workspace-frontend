@@ -357,7 +357,7 @@ resource "aws_rds_cluster" "gitlab" {
 }
 
 resource "aws_rds_cluster_instance" "gitlab" {
-  identifier         = "${var.prefix}-gitlab-writer"
+  identifier         = var.gitlab_rds_cluster_instance_identifier != "" ? var.gitlab_rds_cluster_instance_identifier : "${var.prefix}-gitlab-writer"
   cluster_identifier = "${aws_rds_cluster.gitlab.id}"
   engine             = "${aws_rds_cluster.gitlab.engine}"
   engine_version     = "${aws_rds_cluster.gitlab.engine_version}"
@@ -487,7 +487,7 @@ resource "aws_instance" "gitlab" {
 
 resource "aws_ebs_volume" "gitlab" {
   availability_zone = "${var.aws_availability_zones[0]}"
-  size              = 1024
+  size              = var.gitlab_ebs_volume_size
   encrypted         = true
 
   lifecycle {
