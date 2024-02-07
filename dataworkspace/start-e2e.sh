@@ -17,10 +17,16 @@ set -e
     django-admin loaddata --ignorenonexistent --verbosity=2 \
       users \
       profiles \
+      database \
       datasets \
+      datasets_sourcelink \
+      datasets_sourcetable \
+      datasets_sourcetablefielddefinition \
+      datasets_sourceview \
       datasets_bookmark \
       data_collections \
       eventlog
+
 
     django-admin waffle_flag HOME_PAGE_FLAG --everyone --create
     django-admin waffle_flag ACCESSIBLE_AUTOCOMPLETE_FLAG --everyone --create
