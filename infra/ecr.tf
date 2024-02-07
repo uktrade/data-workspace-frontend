@@ -104,6 +104,8 @@ resource "aws_vpc_endpoint" "ecr_dkr" {
   subnet_ids = ["${aws_subnet.private_with_egress.*.id[0]}"]
 
   policy = "${data.aws_iam_policy_document.aws_vpc_endpoint_ecr.json}"
+
+  timeouts {}
 }
 
 resource "aws_vpc_endpoint" "ecr_api" {
@@ -116,6 +118,7 @@ resource "aws_vpc_endpoint" "ecr_api" {
   subnet_ids = ["${aws_subnet.private_with_egress.*.id[0]}"]
 
   policy = "${data.aws_iam_policy_document.aws_vpc_endpoint_ecr.json}"
+  timeouts {}
 }
 
 data "aws_iam_policy_document" "aws_vpc_endpoint_ecr" {
