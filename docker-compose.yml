@@ -89,7 +89,7 @@ services:
 
   data-workspace-localstack:
     build:
-      context: ./localstack
+      context: .localstack
       dockerfile: Dockerfile
     networks:
       - data-infrastructure-shared-network
