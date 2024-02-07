@@ -86,7 +86,7 @@ ssl.crt
 node_modules
 dataworkspace/dataworkspace/static/*.css.map
 .local
-.localstack
+.localstack/mounted 
 test-results/
 cypress/screenshots/
 cypress/videos/

@@ -1,0 +1,9 @@
+{
+  "CORSRules": [
+    {
+      "AllowedOrigins": ["http://dataworkspace.test:8000"],
+      "AllowedMethods": ["HEAD", "GET", "PUT", "POST", "DELETE"],
+      "ExposeHeaders": ["etag"]
+    }
+  ]
+}
