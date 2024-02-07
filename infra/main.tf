@@ -39,7 +39,10 @@ variable admin_db_instance_class {}
 variable admin_db_instance_version {
   default = "10.15"
 }
-
+variable admin_db_instance_allocated_storage {
+  type = number
+  default = 200
+}
 variable admin_authbroker_client_id {}
 variable admin_authbroker_client_secret {}
 variable admin_authbroker_url {}
@@ -100,11 +103,18 @@ variable gitlab_bucket {}
 variable gitlab_instance_type {}
 variable gitlab_memory {}
 variable gitlab_cpu {}
+variable gitlab_ebs_volume_size {
+  type = number
+  default = 1024
+}
 variable gitlab_runner_instance_type {}
 variable gitlab_runner_tap_instance_type {}
 variable gitlab_runner_root_volume_size {}
 variable gitlab_runner_team_root_volume_size {}
 variable gitlab_db_instance_class {}
+variable gitlab_rds_cluster_instance_identifier {
+  default = ""
+}
 variable gitlab_runner_visualisations_deployment_project_token {}
 variable gitlab_runner_tap_project_token {}
 
