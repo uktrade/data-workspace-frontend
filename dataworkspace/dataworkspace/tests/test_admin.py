@@ -3807,3 +3807,20 @@ class TestDatasetAdminPytest:
 
         assert response.status_code == 200
         assert SourceTable.objects.count() == num_tables + 1
+
+
+class TestVisualisationCatalogueItemAdmin(BaseAdminTestCase):
+    def test_update_visualisation_with_description_not_long_enough(self):
+        dataset = factories.VisualisationCatalogueItemFactory.create()
+        response = self._authenticated_post(
+            reverse("admin:datasets_visualisationcatalogueitem_change", args=(dataset.id,)),
+            {
+                "published": dataset.published,
+                "name": dataset.name,
+                "slug": dataset.slug,
+                "short_description": "test short description",
+                "description": "not long enough description",
+                "type": 2,
+            },
+        )
+        self.assertContains(response, "Description must contain 30 or more words")

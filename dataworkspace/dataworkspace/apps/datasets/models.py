@@ -2772,6 +2772,10 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     def __str__(self):
         return self.name
 
+    def clean(self):
+        if len(re.findall(r"\w+", self.description)) < 30:
+            raise ValidationError("Description must contain 30 or more words")
+
 
 class AdminVisualisationUserPermission(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
