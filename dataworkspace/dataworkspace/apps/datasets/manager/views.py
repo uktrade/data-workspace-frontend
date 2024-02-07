@@ -57,8 +57,10 @@ class DatasetManageSourceTableView(WaffleFlagMixin, EditBaseView, FormView):
     def form_valid(self, form):
         csv_file = form.cleaned_data["csv_file"]
         client = get_s3_client()
+        print('***client', client)
         file_name = f"{csv_file.name}!{uuid.uuid4()}"
         key = self._get_file_upload_key(file_name, self.kwargs["source_uuid"])
+        print('key', key)
         csv_file.seek(0)
         try:
             client.put_object(
@@ -111,10 +113,13 @@ class DatasetManageSourceTableColumnConfigView(DatasetManageSourceTableView):
         source = self._get_source()
         cleaned = form.cleaned_data
         columns = get_s3_csv_column_types(cleaned["path"])
+        print('****cleaned', cleaned)
+        print('****columns', columns)
         for field in columns:
             field["data_type"] = SCHEMA_POSTGRES_DATA_TYPE_MAP.get(
                 cleaned[field["column_name"]], PostgresDataTypes.TEXT
             )
+        print('****columns after processing', columns)
 
         import_path = settings.DATAFLOW_IMPORTS_BUCKET_ROOT + "/" + cleaned["path"]
         copy_file_to_uploads_bucket(cleaned["path"], import_path)

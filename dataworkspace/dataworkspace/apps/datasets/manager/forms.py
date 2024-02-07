@@ -27,7 +27,7 @@ class SourceTableUploadForm(GOVUKDesignSystemForm):
         ),
         validators=[
             FileExtensionValidator(allowed_extensions=["csv"]),
-            malware_file_validator,
+            # malware_file_validator,
         ],
         error_messages={
             "required": "You must provide a CSV to upload.",

@@ -89,25 +89,25 @@ services:
 
   data-workspace-localstack:
     build:
-      context: localstack
+      context: .localstack
       dockerfile: Dockerfile
     networks:
       - data-infrastructure-shared-network
-    profiles:
-      - localstack
     ports:
       - "127.0.0.1:53:53"
       - "127.0.0.1:53:53/udp"
       - "127.0.0.1:443:443"
       - '4563-4599:4563-4599'
     environment:
+      - DISABLE_CORS_CHECKS=1
+      - DISABLE_CUSTOM_CORS_S3=1
       - AWS_DEFAULT_REGION=eu-west-2
       - EDGE_PORT=4566
       - SERVICES=s3,sts,iam
       - EXTRA_CORS_ALLOWED_ORIGINS=http://dataworkspace.test:8000
-      - DATA_DIR=/tmp/localstack/data
     volumes:
-      - "./.localstack:/tmp/localstack"
+      - "./.localstack/mounted:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
 
   # Superset profile services
 
