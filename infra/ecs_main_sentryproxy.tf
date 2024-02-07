@@ -47,7 +47,17 @@ resource "aws_service_discovery_service" "sentryproxy" {
 
 resource "aws_ecs_task_definition" "sentryproxy" {
   family                   = "${var.prefix}-sentryproxy"
-  container_definitions    = "${data.template_file.sentryproxy_container_definitions.rendered}"
+  container_definitions    = templatefile(
+    "${path.module}/ecs_main_sentryproxy_container_definitions.json", {
+      container_image  = "${aws_ecr_repository.sentryproxy.repository_url}:${data.external.sentryproxy_current_tag.result.tag}"
+      container_name   = "${local.sentryproxy_container_name}"
+      container_cpu    = "${local.sentryproxy_container_cpu}"
+      container_memory = "${local.sentryproxy_container_memory}"
+
+      log_group  = "${aws_cloudwatch_log_group.sentryproxy.name}"
+      log_region = "${data.aws_region.aws_region.name}"
+    }
+  )
   execution_role_arn       = "${aws_iam_role.sentryproxy_task_execution.arn}"
   task_role_arn            = "${aws_iam_role.sentryproxy_task.arn}"
   network_mode             = "awsvpc"
@@ -59,20 +69,6 @@ resource "aws_ecs_task_definition" "sentryproxy" {
     ignore_changes = [
       "revision",
     ]
-  }
-}
-
-data "template_file" "sentryproxy_container_definitions" {
-  template = "${file("${path.module}/ecs_main_sentryproxy_container_definitions.json")}"
-
-  vars = {
-    container_image  = "${aws_ecr_repository.sentryproxy.repository_url}:${data.external.sentryproxy_current_tag.result.tag}"
-    container_name   = "${local.sentryproxy_container_name}"
-    container_cpu    = "${local.sentryproxy_container_cpu}"
-    container_memory = "${local.sentryproxy_container_memory}"
-
-    log_group  = "${aws_cloudwatch_log_group.sentryproxy.name}"
-    log_region = "${data.aws_region.aws_region.name}"
   }
 }
 
