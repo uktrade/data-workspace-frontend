@@ -2548,6 +2548,17 @@ function accessibleAutocompleteOptions(
 ) {
   var container = document.getElementById("my-autocomplete-container");
 
+  const runAutoCompleteOnceOnLoad = (fn) => {
+    let domLoaded = false;
+    return (query, callback) => {
+      if (!domLoaded && query) {
+        domLoaded = true;
+        return;
+      }
+      fn(query, callback);
+    };
+  };
+
   function handleSearchQuery(query, callback) {
     var suggestedSearchesName = [];
     var dataName = [];
@@ -2646,7 +2657,7 @@ function accessibleAutocompleteOptions(
     placeholder: "Search by dataset name or description",
     showAllValues: true,
     showNoOptionsFound: false,
-    source: handleSearchQuery.bind(container),
+    source: runAutoCompleteOnceOnLoad(handleSearchQuery).bind(container),
     onConfirm: onConfirm,
     templates: {
       inputValue: inputValueTemplate,
@@ -2655,5 +2666,8 @@ function accessibleAutocompleteOptions(
   });
 
   var inputElement = document.getElementById("app-site-search__input");
+  const urlParams = new URLSearchParams(window.location.search);
+  const query = urlParams.get("q");
+  inputElement.value = query;
   inputElement.type = "search";
 }
