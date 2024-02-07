@@ -40,19 +40,11 @@ function showNotification() {
   }
 }
 
-function feedbackLinkCookie() {
-  var oneMinute = 60 * 1000;
-  var currentTime = new Date().getTime();
-
-  setCookie("feedbackLinkClicked", currentTime, oneMinute);
-}
-
 addButtonListener("data-link-download");
 addButtonListener("data-grid-download");
 addButtonListener("data-grid-json-download");
-addButtonListener("feedback-link", feedbackLinkCookie);
 
-if (getCookie("feedbackLinkClicked") && document.referrer.includes("feedback")) {
+if (document.referrer.includes("feedback")) {
   showFeedbackBanner();
   document.getElementById("download-dialog").showModal();
 }
