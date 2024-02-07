@@ -217,6 +217,8 @@ resource "aws_vpc_endpoint" "s3" {
   vpc_endpoint_type = "Gateway"
 
   policy = "${data.aws_iam_policy_document.aws_vpc_endpoint_s3_notebooks.json}"
+
+  timeouts {}
 }
 
 data "aws_iam_policy_document" "aws_vpc_endpoint_s3_notebooks" {

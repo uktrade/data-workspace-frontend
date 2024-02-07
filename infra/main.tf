@@ -103,6 +103,7 @@ variable gitlab_cpu {}
 variable gitlab_runner_instance_type {}
 variable gitlab_runner_tap_instance_type {}
 variable gitlab_runner_root_volume_size {}
+variable gitlab_runner_team_root_volume_size {}
 variable gitlab_db_instance_class {}
 variable gitlab_runner_visualisations_deployment_project_token {}
 variable gitlab_runner_tap_project_token {}
@@ -149,15 +150,6 @@ variable quicksight_author_iam_arn {}
 
 variable shared_keypair_public_key {}
 
-variable datasets_finder_instance_type {}
-variable datasets_finder_instance_num {
-  type = number
-  default = 2
-}
-variable datasets_finder_ebs_size {
-  type = number
-  default = 100
-}
 variable flower_username {}
 variable flower_password {}
 

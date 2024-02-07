@@ -4,6 +4,7 @@ resource "aws_lb" "dns_rewrite_proxy" {
   name                             = "${var.prefix}-dns-proxy"
   load_balancer_type               = "network"
   enable_cross_zone_load_balancing = "true"
+  enable_deletion_protection = true
 
   internal = true
   

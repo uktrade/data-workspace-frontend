@@ -188,6 +188,8 @@ resource "aws_alb" "prometheus" {
   name            = "${var.prefix}-pm"
   subnets         = "${aws_subnet.public.*.id}"
   security_groups = ["${aws_security_group.prometheus_alb.id}"]
+  enable_deletion_protection = true
+  timeouts {}
 
   access_logs {
     bucket  = "${aws_s3_bucket.alb_access_logs.id}"

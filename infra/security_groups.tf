@@ -112,18 +112,6 @@ resource "aws_security_group_rule" "admin_alb_ingress_https_from_whitelist" {
   protocol   = "tcp"
 }
 
-resource "aws_security_group_rule" "admin_alb_ingress_http_from_whitelist" {
-  description = "ingress-http-from-whitelist"
-
-  security_group_id = "${aws_security_group.admin_alb.id}"
-  cidr_blocks       = "${var.ip_whitelist}"
-
-  type       = "ingress"
-  from_port  = "80"
-  to_port    = "80"
-  protocol   = "tcp"
-}
-
 resource "aws_security_group_rule" "admin_alb_ingress_icmp_host_unreachable_for_mtu_discovery_from_whitelist" {
   description = "ingress-icmp-host-unreachable-for-mtu-discovery-from-whitelist"
 
@@ -1142,18 +1130,6 @@ resource "aws_security_group_rule" "gitlab-ec2-egress-all" {
   protocol    = "tcp"
 }
 
-resource "aws_security_group_rule" "gitlab-ec2-ingress-ssh" {
-  description = "egress-ssh"
-
-  security_group_id = "${aws_security_group.gitlab-ec2.id}"
-  cidr_blocks = ["0.0.0.0/0"]
-
-  type        = "ingress"
-  from_port   = "22"
-  to_port     = "22"
-  protocol    = "tcp"
-}
-
 resource "aws_security_group" "gitlab_runner" {
   name        = "${var.prefix}-gitlab-runner"
   description = "${var.prefix}-gitlab-runner"
@@ -1420,18 +1396,6 @@ resource "aws_security_group" "flower_lb" {
   lifecycle {
     create_before_destroy = true
   }
-}
-
-resource "aws_security_group_rule" "flower_lb_inress_http_admin_service" {
-  description = "ingress-admin-service"
-
-  security_group_id = "${aws_security_group.flower_lb.id}"
-  source_security_group_id = "${aws_security_group.admin_service.id}"
-
-  type        = "ingress"
-  from_port   = "80"
-  to_port     = "80"
-  protocol    = "tcp"
 }
 
 resource "aws_security_group_rule" "flower_lb_egress_http_flower_service" {

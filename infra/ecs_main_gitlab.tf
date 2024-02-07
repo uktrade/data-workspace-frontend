@@ -5,6 +5,7 @@ resource "aws_ecs_service" "gitlab" {
   desired_count   = 1
   launch_type     = "EC2"
   deployment_maximum_percent = 200
+  timeouts {}
 
   network_configuration {
     subnets         = ["${aws_subnet.private_with_egress.*.id[0]}"]
@@ -246,6 +247,7 @@ data "aws_iam_policy_document" "gitlab_task_ecs_tasks_assume_role" {
 resource "aws_lb" "gitlab" {
   name               = "${var.prefix}-gitlab"
   load_balancer_type = "network"
+  enable_deletion_protection = true
 
   subnet_mapping {
     subnet_id     = "${aws_subnet.public.*.id[0]}"
@@ -348,15 +350,26 @@ resource "aws_rds_cluster" "gitlab" {
   vpc_security_group_ids = ["${aws_security_group.gitlab_db.id}"]
   db_subnet_group_name   = "${aws_db_subnet_group.gitlab.name}"
   #ca_cert_identifier     = "rds-ca-2019"
+
+  copy_tags_to_snapshot               = true
+  enable_global_write_forwarding      = false
+  timeouts {}
+
+  lifecycle {
+    ignore_changes = [
+      "engine_version",
+    ]
+  }
 }
 
 resource "aws_rds_cluster_instance" "gitlab" {
-  count              = 1
-  identifier_prefix  = "${var.prefix}-gitlab"
+  identifier         = "${var.prefix}-gitlab-writer"
   cluster_identifier = "${aws_rds_cluster.gitlab.id}"
   engine             = "${aws_rds_cluster.gitlab.engine}"
   engine_version     = "${aws_rds_cluster.gitlab.engine_version}"
   instance_class     = "${var.gitlab_db_instance_class}"
+  promotion_tier     = 1
+
 }
 
 resource "aws_db_subnet_group" "gitlab" {
@@ -480,7 +493,7 @@ resource "aws_instance" "gitlab" {
 
 resource "aws_ebs_volume" "gitlab" {
   availability_zone = "${var.aws_availability_zones[0]}"
-  size              = 512
+  size              = 1024
   encrypted         = true
 
   lifecycle {
@@ -516,6 +529,8 @@ resource "aws_autoscaling_group" "gitlab_runner" {
   health_check_type         = "EC2"
   launch_configuration      = "${aws_launch_configuration.gitlab_runner.name}"
   vpc_zone_identifier       = "${aws_subnet.private_without_egress.*.id}"
+  force_delete_warm_pool    = false
+  timeouts {}
 
   tag {
     key                 = "Name"
@@ -627,7 +642,7 @@ resource "aws_launch_configuration" "gitlab_runner_tap" {
   }
 
   root_block_device {
-    volume_size = "${var.gitlab_runner_root_volume_size}"
+    volume_size = "${var.gitlab_runner_team_root_volume_size}"
     encrypted = true
   }
 
@@ -718,6 +733,7 @@ data "aws_iam_policy_document" "gitlab_runner" {
     resources = [
       "${aws_ecr_repository.visualisation_base.arn}",
       "${aws_ecr_repository.visualisation_base_r.arn}",
+      "${aws_ecr_repository.visualisation_base_rv4.arn}",
     ]
   }
 

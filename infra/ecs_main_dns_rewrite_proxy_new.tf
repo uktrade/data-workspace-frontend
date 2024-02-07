@@ -4,7 +4,7 @@ resource "aws_lb" "dns_rewrite_proxy_new" {
   name                             = "${var.prefix}-dnsproxy2"
   load_balancer_type               = "network"
   enable_cross_zone_load_balancing = "true"
-
+  enable_deletion_protection = true
   internal = true
   
   subnet_mapping {
@@ -99,4 +99,3 @@ data "template_file" "dns_rewrite_proxy_container_definitions_new" {
     ip_address   = "${aws_lb.dns_rewrite_proxy_new.subnet_mapping.*.private_ipv4_address[0]}"
   }
 }
-

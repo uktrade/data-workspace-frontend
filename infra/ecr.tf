@@ -66,6 +66,10 @@ resource "aws_ecr_repository" "visualisation_base_r" {
   name = "${var.prefix}-visualisation-base-r"
 }
 
+resource "aws_ecr_repository" "visualisation_base_rv4" {
+  name = "${var.prefix}-visualisation-base-rv4"
+}
+
 resource "aws_ecr_repository" "mirrors_sync" {
   name = "${var.prefix}-mirrors-sync"
 }
@@ -100,6 +104,8 @@ resource "aws_vpc_endpoint" "ecr_dkr" {
   subnet_ids = ["${aws_subnet.private_with_egress.*.id[0]}"]
 
   policy = "${data.aws_iam_policy_document.aws_vpc_endpoint_ecr.json}"
+
+  timeouts {}
 }
 
 resource "aws_vpc_endpoint" "ecr_api" {
@@ -112,6 +118,7 @@ resource "aws_vpc_endpoint" "ecr_api" {
   subnet_ids = ["${aws_subnet.private_with_egress.*.id[0]}"]
 
   policy = "${data.aws_iam_policy_document.aws_vpc_endpoint_ecr.json}"
+  timeouts {}
 }
 
 data "aws_iam_policy_document" "aws_vpc_endpoint_ecr" {
@@ -296,6 +303,7 @@ data "aws_iam_policy_document" "aws_vpc_endpoint_ecr" {
     resources = [
       "${aws_ecr_repository.visualisation_base.arn}",
       "${aws_ecr_repository.visualisation_base_r.arn}",
+      "${aws_ecr_repository.visualisation_base_rv4.arn}",
     ]
   }
 

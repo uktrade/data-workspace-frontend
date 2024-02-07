@@ -2,6 +2,14 @@ resource "aws_s3_bucket" "mirrors" {
   count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
   bucket = "${var.mirrors_bucket_name}"
 
+  tags = {
+    "name" = "website"
+  }
+
+  tags_all = {
+    "name" = "website"
+  }
+
   server_side_encryption_configuration {
     rule {
       apply_server_side_encryption_by_default {
@@ -39,5 +47,26 @@ data "aws_iam_policy_document" "mirrors" {
     resources = [
       "${aws_s3_bucket.mirrors.*.arn[count.index]}/*",
     ]
+  }
+
+  statement {
+    effect = "Deny"
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+    actions = [
+      "s3:*",
+    ]
+    resources = [
+      "${aws_s3_bucket.mirrors.*.arn[count.index]}/*",
+    ]
+    condition {
+      test = "Bool"
+      variable = "aws:SecureTransport"
+      values = [
+        "false"
+      ]
+    }
   }
 }

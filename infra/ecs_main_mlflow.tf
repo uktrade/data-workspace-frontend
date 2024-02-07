@@ -82,6 +82,7 @@ resource "aws_ecs_task_definition" "mlflow_service" {
   cpu                      = "${local.mlflow_container_cpu}"
   memory                   = "${local.mlflow_container_memory}"
   requires_compatibilities = ["FARGATE"]
+  tags = {}
 
   lifecycle {
     ignore_changes = [
@@ -235,6 +236,7 @@ resource "aws_lb" "mlflow" {
   load_balancer_type = "network"
   internal           = true
   enable_cross_zone_load_balancing = true
+  enable_deletion_protection = true
 
   subnet_mapping {
     subnet_id            = "${aws_subnet.private_without_egress.*.id[0]}"
@@ -282,6 +284,7 @@ resource "aws_lb" "mlflow_dataflow" {
   load_balancer_type = "network"
   internal           = true
   enable_cross_zone_load_balancing = true
+  enable_deletion_protection = true
 
   subnet_mapping {
     subnet_id            = "${aws_subnet.datasets.*.id[0]}"
@@ -365,15 +368,17 @@ resource "aws_rds_cluster" "mlflow" {
   db_subnet_group_name   = "${aws_db_subnet_group.mlflow[count.index].name}"
 
   final_snapshot_identifier  = "${var.prefix}-mlflow-${var.mlflow_instances[count.index]}"
+  copy_tags_to_snapshot      = true
 }
 
 resource "aws_rds_cluster_instance" "mlflow" {
   count              = "${length(var.mlflow_instances)}"
-  identifier_prefix  = "${var.prefix}-mlflow-${var.mlflow_instances[count.index]}-"
+  identifier         = "${var.prefix}-mlflow-${var.mlflow_instances[count.index]}"
   cluster_identifier = "${aws_rds_cluster.mlflow[count.index].id}"
   engine             = "${aws_rds_cluster.mlflow[count.index].engine}"
   engine_version     = "${aws_rds_cluster.mlflow[count.index].engine_version}"
   instance_class     = "${var.mlflow_db_instance_class}"
+  promotion_tier     = 1
 }
 
 resource "aws_db_subnet_group" "mlflow" {
