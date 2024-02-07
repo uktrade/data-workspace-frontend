@@ -75,7 +75,10 @@ resource "aws_service_discovery_service" "mlflow" {
 resource "aws_ecs_task_definition" "mlflow_service" {
   count                    = "${length(var.mlflow_instances)}"
   family                   = "${var.prefix}-mlflow-${var.mlflow_instances[count.index]}"
-  container_definitions    = "${data.template_file.mlflow_service_container_definitions[count.index].rendered}"
+  container_definitions    = templatefile(
+    "${path.module}/ecs_main_mlflow_container_definitions.json",
+    local.mlflow_container_vars[count.index]
+  )
   execution_role_arn       = "${aws_iam_role.mlflow_task_execution[count.index].arn}"
   task_role_arn            = "${aws_iam_role.mlflow_task[count.index].arn}"
   network_mode             = "awsvpc"
@@ -89,13 +92,6 @@ resource "aws_ecs_task_definition" "mlflow_service" {
       "revision",
     ]
   }
-}
-
-data "template_file" "mlflow_service_container_definitions" {
-  count    = "${length(var.mlflow_instances)}"
-  template = "${file("${path.module}/ecs_main_mlflow_container_definitions.json")}"
-
-  vars     = "${local.mlflow_container_vars[count.index]}"
 }
 
 resource "aws_cloudwatch_log_group" "mlflow" {

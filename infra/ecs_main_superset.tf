@@ -26,7 +26,27 @@ resource "aws_ecs_service" "superset" {
 
 resource "aws_ecs_task_definition" "superset_service" {
   family                   = "${var.prefix}-superset"
-  container_definitions    = "${data.template_file.superset_service_container_definitions.rendered}"
+  container_definitions    = templatefile(
+    "${path.module}/ecs_main_superset_container_definitions.json", {
+      container_image = "${aws_ecr_repository.superset.repository_url}:master"
+      container_name  = "superset"
+      log_group       = "${aws_cloudwatch_log_group.superset.name}"
+      log_region      = "${data.aws_region.aws_region.name}"
+      cpu             = "${local.superset_container_cpu}"
+      memory          = "${local.superset_container_memory}"
+
+      db_host        = "${aws_rds_cluster.superset.endpoint}"
+      db_name        = "${aws_rds_cluster.superset.database_name}"
+      db_password    = "${random_string.aws_db_instance_superset_password.result}"
+      db_port        = "${aws_rds_cluster.superset.port}"
+      db_user        = "${aws_rds_cluster.superset.master_username}"
+      admin_users    = "${var.superset_admin_users}"
+      secret_key     = "${random_string.superset_secret_key.result}"
+
+      sentry_dsn = "${var.sentry_notebooks_dsn}"
+      sentry_environment = "${var.sentry_environment}"
+    }
+  )
   execution_role_arn       = "${aws_iam_role.superset_task_execution.arn}"
   task_role_arn            = "${aws_iam_role.superset_task.arn}"
   network_mode             = "awsvpc"
@@ -38,30 +58,6 @@ resource "aws_ecs_task_definition" "superset_service" {
     ignore_changes = [
       "revision",
     ]
-  }
-}
-
-data "template_file" "superset_service_container_definitions" {
-  template = "${file("${path.module}/ecs_main_superset_container_definitions.json")}"
-
-  vars = {
-    container_image = "${aws_ecr_repository.superset.repository_url}:master"
-    container_name  = "superset"
-    log_group       = "${aws_cloudwatch_log_group.superset.name}"
-    log_region      = "${data.aws_region.aws_region.name}"
-    cpu             = "${local.superset_container_cpu}"
-    memory          = "${local.superset_container_memory}"
-
-    db_host        = "${aws_rds_cluster.superset.endpoint}"
-    db_name        = "${aws_rds_cluster.superset.database_name}"
-    db_password    = "${random_string.aws_db_instance_superset_password.result}"
-    db_port        = "${aws_rds_cluster.superset.port}"
-    db_user        = "${aws_rds_cluster.superset.master_username}"
-    admin_users    = "${var.superset_admin_users}"
-    secret_key     = "${random_string.superset_secret_key.result}"
-
-    sentry_dsn = "${var.sentry_notebooks_dsn}"
-    sentry_environment = "${var.sentry_environment}"
   }
 }
 

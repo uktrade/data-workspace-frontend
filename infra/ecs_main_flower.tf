@@ -26,7 +26,19 @@ resource "aws_ecs_service" "flower" {
 
 resource "aws_ecs_task_definition" "flower_service" {
   family                   = "${var.prefix}-flower"
-  container_definitions    = "${data.template_file.flower_service_container_definitions.rendered}"
+  container_definitions    = templatefile(
+    "${path.module}/ecs_main_flower_container_definitions.json", {
+      container_image = "${aws_ecr_repository.flower.repository_url}:master"
+      container_name  = "flower"
+      log_group       = "${aws_cloudwatch_log_group.flower.name}"
+      log_region      = "${data.aws_region.aws_region.name}"
+      cpu             = "${local.flower_container_cpu}"
+      memory          = "${local.flower_container_memory}"
+      redis_url       = "redis://${aws_elasticache_cluster.admin.cache_nodes.0.address}:6379"
+      flower_username = "${var.flower_username}"
+      flower_password = "${var.flower_password}"
+    }
+  )
   execution_role_arn       = "${aws_iam_role.flower_task_execution.arn}"
   task_role_arn            = "${aws_iam_role.flower_task.arn}"
   network_mode             = "awsvpc"
@@ -38,22 +50,6 @@ resource "aws_ecs_task_definition" "flower_service" {
     ignore_changes = [
       "revision",
     ]
-  }
-}
-
-data "template_file" "flower_service_container_definitions" {
-  template = "${file("${path.module}/ecs_main_flower_container_definitions.json")}"
-
-  vars = {
-    container_image = "${aws_ecr_repository.flower.repository_url}:master"
-    container_name  = "flower"
-    log_group       = "${aws_cloudwatch_log_group.flower.name}"
-    log_region      = "${data.aws_region.aws_region.name}"
-    cpu             = "${local.flower_container_cpu}"
-    memory          = "${local.flower_container_memory}"
-    redis_url       = "redis://${aws_elasticache_cluster.admin.cache_nodes.0.address}:6379"
-    flower_username = "${var.flower_username}"
-    flower_password = "${var.flower_password}"
   }
 }
 

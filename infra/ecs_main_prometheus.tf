@@ -57,7 +57,23 @@ resource "aws_service_discovery_service" "prometheus" {
 
 resource "aws_ecs_task_definition" "prometheus" {
   family                   = "${var.prefix}-prometheus"
-  container_definitions    = "${data.template_file.prometheus_container_definitions.rendered}"
+  container_definitions    = templatefile(
+    "${path.module}/ecs_main_prometheus_container_definitions.json", {
+      container_image   = "${aws_ecr_repository.prometheus.repository_url}:${data.external.prometheus_current_tag.result.tag}"
+      container_name    = "${local.prometheus_container_name}"
+      container_port    = "${local.prometheus_container_port}"
+      container_cpu     = "${local.prometheus_container_cpu}"
+      container_memory  = "${local.prometheus_container_memory}"
+
+      log_group  = "${aws_cloudwatch_log_group.prometheus.name}"
+      log_region = "${data.aws_region.aws_region.name}"
+
+      port = "${local.prometheus_container_port}"
+      url = "https://${var.admin_domain}/api/v1/application"
+      metrics_service_discovery_basic_auth_user = "${var.metrics_service_discovery_basic_auth_user}"
+      metrics_service_discovery_basic_auth_password = "${var.metrics_service_discovery_basic_auth_password}"
+    }
+  )
   execution_role_arn       = "${aws_iam_role.prometheus_task_execution.arn}"
   task_role_arn            = "${aws_iam_role.prometheus_task.arn}"
   network_mode             = "awsvpc"
@@ -69,26 +85,6 @@ resource "aws_ecs_task_definition" "prometheus" {
     ignore_changes = [
       "revision",
     ]
-  }
-}
-
-data "template_file" "prometheus_container_definitions" {
-  template = "${file("${path.module}/ecs_main_prometheus_container_definitions.json")}"
-
-  vars = {
-    container_image   = "${aws_ecr_repository.prometheus.repository_url}:${data.external.prometheus_current_tag.result.tag}"
-    container_name    = "${local.prometheus_container_name}"
-    container_port    = "${local.prometheus_container_port}"
-    container_cpu     = "${local.prometheus_container_cpu}"
-    container_memory  = "${local.prometheus_container_memory}"
-
-    log_group  = "${aws_cloudwatch_log_group.prometheus.name}"
-    log_region = "${data.aws_region.aws_region.name}"
-
-    port = "${local.prometheus_container_port}"
-    url = "https://${var.admin_domain}/api/v1/application"
-    metrics_service_discovery_basic_auth_user = "${var.metrics_service_discovery_basic_auth_user}"
-    metrics_service_discovery_basic_auth_password = "${var.metrics_service_discovery_basic_auth_password}"
   }
 }
 

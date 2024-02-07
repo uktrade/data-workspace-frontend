@@ -1,6 +1,22 @@
 resource "aws_ecs_task_definition" "notebook" {
   family                = "${var.prefix}-notebook"
-  container_definitions = "${data.template_file.notebook_container_definitions.rendered}"
+  container_definitions    = templatefile(
+    "${path.module}/ecs_notebooks_notebook_container_definitions.json", {
+      container_image  = "${var.notebook_container_image}:${data.external.notebook_current_tag.result.tag}"
+      container_name   = "${local.notebook_container_name}"
+
+      log_group  = "${aws_cloudwatch_log_group.notebook.name}"
+      log_region = "${data.aws_region.aws_region.name}"
+
+      sentry_dsn = "${var.sentry_notebooks_dsn}"
+      sentry_environment = "${var.sentry_environment}"
+
+      metrics_container_image = "${aws_ecr_repository.metrics.repository_url}:${data.external.notebook_metrics_current_tag.result.tag}"
+      s3sync_container_image = "${aws_ecr_repository.s3sync.repository_url}:${data.external.notebook_s3sync_current_tag.result.tag}"
+
+      home_directory = "/home/jovyan"
+    }
+  )
   execution_role_arn    = "${aws_iam_role.notebook_task_execution.arn}"
   # task_role_arn         = "${aws_iam_role.notebook_task.arn}"
   network_mode          = "awsvpc"
@@ -47,26 +63,6 @@ data "external" "notebook_s3sync_current_tag" {
   query = {
     task_family = "${var.prefix}-notebook"
     container_name = "s3sync"
-  }
-}
-
-data "template_file" "notebook_container_definitions" {
-  template = "${file("${path.module}/ecs_notebooks_notebook_container_definitions.json")}"
-
-  vars = {
-    container_image  = "${var.notebook_container_image}:${data.external.notebook_current_tag.result.tag}"
-    container_name   = "${local.notebook_container_name}"
-
-    log_group  = "${aws_cloudwatch_log_group.notebook.name}"
-    log_region = "${data.aws_region.aws_region.name}"
-
-    sentry_dsn = "${var.sentry_notebooks_dsn}"
-    sentry_environment = "${var.sentry_environment}"
-
-    metrics_container_image = "${aws_ecr_repository.metrics.repository_url}:${data.external.notebook_metrics_current_tag.result.tag}"
-    s3sync_container_image = "${aws_ecr_repository.s3sync.repository_url}:${data.external.notebook_s3sync_current_tag.result.tag}"
-
-    home_directory = "/home/jovyan"
   }
 }
 

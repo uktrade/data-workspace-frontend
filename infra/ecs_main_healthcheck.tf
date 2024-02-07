@@ -58,7 +58,21 @@ resource "aws_service_discovery_service" "healthcheck" {
 
 resource "aws_ecs_task_definition" "healthcheck" {
   family                   = "${var.prefix}-healthcheck"
-  container_definitions    = "${data.template_file.healthcheck_container_definitions.rendered}"
+  container_definitions    = templatefile(
+    "${path.module}/ecs_main_healthcheck_container_definitions.json", {
+      container_image   = "${aws_ecr_repository.healthcheck.repository_url}:${data.external.healthcheck_current_tag.result.tag}"
+      container_name    = "${local.healthcheck_container_name}"
+      container_port    = "${local.healthcheck_container_port}"
+      container_cpu     = "${local.healthcheck_container_cpu}"
+      container_memory  = "${local.healthcheck_container_memory}"
+
+      log_group  = "${aws_cloudwatch_log_group.healthcheck.name}"
+      log_region = "${data.aws_region.aws_region.name}"
+
+      port = "${local.healthcheck_container_port}"
+      url = "https://${var.admin_domain}/healthcheck"
+    }
+  )
   execution_role_arn       = "${aws_iam_role.healthcheck_task_execution.arn}"
   task_role_arn            = "${aws_iam_role.healthcheck_task.arn}"
   network_mode             = "awsvpc"
@@ -70,24 +84,6 @@ resource "aws_ecs_task_definition" "healthcheck" {
     ignore_changes = [
       "revision",
     ]
-  }
-}
-
-data "template_file" "healthcheck_container_definitions" {
-  template = "${file("${path.module}/ecs_main_healthcheck_container_definitions.json")}"
-
-  vars = {
-    container_image   = "${aws_ecr_repository.healthcheck.repository_url}:${data.external.healthcheck_current_tag.result.tag}"
-    container_name    = "${local.healthcheck_container_name}"
-    container_port    = "${local.healthcheck_container_port}"
-    container_cpu     = "${local.healthcheck_container_cpu}"
-    container_memory  = "${local.healthcheck_container_memory}"
-
-    log_group  = "${aws_cloudwatch_log_group.healthcheck.name}"
-    log_region = "${data.aws_region.aws_region.name}"
-
-    port = "${local.healthcheck_container_port}"
-    url = "https://${var.admin_domain}/healthcheck"
   }
 }
 
