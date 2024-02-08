@@ -223,7 +223,7 @@ resource "aws_cloudwatch_log_group" "mirrors_sync" {
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "mirrors_sync" {
-  count = "${var.mirrors_bucket_name != "" ? 1 : 0}"
+  count = "${var.mirrors_bucket_name != "" && var.cloudwatch_subscription_filter ? 1 : 0}"
   name            = "jupyterhub-mirrors-sync"
   log_group_name  = "${aws_cloudwatch_log_group.mirrors_sync.*.name[count.index]}"
   filter_pattern  = ""
