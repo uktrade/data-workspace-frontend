@@ -324,6 +324,7 @@ resource "aws_flow_log" "datasets" {
 resource "aws_vpc_peering_connection" "datasets_to_paas" {
   peer_vpc_id   = "${var.paas_vpc_id}"
   vpc_id        = "${aws_vpc.datasets.id}"
+  auto_accept   = true
 
   accepter {
     allow_remote_vpc_dns_resolution = false
@@ -337,6 +338,7 @@ resource "aws_vpc_peering_connection" "datasets_to_paas" {
 resource "aws_vpc_peering_connection" "datasets_to_main" {
   peer_vpc_id   = "${aws_vpc.datasets.id}"
   vpc_id        = "${aws_vpc.main.id}"
+  auto_accept   = true
 
   accepter {
     allow_remote_vpc_dns_resolution = false
@@ -354,6 +356,7 @@ resource "aws_vpc_peering_connection" "datasets_to_main" {
 resource "aws_vpc_peering_connection" "datasets_to_notebooks" {
   peer_vpc_id   = "${aws_vpc.datasets.id}"
   vpc_id        = "${aws_vpc.notebooks.id}"
+  auto_accept   = true
 
   accepter {
     allow_remote_vpc_dns_resolution = false
