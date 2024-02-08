@@ -5,7 +5,6 @@ from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator, MaxLengthValidator
 
 from dataworkspace.apps.core.boto3_client import get_s3_client
-from dataworkspace.apps.core.constants import SCHEMA_POSTGRES_DATA_TYPE_MAP
 from dataworkspace.apps.core.utils import (
     get_all_schemas,
     get_postgres_datatype_choices,
