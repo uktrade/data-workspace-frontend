@@ -6,7 +6,11 @@ from django.core.validators import RegexValidator, MaxLengthValidator
 
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.constants import SCHEMA_POSTGRES_DATA_TYPE_MAP
-from dataworkspace.apps.core.utils import get_all_schemas, get_user_s3_prefixes
+from dataworkspace.apps.core.utils import (
+    get_all_schemas,
+    get_postgres_datatype_choices,
+    get_user_s3_prefixes,
+)
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
     GOVUKDesignSystemForm,
@@ -122,9 +126,7 @@ class CreateTableDataTypesForm(CreateTableForm):
             self.fields[col_def["column_name"]] = GOVUKDesignSystemChoiceField(
                 label=col_def["column_name"],
                 initial=col_def["data_type"],
-                choices=(
-                    (name, name.capitalize()) for name, _ in SCHEMA_POSTGRES_DATA_TYPE_MAP.items()
-                ),
+                choices=get_postgres_datatype_choices(),
                 widget=GOVUKDesignSystemSelectWidget(
                     label_is_heading=False,
                     extra_label_classes="govuk-visually-hidden",
