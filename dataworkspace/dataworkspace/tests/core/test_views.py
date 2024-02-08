@@ -605,7 +605,7 @@ class TestFeedbackViews(BaseTestCase):
 
     def test_survey_source_is_set_correctly_when_entering_form_from_link(self):
         url = reverse("feedback")
-        params = urlencode({"from": "csat-link"})
+        params = urlencode({"survey_source": "csat-link"})
         url_with_params = f"{url}?{params}"
 
         response = self._authenticated_post(
@@ -626,7 +626,7 @@ class TestFeedbackViews(BaseTestCase):
 
     def test_trying_to_do_value_set_to_analyse_data_when_entering_from_query_params(self):
         url = reverse("feedback")
-        params = urlencode({"from": "csat-link"})
+        params = urlencode({"survey_source": "csat-link"})
         url_with_params = f"{url}?{params}"
 
         response = self._authenticated_post(url_with_params)

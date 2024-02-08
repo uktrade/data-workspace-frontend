@@ -257,7 +257,7 @@ class UserSatisfactionSurveyView(FormView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs["trying_to_do_initial"] = self.request.GET.getlist("from")
+        kwargs["trying_to_do_initial"] = self.request.GET.getlist("survey_source")
         return kwargs
 
     def get_context_data(self, **kwargs):
