@@ -97,9 +97,10 @@ class S3FileStorage(FileSystemStorage):
 
 
 def malware_file_validator(file: FieldFile):
-    clamav_response = _upload_to_clamav(file)
+    if not settings.LOCAL:
+        clamav_response = _upload_to_clamav(file)
 
-    if clamav_response.malware:
-        msg = f"Virus found in {file.name}"
-        logger.error(msg)
-        raise ValidationError(msg, code="virus_found", params={"value": file})
+        if clamav_response.malware:
+            msg = f"Virus found in {file.name}"
+            logger.error(msg)
+            raise ValidationError(msg, code="virus_found", params={"value": file})
