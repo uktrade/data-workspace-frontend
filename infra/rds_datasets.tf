@@ -5,7 +5,6 @@ resource "aws_rds_cluster" "datasets" {
   database_name                 = "${var.datasets_rds_cluster_database_name}"
   db_subnet_group_name          = "${aws_db_subnet_group.datasets.name}"
   engine                        = "aurora-postgresql"
-  engine_version                = "10.11"
   master_password               = "${random_string.aws_rds_cluster_instance_datasets_password.result}"
   master_username               = "${var.datasets_rds_cluster_master_username}"
   storage_encrypted             = "${var.datasets_rds_cluster_storage_encryption_enabled}"
