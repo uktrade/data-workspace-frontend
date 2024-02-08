@@ -94,9 +94,6 @@ services:
     networks:
       - data-infrastructure-shared-network
     ports:
-      # - "127.0.0.1:53:53"
-      # - "127.0.0.1:53:53/udp"
-      # - "127.0.0.1:443:443"
       - '4563-4599:4563-4599'
     environment:
       - DISABLE_CORS_CHECKS=1
