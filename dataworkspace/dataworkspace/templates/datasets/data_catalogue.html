@@ -36,7 +36,7 @@
 
 {% block content %}
   {% csrf_token %}
-  <form id="live-search-form" action="{% url 'datasets:find_datasets' %}" method="get">
+  <form id="live-search-form" action="{% url 'datasets:find_datasets' %}" method="get" data-test="search-form">
     <div class="govuk-grid-row">
       <div class="govuk-grid-column-full">
         <div class="search-field govuk-!-margin-bottom-2">

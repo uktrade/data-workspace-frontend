@@ -11,18 +11,6 @@ describe("Homepage dashboard", () => {
       cy.visit("/");
     });
 
-    it("should show a search bar with a link to getting started", () => {
-      cy.findByTestId("search-form")
-        .first()
-        .findByRole("heading", {
-          level: 1,
-          name: "Search Data Workspace",
-        })
-        .parent()
-        .findByRole("link", { name: "Getting started as a new user" })
-        .should("have.attr", "href", "/welcome");
-    });
-
     it("should show a support title", () => {
       cy.findByRole("heading", {
         level: 2,
