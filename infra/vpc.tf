@@ -322,6 +322,7 @@ resource "aws_flow_log" "datasets" {
 }
 
 resource "aws_vpc_peering_connection" "datasets_to_paas" {
+  count = var.paas_cidr_block != "" ? 1 : 0
   peer_vpc_id   = "${var.paas_vpc_id}"
   vpc_id        = "${aws_vpc.datasets.id}"
   auto_accept   = true
@@ -387,7 +388,7 @@ resource "aws_route" "pcx_datasets_to_paas" {
   count = var.paas_cidr_block != "" ? 1 : 0
   route_table_id            = "${aws_route_table.datasets.id}"
   destination_cidr_block    = "${var.paas_cidr_block}"
-  vpc_peering_connection_id = "${aws_vpc_peering_connection.datasets_to_paas.id}"
+  vpc_peering_connection_id = "${aws_vpc_peering_connection.datasets_to_paas[0].id}"
 }
 
 resource "aws_route" "pcx_datasets_to_main" {
