@@ -21,10 +21,9 @@ describe("Dialog notification", () => {
     it("should show a banner notification", () => {
       visitPageAndDownload();
 
-      cy.findByRole("dialog").should('be.visible');
       cy.findByRole("dialog").within(() => {
         cy.findByText("Important").should("be.visible");
-      });
+      }).should('be.visible');
     });
 
     it("should create a cookie when one does not exist", () => {
@@ -37,10 +36,9 @@ describe("Dialog notification", () => {
       cy.setCookie("notificationLastShown", "timestampOfCreation");
       visitPageAndDownload();
 
-      cy.findByRole("dialog").should('exist');
       cy.findByRole("dialog").within(() => {
         cy.findByText("Important").should("not.be.visible");
-      });
+      }).should('be.visible');
     });
 
     it("should have a link to the feedback form with a query parameter", () => {
@@ -69,10 +67,9 @@ describe("Dialog notification", () => {
         cy.findByRole("link", { name: "feedback form." }).click();
         cy.findByRole("link", { name: "Back" }).click();
 
-        cy.findByRole("dialog").should('be.visible');
         cy.findByRole("dialog").within(() => {
           cy.findByText("Important").should("be.visible");
-        });
+        }).should('be.visible');
       });
     });
   });
