@@ -13,11 +13,12 @@ resource "aws_s3_bucket" "uploads" {
     enabled    = true
     mfa_delete = false
   }
+}
 
-  logging {
-    target_bucket = "${aws_s3_bucket.logging.id}"
-  }
-
+resource "aws_s3_bucket_logging" "uploads_logging" {
+  bucket = aws_s3_bucket.uploads.id
+  target_bucket = aws_s3_bucket.logging.id
+  target_prefix = "logs/"
 }
 
 resource "aws_s3_bucket_policy" "uploads" {
@@ -50,7 +51,6 @@ data "aws_iam_policy_document" "uploads_bucket" {
 
 resource "aws_s3_bucket" "logging" {
   bucket = "${var.uploads_bucket}-logging"
-  acl    = "log-delivery-write"
 
   server_side_encryption_configuration {
     rule {
