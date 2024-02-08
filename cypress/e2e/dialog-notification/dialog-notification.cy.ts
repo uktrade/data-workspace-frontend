@@ -47,7 +47,7 @@ describe("Dialog notification", () => {
       cy.findByRole("link", { name: "feedback form." }).should(
         "have.attr",
         "href",
-        "/feedback?from=csat-link"
+        "/feedback?survey_source=csat-link"
       );
     });
 
@@ -56,7 +56,7 @@ describe("Dialog notification", () => {
         visitPageAndDownload();
 
         cy.findByRole("link", { name: "feedback form." }).click();
-        cy.url().should("include", "/feedback/?from=csat-link");
+        cy.url().should("include", "/feedback/?survey_source=csat-link");
 
         cy.findByLabelText("Analyse data").should("be.checked");
       });
