@@ -54,6 +54,8 @@ def test_file_save_throws_exception_when_virus_found(
 
 @override_settings(LOCAL=True)
 @mock.patch("dataworkspace.apps.core.storage._upload_to_clamav")
-def test_malware_file_validator_not_called_on_local(mock_upload_to_clamav,):
+def test_malware_file_validator_not_called_on_local(
+    mock_upload_to_clamav,
+):
     malware_file_validator("")
     assert not mock_upload_to_clamav.called
