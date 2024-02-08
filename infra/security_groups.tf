@@ -1578,6 +1578,7 @@ resource "aws_security_group_rule" "datasets_db_ingress_postgres_from_notebooks"
 }
 
 resource "aws_security_group_rule" "datasets_db_ingress_postgres_from_paas" {
+  count = var.paas_cidr_block != "" ? 1 : 0
   description = "ingress-postgres-from-paas"
 
   security_group_id = "${aws_security_group.datasets.id}"
@@ -1639,6 +1640,7 @@ resource "aws_security_group_rule" "elasticsearch_ingress_from_admin" {
 }
 
 resource "aws_security_group_rule" "elasticsearch_ingress_from_paas" {
+  count = var.paas_cidr_block != "" ? 1 : 0
   description = "ingress-elasticsearch-https-from-paas-ie-data-flow"
 
   security_group_id = "${aws_security_group.datasets.id}"
