@@ -9,10 +9,7 @@ set -e
 
     # Not suitable on a cluster of size > 1, but for our purposes,
     # no need for more
-    django-admin migrate
-
-    django-admin ensure_databases_configured
-    django-admin ensure_application_template_models
+    django-admin migrate    
 
     django-admin loaddata --ignorenonexistent --verbosity=2 \
       users \
@@ -27,6 +24,8 @@ set -e
       data_collections \
       eventlog
 
+    django-admin ensure_databases_configured
+    django-admin ensure_application_template_models
 
     django-admin waffle_flag HOME_PAGE_FLAG --everyone --create
     django-admin waffle_flag ACCESSIBLE_AUTOCOMPLETE_FLAG --everyone --create
