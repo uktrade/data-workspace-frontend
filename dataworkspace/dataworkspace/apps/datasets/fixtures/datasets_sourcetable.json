@@ -1,1 +1,42 @@
-[]
+[
+  {
+    "model": "datasets.sourcetable",
+    "pk": "1487ce01-1fa4-46f0-877f-0f3892406174",
+    "fields": {
+      "created_date": "2024-01-12T10:16:35.328Z",
+      "modified_date": "2024-01-12T10:16:35.328Z",
+      "dataset": "d7094267-ddfc-40f3-a4a8-ca4f30a0992f",
+      "reference_number": null,
+      "name": "source_data_set_b",
+      "database": "ac99394d-336c-4de9-8c9f-c5bd38d0b670",
+      "schema": "public",
+      "frequency": 1,
+      "table": "test_dataset",
+      "dataset_finder_opted_in": false,
+      "data_grid_enabled": true,
+      "data_grid_download_enabled": false,
+      "data_grid_download_limit": null,
+      "disable_data_grid_interaction": false
+    }
+  },
+  {
+    "model": "datasets.sourcetable",
+    "pk": "1bbdc4dd-1532-49ef-87cc-b53c2d197d26",
+    "fields": {
+      "created_date": "2024-01-12T09:24:49.609Z",
+      "modified_date": "2024-01-12T09:24:49.609Z",
+      "dataset": "3112a785-6bd9-4e56-bc67-10b6cccb5db7",
+      "reference_number": null,
+      "name": "source_data_set",
+      "database": "ac99394d-336c-4de9-8c9f-c5bd38d0b670",
+      "schema": "public",
+      "frequency": 1,
+      "table": "test_dataset",
+      "dataset_finder_opted_in": false,
+      "data_grid_enabled": true,
+      "data_grid_download_enabled": false,
+      "data_grid_download_limit": null,
+      "disable_data_grid_interaction": false
+    }
+  }
+]
