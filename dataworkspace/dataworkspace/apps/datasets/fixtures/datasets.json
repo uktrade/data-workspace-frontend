@@ -22,7 +22,7 @@
       "retention_policy": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
       "personal_data": "Does not contain personal data",
       "restrictions_on_usage": "<p>DBT internal use only</p>",
-      "user_access_type": "REQUIRES_AUTHORIZATION",
+      "user_access_type": "OPEN",
       "published": true,
       "published_at": "2024-01-12",
       "dictionary_published": true,
