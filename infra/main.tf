@@ -109,6 +109,7 @@ variable gitlab_ebs_volume_size {
 }
 variable gitlab_runner_instance_type {}
 variable gitlab_runner_tap_instance_type {}
+variable gitlab_runner_data_science_instance_type {}
 variable gitlab_runner_root_volume_size {}
 variable gitlab_runner_team_root_volume_size {}
 variable gitlab_db_instance_class {}
@@ -117,6 +118,7 @@ variable gitlab_rds_cluster_instance_identifier {
 }
 variable gitlab_runner_visualisations_deployment_project_token {}
 variable gitlab_runner_tap_project_token {}
+variable gitlab_runner_data_science_project_token {}
 
 variable gitlab_sso_id {}
 variable gitlab_sso_secret {}
