@@ -1,8 +1,8 @@
 from django.core.validators import FileExtensionValidator
 from django import forms
 
-from dataworkspace.apps.core.constants import SCHEMA_POSTGRES_DATA_TYPE_MAP
 from dataworkspace.apps.core.storage import malware_file_validator
+from dataworkspace.apps.core.utils import get_postgres_datatype_choices
 from dataworkspace.forms import (
     GOVUKDesignSystemChoiceField,
     GOVUKDesignSystemFileField,
@@ -49,10 +49,7 @@ class SourceTableUploadColumnConfigForm(GOVUKDesignSystemForm):
             self.fields[col_def["column_name"]] = GOVUKDesignSystemChoiceField(
                 label=col_def["column_name"],
                 initial=col_def["data_type"],
-                choices=(
-                    (value, name.capitalize())
-                    for name, value in SCHEMA_POSTGRES_DATA_TYPE_MAP.items()
-                ),
+                choices=get_postgres_datatype_choices(),
                 widget=GOVUKDesignSystemSelectWidget(
                     label_is_heading=False,
                     extra_label_classes="govuk-visually-hidden",

@@ -1672,3 +1672,7 @@ def clear_table_permissions_cache_for_user(user):
         db_role,
     )
     cache.delete(table_permissions_cache_key(db_role))
+
+
+def get_postgres_datatype_choices():
+    return ((name, name.capitalize()) for name, _ in SCHEMA_POSTGRES_DATA_TYPE_MAP.items())
