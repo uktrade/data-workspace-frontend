@@ -64,7 +64,7 @@ const YourBookmarkListItem: React.FC<YourBookmarksProps> = ({ name, url }) => (
 const YourBookmarks: React.FC<Record<'bookmarks', YourBookmarksProps[]>> = ({
   bookmarks
 }) => (
-  <Tile as="article" title="Your bookmarks">
+  <Tile as="article" title="Your bookmarks" dataTest="your-bookmarks">
     {bookmarks?.length ? (
       <>
         <StyledParagraph>
