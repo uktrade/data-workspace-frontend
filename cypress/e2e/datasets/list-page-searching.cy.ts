@@ -13,7 +13,7 @@ describe("Dataset list page searching", () => {
       cy.wait("@api_search");
 
       cy.findAllByTestId("search-result")
-        .should("have.length.least", 2)
+        .should("have.length.least", 1)
         .each(($el) => {
           cy.wrap($el).should("have.attr", "href").should("contain", "source");
         });

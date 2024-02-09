@@ -18,6 +18,7 @@ set -e
       datasets \
       datasets_sourcelink \
       datasets_sourcetable \
+      datasets_datasetuserpermissions \
       datasets_sourcetablefielddefinition \
       datasets_sourceview \
       datasets_bookmark \

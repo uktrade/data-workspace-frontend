@@ -126,7 +126,7 @@ docker compose up
 and in a separate terminal changing to the js app directory and running the webpack hotloader:
 
 ```shell
-cd dataworkspace/dataworkspace/static/js/react_apps/
+cd dataworkspace/dataworkspace/static/js/react/
 npm run dev
 ```
 
@@ -136,7 +136,7 @@ If you make any changes to the React apps you will need to rebuild and commit th
 This will create the relevant js files in `/static/js/bundles/` directory:
 
 ```shell
-cd dataworkspace/dataworkspace/static/js/react_apps/
+cd dataworkspace/dataworkspace/static/js/react/
 # this may about 10 minutes to install all dependencies
 npm install
 npm run build
