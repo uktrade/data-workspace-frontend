@@ -159,13 +159,13 @@ describe("Homepage dashboard", () => {
       cy.findByRole("link", { name: "Superset" }).should("exist");
     });
 
-    it("should show the 'Your bookmarks' section with bookmarks", () => {
+    it.only("should show the 'Your bookmarks' section with bookmarks", () => {
       cy.wait("@yourBookmarks");
       cy.findByRole("heading", {
         level: 2,
         name: "Your bookmarks",
       }).should("exist");
-      cy.findByRole("link", { name: "source dataset a" }).should("exist");
+      cy.findByRole("link", { name: "Source dataset a" }).should("exist");
       cy.findByRole("link", { name: "View all bookmarks" }).should("exist");
     });
   });

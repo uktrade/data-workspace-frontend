@@ -81,3 +81,10 @@ The cypress tests are run using the `data-workspace-e2e-test` docker container. 
 Before running the tests, to get the E2E data workspace app run the make command `make docker-e2e-start` from the root, which will spin up the data workspace app pointing at a dedicated E2E database.
 
 Once the containers have started, you can use either `npm run cypress:run` to run the tests in headless mode, or `npm run cypress:open` to use the Cypress test runner app.
+
+### Exporting data for fixtures
+If you have manually added some test data and would like to include that data inside an E2E test, this command will write that to a json file for you:
+`python3 dataworkspace/manage.py dumpdata --indent=4 MODEL_NAME > dataworkspace/dataworkspace/apps/OUTPUT_FILE.json`
+
+For example:
+`python3 dataworkspace/manage.py dumpdata --indent=4 datasets.DataSetUserPermission > dataworkspace/dataworkspace/apps/datasets/fixtures/datasets_datasetuserpermissions.json`
