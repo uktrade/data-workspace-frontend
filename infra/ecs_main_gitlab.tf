@@ -680,7 +680,7 @@ resource "aws_launch_configuration" "gitlab_runner_tap" {
 }
 
 resource "aws_autoscaling_group" "gitlab_runner_data_science" {
-  name_prefix               = "${var.prefix}-gitlab-runner-tap-"
+  name_prefix               = "${var.prefix}-gitlab-runner-data-science-"
   max_size                  = 2
   min_size                  = 1
   desired_capacity          = 1
@@ -689,11 +689,11 @@ resource "aws_autoscaling_group" "gitlab_runner_data_science" {
   launch_configuration      = "${aws_launch_configuration.gitlab_runner_data_science.name}"
   vpc_zone_identifier       = "${aws_subnet.private_without_egress.*.id}"
 
-  tags = [{
+  tag {
     key                 = "Name"
-    value               = "${var.prefix}-gitlab-runner-tap-asg"
+    value               = "${var.prefix}-gitlab-runner-data-science-asg"
     propagate_at_launch = true
-  }]
+  }
 
   lifecycle {
     create_before_destroy = true
@@ -701,7 +701,7 @@ resource "aws_autoscaling_group" "gitlab_runner_data_science" {
 }
 
 resource "aws_launch_configuration" "gitlab_runner_data_science" {
-  name_prefix     = "${var.prefix}-gitlab-runner-data_science-"
+  name_prefix     = "${var.prefix}-gitlab-runner-data-science-"
   # This is the ECS optimized image, although we're not running ECS. It's
   # handy since it has everything docker installed, and cuts down on the
   # types of infrastructure
@@ -718,7 +718,7 @@ resource "aws_launch_configuration" "gitlab_runner_data_science" {
   }
 
   root_block_device {
-    volume_size = "${var.gitlab_runner_root_volume_size}"
+    volume_size = "${var.gitlab_runner_team_root_volume_size}"
     encrypted = true
   }
 
@@ -754,7 +754,7 @@ resource "aws_launch_configuration" "gitlab_runner_data_science" {
     --clone-url "http://${var.gitlab_domain}/" \
     --registration-token "${var.gitlab_runner_data_science_project_token}" \
     --executor "shell" \
-    --description "data science" \
+    --description "tap" \
     --access-level "not_protected" \
     --run-untagged="true" \
     --locked="true"
