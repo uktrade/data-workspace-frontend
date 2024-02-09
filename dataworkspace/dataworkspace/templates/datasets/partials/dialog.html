@@ -1,43 +1,24 @@
-{% load static %}
-
-<dialog id="download-dialog">
-    <div id="feedback-notification" class="govuk-notification-banner" style="display: none;" role="region" aria-labelledby="govuk-notification-banner-title" data-module="govuk-notification-banner">
-      <div class="govuk-notification-banner__header">
-        <h2 class="govuk-notification-banner__title" id="govuk-notification-banner-title">
-          Important
-        </h2>
-      </div>
-      <div class="govuk-notification-banner__content">
-        <p class="govuk-notification-banner__heading">
-          A copy of this data should now be downloading.
-        </p>
-        <p class="govuk-body">
-          Tell us what went well and what can be improved, by completing our short <a class="govuk-link" href="/feedback?survey_source=csat-link">feedback form.</a>
-        </p>
-      </div>
-    </div>
+<dialog>
     <div>
         <h2 class="govuk-heading-l" role="heading">Confirm data download</h2>
         <div class="govuk-!-padding-bottom-2" tabindex="0">
-              <p class="govuk-body text--margin">Downloading this data will create a copy on your device which will no longer be updated and can be changed.</p>
-              <p class="govuk-body text--margin">By downloading this data, you are aware of the security classification of this data and are responsible for keeping the data secure.</p>
+              <p class="govuk-body" style="margin-bottom: 10px">Downloading this data will create a copy on your device which will no longer be updated and can be changed.</p>
+              <p class="govuk-body" style="margin-bottom: 10px">By downloading this data, you are aware of the security classification of this data and are responsible for keeping the data secure.</p>
         </div>
     </div>
-    <div class="govuk-button-group">
+       <div class="govuk-button-group">
         {% if link %}
-            <a class="govuk-button govuk-button--primary" data-module="govuk-button" id="data-link-download" href="{{ link }}">Download data as {{ format|default:"CSV"}}</a>
+            <a class="govuk-button govuk-button--primary" data-module="govuk-button" href="{{ link }}">Download data as {{ format|default:"CSV"}}</a>
         {% else %}
             <button class="govuk-button govuk-button--primary" data-module="govuk-button" id="data-grid-download">
                 Download data as {{ format|default:"CSV"}}
             </button>
           {% endif %}
-        {% if JSON %}
-          <button class="govuk-button govuk-button--primary" data-module="govuk-button" id="data-grid-json-download">
-              Download data as JSON
-          </button>
-        {% endif %}
-        <button class="govuk-button govuk-button--secondary" data-module="govuk-button">Close</button>
-    </div>
-</dialog>
-
-<script nonce="{{ request.csp_nonce }}" src="{% static 'dialog-notification.js' %}"></script>
+          {% if JSON %}
+            <button class="govuk-button govuk-button--primary" data-module="govuk-button" id="data-grid-json-download">
+                Download data as JSON
+            </button>
+          {% endif %}
+          <button class="govuk-button govuk-button--secondary" data-module="govuk-button">Close</button>
+      </div>
+  </dialog>

@@ -1,5 +1,4 @@
 import io
-from urllib.parse import urlencode
 import uuid
 
 import botocore
@@ -585,7 +584,6 @@ class TestFeedbackViews(BaseTestCase):
         response = self._authenticated_post(
             reverse("feedback"),
             {
-                "survey_source": "contact-us",
                 "how_satisfied": "very-satified",
                 "trying_to_do": "other",
                 "trying_to_do_other_message": "Hello",
@@ -596,41 +594,8 @@ class TestFeedbackViews(BaseTestCase):
         assert response.status_code == 200
 
         survey_entry = UserSatisfactionSurvey.objects.first()
-        assert survey_entry.survey_source == "contact-us"
         assert survey_entry.how_satisfied == "very-satified"
         assert survey_entry.trying_to_do == "other"
         assert survey_entry.trying_to_do_other_message == "Hello"
         assert survey_entry.improve_service == "abc"
         assert survey_entry.describe_experience == "def"
-
-    def test_survey_source_is_set_correctly_when_entering_form_from_link(self):
-        url = reverse("feedback")
-        params = urlencode({"survey_source": "csat-link"})
-        url_with_params = f"{url}?{params}"
-
-        response = self._authenticated_post(
-            url_with_params,
-            {
-                "survey_source": "csat-download-link",
-                "how_satisfied": "very-satified",
-                "trying_to_do": "other",
-                "trying_to_do_other_message": "Hello",
-                "improve_service": "abc",
-                "describe_experience": "def",
-            },
-        )
-        assert response.status_code == 200
-
-        survey_entry = UserSatisfactionSurvey.objects.first()
-        assert survey_entry.survey_source == "csat-download-link"
-
-    def test_trying_to_do_value_set_to_analyse_data_when_entering_from_query_params(self):
-        url = reverse("feedback")
-        params = urlencode({"survey_source": "csat-link"})
-        url_with_params = f"{url}?{params}"
-
-        response = self._authenticated_post(url_with_params)
-        assert response.status_code == 200
-
-        form = response.context["form"]
-        assert form["trying_to_do"].initial == "analyse-data"
