@@ -754,7 +754,7 @@ resource "aws_launch_configuration" "gitlab_runner_data_science" {
     --clone-url "http://${var.gitlab_domain}/" \
     --registration-token "${var.gitlab_runner_data_science_project_token}" \
     --executor "shell" \
-    --description "tap" \
+    --description "data science" \
     --access-level "not_protected" \
     --run-untagged="true" \
     --locked="true"
