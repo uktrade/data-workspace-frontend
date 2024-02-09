@@ -255,11 +255,6 @@ class UserSatisfactionSurveyView(FormView):
     form_class = UserSatisfactionSurveyForm
     template_name = "core/user-satisfaction-survey.html"
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["trying_to_do_initial"] = self.request.GET.getlist("survey_source")
-        return kwargs
-
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data()
         ctx["referer"] = self.request.META.get("HTTP_REFERER")
@@ -273,7 +268,6 @@ class UserSatisfactionSurveyView(FormView):
             improve_service=cleaned["improve_service"],
             trying_to_do_other_message=cleaned["trying_to_do_other_message"],
             describe_experience=cleaned["describe_experience"],
-            survey_source=cleaned["survey_source"],
         )
 
         return HttpResponseRedirect(f'{reverse("feedback")}?success=1')

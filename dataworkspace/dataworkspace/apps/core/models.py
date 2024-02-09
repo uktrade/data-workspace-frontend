@@ -162,20 +162,12 @@ class TryingToDoType(models.TextChoices):
     other = "other", "Other"
 
 
-class SurveySource(models.TextChoices):
-    contact_us = "contact-us", "Contact us"
-    csat_download_link = "csat-download-link", "CSAT download link"
-
-
 class UserSatisfactionSurvey(TimeStampedModel):
     how_satisfied = models.CharField(max_length=32, choices=HowSatisfiedType.choices)
     trying_to_do = models.TextField(null=True, blank=True, choices=TryingToDoType.choices)
     trying_to_do_other_message = models.TextField(null=True, blank=True)
     improve_service = models.TextField(null=True, blank=True)
     describe_experience = models.TextField(null=True, blank=True)
-    survey_source = models.CharField(
-        max_length=32, null=True, blank=True, choices=SurveySource.choices
-    )
 
 
 class NewsletterSubscription(TimeStampedModel):

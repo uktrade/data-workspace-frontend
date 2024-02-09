@@ -7,6 +7,7 @@ dialog {
     0 9px 46px 8px #0000001f;
     font-size: 1rem;
     max-width: MIN(50rem, 90vw);
+    max-height: 280px;
     overflow: hidden;
     padding: 30px 30px 15px;
     .govuk-button-group {
@@ -17,12 +18,3 @@ dialog {
     background: rgba(36, 32, 20, 0.5) !important;
     backdrop-filter: blur(0.25rem);
   }
-
-#download-dialog {
-  .govuk-link {
-    font-size: 19px;
-  }
-  .text--margin {
-    margin-bottom: 10px
-  }
-}

@@ -28,11 +28,10 @@
                 <form method="post" enctype="multipart/form-data" novalidate>
                     {% csrf_token %}
                     <fieldset class="govuk-fieldset">
-                        {{ form.survey_source }}
                         <div class="govuk-checkboxes" data-module="govuk-checkboxes">
                             {{ form.trying_to_do }}
                             <div class="govuk-checkboxes__conditional govuk-checkboxes__conditional_input govuk-checkboxes__conditional--hidden"
-                                id="conditional-message">{{ form.trying_to_do_other_message }}</div>
+                                 id="conditional-message">{{ form.trying_to_do_other_message }}</div>
                         </div>
                         {{ form.how_satisfied }} {{ form.describe_experience }} {{ form.improve_service }}
                     </fieldset>
