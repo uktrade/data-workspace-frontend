@@ -165,10 +165,10 @@ resource "aws_lb" "superset" {
 resource "aws_lb_listener" "superset_443" {
   load_balancer_arn = "${aws_lb.superset.arn}"
   port              = "443"
-  protocol          = "HTTPS"
+  protocol          = "HTTP"
 
-  ssl_policy      = "ELBSecurityPolicy-TLS-1-2-2017-01"
-  certificate_arn = "${aws_acm_certificate_validation.superset_internal.certificate_arn}"
+  # ssl_policy      = "ELBSecurityPolicy-TLS-1-2-2017-01"
+  #certificate_arn = "${aws_acm_certificate_validation.superset_internal.certificate_arn}"
 
   default_action {
     target_group_arn = "${aws_lb_target_group.superset_8000.arn}"

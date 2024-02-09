@@ -200,15 +200,15 @@ resource "aws_alb" "healthcheck" {
 resource "aws_alb_listener" "healthcheck" {
   load_balancer_arn = "${aws_alb.healthcheck.arn}"
   port              = "${local.healthcheck_alb_port}"
-  protocol          = "HTTPS"
+  protocol          = "HTTP"
 
   default_action {
     target_group_arn = "${aws_alb_target_group.healthcheck.arn}"
     type             = "forward"
   }
 
-  ssl_policy      = "ELBSecurityPolicy-TLS-1-2-2017-01"
-  certificate_arn = "${aws_acm_certificate_validation.healthcheck.certificate_arn}"
+  #ssl_policy      = "ELBSecurityPolicy-TLS-1-2-2017-01"
+  #certificate_arn = "${aws_acm_certificate_validation.healthcheck.certificate_arn}"
 }
 
 resource "aws_alb_target_group" "healthcheck" {

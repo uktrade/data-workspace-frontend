@@ -47,9 +47,9 @@ resource "aws_acm_certificate" "admin" {
   }
 }
 
-resource "aws_acm_certificate_validation" "admin" {
-  certificate_arn = "${aws_acm_certificate.admin.arn}"
-}
+# resource "aws_acm_certificate_validation" "admin" {
+#   certificate_arn = "${aws_acm_certificate.admin.arn}"
+# }
 
 resource "aws_route53_record" "healthcheck" {
   provider = "aws.route53"
@@ -77,9 +77,9 @@ resource "aws_acm_certificate" "healthcheck" {
   }
 }
 
-resource "aws_acm_certificate_validation" "healthcheck" {
-  certificate_arn = "${aws_acm_certificate.healthcheck.arn}"
-}
+# resource "aws_acm_certificate_validation" "healthcheck" {
+#   certificate_arn = "${aws_acm_certificate.healthcheck.arn}"
+# }
 
 resource "aws_route53_record" "prometheus" {
   provider = "aws.route53"
@@ -107,9 +107,9 @@ resource "aws_acm_certificate" "prometheus" {
   }
 }
 
-resource "aws_acm_certificate_validation" "prometheus" {
-  certificate_arn = "${aws_acm_certificate.prometheus.arn}"
-}
+# resource "aws_acm_certificate_validation" "prometheus" {
+#   certificate_arn = "${aws_acm_certificate.prometheus.arn}"
+# }
 
 resource "aws_route53_record" "gitlab" {
   provider = "aws.route53"
@@ -182,9 +182,9 @@ resource "aws_acm_certificate" "superset_internal" {
   }
 }
 
-resource "aws_acm_certificate_validation" "superset_internal" {
-  certificate_arn = "${aws_acm_certificate.superset_internal.arn}"
-}
+# resource "aws_acm_certificate_validation" "superset_internal" {
+#   certificate_arn = "${aws_acm_certificate.superset_internal.arn}"
+# }
 
 # resource "aws_route53_record" "jupyterhub" {
 #   zone_id = "${data.aws_route53_zone.aws_route53_zone.zone_id}"

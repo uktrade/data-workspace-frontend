@@ -390,9 +390,9 @@ resource "aws_acm_certificate" "gitlab" {
   }
 }
 
-resource "aws_acm_certificate_validation" "gitlab" {
-  certificate_arn = "${aws_acm_certificate.gitlab.arn}"
-}
+# resource "aws_acm_certificate_validation" "gitlab" {
+#   certificate_arn = "${aws_acm_certificate.gitlab.arn}"
+# }
 
 resource "aws_iam_role" "gitlab_ecs" {
   name               = "${var.prefix}-gitlab-ecs"

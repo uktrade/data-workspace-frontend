@@ -644,15 +644,15 @@ resource "aws_alb" "admin" {
 resource "aws_alb_listener" "admin" {
   load_balancer_arn = "${aws_alb.admin.arn}"
   port              = "${local.admin_alb_port}"
-  protocol          = "HTTPS"
+  protocol          = "HTTP"
 
   default_action {
     target_group_arn = "${aws_alb_target_group.admin.arn}"
     type             = "forward"
   }
 
-  ssl_policy      = "ELBSecurityPolicy-TLS-1-2-2017-01"
-  certificate_arn = "${aws_acm_certificate_validation.admin.certificate_arn}"
+  #ssl_policy      = "ELBSecurityPolicy-TLS-1-2-2017-01"
+  #certificate_arn = "${aws_acm_certificate_validation.admin.certificate_arn}"
 }
 
 resource "aws_alb_listener" "admin_http" {
