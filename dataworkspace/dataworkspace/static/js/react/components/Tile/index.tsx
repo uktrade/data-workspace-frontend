@@ -18,6 +18,7 @@ type TileProps = {
   headerSize?: number;
   headerLevel?: 1 | 2 | 3 | 4 | 5;
   children: ReactNode;
+  dataTest?: string;
 };
 
 type HeaderProps = Pick<TileProps, 'headerSize' | 'headerLevel' | 'children'>;
@@ -42,11 +43,12 @@ const Tile: React.FC<TileProps> = ({
   headerSize = 27,
   headerLevel = 2,
   as,
-  children
+  children,
+  dataTest
 }) => {
   const Component = as || 'div';
   return (
-    <Component>
+    <Component data-test={dataTest}>
       <InnerContainer>
         <Header headerLevel={headerLevel} headerSize={headerSize}>
           {title}

@@ -165,7 +165,9 @@ describe("Homepage dashboard", () => {
         level: 2,
         name: "Your bookmarks",
       }).should("exist");
-      cy.findByRole("link", { name: "source dataset a" }).should("exist");
+      cy.findByTestId("your-bookmarks").within(($form) => {
+        cy.findByRole("link", { name: "Source dataset a" }).should("exist");
+      });
       cy.findByRole("link", { name: "View all bookmarks" }).should("exist");
     });
   });
