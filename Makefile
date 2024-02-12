@@ -47,15 +47,15 @@ docker-e2e-build:
 
 .PHONY: docker-e2e-run
 docker-e2e-run:
-	docker compose -f docker-compose.yml -f docker-compose.e2e.yml -p e2e --profile e2e up --exit-code-from data-workspace-e2e-test
+	docker compose -f docker-compose.yml -f docker-compose.e2e.yml -p e2e --profile e2e up --renew-anon-volumes --exit-code-from data-workspace-e2e-test
 
 .PHONY: docker-e2e-build-run
 docker-e2e-build-run:
-	docker compose -f docker-compose.yml -f docker-compose.e2e.yml -p e2e --profile e2e up --build --force-recreate --exit-code-from data-workspace-e2e-test
+	docker compose -f docker-compose.yml -f docker-compose.e2e.yml -p e2e --profile e2e up --build --force-recreate --renew-anon-volumes --exit-code-from data-workspace-e2e-test
 
 .PHONY: docker-e2e-start
 docker-e2e-start:
-	docker compose -f docker-compose.yml -f docker-compose.e2e.yml -p e2e --profile e2e up --build --force-recreate -d
+	docker compose -f docker-compose.yml -f docker-compose.e2e.yml -p e2e --profile e2e up --build --force-recreate --renew-anon-volumes -d
 
 .PHONY: docker-a11y-build
 docker-a11y-build:

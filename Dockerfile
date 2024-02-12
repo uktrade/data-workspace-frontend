@@ -53,6 +53,7 @@ RUN python3 -m pip install --upgrade pip wheel pip-tools && \
 # Leave this statement at the end, as it is dependant on the builder layer completing. Having this
 # COPY statement will block this layer building, so placing at the end will let the installs above finish
 COPY --from=builder ./app/bundles ./dataworkspace/dataworkspace/static/js/bundles
+COPY --from=builder ./app/stats ./dataworkspace/dataworkspace/static/js/stats
 
 FROM base AS test
 

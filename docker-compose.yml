@@ -21,7 +21,6 @@ services:
     volumes:
       - .:/app
       - ./dataworkspace:/dataworkspace
-      - ./dataworkspace/dataworkspace/static/js/stats:/dataworkspace/dataworkspace/static/js/stats/
     hostname: dataworkspace.test
     extra_hosts:
       - "dataworkspace.test:127.0.0.1"
