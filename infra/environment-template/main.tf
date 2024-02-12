@@ -131,6 +131,7 @@ module "jupyterhub" {
   superset_admin_users       = "REPLACE_ME"
   superset_db_instance_class = "db.t3.medium"
 
+  datasets_rds_cluster_database_engine                       = "aurora-postgresql"
   datasets_rds_cluster_backup_retention_period               = 10
   datasets_rds_cluster_database_name                         = "REPLACE_ME"
   datasets_rds_cluster_master_username                       = "REPLACE_ME"
