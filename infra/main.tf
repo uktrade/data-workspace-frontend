@@ -124,6 +124,10 @@ variable gitlab_sso_id {}
 variable gitlab_sso_secret {}
 variable gitlab_sso_domain {}
 
+variable superset_on {
+  type = bool
+  default = true
+}
 variable superset_admin_users {}
 variable superset_db_instance_class {}
 variable superset_internal_domain {}
@@ -162,10 +166,18 @@ variable quicksight_author_iam_arn {}
 
 variable shared_keypair_public_key {}
 
+variable flower_on {
+  type = bool
+  default = true
+}
 variable flower_username {}
 variable flower_password {}
 
 
+variable mlflow_on {
+  type = bool
+  default = true
+}
 variable mlflow_artifacts_bucket {}
 variable mlflow_instances {}
 variable mlflow_instances_long {}
