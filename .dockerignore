@@ -4,6 +4,7 @@ node_modules
 env
 venv
 db-data-dev
+__pycache__
 
 #Cypress
 screenshots
