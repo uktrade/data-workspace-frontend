@@ -9,7 +9,7 @@
   },
   {
     "model": "datasets.datasetuserpermission",
-    "pk": 1,
+    "pk": 2,
     "fields": {
       "user": 2,
       "dataset": "406291aa-e35e-41a9-ab05-6355c5cc92d6"
@@ -17,7 +17,7 @@
   },
   {
     "model": "datasets.datasetuserpermission",
-    "pk": 1,
+    "pk": 3,
     "fields": {
       "user": 2,
       "dataset": "b603337f-0073-43ac-9dc4-05a8d5cf635d"
@@ -25,7 +25,7 @@
   },
   {
     "model": "datasets.datasetuserpermission",
-    "pk": 1,
+    "pk": 4,
     "fields": {
       "user": 2,
       "dataset": "3112a785-6bd9-4e56-bc67-10b6cccb5db7"
