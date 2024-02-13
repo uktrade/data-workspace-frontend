@@ -50,7 +50,7 @@ const RecentItemsListItem: React.FC<RecentItemProps> = ({ url, name }) => (
 const RecentItems: React.FC<Record<'items', RecentItemProps[]>> = ({
   items
 }) => (
-  <Tile as="article" title="Your recent items">
+  <Tile as="article" title="Your recent items COMPILED FROM DOCKERFILE">
     <StyledParagraph>
       This might be a Source dataset, Reference dataset, Data cut, or
       Visualisation.
