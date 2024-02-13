@@ -43,7 +43,7 @@ docker-test: docker-test-integration docker-test-unit
 
 .PHONY: docker-e2e-build
 docker-e2e-build:
-	docker compose -f docker-compose.yml -f docker-compose.e2e.yml -p e2e --profile e2e build
+	docker compose -f docker-compose.yml -f docker-compose.e2e.yml -p e2e --profile e2e build --parallel
 
 .PHONY: docker-e2e-run
 docker-e2e-run:
