@@ -4,7 +4,7 @@ resource "aws_rds_cluster" "datasets" {
   cluster_identifier            = "${var.datasets_rds_cluster_cluster_identifier}"
   database_name                 = "${var.datasets_rds_cluster_database_name}"
   db_subnet_group_name          = "${aws_db_subnet_group.datasets.name}"
-  engine                        = "aurora-postgresql"
+  engine                        = var.datasets_rds_cluster_database_engine
   master_password               = "${random_string.aws_rds_cluster_instance_datasets_password.result}"
   master_username               = "${var.datasets_rds_cluster_master_username}"
   storage_encrypted             = "${var.datasets_rds_cluster_storage_encryption_enabled}"
@@ -22,7 +22,7 @@ resource "aws_rds_cluster" "datasets" {
 resource "aws_rds_cluster_instance" "datasets" {
   cluster_identifier            = "${aws_rds_cluster.datasets.cluster_identifier}"
   db_subnet_group_name          = "${aws_db_subnet_group.datasets.name}"
-  engine                        = "aurora-postgresql"
+  engine                        = var.datasets_rds_cluster_database_engine
   identifier                    = "${var.datasets_rds_cluster_instance_identifier}"
   instance_class                = "${var.datasets_rds_cluster_instance_class}"
   performance_insights_enabled  = "${var.datasets_rds_cluster_instance_performance_insights_enabled}"
