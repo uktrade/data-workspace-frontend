@@ -27,7 +27,7 @@ resource "aws_rds_cluster_instance" "datasets" {
   instance_class                = "${var.datasets_rds_cluster_instance_class}"
   performance_insights_enabled  = "${var.datasets_rds_cluster_instance_performance_insights_enabled}"
   promotion_tier                = 1
-  db_parameter_group_name       = "aurora-postgresql-14-pgaudit-instance-parameter-group"
+  db_parameter_group_name       = var.datasets_rds_cluster_instance_parameter_group
 
   lifecycle {
     ignore_changes = ["engine_version"]
