@@ -59,7 +59,7 @@ docker-e2e-start:
 
 .PHONY: docker-a11y-build
 docker-a11y-build:
-	docker compose -f docker-compose.yml -f docker-compose.a11y.yml -p a11y --profile a11y build
+	docker compose -f docker-compose.yml -f docker-compose.a11y.yml -p a11y --profile a11y build  --parallel
 
 .PHONY: docker-a11y-run
 docker-a11y-run:
