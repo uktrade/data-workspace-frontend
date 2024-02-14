@@ -86,6 +86,8 @@ Once the containers have started, you can use either `npm run cypress:run` to ru
 If you have manually added some test data and would like to include that data inside an E2E test, this command will write export all models defined in the `e2e-export-models` variable in the `Makefile` file: 
 `make create-e2e-fixtures`
 
+If a new app model needs to be added to the fixtures file, this should be added to the `e2e-export-models` variable in the `Makefile` file
+
 ### Reloading E2E fixture data
 If you need to reset your local E2E environment data, you can run this command to remove all current data and reseed it with the E2E fixtures
 `make reload-e2e-fixtures`
