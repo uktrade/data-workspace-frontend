@@ -48,35 +48,35 @@ docker-test: docker-test-integration docker-test-unit
 
 .PHONY: docker-e2e-build
 docker-e2e-build:
-	$(docker-e2e)build
+	$(docker-e2e) build --parallel
 
 .PHONY: docker-e2e-run
 docker-e2e-run:
-	$(docker-e2e) up --exit-code-from data-workspace-e2e-test
+	$(docker-e2e) up --renew-anon-volumes --exit-code-from data-workspace-e2e-test
 
 .PHONY: docker-e2e-build-run
 docker-e2e-build-run:
-	$(docker-e2e) up --build --force-recreate --exit-code-from data-workspace-e2e-test
+	$(docker-e2e) up --build --force-recreate --renew-anon-volumes --exit-code-from data-workspace-e2e-test
 
 .PHONY: docker-e2e-start
 docker-e2e-start:
-	$(docker-e2e) up --build --force-recreate -d
+	$(docker-e2e) up --build --renew-anon-volumes --force-recreate -d
 
 .PHONY: docker-a11y-build
 docker-a11y-build:
-	$(docker-a11y) build
+	$(docker-a11y) build --parallel
 
 .PHONY: docker-a11y-run
 docker-a11y-run:
-	$(docker-a11y) up --exit-code-from data-workspace-e2e-test
+	$(docker-a11y) up --renew-anon-volumes --exit-code-from data-workspace-e2e-test
 
 .PHONY: docker-a11y-build-run
 docker-a11y-build-run:
-	$(docker-a11y) up --build --force-recreate --exit-code-from data-workspace-e2e-test
+	$(docker-a11y) up --build --force-recreate --renew-anon-volumes --exit-code-from data-workspace-e2e-test
 
 .PHONY: docker-a11y-start
 docker-a11y-start:
-	$(docker-a11y) up --build --force-recreate -d
+	$(docker-a11y) up --build --renew-anon-volumes --force-recreate -d
 
 .PHONY: docker-clean
 docker-clean:
