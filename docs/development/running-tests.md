@@ -82,9 +82,10 @@ Before running the tests, to get the E2E data workspace app run the make command
 
 Once the containers have started, you can use either `npm run cypress:run` to run the tests in headless mode, or `npm run cypress:open` to use the Cypress test runner app.
 
-### Exporting data for fixtures
-If you have manually added some test data and would like to include that data inside an E2E test, this command will write that to a json file for you:
-`python3 dataworkspace/manage.py dumpdata --indent=4 MODEL_NAME > dataworkspace/dataworkspace/apps/OUTPUT_FILE.json`
+### Exporting E2E data for a fixture
+If you have manually added some test data and would like to include that data inside an E2E test, this command will write export all models defined in the `e2e-export-models` variable in the `Makefile` file: 
+`make create-e2e-fixtures`
 
-For example:
-`python3 dataworkspace/manage.py dumpdata --indent=4 datasets.DataSetUserPermission > dataworkspace/dataworkspace/apps/datasets/fixtures/datasets_datasetuserpermissions.json`
+### Reloading E2E fixture data
+If you need to reset your local E2E environment data, you can run this command to remove all current data and reseed it with the E2E fixtures
+`make reload-e2e-fixtures`
