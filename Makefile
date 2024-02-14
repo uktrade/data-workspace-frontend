@@ -7,6 +7,11 @@ COLOUR_NONE=\033[0m
 COLOUR_GREEN=\033[1;36m
 COLOUR_YELLOW=\033[33;01m
 
+docker-e2e = docker compose -f docker-compose.yml -f docker-compose.e2e.yml -p e2e --profile e2e
+docker-a11y = docker compose -f docker-compose.yml -f docker-compose.a11y.yml -p a11y --profile a11y
+
+e2e-export-models = auth.User core.Database accounts.Profile datasets.SensitivityType datasets.Dataset datasets.SourceLink datasets.SourceTable datasets.DatasetUserPermission datasets.SourceTableFieldDefinition datasets.SourceView datasets.DatasetBookmark data_collections.Collection eventlog.EventLog
+
 .PHONY: help test
 help:
 	@echo -e "$(COLOUR_GREEN)|--- $(APPLICATION_NAME) [$(APPLICATION_VERSION)] ---|$(COLOUR_NONE)"
@@ -43,35 +48,35 @@ docker-test: docker-test-integration docker-test-unit
 
 .PHONY: docker-e2e-build
 docker-e2e-build:
-	docker compose -f docker-compose.yml -f docker-compose.e2e.yml -p e2e --profile e2e build --parallel
+	$(docker-e2e) build --parallel
 
 .PHONY: docker-e2e-run
 docker-e2e-run:
-	docker compose -f docker-compose.yml -f docker-compose.e2e.yml -p e2e --profile e2e up --renew-anon-volumes --exit-code-from data-workspace-e2e-test
+	$(docker-e2e) up --renew-anon-volumes --exit-code-from data-workspace-e2e-test
 
 .PHONY: docker-e2e-build-run
 docker-e2e-build-run:
-	docker compose -f docker-compose.yml -f docker-compose.e2e.yml -p e2e --profile e2e up --build --force-recreate --renew-anon-volumes --exit-code-from data-workspace-e2e-test
+	$(docker-e2e) up --build --force-recreate --renew-anon-volumes --exit-code-from data-workspace-e2e-test
 
 .PHONY: docker-e2e-start
 docker-e2e-start:
-	docker compose -f docker-compose.yml -f docker-compose.e2e.yml -p e2e --profile e2e up --build --force-recreate --renew-anon-volumes -d
+	$(docker-e2e) up --build --renew-anon-volumes --force-recreate -d
 
 .PHONY: docker-a11y-build
 docker-a11y-build:
-	docker compose -f docker-compose.yml -f docker-compose.a11y.yml -p a11y --profile a11y build  --parallel
+	$(docker-a11y) build --parallel
 
 .PHONY: docker-a11y-run
 docker-a11y-run:
-	docker compose -f docker-compose.yml -f docker-compose.a11y.yml -p a11y --profile a11y up --exit-code-from data-workspace-e2e-test
+	$(docker-a11y) up --renew-anon-volumes --exit-code-from data-workspace-e2e-test
 
 .PHONY: docker-a11y-build-run
 docker-a11y-build-run:
-	docker compose -f docker-compose.yml -f docker-compose.a11y.yml -p a11y --profile a11y up --build --force-recreate --exit-code-from data-workspace-e2e-test
+	$(docker-a11y) up --build --force-recreate --renew-anon-volumes --exit-code-from data-workspace-e2e-test
 
 .PHONY: docker-a11y-start
 docker-a11y-start:
-	docker compose -f docker-compose.yml -f docker-compose.a11y.yml -p a11y --profile a11y up --build --force-recreate -d
+	$(docker-a11y) up --build --renew-anon-volumes --force-recreate -d
 
 .PHONY: docker-clean
 docker-clean:
@@ -173,3 +178,15 @@ docker-test-sequential:
 	docker compose --profile test -p data-workspace-test up -d
 	docker compose --profile test -p data-workspace-test run --rm data-workspace-test pytest /test/selenium/test_request_data.py -x -v
 	docker compose --profile test -p data-workspace-test stop
+
+.PHONY: create-e2e-fixtures
+create-e2e-fixtures:
+	$(MAKE) docker-e2e-start
+	$(docker-e2e) run --rm data-workspace dockerize -wait tcp://data-workspace:8000 -timeout 3m -wait-retry-interval 5s
+	$(docker-e2e) run --rm data-workspace python3 dataworkspace/manage.py dumpdata $(e2e-export-models) --indent=4 --output dataworkspace/e2e_fixtures.json
+
+.PHONY: reload-e2e-fixtures
+reload-e2e-fixtures:
+	$(MAKE) docker-e2e-start
+	$(docker-e2e) run --rm data-workspace dockerize -wait tcp://data-workspace:8000 -timeout 3m -wait-retry-interval 5s
+	$(docker-e2e) run --rm data-workspace dataworkspace/reload-e2e-data.sh
