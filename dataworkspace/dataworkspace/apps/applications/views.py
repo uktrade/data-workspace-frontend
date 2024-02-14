@@ -328,7 +328,7 @@ def visualisation_link_html_view(request, link_id):
 
     if not visualisation_link.visualisation_catalogue_item.user_has_access(request.user):
         return redirect(
-            "request_access:dataset",
+            "datasets:dataset_detail",
             dataset_uuid=visualisation_link.visualisation_catalogue_item_id,
         )
 
