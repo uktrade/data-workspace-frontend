@@ -1716,7 +1716,7 @@ resource "aws_security_group" "mlflow_service" {
 }
 
 resource "aws_security_group_rule" "mlflow_service_ingress_http_mlflow_lb" {
-  count  = "${length(var.mlflow_instances)}"
+  count  = var.mlflow_on ? length(var.mlflow_instances) : 0
   description = "ingress-mlflow-lb"
 
   security_group_id = "${aws_security_group.mlflow_service[count.index].id}"
@@ -1729,7 +1729,7 @@ resource "aws_security_group_rule" "mlflow_service_ingress_http_mlflow_lb" {
 }
 
 resource "aws_security_group_rule" "mlflow_service_ingress_http_mlflow_dataflow_lb" {
-  count  = "${length(var.mlflow_instances)}"
+  count  = var.mlflow_on ? length(var.mlflow_instances) : 0
   description = "ingress-mlflow-dataflow-lb"
 
   security_group_id = "${aws_security_group.mlflow_service[count.index].id}"
