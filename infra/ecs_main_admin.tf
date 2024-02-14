@@ -106,7 +106,7 @@ resource "aws_ecs_service" "admin" {
   name                       = "${var.prefix}-admin"
   cluster                    = "${aws_ecs_cluster.main_cluster.id}"
   task_definition            = "${aws_ecs_task_definition.admin.arn}"
-  desired_count              = 2
+  desired_count              = var.admin_instances
   launch_type                = "FARGATE"
   platform_version           = "1.4.0"
   deployment_maximum_percent = 600
