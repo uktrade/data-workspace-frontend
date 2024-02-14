@@ -147,7 +147,7 @@ resource "aws_route53_record" "superset_internal" {
 }
 
 resource "aws_route53_record" "mlflow_internal" {
-  count  = "${length(var.mlflow_instances)}"
+  count  = var.mlflow_on ? length(var.mlflow_instances) : 0
   provider = "aws.route53"
   zone_id = "${data.aws_route53_zone.aws_route53_zone.zone_id}"
   name    = "mlflow--${var.mlflow_instances_long[count.index]}--internal.${var.admin_domain}"
@@ -161,7 +161,7 @@ resource "aws_route53_record" "mlflow_internal" {
 }
 
 resource "aws_route53_record" "mlflow_data_flow" {
-  count  = "${length(var.mlflow_instances)}"
+  count  = var.mlflow_on ? length(var.mlflow_instances) : 0
   provider = "aws.route53"
   zone_id = "${data.aws_route53_zone.aws_route53_zone.zone_id}"
   name    = "mlflow--${var.mlflow_instances_long[count.index]}--data-flow.${var.admin_domain}"
