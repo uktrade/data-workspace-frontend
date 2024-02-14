@@ -5,6 +5,8 @@ services:
     build:
       target: e2e
     env_file: .envs/test-e2e.env
+    volumes:
+      - /dataworkspace/dataworkspace/static/js
 
   data-workspace-celery:
     env_file: .envs/test-e2e.env

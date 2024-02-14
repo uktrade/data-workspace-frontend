@@ -1,3 +1,9 @@
+FROM node:16-alpine AS builder
+WORKDIR /app
+COPY dataworkspace/dataworkspace/static/js .
+RUN npm ci --include=dev
+RUN npm run build
+
 FROM debian:bullseye-20220509-slim AS base
 
 ENV \
@@ -38,10 +44,21 @@ RUN apt-get update && \
     chown -R django /var/log/nginx
 
 COPY requirements.txt requirements.txt
+COPY etc /etc
+COPY dataworkspace /dataworkspace
+
 RUN python3 -m pip install --upgrade pip wheel pip-tools && \
     python3 -m pip install -r requirements.txt
 
+# Leave this statement at the end, as it is dependant on the builder layer completing. Having this
+# COPY statement will block this layer building, so placing at the end will let the installs above finish
+COPY --from=builder ./app/bundles ./dataworkspace/dataworkspace/static/js/bundles
+COPY --from=builder ./app/stats ./dataworkspace/dataworkspace/static/js/stats
+
 FROM base AS test
+
+COPY requirements-dev.txt requirements-dev.txt
+COPY setup.cfg setup.cfg
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -56,14 +73,8 @@ RUN apt-get update && \
     rm -rf /tmp/* && \
     rm -rf /var/lib/apt/lists/*
 
-COPY requirements-dev.txt requirements-dev.txt
-COPY setup.cfg setup.cfg
 RUN pip3 install -r requirements-dev.txt
 
-COPY dataworkspace /dataworkspace
-RUN cd dataworkspace
-
-COPY etc /etc
 RUN \
     mkdir /test-results && \
     chown -R django:django /test-results
@@ -92,12 +103,6 @@ FROM dev AS e2e
 CMD ["/dataworkspace/start-e2e.sh"]
 
 FROM base AS live
-
-COPY dataworkspace /dataworkspace
-
-RUN cd dataworkspace
-
-COPY etc /etc
 
 CMD ["/dataworkspace/start.sh"]
 

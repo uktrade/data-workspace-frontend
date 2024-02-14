@@ -4,6 +4,9 @@ node_modules
 env
 venv
 db-data-dev
+__pycache__
+dataworkspace/dataworkspace/static/js/bundles
+dataworkspace/dataworkspace/static/js/stats
 
 #Cypress
 screenshots
