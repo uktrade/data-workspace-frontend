@@ -12,18 +12,7 @@ set -e
     django-admin migrate    
 
     django-admin loaddata --ignorenonexistent --verbosity=2 \
-      users \
-      profiles \
-      database \
-      datasets \
-      datasets_sourcelink \
-      datasets_sourcetable \
-      datasets_datasetuserpermissions \
-      datasets_sourcetablefielddefinition \
-      datasets_sourceview \
-      datasets_bookmark \
-      data_collections \
-      eventlog
+      e2e_fixtures.json
 
     django-admin ensure_databases_configured
     django-admin ensure_application_template_models
