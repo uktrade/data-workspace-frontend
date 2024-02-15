@@ -679,12 +679,10 @@ def get_quicksight_dashboard_name_url(dashboard_id, user):
         aws_access_key_id=role_credentials["AccessKeyId"],
         aws_secret_access_key=role_credentials["SecretAccessKey"],
         aws_session_token=role_credentials["SessionToken"],
-    )
-    
-    print('****get_available_services', session.get_available_services())
+    )   
 
     # QuickSight manages users in a separate region to our data/dashboards.
-    qs_user_client = session.client("quicksight", region_name=user_region, endpoint_url=settings.STS_LOCAL_ENDPOINT_URL)
+    qs_user_client = session.client("quicksight", region_name=user_region)
     qs_dashboard_client = session.client("quicksight")
 
     try:
