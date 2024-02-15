@@ -679,7 +679,7 @@ def get_quicksight_dashboard_name_url(dashboard_id, user):
         aws_access_key_id=role_credentials["AccessKeyId"],
         aws_secret_access_key=role_credentials["SecretAccessKey"],
         aws_session_token=role_credentials["SessionToken"],
-    )   
+    )
 
     # QuickSight manages users in a separate region to our data/dashboards.
     qs_user_client = session.client("quicksight", region_name=user_region)
