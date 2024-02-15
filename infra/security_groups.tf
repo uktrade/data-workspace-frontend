@@ -201,6 +201,7 @@ resource "aws_security_group" "admin_service" {
 }
 
 resource "aws_security_group_rule" "admin_service_egress_http_to_superset_lb" {
+  count       = var.gitlab_on ? 1 : 0
   description = "egress-http-to-gitlab-service"
 
   security_group_id = "${aws_security_group.admin_service.id}"
@@ -237,10 +238,11 @@ resource "aws_security_group_rule" "admin_service_egress_http_to_mlflow" {
 }
 
 resource "aws_security_group_rule" "admin_service_egress_http_to_gitlab_service" {
+  count       = var.gitlab_on ? 1 : 0
   description = "egress-http-to-gitlab-service"
 
   security_group_id = "${aws_security_group.admin_service.id}"
-  source_security_group_id = "${aws_security_group.gitlab_service.id}"
+  source_security_group_id = "${aws_security_group.gitlab_service[count.index].id}"
 
   type        = "egress"
   from_port   = "80"
@@ -249,9 +251,10 @@ resource "aws_security_group_rule" "admin_service_egress_http_to_gitlab_service"
 }
 
 resource "aws_security_group_rule" "gitlab_service_egress_https_to_ecr_api" {
+  count       = var.gitlab_on ? 1 : 0
   description = "egress-https-to-ecr-api"
 
-  security_group_id = "${aws_security_group.gitlab_service.id}"
+  security_group_id = "${aws_security_group.gitlab_service[count.index].id}"
   source_security_group_id = "${aws_security_group.ecr_api.id}"
 
   type        = "egress"
@@ -470,10 +473,11 @@ resource "aws_security_group_rule" "notebooks_egress_http_to_everywhere" {
 }
 
 resource "aws_security_group_rule" "notebooks_egress_ssh_to_gitlab_service" {
+  count       = var.gitlab_on ? 1 : 0
   description = "ingress-ssh-from-nlb"
 
   security_group_id = "${aws_security_group.notebooks.id}"
-  source_security_group_id = "${aws_security_group.gitlab_service.id}"
+  source_security_group_id = "${aws_security_group.gitlab_service[count.index].id}"
 
   type        = "egress"
   from_port   = "22"
@@ -597,10 +601,11 @@ resource "aws_security_group_rule" "ecr_api_ingress_https_from_admin-service" {
 }
 
 resource "aws_security_group_rule" "ecr_api_ingress_https_from_gitlab_ec2" {
+  count       = var.gitlab_on ? 1 : 0
   description = "ingress-https-from-gitlab-ec2"
 
   security_group_id = "${aws_security_group.ecr_api.id}"
-  source_security_group_id = "${aws_security_group.gitlab-ec2.id}"
+  source_security_group_id = "${aws_security_group.gitlab-ec2[count.index].id}"
 
   type        = "ingress"
   from_port   = "443"
@@ -609,10 +614,11 @@ resource "aws_security_group_rule" "ecr_api_ingress_https_from_gitlab_ec2" {
 }
 
 resource "aws_security_group_rule" "ecr_api_ingress_https_from_gitlab_runner" {
+  count       = var.gitlab_on ? 1 : 0
   description = "ingress-https-from-gitlab-runner"
 
   security_group_id = "${aws_security_group.ecr_api.id}"
-  source_security_group_id = "${aws_security_group.gitlab_runner.id}"
+  source_security_group_id = "${aws_security_group.gitlab_runner[count.index].id}"
 
   type        = "ingress"
   from_port   = "443"
@@ -919,6 +925,7 @@ resource "aws_security_group_rule" "prometheus_service_egress_http_to_notebooks"
 }
 
 resource "aws_security_group" "gitlab_service" {
+  count       = var.gitlab_on ? 1 : 0
   name        = "${var.prefix}-gitlab-service"
   description = "${var.prefix}-gitlab-service"
   vpc_id      = "${aws_vpc.main.id}"
@@ -933,10 +940,11 @@ resource "aws_security_group" "gitlab_service" {
 }
 
 resource "aws_security_group_rule" "gitlab_service_ingress_http_from_nlb" {
+  count       = var.gitlab_on ? 1 : 0
   description = "ingress-https-from-nlb"
 
-  security_group_id = "${aws_security_group.gitlab_service.id}"
-  cidr_blocks = ["${aws_eip.gitlab.private_ip}/32"]
+  security_group_id = "${aws_security_group.gitlab_service[count.index].id}"
+  cidr_blocks = ["${aws_eip.gitlab[count.index].private_ip}/32"]
 
   type        = "ingress"
   from_port   = "80"
@@ -945,9 +953,10 @@ resource "aws_security_group_rule" "gitlab_service_ingress_http_from_nlb" {
 }
 
 resource "aws_security_group_rule" "gitlab_service_ingress_http_from_whitelist" {
+  count       = var.gitlab_on ? 1 : 0
   description = "ingress-http-from-whitelist"
 
-  security_group_id = "${aws_security_group.gitlab_service.id}"
+  security_group_id = "${aws_security_group.gitlab_service[count.index].id}"
   cidr_blocks = "${var.gitlab_ip_whitelist}"
 
   type        = "ingress"
@@ -957,9 +966,10 @@ resource "aws_security_group_rule" "gitlab_service_ingress_http_from_whitelist" 
 }
 
 resource "aws_security_group_rule" "gitlab_service_ingress_http_from_admin_service" {
+  count       = var.gitlab_on ? 1 : 0
   description = "ingress-http-from-admin-service"
 
-  security_group_id = "${aws_security_group.gitlab_service.id}"
+  security_group_id = "${aws_security_group.gitlab_service[count.index].id}"
   source_security_group_id =  "${aws_security_group.admin_service.id}"
 
   type        = "ingress"
@@ -969,10 +979,11 @@ resource "aws_security_group_rule" "gitlab_service_ingress_http_from_admin_servi
 }
 
 resource "aws_security_group_rule" "gitlab_service_ingress_https_from_gitlab_runner" {
+  count       = var.gitlab_on ? 1 : 0
   description = "ingress-https-from-gitlab-runner"
 
-  security_group_id = "${aws_security_group.gitlab_service.id}"
-  source_security_group_id =  "${aws_security_group.gitlab_runner.id}"
+  security_group_id = "${aws_security_group.gitlab_service[count.index].id}"
+  source_security_group_id =  "${aws_security_group.gitlab_runner[count.index].id}"
 
   type        = "ingress"
   from_port   = "80"
@@ -981,10 +992,11 @@ resource "aws_security_group_rule" "gitlab_service_ingress_https_from_gitlab_run
 }
 
 resource "aws_security_group_rule" "gitlab_service_ingress_ssh_from_nlb" {
+  count       = var.gitlab_on ? 1 : 0
   description = "ingress-ssh-from-nlb"
 
-  security_group_id = "${aws_security_group.gitlab_service.id}"
-  cidr_blocks = ["${aws_eip.gitlab.private_ip}/32"]
+  security_group_id = "${aws_security_group.gitlab_service[count.index].id}"
+  cidr_blocks = ["${aws_eip.gitlab[count.index].private_ip}/32"]
 
   type        = "ingress"
   from_port   = "22"
@@ -993,9 +1005,10 @@ resource "aws_security_group_rule" "gitlab_service_ingress_ssh_from_nlb" {
 }
 
 resource "aws_security_group_rule" "gitlab_service_ingress_ssh_from_whitelist" {
+  count       = var.gitlab_on ? 1 : 0
   description = "ingress-http-from-whitelist"
 
-  security_group_id = "${aws_security_group.gitlab_service.id}"
+  security_group_id = "${aws_security_group.gitlab_service[count.index].id}"
   cidr_blocks = "${var.gitlab_ip_whitelist}"
 
   type        = "ingress"
@@ -1005,9 +1018,10 @@ resource "aws_security_group_rule" "gitlab_service_ingress_ssh_from_whitelist" {
 }
 
 resource "aws_security_group_rule" "gitlab_service_ingress_ssh_from_notebooks" {
+  count       = var.gitlab_on ? 1 : 0
   description = "ingress-ssh-from-nlb"
 
-  security_group_id = "${aws_security_group.gitlab_service.id}"
+  security_group_id = "${aws_security_group.gitlab_service[count.index].id}"
   source_security_group_id = "${aws_security_group.notebooks.id}"
 
   type        = "ingress"
@@ -1017,9 +1031,10 @@ resource "aws_security_group_rule" "gitlab_service_ingress_ssh_from_notebooks" {
 }
 
 resource "aws_security_group_rule" "gitlab_service_egress_https_to_everwhere" {
+  count       = var.gitlab_on ? 1 : 0
   description = "egress-https-to-everywhere"
 
-  security_group_id = "${aws_security_group.gitlab_service.id}"
+  security_group_id = "${aws_security_group.gitlab_service[count.index].id}"
   cidr_blocks       = ["0.0.0.0/0"]
 
   type        = "egress"
@@ -1029,22 +1044,24 @@ resource "aws_security_group_rule" "gitlab_service_egress_https_to_everwhere" {
 }
 
 resource "aws_security_group_rule" "gitlab_service_egress_postgres_to_gitlab_db" {
+  count       = var.gitlab_on ? 1 : 0
   description = "egress-postgres-to-gitlab-db"
 
-  security_group_id       = "${aws_security_group.gitlab_service.id}"
-  source_security_group_id = "${aws_security_group.gitlab_db.id}"
+  security_group_id       = "${aws_security_group.gitlab_service[count.index].id}"
+  source_security_group_id = "${aws_security_group.gitlab_db[count.index].id}"
 
   type        = "egress"
-  from_port   = "${aws_rds_cluster.gitlab.port}"
-  to_port     = "${aws_rds_cluster.gitlab.port}"
+  from_port   = "${aws_rds_cluster.gitlab[count.index].port}"
+  to_port     = "${aws_rds_cluster.gitlab[count.index].port}"
   protocol    = "tcp"
 }
 
 resource "aws_security_group_rule" "gitlab_service_egress_redis" {
+  count       = var.gitlab_on ? 1 : 0
   description = "egress-redis"
 
-  security_group_id        = "${aws_security_group.gitlab_service.id}"
-  source_security_group_id = "${aws_security_group.gitlab_redis.id}"
+  security_group_id        = "${aws_security_group.gitlab_service[count.index].id}"
+  source_security_group_id = "${aws_security_group.gitlab_redis[count.index].id}"
 
   type        = "egress"
   from_port   = "6379"
@@ -1053,6 +1070,7 @@ resource "aws_security_group_rule" "gitlab_service_egress_redis" {
 }
 
 resource "aws_security_group" "gitlab_redis" {
+  count       = var.gitlab_on ? 1 : 0
   name        = "${var.prefix}-gitlab-redis"
   description = "${var.prefix}-gitlab-redis"
   vpc_id      = "${aws_vpc.main.id}"
@@ -1067,10 +1085,11 @@ resource "aws_security_group" "gitlab_redis" {
 }
 
 resource "aws_security_group_rule" "admin_gitlab_ingress_from_gitlab_service" {
+  count       = var.gitlab_on ? 1 : 0
   description = "ingress-gitlab-from-admin-service"
 
-  security_group_id = "${aws_security_group.gitlab_redis.id}"
-  source_security_group_id = "${aws_security_group.gitlab_service.id}"
+  security_group_id = "${aws_security_group.gitlab_redis[count.index].id}"
+  source_security_group_id = "${aws_security_group.gitlab_service[count.index].id}"
 
   type        = "ingress"
   from_port   = "6379"
@@ -1079,6 +1098,7 @@ resource "aws_security_group_rule" "admin_gitlab_ingress_from_gitlab_service" {
 }
 
 resource "aws_security_group" "gitlab_db" {
+  count       = var.gitlab_on ? 1 : 0
   name        = "${var.prefix}-gitlab-db"
   description = "${var.prefix}-gitlab-db"
   vpc_id      = "${aws_vpc.main.id}"
@@ -1093,18 +1113,20 @@ resource "aws_security_group" "gitlab_db" {
 }
 
 resource "aws_security_group_rule" "gitlab_db_ingress_from_gitlab_service" {
+  count       = var.gitlab_on ? 1 : 0
   description = "egress-postgres-to-gitlab-db"
 
-  security_group_id        = "${aws_security_group.gitlab_db.id}"
-  source_security_group_id = "${aws_security_group.gitlab_service.id}"
+  security_group_id        = "${aws_security_group.gitlab_db[count.index].id}"
+  source_security_group_id = "${aws_security_group.gitlab_service[count.index].id}"
 
   type        = "ingress"
-  from_port   = "${aws_rds_cluster.gitlab.port}"
-  to_port     = "${aws_rds_cluster.gitlab.port}"
+  from_port   = "${aws_rds_cluster.gitlab[count.index].port}"
+  to_port     = "${aws_rds_cluster.gitlab[count.index].port}"
   protocol    = "tcp"
 }
 
 resource "aws_security_group" "gitlab-ec2" {
+  count       = var.gitlab_on ? 1 : 0
   name        = "${var.prefix}-gitlab-ec2"
   description = "${var.prefix}-gitlab-ec2"
   vpc_id      = "${aws_vpc.main.id}"
@@ -1119,9 +1141,10 @@ resource "aws_security_group" "gitlab-ec2" {
 }
 
 resource "aws_security_group_rule" "gitlab-ec2-egress-all" {
+  count       = var.gitlab_on ? 1 : 0
   description = "egress-everything-to-everywhere"
 
-  security_group_id = "${aws_security_group.gitlab-ec2.id}"
+  security_group_id = "${aws_security_group.gitlab-ec2[count.index].id}"
   cidr_blocks = ["0.0.0.0/0"]
 
   type        = "egress"
@@ -1131,6 +1154,7 @@ resource "aws_security_group_rule" "gitlab-ec2-egress-all" {
 }
 
 resource "aws_security_group" "gitlab_runner" {
+  count       = var.gitlab_on ? 1 : 0
   name        = "${var.prefix}-gitlab-runner"
   description = "${var.prefix}-gitlab-runner"
   vpc_id      = "${aws_vpc.notebooks.id}"
@@ -1145,9 +1169,10 @@ resource "aws_security_group" "gitlab_runner" {
 }
 
 resource "aws_security_group_rule" "gitlab_runner_egress_https_to_ecr_api" {
+  count       = var.gitlab_on ? 1 : 0
   description = "egress-https-to-ecr-api"
 
-  security_group_id = "${aws_security_group.gitlab_runner.id}"
+  security_group_id = "${aws_security_group.gitlab_runner[count.index].id}"
   source_security_group_id = "${aws_security_group.ecr_api.id}"
 
   type        = "egress"
@@ -1157,9 +1182,10 @@ resource "aws_security_group_rule" "gitlab_runner_egress_https_to_ecr_api" {
 }
 
 resource "aws_security_group_rule" "gitlab_runner_egress_dns_udp_dns_rewrite_proxy" {
+  count       = var.gitlab_on ? 1 : 0
   description = "egress-dns-udp-dns-rewrite-proxy"
 
-  security_group_id = "${aws_security_group.gitlab_runner.id}"
+  security_group_id = "${aws_security_group.gitlab_runner[count.index].id}"
   cidr_blocks = ["${aws_subnet.private_with_egress.*.cidr_block[0]}"]
 
   type        = "egress"
@@ -1170,9 +1196,10 @@ resource "aws_security_group_rule" "gitlab_runner_egress_dns_udp_dns_rewrite_pro
 
 # Connections to AWS package repos and GitLab
 resource "aws_security_group_rule" "gitlab_runner_egress_http" {
+  count       = var.gitlab_on ? 1 : 0
   description = "egress-https"
 
-  security_group_id = "${aws_security_group.gitlab_runner.id}"
+  security_group_id = "${aws_security_group.gitlab_runner[count.index].id}"
   cidr_blocks = ["0.0.0.0/0"]
 
   type        = "egress"
@@ -1183,9 +1210,10 @@ resource "aws_security_group_rule" "gitlab_runner_egress_http" {
 
 # Connections to ECR and CloudWatch
 resource "aws_security_group_rule" "gitlab_runner_egress_https" {
+  count       = var.gitlab_on ? 1 : 0
   description = "egress-https"
 
-  security_group_id = "${aws_security_group.gitlab_runner.id}"
+  security_group_id = "${aws_security_group.gitlab_runner[count.index].id}"
   cidr_blocks = ["0.0.0.0/0"]
 
   type        = "egress"
