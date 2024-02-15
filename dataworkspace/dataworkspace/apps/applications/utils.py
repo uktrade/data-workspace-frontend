@@ -65,6 +65,7 @@ from dataworkspace.apps.datasets.models import (
 )
 from dataworkspace.cel import celery_app
 from dataworkspace.datasets_db import extract_queried_tables_from_sql_query
+from dataworkspace.apps.core.boto3_client import get_sts_client
 
 logger = logging.getLogger("app")
 
@@ -667,7 +668,7 @@ def get_quicksight_dashboard_name_url(dashboard_id, user):
     embed_role_name = embed_role_arn.rsplit("/", 1)[1]
     sso_id = str(user.profile.sso_id)
 
-    sts = boto3.client("sts")
+    sts = get_sts_client()
     account_id = sts.get_caller_identity().get("Account")
 
     role_credentials = sts.assume_role(RoleArn=embed_role_arn, RoleSessionName=sso_id)[

@@ -2222,6 +2222,27 @@ class TestVisualisationLinkView:
         )
         assert response.status_code == 404
 
+    @pytest.mark.django_db
+    def test_access_denied_redirect(self):
+        user = UserFactory.create()
+        vis = VisualisationCatalogueItemFactory.create(
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
+        )
+        link = VisualisationLinkFactory.create(
+            visualisation_type="QUICKSIGHT",
+            identifier=str(uuid4()),
+            visualisation_catalogue_item=vis,
+        )
+
+        with mock.patch("dataworkspace.apps.applications.views.get_quicksight_dashboard_name_url"):
+            client = Client(**get_http_sso_data(user))
+            response = client.get(link.get_absolute_url())
+
+            assert response.status_code == 302
+            assert response.headers["Location"] == reverse(
+                "datasets:dataset_detail", args=(link.visualisation_catalogue_item_id,)
+            )
+
 
 def test_find_datasets_search_by_source_name(client):
     source = factories.SourceTagFactory(name="source1")
