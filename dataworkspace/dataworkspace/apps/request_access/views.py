@@ -38,6 +38,8 @@ class DatasetAccessRequest(CreateView):
         context = super().get_context_data(**kwargs)
         context["catalogue_item"] = catalogue_item
         context["is_visualisation"] = isinstance(catalogue_item, VisualisationCatalogueItem)
+        context["is_data_cut"] = catalogue_item.type == DataSetType.DATACUT
+        context["is_source_set"] = catalogue_item.type == DataSetType.MASTER
         context["user_has_tools_access"] = user_has_tools_access
         context["eligibility_criteria_not_met"] = (
             resolve(self.request.path_info).url_name == "eligibility_criteria_not_met"
@@ -92,6 +94,7 @@ class DatasetAccessRequest(CreateView):
         if user_has_tools_access or catalogue_item.type in [
             DataSetType.VISUALISATION,
             DataSetType.DATACUT,
+            DataSetType.MASTER,
         ]:
             return HttpResponseRedirect(
                 reverse("request-access:summary-page", kwargs={"pk": access_request.pk})
