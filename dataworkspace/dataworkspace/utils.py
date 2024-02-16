@@ -185,7 +185,7 @@ TYPE_CODES_REVERSED = {
     1183: "time[]",
     1184: "timestamp with time zone",
     1185: "timestamp with time zone[]",
-    1186: "timestamp with time zone",
+    1186: "interval",
     1187: "interval[]",
     1231: "decimal[]",
     1266: "time",
