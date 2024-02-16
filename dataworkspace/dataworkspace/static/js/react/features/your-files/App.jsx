@@ -1,47 +1,23 @@
 import React from 'react';
-import './App.scss';
 
-import { Header } from './Header';
-import { FileList } from './FileList';
-import { BigDataMessage } from './BigDataMessage';
+import AddFolderPopup from './components/AddFolderModal';
+import BigDataMessage from './components/BigDataMessage';
+import DeleteObjectsPopup from './components/DeleteObjectsModal';
+import ErrorModal from './components/ErrorModal';
+import FileList from './components/FileList';
+import Header from './components/Header';
+import TeamsPrefixMessage from './components/TeamsPrefixMessage';
+import UploadFilesPopup from './components/UploadFilesModal';
 import { getBreadcrumbs, getFolderName } from './utils';
-import { AddFolderPopup, UploadFilesPopup } from './popups';
-import { DeleteObjectsPopup } from './popups/DeleteObjects';
-import { ErrorModal } from './popups/ErrorModal';
-import { TeamsPrefixMessage } from './TeamsPrefixMessage';
+import Credentials from './utils/Credentials';
+
+import './App.scss';
 
 const popupTypes = {
   ADD_FOLDER: 'addFolder',
   UPLOAD_FILES: 'uploadFiles',
-  DELETE_OBJECTS: 'deleteObjects'
+  DELETE_OBJECTS: 'deleteObjects',
 };
-
-class Credentials extends AWS.Credentials {
-  constructor(credentialsUrl) {
-    super();
-    this.expiration = 0;
-    this.credentialsUrl = credentialsUrl;
-  }
-
-  async refresh(callback) {
-    try {
-      const response = await (await fetch(this.credentialsUrl)).json();
-      this.accessKeyId = response.AccessKeyId;
-      this.secretAccessKey = response.SecretAccessKey;
-      this.sessionToken = response.SessionToken;
-      this.expiration = Date.parse(response.Expiration);
-    } catch (err) {
-      callback(err);
-      return;
-    }
-
-    callback();
-  }
-
-  needsRefresh() {
-    return this.expiration - 60 < Date.now();
-  }
-}
 
 export default class App extends React.Component {
   constructor(props) {
@@ -60,6 +36,7 @@ export default class App extends React.Component {
         timeout: 10 * 60 * 60 * 1000
       }
     };
+    console.log('AWS Config', awsConfig);
     console.log('AWS Config', awsConfig);
     this.s3 = new AWS.S3(awsConfig);
 

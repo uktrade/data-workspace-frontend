@@ -1,7 +1,7 @@
 import React from "react";
 import "./FileList.css";
 
-import { prefixToFolder, bytesToSize, fullPathToFilename } from "./utils";
+import { prefixToFolder, bytesToSize, fullPathToFilename } from "../../utils";
 
 function TableHeader(props) {
   return (

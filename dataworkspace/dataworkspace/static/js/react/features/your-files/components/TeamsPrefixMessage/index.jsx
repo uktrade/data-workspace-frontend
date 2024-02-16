@@ -1,5 +1,5 @@
 import React from "react";
-export function TeamsPrefixMessage({ team, bucketName }) {
+export default function TeamsPrefixMessage({ team, bucketName }) {
   const relativePath = team.prefix.replace(/^teams/, '');
   return (
     <div className="govuk-inset-text">

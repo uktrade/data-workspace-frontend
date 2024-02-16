@@ -1,7 +1,7 @@
 import React from "react";
-import { TrashIcon } from "./icons/trash";
-import { UploadIcon } from "./icons/upload";
-import { NewFolderIcon } from "./icons/newfolder";
+import { TrashIcon } from "../../icons/TrashIcon";
+import { UploadIcon } from "../../icons/UploadIcon";
+import { NewFolderIcon } from "../../icons/NewFolderIcon";
 
 export class Header extends React.Component {
   constructor(props) {
