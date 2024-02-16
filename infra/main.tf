@@ -99,6 +99,10 @@ variable metrics_service_discovery_basic_auth_password {}
 
 variable google_analytics_site_id {}
 
+variable gitlab_on {
+  type = bool
+  default = true
+}
 variable gitlab_ip_whitelist {
   type = list
 }

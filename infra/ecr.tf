@@ -103,7 +103,7 @@ resource "aws_vpc_endpoint" "ecr_dkr" {
   security_group_ids = ["${aws_security_group.ecr_dkr.id}"]
   subnet_ids = ["${aws_subnet.private_with_egress.*.id[0]}"]
 
-  policy = "${data.aws_iam_policy_document.aws_vpc_endpoint_ecr.json}"
+  policy = data.aws_iam_policy_document.aws_vpc_endpoint_ecr.json
 
   timeouts {}
 }
@@ -117,7 +117,8 @@ resource "aws_vpc_endpoint" "ecr_api" {
   security_group_ids = ["${aws_security_group.ecr_api.id}"]
   subnet_ids = ["${aws_subnet.private_with_egress.*.id[0]}"]
 
-  policy = "${data.aws_iam_policy_document.aws_vpc_endpoint_ecr.json}"
+  policy = data.aws_iam_policy_document.aws_vpc_endpoint_ecr.json
+
   timeouts {}
 }
 
@@ -274,61 +275,69 @@ data "aws_iam_policy_document" "aws_vpc_endpoint_ecr" {
   }
 
   # For GitLab runner to login and get base images
-  statement {
-    principals {
-      type = "AWS"
-      identifiers = ["${aws_iam_role.gitlab_runner.arn}"]
+  dynamic statement {
+    for_each = var.gitlab_on ? aws_iam_role.gitlab_runner[*].arn : []
+    content {
+      principals {
+        type = "AWS"
+        identifiers = [statement.value]
+      }
+      actions = [
+        "ecr:GetAuthorizationToken",
+      ]
+
+      resources = [
+        "*",
+      ]
     }
-
-    actions = [
-      "ecr:GetAuthorizationToken",
-    ]
-
-    resources = [
-      "*",
-    ]
   }
 
-  statement {
-    principals {
-      type = "AWS"
-      identifiers = ["${aws_iam_role.gitlab_runner.arn}"]
+  dynamic statement {
+    for_each = var.gitlab_on ? aws_iam_role.gitlab_runner[*].arn : []
+    content {
+      principals {
+        type        = "AWS"
+        identifiers = [statement.value]
+      }
+
+      actions = [
+        "ecr:BatchGetImage",
+        "ecr:GetDownloadUrlForLayer",
+      ]
+
+      resources = [
+        "${aws_ecr_repository.visualisation_base.arn}",
+        "${aws_ecr_repository.visualisation_base_r.arn}",
+        "${aws_ecr_repository.visualisation_base_rv4.arn}",
+      ]
     }
-
-    actions = [
-      "ecr:BatchGetImage",
-      "ecr:GetDownloadUrlForLayer",
-    ]
-
-    resources = [
-      "${aws_ecr_repository.visualisation_base.arn}",
-      "${aws_ecr_repository.visualisation_base_r.arn}",
-      "${aws_ecr_repository.visualisation_base_rv4.arn}",
-    ]
   }
 
   # For GitLab runner to login and push user-provided images
-  statement {
-    principals {
-      type = "AWS"
-      identifiers = ["${aws_iam_role.gitlab_runner.arn}"]
-    }
+  dynamic statement {
+    for_each = var.gitlab_on ? aws_iam_role.gitlab_runner[*].arn : []
+    content {
+      principals {
+        type = "AWS"
+        identifiers = [statement.value]
+      }
 
-    actions = [
-      "ecr:BatchCheckLayerAvailability",
-      "ecr:GetDownloadUrlForLayer",
-      "ecr:GetRepositoryPolicy",
-      "ecr:DescribeRepositories",
-      "ecr:ListImages",
-      "ecr:DescribeImages",
-      "ecr:BatchGetImage",
-      "ecr:InitiateLayerUpload",
-      "ecr:UploadLayerPart",
-      "ecr:CompleteLayerUpload",
-      "ecr:PutImage",
-    ]
-    resources = [
-      "${aws_ecr_repository.user_provided.arn}",
-    ]
+      actions = [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:GetRepositoryPolicy",
+        "ecr:DescribeRepositories",
+        "ecr:ListImages",
+        "ecr:DescribeImages",
+        "ecr:BatchGetImage",
+        "ecr:InitiateLayerUpload",
+        "ecr:UploadLayerPart",
+        "ecr:CompleteLayerUpload",
+        "ecr:PutImage",
+      ]
+      resources = [
+        "${aws_ecr_repository.user_provided.arn}",
+      ]
+    }
   }
 }

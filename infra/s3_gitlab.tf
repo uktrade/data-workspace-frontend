@@ -2,6 +2,7 @@
 # since path-style access is being phased out
 
 resource "aws_s3_bucket" "gitlab" {
+  count  = var.gitlab_on ? 1 : 0
   bucket = "${var.gitlab_bucket}"
 
   server_side_encryption_configuration {
@@ -14,11 +15,14 @@ resource "aws_s3_bucket" "gitlab" {
 }
 
 resource "aws_s3_bucket_policy" "gitlab" {
-  bucket = "${aws_s3_bucket.gitlab.id}"
-  policy = "${data.aws_iam_policy_document.gitlab_bucket.json}"
+  count  = var.gitlab_on ? 1 : 0
+  bucket = "${aws_s3_bucket.gitlab[count.index].id}"
+  policy = "${data.aws_iam_policy_document.gitlab_bucket[count.index].json}"
 }
 
 data "aws_iam_policy_document" "gitlab_bucket" {
+  count = var.gitlab_on ? 1 : 0
+
   statement {
     effect = "Deny"
     principals {
@@ -29,7 +33,7 @@ data "aws_iam_policy_document" "gitlab_bucket" {
       "s3:*",
     ]
     resources = [
-      "arn:aws:s3:::${aws_s3_bucket.gitlab.id}/*",
+      "arn:aws:s3:::${aws_s3_bucket.gitlab[count.index].id}/*",
     ]
     condition {
       test = "Bool"
@@ -42,49 +46,56 @@ data "aws_iam_policy_document" "gitlab_bucket" {
 }
 
 resource "aws_s3_bucket_object" "ssh_host_rsa_key" {
-  bucket = "${aws_s3_bucket.gitlab.id}"
+  count  = var.gitlab_on ? 1 : 0
+  bucket = "${aws_s3_bucket.gitlab[count.index].id}"
   key    = "sshd/ssh_host_rsa_key"
   source = "./ssh_host_rsa_key"
   etag   = "${md5(file("./ssh_host_rsa_key"))}"
 }
 
 resource "aws_s3_bucket_object" "ssh_host_rsa_key_pub" {
-  bucket = "${aws_s3_bucket.gitlab.id}"
+  count  = var.gitlab_on ? 1 : 0
+  bucket = "${aws_s3_bucket.gitlab[count.index].id}"
   key    = "sshd/ssh_host_rsa_key.pub"
   source = "./ssh_host_rsa_key.pub"
   etag   = "${md5(file("./ssh_host_rsa_key.pub"))}"
 }
 
 resource "aws_s3_bucket_object" "ssh_host_ecdsa_key" {
-  bucket = "${aws_s3_bucket.gitlab.id}"
+  count  = var.gitlab_on ? 1 : 0
+  bucket = "${aws_s3_bucket.gitlab[count.index].id}"
   key    = "sshd/ssh_host_ecdsa_key"
   source = "./ssh_host_ecdsa_key"
   etag   = "${md5(file("./ssh_host_ecdsa_key"))}"
 }
 
 resource "aws_s3_bucket_object" "ssh_host_ecdsa_key_pub" {
-  bucket = "${aws_s3_bucket.gitlab.id}"
+  count  = var.gitlab_on ? 1 : 0
+  bucket = "${aws_s3_bucket.gitlab[count.index].id}"
   key    = "sshd/ssh_host_ecdsa_key.pub"
   source = "./ssh_host_ecdsa_key.pub"
   etag   = "${md5(file("./ssh_host_ecdsa_key.pub"))}"
 }
 
 resource "aws_s3_bucket_object" "ssh_host_ed25519_key" {
-  bucket = "${aws_s3_bucket.gitlab.id}"
+  count  = var.gitlab_on ? 1 : 0
+  bucket = "${aws_s3_bucket.gitlab[count.index].id}"
   key    = "sshd/ssh_host_ed25519_key"
   source = "./ssh_host_ed25519_key"
   etag   = "${md5(file("./ssh_host_ed25519_key"))}"
 }
 
 resource "aws_s3_bucket_object" "ssh_host_ed25519_key_pub" {
-  bucket = "${aws_s3_bucket.gitlab.id}"
+  count  = var.gitlab_on ? 1 : 0
+  bucket = "${aws_s3_bucket.gitlab[count.index].id}"
   key    = "sshd/ssh_host_ed25519_key.pub"
   source = "./ssh_host_ed25519_key.pub"
   etag   = "${md5(file("./ssh_host_ed25519_key.pub"))}"
 }
 
 resource "aws_s3_bucket_object" "gitlab_secrets_json" {
-  bucket = "${aws_s3_bucket.gitlab.id}"
+  count  = var.gitlab_on ? 1 : 0
+  bucket = "${aws_s3_bucket.gitlab[count.index].id}"
   key    = "secrets/gitlab-secrets.json"
   source = "./gitlab-secrets.json"
   etag   = "${md5(file("./gitlab-secrets.json"))}"
