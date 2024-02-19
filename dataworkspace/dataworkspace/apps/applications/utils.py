@@ -837,10 +837,15 @@ def create_update_delete_quicksight_user_data_sources(
 def sync_quicksight_users(data_client, user_client, account_id, quicksight_user_list):
     for quicksight_user in quicksight_user_list:
         user_arn = quicksight_user["Arn"]
-        user_email = quicksight_user["Email"].lower()
         user_role = quicksight_user["Role"]
         user_username = quicksight_user["UserName"]
         sso_id = quicksight_user["UserName"].split("/")[-1]
+
+        # Update the quicksight user's email address to match data workspace
+        try:
+            user_email = get_user_model().objects.get(username=sso_id).email
+        except get_user_model().DoesNotExist:
+            user_email = quicksight_user["Email"].lower()
 
         if user_role not in {"AUTHOR", "ADMIN"}:
             logger.info("Skipping %s with role %s.", user_email, user_role)
