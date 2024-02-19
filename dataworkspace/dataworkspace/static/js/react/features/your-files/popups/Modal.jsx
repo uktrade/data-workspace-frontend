@@ -7,18 +7,18 @@ const Dialog = styled('dialog')`
 `;
 
 export const Modal = ({ isModalOpen, closeModal, children }) => {
-  const ref = useRef();
+  const refModal = useRef();
 
   useEffect(() => {
     if (isModalOpen) {
-      ref.current?.showModal();
+      refModal.current?.showModal();
     } else {
-      ref.current?.close();
+      refModal.current?.close();
     }
   }, [isModalOpen]);
 
   return (
-    <Dialog ref={ref} onCancel={closeModal}>
+    <Dialog ref={refModal} onCancel={closeModal}>
       {children}
     </Dialog>
   );

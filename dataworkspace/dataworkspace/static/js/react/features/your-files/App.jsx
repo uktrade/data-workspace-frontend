@@ -461,6 +461,7 @@ export default class App extends React.Component {
 
         {this.state.popups[popupTypes.UPLOAD_FILES] ? (
           <UploadFilesPopup
+            open={this.state.popups.uploadFiles}
             s3={this.s3}
             bucketName={this.props.config.bucketName}
             currentPrefix={this.state.currentPrefix}

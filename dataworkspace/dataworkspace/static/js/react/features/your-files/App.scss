@@ -255,6 +255,7 @@
 .modal-dialog {
   margin: 0 auto;
   max-width: 640px;
+  background-color: #ffffff;
 }
 .modal-xl {
   max-width: 940px;
@@ -278,13 +279,16 @@
   padding: 15px 15px 0 15px;
   background: white;
   max-height: calc(100vh - 16em);
-  overflow-y: scroll;
 }
 .modal-footer {
   padding: 15px 15px 15px 15px;
   text-align: right;
   /* border-top: 2px solid #e5e5e5; */
   background: white;
+  margin-bottom: 0px;
+}
+.modal-contents{
+  overflow-y: scroll;
 }
 @media (min-width: 40.0625em) {
   .modal-button {
@@ -365,12 +369,6 @@
   .modal-footer {
     overflow: hidden;
 
-    .form-group {
-      float: right;
-    }
-    .govuk-button-group {
-      margin-bottom: 0;
-    }
   }
 }
 
