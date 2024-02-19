@@ -27,6 +27,7 @@ const YourFiles = (props) => {
     const [files, setFiles] = useState([]);
     const [folders, setFolders] = useState([]);
     const [selectedFiles, setSelectedFiles] = useState([]);
+    const [filesToDelete, setFilesToDelete] = useState([]);
     const [foldersToDelete, setFoldersToDelete] = useState([]);
     const [currentPrefix, setCurrentPrefix] = useState(
         appConfig.initialPrefix.replace(/^\//, "").replace(/([^\/]$)/, "$1/")
@@ -44,6 +45,7 @@ const YourFiles = (props) => {
         )
     );
     const [dragActive, setDragActive] = useState(false);
+    const [prefix, setPrefix] = useState('');
 
     const fileInputRef = useRef(null);
 
@@ -78,6 +80,84 @@ const YourFiles = (props) => {
         };
     }, []);
 
+    const refresh = async (prefix) => {
+        const rootPrefix = props.config.rootPrefix;
+        const bigdataPrefix = props.config.bigdataPrefix;
+        const showBigDataMessage = prefix === rootPrefix + bigdataPrefix;
+        const params = {
+            Bucket: bucketName,
+            Prefix: prefix || currentPrefix,
+            Delimeter: '/',
+        };
+
+        const listObjects = async () => {
+            let response;
+            try {
+                response = await s3.listObjectsV2(params).promise();
+            } catch (ex) {
+                throw new Error(ex)
+            }
+
+            const files = response.Contents.filter(
+                (file) => file.key !== params.Prefix
+            ).map((file) => ({
+                ...file,
+                formattedDate: new Date(file.LastModified),
+                isSelected: false,
+            }));
+
+            files.sort(function(a, b) {
+                return b.formattedDate - a.formattedDate;
+            });
+
+            const teamsFolders =
+                params.Prefix === rootPrefix
+                    ? props.config.teamsPrefixes.map((team) => ({
+                        Prefix: team.prefix,
+                        isSharedFolder: true,
+                        isSelected: false,
+                    }))
+                : [];
+            
+            const bigDataFolder =
+                params.Prefix === rootPrefix
+                    ? [
+                        {
+                            Prefix: rootPrefix + bigdataPrefix,
+                            isBigData: true,
+                            isSelected: false,  
+                        },
+                    ]
+                : [];
+            
+            const foldersWithoutBigData = response.CommonPrefixes.filter((folder) => {
+                return folder.Prefix !== `${rootPrefix}${bigdataPrefix}`;
+            }).map((folder) => ({
+                ...folder,
+                isBigData: false,
+                isSelected: false,
+            }));
+            const folders = teamsFolders
+                .concat(bigDataFolder)
+                .concat(foldersWithoutBigData);
+            
+            return {
+                files,
+                folders
+            }
+        };
+
+        try {
+            const data = await listObjects();
+            setFiles(data.files);
+            setFolders(data.folders);
+            setCurrentPrefix(params.Prefix);
+            setShowBigDataMessage(showBigDataMessage);
+        } catch (ex) {
+            // show error modal here
+        }
+    };
+
     const onFileChange = (event) => {
         if (!event.target.files) {
             return;
@@ -92,9 +172,159 @@ const YourFiles = (props) => {
         }
 
         setSelectedFiles(files);
-        showPopup(popupTypes.UPLOAD_FILES);
+        // show upload modal here
         fileInputRef.current.value = null;
     };
+
+    const navigateTo = async (newPrefix) => {
+        window.history.pushState(
+            { prefix: newPrefix },
+            null,
+            props.config.rootUrl + newPrefix
+        );
+        setPrefix(newPrefix);
+        await refresh(newPrefix);
+    }
+
+    const onFileSelect = (file, isSelected) => {
+        setFiles(prevFiles => {
+            return prevFiles.map(f => {
+                if (f.Key === file.Key) {
+                    return { ...f, isSelected };
+                }
+                return f;
+            });
+        });
+    }
+
+    const onFolderSelect = (folder, isSelected) => {
+        setFolders(prevFolders => {
+            return prevFolders.map(f => {
+                if (f.Prefix === folder.Prefix) {
+                    return { ...f, isSelected };
+                }
+                return f;
+            })
+        })
+    };
+
+    const onBreadcrumbClick = async (e, breadcrumb) => {
+        e.preventDefault();
+        await navigateTo(breadcrumb.prefix)
+    };
+
+    const onRefreshClick = async () => {
+        await navigateTo(currentPrefix);
+    };
+
+    const onUploadsComplete = async () => {
+        await refresh(currentPrefix);
+    };
+
+    const onUploadClick = async (prefix) => {
+        fileInputRef.current.click();
+    };
+
+    const onDeleteClick = async () => {
+        const filesToDelete = files.filter((file) => file.isSelected);
+        const foldersToDelete = folders.filter((folder) => folder.isSelected);
+
+        setFilesToDelete(filesToDelete);
+        setFoldersToDelete(foldersToDelete);
+
+        // show delete objects modal here
+    };
+
+    const handleFileClick = async (key) => {
+        const params = {
+            Bucket: bucketName,
+            Key: key,
+            Expires: 15,
+            ResponseContentDisposition: "attachment",
+        };
+
+        let url;
+        try {
+            url = await s3.getSignedUrlPromise('getObject', params);
+            window.location.href = url;
+        } catch {
+            // show error modal here
+        }
+    };
+
+    const handleFolderClick = async (prefix) => {
+        await navigateTo(prefix);
+    };
+
+    const handleDragEnter = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragActive(true);
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.currentTarget.contains(e.relatedTarget)) return;
+        setDragActive(false);
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        e.stopPropagation();    
+    };
+
+    const handleDrop = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        async function entries(directoryReader) {
+            var entries = [];
+            while (true) {
+                var latestEntries = await new Promise((resolve, reject) => {
+                    directoryReader.readEntries(resolve, reject);
+                });
+                if (latestEntries.length === 0) break;
+                entries = entries.concat(latestEntries);
+            }
+            return entries;
+        }
+
+        async function file(fileEntry) {
+            var file = await new Promise((resolve, reject) => {
+                fileEntry.file(resolve, reject);
+            });
+            file.relativePath = fileEntry.fullPath.substring(1);
+            return file;
+        }
+
+        async function getFiles(dataTransferItemList) {
+            const files = [];
+            const fileAndDirectoryEntryQueue = [];
+
+            for (let i = 0; i < dataTransferItemList.length; ++i) {
+                fileAndDirectoryEntryQueue.push(
+                    dataTransferItemList[i].webkitGetAsEntry()
+                );
+            }
+
+            while (fileAndDirectoryEntryQueue.length > 0) {
+                const entry = fileAndDirectoryQueue.shift();
+                if (entry.isFile) {
+                    files.push(await file(entry));
+                } else if (entry.isDirectory) {
+                    fileAndDirectoryEntryQueue.push(
+                        ...(await entries(entry.createReader()))
+                    );
+                }
+            }
+            return files;
+        }
+
+        setDragActive(false);
+        setSelectedFiles(await getFiles(e.dataTransferItemList));
+        // show upload modal
+    }
 
     return (
         <></>
