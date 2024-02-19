@@ -1,19 +1,19 @@
-import React from "react";
-import "./App.scss";
+import React from 'react';
+import './App.scss';
 
-import { Header } from "./Header";
-import { FileList } from "./FileList";
-import { BigDataMessage } from "./BigDataMessage";
-import { getBreadcrumbs, getFolderName } from "./utils";
-import { AddFolderPopup, UploadFilesPopup } from "./popups";
-import { DeleteObjectsPopup } from "./popups/DeleteObjects";
-import { ErrorModal } from "./popups/ErrorModal";
-import { TeamsPrefixMessage } from "./TeamsPrefixMessage";
+import { Header } from './Header';
+import { FileList } from './FileList';
+import { BigDataMessage } from './BigDataMessage';
+import { getBreadcrumbs, getFolderName } from './utils';
+import { AddFolderPopup, UploadFilesPopup } from './popups';
+import { DeleteObjectsPopup } from './popups/DeleteObjects';
+import { ErrorModal } from './popups/ErrorModal';
+import { TeamsPrefixMessage } from './TeamsPrefixMessage';
 
 const popupTypes = {
-  ADD_FOLDER: "addFolder",
-  UPLOAD_FILES: "uploadFiles",
-  DELETE_OBJECTS: "deleteObjects",
+  ADD_FOLDER: 'addFolder',
+  UPLOAD_FILES: 'uploadFiles',
+  DELETE_OBJECTS: 'deleteObjects'
 };
 
 class Credentials extends AWS.Credentials {
@@ -60,7 +60,7 @@ export default class App extends React.Component {
         timeout: 10 * 60 * 60 * 1000
       }
     };
-    console.log("AWS Config", awsConfig);
+    console.log('AWS Config', awsConfig);
     this.s3 = new AWS.S3(awsConfig);
 
     this.state = {
@@ -71,8 +71,8 @@ export default class App extends React.Component {
       foldersToDelete: [],
       // Ensure the user provided prefix ends with a slash but does not start with a slash
       currentPrefix: appConfig.initialPrefix
-        .replace(/^\//, "")
-        .replace(/([^\/]$)/, "$1/"),
+        .replace(/^\//, '')
+        .replace(/([^\/]$)/, '$1/'),
       bigDataFolder: appConfig.bigdataPrefix,
       createTableUrl: appConfig.createTableUrl,
       isLoaded: false,
@@ -83,20 +83,20 @@ export default class App extends React.Component {
       popups: Object.fromEntries(
         Object.entries(popupTypes).map((key, value) => [value, false])
       ),
-      dragActive: false,
+      dragActive: false
     };
 
     this.fileInputRef = React.createRef();
   }
 
   async componentDidMount() {
-    addEventListener("popstate", (event) => {
+    addEventListener('popstate', (event) => {
       this.setState(
         {
           currentPrefix:
             event.state && event.state.prefix
               ? event.state.prefix
-              : this.props.config.initialPrefix,
+              : this.props.config.initialPrefix
         },
         () => {
           this.refresh();
@@ -108,7 +108,7 @@ export default class App extends React.Component {
 
   onFileChange = (event) => {
     if (!event.target.files) {
-      console.log("nothing selected");
+      console.log('nothing selected');
       return;
     }
 
@@ -121,7 +121,7 @@ export default class App extends React.Component {
     }
 
     this.setState({
-      selectedFiles: files,
+      selectedFiles: files
     });
     this.showPopup(popupTypes.UPLOAD_FILES);
     this.fileInputRef.current.value = null;
@@ -177,7 +177,7 @@ export default class App extends React.Component {
 
     this.setState({
       filesToDelete,
-      foldersToDelete,
+      foldersToDelete
     });
 
     this.showPopup(popupTypes.DELETE_OBJECTS);
@@ -196,12 +196,12 @@ export default class App extends React.Component {
       Bucket: this.state.bucketName,
       Key: key,
       Expires: 15,
-      ResponseContentDisposition: "attachment",
+      ResponseContentDisposition: 'attachment'
     };
 
     let url;
     try {
-      url = await this.s3.getSignedUrlPromise("getObject", params);
+      url = await this.s3.getSignedUrlPromise('getObject', params);
       console.log(url);
       window.location.href = url;
     } catch (ex) {
@@ -230,7 +230,7 @@ export default class App extends React.Component {
     const params = {
       Bucket: this.state.bucketName,
       Prefix: prefix || this.state.currentPrefix,
-      Delimiter: "/",
+      Delimiter: '/'
     };
 
     const listObjects = async () => {
@@ -238,7 +238,7 @@ export default class App extends React.Component {
       try {
         response = await this.s3.listObjectsV2(params).promise();
       } catch (ex) {
-        console.error("Failed to fetch objects from S3", ex);
+        console.error('Failed to fetch objects from S3', ex);
         throw new Error(ex);
       }
 
@@ -247,10 +247,10 @@ export default class App extends React.Component {
       ).map((file) => ({
         ...file,
         formattedDate: new Date(file.LastModified),
-        isSelected: false,
+        isSelected: false
       }));
 
-      files.sort(function(a, b) {
+      files.sort(function (a, b) {
         return b.formattedDate - a.formattedDate;
       });
 
@@ -259,7 +259,7 @@ export default class App extends React.Component {
           ? this.props.config.teamsPrefixes.map((team) => ({
               Prefix: team.prefix,
               isSharedFolder: true,
-              isSelected: false,
+              isSelected: false
             }))
           : [];
 
@@ -269,8 +269,8 @@ export default class App extends React.Component {
               {
                 Prefix: rootPrefix + bigdataPrefix,
                 isBigData: true,
-                isSelected: false,
-              },
+                isSelected: false
+              }
             ]
           : [];
 
@@ -279,7 +279,7 @@ export default class App extends React.Component {
       }).map((folder) => ({
         ...folder,
         isBigData: false,
-        isSelected: false,
+        isSelected: false
       }));
       const folders = teamsFolders
         .concat(bigDataFolder)
@@ -287,7 +287,7 @@ export default class App extends React.Component {
 
       return {
         files,
-        folders,
+        folders
       };
     };
 
@@ -297,10 +297,10 @@ export default class App extends React.Component {
         files: data.files,
         folders: data.folders,
         currentPrefix: params.Prefix,
-        showBigDataMessage,
+        showBigDataMessage
       });
     } catch (ex) {
-      console.log("Error", ex);
+      console.log('Error', ex);
       this.showErrorPopup(ex);
     }
   }
@@ -312,7 +312,7 @@ export default class App extends React.Component {
           f.isSelected = isSelected;
         }
         return f;
-      }),
+      })
     });
   };
 
@@ -323,7 +323,7 @@ export default class App extends React.Component {
           f.isSelected = isSelected;
         }
         return f;
-      }),
+      })
     });
   };
 
@@ -401,7 +401,7 @@ export default class App extends React.Component {
 
     this.setState({
       dragActive: false,
-      selectedFiles: await getFiles(e.dataTransfer.items),
+      selectedFiles: await getFiles(e.dataTransfer.items)
     });
     this.showPopup(popupTypes.UPLOAD_FILES);
   };
@@ -425,16 +425,18 @@ export default class App extends React.Component {
           onChange={this.onFileChange}
           multiple={true}
           ref={this.fileInputRef}
-          style={{ display: "none" }}
+          style={{ display: 'none' }}
         />
         {this.state.error ? (
           <ErrorModal
+            open={!!this.state.error}
             error={this.state.error}
             onClose={() => this.setState({ error: null })}
           />
         ) : null}
         {this.state.popups.deleteObjects ? (
           <DeleteObjectsPopup
+            open={this.state.popups.deleteObjects}
             s3={this.s3}
             bucketName={this.props.config.bucketName}
             filesToDelete={this.state.filesToDelete}
@@ -449,6 +451,7 @@ export default class App extends React.Component {
         ) : null}
         {this.state.popups.addFolder ? (
           <AddFolderPopup
+            open={this.state.popups.addFolder}
             s3={this.s3}
             bucketName={this.props.config.bucketName}
             currentPrefix={this.state.currentPrefix}
@@ -460,6 +463,7 @@ export default class App extends React.Component {
 
         {this.state.popups[popupTypes.UPLOAD_FILES] ? (
           <UploadFilesPopup
+            open={this.state.popups.uploadFiles}
             s3={this.s3}
             bucketName={this.props.config.bucketName}
             currentPrefix={this.state.currentPrefix}
@@ -471,7 +475,7 @@ export default class App extends React.Component {
         ) : null}
 
         <div
-          className={`drop-zone ${this.state.dragActive ? "drag-active" : ""}`}
+          className={`drop-zone ${this.state.dragActive ? 'drag-active' : ''}`}
           onDragEnter={this.handleDragEnter}
           onDragLeave={this.handleDragLeave}
           onDrop={this.handleDrop}
@@ -506,11 +510,14 @@ export default class App extends React.Component {
               bucketName={this.state.bucketName}
             />
           ) : null}
-          {this.state.currentPrefix.startsWith("teams/") ?
+          {this.state.currentPrefix.startsWith('teams/') ? (
             <TeamsPrefixMessage
-              team={this.props.config.teamsPrefixes.find(t => this.state.currentPrefix.startsWith(t.prefix))}
+              team={this.props.config.teamsPrefixes.find((t) =>
+                this.state.currentPrefix.startsWith(t.prefix)
+              )}
               bucketName={this.state.bucketName}
-            /> : null}
+            />
+          ) : null}
         </div>
       </div>
     );
