@@ -129,10 +129,10 @@
                 Reset view
               </button>
               {% if object.data_grid_download_enabled %}
-              <button class="govuk-button app-grid__button govuk-button--secondary modal-link" data-module="govuk-button" id="downloadData">
+              <button class="govuk-button app-grid__button govuk-button--secondary" data-modal-ref-id="1" data-module="govuk-button" id="downloadData">
                   Download this data
                 </button>
-                {% include "datasets/partials/dialog.html" %}
+                {% include "datasets/partials/dialog.html" with id="1" %}
               {% endif %}
               {# We only support data dictionaries for master and reference datasets currently #}
               {# reference datagrid uses reference_dataset_grid.html btw   #}

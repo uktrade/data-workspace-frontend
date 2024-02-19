@@ -10,7 +10,16 @@ COLOUR_YELLOW=\033[33;01m
 docker-e2e = docker compose -f docker-compose.yml -f docker-compose.e2e.yml -p e2e --profile e2e
 docker-a11y = docker compose -f docker-compose.yml -f docker-compose.a11y.yml -p a11y --profile a11y
 
-e2e-export-models = auth.User core.Database accounts.Profile datasets.SensitivityType datasets.Dataset datasets.SourceLink datasets.SourceTable datasets.DatasetUserPermission datasets.SourceTableFieldDefinition datasets.SourceView datasets.DatasetBookmark data_collections.Collection eventlog.EventLog
+e2e-export-models = auth.User core.Database \
+	accounts.Profile datasets.SensitivityType \
+	datasets.Dataset datasets.SourceLink \
+	datasets.SourceTable \
+	datasets.DatasetUserPermission \
+	datasets.SourceTableFieldDefinition \
+	datasets.SourceView \
+	datasets.DatasetBookmark \
+	datasets.CustomDatasetQuery \
+	data_collections.Collection
 
 .PHONY: help test
 help:
