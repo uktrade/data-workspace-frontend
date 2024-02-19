@@ -128,11 +128,12 @@
                 {% if has_access %}
                 <a  
                   href="#"
-                  class="govuk-link govuk-link--no-visited-state govuk-body modal-link"
+                  class="govuk-link govuk-link--no-visited-state govuk-body"
+                  data-modal-ref-id={{datacut_link.id}}
                   >
                   {{ datacut_link.name}}
                 </a>
-                {% include "datasets/partials/dialog.html" with format=datacut_link.format link=datacut_link.get_absolute_url %}
+                {% include "datasets/partials/dialog.html" with format=datacut_link.format link=datacut_link.get_absolute_url id=datacut_link.id %}
                 {% else %}
                   {{ datacut_link.name}}
                 {% endif %}
@@ -230,3 +231,4 @@
   <script src="{% static 'dialog.js' %}" nonce="{{ request.csp_nonce }}"></script>
   {% render_bundle "data-cut" "js" %}
 {% endblock %}
+

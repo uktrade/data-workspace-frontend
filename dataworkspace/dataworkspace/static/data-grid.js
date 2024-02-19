@@ -413,7 +413,10 @@ function initDataGrid(
           gridOptions,
           columnDataTypeMap
         );
-        document.getElementById("popup").close();
+        let popup = document.getElementById("popup");
+        if (popup !== null) {
+          popup.close();
+        }
       } else {
         // Download a csv locally using javascript
         gridOptions.api.exportDataAsCsv({
