@@ -1,5 +1,5 @@
 import React from "react";
-export function BigDataMessage(props) {
+export default function BigDataMessage(props) {
   return (
     <div className="govuk-inset-text">
       <p className="govuk-body">

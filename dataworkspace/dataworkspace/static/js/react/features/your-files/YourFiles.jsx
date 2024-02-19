@@ -13,7 +13,7 @@ import UploadFilesPopup from './components/UploadFilesModal';
 import { getBreadcrumbs, getFolderName } from './utils';
 import Credentials from './utils/Credentials';
 
-import './App.scss';
+import './styles/App.scss';
 
 const popupTypes = {
   ADD_FOLDER: 'addFolder',
@@ -60,6 +60,7 @@ const YourFiles = (props) => {
             }
         };
 
+        console.log('AWS Config', awsConfig);
         setS3(new AWS.S3(awsConfig));
     });
 
@@ -95,7 +96,8 @@ const YourFiles = (props) => {
             try {
                 response = await s3.listObjectsV2(params).promise();
             } catch (ex) {
-                throw new Error(ex)
+                console.log('Error', ex);
+                throw new Error(ex);
             }
 
             const files = response.Contents.filter(
@@ -154,12 +156,13 @@ const YourFiles = (props) => {
             setCurrentPrefix(params.Prefix);
             setShowBigDataMessage(showBigDataMessage);
         } catch (ex) {
-            // show error modal here
+            showErrorPopup(ex)
         }
     };
 
     const onFileChange = (event) => {
         if (!event.target.files) {
+            console.log('nothing selected');
             return;
         }
 
@@ -172,7 +175,7 @@ const YourFiles = (props) => {
         }
 
         setSelectedFiles(files);
-        // show upload modal here
+        showPopup(popupTypes.UPLOAD_FILES);
         fileInputRef.current.value = null;
     };
 
@@ -229,10 +232,14 @@ const YourFiles = (props) => {
         const filesToDelete = files.filter((file) => file.isSelected);
         const foldersToDelete = folders.filter((folder) => folder.isSelected);
 
+        console.log(
+            `delete ${filesToDelete.length} files and ${foldersToDelete.length} folders`
+        );
+
         setFilesToDelete(filesToDelete);
         setFoldersToDelete(foldersToDelete);
 
-        // show delete objects modal here
+        showPopup(popupTypes.DELETE_OBJECTS);
     };
 
     const handleFileClick = async (key) => {
@@ -246,9 +253,11 @@ const YourFiles = (props) => {
         let url;
         try {
             url = await s3.getSignedUrlPromise('getObject', params);
+            console.log(url);
             window.location.href = url;
-        } catch {
-            // show error modal here
+        } catch (ex) {
+            console.log('Error', ex);
+            showErrorPopup(ex)
         }
     };
 
@@ -323,11 +332,139 @@ const YourFiles = (props) => {
 
         setDragActive(false);
         setSelectedFiles(await getFiles(e.dataTransferItemList));
-        // show upload modal
-    }
+        showPopup(popupTypes.UPLOAD_FILES);
+    };
+
+    const showErrorPopup = (error) => {
+        setError(error);
+        setPopups(prevPopups => {
+            const newState = { ...prevPopups };
+            Object.keys(newState).forEach(key => newState[key] = false);
+            return newState;
+        });
+    };
+
+    const showNewFolderPopup = async (prefix) => {
+        showPopup(popupTypes.ADD_FOLDER);
+    };
+
+    const showPopup = (popupName) => {
+        setPopups(prevPopups => ({
+            ...prevPopups,
+            [popupName]: true
+        }));
+    };
+
+    const hidePopup = (popupName) => {
+        setPopups(prevPopups => ({
+            ...prevPopups,
+            [popupName]: false
+        }));
+    };
+
+    const breadCrumbs = getBreadcrumbs(
+        props.config.rootPrefix,
+        props.config.teamsPrefix,
+        currentPrefix
+    );
+
+    const currentFolderName = getFolderName(
+        currentPrefix,
+        props.config.rootPrefix
+    );
 
     return (
-        <></>
+        <div className="browser">
+            <input 
+                type="file"
+                onChange={onFileChange}
+                multiple={true}
+                ref={fileInputRef}
+                style={{ display: "none" }}
+            />
+            {error ? (
+                <ErrorModal
+                    error={error}
+                    onClose={() => setError(null)}
+                />
+            ) : null}
+            {popups.deleteObjects ? (
+                <DeleteObjectsPopup 
+                    s3={s3}
+                    bucketName={props.config.bucketName}
+                    filesToDelete={filesToDelete}
+                    foldersToDelete={foldersToDelete}
+                    onClose={async () => {
+                        hidePopup(popupTypes.DELETE_OBJECTS);
+                    }}
+                    onSuccess={async () => {
+                        await onRefreshClick();
+                    }}
+                />
+            ) : null}
+            {popups.addFolder ? (
+                <AddFolderPopup 
+                    s3={s3}
+                    bucketName={props.config.bucketName}
+                    currentPrefix={currentPrefix}
+                    onSuccess={() => onRefreshClick()}
+                    onClose={() => hidePopup(popupTypes.ADD_FOLDER)}
+                    onError={(ex) => showErrorPopup(ex)}
+                />
+            ): null}
+            {popups[popupTypes.UPLOAD_FILES] ? (
+                <UploadFilesPopup 
+                    s3={s3}
+                    bucketName={props.config.bucketName}
+                    currentPrefix={currentPrefix}
+                    selectedFiles={selectedFiles}
+                    folderName={currentFolderName}
+                    onCancel={() => hidePopup(popupTypes.UPLOAD_FILES)}
+                    onUploadsComplete={onUploadsComplete}
+                />
+            ) : null}
+
+            <div
+                className={`drop-zone ${dragActive ? "drag-active" : ""}`}
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+            >
+                <Header 
+                    breadCrumbs={breadCrumbs}
+                    canDelete={
+                        folders.concat(files).filter((f) => f.isSelected).length > 0
+                    }
+                    currentPrefix={currentPrefix}
+                    onBreadcrumbClick={onBreadcrumbClick}
+                    onRefreshClick={onRefreshClick}
+                    onNewFolderClick={showNewFolderPopup}
+                    onUploadClick={onUploadClick}
+                    onDeleteClick={onDeleteClick}
+                />
+                <FileList 
+                    files={files}
+                    folders={folders}
+                    createTableUrl={createTableUrl}
+                    onFolderClick={handleFolderClick}
+                    onFolderSelect={onFolderSelect}
+                    onFileClick={onFileClick}
+                    onFileSelect={onFileSelect}
+                />
+                {showBigDataMessage ? (
+                    <BigDataMessage 
+                        bigDataFolder={bigDataFolder}
+                        bucketName={bucketName}
+                    />
+                ) : null}
+                {currentPrefix.startsWith('teams/') ? 
+                    <TeamsPrefixMessage
+                        team={props.config.teamsPrefixes.find(t => currentPrefix.startsWith(t.prefix))}
+                        bucketName={bucketName}
+                /> : null}
+            </div>
+        </div>
     );
 };
 

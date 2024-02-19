@@ -3,7 +3,7 @@ import { TrashIcon } from "../../icons/TrashIcon";
 import { UploadIcon } from "../../icons/UploadIcon";
 import { NewFolderIcon } from "../../icons/NewFolderIcon";
 
-export class Header extends React.Component {
+export default class Header extends React.Component {
   constructor(props) {
     super(props);
     this.state = { spin: false }

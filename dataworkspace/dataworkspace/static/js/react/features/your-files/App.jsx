@@ -11,7 +11,7 @@ import UploadFilesPopup from './components/UploadFilesModal';
 import { getBreadcrumbs, getFolderName } from './utils';
 import Credentials from './utils/Credentials';
 
-import './App.scss';
+import './styles/App.scss';
 
 const popupTypes = {
   ADD_FOLDER: 'addFolder',
