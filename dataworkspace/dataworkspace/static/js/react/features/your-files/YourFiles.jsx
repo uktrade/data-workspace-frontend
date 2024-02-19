@@ -181,7 +181,7 @@ const YourFiles = (props) => {
         }        
 
         setSelectedFiles(files);
-        // show upload modal here
+        showPopup(popupTypes.UPLOAD_FILES);
         fileInputRef.current.value = null;
     };
 
