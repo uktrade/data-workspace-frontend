@@ -429,6 +429,7 @@ export default class App extends React.Component {
         />
         {this.state.error ? (
           <ErrorModal
+            open={!!this.state.error}
             error={this.state.error}
             onClose={() => this.setState({ error: null })}
           />

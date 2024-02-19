@@ -3,7 +3,6 @@ import styled from 'styled-components';
 
 const Dialog = styled('dialog')`
   padding: 0px;
-  ${'' /* width: 640px; */}
 `;
 
 export const Modal = ({ isModalOpen, closeModal, children }) => {

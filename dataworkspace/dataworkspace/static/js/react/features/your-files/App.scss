@@ -255,7 +255,6 @@
 .modal-dialog {
   margin: 0 auto;
   max-width: 640px;
-  background-color: #ffffff;
 }
 .modal-xl {
   max-width: 940px;
@@ -287,6 +286,7 @@
 }
 .modal-contents{
   overflow-y: scroll;
+  background-color: white;
 }
 
 @media (min-width: 40.0625em) {
