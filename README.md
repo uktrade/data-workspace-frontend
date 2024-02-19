@@ -1,7 +1,7 @@
 <!-- --8<-- [start:intro] -->
-# Data Workspace [![CircleCI](https://circleci.com/gh/uktrade/data-workspace.svg?style=svg)](https://circleci.com/gh/uktrade/data-workspace)
+# Data Workspace [![CircleCI](https://circleci.com/gh/uktrade/data-workspace-frontend.svg?style=svg)](https://circleci.com/gh/uktrade/data-workspace-frontend)
 
-![Data Workspace image](docs/assets/dw-readme-front-page.png)
+![Data Workspace image](/docs/assets/dw-readme-front-page.png)
 
   Data Workspace is an open source data analysis platform with features for users with a range of technical skills. Features include:
 
@@ -14,7 +14,5 @@
 
 Visit the [Data Workspace technical documentation](https://data-workspace.docs.trade.gov.uk/) for details on:
 
-- [how to run Data Workspace locally](https://data-workspace.docs.trade.gov.uk/development/running-locally/)
-- [the architecture of Data Workspace](https://data-workspace.docs.trade.gov.uk/architecture/components/)
-- [how to deploy Data Workspace to a cloud hosting platform](https://data-workspace.docs.trade.gov.uk/deployment/aws/)
-- [how to contribute to Data Workspace](https://data-workspace.docs.trade.gov.uk/contributing/)
+- [how to run Data Workspace Frontend locally](https://data-workspace.docs.trade.gov.uk/development/)
+- [how to release Data Workspace](https://data-workspace.docs.trade.gov.uk/development/releases/)
