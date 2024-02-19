@@ -18,10 +18,8 @@ export function ErrorModal({ open, error, onClose }) {
           <div className="modal-contents">
             <div className="modal-body">
               <div className="panel-body">
-                <p className="govuk-body" ng-if="error.errors.length">
-                  {error.message}
-                </p>
-                <table className="govuk-table" ng-if="error.errors.length">
+                <p className="govuk-body">{error.message}</p>
+                <table className="govuk-table">
                   <thead>
                     <tr className="govuk-table__row">
                       <th className="govuk-table__header">Key</th>
