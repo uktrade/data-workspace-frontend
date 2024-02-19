@@ -435,6 +435,7 @@ export default class App extends React.Component {
         ) : null}
         {this.state.popups.deleteObjects ? (
           <DeleteObjectsPopup
+            open={this.state.popups.deleteObjects}
             s3={this.s3}
             bucketName={this.props.config.bucketName}
             filesToDelete={this.state.filesToDelete}

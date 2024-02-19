@@ -277,19 +277,18 @@
 }
 .modal-body {
   padding: 15px 15px 0 15px;
-  background: white;
   max-height: calc(100vh - 16em);
 }
 .modal-footer {
   padding: 15px 15px 15px 15px;
   text-align: right;
-  /* border-top: 2px solid #e5e5e5; */
-  background: white;
   margin-bottom: 0px;
+  max-width: 500px;
 }
 .modal-contents{
   overflow-y: scroll;
 }
+
 @media (min-width: 40.0625em) {
   .modal-button {
     margin-bottom: 0;

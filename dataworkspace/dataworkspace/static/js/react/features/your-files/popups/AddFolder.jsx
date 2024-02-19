@@ -112,10 +112,7 @@ export class AddFolderPopup extends React.Component {
                     />
                   </div>
                 </div>
-                <div
-                  className="modal-footer govuk-button-group"
-                  style={{ textAlign: 'right' }}
-                >
+                <div className="modal-footer govuk-button-group">
                   <button type="submit" className="govuk-button modal-button">
                     <NewFolderIcon />
                     &nbsp;Add Folder

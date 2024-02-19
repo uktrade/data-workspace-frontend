@@ -261,6 +261,7 @@ export class UploadFilesPopup extends React.Component {
                 >
                   {!this.state.uploadsComplete ? (
                     <button
+                      autofocus="true"
                       onClick={() => this.onUploadClick(files)}
                       className="govuk-button modal-button"
                       disabled={this.state.isUploading}
@@ -270,7 +271,6 @@ export class UploadFilesPopup extends React.Component {
                     </button>
                   ) : null}
                   <button
-                    autofocus="true"
                     id="upload-btn-cancel"
                     type="button"
                     className="govuk-button govuk-button--secondary modal-button"
