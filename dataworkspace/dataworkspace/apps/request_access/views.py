@@ -92,6 +92,7 @@ class DatasetAccessRequest(CreateView):
         if user_has_tools_access or catalogue_item.type in [
             DataSetType.VISUALISATION,
             DataSetType.DATACUT,
+            DataSetType.MASTER,
         ]:
             return HttpResponseRedirect(
                 reverse("request-access:summary-page", kwargs={"pk": access_request.pk})

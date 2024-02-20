@@ -361,7 +361,7 @@ class TestDatasetAndToolsAccess:
         resp = client.get(reverse("request_access:dataset", kwargs={"dataset_uuid": dataset.id}))
         assert "Continue" in resp.content.decode(resp.charset)
 
-    def test_user_redirected_to_tools_form_after_dataset_request_access_form_submission(
+    def test_user_redirected_to_summary_after_dataset_request_access_form_submission(
         self, client, metadata_db
     ):
         dataset = DatasetsCommon()._create_master(
@@ -379,7 +379,9 @@ class TestDatasetAndToolsAccess:
         assert access_requests[0].reason_for_access == "I need it"
         assert access_requests[0].journey == AccessRequest.JOURNEY_DATASET_ACCESS
         assert resp.status_code == 302
-        assert resp.url == reverse("request_access:tools-1", kwargs={"pk": access_requests[0].pk})
+        assert resp.url == reverse(
+            "request_access:summary-page", kwargs={"pk": access_requests[0].pk}
+        )
 
     def test_tools_not_required_for_data_cut(self, client, metadata_db):
         datacut = DataSetFactory.create(
