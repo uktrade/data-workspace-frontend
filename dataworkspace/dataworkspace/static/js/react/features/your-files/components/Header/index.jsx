@@ -1,17 +1,18 @@
-import React from "react";
-import { TrashIcon } from "../../icons/TrashIcon";
-import { UploadIcon } from "../../icons/UploadIcon";
-import { NewFolderIcon } from "../../icons/NewFolderIcon";
+import React from 'react';
+
+import NewFolderIcon from '../../icons/NewFolderIcon';
+import TrashIcon from '../../icons/TrashIcon';
+import UploadIcon from '../../icons/UploadIcon';
 
 export default class Header extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { spin: false }
+    this.state = { spin: false };
   }
 
   handleRefreshClick() {
     this.props.onRefreshClick();
-    this.setState({ spin: true })
+    this.setState({ spin: true });
   }
 
   render() {

@@ -2,93 +2,93 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import AWS from 'aws-sdk';
 
-import AddFolderPopup from './components/AddFolderModal';
+import AddFolderPopup from './components/AddFolderPopup';
 import BigDataMessage from './components/BigDataMessage';
-import DeleteObjectsPopup from './components/DeleteObjectsModal';
-import ErrorModal from './components/ErrorModal';
+import DeleteObjectsPopup from './components/DeleteObjectsPopup';
+import ErrorModal from './components/ErrorPopup';
 import FileList from './components/FileList';
 import Header from './components/Header';
 import TeamsPrefixMessage from './components/TeamsPrefixMessage';
-import UploadFilesPopup from './components/UploadFilesModal';
+import UploadFilesPopup from './components/UploadFilesPopup';
 import { getBreadcrumbs, getFolderName } from './utils';
 import Credentials from './utils/Credentials';
 
 import './styles/App.scss';
 
 const popupTypes = {
-  ADD_FOLDER: 'addFolder',
-  UPLOAD_FILES: 'uploadFiles',
-  DELETE_OBJECTS: 'deleteObjects',
+    ADD_FOLDER: 'addFolder',
+    UPLOAD_FILES: 'uploadFiles',
+    DELETE_OBJECTS: 'deleteObjects',
 };
 
 const YourFiles = (props) => {
-    const appConfig = props.config;
-    const [s3, setS3] = useState(null);
+    const config = props.config;
+    
+    const rootUrl = config.rootUrl;
+    const bucketName = config.bucketName;
+    const teamsPrefix = config.teamsPrefix;
+    const rootPrefix = config.rootPrefix;
+    const initialPrefix = config.initialPrefix;
+    const bigdataPrefix = config.bigdataPrefix;
+    const teamsPrefixes = config.teamsPrefixes;
+    const createTableUrl = config.createTableUrl;
+
+    const awsConfig = {
+        credentials: new Credentials(config.credentialsUrl),
+        region: config.region,
+        s3ForcePathStyle: true,
+        ...(config.endpointUrl ? { endpoint: config.endpointUrl } : {}),
+        httpOptions: {
+          timeout: 10 * 60 * 60 * 1000
+        }
+    };
+    const s3 = new AWS.S3(awsConfig);
+
+    const [currentPrefix, setCurrentPrefix] = useState(
+        initialPrefix.replace(/^\//, '').replace(/([^\/]$)/, '$1/')
+    );
     const [files, setFiles] = useState([]);
     const [folders, setFolders] = useState([]);
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [filesToDelete, setFilesToDelete] = useState([]);
     const [foldersToDelete, setFoldersToDelete] = useState([]);
-    const [currentPrefix, setCurrentPrefix] = useState(
-        appConfig.initialPrefix.replace(/^\//, "").replace(/([^\/]$)/, "$1/")
-    );
-    const [bigDataFolder, setBigDataFolder] = useState(appConfig.bigdataPrefix);
-    const [createTableUrl, setCreateTableUrl] = useState(appConfig.createTableUrl);
-    const [isLoaded, setIsLoaded] = useState(false);
     const [error, setError] = useState(null);
-    const [bucketName, setBucketName] = useState(appConfig.bucketName);
-    const [region, setRegion] = useState(appConfig.region);
     const [showBigDataMessage, setShowBigDataMessage] = useState(false);
-    const [popups, setPopups] = useState(
-        Object.fromEntries(
-            Object.entries(popupTypes).map((key, value) => [value, false])
-        )
-    );
     const [dragActive, setDragActive] = useState(false);
-    const [prefix, setPrefix] = useState('');
+    const [popups, setPopups] = useState({});
 
     const fileInputRef = useRef(null);
 
     useEffect(() => {
-        const awsConfig = {
-            credentials: new Credentials(appConfig.credentialsUrl),
-            region: appConfig.region,
-            s3ForcePathStyle: true,
-            ...(appConfig.endpointUrl ? { endpoint: appConfig.endpointUrl } : {}),
-            httpOptions: {
-              timeout: 10 * 60 * 60 * 1000
-            }
+        const fetchData = async () => {
+            await refresh();
         };
 
-        console.log('AWS Config', awsConfig);
-        setS3(new AWS.S3(awsConfig));
-    });
-
-    useEffect(() => {
         const handlePopState = (event) => {
             setCurrentPrefix(
                 event.state && event.state.prefix
-                    ? event.state.prefix
-                    : props.config.initialPrefix
+                ? event.state.prefix
+                : initialPrefix
             );
-            refresh();
         };
+
+        console.log('AWS Config', awsConfig);
+        fetchData();
 
         window.addEventListener('popstate', handlePopState);
 
-        return () => {
+        return() => {
             window.removeEventListener('popstate', handlePopState);
         };
     }, []);
 
     const refresh = async (prefix) => {
-        const rootPrefix = props.config.rootPrefix;
-        const bigdataPrefix = props.config.bigdataPrefix;
+        const rootPrefix = config.rootPrefix;
         const showBigDataMessage = prefix === rootPrefix + bigdataPrefix;
         const params = {
             Bucket: bucketName,
             Prefix: prefix || currentPrefix,
-            Delimeter: '/',
+            Delimiter: '/'
         };
 
         const listObjects = async () => {
@@ -96,7 +96,7 @@ const YourFiles = (props) => {
             try {
                 response = await s3.listObjectsV2(params).promise();
             } catch (ex) {
-                console.log('Error', ex);
+                console.error('Failed to fetch objects from S3:', ex);
                 throw new Error(ex);
             }
 
@@ -107,17 +107,17 @@ const YourFiles = (props) => {
                 formattedDate: new Date(file.LastModified),
                 isSelected: false,
             }));
-
+            
             files.sort(function(a, b) {
                 return b.formattedDate - a.formattedDate;
             });
 
             const teamsFolders =
                 params.Prefix === rootPrefix
-                    ? props.config.teamsPrefixes.map((team) => ({
+                    ? teamsPrefixes.map((team) => ({
                         Prefix: team.prefix,
                         isSharedFolder: true,
-                        isSelected: false,
+                        isSelected: false
                     }))
                 : [];
             
@@ -127,7 +127,7 @@ const YourFiles = (props) => {
                         {
                             Prefix: rootPrefix + bigdataPrefix,
                             isBigData: true,
-                            isSelected: false,  
+                            isSelected: false
                         },
                     ]
                 : [];
@@ -137,26 +137,32 @@ const YourFiles = (props) => {
             }).map((folder) => ({
                 ...folder,
                 isBigData: false,
-                isSelected: false,
+                isSelected: false
             }));
+
             const folders = teamsFolders
                 .concat(bigDataFolder)
                 .concat(foldersWithoutBigData);
-            
+                
             return {
                 files,
                 folders
-            }
+            };
         };
 
         try {
             const data = await listObjects();
+
             setFiles(data.files);
             setFolders(data.folders);
             setCurrentPrefix(params.Prefix);
             setShowBigDataMessage(showBigDataMessage);
+
+            console.log('files:', files);
+            console.log('folders:', folders);
         } catch (ex) {
-            showErrorPopup(ex)
+            console.log('Error', ex);
+            showErrorPopup(ex);
         }
     };
 
@@ -172,22 +178,22 @@ const YourFiles = (props) => {
             const file = event.target.files[i];
             file.relativePath = file.name;
             files.push(file);
-        }
+        }        
 
         setSelectedFiles(files);
         showPopup(popupTypes.UPLOAD_FILES);
         fileInputRef.current.value = null;
     };
 
-    const navigateTo = async (newPrefix) => {
+    const navigateTo = async (prefix) => {
         window.history.pushState(
-            { prefix: newPrefix },
+            { prefix: prefix },
             null,
-            props.config.rootUrl + newPrefix
+            rootUrl + prefix
         );
-        setPrefix(newPrefix);
-        await refresh(newPrefix);
-    }
+        setCurrentPrefix(prefix);
+        await refresh(prefix);
+    };
 
     const onFileSelect = (file, isSelected) => {
         setFiles(prevFiles => {
@@ -198,7 +204,7 @@ const YourFiles = (props) => {
                 return f;
             });
         });
-    }
+    };
 
     const onFolderSelect = (folder, isSelected) => {
         setFolders(prevFolders => {
@@ -207,13 +213,13 @@ const YourFiles = (props) => {
                     return { ...f, isSelected };
                 }
                 return f;
-            })
-        })
+            });
+        });
     };
 
     const onBreadcrumbClick = async (e, breadcrumb) => {
         e.preventDefault();
-        await navigateTo(breadcrumb.prefix)
+        await navigateTo(breadcrumb.prefix);
     };
 
     const onRefreshClick = async () => {
@@ -224,7 +230,7 @@ const YourFiles = (props) => {
         await refresh(currentPrefix);
     };
 
-    const onUploadClick = async (prefix) => {
+    const onUploadClick = async () => {
         fileInputRef.current.click();
     };
 
@@ -247,7 +253,7 @@ const YourFiles = (props) => {
             Bucket: bucketName,
             Key: key,
             Expires: 15,
-            ResponseContentDisposition: "attachment",
+            ResponseContentDisposition: 'attachment',
         };
 
         let url;
@@ -257,7 +263,7 @@ const YourFiles = (props) => {
             window.location.href = url;
         } catch (ex) {
             console.log('Error', ex);
-            showErrorPopup(ex)
+            // show error popup here
         }
     };
 
@@ -318,7 +324,7 @@ const YourFiles = (props) => {
             }
 
             while (fileAndDirectoryEntryQueue.length > 0) {
-                const entry = fileAndDirectoryQueue.shift();
+                const entry = fileAndDirectoryEntryQueue.shift();
                 if (entry.isFile) {
                     files.push(await file(entry));
                 } else if (entry.isDirectory) {
@@ -335,6 +341,10 @@ const YourFiles = (props) => {
         showPopup(popupTypes.UPLOAD_FILES);
     };
 
+    const showNewFolderPopup = async () => {
+        showPopup(popupTypes.ADD_FOLDER);
+    };
+
     const showErrorPopup = (error) => {
         setError(error);
         setPopups(prevPopups => {
@@ -344,35 +354,31 @@ const YourFiles = (props) => {
         });
     };
 
-    const showNewFolderPopup = async (prefix) => {
-        showPopup(popupTypes.ADD_FOLDER);
-    };
-
     const showPopup = (popupName) => {
         setPopups(prevPopups => ({
-            ...prevPopups,
-            [popupName]: true
+          ...prevPopups,
+          [popupName]: true,
         }));
     };
-
+    
     const hidePopup = (popupName) => {
         setPopups(prevPopups => ({
             ...prevPopups,
-            [popupName]: false
+            [popupName]: false,
         }));
     };
 
     const breadCrumbs = getBreadcrumbs(
-        props.config.rootPrefix,
-        props.config.teamsPrefix,
+        rootPrefix,
+        teamsPrefix,
         currentPrefix
     );
 
     const currentFolderName = getFolderName(
         currentPrefix,
-        props.config.rootPrefix
+        rootPrefix
     );
-
+    
     return (
         <div className="browser">
             <input 
@@ -380,18 +386,20 @@ const YourFiles = (props) => {
                 onChange={onFileChange}
                 multiple={true}
                 ref={fileInputRef}
-                style={{ display: "none" }}
+                style={{ display: 'none' }}
             />
             {error ? (
                 <ErrorModal
+                    open={!!error}
                     error={error}
                     onClose={() => setError(null)}
                 />
             ) : null}
             {popups.deleteObjects ? (
                 <DeleteObjectsPopup 
+                    open={popups.deleteObjects}
                     s3={s3}
-                    bucketName={props.config.bucketName}
+                    bucketName={bucketName}
                     filesToDelete={filesToDelete}
                     foldersToDelete={foldersToDelete}
                     onClose={async () => {
@@ -404,18 +412,20 @@ const YourFiles = (props) => {
             ) : null}
             {popups.addFolder ? (
                 <AddFolderPopup 
+                    open={popups.addFolder}
                     s3={s3}
-                    bucketName={props.config.bucketName}
+                    bucketName={bucketName}
                     currentPrefix={currentPrefix}
                     onSuccess={() => onRefreshClick()}
                     onClose={() => hidePopup(popupTypes.ADD_FOLDER)}
                     onError={(ex) => showErrorPopup(ex)}
                 />
-            ): null}
-            {popups[popupTypes.UPLOAD_FILES] ? (
+            ) : null}
+            {popups.uploadFiles ? (
                 <UploadFilesPopup 
+                    open={popups.uploadFiles}
                     s3={s3}
-                    bucketName={props.config.bucketName}
+                    bucketName={bucketName}
                     currentPrefix={currentPrefix}
                     selectedFiles={selectedFiles}
                     folderName={currentFolderName}
@@ -425,7 +435,7 @@ const YourFiles = (props) => {
             ) : null}
 
             <div
-                className={`drop-zone ${dragActive ? "drag-active" : ""}`}
+                className={`drop-zone ${dragActive ? 'drag-active' : ''}`}
                 onDragEnter={handleDragEnter}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
@@ -449,18 +459,18 @@ const YourFiles = (props) => {
                     createTableUrl={createTableUrl}
                     onFolderClick={handleFolderClick}
                     onFolderSelect={onFolderSelect}
-                    onFileClick={onFileClick}
+                    onFileClick={handleFileClick}
                     onFileSelect={onFileSelect}
                 />
                 {showBigDataMessage ? (
                     <BigDataMessage 
-                        bigDataFolder={bigDataFolder}
+                        bigDataFolder={bigdataPrefix}
                         bucketName={bucketName}
                     />
                 ) : null}
                 {currentPrefix.startsWith('teams/') ? 
                     <TeamsPrefixMessage
-                        team={props.config.teamsPrefixes.find(t => currentPrefix.startsWith(t.prefix))}
+                        team={teamsPrefixes.find(t => currentPrefix.startsWith(t.prefix))}
                         bucketName={bucketName}
                 /> : null}
             </div>

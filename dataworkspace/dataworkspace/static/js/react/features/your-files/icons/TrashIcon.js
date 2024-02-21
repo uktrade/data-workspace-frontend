@@ -1,7 +1,8 @@
-import React from "react";
-import classNames from "classnames";
+import React from 'react';
 
-export function TrashIcon(props) {
+import classNames from 'classnames';
+
+export default function TrashIcon(props) {
   let width = 16;
   let height = 18;
   if (props.isNavIcon) {
@@ -9,9 +10,9 @@ export function TrashIcon(props) {
     height = 60;
   }
 
-  const svgClasses = classNames("svg-inline--fa", "fa-trash-alt", "fa-w-14", {
-    "navbutton-icon": props.isNavIcon,
-    "button-icon": !props.isNavIcon,
+  const svgClasses = classNames('svg-inline--fa', 'fa-trash-alt', 'fa-w-14', {
+    'navbutton-icon': props.isNavIcon,
+    'button-icon': !props.isNavIcon,
   });
 
   return (

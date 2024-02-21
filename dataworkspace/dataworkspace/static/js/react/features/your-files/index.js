@@ -1,7 +1,8 @@
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import App from './App.jsx';
+import App from './App';
+import YourFiles from './YourFiles';
 
 // Workaround for hot reload "ignored-module" issue when developing locally.
 if (module.hot) {
@@ -13,6 +14,6 @@ const root = createRoot(rootElement);
 
 root.render(
   <StrictMode>
-    <App config={YOURFILES_CONFIG} />
+    <YourFiles config={YOURFILES_CONFIG} />
   </StrictMode>
 );

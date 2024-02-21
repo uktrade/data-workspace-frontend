@@ -1,13 +1,15 @@
 import React from 'react';
 
-import AddFolderPopup from './components/AddFolderModal';
+import AWS from 'aws-sdk';
+
+import AddFolderPopup from './components/AddFolderPopup';
 import BigDataMessage from './components/BigDataMessage';
-import DeleteObjectsPopup from './components/DeleteObjectsModal';
-import ErrorModal from './components/ErrorModal';
+import DeleteObjectsPopup from './components/DeleteObjectsPopup';
+import ErrorModal from './components/ErrorPopup';
 import FileList from './components/FileList';
 import Header from './components/Header';
 import TeamsPrefixMessage from './components/TeamsPrefixMessage';
-import UploadFilesPopup from './components/UploadFilesModal';
+import UploadFilesPopup from './components/UploadFilesPopup';
 import { getBreadcrumbs, getFolderName } from './utils';
 import Credentials from './utils/Credentials';
 
@@ -36,7 +38,6 @@ export default class App extends React.Component {
         timeout: 10 * 60 * 60 * 1000
       }
     };
-    console.log('AWS Config', awsConfig);
     console.log('AWS Config', awsConfig);
     this.s3 = new AWS.S3(awsConfig);
 
@@ -121,6 +122,8 @@ export default class App extends React.Component {
     const state = { popups: {} };
     state.popups[popupName] = true;
     this.setState(state);
+
+    console.log(this.state.popups);
   }
 
   hidePopup = (popupName) => {
