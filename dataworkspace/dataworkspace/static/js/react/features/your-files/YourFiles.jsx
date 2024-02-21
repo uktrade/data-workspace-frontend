@@ -5,7 +5,7 @@ import AWS from 'aws-sdk';
 import AddFolderPopup from './components/AddFolderPopup';
 import BigDataMessage from './components/BigDataMessage';
 import DeleteObjectsPopup from './components/DeleteObjectsPopup';
-import ErrorModal from './components/ErrorPopup';
+import ErrorPopup from './components/ErrorPopup';
 import FileList from './components/FileList';
 import Header from './components/Header';
 import TeamsPrefixMessage from './components/TeamsPrefixMessage';
@@ -389,7 +389,7 @@ const YourFiles = (props) => {
                 style={{ display: 'none' }}
             />
             {error ? (
-                <ErrorModal
+                <ErrorPopup
                     open={!!error}
                     error={error}
                     onClose={() => setError(null)}
