@@ -37,6 +37,7 @@ class TestApplicationInstanceReportAPIView(BaseAPIViewTest):
                 app_instance.spawner_stopped_at
             ),
             "state": app_instance.get_state_display(),
+            "successfully_started_at": app_instance.successfully_started_at,
         }
 
     @pytest.mark.django_db
