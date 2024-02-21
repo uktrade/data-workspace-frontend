@@ -162,8 +162,8 @@ class TestSyncQuickSightPermissions:
     @mock.patch("dataworkspace.apps.applications.utils.cache")
     def test_list_user_pagination(self, mock_cache, mock_boto3_client, mock_creds):
         # Arrange
-        UserFactory.create(username="fake@email.com")
-        UserFactory.create(username="fake2@email.com")
+        UserFactory.create(username="fake@email.com", email="updated@email.com")
+        UserFactory.create(username="fake2@email.com", email="fake2@email.com")
         SourceTableFactory(
             dataset=MasterDataSetFactory.create(
                 user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
@@ -214,7 +214,7 @@ class TestSyncQuickSightPermissions:
                 Role="AUTHOR",
                 CustomPermissionsName="author-custom-permissions-test",
                 UserName="user/fake@email.com",
-                Email="fake@email.com",
+                Email="updated@email.com",
             ),
             mock.call(
                 AwsAccountId=mock.ANY,
