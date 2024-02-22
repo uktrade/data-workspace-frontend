@@ -163,7 +163,7 @@
 
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
-        {% include "partials/react-slot.html" with mount_id="data-usage" id=model.id %}
+        {% include "partials/react-slot.html" with mount_id="data-usage" id=model.id test_id="data-usage" %}
     </div>
   </div>
 
@@ -172,7 +172,7 @@
     <div class="govuk-grid-row">
         {% if related_data %}
           <div class="govuk-grid-column-one-half govuk-!-margin-top-8">
-            <aside role="complementary">
+            <aside role="complementary" data-test="related-data">
                   <h3 class="govuk-heading-m">Related data</h3>
                   <nav role="navigation">
                     <ul class="govuk-list">
@@ -187,7 +187,7 @@
           </div>
         {% endif %}
         <div class="govuk-grid-column-one-half govuk-!-margin-top-8">
-          <aside role="complementary">
+          <aside role="complementary" data-test="related-dashboards">
             <h3 class="govuk-heading-m">Related dashboards</h3>
             {% if related_visualisations %}
               <nav role="navigation">

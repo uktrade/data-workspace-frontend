@@ -95,7 +95,7 @@
     "pk": "161d4b68-4b0d-4d96-80dc-d2f9867ff515",
     "fields": {
       "created_date": "2024-01-12T14:18:19.489Z",
-      "modified_date": "2024-02-01T14:30:00.234Z",
+      "modified_date": "2024-02-22T10:37:33.227Z",
       "deleted": false,
       "created_by": 2,
       "updated_by": 2,
@@ -118,7 +118,7 @@
       "published_at": "2024-01-12",
       "dictionary_published": true,
       "eligibility_criteria": null,
-      "number_of_downloads": 50,
+      "number_of_downloads": 78,
       "information_asset_owner": 1,
       "information_asset_manager": 1,
       "reference_code": null,
@@ -141,13 +141,13 @@
     "pk": "3112a785-6bd9-4e56-bc67-10b6cccb5db7",
     "fields": {
       "created_date": "2024-01-12T09:24:49.567Z",
-      "modified_date": "2024-02-09T13:25:06.786Z",
+      "modified_date": "2024-02-22T10:37:33.198Z",
       "deleted": false,
       "created_by": 2,
       "updated_by": 2,
       "type": 1,
-      "name": "Source dataset a",
-      "slug": "source-dataset-a",
+      "name": "Source dataset",
+      "slug": "source-dataset",
       "short_description": "This is a short description about a source dataset",
       "grouping": null,
       "description": "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>",
@@ -155,8 +155,8 @@
       "acronyms": "",
       "enquiries_contact": 2,
       "licence": "No licence",
-      "licence_url": "No licence url",
-      "retention_policy": "",
+      "licence_url": "http://some-url.com",
+      "retention_policy": "Records are retained for 10 years after the form was submitted",
       "personal_data": "Does not contain personal data",
       "restrictions_on_usage": "<p>DBT internal use only</p>",
       "user_access_type": "REQUIRES_AUTHORIZATION",
@@ -165,7 +165,7 @@
       "dictionary_published": false,
       "eligibility_criteria": null,
       "number_of_downloads": 0,
-      "information_asset_owner": 1,
+      "information_asset_owner": 2,
       "information_asset_manager": 1,
       "reference_code": null,
       "authorized_email_domains": "[]",
@@ -187,7 +187,7 @@
     "pk": "406291aa-e35e-41a9-ab05-6355c5cc92d6",
     "fields": {
       "created_date": "2024-01-12T13:57:10.044Z",
-      "modified_date": "2024-02-01T14:30:00.203Z",
+      "modified_date": "2024-02-22T10:37:33.117Z",
       "deleted": false,
       "created_by": 2,
       "updated_by": 2,
@@ -233,7 +233,7 @@
     "pk": "b603337f-0073-43ac-9dc4-05a8d5cf635d",
     "fields": {
       "created_date": "2024-01-12T14:29:16.808Z",
-      "modified_date": "2024-02-01T14:30:00.229Z",
+      "modified_date": "2024-02-22T10:37:33.040Z",
       "deleted": false,
       "created_by": 2,
       "updated_by": 2,
@@ -279,7 +279,7 @@
     "pk": "c9e3eeac-4dd3-4c3d-8350-18ae2064311b",
     "fields": {
       "created_date": "2024-01-12T14:32:50.390Z",
-      "modified_date": "2024-02-01T14:30:00.244Z",
+      "modified_date": "2024-02-22T10:37:33.149Z",
       "deleted": false,
       "created_by": null,
       "updated_by": 2,
@@ -325,13 +325,13 @@
     "pk": "d7094267-ddfc-40f3-a4a8-ca4f30a0992f",
     "fields": {
       "created_date": "2024-01-12T10:16:35.298Z",
-      "modified_date": "2024-02-01T14:30:00.248Z",
+      "modified_date": "2024-02-22T10:37:33.257Z",
       "deleted": false,
       "created_by": 2,
       "updated_by": 2,
       "type": 1,
-      "name": "source dataset b",
-      "slug": "source-dataset-b",
+      "name": "source dataset - no permissions",
+      "slug": "source-dataset-no-permissions",
       "short_description": "This is a short description about a source dataset",
       "grouping": null,
       "description": "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>",
@@ -339,8 +339,8 @@
       "acronyms": "",
       "enquiries_contact": 2,
       "licence": "No licence",
-      "licence_url": "No licence url",
-      "retention_policy": "",
+      "licence_url": "http://some-url.com",
+      "retention_policy": "Records are retained for 10 years after the form was submitted",
       "personal_data": "Does not contain personal data",
       "restrictions_on_usage": "<p>DBT internal use only</p>",
       "user_access_type": "REQUIRES_AUTHORIZATION",
@@ -354,13 +354,59 @@
       "reference_code": null,
       "authorized_email_domains": "[]",
       "request_approvers": null,
-      "search_vector_english": "'ad':34 'adipisc':19 'aliqua':31 'aliquip':44 'amet':17 'b':3A 'commodo':47 'consectetur':18 'consequat':48 'dataset':2A,12B 'descript':8B 'dolor':15,29 'ea':46 'eiusmod':23 'elit':20 'enim':33 'et':28 'ex':45 'exercit':39 'incididunt':25 'ipsum':14 'labor':27 'labori':41 'lorem':13 'magna':30 'minim':35 'nisi':42 'nostrud':38 'qui':37 'sed':21 'short':7B 'sit':16 'sourc':1A,11B 'tempor':24 'ullamco':40 'ut':26,32,43 'veniam':36",
-      "search_vector_english_name": "'b':3 'dataset':2 'sourc':1",
+      "search_vector_english": "'ad':35 'adipisc':20 'aliqua':32 'aliquip':45 'amet':18 'commodo':48 'consectetur':19 'consequat':49 'dataset':2A,13B 'descript':9B 'dolor':16,30 'ea':47 'eiusmod':24 'elit':21 'enim':34 'et':29 'ex':46 'exercit':40 'incididunt':26 'ipsum':15 'labor':28 'labori':42 'lorem':14 'magna':31 'minim':36 'nisi':43 'nostrud':39 'permiss':4A 'qui':38 'sed':22 'short':8B 'sit':17 'sourc':1A,12B 'tempor':25 'ullamco':41 'ut':27,33,44 'veniam':37",
+      "search_vector_english_name": "'dataset':2 'permiss':4 'sourc':1",
       "search_vector_english_short_description": "'dataset':9 'descript':5 'short':4 'sourc':8",
       "search_vector_english_tags": "",
       "search_vector_english_description": "'ad':22 'adipisc':7 'aliqua':19 'aliquip':32 'amet':5 'commodo':35 'consectetur':6 'consequat':36 'dolor':3,17 'ea':34 'eiusmod':11 'elit':8 'enim':21 'et':16 'ex':33 'exercit':27 'incididunt':13 'ipsum':2 'labor':15 'labori':29 'lorem':1 'magna':18 'minim':23 'nisi':30 'nostrud':26 'qui':25 'sed':9 'sit':4 'tempor':12 'ullamco':28 'ut':14,20,31 'veniam':24",
       "average_unique_users_daily": 0.0,
       "government_security_classification": 2,
+      "tags": [],
+      "data_catalogue_editors": [],
+      "sensitivity": [2]
+    }
+  },
+  {
+    "model": "datasets.dataset",
+    "pk": "f66c88c3-b6de-4c18-921f-8cd409861eab",
+    "fields": {
+      "created_date": "2024-02-21T13:29:25.231Z",
+      "modified_date": "2024-02-22T10:37:33.161Z",
+      "deleted": false,
+      "created_by": 2,
+      "updated_by": 2,
+      "type": 2,
+      "name": "Data cut - no permissons",
+      "slug": "data-cut-no-permissons",
+      "short_description": "This is a short description",
+      "grouping": null,
+      "description": "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>",
+      "notes": "",
+      "acronyms": "",
+      "enquiries_contact": 1,
+      "licence": "No licence",
+      "licence_url": "No licence url",
+      "retention_policy": "",
+      "personal_data": null,
+      "restrictions_on_usage": "<p>DBT internal use only</p>",
+      "user_access_type": "REQUIRES_AUTHORIZATION",
+      "published": true,
+      "published_at": "2024-02-21",
+      "dictionary_published": false,
+      "eligibility_criteria": null,
+      "number_of_downloads": 0,
+      "information_asset_owner": 1,
+      "information_asset_manager": 1,
+      "reference_code": null,
+      "authorized_email_domains": "[]",
+      "request_approvers": null,
+      "search_vector_english": "'ad':31 'adipisc':16 'aliqua':28 'aliquip':41 'amet':14 'commodo':44 'consectetur':15 'consequat':45 'cut':2A 'data':1A 'descript':9B 'dolor':12,26 'ea':43 'eiusmod':20 'elit':17 'enim':30 'et':25 'ex':42 'exercit':36 'incididunt':22 'ipsum':11 'labor':24 'labori':38 'lorem':10 'magna':27 'minim':32 'nisi':39 'nostrud':35 'permisson':4A 'qui':34 'sed':18 'short':8B 'sit':13 'tempor':21 'ullamco':37 'ut':23,29,40 'veniam':33",
+      "search_vector_english_name": "'cut':2 'data':1 'permisson':4",
+      "search_vector_english_short_description": "'descript':5 'short':4",
+      "search_vector_english_tags": "",
+      "search_vector_english_description": "'ad':22 'adipisc':7 'aliqua':19 'aliquip':32 'amet':5 'commodo':35 'consectetur':6 'consequat':36 'dolor':3,17 'ea':34 'eiusmod':11 'elit':8 'enim':21 'et':16 'ex':33 'exercit':27 'incididunt':13 'ipsum':2 'labor':15 'labori':29 'lorem':1 'magna':18 'minim':23 'nisi':30 'nostrud':26 'qui':25 'sed':9 'sit':4 'tempor':12 'ullamco':28 'ut':14,20,31 'veniam':24",
+      "average_unique_users_daily": 0.0,
+      "government_security_classification": 1,
       "tags": [],
       "data_catalogue_editors": [],
       "sensitivity": [2]
@@ -447,6 +493,26 @@
     }
   },
   {
+    "model": "datasets.sourcetable",
+    "pk": "f29eef9f-4cfb-467a-a475-38928d3f0e32",
+    "fields": {
+      "created_date": "2024-02-22T08:27:15.788Z",
+      "modified_date": "2024-02-22T08:27:15.788Z",
+      "dataset": "d7094267-ddfc-40f3-a4a8-ca4f30a0992f",
+      "reference_number": null,
+      "name": "source_data_set",
+      "database": "ac99394d-336c-4de9-8c9f-c5bd38d0b670",
+      "schema": "public",
+      "frequency": 1,
+      "table": "test_dataset",
+      "dataset_finder_opted_in": false,
+      "data_grid_enabled": true,
+      "data_grid_download_enabled": false,
+      "data_grid_download_limit": null,
+      "disable_data_grid_interaction": false
+    }
+  },
+  {
     "model": "datasets.datasetuserpermission",
     "pk": 1,
     "fields": {
@@ -476,6 +542,14 @@
     "fields": {
       "user": 2,
       "dataset": "3112a785-6bd9-4e56-bc67-10b6cccb5db7"
+    }
+  },
+  {
+    "model": "datasets.datasetuserpermission",
+    "pk": 5,
+    "fields": {
+      "user": 1,
+      "dataset": "f66c88c3-b6de-4c18-921f-8cd409861eab"
     }
   },
   {
@@ -509,6 +583,22 @@
       "created_date": "2024-02-14T15:17:08.667Z",
       "modified_date": "2024-02-14T15:17:08.667Z",
       "dataset": "b603337f-0073-43ac-9dc4-05a8d5cf635d",
+      "reference_number": null,
+      "name": "Some report",
+      "database": "ac99394d-336c-4de9-8c9f-c5bd38d0b670",
+      "query": "SELECT * FROM public.test_dataset",
+      "frequency": 1,
+      "reviewed": true,
+      "data_grid_enabled": true
+    }
+  },
+  {
+    "model": "datasets.customdatasetquery",
+    "pk": 2,
+    "fields": {
+      "created_date": "2024-02-21T13:29:25.241Z",
+      "modified_date": "2024-02-21T13:29:25.241Z",
+      "dataset": "f66c88c3-b6de-4c18-921f-8cd409861eab",
       "reference_number": null,
       "name": "Some report",
       "database": "ac99394d-336c-4de9-8c9f-c5bd38d0b670",
@@ -568,10 +658,10 @@
   },
   {
     "model": "eventlog.eventlog",
-    "pk": 1990,
+    "pk": 3239,
     "fields": {
       "user": 2,
-      "timestamp": "2024-02-16T14:12:25.317Z",
+      "timestamp": "2024-02-22T10:47:41.066Z",
       "event_type": 28,
       "content_type": 33,
       "object_id": "3112a785-6bd9-4e56-bc67-10b6cccb5db7",
@@ -583,10 +673,25 @@
   },
   {
     "model": "eventlog.eventlog",
-    "pk": 1991,
+    "pk": 3240,
     "fields": {
       "user": 2,
-      "timestamp": "2024-02-16T14:12:29.482Z",
+      "timestamp": "2024-02-22T10:47:56.204Z",
+      "event_type": 28,
+      "content_type": 33,
+      "object_id": "f66c88c3-b6de-4c18-921f-8cd409861eab",
+      "extra": {
+        "path": "/datasets/f66c88c3-b6de-4c18-921f-8cd409861eab",
+        "reference_dataset_version": "2024-02-21"
+      }
+    }
+  },
+  {
+    "model": "eventlog.eventlog",
+    "pk": 3241,
+    "fields": {
+      "user": 2,
+      "timestamp": "2024-02-22T10:48:02.720Z",
       "event_type": 28,
       "content_type": 33,
       "object_id": "161d4b68-4b0d-4d96-80dc-d2f9867ff515",
@@ -598,10 +703,10 @@
   },
   {
     "model": "eventlog.eventlog",
-    "pk": 1992,
+    "pk": 3242,
     "fields": {
       "user": 2,
-      "timestamp": "2024-02-16T14:12:34.851Z",
+      "timestamp": "2024-02-22T10:48:08.070Z",
       "event_type": 28,
       "content_type": 33,
       "object_id": "406291aa-e35e-41a9-ab05-6355c5cc92d6",
@@ -613,25 +718,10 @@
   },
   {
     "model": "eventlog.eventlog",
-    "pk": 1993,
+    "pk": 3243,
     "fields": {
       "user": 2,
-      "timestamp": "2024-02-16T14:12:40.119Z",
-      "event_type": 28,
-      "content_type": 33,
-      "object_id": "b603337f-0073-43ac-9dc4-05a8d5cf635d",
-      "extra": {
-        "path": "/datasets/b603337f-0073-43ac-9dc4-05a8d5cf635d",
-        "reference_dataset_version": "2024-01-12"
-      }
-    }
-  },
-  {
-    "model": "eventlog.eventlog",
-    "pk": 1994,
-    "fields": {
-      "user": 2,
-      "timestamp": "2024-02-16T14:12:45.833Z",
+      "timestamp": "2024-02-22T10:48:13.578Z",
       "event_type": 28,
       "content_type": 33,
       "object_id": "d7094267-ddfc-40f3-a4a8-ca4f30a0992f",
@@ -643,273 +733,15 @@
   },
   {
     "model": "eventlog.eventlog",
-    "pk": 1995,
+    "pk": 3244,
     "fields": {
       "user": 2,
-      "timestamp": "2024-02-16T14:12:54.182Z",
+      "timestamp": "2024-02-22T10:48:30.633Z",
       "event_type": 48,
       "content_type": null,
       "object_id": null,
       "extra": {
         "tool": "Superset"
-      }
-    }
-  },
-  {
-    "model": "eventlog.eventlog",
-    "pk": 2023,
-    "fields": {
-      "user": 2,
-      "timestamp": "2024-02-16T14:16:57.068Z",
-      "event_type": 28,
-      "content_type": 33,
-      "object_id": "b603337f-0073-43ac-9dc4-05a8d5cf635d",
-      "extra": {
-        "path": "/datasets/b603337f-0073-43ac-9dc4-05a8d5cf635d",
-        "reference_dataset_version": "2024-01-12"
-      }
-    }
-  },
-  {
-    "model": "eventlog.eventlog",
-    "pk": 2024,
-    "fields": {
-      "user": 2,
-      "timestamp": "2024-02-16T14:16:57.850Z",
-      "event_type": 42,
-      "content_type": 41,
-      "object_id": "1",
-      "extra": {
-        "path": "/datasets/b603337f-0073-43ac-9dc4-05a8d5cf635d/table/1/grid",
-        "dataset": "Data cut - tables and links",
-        "data_table_id": 1,
-        "data_table_name": "Some report",
-        "data_table_sourcetables": ["public.test_dataset"]
-      }
-    }
-  },
-  {
-    "model": "eventlog.eventlog",
-    "pk": 2025,
-    "fields": {
-      "user": 2,
-      "timestamp": "2024-02-16T14:16:58.404Z",
-      "event_type": 44,
-      "content_type": 41,
-      "object_id": "1",
-      "extra": {
-        "path": "/datasets/b603337f-0073-43ac-9dc4-05a8d5cf635d/table/1/grid",
-        "dataset": "Data cut - tables and links",
-        "status_code": 200,
-        "data_table_id": 1,
-        "data_table_name": "Some report",
-        "data_table_sourcetables": ["public.test_dataset"],
-        "query_time_milliseconds": 95
-      }
-    }
-  },
-  {
-    "model": "eventlog.eventlog",
-    "pk": 2026,
-    "fields": {
-      "user": 2,
-      "timestamp": "2024-02-16T14:16:58.912Z",
-      "event_type": 28,
-      "content_type": 33,
-      "object_id": "b603337f-0073-43ac-9dc4-05a8d5cf635d",
-      "extra": {
-        "path": "/datasets/b603337f-0073-43ac-9dc4-05a8d5cf635d",
-        "reference_dataset_version": "2024-01-12"
-      }
-    }
-  },
-  {
-    "model": "eventlog.eventlog",
-    "pk": 2027,
-    "fields": {
-      "user": 2,
-      "timestamp": "2024-02-16T14:16:59.334Z",
-      "event_type": 42,
-      "content_type": 41,
-      "object_id": "1",
-      "extra": {
-        "path": "/datasets/b603337f-0073-43ac-9dc4-05a8d5cf635d/table/1/grid",
-        "dataset": "Data cut - tables and links",
-        "data_table_id": 1,
-        "data_table_name": "Some report",
-        "data_table_sourcetables": ["public.test_dataset"]
-      }
-    }
-  },
-  {
-    "model": "eventlog.eventlog",
-    "pk": 2028,
-    "fields": {
-      "user": 2,
-      "timestamp": "2024-02-16T14:16:59.588Z",
-      "event_type": 44,
-      "content_type": 41,
-      "object_id": "1",
-      "extra": {
-        "path": "/datasets/b603337f-0073-43ac-9dc4-05a8d5cf635d/table/1/grid",
-        "dataset": "Data cut - tables and links",
-        "status_code": 200,
-        "data_table_id": 1,
-        "data_table_name": "Some report",
-        "data_table_sourcetables": ["public.test_dataset"],
-        "query_time_milliseconds": 62
-      }
-    }
-  },
-  {
-    "model": "eventlog.eventlog",
-    "pk": 2029,
-    "fields": {
-      "user": 2,
-      "timestamp": "2024-02-16T14:16:59.735Z",
-      "event_type": 28,
-      "content_type": 33,
-      "object_id": "b603337f-0073-43ac-9dc4-05a8d5cf635d",
-      "extra": {
-        "path": "/datasets/b603337f-0073-43ac-9dc4-05a8d5cf635d",
-        "reference_dataset_version": "2024-01-12"
-      }
-    }
-  },
-  {
-    "model": "eventlog.eventlog",
-    "pk": 2030,
-    "fields": {
-      "user": 2,
-      "timestamp": "2024-02-16T14:16:59.925Z",
-      "event_type": 42,
-      "content_type": 41,
-      "object_id": "1",
-      "extra": {
-        "path": "/datasets/b603337f-0073-43ac-9dc4-05a8d5cf635d/table/1/grid",
-        "dataset": "Data cut - tables and links",
-        "data_table_id": 1,
-        "data_table_name": "Some report",
-        "data_table_sourcetables": ["public.test_dataset"]
-      }
-    }
-  },
-  {
-    "model": "eventlog.eventlog",
-    "pk": 2031,
-    "fields": {
-      "user": 2,
-      "timestamp": "2024-02-16T14:17:00.242Z",
-      "event_type": 44,
-      "content_type": 41,
-      "object_id": "1",
-      "extra": {
-        "path": "/datasets/b603337f-0073-43ac-9dc4-05a8d5cf635d/table/1/grid",
-        "dataset": "Data cut - tables and links",
-        "status_code": 200,
-        "data_table_id": 1,
-        "data_table_name": "Some report",
-        "data_table_sourcetables": ["public.test_dataset"],
-        "query_time_milliseconds": 137
-      }
-    }
-  },
-  {
-    "model": "eventlog.eventlog",
-    "pk": 2032,
-    "fields": {
-      "user": 2,
-      "timestamp": "2024-02-16T14:17:00.609Z",
-      "event_type": 28,
-      "content_type": 33,
-      "object_id": "161d4b68-4b0d-4d96-80dc-d2f9867ff515",
-      "extra": {
-        "path": "/datasets/161d4b68-4b0d-4d96-80dc-d2f9867ff515",
-        "reference_dataset_version": "2024-01-12"
-      }
-    }
-  },
-  {
-    "model": "eventlog.eventlog",
-    "pk": 2033,
-    "fields": {
-      "user": 2,
-      "timestamp": "2024-02-16T14:17:01.258Z",
-      "event_type": 1,
-      "content_type": 33,
-      "object_id": "161d4b68-4b0d-4d96-80dc-d2f9867ff515",
-      "extra": {
-        "pk": "23d0cb66-cf24-4f9f-b3ec-e81481b2bdb1",
-        "path": "/datasets/161d4b68-4b0d-4d96-80dc-d2f9867ff515/link/23d0cb66-cf24-4f9f-b3ec-e81481b2bdb1/download",
-        "model": "datasets.sourcelink",
-        "fields": {
-          "url": "http://some.data.com/download.csv",
-          "name": "Source link 1",
-          "format": "CSV",
-          "dataset": "161d4b68-4b0d-4d96-80dc-d2f9867ff515",
-          "frequency": "daily",
-          "link_type": 1,
-          "created_date": "2024-01-12T14:18:19.525Z",
-          "modified_date": "2024-01-12T14:18:19.525Z",
-          "reference_number": null
-        }
-      }
-    }
-  },
-  {
-    "model": "eventlog.eventlog",
-    "pk": 2034,
-    "fields": {
-      "user": 2,
-      "timestamp": "2024-02-16T14:17:01.882Z",
-      "event_type": 28,
-      "content_type": 33,
-      "object_id": "161d4b68-4b0d-4d96-80dc-d2f9867ff515",
-      "extra": {
-        "path": "/datasets/161d4b68-4b0d-4d96-80dc-d2f9867ff515",
-        "reference_dataset_version": "2024-01-12"
-      }
-    }
-  },
-  {
-    "model": "eventlog.eventlog",
-    "pk": 2035,
-    "fields": {
-      "user": 2,
-      "timestamp": "2024-02-16T14:17:02.206Z",
-      "event_type": 1,
-      "content_type": 33,
-      "object_id": "161d4b68-4b0d-4d96-80dc-d2f9867ff515",
-      "extra": {
-        "pk": "23d0cb66-cf24-4f9f-b3ec-e81481b2bdb1",
-        "path": "/datasets/161d4b68-4b0d-4d96-80dc-d2f9867ff515/link/23d0cb66-cf24-4f9f-b3ec-e81481b2bdb1/download",
-        "model": "datasets.sourcelink",
-        "fields": {
-          "url": "http://some.data.com/download.csv",
-          "name": "Source link 1",
-          "format": "CSV",
-          "dataset": "161d4b68-4b0d-4d96-80dc-d2f9867ff515",
-          "frequency": "daily",
-          "link_type": 1,
-          "created_date": "2024-01-12T14:18:19.525Z",
-          "modified_date": "2024-01-12T14:18:19.525Z",
-          "reference_number": null
-        }
-      }
-    }
-  },
-  {
-    "model": "eventlog.eventlog",
-    "pk": 2036,
-    "fields": {
-      "user": 2,
-      "timestamp": "2024-02-16T14:17:02.448Z",
-      "event_type": 28,
-      "content_type": 33,
-      "object_id": "161d4b68-4b0d-4d96-80dc-d2f9867ff515",
-      "extra": {
-        "path": "/datasets/161d4b68-4b0d-4d96-80dc-d2f9867ff515",
-        "reference_dataset_version": "2024-01-12"
       }
     }
   }

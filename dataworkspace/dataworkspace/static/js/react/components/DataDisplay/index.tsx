@@ -8,7 +8,7 @@ import {
   SPACING_POINTS
 } from '@govuk-react/constants';
 import { typography } from '@govuk-react/lib';
-import { H3, Link, UnorderedList } from 'govuk-react';
+import { H2, Link, UnorderedList } from 'govuk-react';
 import styled, { css } from 'styled-components';
 
 import { TransformedDataUsageResponse } from '../../types/index';
@@ -129,7 +129,7 @@ const DataDisplay: React.FC<DataDisplayProps> = ({
 }) => {
   return (
     <DataDisplayContainer>
-      <H3>{title}</H3>
+      <H2 size="M">{title}</H2>
       {subTitle && (
         <StyledParagraph data-testid="data-usage-subtitle">
           {subTitle}
