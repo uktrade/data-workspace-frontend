@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 
+import LoadingBox from '@govuk-react/loading-box';
 import AWS from 'aws-sdk';
 
 import AddFolderPopup from './components/AddFolderPopup';
@@ -56,14 +57,11 @@ const YourFiles = (props) => {
     const [showBigDataMessage, setShowBigDataMessage] = useState(false);
     const [dragActive, setDragActive] = useState(false);
     const [popups, setPopups] = useState({});
+    const [loading, setLoading] = useState(true);
 
     const fileInputRef = useRef(null);
 
     useEffect(() => {
-        const fetchData = async () => {
-            await refresh();
-        };
-
         const handlePopState = (event) => {
             setCurrentPrefix(
                 event.state && event.state.prefix
@@ -73,13 +71,10 @@ const YourFiles = (props) => {
         };
 
         console.log('AWS Config', awsConfig);
-        fetchData();
 
         window.addEventListener('popstate', handlePopState);
 
-        return() => {
-            window.removeEventListener('popstate', handlePopState);
-        };
+        refresh();
     }, []);
 
     const refresh = async (prefix) => {
@@ -91,6 +86,8 @@ const YourFiles = (props) => {
             Delimiter: '/'
         };
 
+        console.log('Running refresh');
+
         const listObjects = async () => {
             let response;
             try {
@@ -101,7 +98,7 @@ const YourFiles = (props) => {
             }
 
             const files = response.Contents.filter(
-                (file) => file.key !== params.Prefix
+                (file) => file.Key !== params.Prefix
             ).map((file) => ({
                 ...file,
                 formattedDate: new Date(file.LastModified),
@@ -143,7 +140,7 @@ const YourFiles = (props) => {
             const folders = teamsFolders
                 .concat(bigDataFolder)
                 .concat(foldersWithoutBigData);
-                
+            
             return {
                 files,
                 folders
@@ -160,6 +157,8 @@ const YourFiles = (props) => {
 
             console.log('files:', files);
             console.log('folders:', folders);
+
+            setLoading(false);
         } catch (ex) {
             console.log('Error', ex);
             showErrorPopup(ex);
@@ -263,7 +262,7 @@ const YourFiles = (props) => {
             window.location.href = url;
         } catch (ex) {
             console.log('Error', ex);
-            // show error popup here
+            showErrorPopup(ex);
         }
     };
 
@@ -433,47 +432,49 @@ const YourFiles = (props) => {
                     onUploadsComplete={onUploadsComplete}
                 />
             ) : null}
-
-            <div
-                className={`drop-zone ${dragActive ? 'drag-active' : ''}`}
-                onDragEnter={handleDragEnter}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
-            >
-                <Header 
-                    breadCrumbs={breadCrumbs}
-                    canDelete={
-                        folders.concat(files).filter((f) => f.isSelected).length > 0
-                    }
-                    currentPrefix={currentPrefix}
-                    onBreadcrumbClick={onBreadcrumbClick}
-                    onRefreshClick={onRefreshClick}
-                    onNewFolderClick={showNewFolderPopup}
-                    onUploadClick={onUploadClick}
-                    onDeleteClick={onDeleteClick}
-                />
-                <FileList 
-                    files={files}
-                    folders={folders}
-                    createTableUrl={createTableUrl}
-                    onFolderClick={handleFolderClick}
-                    onFolderSelect={onFolderSelect}
-                    onFileClick={handleFileClick}
-                    onFileSelect={onFileSelect}
-                />
-                {showBigDataMessage ? (
-                    <BigDataMessage 
-                        bigDataFolder={bigdataPrefix}
-                        bucketName={bucketName}
+            <LoadingBox loading={loading}>
+                <div
+                    className={`drop-zone ${dragActive ? 'drag-active' : ''}`}
+                    onDragEnter={handleDragEnter}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                >
+                    <Header 
+                        breadCrumbs={breadCrumbs}
+                        canDelete={
+                            folders.concat(files).filter((f) => f.isSelected).length > 0
+                        }
+                        currentPrefix={currentPrefix}
+                        onBreadcrumbClick={onBreadcrumbClick}
+                        onRefreshClick={onRefreshClick}
+                        onNewFolderClick={showNewFolderPopup}
+                        onUploadClick={onUploadClick}
+                        onDeleteClick={onDeleteClick}
                     />
-                ) : null}
-                {currentPrefix.startsWith('teams/') ? 
-                    <TeamsPrefixMessage
-                        team={teamsPrefixes.find(t => currentPrefix.startsWith(t.prefix))}
-                        bucketName={bucketName}
-                /> : null}
-            </div>
+                    <FileList 
+                        files={files}
+                        folders={folders}
+                        createTableUrl={createTableUrl}
+                        onFolderClick={handleFolderClick}
+                        onFolderSelect={onFolderSelect}
+                        onFileClick={handleFileClick}
+                        onFileSelect={onFileSelect}
+                    />
+                    
+                    {showBigDataMessage ? (
+                        <BigDataMessage 
+                            bigDataFolder={bigdataPrefix}
+                            bucketName={bucketName}
+                        />
+                    ) : null}
+                    {currentPrefix.startsWith('teams/') ? 
+                        <TeamsPrefixMessage
+                            team={teamsPrefixes.find(t => currentPrefix.startsWith(t.prefix))}
+                            bucketName={bucketName}
+                    /> : null}
+                </div>
+            </LoadingBox>
         </div>
     );
 };
