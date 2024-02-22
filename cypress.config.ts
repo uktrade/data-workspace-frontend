@@ -7,7 +7,7 @@ export default defineConfig({
     video: true,
     videosFolder: "test-results/videos",
     viewportWidth: 1200,
-    viewportHeight: 900,
+    viewportHeight: 2000,
     setupNodeEvents(on, config) {
       // implement node event listeners here
     },

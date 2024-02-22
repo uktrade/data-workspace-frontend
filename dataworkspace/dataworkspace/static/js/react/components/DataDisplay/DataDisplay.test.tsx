@@ -16,13 +16,13 @@ const data: TransformedDataUsageResponse = [
 describe('Data display', () => {
   it('should render a default title', () => {
     const { getByRole } = render(<DataDisplay data={data} />);
-    expect(getByRole('heading', { level: 3, name: 'Data usage' }));
+    expect(getByRole('heading', { level: 2, name: 'Data usage' }));
   });
   it('should render a custom title', () => {
     const { getByRole } = render(
       <DataDisplay data={data} title="Custom title" />
     );
-    expect(getByRole('heading', { level: 3, name: 'Custom title' }));
+    expect(getByRole('heading', { level: 2, name: 'Custom title' }));
   });
   it('should render a sub title', () => {
     const { getByTestId } = render(
