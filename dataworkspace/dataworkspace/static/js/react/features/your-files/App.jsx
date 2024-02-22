@@ -153,6 +153,9 @@ export default class App extends React.Component {
   };
 
   onUploadsComplete = async () => {
+    const req = new XMLHttpRequest();
+    req.open('GET', '/files/file-update/trigger');
+    req.send();
     await this.refresh(this.state.currentPrefix);
   };
 
