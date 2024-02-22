@@ -84,7 +84,7 @@ class TestSyncUserStorage:
         user.profile.sso_status = "active"
         user.profile.first_login = datetime.now()
         user.profile.save()
-        
+
         paginator = mock.MagicMock()
         paginator.paginate.return_value = [
             {

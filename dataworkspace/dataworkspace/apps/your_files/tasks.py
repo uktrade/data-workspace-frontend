@@ -122,6 +122,7 @@ def _sync_user_storage(user, paginator):
     # If we don't have any stats for this user, or the stats have changed since the last run,
     # create a new record
     if latest_stat is None or latest_stat.total_size_bytes != total_size:
+        logger.info("your_files_stats: User %s needs a new user stats record created", user.email)
         YourFilesUserPrefixStats.objects.create(
             user=user,
             prefix=user_home_prefix,
@@ -131,6 +132,9 @@ def _sync_user_storage(user, paginator):
         )
     # If no change since the last run just update the last checked date
     elif latest_stat:
+        logger.info(
+            "your_files_stats: User %s has no change in files since the last run", user.email
+        )
         latest_stat.last_checked_date = datetime.now(tz=pytz.utc)
         latest_stat.save(update_fields=["last_checked_date"])
 

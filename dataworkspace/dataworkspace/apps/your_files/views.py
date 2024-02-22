@@ -85,6 +85,7 @@ def s3_update(request):
     print("*********called collect_your_files_stats, sending api response")
     return HttpResponse("OK")
 
+
 @require_http_methods(["GET"])
 def s3_update_user(request):
     # Don't call any S3 api's in this view, offload that work to the celery queue and return OK back to the caller
