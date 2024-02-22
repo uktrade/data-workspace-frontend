@@ -25,6 +25,7 @@ class ApplicationInstanceSerializer(serializers.ModelSerializer):
             "cpu",
             "memory",
             "commit_id",
+            "successfully_started_at",
         )
 
     def get_state(self, obj):
