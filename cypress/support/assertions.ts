@@ -26,7 +26,7 @@ const assertLinksToManageDataset = (titleAndLinks: Record<string, string>) => {
   }
 };
 
-const assertTextandLinks = (
+const assertTextAndLinks = (
   selector: string,
   content: assertTextandLinksType
 ) => {
@@ -82,7 +82,7 @@ const assertDataAccessNotification = (id: DataCatalogueIDType) => {
 
 export {
   assertTable,
-  assertTextandLinks,
+  assertTextAndLinks,
   assertDatasetTitle,
   assertLinksToManageDataset,
   assertDataAccessNotification,

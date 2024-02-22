@@ -4,7 +4,7 @@ import {
   datacutWithNoPermissions,
 } from "../../fixtures/datasets";
 import {
-  assertTextandLinks,
+  assertTextAndLinks,
   assertDatasetTitle,
   assertTable,
   assertLinksToManageDataset,
@@ -16,9 +16,11 @@ describe("Source dataset catalogue", () => {
     beforeEach(() => {
       cy.visit(`/datasets/${sourceWithTable}`);
     });
+
     it("should display a title", () => {
       assertDatasetTitle("Source dataset", "Source dataset");
     });
+
     it("should display links to manage the dataset", () => {
       assertLinksToManageDataset({
         "Add to collection": `/collections/select-collection-for-membership/dataset/${sourceWithTable}`,
@@ -28,8 +30,9 @@ describe("Source dataset catalogue", () => {
         "Manage editors": `/datasets/${sourceWithTable}}/edit-data-catalogue-editors`,
       });
     });
+
     it("should have a summary section", () => {
-      assertTextandLinks("dataset-summary", [
+      assertTextAndLinks("dataset-summary", [
         { text: "Summary" },
         { text: "This is a short description about a source dataset" },
         { text: "Personal data" },
@@ -49,9 +52,11 @@ describe("Source dataset catalogue", () => {
         },
       ]);
     });
+
     it("should NOT display a notification for requesting access to the data", () => {
       cy.findByTestId("request-access-to-data").should("not.exist");
     });
+
     it("should display a data table", () => {
       cy.findByRole("heading", { level: 2, name: "Data tables" });
       assertTable({
@@ -72,9 +77,10 @@ describe("Source dataset catalogue", () => {
         ],
       });
     });
+
     it("should display a governance summary", () => {
       cy.findByRole("heading", { level: 2, name: "Governance" });
-      assertTextandLinks("governance-summary", [
+      assertTextAndLinks("governance-summary", [
         { text: "Information Asset Manager (IAM)" },
         {
           text: "Find out more about IAM's",
@@ -107,17 +113,19 @@ describe("Source dataset catalogue", () => {
         },
       ]);
     });
+
     it("should display data usage", () => {
       cy.findByRole("heading", { level: 2, name: "Data usage" });
-      assertTextandLinks("data-usage", [
+      assertTextAndLinks("data-usage", [
         {
           text: "The data below has been captured since this catalogue item was initially published.",
         },
       ]);
     });
+
     it("should not display any related dashboards", () => {
       cy.findByRole("heading", { level: 3, name: "Related dashboards" });
-      assertTextandLinks("related-dashboards", [
+      assertTextAndLinks("related-dashboards", [
         {
           text: "This data currently has no related dashboards.",
         },
@@ -131,13 +139,16 @@ describe("Source dataset catalogue", () => {
       ]);
     });
   });
+
   context("when a user has NO permissions to view the dataset", () => {
     beforeEach(() => {
       cy.visit(`/datasets/${sourceWithTableNoPermissions}`);
     });
+
     it("should display a title", () => {
       assertDatasetTitle("Source dataset", "source dataset - no permissions");
     });
+
     it("should display links to manage the dataset", () => {
       assertLinksToManageDataset({
         "Add to collection": `/collections/select-collection-for-membership/dataset/${sourceWithTableNoPermissions}`,
@@ -147,8 +158,9 @@ describe("Source dataset catalogue", () => {
         "Manage editors": `/datasets/${sourceWithTableNoPermissions}}/edit-data-catalogue-editors`,
       });
     });
+
     it("should have a summary section", () => {
-      assertTextandLinks("dataset-summary", [
+      assertTextAndLinks("dataset-summary", [
         { text: "Summary" },
         { text: "This is a short description about a source dataset" },
         { text: "Personal data" },
@@ -168,9 +180,11 @@ describe("Source dataset catalogue", () => {
         },
       ]);
     });
+
     it("should display a notification for requesting access to the data", () => {
       assertDataAccessNotification(sourceWithTableNoPermissions);
     });
+
     it("should display a data table", () => {
       cy.findByRole("heading", { level: 2, name: "Data tables" });
       assertTable({
@@ -191,9 +205,10 @@ describe("Source dataset catalogue", () => {
         ],
       });
     });
+
     it("should display a governance summary", () => {
       cy.findByRole("heading", { level: 2, name: "Governance" });
-      assertTextandLinks("governance-summary", [
+      assertTextAndLinks("governance-summary", [
         { text: "Information Asset Manager (IAM)" },
         {
           text: "Find out more about IAM's",
@@ -226,17 +241,19 @@ describe("Source dataset catalogue", () => {
         },
       ]);
     });
+
     it("should display data usage", () => {
       cy.findByRole("heading", { level: 2, name: "Data usage" });
-      assertTextandLinks("data-usage", [
+      assertTextAndLinks("data-usage", [
         {
           text: "The data below has been captured since this catalogue item was initially published.",
         },
       ]);
     });
+
     it("should not display any related dashboards", () => {
       cy.findByRole("heading", { level: 3, name: "Related dashboards" });
-      assertTextandLinks("related-dashboards", [
+      assertTextAndLinks("related-dashboards", [
         {
           text: "This data currently has no related dashboards.",
         },
