@@ -12,13 +12,6 @@ from dataworkspace.apps.datasets.constants import DataSetType, TagType
 from dataworkspace.apps.eventlog.models import EventLog
 
 
-class UserProfileFactory(factory.django.DjangoModelFactory):
-    sso_id = "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2"
-
-    class Meta:
-        model = "accounts.Profile"
-
-
 class UserFactory(factory.django.DjangoModelFactory):
     username = factory.LazyAttribute(lambda _: str(uuid.uuid4()))
     email = factory.LazyAttribute(lambda o: f"test.user+{o.username}@example.com")
@@ -26,6 +19,14 @@ class UserFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = get_user_model()
+
+
+class UserProfileFactory(factory.django.DjangoModelFactory):
+    sso_id = "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2"
+    user = factory.SubFactory(UserFactory)
+
+    class Meta:
+        model = "accounts.Profile"
 
 
 class DatabaseFactory(factory.django.DjangoModelFactory):

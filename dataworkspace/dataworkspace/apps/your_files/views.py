@@ -11,7 +11,9 @@ from django.http import (
     HttpResponseForbidden,
     HttpResponseRedirect,
     HttpResponseBadRequest,
+    HttpResponse,
 )
+from django.views.decorators.http import require_http_methods
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.generic import DetailView, FormView, TemplateView, ListView
@@ -44,6 +46,10 @@ from dataworkspace.apps.your_files.utils import (
     get_schema_for_user,
     get_user_schema,
 )
+from dataworkspace.apps.your_files.tasks import (
+    collect_your_files_stats,
+    collect_your_files_stats_for_user,
+)
 
 logger = logging.getLogger("app")
 
@@ -68,6 +74,16 @@ def your_files_home(request, s3_path=None):
         },
         status=200,
     )
+
+
+@require_http_methods(["GET"])
+def s3_update(request):
+    # Don't call any S3 api's in this view, offload that work to the celery queue and return OK back to the caller
+    print("*********calling collect_your_files_stats_for_user")
+    collect_your_files_stats.delay()
+    # collect_your_files_stats_for_user.delay(user_id=request.user.id)
+    print("*********called collect_your_files_stats_for_user, sending api response")
+    return HttpResponse("OK")
 
 
 class RequiredParameterGetRequestMixin:

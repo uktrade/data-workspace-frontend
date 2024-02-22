@@ -99,7 +99,7 @@ services:
       - DISABLE_CUSTOM_CORS_S3=1
       - AWS_DEFAULT_REGION=eu-west-2
       - EDGE_PORT=4566
-      - SERVICES=s3,sts,iam
+      - SERVICES=s3,cloudwatch,sts,iam,logs
       - EXTRA_CORS_ALLOWED_ORIGINS=http://dataworkspace.test:8000      
     volumes:
       - "./.localstack/mounted:/var/lib/localstack"
