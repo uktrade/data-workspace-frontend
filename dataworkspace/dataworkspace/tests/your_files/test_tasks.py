@@ -1,14 +1,11 @@
 from datetime import datetime
 
-import factory
 import mock
 import pytest
-import uuid
 
 from dataworkspace.apps.core.utils import get_s3_prefix
 from dataworkspace.apps.your_files.tasks import (
     collect_your_files_stats,
-    collect_your_files_stats_for_user,
     _sync_user_storage,
 )
 from dataworkspace.apps.your_files.models import YourFilesUserPrefixStats
