@@ -79,8 +79,17 @@ def your_files_home(request, s3_path=None):
 @require_http_methods(["GET"])
 def s3_update(request):
     # Don't call any S3 api's in this view, offload that work to the celery queue and return OK back to the caller
-    print("*********calling collect_your_files_stats_for_user")
+    print("*********calling collect_your_files_stats")
     collect_your_files_stats.delay()
+    # collect_your_files_stats_for_user.delay(user_id=request.user.id)
+    print("*********called collect_your_files_stats, sending api response")
+    return HttpResponse("OK")
+
+@require_http_methods(["GET"])
+def s3_update_user(request):
+    # Don't call any S3 api's in this view, offload that work to the celery queue and return OK back to the caller
+    print("*********calling collect_your_files_stats_for_user")
+    collect_your_files_stats_for_user.delay(user_id=request.user.id)
     # collect_your_files_stats_for_user.delay(user_id=request.user.id)
     print("*********called collect_your_files_stats_for_user, sending api response")
     return HttpResponse("OK")

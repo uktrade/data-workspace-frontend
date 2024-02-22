@@ -19,6 +19,7 @@ from dataworkspace.apps.your_files.views import (
     RestoreTableViewSuccess,
     UploadedTableListView,
     s3_update,
+    s3_update_user,
     your_files_home,
 )
 
@@ -104,6 +105,7 @@ urlpatterns = [
         name="restore-table-success",
     ),
     path("file-update/trigger", login_required(s3_update), name="files"),
+    path("file-update/trigger-user", login_required(s3_update_user), name="files"),
     path("", login_required(your_files_home), name="files"),
     path("<path:s3_path>", login_required(your_files_home), name="files"),
 ]

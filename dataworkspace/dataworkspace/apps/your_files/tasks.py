@@ -98,12 +98,10 @@ def _sync_user_storage(user, paginator):
     logger.info("your_files_stats: Collecting stats for user %s", user.email)
 
     user_home_prefix = get_s3_prefix(str(user.profile.sso_id))
-    print("***user_home_prefix", user_home_prefix)
     total_size = 0
     total_files = 0
     num_large_files = 0
     for page in paginator.paginate(Bucket=settings.NOTEBOOKS_BUCKET, Prefix=user_home_prefix):
-        print("***page", page)
         for metadata in page.get("Contents", []):
             if metadata["Key"].startswith(f"{user_home_prefix}bigdata"):
                 continue
@@ -111,7 +109,6 @@ def _sync_user_storage(user, paginator):
             total_files += 1
             if metadata["Size"] / 1e9 > 5:
                 num_large_files += 1
-    print("***total_files", total_files)
     if total_files == 0:
         logger.info(
             "your_files_stats: User %s has no files stored currently. Skipping", user.email
