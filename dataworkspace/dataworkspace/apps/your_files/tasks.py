@@ -24,7 +24,7 @@ logger = logging.getLogger("app")
 
 @celery_app.task()
 @close_all_connections_if_not_in_atomic_block
-def collect_your_files_stats():
+def collect_your_files_stats_all_users():
     if not waffle.switch_is_active("enable_your_files_stats_collection"):
         logger.info("your_files_stats: Skipping run as waffle switch is inactive")
         return
@@ -58,7 +58,7 @@ def collect_your_files_stats():
 
 @celery_app.task()
 @close_all_connections_if_not_in_atomic_block
-def collect_your_files_stats_for_user(user_id):
+def collect_your_files_stats_single_user(user_id):
     if not waffle.switch_is_active("enable_your_files_stats_collection"):
         logger.info("your_files_stats: Skipping run as waffle switch is inactive")
         return

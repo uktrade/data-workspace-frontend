@@ -442,8 +442,8 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
             "args": (),
         },
         "your-files-stats-collection": {
-            "task": "dataworkspace.apps.your_files.tasks.collect_your_files_stats",
-            "schedule": crontab(minute="30"),
+            "task": "dataworkspace.apps.your_files.tasks.collect_your_files_stats_all_users",
+            "schedule": 60,
             "args": (),
         },
     }
