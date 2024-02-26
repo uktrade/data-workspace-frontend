@@ -15,4 +15,4 @@
 Visit the [Data Workspace technical documentation](https://data-workspace.docs.trade.gov.uk/) for details on:
 
 - [how to run Data Workspace Frontend locally](https://data-workspace.docs.trade.gov.uk/development/)
-- [how to release Data Workspace](https://data-workspace.docs.trade.gov.uk/development/releases/)
+- [how to release Data Workspace Frontend](https://data-workspace.docs.trade.gov.uk/deployment/frontend/)
