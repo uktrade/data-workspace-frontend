@@ -31,40 +31,44 @@
     );
   </script>
 {% endblock footer_scripts %}
-{% block content %}
-  <div class="govuk-breadcrumbs govuk-!-padding-left-2 govuk-!-padding-bottom-2 govuk-!-margin-bottom-0 app-grid-breadcrumbs">
-    <ol class="govuk-breadcrumbs__list">
-      <li class="govuk-breadcrumbs__list-item">
-        <a class="govuk-breadcrumbs__link" href="">Home</a>
-      </li>
-      <li class="govuk-breadcrumbs__list-item">
-        <a class="govuk-breadcrumbs__link"
-           href="{% url "datasets:dataset_detail" dataset_uuid=model.uuid %}#{{ model.slug }}">{{ model.name }}</a>
-      </li>
-      <li class="govuk-breadcrumbs__list-item" {% if model.name|length > 30 %} title="{{model.name}}" {% endif %}>{{ model.name|truncatechars_html:30 }}
-      </li>
-    </ol>
-    {% flag SECURITY_CLASSIFICATION_FLAG %}
-    <div class="security-classification">
-    {% if not model.government_security_classification %}
-      <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
+
+{% block breadcrumbs %}
+<div class="govuk-breadcrumbs govuk-!-padding-left-2 govuk-!-padding-bottom-2 govuk-!-margin-bottom-0 app-grid-breadcrumbs">
+  <ol class="govuk-breadcrumbs__list">
+    <li class="govuk-breadcrumbs__list-item">
+      <a class="govuk-breadcrumbs__link" href="">Home</a>
+    </li>
+    <li class="govuk-breadcrumbs__list-item">
+      <a class="govuk-breadcrumbs__link"
+         href="{% url "datasets:dataset_detail" dataset_uuid=model.uuid %}#{{ model.slug }}">{{ model.name }}</a>
+    </li>
+    <li class="govuk-breadcrumbs__list-item" {% if model.name|length > 30 %} title="{{model.name}}" {% endif %}>{{ model.name|truncatechars_html:30 }}
+    </li>
+  </ol>
+  {% flag SECURITY_CLASSIFICATION_FLAG %}
+  <div class="security-classification">
+  {% if not model.government_security_classification %}
+    <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
+  {% else %}
+    {% if model.get_government_security_classification_display == "OFFICIAL" %}
+      <strong
+        class="govuk-tag govuk-tag--blue">{{ model.get_government_security_classification_display }}</strong>
     {% else %}
-      {% if model.get_government_security_classification_display == "OFFICIAL" %}
-        <strong
-          class="govuk-tag govuk-tag--blue">{{ model.get_government_security_classification_display }}</strong>
-      {% else %}
-        <strong
-          class="govuk-tag govuk-tag--red">{{ model.get_government_security_classification_display }}
-          {% if model.sensitivity.all %}
-            {% for sensitivity in model.sensitivity.all %}
-              {% if not forloop.first %}and{% endif %}</span> {{ sensitivity }}
-            {% endfor %}
-          {% endif %} </strong>
-      {% endif %}
+      <strong
+        class="govuk-tag govuk-tag--red">{{ model.get_government_security_classification_display }}
+        {% if model.sensitivity.all %}
+          {% for sensitivity in model.sensitivity.all %}
+            {% if not forloop.first %}and{% endif %}</span> {{ sensitivity }}
+          {% endfor %}
+        {% endif %} </strong>
     {% endif %}
+  {% endif %}
   </div>
-{% endflag %}
-  </div>
+  {% endflag %}
+</div>
+{% endblock %}
+
+{% block content %}
   <div id="collapsible-header" class="govuk-!-margin-top-4">
       {% include "datasets/partials/grid-view-saved.html" %}
       {% if model.enquiries_contact %}
