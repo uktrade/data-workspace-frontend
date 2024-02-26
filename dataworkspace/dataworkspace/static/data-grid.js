@@ -112,7 +112,6 @@ function showGridNotificationBanner(isVisible) {
   if (isVisible) {
     gridSavedBanner.classList.remove("govuk-visually-hidden");
     gridSavedBanner.setAttribute("role", "alert");
-    gridSavedBanner.focus();
   } else {
     gridSavedBanner.classList.add("govuk-visually-hidden");
     gridSavedBanner.removeAttribute("role");
@@ -120,6 +119,10 @@ function showGridNotificationBanner(isVisible) {
 
   gridSavedBanner.setAttribute("tabindex", tabIndexValue);
   dismissBanner.setAttribute("tabindex", tabIndexValue);
+
+  if (isVisible) {
+    gridSavedBanner.focus();
+  }
 }
 
 function initDataGrid(
