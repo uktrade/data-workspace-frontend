@@ -104,6 +104,24 @@ function submitFilterForm(action, fileName, gridOptions, columnDataTypeMap) {
   form.remove();
 }
 
+function handleBannerVisibility(isVisible) {
+  var gridSavedBanner = document.getElementById("grid-saved-banner");
+  var dismissBanner = document.getElementById("dismiss-banner");
+  var tabIndexValue = isVisible ? "0" : "-1";
+
+  if (isVisible) {
+    gridSavedBanner.classList.remove("govuk-visually-hidden");
+    gridSavedBanner.setAttribute("role", "alert");
+    gridSavedBanner.focus();
+  } else {
+    gridSavedBanner.classList.add("govuk-visually-hidden");
+    gridSavedBanner.removeAttribute("role");
+  }
+
+  gridSavedBanner.setAttribute("tabindex", tabIndexValue);
+  dismissBanner.setAttribute("tabindex", tabIndexValue);
+}
+
 function initDataGrid(
   columnConfig,
   dataEndpoint,
@@ -557,9 +575,7 @@ function initDataGrid(
       xhr.onreadystatechange = function () {
         if (this.readyState === XMLHttpRequest.DONE) {
           if (this.status === 200) {
-            document
-              .getElementById("grid-saved-banner")
-              .classList.remove("govuk-visually-hidden");
+            handleBannerVisibility(true);
           }
           saveViewButton.innerHTML = "Save view";
           saveViewButton.removeAttribute("disabled");
@@ -572,9 +588,7 @@ function initDataGrid(
       .getElementById("dismiss-banner")
       .addEventListener("click", function (e) {
         e.preventDefault();
-        document
-          .getElementById("grid-saved-banner")
-          .classList.add("govuk-visually-hidden");
+        handleBannerVisibility(false);
       });
   }
 }
