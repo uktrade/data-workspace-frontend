@@ -32,7 +32,7 @@
   </script>
 {% endblock %}
 
-{% block page_title %}Search - {{ block.super }}{% endblock %}
+{% block page_title %}Data Catalogue - {{ block.super }}{% endblock %}
 
 {% block content %}
   {% csrf_token %}
@@ -40,7 +40,7 @@
     <div class="govuk-grid-row">
       <div class="govuk-grid-column-full">
         <div class="search-field govuk-!-margin-bottom-2">
-          {% include 'partials/search_bar.html' with subTitle="Discover, access and analyse DBT data." %}
+          {% include 'partials/search_bar.html' with title="Data Catalogue" subTitle="Discover, access and analyse DBT data." %}
         </div>
       </div>
     </div>
