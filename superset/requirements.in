@@ -1,6 +1,0 @@
-apache-superset
-gevent
-gunicorn
-Pillow
-psycopg2-binary
-sentry-sdk[flask]

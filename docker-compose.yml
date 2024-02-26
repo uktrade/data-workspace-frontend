@@ -106,10 +106,11 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock"
 
   # Superset profile services
+  # Requires https://github.com/uktrade/data-workspace-superset cloned into ../data-workspace-superset
 
   data-workspace-superset:
     build:
-      context: superset
+      context: ../data-workspace-superset
       dockerfile: Dockerfile
       target: dev
     image: data-workspace-superset
@@ -128,7 +129,7 @@ services:
     env_file:
       - .envs/superset.dev.env
     volumes:
-      - ./superset/superset_config.py:/etc/superset/superset_config.py
+      - ./data-workspace-superset/superset_config.py:/etc/superset/superset_config.py
 
   # Test profile services
 
