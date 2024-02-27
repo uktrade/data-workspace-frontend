@@ -44,7 +44,7 @@ pipeline {
         checkout([
             $class: 'GitSCM',
             branches: [[name: params.GIT_COMMIT]],
-            userRemoteConfigs: [[url: 'https://github.com/uktrade/data-workspace.git']]
+            userRemoteConfigs: [[url: 'https://github.com/uktrade/data-workspace-frontend.git']]
         ])
         script {
           pullRequestNumber = sh(
@@ -72,22 +72,6 @@ pipeline {
                   """
               }
             }
-          }
-        }
-      }
-    }
-
-
-    stage('release: dev') {
-      parallel {
-        stage('release: data-workspace') {
-          steps {
-            ecs_pipeline_admin("analysisworkspace-dev", params.GIT_COMMIT)
-          }
-        }
-        stage('release: data-workspace-celery') {
-          steps {
-            ecs_pipeline_celery("analysisworkspace-dev", params.GIT_COMMIT)
           }
         }
       }
