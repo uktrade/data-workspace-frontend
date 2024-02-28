@@ -1,8 +1,10 @@
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import App from './App';
 import YourFiles from './YourFiles';
 
+// Workaround for hot reload "ignored-module" issue when developing locally.
 if (module.hot) {
   module.hot.accept();
 }
