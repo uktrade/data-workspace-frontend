@@ -37,7 +37,7 @@ class GraphDataSetUserPermission(models.Model):
 
 class SourceGraphCollection(models.Model):
     """
-    Skeleton Version of SourceCollection abstract model, SourceTable equivalent for ArangoDB. 
+    Skeleton Version of SourceGraphCollection abstract model, SourceTable equivalent for ArangoDB. 
     """
     graph_dataset = models.ForeignKey(GraphDataset, on_delete=models.CASCADE)
     reference_number = models.IntegerField(null=True)
