@@ -2105,21 +2105,21 @@ class TestStoreReferenceDatasetMetadata:
         )
 
 
-class TestCleanDatasetRestrictionsOnUsage():
+class TestCleanDatasetRestrictionsOnUsage:
     def test_when_restrictions_on_usage_is_none_no_changes_made(self):
         dataset = MagicMock()
         dataset.restrictions_on_usage = None
         clean_dataset_restrictions_on_usage(dataset)
         assert dataset.restrictions_on_usage is None
-        
+
     def test_when_restrictions_on_usage_contain_valid_tags_they_remain(self):
         dataset = MagicMock()
-        dataset.restrictions_on_usage = '<a>Hello</a>'
+        dataset.restrictions_on_usage = "<a>Hello</a>"
         clean_dataset_restrictions_on_usage(dataset)
-        assert dataset.restrictions_on_usage == '<a>Hello</a>'
-        
+        assert dataset.restrictions_on_usage == "<a>Hello</a>"
+
     def test_when_restrictions_on_usage_contain_invalid_tags_they_are_removed(self):
         dataset = MagicMock()
-        dataset.restrictions_on_usage = '<p><a>Hello</a></p>'
+        dataset.restrictions_on_usage = "<p><a>Hello</a></p>"
         clean_dataset_restrictions_on_usage(dataset)
-        assert dataset.restrictions_on_usage == '<a>Hello</a>'
+        assert dataset.restrictions_on_usage == "<a>Hello</a>"

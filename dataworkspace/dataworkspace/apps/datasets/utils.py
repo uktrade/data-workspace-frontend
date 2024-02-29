@@ -1191,6 +1191,7 @@ def get_recently_viewed_catalogue_pages(request):
             )
     return user_event_choice_list
 
+
 def clean_dataset_restrictions_on_usage(dataset):
     if dataset.restrictions_on_usage is not None:
         allowed_tags = bleach.ALLOWED_TAGS + ["a"]
