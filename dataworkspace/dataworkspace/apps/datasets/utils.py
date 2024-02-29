@@ -5,6 +5,7 @@ import os
 import time
 from functools import reduce
 from uuid import UUID
+import bleach
 
 import sqlparse
 import boto3
@@ -18,6 +19,7 @@ from django.db.models import Q, Max
 from django.db.utils import DatabaseError
 from django.http import Http404
 from django.urls import reverse
+from django.utils.safestring import mark_safe
 from psycopg2.sql import Identifier, Literal, SQL, Composed
 from waffle import switch_is_active
 from redis.exceptions import LockError, LockNotOwnedError
@@ -1188,3 +1190,17 @@ def get_recently_viewed_catalogue_pages(request):
                 }
             )
     return user_event_choice_list
+
+def clean_dataset_restrictions_on_usage(dataset):
+    if dataset.restrictions_on_usage is not None:
+        allowed_tags = bleach.ALLOWED_TAGS + ["a"]
+        allowed_attrs = bleach.ALLOWED_ATTRIBUTES.copy()
+        allowed_attrs["a"] = ["href", "class"]
+        dataset.restrictions_on_usage = mark_safe(
+            bleach.clean(
+                dataset.restrictions_on_usage,
+                tags=allowed_tags,
+                attributes=allowed_attrs,
+                strip=True,
+            )
+        )

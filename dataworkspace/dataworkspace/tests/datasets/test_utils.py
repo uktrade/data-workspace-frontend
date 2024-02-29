@@ -16,6 +16,7 @@ from dataworkspace.apps.datasets.models import (
     UserNotification,
 )
 from dataworkspace.apps.datasets.utils import (
+    clean_dataset_restrictions_on_usage,
     dataset_type_to_manage_unpublished_permission_codename,
     get_code_snippets_for_query,
     get_code_snippets_for_table,
@@ -2102,3 +2103,23 @@ class TestStoreReferenceDatasetMetadata:
             '[["link", "integer"], ["field1", "integer"]]',
             "\\x6777518eb5a5d30aa2e7267bdb11bb60",
         )
+
+
+class TestCleanDatasetRestrictionsOnUsage():
+    def test_when_restrictions_on_usage_is_none_no_changes_made(self):
+        dataset = MagicMock()
+        dataset.restrictions_on_usage = None
+        clean_dataset_restrictions_on_usage(dataset)
+        assert dataset.restrictions_on_usage is None
+        
+    def test_when_restrictions_on_usage_contain_valid_tags_they_remain(self):
+        dataset = MagicMock()
+        dataset.restrictions_on_usage = '<a>Hello</a>'
+        clean_dataset_restrictions_on_usage(dataset)
+        assert dataset.restrictions_on_usage == '<a>Hello</a>'
+        
+    def test_when_restrictions_on_usage_contain_invalid_tags_they_are_removed(self):
+        dataset = MagicMock()
+        dataset.restrictions_on_usage = '<p><a>Hello</a></p>'
+        clean_dataset_restrictions_on_usage(dataset)
+        assert dataset.restrictions_on_usage == '<a>Hello</a>'
