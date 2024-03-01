@@ -2298,6 +2298,13 @@ LiveSearch.prototype.formChange = function formChange(e) {
     pageUpdated = this.updateResults();
     pageUpdated.done(
       function () {
+        if (e?.target?.id) {
+          targetElement = document.getElementById(e.target.id);
+          if (targetElement) {
+            targetElement.focus();
+          }
+        }
+
         if (typeof this.GTM !== "undefined") {
           try {
             this.GTM.pushSearchEvent();
