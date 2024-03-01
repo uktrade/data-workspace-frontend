@@ -2298,6 +2298,13 @@ LiveSearch.prototype.formChange = function formChange(e) {
     pageUpdated = this.updateResults();
     pageUpdated.done(
       function () {
+        if (e && e.target && e.target.id) {
+          targetElement = document.getElementById(e.target.id);
+          if (targetElement) {
+            targetElement.focus();
+          }
+        }
+
         if (typeof this.GTM !== "undefined") {
           try {
             this.GTM.pushSearchEvent();
@@ -2312,12 +2319,6 @@ LiveSearch.prototype.formChange = function formChange(e) {
           "?" +
           $.param(this.state);
         history.pushState(this.state, "", newPath);
-        if (e && e.target && e.target.id) {
-          targetElement = document.getElementById(e.target.id);
-          if (targetElement) {
-            targetElement.focus();
-          }
-        }
       }.bind(this)
     );
   }
