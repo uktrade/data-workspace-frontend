@@ -2312,6 +2312,12 @@ LiveSearch.prototype.formChange = function formChange(e) {
           "?" +
           $.param(this.state);
         history.pushState(this.state, "", newPath);
+        if (e && e.target && e.target.id) {
+          targetElement = document.getElementById(e.target.id);
+          if (targetElement) {
+            targetElement.focus();
+          }
+        }
       }.bind(this)
     );
   }
