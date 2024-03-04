@@ -28,19 +28,29 @@
       {% include 'partials/messages.html' %}
       <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
-          <h1 class="govuk-heading-xl govuk-!-margin-bottom-2">Select a collection</h1>
           {% include 'design_system/error_summary.html' with form=form %}
           {% if form.collection|length > 1 %}
             <form method="post" id="add-form">
-            <p class="govuk-hint">{{ form.collection.label }}</p>
-              {% csrf_token %}
-              {% for collection in form.collection %}
-                {% if collection != form.collection|last %}
-                  {{ collection }}
-                {% endif %}
-              {% endfor %}
-              <p class="govuk-body">or</p>
-              {{ form.collection|last }}
+              <div class="govuk-form-group">
+                <fieldset class="govuk-fieldset" aria-describedby="collection-hint">
+                  <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
+                    <h1 class="fieldset__heading govuk-heading-xl govuk-!-margin-bottom-2">Select a collection</h1>                    
+                  </legend>
+                  <div id="collection-hint" class="govuk-hint">
+                    {{ form.collection.label }}
+                  </div>
+                  <div class="govuk-radios" data-module="govuk-radios">
+                    {% csrf_token %}
+                    {% for collection in form.collection %}
+                      {% if collection != form.collection|last %}
+                        {{ collection }}
+                      {% endif %}
+                    {% endfor %}
+                    <div class="govuk-radios__divider">or</div>
+                    {{ form.collection|last }}
+                  </div>
+                </fieldset>
+              </div>
               <div class="govuk-button-group">
                 <input class="govuk-button govuk-!-margin-top-2" type="submit" value="Continue">
                 <a class="govuk-link govuk-link--no-visited-state" href="{{ dataset.get_absolute_url }}">Cancel</a>
