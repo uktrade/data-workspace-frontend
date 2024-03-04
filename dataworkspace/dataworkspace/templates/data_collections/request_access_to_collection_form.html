@@ -31,20 +31,19 @@
       <span class="govuk-caption-xl govuk-!-margin-bottom-7">
       You need to request access from the owner of this collection.
     </span>
-      <p class="govuk-label govuk-!-font-weight-bold govuk-!-margin-bottom-3">Collection name</p>
+      <h2 class="govuk-heading-m">Collection name</h2>
       <p class="govuk-body govuk-!-margin-bottom-8">{{ collection.name }}</p>
-      <h2 class="govuk-label govuk-!-font-weight-bold govuk-!-margin-bottom-3">Collection owner</h2>
+      <h2 class="govuk-heading-m">Collection owner</h2>
       <p class="govuk-body govuk-!-margin-bottom-8">{{ collection.owner.get_full_name|default:'Not available' }}</p>
-
 
       <form method="post" novalidate>
         {% csrf_token %}
         <div class="govuk-form-group govuk-!-margin-bottom-7 {% if form.errors %}govuk-form-group--error{% endif %}">
-              <h1 class="govuk-label-wrapper">
-                <label class="govuk-label govuk-!-font-weight-bold govuk-!-margin-bottom-3" for="id_email">
+              <h2>
+                <label class="govuk-heading-m" for="id_email">
                   {{ form.email.label }}
                 </label>
-              </h1>
+              </h2>
                   <div class="govuk-hint">
             You are logged in as {{ request.user.email }}
           </div>
