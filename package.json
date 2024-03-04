@@ -13,7 +13,9 @@
     "debug:css": "node-sass dataworkspace/dataworkspace/sass --output dataworkspace/dataworkspace/static/css --source-map true --source-map-contents --include-path node_modules",
     "preinstall": "npx npm-force-resolutions",
     "cypress:run": "cypress run",
-    "cypress:open": "cypress open"
+    "cypress:run:a11y": "cypress run --config-file cypress.a11y.config.ts",
+    "cypress:open": "cypress open",
+    "cypress:open:a11y": "cypress open --config-file cypress.a11y.config.ts"
   },
   "resolutions": {
     "scss-tokenizer": "0.4.3"

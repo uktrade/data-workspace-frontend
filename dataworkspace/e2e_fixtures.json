@@ -617,7 +617,7 @@
       "deleted": false,
       "created_by": 2,
       "updated_by": null,
-      "name": "Collection a",
+      "name": "Personal collection a",
       "description": "This is a collection description.",
       "owner": 2,
       "notes": null,
@@ -631,13 +631,13 @@
       "created_date": "2024-01-29T10:34:35.735Z",
       "modified_date": "2024-01-29T10:34:35.736Z",
       "deleted": false,
-      "created_by": 2,
+      "created_by": 1,
       "updated_by": null,
-      "name": "Collection b",
-      "description": "This is a collection description.",
-      "owner": 2,
+      "name": "Collection for all users",
+      "description": "This is a collection that is accessibile to all users of data workspace.",
+      "owner": 1,
       "notes": null,
-      "user_access_type": "REQUIRES_AUTHORIZATION"
+      "user_access_type": "REQUIRES_AUTHENTICATION"
     }
   },
   {
@@ -649,7 +649,7 @@
       "deleted": false,
       "created_by": 2,
       "updated_by": null,
-      "name": "Collection c",
+      "name": "Personal collection b",
       "description": "This is a collection description.",
       "owner": 2,
       "notes": null,
