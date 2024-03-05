@@ -124,7 +124,7 @@ describe("Source dataset catalogue", () => {
     });
 
     it("should not display any related dashboards", () => {
-      cy.findByRole("heading", { level: 3, name: "Related dashboards" });
+      cy.findByRole("heading", { level: 2, name: "Related dashboards" });
       assertTextAndLinks("related-dashboards", [
         {
           text: "This data currently has no related dashboards.",
@@ -252,7 +252,7 @@ describe("Source dataset catalogue", () => {
     });
 
     it("should not display any related dashboards", () => {
-      cy.findByRole("heading", { level: 3, name: "Related dashboards" });
+      cy.findByRole("heading", { level: 2, name: "Related dashboards" });
       assertTextAndLinks("related-dashboards", [
         {
           text: "This data currently has no related dashboards.",
