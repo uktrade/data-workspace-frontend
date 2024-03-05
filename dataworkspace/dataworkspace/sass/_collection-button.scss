@@ -43,6 +43,13 @@ $background-colour: $govuk-brand-colour;
         @extend .govuk-button:hover;
         background-color: govuk-shade($background-colour, 20);
     }
+
+    &:focus {
+      .collection-button__heading, .collection-button__text {
+        color: govuk-colour("black");
+      }
+    }
+
     padding: govuk-spacing(2);
     @include mq($from: tablet) {
         padding: govuk-spacing(3);
@@ -69,6 +76,7 @@ $background-colour: $govuk-brand-colour;
     &:hover {
         @extend .govuk-button:hover;
         background-color: govuk-shade(white, 5);
+        color: $background-colour !important;
     }
     padding: govuk-spacing(2);
     @include mq($from: tablet) {
@@ -77,6 +85,12 @@ $background-colour: $govuk-brand-colour;
 
     .collection-button__heading {
         color: $background-colour;
+    }
+
+    &:focus {
+      .collection-button__heading, .collection-button__text {
+        color: govuk-colour("black");
+      }
     }
 }
 
