@@ -1,6 +1,6 @@
 import React from 'react';
 
-const YourFiles = ({ config }) => {
+const YourFiles = () => {
 
     return (
         <></>
