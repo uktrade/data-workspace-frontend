@@ -15,7 +15,10 @@ pipeline {
     }
 
     stage('release: dev') {      
-
+      when{
+        branch 'master'
+        beforeAgent true
+      }
       parallel {
         stage('release: data-workspace') {
           steps {
