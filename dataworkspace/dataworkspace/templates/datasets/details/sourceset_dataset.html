@@ -166,9 +166,9 @@
       {% if related_data %}
         <div class="govuk-grid-column-one-half govuk-!-margin-top-8">
           <aside role="complementary" data-test="related-data">      
-            <h3 class="govuk-heading-m" id="subsection-title">
+            <h2 class="govuk-heading-m" id="subsection-title">
               Related Data
-            </h3>
+            </h2>
             <nav role="navigation" aria-labelledby="subsection-title">
               <ul class="govuk-list">
                 {% for dataset in related_data|slice:":4" %}
@@ -192,7 +192,7 @@
       {% endif %}
         <div class="govuk-grid-column-one-half govuk-!-margin-top-8">
           <aside role="complementary" data-test="related-dashboards">
-            <h3 class="govuk-heading-m" id="subsection-title">Related dashboards</h3>
+            <h2 class="govuk-heading-m" id="subsection-title">Related dashboards</h2>
             {% if related_visualisations %}
             <nav role="navigation" aria-labelledby="subsection-title">
               <ul class="govuk-list">
