@@ -6,74 +6,11 @@ pipeline {
   }
 
   stages {
-    stage('build') {
-      agent {
-        kubernetes {
-        defaultContainer 'jnlp'
-        yaml """
-            apiVersion: v1
-            kind: Pod
-            metadata:
-              labels:
-                job: ${env.JOB_NAME}
-                job_id: ${env.BUILD_NUMBER}
-            spec:
-              nodeSelector:
-                role: worker
-              containers:
-              - name: builder
-                image: gcr.io/kaniko-project/executor:debug
-                imagePullPolicy: Always
-                command:
-                - cat
-                tty: true
-                volumeMounts:
-                - name: jenkins-docker-cfg
-                  mountPath: /kaniko/.docker
-              volumes:
-              - name: jenkins-docker-cfg
-                configMap:
-                  name: docker-config
-                  items:
-                  - key: config.json
-                    path: config.json
-        """
-        }
-      }
+    stage('build') {      
       steps {
-        checkout([
-            $class: 'GitSCM',
-            branches: [[name: params.GIT_COMMIT]],
-            userRemoteConfigs: [[url: 'https://github.com/uktrade/data-workspace-frontend.git']]
-        ])
-        script {
-          pullRequestNumber = sh(
-              script: "git log -1 --pretty=%B | grep 'Merge pull request' | cut -d ' ' -f 4 | tr -cd '[[:digit:]]'",
-              returnStdout: true
-          ).trim()
-          currentBuild.displayName = "#${env.BUILD_ID} - PR #${pullRequestNumber}"
-        }
-        lock("data-workspace-build-admin") {
-          container(name: 'builder', shell: '/busybox/sh') {
-            withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'DATASCIENCE_ECS_DEPLOY']]) {
-              withEnv(['PATH+EXTRA=/busybox:/kaniko']) {
-                sh """
-                  #!/busybox/sh
-                  /kaniko/executor \
-                    --dockerfile ${env.WORKSPACE}/Dockerfile \
-                    -c ${env.WORKSPACE} \
-                    --destination=165562107270.dkr.ecr.eu-west-2.amazonaws.com/analysisworkspace-dev-admin:${params.GIT_COMMIT} \
-                    --destination=165562107270.dkr.ecr.eu-west-2.amazonaws.com/data-workspace-staging-admin:${params.GIT_COMMIT} \
-                    --destination=165562107270.dkr.ecr.eu-west-2.amazonaws.com/jupyterhub-admin:${params.GIT_COMMIT} \
-                    --cache=true \
-                    --cache-repo=165562107270.dkr.ecr.eu-west-2.amazonaws.com/data-workspace-admin-cache \
-                    --skip-unused-stages=true \
-                    --target=live
-                  """
-              }
-            }
-          }
-        }
+        echo 'Pulling... ' + env.GIT_BRANCH
+
+        echo 'Pulling... ' + env.CHANGE_BRANCH
       }
     }
 
