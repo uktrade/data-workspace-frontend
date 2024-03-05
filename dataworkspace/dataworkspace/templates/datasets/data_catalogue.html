@@ -167,8 +167,8 @@
                 {% endif %}
                 <div style="float:right;">
                   <button
-                  aria-pressed="{% if dataset.is_bookmarked %}true{% else %}false{% endif %}" 
                   type="button" class="bookmark-toggle" 
+                  data-dataset-bookmarked="{% if dataset.is_bookmarked %}true{% else %}false{% endif %}" 
                   data-dataset-id="{{ dataset.id }}" 
                   data-dataset-type="{{data_type|get_key:dataset.data_type}}"
                   data-dataset-name="{{ dataset.name }}">

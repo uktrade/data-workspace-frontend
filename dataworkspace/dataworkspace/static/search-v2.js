@@ -2537,7 +2537,7 @@ function toggleBookmark(toggle, isBookmarked) {
 
   toggle.setAttribute("title", title);
   toggle.setAttribute("aria-description", title);
-  toggle.setAttribute("aria-pressed", pressed);
+  toggle.setAttribute("data-dataset-bookmarked", pressed);
 
   toggle.classList[classFunc]("is-bookmarked");
 
@@ -2547,7 +2547,10 @@ function toggleBookmark(toggle, isBookmarked) {
 document.addEventListener("DOMContentLoaded", (event) => {
   const toggles = document.getElementsByClassName("bookmark-toggle");
   [...toggles].forEach((toggle) => {
-    toggleBookmark(toggle, toggle.getAttribute("aria-pressed") == "true");
+    toggleBookmark(
+      toggle,
+      toggle.getAttribute("data-dataset-bookmarked") == "true"
+    );
   });
 });
 
@@ -2558,7 +2561,7 @@ document.body.addEventListener("click", function (event) {
   const csrf = document.getElementsByName("csrfmiddlewaretoken")[0].value;
   const path = toggleBookmark(
     toggle,
-    toggle.getAttribute("aria-pressed") == "true" ? false : true
+    toggle.getAttribute("data-dataset-bookmarked") == "true" ? false : true
   );
 
   queue = queue.finally(() =>
