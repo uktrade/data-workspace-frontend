@@ -129,7 +129,7 @@ services:
     env_file:
       - .envs/superset.dev.env
     volumes:
-      - ./data-workspace-superset/superset_config.py:/etc/superset/superset_config.py
+      - ../data-workspace-superset/superset_config.py:/etc/superset/superset_config.py
 
   # Test profile services
 

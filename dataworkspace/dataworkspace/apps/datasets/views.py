@@ -5,7 +5,6 @@ from collections import defaultdict, namedtuple
 from itertools import chain
 from typing import Set
 
-import bleach
 import psycopg2
 import waffle
 from botocore.exceptions import ClientError
@@ -41,7 +40,6 @@ from django.http import (
 )
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
-from django.utils.safestring import mark_safe
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import (
     require_GET,
@@ -106,6 +104,7 @@ from dataworkspace.apps.datasets.permissions.utils import (
 from dataworkspace.apps.datasets.search import search_for_datasets
 from dataworkspace.apps.datasets.utils import (
     build_filtered_dataset_query,
+    clean_dataset_restrictions_on_usage,
     dataset_type_to_manage_unpublished_permission_codename,
     find_dataset,
     get_code_snippets_for_table,
@@ -640,18 +639,8 @@ class DatasetDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data()
-        if self.object.restrictions_on_usage is not None:
-            allowed_tags = bleach.ALLOWED_TAGS + ["a"]
-            allowed_attrs = bleach.ALLOWED_ATTRIBUTES.copy()
-            allowed_attrs["a"] = ["href", "class"]
-            self.object.restrictions_on_usage = mark_safe(
-                bleach.clean(
-                    self.object.restrictions_on_usage,
-                    tags=allowed_tags,
-                    attributes=allowed_attrs,
-                    strip=True,
-                )
-            )
+        clean_dataset_restrictions_on_usage(self.object)
+
         ctx["model"] = self.object
         ctx["DATASET_CHANGELOG_PAGE_FLAG"] = settings.DATASET_CHANGELOG_PAGE_FLAG
         ctx["DATA_UPLOADER_UI_FLAG"] = settings.DATA_UPLOADER_UI_FLAG
@@ -705,6 +694,8 @@ def eligibility_criteria_view(request, dataset_uuid):
                 url = reverse("datasets:eligibility_criteria_not_met", args=[dataset_uuid])
 
             return HttpResponseRedirect(url)
+
+    clean_dataset_restrictions_on_usage(dataset)
 
     return render(
         request,

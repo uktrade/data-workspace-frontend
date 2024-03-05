@@ -74,6 +74,10 @@ $background-colour: $govuk-brand-colour;
     @include mq($from: tablet) {
         padding: govuk-spacing(3);
     }
+
+    .collection-button__heading {
+        color: $background-colour;
+    }
 }
 
 
@@ -81,4 +85,8 @@ $background-colour: $govuk-brand-colour;
     @include govuk-font($size: 14);
     display: block;
     padding-top: govuk-spacing(2);
+}
+
+.collection-button__heading {
+    color: govuk-colour("white");
 }

@@ -80,7 +80,7 @@ describe("Homepage dashboard", () => {
         name: "Find out more about collections",
       }).should("exist");
       cy.findByRole("link", {
-        name: "Collection a",
+        name: "Personal collection a",
       }).should("not.exist");
     });
 
@@ -142,7 +142,7 @@ describe("Homepage dashboard", () => {
         name: "Find out more about collections",
       }).should("not.exist");
       cy.findAllByRole("link", {
-        name: "Collection a",
+        name: "Personal collection a",
       }).should("exist");
     });
 
