@@ -15,7 +15,7 @@ pipeline {
     }
 
     stage('release: dev') {      
-      when{
+      when {
         branch 'master'
         beforeAgent true
       }
