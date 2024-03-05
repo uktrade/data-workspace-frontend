@@ -2517,24 +2517,25 @@ installFilterTextSearch();
 let queue = Promise.resolve();
 
 function toggleBookmark(toggle, isBookmarked) {
-  const dataset_id = toggle.getAttribute("data-dataset-id");
-  const dataset_type = toggle.getAttribute("data-dataset-type");
-  const dataset_name = toggle.getAttribute("data-dataset-name");
+  const datasetId = toggle.getAttribute("data-dataset-id");
+  const datasetType = toggle.getAttribute("data-dataset-type");
+  const datasetName = toggle.getAttribute("data-dataset-name");
 
   const [classFunc, path, title, pressed] = isBookmarked
     ? [
         "add",
-        "/datasets/" + dataset_id + "/set-bookmark",
-        `You have bookmarked this ${dataset_type}, with the title '${dataset_name}'`,
+        "/datasets/" + datasetId + "/set-bookmark",
+        `You have bookmarked this ${datasetType}, with the title '${datasetName}'`,
         true,
       ]
     : [
         "remove",
-        "/datasets/" + dataset_id + "/unset-bookmark",
-        `You have not bookmarked this ${dataset_type}, with the title '${dataset_name}'`,
+        "/datasets/" + datasetId + "/unset-bookmark",
+        `You have not bookmarked this ${datasetType}, with the title '${datasetName}'`,
         false,
       ];
 
+  toggle.setAttribute("title", title);
   toggle.setAttribute("aria-description", title);
   toggle.setAttribute("aria-pressed", pressed);
 
@@ -2545,11 +2546,9 @@ function toggleBookmark(toggle, isBookmarked) {
 
 document.addEventListener("DOMContentLoaded", (event) => {
   const toggles = document.getElementsByClassName("bookmark-toggle");
-  for (let index = 0; index < toggles.length; index++) {
-    const toggle = toggles[index];
-    const dataset_is_bookmarked = toggle.getAttribute("aria-pressed");
-    toggleBookmark(toggle, dataset_is_bookmarked == "true");
-  }
+  [...toggles].forEach((toggle) => {
+    toggleBookmark(toggle, toggle.getAttribute("aria-pressed") == "true");
+  });
 });
 
 document.body.addEventListener("click", function (event) {
@@ -2557,10 +2556,9 @@ document.body.addEventListener("click", function (event) {
   if (!toggle) return;
 
   const csrf = document.getElementsByName("csrfmiddlewaretoken")[0].value;
-  const dataset_is_bookmarked = toggle.getAttribute("aria-pressed");
   const path = toggleBookmark(
     toggle,
-    dataset_is_bookmarked == "true" ? false : true
+    toggle.getAttribute("aria-pressed") == "true" ? false : true
   );
 
   queue = queue.finally(() =>
