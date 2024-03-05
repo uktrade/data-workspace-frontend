@@ -2516,26 +2516,53 @@ installFilterTextSearch();
 // to not match the server
 let queue = Promise.resolve();
 
+function toggleBookmark(toggle, isBookmarked) {
+  const dataset_id = toggle.getAttribute("data-dataset-id");
+  const dataset_type = toggle.getAttribute("data-dataset-type");
+  const dataset_name = toggle.getAttribute("data-dataset-name");
+
+  const [classFunc, path, title, pressed] = isBookmarked
+    ? [
+        "add",
+        "/datasets/" + dataset_id + "/set-bookmark",
+        `You have bookmarked this ${dataset_type}, with the title '${dataset_name}'`,
+        true,
+      ]
+    : [
+        "remove",
+        "/datasets/" + dataset_id + "/unset-bookmark",
+        `You have not bookmarked this ${dataset_type}, with the title '${dataset_name}'`,
+        false,
+      ];
+
+  toggle.setAttribute("aria-description", title);
+  toggle.setAttribute("aria-pressed", pressed);
+
+  toggle.classList[classFunc]("is-bookmarked");
+
+  return path;
+}
+
+document.addEventListener("DOMContentLoaded", (event) => {
+  const toggles = document.getElementsByClassName("bookmark-toggle");
+  for (let index = 0; index < toggles.length; index++) {
+    const toggle = toggles[index];
+    const dataset_is_bookmarked = toggle.getAttribute("aria-pressed");
+    toggleBookmark(toggle, dataset_is_bookmarked == "true");
+  }
+});
+
 document.body.addEventListener("click", function (event) {
   const toggle = event.target.closest(".bookmark-toggle");
   if (!toggle) return;
 
-  const dataset_id = toggle.getAttribute("data-dataset-id");
   const csrf = document.getElementsByName("csrfmiddlewaretoken")[0].value;
-  const [classFunc, path, title] = toggle.classList.contains("is-bookmarked")
-    ? [
-        "remove",
-        "/datasets/" + dataset_id + "/unset-bookmark",
-        "You have not bookmarked this dataset",
-      ]
-    : [
-        "add",
-        "/datasets/" + dataset_id + "/set-bookmark",
-        "You have bookmarked this dataset",
-      ];
+  const dataset_is_bookmarked = toggle.getAttribute("aria-pressed");
+  const path = toggleBookmark(
+    toggle,
+    dataset_is_bookmarked == "true" ? false : true
+  );
 
-  toggle.classList[classFunc]("is-bookmarked");
-  toggle.setAttribute("title", title);
   queue = queue.finally(() =>
     fetch(path, {
       method: "POST",
