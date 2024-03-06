@@ -32,58 +32,32 @@
     );
   </script>
 {% endblock footer_scripts %}
+
+{% block breadcrumbs %}
+  {% include "datasets/partials/breadcrumbs.html" %}
+
+  {% if object.dataset.enquiries_contact %}
+    <a class="govuk-link govuk-link--no-visited-state govuk-!-padding-right-3 govuk-!-padding-top-3" style="float: right"
+      href="mailto:{{ object.dataset.enquiries_contact.email }}?subject=Reporting an issue - {{ object.name }}">
+      {% include "partials/icons/report_an_issue_icon.html" with text="Report an issue" %}
+    </a>
+  {% endif %}
+{% endblock %}
+
 {% block content %}
   {% with object.get_metadata_row_count as row_count %}
-    <div class="govuk-breadcrumbs app-grid-breadcrumbs">
-      <ol class="govuk-breadcrumbs__list">
-        <li class="govuk-breadcrumbs__list-item">
-          <a class="govuk-breadcrumbs__link" href="">Home</a>
-        </li>
-        <li class="govuk-breadcrumbs__list-item">
-          <a class="govuk-breadcrumbs__link"
-             href="{% url "datasets:dataset_detail" dataset_uuid=object.dataset.id %}#{{ object.dataset.slug }}">{{ object.dataset.name}}</a>
-        </li>
-        <li class="govuk-breadcrumbs__list-item" {% if object.name|length > 30 %} title="{{object.name}}" {% endif %}>{{ object.name|truncatechars_html:30  }}</li>
-      </ol>
-      {% flag SECURITY_CLASSIFICATION_FLAG %}
-      <div class="security-classification">
-        {% if not object.dataset.government_security_classification %}
-          <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
-        {% else %}
-          {% if object.dataset.get_government_security_classification_display == "OFFICIAL" %}
-            <strong
-              class="govuk-tag govuk-tag--blue">{{ object.dataset.get_government_security_classification_display }}</strong>
-          {% else %}
-            <strong
-              class="govuk-tag govuk-tag--red">{{ object.dataset.get_government_security_classification_display }}
-              {% if object.dataset.sensitivity.all %}
-                {% for sensitivity in object.dataset.sensitivity.all %}
-                  {% if not forloop.first %}and{% endif %}</span> {{ sensitivity }}
-                {% endfor %}
-              {% endif %} </strong>
-          {% endif %}
-        {% endif %}
-      </div>
-    {% endflag %}
-    </div>
     <div id="collapsible-header" class="govuk-!-margin-top-4">
       {% if object.disable_data_grid_interaction %}
         {% include "datasets/partials/grid-interaction-disabled.html" %}
       {% endif %}
       {% include "datasets/partials/grid-view-saved.html" %}
-      {% if object.dataset.enquiries_contact %}
-        <a class="govuk-link govuk-link--no-visited-state govuk-!-padding-right-3" style="float: right"
-          href="mailto:{{ object.dataset.enquiries_contact.email }}?subject=Reporting an issue - {{ object.name }}">
-          {% include "partials/icons/report_an_issue_icon.html" with text="Report an issue" %}
-        </a>
-      {% endif %}
       <div class="govuk-!-padding-top-3 govuk-!-padding-left-2">
         <span class="govuk-caption-xl">
           Data table{% if object.schema %} ({{ object.schema }}.{{ object.table }}){% endif %}
         </span>
         <div class="govuk-grid-row">
           <div class="govuk-grid-column-full">
-            <h2 class="govuk-heading-l">{{ object.name }}</h2>
+            <h1 class="govuk-heading-l">{{ object.name }}</h1>
           </div>
             <div class="govuk-grid-column-full">
                 {% if columns or code_snippets and has_access %}
