@@ -531,6 +531,10 @@ p.sidebar-section {
   }
 }
 
+.word-wrap {
+  word-wrap: break-word;
+}
+
 @import "filters";
 @import "search-bar";
 @import "search-results";
