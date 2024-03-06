@@ -2,6 +2,7 @@ from datetime import datetime
 from urllib.parse import urlencode
 
 import logging
+import waffle
 
 from csp.decorators import csp_update
 from django.db.utils import ProgrammingError
@@ -56,6 +57,7 @@ def your_files_home(request, s3_path=None):
     home_prefix = get_s3_prefix(str(request.user.profile.sso_id))
     initial_prefix = home_prefix if s3_path in [None, "/"] else s3_path
     teams_folders_prefixes = get_team_prefixes(request.user)
+    your_files_v2_flag = waffle.flag_is_active(request, settings.YOUR_FILES_V2_FLAG)
     return render(
         request,
         "your_files/files-react.html",
@@ -65,6 +67,7 @@ def your_files_home(request, s3_path=None):
             "initial_prefix": initial_prefix,
             "bucket": settings.NOTEBOOKS_BUCKET,
             "aws_endpoint": settings.S3_LOCAL_ENDPOINT_URL,
+            "your_files_v2_flag": your_files_v2_flag
         },
         status=200,
     )
