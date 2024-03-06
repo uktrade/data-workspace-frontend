@@ -76,7 +76,7 @@ $background-colour: $govuk-brand-colour;
     &:hover {
         @extend .govuk-button:hover;
         background-color: govuk-shade(white, 5);
-        color: $background-colour !important;
+        color: $background-colour;
     }
     padding: govuk-spacing(2);
     @include mq($from: tablet) {
