@@ -1,0 +1,382 @@
+.govuk-link--no-visited:visited {
+    color: #005ea5;
+  }
+  .govuk-link--no-visited:focus {
+    color: black;
+  }
+  
+  .govuk-button--warning[disabled],
+  .govuk-button--warning[disabled]:hover {
+    opacity: 0.5;
+    background: #b10e1e;
+  }
+  
+  .browser-header {
+    background: #005ea5;
+    color: white;
+    display: flex;
+    align-items: center;
+    height: 40px;
+    margin-bottom: 15px;
+  }
+  @media (min-width: 40.0625em) {
+    .browser-header {
+      height: 60px;
+    }
+  }
+  .browser-breadcrumbs {
+    padding-left: 15px;
+    margin-bottom: 0;
+    height: 40px;
+    line-height: 40px;
+    font-size: 18px;
+    flex: 0 1 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: white;
+    direction: rtl;
+    text-align: left;
+  }
+  @media (min-width: 40.0625em) {
+    .browser-breadcrumbs {
+      height: 60px;
+      line-height: 60px;
+      font-size: 24px;
+    }
+  }
+  .browser-breadcrumb {
+    display: inline;
+    cursor: pointer;
+    position: relative;
+    top: 2px;
+  }
+  .browser-breadcrumb:before {
+    content: "/";
+    vertical-align: middle;
+    position: relative;
+    color: white;
+    font-size: 30px;
+    top: 1px;
+  }
+  @media (min-width: 40.0625em) {
+    .browser-breadcrumb:after {
+      font-size: 39px;
+      top: 3px;
+    }
+  }
+  .browser-breadcrumb-link,
+  .browser-breadcrumb-link:hover {
+    color: white;
+    text-decoration: none;
+  }
+  .browser-breadcrumb-link:focus {
+    background: #ffbf47;
+    color: black;
+  }
+  
+  .navbutton {
+    cursor: pointer;
+    font-size: 20px;
+    text-align: center;
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    border: none;
+    padding: 0;
+    margin: 0;
+    text-decoration: none;
+    background: transparent;
+    color: #ffffff;
+    flex: 0 0 auto;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+  }
+  .navbutton[disabled] {
+    color: rgba(255, 255, 255, 0.6);
+  }
+  .navbutton:focus {
+    position: relative;
+    z-index: 1;
+    outline: 4px solid #ffbf47;
+    background: #005ea5;
+  }
+  .navbutton:active {
+    position: relative;
+    z-index: 1;
+    top: 2px;
+    background: #005ea5;
+  }
+  .navbutton + .navbutton:focus,
+  .browser-breadcrumbs + .navbutton:focus {
+    border-left: 2px solid transparent;
+  }
+  .navbutton-icon {
+    display: block;
+    margin: auto;
+    height: 20px;
+  }
+  @media (min-width: 40.0625em) {
+    .navbutton {
+      width: 60px;
+      height: 60px;
+      line-height: 60px;
+    }
+    .navbutton-icon {
+      height: 24px;
+    }
+    .navbutton-icon-small {
+      height: 22px;
+    }
+    .navbutton-icon-large {
+      height: 26px;
+    }
+  }
+  .navbutton + .navbutton,
+  .browser-breadcrumbs + .navbutton,
+  .browser-breadcrumbs {
+    border-left: 2px solid white;
+  }
+  
+  .button-icon {
+    height: 18px;
+    margin-top: -1px;
+    margin-right: 2px;
+    vertical-align: top;
+  }
+  
+  /* Tweaks so the checkboxes look reasonable in the table */
+  .govuk-table__header--checkbox {
+    width: 25px;
+  }
+  .govuk-table__cell--checkbox {
+    padding: 0 5px 0 8px;
+    vertical-align: top;
+  }
+  .govuk-table__row:hover .govuk-checkboxes__label:before,
+  .govuk-checkboxes--small
+    .govuk-checkboxes__item:hover
+    .govuk-checkboxes__input:not(:disabled)
+    + .govuk-checkboxes__label:before {
+    box-shadow: 0 0 0 8px #dee0e2;
+  }
+  .govuk-table__cell {
+    vertical-align: top;
+  }
+  @media (min-width: 40.0625em) {
+    .govuk-table__header--checkbox {
+      width: 35px;
+    }
+    .govuk-table__cell--checkbox {
+      padding: 0 5px 0 10px;
+    }
+    .govuk-checkboxes--small .govuk-checkboxes__label:before {
+      top: 10px;
+      width: 25px;
+      height: 25px;
+    }
+    .govuk-checkboxes--small .govuk-checkboxes__label:after {
+      top: 18px;
+    }
+    .govuk-table__row:hover .govuk-checkboxes__label:before,
+    .govuk-checkboxes--small
+      .govuk-checkboxes__item:hover
+      .govuk-checkboxes__input:not(:disabled)
+      + .govuk-checkboxes__label:before {
+      box-shadow: 0 0 0 10px #dee0e2;
+    }
+  }
+  
+  .pointer {
+    cursor: pointer;
+  }
+  
+  .dropzone {
+    background: white;
+    border: 2px solid white;
+    margin: -2px;
+  }
+  .dropzone.dragover {
+    box-shadow: 0 0 0 5px #ffbf47;
+  }
+  
+  .govuk-table__cell-progress {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .progress-percentage,
+  .progress-error,
+  .progress-percentage-complete {
+    font-size: 14px;
+  }
+  .progress-percentage-complete {
+    background: #00703c;
+  }
+  .progress-percentage {
+    font-variant-numeric: tabular-nums;
+  }
+  .progress-error {
+    background: #d4351c;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  
+  .modal {
+    visibility: hidden;
+    opacity: 0;
+    position: fixed;
+    z-index: 2040;
+    top: -100%;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+  }
+  @media (min-width: 40.0625em) {
+    .modal {
+      padding: 40px 20px;
+    }
+  }
+  .modal-in {
+    transition: visibility 0s linear 0.1s, opacity 0.3s linear 0.1s,
+      top 0.3s ease-out 0.1s;
+    visibility: visible;
+    opacity: 1;
+    top: 0;
+  }
+  .modal-out {
+    transition: visibility 0s linear 0.3s, opacity 0.3s linear, top 0.3s ease-in;
+    visibility: hidden;
+    opacity: 0;
+    top: -100%;
+  }
+  .modal-dialog {
+    margin: 0 auto;
+    max-width: 640px;
+  }
+  .modal-xl {
+    max-width: 940px;
+  }
+  .modal-dialog {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+  }
+  .modal-header {
+    background-color: #005ea5;
+    color: #ffffff;
+    padding: 15px;
+  }
+  .modal-header button.close {
+    color: #ffffff;
+  }
+  .modal-title {
+    color: white;
+    margin-bottom: 0;
+  }
+  .modal-body {
+    padding: 15px 15px 0 15px;
+    max-height: calc(100vh - 16em);
+  }
+  .modal-footer {
+    padding: 15px 15px 15px 15px;
+    text-align: right;
+    margin-bottom: 0px;
+    max-width: 500px;
+    .modal-button {
+      margin-bottom: 0;
+    }
+  }
+  .modal-contents{
+    overflow-y: scroll;
+    background-color: white;
+  }
+  
+  @media (min-width: 40.0625em) {
+    .modal-button {
+      margin-bottom: 0;
+    }
+  }
+  .modal-backdrop {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1040;
+    background-color: #000;
+    opacity: 0;
+    visibility: hidden;
+  }
+  .modal-backdrop-in {
+    transition: visibility 0s linear 0s, opacity 0.25s linear;
+    visibility: visible;
+    opacity: 0.5;
+  }
+  .modal-backdrop-out {
+    transition: visibility 0s linear 0.5s, opacity 0.25s linear 0.25s;
+    visibility: hidden;
+    opacity: 0;
+  }
+  
+  .progress-bar {
+    min-width: 25px;
+    width: 0%;
+  }
+  
+  .spin {
+    animation: 1s ease-in-out 0s 1 normal spin;
+  }
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  .popup-container {
+    .popup-container__overlay {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 1040;
+      background-color: #000;
+      opacity: 0.5;
+    }
+  
+    .popup-container__modal {
+      position: fixed;
+      z-index: 2040;
+      top: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+      height: 100%;
+      padding: 10px;
+      box-sizing: border-box;
+      max-width: 640px;
+    }
+    @media (min-width: 40.0625em) {
+      .popup-container__modal {
+        padding: 40px 20px;
+        margin: 0 auto;
+        max-width: 940px;
+      }
+    }
+  
+    .modal-footer {
+      overflow: hidden;
+  
+    }
+  }
+  
+  .drop-zone {
+    border: 2px solid transparent;
+    &.drag-active {
+      box-shadow: 0 0 0 5px #ffbf47;
+    }
+  }

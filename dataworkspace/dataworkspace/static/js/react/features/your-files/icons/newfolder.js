@@ -21,7 +21,7 @@ import classNames from "classnames";
                 </svg>
  */
 
-export default function NewFolderIcon(props) {
+export function NewFolderIcon(props) {
   const svgClasses = classNames("svg-inline--fa", "fa-folder-plus", "fa-w-16", {
     "navbutton-icon": props.isNavIcon,
     "button-icon": !props.isNavIcon,

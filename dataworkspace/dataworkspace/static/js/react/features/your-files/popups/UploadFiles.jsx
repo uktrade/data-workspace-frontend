@@ -1,12 +1,71 @@
 import React from 'react';
 
-import UploadIcon from '../../icons/UploadIcon';
-import { fileQueue } from '../../utils';
-import Modal from '../Modal';
-import UploadFileRow from './UploadFileRow';
-import UploadHeaderRow from './UploadHeaderRow';
+import { bytesToSize } from '../utils';
+import { fileQueue } from '../utils';
+import { UploadIcon } from '../icons/upload';
+import Modal from './Modal';
 
-export default class UploadFilesPopup extends React.Component {
+function UploadHeaderRow() {
+  return (
+    <tr className="govuk-table__row">
+      <th className="govuk-table__header">Name</th>
+      <th className="govuk-table__header" style={{ width: '8em' }}>
+        Type
+      </th>
+      <th
+        className="govuk-table__header govuk-table__header--numeric"
+        style={{ width: '5em' }}
+      >
+        Size
+      </th>
+      <th
+        className="govuk-table__header govuk-table__header--numeric"
+        style={{ width: '7em' }}
+      >
+        Status
+      </th>
+    </tr>
+  );
+}
+
+function UploadFileRow(props) {
+  return (
+    <tr className="govuk-table__row">
+      <td className="govuk-table__cell">{props.file.relativePath}</td>
+      <td className="govuk-table__cell">{props.file.type}</td>
+      <td className="govuk-table__cell govuk-table__cell--numeric">
+        {bytesToSize(props.file.size)}
+      </td>
+      <td className="govuk-table__cell govuk-table__cell--numeric govuk-table__cell-progress">
+        {props.file.progress === undefined && props.file.error === undefined ? (
+          <span>...</span>
+        ) : null}
+
+        {props.file.progress ? (
+          <strong
+            className={
+              'govuk-tag progress-percentage ' +
+              (props.file.progress == 100 ? 'progress-percentage-complete' : '')
+            }
+          >
+            {props.file.progress + '%'}
+          </strong>
+        ) : null}
+
+        {props.file.error !== undefined ? (
+          <strong
+            className="govuk-tag progress-error"
+            title="{ props.file.error }"
+          >
+            {props.file.error}
+          </strong>
+        ) : null}
+      </td>
+    </tr>
+  );
+}
+
+export class UploadFilesPopup extends React.Component {
   constructor(props) {
     /**
      * props is a {}

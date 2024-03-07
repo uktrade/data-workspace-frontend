@@ -1,8 +1,7 @@
 import React from 'react';
-
-import TrashIcon from '../../icons/TrashIcon';
-import { bytesToSize, fullPathToFilename, prefixToFolder } from '../../utils';
-import Modal from '../Modal';
+import { TrashIcon } from '../icons/trash';
+import { bytesToSize, fullPathToFilename, prefixToFolder } from '../utils';
+import Modal from './Modal';
 
 const BULK_DELETE_MAX_FILES = 1000;
 
@@ -39,7 +38,7 @@ function DeleteTableHeader() {
   );
 }
 
-export default class DeleteObjectsPopup extends React.Component {
+export class DeleteObjectsPopup extends React.Component {
   constructor(props) {
     super(props);
     this.abort = () => {};

@@ -1,7 +1,7 @@
 import React from "react";
-import '../../styles/FileList.css'
+import "./FileList.css";
 
-import { prefixToFolder, bytesToSize, fullPathToFilename } from "../../utils";
+import { prefixToFolder, bytesToSize, fullPathToFilename } from "./utils";
 
 function TableHeader(props) {
   return (
@@ -339,7 +339,7 @@ function TableRowFile(props) {
   );
 }
 
-export default class FileList extends React.Component {
+export class FileList extends React.Component {
   constructor(props) {
     super(props);
   }
