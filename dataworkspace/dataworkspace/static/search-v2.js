@@ -2518,20 +2518,19 @@ let queue = Promise.resolve();
 
 function toggleBookmark(toggle, isBookmarked) {
   const datasetId = toggle.getAttribute("data-dataset-id");
-  const datasetType = toggle.getAttribute("data-dataset-type");
   const datasetName = toggle.getAttribute("data-dataset-name");
 
   const [classFunc, path, title, pressed] = isBookmarked
     ? [
         "add",
         "/datasets/" + datasetId + "/set-bookmark",
-        `You have bookmarked this ${datasetType}, with the title '${datasetName}'`,
+        `You have bookmarked  ${datasetName}'`,
         true,
       ]
     : [
         "remove",
         "/datasets/" + datasetId + "/unset-bookmark",
-        `You have not bookmarked this ${datasetType}, with the title '${datasetName}'`,
+        `You have not bookmarked ${datasetName}'`,
         false,
       ];
 
