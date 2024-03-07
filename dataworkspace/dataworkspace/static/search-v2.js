@@ -2524,7 +2524,7 @@ function toggleBookmark(toggle, isBookmarked) {
     ? [
         "add",
         "/datasets/" + datasetId + "/set-bookmark",
-        `You have bookmarked  ${datasetName}'`,
+        `You have bookmarked ${datasetName}'`,
         true,
       ]
     : [
