@@ -1,14 +1,11 @@
 {% load waffle_tags %}
-<h1 class="search-field__header govuk-heading-l"><lable for="app-site-search__input">{{title}}</lable></h1>
+<h1 class="search-field__header govuk-heading-l"><label for="app-site-search__input">{{title}}</label></h1>
 {% if subTitle %}
 <p class="govuk-body-l">{{subTitle}}</p>
 {% endif %}
 <div class="search-field">
   {% flag ACCESSIBLE_AUTOCOMPLETE_FLAG %}
   <div class="app-site-search" data-module="app-search">
-    <label class="govuk-visually-hidden" for="app-site-search__input"
-      >Search by dataset name or description</label
-    >
     <div
       class="search-field-wrapper"
       id="my-autocomplete-container"
@@ -40,7 +37,7 @@
       placeholder="Search by dataset name or description"
     />
     <div class="search-field-submit-wrapper search-field__item">
-      <input class="search-field__submit" type="submit" value="Search" />
+      <input class="search-field__submit" id= "app-site-search__input" type="submit" value="Search" />
     </div>
   </div>
   {% endflag %}
