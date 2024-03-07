@@ -67,7 +67,7 @@ def your_files_home(request, s3_path=None):
             "initial_prefix": initial_prefix,
             "bucket": settings.NOTEBOOKS_BUCKET,
             "aws_endpoint": settings.S3_LOCAL_ENDPOINT_URL,
-            "your_files_v2_flag": your_files_v2_flag
+            "your_files_v2_flag": your_files_v2_flag,
         },
         status=200,
     )
