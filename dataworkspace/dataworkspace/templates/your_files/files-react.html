@@ -47,5 +47,9 @@
     console.log(YOURFILES_CONFIG.credentialsUrl);
   </script>
 
-  {% render_bundle "your-files" "js" %}
+  {% if your_files_v2_flag %}
+    {% render_bundle "your-files-v2" "js" %}
+  {% else %}
+    {% render_bundle "your-files" "js" %}
+  {% endif %}
 {% endblock %}

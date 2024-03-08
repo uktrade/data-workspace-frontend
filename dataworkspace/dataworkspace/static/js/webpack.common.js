@@ -7,7 +7,8 @@ const REACT_APPS = [
   'source-dataset',
   'reference-dataset',
   'visualisations',
-  'your-files'
+  'your-files',
+  'your-files-v2'
 ].reduce(
   (prev, acc) => ({
     ...prev,
