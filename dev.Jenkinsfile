@@ -2,7 +2,7 @@ pipeline {
   agent none
 
   parameters {
-    string(name: 'GIT_COMMIT', defaultValue: '', description: '<p>Commit SHA or origin branch to deploy<p><h1>Do NOT release the master branch to production. ONLY promote release tags to production</h1>')
+    string(name: 'GIT_COMMIT', defaultValue: 'master', description: 'Commit SHA or origin branch to deploy')
   }
 
   stages {
