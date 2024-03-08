@@ -601,7 +601,7 @@ if (increaseGridButton !== null) {
   increaseGridButton.addEventListener("click", function (e) {
     document
       .getElementById("collapsible-header")
-      .classList.toggle("govuk-visually-hidden");
+      .classList.toggle("datagrid-visually-hidden");
     if (increaseGridButton.innerText === "Show more rows") {
       increaseGridButton.innerText = "Show less rows";
     } else {
