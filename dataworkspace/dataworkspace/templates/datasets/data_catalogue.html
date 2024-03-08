@@ -166,9 +166,13 @@
                   </strong>
                 {% endif %}
                 <div style="float:right;">
-                  <button type="button" class="bookmark-toggle{% if dataset.is_bookmarked %} is-bookmarked{% endif %}" title="{% if dataset.is_bookmarked %}You have bookmarked this dataset{% else %}You have not bookmarked this dataset{% endif %}" data-dataset-id="{{ dataset.id }}">
-                      {% include 'partials/icons/bookmark_icon.html' with dataset_id=dataset.id is_bookmarked=dataset.is_bookmarked %}
-                  </button>
+                  <button
+                  type="button" class="bookmark-toggle" 
+                  data-dataset-bookmarked="{% if dataset.is_bookmarked %}true{% else %}false{% endif %}" 
+                  data-dataset-id="{{ dataset.id }}" 
+                  data-dataset-name="{{ dataset.name }}">
+                  {% include 'partials/icons/bookmark_icon.html' with dataset_id=dataset.id is_bookmarked=dataset.is_bookmarked %}
+                </button>              
                 </div>
               </h3>
 
