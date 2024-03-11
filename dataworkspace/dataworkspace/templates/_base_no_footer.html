@@ -1,6 +1,6 @@
 {% load static core_filters waffle_tags %}
 <!DOCTYPE html>
-<html lang="en-GB" class="govuk-template" style="overflow: scroll; height: 100%">
+<html lang="en-GB" style="height: 100%;">
 
 <head>
   <meta charset="utf-8">
@@ -41,7 +41,7 @@
   {% block head %}{% endblock %}
 </head>
 
-<body id="body" class="govuk-template__body">
+<body id="body" class="govuk-template__body data-grid__body">
   {% include 'partials/gtm_body.html' %}
 
   <script nonce="{{ request.csp_nonce }}">
@@ -49,7 +49,7 @@
   </script>
 
   <a href="{{ request.path }}#main-content" class="govuk-skip-link">Skip to main content</a>
-  <header class="govuk-header" role="banner" data-module="govuk-header">
+   <header class="govuk-header" role="banner" data-module="govuk-header">
     <div class="govuk-header__container">
       <div class="govuk-header__logotype">
         <a href="{{ root_href }}" class="govuk-header__link govuk-header__link--service-name govuk-!-padding-left-2">

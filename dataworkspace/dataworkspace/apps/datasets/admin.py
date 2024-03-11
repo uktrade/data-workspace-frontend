@@ -565,7 +565,7 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, SortableAdminBase, Permissio
             "js/grid-utils.js",
             "data-grid.js",
         )
-        css = {"grid": ["data-grid.css"]}
+        css = {"grid": ["ag-grid-theme.css"]}
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
