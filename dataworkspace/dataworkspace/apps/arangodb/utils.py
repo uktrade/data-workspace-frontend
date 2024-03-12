@@ -9,6 +9,7 @@ from typing import Tuple
 
 # from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.conf import settings
 
 from arango import ArangoClient
 from dataworkspace.apps.arangodb.models import (
@@ -36,16 +37,10 @@ def new_private_arangodb_credentials(
         start_time = time.time()
 
         # Get ArangoDB database connection variables from environment. 
-        database_data = {
-            "NAME": os.environ.get["ARANGO_NAME"],
-            "HOST": os.environ.get["ARANGO_HOST"],
-            "PORT": os.environ.get["ARANGO_PORT"],
-            "USER": os.environ.get["ARANGO_USER"],
-            "PASSWORD": os.environ.get["ARANGO_PASSWORD"],
-        }
+        database_data = settings.ARANGODB
 
         # Initialize the ArangoDB client.
-        client = ArangoClient(hosts=f"{database_data['HOST']}:{database_data['PORT']}")
+        client = ArangoClient(hosts=f"http://{database_data['HOST']}:{database_data['PORT']}")
 
         # Connect to "_system" database as root user.
         sys_db = client.db('_system', username=database_data["USER"], password=database_data["PASSWORD"])

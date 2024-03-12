@@ -560,6 +560,12 @@ DATABASES = {
 }
 
 DATABASES_DATA = {db: db_config for db, db_config in DATABASES.items() if db in env["DATA_DB"]}
+ARANGODB = {
+    "NAME": "_system",
+    "HOST": "0.0.0.0",
+    "PORT": "8529",
+    "PASSWORD": "arango",
+}
 # Only used when collectstatic is run
 STATIC_ROOT = "/home/django/static/"
 
