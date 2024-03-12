@@ -19,7 +19,21 @@
       }
     }
   }
+
+  .ck-editor__main {
+    .ck-editor__editable:not(.ck-focused) {
+      border-color: #0b0c0c;
+    }
+  }
+
+  .ck {
+    .ck-toolbar {
+      border: 1px solid #0b0c0c;
+    }
+  }
 }
+
+
 
 /*
  User facing display styles
