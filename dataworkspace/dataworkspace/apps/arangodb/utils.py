@@ -19,11 +19,10 @@ from dataworkspace.apps.arangodb.models import (
 
 def new_private_arangodb_credentials(
     db_role_and_schema_suffix,
-    source_tables,
+    source_collections,
     db_user,
     dw_user: get_user_model(),
     valid_for: datetime.timedelta,
-    force_create_for_databases: Tuple[str] = tuple(),
 ):
 
     password_alphabet = string.ascii_letters + string.digits
@@ -85,7 +84,7 @@ def new_private_arangodb_credentials(
 
 
     # Get Access Permissions by Table
-    database_to_collections = {collection["dataset"]["name"].split("__")[0]: [tuple(collection["dataset"]["name"].split("__"))] for collection in source_tables}
+    database_to_collections = {collection["dataset"]["name"].split("__")[0]: [tuple(collection["dataset"]["name"].split("__"))] for collection in source_collections}
 
     # Get Password
     db_password = arango_password()
