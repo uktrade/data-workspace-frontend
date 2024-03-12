@@ -13,7 +13,7 @@ from django.contrib.auth import get_user_model
 from arango import ArangoClient
 from dataworkspace.apps.arangodb.models import (
     GraphDataset,
-    SourceCollection,
+    SourceGraphCollection,
 )
 
 
@@ -46,7 +46,7 @@ def new_private_arangodb_credentials(
         }
 
         # Initialize the ArangoDB client.
-        client = ArangoClient(hosts='http://localhost:8529')
+        client = ArangoClient(hosts=f"{database_data['HOST']}:{database_data['PORT']}")
 
         # Connect to "_system" database as root user.
         sys_db = client.db('_system', username=database_data["USER"], password=database_data["PASSWORD"])
@@ -100,9 +100,8 @@ def new_private_arangodb_credentials(
 
 
 def source_graph_collections_for_user(user):
-    user_email_domain = user.email.split("@")[1]
 
-    req_collections = SourceCollection.objects.filter(
+    req_collections = SourceGraphCollection.objects.filter(
         graph_dataset__graphdatasetuserpermission__user=user,
     ).values(
         "graph_dataset__id",
@@ -121,32 +120,8 @@ def source_graph_collections_for_user(user):
     return source_collections
 
 
-def creds_to_env_vars_with_arangodb(credentials, arango_credentials=None):
+def _arangodb_creds_to_env_vars(arango_credentials=None):
     return dict(
-        list(
-            {
-                f'DATABASE_DSN__{database["memorable_name"]}': f'host={database["db_host"]} '
-                f'port={database["db_port"]} sslmode=require dbname={database["db_name"]} '
-                f'user={database["db_user"]} password={database["db_password"]}'
-                for database in credentials
-            }.items()
-        )
-        + (
-            list(
-                {
-                    # libpq-based libraries use these environment variables automatically
-                    "PGHOST": credentials[0]["db_host"],
-                    "PGPORT": credentials[0]["db_port"],
-                    "PGSSLMODE": "require",
-                    "PGDATABASE": credentials[0]["db_name"],
-                    "PGUSER": credentials[0]["db_user"],
-                    "PGPASSWORD": credentials[0]["db_password"],
-                }.items()
-            )
-            if credentials
-            else []
-        )
-        + (
             list(
                 {
                     "ARANGO_HOST": arango_credentials[0]["arangodb_host"],
@@ -159,4 +134,3 @@ def creds_to_env_vars_with_arangodb(credentials, arango_credentials=None):
             if arango_credentials
             else []
         )
-    )
