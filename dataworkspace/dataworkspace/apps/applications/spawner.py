@@ -94,7 +94,11 @@ def spawn(
 
     source_collections = source_graph_collections_for_user(user)
     arangodb_credentials = new_private_arangodb_credentials(
-
+        db_role_schema_suffix,
+        source_collections,
+        db_user,
+        user,
+        valid_for=datetime.timedelta(days=31),
     )
 
     mlflow_authorised_hosts, sub = (
