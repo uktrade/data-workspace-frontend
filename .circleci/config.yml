@@ -13,6 +13,11 @@ jobs:
              npm install
              npm run lint
              npm run test
+      - store_test_results:
+        path: test-results
+      - store_artifacts:
+          path: coverage
+          destination: coverage
 
   docker-test-unit:
     docker:
