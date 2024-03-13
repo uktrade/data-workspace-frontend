@@ -7,6 +7,7 @@ module.exports = {
   transformIgnorePatterns: ['<rootDir>/node_modules/'],
   setupFilesAfterEnv: ['<rootDir>/jest-setup.js'],
   collectCoverageFrom: ['**/react/**/*.{ts,tsx}'],
+  coveragePathIgnorePatterns: ['^.*\\.stories\\.[jt]sx?$'],
   reporters: [
     'default',
     [
