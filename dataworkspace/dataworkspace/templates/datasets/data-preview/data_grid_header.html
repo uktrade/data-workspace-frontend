@@ -1,0 +1,53 @@
+{% load humanize datasets_tags %}
+    {% with model.fields.all as fields %}
+       <div class="data-grid__header__container">
+        <div class="data-grid__header">
+          <div class="data-grid__header__buttons__left">
+            <div class="govuk-button-group govuk-!-margin-0">
+              <p class="govuk-body row-count govuk-!-font-weight-bold" id="data-grid-rowcount">
+            {% if fields is None %}
+            {% if row_count is not None %}
+                {% if row_count > 5000 %}Over 5,000{% else %}{{ row_count|intcomma }}{% endif %} rows
+                    {% else %}
+                    Loading data...
+            {% endif %}
+            {% endif %}
+              </p>
+              <button class="govuk-button app-grid__button govuk-button--secondary" data-module="govuk-button" id="data-grid-save-view" data-prevent-double-click="true">
+                Save view
+              </button>
+              <button class="govuk-button app-grid__button govuk-button--secondary" data-module="govuk-button" id="data-grid-reset-view">
+                Reset view
+              </button>
+              {% if object.data_grid_download_enabled or fields %}
+              <button class="govuk-button app-grid__button govuk-button--secondary"  data-modal-ref-id="1" data-module="govuk-button" id="downloadData">
+                  Download this data
+                </button>
+                {% if fields %}
+                    {% include "datasets/partials/dialog.html" with JSON=True %}
+                {% else %}
+                    {% include "datasets/partials/dialog.html" %}
+                {% endif %}
+              {% include "datasets/partials/dialog.html" %}
+              {% endif %}
+              {# We only support data dictionaries for master and reference datasets currently #}
+              {# reference datagrid uses reference_dataset_grid.html btw   #}
+            {% if fields %}
+                <a href="{% url "datasets:data_dictionary" source_uuid=model.uuid %}?dataset_uuid={{model.uuid}}" class="govuk-link" target="_blank">Data dictionary</a>
+              {% else %}
+                {% if object.type == 1 %}
+                    {% if object.dataset.dictionary_published or request.user|can_edit_dataset:object.dataset %}
+                    <a href="{% url "datasets:data_dictionary" source_uuid=object.id %}?dataset_uuid={{ object.dataset.id }}" target="_blank" class="govuk-link govuk-!-margin-top-1 govuk-!-font-size-16">
+                        Data dictionary
+                    </a>
+                    {% endif %}
+                {% endif %}
+              {% endif %}
+            </div>
+          </div>
+          <div class="data-grid__header__buttons__right govuk-!-padding-right-3">
+            <button id="increase-grid-button" class="govuk-button app-grid__button govuk-button--secondary" data-module="govuk-button">Show more rows</button>
+          </div>
+        </div>
+      </div>
+{% endwith %}

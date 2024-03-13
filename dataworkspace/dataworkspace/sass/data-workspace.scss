@@ -195,10 +195,6 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   padding: 2px 4px;
 }
 
-#data-grid {
-  width: 100%;
-  height: calc(100vh - 388px);
-}
 .case-study-quote .quote-heading {
   overflow: hidden;
   margin-left: 32px;
@@ -218,10 +214,6 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
 
 .case-study-quote .quote-text {
   margin-bottom: 20px;
-}
-
-.grid-maximised {
-  height: calc(100vh - 175px) !important;
 }
 
 @mixin sidebar-border {
@@ -402,93 +394,6 @@ p.sidebar-section {
   }
 }
 
-.app-compressed-grid {
-  border: 1px solid #b1b4b6;
-  border-bottom: none;
-  &.remove-border {
-    border: 0px;
-  }
-
-  .app-grid-header {
-    padding: 12.5px 0 12.5px 10px;
-    display: flex;
-    flex-wrap: wrap;
-
-    .govuk-link {
-      margin-top: 0;
-      margin-bottom: 0;
-      font-size: 1rem;
-    }
-
-    .grid-header-left {
-      order: 1;
-      flex: 1 0 auto;
-      margin-right: 0;
-      margin-bottom: 0;
-      font-size: 19px;
-
-      p {
-        margin-right: 15px;
-      }
-
-      .govuk-button-group {
-        margin-right: 0;
-      }
-    }
-
-    .grid-header-right {
-      order: 2;
-      flex: 0 0 auto;
-      margin-left: auto;
-      text-align: right;
-      font-size: 19px;
-
-      p {
-        margin-top: 10px;
-      }
-      .govuk-button-group {
-        margin-right: 10px;
-        margin-left: 0;
-      }
-    }
-
-    .govuk-button-group {
-      margin-bottom: 0;
-      margin-top: 0;
-    }
-
-    .app-grid__button {
-      font-size: 1rem;
-      padding: 8px 10px;
-      margin-bottom: 0;
-    }
-    .row-count {
-      margin-bottom: 0;
-      font-size: 16px;
-    }
-  }
-  .ag-header {
-    .ag-header-cell-menu-button {
-      .ag-icon-menu::before {
-        content: "\f115" !important;
-      }
-    }
-    .ag-header-cell-filtered {
-      .ag-header-cell-menu-button {
-        .ag-icon-menu::before {
-          display: inline-block;
-          content: url("/__django_static/assets/images/green-filter.svg") !important;
-          width: 12px;
-          padding-bottom: 4px;
-          margin-right: 2px;
-        }
-      }
-    }
-    .ag-icon-filter {
-      display: none;
-    }
-  }
-}
 .badge {
   top: 50px;
   right: 730px;
@@ -540,6 +445,7 @@ p.sidebar-section {
 @import "search-results";
 @import "rich-text";
 @import "collection-button";
+@import "data-grid";
 @import "dialog";
 @import "grid-breadcrumb";
 @import "summary-list";
