@@ -7,12 +7,20 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Run lint and unit tests
+          name: Run install
           command: |
             cd ./dataworkspace/dataworkspace/static/js
-             npm ci
-             npm run lint
-             npm run test
+            npm ci
+      - run:
+          name: Run lint
+          command: |
+            cd ./dataworkspace/dataworkspace/static/js
+            npm run lint
+      - run:
+          name: Run unit tests
+          command: |
+            cd ./dataworkspace/dataworkspace/static/js
+            npm run test
       - store_test_results:
           path: test-results
       - store_artifacts:
