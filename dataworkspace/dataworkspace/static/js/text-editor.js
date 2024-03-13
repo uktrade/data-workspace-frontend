@@ -62,13 +62,37 @@ const richTextConfig = {
     ],
   },
 };
-document.addEventListener("DOMContentLoaded", function () {
+
+let editors = {};
+
+document.addEventListener('DOMContentLoaded', function () {
   const textAreas = Array.prototype.slice.call(
-    document.querySelectorAll("textarea[data-type=rich-text-editor]")
+    document.querySelectorAll('textarea[data-type=rich-text-editor]')
   );
-  for (let i = 0; i < textAreas.length; ++i) {
-    ClassicEditor.create(textAreas[i], richTextConfig).catch((error) => {
+
+  let editorPromises = textAreas.map((textArea) =>
+    ClassicEditor.create(textArea, richTextConfig).then((editor) => {
+      editors[textArea.id] = editor;
+    })
+  );
+
+  Promise.all(editorPromises)
+    .then(() => {
+      for (let id in editors) {
+        editors[id].model.document.on('change', () => {
+          const preElements = document.querySelectorAll('pre');
+
+          preElements.forEach(function (pre) {
+            const code = pre.querySelector('code[class^="language-"]');
+            if (code) {
+              const language = code.className.replace('language-', '');
+              pre.setAttribute('aria-label', language);
+            }
+          });
+        });
+      }
+    })
+    .catch((error) => {
       console.error(error);
     });
-  }
 });
