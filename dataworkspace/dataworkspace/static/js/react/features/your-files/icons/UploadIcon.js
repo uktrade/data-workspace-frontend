@@ -1,12 +1,13 @@
-import React from "react";
-import classNames from "classnames";
+import React from 'react';
 
-export function UploadIcon(props) {
-  const svgClasses = classNames("svg-inline--fa", "fa-cloud-upload-alt", {
-    "navbutton-icon": props.isNavIcon,
-    "button-icon": !props.isNavIcon,
-    "fa-w-14": !props.isNavIcon,
-    "fa-w-20": props.isNavIcon,
+import classNames from 'classnames';
+
+export default function UploadIcon(props) {
+  const svgClasses = classNames('svg-inline--fa', 'fa-cloud-upload-alt', {
+    'navbutton-icon': props.isNavIcon,
+    'button-icon': !props.isNavIcon,
+    'fa-w-14': !props.isNavIcon,
+    'fa-w-20': props.isNavIcon,
   });
 
   return (
@@ -19,8 +20,8 @@ export function UploadIcon(props) {
       role="img"
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 640 512"
-      width={props.isNavIcon ? "60" : null}
-      height={props.isNavIcon ? "60" : null}
+      width={props.isNavIcon ? '60' : null}
+      height={props.isNavIcon ? '60' : null}
     >
       <path
         fill="currentColor"

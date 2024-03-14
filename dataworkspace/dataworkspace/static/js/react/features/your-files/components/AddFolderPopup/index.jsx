@@ -1,8 +1,9 @@
 import React from 'react';
-import { NewFolderIcon } from '../icons/newfolder';
-import Modal from './Modal';
 
-export class AddFolderPopup extends React.Component {
+import NewFolderIcon from '../../icons/NewFolderIcon';
+import Modal from '../Modal';
+
+export default class AddFolderPopup extends React.Component {
   constructor(props) {
     super(props);
 

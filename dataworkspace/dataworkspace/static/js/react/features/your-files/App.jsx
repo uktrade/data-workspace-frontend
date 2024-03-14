@@ -1,47 +1,25 @@
 import React from 'react';
-import './App.scss';
 
-import { Header } from './Header';
-import { FileList } from './FileList';
-import { BigDataMessage } from './BigDataMessage';
+import AWS from 'aws-sdk';
+
+import AddFolderPopup from './components/AddFolderPopup';
+import BigDataMessage from './components/BigDataMessage';
+import DeleteObjectsPopup from './components/DeleteObjectsPopup';
+import ErrorModal from './components/ErrorPopup';
+import FileList from './components/FileList';
+import Header from './components/Header';
+import TeamsPrefixMessage from './components/TeamsPrefixMessage';
+import UploadFilesPopup from './components/UploadFilesPopup';
 import { getBreadcrumbs, getFolderName } from './utils';
-import { AddFolderPopup, UploadFilesPopup } from './popups';
-import { DeleteObjectsPopup } from './popups/DeleteObjects';
-import { ErrorModal } from './popups/ErrorModal';
-import { TeamsPrefixMessage } from './TeamsPrefixMessage';
+import Credentials from './utils/Credentials';
+
+import './styles/App.scss';
 
 const popupTypes = {
   ADD_FOLDER: 'addFolder',
   UPLOAD_FILES: 'uploadFiles',
-  DELETE_OBJECTS: 'deleteObjects'
+  DELETE_OBJECTS: 'deleteObjects',
 };
-
-class Credentials extends AWS.Credentials {
-  constructor(credentialsUrl) {
-    super();
-    this.expiration = 0;
-    this.credentialsUrl = credentialsUrl;
-  }
-
-  async refresh(callback) {
-    try {
-      const response = await (await fetch(this.credentialsUrl)).json();
-      this.accessKeyId = response.AccessKeyId;
-      this.secretAccessKey = response.SecretAccessKey;
-      this.sessionToken = response.SessionToken;
-      this.expiration = Date.parse(response.Expiration);
-    } catch (err) {
-      callback(err);
-      return;
-    }
-
-    callback();
-  }
-
-  needsRefresh() {
-    return this.expiration - 60 < Date.now();
-  }
-}
 
 export default class App extends React.Component {
   constructor(props) {
@@ -144,6 +122,8 @@ export default class App extends React.Component {
     const state = { popups: {} };
     state.popups[popupName] = true;
     this.setState(state);
+
+    console.log(this.state.popups);
   }
 
   hidePopup = (popupName) => {
