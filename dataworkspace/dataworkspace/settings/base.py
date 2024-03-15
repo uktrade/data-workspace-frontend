@@ -118,7 +118,6 @@ INSTALLED_APPS = [
     "django_extensions",
     "dataworkspace.apps.explorer",
     "dynamic_models",
-    "dataworkspace.apps.case_studies",
     "csp_helpers",
     "webpack_loader",
     "dataworkspace.apps.data_collections",
