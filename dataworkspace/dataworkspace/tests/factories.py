@@ -455,26 +455,6 @@ class ToolQueryAuditLogTableFactory(factory.django.DjangoModelFactory):
         model = "datasets.ToolQueryAuditLogTable"
 
 
-class CaseStudyFactory(factory.django.DjangoModelFactory):
-    published = True
-    name = factory.fuzzy.FuzzyText(length=50)
-    slug = factory.fuzzy.FuzzyText(length=20)
-    short_description = factory.fuzzy.FuzzyText(length=100)
-    department_name = factory.fuzzy.FuzzyText(length=20)
-    service_name = factory.fuzzy.FuzzyText(length=25)
-    outcome = factory.fuzzy.FuzzyText(length=200)
-    background = factory.fuzzy.FuzzyText(length=200)
-    solution = factory.fuzzy.FuzzyText(length=200)
-    impact = factory.fuzzy.FuzzyText(length=200)
-    quote_title = factory.fuzzy.FuzzyText(length=100)
-    quote_text = factory.fuzzy.FuzzyText(length=150)
-    quote_full_name = factory.fuzzy.FuzzyText(length=20)
-    quote_department_name = factory.fuzzy.FuzzyText(length=30)
-
-    class Meta:
-        model = "case_studies.CaseStudy"
-
-
 class DataSetSubscriptionFactory(factory.django.DjangoModelFactory):
     notify_on_schema_change = True
 

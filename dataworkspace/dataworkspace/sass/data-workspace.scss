@@ -195,27 +195,6 @@ Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issue
   padding: 2px 4px;
 }
 
-.case-study-quote .quote-heading {
-  overflow: hidden;
-  margin-left: 32px;
-  margin-top: 16px;
-}
-
-.case-study-quote .quote-content {
-  overflow: hidden;
-  margin-left: 32px;
-  margin-right: 48px;
-  margin-bottom: 16px;
-}
-
-.case-study-image {
-  width: 100%;
-}
-
-.case-study-quote .quote-text {
-  margin-bottom: 20px;
-}
-
 @mixin sidebar-border {
   border-top: 2px solid #1d70b8;
 }
