@@ -512,6 +512,20 @@ function initDataGrid(
     .addEventListener("click", function (e) {
       gridOptions.api.setFilterModel(null);
       gridOptions.columnApi.resetColumnState();
+
+      // Unset filters for any boolean type columns
+      const booleanFilterColumns = gridOptions.api.getColumnDefs().filter(
+        (column) => column.filter.name === "NewBooleanFilterComponent"
+      );
+      booleanFilterColumns.forEach((column) => {
+        const filter = gridOptions.api.getFilterInstance(
+          column.field
+        );
+        if (filter) {
+          filter.clearFilter();
+        }
+      });
+
       // Unset the saved column config
       gridOptions.columnApi.getColumns().forEach((c) => {
         gridOptions.columnApi.setColumnVisible(c.getColId(), true);
