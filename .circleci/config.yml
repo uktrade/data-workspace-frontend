@@ -2,17 +2,29 @@ version: 2.1
 
 jobs:
   docker-test-unit-js:
+    working_directory: ~/repo/dataworkspace/dataworkspace/static/js
     docker:
       - image: cimg/node:16.20
     steps:
-      - checkout
+      - checkout:
+          path: ~/repo
       - run:
-          name: Run lint and unit tests
+          name: Run install
           command: |
-            cd ./dataworkspace/dataworkspace/static/js
-             npm install
-             npm run lint
-             npm run test
+            npm ci
+      - run:
+          name: Run lint
+          command: |
+            npm run lint
+      - run:
+          name: Run unit tests
+          command: |
+            npm run test
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: coverage
+          destination: coverage
 
   docker-test-unit:
     docker:
