@@ -307,9 +307,7 @@ class FargateSpawner:
 
             schema_env = {"APP_SCHEMA": app_schema}
 
-            # arangodb_env = _arangodb_creds_to_env_vars(arangodb_credentials)
-            # TEMPORARY: Overwrite Env Dummy Variable to Check Theia Environment Update
-            env = {"DUMMY": "differentvalue"}
+            arangodb_env = _arangodb_creds_to_env_vars(arangodb_credentials)
 
             user_efs_access_point_id = (
                 user.profile.home_directory_efs_access_point_id

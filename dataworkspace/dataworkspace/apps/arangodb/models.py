@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.conf import settings
 import uuid
 
 from dataworkspace.apps.core.models import (
@@ -13,6 +14,20 @@ class GraphDataset(DeletableTimestampedUserModel):
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(blank=False, null=False, max_length=128)
+    information_asset_owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="info_asset_owned_graph_datasets",
+        null=True,
+        blank=True,
+    )
+    information_asset_manager = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="info_asset_managed_graph_datasets",
+        null=True,
+        blank=True,
+    )
     short_description = models.CharField(blank=False, null=False, max_length=256)
 
     class Meta:
