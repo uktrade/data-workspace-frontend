@@ -137,13 +137,6 @@ urlpatterns = [
         name="newsletter_subscription",
     ),
     path(
-        "case-studies/",
-        include(
-            ("dataworkspace.apps.case_studies.urls", "case_studies"),
-            namespace="case-studies",
-        ),
-    ),
-    path(
         "media",
         login_required(ServeS3UploadedFileView.as_view()),
         name="uploaded-media",
