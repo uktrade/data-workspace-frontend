@@ -19,6 +19,18 @@
       }
     }
   }
+
+  .ck-editor__main {
+    .ck-editor__editable:not(.ck-focused) {
+      border: 2px solid #0b0c0c;
+    }
+  }
+
+  .ck {
+    .ck-toolbar {
+      border: 2px solid #0b0c0c;
+    }
+  }
 }
 
 /*
