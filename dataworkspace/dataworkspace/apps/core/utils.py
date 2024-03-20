@@ -13,6 +13,7 @@ import re
 import secrets
 import string
 import time
+from contextlib import contextmanager
 from timeit import default_timer as timer
 from typing import Tuple
 from urllib.parse import unquote
@@ -60,6 +61,10 @@ logger = logging.getLogger("app")
 
 USER_SCHEMA_STEM = "_user_"
 
+# A PostgreSQL advisory locking lock ID, used to block concurrent GRANTs to the same database
+# objects (other than GRANTing role membership, which we think doesn't need locking)
+GLOBAL_LOCK_ID = 1
+
 
 def database_dsn(database_data):
     return (
@@ -101,6 +106,21 @@ def db_role_schema_suffix_for_user(user):
 
 def db_role_schema_suffix_for_app(application_template):
     return "app_" + application_template.host_basename
+
+
+@contextmanager
+def transaction_and_lock(cursor, lock_id):
+    try:
+        cursor.execute(sql.SQL("BEGIN"))
+        cursor.execute(sql.SQL("SET statement_timeout = '30s'"))
+        cursor.execute(
+            sql.SQL("SELECT pg_advisory_xact_lock({lock_id})").format(lock_id=sql.Literal(lock_id))
+        )
+        yield
+    except Exception:  # pylint: disable=broad-except
+        cursor.execute(sql.SQL("ROLLBACK"))
+    else:
+        cursor.execute(sql.SQL("COMMIT"))
 
 
 def new_private_database_credentials(
@@ -385,11 +405,9 @@ def new_private_database_credentials(
                 )
 
         # PostgreSQL doesn't handle concurrent GRANT/REVOKEs on the same objects well, so we lock
-        with cache.lock(
-            "database-grant-v1",
-            blocking_timeout=15,
-            timeout=180,
-        ), connections[database_memorable_name].cursor() as cur:
+        with connections[database_memorable_name].cursor() as cur, transaction_and_lock(
+            cur, GLOBAL_LOCK_ID
+        ):
             logger.info(
                 "Revoking permissions ON %s %s from %s",
                 database_memorable_name,

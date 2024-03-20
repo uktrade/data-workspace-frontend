@@ -48,12 +48,14 @@ from dataworkspace.apps.core.errors import (
 )
 from dataworkspace.apps.core.models import Database, DatabaseUser
 from dataworkspace.apps.core.utils import (
+    GLOBAL_LOCK_ID,
     close_all_connections_if_not_in_atomic_block,
     create_tools_access_iam_role,
     database_dsn,
     stable_identification_suffix,
     source_tables_for_app,
     source_tables_for_user,
+    transaction_and_lock,
     new_private_database_credentials,
     postgres_user,
 )
@@ -571,93 +573,84 @@ def _do_delete_unused_datasets_users():
 
         # Multiple concurrent GRANT or REVOKE on the same object can result in
         # "tuple concurrently updated" errors
-        lock_name = "database-grant-v1"
-        try:
-            with cache.lock(lock_name, blocking_timeout=0, timeout=4), connect(
-                database_dsn(database_data)
-            ) as conn:
-                conn.autocommit = True
-                with conn.cursor() as cur:
-                    for usename in not_in_use_usernames:
-                        try:
-                            logger.info(
-                                "delete_unused_datasets_users: revoking credentials for %s",
-                                usename,
-                            )
+        with connect(
+            database_dsn(database_data)
+        ) as conn, conn.cursor() as cur, transaction_and_lock(cur, GLOBAL_LOCK_ID):
+            for usename in not_in_use_usernames:
+                try:
+                    logger.info(
+                        "delete_unused_datasets_users: revoking credentials for %s",
+                        usename,
+                    )
 
-                            cur.execute(
-                                sql.SQL("REVOKE CONNECT ON DATABASE {} FROM {};").format(
-                                    sql.Identifier(database_name),
-                                    sql.Identifier(usename),
-                                )
-                            )
+                    cur.execute(
+                        sql.SQL("REVOKE CONNECT ON DATABASE {} FROM {};").format(
+                            sql.Identifier(database_name),
+                            sql.Identifier(usename),
+                        )
+                    )
 
-                            cur.execute(
-                                sql.SQL("REVOKE ALL PRIVILEGES ON DATABASE {} FROM {};").format(
-                                    sql.Identifier(database_name),
-                                    sql.Identifier(usename),
-                                )
-                            )
+                    cur.execute(
+                        sql.SQL("REVOKE ALL PRIVILEGES ON DATABASE {} FROM {};").format(
+                            sql.Identifier(database_name),
+                            sql.Identifier(usename),
+                        )
+                    )
 
-                            logger.info(
-                                "delete_unused_datasets_users: dropping user %s",
-                                usename,
-                            )
+                    logger.info(
+                        "delete_unused_datasets_users: dropping user %s",
+                        usename,
+                    )
 
-                            # Revoke privileges so that the DROP USER command succeeds
-                            if usename in db_persistent_roles:
-                                db_persistent_role = db_persistent_roles[usename]
-                                # This reassigns the ownership of all the database objects owned by
-                                # the temporary role, however it does not handle privileges so these
-                                # need to be revoked in the next command.
-                                #
-                                # REASSIGN OWNED requires privileges on both the source role(s) and
-                                # the target role so these are granted first.
-                                cur.execute(
-                                    sql.SQL("GRANT {} TO {};").format(
-                                        sql.Identifier(usename),
-                                        sql.Identifier(database_data["USER"]),
-                                    )
-                                )
-                                cur.execute(
-                                    sql.SQL("GRANT {} TO {};").format(
-                                        sql.Identifier(db_persistent_role),
-                                        sql.Identifier(database_data["USER"]),
-                                    )
-                                )
-
-                                # The REASSIGN OWNED BY means any objects like tables that were
-                                # owned by the temporary user get transferred to the permanent user
-                                cur.execute(
-                                    sql.SQL("REASSIGN OWNED BY {} TO {};").format(
-                                        sql.Identifier(usename),
-                                        sql.Identifier(db_persistent_role),
-                                    )
-                                )
-                                # ... so the only effect of DROP OWNED BY is to REVOKE any
-                                # remaining permissions by the temporary user, so it can then get
-                                # deleted below
-                                cur.execute(
-                                    sql.SQL("DROP OWNED BY {};").format(sql.Identifier(usename))
-                                )
-
-                            cur.execute(sql.SQL("DROP USER {};").format(sql.Identifier(usename)))
-                        except Exception:  # pylint: disable=broad-except
-                            logger.exception(
-                                "delete_unused_datasets_users: Failed deleting %s",
-                                usename,
+                    # Revoke privileges so that the DROP USER command succeeds
+                    if usename in db_persistent_roles:
+                        db_persistent_role = db_persistent_roles[usename]
+                        # This reassigns the ownership of all the database objects owned by
+                        # the temporary role, however it does not handle privileges so these
+                        # need to be revoked in the next command.
+                        #
+                        # REASSIGN OWNED requires privileges on both the source role(s) and
+                        # the target role so these are granted first.
+                        cur.execute(
+                            sql.SQL("GRANT {} TO {};").format(
+                                sql.Identifier(usename),
+                                sql.Identifier(database_data["USER"]),
                             )
-                        else:
-                            DatabaseUser.objects.filter(username=usename).update(
-                                deleted_date=datetime.datetime.now()
+                        )
+                        cur.execute(
+                            sql.SQL("GRANT {} TO {};").format(
+                                sql.Identifier(db_persistent_role),
+                                sql.Identifier(database_data["USER"]),
                             )
-                            logger.info(
-                                "delete_unused_datasets_users: revoked credentials for and dropped %s",
-                                usename,
-                            )
+                        )
 
-        except redis.exceptions.LockError:
-            logger.exception("LOCK: Unable to acquire %s", lock_name)
+                        # The REASSIGN OWNED BY means any objects like tables that were
+                        # owned by the temporary user get transferred to the permanent user
+                        cur.execute(
+                            sql.SQL("REASSIGN OWNED BY {} TO {};").format(
+                                sql.Identifier(usename),
+                                sql.Identifier(db_persistent_role),
+                            )
+                        )
+                        # ... so the only effect of DROP OWNED BY is to REVOKE any
+                        # remaining permissions by the temporary user, so it can then get
+                        # deleted below
+                        cur.execute(sql.SQL("DROP OWNED BY {};").format(sql.Identifier(usename)))
+
+                    cur.execute(sql.SQL("DROP USER {};").format(sql.Identifier(usename)))
+                except Exception:  # pylint: disable=broad-except
+                    logger.exception(
+                        "delete_unused_datasets_users: Failed deleting %s",
+                        usename,
+                    )
+                else:
+                    DatabaseUser.objects.filter(username=usename).update(
+                        deleted_date=datetime.datetime.now()
+                    )
+                    logger.info(
+                        "delete_unused_datasets_users: revoked credentials for and dropped %s",
+                        usename,
+                    )
 
     logger.info("delete_unused_datasets_users: End")
 
