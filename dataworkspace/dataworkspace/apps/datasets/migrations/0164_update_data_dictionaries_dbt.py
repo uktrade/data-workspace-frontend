@@ -9,7 +9,9 @@ def copy_source_table_field_def_dbt(apps, _):
     for source_table in source_table_model.objects.filter(schema="dit").all():
         field_defs = source_table_field_def_model.objects.filter(source_table=source_table)
         if source_table_model.objects.filter(schema="dbt", table=source_table.table).exists:
-            dbt_source_table = source_table_model.objects.get(schema="dbt", table=source_table.table)
+            dbt_source_table = source_table_model.objects.get(
+                schema="dbt", table=source_table.table
+            )
             for field_definition in field_defs:
                 field_definition.id = None
                 field_definition.source_table = dbt_source_table
@@ -22,5 +24,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(copy_source_table_field_def_dbt, reverse_code=migrations.RunPython.noop),
+        migrations.RunPython(
+            copy_source_table_field_def_dbt, reverse_code=migrations.RunPython.noop
+        ),
     ]
