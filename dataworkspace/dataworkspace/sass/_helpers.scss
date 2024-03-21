@@ -1,3 +1,10 @@
 .govuk-error-colour {
-    color: govuk-colour("red");
+  color: govuk-colour("red");
+}
+
+.background-light-grey {
+  background-color: govuk-colour("light-grey");
+}
+.background-blue {
+  background-color: govuk-colour("blue");
 }

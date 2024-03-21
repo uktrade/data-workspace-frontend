@@ -32,7 +32,7 @@
         </script>
 
     <a href="{{ request.path }}#discover-data" class="govuk-skip-link" data-module="govuk-skip-link">Skip to main content</a>
-      <header class="govuk-header " role="banner" data-module="govuk-header">
+      <header class="govuk-header " role="banner" data-module="govuk-header" style="border-bottom: none;">
         <div class="govuk-width-container">
           <div class="govuk-header__logotype">
             <a href="{{ root_href }}" class="govuk-header__link govuk-header__link--service-name" style="padding-top: 10px;">
@@ -40,7 +40,7 @@
             </a>
           </div>
         </div>
-        <div class="govuk-!-padding-top-8 govuk-!-padding-bottom-4" style="background-color:#3370B3;"" id="discover-data">
+        <div class="govuk-!-padding-top-8 govuk-!-padding-bottom-4 background-blue" id="discover-data">
           <div class="govuk-width-container">
             <div class="govuk-grid-row govuk-!-padding-top-4">
             <div class="govuk-grid-column-one-half govuk-!-padding-right-8">
@@ -57,7 +57,7 @@
         </div>
       </header>
 
-      <div class="govuk-!-padding-top-8 govuk-!-padding-bottom-8" id="discover-data">
+      <div class="govuk-!-padding-top-8 govuk-!-padding-bottom-8 background-light-grey" id="discover-data">
         <div class="govuk-width-container">
           <div class="govuk-grid-row">
             <form id="live-search-form" action="{% url 'datasets:find_datasets' %}" method="get">
@@ -87,7 +87,7 @@
         </div>
       </div>
 
-      <div class="govuk-!-padding-top-8 govuk-!-padding-bottom-8" style="background-color:#F6F6F6;" id="easily-access-data">
+      <div class="govuk-!-padding-top-8 govuk-!-padding-bottom-8" id="easily-access-data">
         <div class="govuk-width-container">
           <div class="govuk-grid-row">
             <div class="govuk-grid-column-one-half">
@@ -125,7 +125,7 @@
         </div>
       </div>-->
 
-      <div class="govuk-!-padding-top-8 govuk-!-padding-bottom-8" id="automate-reporting">
+      <div class="govuk-!-padding-top-8 govuk-!-padding-bottom-8 background-light-grey" id="automate-reporting">
         <div class="govuk-width-container">
           <div class="govuk-grid-row">
             <div class="govuk-grid-column-one-half">
@@ -144,7 +144,7 @@
         </div>
       </div>
 
-      <div class="govuk-!-padding-top-8 govuk-!-padding-bottom-8" style="background-color:#F6F6F6;" id="upload-and-analyse-data">
+      <div class="govuk-!-padding-top-8 govuk-!-padding-bottom-8" id="upload-and-analyse-data">
         <div class="govuk-width-container">
           <div class="govuk-grid-row">
             <div class="govuk-grid-column-one-half">
@@ -162,6 +162,24 @@
               <p class="govuk-body">
                 <a class="govuk-link" href="https://data.trade.gov.uk/tools/" target="_blank">Learn more about our tools.</a>
               </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="govuk-!-padding-top-8 govuk-!-padding-bottom-8 background-light-grey" id="learn-with-learning-pathways">
+        <div class="govuk-width-container">
+          <div class="govuk-grid-row">
+            <div class="govuk-grid-column-one-half">
+              <h2 class="govuk-heading-l">Learn with learning pathways</h2>
+              <p class="govuk-body">Learning pathways is our online training. You can select what is relevant for you and use them as needed.
+              </p>
+              <p class="govuk-body">
+                <a class="govuk-link" href="https://data-services-help.trade.gov.uk/data-workspace/training/learning-pathways/" target="_blank">Go to learning pathways</a>
+              </p>
+            </div>
+            <div class="govuk-grid-column-one-half">
+              <center><img width=70% height=auto max-width=100% alt="" src="{% static 'assets/images/learn_with_learning_pathways.svg' %}"></center>
             </div>
           </div>
         </div>
