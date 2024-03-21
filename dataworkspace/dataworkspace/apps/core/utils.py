@@ -373,6 +373,13 @@ def new_private_database_credentials(
                     )
                 )
 
+        # PostgreSQL doesn't handle concurrent
+        # - GRANT/REVOKEs on the same database object
+        # - ALTER USER ... SET
+        # Either can result in "tuple concurrentl updated" errors. So we lock.
+        with connections[database_memorable_name].cursor() as cur, transaction_and_lock(
+            cur, GLOBAL_LOCK_ID
+        ):
             # Give the roles reasonable timeouts...
             # [Out of paranoia on all roles in case the user change role mid session]
             for _db_user in [db_role, db_user] + db_shared_roles:
@@ -404,10 +411,6 @@ def new_private_database_credentials(
                     )
                 )
 
-        # PostgreSQL doesn't handle concurrent GRANT/REVOKEs on the same objects well, so we lock
-        with connections[database_memorable_name].cursor() as cur, transaction_and_lock(
-            cur, GLOBAL_LOCK_ID
-        ):
             logger.info(
                 "Revoking permissions ON %s %s from %s",
                 database_memorable_name,
