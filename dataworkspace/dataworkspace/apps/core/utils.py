@@ -209,15 +209,15 @@ def new_private_database_credentials(
             )
             missing_db_roles = [role for (role,) in cur.fetchall()]
 
-        if missing_db_roles:
-            cur.execute(
-                sql.SQL("GRANT {} TO {};").format(
-                    sql.SQL(",").join(
-                        sql.Identifier(missing_db_role) for missing_db_role in missing_db_roles
-                    ),
-                    sql.Identifier(database_data["USER"]),
+            if missing_db_roles:
+                cur.execute(
+                    sql.SQL("GRANT {} TO {};").format(
+                        sql.SQL(",").join(
+                            sql.Identifier(missing_db_role) for missing_db_role in missing_db_roles
+                        ),
+                        sql.Identifier(database_data["USER"]),
+                    )
                 )
-            )
 
         if switch_is_active(settings.CACHE_USER_TABLE_PERMISSIONS):
             logging.info("Caching switch is active. Trying to get cached table permissions")
