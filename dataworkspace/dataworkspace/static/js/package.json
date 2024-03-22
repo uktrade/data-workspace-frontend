@@ -8,7 +8,8 @@
     "build": "./node_modules/.bin/webpack build --config webpack.prod.js",
     "test": "jest --coverage",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "lint": "eslint --ext .ts,.tsx ."
   },
   "dependencies": {
     "aws-sdk": "^2.1193.0",
