@@ -8,14 +8,26 @@ def copy_source_table_field_def_dbt(apps, _):
     source_table_field_def_model = apps.get_model("datasets", "SourceTableFieldDefinition")
     for source_table in source_table_model.objects.filter(schema="dit").all():
         field_defs = source_table_field_def_model.objects.filter(source_table=source_table)
-        if source_table_model.objects.filter(schema="dbt", table=source_table.table).exists:
+        if source_table_model.objects.filter(schema="dbt", table=source_table.table).exists():
             dbt_source_table = source_table_model.objects.get(
                 schema="dbt", table=source_table.table
             )
             for field_definition in field_defs:
-                field_definition.id = None
-                field_definition.source_table = dbt_source_table
-                field_definition.save()
+                if not source_table_field_def_model.objects.filter(
+                    field=field_definition.field, source_table=dbt_source_table
+                ).exists():
+                    # create a new entry with dbt source table
+                    field_definition.pk = None
+                    field_definition.source_table = dbt_source_table
+                    field_definition.save()
+                else:
+                    # update description if empty
+                    dbt_field_def = source_table_field_def_model.objects.get(
+                        field=field_definition.field, source_table=dbt_source_table
+                    )
+                    if dbt_field_def.description is None or dbt_field_def.description == "":
+                        dbt_field_def.description = field_definition.description
+                        dbt_field_def.save()
 
 
 class Migration(migrations.Migration):
