@@ -433,6 +433,9 @@ class DatasetDetailView(DetailView):
 
     def _get_context_data_for_master_dataset(self, ctx, **kwargs):
         source_tables = sorted(self.object.sourcetable_set.all(), key=lambda x: x.name)
+        source_tables = [
+            source_table for source_table in source_tables if source_table.schema != "dit"
+        ]
 
         MasterDatasetInfo = namedtuple(
             "MasterDatasetInfo",
