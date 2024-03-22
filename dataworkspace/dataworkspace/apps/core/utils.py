@@ -650,7 +650,7 @@ def can_access_schema_table(user, database, schema, table):
         .exists()
     )
 
-    return has_source_table_perms
+    return schema != "dit" and has_source_table_perms
 
 
 def get_team_schemas_for_user(user):
@@ -777,7 +777,9 @@ def source_tables_for_user(user):
         .exclude(external_database=None)
         .values("external_database__memorable_name", "table_name", "uuid", "name")
     ]
-    return source_tables + reference_dataset_tables
+    return [
+        table for table in (source_tables + reference_dataset_tables) if table["schema"] != "dit"
+    ]
 
 
 def source_tables_for_app(application_template):
@@ -825,7 +827,9 @@ def source_tables_for_app(application_template):
         .filter(published=True, deleted=False)
         .exclude(external_database=None)
     ]
-    return source_tables + reference_dataset_tables
+    return [
+        table for table in (source_tables + reference_dataset_tables) if table["schema"] != "dit"
+    ]
 
 
 def view_exists(database, schema, view):
