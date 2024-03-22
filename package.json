@@ -16,9 +16,14 @@
     "cypress:run:a11y": "cypress run --config-file cypress.a11y.config.ts",
     "cypress:open": "cypress open",
     "cypress:open:a11y": "cypress open --config-file cypress.a11y.config.ts",
-    "lint": "eslint dataworkspace/dataworkspace/static/js/react/**/*"
+    "lint": "eslint dataworkspace/dataworkspace/static/js/react/**/*",
+    "prepare": "husky"
   },
-  "pre-commit": "lint",
+  "lint-staged": {
+    "dataworkspace/dataworkspace/static/**/*.{js,jsx,ts,tsx}": [
+      "eslint"
+    ]
+  },
   "resolutions": {
     "scss-tokenizer": "0.4.3"
   },
@@ -46,8 +51,8 @@
     "js-base64": "^3.7.5",
     "mocha-junit-reporter": "^2.2.1",
     "node-sass": "^8.0.0",
-    "pre-commit": "^1.2.2",
     "ts-jest": "^29.1.1",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "husky": "^9.0.11"
   }
 }
