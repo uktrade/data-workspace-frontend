@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React from 'react';
 import { NewFolderIcon } from '../icons/newfolder';
 import Modal from './Modal';

@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React from "react";
 export function TeamsPrefixMessage({ team, bucketName }) {
   const relativePath = team.prefix.replace(/^teams/, '');

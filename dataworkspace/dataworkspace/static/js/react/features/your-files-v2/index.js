@@ -12,6 +12,7 @@ const root = createRoot(rootElement);
 
 root.render(
   <StrictMode>
+    {/* eslint-disable-next-line no-undef */}
     <YourFiles config={YOURFILES_CONFIG} />
   </StrictMode>
 );

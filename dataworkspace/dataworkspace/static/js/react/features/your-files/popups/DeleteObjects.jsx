@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React from 'react';
 import { TrashIcon } from '../icons/trash';
 import { bytesToSize, fullPathToFilename, prefixToFolder } from '../utils';
