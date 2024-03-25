@@ -649,6 +649,7 @@ class SourceTableForm(forms.ModelForm):
             "data_grid_download_enabled",
             "data_grid_download_limit",
             "disable_data_grid_interaction",
+            "published",
         )
 
     def __init__(self, *args, **kwargs):

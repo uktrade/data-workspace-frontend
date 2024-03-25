@@ -803,6 +803,10 @@ class SourceTable(BaseSource):
             " very large tables to stop timeouts."
         ),
     )
+    published = models.BooleanField(
+        default=True,
+        help_text=("When false hides source table from catalogue page"),
+    )
 
     class Meta:
         db_table = "app_sourcetable"
