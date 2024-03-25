@@ -1,3 +1,4 @@
+/* eslint-disable */
 const ROOT_FOLDER_NAME = "home";
 export function getBreadcrumbs(homePrefix, teamsPrefix, fullCurrentPrefix) {
   const breadcrumbs = [

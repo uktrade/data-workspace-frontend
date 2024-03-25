@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React from "react";
 import { TrashIcon } from "./icons/trash";
 import { UploadIcon } from "./icons/upload";

@@ -1,14 +1,16 @@
+/* eslint-disable */
 import React from 'react';
-import './App.scss';
 
-import { Header } from './Header';
-import { FileList } from './FileList';
 import { BigDataMessage } from './BigDataMessage';
-import { getBreadcrumbs, getFolderName } from './utils';
+import { FileList } from './FileList';
+import { Header } from './Header';
 import { AddFolderPopup, UploadFilesPopup } from './popups';
 import { DeleteObjectsPopup } from './popups/DeleteObjects';
 import { ErrorModal } from './popups/ErrorModal';
 import { TeamsPrefixMessage } from './TeamsPrefixMessage';
+import { getBreadcrumbs, getFolderName } from './utils';
+
+import './App.scss';
 
 const popupTypes = {
   ADD_FOLDER: 'addFolder',

@@ -1,6 +1,4 @@
-import {
-    SPACING,
-} from '@govuk-react/constants';
+import { SPACING } from '@govuk-react/constants';
 import { typography } from '@govuk-react/lib';
 import type { Meta, StoryObj } from '@storybook/react';
 import styled from 'styled-components';
@@ -13,25 +11,23 @@ const StyledParagraph = styled('p')`
 `;
 
 const meta = {
-    title: 'Tile',
-    component: Tile
+  title: 'Tile',
+  component: Tile
 } satisfies Meta<typeof Tile>;
 
 type Story = StoryObj<typeof Tile>;
 
 export const WithContent: Story = {
-    render: () => (
-        <Tile 
-            title='Tile'
-        >
-            <StyledParagraph>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, 
-                sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
-                Ut enim ad minim veniam, quis nostrud exercitation 
-                ullamco laboris nisi ut aliquip ex ea commodo consequat.
-            </StyledParagraph>
-        </Tile>
-    ),
+  render: () => (
+    <Tile title="Tile">
+      <StyledParagraph>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+        veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+        commodo consequat.
+      </StyledParagraph>
+    </Tile>
+  )
 };
 
 export default meta;

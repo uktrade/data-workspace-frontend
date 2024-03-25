@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React from 'react';
 import Modal from './Modal';
 export function ErrorModal({ open, error, onClose }) {

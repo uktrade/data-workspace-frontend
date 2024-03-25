@@ -6,16 +6,19 @@
     "@typescript-eslint",
     "simple-import-sort",
     "jsx-a11y",
-    "react-hooks"
+    "react-hooks",
+    "prettier"
   ],
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended",
-    "plugin:jsx-a11y/recommended"
+    "plugin:jsx-a11y/recommended",
+    "prettier"
   ],
   "ignorePatterns": ["node_modules"],
   "rules": {
+    "prettier/prettier": 2 ,
     "semi": ["error", "always"],
     "quotes": ["error", "single"],
     "react-hooks/rules-of-hooks": "error",

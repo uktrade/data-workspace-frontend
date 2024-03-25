@@ -1,10 +1,7 @@
 import React from 'react';
 
 const YourFiles = () => {
-
-    return (
-        <></>
-    );
+  return <></>;
 };
 
 export default YourFiles;
