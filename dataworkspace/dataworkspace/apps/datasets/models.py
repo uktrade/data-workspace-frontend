@@ -906,8 +906,16 @@ class SourceTableFieldDefinition(models.Model):
         null=True,
     )
     source_table = models.ForeignKey(
-        SourceTable, on_delete=models.CASCADE, related_name="field_definitions"
+        SourceTable,
+        on_delete=models.CASCADE,
+        related_name="field_definitions",
     )
+
+    class Meta:
+        unique_together = (
+            "field",
+            "source_table",
+        )
 
 
 class SourceView(BaseSource):
