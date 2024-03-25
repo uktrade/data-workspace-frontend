@@ -489,7 +489,8 @@
       "data_grid_enabled": true,
       "data_grid_download_enabled": false,
       "data_grid_download_limit": null,
-      "disable_data_grid_interaction": false
+      "disable_data_grid_interaction": false,
+      "published": true
     }
   },
   {
@@ -509,7 +510,8 @@
       "data_grid_enabled": true,
       "data_grid_download_enabled": false,
       "data_grid_download_limit": null,
-      "disable_data_grid_interaction": false
+      "disable_data_grid_interaction": false,
+      "published": true
     }
   },
   {

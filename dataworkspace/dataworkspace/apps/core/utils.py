@@ -630,7 +630,7 @@ def write_credentials_to_bucket(user, creds):
 
 def can_access_schema_table(user, database, schema, table):
     sourcetable = SourceTable.objects.filter(
-        schema=schema, table=table, database__memorable_name=database
+        schema=schema, table=table, database__memorable_name=database, published=True
     )
     has_source_table_perms = (
         DataSet.objects.live()
@@ -650,7 +650,7 @@ def can_access_schema_table(user, database, schema, table):
         .exists()
     )
 
-    return schema != "dit" and has_source_table_perms
+    return has_source_table_perms
 
 
 def get_team_schemas_for_user(user):
@@ -712,6 +712,7 @@ def source_tables_for_user(user):
             ]
         ),
         dataset__deleted=False,
+        published=True,
         **{"dataset__published": True} if not user.is_superuser else {},
     ).values(
         "database__memorable_name",
@@ -777,9 +778,7 @@ def source_tables_for_user(user):
         .exclude(external_database=None)
         .values("external_database__memorable_name", "table_name", "uuid", "name")
     ]
-    return [
-        table for table in (source_tables + reference_dataset_tables) if table["schema"] != "dit"
-    ]
+    return source_tables + reference_dataset_tables
 
 
 def source_tables_for_app(application_template):
@@ -792,6 +791,7 @@ def source_tables_for_app(application_template):
         ),
         dataset__published=True,
         dataset__deleted=False,
+        published=True,
     )
     req_authorization_tables = SourceTable.objects.filter(
         dataset__published=True,
@@ -827,9 +827,7 @@ def source_tables_for_app(application_template):
         .filter(published=True, deleted=False)
         .exclude(external_database=None)
     ]
-    return [
-        table for table in (source_tables + reference_dataset_tables) if table["schema"] != "dit"
-    ]
+    return source_tables + reference_dataset_tables
 
 
 def view_exists(database, schema, view):

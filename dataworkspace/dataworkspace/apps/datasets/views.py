@@ -432,10 +432,9 @@ class DatasetDetailView(DetailView):
         return user_has_tools_access
 
     def _get_context_data_for_master_dataset(self, ctx, **kwargs):
-        source_tables = sorted(self.object.sourcetable_set.all(), key=lambda x: x.name)
-        source_tables = [
-            source_table for source_table in source_tables if source_table.schema != "dit"
-        ]
+        source_tables = sorted(
+            self.object.sourcetable_set.filter(published=True).all(), key=lambda x: x.name
+        )
 
         MasterDatasetInfo = namedtuple(
             "MasterDatasetInfo",
