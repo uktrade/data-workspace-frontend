@@ -373,6 +373,49 @@ def new_private_database_credentials(
                     )
                 )
 
+            # Ensure we have a DB connection role
+            cur.execute(
+                sql.SQL("SELECT oid FROM pg_database WHERE datname = {} LIMIT 1;").format(
+                    sql.Literal(database_data["NAME"])
+                )
+            )
+            db_conn_permission_role = f"database_connect_{cur.fetchone()[0]}"
+            logger.info(
+                "Database %s connection role is %s", database_data["NAME"], db_conn_permission_role
+            )
+            ensure_db_role(db_conn_permission_role)
+
+            # Grant the DB connection role to the temporary user
+            cur.execute(
+                sql.SQL("GRANT {} TO {};").format(
+                    sql.Identifier(db_conn_permission_role), sql.Identifier(db_user)
+                )
+            )
+
+            # Grant the user's permanent role to the temporary user
+            cur.execute(
+                sql.SQL("GRANT {} TO {};").format(sql.Identifier(db_role), sql.Identifier(db_user))
+            )
+
+            # Check if the database connection role has the right privileges
+            cur.execute(
+                sql.SQL(
+                    """
+                    SELECT EXISTS(
+                        SELECT
+                            1
+                        FROM
+                            pg_database, aclexplode(datacl)
+                        WHERE
+                            datname = {}
+                            AND grantee = {}::regrole
+                            AND privilege_type = 'CONNECT'
+                    );
+                """
+                ).format(sql.Literal(database_data["NAME"]), sql.Literal(db_conn_permission_role))
+            )
+            db_conn_permission_role_can_connect = cur.fetchone()[0]
+
         # PostgreSQL doesn't handle concurrent
         # - GRANT/REVOKEs on the same database object
         # - ALTER USER ... SET
@@ -380,6 +423,15 @@ def new_private_database_credentials(
         with connections[database_memorable_name].cursor() as cur, transaction_and_lock(
             cur, GLOBAL_LOCK_ID
         ):
+            if not db_conn_permission_role_can_connect:
+                logger.info("Granting CONNECT to the role %s", db_conn_permission_role)
+                cur.execute(
+                    sql.SQL("GRANT CONNECT ON DATABASE {} TO {};").format(
+                        sql.Identifier(database_data["NAME"]),
+                        sql.Identifier(db_conn_permission_role),
+                    )
+                )
+
             # Give the roles reasonable timeouts...
             # [Out of paranoia on all roles in case the user change role mid session]
             for _db_user in [db_role, db_user] + db_shared_roles:
@@ -537,15 +589,6 @@ def new_private_database_credentials(
                             sql.Identifier(db_shared_role),
                         )
                     )
-
-            cur.execute(
-                sql.SQL("GRANT CONNECT ON DATABASE {} TO {};").format(
-                    sql.Identifier(database_data["NAME"]), sql.Identifier(db_role)
-                )
-            )
-            cur.execute(
-                sql.SQL("GRANT {} TO {};").format(sql.Identifier(db_role), sql.Identifier(db_user))
-            )
 
         # Make it so by default, objects created by the user are owned by the role
         with connections[database_memorable_name].cursor() as cur:
