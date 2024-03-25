@@ -777,9 +777,7 @@ def source_tables_for_user(user):
         .exclude(external_database=None)
         .values("external_database__memorable_name", "table_name", "uuid", "name")
     ]
-    return [
-        table for table in (source_tables + reference_dataset_tables) if table.published
-    ]
+    return [table for table in (source_tables + reference_dataset_tables) if table.published]
 
 
 def source_tables_for_app(application_template):
@@ -827,9 +825,7 @@ def source_tables_for_app(application_template):
         .filter(published=True, deleted=False)
         .exclude(external_database=None)
     ]
-    return [
-        table for table in (source_tables + reference_dataset_tables) if table.published
-    ]
+    return [table for table in (source_tables + reference_dataset_tables) if table.published]
 
 
 def view_exists(database, schema, view):

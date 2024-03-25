@@ -16,7 +16,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(
-            unpublish_dit_source_tables, reverse_code=migrations.RunPython.noop
-        ),
+        migrations.RunPython(unpublish_dit_source_tables, reverse_code=migrations.RunPython.noop),
     ]
