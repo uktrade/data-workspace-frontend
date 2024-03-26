@@ -62,7 +62,6 @@ export default class App extends React.Component {
         timeout: 10 * 60 * 60 * 1000
       }
     };
-    console.log('AWS Config', awsConfig);
     this.s3 = new AWS.S3(awsConfig);
 
     this.state = {
