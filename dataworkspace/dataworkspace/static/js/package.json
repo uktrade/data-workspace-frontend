@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "./node_modules/.bin/webpack serve --config webpack.dev.js --hot",
     "build": "./node_modules/.bin/webpack build --config webpack.prod.js",
-    "test": "jest --coverage",
+    "test": "jest --coverage --maxWorkers 2",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "lint": "eslint --ext .ts,.tsx ."
