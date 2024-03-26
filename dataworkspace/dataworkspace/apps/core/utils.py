@@ -109,10 +109,16 @@ def db_role_schema_suffix_for_app(application_template):
 
 
 @contextmanager
+def get_cursor(database_memorable_name):
+    with connections[database_memorable_name].cursor() as cursor:
+        cursor.execute(sql.SQL("SET statement_timeout = '30s'"))
+        yield cursor
+
+
+@contextmanager
 def transaction_and_lock(cursor, lock_id):
     try:
         cursor.execute(sql.SQL("BEGIN"))
-        cursor.execute(sql.SQL("SET statement_timeout = '30s'"))
         cursor.execute(
             sql.SQL("SELECT pg_advisory_xact_lock({lock_id})").format(lock_id=sql.Literal(lock_id))
         )
@@ -172,7 +178,7 @@ def new_private_database_credentials(
         database_data = settings.DATABASES_DATA[database_memorable_name]
         valid_until = (datetime.datetime.now() + valid_for).isoformat()
 
-        with connections[database_memorable_name].cursor() as cur:
+        with get_cursor(database_memorable_name) as cur:
             existing_tables_and_views_set = set(tables_and_views_that_exist(cur, tables))
 
             allowed_tables_that_exist = [
@@ -259,7 +265,7 @@ def new_private_database_credentials(
             len(tables_with_existing_privs_set),
             db_role,
         )
-        with connections[database_memorable_name].cursor() as cur:
+        with get_cursor(database_memorable_name) as cur:
             # Get a list of all tables in the database
             cur.execute(sql.SQL("SELECT table_schema, table_name FROM information_schema.tables"))
             existing_db_tables = list(cur.fetchall())
@@ -420,9 +426,7 @@ def new_private_database_credentials(
         # - GRANT/REVOKEs on the same database object
         # - ALTER USER ... SET
         # Either can result in "tuple concurrentl updated" errors. So we lock.
-        with connections[database_memorable_name].cursor() as cur, transaction_and_lock(
-            cur, GLOBAL_LOCK_ID
-        ):
+        with get_cursor(database_memorable_name) as cur, transaction_and_lock(cur, GLOBAL_LOCK_ID):
             if not db_conn_permission_role_can_connect:
                 logger.info("Granting CONNECT to the role %s", db_conn_permission_role)
                 cur.execute(
@@ -591,7 +595,7 @@ def new_private_database_credentials(
                     )
 
         # Make it so by default, objects created by the user are owned by the role
-        with connections[database_memorable_name].cursor() as cur:
+        with get_cursor(database_memorable_name) as cur:
             cur.execute(
                 sql.SQL("ALTER USER {} SET ROLE {};").format(
                     sql.Identifier(db_user), sql.Identifier(db_role)
@@ -1630,7 +1634,7 @@ def legacy_table_permissions_for_role(db_role, db_schema, database_name, log_sta
         "table_perms: Querying for all table permissions for permanent role %s",
         db_role,
     )
-    with connections[database_name].cursor() as cur:
+    with get_cursor(database_name) as cur:
         cur.execute(
             sql.SQL(
                 """
@@ -1697,7 +1701,7 @@ def table_permissions_for_role(db_role, db_schema, database_name, log_stats=Fals
     """
     logger.info("table_perms: Querying and caching table permissions for role %s", db_role)
     start_time = time.time()
-    with connections[database_name].cursor() as cur:
+    with get_cursor(database_name) as cur:
         cur.execute(
             sql.SQL(
                 pg_class_query
