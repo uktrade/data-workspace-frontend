@@ -15,8 +15,10 @@ const YourFiles = ({ config }: Record<'config', AWSS3Config>) => {
   useEffect(() => {
     const fetchData = async () => {
       const s3Data = await fetchS3Data(prefix, config);
-      setS3Files(s3Data.files);
-      setS3Folders(s3Data.folders);
+      if (s3Data) {
+        setS3Files(s3Data.files);
+        setS3Folders(s3Data.folders);
+      }
     };
 
     fetchData();
