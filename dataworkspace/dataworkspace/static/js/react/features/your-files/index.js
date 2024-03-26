@@ -1,4 +1,4 @@
-/* eslint-disable */
+/* eslint-disable no-undef */
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 

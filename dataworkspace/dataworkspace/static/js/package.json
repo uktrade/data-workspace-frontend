@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "./node_modules/.bin/webpack serve --config webpack.dev.js --hot",
     "build": "./node_modules/.bin/webpack build --config webpack.prod.js",
-    "test": "jest --coverage",
+    "test": "jest --coverage --maxWorkers 2",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "lint": "eslint --ext .ts,.tsx ."
@@ -59,6 +59,7 @@
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
     "jest-junit": "^16.0.0",
+    "lint-staged": "^14.0.1",
     "prettier": "^3.2.5",
     "sass": "^1.54.8",
     "sass-loader": "^13.0.2",
