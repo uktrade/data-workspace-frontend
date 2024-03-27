@@ -258,7 +258,14 @@ def new_private_database_credentials(
         )
         with get_cursor(database_memorable_name) as cur:
             # Get a list of all tables in the database
-            cur.execute(sql.SQL("SELECT table_schema, table_name FROM information_schema.tables"))
+            cur.execute(
+                sql.SQL(
+                    """
+                SELECT relnamespace::regnamespace::text AS table_schema, relname AS table_name
+                FROM pg_class WHERE relkind IN ('r', 'm', 'v', 'p');
+            """
+                )
+            )
             existing_db_tables = list(cur.fetchall())
             logger.info(
                 "Found %d existing tables in the %s db",
