@@ -93,7 +93,7 @@
               </li>
               {% with tools_count=RUNNING_TOOLS.count %}
                 <li class="govuk-header__navigation-item{% if request.get_full_path == tools_url %} govuk-header__navigation-item--active{% endif %}">
-                  <a class="govuk-header__link" href="{{ tools_url }}">Tools</a>
+                  <a class="govuk-header__link" {% if tools_count > 0 %}aria-label="You have {{ tools_count }} tool{{ tools_count | pluralize }} running"{% endif %} href="{{ tools_url }}">Tools</a>
                   {% if tools_count > 0 %}<span class="badge">{{ tools_count }}</span>{% endif %}
 
                 </li>
