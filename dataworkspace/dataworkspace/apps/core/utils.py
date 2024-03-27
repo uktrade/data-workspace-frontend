@@ -36,7 +36,6 @@ from psycopg2 import connect, sql
 from psycopg2.sql import SQL
 import requests
 from tableschema import Schema
-from waffle import switch_is_active
 import redis
 
 from dataworkspace.apps.core.boto3_client import get_s3_client, get_iam_client
@@ -245,20 +244,12 @@ def new_private_database_credentials(
                     )
                 )
 
-        if switch_is_active(settings.CACHE_USER_TABLE_PERMISSIONS):
-            logging.info("Caching switch is active. Trying to get cached table permissions")
-            tables_with_existing_privs_set = set(
-                table_permissions_for_role(
-                    db_role, db_schema, database_memorable_name, log_stats=dw_user is not None
-                )
+        logging.info("Trying to get cached table permissions")
+        tables_with_existing_privs_set = set(
+            table_permissions_for_role(
+                db_role, db_schema, database_memorable_name, log_stats=dw_user is not None
             )
-        else:
-            logging.info("Caching switch is inactive. Running legacy table permissions query")
-            tables_with_existing_privs_set = set(
-                legacy_table_permissions_for_role(
-                    db_role, db_schema, database_memorable_name, log_stats=dw_user is not None
-                )
-            )
+        )
 
         logger.info(
             "Found %d tables with existing permissions for permanent role %s",
@@ -1638,42 +1629,6 @@ def team_membership_post_delete(instance, **_):
         update_tools_access_policy_task.delay(instance.user_id)
 
 
-def legacy_table_permissions_for_role(db_role, db_schema, database_name, log_stats=False):
-    start_time = time.time()
-    logger.info(
-        "table_perms: Querying for all table permissions for permanent role %s",
-        db_role,
-    )
-    with get_cursor(database_name) as cur:
-        cur.execute(
-            sql.SQL(
-                """
-                SELECT table_schema as schema, table_name as name
-                FROM information_schema.table_privileges
-                WHERE grantee = {role}
-                AND table_schema NOT IN (
-                'information_schema', 'pg_catalog', 'pg_toast', '_data_explorer_charts'
-                )
-                AND table_schema NOT SIMILAR TO 'pg_temp_%|pg_toast_temp_%|pg_toast_temp_%|_user_%|_team_%'
-                AND table_name NOT SIMILAR TO '_\\d{{8}}t\\d{{6}}|%_swap|%0000|_tmp%'
-                """
-            ).format(role=sql.Literal(db_role), schema=sql.Literal(db_schema))
-        )
-        run_time = round(time.time() - start_time, 2)
-        if log_stats:
-            SystemStatLog.objects.log_permissions_query_runtime(
-                run_time,
-                extra={"role": db_role, "query_type": "information_schema", "legacy": True},
-            )
-        logger.info(
-            "table_perms: Querying table permissions for role %s took %s seconds",
-            db_role,
-            run_time,
-        )
-        tables_with_perms = cur.fetchall()
-        return tables_with_perms
-
-
 def table_permissions_cache_key(db_role):
     return f"_table_permissions_cache_key{db_role}"
 
@@ -1688,14 +1643,6 @@ def table_permissions_for_role(db_role, db_schema, database_name, log_stats=Fals
         logger.info("table_perms: Returning cached table permissions for role %s", db_role)
         return tables_with_perms
 
-    info_schema_query = """
-        SELECT table_schema as schema, table_name as name
-        FROM information_schema.table_privileges
-        WHERE grantee = {role}
-        AND table_schema NOT IN ('information_schema', 'pg_catalog', 'pg_toast', '_data_explorer_charts')
-        AND table_schema NOT SIMILAR TO 'pg_temp_%|pg_toast_temp_%|pg_toast_temp_%|_user_%|_team_%'
-        AND table_name NOT SIMILAR TO '_\\d{{8}}t\\d{{6}}|%_swap|%0000|_tmp%'
-    """
     pg_class_query = """
         SELECT relnamespace::regnamespace::text AS schema, relname AS name
         FROM pg_class, aclexplode(relacl) acl
@@ -1712,13 +1659,7 @@ def table_permissions_for_role(db_role, db_schema, database_name, log_stats=Fals
     logger.info("table_perms: Querying and caching table permissions for role %s", db_role)
     start_time = time.time()
     with get_cursor(database_name) as cur:
-        cur.execute(
-            sql.SQL(
-                pg_class_query
-                if settings.USE_PG_CLASS_FOR_TABLE_PERMISSIONS
-                else info_schema_query
-            ).format(role=sql.Literal(db_role))
-        )
+        cur.execute(sql.SQL(pg_class_query).format(role=sql.Literal(db_role)))
         tables_with_perms = cur.fetchall()
     run_time = round(time.time() - start_time, 2)
     if log_stats:
@@ -1726,9 +1667,7 @@ def table_permissions_for_role(db_role, db_schema, database_name, log_stats=Fals
             run_time,
             extra={
                 "role": db_role,
-                "query_type": "pg_class"
-                if settings.USE_PG_CLASS_FOR_TABLE_PERMISSIONS
-                else "information_schema",
+                "query_type": "pg_class",
                 "legacy": False,
             },
         )
