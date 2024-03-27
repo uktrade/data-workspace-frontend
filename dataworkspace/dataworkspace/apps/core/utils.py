@@ -773,6 +773,7 @@ def source_tables_for_user(user):
         dataset__user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
         dataset__deleted=False,
         dataset__datasetuserpermission__user=user,
+        published=True,
         **{"dataset__published": True} if not user.is_superuser else {},
     ).values(
         "database__memorable_name",
@@ -785,6 +786,7 @@ def source_tables_for_user(user):
     automatically_authorized_tables = SourceTable.objects.filter(
         dataset__deleted=False,
         dataset__authorized_email_domains__contains=[user_email_domain],
+        published=True,
         **{"dataset__published": True} if not user.is_superuser else {},
     ).values(
         "database__memorable_name",
@@ -841,6 +843,7 @@ def source_tables_for_app(application_template):
         published=True,
     )
     req_authorization_tables = SourceTable.objects.filter(
+        published=True,
         dataset__published=True,
         dataset__deleted=False,
         dataset__user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,

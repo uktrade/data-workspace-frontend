@@ -975,7 +975,7 @@ def send_notification_emails():
         source_objects = (
             list(
                 SourceTable.objects.filter(
-                    dataset__deleted=False, dataset__published=True
+                    published=True, dataset__deleted=False, dataset__published=True
                 ).order_by("id")
             )
             + list(
