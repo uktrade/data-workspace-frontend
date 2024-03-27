@@ -278,20 +278,27 @@ def new_private_database_credentials(
             cur.execute(
                 sql.SQL(
                     """
-                SELECT
+                SELECT DISTINCT
                     nspname AS name
                 FROM
-                    pg_namespace
+                    pg_namespace, aclexplode(nspacl)
                 WHERE
                     nspname NOT IN ('information_schema', 'pg_catalog', 'pg_toast', {schema})
                     AND nspname NOT LIKE 'pg_temp_%'
                     AND nspname NOT LIKE 'pg_toast_temp_%'
-                    AND has_schema_privilege({role}, nspname, 'CREATE, USAGE')
+                    AND grantee = {role}::regrole
+                    AND privilege_type IN ('CREATE', 'USAGE')
                 ORDER BY nspname;
             """
                 ).format(role=sql.Literal(db_role), schema=sql.Literal(db_schema))
             )
             schemas_with_existing_privs = [row[0] for row in cur.fetchall()]
+            logger.info(
+                "Found %d existing permissions for permanent role %s: %s",
+                len(schemas_with_existing_privs),
+                db_role,
+                schemas_with_existing_privs,
+            )
             schemas_with_existing_privs_set = set(schemas_with_existing_privs)
 
             # Existing granted team roles to permanant user role
