@@ -281,9 +281,7 @@ def new_private_database_credentials(
                 FROM
                     pg_namespace, aclexplode(nspacl)
                 WHERE
-                    nspname NOT IN ('information_schema', 'pg_catalog', 'pg_toast', {schema})
-                    AND nspname NOT LIKE 'pg_temp_%'
-                    AND nspname NOT LIKE 'pg_toast_temp_%'
+                    nspname != {schema}
                     AND grantee = {role}::regrole
                     AND privilege_type IN ('CREATE', 'USAGE')
                 ORDER BY nspname;
