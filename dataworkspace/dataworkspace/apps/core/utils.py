@@ -263,7 +263,7 @@ def new_private_database_credentials(
             cur.execute(
                 sql.SQL(
                     """
-                SELECT relnamespace::regnamespace::text AS table_schema, relname AS table_name
+                SELECT trim(both '"' from relnamespace::regnamespace::text) AS table_schema, relname AS table_name
                 FROM pg_class WHERE relkind IN ('r', 'm', 'v', 'p');
             """
                 )
@@ -1769,7 +1769,7 @@ def team_membership_post_delete(instance, **_):
 
 
 def table_permissions_cache_key(db_role):
-    return f"_table_permissions_cache_key{db_role}"
+    return f"_table_permissions_cache_key_v2{db_role}"
 
 
 def table_permissions_for_role(db_role, db_schema, database_name, log_stats=False):
@@ -1783,14 +1783,14 @@ def table_permissions_for_role(db_role, db_schema, database_name, log_stats=Fals
         return tables_with_perms
 
     pg_class_query = """
-        SELECT relnamespace::regnamespace::text AS schema, relname AS name
+        SELECT trim(both '"' from relnamespace::regnamespace::text) AS schema, relname AS name
         FROM pg_class, aclexplode(relacl) acl
         WHERE acl.grantee = {role}::regrole::oid
         AND relkind in ('r', 'p')
         AND acl.privilege_type in (
             'SELECT', 'INSERT', 'UPDATE', 'DELETE', 'TRUNCATE', 'REFERENCES', 'TRIGGER'
         )
-        AND relnamespace::regnamespace::text NOT SIMILAR TO
+        AND trim(both '"' from relnamespace::regnamespace::text) NOT SIMILAR TO
             'pg_toast|pg_temp_%|pg_toast_temp_%|_team_%|_user_%'
         AND relname NOT SIMILAR TO
             '_\\d{{8}}t\\d{{6}}|%_swap|%_idx|_tmp%|%_pkey|%_seq|_data_explorer_tmp%|%000000|_tmp_%';
