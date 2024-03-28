@@ -531,6 +531,26 @@ def new_private_database_credentials(
             )
             db_conn_permission_role_can_connect = cur.fetchone()[0]
 
+            # Check if the user's permanent role has direct connect privs on the database
+            # (It shouldn't any more since we moved to getting the CONNECT priv via a role)
+            cur.execute(
+                sql.SQL(
+                    """
+                    SELECT EXISTS(
+                        SELECT
+                            1
+                        FROM
+                            pg_database, aclexplode(datacl)
+                        WHERE
+                            datname = {}
+                            AND grantee = {}::regrole
+                            AND privilege_type = 'CONNECT'
+                    );
+                """
+                ).format(sql.Literal(database_data["NAME"]), sql.Literal(db_role))
+            )
+            db_role_can_connect = cur.fetchone()[0]
+
         # PostgreSQL doesn't handle concurrent
         # - GRANT/REVOKEs on the same database object
         # - ALTER USER ... SET
@@ -551,6 +571,15 @@ def new_private_database_credentials(
                     sql.SQL("GRANT CONNECT ON DATABASE {} TO {};").format(
                         sql.Identifier(database_data["NAME"]),
                         sql.Identifier(db_conn_permission_role),
+                    )
+                )
+
+            if db_role_can_connect:
+                logger.info("Revoking CONNECT to from role %s", db_role)
+                cur.execute(
+                    sql.SQL("REVOKE CONNECT ON DATABASE {} FROM {};").format(
+                        sql.Identifier(database_data["NAME"]),
+                        sql.Identifier(db_role),
                     )
                 )
 
