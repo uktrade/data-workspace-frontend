@@ -124,6 +124,7 @@ def transaction_and_lock(cursor, lock_id):
         yield
     except Exception:  # pylint: disable=broad-except
         cursor.execute(sql.SQL("ROLLBACK"))
+        raise
     else:
         cursor.execute(sql.SQL("COMMIT"))
 
