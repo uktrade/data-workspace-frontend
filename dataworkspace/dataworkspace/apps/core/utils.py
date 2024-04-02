@@ -252,12 +252,24 @@ def new_private_database_credentials(
                 db_role, db_schema, database_memorable_name, log_stats=dw_user is not None
             )
         )
-
         logger.info(
             "Found %d tables with existing permissions for permanent role %s",
             len(tables_with_existing_privs_set),
             db_role,
         )
+
+        tables_with_existing_role_privs_set = set(
+            table_role_permissions_for_role(
+                db_role, database_memorable_name, log_stats=dw_user is not None
+            )
+        )
+        logger.info(
+            "Found %s role based table permissions for role %s: %s",
+            len(tables_with_existing_role_privs_set),
+            db_role,
+            list(tables_with_existing_role_privs_set),
+        )
+
         with get_cursor(database_memorable_name) as cur:
             # Get a list of all tables in the database
             cur.execute(
@@ -315,7 +327,7 @@ def new_private_database_credentials(
             )
             schema_roles_granted_to_user_role = [role for (role,) in cur.fetchall()]
 
-            # Existing granted team roles to permanant user role
+            # Existing granted team roles to permanent user role
             cur.execute(
                 sql.SQL(
                     """
@@ -1815,6 +1827,14 @@ def table_permissions_for_role(db_role, db_schema, database_name, log_stats=Fals
     )
     cache.set(key, tables_with_perms, timeout=datetime.timedelta(days=7).total_seconds())
     return tables_with_perms
+
+
+def table_role_permissions_for_role(db_role, database_name, log_stats=False):
+    """
+    Return a (cached) list of tables that the given role has a table role for.
+    """
+    # TODO
+    return []
 
 
 def clear_table_permissions_cache_for_user(user):
