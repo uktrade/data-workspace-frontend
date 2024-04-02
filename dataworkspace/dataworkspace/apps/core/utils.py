@@ -366,7 +366,7 @@ def new_private_database_credentials(
             ]
             logger.info("Got %s tables to grant for role %s", len(tables_to_grant), db_role)
             if tables_to_grant:
-                tables_to_grant_oid_map=tables_to_oid_map(cur,tables_to_grant)
+                tables_to_grant_oid_map = tables_to_oid_map(cur, tables_to_grant)
                 logger.info("tables_to_grant_oid_map: %s", tables_to_grant_oid_map)
 
             # Make sure that that privileges granted directly to the user's role, which was done in
@@ -1864,6 +1864,7 @@ def clear_table_permissions_cache_for_user(user):
 
 def get_postgres_datatype_choices():
     return ((name, name.capitalize()) for name, _ in SCHEMA_POSTGRES_DATA_TYPE_MAP.items())
+
 
 def tables_to_oid_map(cur, tables):
     cur.execute(
