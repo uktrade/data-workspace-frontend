@@ -354,6 +354,10 @@ def new_private_database_credentials(
                 and (schema, table) in existing_db_tables
             ]
             logger.info("Got %s tables to revoke for role %s", len(tables_to_revoke), db_role)
+            if tables_to_revoke:
+                tables_to_revoke_oid_map = tables_to_oid_map(cur, tables_to_revoke)
+                logger.info("tables_to_revoke_oid_map: %s", tables_to_revoke_oid_map)
+
             tables_to_grant = [
                 (schema, table)
                 for (schema, table) in allowed_tables_that_exist
@@ -361,22 +365,9 @@ def new_private_database_credentials(
                 and (schema, table) in existing_db_tables
             ]
             logger.info("Got %s tables to grant for role %s", len(tables_to_grant), db_role)
-
-            cur.execute(
-                sql.SQL(
-                    """SELECT pg_class.oid, nspname ||'.'|| relname 
-                FROM pg_class, pg_namespace
-                WHERE relnamespace = pg_namespace.oid
-                AND nspname||'.'||relname in ({table_names})
-                AND relkind = 'r';"""
-                ).format(
-                    table_names=sql.SQL(",").join(
-                        sql.Literal(f"{table[0]}.{table[1]}") for table in tables_to_grant
-                    )
-                )
-            )
-            table_oids = cur.fetchall()
-            logger.info("Schema role names: %s", table_oids)
+            if tables_to_grant:
+                tables_to_grant_oid_map=tables_to_oid_map(cur,tables_to_grant)
+                logger.info("tables_to_grant_oid_map: %s", tables_to_grant_oid_map)
 
             # Make sure that that privileges granted directly to the user's role, which was done in
             # previous versions, are removed
@@ -1873,3 +1864,20 @@ def clear_table_permissions_cache_for_user(user):
 
 def get_postgres_datatype_choices():
     return ((name, name.capitalize()) for name, _ in SCHEMA_POSTGRES_DATA_TYPE_MAP.items())
+
+def tables_to_oid_map(cur, tables):
+    cur.execute(
+        sql.SQL(
+            """SELECT nspname ||'.'|| relname, pg_class.oid
+            FROM pg_class, pg_namespace
+            WHERE relnamespace = pg_namespace.oid
+            AND nspname||'.'||relname in ({table_names})
+            AND relkind = 'r';"""
+        ).format(
+            table_names=sql.SQL(",").join(
+                sql.Literal(f"{table[0]}.{table[1]}") for table in tables
+            )
+        )
+    )
+    table_oids = cur.fetchall()
+    return dict(table_oids)
