@@ -1833,8 +1833,16 @@ def table_role_permissions_for_role(db_role, database_name, log_stats=False):
     """
     Return a (cached) list of tables that the given role has a table role for.
     """
-    # TODO
-    return []
+    with get_cursor(database_name) as cur:
+        cur.execute(
+            sql.SQL(
+                """SELECT roleid::regrole::text
+            FROM pg_auth_members
+            WHERE (roleid::regrole::text LIKE 'table\\_select\\_%')
+            AND member = {role}::regrole;"""
+            ).format(role=sql.Literal(db_role))
+        )
+        return cur.fetchall()
 
 
 def clear_table_permissions_cache_for_user(user):
