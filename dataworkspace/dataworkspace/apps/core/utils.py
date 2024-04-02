@@ -362,6 +362,22 @@ def new_private_database_credentials(
             ]
             logger.info("Got %s tables to grant for role %s", len(tables_to_grant), db_role)
 
+            cur.execute(
+                sql.SQL(
+                    """SELECT pg_class.oid, nspname ||'.'|| relname 
+                FROM pg_class, pg_namespace
+                WHERE relnamespace = pg_namespace.oid
+                AND nspname||'.'||relname in ({table_names})
+                AND relkind = 'r';"""
+                ).format(
+                    table_names=sql.SQL(",").join(
+                        sql.Literal(f"{table[0]}.{table[1]}") for table in tables_to_grant
+                    )
+                )
+            )
+            table_oids = cur.fetchall()
+            logger.info("Schema role names: %s", table_oids)
+
             # Make sure that that privileges granted directly to the user's role, which was done in
             # previous versions, are removed
             schemas_to_revoke = schemas_with_existing_privs
