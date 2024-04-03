@@ -28,6 +28,7 @@ sentry.init_sentry(
     ]
 )
 
+
 env = normalise_environment(os.environ)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -561,8 +562,8 @@ DATABASES = {
 
 DATABASES_DATA = {db: db_config for db, db_config in DATABASES.items() if db in env["DATA_DB"]}
 ARANGODB = {
-    "NAME": "_system",
-    "HOST": "0.0.0.0",
+    "NAME": "Datasets",
+    "HOST": "172.18.0.8",
     "PORT": "8529",
     "PASSWORD": "arango",
 }

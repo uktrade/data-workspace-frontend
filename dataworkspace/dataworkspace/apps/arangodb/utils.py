@@ -13,7 +13,7 @@ from django.conf import settings
 
 from arango import ArangoClient
 from dataworkspace.apps.arangodb.models import (
-    GraphDataset,
+    ArangoDataset,
     SourceGraphCollection,
 )
 
@@ -43,7 +43,7 @@ def new_private_arangodb_credentials(
         client = ArangoClient(hosts=f"http://{database_data['HOST']}:{database_data['PORT']}")
 
         # Connect to "_system" database as root user.
-        sys_db = client.db('_system', username=database_data["USER"], password=database_data["PASSWORD"])
+        sys_db = client.db('_system', username="root", password=database_data["PASSWORD"])
 
         # Add new user credentials to Arango per collection for new private creds.
         if not sys_db.has_user(db_user):
@@ -79,14 +79,15 @@ def new_private_arangodb_credentials(
 
 
     # Get Access Permissions by Table
-    database_to_collections = {collection["dataset"]["name"].split("__")[0]: [tuple(collection["dataset"]["name"].split("__"))] for collection in source_collections}
+    database_to_collections = {"Datasets": [(collection["dataset"]["id"], collection["dataset"]["name"]) for collection in source_collections]}
+
 
     # Get Password
     db_password = arango_password()
 
     # Get Credentials
     creds = [
-        get_new_credentials(db_memorable_name, collection)
+        get_new_credentials(db, collection)
         for db, collections in database_to_collections.items()
         for (db_memorable_name, collection) in collections
     ]
@@ -98,6 +99,7 @@ def source_graph_collections_for_user(user):
     req_collections = SourceGraphCollection.objects.filter(
         graph_dataset__graphdatasetuserpermission__user=user,
     ).values(
+        "reference_number",
         "graph_dataset__id",
         "graph_dataset__name",
     )
@@ -106,7 +108,8 @@ def source_graph_collections_for_user(user):
         {
             "dataset": {
                 "id": x["graph_dataset__id"],
-                "name": x["graph_dataset__name"],
+                # TEMPORARY: Whist name not in source collections
+                "name": f"test_{x['reference_number']}",
             },
         }
         for x in req_collections
