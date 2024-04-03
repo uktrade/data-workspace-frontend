@@ -252,12 +252,24 @@ def new_private_database_credentials(
                 db_role, db_schema, database_memorable_name, log_stats=dw_user is not None
             )
         )
-
         logger.info(
             "Found %d tables with existing permissions for permanent role %s",
             len(tables_with_existing_privs_set),
             db_role,
         )
+
+        tables_with_existing_role_privs_set = set(
+            table_role_permissions_for_role(
+                db_role, database_memorable_name, log_stats=dw_user is not None
+            )
+        )
+        logger.info(
+            "Found %s role based table permissions for role %s: %s",
+            len(tables_with_existing_role_privs_set),
+            db_role,
+            list(tables_with_existing_role_privs_set),
+        )
+
         with get_cursor(database_memorable_name) as cur:
             # Get a list of all tables in the database
             cur.execute(
@@ -315,7 +327,7 @@ def new_private_database_credentials(
             )
             schema_roles_granted_to_user_role = [role for (role,) in cur.fetchall()]
 
-            # Existing granted team roles to permanant user role
+            # Existing granted team roles to permanent user role
             cur.execute(
                 sql.SQL(
                     """
@@ -342,6 +354,10 @@ def new_private_database_credentials(
                 and (schema, table) in existing_db_tables
             ]
             logger.info("Got %s tables to revoke for role %s", len(tables_to_revoke), db_role)
+            if tables_to_revoke:
+                tables_to_revoke_oid_map = tables_to_oid_map(cur, tables_to_revoke)
+                logger.info("tables_to_revoke_oid_map: %s", tables_to_revoke_oid_map)
+
             tables_to_grant = [
                 (schema, table)
                 for (schema, table) in allowed_tables_that_exist
@@ -349,6 +365,9 @@ def new_private_database_credentials(
                 and (schema, table) in existing_db_tables
             ]
             logger.info("Got %s tables to grant for role %s", len(tables_to_grant), db_role)
+            if tables_to_grant:
+                tables_to_grant_oid_map = tables_to_oid_map(cur, tables_to_grant)
+                logger.info("tables_to_grant_oid_map: %s", tables_to_grant_oid_map)
 
             # Make sure that that privileges granted directly to the user's role, which was done in
             # previous versions, are removed
@@ -1817,6 +1836,22 @@ def table_permissions_for_role(db_role, db_schema, database_name, log_stats=Fals
     return tables_with_perms
 
 
+def table_role_permissions_for_role(db_role, database_name, log_stats=False):
+    """
+    Return a (cached) list of tables that the given role has a table role for.
+    """
+    with get_cursor(database_name) as cur:
+        cur.execute(
+            sql.SQL(
+                """SELECT roleid::regrole::text
+            FROM pg_auth_members
+            WHERE (roleid::regrole::text LIKE 'table\\_select\\_%')
+            AND member = {role}::regrole;"""
+            ).format(role=sql.Literal(db_role))
+        )
+        return cur.fetchall()
+
+
 def clear_table_permissions_cache_for_user(user):
     db_role = f"{USER_SCHEMA_STEM}{db_role_schema_suffix_for_user(user)}"
     logger.info(
@@ -1829,3 +1864,29 @@ def clear_table_permissions_cache_for_user(user):
 
 def get_postgres_datatype_choices():
     return ((name, name.capitalize()) for name, _ in SCHEMA_POSTGRES_DATA_TYPE_MAP.items())
+
+
+def tables_to_oid_map(cur, tables):
+    cur.execute(
+        sql.SQL(
+            """
+        SELECT nspname ||'.'|| relname, pg_class.oid
+        FROM pg_class, pg_namespace
+        WHERE relnamespace = pg_namespace.oid
+        AND (nspname, relname) in ({table_names})
+        AND relkind = 'r';
+        """
+        ).format(
+            table_names=sql.SQL(",").join(
+                [
+                    sql.SQL("(")
+                    + sql.Literal(table[0])
+                    + sql.SQL(",")
+                    + sql.Literal(table[1])
+                    + sql.SQL(")")
+                    for table in tables
+                ]
+            )
+        )
+    )
+    return dict(cur.fetchall())
