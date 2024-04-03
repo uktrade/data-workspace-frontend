@@ -1869,16 +1869,24 @@ def get_postgres_datatype_choices():
 def tables_to_oid_map(cur, tables):
     cur.execute(
         sql.SQL(
-            """SELECT nspname ||'.'|| relname, pg_class.oid
-            FROM pg_class, pg_namespace
-            WHERE relnamespace = pg_namespace.oid
-            AND nspname||'.'||relname in ({table_names})
-            AND relkind = 'r';"""
+            """
+        SELECT nspname ||'.'|| relname, pg_class.oid
+        FROM pg_class, pg_namespace
+        WHERE relnamespace = pg_namespace.oid
+        AND (nspname, relname) in ({table_names})
+        AND relkind = 'r';
+        """
         ).format(
             table_names=sql.SQL(",").join(
-                sql.Literal(f"{table[0]}.{table[1]}") for table in tables
+                [
+                    sql.SQL("(")
+                    + sql.Literal(table[0])
+                    + sql.SQL(",")
+                    + sql.Literal(table[1])
+                    + sql.SQL(")")
+                    for table in tables
+                ]
             )
         )
     )
-    table_oids = cur.fetchall()
-    return dict(table_oids)
+    return dict(cur.fetchall())
