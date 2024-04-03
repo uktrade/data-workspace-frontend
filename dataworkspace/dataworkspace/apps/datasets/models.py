@@ -63,7 +63,7 @@ from dataworkspace.apps.applications.models import (
     ApplicationTemplate,
     VisualisationTemplate,
 )
-from dataworkspace.apps.core.utils import get_data_flow_import_pipeline_name
+
 from dataworkspace.apps.datasets.constants import (
     DataSetType,
     DataLinkType,
@@ -1531,7 +1531,10 @@ class ReferenceDataset(DeletableTimestampedUserModel):
 
     def _sync_to_datasets_db(self):
         # pylint: disable=import-outside-toplevel
-        from dataworkspace.apps.core.utils import trigger_dataflow_dag
+        from dataworkspace.apps.core.utils import (
+            trigger_dataflow_dag,
+            get_data_flow_import_pipeline_name,
+        )
 
         s3_path = f"{settings.DATAFLOW_IMPORTS_BUCKET_ROOT}/reference/{self.table_name}.csv"
         column_config = [
