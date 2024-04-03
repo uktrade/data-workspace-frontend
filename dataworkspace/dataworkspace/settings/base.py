@@ -28,6 +28,7 @@ sentry.init_sentry(
     ]
 )
 
+
 env = normalise_environment(os.environ)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -118,10 +119,12 @@ INSTALLED_APPS = [
     "django_extensions",
     "dataworkspace.apps.explorer",
     "dynamic_models",
+    "dataworkspace.apps.case_studies",
     "csp_helpers",
     "webpack_loader",
     "dataworkspace.apps.data_collections",
     "django_celery_results",
+    "dataworkspace.apps.arangodb",
 ]
 
 MIDDLEWARE = [
@@ -558,6 +561,12 @@ DATABASES = {
 }
 
 DATABASES_DATA = {db: db_config for db, db_config in DATABASES.items() if db in env["DATA_DB"]}
+ARANGODB = {
+    "NAME": "Datasets",
+    "HOST": "172.18.0.8",
+    "PORT": "8529",
+    "PASSWORD": "arango",
+}
 # Only used when collectstatic is run
 STATIC_ROOT = "/home/django/static/"
 
@@ -776,7 +785,6 @@ EXPLORER_CSV_INJECTION_PROTECTION_FLAG = "EXPLORER_CSV_INJECTION_PROTECTION_FLAG
 DEFER_SCHEMA_TAB_LOAD_FLAG = "DEFER_SCHEMA_TAB_LOAD_FLAG"
 CACHE_USER_TABLE_PERMISSIONS = "CACHE_USER_TABLE_PERMISSIONS"
 USE_PG_CLASS_FOR_TABLE_PERMISSIONS = "USE_PG_CLASS_FOR_TABLE_PERMISSIONS"
-YOUR_FILES_V2_FLAG = "YOUR_FILES_V2_FLAG"
 
 DATASET_FINDER_SEARCH_RESULTS_PER_PAGE = 200
 
