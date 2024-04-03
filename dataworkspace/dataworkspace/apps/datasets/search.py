@@ -557,6 +557,7 @@ def _annotate_is_contact(datasets, user):
 
 
 def _annotate_is_owner(datasets, user):
+    print('ahhhhhhhhhh', user)
     """
     Adds a boolean annotation to queryset which is set to True if the user
     is an IAO, IAM or data catalogue editor of a dataset

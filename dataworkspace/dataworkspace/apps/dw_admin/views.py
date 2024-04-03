@@ -1,6 +1,7 @@
 import csv
 import os
 from datetime import date, datetime, timedelta
+from pkgutil import get_data
 
 from botocore.exceptions import ClientError
 from celery import states
@@ -12,16 +13,23 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin import helpers
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.postgres.aggregates.general import BoolOr
+from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.db import connection
 from django.db.models import (
     Avg,
     Count,
     DurationField,
     ExpressionWrapper,
     F,
+    Q,
     Sum,
     Value,
+    Case,
+    When,
+    BooleanField,
 )
 from django.db.models.functions import Concat, TruncDate
 from django.http import Http404, HttpResponseServerError, HttpResponseRedirect
@@ -31,6 +39,7 @@ from django.urls import reverse
 from django.utils.timesince import timesince
 from django.views.generic import FormView, CreateView, TemplateView
 from django_celery_results.models import TaskResult
+from psycopg2.sql import Literal, SQL, Identifier
 
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.core.boto3_client import get_s3_client
@@ -43,6 +52,7 @@ from dataworkspace.apps.datasets.models import (
     ReferenceDatasetUploadLog,
     ReferenceDatasetUploadLogRecord,
     SourceTable,
+    VisualisationCatalogueItem,
 )
 from dataworkspace.apps.dw_admin.forms import (
     ReferenceDataRowDeleteForm,
@@ -58,7 +68,128 @@ from dataworkspace.apps.your_files.models import YourFilesUserPrefixStats
 from dataworkspace.datasets_db import get_all_source_tables
 
 
+class SelectUserForm(forms.Form):
+    user = forms.ModelChoiceField(queryset=User.objects.all())
+
+
+class CurrentOwnerAndRoleForm(SelectUserForm, forms.Form):
+    role = forms.ChoiceField(
+        choices=[
+            ("information_asset_owner_id", "Information asset owner"),
+            ("information_asset_manager_id", "Information asset manager"),
+            ("enquiries_contact_id", "Enquiries contact"),
+        ]
+    )
+
+    def get_user(self):
+        return self.data["user"]
+
+
+class SelectUserAndRoleAdminView(FormView):
+    template_name = "admin/assign_dataset_ownership/select_current_user_and_role_form.html"
+    form_class = CurrentOwnerAndRoleForm
+
+    def form_valid(self, form):
+        user_id = form.get_user()
+        role = form.data["role"]
+        return HttpResponseRedirect(
+            reverse(
+                "dw-admin:assign-dataset-ownership-list",
+                args=(
+                    user_id,
+                    role,
+                ),
+            )
+        )
+
+
+class SelectDatasetAndNewUserAdminView(FormView):
+    template_name = "admin/assign_dataset_ownership/select_datasets_and_new_user_form.html"
+    form_class = SelectUserForm
+
+    def get_dataset_query(self, model, db_role, current_user):
+        return (
+            model.objects.all()
+            .annotate(
+                is_owner=BoolOr(
+                    Case(
+                        When(
+                            Q((db_role, current_user)),
+                            then=True,
+                        ),
+                        default=False,
+                        output_field=BooleanField(),
+                    ),
+                ),
+            )
+            .filter(is_owner=True)
+        )
+
+    def get_datasets(self, user_id, role):
+        current_user = User.objects.all().filter(id=user_id)
+        db_role = role[:-3]
+
+        datasets = self.get_dataset_query(DataSet, db_role, current_user[0])
+        ref_datasets = self.get_dataset_query(ReferenceDataset, db_role, current_user[0])
+        vis_datasets = self.get_dataset_query(VisualisationCatalogueItem, db_role, current_user[0])
+
+        return list(datasets) + list(ref_datasets) + list(vis_datasets)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        return kwargs
+
+    def get_role_title(self, role):
+        roles = {
+            "information_asset_manager_id": "Information asset manager",
+            "information_asset_owner_id": "Information asset owner",
+            "enquiries_contact_id": "Enquiries contact",
+        }
+        return roles[role]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user_id = self.kwargs.get("id")
+        role = self.kwargs.get("role")
+        context["datasets"] = self.get_datasets(user_id, role)
+        context["user_id"] = User.objects.filter(id=user_id).first()
+        context["role"] = self.get_role_title(role)
+        return context
+
+    def execute_sql(self, table, datasets, new_owner, role):
+        with connection.cursor() as cursor:
+            try:
+                cursor.execute(
+                    SQL(
+                        "update {} set {} = {} where id in {}",
+                    ).format(Identifier(table), Identifier(role), Literal(new_owner), Literal(tuple(datasets)))
+                )
+            except Exception as e:
+                print("Error", e)
+
+    def form_valid(self, form):
+        dataset_ids = form.data.getlist("dataset_id")
+        datasets = [dataset for dataset in dataset_ids if '-' in dataset]
+        ref_datasets = [dataset for dataset in dataset_ids if '-' not in dataset]
+        new_owner = form.data["user"]
+        role = self.kwargs.get("role")
+
+        if datasets:
+            self.execute_sql('app_dataset', datasets, new_owner, role)
+            self.execute_sql('datasets_visualisationcatalogueitem', datasets, new_owner, role)
+        if ref_datasets:
+            self.execute_sql('app_referencedataset', ref_datasets, new_owner, role)
+
+        return HttpResponseRedirect(reverse("dw-admin:assign-dataset-ownership-confirmation"))
+
+
+class ConfirmationAdminView(TemplateView):
+    template_name = "admin/assign_dataset_ownership/confirmation.html"
+
+
 class ReferenceDataRecordMixin(UserPassesTestMixin):
+    template_name = "admin/reference_dataset_upload_records.html"
+
     def test_func(self):
         return self.request.user.is_superuser
 
@@ -376,11 +507,6 @@ class SourceLinkUploadView(UserPassesTestMixin, CreateView):  # pylint: disable=
         dataset = self._get_dataset()
         ctx.update({"dataset": dataset, "opts": dataset._meta})
         return ctx
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["initial"] = {"dataset": self._get_dataset()}
-        return kwargs
 
     def get_form(self, form_class=None):
         form = self.get_form_class()(**self.get_form_kwargs())

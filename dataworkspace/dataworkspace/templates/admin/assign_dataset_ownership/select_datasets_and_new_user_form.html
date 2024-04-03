@@ -1,0 +1,19 @@
+{% extends "admin/base_site.html" %} {% block content %}
+<h3>Current user: {{user_id}}</h3>
+<h3>Selected role: {{role}}</h3>
+<h3>Datasets</h3>
+<form method="POST">
+  {% csrf_token %} {% for data in datasets %}
+  <div>
+    <input type="checkbox" value="{{data.id}}" name="dataset_id" />
+    <label for="dataset_id">{{data.name}}: {{data.id}}</label>
+  </div>
+  {% endfor %}
+  <input type="hidden" value="{{data.role}}" name="role" />
+  <h3>Assign to:</h3>
+  <br />
+  <div>{{ form }}</div>
+  <br />
+  <input type="submit" value="Submit" class="default" />
+</form>
+{% endblock %}

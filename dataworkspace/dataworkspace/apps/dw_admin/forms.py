@@ -2,10 +2,11 @@ import csv
 import uuid
 
 from django import forms
+from django.conf import settings
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import get_user_model
 from django.core import validators
-from django.db import transaction
+from django.db import transaction, models
 from django.db.models import Q
 from django.forms.widgets import SelectMultiple
 from django.template.loader import get_template
@@ -49,9 +50,16 @@ class AutoCompleteUserFieldsMixin:
 
 
 class ReferenceDatasetForm(AutoCompleteUserFieldsMixin, forms.ModelForm):
-    model = ReferenceDataset
     sensitivity = forms.ModelMultipleChoiceField(
         queryset=SensitivityType.objects.all(), widget=forms.CheckboxSelectMultiple, required=False
+    )
+
+    information_asset_owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="info_asset_owned_reference_datasets",
+        null=True,
+        blank=True,
     )
 
     def __init__(self, *args, **kwargs):
