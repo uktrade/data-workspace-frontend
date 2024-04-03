@@ -63,6 +63,7 @@ from dataworkspace.apps.applications.models import (
     ApplicationTemplate,
     VisualisationTemplate,
 )
+from dataworkspace.apps.core.utils import get_data_flow_import_pipeline_name
 from dataworkspace.apps.datasets.constants import (
     DataSetType,
     DataLinkType,
@@ -1572,7 +1573,7 @@ class ReferenceDataset(DeletableTimestampedUserModel):
                     "column_definitions": column_config,
                     "drop_swap_table": True,
                 },
-                settings.DATAFLOW_API_CONFIG["DATAFLOW_S3_IMPORT_DAG"],
+                get_data_flow_import_pipeline_name(),
                 f"{self.table_name}-{datetime.now().isoformat()}",
             )
         except HTTPError:

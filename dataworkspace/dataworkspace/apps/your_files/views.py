@@ -26,6 +26,7 @@ from dataworkspace.apps.core.utils import (
     copy_file_to_uploads_bucket,
     create_new_schema,
     get_all_schemas,
+    get_data_flow_import_pipeline_name,
     get_random_data_sample,
     get_s3_prefix,
     get_team_prefixes,
@@ -291,7 +292,6 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
         return kwargs
 
     def form_valid(self, form):
-        config = settings.DATAFLOW_API_CONFIG
         cleaned = form.cleaned_data
 
         file_info = get_s3_csv_file_info(cleaned["path"])
@@ -324,7 +324,7 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
         try:
             response = trigger_dataflow_dag(
                 conf,
-                config["DATAFLOW_S3_IMPORT_DAG"],
+                get_data_flow_import_pipeline_name(),
                 f'{cleaned["schema"]}-{cleaned["table_name"]}-{datetime.now().isoformat()}',
             )
         except HTTPError:
