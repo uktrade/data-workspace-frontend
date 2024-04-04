@@ -29,10 +29,10 @@ sentry.init_sentry(
 )
 
 
-# # TEMPORARY
-# from dotenv import load_dotenv
-# from pathlib import Path
-# load_dotenv()
+# TEMPORARY
+from dotenv import load_dotenv
+from pathlib import Path
+load_dotenv()
 
 env = normalise_environment(os.environ)
 

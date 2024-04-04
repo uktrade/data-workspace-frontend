@@ -70,6 +70,8 @@ from dataworkspace.apps.dw_admin.forms import (
     VisualisationCatalogueItemForm,
     VisualisationLinkForm,
 )
+from dataworkspace.apps.arangodb.models import SourceGraphCollection
+from dataworkspace.apps.arangodb.forms import SourceGraphCollectionForm
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 
@@ -142,6 +144,13 @@ class SourceLinkInline(admin.TabularInline, SourceReferenceInlineMixin):
 class SourceTableInline(admin.TabularInline, SourceReferenceInlineMixin):
     model = SourceTable
     form = SourceTableForm
+    extra = 1
+    manage_unpublished_permission_codename = "datasets.manage_unpublished_master_datasets"
+
+
+class SourceGraphCollectionInline(admin.TabularInline, SourceReferenceInlineMixin):
+    model = SourceGraphCollection
+    form = SourceGraphCollectionForm
     extra = 1
     manage_unpublished_permission_codename = "datasets.manage_unpublished_master_datasets"
 
@@ -380,7 +389,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
 @admin.register(MasterDataset)
 class MasterDatasetAdmin(CSPRichTextEditorMixin, BaseDatasetAdmin):
     form = MasterDatasetForm
-    inlines = [SourceTableInline, DataSetVisualisationInline]
+    inlines = [SourceTableInline, SourceGraphCollectionInline, DataSetVisualisationInline]
     manage_unpublished_permission_codename = "datasets.manage_unpublished_master_datasets"
 
     def save_formset(self, request, form, formset, change):

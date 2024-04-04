@@ -32,6 +32,14 @@ class SourceGraphCollection(ReferenceNumberedDatasetSource):
             "even if they haven’t been explicitly granted access?"
         ),
     )
+    data_grid_enabled = models.BooleanField(
+        default=True,
+        help_text="Allow users to filter, sort and export data from within the browser",
+    )
+    published = models.BooleanField(
+        default=True,
+        help_text=("When false hides source table from catalogue page"),
+    )
 
     class Meta:
         db_table = "app_sourcegraphcollection"

@@ -2,7 +2,6 @@ from django import forms
 from django.contrib import admin
 from dataworkspace.apps.arangodb.models import SourceGraphCollection, SourceGraphCollectionFieldDefinition
 from dataworkspace.apps.datasets.models import MasterDataset
-from dataworkspace.apps.datasets.admin import SourceReferenceInlineMixin
 
 
 class SourceGraphCollectionForm(forms.ModelForm):
@@ -13,7 +12,7 @@ class SourceGraphCollectionForm(forms.ModelForm):
         fields = (
             "dataset",
             "name",
-            "colletion",
+            "collection",
             "dataset_finder_opted_in",
             "data_grid_enabled",
             "published",
@@ -33,13 +32,6 @@ class SourceGraphCollectionForm(forms.ModelForm):
             )
         
         return cleaned
-    
-
-class SourceGraphCollectionInline(admin.TabularInline, SourceReferenceInlineMixin):
-    model = SourceGraphCollection
-    form = SourceGraphCollectionForm
-    extra = 1
-    manage_unpublished_permission_codename = "datasets.manage_unpublished_master_datasets"
 
 
 class SourceGraphCollectionFieldDefinitionInline(admin.TabularInline):
