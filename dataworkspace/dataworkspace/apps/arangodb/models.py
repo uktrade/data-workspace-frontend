@@ -19,7 +19,6 @@ class SourceGraphCollection(ReferenceNumberedDatasetSource):
     collection = models.CharField(
         max_length=1024,
         blank=False,
-        default="Empty",
         validators=[RegexValidator(regex=r"^[a-zA-Z][a-zA-Z0-9_\.]*$")],
         db_index=True,
     )
@@ -33,7 +32,7 @@ class SourceGraphCollection(ReferenceNumberedDatasetSource):
         ),
     )
     data_grid_enabled = models.BooleanField(
-        default=True,
+        default=False,
         help_text="Allow users to filter, sort and export data from within the browser",
     )
     published = models.BooleanField(
