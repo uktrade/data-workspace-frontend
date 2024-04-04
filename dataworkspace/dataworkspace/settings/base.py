@@ -28,12 +28,6 @@ sentry.init_sentry(
     ]
 )
 
-# TEMPORARY
-from dotenv import load_dotenv
-from pathlib import Path
-load_dotenv()
-
-
 env = normalise_environment(os.environ)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
