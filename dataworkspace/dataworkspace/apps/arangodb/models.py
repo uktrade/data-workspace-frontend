@@ -1,7 +1,9 @@
 from django.db import models
 from django.core.validators import RegexValidator
 import uuid
+from dataworkspace.apps.core.models import TimeStampedModel
 from dataworkspace.apps.datasets.models import ReferenceNumberedDatasetSource
+from dataworkspace.apps.applications.models import ApplicationInstance
 
 
 class SourceGraphCollection(ReferenceNumberedDatasetSource):
@@ -48,6 +50,9 @@ class SourceGraphCollection(ReferenceNumberedDatasetSource):
     
 
 class SourceGraphCollectionFieldDefinition(models.Model):
+    """
+    Model for defining contents of json fields in collections
+    """
     field = models.CharField(
         max_length=63,
         blank=False,
@@ -70,3 +75,14 @@ class SourceGraphCollectionFieldDefinition(models.Model):
             "source_collection",
         )
  
+
+class ApplicationInstanceArangoUsers(TimeStampedModel):
+    """
+    Model for tracking temporary user credentials against application instances
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    db_username = models.CharField(max_length=256)
+    application_instance = models.ForeignKey(ApplicationInstance, on_delete=models.CASCADE)
+
+    class Meta:
+        indexes = [models.Index(fields=["db_username"])]
