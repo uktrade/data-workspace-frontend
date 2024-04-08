@@ -86,11 +86,12 @@ class CreateTableForm(GOVUKDesignSystemForm):
     def clean(self):
         # If incremental import support is enabled and the table already exists, prompt the user
         # to determine if they want to overwrite or append to the existing table
-        schema = self.cleaned_data["schema"]
         table_name = self.cleaned_data.get("table_name")
         if waffle.switch_is_active(settings.INCREMENTAL_S3_IMPORT_PIPELINE_FLAG) and table_name:
             if (
-                table_exists(settings.EXPLORER_DEFAULT_CONNECTION, schema, table_name)
+                table_exists(
+                    settings.EXPLORER_DEFAULT_CONNECTION, self.cleaned_data["schema"], table_name
+                )
                 and not self.cleaned_data.get("force_overwrite")
                 and not self.cleaned_data.get("table_exists_action")
             ):
