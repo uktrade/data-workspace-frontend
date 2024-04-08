@@ -357,6 +357,11 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
             "schedule": 60 * 10,
             "args": (),
         },
+        "delete-unused-arangodb-users": {
+            "task": "dataworkspace.apps.arangodb.utils.delete_unused_arangodb_users",
+            "schedule": 60 * 10,
+            "args": (),
+        },
         "full-quicksight-permissions-sync": {
             "task": "dataworkspace.apps.applications.utils.sync_quicksight_permissions",
             "schedule": crontab(minute=17, hour=1),

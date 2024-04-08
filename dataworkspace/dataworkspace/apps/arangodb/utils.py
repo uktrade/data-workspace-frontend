@@ -6,16 +6,18 @@ import string
 import time
 from timeit import default_timer as timer
 from typing import Tuple
+import redis
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.conf import settings
+from django.core.cache import cache
 
 from arango import ArangoClient
 from dataworkspace.apps.arangodb.models import (
     SourceGraphCollection,
     ApplicationInstanceArangoUsers,
 )
+from dataworkspace.cel import celery_app
 
 
 def new_private_arangodb_credentials(
@@ -133,7 +135,22 @@ def _arangodb_creds_to_env_vars(arango_credentials=None):
         )
 
 
-def _do_delete_unused_arango_users():
+@celery_app.task()
+def delete_unused_arangodb_users():
+    try:
+        with cache.lock("delete_unused_datasets_users", blocking_timeout=0, timeout=1800):
+            _do_delete_unused_arangodb_users()
+    except redis.exceptions.LockNotOwnedError:
+        # logger.info("delete_unused_datasets_users: Lock not owned - running on another instance?")
+        print("Exception LockNotOwnedError")
+    except redis.exceptions.LockError:
+    #     logger.info(
+    #         "delete_unused_datasets_users: Unable to grab lock - running on another instance?"
+    #     )
+        print("Exception LockError")
+
+
+def _do_delete_unused_arangodb_users():
     # Connect to ArangoDB as root user and return all temporary user credentials
     database_data = settings.ARANGODB
 
