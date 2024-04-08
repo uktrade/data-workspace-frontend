@@ -7,14 +7,14 @@ import time
 from timeit import default_timer as timer
 from typing import Tuple
 
-# from django.conf import settings
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.conf import settings
 
 from arango import ArangoClient
 from dataworkspace.apps.arangodb.models import (
-    ArangoDataset,
     SourceGraphCollection,
+    ApplicationInstanceArangoUsers,
 )
 
 
@@ -131,3 +131,28 @@ def _arangodb_creds_to_env_vars(arango_credentials=None):
             if arango_credentials
             else []
         )
+
+
+def _do_delete_unused_arango_users():
+    # Connect to ArangoDB as root user and return all temporary user credentials
+    database_data = settings.ARANGODB
+
+    # Initialize the ArangoDB client.
+    client = ArangoClient(hosts=f"http://{database_data['HOST']}:{database_data['PORT']}")
+
+    # Connect to "_system" database as root user.
+    sys_db = client.db('_system', username="root", password=database_data["PASSWORD"])
+
+    # Returns all usernames for temporary users
+    temporary_usernames = [user["username"] for user in sys_db.users() if user["username"].startswith("user_")]
+
+    in_use_usenames = set(
+        ApplicationInstanceArangoUsers.objects.filter(
+            db_username__in=temporary_usernames,
+            application_instance__state__in=["RUNNING", "SPAWNING"],
+        ).values_list("db_username", flat=True)
+    )
+    not_in_use_usernames = [usename for usename in temporary_usernames if usename not in in_use_usenames]
+
+    for username in not_in_use_usernames:
+        sys_db.delete_user(username)
