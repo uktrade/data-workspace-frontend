@@ -338,9 +338,13 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
             "table_name": cleaned["table_name"],
             "column_definitions": file_info["column_definitions"],
             "encoding": file_info["encoding"],
-            "delete": cleaned.get("force_overwrite", False)
-            or cleaned.get("table_exists_action") == "overwrite",
         }
+        if waffle.switch_is_active(settings.INCREMENTAL_S3_IMPORT_PIPELINE_FLAG):
+            conf["delete"] = (
+                cleaned.get("force_overwrite", False)
+                or cleaned.get("table_exists_action") == "overwrite"
+            )
+
         logger.debug(conf)
         if cleaned["schema"] not in self.all_schemas:
             conf["db_role"] = cleaned["schema"]
