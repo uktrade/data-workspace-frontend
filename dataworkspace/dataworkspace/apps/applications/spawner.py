@@ -22,6 +22,7 @@ from dataworkspace.apps.applications.models import (
     ApplicationInstance,
     ApplicationInstanceDbUsers,
 )
+from dataworkspace.apps.arangodb.models import ApplicationInstanceArangoUsers
 from dataworkspace.apps.applications.gitlab import (
     ECR_PROJECT_ID,
     SUCCESS_PIPELINE_STATUSES,
@@ -284,6 +285,12 @@ class FargateSpawner:
                     db_id=Database.objects.get(memorable_name=creds["memorable_name"]).id,
                     db_username=creds["db_user"],
                     db_persistent_role=creds["db_persistent_role"],
+                )
+
+            for creds in arango_credentials:
+                ApplicationInstanceArangoUsers.objects.create(
+                    application_instance=application_instance,
+                    db_username=creds["db_user"],
                 )
 
             database_env = _creds_to_env_vars(credentials)
