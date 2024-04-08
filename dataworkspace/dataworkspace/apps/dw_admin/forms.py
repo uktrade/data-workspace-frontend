@@ -21,7 +21,6 @@ from dataworkspace.apps.datasets.models import (
     SourceLink,
     DataSet,
     DataSetVisualisation,
-    ReferenceDataset,
     ReferenceDatasetField,
     CustomDatasetQuery,
     DataCutDataset,

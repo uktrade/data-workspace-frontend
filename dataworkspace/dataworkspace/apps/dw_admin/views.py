@@ -67,7 +67,7 @@ from dataworkspace.datasets_db import get_all_source_tables
 
 
 class SelectUserForm(forms.Form):
-    #TODO - this will break on prod as it selects all users into the DOM, needs to be an autocomplete field
+    # TODO - this will break on prod as it selects all users into the DOM, needs to be an autocomplete field#
     user = forms.ModelChoiceField(queryset=User.objects.all())
 
 
@@ -89,7 +89,7 @@ class SelectUserAndRoleAdminView(FormView):
     form_class = CurrentOwnerAndRoleForm
 
     def form_valid(self, form):
-        #TODO add validation here around user and role both being present in the form
+        # TODO add validation here around user and role both being present in the form#
         user_id = form.get_user()
         role = form.data["role"]
         return HttpResponseRedirect(
@@ -157,27 +157,25 @@ class SelectDatasetAndNewUserAdminView(FormView):
         return context
 
     def form_valid(self, form):
-        #TODO add validation here around user being present in the form
-        #TODO add validation here around at least 1 dataset being present in the form
-        
+        # TODO add validation here around user being present in the form#
+        # TODO add validation here around at least 1 dataset being present in the form#
         dataset_ids = form.data.getlist("dataset_id")
-        datasets = [dataset for dataset in dataset_ids if '-' in dataset]
-        ref_datasets = [dataset for dataset in dataset_ids if '-' not in dataset]
+        datasets = [dataset for dataset in dataset_ids if "-" in dataset]
+        ref_datasets = [dataset for dataset in dataset_ids if "-" not in dataset]
         new_owner = form.data["user"]
         role = self.kwargs.get("role")
 
-        self.update_datasets(datasets, ref_datasets, role, new_owner)        
+        self.update_datasets(datasets, ref_datasets, role, new_owner)
 
         return HttpResponseRedirect(reverse("dw-admin:assign-dataset-ownership-confirmation"))
-    
+
     @transaction.atomic
     def update_datasets(self, datasets, ref_datasets, role, new_owner):
         if datasets:
-            DataSet.objects.filter(id__in=datasets).update(**{role:new_owner})
-            VisualisationCatalogueItem.objects.filter(id__in=datasets).update(**{role:new_owner})
+            DataSet.objects.filter(id__in=datasets).update(**{role: new_owner})
+            VisualisationCatalogueItem.objects.filter(id__in=datasets).update(**{role: new_owner})
         if ref_datasets:
-            ReferenceDataset.objects.filter(id__in=ref_datasets).update(**{role:new_owner})
-        
+            ReferenceDataset.objects.filter(id__in=ref_datasets).update(**{role: new_owner})
 
 
 class ConfirmationAdminView(TemplateView):
@@ -693,7 +691,7 @@ class DataWorkspaceStatsView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
             {
                 "title": "Missing source tables",
                 "stat": missing_source_tables,
-                "subtitle": f"{missing_source_tables } table{'s' if missing_source_tables != 1 else ''} "
+                "subtitle": f"{missing_source_tables} table{'s' if missing_source_tables != 1 else ''} "
                 "missing from the DB",
                 "bad_news": missing_source_tables > 0,
             }
