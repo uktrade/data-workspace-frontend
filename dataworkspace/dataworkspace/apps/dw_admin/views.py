@@ -1,7 +1,6 @@
 import csv
 import os
 from datetime import date, datetime, timedelta
-from pkgutil import get_data
 
 from botocore.exceptions import ClientError
 from celery import states
@@ -17,7 +16,7 @@ from django.contrib.postgres.aggregates.general import BoolOr
 from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.db import connection
+from django.db import transaction
 from django.db.models import (
     Avg,
     Count,
@@ -39,7 +38,6 @@ from django.urls import reverse
 from django.utils.timesince import timesince
 from django.views.generic import FormView, CreateView, TemplateView
 from django_celery_results.models import TaskResult
-from psycopg2.sql import Literal, SQL, Identifier
 
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.core.boto3_client import get_s3_client
@@ -156,17 +154,6 @@ class SelectDatasetAndNewUserAdminView(FormView):
         context["role"] = self.get_role_title(role)
         return context
 
-    def execute_sql(self, table, datasets, new_owner, role):
-        with connection.cursor() as cursor:
-            try:
-                cursor.execute(
-                    SQL(
-                        "update {} set {} = {} where id in {}",
-                    ).format(Identifier(table), Identifier(role), Literal(new_owner), Literal(tuple(datasets)))
-                )
-            except Exception as e:
-                print("Error", e)
-
     def form_valid(self, form):
         dataset_ids = form.data.getlist("dataset_id")
         datasets = [dataset for dataset in dataset_ids if '-' in dataset]
@@ -174,13 +161,18 @@ class SelectDatasetAndNewUserAdminView(FormView):
         new_owner = form.data["user"]
         role = self.kwargs.get("role")
 
-        if datasets:
-            self.execute_sql('app_dataset', datasets, new_owner, role)
-            self.execute_sql('datasets_visualisationcatalogueitem', datasets, new_owner, role)
-        if ref_datasets:
-            self.execute_sql('app_referencedataset', ref_datasets, new_owner, role)
+        self.update_datasets(datasets, ref_datasets, role, new_owner)        
 
         return HttpResponseRedirect(reverse("dw-admin:assign-dataset-ownership-confirmation"))
+    
+    @transaction.atomic
+    def update_datasets(self, datasets, ref_datasets, role, new_owner):
+        if datasets:
+            DataSet.objects.filter(id__in=datasets).update(**{role:new_owner})
+            VisualisationCatalogueItem.objects.filter(id__in=datasets).update(**{role:new_owner})
+        if ref_datasets:
+            ReferenceDataset.objects.filter(id__in=ref_datasets).update(**{role:new_owner})
+        
 
 
 class ConfirmationAdminView(TemplateView):
