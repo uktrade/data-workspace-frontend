@@ -1859,6 +1859,10 @@ def clear_table_permissions_cache_for_user(user):
         user.email,
         db_role,
     )
+    delete_cache_for_db_role(db_role)
+
+
+def delete_cache_for_db_role(db_role):
     cache.delete(table_permissions_cache_key(db_role))
 
 
