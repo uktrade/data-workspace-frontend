@@ -67,6 +67,7 @@ from dataworkspace.datasets_db import get_all_source_tables
 
 
 class SelectUserForm(forms.Form):
+    #TODO - this will break on prod as it selects all users into the DOM, needs to be an autocomplete field
     user = forms.ModelChoiceField(queryset=User.objects.all())
 
 
@@ -88,6 +89,7 @@ class SelectUserAndRoleAdminView(FormView):
     form_class = CurrentOwnerAndRoleForm
 
     def form_valid(self, form):
+        #TODO add validation here around user and role both being present in the form
         user_id = form.get_user()
         role = form.data["role"]
         return HttpResponseRedirect(
@@ -155,6 +157,9 @@ class SelectDatasetAndNewUserAdminView(FormView):
         return context
 
     def form_valid(self, form):
+        #TODO add validation here around user being present in the form
+        #TODO add validation here around at least 1 dataset being present in the form
+        
         dataset_ids = form.data.getlist("dataset_id")
         datasets = [dataset for dataset in dataset_ids if '-' in dataset]
         ref_datasets = [dataset for dataset in dataset_ids if '-' not in dataset]
