@@ -227,6 +227,7 @@ class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, ValidateSchem
                     "schema": schema,
                     "team": self.request.GET.get("team"),
                     "table_name": self.request.GET.get("table_name"),
+                    "force_overwrite": "overwrite" in self.request.GET,
                 }
             )
         return initial
@@ -241,6 +242,7 @@ class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, ValidateSchem
             "path": form.cleaned_data["path"],
             "schema": form.cleaned_data["schema"],
             "table_name": form.cleaned_data["table_name"],
+            "overwrite": form.cleaned_data["force_overwrite"],
         }
         return HttpResponseRedirect(
             f'{reverse("your-files:create-table-confirm-data-types")}?{urlencode(params)}'
@@ -255,6 +257,24 @@ class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, ValidateSchem
                 f'{reverse("your-files:create-table-failed")}?'
                 f'filename={form.data["path"].split("/")[-1]}'
             )
+
+        # If table name validation failed due to a duplicate table in the db confirm overwrite
+        if (
+            not form.cleaned_data["force_overwrite"]
+            and errors.get("table_name")
+            and errors["table_name"][0].code == "duplicate-table"
+        ):
+            params = {
+                "path": form.cleaned_data["path"],
+                "table_name": form.data["table_name"],
+                "schema": form.cleaned_data["schema"],
+                "overwrite": form.cleaned_data["force_overwrite"],
+            }
+            return HttpResponseRedirect(
+                f'{reverse("your-files:create-table-table-exists")}?{urlencode(params)}'
+            )
+
+        # Otherwise just redisplay the form (likely an invalid table name)
         return super().form_invalid(form)
 
 
@@ -275,6 +295,8 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
                     "path": self.request.GET["path"],
                     "schema": self.request.GET["schema"],
                     "table_name": self.request.GET["table_name"],
+                    "force_overwrite": "overwrite" in self.request.GET,
+                    "table_exists_action": self.request.GET.get("table_exists_action"),
                 }
             )
         return initial
@@ -316,6 +338,8 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
             "table_name": cleaned["table_name"],
             "column_definitions": file_info["column_definitions"],
             "encoding": file_info["encoding"],
+            "delete": cleaned.get("force_overwrite", False)
+            or cleaned.get("table_exists_action") == "overwrite",
         }
         logger.debug(conf)
         if cleaned["schema"] not in self.all_schemas:
@@ -479,6 +503,41 @@ class CreateTableFailedView(RequiredParameterGetRequestMixin, TemplateView):
                 self.request.GET["execution_date"], self.request.GET["task_name"]
             )
         return context
+
+
+class CreateTableTableExists(RequiredParameterGetRequestMixin, ValidateSchemaMixin, FormView):
+    template_name = "your_files/create-table-table-exists.html"
+    required_parameters = ["path", "table_name"]
+    form_class = CreateTableForm
+
+    def get_initial(self):
+        initial = super().get_initial()
+        if self.request.method == "GET":
+            initial.update(
+                {
+                    "path": self.request.GET["path"],
+                    "schema": self.request.GET.get("schema"),
+                    "table_name": self.request.GET.get("table_name"),
+                    "force_overwrite": True,
+                },
+            )
+        return initial
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        params = {
+            "path": form.cleaned_data["path"],
+            "schema": form.cleaned_data["schema"],
+            "table_name": form.cleaned_data["table_name"],
+            "table_exists_action": form.cleaned_data.get("table_exists_action"),
+        }
+        return HttpResponseRedirect(
+            f'{reverse("your-files:create-table-confirm-data-types")}?{urlencode(params)}'
+        )
 
 
 class ValidateUserIsStaffMixin:

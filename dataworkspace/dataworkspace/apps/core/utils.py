@@ -1670,7 +1670,7 @@ def get_dataflow_task_log(dag, execution_date, task_id):
 
 def get_data_flow_import_pipeline_name():
     if waffle.switch_is_active(settings.INCREMENTAL_S3_IMPORT_PIPELINE_FLAG):
-        return settings.DATAFLOW_API_CONFIG["INCREMENTAL_S3_IMPORT_PIPELINE_FLAG"]
+        return settings.DATAFLOW_API_CONFIG["DATAFLOW_S3_IMPORT_INCREMENTAL_DAG"]
     return settings.DATAFLOW_API_CONFIG["DATAFLOW_S3_IMPORT_DAG"]
 
 
