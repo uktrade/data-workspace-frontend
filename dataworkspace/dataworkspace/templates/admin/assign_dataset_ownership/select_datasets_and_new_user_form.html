@@ -5,10 +5,15 @@
 <form method="POST">
   {% csrf_token %} {% for data in datasets %}
   <div>
-    <input type="checkbox" value="{{data.id}}" name="dataset_id" />
-    <label for="dataset_id">{{data.name}}: {{data.id}}</label>
+    {% with dataset_id=data.uuid|default:data.id %}
+    <input type="checkbox" value="{{dataset_id}}" name="dataset_id" />
+    <label for="dataset_id">
+      <a href="/datasets/{{dataset_id}}">
+        {{data.name}}: {{dataset_id}}</a
+      ></label
+    >
   </div>
-  {% endfor %}
+  {% endwith %} {% endfor %}
   <input type="hidden" value="{{data.role}}" name="role" />
   <h3>Assign to:</h3>
   <br />
