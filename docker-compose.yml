@@ -54,6 +54,19 @@ services:
       - db-data-dev:/var/lib/postgresql/data
       - db-logs-dev:/var/log/postgres
 
+    data-workspace-arango:
+    build:
+      context: arango
+      dockerfile: Dockerfile
+    image: data-workspace-arango
+    networks:
+      - data-infrastructure-shared-network
+      - test
+    ports:
+      - "8529:8529"
+    volumes:
+      - db-arango-dev:/var/lib/arango3
+
   data-workspace-redis:
     build:
       context: redis
@@ -170,6 +183,7 @@ services:
       - "testvisualisation-b.dataworkspace.test:127.0.0.1"
       - "api.ecr.my-region-1.amazonaws.com:127.0.0.1"
       - "mlflow--data-science.dataworkspace.test:127.0.0.1"
+      - "arango.dataworkspace.test:127.0.0.1"
     volumes:
       - db-logs-dev:/var/log/postgres
       - test-results:/test-results
