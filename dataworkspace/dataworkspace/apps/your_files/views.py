@@ -340,9 +340,9 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
             "encoding": file_info["encoding"],
         }
         if waffle.switch_is_active(settings.INCREMENTAL_S3_IMPORT_PIPELINE_FLAG):
-            conf["delete"] = (
-                cleaned.get("force_overwrite", False)
-                or cleaned.get("table_exists_action") == "overwrite"
+            conf["incremental"] = (
+                not cleaned.get("force_overwrite", False)
+                and cleaned.get("table_exists_action") == "append"
             )
 
         logger.debug(conf)
