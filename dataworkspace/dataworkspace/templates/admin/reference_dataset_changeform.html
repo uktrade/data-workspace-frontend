@@ -4,7 +4,7 @@
   {% with adminform.form.instance as instance %}
     {% if instance.id %}
       {{ instance.get_column_config|json_script:"column_data" }}
-      <script nonce="{{ request.csp_nonce }}">
+      <script>
         const columnDefs = JSON.parse(document.getElementById('column_data').textContent);
         columnDefs.push({
           field: "actions",

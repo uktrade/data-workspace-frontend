@@ -559,6 +559,7 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, SortableAdminBase, Permissio
     class Media:
         js = (
             "admin/js/vendor/jquery/jquery.js",
+            "admin/js/jquery.init.js",
             "data-workspace-admin.js",
             "ag-grid-community.min.js",
             "dayjs.min.js",
