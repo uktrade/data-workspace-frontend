@@ -10,13 +10,13 @@
   {{ form.errors }}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-      <form method="POST" action="{% url 'your_files:create-table-confirm-name' %}?{{ request.GET.urlencode }}" novalidate>
+      <form method="POST" novalidate>
         <div class="govuk-form-group{% if form.table_name.errors %} govuk-form-group--error{% endif %}">
           <h1 class="govuk-heading-xl govuk-!-margin-bottom-3">
             Table already exists
           </h1>
           <div class="govuk-hint" id="table-exists-hint">
-            A table already exists in your personal database schema with the name "{{ form.table_name.value }}". Do you want to overwrite the existing table?
+            The table "{{ form.table_name.value }}" already exists in schema "{{ form.schema.value }}". You can either overwrite or append records to the existing table.
           </div>
         <div class="govuk-warning-text">
           <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
@@ -30,13 +30,11 @@
           {{ form.path }}
           {{ form.schema }}
           {{ form.force_overwrite }}
+          {{ form.table_exists_action }}
         </div>
         <button type="submit" class="govuk-button" aria-describedby="table-exists-hint">
-          Yes, I understand - Continue
+          Continue
         </button>
-        <a href="{% url 'your_files:create-table-confirm-name' %}?path={{ request.GET.path }}&table_name={{ form.table_name.value }}&schema={{ form.schema.value }}" class="govuk-button govuk-button--secondary">
-          Cancel
-        </a>
       </form>
     </div>
   </div>

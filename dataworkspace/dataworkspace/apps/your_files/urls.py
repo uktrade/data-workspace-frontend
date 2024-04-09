@@ -11,6 +11,7 @@ from dataworkspace.apps.your_files.views import (
     CreateTableSuccessView,
     CreateTableConfirmNameView,
     CreateTableConfirmSchemaView,
+    CreateTableTableExists,
     CreateTableValidatingView,
     CreateTableView,
     RestoreTableView,
@@ -96,6 +97,11 @@ urlpatterns = [
         "restore-table/<int:pk>/failed",
         login_required(RestoreTableViewFailed.as_view()),
         name="restore-table-failed",
+    ),
+    path(
+        "create-table/table-exists",
+        login_required(CreateTableTableExists.as_view()),
+        name="create-table-table-exists",
     ),
     path(
         "restore-table/<int:pk>/success",

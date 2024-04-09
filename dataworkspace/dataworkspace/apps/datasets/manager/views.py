@@ -19,6 +19,7 @@ from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.constants import PostgresDataTypes, SCHEMA_POSTGRES_DATA_TYPE_MAP
 from dataworkspace.apps.core.utils import (
     copy_file_to_uploads_bucket,
+    get_data_flow_import_pipeline_name,
     get_random_data_sample,
     get_s3_csv_column_types,
     get_s3_prefix,
@@ -128,7 +129,7 @@ class DatasetManageSourceTableColumnConfigView(DatasetManageSourceTableView):
         try:
             response = trigger_dataflow_dag(
                 conf,
-                settings.DATAFLOW_API_CONFIG["DATAFLOW_S3_IMPORT_DAG"],
+                get_data_flow_import_pipeline_name(),
                 f"{source.schema}-{source.table}-{datetime.now().isoformat()}",
             )
         except HTTPError:

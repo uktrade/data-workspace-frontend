@@ -36,6 +36,7 @@ from dataworkspace.apps.core.storage import S3FileStorage
 from dataworkspace.apps.core.utils import (
     StreamingHttpResponseWithoutDjangoDbConnection,
     can_access_schema_table,
+    get_data_flow_import_pipeline_name,
     get_dataflow_dag_status,
     get_dataflow_task_status,
     table_data,
@@ -378,10 +379,9 @@ class CreateTableDAGStatusView(View):
     """
 
     def get(self, request, execution_date):
-        config = settings.DATAFLOW_API_CONFIG
         try:
             return JsonResponse(
-                get_dataflow_dag_status(config["DATAFLOW_S3_IMPORT_DAG"], execution_date)
+                get_dataflow_dag_status(get_data_flow_import_pipeline_name(), execution_date)
             )
         except HTTPError as e:
             return JsonResponse({}, status=e.response.status_code)
@@ -389,12 +389,11 @@ class CreateTableDAGStatusView(View):
 
 class CreateTableDAGTaskStatusView(View):
     def get(self, request, execution_date, task_id):
-        config = settings.DATAFLOW_API_CONFIG
         try:
             return JsonResponse(
                 {
                     "state": get_dataflow_task_status(
-                        config["DATAFLOW_S3_IMPORT_DAG"], execution_date, task_id
+                        get_data_flow_import_pipeline_name(), execution_date, task_id
                     )
                 }
             )
