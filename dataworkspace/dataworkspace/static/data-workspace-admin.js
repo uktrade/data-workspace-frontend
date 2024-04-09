@@ -1,4 +1,5 @@
-window.$ = jQuery;
+jQuery = window.django.jQuery;
+
 jQuery(function () {
   jQuery(".field-data_type select").on("change", function () {
     var relationSelector = jQuery(this)
