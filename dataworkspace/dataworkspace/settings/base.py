@@ -269,6 +269,7 @@ CSP_CONNECT_SRC = [
     "*.google-analytics.com",
     "*.analytics.google.com",
     "*.googletagmanager.com",
+    "https://cke4.ckeditor.com",
 ]
 CSP_IMG_SRC = [
     APPLICATION_ROOT_DOMAIN,
@@ -287,6 +288,7 @@ CSP_SCRIPT_SRC = [
     "https://www.google-analytics.com",
     "https://tagmanager.google.com",
     "*.googletagmanager.com",
+    "https://cke4.ckeditor.com",
 ]
 CSP_STYLE_SRC = [
     APPLICATION_ROOT_DOMAIN,
@@ -777,7 +779,6 @@ DEFER_SCHEMA_TAB_LOAD_FLAG = "DEFER_SCHEMA_TAB_LOAD_FLAG"
 CACHE_USER_TABLE_PERMISSIONS = "CACHE_USER_TABLE_PERMISSIONS"
 USE_PG_CLASS_FOR_TABLE_PERMISSIONS = "USE_PG_CLASS_FOR_TABLE_PERMISSIONS"
 YOUR_FILES_V2_FLAG = "YOUR_FILES_V2_FLAG"
-INCREMENTAL_S3_IMPORT_PIPELINE_FLAG = "INCREMENTAL_S3_IMPORT_PIPELINE_FLAG"
 
 DATASET_FINDER_SEARCH_RESULTS_PER_PAGE = 200
 
@@ -790,9 +791,6 @@ DATAFLOW_API_CONFIG = {
     "DATAFLOW_HAWK_ID": env.get("DATAFLOW_HAWK_ID"),
     "DATAFLOW_HAWK_KEY": env.get("DATAFLOW_HAWK_KEY"),
     "DATAFLOW_S3_IMPORT_DAG": env.get("DATAFLOW_S3_IMPORT_DAG"),
-    "DATAFLOW_S3_IMPORT_INCREMENTAL_DAG": env.get(
-        "DATAFLOW_S3_IMPORT_INCREMENTAL_DAG", "DataWorkspaceS3IncrementalPipeline"
-    ),
     "DATAFLOW_RESTORE_TABLE_DAG": env.get("DATAFLOW_RESTORE_TABLE_DAG"),
     "DATAFLOW_DROP_TABLE_DAG": env.get("DATAFLOW_DROP_TABLE_DAG"),
 }
