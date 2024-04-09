@@ -345,6 +345,7 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
                 and cleaned.get("table_exists_action") == "append"
             )
 
+        logger.debug("Triggering pipeline %s", get_data_flow_import_pipeline_name())
         logger.debug(conf)
         if cleaned["schema"] not in self.all_schemas:
             conf["db_role"] = cleaned["schema"]
