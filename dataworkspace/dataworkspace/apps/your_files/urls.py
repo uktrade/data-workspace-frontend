@@ -3,6 +3,7 @@ from django.urls import path
 from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.your_files.views import (
     CreateSchemaView,
+    CreateTableAppendingToTableView,
     CreateTableConfirmDataTypesView,
     CreateTableCreatingTableView,
     CreateTableFailedView,
@@ -67,6 +68,11 @@ urlpatterns = [
         "create-table/renaming-table",
         login_required(CreateTableRenamingTableView.as_view()),
         name="create-table-renaming-table",
+    ),
+    path(
+        "create-table/appending",
+        login_required(CreateTableAppendingToTableView.as_view()),
+        name="create-table-appending",
     ),
     path(
         "create-table/success",
