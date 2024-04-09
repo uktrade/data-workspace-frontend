@@ -501,7 +501,7 @@ class CreateTableAppendingToTableView(BaseCreateTableStepView):
         else:
             context.update(
                 {
-                    "title": "Creating and inserting into your existing table",
+                    "title": "Creating and inserting into your table",
                     "info_text": "This is the last step, your table is almost ready.",
                 }
             )
