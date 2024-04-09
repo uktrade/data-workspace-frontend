@@ -10,11 +10,12 @@ from dataworkspace.apps.core.utils import (
     db_role_schema_suffix_for_user,
     postgres_user,
 )
-from .utils import (
+from dataworkspace.apps.arangodb.utils import (
     source_graph_collections_for_user,
     new_private_arangodb_credentials,
+    _do_delete_unused_arangodb_users,
 )
-from dataworkspace.apps.arangodb.models import ArangoDataset, SourceGraphCollection, GraphDataSetUserPermission
+from dataworkspace.apps.arangodb.models import SourceGraphCollection, ApplicationInstanceArangoUsers
 
 
 
@@ -41,6 +42,19 @@ def TEMPORARY_print_credentials_to_url(request):
     )
 
     html = "<html><body>Credentials are %s.</body></html>" % credentials
+    return HttpResponse(html)
+
+
+def TEMPORARY_remove_temp_credentials_to_url(request):
+
+    # Get Example User
+    user_id = request.user.pk
+    user = get_user_model().objects.get(pk=user_id)
+
+    # Run user removal function
+    _do_delete_unused_arangodb_users()
+
+    html = "<html><body>Credentials removed %s.</body></html>"
     return HttpResponse(html)
 
 

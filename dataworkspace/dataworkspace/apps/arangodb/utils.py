@@ -1,11 +1,9 @@
 import datetime
 import logging
-import os
 import secrets
 import string
 import time
 from timeit import default_timer as timer
-from typing import Tuple
 import redis
 
 from django.conf import settings
@@ -83,7 +81,6 @@ def new_private_arangodb_credentials(
     # Get Access Permissions by Table
     database_to_collections = {"Datasets": [(collection["dataset"]["id"], collection["dataset"]["name"]) for collection in source_collections]}
 
-
     # Get Password
     db_password = arango_password()
 
@@ -99,19 +96,18 @@ def new_private_arangodb_credentials(
 def source_graph_collections_for_user(user):
 
     req_collections = SourceGraphCollection.objects.filter(
-        graph_dataset__graphdatasetuserpermission__user=user,
+        dataset__datasetuserpermission__user=user,
     ).values(
         "reference_number",
-        "graph_dataset__id",
-        "graph_dataset__name",
+        "dataset__id",
+        "collection",
     )
 
     source_collections = [
         {
             "dataset": {
-                "id": x["graph_dataset__id"],
-                # TEMPORARY: Whist name not in source collections
-                "name": f"test_{x['reference_number']}",
+                "id": x["dataset__id"],
+                "name": x["collection"],
             },
         }
         for x in req_collections
@@ -141,13 +137,13 @@ def delete_unused_arangodb_users():
         with cache.lock("delete_unused_datasets_users", blocking_timeout=0, timeout=1800):
             _do_delete_unused_arangodb_users()
     except redis.exceptions.LockNotOwnedError:
+        pass
         # logger.info("delete_unused_datasets_users: Lock not owned - running on another instance?")
-        print("Exception LockNotOwnedError")
     except redis.exceptions.LockError:
+        pass
     #     logger.info(
     #         "delete_unused_datasets_users: Unable to grab lock - running on another instance?"
     #     )
-        print("Exception LockError")
 
 
 def _do_delete_unused_arangodb_users():
