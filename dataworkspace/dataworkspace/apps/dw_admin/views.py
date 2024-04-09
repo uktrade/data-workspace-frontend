@@ -437,9 +437,9 @@ class ReferenceDatasetAdminUploadView(ReferenceDataRecordMixin, FormView):
                         try:
                             link_id = linked_dataset.get_record_by_custom_id(value).id
                         except linked_dataset.get_record_model_class().DoesNotExist:
-                            errors[header_name] = (
-                                "Identifier {} does not exist in linked dataset".format(value)
-                            )
+                            errors[
+                                header_name
+                            ] = "Identifier {} does not exist in linked dataset".format(value)
                     form_data[field.relationship_name + "_id"] = link_id
                 else:
                     # Otherwise validate using the associated form field

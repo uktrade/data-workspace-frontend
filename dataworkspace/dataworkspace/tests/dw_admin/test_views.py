@@ -28,7 +28,9 @@ class SelectUserFormTest(BaseTest):
 
 class CurrentOwnerAndRoleFormTest(BaseTest):
     def test_form(self):
-        form = CurrentOwnerAndRoleForm(data={"user": self.user.id, "role": "information_asset_owner_id"})
+        form = CurrentOwnerAndRoleForm(
+            data={"user": self.user.id, "role": "information_asset_owner_id"}
+        )
         self.assertTrue(form.is_valid())
 
 

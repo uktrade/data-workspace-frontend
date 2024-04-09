@@ -177,9 +177,9 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
             # Disable the relationship selector if the data type is not foreign key
             elif self.fields["linked_reference_dataset_field"].initial is None:
                 self.fields["linked_reference_dataset_field"].disabled = True
-                self.fields["linked_reference_dataset_field"].queryset = (
-                    ReferenceDatasetField.objects.none()
-                )
+                self.fields[
+                    "linked_reference_dataset_field"
+                ].queryset = ReferenceDatasetField.objects.none()
             self.fields["column_name"].disabled = True
             self.fields["relationship_name"].disabled = True
 

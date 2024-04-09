@@ -6,7 +6,7 @@
   {% csrf_token %} {% for data in datasets %}
   <div>
     {% with dataset_id=data.uuid|default:data.id %}
-    <input type="checkbox" value="{{dataset_id}}" name="dataset_id" />
+    <input type="checkbox" value="{{data.id}}" name="dataset_id" />
     <label for="dataset_id">
       <a href="/datasets/{{dataset_id}}" target="_blank">
         {{data.name}}: {{dataset_id}}</a
