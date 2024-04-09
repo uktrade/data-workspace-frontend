@@ -1,4 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
+  if (!document.getElementById("column_data")) {
+    return;
+  }
   const columnDefs = JSON.parse(
     document.getElementById("column_data").textContent
   );
