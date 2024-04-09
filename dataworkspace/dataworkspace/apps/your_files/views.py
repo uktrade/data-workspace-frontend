@@ -367,6 +367,11 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
             "table_name": cleaned["table_name"],
             "execution_date": response["execution_date"],
         }
+        if conf.get("incremental"):
+            return HttpResponseRedirect(
+                f'{reverse("your-files:create-table-appending")}?{urlencode(params)}'
+            )
+
         return HttpResponseRedirect(
             f'{reverse("your-files:create-table-validating")}?{urlencode(params)}'
         )
@@ -473,6 +478,22 @@ class CreateTableRenamingTableView(BaseCreateTableStepView):
         context.update(
             {
                 "title": "Renaming temporary table",
+                "info_text": "This is the last step, your table is almost ready.",
+            }
+        )
+        return context
+
+
+class CreateTableAppendingToTableView(BaseCreateTableStepView):
+    task_name = "sync"
+    next_step_url_name = "your-files:create-table-success"
+    step = 4
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data()
+        context.update(
+            {
+                "title": "Appending to existing table",
                 "info_text": "This is the last step, your table is almost ready.",
             }
         )
