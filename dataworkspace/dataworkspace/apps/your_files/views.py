@@ -367,7 +367,7 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
             "table_name": cleaned["table_name"],
             "execution_date": response["execution_date"],
         }
-        if conf.get("incremental"):
+        if waffle.switch_is_active(settings.INCREMENTAL_S3_IMPORT_PIPELINE_FLAG):
             return HttpResponseRedirect(
                 f'{reverse("your-files:create-table-appending")}?{urlencode(params)}'
             )
@@ -491,12 +491,20 @@ class CreateTableAppendingToTableView(BaseCreateTableStepView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data()
-        context.update(
-            {
-                "title": "Appending to existing table",
-                "info_text": "This is the last step, your table is almost ready.",
-            }
-        )
+        if waffle.switch_is_active(settings.INCREMENTAL_S3_IMPORT_PIPELINE_FLAG):
+            context.update(
+                {
+                    "title": "Appending to existing table",
+                    "info_text": "This is the last step, your table is almost ready.",
+                }
+            )
+        else:
+            context.update(
+                {
+                    "title": "Creating and inserting into your table",
+                    "info_text": "This is the last step, your table is almost ready.",
+                }
+            )
         return context
 
 
