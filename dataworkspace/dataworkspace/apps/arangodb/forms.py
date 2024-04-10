@@ -1,11 +1,13 @@
-from django import forms 
+from django import forms
 from django.contrib import admin
-from dataworkspace.apps.arangodb.models import SourceGraphCollection, SourceGraphCollectionFieldDefinition
+from dataworkspace.apps.arangodb.models import (
+    SourceGraphCollection,
+    SourceGraphCollectionFieldDefinition,
+)
 from dataworkspace.apps.datasets.models import MasterDataset
 
 
 class SourceGraphCollectionForm(forms.ModelForm):
-
     model = SourceGraphCollection
 
     class Meta:
@@ -30,7 +32,7 @@ class SourceGraphCollectionForm(forms.ModelForm):
             raise forms.ValidationError(
                 {"data_grid_enabled": "Grid cannot be enabled for graph-type data"}
             )
-        
+
         return cleaned
 
 

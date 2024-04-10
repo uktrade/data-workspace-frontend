@@ -3,7 +3,7 @@ from dataworkspace.apps.arangodb.models import (
     SourceGraphCollection,
 )
 from dataworkspace.apps.arangodb.forms import (
-    SourceGraphCollectionForm, 
+    SourceGraphCollectionForm,
     SourceGraphCollectionFieldDefinitionInline,
 )
 
