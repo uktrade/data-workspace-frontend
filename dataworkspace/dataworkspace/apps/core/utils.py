@@ -398,6 +398,46 @@ def new_private_database_credentials(
                     logger.info("Creating table usage role %s", role_name)
                     ensure_db_role(cur, role_name)
 
+            # Find the table roles that don't have SELECT on their tables
+            if allowed_tables_that_exist_role_map:
+                # We don't use the ::regnamespace casting because that can wrap in double quotes
+                # in some circumstances. We want the non-quoted value
+                cur.execute(
+                    sql.SQL(
+                        """
+                        SELECT
+                            nspname, relname
+                        FROM
+                            pg_class
+                        INNER JOIN
+                            pg_namespace ON pg_namespace.oid = pg_class.relnamespace
+                        CROSS JOIN
+                            aclexplode(relacl)
+                        WHERE
+                            (nspname, relname) IN ({schema_tables})
+                            AND grantee::regrole::text = 'table_select_' || pg_class.oid::text
+                            AND privilege_type = 'SELECT'
+                        ORDER BY
+                            nspname, relname
+                    """
+                    ).format(
+                        schema_tables=sql.SQL(",").join(
+                            sql.SQL("({schema},{table})").format(
+                                schema=sql.Literal(schema), table=sql.Literal(table)
+                            )
+                            for (schema, table) in allowed_tables_that_exist_role_map.keys()
+                        )
+                    )
+                )
+                tables_with_select = set(cur.fetchall())
+            else:
+                tables_with_select = set()
+            table_role_names_without_select = [
+                ((schema, table), role)
+                for (schema, table), role in allowed_tables_that_exist_role_map.items()
+                if (schema, table) not in tables_with_select
+            ]
+
             # Make sure that that privileges granted directly to the user's role, which was done in
             # previous versions, are removed
             schemas_to_revoke = schemas_with_existing_privs
@@ -605,6 +645,15 @@ def new_private_database_credentials(
         # - ALTER USER ... SET
         # Either can result in "tuple concurrentl updated" errors. So we lock.
         with get_cursor(database_memorable_name) as cur, transaction_and_lock(cur, GLOBAL_LOCK_ID):
+            for (schema, table), table_role_name in table_role_names_without_select:
+                logger.info("Granting SELECT on %s to role %s", (schema, table), table_role_name)
+                cur.execute(
+                    sql.SQL("GRANT SELECT ON {} TO {};").format(
+                        sql.Identifier(schema, table),
+                        sql.Identifier(table_role_name),
+                    )
+                )
+
             for schema, schema_role_name in schemas_role_names_without_usage:
                 logger.info("Granting USAGE on %s to role %s", schema, schema_role_name)
                 cur.execute(
@@ -1913,7 +1962,7 @@ def tables_select_role_map(cur, tables):
     cur.execute(
         sql.SQL(
             """
-        SELECT nspname ||'.'|| relname, 'table_select_' || pg_class.oid
+        SELECT nspname, relname, 'table_select_' || pg_class.oid
         FROM pg_class, pg_namespace
         WHERE relnamespace = pg_namespace.oid
         AND (nspname, relname) in ({table_names})
@@ -1932,4 +1981,4 @@ def tables_select_role_map(cur, tables):
             )
         )
     )
-    return dict(cur.fetchall())
+    return {(schema, table): role_name for (schema, table, role_name) in cur.fetchall()}
