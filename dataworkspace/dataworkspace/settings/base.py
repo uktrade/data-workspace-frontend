@@ -118,7 +118,6 @@ INSTALLED_APPS = [
     "django_extensions",
     "dataworkspace.apps.explorer",
     "dynamic_models",
-    "dataworkspace.apps.case_studies",
     "csp_helpers",
     "webpack_loader",
     "dataworkspace.apps.data_collections",
@@ -784,6 +783,7 @@ EXPLORER_CSV_INJECTION_PROTECTION_FLAG = "EXPLORER_CSV_INJECTION_PROTECTION_FLAG
 DEFER_SCHEMA_TAB_LOAD_FLAG = "DEFER_SCHEMA_TAB_LOAD_FLAG"
 CACHE_USER_TABLE_PERMISSIONS = "CACHE_USER_TABLE_PERMISSIONS"
 USE_PG_CLASS_FOR_TABLE_PERMISSIONS = "USE_PG_CLASS_FOR_TABLE_PERMISSIONS"
+YOUR_FILES_V2_FLAG = "YOUR_FILES_V2_FLAG"
 
 DATASET_FINDER_SEARCH_RESULTS_PER_PAGE = 200
 
