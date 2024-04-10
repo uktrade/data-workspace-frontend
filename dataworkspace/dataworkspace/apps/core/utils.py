@@ -1966,7 +1966,7 @@ def tables_select_role_map(cur, tables):
         FROM pg_class, pg_namespace
         WHERE relnamespace = pg_namespace.oid
         AND (nspname, relname) in ({table_names})
-        AND relkind = 'r';
+        AND relkind in ('r', 'm', 'v', 'p');
         """
         ).format(
             table_names=sql.SQL(",").join(
