@@ -837,6 +837,9 @@ def new_private_database_credentials(
                 )
             )
 
+        if tables_to_revoke or tables_to_grant:
+            delete_cache_for_db_role(db_role)
+
         logger.info(
             "Generated new credentials for permanent role %s in %s seconds",
             db_role,
@@ -1887,17 +1890,10 @@ def table_permissions_for_role(db_role, db_schema, database_name, log_stats=Fals
         return tables_with_perms
 
     pg_class_query = """
-        SELECT trim(both '"' from relnamespace::regnamespace::text) AS schema, relname AS name
+        SELECT DISTINCT trim(both '"' from relnamespace::regnamespace::text) AS schema, relname AS name
         FROM pg_class, aclexplode(relacl) acl
         WHERE acl.grantee = {role}::regrole::oid
-        AND relkind in ('r', 'p')
-        AND acl.privilege_type in (
-            'SELECT', 'INSERT', 'UPDATE', 'DELETE', 'TRUNCATE', 'REFERENCES', 'TRIGGER'
-        )
-        AND trim(both '"' from relnamespace::regnamespace::text) NOT SIMILAR TO
-            'pg_toast|pg_temp_%|pg_toast_temp_%|_team_%|_user_%'
-        AND relname NOT SIMILAR TO
-            '_\\d{{8}}t\\d{{6}}|%_swap|%_idx|_tmp%|%_pkey|%_seq|_data_explorer_tmp%|%000000|_tmp_%';
+        AND relkind in ('r', 'm', 'v', 'p')
     """
     logger.info("table_perms: Querying and caching table permissions for role %s", db_role)
     start_time = time.time()
