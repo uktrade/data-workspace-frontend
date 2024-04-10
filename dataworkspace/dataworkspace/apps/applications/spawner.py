@@ -46,6 +46,11 @@ from dataworkspace.apps.core.utils import (
     write_credentials_to_bucket,
     USER_SCHEMA_STEM,
 )
+from dataworkspace.apps.arangodb.utils import (
+    _arangodb_creds_to_env_vars,
+    source_graph_collections_for_user,
+    new_private_arangodb_credentials,
+)
 
 logger = logging.getLogger("app")
 
@@ -88,6 +93,15 @@ def spawn(
         valid_for=datetime.timedelta(days=31),
     )
 
+    source_collections = source_graph_collections_for_user(user)
+    arangodb_credentials = new_private_arangodb_credentials(
+        db_role_schema_suffix,
+        source_collections,
+        db_user,
+        user,
+        valid_for=datetime.timedelta(days=31),
+    )
+
     mlflow_authorised_hosts, sub = (
         (
             list(
@@ -123,6 +137,7 @@ def spawn(
         jwt_token,
         mlflow_authorised_hosts,
         app_schema,
+        arangodb_credentials,
     )
 
 
@@ -149,6 +164,7 @@ class ProcessSpawner:
         jwt_token,
         mlflow_authorised_hosts,
         ___,
+        ____,
     ):
         try:
             # The database users are stored so when the database users are cleaned up,
@@ -254,6 +270,7 @@ class FargateSpawner:
         jwt_token,
         mlflow_authorised_hosts,
         app_schema,
+        arangodb_credentials,
     ):
         try:
             pipeline_id = None
@@ -287,7 +304,7 @@ class FargateSpawner:
                     db_persistent_role=creds["db_persistent_role"],
                 )
 
-            for creds in arango_credentials:
+            for creds in arangodb_credentials:
                 ApplicationInstanceArangoUsers.objects.create(
                     application_instance=application_instance,
                     db_username=creds["db_user"],
@@ -296,6 +313,8 @@ class FargateSpawner:
             database_env = _creds_to_env_vars(credentials)
 
             schema_env = {"APP_SCHEMA": app_schema}
+
+            arangodb_env = _arangodb_creds_to_env_vars(arangodb_credentials)
 
             user_efs_access_point_id = (
                 user.profile.home_directory_efs_access_point_id
@@ -406,7 +425,7 @@ class FargateSpawner:
                         cpu,
                         memory,
                         cmd,
-                        {**s3_env, **database_env, **schema_env, **env, **mlflow_env},
+                        {**s3_env, **database_env, **schema_env, **env, **mlflow_env, **arangodb_env},
                         s3_sync,
                         platform_version,
                     )
