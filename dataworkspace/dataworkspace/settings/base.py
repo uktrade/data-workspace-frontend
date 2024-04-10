@@ -269,6 +269,7 @@ CSP_CONNECT_SRC = [
     "*.google-analytics.com",
     "*.analytics.google.com",
     "*.googletagmanager.com",
+    "https://cke4.ckeditor.com",
 ]
 CSP_IMG_SRC = [
     APPLICATION_ROOT_DOMAIN,
