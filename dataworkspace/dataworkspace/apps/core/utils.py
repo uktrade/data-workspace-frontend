@@ -630,8 +630,9 @@ def new_private_database_credentials(
                     )
                 )
                 cur.execute(
-                    sql.SQL("ALTER USER {} WITH CONNECTION LIMIT 10;").format(
+                    sql.SQL("ALTER USER {} WITH CONNECTION LIMIT {};").format(
                         sql.Identifier(_db_user),
+                        sql.Literal(50 if db_user.endswith("_qs") else 10),
                     )
                 )
 
