@@ -203,7 +203,6 @@ def new_private_database_credentials(
                 for schema, table in tables
                 if (schema, table) in existing_tables_and_views_set
             ]
-            allowed_tables_that_exist_set = set(allowed_tables_that_exist)
 
             allowed_schemas_that_exist = without_duplicates_preserve_order(
                 schema for schema, _ in allowed_tables_that_exist
@@ -328,6 +327,22 @@ def new_private_database_credentials(
             )
             schema_roles_granted_to_user_role = [role for (role,) in cur.fetchall()]
 
+            # Find existing table permissions granted via table role membership
+            cur.execute(
+                sql.SQL(
+                    """
+                    SELECT
+                        roleid::regrole::text
+                    FROM
+                        pg_auth_members
+                    WHERE
+                        roleid::regrole::text LIKE 'table\\_select\\_%'
+                        AND member = {role}::regrole
+                    """
+                ).format(role=sql.Literal(db_role))
+            )
+            table_roles_granted_to_user_role = [role for (role,) in cur.fetchall()]
+
             # Existing granted team roles to permanent user role
             cur.execute(
                 sql.SQL(
@@ -348,21 +363,8 @@ def new_private_database_credentials(
             db_shared_roles_previously_granted = [role for (role,) in cur.fetchall()]
             db_shared_roles_previously_granted_set = set(db_shared_roles_previously_granted)
 
-            tables_to_revoke = [
-                (schema, table)
-                for (schema, table) in tables_with_existing_privs_set
-                if (schema, table) not in allowed_tables_that_exist_set
-                and (schema, table) in existing_db_tables
-            ]
+            tables_to_revoke = tables_with_existing_privs_set
             logger.info("Got %s tables to revoke for role %s", len(tables_to_revoke), db_role)
-
-            tables_to_grant = [
-                (schema, table)
-                for (schema, table) in allowed_tables_that_exist
-                if (schema, table) not in tables_with_existing_privs_set
-                and (schema, table) in existing_db_tables
-            ]
-            logger.info("Got %s tables to grant for role %s", len(tables_to_grant), db_role)
 
             # Create any missing roles for existing tables
             allowed_tables_that_exist_role_map = (
@@ -437,6 +439,47 @@ def new_private_database_credentials(
                 for (schema, table), role in allowed_tables_that_exist_role_map.items()
                 if (schema, table) not in tables_with_select
             ]
+
+            # Revoke/grant any table roles needed
+            table_roles_granted_to_user_role_set = set(table_roles_granted_to_user_role)
+            allowed_table_roles_with_existing_tables_set = set(
+                allowed_tables_that_exist_role_map.values()
+            )
+            logger.info(
+                "Working out tables to revoke and grant based on existing and allowed schemas %s and corresponding roles %s",
+                table_roles_granted_to_user_role_set,
+                allowed_table_roles_with_existing_tables_set,
+            )
+            table_roles_to_revoke = [
+                role_name
+                for role_name in table_roles_granted_to_user_role_set
+                if role_name not in allowed_table_roles_with_existing_tables_set
+            ]
+            table_roles_to_grant = [
+                role_name
+                for role_name in allowed_tables_that_exist_role_map.values()
+                if role_name not in table_roles_granted_to_user_role_set
+            ]
+            logger.info("Revoking table roles %s from %s", table_roles_to_revoke, db_role)
+            if table_roles_to_revoke:
+                cur.execute(
+                    sql.SQL("REVOKE {} FROM {};").format(
+                        sql.SQL(",").join(
+                            sql.Identifier(table_role) for table_role in table_roles_to_revoke
+                        ),
+                        sql.Identifier(db_role),
+                    )
+                )
+            logger.info("Granting table roles %s to %s", table_roles_to_grant, db_role)
+            if table_roles_to_grant:
+                cur.execute(
+                    sql.SQL("GRANT {} TO {};").format(
+                        sql.SQL(",").join(
+                            sql.Identifier(table_role) for table_role in table_roles_to_grant
+                        ),
+                        sql.Identifier(db_role),
+                    )
+                )
 
             # Make sure that that privileges granted directly to the user's role, which was done in
             # previous versions, are removed
@@ -746,22 +789,6 @@ def new_private_database_credentials(
                 )
 
             logger.info(
-                "Granting SELECT ON %s %s from %s",
-                database_memorable_name,
-                tables_to_grant,
-                db_role,
-            )
-            if tables_to_grant:
-                cur.execute(
-                    sql.SQL("GRANT SELECT ON {} TO {};").format(
-                        sql.SQL(",").join(
-                            [sql.Identifier(schema, table) for schema, table in tables_to_grant]
-                        ),
-                        sql.Identifier(db_role),
-                    )
-                )
-
-            logger.info(
                 "Revoking %s from %s",
                 db_shared_roles_to_revoke,
                 db_role,
@@ -837,7 +864,7 @@ def new_private_database_credentials(
                 )
             )
 
-        if tables_to_revoke or tables_to_grant:
+        if tables_to_revoke:
             delete_cache_for_db_role(db_role)
 
         logger.info(
