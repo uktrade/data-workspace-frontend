@@ -1,3 +1,4 @@
+import waffle
 from botocore.exceptions import ClientError
 from django import forms
 from django.conf import settings
@@ -9,6 +10,7 @@ from dataworkspace.apps.core.utils import (
     get_all_schemas,
     get_postgres_datatype_choices,
     get_user_s3_prefixes,
+    table_exists,
 )
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
@@ -43,6 +45,15 @@ class CreateTableForm(GOVUKDesignSystemForm):
         ],
     )
     force_overwrite = forms.BooleanField(required=False, widget=forms.HiddenInput())
+    table_exists_action = GOVUKDesignSystemChoiceField(
+        required=False,
+        choices=(
+            ("overwrite", "Overwrite the existing table"),
+            ("append", "Append records to the existing table"),
+        ),
+        label="Action to take",
+        widget=GOVUKDesignSystemSelectWidget(label_is_heading=False),
+    )
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
@@ -71,6 +82,25 @@ class CreateTableForm(GOVUKDesignSystemForm):
             raise ValidationError("This file does not exist in S3")
 
         return path
+
+    def clean(self):
+        # If incremental import support is enabled and the table already exists, prompt the user
+        # to determine if they want to overwrite or append to the existing table
+        table_name = self.cleaned_data.get("table_name")
+        if waffle.switch_is_active(settings.INCREMENTAL_S3_IMPORT_PIPELINE_FLAG) and table_name:
+            if (
+                table_exists(
+                    settings.EXPLORER_DEFAULT_CONNECTION, self.cleaned_data["schema"], table_name
+                )
+                and not self.cleaned_data.get("force_overwrite")
+                and not self.cleaned_data.get("table_exists_action")
+            ):
+                self.add_error(
+                    "table_name",
+                    ValidationError("This table already exists", code="duplicate-table"),
+                )
+
+        return super().clean()
 
 
 class CreateTableSchemaForm(GOVUKDesignSystemForm):
@@ -120,6 +150,7 @@ class CreateTableDataTypesForm(CreateTableForm):
         if not self.column_definitions:
             raise ValueError("Definitions for at least one column must be provided")
         super().__init__(*args, **kwargs)
+        self.fields["table_exists_action"].widget = forms.HiddenInput()
 
         for col_def in self.column_definitions:
             self.fields[col_def["column_name"]] = GOVUKDesignSystemChoiceField(

@@ -26,6 +26,7 @@ from dataworkspace.apps.core.utils import (
     copy_file_to_uploads_bucket,
     create_new_schema,
     get_all_schemas,
+    get_data_flow_import_pipeline_name,
     get_random_data_sample,
     get_s3_prefix,
     get_team_prefixes,
@@ -226,6 +227,7 @@ class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, ValidateSchem
                     "schema": schema,
                     "team": self.request.GET.get("team"),
                     "table_name": self.request.GET.get("table_name"),
+                    "force_overwrite": "overwrite" in self.request.GET,
                 }
             )
         return initial
@@ -240,6 +242,7 @@ class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, ValidateSchem
             "path": form.cleaned_data["path"],
             "schema": form.cleaned_data["schema"],
             "table_name": form.cleaned_data["table_name"],
+            "overwrite": form.cleaned_data["force_overwrite"],
         }
         return HttpResponseRedirect(
             f'{reverse("your-files:create-table-confirm-data-types")}?{urlencode(params)}'
@@ -254,6 +257,24 @@ class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, ValidateSchem
                 f'{reverse("your-files:create-table-failed")}?'
                 f'filename={form.data["path"].split("/")[-1]}'
             )
+
+        # If table name validation failed due to a duplicate table in the db confirm overwrite
+        if (
+            not form.cleaned_data["force_overwrite"]
+            and errors.get("table_name")
+            and errors["table_name"][0].code == "duplicate-table"
+        ):
+            params = {
+                "path": form.cleaned_data["path"],
+                "table_name": form.data["table_name"],
+                "schema": form.cleaned_data["schema"],
+                "overwrite": form.cleaned_data["force_overwrite"],
+            }
+            return HttpResponseRedirect(
+                f'{reverse("your-files:create-table-table-exists")}?{urlencode(params)}'
+            )
+
+        # Otherwise just redisplay the form (likely an invalid table name)
         return super().form_invalid(form)
 
 
@@ -274,6 +295,8 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
                     "path": self.request.GET["path"],
                     "schema": self.request.GET["schema"],
                     "table_name": self.request.GET["table_name"],
+                    "force_overwrite": "overwrite" in self.request.GET,
+                    "table_exists_action": self.request.GET.get("table_exists_action"),
                 }
             )
         return initial
@@ -291,7 +314,6 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
         return kwargs
 
     def form_valid(self, form):
-        config = settings.DATAFLOW_API_CONFIG
         cleaned = form.cleaned_data
 
         file_info = get_s3_csv_file_info(cleaned["path"])
@@ -317,6 +339,13 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
             "column_definitions": file_info["column_definitions"],
             "encoding": file_info["encoding"],
         }
+        if waffle.switch_is_active(settings.INCREMENTAL_S3_IMPORT_PIPELINE_FLAG):
+            conf["incremental"] = (
+                not cleaned.get("force_overwrite", False)
+                and cleaned.get("table_exists_action") == "append"
+            )
+
+        logger.debug("Triggering pipeline %s", get_data_flow_import_pipeline_name())
         logger.debug(conf)
         if cleaned["schema"] not in self.all_schemas:
             conf["db_role"] = cleaned["schema"]
@@ -324,7 +353,7 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
         try:
             response = trigger_dataflow_dag(
                 conf,
-                config["DATAFLOW_S3_IMPORT_DAG"],
+                get_data_flow_import_pipeline_name(),
                 f'{cleaned["schema"]}-{cleaned["table_name"]}-{datetime.now().isoformat()}',
             )
         except HTTPError:
@@ -338,6 +367,11 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
             "table_name": cleaned["table_name"],
             "execution_date": response["execution_date"],
         }
+        if waffle.switch_is_active(settings.INCREMENTAL_S3_IMPORT_PIPELINE_FLAG):
+            return HttpResponseRedirect(
+                f'{reverse("your-files:create-table-appending")}?{urlencode(params)}'
+            )
+
         return HttpResponseRedirect(
             f'{reverse("your-files:create-table-validating")}?{urlencode(params)}'
         )
@@ -450,6 +484,30 @@ class CreateTableRenamingTableView(BaseCreateTableStepView):
         return context
 
 
+class CreateTableAppendingToTableView(BaseCreateTableStepView):
+    task_name = "sync"
+    next_step_url_name = "your-files:create-table-success"
+    step = 4
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data()
+        if waffle.switch_is_active(settings.INCREMENTAL_S3_IMPORT_PIPELINE_FLAG):
+            context.update(
+                {
+                    "title": "Appending to existing table",
+                    "info_text": "This is the last step, your table is almost ready.",
+                }
+            )
+        else:
+            context.update(
+                {
+                    "title": "Creating and inserting into your table",
+                    "info_text": "This is the last step, your table is almost ready.",
+                }
+            )
+        return context
+
+
 class CreateTableSuccessView(BaseCreateTableTemplateView):
     template_name = "your_files/create-table-success.html"
     step = 5
@@ -479,6 +537,41 @@ class CreateTableFailedView(RequiredParameterGetRequestMixin, TemplateView):
                 self.request.GET["execution_date"], self.request.GET["task_name"]
             )
         return context
+
+
+class CreateTableTableExists(RequiredParameterGetRequestMixin, ValidateSchemaMixin, FormView):
+    template_name = "your_files/create-table-table-exists.html"
+    required_parameters = ["path", "table_name"]
+    form_class = CreateTableForm
+
+    def get_initial(self):
+        initial = super().get_initial()
+        if self.request.method == "GET":
+            initial.update(
+                {
+                    "path": self.request.GET["path"],
+                    "schema": self.request.GET.get("schema"),
+                    "table_name": self.request.GET.get("table_name"),
+                    "force_overwrite": True,
+                },
+            )
+        return initial
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        params = {
+            "path": form.cleaned_data["path"],
+            "schema": form.cleaned_data["schema"],
+            "table_name": form.cleaned_data["table_name"],
+            "table_exists_action": form.cleaned_data.get("table_exists_action"),
+        }
+        return HttpResponseRedirect(
+            f'{reverse("your-files:create-table-confirm-data-types")}?{urlencode(params)}'
+        )
 
 
 class ValidateUserIsStaffMixin:

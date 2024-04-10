@@ -1,6 +1,7 @@
 import datetime
 import itertools
 import json
+import logging
 import random
 import re
 from contextlib import closing
@@ -31,7 +32,7 @@ from django.utils.encoding import force_str
 from django.views.decorators.http import require_GET
 from django.views.generic.edit import UpdateView
 from dataworkspace.apps.datasets.models import Pipeline
-from dataworkspace.apps.core.utils import USER_SCHEMA_STEM
+from dataworkspace.apps.core.utils import USER_SCHEMA_STEM, delete_cache_for_db_role
 from dataworkspace.apps.core.utils import db_role_schema_suffix_for_app
 from dataworkspace.datasets_db import extract_queried_tables_from_sql_query
 
@@ -93,6 +94,7 @@ from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.notify import decrypt_token, send_email
 from dataworkspace.zendesk import update_zendesk_ticket
 
+logger = logging.getLogger("app")
 TOOL_LOADING_MESSAGES = [
     {
         "title": "Principle 1 of the Data Protection Act 2018",
@@ -1309,6 +1311,14 @@ def visualisation_datasets_html_POST(request, gitlab_project):
                 )
         except DataSetApplicationTemplatePermission.DoesNotExist:
             pass
+
+    # Clear the cached perms for the app user on update
+    app_db_role = USER_SCHEMA_STEM + db_role_schema_suffix_for_app(application_template)
+    logger.info(
+        "table_perms: Deleting cached table permissions for app role %s",
+        app_db_role,
+    )
+    delete_cache_for_db_role(app_db_role)
 
     messages.success(request, "Saved datasets access")
 

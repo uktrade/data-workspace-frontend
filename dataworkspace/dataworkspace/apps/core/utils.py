@@ -19,6 +19,7 @@ from typing import Tuple
 from urllib.parse import unquote
 
 import boto3
+import waffle
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -354,9 +355,6 @@ def new_private_database_credentials(
                 and (schema, table) in existing_db_tables
             ]
             logger.info("Got %s tables to revoke for role %s", len(tables_to_revoke), db_role)
-            if tables_to_revoke:
-                tables_to_revoke_oid_map = tables_to_oid_map(cur, tables_to_revoke)
-                logger.info("tables_to_revoke_oid_map: %s", tables_to_revoke_oid_map)
 
             tables_to_grant = [
                 (schema, table)
@@ -365,9 +363,40 @@ def new_private_database_credentials(
                 and (schema, table) in existing_db_tables
             ]
             logger.info("Got %s tables to grant for role %s", len(tables_to_grant), db_role)
-            if tables_to_grant:
-                tables_to_grant_oid_map = tables_to_oid_map(cur, tables_to_grant)
-                logger.info("tables_to_grant_oid_map: %s", tables_to_grant_oid_map)
+
+            # Create any missing roles for existing tables
+            allowed_tables_that_exist_role_map = (
+                tables_select_role_map(cur, allowed_tables_that_exist)
+                if allowed_tables_that_exist
+                else {}
+            )
+            logger.info(
+                "allowed_tables_that_exist_role_map: %s", allowed_tables_that_exist_role_map
+            )
+            if allowed_tables_that_exist:
+                cur.execute(
+                    sql.SQL(
+                        """
+                        SELECT rolname
+                        FROM pg_roles
+                        WHERE rolname IN ({role_names})
+                        """
+                    ).format(
+                        role_names=sql.SQL(",").join(
+                            [
+                                sql.Literal(role_name)
+                                for role_name in allowed_tables_that_exist_role_map.values()
+                            ]
+                        )
+                    )
+                )
+                table_roles_that_exist = set(role_name for role_name, in cur.fetchall())
+                table_roles_that_dont_exist = (
+                    set(allowed_tables_that_exist_role_map.values()) - table_roles_that_exist
+                )
+                for role_name in table_roles_that_dont_exist:
+                    logger.info("Creating table usage role %s", role_name)
+                    ensure_db_role(cur, role_name)
 
             # Make sure that that privileges granted directly to the user's role, which was done in
             # previous versions, are removed
@@ -629,8 +658,9 @@ def new_private_database_credentials(
                     )
                 )
                 cur.execute(
-                    sql.SQL("ALTER USER {} WITH CONNECTION LIMIT 10;").format(
+                    sql.SQL("ALTER USER {} WITH CONNECTION LIMIT {};").format(
                         sql.Identifier(_db_user),
+                        sql.Literal(50 if db_user.endswith("_qs") else 10),
                     )
                 )
 
@@ -1667,9 +1697,15 @@ def get_dataflow_task_log(dag, execution_date, task_id):
     return response.json().get("log")
 
 
+def get_data_flow_import_pipeline_name():
+    if waffle.switch_is_active(settings.INCREMENTAL_S3_IMPORT_PIPELINE_FLAG):
+        return settings.DATAFLOW_API_CONFIG["DATAFLOW_S3_IMPORT_INCREMENTAL_DAG"]
+    return settings.DATAFLOW_API_CONFIG["DATAFLOW_S3_IMPORT_DAG"]
+
+
 def get_task_error_message_template(execution_date, task_name):
     logs = get_dataflow_task_log(
-        settings.DATAFLOW_API_CONFIG["DATAFLOW_S3_IMPORT_DAG"],
+        get_data_flow_import_pipeline_name(),
         unquote(execution_date).replace(" ", "+"),
         task_name,
     )
@@ -1859,6 +1895,10 @@ def clear_table_permissions_cache_for_user(user):
         user.email,
         db_role,
     )
+    delete_cache_for_db_role(db_role)
+
+
+def delete_cache_for_db_role(db_role):
     cache.delete(table_permissions_cache_key(db_role))
 
 
@@ -1866,11 +1906,14 @@ def get_postgres_datatype_choices():
     return ((name, name.capitalize()) for name, _ in SCHEMA_POSTGRES_DATA_TYPE_MAP.items())
 
 
-def tables_to_oid_map(cur, tables):
+def tables_select_role_map(cur, tables):
+    """
+    Returns a map of table name -> oid based role name for that table
+    """
     cur.execute(
         sql.SQL(
             """
-        SELECT nspname ||'.'|| relname, pg_class.oid
+        SELECT nspname ||'.'|| relname, 'table_select_' || pg_class.oid
         FROM pg_class, pg_namespace
         WHERE relnamespace = pg_namespace.oid
         AND (nspname, relname) in ({table_names})
