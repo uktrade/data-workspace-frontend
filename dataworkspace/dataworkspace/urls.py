@@ -187,7 +187,7 @@ urlpatterns = [
     ),
     path(
         "arangodb/",
-        include('dataworkspace.apps.arangodb.urls'),
+        include("dataworkspace.apps.arangodb.urls"),
         # name="temporary-arangodb-page",
     ),
 ]

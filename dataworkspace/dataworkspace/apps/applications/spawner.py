@@ -425,7 +425,14 @@ class FargateSpawner:
                         cpu,
                         memory,
                         cmd,
-                        {**s3_env, **database_env, **schema_env, **env, **mlflow_env, **arangodb_env},
+                        {
+                            **s3_env,
+                            **database_env,
+                            **schema_env,
+                            **env,
+                            **mlflow_env,
+                            **arangodb_env,
+                        },
                         s3_sync,
                         platform_version,
                     )

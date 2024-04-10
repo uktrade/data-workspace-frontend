@@ -121,6 +121,8 @@ django-extensions==3.2.3
     # via -r requirements.in
 django-js-asset==2.0.0
     # via django-ckeditor
+django-maintenance-mode==0.21.1
+    # via -r requirements.in
 django-redis==5.4.0
     # via -r requirements.in
 django-staff-sso-client==4.2.1
@@ -231,6 +233,8 @@ python-dateutil==2.8.2
     #   zenpy
 python-dotenv==0.12.0
     # via -r requirements.in
+python-fsutil==0.14.1
+    # via django-maintenance-mode
 pytz==2021.3
     # via
     #   djangorestframework

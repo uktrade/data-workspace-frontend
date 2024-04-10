@@ -33,7 +33,6 @@ def TEMPORARY_print_credentials_to_url(request):
 
 
 def TEMPORARY_remove_temp_credentials_to_url(_):
-
     # Run user removal function
     _do_delete_unused_arangodb_users()
 
