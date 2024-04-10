@@ -837,6 +837,9 @@ def new_private_database_credentials(
                 )
             )
 
+        if tables_to_revoke or tables_to_grant:
+            delete_cache_for_db_role(db_role)
+
         logger.info(
             "Generated new credentials for permanent role %s in %s seconds",
             db_role,
