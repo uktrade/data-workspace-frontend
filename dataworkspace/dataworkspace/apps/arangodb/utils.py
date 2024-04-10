@@ -70,7 +70,6 @@ def new_private_arangodb_credentials(
 
         return {
             "memorable_name": database_memorable_name,
-            "db_name": database_data["NAME"],
             "db_host": database_data["HOST"],
             "db_port": database_data["PORT"],
             "db_user": db_user,
