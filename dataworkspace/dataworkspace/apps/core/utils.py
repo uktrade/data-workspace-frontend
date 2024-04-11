@@ -1202,26 +1202,16 @@ def tables_and_views_that_exist(cur, schema_tables):
         sql.SQL(
             """
         SELECT
-            schemaname AS schema, tablename AS name
+            nspname AS schema, relname AS name
         FROM
-            pg_catalog.pg_tables
-        WHERE (
-            (schemaname, tablename) IN ({existing})
-        )
-        UNION
-        SELECT
-            schemaname AS schema, viewname AS name
-        FROM
-            pg_catalog.pg_views
+            pg_class
+        INNER JOIN
+            pg_namespace ON pg_namespace.oid = pg_class.relnamespace
         WHERE
-            (schemaname, viewname) IN ({existing})
-        UNION
-        SELECT
-            schemaname AS schema, matviewname AS name
-        FROM
-            pg_catalog.pg_matviews
-        WHERE
-             (schemaname, matviewname) IN ({existing})
+            relkind in ('r', 'm', 'v', 'p')
+            AND (nspname, relname) IN ({existing})
+        ORDER BY
+            nspname, relname
     """
         ).format(
             existing=sql.SQL(",").join(
