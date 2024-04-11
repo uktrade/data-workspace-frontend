@@ -111,7 +111,7 @@ def db_role_schema_suffix_for_app(application_template):
 @contextmanager
 def get_cursor(database_memorable_name):
     with connections[database_memorable_name].cursor() as cursor:
-        cursor.execute(sql.SQL("SET statement_timeout = '30s'"))
+        cursor.execute(sql.SQL("SET statement_timeout = '120s'"))
         yield cursor
 
 
