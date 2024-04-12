@@ -1,30 +1,40 @@
-import { useEffect, useState } from 'react';
+// @ts-nocheck
+import { useEffect } from 'react';
 
 import FilesAndFolders from './components/FilesAndFolders';
-import fetchS3Data from './services';
-import type { AWSS3Config, File, Folder } from './types';
+import { useReducerWithThunk } from './hooks';
+import { fetchFilesReducer, state as yourFilesState } from './reducer';
+import { fetchAMessage, fetchDataAction } from './thunks';
+import type { AWSS3Config } from './types';
 
 const YourFiles = ({ config }: Record<'config', AWSS3Config>) => {
   const prefix = config.initialPrefix
     .replace(/^\//, '')
     .replace(/([^/]$)/, '$1/');
 
-  const [s3Files, setS3Files] = useState<File[]>([]);
-  const [s3Folders, setS3Folders] = useState<Folder[]>([]);
+  const [state, dispatch] = useReducerWithThunk(
+    fetchFilesReducer,
+    yourFilesState
+  );
 
   useEffect(() => {
-    const fetchData = async () => {
-      const s3Data = await fetchS3Data(prefix, config);
-      if (s3Data) {
-        setS3Files(s3Data.files);
-        setS3Folders(s3Data.folders);
-      }
-    };
-
-    fetchData();
+    dispatch(fetchDataAction(prefix, config));
   }, []);
 
-  return <FilesAndFolders folders={s3Folders} files={s3Files} />;
+  return state.loading ? (
+    <>Loading....</>
+  ) : (
+    <>
+      <button
+        onClick={() => {
+          dispatch(fetchDataAction(prefix, config));
+        }}
+      >
+        Reload
+      </button>
+      <FilesAndFolders folders={state.files} files={state.folders} />
+    </>
+  );
 };
 
 export default YourFiles;

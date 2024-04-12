@@ -39,3 +39,12 @@ export type FilesAndFolders = {
   files: File[];
   folders: Folder[];
 };
+
+export type ActionType = 'FETCH_FILES' | 'SAY_HELLO' | 'LOADING';
+
+export type Action = { type: ActionType };
+
+export type ActionWithPayload = {
+  type: ActionType;
+  payload: { files: File[]; folders: Folder[]; loading: boolean };
+};
