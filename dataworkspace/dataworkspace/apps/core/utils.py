@@ -794,6 +794,16 @@ def new_private_database_credentials(
                     )
                 )
 
+            # The master user has to be a member of the user's role for the ALTER DEFAULT PRIVILEGES
+            # changes below
+            if db_shared_roles_to_revoke or db_shared_roles_to_grant:
+                cur.execute(
+                    sql.SQL("GRANT {} TO {}").format(
+                        sql.Identifier(db_role),
+                        sql.Identifier(database_data["USER"]),
+                    )
+                )
+
             logger.info(
                 "Revoking %s from %s",
                 db_shared_roles_to_revoke,
@@ -861,6 +871,14 @@ def new_private_database_credentials(
                             sql.Identifier(db_shared_role),
                         )
                     )
+
+            if db_shared_roles_to_revoke or db_shared_roles_to_grant:
+                cur.execute(
+                    sql.SQL("REVOKE {} FROM {}").format(
+                        sql.Identifier(db_role),
+                        sql.Identifier(database_data["USER"]),
+                    )
+                )
 
         # Make it so by default, objects created by the user are owned by the role
         with get_cursor(database_memorable_name) as cur:
