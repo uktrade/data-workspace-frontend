@@ -212,40 +212,6 @@ def new_private_database_credentials(
             for db_role_name in db_shared_roles + [db_role]:
                 ensure_db_role(cur, db_role_name)
 
-            # On RDS, to do SET ROLE, you have to GRANT the role to the current master user. You also
-            # have to have (at least) USAGE on each user schema to call has_table_privilege. So,
-            # we make sure the master user has this before the user schema is even created. But, since
-            # this would involve a GRANT, and since GRANTs have to be wrapped in the lock, we check if
-            # we need to do it first
-            cur.execute(
-                sql.SQL(
-                    """
-                SELECT
-                    rolname
-                FROM
-                    pg_roles
-                WHERE
-                    (
-                        rolname SIMILAR TO '\\_user\\_[0-9a-f]{8}' OR
-                        rolname LIKE '\\_user\\_app\\_%' OR
-                        rolname LIKE '\\_team\\_%'
-                    )
-                    AND NOT pg_has_role(rolname, 'member');
-            """
-                )
-            )
-            missing_db_roles = [role for (role,) in cur.fetchall()]
-
-            if missing_db_roles:
-                cur.execute(
-                    sql.SQL("GRANT {} TO {};").format(
-                        sql.SQL(",").join(
-                            sql.Identifier(missing_db_role) for missing_db_role in missing_db_roles
-                        ),
-                        sql.Identifier(database_data["USER"]),
-                    )
-                )
-
         logging.info("Trying to get cached table permissions")
         tables_with_existing_privs_set = set(
             table_permissions_for_role(
@@ -510,16 +476,31 @@ def new_private_database_credentials(
                 ),
             )
 
-            # ... create schemas
-            for _db_role, _db_schema in list(zip(db_shared_roles, db_shared_schemas)) + [
+            # ... find non-catalogue schemas that don't yet exist
+            db_shared_schema_roles = list(zip(db_shared_roles, db_shared_schemas)) + [
                 (db_role, db_schema)
-            ]:
+            ]
+            if db_shared_schema_roles:
                 cur.execute(
-                    sql.SQL("CREATE SCHEMA IF NOT EXISTS {} AUTHORIZATION {};").format(
-                        sql.Identifier(_db_schema),
-                        sql.Identifier(_db_role),
+                    sql.SQL(
+                        """
+                        SELECT nspname FROM pg_namespace WHERE nspname IN ({schemas})
+                    """
+                    ).format(
+                        schemas=sql.SQL(",").join(
+                            sql.Literal(_db_schema)
+                            for (_db_role, _db_schema) in db_shared_schema_roles
+                        ),
                     )
                 )
+                db_shared_schemas_that_exist = set(schema for schema, in cur.fetchall())
+            else:
+                db_shared_schemas_that_exist = set()
+            db_shared_schemas_role_schemas_to_create = [
+                (_db_role, _db_schema)
+                for (_db_role, _db_schema) in db_shared_schema_roles
+                if _db_schema not in db_shared_schemas_that_exist
+            ]
 
             # Ensure we have a DB connection role
             cur.execute(
@@ -687,7 +668,31 @@ def new_private_database_credentials(
         # - GRANT/REVOKEs on the same database object
         # - ALTER USER ... SET
         # Either can result in "tuple concurrentl updated" errors. So we lock.
+        #
+        # We also lock when we need to temporarily grant and revoke roles to the master user, so
+        # we never get into a race condition where just after GRANT another client REVOKEs
+        # (We need to GRANT roles to the master user to create schemas with the right ownership)
         with get_cursor(database_memorable_name) as cur, transaction_and_lock(cur, GLOBAL_LOCK_ID):
+            for _db_role, _db_schema in db_shared_schemas_role_schemas_to_create:
+                cur.execute(
+                    sql.SQL("GRANT {} TO {}").format(
+                        sql.Identifier(_db_role),
+                        sql.Identifier(database_data["USER"]),
+                    )
+                )
+                cur.execute(
+                    sql.SQL("CREATE SCHEMA IF NOT EXISTS {} AUTHORIZATION {};").format(
+                        sql.Identifier(_db_schema),
+                        sql.Identifier(_db_role),
+                    )
+                )
+                cur.execute(
+                    sql.SQL("REVOKE {} FROM {}").format(
+                        sql.Identifier(_db_role),
+                        sql.Identifier(database_data["USER"]),
+                    )
+                )
+
             for (schema, table), table_role_name in table_role_names_without_select:
                 logger.info("Granting SELECT on %s to role %s", (schema, table), table_role_name)
                 cur.execute(
