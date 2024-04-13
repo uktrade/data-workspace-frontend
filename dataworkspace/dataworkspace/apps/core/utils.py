@@ -568,9 +568,9 @@ def new_private_database_credentials(
                         schemas=sql.SQL(",").join(sql.Literal(schema) for schema, _ in schema_oids)
                     )
                 )
-                schemas_with_usage = cur.fetchall()
+                schemas_with_usage = set(schema for schema, in cur.fetchall())
             else:
-                schemas_with_usage = []
+                schemas_with_usage = set()
             schemas_role_names_without_usage = [
                 (schema, role)
                 for schema, role in schema_role_names
