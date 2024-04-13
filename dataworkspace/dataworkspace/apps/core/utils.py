@@ -322,6 +322,7 @@ def new_private_database_credentials(
                         rolname LIKE '\\_team\\_%'
                         OR rolname LIKE '\\_user\\_app\\_%'
                     )
+                    AND rolname != {db_role} -- If loading an app, don't include its own role
                     AND pg_has_role({db_role}, rolname, 'member');
             """
                 ).format(db_role=sql.Literal(db_role))
