@@ -14,10 +14,12 @@ export class AddFolderPopup extends React.Component {
 
   componentDidMount() {
     document.addEventListener('keydown', this.escFunction, false);
+    document.body.classList.add('no-scroll');
   }
 
   componentWillUnmount() {
     document.removeEventListener('keydown', this.escFunction, false);
+    document.body.classList.remove('no-scroll');
   }
 
   escFunction = (event) => {
@@ -104,7 +106,7 @@ export class AddFolderPopup extends React.Component {
                       Folder name
                     </label>
                     <input
-                      autofocus="true"
+                      autoFocus={true}
                       className="govuk-input"
                       type="text"
                       value={this.state.value}
