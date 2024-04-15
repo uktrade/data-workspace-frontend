@@ -3,7 +3,9 @@ import type { ActionWithPayload, File, Folder } from './types';
 export const state = {
   loading: false,
   files: [],
-  folders: []
+  folders: [],
+  modalOpen: false,
+  uploadFolderView: false
 };
 
 export const fetchFilesReducer = (
@@ -26,6 +28,12 @@ export const fetchFilesReducer = (
         files: action?.payload?.files,
         folders: action?.payload?.folders,
         loading: action.payload.loading
+      };
+    case 'UPLOAD_FOLDERS_MODAL':
+      return {
+        ...state,
+        modalOpen: true,
+        uploadFolderView: true
       };
     default:
       return state;

@@ -1,10 +1,11 @@
 // @ts-nocheck
 import { useEffect } from 'react';
 
+import { UPLOAD_FOLDERS_MODAL } from './actions';
 import FilesAndFolders from './components/FilesAndFolders';
 import { useReducerWithThunk } from './hooks';
 import { fetchFilesReducer, state as yourFilesState } from './reducer';
-import { fetchAMessage, fetchDataAction } from './thunks';
+import { fetchDataAction } from './thunks';
 import type { AWSS3Config } from './types';
 
 const YourFiles = ({ config }: Record<'config', AWSS3Config>) => {
@@ -27,12 +28,14 @@ const YourFiles = ({ config }: Record<'config', AWSS3Config>) => {
     <>
       <button
         onClick={() => {
-          dispatch(fetchDataAction(prefix, config));
+          dispatch({ type: UPLOAD_FOLDERS_MODAL });
         }}
       >
-        Reload
+        Upload folders
       </button>
+
       <FilesAndFolders folders={state.files} files={state.folders} />
+      <pre>{JSON.stringify(state, null, 2)}</pre>
     </>
   );
 };

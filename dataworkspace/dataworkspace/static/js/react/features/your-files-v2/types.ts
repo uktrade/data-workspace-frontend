@@ -40,7 +40,11 @@ export type FilesAndFolders = {
   folders: Folder[];
 };
 
-export type ActionType = 'FETCH_FILES' | 'SAY_HELLO' | 'LOADING';
+export type ActionType =
+  | 'FETCH_FILES'
+  | 'SAY_HELLO'
+  | 'LOADING'
+  | 'UPLOAD_FOLDERS_MODAL';
 
 export type Action = { type: ActionType };
 
