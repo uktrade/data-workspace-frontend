@@ -206,7 +206,7 @@ export class UploadFilesPopup extends React.Component {
               <div className="modal-contents">
                 <div className="modal-body">
                   <div className="col-md-18">
-                    <div className="panel-body">
+                    <div className="panel-body upload-files__table-container">
                       <table
                         className="govuk-table"
                         style={{ tableLayout: 'fixed' }}

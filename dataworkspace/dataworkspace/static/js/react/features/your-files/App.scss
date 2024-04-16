@@ -380,3 +380,31 @@
     box-shadow: 0 0 0 5px #ffbf47;
   }
 }
+
+.upload-files__table-container{
+  max-height: 275px;
+  overflow: scroll;
+  margin-bottom: 10px;
+  table {
+ border-collapse: separate;
+   position: relative;
+    th {
+      position: sticky;
+        top: 0;
+        background-color: white;
+    }
+  }
+}
+
+.upload-files__table-container::-webkit-scrollbar {
+    -webkit-appearance: none;
+}
+
+.upload-files__table-container::-webkit-scrollbar:vertical{
+    width: 10px;
+  }
+.upload-files__table-container::-webkit-scrollbar-thumb {
+    border-radius: 8px;
+    border: 2px solid white;
+    background-color: rgba(0, 0, 0, .5);
+}
