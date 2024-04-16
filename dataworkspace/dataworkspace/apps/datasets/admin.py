@@ -906,7 +906,11 @@ class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStamp
     inlines = [VisualisationLinkInline]
 
     class Media:
-        js = ("js/min/django_better_admin_arrayfield.min.js", "admin/js/jquery.init.js", "data-workspace-admin.js")
+        js = (
+            "js/min/django_better_admin_arrayfield.min.js",
+            "admin/js/jquery.init.js",
+            "data-workspace-admin.js",
+        )
         css = {
             "all": (
                 "css/min/django_better_admin_arrayfield.min.css",
