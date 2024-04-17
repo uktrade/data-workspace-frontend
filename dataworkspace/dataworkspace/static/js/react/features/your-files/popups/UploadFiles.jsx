@@ -32,8 +32,8 @@ function UploadHeaderRow() {
 function UploadFileRow(props) {
   return (
     <tr className="govuk-table__row">
-      <td className="govuk-table__cell">{props.file.relativePath}</td>
-      <td className="govuk-table__cell">{props.file.type}</td>
+      <td className="govuk-table__cell govuk-table__cell--word-wrapper">{props.file.relativePath}</td>
+      <td className="govuk-table__cell govuk-table__cell--word-wrapper">{props.file.type}</td>
       <td className="govuk-table__cell govuk-table__cell--numeric">
         {bytesToSize(props.file.size)}
       </td>
