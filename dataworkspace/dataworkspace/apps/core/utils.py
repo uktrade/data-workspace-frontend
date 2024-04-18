@@ -1057,6 +1057,7 @@ def source_tables_for_user(user):
         "dataset__id",
         "dataset__name",
         "dataset__user_access_type",
+        "dataset__published",
     )
     req_authorization_tables = SourceTable.objects.filter(
         dataset__user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
@@ -1071,6 +1072,7 @@ def source_tables_for_user(user):
         "dataset__id",
         "dataset__name",
         "dataset__user_access_type",
+        "dataset__published",
     )
     automatically_authorized_tables = SourceTable.objects.filter(
         dataset__deleted=False,
@@ -1084,6 +1086,7 @@ def source_tables_for_user(user):
         "dataset__id",
         "dataset__name",
         "dataset__user_access_type",
+        "dataset__published",
     )
     source_tables = [
         {
@@ -1094,6 +1097,7 @@ def source_tables_for_user(user):
                 "id": x["dataset__id"],
                 "name": x["dataset__name"],
                 "user_access_type": x["dataset__user_access_type"],
+                "published": x["dataset__published"],
             },
         }
         for x in req_authentication_tables.union(
@@ -1109,12 +1113,13 @@ def source_tables_for_user(user):
                 "id": x["uuid"],
                 "name": x["name"],
                 "user_access_type": UserAccessType.REQUIRES_AUTHENTICATION,
+                "published": x["published"],
             },
         }
         for x in ReferenceDataset.objects.live()
         .filter(deleted=False, **{"published": True} if not user.is_superuser else {})
         .exclude(external_database=None)
-        .values("external_database__memorable_name", "table_name", "uuid", "name")
+        .values("external_database__memorable_name", "table_name", "uuid", "name", "published")
     ]
     return source_tables + reference_dataset_tables
 
@@ -1147,6 +1152,7 @@ def source_tables_for_app(application_template):
                 "id": x.dataset.id,
                 "name": x.dataset.name,
                 "user_access_type": x.dataset.user_access_type,
+                "published": x.dataset.published,
             },
         }
         for x in req_authentication_tables.union(req_authorization_tables)
@@ -1160,6 +1166,7 @@ def source_tables_for_app(application_template):
                 "id": x.uuid,
                 "name": x.name,
                 "user_access_type": UserAccessType.REQUIRES_AUTHENTICATION,
+                "published": x.published,
             },
         }
         for x in ReferenceDataset.objects.live()
