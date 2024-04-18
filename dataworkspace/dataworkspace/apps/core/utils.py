@@ -200,7 +200,7 @@ def new_private_database_credentials(
 
             allowed_tables_that_exist = [
                 (schema, table)
-                for schema, table in tables
+                for schema, table, _ in tables
                 if (schema, table) in existing_tables_and_views_set
             ]
 
@@ -906,9 +906,25 @@ def new_private_database_credentials(
             "db_password": db_password,
         }
 
+    public_access_types = (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+
+    def is_public_published(dataset):
+        return dataset["user_access_type"] in public_access_types and dataset["published"]
+
+    def is_public_unpublished(dataset):
+        return dataset["user_access_type"] in public_access_types and not dataset["published"]
+
     database_to_tables = {
         database_memorable_name: [
-            (source_table["schema"], source_table["table"])
+            (
+                source_table["schema"],
+                source_table["table"],
+                "table_select_public_published"
+                if is_public_published(source_table["dataset"])
+                else "table_select_public_unpublished"
+                if is_public_unpublished(source_table["dataset"])
+                else None,
+            )
             for source_table in source_tables_for_database
         ]
         for database_memorable_name, source_tables_for_database in itertools.groupby(
@@ -1254,7 +1270,7 @@ def tables_and_views_that_exist(cur, schema_tables):
                         + sql.Literal(table)
                         + sql.SQL(")")
                     )
-                    for (schema, table) in schema_tables
+                    for (schema, table, _) in schema_tables
                 ]
             )
         )
