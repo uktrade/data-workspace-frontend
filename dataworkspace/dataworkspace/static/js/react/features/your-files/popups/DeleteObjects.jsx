@@ -65,10 +65,12 @@ export class DeleteObjectsPopup extends React.Component {
 
   componentDidMount() {
     document.addEventListener('keydown', this.escFunction, false);
+    document.body.classList.add('no-scroll');
   }
 
   componentWillUnmount() {
     document.removeEventListener('keydown', this.escFunction, false);
+    document.body.classList.remove('no-scroll');
   }
 
   escFunction = (event) => {
@@ -322,7 +324,7 @@ export class DeleteObjectsPopup extends React.Component {
                 <div className="modal-footer govuk-button-group">
                   {!this.state.finished ? (
                     <button
-                      autofocus="true"
+                      autoFocus={true}
                       id="trash-btn-delete"
                       type="button"
                       onClick={() => this.onDeleteClick()}

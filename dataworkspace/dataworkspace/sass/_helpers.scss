@@ -8,3 +8,9 @@
 .background-blue {
   background-color: govuk-colour("blue");
 }
+
+.no-scroll {
+  overflow: hidden;
+  position: relative;
+  height: 100vh;
+}
