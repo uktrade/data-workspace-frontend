@@ -14,7 +14,7 @@ function HeaderMessage() {
         automatically to the bigdata folder. The upload location is in the table
         below.{' '}
         <a href="https://data-services-help.trade.gov.uk/data-workspace/how-to/see-tools-specific-guidance/your-files/uploading-files-to-your-files/">
-          Find out more about storing files in Your Files
+          Find out more about storing files in Your Files.
         </a>
       </strong>
     </p>
@@ -47,8 +47,12 @@ function UploadHeaderRow() {
 function UploadFileRow(props) {
   return (
     <tr className="govuk-table__row">
-      <td className="govuk-table__cell govuk-table__cell--word-wrapper">{props.file.relativePath}</td>
-      <td className="govuk-table__cell govuk-table__cell--word-wrapper">{props.file.type}</td>
+      <td className="govuk-table__cell govuk-table__cell--word-wrapper">
+        {props.file.relativePath}
+      </td>
+      <td className="govuk-table__cell govuk-table__cell--word-wrapper">
+        {props.file.type}
+      </td>
       <td className="govuk-table__cell govuk-table__cell--numeric">
         {bytesToSize(props.file.size)}
       </td>
