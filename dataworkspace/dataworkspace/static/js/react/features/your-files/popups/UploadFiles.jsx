@@ -6,6 +6,21 @@ import { fileQueue } from '../utils';
 import { UploadIcon } from '../icons/upload';
 import Modal from './Modal';
 
+function HeaderMessage() {
+  return (
+    <p className="govuk-body">
+      <strong>
+        Unless you are in a team folder, files over 5GB are uploaded
+        automatically to the bigdata folder. The upload location is in the table
+        below.{' '}
+        <a href="https://data-services-help.trade.gov.uk/data-workspace/how-to/see-tools-specific-guidance/your-files/uploading-files-to-your-files/">
+          Find out more about storing files in Your Files
+        </a>
+      </strong>
+    </p>
+  );
+}
+
 function UploadHeaderRow() {
   return (
     <tr className="govuk-table__row">
@@ -208,6 +223,7 @@ export class UploadFilesPopup extends React.Component {
               <div className="modal-contents">
                 <div className="modal-body">
                   <div className="col-md-18">
+                    <HeaderMessage />
                     <div className="panel-body upload-files__table-container">
                       <table
                         className="govuk-table"
