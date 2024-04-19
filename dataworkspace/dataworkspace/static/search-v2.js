@@ -2524,13 +2524,13 @@ function toggleBookmark(toggle, isBookmarked) {
     ? [
         "add",
         "/datasets/" + datasetId + "/set-bookmark",
-        `You have bookmarked ${datasetName}'`,
+        `You have bookmarked ${datasetName}`,
         true,
       ]
     : [
         "remove",
         "/datasets/" + datasetId + "/unset-bookmark",
-        `You have not bookmarked ${datasetName}'`,
+        `You have not bookmarked ${datasetName}`,
         false,
       ];
 
