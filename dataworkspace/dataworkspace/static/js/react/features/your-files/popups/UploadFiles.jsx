@@ -17,8 +17,9 @@ function HeaderMessage() {
           href="https://data-services-help.trade.gov.uk/data-workspace/how-to/see-tools-specific-guidance/your-files/uploading-files-to-your-files/"
           target="blank"
         >
-          Find out more about storing files in Your Files (opens in a new tab).
+          Find out more about storing files in Your Files (opens in new tab)
         </a>
+        .
       </strong>
     </p>
   );
