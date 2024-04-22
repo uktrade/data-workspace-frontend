@@ -267,18 +267,14 @@ export class UploadFilesPopup extends React.Component {
                       <span className="govuk-warning-text__assistive">
                         Warning
                       </span>
-                      It is your personal responsibility to protect and handle
-                      data appropriately. Data Workspace is not accredited for
-                      SECRET or TOP SECRET information. If you are unsure about
-                      the information security or data protection of this
-                      upload, seek advice on{' '}
-                      <a
-                        className="govuk-link"
-                        href="https://workspace.trade.gov.uk/working-at-dit/policies-and-guidance/guidance/information-classification-and-handling/"
-                      >
-                        information classification and data handling
+                      Do not store SECRET or TOP SECRET data on Data Workspace.
+                      You are responsible for the information security and data
+                      protection of this upload. You can get help from the{' '}
+                      <a href="mailto:security@businessandtrade.gov.uk">
+                        DBT Security Team
                       </a>{' '}
-                      or contact your line manager.
+                      if you are unsure about the Government Security
+                      Classification policy.
                     </strong>
                   </div>
                 </div>
