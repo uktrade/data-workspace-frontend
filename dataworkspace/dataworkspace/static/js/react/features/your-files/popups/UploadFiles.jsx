@@ -13,8 +13,11 @@ function HeaderMessage() {
         Unless you are in a team folder, files over 5GB are uploaded
         automatically to the bigdata folder. The upload location is in the table
         below.{' '}
-        <a href="https://data-services-help.trade.gov.uk/data-workspace/how-to/see-tools-specific-guidance/your-files/uploading-files-to-your-files/">
-          Find out more about storing files in Your Files.
+        <a
+          href="https://data-services-help.trade.gov.uk/data-workspace/how-to/see-tools-specific-guidance/your-files/uploading-files-to-your-files/"
+          target="blank"
+        >
+          Find out more about storing files in Your Files (opens in a new tab).
         </a>
       </strong>
     </p>
