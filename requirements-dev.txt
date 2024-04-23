@@ -182,9 +182,7 @@ django-csp==3.7
 django-csp-helpers==0.7.1
     # via -r requirements.txt
 django-db-connection-pool[postgresql]==1.2.4
-    # via
-    #   -r requirements.txt
-    #   django-db-connection-pool
+    # via -r requirements.txt
 django-debug-toolbar==3.2.1
     # via -r requirements-dev.in
 django-dynamic-models-readonly==0.1.1
@@ -197,7 +195,7 @@ django-js-asset==2.0.0
     # via
     #   -r requirements.txt
     #   django-ckeditor
-django-maintenance-mode==0.21.0
+django-maintenance-mode==0.21.1
     # via -r requirements.txt
 django-redis==5.4.0
     # via -r requirements.txt
@@ -220,9 +218,7 @@ ecs-logging==0.5.0
 elastic-apm==6.12.0
     # via -r requirements.txt
 elasticsearch[async]==7.11.0
-    # via
-    #   -r requirements.txt
-    #   elasticsearch
+    # via -r requirements.txt
 escapejson==1.0
     # via -r requirements.txt
 et-xmlfile==1.0.1
@@ -273,10 +269,11 @@ ijson==3.1.3
     # via
     #   -r requirements.txt
     #   tabulator
-importlib-metadata==4.11.3
+importlib-metadata==7.0.1
     # via
-    #   djlint
+    #   -r requirements.txt
     #   pyppeteer
+    #   python-arango
 iniconfig==1.1.1
     # via pytest
 ipdb==0.13.7
@@ -427,6 +424,7 @@ pyjwt==2.4.0
     # via
     #   -r requirements.txt
     #   notifications-python-client
+    #   python-arango
 pylint==2.11.1
     # via
     #   -r requirements-dev.in
@@ -461,6 +459,8 @@ pytest-mock==3.5.1
     # via -r requirements-dev.in
 pytest-timeout==1.4.2
     # via -r requirements-dev.in
+python-arango==7.5.8
+    # via -r requirements.txt
 python-dateutil==2.8.2
     # via
     #   -r requirements.txt
@@ -473,7 +473,7 @@ python-dateutil==2.8.2
     #   zenpy
 python-dotenv==0.12.0
     # via -r requirements.txt
-python-fsutil==0.13.0
+python-fsutil==0.14.1
     # via
     #   -r requirements.txt
     #   django-maintenance-mode
@@ -504,8 +504,10 @@ requests==2.31.0
     #   -r requirements.txt
     #   aws-requests-auth
     #   notifications-python-client
+    #   python-arango
     #   requests-mock
     #   requests-oauthlib
+    #   requests-toolbelt
     #   tableschema
     #   tabulator
     #   zenpy
@@ -515,6 +517,10 @@ requests-oauthlib==1.3.0
     # via
     #   -r requirements.txt
     #   django-staff-sso-client
+requests-toolbelt==1.0.0
+    # via
+    #   -r requirements.txt
+    #   python-arango
 rfc3986==1.4.0
     # via
     #   -r requirements.txt
@@ -634,6 +640,7 @@ urllib3[secure,socks]==1.26.18
     #   elastic-apm
     #   elasticsearch
     #   pyppeteer
+    #   python-arango
     #   requests
     #   selenium
     #   sentry-sdk
@@ -675,8 +682,10 @@ yarl==1.5.1
     #   aiohttp
 zenpy==2.0.21
     # via -r requirements.txt
-zipp==3.8.0
-    # via importlib-metadata
+zipp==3.17.0
+    # via
+    #   -r requirements.txt
+    #   importlib-metadata
 zope-event==4.5.0
     # via
     #   -r requirements.txt

@@ -1,9 +1,9 @@
 import secrets
 import string
-import redis
 
 from django.conf import settings
 from django.core.cache import cache
+import redis
 
 from arango import ArangoClient
 from dataworkspace.apps.arangodb.models import (
