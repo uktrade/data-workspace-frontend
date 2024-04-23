@@ -16,6 +16,7 @@ from dataworkspace.cel import celery_app
 def new_private_arangodb_credentials(
     source_collections,
     db_user,
+    datasets_database="Datasets",
 ):
     password_alphabet = string.ascii_letters + string.digits
 
@@ -60,16 +61,16 @@ def new_private_arangodb_credentials(
         )
 
         return {
-            "memorable_name": database_memorable_name,
-            "db_host": database_data["HOST"],
-            "db_port": database_data["PORT"],
-            "db_user": db_user,
-            "db_password": db_password,
+            "arangodb_name": database_memorable_name,
+            "arangodb_host": database_data["HOST"],
+            "arangodb_port": database_data["PORT"],
+            "arangodb_user": db_user,
+            "arangodb_password": db_password,
         }
 
     # Get Access Permissions by Table
     database_to_collections = {
-        "Datasets": [
+        datasets_database: [
             (collection["dataset"]["id"], collection["dataset"]["name"])
             for collection in source_collections
         ]

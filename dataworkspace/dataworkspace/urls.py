@@ -185,11 +185,6 @@ urlpatterns = [
         login_required(RestoreTableDAGTaskStatusView.as_view()),
         name="restore-table-task-status",
     ),
-    path(
-        "arangodb/",
-        include("dataworkspace.apps.arangodb.urls"),
-        # name="temporary-arangodb-page",
-    ),
 ]
 
 if settings.DEBUG:
