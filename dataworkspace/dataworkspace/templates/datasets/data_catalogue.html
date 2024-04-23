@@ -167,7 +167,7 @@
                 {% endif %}
                 <div style="float:right;">
                   <button
-                  type="button" class="bookmark-toggle" 
+                  type="button" class="bookmark-toggle {% if dataset.is_bookmarked %}is-bookmarked{% endif %}" 
                   data-dataset-bookmarked="{% if dataset.is_bookmarked %}true{% else %}false{% endif %}" 
                   data-dataset-id="{{ dataset.id }}" 
                   data-dataset-name="{{ dataset.name }}">
