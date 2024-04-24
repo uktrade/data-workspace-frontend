@@ -25,6 +25,7 @@ from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
     SourceTable,
 )
+from dataworkspace.apps.arangodb.models import SourceGraphCollection
 from dataworkspace.apps.explorer.utils import get_user_explorer_connection_settings
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import BaseAdminTestCase, get_http_sso_data
@@ -3835,6 +3836,56 @@ class TestDatasetAdminPytest:
 
         assert response.status_code == 200
         assert SourceTable.objects.count() == num_tables + 1
+
+    # @pytest.mark.django_db
+    # def test_source_graph_collections_data_grid_disabled(self, staff_client):
+    #     staff_client.post(reverse("admin:index"), follow=True)
+    #     dataset = factories.MasterDataSetFactory.create(
+    #         published=True, user_access_type=UserAccessType.REQUIRES_AUTHORIZATION
+    #     )
+    #     num_collections = SourceGraphCollection.objects.count()
+
+    #     user = get_user_model().objects.create(is_staff=True)
+
+    #     response = staff_client.post(
+    #         reverse("admin:datasets_masterdataset_change", args=(dataset.id,)),
+    #         {
+    #             "published": True,
+    #             "name": dataset.name,
+    #             "slug": dataset.slug,
+    #             "short_description": "test short description",
+    #             "description": LONG_DATASET_DESCRIPTION,
+    #             "information_asset_owner": user.id,
+    #             "information_asset_manager": user.id,
+    #             "enquiries_contact": user.id,
+    #             "type": dataset.type,
+    #             "user_access_type": dataset.user_access_type,
+    #             "sourcetable_set-TOTAL_FORMS": "0",
+    #             "sourcetable_set-INITIAL_FORMS": "0",
+    #             "sourcetable_set-MIN_NUM_FORMS": "0",
+    #             "sourcetable_set-MAX_NUM_FORMS": "1000",
+    #             "sourcegraphcollection_set-TOTAL_FORMS": "1",
+    #             "sourcegraphcollection_set-INITIAL_FORMS": "0",
+    #             "sourcegraphcollection_set-MIN_NUM_FORMS": "0",
+    #             "sourcegraphcollection_set-MAX_NUM_FORMS": "1000",
+    #             "visualisations-TOTAL_FORMS": "1",
+    #             "visualisations-INITIAL_FORMS": "0",
+    #             "visualisations-MIN_NUM_FORMS": "0",
+    #             "visualisations-MAX_NUM_FORMS": "1000",
+    #             "sourcegraphcollection_set-0-dataset": dataset.id,
+    #             "sourcegraphcollection_set-0-name": "reporting collection",
+    #             "sourcegraphcollection_set-0-collection": "testcollection",
+    #             "sourcegraphcollection_set-0-data_grid_enabled": False,
+    #             "charts-TOTAL_FORMS": "1",
+    #             "charts-INITIAL_FORMS": "0",
+    #             "charts-MIN_NUM_FORMS": "0",
+    #             "charts-MAX_NUM_FORMS": "1000",
+    #         },
+    #         follow=True,
+    #     )
+
+    #     assert response.status_code == 200
+    #     assert SourceGraphCollection.objects.count() == num_collections + 1
 
 
 class TestVisualisationCatalogueItemAdmin(BaseAdminTestCase):
