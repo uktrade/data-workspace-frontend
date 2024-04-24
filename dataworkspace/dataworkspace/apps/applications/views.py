@@ -198,9 +198,7 @@ def tools_html_view(request):
     return (
         tools_html_POST(request)
         if request.method == "POST"
-        else tools_html_GET(request)
-        if request.method == "GET"
-        else HttpResponse(status=405)
+        else tools_html_GET(request) if request.method == "GET" else HttpResponse(status=405)
     )
 
 
@@ -1137,9 +1135,11 @@ def visualisation_datasets_html_GET(request, gitlab_project):
     datasets = _datasets(request.user, application_template)
     pipeline_objects = _get_pipeline_objects_for_application(application_template)
     tables = [
-        extract_queried_tables_from_sql_query(pipeline_object.config["sql"])
-        if "sql" in pipeline_object.config
-        else []
+        (
+            extract_queried_tables_from_sql_query(pipeline_object.config["sql"])
+            if "sql" in pipeline_object.config
+            else []
+        )
         for pipeline_object in pipeline_objects
     ]
     pipelines = zip(pipeline_objects, tables)
@@ -1486,9 +1486,9 @@ def _set_published_on_catalogue_item(request, gitlab_project, catalogue_item, pu
             object_id=catalogue_item.pk,
             object_repr=force_str(catalogue_item),
             action_flag=CHANGE,
-            change_message=f"Published {catalogue_item}"
-            if publish
-            else f"Unpublished {catalogue_item}",
+            change_message=(
+                f"Published {catalogue_item}" if publish else f"Unpublished {catalogue_item}"
+            ),
         )
 
         return redirect(request.path)
@@ -1532,9 +1532,11 @@ def _set_published_on_visualisation(request, gitlab_project, application_templat
             object_id=application_template.pk,
             object_repr=force_str(application_template),
             action_flag=CHANGE,
-            change_message=f"Published {application_template}"
-            if publish
-            else f"Unpublished {application_template}",
+            change_message=(
+                f"Published {application_template}"
+                if publish
+                else f"Unpublished {application_template}"
+            ),
         )
 
         return redirect(request.path)

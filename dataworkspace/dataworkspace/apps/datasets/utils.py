@@ -78,9 +78,7 @@ def find_dataset(dataset_uuid, user, model_class=None, id_field_override=None):
         id_field = (
             id_field_override
             if id_field_override is not None
-            else "id"
-            if dataset_model != ReferenceDataset
-            else "uuid"
+            else "id" if dataset_model != ReferenceDataset else "uuid"
         )
         try:
             dataset = dataset_model.objects.live().get(**{id_field: dataset_uuid})
@@ -913,9 +911,11 @@ def store_reference_dataset_metadata():
 
                 columns = [
                     (
-                        field.relationship_name
-                        if field.data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
-                        else field.column_name,
+                        (
+                            field.relationship_name
+                            if field.data_type == ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
+                            else field.column_name
+                        ),
                         field.get_postgres_datatype(),
                     )
                     for field in reference_dataset.fields.all()
@@ -1028,9 +1028,11 @@ def send_notification_emails():
                 queryset = (
                     dataset.subscriptions.filter(notify_on_schema_change=True)
                     if schema_change
-                    else dataset.subscriptions.filter(notify_on_data_change=True)
-                    if data_change
-                    else DataSetSubscription.objects.none()
+                    else (
+                        dataset.subscriptions.filter(notify_on_data_change=True)
+                        if data_change
+                        else DataSetSubscription.objects.none()
+                    )
                 )
 
                 for subscription in queryset:

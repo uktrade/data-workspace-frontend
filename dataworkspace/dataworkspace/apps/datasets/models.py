@@ -1658,9 +1658,11 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         :return:
         """
         return {
-            f.name
-            if f.data_type != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
-            else f.relationship_name: f
+            (
+                f.name
+                if f.data_type != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
+                else f.relationship_name
+            ): f
             for f in self.fields.filter(data_type__in=ReferenceDatasetField.EDITABLE_DATA_TYPES)
         }
 
@@ -1771,9 +1773,11 @@ class ReferenceDataset(DeletableTimestampedUserModel):
 
         attrs = {
             **{
-                f.column_name
-                if f.data_type != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
-                else f.relationship_name: f.get_model_field()
+                (
+                    f.column_name
+                    if f.data_type != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
+                    else f.relationship_name
+                ): f.get_model_field()
                 for f in self.fields.all()
             },
             "__module__": "datasets",
@@ -2465,9 +2469,9 @@ class ReferenceDatasetField(TimeStampedUserModel):
         elif self.data_type == self.DATA_TYPE_TIME:
             field_data["widget"] = forms.DateInput(attrs={"type": "time"})
         elif self.data_type == self.DATA_TYPE_FOREIGN_KEY:
-            field_data[
-                "queryset"
-            ] = self.linked_reference_dataset_field.reference_dataset.get_records()
+            field_data["queryset"] = (
+                self.linked_reference_dataset_field.reference_dataset.get_records()
+            )
             field_data["label"] = self.relationship_name_for_record_forms
         field_data["required"] = self.is_identifier or self.required
         field = self._DATA_TYPE_FORM_FIELD_MAP.get(self.data_type)(**field_data)

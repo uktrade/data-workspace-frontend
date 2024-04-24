@@ -346,13 +346,19 @@ class ApplicationInstanceReportAdmin(admin.ModelAdmin):
         summary_without_applications = (
             group_by_user_missing_rows()
             if request.GET.get("group_by") == "user"
-            else group_by_application_missing_rows()
-            if request.GET.get("group_by") == "application"
-            else group_by_cpu_memory_missing_rows()
-            if request.GET.get("group_by") == "cpu_memory"
-            else group_by_user_cpu_memory_missing_rows()
-            if request.GET.get("group_by") == "user_and_cpu_memory"
-            else group_by_user_and_application_missing_rows()
+            else (
+                group_by_application_missing_rows()
+                if request.GET.get("group_by") == "application"
+                else (
+                    group_by_cpu_memory_missing_rows()
+                    if request.GET.get("group_by") == "cpu_memory"
+                    else (
+                        group_by_user_cpu_memory_missing_rows()
+                        if request.GET.get("group_by") == "user_and_cpu_memory"
+                        else group_by_user_and_application_missing_rows()
+                    )
+                )
+            )
         )
 
         response.context_data["summary"] = summary_with_applications + summary_without_applications

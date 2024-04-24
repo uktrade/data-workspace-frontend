@@ -110,15 +110,23 @@ def application_api_view(request, public_host):
     return (
         JsonResponse({"redirect_url": "/error_403"}, status=403)
         if not is_allowed
-        else application_api_GET(request, public_host)
-        if request.method == "GET"
-        else application_api_PUT(request, public_host)
-        if request.method == "PUT"
-        else application_api_PATCH(request, public_host)
-        if request.method == "PATCH"
-        else application_api_DELETE(request, public_host)
-        if request.method == "DELETE"
-        else JsonResponse({}, status=405)
+        else (
+            application_api_GET(request, public_host)
+            if request.method == "GET"
+            else (
+                application_api_PUT(request, public_host)
+                if request.method == "PUT"
+                else (
+                    application_api_PATCH(request, public_host)
+                    if request.method == "PATCH"
+                    else (
+                        application_api_DELETE(request, public_host)
+                        if request.method == "DELETE"
+                        else JsonResponse({}, status=405)
+                    )
+                )
+            )
+        )
     )
 
 
