@@ -637,6 +637,22 @@ def _do_delete_unused_datasets_users():
                         # deleted below
                         cur.execute(sql.SQL("DROP OWNED BY {};").format(sql.Identifier(usename)))
 
+                        # ... and then cleanup the roles on the master user (since there are
+                        # performance implications for the master user having a lot of roles,
+                        # specifically it can cause slowness on connect)
+                        cur.execute(
+                            sql.SQL("REVOKE {} FROM {};").format(
+                                sql.Identifier(usename),
+                                sql.Identifier(database_data["USER"]),
+                            )
+                        )
+                        cur.execute(
+                            sql.SQL("REVOKE {} FROM {};").format(
+                                sql.Identifier(db_persistent_role),
+                                sql.Identifier(database_data["USER"]),
+                            )
+                        )
+
                     cur.execute(sql.SQL("DROP USER {};").format(sql.Identifier(usename)))
                 except Exception:  # pylint: disable=broad-except
                     logger.exception(

@@ -6,6 +6,25 @@ import { fileQueue } from '../utils';
 import { UploadIcon } from '../icons/upload';
 import Modal from './Modal';
 
+function HeaderMessage() {
+  return (
+    <p className="govuk-body">
+      <strong>
+        Unless you are in a team folder, files over 5GB are uploaded
+        automatically to the bigdata folder. The upload location is in the table
+        below.{' '}
+        <a
+          href="https://data-services-help.trade.gov.uk/data-workspace/how-to/see-tools-specific-guidance/your-files/uploading-files-to-your-files/"
+          target="blank"
+        >
+          Find out more about storing files in Your Files (opens in new tab)
+        </a>
+        .
+      </strong>
+    </p>
+  );
+}
+
 function UploadHeaderRow() {
   return (
     <tr className="govuk-table__row">
@@ -32,8 +51,12 @@ function UploadHeaderRow() {
 function UploadFileRow(props) {
   return (
     <tr className="govuk-table__row">
-      <td className="govuk-table__cell">{props.file.relativePath}</td>
-      <td className="govuk-table__cell">{props.file.type}</td>
+      <td className="govuk-table__cell govuk-table__cell--word-wrapper">
+        {props.file.relativePath}
+      </td>
+      <td className="govuk-table__cell govuk-table__cell--word-wrapper">
+        {props.file.type}
+      </td>
       <td className="govuk-table__cell govuk-table__cell--numeric">
         {bytesToSize(props.file.size)}
       </td>
@@ -90,10 +113,12 @@ export class UploadFilesPopup extends React.Component {
 
   componentDidMount() {
     document.addEventListener('keydown', this.escFunction, false);
+    document.body.classList.add('no-scroll');
   }
 
   componentWillUnmount() {
     document.removeEventListener('keydown', this.escFunction, false);
+    document.body.classList.remove('no-scroll');
   }
 
   escFunction = (event) => {
@@ -206,7 +231,8 @@ export class UploadFilesPopup extends React.Component {
               <div className="modal-contents">
                 <div className="modal-body">
                   <div className="col-md-18">
-                    <div className="panel-body">
+                    <HeaderMessage />
+                    <div className="panel-body upload-files__table-container">
                       <table
                         className="govuk-table"
                         style={{ tableLayout: 'fixed' }}
@@ -241,18 +267,14 @@ export class UploadFilesPopup extends React.Component {
                       <span className="govuk-warning-text__assistive">
                         Warning
                       </span>
-                      It is your personal responsibility to protect and handle
-                      data appropriately. Data Workspace is not accredited for
-                      SECRET or TOP SECRET information. If you are unsure about
-                      the information security or data protection of this
-                      upload, seek advice on{' '}
-                      <a
-                        className="govuk-link"
-                        href="https://workspace.trade.gov.uk/working-at-dit/policies-and-guidance/guidance/information-classification-and-handling/"
-                      >
-                        information classification and data handling
+                      Do not store SECRET or TOP SECRET data on Data Workspace.
+                      You are responsible for the information security and data
+                      protection of this upload. You can get help from the{' '}
+                      <a href="mailto:security@businessandtrade.gov.uk">
+                        DBT Security Team
                       </a>{' '}
-                      or contact your line manager.
+                      if you are unsure about the Government Security
+                      Classification policy.
                     </strong>
                   </div>
                 </div>
