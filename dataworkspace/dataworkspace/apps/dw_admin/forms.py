@@ -170,9 +170,9 @@ class ReferenceDataFieldInlineForm(forms.ModelForm):
             # Disable the relationship selector if the data type is not foreign key
             elif self.fields["linked_reference_dataset_field"].initial is None:
                 self.fields["linked_reference_dataset_field"].disabled = True
-                self.fields[
-                    "linked_reference_dataset_field"
-                ].queryset = ReferenceDatasetField.objects.none()
+                self.fields["linked_reference_dataset_field"].queryset = (
+                    ReferenceDatasetField.objects.none()
+                )
             self.fields["column_name"].disabled = True
             self.fields["relationship_name"].disabled = True
 
@@ -445,9 +445,11 @@ class ReferenceDataRecordUploadForm(forms.Form):
         reader = csv.DictReader(chunk.decode("utf-8-sig") for chunk in self.cleaned_data["file"])
         csv_fields = [x.lower() for x in reader.fieldnames]
         for field in [
-            field.name.lower()
-            if field.data_type != field.DATA_TYPE_FOREIGN_KEY
-            else field.relationship_name_for_record_forms.lower()
+            (
+                field.name.lower()
+                if field.data_type != field.DATA_TYPE_FOREIGN_KEY
+                else field.relationship_name_for_record_forms.lower()
+            )
             for _, field in self.reference_dataset.editable_fields.items()
         ]:
             if field not in csv_fields:

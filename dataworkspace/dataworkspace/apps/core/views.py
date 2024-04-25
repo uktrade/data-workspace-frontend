@@ -358,9 +358,9 @@ class ServeS3UploadedFileView(View):
             file_object["Body"].iter_chunks(chunk_size=65536),
             content_type=file_object["ContentType"],
         )
-        response[
-            "Content-Disposition"
-        ] = f'attachment; filename="{os.path.split(path)[-1].rpartition("!")[0]}"'
+        response["Content-Disposition"] = (
+            f'attachment; filename="{os.path.split(path)[-1].rpartition("!")[0]}"'
+        )
         response["Content-Length"] = file_object["ContentLength"]
         return response
 

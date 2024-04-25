@@ -123,9 +123,9 @@ class AppUserEditForm(forms.ModelForm):
         self.fields["tools_access_role_arn"].initial = instance.profile.tools_access_role_arn
         self.fields["tools_access_role_arn"].widget.attrs["class"] = "vTextField"
 
-        self.fields[
-            "home_directory_efs_access_point_id"
-        ].initial = instance.profile.home_directory_efs_access_point_id
+        self.fields["home_directory_efs_access_point_id"].initial = (
+            instance.profile.home_directory_efs_access_point_id
+        )
         self.fields["home_directory_efs_access_point_id"].widget.attrs["class"] = "vTextField"
 
         self.fields["can_start_all_applications"].initial = instance.user_permissions.filter(
@@ -159,17 +159,17 @@ class AppUserEditForm(forms.ModelForm):
         ].initial = VisualisationCatalogueItem.objects.live().filter(
             visualisationuserpermission__user=instance
         )
-        self.fields[
-            "authorized_visualisations"
-        ].queryset = VisualisationCatalogueItem.objects.live().order_by("name", "id")
+        self.fields["authorized_visualisations"].queryset = (
+            VisualisationCatalogueItem.objects.live().order_by("name", "id")
+        )
         self.fields[
             "authorized_admin_visualisations"
         ].initial = VisualisationCatalogueItem.objects.live().filter(
             adminvisualisationuserpermission__user=instance
         )
-        self.fields[
-            "authorized_admin_visualisations"
-        ].queryset = VisualisationCatalogueItem.objects.live().order_by("name", "id")
+        self.fields["authorized_admin_visualisations"].queryset = (
+            VisualisationCatalogueItem.objects.live().order_by("name", "id")
+        )
 
 
 admin.site.unregister(get_user_model())

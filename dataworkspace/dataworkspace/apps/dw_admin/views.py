@@ -114,9 +114,11 @@ class ReferenceDatasetAdminEditView(ReferenceDataRecordMixin, FormView):
         reference_dataset = self._get_reference_dataset()
         record_model = reference_dataset.get_record_model_class()
         field_names = ["reference_dataset"] + [
-            field.column_name
-            if field.data_type != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
-            else field.relationship_name
+            (
+                field.column_name
+                if field.data_type != ReferenceDatasetField.DATA_TYPE_FOREIGN_KEY
+                else field.relationship_name
+            )
             for _, field in reference_dataset.editable_fields.items()
         ]
 
@@ -273,9 +275,11 @@ class ReferenceDatasetAdminUploadView(ReferenceDataRecordMixin, FormView):
         reference_dataset = self._get_reference_dataset()
         record_model_class = reference_dataset.get_record_model_class()
         field_map = {
-            field.name.lower()
-            if field.data_type != field.DATA_TYPE_FOREIGN_KEY
-            else field.relationship_name_for_record_forms.lower(): field
+            (
+                field.name.lower()
+                if field.data_type != field.DATA_TYPE_FOREIGN_KEY
+                else field.relationship_name_for_record_forms.lower()
+            ): field
             for _, field in reference_dataset.editable_fields.items()
         }
         self.upload_log = ReferenceDatasetUploadLog.objects.create(
@@ -307,9 +311,9 @@ class ReferenceDatasetAdminUploadView(ReferenceDataRecordMixin, FormView):
                         try:
                             link_id = linked_dataset.get_record_by_custom_id(value).id
                         except linked_dataset.get_record_model_class().DoesNotExist:
-                            errors[
-                                header_name
-                            ] = "Identifier {} does not exist in linked dataset".format(value)
+                            errors[header_name] = (
+                                "Identifier {} does not exist in linked dataset".format(value)
+                            )
                     form_data[field.relationship_name + "_id"] = link_id
                 else:
                     # Otherwise validate using the associated form field
@@ -592,9 +596,11 @@ class DataWorkspaceStatsView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
         ctx["current_stats"].append(
             {
                 "title": "Average DB perms query runtime",
-                "stat": f"{round(perms_query_runtimes.aggregate(Avg('stat'))['stat__avg'], 1)}s"
-                if perms_query_runtimes.exists()
-                else "N/A",
+                "stat": (
+                    f"{round(perms_query_runtimes.aggregate(Avg('stat'))['stat__avg'], 1)}s"
+                    if perms_query_runtimes.exists()
+                    else "N/A"
+                ),
                 "subtitle": "In the past 7 days",
                 "url": f"{reverse('admin:eventlog_systemstatlog_changelist')}?"
                 f"admin:type__exact={SystemStatLogEventType.PERMISSIONS_QUERY_RUNTIME}",

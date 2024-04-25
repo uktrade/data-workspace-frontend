@@ -204,13 +204,15 @@ class ProcessSpawner:
             return (
                 "RUNNING"
                 if not spawner_application_id_parsed and ten_seconds_ago < created_date
-                else "STOPPED"
-                if not spawner_application_id_parsed
-                else "RUNNING"
-                if not proxy_url and twenty_seconds_ago < created_date
-                else "STOPPED"
-                if not proxy_url
-                else process_status()
+                else (
+                    "STOPPED"
+                    if not spawner_application_id_parsed
+                    else (
+                        "RUNNING"
+                        if not proxy_url and twenty_seconds_ago < created_date
+                        else "STOPPED" if not proxy_url else process_status()
+                    )
+                )
             )
 
         except Exception:  # pylint: disable=broad-except
@@ -748,9 +750,7 @@ def _fargate_task_describe(cluster_name, arn):
     task = (
         described_tasks["tasks"][0]
         if "tasks" in described_tasks and described_tasks["tasks"]
-        else described_tasks["task"]
-        if "task" in described_tasks
-        else None
+        else described_tasks["task"] if "task" in described_tasks else None
     )
 
     return task

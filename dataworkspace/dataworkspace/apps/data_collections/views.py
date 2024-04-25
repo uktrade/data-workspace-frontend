@@ -326,9 +326,11 @@ def select_collection_for_membership(
 
             log_event(
                 request.user,
-                EventLog.TYPE_ADD_VISUALISATION_TO_COLLECTION
-                if dataset.type == DataSetType.VISUALISATION
-                else EventLog.TYPE_ADD_DATASET_TO_COLLECTION,
+                (
+                    EventLog.TYPE_ADD_VISUALISATION_TO_COLLECTION
+                    if dataset.type == DataSetType.VISUALISATION
+                    else EventLog.TYPE_ADD_DATASET_TO_COLLECTION
+                ),
                 related_object=user_collections.get(pk=form.cleaned_data["collection"]),
             )
 
@@ -344,13 +346,15 @@ def select_collection_for_membership(
         {
             "dataset": dataset,
             "form": form,
-            "collection_url": reverse(
-                "data_collections:collection-create-with-selected-dataset", args=(dataset.id,)
-            )
-            if membership_model_relationship_name == "dataset"
-            else reverse(
-                "data_collections:collection-create-with-selected-visualisation",
-                args=(dataset.id,),
+            "collection_url": (
+                reverse(
+                    "data_collections:collection-create-with-selected-dataset", args=(dataset.id,)
+                )
+                if membership_model_relationship_name == "dataset"
+                else reverse(
+                    "data_collections:collection-create-with-selected-visualisation",
+                    args=(dataset.id,),
+                )
             ),
         },
     )

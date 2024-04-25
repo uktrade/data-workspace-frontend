@@ -60,9 +60,11 @@ def process_dataset_authorized_users_change(
         log_permission_change(
             request_user,
             dataset,
-            EventLog.TYPE_SET_DATASET_USER_ACCESS_TYPE
-            if access_type_changed
-            else EventLog.TYPE_CHANGED_AUTHORIZED_EMAIL_DOMAIN,
+            (
+                EventLog.TYPE_SET_DATASET_USER_ACCESS_TYPE
+                if access_type_changed
+                else EventLog.TYPE_CHANGED_AUTHORIZED_EMAIL_DOMAIN
+            ),
             {"access_type": dataset.user_access_type},
             f"user_access_type set to {dataset.user_access_type}",
         )
@@ -139,9 +141,11 @@ def process_visualisation_catalogue_item_authorized_users_change(
         log_permission_change(
             request_user,
             visualisation_catalogue_item,
-            EventLog.TYPE_SET_DATASET_USER_ACCESS_TYPE
-            if access_type_changed
-            else EventLog.TYPE_CHANGED_AUTHORIZED_EMAIL_DOMAIN,
+            (
+                EventLog.TYPE_SET_DATASET_USER_ACCESS_TYPE
+                if access_type_changed
+                else EventLog.TYPE_CHANGED_AUTHORIZED_EMAIL_DOMAIN
+            ),
             {"access_type": visualisation_catalogue_item.user_access_type},
             f"user_access_type set to {visualisation_catalogue_item.user_access_type}",
         )
