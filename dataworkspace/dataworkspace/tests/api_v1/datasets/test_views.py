@@ -448,18 +448,18 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             "description": dataset.description or None,
             "published": dataset.published,
             "created_date": dataset.created_date.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "published_at": dataset.published_at.strftime("%Y-%m-%d")
-            if dataset.published_at
-            else None,
-            "information_asset_owner": dataset.information_asset_owner.id
-            if dataset.information_asset_owner
-            else None,
-            "information_asset_manager": dataset.information_asset_manager.id
-            if dataset.information_asset_manager
-            else None,
-            "enquiries_contact": dataset.enquiries_contact.id
-            if dataset.enquiries_contact
-            else None,
+            "published_at": (
+                dataset.published_at.strftime("%Y-%m-%d") if dataset.published_at else None
+            ),
+            "information_asset_owner": (
+                dataset.information_asset_owner.id if dataset.information_asset_owner else None
+            ),
+            "information_asset_manager": (
+                dataset.information_asset_manager.id if dataset.information_asset_manager else None
+            ),
+            "enquiries_contact": (
+                dataset.enquiries_contact.id if dataset.enquiries_contact else None
+            ),
             "is_draft": dataset.is_draft if dataset.type == DataSetType.REFERENCE else None,
             "dictionary_published": getattr(dataset, "dictionary_published", None),
             "licence": dataset.licence or None,
@@ -470,21 +470,23 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             "eligibility_criteria": list(eligibility_criteria) if eligibility_criteria else None,
             "request_approvers": list(request_approvers) if request_approvers else None,
             "catalogue_editors": data_catalogue_editors,
-            "source_tables": [
-                {"id": str(x.id), "name": x.name, "schema": x.schema, "table": x.table}
-                for x in dataset.sourcetable_set.all()
-            ]
-            if dataset.type == DataSetType.MASTER
-            else [],
+            "source_tables": (
+                [
+                    {"id": str(x.id), "name": x.name, "schema": x.schema, "table": x.table}
+                    for x in dataset.sourcetable_set.all()
+                ]
+                if dataset.type == DataSetType.MASTER
+                else []
+            ),
             "slug": dataset.slug,
             "licence_url": dataset.licence_url,
             "restrictions_on_usage": dataset.restrictions_on_usage,
-            "user_access_type": None
-            if isinstance(dataset, ReferenceDataset)
-            else str(dataset.user_access_type),
-            "authorized_email_domains": None
-            if isinstance(dataset, ReferenceDataset)
-            else dataset.authorized_email_domains,
+            "user_access_type": (
+                None if isinstance(dataset, ReferenceDataset) else str(dataset.user_access_type)
+            ),
+            "authorized_email_domains": (
+                None if isinstance(dataset, ReferenceDataset) else dataset.authorized_email_domains
+            ),
             "user_ids": userids,
             "quicksight_id": None,
             "security_classification_display": None,

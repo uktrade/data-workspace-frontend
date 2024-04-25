@@ -365,9 +365,11 @@ class VisualisationCatalogueItemFactory(factory.django.DjangoModelFactory):
     id = factory.LazyAttribute(lambda _: uuid.uuid4())
     visualisation_template = factory.SubFactory(VisualisationTemplateFactory)
     name = factory.LazyAttribute(
-        lambda o: o.visualisation_template.name
-        if o.visualisation_template
-        else factory.fuzzy.FuzzyText().fuzz()
+        lambda o: (
+            o.visualisation_template.name
+            if o.visualisation_template
+            else factory.fuzzy.FuzzyText().fuzz()
+        )
     )
     slug = factory.LazyAttribute(lambda o: o.name.lower())
     published = True

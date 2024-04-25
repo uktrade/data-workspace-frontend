@@ -950,9 +950,9 @@ async def nltk_mirror(logger, request, s3_context, s3_prefix):
         _, ext = os.path.splitext(package_original_url)
         new_path = f"/{s3_prefix}{package_id}-{package_checksum}{ext}"
 
-        package.attrib[
-            "url"
-        ] = f"https://{s3_context.bucket.host}/{s3_context.bucket.name}{new_path}"
+        package.attrib["url"] = (
+            f"https://{s3_context.bucket.host}/{s3_context.bucket.name}{new_path}"
+        )
 
         # If the file already exists, don't re-upload. Named including the
         # checksum deliberately so we can do this

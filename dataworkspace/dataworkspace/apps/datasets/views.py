@@ -1068,9 +1068,9 @@ class DatasetUsageHistoryView(View):
             "datasets/dataset_usage_history.html",
             context={
                 "dataset": dataset,
-                "event_description": "Viewed"
-                if dataset.type == DataSetType.VISUALISATION
-                else "Downloaded",
+                "event_description": (
+                    "Viewed" if dataset.type == DataSetType.VISUALISATION else "Downloaded"
+                ),
                 "rows": dataset.events.filter(
                     event_type__in=[
                         EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD,
@@ -1351,9 +1351,11 @@ class DataGridDataView(DetailView):
         records = self._get_rows(source, query, params)
         return JsonResponse(
             {
-                "rowcount": self._get_rows(source, rowcount_query, params)[0]
-                if request.GET.get("count")
-                else {"count": None},
+                "rowcount": (
+                    self._get_rows(source, rowcount_query, params)[0]
+                    if request.GET.get("count")
+                    else {"count": None}
+                ),
                 "download_limit": source.data_grid_download_limit,
                 "records": records,
             }
@@ -1480,9 +1482,9 @@ class DatasetEditView(EditBaseView, UpdateView):
 
     def get_initial(self):
         return {
-            "enquiries_contact": self.object.enquiries_contact.email
-            if self.object.enquiries_contact
-            else "",
+            "enquiries_contact": (
+                self.object.enquiries_contact.email if self.object.enquiries_contact else ""
+            ),
             "authorized_email_domains": ",".join(self.object.authorized_email_domains),
         }
 
@@ -1521,12 +1523,14 @@ class VisualisationCatalogueItemEditView(EditBaseView, UpdateView):
 
     def get_initial(self):
         return {
-            "enquiries_contact": self.object.enquiries_contact.email
-            if self.object.enquiries_contact
-            else "",
-            "secondary_enquiries_contact": self.object.secondary_enquiries_contact.email
-            if self.object.secondary_enquiries_contact
-            else "",
+            "enquiries_contact": (
+                self.object.enquiries_contact.email if self.object.enquiries_contact else ""
+            ),
+            "secondary_enquiries_contact": (
+                self.object.secondary_enquiries_contact.email
+                if self.object.secondary_enquiries_contact
+                else ""
+            ),
             "authorized_email_domains": ",".join(self.object.authorized_email_domains),
         }
 
@@ -1599,9 +1603,11 @@ class UserSearchFormView(EditBaseView, FormView):
         self.form = form
         search_query = self.request.POST["search"]
         self.request.session[
-            f"search-query--edit-dataset-permissions--{self.obj.pk}--{self.summary.id}"
-            if self.summary
-            else f"search-query--edit-dataset-permissions--{self.obj.pk}"
+            (
+                f"search-query--edit-dataset-permissions--{self.obj.pk}--{self.summary.id}"
+                if self.summary
+                else f"search-query--edit-dataset-permissions--{self.obj.pk}"
+            )
         ] = search_query
 
         return super().form_valid(form)
@@ -1610,9 +1616,11 @@ class UserSearchFormView(EditBaseView, FormView):
         initial = super().get_initial()
         try:
             initial["search"] = self.request.session[
-                f"search-query--edit-dataset-permissions--{self.obj.pk}--{self.summary.id}"
-                if self.summary
-                else f"search-query--edit-dataset-permissions--{self.obj.pk}"
+                (
+                    f"search-query--edit-dataset-permissions--{self.obj.pk}--{self.summary.id}"
+                    if self.summary
+                    else f"search-query--edit-dataset-permissions--{self.obj.pk}"
+                )
             ]
         except KeyError:
             pass
