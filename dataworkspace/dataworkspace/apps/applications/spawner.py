@@ -94,12 +94,10 @@ def spawn(
     )
 
     source_collections = source_graph_collections_for_user(user)
-    logger.info("TEMPORARY LOG: source_collections %s", source_collections)
     arangodb_credentials = new_private_arangodb_credentials(
         source_collections,
         db_user,
     )
-    logger.info("TEMPORARY LOG: arangodb_credentials %s", arangodb_credentials)
 
     mlflow_authorised_hosts, sub = (
         (
@@ -272,7 +270,6 @@ class FargateSpawner:
         arangodb_credentials,
     ):
         try:
-            logger.info("TEMPORARY LOG: Starting Fargate Spawner")
             pipeline_id = None
             task_arn = None
             options = json.loads(spawner_options)
@@ -305,20 +302,16 @@ class FargateSpawner:
                 )
 
             for creds in arangodb_credentials:
-                logger.info("TEMPORARY LOG: creds in arangodb_credentials %s", creds)
                 ApplicationInstanceArangoUsers.objects.create(
                     application_instance=application_instance,
-                    db_username=creds["db_user"],
+                    db_username=creds["arangodb_user"],
                 )
 
             database_env = _creds_to_env_vars(credentials)
-            logger.info("TEMPORARY LOG: database_env %s", database_env)
 
             schema_env = {"APP_SCHEMA": app_schema}
-            logger.info("TEMPORARY LOG: schema_env %s", schema_env)
 
             arangodb_env = _arangodb_creds_to_env_vars(arangodb_credentials)
-            logger.info("TEMPORARY LOG: arangodb_env %s", arangodb_env)
 
             user_efs_access_point_id = (
                 user.profile.home_directory_efs_access_point_id
@@ -419,7 +412,6 @@ class FargateSpawner:
                 # Sometimes there is an error assuming the new role: both IAM  and ECS are
                 # eventually consistent
                 try:
-                    logger.info("TEMPORARY LOG: Starting _fargate_task_run")
                     start_task_response = _fargate_task_run(
                         role_arn,
                         cluster_name,
@@ -441,7 +433,6 @@ class FargateSpawner:
                         s3_sync,
                         platform_version,
                     )
-                    logger.info("TEMPORARY LOG: Finishing _fargate_task_run")
                 except ClientError:
                     gevent.sleep(3)
                     if i == 9:
