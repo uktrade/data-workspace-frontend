@@ -159,7 +159,7 @@ greenlet==3.0.1
     #   sqlalchemy
 hawk-server-asyncio==0.0.13
     # via -r requirements.in
-idna==2.10
+idna==3.7
     # via
     #   requests
     #   yarl
