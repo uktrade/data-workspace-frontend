@@ -34,39 +34,48 @@ def new_private_arangodb_credentials(
         # Initialize the ArangoDB client.
         client = ArangoClient(hosts=f"http://{database_data['HOST']}:{database_data['PORT']}")
 
-        # Connect to "_system" database as root user.
-        sys_db = client.db("_system", username="root", password=database_data["PASSWORD"])
+        try:
+            # Connect to "_system" database as root user.
+            sys_db = client.db("_system", username="root", password=database_data["PASSWORD"])            
 
-        # Add new user credentials to Arango per collection for new private creds.
-        if not sys_db.has_user(db_user):
-            sys_db.create_user(
+            # Add new user credentials to Arango per collection for new private creds.
+            if not sys_db.has_user(db_user):
+                sys_db.create_user(
+                    username=db_user,
+                    password=db_password,
+                    active=True,
+                )
+
+            # Create a new database named database_memorable_name if it does not exist.
+            # TODO: Move to arango container start up.
+            if not sys_db.has_database(database_memorable_name):
+                sys_db.create_database(database_memorable_name)
+
+            # Update Database Permission
+            sys_db.update_permission(
                 username=db_user,
-                password=db_password,
-                active=True,
+                permission="ro",
+                database=database_memorable_name,
             )
 
-        # Update Database Permission
-        sys_db.update_permission(
-            username=db_user,
-            permission="ro",
-            database=database_memorable_name,
-        )
-
-        # Update Collection Permission
-        sys_db.update_permission(
-            username=db_user,
-            permission="ro",
-            database=database_memorable_name,
-            collection=collection,
-        )
-
-        return {
-            "arangodb_name": database_memorable_name,
-            "arangodb_host": database_data["HOST"],
-            "arangodb_port": database_data["PORT"],
-            "arangodb_user": db_user,
-            "arangodb_password": db_password,
-        }
+            # Update Collection Permission
+            sys_db.update_permission(
+                username=db_user,
+                permission="ro",
+                database=database_memorable_name,
+                collection=collection,
+            )
+            
+            return {
+                "arangodb_name": database_memorable_name,
+                "arangodb_host": database_data["HOST"],
+                "arangodb_port": database_data["PORT"],
+                "arangodb_user": db_user,
+                "arangodb_password": db_password,
+            }
+    
+        except:
+            return {}
 
     # Get Access Permissions by Table
     database_to_collections = {
