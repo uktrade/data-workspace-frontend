@@ -36,7 +36,7 @@ def new_private_arangodb_credentials(
 
         try:
             # Connect to "_system" database as root user.
-            sys_db = client.db("_system", username="root", password=database_data["PASSWORD"])            
+            sys_db = client.db("_system", username="root", password=database_data["PASSWORD"])
 
             # Add new user credentials to Arango per collection for new private creds.
             if not sys_db.has_user(db_user):
@@ -65,7 +65,7 @@ def new_private_arangodb_credentials(
                 database=database_memorable_name,
                 collection=collection,
             )
-            
+
             return {
                 "arangodb_name": database_memorable_name,
                 "arangodb_host": database_data["HOST"],
@@ -73,7 +73,7 @@ def new_private_arangodb_credentials(
                 "arangodb_user": db_user,
                 "arangodb_password": db_password,
             }
-    
+
         except:
             return {}
 
