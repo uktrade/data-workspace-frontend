@@ -49,6 +49,7 @@ from dataworkspace.apps.datasets.models import (
     ToolQueryAuditLog,
     DataSetSubscription,
     SourceTableFieldDefinition,
+    SourceGraphCollection,
 )
 from dataworkspace.apps.datasets.utils import get_dataset_table
 from dataworkspace.apps.datasets.permissions.utils import (
@@ -70,8 +71,9 @@ from dataworkspace.apps.dw_admin.forms import (
     VisualisationCatalogueItemForm,
     VisualisationLinkForm,
 )
-from dataworkspace.apps.arangodb.models import SourceGraphCollection
-from dataworkspace.apps.arangodb.forms import SourceGraphCollectionForm
+from dataworkspace.apps.arangodb.forms import (
+    SourceGraphCollectionForm,
+)
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 

@@ -1,10 +1,9 @@
 from django import forms
 from django.contrib import admin
 from dataworkspace.apps.arangodb.models import (
-    SourceGraphCollection,
     SourceGraphCollectionFieldDefinition,
 )
-from dataworkspace.apps.datasets.models import MasterDataset
+from dataworkspace.apps.datasets.models import MasterDataset, SourceGraphCollection
 
 
 class SourceGraphCollectionForm(forms.ModelForm):
@@ -16,24 +15,12 @@ class SourceGraphCollectionForm(forms.ModelForm):
             "name",
             "collection",
             "dataset_finder_opted_in",
-            "data_grid_enabled",
             "published",
         )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["dataset"].queryset = MasterDataset.objects.live()
-
-    def clean(self):
-        cleaned = self.cleaned_data
-        grid_enabled = cleaned.get("data_grid_enabled", False)
-
-        if grid_enabled:
-            raise forms.ValidationError(
-                {"data_grid_enabled": "Grid cannot be enabled for graph-type data"}
-            )
-
-        return cleaned
 
 
 class SourceGraphCollectionFieldDefinitionInline(admin.TabularInline):

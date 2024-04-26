@@ -1,5 +1,5 @@
 from django.contrib import admin
-from dataworkspace.apps.arangodb.models import (
+from dataworkspace.apps.datasets.models import (
     SourceGraphCollection,
 )
 from dataworkspace.apps.arangodb.forms import (
