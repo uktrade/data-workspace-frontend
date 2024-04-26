@@ -47,7 +47,6 @@ from dataworkspace.apps.core.utils import (
     USER_SCHEMA_STEM,
 )
 from dataworkspace.apps.arangodb.utils import (
-    # _arangodb_creds_to_env_vars,
     source_graph_collections_for_user,
     new_private_arangodb_credentials,
 )
@@ -301,22 +300,16 @@ class FargateSpawner:
                     db_persistent_role=creds["db_persistent_role"],
                 )
 
-            # for creds in arangodb_credentials:
-            #     ApplicationInstanceArangoUsers.objects.create(
-            #         application_instance=application_instance,
-            #         db_username=creds["arangodb_user"],
-            #     )
             if arangodb_credentials:
                 ApplicationInstanceArangoUsers.objects.create(
                     application_instance=application_instance,
-                    db_username=creds["arangodb_user"],
+                    db_username=arangodb_credentials["ARANGO_USER"],
                 )
 
             database_env = _creds_to_env_vars(credentials)
 
             schema_env = {"APP_SCHEMA": app_schema}
 
-            # arangodb_env = _arangodb_creds_to_env_vars(arangodb_credentials)
             arangodb_env = arangodb_credentials
 
             user_efs_access_point_id = (
