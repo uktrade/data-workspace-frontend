@@ -44,7 +44,7 @@ def new_private_arangodb_credentials(
                 collection=collection["collection"],
             )
 
-        except Exception: # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-except
             logger.info(
                 "Unable to set read permission on %s for collection %s",
                 datasets_database,
@@ -91,7 +91,7 @@ def new_private_arangodb_credentials(
                 len(existing_db_collections),
                 datasets_database,
             )
-        except Exception: # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-except
             logger.info("Unable to create temporary user in ArangoDB")
             return {}
 
