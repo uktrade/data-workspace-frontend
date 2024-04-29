@@ -3,7 +3,6 @@ from random import randint
 import pytest
 from django.urls import reverse
 from rest_framework import status
-import factory.fuzzy
 
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.eventlog.models import EventLog
