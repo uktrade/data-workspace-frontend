@@ -210,13 +210,17 @@
   font-size: 14px;
 }
 .progress-percentage-complete {
-  background: #00703c;
+  // background: #00703c;
+  color: #005a30;
+  background: #cce2d8;
 }
 .progress-percentage {
   font-variant-numeric: tabular-nums;
 }
 .progress-error {
-  background: #d4351c;
+  // background: #d4351c;
+  color: #942514;
+  background: #f6d7d2;
   text-transform: none;
   letter-spacing: 0;
 }
@@ -263,9 +267,11 @@
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
 }
 .modal-header {
-  background-color: #005ea5;
-  color: #ffffff;
+  // background-color: #005ea5;
+  // color: #ffffff;
   padding: 15px;
+  color: #144e81;
+  background: #d2e2f1;
 }
 .modal-header button.close {
   color: #ffffff;
