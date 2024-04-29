@@ -91,7 +91,7 @@ def test_master_dataset_stats(client, user):
 @pytest.mark.django_db
 def test_datacut_dataset_stats(client, user):
     client.force_login(user)
-    dataset = factories.MasterDataSetFactory()
+    dataset = factories.DatacutDataSetFactory()
     database = factories.DatabaseFactory(memorable_name="my_database")
     query = factories.CustomDatasetQueryFactory(
         dataset=dataset,

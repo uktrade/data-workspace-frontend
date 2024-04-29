@@ -53,7 +53,7 @@ class DatasetStatsSerializer(serializers.ModelSerializer):
                 object_id__in=source_table_ids, event_type=EventLog.TYPE_DATA_TABLE_VIEW
             ).count()
 
-        if obj.type == DataSetType.DATACUT:
+        elif obj.type == DataSetType.DATACUT:
             custom_dataset_table_ids = obj.customdatasetquery_set.annotate(
                 str_id=Cast("id", output_field=TextField())
             ).values_list("str_id", flat=True)
@@ -62,7 +62,7 @@ class DatasetStatsSerializer(serializers.ModelSerializer):
                 event_type=EventLog.TYPE_DATA_TABLE_VIEW,
             ).count()
 
-        if obj.type == DataSetType.REFERENCE:
+        else:
             return obj.events.filter(event_type=EventLog.TYPE_DATA_TABLE_VIEW).count()
 
     def get_collection_count(self, obj):
