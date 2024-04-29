@@ -127,9 +127,7 @@ def test_datacut_dataset_stats(client, user):
 @pytest.mark.django_db
 def test_ref_dataset_stats(client, user):
     client.force_login(user)
-    dataset = factories.ReferenceDatasetFactory.create(
-        name="refds1", table_name="table1"
-    )
+    dataset = factories.ReferenceDatasetFactory.create(name="refds1", table_name="table1")
 
     num_table_views = randint(0, 5)
     for _ in range(num_table_views):
