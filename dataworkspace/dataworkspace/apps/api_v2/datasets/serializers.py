@@ -1,11 +1,16 @@
-from django.db.models import Q
+from django.db.models import Q, TextField
 from django.urls import reverse
 from rest_framework import serializers
+
+from django.db.models.functions import Cast
 
 from dataworkspace.apps.datasets.models import (
     DataSet,
     ReferenceDataset,
     VisualisationCatalogueItem,
+)
+from dataworkspace.apps.datasets.constants import (
+    DataSetType,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 
@@ -40,7 +45,25 @@ class DatasetStatsSerializer(serializers.ModelSerializer):
         return f"{obj.average_unique_users_daily:.3f}"
 
     def get_table_views(self, obj):
-        return obj.events.filter(event_type=EventLog.TYPE_DATA_TABLE_VIEW).count()
+        if obj.type == DataSetType.MASTER:
+            source_table_ids = obj.sourcetable_set.annotate(
+                str_id=Cast("id", output_field=TextField())
+            ).values_list("str_id", flat=True)
+            return EventLog.objects.filter(
+                object_id__in=source_table_ids, event_type=EventLog.TYPE_DATA_TABLE_VIEW
+            ).count()
+
+        elif obj.type == DataSetType.DATACUT:
+            custom_dataset_table_ids = obj.customdatasetquery_set.annotate(
+                str_id=Cast("id", output_field=TextField())
+            ).values_list("str_id", flat=True)
+            return EventLog.objects.filter(
+                object_id__in=custom_dataset_table_ids,
+                event_type=EventLog.TYPE_DATA_TABLE_VIEW,
+            ).count()
+
+        else:
+            return obj.events.filter(event_type=EventLog.TYPE_DATA_TABLE_VIEW).count()
 
     def get_collection_count(self, obj):
         return obj.collection_set.count()
