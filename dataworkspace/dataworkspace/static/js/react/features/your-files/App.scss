@@ -216,6 +216,8 @@
 }
 .progress-percentage {
   font-variant-numeric: tabular-nums;
+  color: #144e81;
+  background: #d2e2f1;
 }
 .progress-error {
   // background: #d4351c;
@@ -267,11 +269,9 @@
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
 }
 .modal-header {
-  // background-color: #005ea5;
-  // color: #ffffff;
+  background-color: #005ea5;
+  color: #ffffff;
   padding: 15px;
-  color: #144e81;
-  background: #d2e2f1;
 }
 .modal-header button.close {
   color: #ffffff;
