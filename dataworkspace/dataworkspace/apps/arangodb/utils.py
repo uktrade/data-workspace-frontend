@@ -75,16 +75,28 @@ def new_private_arangodb_credentials(
                     active=True,
                 )
 
-            # Create a new database named database_memorable_name if it does not exist.
-            # Move to arango container start up.
-            if not sys_db.has_database(datasets_database):
-                sys_db.create_database(datasets_database)
+            # Add database level read only permission
+            sys_db.update_permission(
+                username=db_user,
+                permission="ro",
+                database=datasets_database,
+            )
 
             # Find existing collections in ArangoDB
             datasets_db = client.db(
                 datasets_database, username="root", password=database_data["PASSWORD"]
             )
             existing_db_collections = datasets_db.collections()
+
+            # Set default permission to none for all non system collections
+            for existing_collection in existing_db_collections:
+                if not existing_collection["system"]:
+                    sys_db.update_permission(
+                        username=db_user,
+                        permission="none",
+                        database=datasets_database,
+                        collection=existing_collection["name"],
+                    )
 
             logger.info(
                 "Found %d existing collections in the %s graph db",
