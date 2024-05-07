@@ -590,7 +590,7 @@ tomli==2.0.1
     # via
     #   black
     #   pytest
-tqdm==4.56.0
+tqdm==4.66.3
     # via pyppeteer
 traitlets==5.0.5
     # via

@@ -325,7 +325,7 @@ wcwidth==0.2.5
     # via prompt-toolkit
 webencodings==0.5.1
     # via bleach
-werkzeug==3.0.1
+werkzeug==3.0.3
     # via -r requirements.in
 xlrd==2.0.1
     # via tabulator
