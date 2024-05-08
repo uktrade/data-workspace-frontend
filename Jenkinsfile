@@ -151,3 +151,16 @@ void ecs_pipeline_celery(cluster, version) {
     ]
   }
 }
+
+void ecs_pipeline_celery(cluster, version) {
+  lock("data-workspace-ecs-pipeline-${cluster}-arango") {
+    build job: "ecs-pipeline", parameters: [
+        string(name: "Image", value: "165562107270.dkr.ecr.eu-west-2.amazonaws.com/${cluster}-arango:${version}"),
+        string(name: "Cluster", value: cluster),
+        string(name: "Service", value: "${cluster}-arango"),
+        string(name: "CredentialsId", value: "DATASCIENCE_ECS_DEPLOY"),
+        string(name: "EcsPipelineRepository", value: "public.ecr.aws/j9o7k4h4/ecs-pipeline:latest")
+    ]
+  }
+}
+
