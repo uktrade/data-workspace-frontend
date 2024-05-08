@@ -27,6 +27,9 @@ from test.utility_functions import (
     give_user_visualisation_developer_perms,
     sync_query_logs,
     until_succeeds,
+    make_all_tools_visible,
+    until_non_202,
+    create_graph_dataset,
 )
 
 from aiohttp import web
@@ -919,3 +922,63 @@ class TestApplication(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             payload["authorised_hosts"], ["mlflow--data-science--internal.dataworkspace.test:8000"]
         )
+
+    async def test_arango_user_permissions(self):
+        session, cleanup_session = client_session()
+        self.addAsyncCleanup(cleanup_session)
+
+        cleanup_application = await create_application()
+        self.addAsyncCleanup(cleanup_application)
+
+        is_logged_in = True
+        codes = iter(["some-code"])
+        tokens = iter(["token-1"])
+        auth_to_me = {
+            "Bearer token-1": {
+                "email": "test@test.com",
+                "contact_email": "test@test.com",
+                "related_emails": [],
+                "first_name": "Peter",
+                "last_name": "Piper",
+                "user_id": "7f93c2c7-bc32-43f3-87dc-40d0b8fb2cd2",
+            }
+        }
+        sso_cleanup, _ = await create_sso(is_logged_in, codes, tokens, auth_to_me)
+        self.addAsyncCleanup(sso_cleanup)
+
+        await until_succeeds("http://dataworkspace.test:8000/healthcheck")
+
+        # Create dataset - 'Master 4' gives access to testcollection1 in ArangoDB
+        _, _, code = await create_graph_dataset()
+        self.assertEqual(code, 0)
+
+        # Give use dataset permission
+        stdout, stderr, code = await give_user_dataset_perms("Master 4")
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
+        self.assertEqual(code, 0)
+
+        _, _, _ = await make_all_tools_visible()
+        stdout, stderr, code = await give_user_app_perms()
+        self.assertEqual(stdout, b"")
+        self.assertEqual(stderr, b"")
+        self.assertEqual(code, 0)
+
+        async with session.request(
+            "GET", "http://testdbapplication-23b40dd9.dataworkspace.test:8000/"
+        ) as response:
+            application_content_1 = await response.text()
+
+        self.assertIn("Tool with DB access is loading...", application_content_1)
+
+        await until_non_202(session, "http://testdbapplication-23b40dd9.dataworkspace.test:8000/")
+
+        async with session.request(
+            "GET", "http://testdbapplication-23b40dd9.dataworkspace.test:8000/arango"
+        ) as response:
+            status = response.status
+            content = await response.text()
+
+        self.assertEqual(status, 200)
+        self.assertIn('"name": "testcollection1"', content)
+        self.assertIn("No access to collection 'testcollection2'", content)

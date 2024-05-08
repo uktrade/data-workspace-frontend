@@ -137,6 +137,14 @@ class SourceTableFactory(factory.django.DjangoModelFactory):
         model = "datasets.SourceTable"
 
 
+class SourceGraphCollectionFactory(factory.django.DjangoModelFactory):
+    id = factory.LazyAttribute(lambda _: uuid.uuid4())
+    dataset = factory.SubFactory(DataSetFactory)
+
+    class Meta:
+        model = "datasets.SourceGraphCollection"
+
+
 class SourceViewFactory(factory.django.DjangoModelFactory):
     id = factory.LazyAttribute(lambda _: uuid.uuid4())
     dataset = factory.SubFactory(DataSetFactory)

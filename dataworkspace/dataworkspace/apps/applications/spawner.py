@@ -160,7 +160,7 @@ class ProcessSpawner:
         jwt_token,
         mlflow_authorised_hosts,
         ___,
-        ____,
+        arangodb_credentials,
     ):
         try:
             # The database users are stored so when the database users are cleaned up,
@@ -181,7 +181,9 @@ class ProcessSpawner:
 
             logger.info("Starting %s", cmd)
             # pylint: disable=consider-using-with
-            proc = subprocess.Popen(cmd, cwd="/home/django", env=database_env)
+            proc = subprocess.Popen(
+                cmd, cwd="/home/django", env={**database_env, **arangodb_credentials}
+            )
 
             application_instance.spawner_application_instance_id = json.dumps(
                 {"process_id": proc.pid}

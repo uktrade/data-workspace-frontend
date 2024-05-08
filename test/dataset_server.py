@@ -6,6 +6,7 @@ import sys
 import aiopg
 from aiohttp import web
 import psycopg2.sql
+from arango import ArangoClient
 
 
 async def async_main():
@@ -85,8 +86,32 @@ async def async_main():
 
         return web.json_response({"data": rows}, status=200)
 
+    async def handle_get_graph_collection(request):
+        # Get temporary user credentials
+        arango_user = os.environ["ARANGO_USER"]
+        arango_password = os.environ["ARANGO_PASSWORD"]
+        arango_host = os.environ["ARANGO_HOST"]
+        arango_port = os.environ["ARANGO_PORT"]
+
+        # Connect to ArangoDB with temporary credentials
+        client = ArangoClient(hosts=f"http://{arango_host}:{arango_port}")
+        db = client.db("Datasets", username=arango_user, password=arango_password)
+
+        testcollection1 = db.collection("testcollection1").properties()
+        try:
+            testcollection2 = db.collection("testcollection2").properties()
+        except Exception as collection_access_exception:  # pylint: disable=broad-except
+            testcollection2 = collection_access_exception.error_message
+
+        data = {
+            "testcollection1": testcollection1,
+            "testcollection2": testcollection2,
+        }
+        return web.json_response({"data": data}, status=200)
+
     upstream = web.Application()
     upstream.add_routes([web.post("/stop", handle_stop)])
+    upstream.add_routes([web.get("/arango", handle_get_graph_collection)])
     upstream.add_routes([web.get("/{database}/{table}", handle_dataset)])
     upstream.add_routes([web.get("/{database}/{schema}/{table}", handle_get_schema_table)])
     upstream.add_routes([web.post("/{database}/{schema}/{table}", handle_post_schema_table)])

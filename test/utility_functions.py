@@ -417,6 +417,49 @@ async def create_private_dataset(
     return stdout, stderr, code
 
 
+async def create_graph_dataset():
+    python_code = textwrap.dedent(
+        """\
+import factory
+
+from dataworkspace.apps.datasets.constants import DataSetType
+from dataworkspace.tests import factories
+
+def paragraph(_):
+    from faker import Faker
+    return Faker().paragraph(5)
+
+master = factories.DataSetFactory(
+    id=4,
+    name=f"Master 4",
+    slug="master-4",
+    description=factory.LazyAttribute(paragraph),
+    type=DataSetType.MASTER,
+    published=True,
+    user_access_type='REQUIRES_AUTHENTICATION',
+)
+
+test_collection = factories.SourceGraphCollectionFactory(
+    name="testcollection1",
+    collection="testcollection1",
+    dataset=master,
+)
+    """
+    ).encode("ascii")
+
+    give_perm = await asyncio.create_subprocess_shell(
+        "django-admin shell",
+        env=os.environ,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await give_perm.communicate(python_code)
+    code = await give_perm.wait()
+
+    return stdout, stderr, code
+
+
 async def create_visusalisation(visualisation_name, user_access_type, link_type, link_identifier):
     python_code = textwrap.dedent(
         f"""\

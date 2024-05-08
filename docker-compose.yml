@@ -169,6 +169,7 @@ services:
       - "data-workspace-postgres"
       - "data-workspace-redis"
       - "data-workspace-es"
+      - "data-workspace-arango"
     depends_on:
       - "data-workspace-test-results"
     extra_hosts:
