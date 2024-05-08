@@ -209,14 +209,19 @@
 .progress-percentage-complete {
   font-size: 14px;
 }
-.progress-percentage-complete {
-  background: #00703c;
-}
 .progress-percentage {
+  color: #144e81;
+  background: #d2e2f1;
   font-variant-numeric: tabular-nums;
 }
+.progress-percentage-complete {
+  color: #005a30;
+  background: #cce2d8;
+}
 .progress-error {
-  background: #d4351c;
+
+  color: #942514;
+  background: #f6d7d2;
   text-transform: none;
   letter-spacing: 0;
 }
