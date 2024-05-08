@@ -75,6 +75,11 @@ def new_private_arangodb_credentials(
                     active=True,
                 )
 
+            # Create a new database named database_memorable_name if it does not exist.
+            # To be moved to arango container start up on second iteration.
+            if not sys_db.has_database(datasets_database):
+                sys_db.create_database(datasets_database)
+
             # Add database level read only permission
             sys_db.update_permission(
                 username=db_user,
