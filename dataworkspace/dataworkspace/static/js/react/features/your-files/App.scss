@@ -209,14 +209,14 @@
 .progress-percentage-complete {
   font-size: 14px;
 }
-.progress-percentage-complete {
-  color: #005a30;
-  background: #cce2d8;
-}
 .progress-percentage {
   color: #144e81;
   background: #d2e2f1;
   font-variant-numeric: tabular-nums;
+}
+.progress-percentage-complete {
+  color: #005a30;
+  background: #cce2d8;
 }
 .progress-error {
 
