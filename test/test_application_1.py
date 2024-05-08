@@ -948,11 +948,11 @@ class TestApplication(unittest.IsolatedAsyncioTestCase):
 
         await until_succeeds("http://dataworkspace.test:8000/healthcheck")
 
-        # Create dataset - 'Master 4' gives access to testcollection1 in ArangoDB
+        # Create dataset - 'Master 4' gives access to 'testcollection1' in ArangoDB
         _, _, code = await create_graph_dataset()
         self.assertEqual(code, 0)
 
-        # Give use dataset permission
+        # Give user dataset permission
         stdout, stderr, code = await give_user_dataset_perms("Master 4")
         self.assertEqual(stdout, b"")
         self.assertEqual(stderr, b"")

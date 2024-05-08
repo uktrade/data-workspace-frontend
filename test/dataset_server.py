@@ -101,7 +101,7 @@ async def async_main():
         try:
             testcollection2 = db.collection("testcollection2").properties()
         except Exception as collection_access_exception:  # pylint: disable=broad-except
-            testcollection2 = collection_access_exception.error_message
+            testcollection2 = collection_access_exception.error_message  # pylint: disable=no-member
 
         data = {
             "testcollection1": testcollection1,
