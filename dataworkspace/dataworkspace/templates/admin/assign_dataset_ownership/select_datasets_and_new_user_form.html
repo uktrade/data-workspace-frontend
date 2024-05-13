@@ -1,24 +1,36 @@
 {% extends "admin/base_site.html" %} {% block content %}
-<h3>Current user: {{user_id}}</h3>
-<h3>Selected role: {{role}}</h3>
-<h3>Datasets</h3>
-<form method="POST">
-  {% csrf_token %} {% for data in datasets %}
-  <div>
-    {% with dataset_id=data.uuid|default:data.id %}
-    <input type="checkbox" value="{{data.id}}" name="dataset_id" />
-    <label for="dataset_id">
-      <a href="/datasets/{{dataset_id}}" target="_blank">
-        {{data.name}}: {{dataset_id}}</a
-      ></label
-    >
-  </div>
-  {% endwith %} {% endfor %}
-  <input type="hidden" value="{{data.role}}" name="role" />
-  <h3>Assign to:</h3>
-  <br />
-  <div>{{ form }}</div>
-  <br />
-  <input type="submit" value="Submit" class="default" />
-</form>
+{% load static %}
+
+{% if datasets %}
+  <h3>Current user: {{user_id}}</h3>
+  <h3>Selected role: {{role}}</h3>
+  <h3>Datasets</h3>
+  <form method="POST">
+      <input type="checkbox" name="select_all" />
+      <label for="select_all">Select all</label>
+    {% csrf_token %} {% for data in datasets %}
+    <div>
+      {% with dataset_id=data.uuid|default:data.id %}
+      <input type="checkbox" value="{{data.id}}" name="dataset_id" />
+      <label for="dataset_id">
+        <a href="/datasets/{{dataset_id}}" target="_blank">
+          {{data.name}}: {{dataset_id}}</a
+        ></label
+      >
+    </div>
+    {% endwith %} {% endfor %}
+    <input type="hidden" value="{{data.role}}" name="role" />
+    <h3>Assign to:</h3>
+    <br />
+    <div>{{ form }}</div>
+    <br />
+    <input type="submit" value="Submit" class="default" />
+  </form>
+{% else %}
+  <p>No datasets for <strong>{{user_id}}</strong> as <strong>{{role}}</strong></p>
+{% endif %}
+{% endblock %}
+
+{% block footer %}
+  <script src="{% static 'select-all-datasets.js' %}" nonce="{{ request.csp_nonce }}"></script>
 {% endblock %}
