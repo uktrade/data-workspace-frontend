@@ -176,6 +176,7 @@ class TestCreateTableViews:
                 "table_name": "a_csv",
                 "encoding": file_info_return_value["encoding"],
                 "column_definitions": file_info_return_value["column_definitions"],
+                "auto_generate_id_column": False,
             },
             "DataWorkspaceS3ImportPipeline",
             "test_schema-a_csv-2021-01-01T01:01:01",
@@ -417,6 +418,100 @@ class TestCreateTableViews:
         assert response.status_code == 200
         assert b"schema &quot;public&quot; already exists" in response.content
 
+    @mock.patch("dataworkspace.apps.your_files.views.get_schema_for_user")
+    @mock.patch("dataworkspace.apps.your_files.views.get_team_schemas_for_user")
+    @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_file_info")
+    @mock.patch("dataworkspace.apps.your_files.forms.get_user_s3_prefixes")
+    def test_auto_generate_id_option_exists(
+        self,
+        mock_get_s3_prefix,
+        mock_get_file_info,
+        mock_get_team_schemas_for_user,
+        mock_get_schema_for_user,
+        client,
+    ):
+        mock_get_schema_for_user.return_value = "test_schema"
+        mock_get_team_schemas_for_user.return_value = [
+            {"name": "TestTeam", "schema_name": "test_team_schema"},
+        ]
+        mock_get_s3_prefix.return_value = {"home": "user/federated/abc"}
+        file_info_return_value = {
+            "encoding": "utf-8-sig",
+            "column_definitions": [
+                {
+                    "header_name": "Field 1",
+                    "column_name": "field1",
+                    "data_type": "text",
+                    "sample_data": [1, 2, 3],
+                }
+            ],
+        }
+        mock_get_file_info.return_value = file_info_return_value
+
+        params = {
+            "path": "user/federated/abc/a-csv.csv",
+            "table_name": "test_table",
+            "schema": "test_team_schema",
+        }
+        response = client.get(
+            f'{reverse("your-files:create-table-confirm-data-types")}?{urlencode(params)}',
+        )
+
+        print(response.content)
+
+        assert b"Do you want to generate an ID column?" in response.content
+        assert (
+            b"This will add an ID column and assign an ID to each row in your table."
+            in response.content
+        )
+        assert b"The ID will be an increasing integer, e.g. 1, 2, 3." in response.content
+
+    @mock.patch("dataworkspace.apps.your_files.views.get_schema_for_user")
+    @mock.patch("dataworkspace.apps.your_files.views.get_team_schemas_for_user")
+    @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_file_info")
+    @mock.patch("dataworkspace.apps.your_files.forms.get_user_s3_prefixes")
+    def test_auto_generate_id_option_does_not_exist(
+        self,
+        mock_get_s3_prefix,
+        mock_get_file_info,
+        mock_get_team_schemas_for_user,
+        mock_get_schema_for_user,
+        client,
+    ):
+        mock_get_schema_for_user.return_value = "test_schema"
+        mock_get_team_schemas_for_user.return_value = [
+            {"name": "TestTeam", "schema_name": "test_team_schema"},
+        ]
+        mock_get_s3_prefix.return_value = {"home": "user/federated/abc"}
+        file_info_return_value = {
+            "encoding": "utf-8-sig",
+            "column_definitions": [
+                {
+                    "header_name": "Field 1",
+                    "column_name": "id",
+                    "data_type": "text",
+                    "sample_data": [1, 2, 3],
+                }
+            ],
+        }
+        mock_get_file_info.return_value = file_info_return_value
+
+        params = {
+            "path": "user/federated/abc/a-csv.csv",
+            "table_name": "test_table",
+            "schema": "test_team_schema",
+        }
+        response = client.get(
+            f'{reverse("your-files:create-table-confirm-data-types")}?{urlencode(params)}',
+        )
+
+        assert b"Do you want to generate an ID column?" not in response.content
+        assert (
+            b"This will add an ID column and assign an ID to each row in your table."
+            not in response.content
+        )
+        assert b"The ID will be an increasing integer, e.g. 1, 2, 3." not in response.content
+
     @freeze_time("2021-01-01 01:01:01")
     @mock.patch("dataworkspace.apps.your_files.views.get_schema_for_user")
     @mock.patch("dataworkspace.apps.your_files.views.get_team_schemas_for_user")
@@ -483,6 +578,7 @@ class TestCreateTableViews:
                 "table_name": "a_csv",
                 "encoding": file_info_return_value["encoding"],
                 "column_definitions": file_info_return_value["column_definitions"],
+                "auto_generate_id_column": False,
             },
             "DataWorkspaceS3ImportPipeline",
             "test_team_schema-a_csv-2021-01-01T01:01:01",
@@ -556,6 +652,7 @@ class TestCreateTableViews:
                 "table_name": "a_csv",
                 "encoding": file_info_return_value["encoding"],
                 "column_definitions": file_info_return_value["column_definitions"],
+                "auto_generate_id_column": False,
             },
             "DataWorkspaceS3ImportPipeline",
             "public-a_csv-2021-01-01T01:01:01",

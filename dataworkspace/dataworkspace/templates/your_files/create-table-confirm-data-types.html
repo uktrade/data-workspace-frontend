@@ -39,6 +39,10 @@
             {% endfor %}
           </tbody>
         </table>
+        {% if form.show_id_form %}
+          {{ form.auto_generate_id_column }}
+        {% endif %}
+        <br />
         <button type="submit" class="govuk-button">Continue</button>
       </form>
     </div>

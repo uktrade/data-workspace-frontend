@@ -4684,6 +4684,7 @@ class TestDatasetManagerViews:
                 "schema_name": source.schema,
                 "table_name": source.table,
                 "column_definitions": mock_get_column_types.return_value,
+                "auto_generate_id_column": False,
             },
             "DataWorkspaceS3ImportPipeline",
             "test-table1-2021-01-01T01:01:01",

@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator, MaxLengthValidator
 
 from dataworkspace.apps.core.boto3_client import get_s3_client
+from dataworkspace.apps.core.forms import ConditionalSupportTypeRadioWidget
 from dataworkspace.apps.core.utils import (
     get_all_schemas,
     get_postgres_datatype_choices,
@@ -145,14 +146,26 @@ class CreateSchemaForm(GOVUKDesignSystemForm):
 
 
 class CreateTableDataTypesForm(CreateTableForm):
+    auto_generate_id_column = GOVUKDesignSystemRadioField(
+        label="Do you want to generate an ID column?",
+        help_text="This will add an ID column and assign an ID to each row in your table. \
+        The ID will be an increasing integer, e.g. 1, 2, 3.",
+        choices=[("True", "Yes"), ("False", "No")],
+        widget=ConditionalSupportTypeRadioWidget(heading="h2", label_size="m", small=False),
+        required=False,
+    )
+
     def __init__(self, *args, **kwargs):
         self.column_definitions = kwargs.pop("column_definitions")
+        self.show_id_form = True
         if not self.column_definitions:
             raise ValueError("Definitions for at least one column must be provided")
         super().__init__(*args, **kwargs)
         self.fields["table_exists_action"].widget = forms.HiddenInput()
 
         for col_def in self.column_definitions:
+            if col_def["column_name"] == "id":
+                self.show_id_form = False
             self.fields[col_def["column_name"]] = GOVUKDesignSystemChoiceField(
                 label=col_def["column_name"],
                 initial=col_def["data_type"],
