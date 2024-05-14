@@ -508,9 +508,9 @@ class TestCreateTableViews:
         assert b"Do you want to generate an ID column?" not in response.content
         assert (
             b"This will add an ID column and assign an ID to each row in your table."
-            in response.content
+            not in response.content
         )
-        assert b"The ID will be an increasing integer, e.g. 1, 2, 3." in response.content
+        assert b"The ID will be an increasing integer, e.g. 1, 2, 3." not in response.content
 
     @freeze_time("2021-01-01 01:01:01")
     @mock.patch("dataworkspace.apps.your_files.views.get_schema_for_user")
