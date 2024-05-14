@@ -148,20 +148,6 @@ class HowSatisfiedType(models.TextChoices):
     dissatisfied = "dissatisfied", "Dissatisfied"
     very_dissatisfied = "very-dissatisfied", "Very dissatisfied"
 
-class WhyPageHelpfulType(models.TextChoices):
-    info_helpful= "info-helpfull","I found the information I needed", 
-    info_not_helpful="info-not-helpful", "I did not find the information I needed",
-    easy_to_find= "easy-to-find","It was easy to find relevant datasets",
-    hard_to_find= "hard-to-find","It was hard to find relevant datasets",
-    helpful_filter= "helpful-filter","The filters helped me narrow doen my search results",
-    not_helpful_filter= "not-helpful_filter","The filters did not help me find relevant datasets",
-    easy_to_determine="easy-to-determine", "It was easy to determine what datasets could be useful",
-    hard_to_determine="hard-to-determine", "It was hard to determine what datasets could be useful",
-    other= "other",  "Other"
-    
-    class IsPageHelpful(models.TextChoices):
-        page_helpful= "page-helpful", "Yes",
-        page_not_helpful= "page-not-helpful","No"
 
 class TryingToDoType(models.TextChoices):
     looking = "looking", "Looking for data"
@@ -190,11 +176,15 @@ class UserSatisfactionSurvey(TimeStampedModel):
     survey_source = models.CharField(
         max_length=32, null=True, blank=True, choices=SurveySource.choices
     )
+
+
 class UserInlineFeedbackSurvey(TimeStampedModel):
-    location= models.CharField(max_length=32)
-    was_this_page_helpful= models.TextField(null=True, blank=True, choices=IsPageHelpful.choices)
-    how_is_this_page_helpful = models.CharField(max_length=32, choices=HowHelpfulType.choices)
+    location = models.CharField(max_length=256)
+    was_this_page_helpful = models.BooleanField(null=False, blank=False)
+    inline_feedback_choices = models.TextField(null=True, blank=True)
     more_detail = models.TextField(null=True, blank=True)
+
+
 class NewsletterSubscription(TimeStampedModel):
     user = models.ForeignKey(
         get_user_model(),
