@@ -3,12 +3,14 @@ from django import forms
 
 from dataworkspace.apps.core.storage import malware_file_validator
 from dataworkspace.apps.core.utils import get_postgres_datatype_choices
+from dataworkspace.apps.core.forms import ConditionalSupportTypeRadioWidget
 from dataworkspace.forms import (
     GOVUKDesignSystemChoiceField,
     GOVUKDesignSystemFileField,
     GOVUKDesignSystemFileInputWidget,
     GOVUKDesignSystemForm,
     GOVUKDesignSystemSelectWidget,
+    GOVUKDesignSystemRadioField,
 )
 
 
@@ -38,14 +40,27 @@ class SourceTableUploadForm(GOVUKDesignSystemForm):
 
 class SourceTableUploadColumnConfigForm(GOVUKDesignSystemForm):
     path = forms.CharField(widget=forms.HiddenInput())
+    auto_generate_id_column = GOVUKDesignSystemRadioField(
+        label="Do you want to generate an ID column?",
+        help_text="This will add an ID column and assign an ID to each row in your table. \
+        The ID will be an increasing integer, e.g. 1, 2, 3.",
+        choices=[("True", "Yes"), ("False", "No")],
+        widget=ConditionalSupportTypeRadioWidget(heading="h2", label_size="m", small=False),
+        required=False,
+    )
 
     def __init__(self, *args, **kwargs):
+
         self.column_definitions = kwargs.pop("column_definitions")
+        self.show_id_form = True
+
         if not self.column_definitions:
             raise ValueError("Definitions for at least one column must be provided")
         super().__init__(*args, **kwargs)
 
         for col_def in self.column_definitions:
+            if col_def["column_name"] == "id":
+                self.show_id_form = False
             self.fields[col_def["column_name"]] = GOVUKDesignSystemChoiceField(
                 label=col_def["column_name"],
                 initial=col_def["data_type"],

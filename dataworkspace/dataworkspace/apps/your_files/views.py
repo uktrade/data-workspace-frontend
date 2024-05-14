@@ -315,6 +315,7 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
 
     def form_valid(self, form):
         cleaned = form.cleaned_data
+        include_column_id = False
 
         file_info = get_s3_csv_file_info(cleaned["path"])
 
@@ -332,12 +333,17 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
 
         filename = cleaned["path"].split("/")[-1]
         logger.debug(filename)
+
+        if "auto_generate_id_column" in cleaned and cleaned["auto_generate_id_column"] != "":
+            include_column_id = cleaned["auto_generate_id_column"] == "True"
+
         conf = {
             "file_path": import_path,
             "schema_name": cleaned["schema"],
             "table_name": cleaned["table_name"],
             "column_definitions": file_info["column_definitions"],
             "encoding": file_info["encoding"],
+            "auto_generate_id_column": include_column_id,
         }
         if waffle.switch_is_active(settings.INCREMENTAL_S3_IMPORT_PIPELINE_FLAG):
             conf["incremental"] = (

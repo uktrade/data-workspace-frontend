@@ -111,6 +111,11 @@ class DatasetManageSourceTableColumnConfigView(DatasetManageSourceTableView):
     def form_valid(self, form):
         source = self._get_source()
         cleaned = form.cleaned_data
+        include_column_id = False
+
+        if "auto_generate_id_column" in cleaned and cleaned["auto_generate_id_column"] != "":
+            include_column_id = cleaned["auto_generate_id_column"] == "True"
+
         columns = get_s3_csv_column_types(cleaned["path"])
         for field in columns:
             field["data_type"] = SCHEMA_POSTGRES_DATA_TYPE_MAP.get(
@@ -125,7 +130,9 @@ class DatasetManageSourceTableColumnConfigView(DatasetManageSourceTableView):
             "schema_name": source.schema,
             "table_name": source.table,
             "column_definitions": columns,
+            "auto_generate_id_column": include_column_id,
         }
+
         try:
             response = trigger_dataflow_dag(
                 conf,
