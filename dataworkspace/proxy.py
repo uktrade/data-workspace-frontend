@@ -804,9 +804,11 @@ async def async_main():
 
     async def handle_websocket(downstream_request, upstream_headers, upstream_url):
         request_protocols = downstream_request.headers.get("Sec-WebSocket-Protocol")
-        response_protocols = tuple(
-            protocol.strip() for protocol in request_protocols.split(',')
-        ) if request_protocols else ()
+        response_protocols = (
+            tuple(protocol.strip() for protocol in request_protocols.split(","))
+            if request_protocols
+            else ()
+        )
 
         async def proxy_msg(msg, to_ws):
             if msg.type == aiohttp.WSMsgType.TEXT:
@@ -824,9 +826,7 @@ async def async_main():
         async def upstream():
             try:
                 async with client_session.ws_connect(
-                    str(upstream_url),
-                    headers=upstream_headers,
-                    protocols=response_protocols
+                    str(upstream_url), headers=upstream_headers, protocols=response_protocols
                 ) as upstream_ws:
                     upstream_connection.set_result(upstream_ws)
                     downstream_ws = await downstream_connection
@@ -857,9 +857,7 @@ async def async_main():
             upstream_ws = await upstream_connection
             _, _, _, with_session_cookie = downstream_request[SESSION_KEY]
             downstream_ws = await with_session_cookie(
-                web.WebSocketResponse(
-                    protocols=response_protocols, heartbeat=30
-                )
+                web.WebSocketResponse(protocols=response_protocols, heartbeat=30)
             )
 
             await downstream_ws.prepare(downstream_request)
