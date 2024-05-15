@@ -178,6 +178,13 @@ class UserSatisfactionSurvey(TimeStampedModel):
     )
 
 
+class UserInlineFeedbackSurvey(TimeStampedModel):
+    location = models.CharField(max_length=256)
+    was_this_page_helpful = models.BooleanField(null=False, blank=False)
+    inline_feedback_choices = models.TextField(null=True, blank=True)
+    more_detail = models.TextField(null=True, blank=True)
+
+
 class NewsletterSubscription(TimeStampedModel):
     user = models.ForeignKey(
         get_user_model(),
