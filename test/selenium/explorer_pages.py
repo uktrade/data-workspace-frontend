@@ -8,17 +8,17 @@ from test.selenium.common import _BasePage  # pylint: disable=wrong-import-order
 
 class _BaseExplorerPage(_BasePage):
     def click_home(self):
-        link = self._driver.find_element_by_link_text("Home")
+        link = self._driver.find_element("link_text", "Home")
         link.click()
 
         self._check_url_and_return_page(HomePage)
 
     def click_saved_queries(self):
-        link = self._driver.find_element_by_link_text("Saved queries")
+        link = self._driver.find_element("link_text", "Saved queries")
         link.click()
 
     def click_query_log(self):
-        link = self._driver.find_element_by_link_text("Logs")
+        link = self._driver.find_element("link_text", "Logs")
         link.click()
 
         return self._check_url_and_return_page(QueryLogPage)
@@ -28,7 +28,7 @@ class HomePage(_BaseExplorerPage):
     _url_path = "/data-explorer/"
 
     def enter_query(self, sql):
-        textarea = self._driver.find_element_by_class_name("ace_text-input")
+        textarea = self._driver.find_element("class_name", "ace_text-input")
         textarea.send_keys(sql)
 
     def click_run(self):
@@ -55,8 +55,9 @@ class HomePage(_BaseExplorerPage):
         )
 
     def read_result_headers(self):
-        headers = self._driver.find_elements_by_xpath(
-            "//div[contains(@class, 'scrollable-table')]//th[contains(@class, 'govuk-table__header')]"
+        headers = self._driver.find_elements(
+            "xpath",
+            "//div[contains(@class, 'scrollable-table')]//th[contains(@class, 'govuk-table__header')]",
         )
 
         return [header.text for header in headers]
@@ -80,28 +81,28 @@ class HomePage(_BaseExplorerPage):
         return results
 
     def read_sql(self):
-        textarea = self._driver.find_element_by_id("original-sql")
+        textarea = self._driver.find_element("id", "original-sql")
         return textarea.get_attribute("value")
 
     def read_sql_error(self):
-        span = self._driver.find_element_by_id("sql-error")
+        span = self._driver.find_element("id", "sql-error")
         return span.text
 
     def read_cancelled_error(self):
-        span = self._driver.find_element_by_id("query_cancelled")
+        span = self._driver.find_element("id", "query_cancelled")
         return span.text
 
     def change_results_pagination(self, page, results_per_page):
-        query_page = self._driver.find_element_by_id("query-page")
+        query_page = self._driver.find_element("id", "query-page")
         query_page.clear()
         query_page.send_keys(str(page))
 
-        query_rows = self._driver.find_element_by_id("query-rows")
+        query_rows = self._driver.find_element("id", "query-rows")
         query_rows.clear()
         query_rows.send_keys(str(results_per_page))
 
-        fetch_page = self._driver.find_element_by_xpath(
-            "//button[normalize-space(text()) = 'Fetch page']"
+        fetch_page = self._driver.find_element(
+            "xpath", "//button[normalize-space(text()) = 'Fetch page']"
         )
         fetch_page.click()
 
@@ -114,11 +115,11 @@ class CreateQueryPage(_BaseExplorerPage):
         return f'/data-explorer/queries/create/?play_id={self._url_data["play_id"]}'
 
     def set_title(self, title):
-        field = self._driver.find_element_by_name("title")
+        field = self._driver.find_element("name", "title")
         field.send_keys(title)
 
     def set_description(self, description):
-        field = self._driver.find_element_by_name("description")
+        field = self._driver.find_element("name", "description")
         field.send_keys(description)
 
     def click_save(self):

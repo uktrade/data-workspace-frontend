@@ -9,8 +9,9 @@ from test.selenium.common import (  # pylint: disable=wrong-import-order
 
 class _BaseWorkspacePage(_BasePage):
     def click_header_link(self, label, new_page_class: Type[_PageClassType]) -> _PageClassType:
-        link = self._driver.find_element_by_xpath(
-            f'//a[contains(@class, "govuk-header__link") and normalize-space(text()) = "{label}"]'
+        link = self._driver.find_element(
+            "xpath",
+            f'//a[contains(@class, "govuk-header__link") and normalize-space(text()) = "{label}"]',
         )
         link.click()
 

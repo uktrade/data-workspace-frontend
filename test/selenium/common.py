@@ -84,14 +84,14 @@ class _BasePage:
         return new_page
 
     def _submit(self, label):
-        button = self._driver.find_element_by_xpath(
-            f"//button[normalize-space(text()) = '{label}']"
+        button = self._driver.find_element(
+            "xpath", f"//button[normalize-space(text()) = '{label}']"
         )
         button.click()
 
     def _get_input_field(self, field_label):
-        return self._driver.find_element_by_xpath(
-            f"//*[@id = //label[normalize-space(text()) = '{field_label}']/@for]"
+        return self._driver.find_element(
+            "xpath", f"//*[@id = //label[normalize-space(text()) = '{field_label}']/@for]"
         )
 
     def _fill_field(self, field_label, text):
@@ -99,7 +99,7 @@ class _BasePage:
         field.send_keys(text)
 
     def click_link(self, link_text, new_page_class: Optional[Type[_PageClassType]]):
-        link = self._driver.find_element_by_link_text(link_text)
+        link = self._driver.find_element("link_text", link_text)
         link.click()
 
         if new_page_class:
@@ -108,4 +108,4 @@ class _BasePage:
         return None
 
     def select_radio_button(self, button_id):
-        self._driver.find_element_by_id(button_id).click()
+        self._driver.find_element("id", button_id).click()
