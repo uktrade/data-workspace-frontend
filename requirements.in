@@ -34,8 +34,9 @@ kaleido
 mohawk
 notifications-python-client
 paste
-plotly
+pg-sync-roles
 pglast
+plotly
 psutil
 psycogreen
 python-dotenv

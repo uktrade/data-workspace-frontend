@@ -32,10 +32,12 @@ from django.http import StreamingHttpResponse
 import gevent
 import gevent.queue
 from mohawk import Sender
+from pg_sync_roles import sync_roles, Login, DatabaseConnect, RoleMembership
 import psycopg2
 from psycopg2 import connect, sql
 from psycopg2.sql import SQL
 import requests
+import sqlalchemy as sa
 from tableschema import Schema
 import redis
 
@@ -71,6 +73,14 @@ def database_dsn(database_data):
         f'host={database_data["HOST"]} port={database_data["PORT"]} '
         f'dbname={database_data["NAME"]} user={database_data["USER"]} '
         f'password={database_data["PASSWORD"]} sslmode=require'
+    )
+
+
+def database_engine(database_data):
+    return sa.create_engine(
+        f'postgresql+psycopg2://{database_data["USER"]}:{database_data["PASSWORD"]}'
+        + f'@{database_data["HOST"]}:{database_data["PORT"]}/{database_data["NAME"]}',
+        connect_args={"sslmode": "require"},
     )
 
 
@@ -193,7 +203,7 @@ def new_private_database_credentials(
         db_schema = f"{USER_SCHEMA_STEM}{db_role_and_schema_suffix}"
 
         database_data = settings.DATABASES_DATA[database_memorable_name]
-        valid_until = (datetime.datetime.now() + valid_for).isoformat()
+        valid_until = datetime.datetime.now() + valid_for
 
         with get_cursor(database_memorable_name) as cur:
             existing_tables_and_views_set = set(tables_and_views_that_exist(cur, tables))
@@ -464,19 +474,6 @@ def new_private_database_credentials(
                 if db_shared_role not in db_shared_roles_previously_granted_set
             ]
 
-            # Create user. Note that in PostgreSQL a USER and ROLE are almost the same thing, the
-            # difference is that by default a ROLE is "NOLOGIN", so can't be used to connect to
-            # the database, i.e. it really is more of a "group".
-            cur.execute(
-                sql.SQL(
-                    "CREATE USER {user} WITH PASSWORD {password} VALID UNTIL {valid_until}"
-                ).format(
-                    user=sql.Identifier(db_user),
-                    password=sql.Literal(db_password),
-                    valid_until=sql.Literal(valid_until),
-                ),
-            )
-
             # ... find non-catalogue schemas that don't yet exist
             db_shared_schema_roles = list(zip(db_shared_roles, db_shared_schemas)) + [
                 (db_role, db_schema)
@@ -502,25 +499,6 @@ def new_private_database_credentials(
                 for (_db_role, _db_schema) in db_shared_schema_roles
                 if _db_schema not in db_shared_schemas_that_exist
             ]
-
-            # Ensure we have a DB connection role
-            cur.execute(
-                sql.SQL("SELECT oid FROM pg_database WHERE datname = {} LIMIT 1;").format(
-                    sql.Literal(database_data["NAME"])
-                )
-            )
-            db_conn_permission_role = f"database_connect_{cur.fetchone()[0]}"
-            logger.info(
-                "Database %s connection role is %s", database_data["NAME"], db_conn_permission_role
-            )
-            ensure_db_role(cur, db_conn_permission_role)
-
-            # Grant the DB connection role to the temporary user
-            cur.execute(
-                sql.SQL("GRANT {} TO {};").format(
-                    sql.Identifier(db_conn_permission_role), sql.Identifier(db_user)
-                )
-            )
 
             # Ensure we have roles for all schemas
             if allowed_schemas_that_exist:
@@ -621,30 +599,6 @@ def new_private_database_credentials(
                     )
                 )
 
-            # Grant the user's permanent role to the temporary user
-            cur.execute(
-                sql.SQL("GRANT {} TO {};").format(sql.Identifier(db_role), sql.Identifier(db_user))
-            )
-
-            # Check if the database connection role has the right privileges
-            cur.execute(
-                sql.SQL(
-                    """
-                    SELECT EXISTS(
-                        SELECT
-                            1
-                        FROM
-                            pg_database, aclexplode(datacl)
-                        WHERE
-                            datname = {}
-                            AND grantee = {}::regrole
-                            AND privilege_type = 'CONNECT'
-                    );
-                """
-                ).format(sql.Literal(database_data["NAME"]), sql.Literal(db_conn_permission_role))
-            )
-            db_conn_permission_role_can_connect = cur.fetchone()[0]
-
             # Check if the user's permanent role has direct connect privs on the database
             # (It shouldn't any more since we moved to getting the CONNECT priv via a role)
             cur.execute(
@@ -664,6 +618,19 @@ def new_private_database_credentials(
                 ).format(sql.Literal(database_data["NAME"]), sql.Literal(db_role))
             )
             db_role_can_connect = cur.fetchone()[0]
+
+        # A bit odd for now that this lives here in the middle of all the other code, but we're
+        # refactoring more of the surrounding code to move into sync_roles
+        with database_engine(database_data).connect() as sync_roles_conn:
+            sync_roles(
+                sync_roles_conn,
+                db_user,
+                grants=(
+                    Login(password=db_password, valid_until=valid_until),
+                    DatabaseConnect(database_data["NAME"]),
+                    RoleMembership(db_role),
+                ),
+            )
 
         # PostgreSQL doesn't handle concurrent
         # - GRANT/REVOKEs on the same database object
@@ -709,15 +676,6 @@ def new_private_database_credentials(
                     sql.SQL("GRANT USAGE ON SCHEMA {} TO {};").format(
                         sql.Identifier(schema),
                         sql.Identifier(schema_role_name),
-                    )
-                )
-
-            if not db_conn_permission_role_can_connect:
-                logger.info("Granting CONNECT to the role %s", db_conn_permission_role)
-                cur.execute(
-                    sql.SQL("GRANT CONNECT ON DATABASE {} TO {};").format(
-                        sql.Identifier(database_data["NAME"]),
-                        sql.Identifier(db_conn_permission_role),
                     )
                 )
 

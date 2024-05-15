@@ -365,6 +365,8 @@ pep517==0.10.0
     # via pip-tools
 pexpect==4.8.0
     # via ipython
+pg-sync-roles==0.0.29
+    # via -r requirements.txt
 pglast==3.10
     # via -r requirements.txt
 pickleshare==0.7.5
@@ -551,6 +553,7 @@ sqlalchemy==2.0.12
     #   -r requirements.txt
     #   django-db-connection-pool
     #   geoalchemy2
+    #   pg-sync-roles
     #   tabulator
 sqlparams==6.0.1
     # via
