@@ -210,7 +210,7 @@ def new_private_database_credentials(
 
             allowed_tables_that_exist = [
                 (schema, table)
-                for schema, table in tables
+                for schema, table, _ in tables
                 if (schema, table) in existing_tables_and_views_set
             ]
 
@@ -864,9 +864,25 @@ def new_private_database_credentials(
             "db_password": db_password,
         }
 
+    public_access_types = (UserAccessType.REQUIRES_AUTHENTICATION, UserAccessType.OPEN)
+
+    def is_public_published(dataset):
+        return dataset["user_access_type"] in public_access_types and dataset["published"]
+
+    def is_public_unpublished(dataset):
+        return dataset["user_access_type"] in public_access_types and not dataset["published"]
+
     database_to_tables = {
         database_memorable_name: [
-            (source_table["schema"], source_table["table"])
+            (
+                source_table["schema"],
+                source_table["table"],
+                "table_select_public_published"
+                if is_public_published(source_table["dataset"])
+                else "table_select_public_unpublished"
+                if is_public_unpublished(source_table["dataset"])
+                else None,
+            )
             for source_table in source_tables_for_database
         ]
         for database_memorable_name, source_tables_for_database in itertools.groupby(
@@ -1015,6 +1031,7 @@ def source_tables_for_user(user):
         "dataset__id",
         "dataset__name",
         "dataset__user_access_type",
+        "dataset__published",
     )
     req_authorization_tables = SourceTable.objects.filter(
         dataset__user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
@@ -1029,6 +1046,7 @@ def source_tables_for_user(user):
         "dataset__id",
         "dataset__name",
         "dataset__user_access_type",
+        "dataset__published",
     )
     automatically_authorized_tables = SourceTable.objects.filter(
         dataset__deleted=False,
@@ -1042,6 +1060,7 @@ def source_tables_for_user(user):
         "dataset__id",
         "dataset__name",
         "dataset__user_access_type",
+        "dataset__published",
     )
     source_tables = [
         {
@@ -1052,6 +1071,7 @@ def source_tables_for_user(user):
                 "id": x["dataset__id"],
                 "name": x["dataset__name"],
                 "user_access_type": x["dataset__user_access_type"],
+                "published": x["dataset__published"],
             },
         }
         for x in req_authentication_tables.union(
@@ -1067,12 +1087,13 @@ def source_tables_for_user(user):
                 "id": x["uuid"],
                 "name": x["name"],
                 "user_access_type": UserAccessType.REQUIRES_AUTHENTICATION,
+                "published": x["published"],
             },
         }
         for x in ReferenceDataset.objects.live()
         .filter(deleted=False, **{"published": True} if not user.is_superuser else {})
         .exclude(external_database=None)
-        .values("external_database__memorable_name", "table_name", "uuid", "name")
+        .values("external_database__memorable_name", "table_name", "uuid", "name", "published")
     ]
     return source_tables + reference_dataset_tables
 
@@ -1105,6 +1126,7 @@ def source_tables_for_app(application_template):
                 "id": x.dataset.id,
                 "name": x.dataset.name,
                 "user_access_type": x.dataset.user_access_type,
+                "published": x.dataset.published,
             },
         }
         for x in req_authentication_tables.union(req_authorization_tables)
@@ -1118,6 +1140,7 @@ def source_tables_for_app(application_template):
                 "id": x.uuid,
                 "name": x.name,
                 "user_access_type": UserAccessType.REQUIRES_AUTHENTICATION,
+                "published": x.published,
             },
         }
         for x in ReferenceDataset.objects.live()
@@ -1205,7 +1228,7 @@ def tables_and_views_that_exist(cur, schema_tables):
                         + sql.Literal(table)
                         + sql.SQL(")")
                     )
-                    for (schema, table) in schema_tables
+                    for (schema, table, _) in schema_tables
                 ]
             )
         )
