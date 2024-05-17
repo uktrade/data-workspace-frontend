@@ -14,7 +14,12 @@ from dataworkspace.tests import factories
     (
         (
             "no_dot",
-            "Table name must be in the format schema.table or &quot;schema&quot;.&quot;table&quot;",
+            "Table name must be lower case in the format schema.table or &quot;schema&quot;.&quot;table&quot;",
+            0,
+        ),
+        (
+            "CAPITAL.table",
+            "Table name must be lower case in the format schema.table or &quot;schema&quot;.&quot;table&quot;",
             0,
         ),
         (
