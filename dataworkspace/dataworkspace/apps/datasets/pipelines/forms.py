@@ -51,9 +51,9 @@ class BasePipelineCreateForm(GOVUKDesignSystemModelForm):
         error_messages={"required": "Enter a table name."},
         validators=(
             RegexValidator(
-                message='Table name must be in the format schema.table or "schema"."table"',
-                regex=r"^((\"[a-zA-Z_-][a-zA-Z0-9_-]*\")|([a-zA-Z_-][a-zA-Z0-9_-]*))"
-                r"\.((\"[a-zA-Z_-][a-zA-Z0-9_-]*\")|([a-zA-Z_-][a-zA-Z0-9_-]*))$",
+                message='Table name must be lower case in the format schema.table or "schema"."table"',
+                regex=r"^((\"[a-z_-][a-z0-9_-]*\")|([a-z_-][a-z0-9_-]*))"
+                r"\.((\"[a-z_-][a-z0-9_-]*\")|([a-z_-][a-z0-9_-]*))$",
             ),
             validate_schema_and_table,
         ),
