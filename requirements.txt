@@ -199,7 +199,7 @@ packaging==22.0
     # via bleach
 paste==3.4.3
     # via -r requirements.in
-pg-sync-roles==0.0.29
+pg-sync-roles==0.0.30
     # via -r requirements.in
 pglast==3.10
     # via -r requirements.in

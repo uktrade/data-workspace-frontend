@@ -365,7 +365,7 @@ pep517==0.10.0
     # via pip-tools
 pexpect==4.8.0
     # via ipython
-pg-sync-roles==0.0.29
+pg-sync-roles==0.0.30
     # via -r requirements.txt
 pglast==3.10
     # via -r requirements.txt
