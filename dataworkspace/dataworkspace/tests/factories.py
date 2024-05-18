@@ -147,7 +147,7 @@ class SourceViewFactory(factory.django.DjangoModelFactory):
 
 
 class CustomDatasetQueryFactory(factory.django.DjangoModelFactory):
-    id = factory.Sequence(lambda n: n)
+    # id = factory.Sequence(lambda n: n)
     name = factory.fuzzy.FuzzyText()
     dataset = factory.SubFactory(DataSetFactory)
     database = factory.SubFactory(DatabaseFactory)
