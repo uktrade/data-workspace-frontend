@@ -1603,7 +1603,6 @@ class ReferenceDataset(DeletableTimestampedUserModel):
         will cause all users available tables to change.
         """
         # pylint: disable=import-outside-toplevel, reimported
-        from dataworkspace.apps.core.utils import clear_table_permissions_cache_for_user
         from dataworkspace.apps.explorer.connections import connections
 
         for user in (
@@ -1617,8 +1616,6 @@ class ReferenceDataset(DeletableTimestampedUserModel):
             for conn in connections.values():
                 cache_key = f"_explorer_cache_key_{user.profile.sso_id}_{conn}"
                 cache.delete(cache_key)
-
-            clear_table_permissions_cache_for_user(user)
 
     def _create_external_database_table(self, db_name):
         if not self._sync_via_data_flow:
