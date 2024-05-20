@@ -5,6 +5,7 @@ from django import forms
 from django.conf import settings
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
 from django.core import validators
 from django.db import transaction, models
 from django.db.models import Q
@@ -753,3 +754,21 @@ class VisualisationLinkForm(forms.ModelForm):
                 raise forms.ValidationError("Quicksight identifiers must be a UUID.")
 
         return identifier
+
+
+class SelectUserForm(forms.Form):
+    # TODO - this will break on prod as it selects all users into the DOM, needs to be an autocomplete field#
+    user = forms.ModelChoiceField(queryset=User.objects.all())
+
+
+class CurrentOwnerAndRoleForm(SelectUserForm, forms.Form):
+    role = forms.ChoiceField(
+        choices=[
+            ("information_asset_owner_id", "Information asset owner"),
+            ("information_asset_manager_id", "Information asset manager"),
+            ("enquiries_contact_id", "Enquiries contact"),
+        ]
+    )
+
+    def get_user(self):
+        return self.data["user"]

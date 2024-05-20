@@ -58,30 +58,14 @@ from dataworkspace.apps.dw_admin.forms import (
     SourceLinkUploadForm,
     ReferenceDataRecordUploadForm,
     clean_identifier,
+    SelectUserForm,
+    CurrentOwnerAndRoleForm,
 )
 from dataworkspace.apps.eventlog.constants import SystemStatLogEventType
 from dataworkspace.apps.eventlog.models import EventLog, SystemStatLog
 from dataworkspace.apps.explorer.templatetags.explorer_tags import format_duration_short
 from dataworkspace.apps.your_files.models import YourFilesUserPrefixStats
 from dataworkspace.datasets_db import get_all_source_tables
-
-
-class SelectUserForm(forms.Form):
-    # TODO - this will break on prod as it selects all users into the DOM, needs to be an autocomplete field#
-    user = forms.ModelChoiceField(queryset=User.objects.all())
-
-
-class CurrentOwnerAndRoleForm(SelectUserForm, forms.Form):
-    role = forms.ChoiceField(
-        choices=[
-            ("information_asset_owner_id", "Information asset owner"),
-            ("information_asset_manager_id", "Information asset manager"),
-            ("enquiries_contact_id", "Enquiries contact"),
-        ]
-    )
-
-    def get_user(self):
-        return self.data["user"]
 
 
 class SelectUserAndRoleAdminView(FormView):
