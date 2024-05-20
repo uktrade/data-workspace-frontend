@@ -32,7 +32,16 @@ from django.http import StreamingHttpResponse
 import gevent
 import gevent.queue
 from mohawk import Sender
-from pg_sync_roles import sync_roles, Login, DatabaseConnect, RoleMembership
+from pg_sync_roles import (
+    DatabaseConnect,
+    Login,
+    RoleMembership,
+    SchemaCreate,
+    SchemaOwnership,
+    SchemaUsage,
+    TableSelect,
+    sync_roles,
+)
 import psycopg2
 from psycopg2 import connect, sql
 from psycopg2.sql import SQL
@@ -56,7 +65,6 @@ from dataworkspace.apps.datasets.models import (
     ReferenceDataset,
     AdminVisualisationUserPermission,
 )
-from dataworkspace.apps.eventlog.models import SystemStatLog
 from dataworkspace.cel import celery_app
 
 logger = logging.getLogger("app")
@@ -179,8 +187,6 @@ def new_private_database_credentials(
             ]
         )
     )
-    db_shared_roles_set = set(db_shared_roles)
-    db_shared_schemas = db_shared_roles
 
     # This function can take a while. That isn't great, but also not great to
     # hold a connection to the admin database
@@ -200,428 +206,16 @@ def new_private_database_credentials(
         logger.info("Getting new credentials for permanent role %s", db_role_and_schema_suffix)
         db_password = postgres_password()
         db_role = f"{USER_SCHEMA_STEM}{db_role_and_schema_suffix}"
-        db_schema = f"{USER_SCHEMA_STEM}{db_role_and_schema_suffix}"
 
         database_data = settings.DATABASES_DATA[database_memorable_name]
         valid_until = datetime.datetime.now() + valid_for
 
-        with get_cursor(database_memorable_name) as cur:
-            existing_tables_and_views_set = set(tables_and_views_that_exist(cur, tables))
-
-            allowed_tables_that_exist = [
-                (schema, table)
-                for schema, table in tables
-                if (schema, table) in existing_tables_and_views_set
-            ]
-
-            allowed_schemas_that_exist = without_duplicates_preserve_order(
-                schema for schema, _ in allowed_tables_that_exist
-            )
-            allowed_schemas_that_exist_set = set(allowed_schemas_that_exist)
-
-            for db_role_name in db_shared_roles + [db_role]:
-                ensure_db_role(cur, db_role_name)
-
-        logging.info("Trying to get cached table permissions")
-        tables_with_existing_privs_set = set(
-            table_permissions_for_role(
-                db_role, db_schema, database_memorable_name, log_stats=dw_user is not None
-            )
-        )
-        logger.info(
-            "Found %d tables with existing permissions for permanent role %s",
-            len(tables_with_existing_privs_set),
-            db_role,
+        schema_names = without_duplicates_preserve_order(
+            schema_name for schema_name, table_name in tables
         )
 
-        tables_with_existing_role_privs_set = set(
-            table_role_permissions_for_role(
-                db_role, database_memorable_name, log_stats=dw_user is not None
-            )
-        )
-        logger.info(
-            "Found %s role based table permissions for role %s: %s",
-            len(tables_with_existing_role_privs_set),
-            db_role,
-            list(tables_with_existing_role_privs_set),
-        )
-
-        with get_cursor(database_memorable_name) as cur:
-            # Get a list of all tables in the database
-            cur.execute(
-                sql.SQL(
-                    """
-                SELECT trim(both '"' from relnamespace::regnamespace::text) AS table_schema, relname AS table_name
-                FROM pg_class WHERE relkind IN ('r', 'm', 'v', 'p');
-            """
-                )
-            )
-            existing_db_tables = list(cur.fetchall())
-            logger.info(
-                "Found %d existing tables in the %s db",
-                len(existing_db_tables),
-                database_memorable_name,
-            )
-            # Find existing schema permissions granted directly on user's permanent roles
-            # (which is the old way - we don't add these any more)
-            cur.execute(
-                sql.SQL(
-                    """
-                SELECT DISTINCT
-                    nspname AS name
-                FROM
-                    pg_namespace, aclexplode(nspacl)
-                WHERE
-                    nspname != {schema}
-                    AND grantee = {role}::regrole
-                    AND privilege_type IN ('CREATE', 'USAGE')
-                ORDER BY nspname;
-            """
-                ).format(role=sql.Literal(db_role), schema=sql.Literal(db_schema))
-            )
-            schemas_with_existing_privs = [row[0] for row in cur.fetchall()]
-            logger.info(
-                "Found %d existing permissions for permanent role %s: %s",
-                len(schemas_with_existing_privs),
-                db_role,
-                schemas_with_existing_privs,
-            )
-
-            # Find existing schema permissions granted via schema role membership
-            cur.execute(
-                sql.SQL(
-                    """
-                    SELECT
-                        roleid::regrole::text
-                    FROM
-                        pg_auth_members
-                    WHERE
-                        roleid::regrole::text LIKE 'schema\\_usage\\_%'
-                        AND member = {role}::regrole
-                    """
-                ).format(role=sql.Literal(db_role))
-            )
-            schema_roles_granted_to_user_role = [role for (role,) in cur.fetchall()]
-
-            # Find existing table permissions granted via table role membership
-            cur.execute(
-                sql.SQL(
-                    """
-                    SELECT
-                        roleid::regrole::text
-                    FROM
-                        pg_auth_members
-                    WHERE
-                        roleid::regrole::text LIKE 'table\\_select\\_%'
-                        AND member = {role}::regrole
-                    """
-                ).format(role=sql.Literal(db_role))
-            )
-            table_roles_granted_to_user_role = [role for (role,) in cur.fetchall()]
-
-            # Existing granted team roles to permanent user role
-            cur.execute(
-                sql.SQL(
-                    """
-                SELECT
-                    rolname
-                FROM
-                    pg_roles
-                WHERE
-                    (
-                        rolname LIKE '\\_team\\_%'
-                        OR rolname LIKE '\\_user\\_app\\_%'
-                    )
-                    AND rolname != {db_role} -- If loading an app, don't include its own role
-                    AND pg_has_role({db_role}, rolname, 'member');
-            """
-                ).format(db_role=sql.Literal(db_role))
-            )
-            db_shared_roles_previously_granted = [role for (role,) in cur.fetchall()]
-            db_shared_roles_previously_granted_set = set(db_shared_roles_previously_granted)
-
-            tables_to_revoke = tables_with_existing_privs_set
-            logger.info("Got %s tables to revoke for role %s", len(tables_to_revoke), db_role)
-
-            # Create any missing roles for existing tables
-            allowed_tables_that_exist_role_map = (
-                tables_select_role_map(cur, allowed_tables_that_exist)
-                if allowed_tables_that_exist
-                else {}
-            )
-            logger.info(
-                "allowed_tables_that_exist_role_map: %s", allowed_tables_that_exist_role_map
-            )
-            if allowed_tables_that_exist:
-                cur.execute(
-                    sql.SQL(
-                        """
-                        SELECT rolname
-                        FROM pg_roles
-                        WHERE rolname IN ({role_names})
-                        """
-                    ).format(
-                        role_names=sql.SQL(",").join(
-                            [
-                                sql.Literal(role_name)
-                                for role_name in allowed_tables_that_exist_role_map.values()
-                            ]
-                        )
-                    )
-                )
-                table_roles_that_exist = set(role_name for role_name, in cur.fetchall())
-                table_roles_that_dont_exist = (
-                    set(allowed_tables_that_exist_role_map.values()) - table_roles_that_exist
-                )
-                for role_name in table_roles_that_dont_exist:
-                    logger.info("Creating table usage role %s", role_name)
-                    ensure_db_role(cur, role_name)
-
-            # Find the table roles that don't have SELECT on their tables
-            if allowed_tables_that_exist_role_map:
-                # We don't use the ::regnamespace casting because that can wrap in double quotes
-                # in some circumstances. We want the non-quoted value
-                cur.execute(
-                    sql.SQL(
-                        """
-                        SELECT
-                            nspname, relname
-                        FROM
-                            pg_class
-                        INNER JOIN
-                            pg_namespace ON pg_namespace.oid = pg_class.relnamespace
-                        CROSS JOIN
-                            aclexplode(relacl)
-                        WHERE
-                            (nspname, relname) IN ({schema_tables})
-                            AND grantee::regrole::text = 'table_select_' || pg_class.oid::text
-                            AND privilege_type = 'SELECT'
-                        ORDER BY
-                            nspname, relname
-                    """
-                    ).format(
-                        schema_tables=sql.SQL(",").join(
-                            sql.SQL("({schema},{table})").format(
-                                schema=sql.Literal(schema), table=sql.Literal(table)
-                            )
-                            for (schema, table) in allowed_tables_that_exist_role_map.keys()
-                        )
-                    )
-                )
-                tables_with_select = set(cur.fetchall())
-            else:
-                tables_with_select = set()
-            table_role_names_without_select = [
-                ((schema, table), role)
-                for (schema, table), role in allowed_tables_that_exist_role_map.items()
-                if (schema, table) not in tables_with_select
-            ]
-
-            # Revoke/grant any table roles needed
-            table_roles_granted_to_user_role_set = set(table_roles_granted_to_user_role)
-            allowed_table_roles_with_existing_tables_set = set(
-                allowed_tables_that_exist_role_map.values()
-            )
-            logger.info(
-                "Working out tables to revoke and grant based on existing and allowed schemas %s and corresponding roles %s",
-                table_roles_granted_to_user_role_set,
-                allowed_table_roles_with_existing_tables_set,
-            )
-            table_roles_to_revoke = [
-                role_name
-                for role_name in table_roles_granted_to_user_role_set
-                if role_name not in allowed_table_roles_with_existing_tables_set
-            ]
-            table_roles_to_grant = [
-                role_name
-                for role_name in allowed_tables_that_exist_role_map.values()
-                if role_name not in table_roles_granted_to_user_role_set
-            ]
-            logger.info("Revoking table roles %s from %s", table_roles_to_revoke, db_role)
-            if table_roles_to_revoke:
-                cur.execute(
-                    sql.SQL("REVOKE {} FROM {};").format(
-                        sql.SQL(",").join(
-                            sql.Identifier(table_role) for table_role in table_roles_to_revoke
-                        ),
-                        sql.Identifier(db_role),
-                    )
-                )
-            logger.info("Granting table roles %s to %s", table_roles_to_grant, db_role)
-            if table_roles_to_grant:
-                cur.execute(
-                    sql.SQL("GRANT {} TO {};").format(
-                        sql.SQL(",").join(
-                            sql.Identifier(table_role) for table_role in table_roles_to_grant
-                        ),
-                        sql.Identifier(db_role),
-                    )
-                )
-
-            # Make sure that that privileges granted directly to the user's role, which was done in
-            # previous versions, are removed
-            schemas_to_revoke = schemas_with_existing_privs
-            logger.info("Got %s schemas to revoke for role %s", len(schemas_to_revoke), db_role)
-
-            db_shared_roles_to_revoke = [
-                db_shared_role
-                for db_shared_role in db_shared_roles_previously_granted
-                if db_shared_role not in db_shared_roles_set
-            ]
-            db_shared_roles_to_grant = [
-                db_shared_role
-                for db_shared_role in db_shared_roles
-                if db_shared_role not in db_shared_roles_previously_granted_set
-            ]
-
-            # ... find non-catalogue schemas that don't yet exist
-            db_shared_schema_roles = list(zip(db_shared_roles, db_shared_schemas)) + [
-                (db_role, db_schema)
-            ]
-            if db_shared_schema_roles:
-                cur.execute(
-                    sql.SQL(
-                        """
-                        SELECT nspname FROM pg_namespace WHERE nspname IN ({schemas})
-                    """
-                    ).format(
-                        schemas=sql.SQL(",").join(
-                            sql.Literal(_db_schema)
-                            for (_db_role, _db_schema) in db_shared_schema_roles
-                        ),
-                    )
-                )
-                db_shared_schemas_that_exist = set(schema for schema, in cur.fetchall())
-            else:
-                db_shared_schemas_that_exist = set()
-            db_shared_schemas_role_schemas_to_create = [
-                (_db_role, _db_schema)
-                for (_db_role, _db_schema) in db_shared_schema_roles
-                if _db_schema not in db_shared_schemas_that_exist
-            ]
-
-            # Ensure we have roles for all schemas
-            if allowed_schemas_that_exist:
-                cur.execute(
-                    sql.SQL(
-                        """
-                        SELECT
-                            nspname, oid
-                        FROM
-                            pg_namespace
-                        WHERE
-                            nspname IN ({schemas})
-                        ORDER BY
-                            nspname
-                    """
-                    ).format(
-                        schemas=sql.SQL(",").join(
-                            sql.Literal(schema) for schema in allowed_schemas_that_exist
-                        )
-                    )
-                )
-                schema_oids = cur.fetchall()
-            else:
-                schema_oids = []
-            schema_role_names = [(schema, f"schema_usage_{oid}") for schema, oid in schema_oids]
-            for _, role_name in schema_role_names:
-                ensure_db_role(cur, role_name)
-
-            # Find the schema roles that don't have USAGE on the schemas
-            if schema_oids:
-                cur.execute(
-                    sql.SQL(
-                        """
-                        SELECT
-                            nspname
-                        FROM
-                            pg_namespace, aclexplode(nspacl)
-                        WHERE
-                            nspname IN ({schemas})
-                            AND grantee::regrole::text = 'schema_usage_' || oid::text
-                            AND privilege_type = 'USAGE'
-                        ORDER BY
-                            nspname
-                    """
-                    ).format(
-                        schemas=sql.SQL(",").join(sql.Literal(schema) for schema, _ in schema_oids)
-                    )
-                )
-                schemas_with_usage = set(schema for schema, in cur.fetchall())
-            else:
-                schemas_with_usage = set()
-            schemas_role_names_without_usage = [
-                (schema, role)
-                for schema, role in schema_role_names
-                if schema not in schemas_with_usage
-            ]
-
-            # Revoke/grant any schema roles needed
-            schema_roles_granted_to_user_role_set = set(schema_roles_granted_to_user_role)
-            schema_role_names_dict = dict(schema_role_names)
-            allowed_schema_roles_with_existing_schemas_set = {
-                schema_role_names_dict[schema] for schema in allowed_schemas_that_exist_set
-            }
-
-            logger.info(
-                "Working out schemas to revoke based on existing and allowed schemas %s and corresponding roles %s",
-                allowed_schemas_that_exist_set,
-                allowed_schema_roles_with_existing_schemas_set,
-            )
-            schema_roles_to_revoke = [
-                role_name
-                for role_name in schema_roles_granted_to_user_role
-                if role_name not in allowed_schema_roles_with_existing_schemas_set
-            ]
-            schema_roles_to_grant = [
-                role_name
-                for schema, role_name in schema_role_names
-                if role_name not in schema_roles_granted_to_user_role_set
-            ]
-            logger.info("Revoking schema roles %s from %s", schema_roles_to_revoke, db_role)
-            if schema_roles_to_revoke:
-                cur.execute(
-                    sql.SQL("REVOKE {} FROM {};").format(
-                        sql.SQL(",").join(
-                            sql.Identifier(schema_role) for schema_role in schema_roles_to_revoke
-                        ),
-                        sql.Identifier(db_role),
-                    )
-                )
-            logger.info("Granting schema roles %s to %s", schema_roles_to_grant, db_role)
-            if schema_roles_to_grant:
-                cur.execute(
-                    sql.SQL("GRANT {} TO {};").format(
-                        sql.SQL(",").join(
-                            sql.Identifier(schema_role) for schema_role in schema_roles_to_grant
-                        ),
-                        sql.Identifier(db_role),
-                    )
-                )
-
-            # Check if the user's permanent role has direct connect privs on the database
-            # (It shouldn't any more since we moved to getting the CONNECT priv via a role)
-            cur.execute(
-                sql.SQL(
-                    """
-                    SELECT EXISTS(
-                        SELECT
-                            1
-                        FROM
-                            pg_database, aclexplode(datacl)
-                        WHERE
-                            datname = {}
-                            AND grantee = {}::regrole
-                            AND privilege_type = 'CONNECT'
-                    );
-                """
-                ).format(sql.Literal(database_data["NAME"]), sql.Literal(db_role))
-            )
-            db_role_can_connect = cur.fetchone()[0]
-
-        # A bit odd for now that this lives here in the middle of all the other code, but we're
-        # refactoring more of the surrounding code to move into sync_roles
         with database_engine(database_data).connect() as sync_roles_conn:
+            # Temporary database user that can login, and has membership of
             sync_roles(
                 sync_roles_conn,
                 db_user,
@@ -630,63 +224,76 @@ def new_private_database_credentials(
                     DatabaseConnect(database_data["NAME"]),
                     RoleMembership(db_role),
                 ),
+                lock_key=GLOBAL_LOCK_ID,
             )
+            # ... the user's permanent role, which has ownership of the user's private schema,
+            # permission to query catalogue tables, and membership of shared roles...
+            sync_roles(
+                sync_roles_conn,
+                db_role,
+                grants=tuple(SchemaUsage(schema_name) for schema_name in schema_names)
+                + tuple(TableSelect(schema_name, table_name) for schema_name, table_name in tables)
+                + tuple(RoleMembership(role_name) for role_name in db_shared_roles)
+                + (
+                    SchemaOwnership(db_role),
+                    SchemaCreate(db_role),
+                    SchemaUsage(db_role),
+                ),
+                preserve_existing_grants_in_schemas=(db_role,),
+                lock_key=GLOBAL_LOCK_ID,
+            )
+            # ... which have ownership of a single schema each, its team schema
+            for db_shared_role in db_shared_roles:
+                sync_roles(
+                    sync_roles_conn,
+                    db_shared_role,
+                    grants=(
+                        SchemaOwnership(db_shared_role),
+                        SchemaCreate(db_shared_role),
+                        SchemaUsage(db_shared_role),
+                    ),
+                    preserve_existing_grants_in_schemas=(db_shared_role,),
+                    lock_key=GLOBAL_LOCK_ID,
+                )
 
         # PostgreSQL doesn't handle concurrent
         # - GRANT/REVOKEs on the same database object
         # - ALTER USER ... SET
         # Either can result in "tuple concurrentl updated" errors. So we lock.
-        #
-        # We also lock when we need to temporarily grant and revoke roles to the master user, so
-        # we never get into a race condition where just after GRANT another client REVOKEs
-        # (We need to GRANT roles to the master user to create schemas with the right ownership)
         with get_cursor(database_memorable_name) as cur, transaction_and_lock(cur, GLOBAL_LOCK_ID):
-            for _db_role, _db_schema in db_shared_schemas_role_schemas_to_create:
-                cur.execute(
-                    sql.SQL("GRANT {} TO {}").format(
-                        sql.Identifier(_db_role),
-                        sql.Identifier(database_data["USER"]),
-                    )
+            # Temporarily grant the current user the roles to be able to manage them below
+            all_roles = [db_role, db_user] + db_shared_roles
+            cur.execute(
+                sql.SQL("GRANT {all_roles} TO CURRENT_USER").format(
+                    all_roles=sql.SQL(",").join(sql.Identifier(role) for role in all_roles)
                 )
-                cur.execute(
-                    sql.SQL("CREATE SCHEMA IF NOT EXISTS {} AUTHORIZATION {};").format(
-                        sql.Identifier(_db_schema),
-                        sql.Identifier(_db_role),
-                    )
-                )
-                cur.execute(
-                    sql.SQL("REVOKE {} FROM {}").format(
-                        sql.Identifier(_db_role),
-                        sql.Identifier(database_data["USER"]),
-                    )
-                )
+            )
 
-            for (schema, table), table_role_name in table_role_names_without_select:
-                logger.info("Granting SELECT on %s to role %s", (schema, table), table_role_name)
+            # If the user creates tables in any of the shared schemas, make sure the corresponding
+            # role for that schema have all privilege on them (which unfortunately does not
+            # mean ownership)
+            for db_shared_role in db_shared_roles:
                 cur.execute(
-                    sql.SQL("GRANT SELECT ON {} TO {};").format(
-                        sql.Identifier(schema, table),
-                        sql.Identifier(table_role_name),
-                    )
-                )
-
-            for schema, schema_role_name in schemas_role_names_without_usage:
-                logger.info("Granting USAGE on %s to role %s", schema, schema_role_name)
-                cur.execute(
-                    sql.SQL("GRANT USAGE ON SCHEMA {} TO {};").format(
-                        sql.Identifier(schema),
-                        sql.Identifier(schema_role_name),
-                    )
-                )
-
-            if db_role_can_connect:
-                logger.info("Revoking CONNECT to from role %s", db_role)
-                cur.execute(
-                    sql.SQL("REVOKE CONNECT ON DATABASE {} FROM {};").format(
-                        sql.Identifier(database_data["NAME"]),
+                    sql.SQL(
+                        """
+                        ALTER DEFAULT PRIVILEGES
+                        FOR USER {}
+                        IN SCHEMA {}
+                        GRANT ALL ON TABLES TO {};
+                        """
+                    ).format(
                         sql.Identifier(db_role),
+                        sql.Identifier(db_shared_role),
+                        sql.Identifier(db_shared_role),
                     )
                 )
+
+            # Make it so by default, objects created by the user are owned by the role
+            cur.execute(
+                sql.SQL("ALTER USER {} SET ROLE {};").format(
+                    sql.Identifier(db_user), sql.Identifier(db_role)
+                )
+            )
 
             # Give the roles reasonable timeouts...
             # [Out of paranoia on all roles in case the user change role mid session]
@@ -720,134 +327,13 @@ def new_private_database_credentials(
                     )
                 )
 
-            logger.info(
-                "Revoking permissions ON %s %s from %s",
-                database_memorable_name,
-                schemas_to_revoke,
-                db_role,
-            )
-            if schemas_to_revoke:
-                # Ensure any directly granted schema perms are still removed while we
-                # migrate to role based perms
-                cur.execute(
-                    sql.SQL("REVOKE ALL PRIVILEGES ON SCHEMA {} FROM {};").format(
-                        sql.SQL(",").join(sql.Identifier(schema) for schema in schemas_to_revoke),
-                        sql.Identifier(db_role),
-                    )
-                )
-
-            logger.info(
-                "Revoking permissions ON %s %s from %s",
-                database_memorable_name,
-                tables_to_revoke,
-                db_role,
-            )
-            if tables_to_revoke:
-                cur.execute(
-                    sql.SQL("REVOKE ALL PRIVILEGES ON {} FROM {};").format(
-                        sql.SQL(",").join(
-                            [sql.Identifier(schema, table) for schema, table in tables_to_revoke]
-                        ),
-                        sql.Identifier(db_role),
-                    )
-                )
-
-            # The master user has to be a member of the user's role for the ALTER DEFAULT PRIVILEGES
-            # changes below
-            if db_shared_roles_to_revoke or db_shared_roles_to_grant:
-                cur.execute(
-                    sql.SQL("GRANT {} TO {}").format(
-                        sql.Identifier(db_role),
-                        sql.Identifier(database_data["USER"]),
-                    )
-                )
-
-            logger.info(
-                "Revoking %s from %s",
-                db_shared_roles_to_revoke,
-                db_role,
-            )
-            if db_shared_roles_to_revoke:
-                cur.execute(
-                    sql.SQL("REVOKE {} FROM {};").format(
-                        sql.SQL(",").join(
-                            [
-                                sql.Identifier(db_shared_role)
-                                for db_shared_role in db_shared_roles_to_revoke
-                            ]
-                        ),
-                        sql.Identifier(db_role),
-                    )
-                )
-                for db_shared_role in db_shared_roles_to_revoke:
-                    cur.execute(
-                        sql.SQL(
-                            """
-                            ALTER DEFAULT PRIVILEGES
-                            FOR USER {}
-                            IN SCHEMA {}
-                            REVOKE ALL ON TABLES FROM {};
-                            """
-                        ).format(
-                            sql.Identifier(db_role),
-                            sql.Identifier(db_shared_role),
-                            sql.Identifier(db_shared_role),
-                        )
-                    )
-
-            logger.info(
-                "Granting %s to %s",
-                db_shared_roles_to_grant,
-                db_role,
-            )
-            if db_shared_roles_to_grant:
-                cur.execute(
-                    sql.SQL("GRANT {} TO {};").format(
-                        sql.SQL(",").join(
-                            [
-                                sql.Identifier(db_shared_role)
-                                for db_shared_role in db_shared_roles_to_grant
-                            ]
-                        ),
-                        sql.Identifier(db_role),
-                    )
-                )
-                # When this user creates a table in a team schema
-                # ensure all members of that team can access it
-                for db_shared_role in db_shared_roles_to_grant:
-                    cur.execute(
-                        sql.SQL(
-                            """
-                            ALTER DEFAULT PRIVILEGES
-                            FOR USER {}
-                            IN SCHEMA {}
-                            GRANT ALL ON TABLES TO {};
-                            """
-                        ).format(
-                            sql.Identifier(db_role),
-                            sql.Identifier(db_shared_role),
-                            sql.Identifier(db_shared_role),
-                        )
-                    )
-
-            if db_shared_roles_to_revoke or db_shared_roles_to_grant:
-                cur.execute(
-                    sql.SQL("REVOKE {} FROM {}").format(
-                        sql.Identifier(db_role),
-                        sql.Identifier(database_data["USER"]),
-                    )
-                )
-
-        # Make it so by default, objects created by the user are owned by the role
-        with get_cursor(database_memorable_name) as cur:
+            # Make sure we don't keep the roles in the current user (we don't need them, and
+            # the master user having a lot of roles can slow login)
             cur.execute(
-                sql.SQL("ALTER USER {} SET ROLE {};").format(
-                    sql.Identifier(db_user), sql.Identifier(db_role)
+                sql.SQL("REVOKE {all_roles} FROM CURRENT_USER").format(
+                    all_roles=sql.SQL(",").join(sql.Identifier(role) for role in all_roles)
                 )
             )
-
-        if tables_to_revoke:
-            delete_cache_for_db_role(db_role)
 
         logger.info(
             "Generated new credentials for permanent role %s in %s seconds",
@@ -1175,43 +661,6 @@ def _table_exists(cur, schema, table):
         (schema, table),
     )
     return bool(cur.fetchone())
-
-
-def tables_and_views_that_exist(cur, schema_tables):
-    if not schema_tables:
-        return []
-    cur.execute(
-        sql.SQL(
-            """
-        SELECT
-            nspname AS schema, relname AS name
-        FROM
-            pg_class
-        INNER JOIN
-            pg_namespace ON pg_namespace.oid = pg_class.relnamespace
-        WHERE
-            relkind in ('r', 'm', 'v', 'p')
-            AND (nspname, relname) IN ({existing})
-        ORDER BY
-            nspname, relname
-    """
-        ).format(
-            existing=sql.SQL(",").join(
-                [
-                    (
-                        sql.SQL("(")
-                        + sql.Literal(schema)
-                        + sql.SQL(",")
-                        + sql.Literal(table)
-                        + sql.SQL(")")
-                    )
-                    for (schema, table) in schema_tables
-                ]
-            )
-        )
-    )
-
-    return cur.fetchall()
 
 
 def streaming_query_response(
@@ -1874,113 +1323,5 @@ def team_membership_post_delete(instance, **_):
         update_tools_access_policy_task.delay(instance.user_id)
 
 
-def table_permissions_cache_key(db_role):
-    return f"_table_permissions_cache_key_v2{db_role}"
-
-
-def table_permissions_for_role(db_role, db_schema, database_name, log_stats=False):
-    """
-    Return a (cached) list of tables that the given role has SELECT/UPDATE/DELETE/ETC perms for.
-    """
-    key = table_permissions_cache_key(db_role)
-    tables_with_perms = cache.get(key)
-    if tables_with_perms:
-        logger.info("table_perms: Returning cached table permissions for role %s", db_role)
-        return tables_with_perms
-
-    pg_class_query = """
-        SELECT trim(both '"' from relnamespace::regnamespace::text) AS schema, relname AS name
-        FROM pg_class, aclexplode(relacl) acl
-        WHERE acl.grantee = {role}::regrole::oid
-        AND relkind in ('r', 'p')
-        AND acl.privilege_type in (
-            'SELECT', 'INSERT', 'UPDATE', 'DELETE', 'TRUNCATE', 'REFERENCES', 'TRIGGER'
-        )
-        AND trim(both '"' from relnamespace::regnamespace::text) NOT SIMILAR TO
-            'pg_toast|pg_temp_%|pg_toast_temp_%|_team_%|_user_%'
-        AND relname NOT SIMILAR TO
-            '_\\d{{8}}t\\d{{6}}|%_swap|%_idx|_tmp%|%_pkey|%_seq|_data_explorer_tmp%|%000000|_tmp_%';
-    """
-    logger.info("table_perms: Querying and caching table permissions for role %s", db_role)
-    start_time = time.time()
-    with get_cursor(database_name) as cur:
-        cur.execute(sql.SQL(pg_class_query).format(role=sql.Literal(db_role)))
-        tables_with_perms = cur.fetchall()
-    run_time = round(time.time() - start_time, 2)
-    if log_stats:
-        SystemStatLog.objects.log_permissions_query_runtime(
-            run_time,
-            extra={
-                "role": db_role,
-                "query_type": "pg_class",
-                "legacy": False,
-            },
-        )
-    logger.info(
-        "table_perms: Querying table permissions for role %s took %s seconds", db_role, run_time
-    )
-    cache.set(key, tables_with_perms, timeout=datetime.timedelta(days=7).total_seconds())
-    return tables_with_perms
-
-
-def table_role_permissions_for_role(db_role, database_name, log_stats=False):
-    """
-    Return a (cached) list of tables that the given role has a table role for.
-    """
-    with get_cursor(database_name) as cur:
-        cur.execute(
-            sql.SQL(
-                """SELECT roleid::regrole::text
-            FROM pg_auth_members
-            WHERE (roleid::regrole::text LIKE 'table\\_select\\_%')
-            AND member = {role}::regrole;"""
-            ).format(role=sql.Literal(db_role))
-        )
-        return cur.fetchall()
-
-
-def clear_table_permissions_cache_for_user(user):
-    db_role = f"{USER_SCHEMA_STEM}{db_role_schema_suffix_for_user(user)}"
-    logger.info(
-        "table_perms: Deleting cached table permissions for user %s (db role %s)",
-        user.email,
-        db_role,
-    )
-    delete_cache_for_db_role(db_role)
-
-
-def delete_cache_for_db_role(db_role):
-    cache.delete(table_permissions_cache_key(db_role))
-
-
 def get_postgres_datatype_choices():
     return ((name, name.capitalize()) for name, _ in SCHEMA_POSTGRES_DATA_TYPE_MAP.items())
-
-
-def tables_select_role_map(cur, tables):
-    """
-    Returns a map of table name -> oid based role name for that table
-    """
-    cur.execute(
-        sql.SQL(
-            """
-        SELECT nspname, relname, 'table_select_' || pg_class.oid
-        FROM pg_class, pg_namespace
-        WHERE relnamespace = pg_namespace.oid
-        AND (nspname, relname) in ({table_names})
-        AND relkind in ('r', 'm', 'v', 'p');
-        """
-        ).format(
-            table_names=sql.SQL(",").join(
-                [
-                    sql.SQL("(")
-                    + sql.Literal(table[0])
-                    + sql.SQL(",")
-                    + sql.Literal(table[1])
-                    + sql.SQL(")")
-                    for table in tables
-                ]
-            )
-        )
-    )
-    return {(schema, table): role_name for (schema, table, role_name) in cur.fetchall()}

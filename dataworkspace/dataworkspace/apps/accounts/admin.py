@@ -22,7 +22,6 @@ from dataworkspace.apps.accounts.utils import (
     remove_user_access_profile,
 )
 from dataworkspace.apps.core.utils import (
-    clear_table_permissions_cache_for_user,
     stable_identification_suffix,
 )
 from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType
@@ -493,7 +492,6 @@ class AppUserAdmin(UserAdmin):
         if clear_schema_info_and_credentials_cache and obj.pk:
             clear_schema_info_cache_for_user(obj)
             remove_data_explorer_user_cached_credentials(obj)
-            clear_table_permissions_cache_for_user(obj)
 
         if "authorized_visualisations" in form.cleaned_data:
             current_visualisations = VisualisationCatalogueItem.objects.filter(
