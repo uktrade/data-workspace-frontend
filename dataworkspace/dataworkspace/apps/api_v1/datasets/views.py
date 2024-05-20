@@ -10,8 +10,10 @@ from django.db.models.functions import Substr
 from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from django.contrib.postgres.fields import ArrayField
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
 
 from dataworkspace.apps.api_v1.mixins import TimestampFilterMixin
 from dataworkspace.apps.api_v1.pagination import TimestampCursorPagination
@@ -36,6 +38,7 @@ from dataworkspace.apps.api_v1.datasets.serializers import (
     CatalogueItemSerializer,
     ToolQueryAuditLogSerializer,
 )
+from dataworkspace.apps.datasets.data_dictionary.service import DataDictionaryService
 
 
 def _get_dataset_columns(connection, source_table):
@@ -489,3 +492,26 @@ class ToolQueryAuditLogViewSet(TimestampFilterMixin, viewsets.ModelViewSet):
     )
     serializer_class = ToolQueryAuditLogSerializer
     pagination_class = TimestampCursorPagination
+
+
+@api_view(("GET",))
+def data_dictionary_api_view_GET(request, source_uuid):
+    """
+    API endpoint to list data dictionary for a source table for ingestion by data flow
+    """
+    service = DataDictionaryService()
+    dictionary = service.get_dictionary(source_uuid)
+    response = {
+        "id": source_uuid,
+        "schema_name": dictionary.schema_name,
+        "table_name": dictionary.table_name,
+        "fields": [
+            {
+                "name": item.name,
+                "data_type": item.data_type,
+                "definition": item.definition,
+            }
+            for item in dictionary.items
+        ],
+    }
+    return Response(response, status=status.HTTP_200_OK)
