@@ -29,7 +29,6 @@ class UserFactory(factory.django.DjangoModelFactory):
 
 
 class DatabaseFactory(factory.django.DjangoModelFactory):
-    id = factory.LazyAttribute(lambda _: uuid.uuid4())
     memorable_name = "test_external_db"
 
     class Meta:
@@ -38,7 +37,6 @@ class DatabaseFactory(factory.django.DjangoModelFactory):
 
 
 class DataGroupingFactory(factory.django.DjangoModelFactory):
-    id = factory.LazyAttribute(lambda _: uuid.uuid4())
     name = factory.fuzzy.FuzzyText()
     slug = factory.fuzzy.FuzzyText(length=10)
 
@@ -47,7 +45,6 @@ class DataGroupingFactory(factory.django.DjangoModelFactory):
 
 
 class TagFactory(factory.django.DjangoModelFactory):
-    id = factory.LazyAttribute(lambda _: uuid.uuid4())
     name = factory.fuzzy.FuzzyText()
 
     class Meta:
@@ -77,7 +74,6 @@ class VisualisationDatasetFactory(factory.django.DjangoModelFactory):
 
 
 class DataSetFactory(factory.django.DjangoModelFactory):
-    id = factory.LazyAttribute(lambda _: uuid.uuid4())
     grouping = factory.SubFactory(DataGroupingFactory)
     name = factory.fuzzy.FuzzyText()
     slug = factory.fuzzy.FuzzyText(length=10)
@@ -117,7 +113,6 @@ class DataSetBookmarkFactory(factory.django.DjangoModelFactory):
 
 
 class SourceLinkFactory(factory.django.DjangoModelFactory):
-    id = factory.LazyAttribute(lambda _: uuid.uuid4())
     dataset = factory.SubFactory(DataSetFactory)
     name = factory.fuzzy.FuzzyText()
     format = factory.fuzzy.FuzzyText(length=5)
@@ -129,7 +124,6 @@ class SourceLinkFactory(factory.django.DjangoModelFactory):
 
 
 class SourceTableFactory(factory.django.DjangoModelFactory):
-    id = factory.LazyAttribute(lambda _: uuid.uuid4())
     dataset = factory.SubFactory(DataSetFactory)
     database = factory.SubFactory(DatabaseFactory)
 
@@ -138,7 +132,6 @@ class SourceTableFactory(factory.django.DjangoModelFactory):
 
 
 class SourceViewFactory(factory.django.DjangoModelFactory):
-    id = factory.LazyAttribute(lambda _: uuid.uuid4())
     dataset = factory.SubFactory(DataSetFactory)
     database = factory.SubFactory(DatabaseFactory)
 
@@ -147,7 +140,6 @@ class SourceViewFactory(factory.django.DjangoModelFactory):
 
 
 class CustomDatasetQueryFactory(factory.django.DjangoModelFactory):
-    id = factory.Sequence(lambda n: n)
     name = factory.fuzzy.FuzzyText()
     dataset = factory.SubFactory(DataSetFactory)
     database = factory.SubFactory(DatabaseFactory)
@@ -168,7 +160,6 @@ class CustomDatasetQueryTableFactory(factory.django.DjangoModelFactory):
 
 
 class DatasetReferenceCodeFactory(factory.django.DjangoModelFactory):
-    id = factory.Sequence(lambda n: n)
     code = factory.fuzzy.FuzzyText(length=3)
     counter = 0
 
@@ -216,7 +207,6 @@ class EventLogFactory(factory.django.DjangoModelFactory):
 
 @freeze_time("2020-01-01 00:00:00")
 class RelatedObjectEventFactory(factory.django.DjangoModelFactory):
-    id = factory.Sequence(lambda n: n)
     user = factory.SubFactory(UserFactory)
     timestamp = datetime.now()
     object_id = factory.SelfAttribute("content_object.id")
@@ -427,7 +417,6 @@ class ApplicationInstanceFactory(factory.django.DjangoModelFactory):
 
 
 class DatabaseUserFactory(factory.django.DjangoModelFactory):
-    id = factory.LazyAttribute(lambda _: uuid.uuid4())
     owner = factory.SubFactory(UserFactory)
     username = factory.fuzzy.FuzzyText(length=8)
 
@@ -436,7 +425,6 @@ class DatabaseUserFactory(factory.django.DjangoModelFactory):
 
 
 class ToolQueryAuditLogFactory(factory.django.DjangoModelFactory):
-    id = factory.Sequence(lambda n: n)
     user = factory.SubFactory(UserFactory)
     database = factory.SubFactory(DatabaseFactory)
     rolename = factory.fuzzy.FuzzyText(length=10)
@@ -448,7 +436,6 @@ class ToolQueryAuditLogFactory(factory.django.DjangoModelFactory):
 
 
 class ToolQueryAuditLogTableFactory(factory.django.DjangoModelFactory):
-    id = factory.Sequence(lambda n: n)
     audit_log = factory.SubFactory(ToolQueryAuditLogFactory)
     schema = factory.fuzzy.FuzzyText(length=10)
     table = factory.fuzzy.FuzzyText(length=10)
