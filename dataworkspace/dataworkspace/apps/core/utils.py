@@ -295,37 +295,35 @@ def new_private_database_credentials(
                 )
             )
 
-            # Give the roles reasonable timeouts...
-            # [Out of paranoia on all roles in case the user change role mid session]
-            for _db_user in [db_role, db_user] + db_shared_roles:
-                cur.execute(
-                    sql.SQL(
-                        "ALTER USER {} SET idle_in_transaction_session_timeout = '60min';"
-                    ).format(sql.Identifier(_db_user))
+            # Give the user reasonable timeouts
+            cur.execute(
+                sql.SQL("ALTER USER {} SET idle_in_transaction_session_timeout = '60min';").format(
+                    sql.Identifier(db_user)
                 )
-                cur.execute(
-                    sql.SQL("ALTER USER {} SET statement_timeout = '60min';").format(
-                        sql.Identifier(_db_user)
-                    )
+            )
+            cur.execute(
+                sql.SQL("ALTER USER {} SET statement_timeout = '60min';").format(
+                    sql.Identifier(db_user)
                 )
-                cur.execute(
-                    sql.SQL("ALTER USER {} SET pgaudit.log = {};").format(
-                        sql.Identifier(_db_user),
-                        sql.Literal(settings.PGAUDIT_LOG_SCOPES),
-                    )
+            )
+            cur.execute(
+                sql.SQL("ALTER USER {} SET pgaudit.log = {};").format(
+                    sql.Identifier(db_user),
+                    sql.Literal(settings.PGAUDIT_LOG_SCOPES),
                 )
-                cur.execute(
-                    sql.SQL("ALTER USER {} SET pgaudit.log_catalog = off;").format(
-                        sql.Identifier(_db_user),
-                        sql.Literal(settings.PGAUDIT_LOG_SCOPES),
-                    )
+            )
+            cur.execute(
+                sql.SQL("ALTER USER {} SET pgaudit.log_catalog = off;").format(
+                    sql.Identifier(db_user),
+                    sql.Literal(settings.PGAUDIT_LOG_SCOPES),
                 )
-                cur.execute(
-                    sql.SQL("ALTER USER {} WITH CONNECTION LIMIT {};").format(
-                        sql.Identifier(_db_user),
-                        sql.Literal(50 if db_user.endswith("_qs") else 10),
-                    )
+            )
+            cur.execute(
+                sql.SQL("ALTER USER {} WITH CONNECTION LIMIT {};").format(
+                    sql.Identifier(db_user),
+                    sql.Literal(50 if db_user.endswith("_qs") else 10),
                 )
+            )
 
             # Make sure we don't keep the roles in the current user (we don't need them, and
             # the master user having a lot of roles can slow login)
