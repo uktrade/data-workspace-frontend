@@ -96,31 +96,82 @@ def build_schema_info(user, connection_alias):
         f'@{connection["db_host"]}:{connection["db_port"]}/'
         f'{connection["db_name"]}'
     ) as conn, conn.cursor(cursor_factory=RealDictCursor) as cursor:
-        # Fetch schema, table, column_name, column_type in one query, avoiding
-        # information_schema since there is suspicion it is slow
+        # Fetch schema, table, column_name, column_type in one query, based on
+        # https://dba.stackexchange.com/a/339630/37229 to get parent roles and
+        # https://stackoverflow.com/a/78466268/1319998 to get their permissions
+        # By using pg_shdepend this avoids full table scans and is usually much faster than using
+        # information_schema or has_schema_privilege/has_table_privilege functions when there are
+        # many tables in the database. This is similar to the techniques used in
+        # https://github.com/uktrade/pg-sync-roles
         cursor.execute(
             """
+            WITH
+
+            -- The current user's roleid, and all roles that the current user inherits permissions from
+            RECURSIVE granted_roles AS (
+                SELECT r.oid, r.rolinherit
+                FROM pg_roles r
+                WHERE rolname = CURRENT_USER
+              UNION
+                SELECT r.oid, r.rolinherit
+                FROM granted_roles g
+                INNER JOIN pg_auth_members m ON m.member = g.oid
+                INNER JOIN pg_roles r ON r.oid = m.roleid
+                WHERE g.rolinherit = TRUE -- Do not walk up tree beyond NOINHERIT
+            ),
+
+            -- Tables and schemas that the current user + its roles might have permissions on
+            -- There will be no permissions in the case that roles are just owner with no other perms,
+            -- but we won't know that until we look to pg_namespace or pg_class below
+            objects_with_maybe_privileges AS (
+              SELECT
+                refobjid,  -- The referenced object: the role in this case
+                classid,   -- The pg_class oid that the dependant object is in
+                objid      -- The oid of the dependant object in the table specified by classid
+              FROM pg_shdepend
+              INNER JOIN granted_roles r ON r.oid = refobjid
+              WHERE refclassid='pg_catalog.pg_authid'::regclass
+                AND deptype IN ('a', 'o')
+                AND classid IN ('pg_namespace'::regclass, 'pg_class'::regclass)
+                AND dbid = (SELECT oid FROM pg_database WHERE datname = current_database())
+                AND objsubid = 0  -- Non-zero only for table-column permissions
+            ),
+
+            -- Schemas where at least one role has USAGE
+            schemas_with_usage AS (
+              SELECT DISTINCT n.oid, nspname
+              FROM pg_namespace n
+              INNER JOIN objects_with_maybe_privileges a ON a.objid = n.oid
+              CROSS JOIN aclexplode(COALESCE(n.nspacl, acldefault('n', n.nspowner)))
+              WHERE classid = 'pg_namespace'::regclass
+                AND grantee = refobjid
+                AND privilege_type = 'USAGE'
+            ),
+
+            -- Tables where at least one role has SELECT, and where a role also has USAGE on its schema
+            tables_with_select_in_schemas_with_usage AS (
+              SELECT DISTINCT nspname, relname, c.oid
+              FROM pg_class c
+              INNER JOIN schemas_with_usage n ON n.oid = c.relnamespace
+              INNER JOIN objects_with_maybe_privileges a ON a.objid = c.oid
+              CROSS JOIN aclexplode(COALESCE(c.relacl, acldefault('r', c.relowner)))
+              WHERE classid = 'pg_class'::regclass
+                AND grantee = refobjid
+                AND privilege_type = 'SELECT'
+                AND relkind IN ('r', 'v', 'm', 'f', 'p') -- All real table-like things
+                AND relname NOT SIMILAR TO '\\_data\\_explorer\\_tmp\\_%|%\\_swap'
+            )
+
+            -- All the columns on all the tables above
             SELECT
-              pg_namespace.nspname AS schema_name,
-              pg_class.relname AS table_name,
-              pg_attribute.attname AS column_name,
+              nspname AS schema_name,
+              relname AS table_name,
+              attname AS column_name,
               pg_catalog.format_type(atttypid, atttypmod) AS column_type
-            FROM
-              pg_attribute
-              INNER JOIN pg_class ON pg_class.oid = pg_attribute.attrelid
-              INNER JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
-            WHERE
-              pg_namespace.nspname != 'pg_toast' AND
-              pg_namespace.nspname NOT SIMILAR TO 'pg_temp_%|pg_toast_temp_%' AND
-              pg_class.relname NOT SIMILAR TO '%_swap|%_idx|_tmp%|%_pkey|%_seq|_data_explorer_tmp%|%000000' AND
-              has_schema_privilege(pg_namespace.nspname, 'USAGE') AND
-              has_table_privilege(
-                quote_ident(pg_namespace.nspname) || '.' || quote_ident(pg_class.relname),
-                'SELECT'
-              ) = true AND
-              attnum > 0
-            ORDER BY
-              pg_namespace.nspname, pg_class.relname, attnum
+            FROM tables_with_select_in_schemas_with_usage t
+            INNER JOIN pg_attribute ON attrelid = t.oid
+            WHERE attnum > 0
+            ORDER BY nspname, relname, attnum
         """
         )
         results = [row for row in cursor.fetchall() if _include_table(row["table_name"])]
