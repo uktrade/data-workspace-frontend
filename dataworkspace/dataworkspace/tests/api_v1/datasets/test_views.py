@@ -11,6 +11,7 @@ from rest_framework import status
 
 from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.core.utils import database_dsn
+from dataworkspace.apps.datasets.data_dictionary.service import DataDictionaryService
 from dataworkspace.apps.datasets.models import (
     DataGrouping,
     DataSet,
@@ -653,3 +654,32 @@ class TestToolQueryAuditLogAPIView(BaseAPIViewTest):
             self.expected_response(log_1),
             self.expected_response(log_2),
         ]
+
+
+@pytest.mark.django_db
+class TestDataDictionaryView:
+    def test_success(self, unauthenticated_client):
+        service = DataDictionaryService()
+        master_dataset = factories.MasterDataSetFactory.create()
+        source_table = factories.SourceTableFactory(
+            dataset=master_dataset, schema="public", table="test_source_table"
+        )
+
+        dictionary = service.get_dictionary(source_table.id)
+        url = "/api/v1/dataset/data-dictionary/{}".format(source_table.id)
+        response = unauthenticated_client.get(url)
+        expected = {
+            "id": str(source_table.id),
+            "schema_name": "public",
+            "table_name": "test_source_table",
+            "fields": [
+                {
+                    "name": item.name,
+                    "data_type": item.data_type,
+                    "definition": item.definition,
+                }
+                for item in dictionary.items
+            ],
+        }
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["results"] == [expected]

@@ -502,16 +502,21 @@ def data_dictionary_api_view_GET(request, source_uuid):
     service = DataDictionaryService()
     dictionary = service.get_dictionary(source_uuid)
     response = {
-        "id": source_uuid,
-        "schema_name": dictionary.schema_name,
-        "table_name": dictionary.table_name,
-        "fields": [
+        "next": None,
+        "results": [
             {
-                "name": item.name,
-                "data_type": item.data_type,
-                "definition": item.definition,
-            }
-            for item in dictionary.items
+                "id": source_uuid,
+                "schema_name": dictionary.schema_name,
+                "table_name": dictionary.table_name,
+                "fields": [
+                    {
+                        "name": item.name,
+                        "data_type": item.data_type,
+                        "definition": item.definition,
+                    }
+                    for item in dictionary.items
+                ],
+            },
         ],
     }
     return Response(response, status=status.HTTP_200_OK)
