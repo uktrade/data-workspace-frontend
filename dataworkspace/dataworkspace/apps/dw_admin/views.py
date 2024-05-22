@@ -34,7 +34,7 @@ from django.db.models.functions import Concat, TruncDate
 from django.http import Http404, HttpResponseServerError, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template.defaultfilters import filesizeformat
-from django.urls import reverse, NoReverseMatch
+from django.urls import reverse
 from django.utils.timesince import timesince
 from django.views.generic import FormView, CreateView, TemplateView
 from django_celery_results.models import TaskResult
@@ -141,8 +141,11 @@ class SelectDatasetAndNewUserAdminView(FormView):
 
     def form_valid(self, form):
         # TODO add validation here around user being present in the form#
-        # TODO add validation here around at least 1 dataset being present in the form#
         dataset_ids = form.data.getlist("dataset_id")
+        if not dataset_ids:
+            form.add_error(None, "Select at least 1 dataset.")
+            return self.form_invalid(form)
+
         datasets = [dataset for dataset in dataset_ids if "-" in dataset]
         ref_datasets = [dataset for dataset in dataset_ids if "-" not in dataset]
         new_owner = form.data["user"]
@@ -420,9 +423,9 @@ class ReferenceDatasetAdminUploadView(ReferenceDataRecordMixin, FormView):
                         try:
                             link_id = linked_dataset.get_record_by_custom_id(value).id
                         except linked_dataset.get_record_model_class().DoesNotExist:
-                            errors[
-                                header_name
-                            ] = "Identifier {} does not exist in linked dataset".format(value)
+                            errors[header_name] = (
+                                "Identifier {} does not exist in linked dataset".format(value)
+                            )
                     form_data[field.relationship_name + "_id"] = link_id
                 else:
                     # Otherwise validate using the associated form field
