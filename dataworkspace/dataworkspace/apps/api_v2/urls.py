@@ -26,4 +26,11 @@ urlpatterns = [
             ("dataworkspace.apps.api_v2.recent_tools.urls", "api_v2"), namespace="recent_tools"
         ),
     ),
+    path(
+        "",
+        include(
+            ("dataworkspace.apps.api_v2.inline_feedback.urls", "api_v2"),
+            namespace="inline_feedback",
+        ),
+    ),
 ]
