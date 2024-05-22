@@ -757,7 +757,7 @@ class VisualisationLinkForm(forms.ModelForm):
 
 
 class SelectUserForm(forms.Form):
-    # TODO - this will break on prod as it selects all users into the DOM, needs to be an autocomplete field#
+    # TODO - this will break on prod as it selects all users into the DOM, needs to be an autocomplete field
     user = forms.ModelChoiceField(queryset=User.objects.all())
 
 

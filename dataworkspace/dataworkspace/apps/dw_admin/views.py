@@ -34,7 +34,7 @@ from django.db.models.functions import Concat, TruncDate
 from django.http import Http404, HttpResponseServerError, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template.defaultfilters import filesizeformat
-from django.urls import reverse
+from django.urls import reverse, NoReverseMatch
 from django.utils.timesince import timesince
 from django.views.generic import FormView, CreateView, TemplateView
 from django_celery_results.models import TaskResult
@@ -73,9 +73,8 @@ class SelectUserAndRoleAdminView(FormView):
     form_class = CurrentOwnerAndRoleForm
 
     def form_valid(self, form):
-        # TODO add validation here around user and role both being present in the form#
         user_id = form.get_user()
-        role = form.data["role"]
+        role = form.cleaned_data["role"]
         return HttpResponseRedirect(
             reverse(
                 "dw-admin:assign-dataset-ownership-list",

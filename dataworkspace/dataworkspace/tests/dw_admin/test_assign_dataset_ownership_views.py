@@ -1,14 +1,15 @@
 from django.test import TestCase, RequestFactory
 from django.urls import reverse
-from mock import patch
+from django.template.response import TemplateResponse
+from django.contrib.auth.models import User
+
+from unittest.mock import patch
+
 from dataworkspace.apps.dw_admin.views import (
-    SelectUserForm,
-    CurrentOwnerAndRoleForm,
     SelectUserAndRoleAdminView,
     SelectDatasetAndNewUserAdminView,
     ConfirmationAdminView,
 )
-from django.contrib.auth.models import User
 
 
 class BaseTest(TestCase):
@@ -20,33 +21,45 @@ class BaseTest(TestCase):
         self.factory = RequestFactory()
 
 
-class SelectUserFormTest(BaseTest):
-    def test_form(self):
-        form = SelectUserForm(data={"user": 1})
-        self.assertTrue(form.is_valid())
-
-
-class CurrentOwnerAndRoleFormTest(BaseTest):
-    def test_form(self):
-        form = CurrentOwnerAndRoleForm(
-            data={"user": self.user.id, "role": "information_asset_owner_id"}
-        )
-        self.assertTrue(form.is_valid())
-
-
 class SelectUserAndRoleAdminViewTest(BaseTest):
-    def test_view(self):
-        request = self.factory.get(
+    def test_view_successful_redirect_on_valid_form_submission(self):
+        request = self.factory.post(
+            reverse("dw-admin:assign-dataset-ownership"),
+            data={"user": self.user.id, "role": "information_asset_owner_id"},
+        )
+        request.user = self.user
+
+        response = SelectUserAndRoleAdminView.as_view()(request)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
             reverse(
                 "dw-admin:assign-dataset-ownership-list",
-                args=(
-                    "1",
-                    "information_asset_owner_id",
-                ),
-            )
+                args=(str(self.user.id), "information_asset_owner_id"),
+            ),
         )
+
+    def test_view_no_user_selected_reloads_page_with_error_listed(self):
+        request = self.factory.post(
+            reverse("dw-admin:assign-dataset-ownership"),
+            data={"user": "", "role": "information_asset_owner_id"},
+        )
+        request.user = self.user
+
         response = SelectUserAndRoleAdminView.as_view()(request)
-        self.assertEqual(response.status_code, 200)
+        self.assertIsInstance(response, TemplateResponse)
+        self.assertContains(response, "This field is required.", status_code=200)
+
+    def test_view_no_role_selected_reloads_page_with_error_listed(self):
+        request = self.factory.post(
+            reverse("dw-admin:assign-dataset-ownership"),
+            data={"user": self.user.id, "role": ""},
+        )
+        request.user = self.user
+
+        response = SelectUserAndRoleAdminView.as_view()(request)
+        self.assertIsInstance(response, TemplateResponse)
+        self.assertContains(response, "This field is required.", status_code=200)
 
 
 class SelectDatasetAndNewUserAdminViewTest(BaseTest):
