@@ -10,6 +10,11 @@ urlpatterns = [
         name="catalogue-items",
     ),
     path(
+        "data-dictionary/<str:source_uuid>",
+        views.data_dictionary_api_view_GET,
+        name="data-dictionary",
+    ),
+    path(
         "<str:dataset_id>/<str:source_table_id>",
         views.dataset_api_view_GET,
         name="api-dataset-view",
