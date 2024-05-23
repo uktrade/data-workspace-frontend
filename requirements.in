@@ -51,3 +51,4 @@ XlsxWriter
 zenpy
 django-webpack-loader
 django-celery-results
+python-arango
