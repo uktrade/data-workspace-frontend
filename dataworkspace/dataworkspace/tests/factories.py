@@ -482,3 +482,13 @@ class UserDataTableViewFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = "accounts.UserDataTableView"
+
+
+class InlineFeedbackFactory(factory.django.DjangoModelFactory):
+    was_this_page_helpful = True
+    location = factory.fuzzy.FuzzyText()
+    inline_feedback_choices = ""
+    more_detail = ""
+
+    class Meta:
+        model = "core.UserInlineFeedbackSurvey"
