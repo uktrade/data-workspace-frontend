@@ -1,11 +1,22 @@
 from rest_framework import serializers
 
-from dataworkspace.apps.core.models import UserSatisfactionSurvey, NewsletterSubscription, Team
+from dataworkspace.apps.core.models import (
+    UserSatisfactionSurvey,
+    NewsletterSubscription,
+    Team,
+    UserInlineFeedbackSurvey,
+)
 
 
 class UserSatisfactionSurveySerializer(serializers.ModelSerializer):
     class Meta:
         model = UserSatisfactionSurvey
+        fields = "__all__"
+
+
+class UserInlineFeedbackSurveySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserInlineFeedbackSurvey
         fields = "__all__"
 
 

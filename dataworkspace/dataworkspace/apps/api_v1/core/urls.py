@@ -29,4 +29,9 @@ urlpatterns = [
         views.TeamViewSet.as_view({"get": "list"}),
         name="teams",
     ),
+    path(
+        "user-inline-feedback-survey",
+        views.UserInlineFeedbackSurveyViewSet.as_view({"get": "list"}),
+        name="user-inline-feedback-survey",
+    ),
 ]
