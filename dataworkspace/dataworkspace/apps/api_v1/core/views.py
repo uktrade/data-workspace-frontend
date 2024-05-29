@@ -13,12 +13,14 @@ from dataworkspace.apps.api_v1.core.serializers import (
     UserSatisfactionSurveySerializer,
     NewsletterSubscriptionSerializer,
     TeamSerializer,
+    UserInlineFeedbackSurveySerializer,
 )
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.core.models import (
     UserSatisfactionSurvey,
     NewsletterSubscription,
     Team,
+    UserInlineFeedbackSurvey,
 )
 from dataworkspace.apps.core.utils import (
     generate_jwt_token,
@@ -156,3 +158,13 @@ class TeamViewSet(viewsets.ModelViewSet):
     queryset = Team.objects.all()
     serializer_class = TeamSerializer
     pagination_class = PageNumberPagination
+
+
+class UserInlineFeedbackSurveyViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint to list user satisfaction survey results for ingestion by data flow
+    """
+
+    queryset = UserInlineFeedbackSurvey.objects.all()
+    serializer_class = UserInlineFeedbackSurveySerializer
+    # pagination_class = PageNumberPagination
