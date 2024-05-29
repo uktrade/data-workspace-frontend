@@ -167,4 +167,4 @@ class UserInlineFeedbackSurveyViewSet(viewsets.ModelViewSet):
 
     queryset = UserInlineFeedbackSurvey.objects.all()
     serializer_class = UserInlineFeedbackSurveySerializer
-    # pagination_class = PageNumberPagination
+    pagination_class = PageNumberPagination
