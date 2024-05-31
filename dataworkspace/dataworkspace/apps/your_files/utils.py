@@ -31,7 +31,7 @@ def get_s3_csv_file_info(path):
     encoding, decoded = _get_encoding_and_decoded_bytes(raw)
 
     fh = StringIO(decoded, newline="")
-    rows = list(csv.reader(fh))
+    rows = list(csv.reader(fh, separator='|', text_qualifier='"'))
 
     return {"encoding": encoding, "column_definitions": _get_csv_column_types(rows)}
 
