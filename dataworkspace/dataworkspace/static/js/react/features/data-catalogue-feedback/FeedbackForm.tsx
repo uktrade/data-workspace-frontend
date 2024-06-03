@@ -44,6 +44,7 @@ const StyledTextArea = styled(TextArea)`
   span {
     font-weight: ${FONT_WEIGHTS.bold};
     margin-bottom: ${SPACING_POINTS[3]}px;
+    padding-bottom: 0;
   }
   textarea {
     font-weight: ${FONT_WEIGHTS.regular};
