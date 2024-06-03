@@ -35,6 +35,9 @@ const StyledLink = styled(Link)`
 const StyledFieldset = styled(Fieldset)`
   margin-top: ${SPACING_POINTS[6]}px;
   margin-bottom: ${SPACING_POINTS[4]}px;
+  legend {
+    margin-bottom: ${SPACING_POINTS[3]}px;
+  }
 `;
 
 const StyledTextArea = styled(TextArea)`
