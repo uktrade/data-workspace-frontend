@@ -283,6 +283,15 @@
       </div>
     </div>
   </form>
+  
+{% endblock %}
+
+{% block secondary_section %}
+<section class="govuk-border--top govuk-!-margin-top-5">
+  <div class="govuk-width-container govuk-!-padding-top-7">
+        {% include "partials/react-slot.html" with mount_id="data-catalogue-feedback" id=model.id test_id="data-catalogue-feedback" %}
+  </div>
+</section>
 {% endblock %}
 
 {% block footer_scripts %}
@@ -305,4 +314,5 @@
       {% endflag %}
     });
   </script>
+    {% render_bundle "data-catalogue-feedback" "js" %}
 {% endblock %}

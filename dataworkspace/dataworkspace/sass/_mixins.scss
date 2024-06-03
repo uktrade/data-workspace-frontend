@@ -1,0 +1,11 @@
+$positions: top, right, bottom, left;
+
+@mixin govuk-border($position, $color: $govuk-border-colour) {
+  .govuk-border--#{$position} {
+    border-#{$position}: 1px solid $color;
+  }
+}
+
+@each $position in $positions {
+  @include govuk-border($position);
+}

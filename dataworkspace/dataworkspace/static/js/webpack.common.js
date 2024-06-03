@@ -8,7 +8,8 @@ const REACT_APPS = [
   'reference-dataset',
   'visualisations',
   'your-files',
-  'your-files-v2'
+  'your-files-v2',
+  'data-catalogue-feedback'
 ].reduce(
   (prev, acc) => ({
     ...prev,
