@@ -1,10 +1,12 @@
 {% extends '_base.html' %}
 {% block main %}
 {% block search_bar %}{% endblock %}
+<main class="govuk-main-wrapper" id="main-content" role="main">
 <div class="govuk-width-container">
-  <main class="govuk-main-wrapper" id="main-content" role="main">
     {% include 'partials/messages.html' %}
     {% block content %}{% endblock %}
-  </main>
-</div>
+  </div>
+  {% block secondary_section %}{% endblock %}
+</main>
+
 {% endblock %}

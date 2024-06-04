@@ -77,3 +77,5 @@ export const fetchYourRecentTools = async () => {
     TransformedYourRecentToolsResponse
   >(`/${API_BASE_URL}/recent_tools?page_size=2`, transformRecentToolsResponse);
 };
+
+export { patchFeedback, postFeedback } from './inline-feedback';

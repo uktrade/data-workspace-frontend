@@ -15,9 +15,8 @@ export const InlineFeedbackForm: Story = {
   args: {
     title: 'Was this page helpful?',
     location: 'data-catalogue',
-    successMessage:
-      'Thanks for letting us know, your response has been recorded',
-    postFeedback: mockPostFeedback
+    postFeedback: mockPostFeedback,
+    csrf_token: '1234'
   }
 };
 
@@ -25,9 +24,8 @@ export const InlineFeedbackFormWithError: Story = {
   args: {
     title: 'Was this page helpful?',
     location: 'data-catalogue',
-    successMessage:
-      'Thanks for letting us know, your response has been recorded',
-    postFeedback: mockRejectPostFeedback
+    postFeedback: mockRejectPostFeedback,
+    csrf_token: '1234'
   }
 };
 
@@ -35,17 +33,13 @@ export const InlineFeedbackWithChildForm: Story = {
   render: (args) => {
     return (
       <InlineFeedback {...args}>
-        {(location, wasItHelpful) => (
-          <ChildForm location={location} wasItHelpful={wasItHelpful} />
-        )}
+        {(props) => <ChildForm {...props} />}
       </InlineFeedback>
     );
   },
   args: {
     title: 'Was this page helpful?',
     location: 'data-catalogue',
-    successMessage:
-      'Thanks for letting us know, your response has been recorded',
     postFeedback: mockPostFeedback
   }
 };
