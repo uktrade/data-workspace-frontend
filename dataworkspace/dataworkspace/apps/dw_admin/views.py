@@ -12,16 +12,23 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin import helpers
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.postgres.aggregates.general import BoolOr
+from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models import (
     Avg,
     Count,
     DurationField,
     ExpressionWrapper,
     F,
+    Q,
     Sum,
     Value,
+    Case,
+    When,
+    BooleanField,
 )
 from django.db.models.functions import Concat, TruncDate
 from django.http import Http404, HttpResponseServerError, HttpResponseRedirect
@@ -43,6 +50,7 @@ from dataworkspace.apps.datasets.models import (
     ReferenceDatasetUploadLog,
     ReferenceDatasetUploadLogRecord,
     SourceTable,
+    VisualisationCatalogueItem,
 )
 from dataworkspace.apps.dw_admin.forms import (
     ReferenceDataRowDeleteForm,
@@ -50,6 +58,8 @@ from dataworkspace.apps.dw_admin.forms import (
     SourceLinkUploadForm,
     ReferenceDataRecordUploadForm,
     clean_identifier,
+    SelectUserForm,
+    CurrentOwnerAndRoleForm,
 )
 from dataworkspace.apps.eventlog.constants import SystemStatLogEventType
 from dataworkspace.apps.eventlog.models import EventLog, SystemStatLog
@@ -58,7 +68,109 @@ from dataworkspace.apps.your_files.models import YourFilesUserPrefixStats
 from dataworkspace.datasets_db import get_all_source_tables
 
 
+class SelectUserAndRoleAdminView(FormView):
+    template_name = "admin/assign_dataset_ownership/select_current_user_and_role_form.html"
+    form_class = CurrentOwnerAndRoleForm
+
+    def form_valid(self, form):
+        user_id = form.get_user()
+        role = form.cleaned_data["role"]
+        return HttpResponseRedirect(
+            reverse(
+                "dw-admin:assign-dataset-ownership-list",
+                args=(
+                    user_id,
+                    role,
+                ),
+            )
+        )
+
+
+class SelectDatasetAndNewUserAdminView(FormView):
+    template_name = "admin/assign_dataset_ownership/select_datasets_and_new_user_form.html"
+    form_class = SelectUserForm
+
+    def get_dataset_query(self, model, db_role, current_user):
+        return (
+            model.objects.all()
+            .annotate(
+                is_owner=BoolOr(
+                    Case(
+                        When(
+                            Q((db_role, current_user)),
+                            then=True,
+                        ),
+                        default=False,
+                        output_field=BooleanField(),
+                    ),
+                ),
+            )
+            .filter(is_owner=True)
+        )
+
+    def get_datasets(self, user_id, role):
+        current_user = User.objects.all().filter(id=user_id)
+        db_role = role[:-3]
+
+        datasets = self.get_dataset_query(DataSet, db_role, current_user[0])
+        ref_datasets = self.get_dataset_query(ReferenceDataset, db_role, current_user[0])
+        vis_datasets = self.get_dataset_query(VisualisationCatalogueItem, db_role, current_user[0])
+
+        return list(datasets) + list(ref_datasets) + list(vis_datasets)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        return kwargs
+
+    def get_role_title(self, role):
+        roles = {
+            "information_asset_manager_id": "Information asset manager",
+            "information_asset_owner_id": "Information asset owner",
+            "enquiries_contact_id": "Enquiries contact",
+        }
+        return roles[role]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user_id = self.kwargs.get("id")
+        role = self.kwargs.get("role")
+        context["datasets"] = self.get_datasets(user_id, role)
+        context["user_id"] = User.objects.filter(id=user_id).first()
+        context["role"] = self.get_role_title(role)
+        return context
+
+    def form_valid(self, form):
+        # TODO add validation here around user being present in the form#
+        dataset_ids = form.data.getlist("dataset_id")
+        if not dataset_ids:
+            form.add_error(None, "Select at least 1 dataset.")
+            return self.form_invalid(form)
+
+        datasets = [dataset for dataset in dataset_ids if "-" in dataset]
+        ref_datasets = [dataset for dataset in dataset_ids if "-" not in dataset]
+        new_owner = form.data["user"]
+        role = self.kwargs.get("role")
+
+        self.update_datasets(datasets, ref_datasets, role, new_owner)
+
+        return HttpResponseRedirect(reverse("dw-admin:assign-dataset-ownership-confirmation"))
+
+    @transaction.atomic
+    def update_datasets(self, datasets, ref_datasets, role, new_owner):
+        if datasets:
+            DataSet.objects.filter(id__in=datasets).update(**{role: new_owner})
+            VisualisationCatalogueItem.objects.filter(id__in=datasets).update(**{role: new_owner})
+        if ref_datasets:
+            ReferenceDataset.objects.filter(id__in=ref_datasets).update(**{role: new_owner})
+
+
+class ConfirmationAdminView(TemplateView):
+    template_name = "admin/assign_dataset_ownership/confirmation.html"
+
+
 class ReferenceDataRecordMixin(UserPassesTestMixin):
+    template_name = "admin/reference_dataset_upload_records.html"
+
     def test_func(self):
         return self.request.user.is_superuser
 
@@ -377,11 +489,6 @@ class SourceLinkUploadView(UserPassesTestMixin, CreateView):  # pylint: disable=
         ctx.update({"dataset": dataset, "opts": dataset._meta})
         return ctx
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["initial"] = {"dataset": self._get_dataset()}
-        return kwargs
-
     def get_form(self, form_class=None):
         form = self.get_form_class()(**self.get_form_kwargs())
         return helpers.AdminForm(form, list([(None, {"fields": list(form.fields.keys())})]), {})
@@ -570,7 +677,7 @@ class DataWorkspaceStatsView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
             {
                 "title": "Missing source tables",
                 "stat": missing_source_tables,
-                "subtitle": f"{missing_source_tables } table{'s' if missing_source_tables != 1 else ''} "
+                "subtitle": f"{missing_source_tables} table{'s' if missing_source_tables != 1 else ''} "
                 "missing from the DB",
                 "bad_news": missing_source_tables > 0,
             }

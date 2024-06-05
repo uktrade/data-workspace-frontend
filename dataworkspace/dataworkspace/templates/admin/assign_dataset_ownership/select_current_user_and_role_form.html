@@ -1,0 +1,8 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+    <form method="POST">
+        {% csrf_token %}
+        {{ form }}
+        <input type="submit" value="Submit" class="default" />
+    </form>
+{% endblock %}
