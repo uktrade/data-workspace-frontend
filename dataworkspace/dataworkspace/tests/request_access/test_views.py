@@ -4,11 +4,13 @@ import pytest
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import Client
 from django.urls import reverse
 
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType
 from dataworkspace.apps.request_access.models import AccessRequest
+from dataworkspace.tests.common import get_http_sso_data
 from dataworkspace.tests.datasets.test_views import DatasetsCommon
 from dataworkspace.tests.factories import DataSetFactory
 from dataworkspace.tests.request_access import factories
@@ -528,3 +530,28 @@ class TestEditAccessRequest:
             },
         )
         assert resp.status_code == 404
+
+
+@pytest.mark.django_db
+class TestSelfCertify:
+    def test_user_sees_self_certify_form_when_email_is_allowed_to_self_certify(self):
+        user = factories.UserFactory.create(is_superuser=False)
+        client = Client(**get_http_sso_data(user))
+
+        response = client.get(
+            reverse("request_access:self-certify-page"),
+        )
+        assert response.status_code == 200
+
+    def test_user_is_redirected_to_request_access_when_email_is_not_allowed_to_self_certify(self):
+        user = factories.UserFactory.create(is_superuser=False)
+        client = Client(**get_http_sso_data(user))
+
+        response = client.get(
+            reverse("request_access:self-certify-page"),
+        )
+        assert response.status_code == 200
+        # TODO when https://uktrade.atlassian.net/browse/DT-2032 is implemented this test will # pylint: disable=fixme
+        # need to be updated, this example code can be used to make it pass
+        # assert response.status_code == 302
+        # assert response.headers['location'] == reverse("request-access:index")

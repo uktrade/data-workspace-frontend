@@ -1,0 +1,55 @@
+{% extends '_main.html' %}DBT
+
+{% block page_title %}Get access to tools{% endblock %}
+
+{% block breadcrumbs %}
+    <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+            <li class="govuk-breadcrumbs__list-item">
+                <a class="govuk-breadcrumbs__link" href="/">Home</a>
+            </li>
+            <li class="govuk-breadcrumbs__list-item">Get access
+            </li>
+        </ol>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            {% include 'design_system/error_summary.html' with form=form %}
+            <h1 class="govuk-heading-xl">Get access to tools</h1>
+
+            <p class="govuk-body">
+              To get access to tools you need to have completed the <a href="https://www.learninghub.businessandtrade.gov.uk/group/guest/learning-paths" class="govuk-link" target="_blank">Security and Data Protection</a> training. It's mandatory for all DBT staff and needs to be completed every 12 months.
+            </p>
+            <p class="govuk-body">
+              <span>Once you have verified your training is up to date, you will get access to:</span>
+            </p>
+
+            <ul class="govuk-list govuk-list--bullet">
+                <li>Quicksight</li>
+                <li>pgAdmin</li>
+                <li>Data Explorer</li>
+                <li>RStudio</li>
+                <li>JupyterLab Python</li>
+                <li>Theia</li>
+                <li>Your Files</li>
+            </ul>
+
+            <h2 class="govuk-heading-l">How to verify your training is up to date</h2>
+            <p class="govuk-body">
+              You need to give us the date that's on your Security and Data Protection certificate by entering it into the boxes below.
+            </p>
+            <form method="post">
+              {% csrf_token %}
+              {{ form.certificate_date }}
+              <span class="govuk-label  govuk-!-font-weight-bold">
+                Declaration
+              </span>
+              {{ form.declaration }}
+              <button type="submit" class="govuk-button">Submit</button>
+            </form>            
+        </div>
+    </div>
+{% endblock %}

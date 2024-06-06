@@ -1,5 +1,5 @@
 import copy
-
+import datetime
 import re
 
 from django import forms
@@ -11,6 +11,8 @@ from django.forms import (
     EmailField,
     Media,
     ModelChoiceField,
+    MultiValueField,
+    ValidationError,
 )
 from django.utils.html import linebreaks
 
@@ -74,6 +76,41 @@ class GOVUKDesignSystemFieldMixin:
         self.widget.custom_context["label"] = self.label
         self.widget.custom_context["help_text"] = self.help_text
         self.widget.custom_context["help_html"] = self.help_html
+
+
+class GOVUKDesignSystemDateWidget(forms.widgets.MultiWidget):
+    template_name = "design_system/date.html"
+
+    def __init__(self, day_attrs=None, month_attrs=None, year_attrs=None, **kwargs):
+        widgets = (
+            GOVUKDesignSystemTextWidget(),
+            GOVUKDesignSystemTextWidget(),
+            GOVUKDesignSystemTextWidget(),
+        )
+
+        super().__init__(widgets, **kwargs)
+
+        self.custom_context = {}
+        self.day_attrs = day_attrs
+        self.month_attrs = month_attrs
+        self.year_attrs = year_attrs
+
+    def decompress(self, value):
+        return [None, None, None]
+
+    def __deepcopy__(self, memo):
+        obj = copy.copy(self)
+        obj.custom_context = self.custom_context.copy()
+        memo[id(self)] = obj
+        return obj
+
+    def get_context(self, name, value, attrs):
+        context = super().get_context(name, value, attrs)
+        context["widget"].update(self.custom_context)
+        context["widget"]["subwidgets"][0].update(self.day_attrs)
+        context["widget"]["subwidgets"][1].update(self.month_attrs)
+        context["widget"]["subwidgets"][2].update(self.year_attrs)
+        return context
 
 
 class GOVUKDesignSystemTextWidget(GOVUKDesignSystemWidgetMixin, forms.widgets.TextInput):
@@ -156,6 +193,58 @@ class GOVUKDesignSystemMultipleChoiceField(GOVUKDesignSystemFieldMixin, forms.Mu
 
 class GOVUKDesignSystemCharField(GOVUKDesignSystemFieldMixin, CharField):
     widget = GOVUKDesignSystemTextWidget
+
+
+class GOVUKDesignSystemDateField(MultiValueField):
+    widget = GOVUKDesignSystemDateWidget
+    default_error_messages = {
+        "invalid_day": ("Enter a valid day."),
+        "invalid_month": ("Enter a valid month."),
+        "invalid_year": ("Enter a valid year."),
+        "invalid_date": ("Enter a valid date."),
+    }
+
+    def __init__(self, *, label, help_text, **kwargs):
+        errors = self.default_error_messages.copy()
+        if "error_messages" in kwargs:
+            errors.update(kwargs["error_messages"])
+        fields = (
+            GOVUKDesignSystemCharField(),
+            GOVUKDesignSystemCharField(),
+            GOVUKDesignSystemCharField(),
+        )
+
+        super().__init__(fields, **kwargs)
+        self.widget.custom_context["label"] = label
+        self.widget.custom_context["help_text"] = help_text
+
+    def compress(self, data_list):
+        def try_parse_int_value(value, code):
+            try:
+                return int(value)
+            except ValueError as invalid_int_exc:
+                raise ValidationError(self.error_messages[code], code=code) from invalid_int_exc
+
+        if data_list:
+            if data_list[0] in self.empty_values:
+                raise ValidationError(self.error_messages["invalid_day"], code="invalid_day")
+            if data_list[1] in self.empty_values:
+                raise ValidationError(self.error_messages["invalid_month"], code="invalid_month")
+            if data_list[2] in self.empty_values:
+                raise ValidationError(self.error_messages["invalid_year"], code="invalid_year")
+            try_parse_int_value(data_list[0], "invalid_day")
+            try_parse_int_value(data_list[1], "invalid_month")
+            try_parse_int_value(data_list[2], "invalid_year")
+            try:
+                date = datetime.datetime(
+                    year=int(data_list[2]), month=int(data_list[1]), day=int(data_list[0])
+                )
+                return date
+            except ValueError as datetime_parse_exc:
+                raise ValidationError(
+                    self.error_messages["invalid_date"], code="invalid_date"
+                ) from datetime_parse_exc
+        return None
 
 
 class GOVUKDesignSystemEmailField(GOVUKDesignSystemFieldMixin, EmailField):

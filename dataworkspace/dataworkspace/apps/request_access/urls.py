@@ -6,6 +6,7 @@ from dataworkspace.apps.request_access.views import (
     AccessRequestSummaryPage,
     DatasetAccessRequest,
     DatasetAccessRequestUpdate,
+    SelfCertifyView,
     ToolsAccessRequestPart1,
     ToolsAccessRequestPart2,
     ToolsAccessRequestPart3,
@@ -51,5 +52,10 @@ urlpatterns = [
         "<int:pk>/confirmation",
         login_required(AccessRequestConfirmationPage.as_view()),
         name="confirmation-page",
+    ),
+    path(
+        "self-certify",
+        login_required(SelfCertifyView.as_view()),
+        name="self-certify-page",
     ),
 ]

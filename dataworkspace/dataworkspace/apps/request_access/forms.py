@@ -4,14 +4,18 @@ from django.template.loader import render_to_string
 from dataworkspace.apps.request_access.models import AccessRequest
 from dataworkspace.forms import (
     GOVUKDesignSystemBooleanField,
+    GOVUKDesignSystemDateField,
+    GOVUKDesignSystemForm,
     GOVUKDesignSystemModelForm,
     GOVUKDesignSystemRadiosWidget,
     GOVUKDesignSystemCharField,
+    GOVUKDesignSystemSingleCheckboxWidget,
     GOVUKDesignSystemTextareaField,
     GOVUKDesignSystemTextareaWidget,
     GOVUKDesignSystemTextWidget,
     GOVUKDesignSystemFileField,
     GOVUKDesignSystemFileInputWidget,
+    GOVUKDesignSystemDateWidget,
 )
 
 
@@ -110,4 +114,38 @@ class ToolsAccessRequestFormPart3(GOVUKDesignSystemModelForm):
             attrs={"rows": 5},
         ),
         error_messages={"required": "Enter a reason for needing STATA."},
+    )
+
+
+class SelfCertifyForm(GOVUKDesignSystemForm):
+    certificate_date = GOVUKDesignSystemDateField(
+        label="Enter the date that's on your certificate?",
+        help_text="For example, 27 3 2007",
+        widget=GOVUKDesignSystemDateWidget(
+            day_attrs={
+                "label": "Day",
+                "label_is_heading": False,
+                "inputmode": "numeric",
+                "extra_input_classes": "govuk-date-input__input govuk-input--width-2",
+            },
+            month_attrs={
+                "label": "Month",
+                "label_is_heading": False,
+                "inputmode": "numeric",
+                "extra_input_classes": "govuk-date-input__input govuk-input--width-2",
+            },
+            year_attrs={
+                "label": "Year",
+                "label_is_heading": False,
+                "inputmode": "numeric",
+                "extra_input_classes": "govuk-date-input__input govuk-input--width-4",
+            },
+        ),
+    )
+
+    declaration = GOVUKDesignSystemBooleanField(
+        label="I confirm that I've completed the Security and Data Protection training and the date I've entered matches my certificate.",  # pylint: disable=line-too-long
+        widget=GOVUKDesignSystemSingleCheckboxWidget(
+            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
+        ),
     )

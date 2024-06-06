@@ -27,7 +27,7 @@
   {% endif %}
 
   <input
-          class="govuk-input"
+          class="govuk-input {{ widget.extra_input_classes }}"
           type="text"
           name="{{ widget.name }}"
           {% if widget.help_text %}aria-describedby="{{ id }}-hint" {% endif %}
