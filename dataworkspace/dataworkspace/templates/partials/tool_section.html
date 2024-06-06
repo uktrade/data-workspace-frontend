@@ -15,11 +15,11 @@
   </div>
 
   <div class="govuk-grid-column-one-half">
-    {% if not has_access %}
+    {% if not false %}
       <div class="govuk-grid-row">
         <div class="govuk-grid-column-one-half"><p class="govuk-body"></p></div>
         <div class="govuk-grid-column-one-half">
-          <a class="govuk-button govuk-button--secondary" href="{% url 'request_access:index' %}">Request access to {{ application_name }}</a>
+          <a class="govuk-button govuk-button--secondary" href="{% url 'request_access:index' %}">Get access to {{ application_name }}</a>
         </div>
       </div>
     {% elif instance %}
