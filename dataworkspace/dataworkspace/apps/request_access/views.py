@@ -2,7 +2,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponseRedirect, Http404
 from django.shortcuts import render
 from django.urls import reverse, resolve
-from django.views.generic import CreateView, UpdateView, DetailView
+from django.views.generic import CreateView, UpdateView, DetailView, FormView
 
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.datasets.constants import DataSetType
@@ -12,6 +12,7 @@ from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.apps.request_access.forms import (  # pylint: disable=import-error
     DatasetAccessRequestForm,
+    SelfCertifyForm,
     ToolsAccessRequestFormPart1,
     ToolsAccessRequestFormPart2,
     ToolsAccessRequestFormPart3,
@@ -246,3 +247,20 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
             else None
         )
         return context
+
+
+class SelfCertifyView(FormView):
+    form_class = SelfCertifyForm
+    template_name = "request_access/self-certify.html"
+
+    def get(self, request, *args, **kwargs):
+        # TODO add the check here that the user email domain is allowed, otherwise send them to # pylint: disable=fixme
+        # the page where they must upload docs https://uktrade.atlassian.net/browse/DT-2032
+        is_user_allowed_to_use_self_certify = True
+        if not is_user_allowed_to_use_self_certify:
+            return HttpResponseRedirect(reverse("request-access:index"))
+        return super().get(request, args, kwargs)
+
+    def form_valid(self, form):
+        # TODO add the logic here to store the certification value against the user # pylint: disable=fixme
+        return HttpResponseRedirect("/tools")  # pylint: disable=fixme

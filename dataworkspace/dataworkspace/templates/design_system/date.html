@@ -1,0 +1,34 @@
+{% with id=widget.attrs.id %}
+
+<div class="govuk-form-group {% if widget.errors %}govuk-form-group--error{% endif %}">
+  <fieldset class="govuk-fieldset" role="group" aria-describedby="{{ id }}-hint">
+    <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
+      <h2 class="govuk-heading-m">
+        {{widget.label}}
+      </h2>
+    </legend>
+    {% if widget.help_html %}
+      <div id="{{ id }}-hint">
+        {{ widget.help_html }}
+      </div>
+      {% elif widget.help_text %}
+      <div id="{{ id }}-hint" class="govuk-hint">
+        {{ widget.help_text }}
+      </div>
+    {% endif %}
+    {% if widget.errors %}
+      <span id="{{ id }}-error" class="govuk-error-message">
+          <span class="govuk-visually-hidden">Error: </span>{{ widget.errors.0 }}
+      </span>
+    {% endif %}
+    <div class="govuk-date-input" id="{{ id }}">
+      {% for subwidget in widget.subwidgets %}  
+        {{ subwidget }}
+          <div class="govuk-date-input__item">
+            {% include subwidget.template_name with widget=subwidget %}
+          </div>        
+      {% endfor %}
+    </div>
+  </fieldset>
+</div>
+{% endwith %}
