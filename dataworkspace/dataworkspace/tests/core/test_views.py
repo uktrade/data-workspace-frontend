@@ -301,7 +301,7 @@ def test_footer_links(request_client):
         (
             False,
             "/request-access/",
-            "Request access to QuickSight",
+            "Get access to QuickSight",
         ),
     ),
 )
@@ -333,7 +333,7 @@ def test_quicksight_link_only_shown_to_user_with_permission(
         (
             False,
             "/request-access/",
-            "Request access to STATA",
+            "Get access to STATA",
         ),
     ),
 )
