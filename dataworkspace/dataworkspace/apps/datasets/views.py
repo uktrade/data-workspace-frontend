@@ -143,6 +143,8 @@ def _matches_filters(
         users_datasets.add("owned")
     if data["is_contact"]:
         users_datasets.add("enquiries_contact")
+    if data["is_editor"]:
+        users_datasets.add("editor")
 
     return (
         (

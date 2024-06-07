@@ -271,6 +271,7 @@ def expected_search_result(catalogue_item, **kwargs):
         "average_unique_users_daily": mock.ANY,
         "is_owner": False,
         "is_contact": False,
+        "is_editor": False,
     }
     result.update(**kwargs)
     return result
@@ -1316,6 +1317,27 @@ def test_find_datasets_filters_by_enquires_contact(user, client):
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
         expected_search_result(ds1, is_contact=True),
+        expected_search_result(ds2),
+        expected_search_result(ds3),
+    ]
+
+
+@pytest.mark.django_db
+def test_find_datasets_filters_by_editor(user, client):
+    ds1 = factories.DataSetFactory.create(
+        name="Dataset",
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+    )
+    ds1.data_catalogue_editors.set([user])
+    ds2 = factories.ReferenceDatasetFactory.create(name="Reference")
+    ds3 = factories.VisualisationCatalogueItemFactory.create(
+        name="Visualisation", user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
+    )
+
+    response = client.get(reverse("datasets:find_datasets"))
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(ds1, is_editor=True),
         expected_search_result(ds2),
         expected_search_result(ds3),
     ]
