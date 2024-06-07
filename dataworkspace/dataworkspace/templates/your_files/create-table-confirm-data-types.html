@@ -2,7 +2,7 @@
 {% block page_title %}How do you want to name your table? - {{ block.super }}{% endblock page_title %}
 
 {% block go_back %}
-  <a href="{% url 'your_files:create-table-confirm-name' %}?{{ request.GET.urlencode }}" class="govuk-back-link">Back</a>
+  <a href="{% url 'your_files:create-table-confirm-file-format' %}?{{ request.GET.urlencode }}" class="govuk-back-link">Back</a>
 {% endblock %}
 
 {% block content %}

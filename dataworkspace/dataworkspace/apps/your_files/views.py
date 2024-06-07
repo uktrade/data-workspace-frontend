@@ -36,6 +36,7 @@ from dataworkspace.apps.core.utils import (
 )
 from dataworkspace.apps.your_files.forms import (
     CreateSchemaForm,
+    CreateTableConfirmFileFormatForm,
     CreateTableDataTypesForm,
     CreateTableForm,
     CreateTableSchemaForm,
@@ -245,7 +246,7 @@ class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, ValidateSchem
             "overwrite": form.cleaned_data["force_overwrite"],
         }
         return HttpResponseRedirect(
-            f'{reverse("your-files:create-table-confirm-data-types")}?{urlencode(params)}'
+            f'{reverse("your-files:create-table-confirm-file-format")}?{urlencode(params)}'
         )
 
     def form_invalid(self, form):
@@ -278,6 +279,48 @@ class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, ValidateSchem
         return super().form_invalid(form)
 
 
+class CreateTableConfirmFileFormatView(RequiredParameterGetRequestMixin, FormView):
+    template_name = "your_files/create-table-confirm-file-format.html"
+    form_class = CreateTableConfirmFileFormatForm
+    required_parameters = ["path"]
+
+    def get_initial(self):
+        schema = self.request.GET.get("schema", get_user_schema(self.request))
+        initial = super().get_initial()
+        if self.request.method == "GET":
+            initial.update(
+                {
+                    "path": self.request.GET["path"]
+                }
+            )
+        return initial
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        params = {
+            "path": self.request.GET["path"],
+            "schema": self.request.GET["schema"],
+            "table_name": self.request.GET["table_name"],
+            "force_overwrite": "overwrite" in self.request.GET,
+            "column_delimiter": form.cleaned_data['column_delimiter'],
+            "quote_char": form.cleaned_data['quote_char'],
+            "line_terminator": form.cleaned_data['line_terminator'],
+        }
+        return HttpResponseRedirect(
+            f'{reverse("your-files:create-table-confirm-data-types")}?{urlencode(params)}'
+        )
+
+    def form_invalid(self, form):
+        errors = form.errors.as_data()
+
+        # Otherwise just redisplay the form (likely an invalid table name)
+        return super().form_invalid(form)
+
+
 class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
     template_name = "your_files/create-table-confirm-data-types.html"
     form_class = CreateTableDataTypesForm
@@ -297,16 +340,25 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
                     "table_name": self.request.GET["table_name"],
                     "force_overwrite": "overwrite" in self.request.GET,
                     "table_exists_action": self.request.GET.get("table_exists_action"),
+                    "column_delimiter": self.request.GET.get("column_delimiter"),
+                    "quote_char": self.request.GET.get("quote_char"),
+                    "line_terminator": self.request.GET.get("line_terminator"),
                 }
             )
         return initial
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
+        column_delimiter = self.request.GET.get("column_delimiter"),
+        quote_char = self.request.GET.get("quote_char"),
+        line_terminator = self.request.GET.get("line_terminator"),
         kwargs.update(
             {
                 "user": self.request.user,
-                "column_definitions": get_s3_csv_file_info(self.request.GET["path"])[
+                "column_definitions": get_s3_csv_file_info(self.request.GET["path"],
+                                                           column_delimiter,
+                                                           quote_char,
+                                                           line_terminator)[
                     "column_definitions"
                 ],
             }

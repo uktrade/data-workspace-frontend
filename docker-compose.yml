@@ -17,7 +17,7 @@ services:
     depends_on:
       - data-workspace-postgres
       - data-workspace-redis
-      - data-workspace-es
+#      - data-workspace-es
     volumes:
       - .:/app
       - ./dataworkspace:/dataworkspace
@@ -64,16 +64,16 @@ services:
     ports:
       - "6379:6379"
   
-  data-workspace-es:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.0
-    environment:
-      - discovery.type=single-node
-      - http.port=9200
-    networks:
-      - data-infrastructure-shared-network
-      - test
-    ports:
-      - "9200:9200"
+#  data-workspace-es:
+#    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.0
+#    environment:
+#      - discovery.type=single-node
+#      - http.port=9200
+#    networks:
+#      - data-infrastructure-shared-network
+#      - test
+#    ports:
+#      - "9200:9200"
 
   data-workspace-sso.test:
     build: https://github.com/uktrade/mock-sso.git
@@ -153,7 +153,7 @@ services:
     links:
       - "data-workspace-postgres"
       - "data-workspace-redis"
-      - "data-workspace-es"
+#      - "data-workspace-es"
     depends_on:
       - "data-workspace-test-results"
     extra_hosts:

@@ -5,6 +5,7 @@ from dataworkspace.apps.your_files.views import (
     CreateSchemaView,
     CreateTableAppendingToTableView,
     CreateTableConfirmDataTypesView,
+    CreateTableConfirmFileFormatView,
     CreateTableCreatingTableView,
     CreateTableFailedView,
     CreateTableIngestingView,
@@ -43,6 +44,11 @@ urlpatterns = [
         "create-table/confirm-name",
         login_required(CreateTableConfirmNameView.as_view()),
         name="create-table-confirm-name",
+    ),
+    path(
+        "create-table/confirm-file-format",
+        login_required(CreateTableConfirmFileFormatView.as_view()),
+        name="create-table-confirm-file-format",
     ),
     path(
         "create-table/confirm-data-types",
