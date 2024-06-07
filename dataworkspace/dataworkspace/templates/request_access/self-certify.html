@@ -21,7 +21,7 @@
             <h1 class="govuk-heading-xl">Get access to tools</h1>
 
             <p class="govuk-body">
-              To get access to tools you need to have completed the <a href="https://www.learninghub.businessandtrade.gov.uk/group/guest/learning-paths" class="govuk-link" target="_blank">Security and Data Protection</a> training. It's mandatory for all DBT staff and needs to be completed every 12 months.
+              To get access to tools you need to have completed the <a href="https://www.learninghub.businessandtrade.gov.uk/c/portal/learning-path/open?plid=2224131&lpId=434" class="govuk-link" target="_blank">Security and Data Protection</a> training. It's mandatory for all DBT staff and needs to be completed every 12 months.
             </p>
             <p class="govuk-body">
               <span>Once you have verified your training is up to date, you will get access to:</span>
@@ -44,11 +44,14 @@
             <form method="post">
               {% csrf_token %}
               {{ form.certificate_date }}
-              <span class="govuk-label  govuk-!-font-weight-bold">
+              <h2 class="govuk-heading-m">
                 Declaration
-              </span>
+              </h2>
               {{ form.declaration }}
-              <button type="submit" class="govuk-button">Submit</button>
+              <div class="govuk-button-group">
+                <button type="submit" class="govuk-button">Submit</button>
+                <a class="govuk-link govuk-link--no-visited-state" href="/tools">Cancel</a>
+              </div>
             </form>            
         </div>
     </div>

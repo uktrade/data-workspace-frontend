@@ -2,10 +2,8 @@
 
 <div class="govuk-form-group {% if widget.errors %}govuk-form-group--error{% endif %}">
   <fieldset class="govuk-fieldset" role="group" aria-describedby="{{ id }}-hint">
-    <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
-      <h2 class="govuk-heading-m">
-        {{widget.label}}
-      </h2>
+    <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">      
+        {{widget.label}}      
     </legend>
     {% if widget.help_html %}
       <div id="{{ id }}-hint">
