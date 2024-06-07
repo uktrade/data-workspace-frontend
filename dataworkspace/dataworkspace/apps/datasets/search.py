@@ -586,7 +586,7 @@ def _annotate_is_editor(datasets, user):
 def _annotate_is_owner(datasets, user):
     """
     Adds a boolean annotation to queryset which is set to True if the user
-    is an IAO, IAM or data catalogue editor of a dataset
+    is an IAO or IAM of a dataset
     @param datasets: Django queryset
     @param user: request.user
     @return: Annotated queryset
@@ -596,9 +596,7 @@ def _annotate_is_owner(datasets, user):
         is_owner=BoolOr(
             Case(
                 When(
-                    Q(information_asset_owner=user)
-                    | Q(information_asset_manager=user)
-                    | Q(data_catalogue_editors=user),
+                    Q(information_asset_owner=user) | Q(information_asset_manager=user),
                     then=True,
                 ),
                 default=False,

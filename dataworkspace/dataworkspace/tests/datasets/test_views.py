@@ -1328,7 +1328,8 @@ def test_find_datasets_filters_by_editor(user, client):
         name="Dataset",
         user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
     )
-    ds1.data_catalogue_editors.set([user])
+    ds1.data_catalogue_editors.add(user)
+
     ds2 = factories.ReferenceDatasetFactory.create(name="Reference")
     ds3 = factories.VisualisationCatalogueItemFactory.create(
         name="Visualisation", user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
