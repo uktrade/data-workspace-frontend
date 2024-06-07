@@ -44,9 +44,9 @@
             <form method="post">
               {% csrf_token %}
               {{ form.certificate_date }}
-              <span class="govuk-label  govuk-!-font-weight-bold">
+              <h2 class="govuk-heading-m">
                 Declaration
-              </span>
+              </h2>
               {{ form.declaration }}
               <button type="submit" class="govuk-button">Submit</button>
             </form>            
