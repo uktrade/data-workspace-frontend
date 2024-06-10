@@ -200,6 +200,8 @@ def _get_datasets_data_for_user_matching_query(
 
     datasets = _annotate_is_contact(datasets, user)
 
+    datasets = _annotate_is_editor(datasets, user)
+
     return datasets.values(
         id_field,
         "name",
@@ -225,6 +227,7 @@ def _get_datasets_data_for_user_matching_query(
         "average_unique_users_daily",
         "is_owner",
         "is_contact",
+        "is_editor",
     )
 
 
@@ -535,7 +538,7 @@ def _annotate_has_access(datasets, user):
 def _annotate_is_contact(datasets, user):
     """
     Adds a boolean annotation to queryset which is set to True if the user
-    is an IAO, IAM or data catalogue editor of a dataset
+    is an enquiries contact of a dataset
     @param datasets: Django queryset
     @param user: request.user
     @return: Annotated queryset
@@ -556,10 +559,34 @@ def _annotate_is_contact(datasets, user):
     return datasets
 
 
+def _annotate_is_editor(datasets, user):
+    """
+    Adds a boolean annotation to queryset which is set to True if the user
+    is a data catalogue editor of a dataset
+    @param datasets: Django queryset
+    @param user: request.user
+    @return: Annotated queryset
+    """
+
+    datasets = datasets.annotate(
+        is_editor=BoolOr(
+            Case(
+                When(
+                    Q(data_catalogue_editors=user),
+                    then=True,
+                ),
+                default=False,
+                output_field=BooleanField(),
+            ),
+        ),
+    )
+    return datasets
+
+
 def _annotate_is_owner(datasets, user):
     """
     Adds a boolean annotation to queryset which is set to True if the user
-    is an IAO, IAM or data catalogue editor of a dataset
+    is an IAO or IAM of a dataset
     @param datasets: Django queryset
     @param user: request.user
     @return: Annotated queryset
@@ -569,9 +596,7 @@ def _annotate_is_owner(datasets, user):
         is_owner=BoolOr(
             Case(
                 When(
-                    Q(information_asset_owner=user)
-                    | Q(information_asset_manager=user)
-                    | Q(data_catalogue_editors=user),
+                    Q(information_asset_owner=user) | Q(information_asset_manager=user),
                     then=True,
                 ),
                 default=False,
@@ -601,8 +626,6 @@ def _sorted_datasets_and_visualisations_matching_query_for_user(query, user, sor
         id_field="id",
         user=user,
     )
-
-    print("result", master_and_datacut_datasets)
 
     reference_datasets = _get_datasets_data_for_user_matching_query(
         ReferenceDataset.objects.live().annotate(
