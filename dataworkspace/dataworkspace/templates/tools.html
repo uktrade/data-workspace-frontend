@@ -19,6 +19,23 @@
 
 {% block content %}
 
+<div class="govuk-notification-banner" role="region"
+aria-labelledby="govuk-notification-banner-title"
+data-module="govuk-notification-banner">
+<div class="govuk-notification-banner__header">
+  <h2 class="govuk-notification-banner__title" id="govuk-notification-banner-title">
+    Success
+  </h2>
+</div>
+<div class="govuk-notification-banner__content">   
+        <p class="govuk-notification-banner__heading" style="max-width: none;">
+          Test 
+
+          <a class="govuk-notification-banner__link" href=https://data-services-help.trade.gov.uk/data-workspace/how-to/use-tools/about-data-workspace-tools/ >Why close Tools?</a>
+        </p>   
+
+</div>
+</div>
 {% with tools_count=RUNNING_TOOLS.count %}
 {% if tools_count > 0 %} 
   <div class="govuk-notification-banner" role="region"
