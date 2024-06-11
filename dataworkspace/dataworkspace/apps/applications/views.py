@@ -208,7 +208,8 @@ def tools_html_GET(request):
     return render(
         request,
         "applications/tools.html",
-        {"tools": tools},
+        {"tools": tools,
+        "is_self_certify": True},
     )
 
 

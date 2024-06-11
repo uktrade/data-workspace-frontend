@@ -20,6 +20,22 @@
 {% block content %}
 
 {% with tools_count=RUNNING_TOOLS.count %}
+{% if is_self_certify %}
+  <div class="govuk-notification-banner govuk-notification-banner--success" role="alert" aria-labelledby="govuk-notification-banner-title" data-module="govuk-notification-banner">
+    <div class="govuk-notification-banner__header">
+      <h2 class="govuk-notification-banner__title" id="govuk-notification-banner-title">
+        Success
+      </h2>
+    </div>
+    <div class="govuk-notification-banner__content">
+      <h3 class="govuk-notification-banner__heading">
+        You've been granted tools access
+      </h3>
+      <p class="govuk-body">Find out how to <a class="govuk-notification-banner__link" href="https://data-services-help.trade.gov.uk/data-workspace/how-to/use-tools/">get started with tools</a>.</p>
+    </div>
+  </div>
+{% endif %}
+
 {% if tools_count > 0 %} 
   <div class="govuk-notification-banner" role="region"
     aria-labelledby="govuk-notification-banner-title"
