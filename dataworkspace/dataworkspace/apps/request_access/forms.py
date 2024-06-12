@@ -119,7 +119,7 @@ class ToolsAccessRequestFormPart3(GOVUKDesignSystemModelForm):
 
 class SelfCertifyForm(GOVUKDesignSystemForm):
     certificate_date = GOVUKDesignSystemDateField(
-        label="Enter the date that's on your certificate?",
+        label="Enter the date that's on your certificate",
         help_text="For example, 27 3 2007",
         widget=GOVUKDesignSystemDateWidget(
             day_attrs={
