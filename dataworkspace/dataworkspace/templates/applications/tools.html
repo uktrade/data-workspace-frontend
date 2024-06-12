@@ -19,7 +19,6 @@
 
 {% block content %}
 
-{% with tools_count=RUNNING_TOOLS.count %}
 {% if is_self_certify %}
   <div class="govuk-notification-banner govuk-notification-banner--success" role="alert" aria-labelledby="govuk-notification-banner-title" data-module="govuk-notification-banner">
     <div class="govuk-notification-banner__header">
@@ -36,6 +35,7 @@
   </div>
 {% endif %}
 
+{% with tools_count=RUNNING_TOOLS.count %}
 {% if tools_count > 0 %} 
   <div class="govuk-notification-banner" role="region"
     aria-labelledby="govuk-notification-banner-title"
