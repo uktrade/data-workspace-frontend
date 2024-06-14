@@ -206,7 +206,7 @@ def tools_html_GET(request):
     tools = get_grouped_tools(request)
     is_self_certify = False
     if request.META.get("HTTP_REFERER"):
-      is_self_certify = "self-certify" in request.META.get("HTTP_REFERER")
+        is_self_certify = "self-certify" in request.META.get("HTTP_REFERER")
     return render(
         request,
         "applications/tools.html",
