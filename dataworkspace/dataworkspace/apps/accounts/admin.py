@@ -110,6 +110,11 @@ class AppUserEditForm(forms.ModelForm):
         widget=FilteredSelectMultiple("visualisations", False),
         queryset=None,
     )
+    certificate_date = forms.DateField(
+        label="Date self-certified",
+        help_text="Date that user last self-certified for tools access",
+        required=False,
+    )
 
     class Meta:
         model = get_user_model()
@@ -169,6 +174,7 @@ class AppUserEditForm(forms.ModelForm):
         self.fields["authorized_admin_visualisations"].queryset = (
             VisualisationCatalogueItem.objects.live().order_by("name", "id")
         )
+        self.fields["certificate_date"].initial = instance.profile.tools_certification_date
 
 
 admin.site.unregister(get_user_model())
@@ -280,6 +286,7 @@ class AppUserAdmin(UserAdmin):
                     "can_access_quicksight",
                     "is_staff",
                     "is_superuser",
+                    "certificate_date",
                 ]
             },
         ),
@@ -566,6 +573,9 @@ class AppUserAdmin(UserAdmin):
 
         if "tools_access_role_arn" in form.cleaned_data:
             obj.profile.tools_access_role_arn = form.cleaned_data["tools_access_role_arn"]
+
+        if "certificate_date" in form.cleaned_data:
+            obj.profile.tools_certification_date = form.cleaned_data["certificate_date"]
 
         super().save_model(request, obj, form, change)
 
