@@ -1,4 +1,5 @@
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.auth.models import Permission, User
 from django.http import HttpResponseRedirect, Http404
 from django.shortcuts import render
 from django.urls import reverse, resolve
@@ -268,6 +269,27 @@ class SelfCertifyView(FormView):
 
         user_profile = Profile.objects.get(user_id=self.request.user.id)
         user_profile.tools_certification_date = certificate_date
+
         user_profile.save()
+
+        # TODO enable permissions for user - may need to update this to exclude Stata/appstream
+        user = User.objects.get(profile__sso_id=user_profile.sso_id)
+
+        permission_codenames = [
+            "start_all_applications",
+            "develop_visualisations",
+            "access_appstream",
+            "access_quicksight",
+        ]
+        content_type = ContentType.objects.get_for_model(ApplicationInstance)
+
+        for codename in permission_codenames:
+            permission = Permission.objects.get(
+                codename=codename,
+                content_type=content_type,
+            )
+            user.user_permissions.add(permission)
+
+        user.save()
 
         return HttpResponseRedirect("/tools")  # pylint: disable=fixme
