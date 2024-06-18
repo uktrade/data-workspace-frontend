@@ -115,14 +115,14 @@ class CreateTableConfirmFileFormatForm(GOVUKDesignSystemForm):
     )
     quote_char = GOVUKDesignSystemCharField(
         label="How are strings defined in your file?",
-        help_text="This will be the character you flanking text values in your raw file.",
+        help_text="This will be the character flanking the text values in your raw file.",
         required=True,
         widget=GOVUKDesignSystemTextWidget(label_size="l", label_is_heading=True),
         initial='"'
     )
     line_terminator = GOVUKDesignSystemCharField(
         label="How are new lines defined in your file?",
-        help_text="This will typically just be a new line.",
+        help_text="This will typically just be a new line. Leave this field as '\\n' if you're not sure.",
         required=False,
         widget=GOVUKDesignSystemTextWidget(label_size="l", label_is_heading=True),
         initial='\\n'
@@ -132,6 +132,18 @@ class CreateTableConfirmFileFormatForm(GOVUKDesignSystemForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
+
+    def clean(self):
+        error_messages = []
+        line_terminator = self.cleaned_data["line_terminator"]
+        quote_char = self.cleaned_data["quote_char"]
+        column_delimiter = self.cleaned_data["column_delimiter"]
+        # todo check values are distinct
+        if len({line_terminator, quote_char, column_delimiter}) < 3:
+            error_messages.append("All three values must be unique")
+
+        if len(error_messages):
+            raise forms.ValidationError(" & ".join(error_messages))
 
 
 class CreateTableSchemaForm(GOVUKDesignSystemForm):

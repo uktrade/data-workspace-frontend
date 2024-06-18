@@ -20,7 +20,7 @@ from dataworkspace.apps.core.utils import (
 logger = logging.getLogger("app")
 
 
-def get_s3_csv_file_info(path, delimiter, quote_char, line_terminator):
+def get_s3_csv_file_info(path, custom_delimiter=None, custom_quote_char=None, custom_line_terminator=None):
     client = get_s3_client()
 
     logger.debug(path)
@@ -32,18 +32,34 @@ def get_s3_csv_file_info(path, delimiter, quote_char, line_terminator):
         return csv.reader((line.replace(delimiter, chr(255)) for line in source), delimiter=chr(255), quotechar=quotechar)
 
     encoding, decoded = _get_encoding_and_decoded_bytes(raw)
-    line_terminator = bytes("".join(line_terminator), "utf-8").decode("unicode_escape") if line_terminator else ''
-    delimiter = "".join(delimiter) if delimiter else ','
-    quote_char = "".join(quote_char) if quote_char else '"'
+
+    delimiter = custom_delimiter if custom_delimiter else ','
+    quote_char = custom_quote_char if custom_quote_char else '"'
+    logger.info(custom_line_terminator)
+    line_terminator = bytes("".join(custom_line_terminator), "utf-8").decode("unicode_escape") if custom_line_terminator else ''
+
     logger.info(line_terminator)
     logger.info(delimiter)
     logger.info(quote_char)
-    fh = StringIO(decoded, newline=line_terminator)
-    if len(delimiter) > 1:
-        rows = list(csv_reader_alt(fh, delimiter, quote_char))
-    else:
-        rows = list(csv.reader(fh, delimiter=delimiter, quotechar=quote_char))
 
+    if custom_line_terminator:
+        fh = StringIO(
+        decoded.replace(
+            '\r\n', ''
+        ).replace(
+            '\r', ''
+        ).replace(
+            '\n', ''
+        ).replace(
+            custom_line_terminator, '\n'
+        ), newline='\n')
+    else:
+        fh = StringIO(
+            decoded, newline='')
+
+
+    rows = list(csv_reader_alt(fh, delimiter, quote_char, line_terminator))
+    logger.info(len(rows))
     return {"encoding": encoding, "column_definitions": _get_csv_column_types(rows)}
 
 

@@ -132,9 +132,9 @@ class CreateTableConfirmSchemaView(RequiredParameterGetRequestMixin, FormView):
         user_schema = get_schema_for_user(self.request.user)
         team_schemas = get_team_schemas_for_user(self.request.user)
         schemas = (
-            [{"name": "user", "schema_name": user_schema}]
-            + team_schemas
-            + [{"name": schema, "schema_name": schema} for schema in all_schemas]
+                [{"name": "user", "schema_name": user_schema}]
+                + team_schemas
+                + [{"name": schema, "schema_name": schema} for schema in all_schemas]
         )
         schema_name = [
             schema["schema_name"]
@@ -202,9 +202,9 @@ class ValidateSchemaMixin:
         user_schema = get_schema_for_user(self.request.user)
         team_schemas = get_team_schemas_for_user(self.request.user)
         schemas = (
-            [{"name": "user", "schema_name": user_schema}]
-            + team_schemas
-            + [{"name": schema, "schema_name": schema} for schema in self.all_schemas]
+                [{"name": "user", "schema_name": user_schema}]
+                + team_schemas
+                + [{"name": schema, "schema_name": schema} for schema in self.all_schemas]
         )
 
         if schema not in [s["schema_name"] for s in schemas]:
@@ -261,9 +261,9 @@ class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, ValidateSchem
 
         # If table name validation failed due to a duplicate table in the db confirm overwrite
         if (
-            not form.cleaned_data["force_overwrite"]
-            and errors.get("table_name")
-            and errors["table_name"][0].code == "duplicate-table"
+                not form.cleaned_data["force_overwrite"]
+                and errors.get("table_name")
+                and errors["table_name"][0].code == "duplicate-table"
         ):
             params = {
                 "path": form.cleaned_data["path"],
@@ -349,9 +349,9 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        column_delimiter = self.request.GET.get("column_delimiter"),
-        quote_char = self.request.GET.get("quote_char"),
-        line_terminator = self.request.GET.get("line_terminator"),
+        column_delimiter = self.request.GET["column_delimiter"]
+        quote_char = self.request.GET["quote_char"]
+        line_terminator = self.request.GET["line_terminator"]
         kwargs.update(
             {
                 "user": self.request.user,
@@ -368,8 +368,15 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
     def form_valid(self, form):
         cleaned = form.cleaned_data
         include_column_id = False
-
-        file_info = get_s3_csv_file_info(cleaned["path"])
+        column_delimiter = self.request.GET["column_delimiter"]
+        quote_char = self.request.GET["quote_char"]
+        line_terminator = self.request.GET["line_terminator"]
+        file_info = get_s3_csv_file_info(
+            cleaned["path"],
+            column_delimiter,
+            quote_char,
+            line_terminator
+        )
 
         logger.info(file_info)
 
@@ -399,8 +406,8 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
         }
         if waffle.switch_is_active(settings.INCREMENTAL_S3_IMPORT_PIPELINE_FLAG):
             conf["incremental"] = (
-                not cleaned.get("force_overwrite", False)
-                and cleaned.get("table_exists_action") == "append"
+                    not cleaned.get("force_overwrite", False)
+                    and cleaned.get("table_exists_action") == "append"
             )
 
         logger.debug("Triggering pipeline %s", get_data_flow_import_pipeline_name())
@@ -520,7 +527,7 @@ class CreateTableIngestingView(BaseCreateTableStepView):
             {
                 "title": "Inserting data",
                 "info_text": "Once complete, your data will be validated and your table will be "
-                "made available.",
+                             "made available.",
             }
         )
         return context
