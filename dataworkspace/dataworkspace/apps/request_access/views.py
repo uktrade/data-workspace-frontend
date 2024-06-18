@@ -1,15 +1,15 @@
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import Permission, User
-from django.http import HttpResponseRedirect, Http404
+from django.contrib.contenttypes.models import ContentType
+from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import render
-from django.urls import reverse, resolve
-from django.views.generic import CreateView, UpdateView, DetailView, FormView
+from django.urls import resolve, reverse
+from django.views.generic import CreateView, DetailView, FormView, UpdateView
 
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import DataSet, VisualisationCatalogueItem
-from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.eventlog.models import EventLog
+from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.apps.request_access.forms import (  # pylint: disable=import-error
     DatasetAccessRequestForm,
@@ -19,9 +19,9 @@ from dataworkspace.apps.request_access.forms import (  # pylint: disable=import-
     ToolsAccessRequestFormPart3,
 )
 
-from dataworkspace.apps.request_access import models
 from dataworkspace import zendesk
 from dataworkspace.apps.accounts.models import Profile
+from dataworkspace.apps.request_access import models
 
 
 class DatasetAccessRequest(CreateView):
