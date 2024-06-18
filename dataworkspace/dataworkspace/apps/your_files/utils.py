@@ -28,8 +28,18 @@ def get_s3_csv_file_info(path, custom_delimiter=None, custom_quote_char=None, cu
     file = client.get_object(Bucket=settings.NOTEBOOKS_BUCKET, Key=path, Range="bytes=0-102400")
     raw = file["Body"].read()
 
-    def csv_reader_alt(source, delimiter, quotechar):
-        return csv.reader((line.replace(delimiter, chr(255)) for line in source), delimiter=chr(255), quotechar=quotechar)
+    def csv_reader_alt(source, delimiter, quote_char, line_terminator):
+        reserved_delimiter = chr(255)
+        reserved_quote_char = chr(128207)
+        return csv.reader((
+            line.replace(
+                delimiter, reserved_delimiter
+            ).replace(
+                quote_char, reserved_quote_char
+            ) for line in source),
+            delimiter=reserved_delimiter,
+            quotechar=reserved_quote_char,
+        )
 
     encoding, decoded = _get_encoding_and_decoded_bytes(raw)
 
@@ -64,9 +74,9 @@ def get_s3_csv_file_info(path, custom_delimiter=None, custom_quote_char=None, cu
 
 
 def _get_encoding_and_decoded_bytes(raw: bytes):
-    encoding = "utf-8-sig"
 
     try:
+        encoding = "utf-8-sig"
         decoded = raw.decode(encoding)
         return encoding, decoded
     except UnicodeDecodeError:
