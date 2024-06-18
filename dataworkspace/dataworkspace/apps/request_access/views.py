@@ -1,4 +1,5 @@
-from django.contrib.auth.models import Permission, User
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import render
@@ -266,14 +267,15 @@ class SelfCertifyView(FormView):
     def form_valid(self, form):
         # TODO add the logic here to store the certification value against the user # pylint: disable=fixme
         certificate_date = form.cleaned_data["certificate_date"]
+        user_id = self.request.user.id
 
-        user_profile = Profile.objects.get(user_id=self.request.user.id)
+        user_profile = Profile.objects.get(user_id=user_id)
         user_profile.tools_certification_date = certificate_date
 
         user_profile.save()
 
         # TODO enable permissions for user - may need to update this to exclude Stata/appstream
-        user = User.objects.get(profile__sso_id=user_profile.sso_id)
+        user = get_user_model().objects.get(id=user_id)
 
         permission_codenames = [
             "start_all_applications",
