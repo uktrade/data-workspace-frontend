@@ -1,3 +1,4 @@
+from datetime import date
 from unittest import mock
 
 import pytest
@@ -555,3 +556,33 @@ class TestSelfCertify:
         # need to be updated, this example code can be used to make it pass
         # assert response.status_code == 302
         # assert response.headers['location'] == reverse("request-access:index")
+
+    def test_certification_date_gets_saved_for_user(self):
+        user = factories.UserFactory.create(is_superuser=False)
+        client = Client(**get_http_sso_data(user))
+        client.force_login(user)
+
+        url = reverse("request_access:self-certify-page")
+
+        # TODO update this date so it will always be within the past year
+        certificate_date = date(2024, 6, 18)
+        form_data = {"certificate_date": certificate_date, "declaration": True}
+
+        response = client.post(url, form_data)
+
+        print("CONTEXT", response.context)
+
+        user.profile.refresh_from_db()
+
+        user_profile = user.profile
+        print(user_profile)
+        print(user_profile.tools_certification_date)
+
+        assert user_profile.tools_certification_date == certificate_date
+        assert response.status_code == 302
+
+    def test_permissions_get_set_for_user(self):
+        pass
+
+    def test_form_valid_redirects_to_tools_page(self):
+        pass
