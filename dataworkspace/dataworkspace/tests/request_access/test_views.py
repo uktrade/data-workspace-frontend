@@ -580,17 +580,14 @@ class TestSelfCertify(TestCase):
 
         assert response.url == "/tools"
 
-    def test_certification_for_incorrect_date_format(self):
+    def test_self_certify_errors_for_invalid_date_format(self):
 
-        self.certificate_date = date(2024, 14, 50)
         self.form_data = {
-            "certificate_date_0": self.certificate_date.day,
-            "certificate_date_1": self.certificate_date.month,
-            "certificate_date_2": self.certificate_date.year,
+            "certificate_date_0": "40",
+            "certificate_date_1": "14",
+            "certificate_date_2": "2024",
             "declaration": True,
         }
         response = self.client.post(self.url, self.form_data)
-        self.user.refresh_from_db()
 
-        assert self.user.profile.tools_certification_date == self.certificate_date
-        assert response.status_code == 404
+        assert "Enter a valid date" in str(response.content)
