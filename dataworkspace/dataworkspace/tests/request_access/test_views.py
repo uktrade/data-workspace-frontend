@@ -560,25 +560,23 @@ class TestSelfCertify:
     def test_certification_date_gets_saved_for_user(self):
         user = factories.UserFactory.create(is_superuser=False)
         client = Client(**get_http_sso_data(user))
-        client.force_login(user)
 
         url = reverse("request_access:self-certify-page")
 
         # TODO update this date so it will always be within the past year
         certificate_date = date(2024, 6, 18)
-        form_data = {"certificate_date": certificate_date, "declaration": True}
+        form_data = {
+            "certificate_date_0": certificate_date.day,
+            "certificate_date_1": certificate_date.month,
+            "certificate_date_2": certificate_date.year,
+            "declaration": True,
+        }
 
         response = client.post(url, form_data)
 
-        print("CONTEXT", response.context)
+        user.refresh_from_db()
 
-        user.profile.refresh_from_db()
-
-        user_profile = user.profile
-        print(user_profile)
-        print(user_profile.tools_certification_date)
-
-        assert user_profile.tools_certification_date == certificate_date
+        assert user.profile.tools_certification_date == certificate_date
         assert response.status_code == 302
 
     def test_permissions_get_set_for_user(self):
