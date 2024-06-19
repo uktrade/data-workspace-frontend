@@ -20,12 +20,19 @@ from dataworkspace.apps.core.utils import (
 logger = logging.getLogger("app")
 
 
-def get_s3_csv_file_info(path, custom_delimiter=None, custom_quote_char=None, custom_line_terminator=None):
+def get_s3_csv_file_info(
+        path,
+        custom_delimiter=None,
+        custom_quote_char=None,
+        custom_line_terminator=None
+):
     client = get_s3_client()
 
     logger.debug(path)
 
-    file = client.get_object(Bucket=settings.NOTEBOOKS_BUCKET, Key=path, Range="bytes=0-102400")
+    file = client.get_object(
+        Bucket=settings.NOTEBOOKS_BUCKET, Key=path, Range="bytes=0-102400"
+    )
     raw = file["Body"].read()
 
     def csv_reader_alt(source, delimiter, quote_char, line_terminator):
@@ -36,24 +43,22 @@ def get_s3_csv_file_info(path, custom_delimiter=None, custom_quote_char=None, cu
                 delimiter, reserved_delimiter
             ).replace(
                 quote_char, reserved_quote_char
-            ) for line in source),
-            delimiter=reserved_delimiter,
-            quotechar=reserved_quote_char,
-        )
+            ) for line in source
+        ), delimiter=reserved_delimiter, quotechar=reserved_quote_char)
 
     encoding, decoded = _get_encoding_and_decoded_bytes(raw)
 
     delimiter = custom_delimiter if custom_delimiter else ','
     quote_char = custom_quote_char if custom_quote_char else '"'
-    logger.info(custom_line_terminator)
-    line_terminator = bytes("".join(custom_line_terminator), "utf-8").decode("unicode_escape") if custom_line_terminator else ''
+    line_terminator = bytes(
+        "".join(custom_line_terminator), "utf-8"
+    ).decode("unicode_escape") if custom_line_terminator else ''
 
     logger.info(line_terminator)
     logger.info(delimiter)
     logger.info(quote_char)
 
-    if custom_line_terminator:
-        fh = StringIO(
+    fh = StringIO(
         decoded.replace(
             '\r\n', ''
         ).replace(
@@ -62,15 +67,14 @@ def get_s3_csv_file_info(path, custom_delimiter=None, custom_quote_char=None, cu
             '\n', ''
         ).replace(
             custom_line_terminator, '\n'
-        ), newline='\n')
-    else:
-        fh = StringIO(
-            decoded, newline='')
-
+        ), newline='\n'
+    ) if custom_line_terminator else StringIO(decoded, newline='')
 
     rows = list(csv_reader_alt(fh, delimiter, quote_char, line_terminator))
-    logger.info(len(rows))
-    return {"encoding": encoding, "column_definitions": _get_csv_column_types(rows)}
+    return {
+        "encoding": encoding,
+        "column_definitions": _get_csv_column_types(rows)
+    }
 
 
 def _get_encoding_and_decoded_bytes(raw: bytes):
