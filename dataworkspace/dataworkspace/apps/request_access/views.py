@@ -281,12 +281,12 @@ class SelfCertifyView(FormView):
             "access_quicksight",
         ]
         content_type = ContentType.objects.get_for_model(ApplicationInstance)
+        permissions = Permission.objects.filter(
+            codename__in=permission_codenames,
+            content_type=content_type,
+        )
 
-        for codename in permission_codenames:
-            permission = Permission.objects.get(
-                codename=codename,
-                content_type=content_type,
-            )
+        for permission in permissions:
             user.user_permissions.add(permission)
 
         user.save()
