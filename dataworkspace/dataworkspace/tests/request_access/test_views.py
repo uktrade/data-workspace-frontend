@@ -539,7 +539,7 @@ class TestSelfCertify(TestCase):
         self.user = factories.UserFactory.create(is_superuser=False)
         self.client = Client(**get_http_sso_data(self.user))
         self.url = reverse("request_access:self-certify-page")
-        # TODO update this date so it will always be within the past year
+        # TODO update this date so it will always be within the past year # pylint: disable=fixme
         self.certificate_date = date(2024, 6, 18)
         self.form_data = {
             "certificate_date_0": self.certificate_date.day,
@@ -561,9 +561,7 @@ class TestSelfCertify(TestCase):
         # assert response.headers['location'] == reverse("request-access:index")
 
     def test_certification_date_gets_saved_for_user(self):
-
         response = self.client.post(self.url, self.form_data)
-
         self.user.refresh_from_db()
 
         assert self.user.profile.tools_certification_date == self.certificate_date
@@ -571,9 +569,7 @@ class TestSelfCertify(TestCase):
 
     def test_permissions_get_set_for_user(self):
         response = self.client.post(self.url, self.form_data)
-
         self.user.refresh_from_db()
-
         user_permissions = self.user.user_permissions.all()
 
         assert user_permissions.count() == 4
