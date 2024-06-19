@@ -11,6 +11,11 @@
       {% include 'design_system/error_summary.html' with form=form %}
       <form method="POST">
         {% csrf_token %}
+        {{ form.table_name.as_hidden }}
+        {{ form.path.as_hidden }}
+        {{ form.schema.as_hidden }}
+        {{ form.team.as_hidden }}
+        {{ form.force_overwrite.as_hidden }}
         {{ form.column_delimiter }}
         {{ form.quote_char }}
         {{ form.line_terminator }}

@@ -73,8 +73,8 @@ class CreateTableForm(GOVUKDesignSystemForm):
         if not has_permissions:
             raise ValidationError("You don't have permission to access this file")
 
-        if not path.endswith(".csv"):
-            raise ValidationError("Invalid file type. Only CSV files are currently supported")
+        if not path.endswith(".csv") and not path.endswith(".tsv"):
+            raise ValidationError("Invalid file type. Only CSV and TSV files are currently supported")
 
         try:
             client.head_object(Bucket=settings.NOTEBOOKS_BUCKET, Key=path)
@@ -105,10 +105,15 @@ class CreateTableForm(GOVUKDesignSystemForm):
 
 
 class CreateTableConfirmFileFormatForm(GOVUKDesignSystemForm):
-    # path = forms.CharField(required=True, widget=forms.HiddenInput())
+    path = forms.CharField(required=True, widget=forms.HiddenInput())
+    schema = forms.CharField(required=True, widget=forms.HiddenInput())
+    team = forms.CharField(required=False, widget=forms.HiddenInput())
+    table_name = forms.CharField(required=True, widget=forms.HiddenInput())
+    force_overwrite = forms.CharField(required=True, widget=forms.HiddenInput())
+
     column_delimiter = GOVUKDesignSystemCharField(
         label="How are the columns separated in your file?",
-        help_text="This will be the character you see in your raw file between each column.",
+        help_text="This will be the character you see in your raw file between each column. Typically this is ',' for .csv files or '\\t' for .tsv files",
         required=True,
         widget=GOVUKDesignSystemTextWidget(label_size="l", label_is_heading=True),
         initial=','
@@ -122,16 +127,17 @@ class CreateTableConfirmFileFormatForm(GOVUKDesignSystemForm):
     )
     line_terminator = GOVUKDesignSystemCharField(
         label="How are new lines defined in your file?",
-        help_text="This will typically just be a new line. Leave this field as '\\n' if you're not sure.",
+        help_text="This will typically just be a new line. Leave this field empty if you're not sure.",
         required=False,
         widget=GOVUKDesignSystemTextWidget(label_size="l", label_is_heading=True),
-        initial='\\n'
+        initial=''
     )
 
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
+
 
     def clean(self):
         error_messages = []

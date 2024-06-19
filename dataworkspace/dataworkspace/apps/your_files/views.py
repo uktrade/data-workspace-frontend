@@ -282,18 +282,22 @@ class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, ValidateSchem
 class CreateTableConfirmFileFormatView(RequiredParameterGetRequestMixin, FormView):
     template_name = "your_files/create-table-confirm-file-format.html"
     form_class = CreateTableConfirmFileFormatForm
-    required_parameters = ["path"]
 
     def get_initial(self):
-        schema = self.request.GET.get("schema", get_user_schema(self.request))
         initial = super().get_initial()
-        if self.request.method == "GET":
-            initial.update(
-                {
-                    "path": self.request.GET["path"]
-                }
-            )
-        return initial
+        if self.request.method == 'GET':
+            initial.update({
+                "path": self.request.GET.get("path"),
+                "schema": self.request.GET.get('schema', get_user_schema(self.request)),
+                "team": self.request.GET.get("team"),
+                "table_name": self.request.GET.get("table_name"),
+                "force_overwrite": "overwrite" in self.request.GET,
+                'column_delimiter': (
+                    '\\t' if self.request.GET['path'].endswith('.tsv')
+                    else ',' if self.request.GET['path'].endswith('.csv') else ','
+                )
+            })
+            return initial
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -302,10 +306,10 @@ class CreateTableConfirmFileFormatView(RequiredParameterGetRequestMixin, FormVie
 
     def form_valid(self, form):
         params = {
-            "path": self.request.GET["path"],
-            "schema": self.request.GET["schema"],
-            "table_name": self.request.GET["table_name"],
-            "force_overwrite": "overwrite" in self.request.GET,
+            "path": form.cleaned_data['path'],
+            "schema": form.cleaned_data['schema'],
+            "table_name": form.cleaned_data['table_name'],
+            "force_overwrite": form.cleaned_data['force_overwrite'],
             "column_delimiter": form.cleaned_data['column_delimiter'],
             "quote_char": form.cleaned_data['quote_char'],
             "line_terminator": form.cleaned_data['line_terminator'],
@@ -333,18 +337,16 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
     def get_initial(self):
         initial = super().get_initial()
         if self.request.method == "GET":
-            initial.update(
-                {
-                    "path": self.request.GET["path"],
-                    "schema": self.request.GET["schema"],
-                    "table_name": self.request.GET["table_name"],
-                    "force_overwrite": "overwrite" in self.request.GET,
-                    "table_exists_action": self.request.GET.get("table_exists_action"),
-                    "column_delimiter": self.request.GET.get("column_delimiter"),
-                    "quote_char": self.request.GET.get("quote_char"),
-                    "line_terminator": self.request.GET.get("line_terminator"),
-                }
-            )
+            initial.update({
+                "path": self.request.GET["path"],
+                "schema": self.request.GET["schema"],
+                "table_name": self.request.GET["table_name"],
+                "force_overwrite": "overwrite" in self.request.GET,
+                "table_exists_action": self.request.GET.get("table_exists_action"),
+                "column_delimiter": self.request.GET.get("column_delimiter"),
+                "quote_char": self.request.GET.get("quote_char"),
+                "line_terminator": self.request.GET.get("line_terminator"),
+            })
         return initial
 
     def get_form_kwargs(self):
@@ -352,17 +354,15 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
         column_delimiter = self.request.GET["column_delimiter"]
         quote_char = self.request.GET["quote_char"]
         line_terminator = self.request.GET["line_terminator"]
-        kwargs.update(
-            {
-                "user": self.request.user,
-                "column_definitions": get_s3_csv_file_info(self.request.GET["path"],
-                                                           column_delimiter,
-                                                           quote_char,
-                                                           line_terminator)[
-                    "column_definitions"
-                ],
-            }
-        )
+        kwargs.update({
+            "user": self.request.user,
+            "column_definitions": get_s3_csv_file_info(
+                self.request.GET["path"],
+                column_delimiter,
+                quote_char,
+                line_terminator
+            )["column_definitions"],
+        })
         return kwargs
 
     def form_valid(self, form):
@@ -403,6 +403,9 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
             "column_definitions": file_info["column_definitions"],
             "encoding": file_info["encoding"],
             "auto_generate_id_column": include_column_id,
+            "column_delimiter": column_delimiter,
+            "quote_char": quote_char,
+            "line_terminator": line_terminator,
         }
         if waffle.switch_is_active(settings.INCREMENTAL_S3_IMPORT_PIPELINE_FLAG):
             conf["incremental"] = (

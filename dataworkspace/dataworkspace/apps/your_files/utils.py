@@ -48,8 +48,12 @@ def get_s3_csv_file_info(
 
     encoding, decoded = _get_encoding_and_decoded_bytes(raw)
 
-    delimiter = custom_delimiter if custom_delimiter else ','
-    quote_char = custom_quote_char if custom_quote_char else '"'
+    delimiter = bytes(
+        "".join(custom_delimiter), "utf-8"
+    ).decode("unicode_escape") if custom_delimiter else ','
+    quote_char = bytes(
+        "".join(custom_quote_char), "utf-8"
+    ).decode("unicode_escape") if custom_quote_char else '"'
     line_terminator = bytes(
         "".join(custom_line_terminator), "utf-8"
     ).decode("unicode_escape") if custom_line_terminator else ''
