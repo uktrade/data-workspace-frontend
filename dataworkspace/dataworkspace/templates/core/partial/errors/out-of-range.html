@@ -1,6 +1,19 @@
 <p class="govuk-body">
   Your file, {{ filename }}, cannot be processed due to an out of range error.
 </p>
+
+
 <p class="govuk-body">
- This can occur when a column with a data type set to integer contains numbers with more than 12 digits.
-</p>
+  Your table has not been added.</p>
+<p class="govuk-body">
+  Integers must: </p>
+
+<ul class="govuk-list govuk-list--bullet">
+  <li>be a whole number</li>
+  <li>have 12 digits or less</li>
+</ul>
+
+<p class="govuk-body">You can use the 'Numeric' data type for numbers that have more than 12 digits or that have
+  decimals.</p>
+
+<p class="govuk-body">YYou need to check all columns set as 'Integer' data type and fix the error.</p>
