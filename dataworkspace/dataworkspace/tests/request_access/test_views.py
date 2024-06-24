@@ -11,6 +11,7 @@ from django.urls import reverse
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType
 from dataworkspace.apps.request_access.models import AccessRequest
+from dataworkspace.apps.request_access.views import is_user_email_domain_valid
 from dataworkspace.tests.common import get_http_sso_data
 from dataworkspace.tests.datasets.test_views import DatasetsCommon
 from dataworkspace.tests.factories import DataSetFactory
@@ -536,7 +537,9 @@ class TestEditAccessRequest:
 @pytest.mark.django_db
 class TestSelfCertify(TestCase):
     def setUp(self):
-        self.user = factories.UserFactory.create(is_superuser=False)
+        self.user = factories.UserFactory.create(
+            is_superuser=False, email="valid-domain@trade.com"
+        )
         self.client = Client(**get_http_sso_data(self.user))
         self.url = reverse("request_access:self-certify-page")
         # TODO update this date so it will always be within the past year # pylint: disable=fixme
@@ -553,12 +556,11 @@ class TestSelfCertify(TestCase):
         assert response.status_code == 200
 
     def test_user_is_redirected_to_request_access_when_email_is_not_allowed_to_self_certify(self):
-        response = self.client.get(self.url)
-        assert response.status_code == 200
-        # TODO when https://uktrade.atlassian.net/browse/DT-2032 is implemented this test will # pylint: disable=fixme
-        # need to be updated, this example code can be used to make it pass
-        # assert response.status_code == 302
-        # assert response.headers['location'] == reverse("request-access:index")
+        user = factories.UserFactory.create(is_superuser=False, email="invalid-domain@invalid.com")
+        client = Client(**get_http_sso_data(user))
+        response = client.get(self.url)
+        assert response.status_code == 302
+        assert response.url == reverse("request-access:index")
 
     def test_certification_date_gets_saved_for_user(self):
         response = self.client.post(self.url, self.form_data)
@@ -591,3 +593,45 @@ class TestSelfCertify(TestCase):
         response = self.client.post(self.url, self.form_data)
 
         assert "Enter a valid date" in str(response.content)
+
+
+class TestIsEmailDomainValid:
+    @pytest.mark.parametrize(
+        "email,assertion",
+        (
+            (
+                "valid@businessandtrade.gov.uk",
+                True,
+            ),
+            (
+                "valid@beis.gov.com",
+                True,
+            ),
+            (
+                "valid@trade.gov.uk",
+                True,
+            ),
+            (
+                "valid@digital.trade.gov.uk",
+                True,
+            ),
+            (
+                "valid@fcdo.co.uk",
+                True,
+            ),
+            (
+                "valid@fco.gov.uk",
+                True,
+            ),
+            (
+                "invalid@test",
+                False,
+            ),
+            (
+                "partial@business.gov.uk",
+                False,
+            ),
+        ),
+    )
+    def test_is_user_email_domain_valid_for_various_domains(self, email, assertion):
+        assert is_user_email_domain_valid(email) == assertion
