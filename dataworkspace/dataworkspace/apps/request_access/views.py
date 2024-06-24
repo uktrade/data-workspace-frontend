@@ -1,14 +1,16 @@
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
-from django.http import HttpResponseRedirect, Http404
+from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import render
-from django.urls import reverse, resolve
-from django.views.generic import CreateView, UpdateView, DetailView, FormView
+from django.urls import resolve, reverse
+from django.views.generic import CreateView, DetailView, FormView, UpdateView
 
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import DataSet, VisualisationCatalogueItem
-from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.eventlog.models import EventLog
+from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.apps.request_access.forms import (  # pylint: disable=import-error
     DatasetAccessRequestForm,
@@ -18,8 +20,9 @@ from dataworkspace.apps.request_access.forms import (  # pylint: disable=import-
     ToolsAccessRequestFormPart3,
 )
 
-from dataworkspace.apps.request_access import models
 from dataworkspace import zendesk
+from dataworkspace.apps.accounts.models import Profile
+from dataworkspace.apps.request_access import models
 
 
 class DatasetAccessRequest(CreateView):
@@ -262,5 +265,30 @@ class SelfCertifyView(FormView):
         return super().get(request, args, kwargs)
 
     def form_valid(self, form):
-        # TODO add the logic here to store the certification value against the user # pylint: disable=fixme
+        certificate_date = form.cleaned_data["certificate_date"]
+        user_id = self.request.user.id
+        user_profile = Profile.objects.get(user_id=user_id)
+
+        user_profile.tools_certification_date = certificate_date
+        user_profile.save()
+
+        user = get_user_model().objects.get(id=user_id)
+
+        permission_codenames = [
+            "start_all_applications",
+            "develop_visualisations",
+            "access_appstream",
+            "access_quicksight",
+        ]
+        content_type = ContentType.objects.get_for_model(ApplicationInstance)
+        permissions = Permission.objects.filter(
+            codename__in=permission_codenames,
+            content_type=content_type,
+        )
+
+        for permission in permissions:
+            user.user_permissions.add(permission)
+
+        user.save()
+
         return HttpResponseRedirect("/tools")  # pylint: disable=fixme

@@ -1,4 +1,5 @@
-from unittest import mock
+from datetime import date
+from unittest import TestCase, mock
 
 import pytest
 from django.contrib.auth.models import Permission
@@ -533,25 +534,60 @@ class TestEditAccessRequest:
 
 
 @pytest.mark.django_db
-class TestSelfCertify:
-    def test_user_sees_self_certify_form_when_email_is_allowed_to_self_certify(self):
-        user = factories.UserFactory.create(is_superuser=False)
-        client = Client(**get_http_sso_data(user))
+class TestSelfCertify(TestCase):
+    def setUp(self):
+        self.user = factories.UserFactory.create(is_superuser=False)
+        self.client = Client(**get_http_sso_data(self.user))
+        self.url = reverse("request_access:self-certify-page")
+        # TODO update this date so it will always be within the past year # pylint: disable=fixme
+        self.certificate_date = date(2024, 6, 18)
+        self.form_data = {
+            "certificate_date_0": self.certificate_date.day,
+            "certificate_date_1": self.certificate_date.month,
+            "certificate_date_2": self.certificate_date.year,
+            "declaration": True,
+        }
 
-        response = client.get(
-            reverse("request_access:self-certify-page"),
-        )
+    def test_user_sees_self_certify_form_when_email_is_allowed_to_self_certify(self):
+        response = self.client.get(self.url)
         assert response.status_code == 200
 
     def test_user_is_redirected_to_request_access_when_email_is_not_allowed_to_self_certify(self):
-        user = factories.UserFactory.create(is_superuser=False)
-        client = Client(**get_http_sso_data(user))
-
-        response = client.get(
-            reverse("request_access:self-certify-page"),
-        )
+        response = self.client.get(self.url)
         assert response.status_code == 200
         # TODO when https://uktrade.atlassian.net/browse/DT-2032 is implemented this test will # pylint: disable=fixme
         # need to be updated, this example code can be used to make it pass
         # assert response.status_code == 302
         # assert response.headers['location'] == reverse("request-access:index")
+
+    def test_certification_date_gets_saved_for_user(self):
+        response = self.client.post(self.url, self.form_data)
+        self.user.refresh_from_db()
+
+        assert self.user.profile.tools_certification_date == self.certificate_date
+        assert response.status_code == 302
+
+    def test_permissions_get_set_for_user(self):
+        response = self.client.post(self.url, self.form_data)
+        self.user.refresh_from_db()
+        user_permissions = self.user.user_permissions.all()
+
+        assert user_permissions.count() == 4
+        assert response.status_code == 302
+
+    def test_form_valid_redirects_to_tools_page(self):
+        response = self.client.post(self.url, self.form_data)
+
+        assert response.url == "/tools"
+
+    def test_self_certify_errors_for_invalid_date_format(self):
+
+        self.form_data = {
+            "certificate_date_0": "40",
+            "certificate_date_1": "14",
+            "certificate_date_2": "2024",
+            "declaration": True,
+        }
+        response = self.client.post(self.url, self.form_data)
+
+        assert "Enter a valid date" in str(response.content)
