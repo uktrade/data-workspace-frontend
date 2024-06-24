@@ -252,15 +252,28 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
         return context
 
 
+def is_user_email_domain_valid(email):
+
+    email_domain = email.split("@")[-1]
+
+    valid_domains = [
+        "businessandtrade",
+        "beis",
+        "trade",
+        "digital.trade",
+        "fcdo",
+        "fco",
+    ]
+
+    return any(email_domain.startswith(valid_domain) for valid_domain in valid_domains)
+
+
 class SelfCertifyView(FormView):
     form_class = SelfCertifyForm
     template_name = "request_access/self-certify.html"
 
     def get(self, request, *args, **kwargs):
-        # TODO add the check here that the user email domain is allowed, otherwise send them to # pylint: disable=fixme
-        # the page where they must upload docs https://uktrade.atlassian.net/browse/DT-2032
-        is_user_allowed_to_use_self_certify = True
-        if not is_user_allowed_to_use_self_certify:
+        if not is_user_email_domain_valid(request.user.email):
             return HttpResponseRedirect(reverse("request-access:index"))
         return super().get(request, args, kwargs)
 
