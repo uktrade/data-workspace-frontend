@@ -538,7 +538,7 @@ class TestEditAccessRequest:
 class TestSelfCertify(TestCase):
     def setUp(self):
         self.user = factories.UserFactory.create(
-            is_superuser=False, email="valid-domain@trade.com"
+            is_superuser=False, email="valid-domain@trade.gov.uk"
         )
         self.client = Client(**get_http_sso_data(self.user))
         self.url = reverse("request_access:self-certify-page")
@@ -556,7 +556,9 @@ class TestSelfCertify(TestCase):
         assert response.status_code == 200
 
     def test_user_is_redirected_to_request_access_when_email_is_not_allowed_to_self_certify(self):
-        user = factories.UserFactory.create(is_superuser=False, email="invalid-domain@invalid.com")
+        user = factories.UserFactory.create(
+            is_superuser=False, email="invalid-domain@invalid.gov.uk"
+        )
         client = Client(**get_http_sso_data(user))
         response = client.get(self.url)
         assert response.status_code == 302
@@ -604,7 +606,7 @@ class TestIsEmailDomainValid:
                 True,
             ),
             (
-                "valid@beis.gov.com",
+                "valid@beis.gov.uk",
                 True,
             ),
             (
@@ -616,7 +618,7 @@ class TestIsEmailDomainValid:
                 True,
             ),
             (
-                "valid@fcdo.co.uk",
+                "valid@fcdo.gov.uk",
                 True,
             ),
             (

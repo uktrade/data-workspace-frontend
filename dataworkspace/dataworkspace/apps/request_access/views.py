@@ -257,15 +257,15 @@ def is_user_email_domain_valid(email):
     email_domain = email.split("@")[-1]
 
     valid_domains = [
-        "businessandtrade",
-        "beis",
-        "trade",
-        "digital.trade",
-        "fcdo",
-        "fco",
+        "businessandtrade.gov.uk",
+        "beis.gov.uk",
+        "trade.gov.uk",
+        "digital.trade.gov.uk",
+        "fcdo.gov.uk",
+        "fco.gov.uk",
     ]
 
-    return any(email_domain.startswith(valid_domain) for valid_domain in valid_domains)
+    return email_domain in valid_domains
 
 
 class SelfCertifyView(FormView):
