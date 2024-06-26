@@ -572,7 +572,7 @@ class TestSelfCertify(TestCase):
         self.user.refresh_from_db()
         user_permissions = self.user.user_permissions.all()
 
-        assert user_permissions.count() == 4
+        assert user_permissions.count() == 3
         assert response.status_code == 302
 
     def test_form_valid_redirects_to_tools_page(self):
