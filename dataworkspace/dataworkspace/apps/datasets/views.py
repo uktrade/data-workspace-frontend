@@ -420,7 +420,7 @@ class DatasetDetailView(DetailView):
         return source_text
 
     def _get_publisher_text(self, model):
-        publisher_text = ",".join(
+        publisher_text = ", ".join(
             sorted({t.name for t in self.object.tags.filter(type=TagType.PUBLISHER)})
         )
         return publisher_text
