@@ -200,7 +200,7 @@ django-waffle==2.0.0
     # via -r requirements.txt
 django-webpack-loader==1.4.1
     # via -r requirements.txt
-djangorestframework==3.14.0
+djangorestframework==3.15.2
     # via -r requirements.txt
 djlint==0.1.4
     # via -r requirements-dev.in
@@ -469,7 +469,6 @@ python-fsutil==0.13.0
 pytz==2021.3
     # via
     #   -r requirements.txt
-    #   djangorestframework
     #   zenpy
 pyyaml==6.0.1
     # via djlint

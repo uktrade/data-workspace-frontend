@@ -131,7 +131,7 @@ django-waffle==2.0.0
     # via -r requirements.in
 django-webpack-loader==1.4.1
     # via -r requirements.in
-djangorestframework==3.14.0
+djangorestframework==3.15.2
     # via -r requirements.in
 docopt==0.6.2
     # via notifications-python-client
@@ -235,9 +235,7 @@ python-dotenv==0.12.0
 python-fsutil==0.13.0
     # via django-maintenance-mode
 pytz==2021.3
-    # via
-    #   djangorestframework
-    #   zenpy
+    # via zenpy
 rcssmin==1.0.6
     # via django-compressor
 redis==4.5.4
