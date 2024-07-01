@@ -81,7 +81,7 @@ class ToolsAccessRequestFormPart2(GOVUKDesignSystemModelForm):
 
     spss_and_stata = GOVUKDesignSystemBooleanField(
         label="Stata",
-        help_html=render_to_string("request_access/spss-and-stata-hint.html"),
+        help_html=render_to_string("request_access/stata_request_access.html"),
         required=False,
         widget=GOVUKDesignSystemRadiosWidget(
             label_is_heading=False,
