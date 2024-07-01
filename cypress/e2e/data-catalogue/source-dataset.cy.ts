@@ -25,7 +25,7 @@ describe("Source dataset catalogue", () => {
       assertLinksToManageDataset({
         "Add to collection": `/collections/select-collection-for-membership/dataset/${sourceWithTable}`,
         "Remove the bookmark from this dataset": `/datasets/${sourceWithTable}/toggle-bookmark`,
-        "Report an issue": `mailto:vyvyan.holland@contact-email.com?subject=Reporting an issue - Source dataset a`,
+        "Report an issue": `mailto:vyvyan.holland@businessandtrade.gov.uk?subject=Reporting an issue - Source dataset a`,
         "Manage dataset": `/datasets/${sourceWithTable}}/edit-dataset`,
         "Manage editors": `/datasets/${sourceWithTable}}/edit-data-catalogue-editors`,
       });
@@ -47,8 +47,8 @@ describe("Source dataset catalogue", () => {
         { text: "Source" },
         { text: "Contact" },
         {
-          text: "vyvyan.holland@contact-email.com",
-          link: "mailto:vyvyan.holland@contact-email.com",
+          text: "vyvyan.holland@businessandtrade.gov.uk",
+          link: "mailto:vyvyan.holland@businessandtrade.gov.uk",
         },
       ]);
     });
@@ -70,8 +70,7 @@ describe("Source dataset catalogue", () => {
               text: "public.test_dataset",
             },
             {
-              text: "Update or restore table",
-              link: "/datasets/3112a785-6bd9-4e56-bc67-10b6cccb5db7/manage/1bbdc4dd-1532-49ef-87cc-b53c2d197d26",
+              text: "N/A, N/A",
             },
           ],
         ],
@@ -99,7 +98,7 @@ describe("Source dataset catalogue", () => {
         },
         {
           text: "Vyvyan Holland",
-          link: "mailto:vyvyan.holland@contact-email.com",
+          link: "mailto:vyvyan.holland@businessandtrade.gov.uk",
         },
         {
           text: "No licence",
@@ -153,9 +152,7 @@ describe("Source dataset catalogue", () => {
       assertLinksToManageDataset({
         "Add to collection": `/collections/select-collection-for-membership/dataset/${sourceWithTableNoPermissions}`,
         "Bookmark this dataset": `/datasets/${sourceWithTableNoPermissions}/toggle-bookmark`,
-        "Report an issue": `mailto:vyvyan.holland@contact-email.com?subject=Reporting an issue - Source dataset a`,
-        "Manage dataset": `/datasets/${sourceWithTableNoPermissions}}/edit-dataset`,
-        "Manage editors": `/datasets/${sourceWithTableNoPermissions}}/edit-data-catalogue-editors`,
+        "Report an issue": `mailto:vyvyan.holland@businessandtrade.gov.uk?subject=Reporting an issue - Source dataset a`,
       });
     });
 
@@ -175,8 +172,8 @@ describe("Source dataset catalogue", () => {
         { text: "Source" },
         { text: "Contact" },
         {
-          text: "vyvyan.holland@contact-email.com",
-          link: "mailto:vyvyan.holland@contact-email.com",
+          text: "vyvyan.holland@businessandtrade.gov.uk",
+          link: "mailto:vyvyan.holland@businessandtrade.gov.uk",
         },
       ]);
     });
@@ -195,8 +192,7 @@ describe("Source dataset catalogue", () => {
               text: "source_data_set",
             },
             {
-              text: "public.test_dataset (",
-              link: "/datasets/data-dictionary/f29eef9f-4cfb-467a-a475-38928d3f0e32?dataset_uuid=d7094267-ddfc-40f3-a4a8-ca4f30a0992f",
+              text: "public.test_dataset",
             },
             {
               text: "N/A, N/A",

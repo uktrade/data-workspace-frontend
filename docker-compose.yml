@@ -81,6 +81,8 @@ services:
       - MOCK_SSO_PORT=8081
       - MOCK_SSO_TOKEN=bar
       - MOCK_SSO_CODE=fizz
+      - MOCK_SSO_USER_EMAIL=vyvyan.holland@businessandtrade.gov.uk
+      - MOCK_SSO_USER_CONTACT_EMAIL=vyvyan.holland@businessandtrade.gov.uk
     networks:
       - data-infrastructure-shared-network
     ports:
