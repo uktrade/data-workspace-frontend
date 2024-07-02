@@ -64,13 +64,12 @@ class ToolsAccessRequestFormPart1(GOVUKDesignSystemModelForm):
         fields = ["training_screenshot"]
 
     training_screenshot = GOVUKDesignSystemFileField(
-        label="Security and Data Protection training evidence",
-        help_html=render_to_string("request_access/training-screenshot-hint.html"),
+        label="Upload file",
         widget=GOVUKDesignSystemFileInputWidget(
-            label_is_heading=True,
+            label_is_heading=False,
+            label_size="small",
             heading="h2",
             heading_class="govuk-heading-m",
-            extra_label_classes="govuk-!-font-weight-bold",
             show_selected_file=True,
         ),
         error_messages={"required": "You must upload proof that you've completed the training."},
