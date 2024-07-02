@@ -1,5 +1,7 @@
-{% extends '_main.html' %} {% block page_title %}Request complete - {{
-block.super }}{% endblock page_title %} {% block breadcrumbs %}
+{% extends '_main.html' %} 
+{% load waffle_tags %}
+{% block page_title %}Request complete - {{block.super }}{% endblock page_title %} 
+{% block breadcrumbs %}
 <div class="govuk-breadcrumbs">
   <ol class="govuk-breadcrumbs__list">
     <li class="govuk-breadcrumbs__list-item">
@@ -8,15 +10,15 @@ block.super }}{% endblock page_title %} {% block breadcrumbs %}
     <li class="govuk-breadcrumbs__list-item">Request access</li>
   </ol>
 </div>
-{% endblock %} {% block content %}
+{% endblock %} 
+{% block content %}
+{% flag TOOLS_SELF_CERTIFY %}
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-two-thirds">
     <div class="govuk-panel govuk-panel--confirmation">
       <h1 class="govuk-panel__title">Request complete</h1>
       <div class="govuk-panel__body">
-        Your reference number<br /><strong
-          >{{ object.zendesk_reference_number }}</strong
-        >
+        Your reference number<br /><strong>{{ object.zendesk_reference_number }}</strong>
       </div>
     </div>
 
@@ -28,12 +30,10 @@ block.super }}{% endblock page_title %} {% block breadcrumbs %}
     </p>
     <p class="govuk-body">
       If you have any questions, contact
-      <a
-        class="govuk-link"
-        href="mailto:data-workspace+id{{ object.zendesk_reference_number }}@uktrade.zendesk.com"
-        >data-workspace+id{{ object.zendesk_reference_number
-        }}@uktrade.zendesk.com</a
-      >
+      <a class="govuk-link"
+        href="mailto:data-workspace+id{{ object.zendesk_reference_number }}@uktrade.zendesk.com">data-workspace+id{{
+        object.zendesk_reference_number
+        }}@uktrade.zendesk.com</a>
     </p>
     <p class="govuk-body">In the meantime you can:</p>
     <ul class="govuk-list govuk-list--bullet">
@@ -42,11 +42,8 @@ block.super }}{% endblock page_title %} {% block breadcrumbs %}
       </li>
       <li>
         join the
-        <a
-          href="https://teams.microsoft.com/dl/launcher/launcher.html?url=%2F_%23%2Fl%2Fteam%2F19%3Ac1f08445f252403982e22a387b30b4ca%40thread.skype%2Fconversations%3FgroupId%3D748264d0-f2a0-4e13-afa0-22c152ea7cb9%26tenantId%3D8fa217ec-33aa-46fb-ad96-dfe68006bb86&amp;type=team&amp;deeplinkId=87aab110-11a4-4caf-860d-3610d220f5fa&amp;directDl=true&amp;msLaunch=true&amp;enableMobilePage=true&amp;suppressPrompt=true"
-          class="govuk-link"
-          >Data Workspace Community</a
-        >
+        <a href="https://teams.microsoft.com/dl/launcher/launcher.html?url=%2F_%23%2Fl%2Fteam%2F19%3Ac1f08445f252403982e22a387b30b4ca%40thread.skype%2Fconversations%3FgroupId%3D748264d0-f2a0-4e13-afa0-22c152ea7cb9%26tenantId%3D8fa217ec-33aa-46fb-ad96-dfe68006bb86&amp;type=team&amp;deeplinkId=87aab110-11a4-4caf-860d-3610d220f5fa&amp;directDl=true&amp;msLaunch=true&amp;enableMobilePage=true&amp;suppressPrompt=true"
+          class="govuk-link">Data Workspace Community</a>
         for help, support and advice.
       </li>
     </ul>
@@ -54,11 +51,69 @@ block.super }}{% endblock page_title %} {% block breadcrumbs %}
     <h2 class="govuk-heading-m">Give feedback on requesting access to tools</h2>
 
     <p class="govuk-body">
-      <a href="{% url 'feedback' %}" class="govuk-link"
-        >What did you think of this service?</a
-      >
+      <a href="{% url 'feedback' %}" class="govuk-link">What did you think of this service?</a>
       (short survey with 4 questions)
     </p>
   </div>
 </div>
+{% else %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <div class="govuk-panel govuk-panel--confirmation">
+        <h1 class="govuk-panel__title">
+          Request complete
+        </h1>
+        <div class="govuk-panel__body">
+          Your reference number<br><strong>{{ object.zendesk_reference_number }}</strong>
+        </div>
+      </div>
+  
+      <p class="govuk-body">
+        {% if object.journey == object.JOURNEY_DATASET_AND_TOOLS_ACCESS %}
+        You've requested access to <a class="govuk-link" href="{{ catalogue_item.get_absolute_url }}">{{ catalogue_item }}</a> and our <a href="/tools">tools.</a>
+        {% elif object.journey == object.JOURNEY_TOOLS_ACCESS %}
+      <p class="govuk-body">You've requested access to our <a href="{% url 'applications:tools' %}">tools.</a>
+        {% elif object.journey == object.JOURNEY_DATASET_ACCESS %}
+      <p class="govuk-body">You've requested access to <a href="{{ catalogue_item.get_absolute_url }}">{{ catalogue_item }}.</a>
+        {% endif %}
+      </p>
+  
+      <p class="govuk-body">We have sent you a confirmation email.</p>
+  
+      <h2 class="govuk-heading-m">What happens next</h2>
+  
+      <p class="govuk-body">
+        {% if object.journey == object.JOURNEY_DATASET_AND_TOOLS_ACCESS or object.journey == object.JOURNEY_TOOLS_ACCESS %}
+        We will respond within 5 working days and delete the screenshot you sent us after we have validated it.
+        {% else %}
+        We will respond within 5 working days.
+        {% endif %}
+      </p>
+      <p class="govuk-body">
+        If you have any questions, contact <a class="govuk-link"
+          href="mailto:data-workspace+id{{ object.zendesk_reference_number }}@uktrade.zendesk.com">data-workspace+id{{ object.zendesk_reference_number }}@uktrade.zendesk.com</a>
+      </p>
+      <p class="govuk-body">
+        You can also:
+      </p>
+      <ul class="govuk-list govuk-list--bullet">
+        <li>
+          <a href="/">search our data</a> to find and request access to more data.
+        </li>
+        <li>
+          join the <a
+            href="https://teams.microsoft.com/dl/launcher/launcher.html?url=%2F_%23%2Fl%2Fteam%2F19%3Ac1f08445f252403982e22a387b30b4ca%40thread.skype%2Fconversations%3FgroupId%3D748264d0-f2a0-4e13-afa0-22c152ea7cb9%26tenantId%3D8fa217ec-33aa-46fb-ad96-dfe68006bb86&amp;type=team&amp;deeplinkId=87aab110-11a4-4caf-860d-3610d220f5fa&amp;directDl=true&amp;msLaunch=true&amp;enableMobilePage=true&amp;suppressPrompt=true"
+            class="govuk-link">Data Workspace Community</a> for help, support and advice.
+        </li>
+        <li>
+          find out our latest dataset and improvements on our <a
+            href="https://data-services-help.trade.gov.uk/data-workspace/updates/roadmap/" class="govuk-link">roadmap</a>.
+        </li>
+      </ul>
+      <p class="govuk-body">
+        <a href="{% url 'feedback' %}" class="govuk-link">What did you think of this service?</a> (takes 30 seconds)
+      </p>
+    </div>
+  </div>
+  {% endflag %}
 {% endblock %}

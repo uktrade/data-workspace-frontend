@@ -1,4 +1,4 @@
-{% load core_tags %}
+{% load core_tags waffle_tags %}
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-two-thirds">
     <h3 class="govuk-heading-m">
@@ -19,7 +19,11 @@
       <div class="govuk-grid-row">
         <div class="govuk-grid-column-one-half"><p class="govuk-body"></p></div>
         <div class="govuk-grid-column-one-half">
-          <a class="govuk-button govuk-button--secondary" href="{% url 'request_access:index' %}">Request access to {{ application_name }}</a>
+            {% flag TOOLS_SELF_CERTIFY %}
+                  <a class="govuk-button govuk-button--secondary" href="{% url 'request-access:self-certify-page' %}">Get access to {{ application_name }}</a>
+                {% else %}
+                  <a class="govuk-button govuk-button--secondary" href="{% url 'request-access:index' %}">Request access to {{ application_name }}</a>
+            {% endflag %}
         </div>
       </div>
     {% elif instance %}

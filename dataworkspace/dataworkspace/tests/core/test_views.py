@@ -9,7 +9,9 @@ import pytest
 import requests_mock
 from botocore.response import StreamingBody
 from bs4 import BeautifulSoup
+from waffle.testutils import override_flag
 
+from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.test import override_settings, Client
 from django.urls import reverse
@@ -327,6 +329,39 @@ def test_quicksight_link_only_shown_to_user_with_permission(
 
 
 @pytest.mark.parametrize(
+    "has_quicksight_access, expected_href, expected_text",
+    (
+        (True, "/tools/quicksight/redirect", "Open QuickSight"),
+        (
+            False,
+            "/request-access/self-certify",
+            "Get access to QuickSight",
+        ),
+    ),
+)
+@override_settings(QUICKSIGHT_SSO_URL="https://quicksight")
+@pytest.mark.django_db
+@override_flag(settings.TOOLS_SELF_CERTIFY, active=True)
+def test_quicksight_link_only_shown_to_user_with_permission_with_feature_flag(
+    has_quicksight_access, expected_href, expected_text
+):
+    user = UserFactory.create(is_staff=False, is_superuser=False)
+    if has_quicksight_access:
+        perm = Permission.objects.get(codename="access_quicksight")
+        user.user_permissions.add(perm)
+    user.save()
+    client = Client(**get_http_sso_data(user))
+
+    response = client.get(reverse("applications:tools"))
+
+    content = response.content.decode(response.charset)
+    soup = BeautifulSoup(content)
+    quicksight_link = soup.find("a", href=True, text=expected_text)
+
+    assert quicksight_link.get("href") == expected_href
+
+
+@pytest.mark.parametrize(
     "has_appstream_update, expected_href, expected_text",
     (
         (True, "https://appstream", "Open STATA"),
@@ -340,6 +375,37 @@ def test_quicksight_link_only_shown_to_user_with_permission(
 @override_settings(APPSTREAM_URL="https://appstream")
 @pytest.mark.django_db
 def test_appstream_link_only_shown_to_user_with_permission(
+    has_appstream_update, expected_href, expected_text
+):
+    user = UserFactory.create(is_staff=False, is_superuser=False)
+    if has_appstream_update:
+        perm = Permission.objects.get(codename="access_appstream")
+        user.user_permissions.add(perm)
+    user.save()
+    client = Client(**get_http_sso_data(user))
+
+    response = client.get(reverse("applications:tools"))
+
+    soup = BeautifulSoup(response.content.decode(response.charset))
+    quicksight_link = soup.find("a", href=True, text=expected_text)
+    assert quicksight_link.get("href") == expected_href
+
+
+@pytest.mark.parametrize(
+    "has_appstream_update, expected_href, expected_text",
+    (
+        (True, "https://appstream", "Open STATA"),
+        (
+            False,
+            "/request-access/self-certify",
+            "Get access to STATA",
+        ),
+    ),
+)
+@override_settings(APPSTREAM_URL="https://appstream")
+@pytest.mark.django_db
+@override_flag(settings.TOOLS_SELF_CERTIFY, active=True)
+def test_appstream_link_only_shown_to_user_with_permission_with_feature_flag(
     has_appstream_update, expected_href, expected_text
 ):
     user = UserFactory.create(is_staff=False, is_superuser=False)

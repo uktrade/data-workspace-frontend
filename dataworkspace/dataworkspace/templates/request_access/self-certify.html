@@ -41,7 +41,7 @@
             <p class="govuk-body">
               You need to give us the date that's on your Security and Data Protection certificate by entering it into the boxes below.
             </p>
-            <form method="post">
+            <form method="post" novalidate>
               {% csrf_token %}
               {{ form.certificate_date }}
               <h2 class="govuk-heading-m">

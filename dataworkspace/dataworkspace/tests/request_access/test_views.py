@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from unittest import TestCase, mock
 
 import pytest
@@ -542,8 +542,7 @@ class TestSelfCertify(TestCase):
         )
         self.client = Client(**get_http_sso_data(self.user))
         self.url = reverse("request_access:self-certify-page")
-        # TODO update this date so it will always be within the past year # pylint: disable=fixme
-        self.certificate_date = date(2024, 6, 18)
+        self.certificate_date = date.today() - timedelta(weeks=12)
         self.form_data = {
             "certificate_date_0": self.certificate_date.day,
             "certificate_date_1": self.certificate_date.month,
@@ -582,7 +581,7 @@ class TestSelfCertify(TestCase):
     def test_form_valid_redirects_to_tools_page(self):
         response = self.client.post(self.url, self.form_data)
 
-        assert response.url == "/tools"
+        assert response.url == "/tools?access=true"
 
     def test_self_certify_errors_for_invalid_date_format(self):
 
@@ -594,7 +593,14 @@ class TestSelfCertify(TestCase):
         }
         response = self.client.post(self.url, self.form_data)
 
-        assert "Enter a valid date" in str(response.content)
+        assert (
+            "The date on your Security and Data Protection certificate must be a real date"
+            in str(response.content)
+        )
+        assert (
+            "The date on your Security and Data Protection certificate must be a real date"
+            in str(response.content)
+        )
 
 
 class TestIsEmailDomainValid:
@@ -619,6 +625,10 @@ class TestIsEmailDomainValid:
             ),
             (
                 "valid@fcdo.gov.uk",
+                True,
+            ),
+            (
+                "valid@mobile.trade.gov.uk",
                 True,
             ),
             (
