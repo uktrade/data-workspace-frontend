@@ -263,6 +263,7 @@ def is_user_email_domain_valid(email):
         "digital.trade.gov.uk",
         "fcdo.gov.uk",
         "fco.gov.uk",
+        "mobile.trade.gov.uk",
     ]
 
     return email_domain in valid_domains
@@ -303,4 +304,4 @@ class SelfCertifyView(FormView):
 
         user.save()
 
-        return HttpResponseRedirect("/tools")  # pylint: disable=fixme
+        return HttpResponseRedirect("/tools?access=true")  # pylint: disable=fixme

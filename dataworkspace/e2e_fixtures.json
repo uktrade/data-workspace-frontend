@@ -23,7 +23,7 @@
     "fields": {
       "password": "!77U6PxGMZicWtltyo4dThbXaa8tmejXhu7QN6iar",
       "last_login": null,
-      "is_superuser": true,
+      "is_superuser": false,
       "username": "20a0353f-a7d1-4851-9af8-1bcaff152b60",
       "first_name": "Vyvyan",
       "last_name": "Holland",
