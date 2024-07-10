@@ -25,8 +25,14 @@ TABLESCHEMA_FIELD_TYPE_MAP = {
 }
 
 DATA_FLOW_TASK_ERROR_MAP = {
-    r".*Unable to decode CSV as.*|.*UnicodeDecodeError.*": "core/partial/errors/decode.html",
-    r".*invalid input syntax for (type )?(numeric|integer).*": "core/partial/errors/input-syntax.html",
-    r".*NumericValueOutOfRange.*": "core/partial/errors/out-of-range.html",
-    r".*DatetimeFieldOverflow.*|.*InvalidDatetimeFormat*": "core/partial/errors/invalid-date.html",
+    r".*is of type bigint but expression is of type boolean.*": "core/partial/errors/setting-boolean-integer.html",
+    r".*is of type numeric but expression is of type boolean.*": "core/partial/errors/setting-boolean-numeric.html",
+    r".*is of type date but expression is of type boolean.*": "core/partial/errors/setting-boolean-date.html",
+    r".*is of type timestamp with time zone but expression is of type boolean.*": "core/partial/errors/setting-boolean-datetime.html",  # pylint: disable=line-too-long
+    r".*Not a boolean value*.": "core/partial/errors/setting-value-as-boolean.html",
+    r".*invalid input syntax for type bigint.*": "core/partial/errors/setting-string-integer.html",
+    r".*invalid input syntax for type numeric.*": "core/partial/errors/setting-string-numeric.html",
+    r".*is of type date.*|.*invalid input syntax for type date*.": "core/partial/errors/setting-value-as-date.html",
+    r".*is of type timestamp.*|.*invalid input syntax for type timestamp*.": "core/partial/errors/setting-value-as-datetime.html",  # pylint: disable=line-too-long
+    r".*date/time field value out of range.*": "core/partial/errors/setting-date-as-incorrect-date.html",
 }

@@ -1,0 +1,12 @@
+<h1 class="govuk-heading-xl">
+    There's an error in a column which has been set as: 'Integer'
+</h1>
+
+<p class="govuk-body">Your table has not been added.</p>
+<p class="govuk-body">Data Workspace has identified boolean values in a column set as 'Integer'.</p>
+<p class="govuk-body">Integers are: whole numbers and have 12 digits or less. <br> Booleans are: one of three possible values - true, false, or null.</p>
+<p class="govuk-body">Check all columns set as 'Integer' and make sure the data in these columns has an appropriate data type.</p>
+<p class="govuk-body">Once you’ve fixed the error, <a
+        href="{% if next_step %}{{ next_step }}{% else %}{% url 'your_files:files' %}{% endif %}"
+        class="govuk-link">re-upload your file.</a>
+</p>

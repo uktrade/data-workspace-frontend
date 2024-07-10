@@ -4764,11 +4764,49 @@ class TestDatasetManagerViews:
     @pytest.mark.parametrize(
         "log_message,expected_text",
         [
-            ("Generic Error", b"Please check the following before you try again"),
-            ("UnicodeDecodeError", b"character encoding error"),
-            ("Invalid input syntax for type Numeric", b"error parsing a numeric field"),
-            ("NumericValueOutOfRange", b"out of range error"),
-            ("DatetimeFieldOverflow", b"error parsing a date field"),
+            (
+                "is of type bigint but expression is of type boolean",
+                b"There's an error in a column which has been set as: 'Integer'",
+            ),
+            (
+                "is of type numeric but expression is of type boolean",
+                b"There's an error in a column which has been set as: 'Numeric'",
+            ),
+            (
+                "is of type date but expression is of type boolean",
+                b"There's an error in a column which has been set as: 'Date'",
+            ),
+            (
+                "is of type timestamp with time zone but expression is of type boolean",
+                b"There's an error in a column which has been set as: 'Datetime'",
+            ),
+            ("Not a boolean value", b"Your CSV contains a value that cannot be set as 'Boolean'"),
+            (
+                "invalid input syntax for type bigint",
+                b"Your CSV contains a 'String' value that cannot be set as 'Integer'",
+            ),
+            (
+                "invalid input syntax for type numeric",
+                b"Your CSV contains a 'String' value that cannot be set as 'Numeric'",
+            ),
+            ("is of type date", b"There's an error in a column which has been set as: 'Date'"),
+            (
+                "invalid input syntax for type date",
+                b"There's an error in a column which has been set as: 'Date'",
+            ),
+            (
+                "is of type timestamp",
+                b"There's an error in a column which has been set as: 'Datetime'",
+            ),
+            (
+                "invalid input syntax for type timestamp",
+                b"There's an error in a column which has been set as: 'Datetime'",
+            ),
+            (
+                "date/time field value out of range",
+                b"Your CSV contains a date that cannot be correct",
+            ),
+            ("some other error", b"There's a problem with your CSV"),
         ],
     )
     @mock.patch("dataworkspace.apps.core.utils.get_dataflow_task_log")

@@ -4,26 +4,28 @@
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-      <h1 class="govuk-heading-l">
-        We can’t process your CSV file
-      </h1>
       {% if error_message_template %}
         {% include error_message_template %}
       {% else %}
-        <p class="govuk-body">
-          Your file, {{ filename }}, cannot be processed. Please check the following before you try again.
-        </p>
-        <div class="govuk-inset-text">
-          <ul class="govuk-list govuk-list--bullet">
-            <li>Make sure the file uploaded is a CSV file</li>
-            <li>All rows in your file must have the same number of columns</li>
-            <li>Column names must be unique</li>
-          </ul>
-        </div>
+        <h1 class="govuk-heading-xl">
+          There's a problem with your CSV
+        </h1>
+        <p class="govuk-body">Your table has not been added.</p>
+        <p class="govuk-body">There's an error in your CSV. Data Workspace cannot identify what caused the error or what column it's in.</p>
+        <p class="govuk-body">You need to check:</p>
+        <ul class="govuk-list govuk-list--bullet">
+          <li>you have followed the steps on the <a href="{{ next_step }}">upload page</a></li>
+          <li>you have chosen data types that can describe your data</li>
+        </ul>
       {% endif %}
-      <p class="govuk-body">
-        <a href="{{ next_step }}" class="govuk-link">Return to dataset upload page</a>
-      </p>
+
+      <h2 class="govuk-heading-m">If you continue to get an error</h2>
+
+      <p class="govuk-body">Data Workspace can only identify one error at a time. This means that you could get the same or a different error more
+      than once. If this happens you'll need to fix each error in turn.</p>
+
+      <p class="govuk-body">If you're unable to solve your error, <a href="/contact-us" class="govuk-link">contact us</a></p>
+
     </div>
   </div>
 {% endblock content %}
