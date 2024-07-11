@@ -145,6 +145,8 @@ class PipelineScheduleType(models.TextChoices):
     ONCE = "@once", "Run once and manually thereafter"
     DAILY = "@daily", "Run once a day at midnight"
     WEEKLY = "@weekly", "Run once a week at midnight on Sunday"
+    WEEKLY_OFFSET = "0 22 * * 0", "Run once a week at 22:00 on Sunday"
     FRIDAYS = "0 0 * * 6", "Run once a week at midnight on Friday"
     MONTHLY = "@monthly", "Run once a month at midnight of the first day of the month"
+    MONTHLY_DELAYED = "0 12 1 * *", "Run once a month at midday of the first day of the month"
     YEARLY = "@yearly", "Run once a year at midnight of January 1"
