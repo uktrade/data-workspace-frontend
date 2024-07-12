@@ -33,7 +33,7 @@ class TestCreateTableViews:
             data={"path": "not-a-csv.txt"},
             follow=True,
         )
-        assert "We can’t process your CSV file" in response.content.decode("utf-8")
+        assert "There’s a problem with your CSV" in response.content.decode("utf-8")
 
     @mock.patch("dataworkspace.apps.your_files.forms.get_user_s3_prefixes")
     def test_unauthorised_file(self, mock_get_s3_prefix, client):
@@ -43,7 +43,7 @@ class TestCreateTableViews:
             data={"path": "user/federated/def/a-csv.csv"},
             follow=True,
         )
-        assert "We can’t process your CSV file" in response.content.decode("utf-8")
+        assert "There’s a problem with your CSV" in response.content.decode("utf-8")
 
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.your_files.forms.get_user_s3_prefixes")
@@ -60,7 +60,7 @@ class TestCreateTableViews:
             data={"path": "user/federated/abc/a-csv.csv"},
             follow=True,
         )
-        assert "We can’t process your CSV file" in response.content.decode("utf-8")
+        assert "There’s a problem with your CSV" in response.content.decode("utf-8")
 
     @mock.patch("dataworkspace.apps.your_files.views.copy_file_to_uploads_bucket")
     @mock.patch("dataworkspace.apps.your_files.views.get_s3_csv_file_info")
@@ -111,7 +111,7 @@ class TestCreateTableViews:
                 follow=True,
             )
 
-        assert "We can’t process your CSV file" in response.content.decode("utf-8")
+        assert "There’s a problem with your CSV" in response.content.decode("utf-8")
 
     @freeze_time("2021-01-01 01:01:01")
     @mock.patch("dataworkspace.apps.your_files.views.trigger_dataflow_dag")
