@@ -662,7 +662,7 @@ yarl==1.5.1
     #   aiohttp
 zenpy==2.0.21
     # via -r requirements.txt
-zipp==3.8.0
+zipp==3.19.1
     # via importlib-metadata
 zope-event==4.5.0
     # via
