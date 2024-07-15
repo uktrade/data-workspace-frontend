@@ -19,11 +19,13 @@
         Your reference number<br /><strong>{{ object.zendesk_reference_number }}</strong>
       </div>
     </div>
- 
+
         {% if object.journey == object.JOURNEY_TOOLS_ACCESS %}
-       <p class="govuk-body">You've requested access to our <a href="{% url 'applications:tools' %}">tools.</a></p>
+        <p class="govuk-body">You've requested access to our <a href="{% url 'applications:tools' %}">tools.</a></p>
+        {% elif object.journey == object.JOURNEY_DATASET_ACCESS %}
+        <p class="govuk-body">You've requested access to <a href="{{ catalogue_item.get_absolute_url }}">{{ catalogue_item }}.</a></p>
         {% else %}
-       <p class="govuk-body">You've requested access to <a href="{{ catalogue_item.get_absolute_url }}">{{ catalogue_item }}.</a></p>
+        <p class="govuk-body">You've requested access to STATA.</p>
         {% endif %}
 
     <h2 class="govuk-heading-m">Next steps</h2>

@@ -1,4 +1,5 @@
 {% extends '_main.html' %}
+{% load core_tags waffle_tags %}
 {% block page_title %}Check your answers before sending your request - {{ block.super }}{% endblock page_title %}
 {% block breadcrumbs %}
   <div class="govuk-breadcrumbs">
@@ -44,7 +45,9 @@
                 {% include 'request_access/partials/summary-list-row.html' with title='Line manager&apos;s email address' description=object.line_manager_email_address change_link='request_access:tools-3' object_id=object.id %}
                 {% include 'request_access/partials/summary-list-row.html' with title='Reason for needing Stata' description=object.reason_for_spss_and_stata change_link='request_access:tools-3' object_id=object.id %}
               {% else %}
+                {% flag TOOLS_SELF_CERTIFY %}{% else %}
                 {% include 'request_access/partials/summary-list-row.html' with title='Request Stata' description='No' change_link='request_access:tools-2' object_id=object.id %}
+                {% endflag %}
               {% endif %}
             {% endif %}
           </dl>

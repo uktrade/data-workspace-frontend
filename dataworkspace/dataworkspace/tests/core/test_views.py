@@ -398,7 +398,7 @@ def test_appstream_link_only_shown_to_user_with_permission(
         (
             False,
             "/request-access/self-certify",
-            "Get access to STATA",
+            "Get access to QuickSight",
         ),
     ),
 )

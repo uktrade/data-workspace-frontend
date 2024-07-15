@@ -24,7 +24,9 @@ def get_people_url(name):
     )
 
 
-def build_ticket_description_text(access_request, access_request_url, catalogue_item=None):
+def build_ticket_description_text(
+    access_request, access_request_url, catalogue_item=None, stata_description="N/A"
+):
     username = get_username(access_request.requester)
     people_url = get_people_url(username)
     ticket_description = f"""Access request for
@@ -34,6 +36,7 @@ Journey:    {access_request.human_readable_journey}
 Dataset:    {catalogue_item}
 SSO Login:  {access_request.requester.email}
 People search: {people_url}
+Stata Request Description: {stata_description}
 
 
 Details for the request can be found at
@@ -72,7 +75,7 @@ You can approve this request here
     return private_comment
 
 
-def create_zendesk_ticket(request, access_request, catalogue_item=None):
+def create_zendesk_ticket(request, access_request, catalogue_item=None, stata_description="N/A"):
     client = Zenpy(
         subdomain=settings.ZENDESK_SUBDOMAIN,
         email=settings.ZENDESK_EMAIL,
@@ -88,7 +91,7 @@ def create_zendesk_ticket(request, access_request, catalogue_item=None):
     )
 
     ticket_description = build_ticket_description_text(
-        access_request, access_request_url, catalogue_item
+        access_request, access_request_url, catalogue_item, stata_description
     )
 
     private_comment = (

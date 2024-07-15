@@ -18,8 +18,7 @@
 {% endblock %}
 
 {% block content %}
-
-{% if is_self_certify %}
+{% if just_self_certified %}
   <div class="govuk-notification-banner govuk-notification-banner--success" role="alert" aria-labelledby="govuk-notification-banner-title" data-module="govuk-notification-banner">
     <div class="govuk-notification-banner__header">
       <h2 class="govuk-notification-banner__title" id="govuk-notification-banner-title">
@@ -96,7 +95,6 @@
         Find out more about tools and how to start using them in the
         <a class="govuk-link" href="https://data-services-help.trade.gov.uk">Help Centre.</a>
       </p>
-
       {% for key, group in tools.items %}
         <div class="govuk-!-margin-bottom-8">
           <h2 class="govuk-heading-l">{{ group.group_name }}</h2>
@@ -108,7 +106,7 @@
             {% endif %}
           </div>
           {% for tool in group.tools %}
-            {% include 'partials/tool_section_wrapper.html' with tool=tool %}
+            {% include 'partials/tool_section_wrapper.html' with tool=tool is_self_certified=is_self_certified %}
           {% endfor %}
         </div>
       {% endfor %}

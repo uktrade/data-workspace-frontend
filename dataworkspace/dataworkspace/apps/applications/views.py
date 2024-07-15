@@ -1,4 +1,5 @@
-import datetime
+from datetime import datetime, timedelta, date
+import calendar
 import itertools
 import json
 import logging
@@ -35,6 +36,7 @@ from dataworkspace.apps.datasets.models import Pipeline
 from dataworkspace.apps.core.utils import USER_SCHEMA_STEM
 from dataworkspace.apps.core.utils import db_role_schema_suffix_for_app
 from dataworkspace.datasets_db import extract_queried_tables_from_sql_query
+from dataworkspace.apps.accounts.models import Profile
 
 from dataworkspace.apps.api_v1.views import (
     get_api_visible_application_instance_by_public_host,
@@ -203,16 +205,38 @@ def tools_html_view(request):
 
 
 def tools_html_GET(request):
+    user = Profile.objects.filter(user=request.user.id)
+    tools_certification_date = user[0].tools_certification_date
+    total_days = 366 if calendar.isleap(date.today().year) else 365
+    one_year_ago = datetime.now().date() - timedelta(days=total_days)
+    now = datetime.now().date()
+    is_self_certified = False
+
+    user_has_tools_access = request.user.user_permissions.filter(
+        codename="start_all_applications",
+        content_type=ContentType.objects.get_for_model(ApplicationInstance),
+    ).exists()
+
+    if tools_certification_date is None:
+        is_self_certified = False
+    else:
+        is_self_certified = one_year_ago < tools_certification_date < now
+
     tools = get_grouped_tools(request)
-    is_self_certify = False
+    just_self_certified = False
     if request.META.get("HTTP_REFERER"):
-        is_self_certify = "self-certify" in request.META.get("HTTP_REFERER") and request.GET.get(
-            "access"
-        )
+        just_self_certified = "self-certify" in request.META.get(
+            "HTTP_REFERER"
+        ) and request.GET.get("access")
     return render(
         request,
         "applications/tools.html",
-        {"tools": tools, "is_self_certify": is_self_certify},
+        {
+            "tools": tools,
+            "just_self_certified": just_self_certified,
+            "is_self_certified": is_self_certified,
+            "user_has_tools_access": user_has_tools_access,
+        },
     )
 
 
@@ -482,7 +506,7 @@ def visualisation_branch_html_GET(request, gitlab_project, branch_name):
         f'{request.scheme}://{application_template.host_basename}--{latest_commit["short_id"]}'
         f".{settings.APPLICATION_ROOT_DOMAIN}/"
     )
-    latest_commit_date = datetime.datetime.strptime(
+    latest_commit_date = datetime.strptime(
         latest_commit["committed_date"], "%Y-%m-%dT%H:%M:%S.%f%z"
     )
     latest_commit_tag_exists = get_spawner(application_template.spawner).tags_for_tag(
@@ -1631,7 +1655,7 @@ def _download_log(filename, events):
         if events:
             for event in events:
                 logfile.write(
-                    f'{datetime.datetime.fromtimestamp(event["timestamp"] / 1000)} - {event["message"]}\n'
+                    f'{datetime.fromtimestamp(event["timestamp"] / 1000)} - {event["message"]}\n'
                 )
         else:
             logfile.write("No logs were found for this visualisation.")
