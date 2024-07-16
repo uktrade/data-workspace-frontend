@@ -445,9 +445,7 @@ def test_appstream_link_only_shown_to_user_with_permission_with_feature_flag(
 )
 @pytest.mark.django_db
 @override_flag(settings.TOOLS_SELF_CERTIFY, active=True)
-def test_tools_links_with_invalid_email(
-    expected_href, expected_text
-):
+def test_tools_links_with_invalid_email(expected_href, expected_text):
     user = UserFactory.create(is_staff=False, is_superuser=False, email="ian@gmail.com")
     user.save()
     client = Client(**get_http_sso_data(user))
@@ -487,9 +485,7 @@ def test_tools_links_with_invalid_email(
 )
 @pytest.mark.django_db
 @override_flag(settings.TOOLS_SELF_CERTIFY, active=True)
-def test_tools_links_with_valid_email(
-    expected_href, expected_text
-):
+def test_tools_links_with_valid_email(expected_href, expected_text):
     user = UserFactory.create(is_staff=False, is_superuser=False, email="ian@trade.gov.uk")
     user.save()
     client = Client(**get_http_sso_data(user))
@@ -527,9 +523,7 @@ def test_tools_links_with_valid_email(
 )
 @pytest.mark.django_db
 @override_flag(settings.TOOLS_SELF_CERTIFY, active=True)
-def test_stata_link_after_tools_access_has_been_granted(
-    expected_href, expected_text
-):
+def test_stata_link_after_tools_access_has_been_granted(expected_href, expected_text):
     user = UserFactory.create(is_staff=False, is_superuser=False, email="ian@trade.gov.uk")
     start_all_applications = Permission.objects.get(codename="start_all_applications")
     user.user_permissions.add(start_all_applications)

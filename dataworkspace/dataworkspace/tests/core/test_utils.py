@@ -18,7 +18,7 @@ from dataworkspace.apps.core.utils import (
     source_tables_for_user,
     db_role_schema_suffix_for_user,
     new_private_database_credentials,
-    is_user_email_domain_valid
+    is_user_email_domain_valid,
 )
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.management.commands.ensure_databases_configured import (
