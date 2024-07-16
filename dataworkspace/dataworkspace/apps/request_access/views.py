@@ -314,7 +314,7 @@ class SelfCertifyView(FormView):
 
         user.save()
 
-        return HttpResponseRedirect("/tools?access=true")  # pylint: disable=fixme
+        return HttpResponseRedirect("/tools?access=true")
 
 
 class StataAccessRequest(CreateView):
@@ -343,4 +343,4 @@ class StataAccessView(FormView):
 
         return HttpResponseRedirect(
             reverse("request-access:confirmation-page", kwargs={"pk": self.kwargs["pk"]})
-        )  # pylint: disable=fixme
+        )
