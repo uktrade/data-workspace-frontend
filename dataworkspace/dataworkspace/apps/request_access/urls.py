@@ -7,6 +7,8 @@ from dataworkspace.apps.request_access.views import (
     DatasetAccessRequest,
     DatasetAccessRequestUpdate,
     SelfCertifyView,
+    StataAccessView,
+    StataAccessRequest,
     ToolsAccessRequestPart1,
     ToolsAccessRequestPart2,
     ToolsAccessRequestPart3,
@@ -57,5 +59,15 @@ urlpatterns = [
         "self-certify",
         login_required(SelfCertifyView.as_view()),
         name="self-certify-page",
+    ),
+    path(
+        "stata-access",
+        login_required(StataAccessRequest.as_view()),
+        name="stata-access-index",
+    ),
+    path(
+        "<int:pk>/stata-access",
+        login_required(StataAccessView.as_view()),
+        name="stata-access-page",
     ),
 ]

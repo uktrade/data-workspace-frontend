@@ -29,7 +29,7 @@ const assertErrorMessages = (messages: string[]) => {
   });
 };
 
-describe('Self certify tools access', () => {
+describe('Tools access', () => {
   context('when a user goes to access tools', () => {
     it('should NOT be able to access tools', () => {
       cy.visit('/tools');
@@ -45,6 +45,15 @@ describe('Self certify tools access', () => {
           '/request-access/self-certify'
         );
       });
+    });
+    it("should NOT be able to access STATA", () => {
+      cy.visit("/tools");
+      cy.findByRole("alert").should("not.exist");
+      cy.findByRole("link", { name: "Request access to STATA" }).should(
+        "have.attr",
+        "href",
+        "/request-access/self-certify"
+      );
     });
     it('should be directed to the self certify form', () => {
       cy.visit('/tools');
@@ -268,6 +277,14 @@ describe('Self certify tools access', () => {
         'have.attr',
         'href',
         '/tools/explorer/redirect'
+      );
+    });
+    it("should be able to request access to STATA", () => {
+      cy.visit("/tools/");
+      cy.findByRole("link", { name: "Request access to STATA" }).should(
+        "have.attr",
+        "href",
+        "/request-access/stata-access"
       );
     });
   });

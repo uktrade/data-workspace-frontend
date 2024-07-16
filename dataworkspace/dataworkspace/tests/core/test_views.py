@@ -15,6 +15,8 @@ from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.test import override_settings, Client
 from django.urls import reverse
+from django.contrib.contenttypes.models import ContentType
+from dataworkspace.apps.applications.models import ApplicationInstance
 
 from dataworkspace.apps.core.models import NewsletterSubscription, UserSatisfactionSurvey
 from dataworkspace.tests.common import (
@@ -398,7 +400,7 @@ def test_appstream_link_only_shown_to_user_with_permission(
         (
             False,
             "/request-access/self-certify",
-            "Get access to STATA",
+            "Get access to QuickSight",
         ),
     ),
 )
@@ -420,6 +422,160 @@ def test_appstream_link_only_shown_to_user_with_permission_with_feature_flag(
     soup = BeautifulSoup(response.content.decode(response.charset))
     quicksight_link = soup.find("a", href=True, text=expected_text)
     assert quicksight_link.get("href") == expected_href
+
+
+@pytest.mark.parametrize(
+    "expected_href, expected_text",
+    (
+        (
+            "/request-access/self-certify",
+            "Get access to QuickSight",
+        ),
+        (
+            "/request-access/self-certify",
+            "Get access to Superset",
+        ),
+        (
+            "/request-access/self-certify",
+            "Get access to Data Explorer",
+        ),
+        (
+            "/request-access/self-certify",
+            "Request access to STATA",
+        ),
+    ),
+)
+@pytest.mark.django_db
+@override_flag(settings.TOOLS_SELF_CERTIFY, active=True)
+def test_tools_links_with_invalid_email(expected_href, expected_text):
+    user = UserFactory.create(is_staff=False, is_superuser=False, email="ian@gmail.com")
+    user.save()
+    client = Client(**get_http_sso_data(user))
+
+    response = client.get(reverse("applications:tools"))
+    redirected_response = client.get(expected_href)
+    request_tools_access_redirect = client.get(redirected_response.url)
+    request_tools_access_page = client.get(request_tools_access_redirect.url)
+
+    soup = BeautifulSoup(response.content.decode(response.charset))
+    tool_link = soup.find("a", href=True, text=expected_text)
+    assert tool_link.get("href") == expected_href
+    assert b"Request access to tools" in request_tools_access_page.content
+    assert b"Upload file" in request_tools_access_page.content
+
+
+@pytest.mark.parametrize(
+    "expected_href, expected_text",
+    (
+        (
+            "/request-access/self-certify",
+            "Get access to QuickSight",
+        ),
+        (
+            "/request-access/self-certify",
+            "Get access to Superset",
+        ),
+        (
+            "/request-access/self-certify",
+            "Get access to Data Explorer",
+        ),
+        (
+            "/request-access/self-certify",
+            "Request access to STATA",
+        ),
+    ),
+)
+@pytest.mark.django_db
+@override_flag(settings.TOOLS_SELF_CERTIFY, active=True)
+def test_tools_links_with_valid_email(expected_href, expected_text):
+    user = UserFactory.create(is_staff=False, is_superuser=False, email="ian@trade.gov.uk")
+    user.save()
+    client = Client(**get_http_sso_data(user))
+
+    response = client.get(reverse("applications:tools"))
+    request_tools_access_page = client.get(expected_href)
+    soup = BeautifulSoup(response.content.decode(response.charset))
+    tool_link = soup.find("a", href=True, text=expected_text)
+    assert tool_link.get("href") == expected_href
+    assert b"Get access to tools" in request_tools_access_page.content
+    assert b"How to verify your training is up to date" in request_tools_access_page.content
+    assert b"Enter the date that&#x27;s on your certificate" in request_tools_access_page.content
+
+
+@pytest.mark.parametrize(
+    "expected_href, expected_text",
+    (
+        (
+            "/request-access/stata-access",
+            "Request access to STATA",
+        ),
+    ),
+)
+@pytest.mark.django_db
+@override_flag(settings.TOOLS_SELF_CERTIFY, active=True)
+def test_stata_link_after_tools_access_has_been_granted(expected_href, expected_text):
+    user = UserFactory.create(is_staff=False, is_superuser=False, email="ian@trade.gov.uk")
+    start_all_applications = Permission.objects.get(codename="start_all_applications")
+    user.user_permissions.add(start_all_applications)
+    user.save()
+    client = Client(**get_http_sso_data(user))
+
+    response = client.get(reverse("applications:tools"))
+    redirected_response = client.get(expected_href)
+    request_tools_access_page = client.get(redirected_response.url)
+    soup = BeautifulSoup(response.content.decode(response.charset))
+    tool_link = soup.find("a", href=True, text=expected_text)
+
+    assert tool_link.get("href") == expected_href
+    assert b"Request access to tools" in request_tools_access_page.content
+    assert b"Explain why you need access to STATA" in request_tools_access_page.content
+
+
+@pytest.mark.parametrize(
+    "expected_href, expected_text",
+    (
+        (
+            "/tools/quicksight/redirect",
+            "Open QuickSight",
+        ),
+        (
+            "/tools/superset/redirect",
+            "Open Superset",
+        ),
+        (
+            "/tools/explorer/redirect",
+            "Open Data Explorer",
+        ),
+        (
+            "/request-access/stata-access",
+            "Request access to STATA",
+        ),
+    ),
+)
+@pytest.mark.django_db
+@override_flag(settings.TOOLS_SELF_CERTIFY, active=True)
+def test_all_tool_links_after_access_has_been_granted(expected_href, expected_text):
+    user = UserFactory.create(is_staff=False, is_superuser=False, email="ian@trade.gov.uk")
+    permission_codenames = [
+        "start_all_applications",
+        "develop_visualisations",
+        "access_quicksight",
+    ]
+    content_type = ContentType.objects.get_for_model(ApplicationInstance)
+    permissions = Permission.objects.filter(
+        codename__in=permission_codenames,
+        content_type=content_type,
+    )
+    for permission in permissions:
+        user.user_permissions.add(permission)
+    user.save()
+    client = Client(**get_http_sso_data(user))
+
+    response = client.get(reverse("applications:tools"))
+    soup = BeautifulSoup(response.content.decode(response.charset))
+    tool_link = soup.find("a", href=True, text=expected_text)
+
+    assert tool_link.get("href") == expected_href
 
 
 @pytest.mark.django_db
@@ -597,7 +753,6 @@ class TestContactUsViews(BaseTestCase):
     def test_invalid_contact_type_returns_expected_error(self):
         response = self._authenticated_post(reverse("contact-us"), {"contact_type": "NOT_REAL"})
         assert response.status_code == 200
-        print(response.content)
         self.assertContains(
             response, "Select a valid choice. NOT_REAL is not one of the available choices."
         )

@@ -178,3 +178,19 @@ class SelfCertifyForm(GOVUKDesignSystemForm):
             label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
         ),
     )
+
+
+class StataAccessForm(GOVUKDesignSystemForm):
+    class Meta:
+        model = AccessRequest
+        fields = ["reason_for_spss_and_stata"]
+
+    reason_for_spss_and_stata = GOVUKDesignSystemTextareaField(
+        help_text="Use this space to specify why you need to use STATA instead of other tools.",
+        widget=GOVUKDesignSystemTextareaWidget(
+            label_is_heading=False,
+            extra_label_classes="govuk-!-font-weight-bold",
+            attrs={"rows": 5},
+        ),
+        error_messages={"required": "Explain why you need to use STATA"},
+    )

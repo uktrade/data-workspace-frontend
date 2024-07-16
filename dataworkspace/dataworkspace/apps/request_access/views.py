@@ -1,3 +1,4 @@
+import waffle
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
@@ -15,6 +16,7 @@ from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.apps.request_access.forms import (  # pylint: disable=import-error
     DatasetAccessRequestForm,
     SelfCertifyForm,
+    StataAccessForm,
     ToolsAccessRequestFormPart1,
     ToolsAccessRequestFormPart2,
     ToolsAccessRequestFormPart3,
@@ -23,6 +25,7 @@ from dataworkspace.apps.request_access.forms import (  # pylint: disable=import-
 from dataworkspace import zendesk
 from dataworkspace.apps.accounts.models import Profile
 from dataworkspace.apps.request_access import models
+from dataworkspace.apps.core.utils import is_user_email_domain_valid
 
 
 class DatasetAccessRequest(CreateView):
@@ -132,6 +135,8 @@ class ToolsAccessRequestPart1(RequestAccessMixin, UpdateView):
     form_class = ToolsAccessRequestFormPart1
 
     def get_success_url(self):
+        if waffle.flag_is_active(self.request, "TOOLS_SELF_CERTIFY"):
+            return reverse("request-access:summary-page", kwargs={"pk": self.object.pk})
         return reverse("request-access:tools-2", kwargs={"pk": self.object.pk})
 
 
@@ -178,6 +183,9 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
 
     def get(self, request, *args, **kwargs):
         access_request = self.get_object()
+
+        stata_reason = self.request.session.get("reason_for_spss_and_stata")
+
         if not access_request.zendesk_reference_number:
             catalogue_item = (
                 find_dataset(access_request.catalogue_item_id, self.request.user)
@@ -215,6 +223,15 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
                     access_request,
                     catalogue_item,
                 )
+            elif stata_reason:
+                access_request.reason_for_spss_and_stata = stata_reason
+                access_request.zendesk_reference_number = zendesk.create_zendesk_ticket(
+                    request,
+                    access_request,
+                    catalogue_item=None,
+                    stata_description=stata_reason,
+                )
+
             else:
                 access_request.zendesk_reference_number = zendesk.create_zendesk_ticket(
                     request,
@@ -232,6 +249,15 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
                         "ticket_reference": access_request.zendesk_reference_number,
                     },
                 )
+            elif stata_reason:
+                log_event(
+                    request.user,
+                    EventLog.TYPE_STATA_ACCESS_REQUEST,
+                    extra={
+                        "ticket_reference": access_request.zendesk_reference_number,
+                        "reason_for_spss_and_stata": access_request.reason_for_spss_and_stata,
+                    },
+                )
             else:
                 log_event(
                     request.user,
@@ -240,6 +266,7 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
                         "ticket_reference": access_request.zendesk_reference_number,
                     },
                 )
+
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -250,23 +277,6 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
             else None
         )
         return context
-
-
-def is_user_email_domain_valid(email):
-
-    email_domain = email.split("@")[-1]
-
-    valid_domains = [
-        "businessandtrade.gov.uk",
-        "beis.gov.uk",
-        "trade.gov.uk",
-        "digital.trade.gov.uk",
-        "fcdo.gov.uk",
-        "fco.gov.uk",
-        "mobile.trade.gov.uk",
-    ]
-
-    return email_domain in valid_domains
 
 
 class SelfCertifyView(FormView):
@@ -304,4 +314,33 @@ class SelfCertifyView(FormView):
 
         user.save()
 
-        return HttpResponseRedirect("/tools?access=true")  # pylint: disable=fixme
+        return HttpResponseRedirect("/tools?access=true")
+
+
+class StataAccessRequest(CreateView):
+    model = models.AccessRequest
+    template_name = "request_access/stata_request_access.html"
+    form_class = StataAccessForm
+
+    def dispatch(self, request, *args, **kwargs):
+        access_request = models.AccessRequest.objects.create(
+            requester=self.request.user,
+        )
+
+        return HttpResponseRedirect(
+            reverse("request-access:stata-access-page", kwargs={"pk": access_request.pk})
+        )
+
+
+class StataAccessView(FormView):
+    form_class = StataAccessForm
+    template_name = "request_access/stata_request_access.html"
+
+    def form_valid(self, form):
+        reason_for_spss_and_stata = form.cleaned_data["reason_for_spss_and_stata"]
+
+        self.request.session["reason_for_spss_and_stata"] = reason_for_spss_and_stata
+
+        return HttpResponseRedirect(
+            reverse("request-access:confirmation-page", kwargs={"pk": self.kwargs["pk"]})
+        )

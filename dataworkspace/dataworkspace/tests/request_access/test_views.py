@@ -1,5 +1,6 @@
 from datetime import date, timedelta
 from unittest import TestCase, mock
+from unittest.mock import MagicMock
 
 import pytest
 from django.contrib.auth.models import Permission
@@ -11,7 +12,7 @@ from django.urls import reverse
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType
 from dataworkspace.apps.request_access.models import AccessRequest
-from dataworkspace.apps.request_access.views import is_user_email_domain_valid
+from dataworkspace.apps.request_access.views import StataAccessView
 from dataworkspace.tests.common import get_http_sso_data
 from dataworkspace.tests.datasets.test_views import DatasetsCommon
 from dataworkspace.tests.factories import DataSetFactory
@@ -153,6 +154,7 @@ Journey:    Dataset access
 Dataset:    A master
 SSO Login:  frank.exampleson@test.com
 People search: https://people.trade.gov.uk/people-and-teams/search/?query=Frank%20Exampleson&filters=teams&filters=people
+Stata Request Description: N/A
 
 
 Details for the request can be found at
@@ -339,6 +341,7 @@ Journey:    Tools access
 Dataset:    A master
 SSO Login:  frank.exampleson@test.com
 People search: https://people.trade.gov.uk/people-and-teams/search/?query=Frank%20Exampleson&filters=teams&filters=people
+Stata Request Description: N/A
 
 
 Details for the request can be found at
@@ -603,47 +606,44 @@ class TestSelfCertify(TestCase):
         )
 
 
-class TestIsEmailDomainValid:
-    @pytest.mark.parametrize(
-        "email,assertion",
-        (
-            (
-                "valid@businessandtrade.gov.uk",
-                True,
-            ),
-            (
-                "valid@beis.gov.uk",
-                True,
-            ),
-            (
-                "valid@trade.gov.uk",
-                True,
-            ),
-            (
-                "valid@digital.trade.gov.uk",
-                True,
-            ),
-            (
-                "valid@fcdo.gov.uk",
-                True,
-            ),
-            (
-                "valid@mobile.trade.gov.uk",
-                True,
-            ),
-            (
-                "valid@fco.gov.uk",
-                True,
-            ),
-            (
-                "invalid@test",
-                False,
-            ),
-            (
-                "partial@business.gov.uk",
-                False,
-            ),
-        ),
-    )
-    def test_is_user_email_domain_valid_for_various_domains(self, email, assertion):
-        assert is_user_email_domain_valid(email) == assertion
+@pytest.mark.django_db
+class TestStataAccessJourney(TestCase):
+
+    def setUp(self):
+        self.user = factories.UserFactory.create(
+            is_superuser=False, email="valid-domain@trade.gov.uk"
+        )
+        self.client = Client(**get_http_sso_data(self.user))
+        self.index_url = reverse("request-access:stata-access-index")
+        self.form_url = "request_access:stata-access-page"
+        self.form_data = {
+            "reason_for_spss_and_stata": "I want it",
+        }
+
+    def test_access_request_for_stata_redirects_to_form(self):
+        response = self.client.get(self.index_url)
+        redirected_response = self.client.get(response.url)
+        redirected_response_content = redirected_response.content
+
+        assert response.status_code == 302
+        assert b"Request access to tools" in redirected_response_content
+        assert b"Explain why you need access to STATA" in redirected_response_content
+
+    def test_that_form_is_valid_and_redirects_to_confirmation_page(self):
+        form = MagicMock()
+        form.cleaned_data = self.form_data
+        kwargs = {"pk": "1"}
+
+        request = self.client.get(self.form_url, kwargs=kwargs)
+        request.session = {}
+
+        view = StataAccessView(request=request, kwargs=kwargs)
+
+        response = view.form_valid(form=form)
+
+        assert response.status_code == 302
+        assert (
+            request.session["reason_for_spss_and_stata"]
+            == self.form_data["reason_for_spss_and_stata"]
+        )
+        assert response.url == reverse("request_access:confirmation-page", kwargs=kwargs)

@@ -1323,3 +1323,20 @@ def team_membership_post_delete(instance, **_):
 
 def get_postgres_datatype_choices():
     return ((name, name.capitalize()) for name, _ in SCHEMA_POSTGRES_DATA_TYPE_MAP.items())
+
+
+def is_user_email_domain_valid(email):
+
+    email_domain = email.split("@")[-1]
+
+    valid_domains = [
+        "businessandtrade.gov.uk",
+        "beis.gov.uk",
+        "trade.gov.uk",
+        "digital.trade.gov.uk",
+        "fcdo.gov.uk",
+        "fco.gov.uk",
+        "mobile.trade.gov.uk",
+    ]
+
+    return email_domain in valid_domains

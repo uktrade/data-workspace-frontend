@@ -1,0 +1,39 @@
+{% extends '_main.html' %}
+
+{% block page_title %}Request access to tools - reason for stata{% endblock %}
+
+{% block breadcrumbs %}
+    <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+            <li class="govuk-breadcrumbs__list-item">
+                <a class="govuk-breadcrumbs__link" href="/">Home</a>
+            </li>
+            <li class="govuk-breadcrumbs__list-item">Request access to tools
+            </li>
+        </ol>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            {% include 'design_system/error_summary.html' with form=form %}
+            <h1 class="govuk-heading-xl">Request access to tools</h1>
+            <p class="govuk-body">We have limited number of licenses for STATA. To get access you will need to:</p>
+            <ul class="govuk-list govuk-list--bullet">
+                <li>get your line manager's approval</li>
+                <li>be a DBT employee</li>
+                <li>provide clear justification for using it</li>
+            </ul>
+            <h2 class="govuk-heading-l">Explain why you need access to STATA</h2>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+                <fieldset class="govuk-fieldset">
+                    {{ form.reason_for_spss_and_stata }}
+                    <button type="submit" class="govuk-button" data-prevent-double-click="true" >Submit</button>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+{% endblock %}
