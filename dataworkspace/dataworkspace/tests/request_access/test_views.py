@@ -614,17 +614,20 @@ class TestStataAccessJourney(TestCase):
             is_superuser=False, email="valid-domain@trade.gov.uk"
         )
         self.client = Client(**get_http_sso_data(self.user))
-        self.index_url = reverse("request_access:stata-access-index")
+        self.index_url = reverse("request-access:stata-access-index")
         self.form_url = "request_access:stata-access-page"
         self.form_data = {
             "reason_for_spss_and_stata": "I want it",
         }
 
-    def test_access_request_for_stata_is_created_before_redirecting_to_form_page(self):
+    def test_access_request_for_stata_redirects_to_form(self):
         response = self.client.get(self.index_url)
-        access_request = AccessRequest.objects.all()
-        assert response.status_code == 302
-        assert response.url == reverse(self.form_url, kwargs={"pk": access_request[0].pk})
+        redirected_response = self.client.get(response.url)
+        redirected_response_content = redirected_response.content
+        response.status_code == 302
+        assert response.url == '/request-access/1/stata-access'
+        assert b"Request access to tools" in redirected_response_content
+        assert b"Explain why you need access to STATA" in redirected_response_content
 
     def test_that_form_is_valid_and_redirects_to_confirmation_page(self):
         form = MagicMock()
@@ -643,3 +646,4 @@ class TestStataAccessJourney(TestCase):
             == self.form_data["reason_for_spss_and_stata"]
         )
         assert response.url == reverse("request_access:confirmation-page", kwargs=kwargs)
+        response.status_code == 302
