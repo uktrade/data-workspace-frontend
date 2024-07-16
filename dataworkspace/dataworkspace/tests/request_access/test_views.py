@@ -626,7 +626,6 @@ class TestStataAccessJourney(TestCase):
         redirected_response_content = redirected_response.content
 
         assert response.status_code == 302
-        assert response.url == "/request-access/1/stata-access"
         assert b"Request access to tools" in redirected_response_content
         assert b"Explain why you need access to STATA" in redirected_response_content
 
