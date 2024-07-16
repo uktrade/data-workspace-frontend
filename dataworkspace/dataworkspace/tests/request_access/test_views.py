@@ -624,7 +624,8 @@ class TestStataAccessJourney(TestCase):
         response = self.client.get(self.index_url)
         redirected_response = self.client.get(response.url)
         redirected_response_content = redirected_response.content
-        response.status_code == 302
+
+        assert response.status_code == 302
         assert response.url == "/request-access/1/stata-access"
         assert b"Request access to tools" in redirected_response_content
         assert b"Explain why you need access to STATA" in redirected_response_content
@@ -641,9 +642,9 @@ class TestStataAccessJourney(TestCase):
 
         response = view.form_valid(form=form)
 
+        assert response.status_code == 302
         assert (
             request.session["reason_for_spss_and_stata"]
             == self.form_data["reason_for_spss_and_stata"]
         )
         assert response.url == reverse("request_access:confirmation-page", kwargs=kwargs)
-        response.status_code == 302
