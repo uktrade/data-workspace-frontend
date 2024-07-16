@@ -25,6 +25,7 @@ from dataworkspace.apps.request_access.forms import (  # pylint: disable=import-
 from dataworkspace import zendesk
 from dataworkspace.apps.accounts.models import Profile
 from dataworkspace.apps.request_access import models
+from dataworkspace.apps.core.utils import is_user_email_domain_valid
 
 
 class DatasetAccessRequest(CreateView):
@@ -276,23 +277,6 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
             else None
         )
         return context
-
-
-def is_user_email_domain_valid(email):
-
-    email_domain = email.split("@")[-1]
-
-    valid_domains = [
-        "businessandtrade.gov.uk",
-        "beis.gov.uk",
-        "trade.gov.uk",
-        "digital.trade.gov.uk",
-        "fcdo.gov.uk",
-        "fco.gov.uk",
-        "mobile.trade.gov.uk",
-    ]
-
-    return email_domain in valid_domains
 
 
 class SelfCertifyView(FormView):

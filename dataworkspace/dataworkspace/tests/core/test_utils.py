@@ -18,6 +18,7 @@ from dataworkspace.apps.core.utils import (
     source_tables_for_user,
     db_role_schema_suffix_for_user,
     new_private_database_credentials,
+    is_user_email_domain_valid
 )
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.management.commands.ensure_databases_configured import (
@@ -209,3 +210,49 @@ class TestDeleteUnusedDatasetsUsers:
                 ],
             )
             assert cursor.fetchall() == [(qs_creds_to_keep[0]["db_user"],)]
+
+
+class TestIsEmailDomainValid:
+    @pytest.mark.parametrize(
+        "email,assertion",
+        (
+            (
+                "valid@businessandtrade.gov.uk",
+                True,
+            ),
+            (
+                "valid@beis.gov.uk",
+                True,
+            ),
+            (
+                "valid@trade.gov.uk",
+                True,
+            ),
+            (
+                "valid@digital.trade.gov.uk",
+                True,
+            ),
+            (
+                "valid@fcdo.gov.uk",
+                True,
+            ),
+            (
+                "valid@mobile.trade.gov.uk",
+                True,
+            ),
+            (
+                "valid@fco.gov.uk",
+                True,
+            ),
+            (
+                "invalid@test",
+                False,
+            ),
+            (
+                "partial@business.gov.uk",
+                False,
+            ),
+        ),
+    )
+    def test_is_user_email_domain_valid_for_various_domains(self, email, assertion):
+        assert is_user_email_domain_valid(email) == assertion

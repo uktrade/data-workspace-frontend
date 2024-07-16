@@ -12,7 +12,7 @@ from django.urls import reverse
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType
 from dataworkspace.apps.request_access.models import AccessRequest
-from dataworkspace.apps.request_access.views import is_user_email_domain_valid, StataAccessView
+from dataworkspace.apps.request_access.views import StataAccessView
 from dataworkspace.tests.common import get_http_sso_data
 from dataworkspace.tests.datasets.test_views import DatasetsCommon
 from dataworkspace.tests.factories import DataSetFactory
@@ -606,52 +606,6 @@ class TestSelfCertify(TestCase):
         )
 
 
-class TestIsEmailDomainValid:
-    @pytest.mark.parametrize(
-        "email,assertion",
-        (
-            (
-                "valid@businessandtrade.gov.uk",
-                True,
-            ),
-            (
-                "valid@beis.gov.uk",
-                True,
-            ),
-            (
-                "valid@trade.gov.uk",
-                True,
-            ),
-            (
-                "valid@digital.trade.gov.uk",
-                True,
-            ),
-            (
-                "valid@fcdo.gov.uk",
-                True,
-            ),
-            (
-                "valid@mobile.trade.gov.uk",
-                True,
-            ),
-            (
-                "valid@fco.gov.uk",
-                True,
-            ),
-            (
-                "invalid@test",
-                False,
-            ),
-            (
-                "partial@business.gov.uk",
-                False,
-            ),
-        ),
-    )
-    def test_is_user_email_domain_valid_for_various_domains(self, email, assertion):
-        assert is_user_email_domain_valid(email) == assertion
-
-
 @pytest.mark.django_db
 class TestStataAccessJourney(TestCase):
 
@@ -683,10 +637,6 @@ class TestStataAccessJourney(TestCase):
         view = StataAccessView(request=request, kwargs=kwargs)
 
         response = view.form_valid(form=form)
-
-        # Test passes but there are errors in the terminal:
-        # Not Found: /request_access:self-certify-stata-page,
-        # WARNING  django.request:log.py:241 Not Found: /request_access:self-certify-stata-page
 
         assert (
             request.session["reason_for_spss_and_stata"]
