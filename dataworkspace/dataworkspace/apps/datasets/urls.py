@@ -365,4 +365,9 @@ urlpatterns = [
         {"model_class": models.ReferenceDataset},
         name="reference_dataset_save_grid_view",
     ),
+#      path(
+#         "create-table/",
+#         login_required(views.CreateTableOnCataloguePageView.as_view()),
+#         name="create_table",
+#     ),
 ]

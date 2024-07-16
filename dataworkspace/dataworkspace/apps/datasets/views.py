@@ -2267,3 +2267,6 @@ class SaveUserDataGridView(View):
         except UserDataTableView.DoesNotExist:
             pass
         return HttpResponse(status=200)
+class CreateTableOnCataloguePageView(TemplateView):
+    pass
+    # template_name = "datasets/create_table.html"     
