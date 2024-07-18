@@ -305,4 +305,11 @@ urlpatterns = [
         {"model_class": models.ReferenceDataset},
         name="reference_dataset_save_grid_view",
     ),
+    path(
+        "<uuid:pk>/add-table/",
+        include(
+            ("dataworkspace.apps.datasets.add_table.urls", "dataset_add_table"),
+            namespace="add_table",
+        ),
+    ),
 ]
