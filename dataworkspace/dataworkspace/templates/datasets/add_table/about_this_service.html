@@ -1,7 +1,7 @@
  {% extends '_main.html' %}
 
 
-{% block page_title %}Add Table - {{ dataset.name }} - {{ block.super }}{% endblock %}
+{% block page_title %}Add Table - {{ model.name }} - {{ block.super }}{% endblock %}
 
 {% if backlink %}
   {% block go_back %}
@@ -14,7 +14,7 @@
     <div class="govuk-grid-column-two-thirds">
         <h1 class="govuk-heading-l">About this service</h1>
 
-        <p class="govuk-body">Use this service to turn a CSV file into a data table. The new table will be added to this catalogue item.</p>
+        <p class="govuk-body">Use this service to turn a CSV file into a data table. The new table will be added to {{model.name}}.</p>
 
         <h2 class="govuk-heading-m">When you should not use this service</h2>
 
@@ -24,7 +24,7 @@
                 <li>large datasets with lots of columns</li>
                 </ul>
             <p class="govuk-body">We may be able to help you automate this type of upload. To get advice on if automation is right for your datasets,
-            <a class="govuk-link" href="/support-and-feedback/">contact us.</a>
+            <a class="govuk-link" href="/support-and-feedback/">contact us (opens in new tab).</a>
             </p> 
           
         <div class="govuk-button-group">
