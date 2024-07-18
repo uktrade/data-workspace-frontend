@@ -1,6 +1,5 @@
 from django.views.generic import DetailView
 from django.urls import reverse
-from dataworkspace.apps.datasets import models
 from dataworkspace.apps.datasets.utils import find_dataset
 
 
