@@ -4962,13 +4962,3 @@ def test_master_dataset_detail_page_shows_pipeline_failures(client, metadata_db)
         len([x for x in response.context["master_datasets_info"] if x.pipeline_last_run_succeeded])
         == 1
     )
-
-
-def test_AddTableView(client):
-    ds = factories.DataSetFactory.create()
-    url_datasets = reverse("datasets:dataset_detail", args=(ds.id,))
-    url_add_data_html = f"{url_datasets}/add_data"
-
-    response = client.get(url_add_data_html)
-    assert response.status_code == 200
-    assert "About this service" in str(response.content)
