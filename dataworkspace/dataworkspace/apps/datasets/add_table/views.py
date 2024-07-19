@@ -1,8 +1,9 @@
 from django.views.generic import DetailView
+from dataworkspace.apps.datasets.views import EditBaseView
 from django.urls import reverse
-from dataworkspace.apps.datasets.utils import find_dataset
+from dataworkspace.apps.datasets.utils import find_dataset, get_dataset_table
 import inspect
-
+from django.shortcuts import get_object_or_404
 
 
 class AddTableView(DetailView):
@@ -19,16 +20,20 @@ class AddTableView(DetailView):
 
         return ctx
     
-class TableSchemaView(DetailView):
+class TableSchemaView(EditBaseView, DetailView):
     template_name = "datasets/add_table/table_schema.html"
 
-    def get_schema(self, queryset=None):
+    def get_object(self, queryset=None):
         return find_dataset(self.kwargs["pk"], self.request.user)
+    
+    def _get_source(self):
+        return get_object_or_404(self.obj.sourcetable_set.all())
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["model"] = self.object
         ctx["backlink"] = reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
-        print('HERE', inspect.getmembers(self.object))
-
+        ctx["schema"] = self._get_source().schema
         return ctx
+    
+
