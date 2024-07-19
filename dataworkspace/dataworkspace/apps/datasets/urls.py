@@ -312,11 +312,5 @@ urlpatterns = [
             namespace="add_table",
         ),
     ),
-    path(
-        "<uuid:pk>/table-schema/",
-        include(
-            ("dataworkspace.apps.datasets.add_table.urls", "dataset_table_schema"),
-            namespace="table_schema",
-        ),
-    ),
+
 ]
