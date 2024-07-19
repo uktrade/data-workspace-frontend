@@ -13,7 +13,7 @@ urlpatterns = [
         name="add-table",
     ),
     path(
-        "table_schema",
+        "table-schema",
         login_required(TableSchemaView.as_view()),
         name="table-schema",
     ),
