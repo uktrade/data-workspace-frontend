@@ -362,7 +362,7 @@ def process_quicksight_dashboard_visualisations():
                     dashboard_id,
                 )
                 visualisation_link.data_source_last_updated = max(last_updated_dates)
-                visualisation_link.save()
+                visualisation_link.save(update_fields=["data_source_last_updated"])
 
             if tables:
                 set_dataset_related_visualisation_catalogue_items(visualisation_link, tables)
