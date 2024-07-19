@@ -13,5 +13,19 @@ class AddTableView(DetailView):
         ctx = super().get_context_data(**kwargs)
         ctx["model"] = self.object
         ctx["backlink"] = reverse("datasets:dataset_detail", args={self.kwargs["pk"]})
+        # ctx["nextlink"] = reverse("datasets:dataset_table_schema", args={self.kwargs["pk"]})
+
+        return ctx
+    
+class TableSchemaView(DetailView):
+    template_name = "datasets/add_table/table_schema.html"
+
+    def get_object(self, queryset=None):
+        return find_dataset(self.kwargs["pk"], self.request.user)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["model"] = self.object
+        ctx["backlink"] = reverse("datasets:dataset_add_table", args={self.kwargs["pk"]})
 
         return ctx
