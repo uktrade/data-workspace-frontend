@@ -217,6 +217,18 @@ tryCatch({{
 @celery_app.task()
 @close_all_connections_if_not_in_atomic_block
 def process_quicksight_dashboard_visualisations():
+    try:
+        with cache.lock(
+            "process_quicksight_dashboard_visualisations_lock", blocking_timeout=0, timeout=3600
+        ):
+            do_process_quicksight_dashboard_visualisations()
+    except LockError as e:
+        logger.warning(
+            "Failed to acquire lock for process_quicksight_dashboard_visualisations: %s", e
+        )
+
+
+def do_process_quicksight_dashboard_visualisations():
     """
     Loop over all VisualisationLink objects and do the following:
 
