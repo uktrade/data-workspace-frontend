@@ -355,6 +355,14 @@ def application_instance_max_cpu(application_instance):
 @celery_app.task()
 @close_all_connections_if_not_in_atomic_block
 def kill_idle_fargate():
+    try:
+        with cache.lock("do_kill_idle_fargate", blocking_timeout=0, timeout=3600):
+            do_kill_idle_fargate()
+    except redis.exceptions.LockError as e:
+        logger.warning("Failed to acquire lock for do_kill_idle_fargate: %s", e)
+
+
+def do_kill_idle_fargate():
     logger.info("kill_idle_fargate: Start")
 
     two_hours_ago = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=-2)
@@ -397,6 +405,14 @@ def kill_idle_fargate():
 @celery_app.task()
 @close_all_connections_if_not_in_atomic_block
 def populate_created_stopped_fargate():
+    try:
+        with cache.lock("populate_created_stopped_fargate", blocking_timeout=0, timeout=3600):
+            do_populate_created_stopped_fargate()
+    except redis.exceptions.LockError as e:
+        logger.warning("Failed to acquire lock for populate_created_stopped_fargate: %s", e)
+
+
+def do_populate_created_stopped_fargate():
     logger.info("populate_created_stopped_fargate: Start")
 
     # This is used to populate spawner_created_at and spawner_stopped_at for
@@ -1505,6 +1521,16 @@ def long_running_query_alert():
 @celery_app.task()
 @close_all_connections_if_not_in_atomic_block
 def push_tool_monitoring_dashboard_datasets():
+    try:
+        with cache.lock(
+            "push_tool_monitoring_dashboard_datasets", blocking_timeout=0, timeout=3600
+        ):
+            do_push_tool_monitoring_dashboard_datasets()
+    except redis.exceptions.LockError as e:
+        logger.warning("Failed to acquire lock for push_tool_monitoring_dashboard_datasets: %s", e)
+
+
+def do_push_tool_monitoring_dashboard_datasets():
     geckboard_api_key = os.environ["GECKOBOARD_API_KEY"]
     cluster = os.environ["APPLICATION_SPAWNER_OPTIONS__FARGATE__VISUALISATION__CLUSTER_NAME"]
     task_role_prefix = os.environ["APPLICATION_TEMPLATES__1__SPAWNER_OPTIONS__ROLE_PREFIX"]
