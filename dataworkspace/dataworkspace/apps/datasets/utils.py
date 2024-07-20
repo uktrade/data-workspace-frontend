@@ -409,6 +409,18 @@ def store_sql_query(visualisation_link, data_set_id, table_id, sql_query):
 @celery_app.task()
 @close_all_connections_if_not_in_atomic_block
 def link_superset_visualisations_to_related_datasets():
+    try:
+        with cache.lock(
+            "link_superset_visualisations_to_related_datasets", blocking_timeout=0, timeout=3600
+        ):
+            do_link_superset_visualisations_to_related_datasets()
+    except LockError as e:
+        logger.warning(
+            "Failed to acquire lock for link_superset_visualisations_to_related_datasets: %s", e
+        )
+
+
+def do_link_superset_visualisations_to_related_datasets():
     api_url = os.environ["SUPERSET_ROOT"] + "/api/v1/%s"
 
     login_response = requests.post(
@@ -729,6 +741,14 @@ def get_change_item(related_object, change_id):
 @celery_app.task()
 @close_all_connections_if_not_in_atomic_block
 def update_metadata_with_source_table_id():
+    try:
+        with cache.lock("update_metadata_with_source_table_id", blocking_timeout=0, timeout=3600):
+            do_update_metadata_with_source_table_id()
+    except LockError as e:
+        logger.warning("Failed to acquire lock for update_metadata_with_source_table_id: %s", e)
+
+
+def do_update_metadata_with_source_table_id():
     database_name = list(settings.DATABASES_DATA.items())[0][0]
     with connections[database_name].cursor() as cursor:
         cursor.execute(
@@ -857,6 +877,14 @@ def do_store_custom_dataset_query_metadata():
 @celery_app.task()
 @close_all_connections_if_not_in_atomic_block
 def store_reference_dataset_metadata():
+    try:
+        with cache.lock("store_reference_dataset_metadata", blocking_timeout=0, timeout=3600):
+            do_store_reference_dataset_metadata()
+    except LockError as e:
+        logger.warning("Failed to acquire lock for store_reference_dataset_metadata: %s", e)
+
+
+def do_store_reference_dataset_metadata():
     for reference_dataset in ReferenceDataset.objects.live().filter(published=True):
         logger.info(
             "Checking for metadata update for reference dataset '%s'", reference_dataset.name
