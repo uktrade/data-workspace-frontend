@@ -46,9 +46,9 @@ async def async_main():
 
     start = DnsProxy(
         rules=(
-            # The docker registry host in the public zone will already correctly
+            # The arango host in the public zone will already correctly
             # resolve to the private IP, so we pass that through
-            (r"^(registry\." + public_zone + ")$", r"\1"),
+            (r"^(arango\." + public_zone + ")$", r"\1"),
             # ... other public zone hosts should resolve to the IP of the
             # private zone, e.g. gitlab
             (r"^(.+)\." + public_zone + "$", r"\1." + private_zone),
