@@ -312,5 +312,4 @@ urlpatterns = [
             namespace="add_table",
         ),
     ),
-
 ]
