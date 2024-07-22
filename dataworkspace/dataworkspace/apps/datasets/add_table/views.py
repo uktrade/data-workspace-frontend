@@ -2,7 +2,6 @@ from django.views.generic import DetailView
 from dataworkspace.apps.datasets.views import EditBaseView
 from django.urls import reverse
 from dataworkspace.apps.datasets.utils import find_dataset, get_dataset_table
-import inspect
 from django.shortcuts import get_object_or_404
 
 
@@ -34,6 +33,8 @@ class TableSchemaView(EditBaseView, DetailView):
         ctx["model"] = self.object
         ctx["backlink"] = reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
         ctx["schema"] = self._get_source().schema
+        ctx["nextlink"] = reverse("datasets:add_table:table-schema", args={self.kwargs["pk"]})
+
         return ctx
     
 
