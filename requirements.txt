@@ -154,9 +154,7 @@ geoalchemy2==0.8.4
 gevent==23.9.1
     # via -r requirements.in
 greenlet==3.0.1
-    # via
-    #   gevent
-    #   sqlalchemy
+    # via gevent
 hawk-server-asyncio==0.0.13
     # via -r requirements.in
 idna==3.7
