@@ -31,11 +31,14 @@ class TestAddTable(TestCase):
         header_one = soup.find("h1")
         header_two = soup.find("h2")
         paragraph = soup.find("p")
+        title = soup.find("title")
         header_one_text = header_one.contents
         header_two_text = header_two.contents
         paragraph_text = paragraph.contents
+        title_text = title.contents[0]
 
         assert response.status_code == 200
+        assert f"Add Table - {self.dataset.name} - Data Workspace" in title_text
         assert "About this service" in header_one_text
         assert "When you should not use this service" in header_two_text
         assert (
@@ -52,12 +55,15 @@ class TestAddTable(TestCase):
         header_one = soup.find("h1")
         header_two = soup.find("h2")
         paragraph = soup.find("p")
+        title = soup.find("title")
         header_one_text = header_one.contents
         header_two_text = header_two.contents
         paragraph_text = paragraph.contents
+        title_text = title.contents[0]
 
         assert response.status_code == 200
-        assert "Your table’s schema" in header_one_text
+        assert f"Add Table - {self.dataset.name} - Data Workspace" in title_text
+        assert "Your table's schema" in header_one_text
         assert f"Your table will be saved in '{self.source.schema}' schema" in header_two_text
         assert (
             "This is the schema used by other tables in this catalogue item. Schemas are used to categorise data sources. Schemas are often named after the data provider e.g. HMRC."
