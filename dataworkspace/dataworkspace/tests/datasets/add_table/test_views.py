@@ -57,7 +57,7 @@ class TestAddTable(TestCase):
         paragraph = soup.find("p")
         title = soup.find("title")
         header_one_text = header_one.contents
-        header_two_text = header_two.contents[0]
+        header_two_text = header_two.contents
         paragraph_text = paragraph.contents
         title_text = title.contents[0]
 
