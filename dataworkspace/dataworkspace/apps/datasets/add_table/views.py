@@ -1,7 +1,7 @@
 from django.views.generic import DetailView
 from dataworkspace.apps.datasets.views import EditBaseView
 from django.urls import reverse
-from dataworkspace.apps.datasets.utils import find_dataset, get_dataset_table
+from dataworkspace.apps.datasets.utils import find_dataset
 from django.shortcuts import get_object_or_404
 
 
