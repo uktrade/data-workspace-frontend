@@ -17,6 +17,7 @@ class TestAddTable(TestCase):
             published=True,
             user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
             information_asset_owner=self.user,
+            government_security_classification=2,
         )
         self.source = factories.SourceTableFactory.create(
             dataset=self.dataset, schema="test", table="table1"
@@ -88,8 +89,5 @@ class TestAddTable(TestCase):
         assert response.status_code == 200
         assert f"Classification check - {self.dataset.name} - Data Workspace" in title_text
         assert "Check your upload is compatible with the catalogue item" in header_one_text
-        assert (
-            f"The security classification of the catalogue item is {{model.get_government_security_classification_display}}"
-            in header_two_text
-        )
-        assert "By clicking 'continue', you're confirming your upload:" in paragraph_text
+        assert "The security classification of the catalogue item is OFFICIAL-SENSITIVE" in header_two_text
+        assert "You must not add a table that would change the security classification of the catalogue item you're adding to." in paragraph_text
