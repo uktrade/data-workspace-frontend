@@ -35,11 +35,14 @@ class TableSchemaView(EditBaseView, DetailView):
         ctx["model"] = self.object
         ctx["backlink"] = reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
         ctx["schema"] = self._get_source().schema
-        ctx["nextlink"] = reverse("datasets:add_table:classification-check", args={self.kwargs["pk"]})
+        ctx["nextlink"] = reverse(
+            "datasets:add_table:classification-check", args={self.kwargs["pk"]}
+        )
 
         return ctx
 
-class UploadClassificationCheckView(EditBaseView, DetailView):
+
+class ClassificationCheckView(EditBaseView, DetailView):
     template_name = "datasets/add_table/classification_check.html"
 
     def get_object(self, queryset=None):
@@ -49,5 +52,7 @@ class UploadClassificationCheckView(EditBaseView, DetailView):
         ctx = super().get_context_data(**kwargs)
         ctx["model"] = self.object
         ctx["backlink"] = reverse("datasets:add_table:table-schema", args={self.kwargs["pk"]})
-        ctx["nextlink"] = reverse("datasets:add_table:classification-check", args={self.kwargs["pk"]})
+        ctx["nextlink"] = reverse(
+            "datasets:add_table:classification-check", args={self.kwargs["pk"]}
+        )
         return ctx
