@@ -42,8 +42,9 @@ psycogreen
 python-dotenv
 redis
 pyjwt
-requests
+requests==2.32.3
 sentry-sdk
+smart_open[s3]==6.4.0
 sqlalchemy
 tableschema
 Werkzeug

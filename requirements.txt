@@ -33,6 +33,7 @@ bleach==3.3.0
 boto3==1.24.45
     # via
     #   -r requirements.in
+    #   smart-open
     #   tabulator
 botocore==1.27.45
     # via
@@ -241,7 +242,7 @@ redis==4.5.4
     #   -r requirements.in
     #   celery-redbeat
     #   django-redis
-requests==2.32.0
+requests==2.32.3
     # via
     #   -r requirements.in
     #   aws-requests-auth
@@ -276,6 +277,10 @@ six==1.15.0
     #   tabulator
     #   tenacity
     #   zenpy
+smart-open[s3]==6.4.0
+    # via
+    #   -r requirements.in
+    #   smart-open
 soupsieve==2.3.2.post1
     # via beautifulsoup4
 sqlalchemy==2.0.12

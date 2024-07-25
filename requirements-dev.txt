@@ -20,6 +20,8 @@ amqp==5.1.1
     #   kombu
 appdirs==1.4.4
     # via pyppeteer
+appnope==0.1.4
+    # via ipython
 asgiref==3.7.2
     # via
     #   -r requirements.txt
@@ -64,6 +66,7 @@ bleach==3.3.0
 boto3==1.24.45
     # via
     #   -r requirements.txt
+    #   smart-open
     #   tabulator
 botocore==1.27.45
     # via
@@ -249,7 +252,6 @@ greenlet==3.0.1
     # via
     #   -r requirements.txt
     #   gevent
-    #   sqlalchemy
 h11==0.13.0
     # via wsproto
 hawk-server-asyncio==0.0.13
@@ -487,7 +489,7 @@ remote-pdb==2.1.0
     # via -r requirements-dev.in
 remote-pdb-client==1.0.4
     # via -r requirements-dev.in
-requests==2.32.0
+requests==2.32.3
     # via
     #   -r requirements.txt
     #   aws-requests-auth
@@ -538,6 +540,8 @@ six==1.15.0
     #   tabulator
     #   tenacity
     #   zenpy
+smart-open[s3]==6.4.0
+    # via -r requirements.txt
 sniffio==1.2.0
     # via trio
 sortedcontainers==2.4.0
