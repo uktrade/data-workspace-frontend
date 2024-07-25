@@ -90,7 +90,7 @@ class TestAddTable(TestCase):
         assert f"Classification check - {self.dataset.name} - Data Workspace" in title_text
         assert "Check your upload is compatible with the catalogue item" in header_one_text
         assert (
-            "The security classification of the catalogue item is 'OFFICIAL-SENSITIVE'"
+            "The security classification of the catalogue item is 'Official-Sensitive'"
             in header_two_text
         )
         assert (

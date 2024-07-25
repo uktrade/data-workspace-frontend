@@ -33,8 +33,8 @@ class TableSchemaView(EditBaseView, DetailView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["model"] = self.object
-        ctx["backlink"] = reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
         ctx["schema"] = self._get_source().schema
+        ctx["backlink"] = reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
         ctx["nextlink"] = reverse(
             "datasets:add_table:classification-check", args={self.kwargs["pk"]}
         )
@@ -51,6 +51,9 @@ class ClassificationCheckView(EditBaseView, DetailView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["model"] = self.object
+        ctx["classification"] = (
+            self.object.get_government_security_classification_display() or "Unclassified"
+        ).title()
         ctx["backlink"] = reverse("datasets:add_table:table-schema", args={self.kwargs["pk"]})
         ctx["nextlink"] = reverse(
             "datasets:add_table:classification-check", args={self.kwargs["pk"]}
