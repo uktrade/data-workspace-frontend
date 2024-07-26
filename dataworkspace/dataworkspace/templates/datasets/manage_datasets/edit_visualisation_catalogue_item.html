@@ -3,8 +3,6 @@
 
 {% block head %}
     {{ block.super }}
-    <script src="{% static "ckeditor/ckeditor-init.js" %}"></script>
-    <script src="{% static "ckeditor/ckeditor/ckeditor.js" %}"></script>
     <link rel="stylesheet" href="{% static 'explorer.css' %}">
 {% endblock %}
 
@@ -196,4 +194,5 @@
       })
     })
   </script>
+  {% include 'partials/tinymce.html' %}
 {% endblock footer_scripts %}

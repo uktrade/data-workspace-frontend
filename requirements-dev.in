@@ -27,3 +27,4 @@ remote-pdb
 remote-pdb-client
 pydevd-pycharm
 debugpy
+django-tinymce

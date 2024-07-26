@@ -3,13 +3,11 @@ import datetime
 import re
 
 from django import forms
-from django.contrib.admin.widgets import AdminTextareaWidget
 from django.core.validators import EmailValidator
 from django.forms import (
     CheckboxInput,
     CharField,
     EmailField,
-    Media,
     ModelChoiceField,
     MultiValueField,
     ValidationError,
@@ -123,30 +121,6 @@ class GOVUKDesignSystemEmailWidget(GOVUKDesignSystemWidgetMixin, forms.widgets.E
 
 class GOVUKDesignSystemTextareaWidget(GOVUKDesignSystemWidgetMixin, forms.widgets.Textarea):
     template_name = "design_system/textarea.html"
-
-
-class GOVUKDesignSystemRichTextWidget(GOVUKDesignSystemTextareaWidget):
-    def __init__(self, **kwargs):
-        kwargs["attrs"] = {"style": "display:none;"}
-        super().__init__(**kwargs)
-
-    class Media:
-        js = (
-            "assets/vendor/ckeditor5/ckeditor.js",
-            "js/text-editor.js",
-        )
-
-
-class GOVUKDesignSystemLinkWidget(GOVUKDesignSystemTextareaWidget):
-    def __init__(self, **kwargs):
-        kwargs["attrs"] = {"style": "display:none;"}
-        super().__init__(**kwargs)
-
-    class Media:
-        js = (
-            "assets/vendor/ckeditor5/ckeditor.js",
-            "js/link-text-editor.js",
-        )
 
 
 class GOVUKDesignSystemPlainTextareaWidget(GOVUKDesignSystemTextareaWidget):
@@ -302,11 +276,7 @@ class GOVUKDesignSystemFileField(GOVUKDesignSystemFieldMixin, forms.FileField):
 
 
 class GOVUKDesignSystemRichTextField(GOVUKDesignSystemFieldMixin, forms.CharField):
-    widget = GOVUKDesignSystemRichTextWidget(data_attributes={"type": "rich-text-editor"})
-
-
-class GOVUKDesignSystemRichLinkField(GOVUKDesignSystemFieldMixin, forms.CharField):
-    widget = GOVUKDesignSystemLinkWidget(data_attributes={"type": "rich-link-text-editor"})
+    widget = GOVUKDesignSystemTextareaWidget(data_attributes={"type": "rich-text-editor"})
 
 
 class GOVUKDesignSystemModelForm(forms.ModelForm):
@@ -375,33 +345,3 @@ class GOVUKDesignSystemForm(forms.Form):
         non_field_errors = [(None, e) for e in self.non_field_errors()]
 
         return non_field_errors + field_errors
-
-
-class AdminRichTextEditorWidget(AdminTextareaWidget):
-    def __init__(self, attrs=None):
-        super().__init__(attrs={"data-type": "rich-text-editor", **(attrs or {})})
-
-    @property
-    def media(self):
-        return Media(
-            js=(
-                "assets/vendor/ckeditor5/ckeditor.js",
-                "js/text-editor.js",
-            ),
-            css={"all": ["admin/css/rich-text.css"]},
-        )
-
-
-class AdminRichLinkEditorWidget(AdminTextareaWidget):
-    def __init__(self, attrs=None):
-        super().__init__(attrs={"data-type": "rich-link-text-editor", **(attrs or {})})
-
-    @property
-    def media(self):
-        return Media(
-            js=(
-                "assets/vendor/ckeditor5/ckeditor.js",
-                "js/link-text-editor.js",
-            ),
-            css={"all": ["admin/css/rich-text.css"]},
-        )

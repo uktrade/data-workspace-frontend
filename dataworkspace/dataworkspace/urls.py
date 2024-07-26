@@ -185,6 +185,7 @@ urlpatterns = [
         login_required(RestoreTableDAGTaskStatusView.as_view()),
         name="restore-table-task-status",
     ),
+    path("tinymce/", include("tinymce.urls")),
 ]
 
 if settings.DEBUG:

@@ -25,7 +25,7 @@ def test_baseline_content_security_policy(client):
         "font-src dataworkspace.test:8000 data: https://fonts.gstatic.com",
         "style-src dataworkspace.test:8000 'unsafe-inline' https://tagmanager.google.com https://fonts.googleapis.com",
         "default-src dataworkspace.test:8000",
-        "connect-src dataworkspace.test:8000 https://www.google-analytics.com *.google-analytics.com *.analytics.google.com *.googletagmanager.com https://cke4.ckeditor.com",  # pylint: disable=line-too-long
+        "connect-src dataworkspace.test:8000 https://www.google-analytics.com *.google-analytics.com *.analytics.google.com *.googletagmanager.com",  # pylint: disable=line-too-long
     }
 
     assert policies == expected_policies
@@ -43,7 +43,7 @@ def test_baseline_content_security_policy(client):
         ("admin:index", None, False),
     ),
 )
-def test_dataset_admin_pages_allow_inline_scripts_for_ckeditor_support(
+def test_dataset_admin_pages_allow_inline_scripts_for_tinymce_support(
     staff_client, url, factory, unsafe_inline_script
 ):
     args = None

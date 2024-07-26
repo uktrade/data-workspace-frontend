@@ -18,9 +18,17 @@ const REACT_APPS = [
   {}
 );
 
+const APPS = ['tinymce'].reduce(
+  (prev, acc) => ({
+    ...prev,
+    [acc]: path.join(__dirname, `./${acc}/index`)
+  }),
+  {}
+);
+
 module.exports = {
   context: __dirname,
-  entry: REACT_APPS,
+  entry: {...APPS, ...REACT_APPS},
   output: {
     path: path.resolve('./bundles/'),
     filename: '[name].[contenthash].js',
