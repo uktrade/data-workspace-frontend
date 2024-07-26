@@ -136,24 +136,3 @@ def list_pipelines():
     )
     response.raise_for_status()
     return response.json()
-
-
-def get_pipeline_logs(pipeline):
-    url = f"{API_URL}/dag/{pipeline.dag_id}/logs"
-
-    method = "GET"
-    content_type = "application/json"
-    header = Sender(
-        HAWK_CREDS,
-        url,
-        method.lower(),
-        content="",
-        content_type=content_type,
-    ).request_header
-    response = requests.request(
-        method,
-        url,
-        headers={"Authorization": header, "Content-Type": content_type},
-    )
-    response.raise_for_status()
-    return response.json()

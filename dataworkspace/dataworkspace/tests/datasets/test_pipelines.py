@@ -2,8 +2,6 @@ import pytest
 from django.urls import reverse
 from mock import mock
 
-from requests import RequestException
-
 from dataworkspace.apps.datasets.models import Pipeline
 from dataworkspace.tests import factories
 
@@ -319,39 +317,6 @@ def test_stop_pipeline(mock_stop, staff_client):
         follow=True,
     )
     assert "Pipeline stopped successfully" in resp.content.decode(resp.charset)
-
-
-@pytest.mark.django_db
-def test_pipeline_log_success(staff_client, mocker):
-    pipeline = factories.PipelineFactory.create(type="sharepoint")
-    _return_value = [
-        {
-            "task_1": "...",
-        }
-    ]
-    mocker.patch(
-        "dataworkspace.apps.datasets.pipelines.views.get_pipeline_logs",
-        return_value=_return_value,
-    )
-    resp = staff_client.get(
-        reverse("pipelines:logs", args=(pipeline.id,)),
-        follow=True,
-    )
-    assert "task_1" in resp.content.decode(resp.charset)
-
-
-@pytest.mark.django_db
-def test_pipeline_log_failure(staff_client, mocker):
-    pipeline = factories.PipelineFactory.create()
-    mocker.patch(
-        "dataworkspace.apps.datasets.pipelines.views.get_pipeline_logs",
-        side_effect=RequestException(),
-    )
-    resp = staff_client.get(
-        reverse("pipelines:logs", args=(pipeline.id,)),
-        follow=True,
-    )
-    assert "There is a problem" in resp.content.decode(resp.charset)
 
 
 @mock.patch("dataworkspace.apps.datasets.pipelines.views.save_pipeline_to_dataflow")

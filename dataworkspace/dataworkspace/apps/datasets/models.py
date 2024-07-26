@@ -2946,6 +2946,10 @@ class Pipeline(TimeStampedUserModel):
         # we don't risk a clash - we cannot have "schema.a"."table" or "schema"."a.table"
         return "DerivedPipeline-" + self.table_name.replace('"', "")
 
+    @property
+    def dataflow_grid_view_url(self):
+        return settings.DATAFLOW_API_CONFIG["DATAFLOW_BASE_URL"] + "/dags/" + self.dag_id + "/grid"
+
     def get_absolute_url(self):
         return reverse(f"pipelines:edit-{self.type}", args=(self.id,))
 
