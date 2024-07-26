@@ -28,7 +28,7 @@ class TableSchemaView(EditBaseView, DetailView):
         return find_dataset(self.kwargs["pk"], self.request.user)
 
     def _get_source(self):
-        return get_object_or_404(self.obj.sourcetable_set.all())
+        return get_object_or_404(self.obj.sourcetable_set.all()[:1])
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
