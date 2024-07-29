@@ -28,19 +28,27 @@ class TableSchemaView(EditBaseView, DetailView):
     def get_object(self, queryset=None):
         return find_dataset(self.kwargs["pk"], self.request.user)
 
-    def _get_source(self):
+    def _get_schemas(self):
+        schemas = []
         if self.object.type == DataSetType.MASTER:
-            return get_object_or_404(self.obj.sourcetable_set.all()[:1]).schema
+            for table in self.obj.sourcetable_set.all():
+                schemas += [table.schema]
         elif self.object.type == DataSetType.REFERENCE:
-            return "public"
+            schemas = ["public"]
         else:
             # Invalid dataset, return error or redirect?
             return ""
 
+        # This should return a list with no duplicates, need to test
+        return list(set(schemas))
+
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["model"] = self.object
-        ctx["schema"] = self._get_source()
+        ctx["schemas"] = self._get_schemas()
+        print("schemas", ctx["schemas"])
+        ctx["is_multiple_schemas"] = len(ctx["schemas"]) > 1
+        print("Multiple", ctx["is_multiple_schemas"])
         ctx["backlink"] = reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
         ctx["nextlink"] = reverse("datasets:add_table:table-schema", args={self.kwargs["pk"]})
 
