@@ -1,10 +1,12 @@
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from django.views.generic import DetailView
+from django.views.generic import DetailView, FormView
+from django.http import HttpResponseRedirect
 
 from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.datasets.views import EditBaseView
 from dataworkspace.apps.datasets.constants import DataSetType
+from dataworkspace.apps.datasets.add_table.forms import TableSchemaForm
 
 
 class AddTableView(DetailView):
@@ -22,8 +24,9 @@ class AddTableView(DetailView):
         return ctx
 
 
-class TableSchemaView(EditBaseView, DetailView):
+class TableSchemaView(EditBaseView, DetailView, FormView):
     template_name = "datasets/add_table/table_schema.html"
+    form_class = TableSchemaForm
 
     def get_object(self, queryset=None):
         return find_dataset(self.kwargs["pk"], self.request.user)
@@ -53,3 +56,11 @@ class TableSchemaView(EditBaseView, DetailView):
         ctx["nextlink"] = reverse("datasets:add_table:table-schema", args={self.kwargs["pk"]})
 
         return ctx
+    
+    def form_valid(self, form):
+        cleaned = form.cleaned_data
+        print('cleaned', cleaned)
+        print('form.schema', form.schema[0].__dict__)
+        if form.schema:
+            return HttpResponseRedirect(reverse("datasets:add_table:add-table", args={self.kwargs["pk"]}))
+    
