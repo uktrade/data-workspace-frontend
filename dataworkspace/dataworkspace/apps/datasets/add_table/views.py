@@ -4,6 +4,7 @@ from django.views.generic import DetailView
 
 from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.datasets.views import EditBaseView
+from dataworkspace.apps.datasets.constants import DataSetType
 
 
 class AddTableView(DetailView):
@@ -28,13 +29,19 @@ class TableSchemaView(EditBaseView, DetailView):
         return find_dataset(self.kwargs["pk"], self.request.user)
 
     def _get_source(self):
-        return get_object_or_404(self.obj.sourcetable_set.all()[:1])
+        if self.object.type == DataSetType.MASTER:
+            return get_object_or_404(self.obj.sourcetable_set.all()[:1]).schema
+        elif self.object.type == DataSetType.REFERENCE:
+            return "public"
+        else:
+            # Invalid dataset, return error or redirect?
+            return ""
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["model"] = self.object
+        ctx["schema"] = self._get_source()
         ctx["backlink"] = reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
-        ctx["schema"] = self._get_source().schema
         ctx["nextlink"] = reverse("datasets:add_table:table-schema", args={self.kwargs["pk"]})
 
         return ctx
