@@ -340,6 +340,12 @@ CELERY_ROUTES = {
 
 if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
     CELERY_BEAT_SCHEDULE = {
+        "remove_tools_access_for_users_with_expired_cert": {
+            "task": "dataworkspace.apps.applications.utils.remove_tools_access_for_users_with_expired_cert",
+            # Executes every day at 5:00 a.m.
+            "schedule": crontab(hour=5, minute=0),
+            "args": (),
+        },
         "kill-idle-fargate-containers": {
             "task": "dataworkspace.apps.applications.utils.kill_idle_fargate",
             "schedule": 60 * 10,
