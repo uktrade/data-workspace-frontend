@@ -139,3 +139,8 @@ class AggregationType(models.TextChoices):
 class SecurityClassificationAndHandlingInstructionType(models.IntegerChoices):
     OFFICIAL = 1, "OFFICIAL"
     OFFICIAL_SENSITIVE = 2, "OFFICIAL-SENSITIVE"
+
+
+class DataFlowPlatform(models.TextChoices):
+    GOV_PAAS = "gov_paas", "GOV.UK PaaS"
+    DATA_WORKSPACE_AWS = "data_workspace_aws", "Data Workspace AWS"

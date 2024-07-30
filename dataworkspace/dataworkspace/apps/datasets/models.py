@@ -64,6 +64,7 @@ from dataworkspace.apps.applications.models import (
     VisualisationTemplate,
 )
 from dataworkspace.apps.datasets.constants import (
+    DataFlowPlatform,
     DataSetType,
     DataLinkType,
     GRID_DATA_TYPE_MAP,
@@ -2892,6 +2893,7 @@ class Pipeline(TimeStampedUserModel):
     type = models.CharField(max_length=255, choices=PipelineType.choices)
     config = models.JSONField()
     notes = models.TextField(null=True, blank=True)
+    data_flow_platform = models.CharField(max_length=255, choices=DataFlowPlatform.choices)
 
     class Meta:
         ordering = ("table_name",)
