@@ -1,4 +1,4 @@
-from django.shortcuts import get_object_or_404
+from typing import Any
 from django.urls import reverse
 from django.views.generic import DetailView, FormView
 from django.http import HttpResponseRedirect
@@ -56,11 +56,16 @@ class TableSchemaView(EditBaseView, DetailView, FormView):
         ctx["nextlink"] = reverse("datasets:add_table:table-schema", args={self.kwargs["pk"]})
 
         return ctx
-    
+
     def form_valid(self, form):
-        cleaned = form.cleaned_data
-        print('cleaned', cleaned)
-        print('form.schema', form.schema[0].__dict__)
+        schema = ""
+        for key, value in self.request.POST.lists():
+            if "on" in value:
+                schema = key
+
+        print("schema:", schema)
+
         if form.schema:
-            return HttpResponseRedirect(reverse("datasets:add_table:add-table", args={self.kwargs["pk"]}))
-    
+            return HttpResponseRedirect(
+                reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
+            )

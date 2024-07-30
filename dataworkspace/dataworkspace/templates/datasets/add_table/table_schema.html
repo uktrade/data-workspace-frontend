@@ -27,14 +27,13 @@
             <div class="govuk-radios" data-module="govuk-radios">
               {% for schema in schemas %}
               <div class="govuk-radios__item">
-                <input class="govuk-radios__input" name="schema" type="radio">
+                <input class="govuk-radios__input" name={{ schema }} type="radio">
                 <label class="govuk-label govuk-radios__label">
                   {{ schema }}
                 </label>
               </div>
               <br>
               {% endfor %}
-              {{ form.schema }}
             </div>
           </fieldset>
         </div>
