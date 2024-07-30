@@ -328,3 +328,10 @@ class TestHasToolsCertExpired:
         self,
     ):
         assert has_tools_cert_expired(datetime.date(year=2019, month=2, day=27)) is True
+
+    @pytest.mark.django_db
+    @freeze_time("2020-02-28")
+    def test_cert_date_has_not_expired_when_date_falls_on_a_leap_year_and_is_less_then_a_year_old(
+        self,
+    ):
+        assert has_tools_cert_expired(datetime.date(year=2019, month=2, day=28)) is False
