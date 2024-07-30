@@ -34,7 +34,6 @@ from dataworkspace.apps.applications.utils import (
     sync_quicksight_permissions,
     _do_sync_s3_sso_users,
     _process_staff_sso_file,
-    has_tools_cert_expired,
     remove_tools_access_for_users_with_expired_cert,
 )
 from dataworkspace.apps.datasets.constants import UserAccessType
