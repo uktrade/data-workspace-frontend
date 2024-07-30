@@ -122,6 +122,7 @@ INSTALLED_APPS = [
     "webpack_loader",
     "dataworkspace.apps.data_collections",
     "django_celery_results",
+    "dataworkspace.apps.arangodb",
 ]
 
 MIDDLEWARE = [
@@ -356,6 +357,11 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
             "schedule": 60 * 10,
             "args": (),
         },
+        "delete-unused-arangodb-users": {
+            "task": "dataworkspace.apps.arangodb.utils.delete_unused_arangodb_users",
+            "schedule": 60 * 10,
+            "args": (),
+        },
         "full-quicksight-permissions-sync": {
             "task": "dataworkspace.apps.applications.utils.sync_quicksight_permissions",
             "schedule": crontab(minute=17, hour=1),
@@ -559,6 +565,7 @@ DATABASES = {
 }
 
 DATABASES_DATA = {db: db_config for db, db_config in DATABASES.items() if db in env["DATA_DB"]}
+ARANGODB = env["ARANGO_DB"]
 # Only used when collectstatic is run
 STATIC_ROOT = "/home/django/static/"
 
