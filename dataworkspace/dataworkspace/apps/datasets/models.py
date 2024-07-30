@@ -2893,7 +2893,7 @@ class Pipeline(TimeStampedUserModel):
     type = models.CharField(max_length=255, choices=PipelineType.choices)
     config = models.JSONField()
     notes = models.TextField(null=True, blank=True)
-    data_flow_platform = models.CharField(max_length=255, choices=DataFlowPlatform.choices)
+    data_flow_platform = models.CharField(max_length=255, choices=DataFlowPlatform.choices, default=DataFlowPlatform.GOV_PAAS)
 
     class Meta:
         ordering = ("table_name",)
