@@ -1590,23 +1590,6 @@ class TestRemoveToolsAccessForUsersWithExpiredCert:
         user.save()
 
     @pytest.mark.django_db
-    @freeze_time("2024-07-30")
-    def test_tools_cert_has_expired_when_cert_date_is_over_year_old(self):
-        assert has_tools_cert_expired(datetime.date(year=2023, month=7, day=31)) is False
-
-    @pytest.mark.django_db
-    @freeze_time("2024-07-30")
-    def test_tools_cert_has_not_expired_when_cert_date_is_less_than_a_year_old(self):
-        assert has_tools_cert_expired(datetime.date(year=2023, month=7, day=30)) is True
-
-    @pytest.mark.django_db
-    @freeze_time("2020-02-28")
-    def test_tools_cert_has_expired_when_cert_date_falls_on_a_leap_year_and_is_over_a_year_old(
-        self,
-    ):
-        assert has_tools_cert_expired(datetime.date(year=2019, month=2, day=27)) is True
-
-    @pytest.mark.django_db
     def test_removes_permissions_when_cert_has_expired(self):
         user = UserFactory.create()
         self.setup_user_tools_cert(user, self.one_year_ago.date())

@@ -1,4 +1,5 @@
 from base64 import urlsafe_b64encode
+import calendar
 import csv
 import datetime
 import json
@@ -1362,3 +1363,10 @@ def get_tinymce_configs(configs):
             }
         )
     return tiny_mce_configs
+
+
+def has_tools_cert_expired(cert_date):
+    given_datetime = datetime.datetime.combine(cert_date, datetime.datetime.min.time())
+    total_days = 366 if calendar.isleap(datetime.date.today().year) else 365
+    one_year_ago = datetime.datetime.now() - datetime.timedelta(days=total_days)
+    return bool(one_year_ago >= given_datetime or given_datetime > datetime.datetime.now())

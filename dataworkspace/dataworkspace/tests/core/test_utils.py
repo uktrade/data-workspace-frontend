@@ -1,3 +1,4 @@
+from freezegun import freeze_time
 import datetime
 import re
 import time
@@ -20,6 +21,7 @@ from dataworkspace.apps.core.utils import (
     new_private_database_credentials,
     is_user_email_domain_valid,
     get_tinymce_configs,
+    has_tools_cert_expired,
 )
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.management.commands.ensure_databases_configured import (
@@ -307,3 +309,22 @@ class TestTinymceConfigs:
         assert tinymce_configs[0]["plugins"] == "link"
         assert tinymce_configs[0]["toolbar"] == "link"
         assert tinymce_configs[0]["custom_undo_redo_levels"] == 10
+
+
+class TestHasToolsCertExpired:
+    @pytest.mark.django_db
+    @freeze_time("2024-07-30")
+    def test_cert_date_has_expired_when_date_is_over_year_old(self):
+        assert has_tools_cert_expired(datetime.date(year=2023, month=7, day=31)) is False
+
+    @pytest.mark.django_db
+    @freeze_time("2024-07-30")
+    def test_cert_date_has_not_expired_when_date_is_less_than_a_year_old(self):
+        assert has_tools_cert_expired(datetime.date(year=2023, month=7, day=30)) is True
+
+    @pytest.mark.django_db
+    @freeze_time("2020-02-28")
+    def test_cert_date_has_expired_when_date_falls_on_a_leap_year_and_is_over_a_year_old(
+        self,
+    ):
+        assert has_tools_cert_expired(datetime.date(year=2019, month=2, day=27)) is True

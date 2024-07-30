@@ -1,4 +1,3 @@
-import calendar
 import csv
 import datetime
 import json
@@ -64,6 +63,7 @@ from dataworkspace.apps.core.utils import (
     transaction_and_lock,
     new_private_database_credentials,
     postgres_user,
+    has_tools_cert_expired,
 )
 from dataworkspace.apps.applications.gitlab import gitlab_has_developer_access
 from dataworkspace.apps.datasets.constants import UserAccessType
@@ -2110,13 +2110,6 @@ def remove_tools_access_for_users_with_expired_cert():
         logger.info("remove_tools_access: Lock not owned - running on another instance?")
     except redis.exceptions.LockError:
         logger.info("remove_tools_access: Unable to grab lock - running on another instance?")
-
-
-def has_tools_cert_expired(cert_date):
-    given_datetime = datetime.datetime.combine(cert_date, datetime.datetime.min.time())
-    total_days = 366 if calendar.isleap(datetime.date.today().year) else 365
-    one_year_ago = datetime.datetime.now() - datetime.timedelta(days=total_days)
-    return bool(one_year_ago >= given_datetime or given_datetime > datetime.datetime.now())
 
 
 def _remove_tools_access_for_users_with_expired_cert():
