@@ -34,6 +34,7 @@ from dataworkspace.apps.applications.utils import (
     sync_quicksight_permissions,
     _do_sync_s3_sso_users,
     _process_staff_sso_file,
+    has_tools_cert_expired,
     remove_tools_access_for_users_with_expired_cert,
 )
 from dataworkspace.apps.datasets.constants import UserAccessType
@@ -1564,7 +1565,7 @@ class TestLongRunningQueryAlerts:
         )
 
 
-class Test_remove_tools_access_for_users_with_expired_cert:
+class TestRemoveToolsAccessForUsersWithExpiredCert:
 
     permissions_codenames = [
         "start_all_applications",
@@ -1577,8 +1578,8 @@ class Test_remove_tools_access_for_users_with_expired_cert:
     one_year_ago = datetime.datetime.now() - datetime.timedelta(days=total_days)
     one_day_ago = datetime.datetime.now() - datetime.timedelta(days=1)
 
-    def setup_user_tools_cert(self, user, cert_date):
-        for codename in self.permissions_codenames:
+    def setup_user_tools_cert(self, user, cert_date, codenames=permissions_codenames):
+        for codename in codenames:
             tools_permission = Permission.objects.get(
                 codename=codename,
                 content_type=ContentType.objects.get_for_model(ApplicationInstance),
@@ -1589,7 +1590,22 @@ class Test_remove_tools_access_for_users_with_expired_cert:
         user.save()
 
     @pytest.mark.django_db
-    def test_removes_access_when_cert_has_expired(self):
+    @freeze_time("2024-07-30")
+    def test_tools_cert_has_expired_when_cert_date_is_over_year_old(self):
+        assert has_tools_cert_expired(datetime.date(year=2023, month=7, day=31)) is False
+
+    @pytest.mark.django_db
+    @freeze_time("2024-07-30")
+    def test_tools_cert_has_not_expired_when_cert_date_is_less_than_a_year_old(self):
+        assert has_tools_cert_expired(datetime.date(year=2023, month=7, day=30)) is True
+
+    @pytest.mark.django_db
+    @freeze_time("2020-02-28")
+    def test_tools_cert_has_expired_when_cert_date_falls_on_a_leap_year_and_is_over_a_year_old(self):
+        assert has_tools_cert_expired(datetime.date(year=2019, month=2, day=27)) is True
+
+    @pytest.mark.django_db
+    def test_removes_permissions_when_cert_has_expired(self):
         user = UserFactory.create()
         self.setup_user_tools_cert(user, self.one_year_ago.date())
 
@@ -1604,7 +1620,7 @@ class Test_remove_tools_access_for_users_with_expired_cert:
         assert can_start_tools is False
 
     @pytest.mark.django_db
-    def test_does_not_remove_access_when_cert_is_valid(self):
+    def test_does_not_remove_permissions_when_cert_is_valid(self):
         user = UserFactory.create()
         self.setup_user_tools_cert(user, self.one_day_ago.date())
 
@@ -1617,3 +1633,18 @@ class Test_remove_tools_access_for_users_with_expired_cert:
             codename__in=self.permissions_codenames
         ).exists()
         assert can_start_tools is True
+
+    @pytest.mark.django_db
+    def test_does_not_effect_permissions_when_user_has_no_permissions_but_has_valid_cert(self):
+        user = UserFactory.create()
+        self.setup_user_tools_cert(user, self.one_day_ago.date(), [])
+
+        can_start_tools = user.user_permissions.filter(
+            codename__in=self.permissions_codenames
+        ).exists()
+        assert can_start_tools is False
+        remove_tools_access_for_users_with_expired_cert()
+        can_start_tools = user.user_permissions.filter(
+            codename__in=self.permissions_codenames
+        ).exists()
+        assert can_start_tools is False

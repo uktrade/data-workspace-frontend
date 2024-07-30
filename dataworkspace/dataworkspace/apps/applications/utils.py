@@ -2112,6 +2112,13 @@ def remove_tools_access_for_users_with_expired_cert():
         logger.info("remove_tools_access: Unable to grab lock - running on another instance?")
 
 
+def has_tools_cert_expired(cert_date):
+    given_datetime = datetime.datetime.combine(cert_date, datetime.datetime.min.time())
+    total_days = 366 if calendar.isleap(datetime.date.today().year) else 365
+    one_year_ago = datetime.datetime.now() - datetime.timedelta(days=total_days)
+    return bool(one_year_ago >= given_datetime or given_datetime > datetime.datetime.now())
+
+
 def _remove_tools_access_for_users_with_expired_cert():
     logger.info("_remove_tools_access: Start")
     user_model = get_user_model()
@@ -2122,12 +2129,6 @@ def _remove_tools_access_for_users_with_expired_cert():
         "access_appstream",
     ]
     permission_ids = Permission.objects.filter(codename__in=permissions_codenames).all()
-
-    def has_tools_cert_expired(cert_date):
-        given_datetime = datetime.datetime.combine(cert_date, datetime.datetime.min.time())
-        total_days = 366 if calendar.isleap(datetime.date.today().year) else 365
-        one_year_ago = datetime.datetime.now() - datetime.timedelta(days=total_days)
-        return bool(one_year_ago >= given_datetime or given_datetime > datetime.datetime.now())
 
     def remove_tools_access(user):
         for permission_id in permission_ids:
