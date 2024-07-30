@@ -53,3 +53,4 @@ zenpy
 django-webpack-loader
 django-celery-results
 django-tinymce
+python-arango

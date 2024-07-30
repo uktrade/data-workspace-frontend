@@ -22,6 +22,7 @@ from dataworkspace.apps.applications.models import (
     ApplicationInstance,
     ApplicationInstanceDbUsers,
 )
+from dataworkspace.apps.arangodb.models import ApplicationInstanceArangoUsers
 from dataworkspace.apps.applications.gitlab import (
     ECR_PROJECT_ID,
     SUCCESS_PIPELINE_STATUSES,
@@ -44,6 +45,9 @@ from dataworkspace.apps.core.utils import (
     new_private_database_credentials,
     write_credentials_to_bucket,
     USER_SCHEMA_STEM,
+)
+from dataworkspace.apps.arangodb.utils import (
+    new_private_arangodb_credentials,
 )
 
 logger = logging.getLogger("app")
@@ -87,6 +91,11 @@ def spawn(
         valid_for=datetime.timedelta(days=31),
     )
 
+    arangodb_credentials = new_private_arangodb_credentials(
+        db_user,
+        user,
+    )
+
     mlflow_authorised_hosts, sub = (
         (
             list(
@@ -122,6 +131,7 @@ def spawn(
         jwt_token,
         mlflow_authorised_hosts,
         app_schema,
+        arangodb_credentials,
     )
 
 
@@ -148,6 +158,7 @@ class ProcessSpawner:
         jwt_token,
         mlflow_authorised_hosts,
         ___,
+        arangodb_credentials,
     ):
         try:
             # The database users are stored so when the database users are cleaned up,
@@ -168,7 +179,9 @@ class ProcessSpawner:
 
             logger.info("Starting %s", cmd)
             # pylint: disable=consider-using-with
-            proc = subprocess.Popen(cmd, cwd="/home/django", env=database_env)
+            proc = subprocess.Popen(
+                cmd, cwd="/home/django", env={**database_env, **arangodb_credentials}
+            )
 
             application_instance.spawner_application_instance_id = json.dumps(
                 {"process_id": proc.pid}
@@ -255,6 +268,7 @@ class FargateSpawner:
         jwt_token,
         mlflow_authorised_hosts,
         app_schema,
+        arangodb_credentials,
     ):
         try:
             pipeline_id = None
@@ -288,9 +302,17 @@ class FargateSpawner:
                     db_persistent_role=creds["db_persistent_role"],
                 )
 
+            if arangodb_credentials:
+                ApplicationInstanceArangoUsers.objects.create(
+                    application_instance=application_instance,
+                    db_username=arangodb_credentials["ARANGO_USER"],
+                )
+
             database_env = _creds_to_env_vars(credentials)
 
             schema_env = {"APP_SCHEMA": app_schema}
+
+            arangodb_env = arangodb_credentials
 
             user_efs_access_point_id = (
                 user.profile.home_directory_efs_access_point_id
@@ -401,7 +423,14 @@ class FargateSpawner:
                         cpu,
                         memory,
                         cmd,
-                        {**s3_env, **database_env, **schema_env, **env, **mlflow_env},
+                        {
+                            **s3_env,
+                            **database_env,
+                            **schema_env,
+                            **env,
+                            **mlflow_env,
+                            **arangodb_env,
+                        },
                         s3_sync,
                         platform_version,
                     )
