@@ -1,7 +1,7 @@
-from freezegun import freeze_time
 import datetime
 import re
 import time
+from freezegun import freeze_time
 
 import mock
 import psycopg2
