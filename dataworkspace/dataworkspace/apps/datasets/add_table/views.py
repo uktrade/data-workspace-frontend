@@ -1,4 +1,3 @@
-from typing import Any
 from django.urls import reverse
 from django.views.generic import DetailView, FormView
 from django.http import HttpResponseRedirect
@@ -28,6 +27,19 @@ class TableSchemaView(EditBaseView, DetailView, FormView):
     template_name = "datasets/add_table/table_schema.html"
     form_class = TableSchemaForm
 
+    # def get_form(self, form_class=None):
+    #     form = self.get_form_class()(**self.get_form_kwargs())
+    #     return form
+
+    # def get_initial(self, *args, **kwargs):
+    #   super().get_initial(*args, **kwargs)
+    #   schema_choices = self._get_schemas()
+    #   print("schemas", schema_choices)
+    #   print("self", self)
+    #   form = self.get_form()
+    #   print("form", form)
+    #   self.form.fields["schema"].choices = schema_choices
+
     def get_object(self, queryset=None):
         return find_dataset(self.kwargs["pk"], self.request.user)
 
@@ -36,11 +48,8 @@ class TableSchemaView(EditBaseView, DetailView, FormView):
         if self.object.type == DataSetType.MASTER:
             for table in self.obj.sourcetable_set.all():
                 schemas += [table.schema]
-        elif self.object.type == DataSetType.REFERENCE:
-            schemas = ["public"]
         else:
-            # Invalid dataset, return error or redirect?
-            return ""
+            schemas = ["public"]
 
         # This should return a list with no duplicates, need to test
         return list(set(schemas))
@@ -49,9 +58,7 @@ class TableSchemaView(EditBaseView, DetailView, FormView):
         ctx = super().get_context_data(**kwargs)
         ctx["model"] = self.object
         ctx["schemas"] = self._get_schemas()
-        print("schemas", ctx["schemas"])
         ctx["is_multiple_schemas"] = len(ctx["schemas"]) > 1
-        print("Multiple", ctx["is_multiple_schemas"])
         ctx["backlink"] = reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
         ctx["nextlink"] = reverse("datasets:add_table:table-schema", args={self.kwargs["pk"]})
 
@@ -63,9 +70,12 @@ class TableSchemaView(EditBaseView, DetailView, FormView):
             if "on" in value:
                 schema = key
 
-        print("schema:", schema)
-
-        if form.schema:
+        # Need to pass schema value onto next pages
+        if schema:
             return HttpResponseRedirect(
                 reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
             )
+        # Need to do this with error handling as no option has been selected
+        return HttpResponseRedirect(
+            reverse("datasets:add_table:table-schema", args={self.kwargs["pk"]})
+        )

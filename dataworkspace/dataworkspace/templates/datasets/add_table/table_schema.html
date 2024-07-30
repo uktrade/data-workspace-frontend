@@ -11,32 +11,12 @@
     <h2 class="govuk-heading-m">Your table will be saved in '{{ schemas.0 }}' schema</h2>
     {% endif %}
 
-    <p class="govuk-body">This is the schema used by other tables in this catalogue item. Schemas are used to categorise
-      data sources. Schemas are often named after the data provider e.g. HMRC.</p>
+    <p class="govuk-body">This is the schema used by other tables in this catalogue item. Schemas are used to categorise data sources. Schemas are often named after the data provider e.g. HMRC.</p>
 
     {% if is_multiple_schemas %}
     <form method="post">
       {% csrf_token %}
-        <div class="govuk-form-group">
-          <fieldset class="govuk-fieldset">
-            <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
-              <h2 class="govuk-heading-m">
-                Select an existing schema from this catalogue page
-              </h2>
-            </legend>
-            <div class="govuk-radios" data-module="govuk-radios">
-              {% for schema in schemas %}
-              <div class="govuk-radios__item">
-                <input class="govuk-radios__input" name={{ schema }} type="radio">
-                <label class="govuk-label govuk-radios__label">
-                  {{ schema }}
-                </label>
-              </div>
-              <br>
-              {% endfor %}
-            </div>
-          </fieldset>
-        </div>
+        {{ form.schema }}
         <button type="submit" class="govuk-button" data-module="govuk-button">
           Continue </button>
       </form>
