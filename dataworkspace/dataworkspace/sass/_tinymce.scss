@@ -7,4 +7,7 @@ textarea[data-type="rich-text-editor"] + .tox {
         box-shadow: none;
         border-bottom: 2px solid $govuk-focus-text-colour;
     }
+    .tox-statusbar__branding{
+        display: none;
+    }
 }

@@ -817,6 +817,7 @@ TINYMCE_DEFAULT_CONFIG = {
     "plugins": "advlist autolink lists link searchreplace visualblocks code codesample fullscreen insertdatetime media table code wordcount",  # pylint: disable=line-too-long
     "toolbar": "undo redo | blocks | bold italic | fontselect fontsizeselect formatselect | alignleft aligncenter alignright alignjustify | numlist bullist checklist | link codesample code",  # pylint: disable=line-too-long
     "custom_undo_redo_levels": 10,
+    "license_key": "gpl",
 }
 
 TINYMCE_LINK_CONFIG = {
