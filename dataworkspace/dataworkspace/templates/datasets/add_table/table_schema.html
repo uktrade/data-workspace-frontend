@@ -13,14 +13,14 @@
 
     <p class="govuk-body">This is the schema used by other tables in this catalogue item. Schemas are used to categorise data sources. Schemas are often named after the data provider e.g. HMRC.</p>
 
-    {% if is_multiple_schemas %}
+
     <form method="post">
       {% csrf_token %}
         {{ form.schema }}
         <button type="submit" class="govuk-button" data-module="govuk-button">
           Continue </button>
       </form>
-    {% endif %}
+
 
 
   </div>

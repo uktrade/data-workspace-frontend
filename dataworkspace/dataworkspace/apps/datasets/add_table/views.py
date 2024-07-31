@@ -27,18 +27,17 @@ class TableSchemaView(EditBaseView, DetailView, FormView):
     template_name = "datasets/add_table/table_schema.html"
     form_class = TableSchemaForm
 
-    # def get_form(self, form_class=None):
-    #     form = self.get_form_class()(**self.get_form_kwargs())
-    #     return form
-
-    # def get_initial(self, *args, **kwargs):
-    #   super().get_initial(*args, **kwargs)
-    #   schema_choices = self._get_schemas()
-    #   print("schemas", schema_choices)
-    #   print("self", self)
-    #   form = self.get_form()
-    #   print("form", form)
-    #   self.form.fields["schema"].choices = schema_choices
+    def get_initial(self, *args, **kwargs):
+        initial = super().get_initial()
+        schemas = self._get_schemas()
+        schema_choices = list(((x, x) for x in schemas))
+        if self.request.method == "GET":
+            initial.update(
+                {
+                    "schema_choices": schema_choices,
+                }
+            )
+        return initial
 
     def get_object(self, queryset=None):
         return find_dataset(self.kwargs["pk"], self.request.user)
@@ -56,9 +55,10 @@ class TableSchemaView(EditBaseView, DetailView, FormView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        schemas = ctx["form"].fields["schema"].choices  # TODO add checks this key exists and is populated
+
         ctx["model"] = self.object
-        ctx["schemas"] = self._get_schemas()
-        ctx["is_multiple_schemas"] = len(ctx["schemas"]) > 1
+        ctx["is_multiple_schemas"] = len(schemas) > 1
         ctx["backlink"] = reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
         ctx["nextlink"] = reverse("datasets:add_table:table-schema", args={self.kwargs["pk"]})
 
