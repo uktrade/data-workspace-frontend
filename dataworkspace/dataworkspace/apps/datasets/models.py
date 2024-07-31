@@ -65,6 +65,7 @@ from dataworkspace.apps.applications.models import (
 )
 
 from dataworkspace.apps.datasets.constants import (
+    DataFlowPlatform,
     DataSetType,
     DataLinkType,
     GRID_DATA_TYPE_MAP,
@@ -2922,6 +2923,9 @@ class Pipeline(TimeStampedUserModel):
     notes = models.TextField(null=True, blank=True)
     schedule = models.TextField(
         choices=PipelineScheduleType.choices, default=PipelineScheduleType.DAILY
+    )
+    data_flow_platform = models.CharField(
+        max_length=255, choices=DataFlowPlatform.choices, default=DataFlowPlatform.GOV_PAAS
     )
 
     class Meta:
