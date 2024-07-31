@@ -29,9 +29,9 @@ class TableSchemaView(EditBaseView, DetailView, FormView):
 
     def get_initial(self, *args, **kwargs):
         initial = super().get_initial()
-        schemas = self._get_schemas()
-        schema_choices = list(((x, x) for x in schemas))
         if self.request.method == "GET":
+            schemas = self._get_schemas()
+            schema_choices = list(((x, x) for x in schemas))
             initial.update(
                 {
                     "schema_choices": schema_choices,
@@ -53,30 +53,39 @@ class TableSchemaView(EditBaseView, DetailView, FormView):
         return list(set(schemas))
 
     def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        schemas = ctx["form"].fields["schema"].choices  # TODO add checks this key exists and is populated
+        ctx = {}
+        if self.request.method == "GET":
+            ctx = super().get_context_data(**kwargs)
 
-        ctx["model"] = self.object
-        ctx["schema"] = schemas[0][0]
-        ctx["is_multiple_schemas"] = len(schemas) > 1
-        ctx["backlink"] = reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
-        ctx["nextlink"] = reverse("datasets:add_table:add-table", args={self.kwargs["pk"]}) # Will change to classification check url
+            schemas = (
+                ctx["form"].fields["schema"].choices
+            )  # TODO add checks this key exists and is populated
 
-        print("ctx", ctx)
+            ctx["model"] = self.object
+            ctx["schema"] = schemas[0][0]
+            ctx["is_multiple_schemas"] = len(schemas) > 1
+            ctx["backlink"] = reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
+            ctx["nextlink"] = reverse(
+                "datasets:add_table:add-table", args={self.kwargs["pk"]}
+            )  # Will change to classification check url
 
         return ctx
 
-    def form_valid(self, form):
-        schema = ""
-        for key, value in self.request.POST.lists():
-            if "on" in value:
-                schema = key
+    def form_invalid(self, form):
+        print("Form invalid")
 
+        return HttpResponseRedirect(
+            reverse("datasets:add_table:table-schema", args={self.kwargs["pk"]})
+        )
+
+    def form_valid(self, form):
+        print("form valid")
+        schema = form.cleaned_data
         if schema:
             return HttpResponseRedirect(
                 reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
             )
         # Need to do this with error handling as no option has been selected
         return HttpResponseRedirect(
-            reverse("datasets:add_table:table-schema", args={self.kwargs["pk"]})
+            reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
         )

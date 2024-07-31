@@ -7,7 +7,7 @@ from dataworkspace.forms import (
 
 class TableSchemaForm(GOVUKDesignSystemForm):
     schema = GOVUKDesignSystemRadioField(
-        required=False,
+        required=True,
         label="Select an existing schema from this catalogue page",
         widget=GOVUKDesignSystemRadiosWidget(heading="h2", extra_label_classes="govuk-heading-m"),
         error_messages={"required": "You must select a schema."},
@@ -16,6 +16,5 @@ class TableSchemaForm(GOVUKDesignSystemForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.fields["schema"].choices = kwargs.pop("initial")[
-            "schema_choices"
-        ]  # TODO add checks this key exists
+        if "schema_choices" in kwargs.get("initial", {}):
+            self.fields["schema"].choices = kwargs.pop("initial")["schema_choices"]
