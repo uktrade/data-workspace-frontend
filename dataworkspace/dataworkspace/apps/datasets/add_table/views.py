@@ -50,7 +50,6 @@ class TableSchemaView(EditBaseView, DetailView, FormView):
         else:
             schemas = ["public"]
 
-        # This should return a list with no duplicates, need to test
         return list(set(schemas))
 
     def get_context_data(self, **kwargs):
@@ -58,9 +57,12 @@ class TableSchemaView(EditBaseView, DetailView, FormView):
         schemas = ctx["form"].fields["schema"].choices  # TODO add checks this key exists and is populated
 
         ctx["model"] = self.object
+        ctx["schema"] = schemas[0][0]
         ctx["is_multiple_schemas"] = len(schemas) > 1
         ctx["backlink"] = reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
-        ctx["nextlink"] = reverse("datasets:add_table:table-schema", args={self.kwargs["pk"]})
+        ctx["nextlink"] = reverse("datasets:add_table:add-table", args={self.kwargs["pk"]}) # Will change to classification check url
+
+        print("ctx", ctx)
 
         return ctx
 
@@ -70,7 +72,6 @@ class TableSchemaView(EditBaseView, DetailView, FormView):
             if "on" in value:
                 schema = key
 
-        # Need to pass schema value onto next pages
         if schema:
             return HttpResponseRedirect(
                 reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
