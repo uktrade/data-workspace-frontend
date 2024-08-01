@@ -266,7 +266,7 @@ class TestTinymceConfigs:
     def test_default_config_is_returned(self):
         tinymce_configs = get_tinymce_configs([{"selector": "#some_selector"}])
         assert len(tinymce_configs) == 1
-        assert len(tinymce_configs[0]) == 6
+        assert len(tinymce_configs[0]) == 7
         assert tinymce_configs[0]["selector"] == "#some_selector"
         assert tinymce_configs[0]["height"] == "320px"
         assert tinymce_configs[0]["width"] == "900px"
@@ -279,8 +279,8 @@ class TestTinymceConfigs:
             [{"selector": "#some_selector"}, {"selector": "#some_selector"}]
         )
         assert len(tinymce_configs) == 2
-        assert len(tinymce_configs[0]) == 6
-        assert len(tinymce_configs[1]) == 6
+        assert len(tinymce_configs[0]) == 7
+        assert len(tinymce_configs[1]) == 7
         for config in tinymce_configs:
             assert config["selector"] == "#some_selector"
             assert config["height"] == "320px"
@@ -300,7 +300,7 @@ class TestTinymceConfigs:
             ]
         )
         assert len(tinymce_configs) == 1
-        assert len(tinymce_configs[0]) == 6
+        assert len(tinymce_configs[0]) == 7
         assert tinymce_configs[0]["selector"] == "#some_selector"
         assert tinymce_configs[0]["height"] == "320px"
         assert tinymce_configs[0]["width"] == "900px"
