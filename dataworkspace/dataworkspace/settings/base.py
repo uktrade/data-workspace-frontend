@@ -376,6 +376,11 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
             "schedule": 60 * 2,
             "args": (),
         },
+        "sync-sso-users-from-sso": {
+            "task": "dataworkspace.apps.applications.utils.sync_s3_sso_users",
+            "schedule": crontab(minute="*/15"),  # Run every 15 minutes
+            "args": (),
+        },
         "sync-tool-query-logs": {
             "task": "dataworkspace.apps.applications.utils.sync_tool_query_logs",
             "schedule": 60 * 2,
@@ -479,6 +484,7 @@ S3_POLICY_DOCUMENT_TEMPLATE = base64.b64decode(env["S3_POLICY_DOCUMENT_TEMPLATE_
 S3_PERMISSIONS_BOUNDARY_ARN = env["S3_PERMISSIONS_BOUNDARY_ARN"]
 S3_ROLE_PREFIX = env["S3_ROLE_PREFIX"]
 S3_NOTEBOOKS_BUCKET_ARN = env["S3_NOTEBOOKS_BUCKET_ARN"]
+S3_SSO_IMPORT_ENABLED = env.get("S3_SSO_IMPORT_ENABLED", False)
 EFS_ID = env["EFS_ID"]
 
 YOUR_FILES_ENABLED = env.get("YOUR_FILES_ENABLED", "False") == "True"

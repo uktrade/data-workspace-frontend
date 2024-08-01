@@ -14,6 +14,14 @@ def get_s3_client():
     return boto3.client("s3")
 
 
+def get_s3_resource():
+    if settings.S3_LOCAL_ENDPOINT_URL:
+        logger.debug("using local S3 endpoint %s", settings.S3_LOCAL_ENDPOINT_URL)
+        return boto3.resource("s3", endpoint_url=settings.S3_LOCAL_ENDPOINT_URL)
+
+    return boto3.resource("s3")
+
+
 def get_sts_client():
     if settings.STS_LOCAL_ENDPOINT_URL:
         logger.debug("get_sts_client using %s", settings.STS_LOCAL_ENDPOINT_URL)
