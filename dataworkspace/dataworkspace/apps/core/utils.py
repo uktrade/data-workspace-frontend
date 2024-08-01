@@ -1357,7 +1357,8 @@ def get_tinymce_configs(configs):
                 "height": config.get("height") or settings.TINYMCE_DEFAULT_CONFIG["height"],
                 "custom_undo_redo_levels": config.get("custom_undo_redo_levels")
                 or settings.TINYMCE_DEFAULT_CONFIG["custom_undo_redo_levels"],
-                "license_key": config.get("license_key") or settings.TINYMCE_DEFAULT_CONFIG["license_key"],
+                "license_key": config.get("license_key")
+                or settings.TINYMCE_DEFAULT_CONFIG["license_key"],
             }
         )
     return tiny_mce_configs
