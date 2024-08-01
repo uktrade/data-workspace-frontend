@@ -3,22 +3,6 @@
 {% if backlink %} {% block go_back %}
 <a href="{{ backlink }}" class="govuk-back-link">Back</a>
 {% endblock %} {% endif %} {% block content %}
-{% if form.errors %}
-<div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="govuk-error-summary">
-  <h2 class="govuk-error-summary__title" id="error-summary-title">
-    There is a problem
-  </h2>
-  <div class="govuk-error-summary__body">
-    <ul class="govuk-list govuk-error-summary__list">
-    {% for id_for_label, error in form.errors %}
-        <li>
-          <a href="{{ request.path }}#{{ id_for_label }}">{{ error }}</a>
-        </li>
-    {% endfor %}
-    </ul>
-  </div>
-</div>
-{% endif %}
 
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-two-thirds">

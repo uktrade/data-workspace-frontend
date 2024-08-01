@@ -23,14 +23,19 @@ class AddTableView(DetailView):
         return ctx
 
 
-class TableSchemaView(EditBaseView, DetailView, FormView):
+class TableSchemaView(FormView):
     template_name = "datasets/add_table/table_schema.html"
     form_class = TableSchemaForm
 
     def get_initial(self, *args, **kwargs):
         initial = super().get_initial()
-        if self.request.method == "GET":
-            schemas = self._get_schemas()
+        # if self.request.method == "GET":
+        dataset = find_dataset(self.kwargs["pk"], self.request.user)
+        schemas = []
+        if dataset.type == DataSetType.MASTER:
+            tables = list(dataset.sourcetable_set.all())
+            for table in tables:
+                schemas.append(table.schema)
             schema_choices = list(((x, x) for x in schemas))
             initial.update(
                 {
@@ -39,47 +44,15 @@ class TableSchemaView(EditBaseView, DetailView, FormView):
             )
         return initial
 
-    def get_object(self, queryset=None):
-        return find_dataset(self.kwargs["pk"], self.request.user)
-
-    def _get_schemas(self):
-        schemas = []
-        if self.object.type == DataSetType.MASTER:
-            for table in self.obj.sourcetable_set.all():
-                schemas += [table.schema]
-        else:
-            schemas = ["public"]
-
-        return list(set(schemas))
-
     def get_context_data(self, **kwargs):
-        ctx = {}
-        if self.request.method == "GET":
-            ctx = super().get_context_data(**kwargs)
-
-            schemas = (
-                ctx["form"].fields["schema"].choices
-            )  # TODO add checks this key exists and is populated
-
-            ctx["model"] = self.object
-            ctx["schema"] = schemas[0][0]
-            ctx["is_multiple_schemas"] = len(schemas) > 1
-            ctx["backlink"] = reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
-            ctx["nextlink"] = reverse(
-                "datasets:add_table:add-table", args={self.kwargs["pk"]}
-            )  # Will change to classification check url
-
+        ctx = super().get_context_data(**kwargs)
+        ctx["model"] = find_dataset(self.kwargs["pk"], self.request.user)
+        ctx["is_multiple_schemas"] = True
+        ctx["backlink"] = reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
+        ctx["nextlink"] = reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})  # Will change to classification check url
         return ctx
 
-    def form_invalid(self, form):
-        print("Form invalid")
-
-        return HttpResponseRedirect(
-            reverse("datasets:add_table:table-schema", args={self.kwargs["pk"]})
-        )
-
     def form_valid(self, form):
-        print("form valid")
         schema = form.cleaned_data
         if schema:
             return HttpResponseRedirect(
@@ -87,5 +60,5 @@ class TableSchemaView(EditBaseView, DetailView, FormView):
             )
         # Need to do this with error handling as no option has been selected
         return HttpResponseRedirect(
-            reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
+            reverse("datasets:add_table:table-schema", args={self.kwargs["pk"]})
         )
