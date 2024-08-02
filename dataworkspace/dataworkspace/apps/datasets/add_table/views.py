@@ -68,5 +68,16 @@ class TableSchemaView(FormView):
         )
 
 
-class ClassificationCheck(TemplateView):
+class ClassificationCheckView(TemplateView):
     template_name = "datasets/add_table/classification_check.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        dataset = find_dataset(self.kwargs["pk"], self.request.user)
+        ctx["model"] = dataset
+        ctx["classification"] = (
+            dataset.get_government_security_classification_display() or "Unclassified"
+        ).title()
+        ctx["backlink"] = reverse("datasets:add_table:table-schema", args={self.kwargs["pk"]})
+        ctx["nextlink"] = ""
+        return ctx
