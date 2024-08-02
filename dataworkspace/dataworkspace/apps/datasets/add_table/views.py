@@ -70,3 +70,28 @@ class TableSchemaView(FormView):
 
 class ClassificationCheck(TemplateView):
     template_name = "datasets/add_table/classification_check.html"
+
+
+class DescriptiveNameView(FormView):
+    template_name = "datasets/add_table/descriptive_name.html"
+    form_class = DescriptiveNameForm
+
+    def get_object(self, queryset=None):
+        return find_dataset(self.kwargs["pk"], self.request.user)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['form'] = self.form_class
+        dataset = find_dataset(self.kwargs["pk"], self.request.user)
+        ctx["model"] = dataset
+        ctx["backlink"] = reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
+        ctx["nextlink"] = reverse("datasets:add_table:table-schema", args={self.kwargs["pk"]})
+
+        return ctx
+
+    def form_valid(self, form):
+        clean_data = form.cleaned_data
+        # schema = clean_data["schema"]
+        return HttpResponseRedirect(
+            reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
+        )
