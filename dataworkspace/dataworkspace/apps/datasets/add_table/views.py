@@ -63,8 +63,6 @@ class TableSchemaView(FormView):
     def form_valid(self, form):
         clean_data = form.cleaned_data
         schema = clean_data["schema"]
-        print("HERE", type(schema))
-        print(reverse("datasets:add_table:classification-check", args={self.kwargs["pk"], schema}))
         return HttpResponseRedirect(
             reverse("datasets:add_table:classification-check", args={self.kwargs["pk"], schema})
         )
