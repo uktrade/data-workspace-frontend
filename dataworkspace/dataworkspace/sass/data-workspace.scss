@@ -422,7 +422,6 @@ p.sidebar-section {
 @import "filters";
 @import "search-bar";
 @import "search-results";
-@import "rich-text";
 @import "collection-button";
 @import "data-grid";
 @import "dialog";
@@ -432,6 +431,6 @@ p.sidebar-section {
 @import "warning";
 @import "pipeline-error-message";
 @import "tables";
-@import "tinymce";
+@import "rich-text-editor";
 @import "helpers";
 @import "mixins";
