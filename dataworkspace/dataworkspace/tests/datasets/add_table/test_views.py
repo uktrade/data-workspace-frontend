@@ -115,7 +115,6 @@ class TestAddTable(TestCase):
         header_two = soup.find("h2")
         paragraph = soup.find("p")
         title = soup.find("title")
-        radios = soup.find_all("input", type="radio")
         header_one_text = header_one.contents
         header_two_text = header_two.contents
         paragraph_text = paragraph.contents
