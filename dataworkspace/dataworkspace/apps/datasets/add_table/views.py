@@ -49,10 +49,8 @@ class TableSchemaView(FormView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-
         dataset = find_dataset(self.kwargs["pk"], self.request.user)
         schemas = self.get_schemas(dataset)
-
         ctx["model"] = dataset
         ctx["schema"] = schemas[0]
         ctx["is_multiple_schemas"] = len(schemas) > 1
@@ -64,7 +62,7 @@ class TableSchemaView(FormView):
         clean_data = form.cleaned_data
         schema = clean_data["schema"]
         return HttpResponseRedirect(
-            reverse("datasets:add_table:classification-check", args={self.kwargs["pk"], schema})
+            reverse("datasets:add_table:classification-check", args=(self.kwargs["pk"], schema))
         )
 
 
