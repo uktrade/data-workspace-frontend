@@ -4,7 +4,7 @@ from django.http import HttpResponseRedirect
 
 from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.datasets.constants import DataSetType
-from dataworkspace.apps.datasets.add_table.forms import TableSchemaForm
+from dataworkspace.apps.datasets.add_table.forms import DescriptiveNameForm, TableSchemaForm
 
 
 class AddTableView(DetailView):
@@ -76,8 +76,6 @@ class DescriptiveNameView(FormView):
     template_name = "datasets/add_table/descriptive_name.html"
     form_class = DescriptiveNameForm
 
-    def get_object(self, queryset=None):
-        return find_dataset(self.kwargs["pk"], self.request.user)
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -89,9 +87,9 @@ class DescriptiveNameView(FormView):
 
         return ctx
 
-    def form_valid(self, form):
-        clean_data = form.cleaned_data
-        # schema = clean_data["schema"]
-        return HttpResponseRedirect(
-            reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
-        )
+    # def form_valid(self, form):
+    #     clean_data = form.cleaned_data
+    #     # schema = clean_data["schema"]
+    #     # return HttpResponseRedirect(
+    #     #     reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
+    #     # )

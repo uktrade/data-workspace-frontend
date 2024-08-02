@@ -26,7 +26,7 @@ urlpatterns = [
         name="classification-check",
     ),
     path(
-        "descriptive-name",
+        "<str:schema>/descriptive-name",
         login_required(DescriptiveNameView.as_view()),
         name="descriptive-name",
     ),
