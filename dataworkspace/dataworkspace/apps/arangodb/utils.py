@@ -10,8 +10,8 @@ import redis
 from arango import ArangoClient
 from dataworkspace.apps.arangodb.models import (
     ApplicationInstanceArangoUsers,
-    ArangoTeam,
 )
+from dataworkspace.apps.core.models import Team
 from dataworkspace.cel import celery_app
 
 
@@ -24,7 +24,11 @@ def new_private_arangodb_credentials(
 ):
     password_alphabet = string.ascii_letters + string.digits
 
-    team_dbs = [team.database_name for team in ArangoTeam.objects.filter(member=user)]
+    # ArangoDB database names must start with a letter - '_' removed from start of team.schema_name
+    team_dbs = [
+        team.schema_name[1:]
+        for team in Team.objects.filter(platform="postgres-and-arango", member=user)
+    ]
 
     try:
         logger.info("Getting new credentials for temporary user in ArangoDB")

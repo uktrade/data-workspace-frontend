@@ -203,6 +203,10 @@ class Team(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=256, unique=True)
     schema_name = models.CharField(max_length=63, unique=True)
+    platform = models.CharField(
+        choices=[("postgres", "Postgres"), ("postgres-and-arango", "Postgres & ArangoDB")],
+        default="postgres",
+    )
 
     member = models.ManyToManyField(get_user_model(), through="TeamMembership")
     notes = RichTextField(null=True, blank=True)
