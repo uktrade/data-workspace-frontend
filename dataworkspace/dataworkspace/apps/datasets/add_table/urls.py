@@ -4,7 +4,7 @@ from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.datasets.add_table.views import (
     AddTableView,
     TableSchemaView,
-    ClassificationCheck
+    ClassificationCheck,
 )
 
 

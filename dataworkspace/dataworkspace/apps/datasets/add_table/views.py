@@ -30,30 +30,43 @@ class TableSchemaView(FormView):
         initial = super().get_initial()
         # if self.request.method == "GET":
         dataset = find_dataset(self.kwargs["pk"], self.request.user)
+        schemas = self.get_schemas(dataset)
+        schema_choices = list(((x, x) for x in schemas))
+        initial.update(
+            {
+                "schema_choices": schema_choices,
+            }
+        )
+        return initial
+
+    def get_schemas(self, dataset):
         schemas = []
         if dataset.type == DataSetType.MASTER:
             tables = list(dataset.sourcetable_set.all())
             for table in tables:
                 schemas.append(table.schema)
-            schema_choices = list(((x, x) for x in schemas))
-            initial.update(
-                {
-                    "schema_choices": schema_choices,
-                }
-            )
-        return initial
+
+        print("---------------", list(set(schemas)))
+        return list(set(schemas))
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["model"] = find_dataset(self.kwargs["pk"], self.request.user)
-        ctx["is_multiple_schemas"] = False
+
+        dataset = find_dataset(self.kwargs["pk"], self.request.user)
+        schemas = self.get_schemas(dataset)
+
+        ctx["model"] = dataset
+        ctx["schema"] = schemas[0]
+        ctx["is_multiple_schemas"] = len(schemas) > 1
         ctx["backlink"] = reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
-        ctx["nextlink"] = reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})  # Will change to classification check url
+        ctx["nextlink"] = reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
         return ctx
 
     def form_valid(self, form):
         clean_data = form.cleaned_data
-        schema = clean_data['schema']
+        schema = clean_data["schema"]
+        print("HERE", type(schema))
+        print(reverse("datasets:add_table:classification-check", args={self.kwargs["pk"], schema}))
         return HttpResponseRedirect(
             reverse("datasets:add_table:classification-check", args={self.kwargs["pk"], schema})
         )

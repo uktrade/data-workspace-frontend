@@ -21,7 +21,7 @@
         <button type="submit" class="govuk-button" data-module="govuk-button">Continue</button>
       </form>
     {% else %}
-      <a class="govuk-button" href="{{ datasets:add_table:classification-check }}">Continue</a>
+      <a class="govuk-button" href="{% url 'datasets:add_table:classification-check' model.id schema %}">Continue</a>
     {% endif %}
 
   </div>
