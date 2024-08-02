@@ -16,6 +16,4 @@ class TableSchemaForm(GOVUKDesignSystemForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if "schema_choices" in kwargs.get("initial", {}):
-            self.fields["schema"].choices = kwargs.pop("initial")[
-                "schema_choices"
-            ]  # TODO add checks this key exists
+            self.fields["schema"].choices = kwargs.pop("initial")["schema_choices"]

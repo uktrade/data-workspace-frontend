@@ -28,7 +28,6 @@ class TableSchemaView(FormView):
 
     def get_initial(self, *args, **kwargs):
         initial = super().get_initial()
-        # if self.request.method == "GET":
         dataset = find_dataset(self.kwargs["pk"], self.request.user)
         schemas = self.get_schemas(dataset)
         schema_choices = list(((x, x) for x in schemas))
@@ -46,7 +45,6 @@ class TableSchemaView(FormView):
             for table in tables:
                 schemas.append(table.schema)
 
-        print("---------------", list(set(schemas)))
         return list(set(schemas))
 
     def get_context_data(self, **kwargs):

@@ -89,7 +89,7 @@ class TestAddTable(TestCase):
         header_two_text = header_two.contents
         paragraph_text = paragraph.contents
         title_text = title.contents[0]
-        radio_names = (radio.get("name") for radio in radios)
+        radio_names = (radio.get("value") for radio in radios)
 
         assert response.status_code == 200
         assert f"Add Table - {self.dataset.name} - Data Workspace" in title_text
