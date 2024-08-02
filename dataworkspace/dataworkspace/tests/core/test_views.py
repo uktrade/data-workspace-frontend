@@ -187,7 +187,6 @@ def test_csp_on_files_endpoint_includes_s3(client):
         "*.google-analytics.com",
         "*.analytics.google.com",
         "*.googletagmanager.com",
-        "https://cke4.ckeditor.com",
     ]
 
     for element in expected_elements:

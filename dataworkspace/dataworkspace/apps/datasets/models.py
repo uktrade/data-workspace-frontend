@@ -17,7 +17,6 @@ import waffle
 from psycopg2 import sql
 
 from botocore.exceptions import ClientError
-from ckeditor.fields import RichTextField
 
 from django import forms
 from django.apps import apps
@@ -57,6 +56,7 @@ from dataworkspace.apps.core.models import (
     Database,
     DeletableQuerySet,
     MLFlowInstance,
+    RichTextField,
     RichLinkField,
 )
 from dataworkspace.apps.applications.models import (

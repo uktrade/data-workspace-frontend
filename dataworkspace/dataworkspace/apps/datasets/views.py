@@ -52,6 +52,7 @@ from psycopg2 import sql
 from dataworkspace import datasets_db
 from dataworkspace.apps.accounts.models import UserDataTableView
 from dataworkspace.apps.api_v1.core.views import invalidate_superset_user_cached_credentials
+from dataworkspace.apps.core.utils import get_tinymce_configs
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.core.boto3_client import get_s3_client
 
@@ -188,12 +189,12 @@ def _get_tags_as_dict():
     return tags_dict
 
 
-@csp_update(SCRIPT_SRC=settings.REACT_SCRIPT_SRC)
+@csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC)
 def home_view(request):
     return render(request, "datasets/index.html")
 
 
-@csp_update(SCRIPT_SRC=settings.REACT_SCRIPT_SRC)
+@csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC)
 @require_GET
 def find_datasets(request):
     ###############
@@ -399,7 +400,7 @@ class DatasetDetailView(DetailView):
 
     @csp_update(
         frame_src=settings.QUICKSIGHT_DASHBOARD_HOST,
-        SCRIPT_SRC=settings.REACT_SCRIPT_SRC,
+        SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC,
     )
     def get(self, request, *args, **kwargs):
         log_event(
@@ -1474,6 +1475,24 @@ class DatasetEditView(EditBaseView, UpdateView):
     form_class = DatasetEditForm
     template_name = "datasets/manage_datasets/edit_dataset.html"
 
+    @csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC, STYLE_SRC=settings.WEBPACK_SCRIPT_SRC)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["TINYMCE_CONFIGS"] = get_tinymce_configs(
+            [
+                {"selector": "#id_description"},
+                {
+                    "selector": "#id_restrictions_on_usage",
+                    "plugins": "link",
+                    "toolbar": "link",
+                },
+            ]
+        )
+        return context
+
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["request"] = self.request
@@ -1514,6 +1533,24 @@ class VisualisationCatalogueItemEditView(EditBaseView, UpdateView):
     model = VisualisationCatalogueItem
     form_class = VisualisationCatalogueItemEditForm
     template_name = "datasets/manage_datasets/edit_visualisation_catalogue_item.html"
+
+    @csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC, STYLE_SRC=settings.WEBPACK_SCRIPT_SRC)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["TINYMCE_CONFIGS"] = get_tinymce_configs(
+            [
+                {"selector": "#id_description"},
+                {
+                    "selector": "#id_restrictions_on_usage",
+                    "plugins": "link",
+                    "toolbar": "link",
+                },
+            ]
+        )
+        return context
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()

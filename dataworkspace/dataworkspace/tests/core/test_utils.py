@@ -19,6 +19,7 @@ from dataworkspace.apps.core.utils import (
     db_role_schema_suffix_for_user,
     new_private_database_credentials,
     is_user_email_domain_valid,
+    get_tinymce_configs,
 )
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.management.commands.ensure_databases_configured import (
@@ -256,3 +257,53 @@ class TestIsEmailDomainValid:
     )
     def test_is_user_email_domain_valid_for_various_domains(self, email, assertion):
         assert is_user_email_domain_valid(email) == assertion
+
+
+class TestTinymceConfigs:
+    plugins = "advlist autolink lists link searchreplace visualblocks code codesample fullscreen insertdatetime media table code wordcount"  # pylint: disable=line-too-long
+    toolbar = "undo redo | blocks | bold italic | fontselect fontsizeselect formatselect | alignleft aligncenter alignright alignjustify | numlist bullist checklist | link codesample code"  # pylint: disable=line-too-long
+
+    def test_default_config_is_returned(self):
+        tinymce_configs = get_tinymce_configs([{"selector": "#some_selector"}])
+        assert len(tinymce_configs) == 1
+        assert len(tinymce_configs[0]) == 7
+        assert tinymce_configs[0]["selector"] == "#some_selector"
+        assert tinymce_configs[0]["height"] == "320px"
+        assert tinymce_configs[0]["width"] == "900px"
+        assert tinymce_configs[0]["plugins"] == self.plugins
+        assert tinymce_configs[0]["toolbar"] == self.toolbar
+        assert tinymce_configs[0]["custom_undo_redo_levels"] == 10
+
+    def test_multiple_configs_are_returned(self):
+        tinymce_configs = get_tinymce_configs(
+            [{"selector": "#some_selector"}, {"selector": "#some_selector"}]
+        )
+        assert len(tinymce_configs) == 2
+        assert len(tinymce_configs[0]) == 7
+        assert len(tinymce_configs[1]) == 7
+        for config in tinymce_configs:
+            assert config["selector"] == "#some_selector"
+            assert config["height"] == "320px"
+            assert config["width"] == "900px"
+            assert config["plugins"] == self.plugins
+            assert config["toolbar"] == self.toolbar
+            assert config["custom_undo_redo_levels"] == 10
+
+    def test_override_config_is_returned(self):
+        tinymce_configs = get_tinymce_configs(
+            [
+                {
+                    "selector": "#some_selector",
+                    "plugins": "link",
+                    "toolbar": "link",
+                }
+            ]
+        )
+        assert len(tinymce_configs) == 1
+        assert len(tinymce_configs[0]) == 7
+        assert tinymce_configs[0]["selector"] == "#some_selector"
+        assert tinymce_configs[0]["height"] == "320px"
+        assert tinymce_configs[0]["width"] == "900px"
+        assert tinymce_configs[0]["plugins"] == "link"
+        assert tinymce_configs[0]["toolbar"] == "link"
+        assert tinymce_configs[0]["custom_undo_redo_levels"] == 10

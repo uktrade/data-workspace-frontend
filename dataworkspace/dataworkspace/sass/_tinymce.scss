@@ -1,0 +1,13 @@
+textarea[data-type="rich-text-editor"] + .tox {
+    width: 100% !important;
+    border: 2px solid $govuk-focus-text-colour;
+    border-radius: 0;
+
+    .tox-editor-header {
+        box-shadow: none;
+        border-bottom: 2px solid $govuk-focus-text-colour;
+    }
+    .tox-statusbar__branding{
+        display: none;
+    }
+}

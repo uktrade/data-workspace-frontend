@@ -99,7 +99,6 @@ INSTALLED_APPS = [
     "django.forms",
     "django_better_admin_arrayfield.apps.DjangoBetterAdminArrayfieldConfig",
     "adminsortable2",
-    "ckeditor",
     "waffle",
     "rest_framework",
     "dataworkspace.apps.core",
@@ -122,6 +121,7 @@ INSTALLED_APPS = [
     "webpack_loader",
     "dataworkspace.apps.data_collections",
     "django_celery_results",
+    "tinymce",
 ]
 
 MIDDLEWARE = [
@@ -269,7 +269,6 @@ CSP_CONNECT_SRC = [
     "*.google-analytics.com",
     "*.analytics.google.com",
     "*.googletagmanager.com",
-    "https://cke4.ckeditor.com",
 ]
 CSP_IMG_SRC = [
     APPLICATION_ROOT_DOMAIN,
@@ -469,7 +468,7 @@ YOUR_FILES_CONNECT_SRC = [
     "https://s3.eu-west-2.amazonaws.com",
 ] + ([S3_LOCAL_ENDPOINT_URL] if DEBUG else [])
 
-REACT_SCRIPT_SRC = [] + (["http://0.0.0.0:3000", "'unsafe-eval'"] if DEBUG else [])
+WEBPACK_SCRIPT_SRC = [] + (["http://0.0.0.0:3000", "'unsafe-eval'"] if DEBUG else [])
 
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
@@ -488,38 +487,6 @@ S3_SSO_IMPORT_ENABLED = env.get("S3_SSO_IMPORT_ENABLED", False)
 EFS_ID = env["EFS_ID"]
 
 YOUR_FILES_ENABLED = env.get("YOUR_FILES_ENABLED", "False") == "True"
-
-
-CKEDITOR_CONFIGS = {
-    "default": {
-        "toolbar": "Custom",
-        "enterMode": 1,  # 1 = p, 2 = br, 3 = div
-        "height": 350,
-        "toolbar_Custom": [
-            ["Bold", "CodeSnippet"],
-            [
-                "NumberedList",
-                "BulletedList",
-                "-",
-                "Link",
-                "Unlink",
-            ],
-            ["Format"],
-            ["Cut", "Copy", "Paste", "-", "Undo", "Redo"],
-        ],
-        "format_tags": "p;h3;h4;h5;h6",
-        "linkShowAdvancedTab": False,
-        "extraPlugins": "codesnippet",
-        "removePlugins": "exportpdf",
-        "codeSnippet_languages": {
-            "bash": "Bash",
-            "json": "JSON",
-            "python": "Python",
-            "r": "R",
-            "pgsql": "SQL",
-        },
-    }
-}
 
 FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
 
@@ -571,9 +538,6 @@ STATIC_ROOT = "/home/django/static/"
 # Used when generating URLs for static files, and routed by nginx _before_
 # hitting proxy.py, so must not conflict with an analysis application
 STATIC_URL = "/__django_static/"
-
-
-CKEDITOR_BASEPATH = STATIC_URL + "ckeditor/ckeditor/"
 
 
 REST_FRAMEWORK = {
@@ -851,3 +815,19 @@ MAINTENANCE_MODE_IGNORE_URLS = (r"^/healthcheck$",)
 MAINTENANCE_MODE_IGNORE_ADMIN_SITE = True
 MAINTENANCE_MODE_GET_CONTEXT = "dataworkspace.apps.maintenance.maintenance.maintenance_context"
 MAINTENANCE_MODE_STATE_BACKEND = "maintenance_mode.backends.CacheBackend"
+
+TINYMCE_DEFAULT_CONFIG = {
+    "height": "320px",
+    "width": "900px",
+    "menubar": False,
+    "plugins": "advlist autolink lists link searchreplace visualblocks code codesample fullscreen insertdatetime media table code wordcount",  # pylint: disable=line-too-long
+    "toolbar": "undo redo | blocks | bold italic | fontselect fontsizeselect formatselect | alignleft aligncenter alignright alignjustify | numlist bullist checklist | link codesample code",  # pylint: disable=line-too-long
+    "custom_undo_redo_levels": 10,
+    "license_key": "gpl",
+}
+
+TINYMCE_LINK_CONFIG = {
+    **TINYMCE_DEFAULT_CONFIG,
+    "plugins": "link",
+    "toolbar": "link",
+}
