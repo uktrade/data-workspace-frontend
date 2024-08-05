@@ -117,7 +117,9 @@ class PipelineListView(IsAdminMixin, ListView):
         except RequestException as e:
             logger.exception(e)
         for pipeline in context["object_list"]:
-            pipeline.dag_details = derived_dags.get(pipeline.dag_id, None)
+            pipeline.dag_details = derived_dags.get(pipeline.data_flow_platform, {}).get(
+                pipeline.dag_id, None
+            )
         return context
 
 
