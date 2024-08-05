@@ -91,5 +91,5 @@ class DescriptiveNameView(FormView):
         self.request.session["descriptive_name"] = descriptive_name
 
         return HttpResponseRedirect(
-            reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
+            reverse("datasets:add_table:add-table", args={self.kwargs["pk"]}) 
         )

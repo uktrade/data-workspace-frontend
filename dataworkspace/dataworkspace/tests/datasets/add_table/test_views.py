@@ -227,7 +227,7 @@ class TestAddTable(TestCase):
             reverse(
                 "datasets:add_table:descriptive-name",
                 kwargs={"pk": self.dataset.id, "schema": self.source.schema},
-            ),{'descriptive_name': 'records'})
+            ),{'descriptive_name': 'record'})
         
         soup = BeautifulSoup(response.content.decode(response.charset))
         assert response.status_code == 200
@@ -238,7 +238,7 @@ class TestAddTable(TestCase):
         links = error_messages.find('a')
         link_text = links.contents
         assert "\n    There is a problem\n  " in error_header_text
-        assert "Descriptive name cannot contain the word 'records'" in link_text
+        assert "Descriptive name cannot contain the word 'record'" in link_text
 
     def test_error_shows_when_descriptive_table_name_input_contains_underscores(self):
         response = self.client.post(
