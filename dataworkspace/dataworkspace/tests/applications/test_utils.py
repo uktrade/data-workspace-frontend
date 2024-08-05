@@ -1577,7 +1577,7 @@ class TestRemoveToolsAccessForUsersWithExpiredCert:
     one_year_ago = datetime.datetime.now() - datetime.timedelta(days=total_days)
     one_day_ago = datetime.datetime.now() - datetime.timedelta(days=1)
 
-    def setup_user_tools_cert(self, user, cert_date, codenames=permissions_codenames):
+    def setup_user_tools_cert(self, user, cert_date, codenames=[]):
         for codename in codenames:
             tools_permission = Permission.objects.get(
                 codename=codename,
@@ -1591,7 +1591,7 @@ class TestRemoveToolsAccessForUsersWithExpiredCert:
     @pytest.mark.django_db
     def test_removes_permissions_when_cert_has_expired(self):
         user = UserFactory.create()
-        self.setup_user_tools_cert(user, self.one_year_ago.date())
+        self.setup_user_tools_cert(user, self.one_year_ago.date(), self.permissions_codenames)
 
         can_start_tools = user.user_permissions.filter(
             codename__in=self.permissions_codenames
@@ -1606,7 +1606,7 @@ class TestRemoveToolsAccessForUsersWithExpiredCert:
     @pytest.mark.django_db
     def test_does_not_remove_permissions_when_cert_is_valid(self):
         user = UserFactory.create()
-        self.setup_user_tools_cert(user, self.one_day_ago.date())
+        self.setup_user_tools_cert(user, self.one_day_ago.date(), self.permissions_codenames)
 
         can_start_tools = user.user_permissions.filter(
             codename__in=self.permissions_codenames
@@ -1621,7 +1621,7 @@ class TestRemoveToolsAccessForUsersWithExpiredCert:
     @pytest.mark.django_db
     def test_does_not_effect_permissions_when_user_has_no_permissions_but_has_valid_cert(self):
         user = UserFactory.create()
-        self.setup_user_tools_cert(user, self.one_day_ago.date(), [])
+        self.setup_user_tools_cert(user, self.one_day_ago.date())
 
         can_start_tools = user.user_permissions.filter(
             codename__in=self.permissions_codenames
