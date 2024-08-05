@@ -44,6 +44,10 @@ class TableSchemaView(FormView):
             tables = list(dataset.sourcetable_set.all())
             for table in tables:
                 schemas.append(table.schema)
+        else:
+            schemas = [
+                "public",
+            ]
 
         return list(set(schemas))
 
@@ -51,7 +55,8 @@ class TableSchemaView(FormView):
         ctx = super().get_context_data(**kwargs)
         dataset = find_dataset(self.kwargs["pk"], self.request.user)
         schemas = self.get_schemas(dataset)
-        ctx["model"] = dataset
+        ctx["model_name"] = dataset.name
+        ctx["model_id"] = self.kwargs["pk"]
         ctx["schema"] = schemas[0]
         ctx["is_multiple_schemas"] = len(schemas) > 1
         ctx["backlink"] = reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
