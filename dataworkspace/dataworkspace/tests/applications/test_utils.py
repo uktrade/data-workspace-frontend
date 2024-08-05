@@ -1566,18 +1566,18 @@ class TestLongRunningQueryAlerts:
 
 class TestRemoveToolsAccessForUsersWithExpiredCert:
 
-    permissions_codenames = [
+    permissions_codenames = (
         "start_all_applications",
         "develop_visualisations",
         "access_quicksight",
         "access_appstream",
-    ]
+    )
 
     total_days = 366 if calendar.isleap(datetime.date.today().year) else 365
     one_year_ago = datetime.datetime.now() - datetime.timedelta(days=total_days)
     one_day_ago = datetime.datetime.now() - datetime.timedelta(days=1)
 
-    def setup_user_tools_cert(self, user, cert_date, codenames=[]):
+    def setup_user_tools_cert(self, user, cert_date, codenames=()):
         for codename in codenames:
             tools_permission = Permission.objects.get(
                 codename=codename,
