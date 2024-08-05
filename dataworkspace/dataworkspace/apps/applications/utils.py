@@ -17,6 +17,7 @@ from botocore.config import Config
 from botocore.exceptions import ClientError
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
@@ -62,6 +63,7 @@ from dataworkspace.apps.core.utils import (
     transaction_and_lock,
     new_private_database_credentials,
     postgres_user,
+    has_tools_cert_expired,
 )
 from dataworkspace.apps.applications.gitlab import gitlab_has_developer_access
 from dataworkspace.apps.datasets.constants import UserAccessType
@@ -2094,3 +2096,43 @@ def get_tool_url_for_user(user: get_user_model(), application_template: Applicat
     user_prefix = stable_identification_suffix(str(user.profile.sso_id), short=True)
     hostname = application_template.host_basename
     return f"https://{hostname}-{user_prefix}.{settings.APPLICATION_ROOT_DOMAIN}/"
+
+
+@celery_app.task()
+@close_all_connections_if_not_in_atomic_block
+def remove_tools_access_for_users_with_expired_cert():
+    try:
+        with cache.lock(
+            "_remove_tools_access_for_users_with_expired_cert", blocking_timeout=0, timeout=1800
+        ):
+            _remove_tools_access_for_users_with_expired_cert()
+    except redis.exceptions.LockNotOwnedError:
+        logger.info("remove_tools_access: Lock not owned - running on another instance?")
+    except redis.exceptions.LockError:
+        logger.info("remove_tools_access: Unable to grab lock - running on another instance?")
+
+
+def _remove_tools_access_for_users_with_expired_cert():
+    logger.info("_remove_tools_access: Start")
+    user_model = get_user_model()
+    permissions_codenames = [
+        "start_all_applications",
+        "develop_visualisations",
+        "access_quicksight",
+        "access_appstream",
+    ]
+    permission_ids = Permission.objects.filter(codename__in=permissions_codenames).all()
+
+    def remove_tools_access(user):
+        for permission_id in permission_ids:
+            user.user_permissions.remove(permission_id.id)
+
+    for user in user_model.objects.all():
+        user_has_access = user.user_permissions.filter(codename__in=permissions_codenames).exists()
+        user_profile = Profile.objects.filter(user=user.id)
+
+        if user_has_access and user_profile[0].tools_certification_date:
+            if has_tools_cert_expired(user_profile[0].tools_certification_date):
+                remove_tools_access(user)
+
+    logger.info("_remove_tools_access: End")

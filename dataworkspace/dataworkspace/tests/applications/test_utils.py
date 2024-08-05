@@ -1,4 +1,5 @@
 # pylint: disable=unspecified-encoding
+import calendar
 import datetime
 import json
 import os
@@ -33,6 +34,7 @@ from dataworkspace.apps.applications.utils import (
     sync_quicksight_permissions,
     _do_sync_s3_sso_users,
     _process_staff_sso_file,
+    remove_tools_access_for_users_with_expired_cert,
 )
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import ToolQueryAuditLog, ToolQueryAuditLogTable
@@ -1560,3 +1562,73 @@ class TestLongRunningQueryAlerts:
             ":rotating_light: Found 1 SQL query running for longer than 15 minutes "
             "on the datasets db."
         )
+
+
+class TestRemoveToolsAccessForUsersWithExpiredCert:
+
+    permissions_codenames = (
+        "start_all_applications",
+        "develop_visualisations",
+        "access_quicksight",
+        "access_appstream",
+    )
+
+    total_days = 366 if calendar.isleap(datetime.date.today().year) else 365
+    one_year_ago = datetime.datetime.now() - datetime.timedelta(days=total_days)
+    one_day_ago = datetime.datetime.now() - datetime.timedelta(days=1)
+
+    def setup_user_tools_cert(self, user, cert_date, codenames=()):
+        for codename in codenames:
+            tools_permission = Permission.objects.get(
+                codename=codename,
+                content_type=ContentType.objects.get_for_model(ApplicationInstance),
+            )
+            user.user_permissions.add(tools_permission)
+
+        user.profile.tools_certification_date = cert_date
+        user.save()
+
+    @pytest.mark.django_db
+    def test_removes_permissions_when_cert_has_expired(self):
+        user = UserFactory.create()
+        self.setup_user_tools_cert(user, self.one_year_ago.date(), self.permissions_codenames)
+
+        can_start_tools = user.user_permissions.filter(
+            codename__in=self.permissions_codenames
+        ).exists()
+        assert can_start_tools is True
+        remove_tools_access_for_users_with_expired_cert()
+        can_start_tools = user.user_permissions.filter(
+            codename__in=self.permissions_codenames
+        ).exists()
+        assert can_start_tools is False
+
+    @pytest.mark.django_db
+    def test_does_not_remove_permissions_when_cert_is_valid(self):
+        user = UserFactory.create()
+        self.setup_user_tools_cert(user, self.one_day_ago.date(), self.permissions_codenames)
+
+        can_start_tools = user.user_permissions.filter(
+            codename__in=self.permissions_codenames
+        ).exists()
+        assert can_start_tools is True
+        remove_tools_access_for_users_with_expired_cert()
+        can_start_tools = user.user_permissions.filter(
+            codename__in=self.permissions_codenames
+        ).exists()
+        assert can_start_tools is True
+
+    @pytest.mark.django_db
+    def test_does_not_effect_permissions_when_user_has_no_permissions_but_has_valid_cert(self):
+        user = UserFactory.create()
+        self.setup_user_tools_cert(user, self.one_day_ago.date())
+
+        can_start_tools = user.user_permissions.filter(
+            codename__in=self.permissions_codenames
+        ).exists()
+        assert can_start_tools is False
+        remove_tools_access_for_users_with_expired_cert()
+        can_start_tools = user.user_permissions.filter(
+            codename__in=self.permissions_codenames
+        ).exists()
+        assert can_start_tools is False
