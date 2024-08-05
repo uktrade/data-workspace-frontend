@@ -1,5 +1,5 @@
 {% extends '_main.html' %}
-{% block page_title %}Add Table - {{ model.name }} - {{ block.super }}{% endblock %}
+{% block page_title %}Add Table - {{ model_name }} - {{ block.super }}{% endblock %}
 {% if backlink %} {% block go_back %}
 <a href="{{ backlink }}" class="govuk-back-link">Back</a>
 {% endblock %} {% endif %} {% block content %}
@@ -21,7 +21,7 @@
         <button type="submit" class="govuk-button" data-module="govuk-button">Continue</button>
       </form>
     {% else %}
-      <a class="govuk-button" href="{% url 'datasets:add_table:classification-check' model.id schema %}">Continue</a>
+      <a class="govuk-button" href="{% url 'datasets:add_table:classification-check' model_id schema %}">Continue</a>
     {% endif %}
 
   </div>
