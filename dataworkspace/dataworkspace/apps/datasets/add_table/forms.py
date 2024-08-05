@@ -5,6 +5,8 @@ from dataworkspace.forms import (
     GOVUKDesignSystemRadioField,
     GOVUKDesignSystemRadiosWidget,
     GOVUKDesignSystemTextWidget,
+    GOVUKDesignSystemTextareaField,
+    GOVUKDesignSystemTextareaWidget,
 )
 from django.forms import ValidationError
 
@@ -29,30 +31,29 @@ class DescriptiveNameForm(GOVUKDesignSystemForm):
         cleaned_data = super().clean()
         descriptive_name = cleaned_data["descriptive_name"].lower()
         if 'data' in descriptive_name:
-            print('Descriptive name cannot contain the word ‘data’')
+            print('Descriptive name cannot contain the word data')
             raise ValidationError(
-                "Descriptive name cannot contain the word ‘data’"
+                "Descriptive name cannot contain the word data"
             )
         elif 'dataset' in descriptive_name:
             raise ValidationError(
-                    "Descriptive name cannot contain the word ‘data’"
+                    "Descriptive name cannot contain the word data"
                 )
         elif 'records' in descriptive_name:
             raise ValidationError(
-                    "Descriptive name cannot contain the word ‘data’"
+                    "Descriptive name cannot contain the word data"
                 )
         elif '_' in descriptive_name:
             raise ValidationError(
-                    "Descriptive name cannot contain the word ‘data’"
+                    "Descriptive name cannot contain the word data"
                 )
         return descriptive_name
-    
+
     descriptive_name = GOVUKDesignSystemCharField(
         label="Descriptive Name",
         required=True,
-        help_text="It should not contain the words ‘records’, ‘data’ or ‘dataset’. It should also not contain underscores. for example, Companies in India.",
+        help_text="It should not contain the words records, data or dataset. It should also not contain underscores. for example, Companies in India.",
         widget=GOVUKDesignSystemTextWidget(label_is_heading=False),
-        error_messages={"required": "Enter a descriptive name",
-                        },
+        error_messages={"required": "Enter a descriptive name"},
     )
 

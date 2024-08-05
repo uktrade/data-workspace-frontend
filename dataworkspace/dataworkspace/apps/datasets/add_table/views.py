@@ -73,9 +73,8 @@ class ClassificationCheck(TemplateView):
 
 
 class DescriptiveNameView(FormView):
-    template_name = "datasets/add_table/descriptive_name.html"
     form_class = DescriptiveNameForm
-
+    template_name = "datasets/add_table/descriptive_name.html"
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -84,12 +83,14 @@ class DescriptiveNameView(FormView):
         ctx["model"] = dataset
         ctx["backlink"] = reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
         ctx["nextlink"] = reverse("datasets:add_table:table-schema", args={self.kwargs["pk"]})
-
         return ctx
+    
+    def form_valid(self, form):
+        clean_data = form.cleaned_data
+        descriptive_name = clean_data["descriptive_name"]
+        print('descriptive_name', descriptive_name)
+        self.request.session["descriptive_name"] = descriptive_name
 
-    # def form_valid(self, form):
-    #     clean_data = form.cleaned_data
-    #     # schema = clean_data["schema"]
-    #     # return HttpResponseRedirect(
-    #     #     reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
-    #     # )
+        return HttpResponseRedirect(
+            reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})
+        )
