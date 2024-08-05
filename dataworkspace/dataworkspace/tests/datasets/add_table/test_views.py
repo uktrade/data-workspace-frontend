@@ -164,3 +164,116 @@ class TestAddTable(TestCase):
 
         schemas = list(radio_names)
         assert len(schemas) == 2
+
+    def test_descriptive_table_name_page(self):
+
+        response = self.client.get(
+            reverse(
+                "datasets:add_table:descriptive-name",
+                kwargs={"pk": self.dataset.id, "schema": self.source.schema},
+            ))
+        
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        header_one = soup.find("h1")
+        paragraph = soup.find("p")
+        header_one_text = header_one.contents
+        paragraph_text = paragraph.contents
+
+        assert response.status_code == 200
+        assert "Give your table a descriptive name" in header_one_text
+        assert (
+            "This should be a meaningful name that can help users understand what the table contains. It will show in the catalogue item under the 'Name' field in the data tables section."
+            in paragraph_text
+        )
+
+    def test_error_shows_when_descriptive_table_name_input_contains_data(self):
+        response = self.client.post(
+            reverse(
+                "datasets:add_table:descriptive-name",
+                kwargs={"pk": self.dataset.id, "schema": self.source.schema},
+            ),{'descriptive_name': 'data'})
+        
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        assert response.status_code == 200
+
+        error_header = soup.find("h2")
+        error_header_text = error_header.contents
+        error_messages = soup.find('ul', class_='govuk-list govuk-error-summary__list')
+        links = error_messages.find('a')
+        link_text = links.contents
+        assert "\n    There is a problem\n  " in error_header_text
+        assert "Descriptive name cannot contain the word 'data'" in link_text
+
+    def test_error_shows_when_descriptive_table_name_input_contains_dataset(self):
+        response = self.client.post(
+            reverse(
+                "datasets:add_table:descriptive-name",
+                kwargs={"pk": self.dataset.id, "schema": self.source.schema},
+            ),{'descriptive_name': 'dataset'})
+        
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        assert response.status_code == 200
+
+        error_header = soup.find("h2")
+        error_header_text = error_header.contents
+        error_messages = soup.find('ul', class_='govuk-list govuk-error-summary__list')
+        links = error_messages.find('a')
+        link_text = links.contents
+        assert "\n    There is a problem\n  " in error_header_text
+        assert "Descriptive name cannot contain the word 'dataset'" in link_text
+
+    def test_error_shows_when_descriptive_table_name_input_contains_records(self):
+        response = self.client.post(
+            reverse(
+                "datasets:add_table:descriptive-name",
+                kwargs={"pk": self.dataset.id, "schema": self.source.schema},
+            ),{'descriptive_name': 'records'})
+        
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        assert response.status_code == 200
+
+        error_header = soup.find("h2")
+        error_header_text = error_header.contents
+        error_messages = soup.find('ul', class_='govuk-list govuk-error-summary__list')
+        links = error_messages.find('a')
+        link_text = links.contents
+        assert "\n    There is a problem\n  " in error_header_text
+        assert "Descriptive name cannot contain the word 'records'" in link_text
+
+    def test_error_shows_when_descriptive_table_name_input_contains_underscores(self):
+        response = self.client.post(
+            reverse(
+                "datasets:add_table:descriptive-name",
+                kwargs={"pk": self.dataset.id, "schema": self.source.schema},
+            ),{'descriptive_name': '_'})
+        
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        assert response.status_code == 200
+
+        error_header = soup.find("h2")
+        error_header_text = error_header.contents
+        error_messages = soup.find('ul', class_='govuk-list govuk-error-summary__list')
+        links = error_messages.find('a')
+        link_text = links.contents
+        assert "\n    There is a problem\n  " in error_header_text
+        assert "Descriptive name cannot contain the word underscores" in link_text
+
+    def test_error_shows_when_descriptive_table_name_input_contains_underscores(self):
+        response = self.client.post(
+            reverse(
+                "datasets:add_table:descriptive-name",
+                kwargs={"pk": self.dataset.id, "schema": self.source.schema},
+            ),{'descriptive_name': ''})
+        
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        assert response.status_code == 200
+
+        error_header = soup.find("h2")
+        error_header_text = error_header.contents
+        error_messages = soup.find('ul', class_='govuk-list govuk-error-summary__list')
+        links = error_messages.find('a')
+        link_text = links.contents
+        assert "\n    There is a problem\n  " in error_header_text
+        assert "Enter a descriptive name" in link_text
+
+    

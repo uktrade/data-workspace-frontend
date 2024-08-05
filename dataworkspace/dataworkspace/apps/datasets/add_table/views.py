@@ -73,12 +73,11 @@ class ClassificationCheck(TemplateView):
 
 
 class DescriptiveNameView(FormView):
-    form_class = DescriptiveNameForm
     template_name = "datasets/add_table/descriptive_name.html"
+    form_class = DescriptiveNameForm
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['form'] = self.form_class
         dataset = find_dataset(self.kwargs["pk"], self.request.user)
         ctx["model"] = dataset
         ctx["backlink"] = reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})

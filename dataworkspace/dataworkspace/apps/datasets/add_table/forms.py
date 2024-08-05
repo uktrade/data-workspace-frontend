@@ -30,29 +30,20 @@ class DescriptiveNameForm(GOVUKDesignSystemForm):
     def clean_descriptive_name(self):
         cleaned_data = super().clean()
         descriptive_name = cleaned_data["descriptive_name"].lower()
-        if 'data' in descriptive_name:
-            print('Descriptive name cannot contain the word data')
-            raise ValidationError(
-                "Descriptive name cannot contain the word data"
-            )
-        elif 'dataset' in descriptive_name:
-            raise ValidationError(
-                    "Descriptive name cannot contain the word data"
-                )
+        if 'dataset' in descriptive_name:
+            raise ValidationError("Descriptive name cannot contain the word 'dataset'")
+        elif 'data' in descriptive_name:
+            raise ValidationError("Descriptive name cannot contain the word 'data'")
         elif 'records' in descriptive_name:
-            raise ValidationError(
-                    "Descriptive name cannot contain the word data"
-                )
+            raise ValidationError("Descriptive name cannot contain the word 'records'")
         elif '_' in descriptive_name:
-            raise ValidationError(
-                    "Descriptive name cannot contain the word data"
-                )
+            raise ValidationError("Descriptive name cannot contain 'underscores'")
         return descriptive_name
 
     descriptive_name = GOVUKDesignSystemCharField(
         label="Descriptive Name",
         required=True,
-        help_text="It should not contain the words records, data or dataset. It should also not contain underscores. for example, Companies in India.",
+        help_text="It should not contain the words 'records', 'data' or 'dataset'. It should also not contain underscores. For example, Companies in India.",
         widget=GOVUKDesignSystemTextWidget(label_is_heading=False),
         error_messages={"required": "Enter a descriptive name"},
     )
