@@ -5,6 +5,7 @@ from dataworkspace.apps.datasets.add_table.views import (
     AddTableView,
     TableSchemaView,
     ClassificationCheckView,
+    DescriptiveNameView,
 )
 
 
@@ -23,5 +24,10 @@ urlpatterns = [
         "<str:schema>/classification-check",
         login_required(ClassificationCheckView.as_view()),
         name="classification-check",
+    ),
+    path(
+        "<str:schema>/descriptive-name",
+        login_required(DescriptiveNameView.as_view()),
+        name="descriptive-name",
     ),
 ]

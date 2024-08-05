@@ -4,7 +4,7 @@ from django.http import HttpResponseRedirect
 
 from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.datasets.constants import DataSetType
-from dataworkspace.apps.datasets.add_table.forms import TableSchemaForm
+from dataworkspace.apps.datasets.add_table.forms import TableSchemaForm, DescriptiveNameForm
 
 
 class AddTableView(DetailView):
@@ -77,5 +77,29 @@ class ClassificationCheckView(TemplateView):
             dataset.get_government_security_classification_display() or "Unclassified"
         ).title()
         ctx["backlink"] = reverse("datasets:add_table:table-schema", args={self.kwargs["pk"]})
-        ctx["nextlink"] = ""
+        ctx["nextlink"] = reverse("datasets:add_table:descriptive-name", args={self.kwargs["pk"]})
         return ctx
+
+
+class DescriptiveNameView(FormView):
+    template_name = "datasets/add_table/descriptive_name.html"
+    form_class = DescriptiveNameForm
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        dataset = find_dataset(self.kwargs["pk"], self.request.user)
+        ctx["model"] = dataset
+        ctx["backlink"] = reverse("datasets:add_table:classification-check", args={self.kwargs["pk"]})
+        ctx["nextlink"] = ''
+        return ctx
+
+    def form_valid(self, form):
+        clean_data = form.cleaned_data
+        descriptive_name = clean_data["descriptive_name"]
+        print('descriptive_name', descriptive_name)
+        self.request.session["descriptive_name"] = descriptive_name
+
+        # add correct next link 
+        return HttpResponseRedirect(
+            ''
+        )
