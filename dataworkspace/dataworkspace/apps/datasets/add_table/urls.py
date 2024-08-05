@@ -4,7 +4,7 @@ from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.datasets.add_table.views import (
     AddTableView,
     TableSchemaView,
-    ClassificationCheck,
+    ClassificationCheckView,
 )
 
 
@@ -21,7 +21,7 @@ urlpatterns = [
     ),
     path(
         "<str:schema>/classification-check",
-        login_required(ClassificationCheck.as_view()),
+        login_required(ClassificationCheckView.as_view()),
         name="classification-check",
     ),
 ]
