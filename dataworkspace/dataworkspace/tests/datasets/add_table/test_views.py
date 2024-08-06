@@ -219,13 +219,10 @@ class TestDescriptiveNamePage(TestCase):
                 kwargs={"pk": self.dataset.id, "schema": self.source.schema},
             ),
         )
-        
-        print('blah',response)
+
         soup = BeautifulSoup(response.content.decode(response.charset))
-        header_one = soup.find("h1")
-        paragraph = soup.find("p")
-        header_one_text = header_one.contents
-        paragraph_text = paragraph.contents
+        header_one_text = soup.find("h1").contents
+        paragraph_text = soup.find("p").contents
 
         assert response.status_code == 200
         assert "Give your table a descriptive name" in header_one_text
@@ -243,15 +240,12 @@ class TestDescriptiveNamePage(TestCase):
         )
 
         soup = BeautifulSoup(response.content.decode(response.charset))
-        assert response.status_code == 200
+        error_header_text = soup.find("h2").get_text(strip=True)
+        error_message_text = soup.find('ul', class_='govuk-list govuk-error-summary__list').find('a').contents
 
-        error_header = soup.find("h2")
-        error_header_text = error_header.get_text(strip=True)
-        error_messages = soup.find('ul', class_='govuk-list govuk-error-summary__list')
-        links = error_messages.find('a')
-        link_text = links.contents
+        assert response.status_code == 200
         assert "There is a problem" in error_header_text
-        assert "Descriptive name cannot contain the word 'data'" in link_text
+        assert "Descriptive name cannot contain the word 'data'" in error_message_text
 
     def test_error_shows_when_descriptive_table_name_input_contains_dataset(self):#PASS
         response = self.client.post(
@@ -262,15 +256,12 @@ class TestDescriptiveNamePage(TestCase):
         )
 
         soup = BeautifulSoup(response.content.decode(response.charset))
-        assert response.status_code == 200
+        error_header_text = soup.find("h2").get_text(strip=True)
+        error_message_text = soup.find('ul', class_='govuk-list govuk-error-summary__list').find('a').contents
 
-        error_header = soup.find("h2")
-        error_header_text = error_header.get_text(strip=True)
-        error_messages = soup.find('ul', class_='govuk-list govuk-error-summary__list')
-        links = error_messages.find('a')
-        link_text = links.contents
+        assert response.status_code == 200
         assert "There is a problem" in error_header_text
-        assert "Descriptive name cannot contain the word 'dataset'" in link_text
+        assert "Descriptive name cannot contain the word 'dataset'" in error_message_text
 
     def test_error_shows_when_descriptive_table_name_input_contains_record(self):
         response = self.client.post(
@@ -281,15 +272,12 @@ class TestDescriptiveNamePage(TestCase):
         )
 
         soup = BeautifulSoup(response.content.decode(response.charset))
-        assert response.status_code == 200
+        error_header_text = soup.find("h2").get_text(strip=True)
+        error_message_text = soup.find('ul', class_='govuk-list govuk-error-summary__list').find('a').contents
 
-        error_header = soup.find("h2")
-        error_header_text = error_header.get_text(strip=True)
-        error_messages = soup.find('ul', class_='govuk-list govuk-error-summary__list')
-        links = error_messages.find('a')
-        link_text = links.contents
+        assert response.status_code == 200
         assert "There is a problem" in error_header_text
-        assert "Descriptive name cannot contain the word 'record'" in link_text
+        assert "Descriptive name cannot contain the word 'record'" in error_message_text
 
     def test_error_shows_when_descriptive_table_name_input_contains_underscores(self):
         response = self.client.post(
@@ -300,31 +288,25 @@ class TestDescriptiveNamePage(TestCase):
         )
 
         soup = BeautifulSoup(response.content.decode(response.charset))
-        assert response.status_code == 200
+        error_header_text = soup.find("h2").get_text(strip=True)
+        error_message_text = soup.find('ul', class_='govuk-list govuk-error-summary__list').find('a').contents 
 
-        error_header = soup.find("h2")
-        error_header_text = error_header.get_text(strip=True)
-        error_messages = soup.find('ul', class_='govuk-list govuk-error-summary__list')
-        links = error_messages.find('a')
-        link_text = links.contents
+        assert response.status_code == 200      
         assert "There is a problem" in error_header_text
-        assert "Descriptive name cannot contain underscores" in link_text
+        assert "Descriptive name cannot contain underscores" in error_message_text
 
     def test_error_shows_when_descriptive_table_name_is_empty(self):
         response = self.client.post(
             reverse(
                 "datasets:add_table:descriptive-name",
                 kwargs={"pk": self.dataset.id, "schema": self.source.schema}
-            ),{'descriptive_name': ' '},
+            ),{'descriptive_name': ''},
         )
 
         soup = BeautifulSoup(response.content.decode(response.charset))
-        assert response.status_code == 200
+        error_header_text = soup.find("h2").get_text(strip=True)
+        error_message_text = soup.find('ul', class_='govuk-list govuk-error-summary__list').find('a').contents 
 
-        error_header = soup.find("h2")
-        error_header_text = error_header.get_text(strip=True)
-        error_messages = soup.find('ul', class_='govuk-list govuk-error-summary__list')
-        links = error_messages.find('a')
-        link_text = links.contents
+        assert response.status_code == 200
         assert "There is a problem" in error_header_text
-        assert "Enter a descriptive name" in link_text
+        assert "Enter a descriptive name" in error_message_text
