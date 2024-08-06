@@ -10,7 +10,7 @@ class TableSchemaForm(GOVUKDesignSystemForm):
         required=True,
         label="Select a schema for your table",
         widget=GOVUKDesignSystemRadiosWidget(heading="h2", label_size="l"),
-        error_messages={"required": "You must select a schema."},
+        error_messages={"required": "Select a schema"},
     )
 
     def __init__(self, *args, **kwargs):
