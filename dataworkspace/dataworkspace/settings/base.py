@@ -381,7 +381,7 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
             "schedule": 60 * 2,
             "args": (),
         },
-        "sync-sso-users-from-sso": {
+        "sync-sso-users-from-s3": {
             "task": "dataworkspace.apps.applications.utils.sync_s3_sso_users",
             "schedule": crontab(minute="*/15"),  # Run every 15 minutes
             "args": (),
