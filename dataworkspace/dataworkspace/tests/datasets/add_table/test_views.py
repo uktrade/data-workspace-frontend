@@ -224,7 +224,7 @@ class TestDescriptiveNamePage(TestCase):
         header_one_text = soup.find("h1").contents
         paragraph_text = soup.find("p").contents
         title_text = soup.find("title").get_text(strip=True)
-        backlink = soup.find("a",{"class":"govuk-back-link"}).get("href")
+        backlink = soup.find("a", {"class":"govuk-back-link"}).get("href")
 
         assert f"/datasets/{self.dataset.id}" in backlink
         assert response.status_code == 200
