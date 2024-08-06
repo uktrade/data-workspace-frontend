@@ -195,7 +195,7 @@ class TestAddTable(TestCase):
             "You must not add a table that would change the security classification of the catalogue item you're adding to."
             in paragraph_text
         )
-    
+
 
 @pytest.mark.django_db
 class TestDescriptiveNamePage(TestCase):
@@ -224,7 +224,7 @@ class TestDescriptiveNamePage(TestCase):
         header_one_text = soup.find("h1").contents
         paragraph_text = soup.find("p").contents
         title_text = soup.find("title").get_text(strip=True)
-        backlink = soup.find("a", {"class":"govuk-back-link"}).get("href")
+        backlink = soup.find("a", {"class": "govuk-back-link"}).get("href")
 
         assert f"/datasets/{self.dataset.id}" in backlink
         assert response.status_code == 200
@@ -237,34 +237,39 @@ class TestDescriptiveNamePage(TestCase):
 
     def test_error_shows_when_descriptive_table_name_input_contains_word(self):
 
-        words = ['record', 'dataset', 'data']
+        words = ["record", "dataset", "data"]
         for word in words:
             response = self.client.post(
                 reverse(
                     "datasets:add_table:descriptive-name",
-                    kwargs={"pk": self.dataset.id, "schema": self.source.schema}
-                ),{'descriptive_name': word},
+                    kwargs={"pk": self.dataset.id, "schema": self.source.schema},
+                ),
+                {"descriptive_name": word},
             )
 
         soup = BeautifulSoup(response.content.decode(response.charset))
         error_header_text = soup.find("h2").get_text(strip=True)
-        error_message_text = soup.find('ul', class_='govuk-list govuk-error-summary__list').find('a').contents
+        error_message_text = (
+            soup.find("ul", class_="govuk-list govuk-error-summary__list").find("a").contents
+        )
 
         assert response.status_code == 200
         assert "There is a problem" in error_header_text
         assert f"Descriptive name cannot contain the word '{word}'" in error_message_text
 
-
         response = self.client.post(
             reverse(
                 "datasets:add_table:descriptive-name",
-                kwargs={"pk": self.dataset.id, "schema": self.source.schema}
-            ),{'descriptive_name': 'record'},
+                kwargs={"pk": self.dataset.id, "schema": self.source.schema},
+            ),
+            {"descriptive_name": "record"},
         )
 
         soup = BeautifulSoup(response.content.decode(response.charset))
         error_header_text = soup.find("h2").get_text(strip=True)
-        error_message_text = soup.find('ul', class_='govuk-list govuk-error-summary__list').find('a').contents
+        error_message_text = (
+            soup.find("ul", class_="govuk-list govuk-error-summary__list").find("a").contents
+        )
 
         assert response.status_code == 200
         assert "There is a problem" in error_header_text
@@ -274,15 +279,18 @@ class TestDescriptiveNamePage(TestCase):
         response = self.client.post(
             reverse(
                 "datasets:add_table:descriptive-name",
-                kwargs={"pk": self.dataset.id, "schema": self.source.schema}
-            ),{'descriptive_name': '_'},
+                kwargs={"pk": self.dataset.id, "schema": self.source.schema},
+            ),
+            {"descriptive_name": "_"},
         )
 
         soup = BeautifulSoup(response.content.decode(response.charset))
         error_header_text = soup.find("h2").get_text(strip=True)
-        error_message_text = soup.find('ul', class_='govuk-list govuk-error-summary__list').find('a').contents 
+        error_message_text = (
+            soup.find("ul", class_="govuk-list govuk-error-summary__list").find("a").contents
+        )
 
-        assert response.status_code == 200      
+        assert response.status_code == 200
         assert "There is a problem" in error_header_text
         assert "Descriptive name cannot contain underscores" in error_message_text
 
@@ -290,13 +298,16 @@ class TestDescriptiveNamePage(TestCase):
         response = self.client.post(
             reverse(
                 "datasets:add_table:descriptive-name",
-                kwargs={"pk": self.dataset.id, "schema": self.source.schema}
-            ),{'descriptive_name': ''},
+                kwargs={"pk": self.dataset.id, "schema": self.source.schema},
+            ),
+            {"descriptive_name": ""},
         )
 
         soup = BeautifulSoup(response.content.decode(response.charset))
         error_header_text = soup.find("h2").get_text(strip=True)
-        error_message_text = soup.find('ul', class_='govuk-list govuk-error-summary__list').find('a').contents 
+        error_message_text = (
+            soup.find("ul", class_="govuk-list govuk-error-summary__list").find("a").contents
+        )
 
         assert response.status_code == 200
         assert "There is a problem" in error_header_text
