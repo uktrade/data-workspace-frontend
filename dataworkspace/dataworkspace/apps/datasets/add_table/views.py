@@ -77,7 +77,7 @@ class ClassificationCheckView(TemplateView):
             dataset.get_government_security_classification_display() or "Unclassified"
         ).title()
         ctx["backlink"] = reverse("datasets:add_table:table-schema", args={self.kwargs["pk"]})
-        ctx["nextlink"] = reverse("datasets:add_table:descriptive-name", args={self.kwargs["pk"], self.kwargs['schema']})
+        ctx["nextlink"] = reverse("datasets:add_table:descriptive-name", args={self.kwargs["pk"], self.kwargs["schema"]})
         return ctx
 
 
@@ -96,8 +96,6 @@ class DescriptiveNameView(FormView):
     def form_valid(self, form):
         clean_data = form.cleaned_data
         descriptive_name = clean_data["descriptive_name"]
-        print('descriptive_name', descriptive_name)
-        self.request.session["descriptive_name"] = descriptive_name
 
         # add correct next link 
         return HttpResponseRedirect(

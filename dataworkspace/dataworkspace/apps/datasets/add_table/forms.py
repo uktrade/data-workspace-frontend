@@ -34,7 +34,7 @@ class DescriptiveNameForm(GOVUKDesignSystemForm):
         elif 'record' in descriptive_name:
             raise ValidationError("Descriptive name cannot contain the word 'record'")
         elif '_' in descriptive_name:
-            raise ValidationError("Descriptive name cannot contain 'underscores'")
+            raise ValidationError("Descriptive name cannot contain underscores")
         return descriptive_name
 
     descriptive_name = GOVUKDesignSystemCharField(
