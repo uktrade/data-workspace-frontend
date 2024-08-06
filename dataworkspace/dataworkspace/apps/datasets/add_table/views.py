@@ -87,7 +87,8 @@ class DescriptiveNameView(FormView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-
+        dataset = find_dataset(self.kwargs["pk"], self.request.user)
+        ctx["model"] = dataset
         ctx["backlink"] = reverse("datasets:add_table:classification-check", args=(self.kwargs["pk"], self.kwargs['schema']))
         # TODO add next link 
         ctx["nextlink"] = ''

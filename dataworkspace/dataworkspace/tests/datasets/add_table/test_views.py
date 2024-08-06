@@ -223,15 +223,19 @@ class TestDescriptiveNamePage(TestCase):
         soup = BeautifulSoup(response.content.decode(response.charset))
         header_one_text = soup.find("h1").contents
         paragraph_text = soup.find("p").contents
+        title_text = soup.find("title").get_text(strip=True)
+        backlink = soup.find("a",{"class":"govuk-back-link"}).get("href")
 
+        assert f"/datasets/{self.dataset.id}" in backlink
         assert response.status_code == 200
+        assert f"Add Table - {self.dataset.name} - Data Workspace" in title_text
         assert "Give your table a descriptive name" in header_one_text
         assert (
             "This should be a meaningful name that can help users understand what the table contains. It will show in the catalogue item under the 'Name' field in the data tables section."
             in paragraph_text
         )
 
-    def test_error_shows_when_descriptive_table_name_input_contains_data(self):#PASS
+    def test_error_shows_when_descriptive_table_name_input_contains_data(self):
         response = self.client.post(
             reverse(
                 "datasets:add_table:descriptive-name",
