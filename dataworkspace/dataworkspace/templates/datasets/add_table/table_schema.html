@@ -6,22 +6,20 @@
 
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-two-thirds">
+    {% include 'design_system/error_summary.html' with form=form %}
     <h1 class="govuk-heading-xl">Your table's schema</h1>
 
     {% if not is_multiple_schemas %}
-    <h2 class="govuk-heading-m">Your table will be saved in '{{ schema }}' schema</h2>
-    {% endif %}
-
-    <p class="govuk-body">This is the schema used by other tables in this catalogue item. Schemas are used to categorise data sources. Schemas are often named after the data provider e.g. HMRC.</p>
-
-    {% if is_multiple_schemas %}
+      <h2 class="govuk-heading-m">Your table will be saved in '{{ schema }}' schema</h2>
+      <p class="govuk-body">This is the schema used by other tables in this catalogue item. Schemas are used to categorise data sources. Schemas are often named after the data provider e.g. HMRC.</p>
+      <a class="govuk-button" href="{% url 'datasets:add_table:classification-check' model_id schema %}">Continue</a>
+      {% else %}
+      <p class="govuk-body">These are the schemas used by other tables in this catalogue item. Schemas are used to categorise data sources. Schemas are often named after the data provider e.g. HMRC.</p>
       <form method="post" novalidate>
         {% csrf_token %}
         {{ form.schema }}
         <button type="submit" class="govuk-button" data-module="govuk-button">Continue</button>
       </form>
-    {% else %}
-      <a class="govuk-button" href="{% url 'datasets:add_table:classification-check' model_id schema %}">Continue</a>
     {% endif %}
 
   </div>

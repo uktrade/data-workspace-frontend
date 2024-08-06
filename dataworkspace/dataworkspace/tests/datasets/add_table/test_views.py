@@ -95,9 +95,9 @@ class TestAddTable(TestCase):
         assert response.status_code == 200
         assert f"Add Table - {self.dataset.name} - Data Workspace" in title_text
         assert "Your table's schema" in header_one_text
-        assert "Select an existing schema from this catalogue page" in header_two_text
+        assert "Select a schema" in header_two_text
         assert (
-            "This is the schema used by other tables in this catalogue item. Schemas are used to categorise data sources. Schemas are often named after the data provider e.g. HMRC."
+            "These are the schemas used by other tables in this catalogue item. Schemas are used to categorise data sources. Schemas are often named after the data provider e.g. HMRC."
             in paragraph_text
         )
         assert self.source.schema and self.source2.schema in radio_names
@@ -157,9 +157,9 @@ class TestAddTable(TestCase):
         assert response.status_code == 200
         assert f"Add Table - {self.dataset.name} - Data Workspace" in title_text
         assert "Your table's schema" in header_one_text
-        assert "Select an existing schema from this catalogue page" in header_two_text
+        assert "Select a schema" in header_two_text
         assert (
-            "This is the schema used by other tables in this catalogue item. Schemas are used to categorise data sources. Schemas are often named after the data provider e.g. HMRC."
+            "These are the schemas used by other tables in this catalogue item. Schemas are used to categorise data sources. Schemas are often named after the data provider e.g. HMRC."
             in paragraph_text
         )
 
