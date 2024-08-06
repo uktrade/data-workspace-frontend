@@ -28,13 +28,11 @@ class DescriptiveNameForm(GOVUKDesignSystemForm):
     def clean_descriptive_name(self):
         cleaned_data = super().clean()
         descriptive_name = cleaned_data["descriptive_name"].lower()
-        if "dataset" in descriptive_name:
-            raise ValidationError("Descriptive name cannot contain the word 'dataset'")
-        elif "data" in descriptive_name:
-            raise ValidationError("Descriptive name cannot contain the word 'data'")
-        elif "record" in descriptive_name:
-            raise ValidationError("Descriptive name cannot contain the word 'record'")
-        elif "_" in descriptive_name:
+        words = ['record', 'dataset', 'data']
+        for word in words:
+            if word in descriptive_name:
+                raise ValidationError(f"Descriptive name cannot contain the word '{word}'")
+        if '_' in descriptive_name:
             raise ValidationError("Descriptive name cannot contain underscores")
         return descriptive_name
 

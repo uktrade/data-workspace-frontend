@@ -235,7 +235,7 @@ class TestDescriptiveNamePage(TestCase):
             in paragraph_text
         )
 
-    def test_error_shows_when_descriptive_table_name_input_contains_word(self):
+    def test_error_shows_when_descriptive_table_name_input_contains_prohibited_word(self):
 
         words = ["record", "dataset", "data"]
         for word in words:
