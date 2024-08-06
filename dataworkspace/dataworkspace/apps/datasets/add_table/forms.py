@@ -1,5 +1,4 @@
 from django.forms import ValidationError
-
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
     GOVUKDesignSystemForm,
@@ -24,7 +23,7 @@ class TableSchemaForm(GOVUKDesignSystemForm):
 
 
 class DescriptiveNameForm(GOVUKDesignSystemForm):
-
+  
     def clean_descriptive_name(self):
         cleaned_data = super().clean()
         descriptive_name = cleaned_data["descriptive_name"].lower()
@@ -43,3 +42,34 @@ class DescriptiveNameForm(GOVUKDesignSystemForm):
         widget=GOVUKDesignSystemTextWidget(label_is_heading=False),
         error_messages={"required": "Enter a descriptive name"},
     )
+
+
+class TableNameForm(GOVUKDesignSystemForm):
+    table_name = GOVUKDesignSystemCharField(
+        label="Enter your table name",
+        required=True,
+        help_text="Your table name needs to be unique, have less than 42 characters and not contain any special characters apart from underscores.",
+        error_messages={"required": "Enter a descriptive name"},
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        schema = kwargs.pop("initial")["schema"]
+        self.fields["table_name"].widget = GOVUKDesignSystemTextWidget(prefix=schema)
+
+    def clean_table_name(self):
+        cleaned_data = super().clean()
+        table_name = str(cleaned_data["table_name"].lower())
+        if len(table_name) > 42:
+            raise ValidationError("Table name must be 42 characters or less")
+        # elif table_name:
+        #     raise ValidationError("Table name cannot contain numbers or special characters")
+        # elif table_name:
+        #     raise ValidationError("Table name already in use")
+        # elif 'dataset' in table_name:
+        #     raise ValidationError("Table name cannot contain the word 'dataset'")
+        # elif 'data' in table_name:
+        #     raise ValidationError("Descriptive name cannot contain the word 'data'")
+        # elif 'record' in table_name:
+        #     raise ValidationError("Descriptive name cannot contain the word 'record'")
+        return table_name
