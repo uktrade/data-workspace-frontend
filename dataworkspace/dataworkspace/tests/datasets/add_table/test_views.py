@@ -95,7 +95,7 @@ class TestAddTable(TestCase):
         assert response.status_code == 200
         assert f"Add Table - {self.dataset.name} - Data Workspace" in title_text
         assert "Your table's schema" in header_one_text
-        assert "Select a schema" in header_two_text
+        assert "Select a schema for your table" in header_two_text
         assert (
             "These are the schemas used by other tables in this catalogue item. Schemas are used to categorise data sources. Schemas are often named after the data provider e.g. HMRC."
             in paragraph_text
@@ -157,7 +157,7 @@ class TestAddTable(TestCase):
         assert response.status_code == 200
         assert f"Add Table - {self.dataset.name} - Data Workspace" in title_text
         assert "Your table's schema" in header_one_text
-        assert "Select a schema" in header_two_text
+        assert "Select a schema for your table" in header_two_text
         assert (
             "These are the schemas used by other tables in this catalogue item. Schemas are used to categorise data sources. Schemas are often named after the data provider e.g. HMRC."
             in paragraph_text

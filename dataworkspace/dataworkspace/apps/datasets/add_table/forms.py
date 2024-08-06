@@ -8,7 +8,7 @@ from dataworkspace.forms import (
 class TableSchemaForm(GOVUKDesignSystemForm):
     schema = GOVUKDesignSystemRadioField(
         required=True,
-        label="Select a schema",
+        label="Select a schema for your table",
         widget=GOVUKDesignSystemRadiosWidget(heading="h2", label_size="l"),
         error_messages={"required": "You must select a schema."},
     )
