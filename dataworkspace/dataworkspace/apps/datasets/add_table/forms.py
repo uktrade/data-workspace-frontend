@@ -1,3 +1,4 @@
+import re
 from django.forms import ValidationError
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
@@ -54,7 +55,7 @@ class TableNameForm(GOVUKDesignSystemForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        schema = kwargs.pop("initial")["schema"]
+        schema = kwargs.pop("initial")["schema"] + "."
         self.fields["table_name"].widget = GOVUKDesignSystemTextWidget(prefix=schema)
 
     def clean_table_name(self):
@@ -62,14 +63,14 @@ class TableNameForm(GOVUKDesignSystemForm):
         table_name = str(cleaned_data["table_name"].lower())
         if len(table_name) > 42:
             raise ValidationError("Table name must be 42 characters or less")
-        # elif table_name:
-        #     raise ValidationError("Table name cannot contain numbers or special characters")
+        elif bool(re.search(r"[^A-Za-z_]", table_name)):
+            raise ValidationError("Table name cannot contain numbers or special characters")
         # elif table_name:
         #     raise ValidationError("Table name already in use")
-        # elif 'dataset' in table_name:
-        #     raise ValidationError("Table name cannot contain the word 'dataset'")
-        # elif 'data' in table_name:
-        #     raise ValidationError("Descriptive name cannot contain the word 'data'")
-        # elif 'record' in table_name:
-        #     raise ValidationError("Descriptive name cannot contain the word 'record'")
+        elif "dataset" in table_name:
+            raise ValidationError("Table name cannot contain the word 'dataset'")
+        elif "data" in table_name:
+            raise ValidationError("Descriptive name cannot contain the word 'data'")
+        elif "record" in table_name:
+            raise ValidationError("Descriptive name cannot contain the word 'record'")
         return table_name
