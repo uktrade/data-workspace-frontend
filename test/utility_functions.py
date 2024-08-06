@@ -421,8 +421,8 @@ async def ensure_arango_team_created(team_name: str):
     python_code = textwrap.dedent(
         f"""\
 
-        from dataworkspace.apps.arangodb.models import ArangoTeam
-        ArangoTeam.objects.get_or_create(name="{team_name}")
+        from dataworkspace.apps.core.models import Team
+        Team.objects.get_or_create(name="{team_name}, platform='postgres-and-arango'")
 
         """
     ).encode("ascii")
@@ -445,14 +445,14 @@ async def add_user_to_arango_team(user_sso_id: str, team_name: str):
         f"""\
 
         from django.contrib.auth import get_user_model
-        from dataworkspace.apps.arangodb.models import ArangoTeam, ArangoTeamMembership
+        from dataworkspace.apps.core.models import Team, TeamMembership
 
         User = get_user_model()
 
         user = User.objects.get(profile__sso_id="{user_sso_id}")
 
-        team, _ = ArangoTeam.objects.get_or_create(name="{team_name}")
-        membership, _ = ArangoTeamMembership.objects.get_or_create(user=user, team=team)
+        team, _ = Team.objects.get_or_create(name="{team_name}", platform="postgres-and-arango")
+        membership, _ = TeamMembership.objects.get_or_create(user=user, team=team)
 
         """
     ).encode("ascii")
