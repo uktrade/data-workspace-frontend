@@ -235,13 +235,16 @@ class TestDescriptiveNamePage(TestCase):
             in paragraph_text
         )
 
-    def test_error_shows_when_descriptive_table_name_input_contains_data(self):
-        response = self.client.post(
-            reverse(
-                "datasets:add_table:descriptive-name",
-                kwargs={"pk": self.dataset.id, "schema": self.source.schema}
-            ),{'descriptive_name': 'data'},
-        )
+    def test_error_shows_when_descriptive_table_name_input_contains_word(self):
+
+        words = ['record', 'dataset', 'data']
+        for word in words:
+            response = self.client.post(
+                reverse(
+                    "datasets:add_table:descriptive-name",
+                    kwargs={"pk": self.dataset.id, "schema": self.source.schema}
+                ),{'descriptive_name': word},
+            )
 
         soup = BeautifulSoup(response.content.decode(response.charset))
         error_header_text = soup.find("h2").get_text(strip=True)
@@ -249,25 +252,9 @@ class TestDescriptiveNamePage(TestCase):
 
         assert response.status_code == 200
         assert "There is a problem" in error_header_text
-        assert "Descriptive name cannot contain the word 'data'" in error_message_text
+        assert f"Descriptive name cannot contain the word '{word}'" in error_message_text
 
-    def test_error_shows_when_descriptive_table_name_input_contains_dataset(self):#PASS
-        response = self.client.post(
-            reverse(
-                "datasets:add_table:descriptive-name",
-                kwargs={"pk": self.dataset.id, "schema": self.source.schema}
-                ), {'descriptive_name': 'dataset'},
-        )
 
-        soup = BeautifulSoup(response.content.decode(response.charset))
-        error_header_text = soup.find("h2").get_text(strip=True)
-        error_message_text = soup.find('ul', class_='govuk-list govuk-error-summary__list').find('a').contents
-
-        assert response.status_code == 200
-        assert "There is a problem" in error_header_text
-        assert "Descriptive name cannot contain the word 'dataset'" in error_message_text
-
-    def test_error_shows_when_descriptive_table_name_input_contains_record(self):
         response = self.client.post(
             reverse(
                 "datasets:add_table:descriptive-name",
