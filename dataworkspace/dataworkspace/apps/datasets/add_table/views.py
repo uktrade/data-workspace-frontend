@@ -87,6 +87,7 @@ class DescriptiveNameView(FormView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+
         ctx["backlink"] = reverse("datasets:add_table:classification-check", args=(self.kwargs["pk"], self.kwargs['schema']))
         # TODO add next link 
         ctx["nextlink"] = ''
@@ -95,8 +96,7 @@ class DescriptiveNameView(FormView):
     def form_valid(self, form):
         clean_data = form.cleaned_data
         descriptive_name = clean_data["descriptive_name"]
-
         # TODO add next link 
         return HttpResponseRedirect(
-            ''
+            '/'
         )
