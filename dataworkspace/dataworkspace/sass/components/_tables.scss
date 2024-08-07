@@ -1,0 +1,65 @@
+.data-dictionary__table {
+    table-layout: fixed;
+    th,
+    td {
+        word-wrap: break-word;
+    }
+    th:nth-child(2) {
+        width: 10%;
+    }
+    th:nth-child(3) {
+        width: 50%;
+    }
+}
+
+.scrollable-table {
+  width: 100%;
+  overflow-x: auto;
+  max-height: 560px;
+  padding: 3px;
+}
+
+.scrollable-table:focus {
+  border: 3px solid #0b0c0c;
+  outline: 3px solid #fd0;
+  padding: 0;
+}
+
+.scrollable-table table thead th {
+  padding: 15px;
+  background-color: #dee0e2;
+  border-bottom: 0;
+  border-right: 2px solid #fff;
+  font-weight: normal;
+  min-width: 120px;
+  position: relative;
+  vertical-align: middle;
+}
+
+.scrollable-table table tbody td {
+  padding: 15px;
+  vertical-align: top;
+  border: none;
+}
+
+.scrollable-table table tbody tr:nth-child(even) td {
+  background-color: #f8f8f8;
+}
+
+.scrollable-table table thead th.ref-data-col-character-field,
+.scrollable-table table thead th.ref-datetime-field {
+  min-width: 280px;
+}
+
+.scrollable-table table thead th.ref-data-col-id {
+  min-width: 120px;
+}
+
+.scrollable-table table thead th.ref-data-boolean-field {
+  min-width: 80px;
+}
+
+.scrollable-table table thead th.ref-data-col-universal-unique-identifier-field {
+  min-width: 300px;
+}
+    
