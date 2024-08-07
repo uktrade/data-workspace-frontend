@@ -70,9 +70,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 "indexes": [
-                    models.Index(
-                        fields=["db_username"], name="arangodb_ap_db_user_793637_idx"
-                    )
+                    models.Index(fields=["db_username"], name="arangodb_ap_db_user_793637_idx")
                 ],
             },
         ),
