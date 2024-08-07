@@ -10,9 +10,14 @@
     <h1 class="govuk-heading-xl">Format your table name</h1>
     <h2 class="govuk-heading-m">Table names generally follow the format below</h2>
     <p class="govuk-body-l">[schema].[grouping].__[subject]</p>
+    <p class="govuk-body">For example, dbt.data_hub__companies_in_india</p>
 
     <h3 class="govuk-heading-s">Schema (has been set for you)</h3>
-    <p class="govuk-body">Your tables schema has been set to the one other tables in the catalogue item use.</p>
+    {% if is_multiple_schemas %}
+      <p class="govuk-body">You selected your table's schema in a previous screen.</p>
+    {% else %}
+      <p class="govuk-body">Your tables schema has been set to the one other tables in the catalogue item use.</p>
+    {% endif %}
 
     <h3 class="govuk-heading-s">Grouping (optional)</h3>
     <p class="govuk-body">This is what technological system the data has come from e.g. data hub or people finder. If you have a grouping you must put a double underscore between grouping and subject when you enter it into the input box below.</p>

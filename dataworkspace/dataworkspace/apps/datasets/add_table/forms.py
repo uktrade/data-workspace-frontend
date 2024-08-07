@@ -49,14 +49,18 @@ class TableNameForm(GOVUKDesignSystemForm):
     table_name = GOVUKDesignSystemCharField(
         label="Enter your table name",
         required=True,
-        help_text="Your table name needs to be unique, have less than 42 characters and not contain any special characters apart from underscores.",
-        error_messages={"required": "Enter a descriptive name"},
+        help_text="Your table name needs to be unique, have less than 42 characters and not contain any special characters apart from underscores.",  # pylint: disable=line-too-long
+        error_messages={"required": "Enter a table name"},
     )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         schema = kwargs.pop("initial")["schema"] + "."
         self.fields["table_name"].widget = GOVUKDesignSystemTextWidget(prefix=schema)
+        print("fields", self.fields["table_name"].label)
+        self.fields["table_name"].label = "TEST"
+
+        self.fields["table_name"].initial = "descriptive name"
 
     def clean_table_name(self):
         cleaned_data = super().clean()

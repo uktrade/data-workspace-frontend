@@ -127,9 +127,23 @@ class TableNameView(FormView):
         )
         return initial
 
+    def is_multiple_schemas(self, dataset):
+        schemas = []
+        if dataset.type == DataSetType.MASTER:
+            tables = list(dataset.sourcetable_set.all())
+            for table in tables:
+                schemas.append(table.schema)
+        else:
+            schemas = [
+                "public",
+            ]
+
+        return len(set(schemas)) > 1
+
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         dataset = find_dataset(self.kwargs["pk"], self.request.user)
+        ctx["is_multiple_schemas"] = self.is_multiple_schemas(dataset)
         ctx["model_name"] = dataset.name
         ctx["schema"] = self.kwargs["schema"]
         return ctx
