@@ -1,6 +1,7 @@
 import secrets
 import string
 import logging
+import datetime
 
 from django.conf import settings
 from django.core.cache import cache
@@ -8,8 +9,10 @@ import gevent
 import redis
 
 from arango import ArangoClient
+from arango.exceptions import ServerConnectionError, UserCreateError
 from dataworkspace.apps.arangodb.models import (
     ApplicationInstanceArangoUsers,
+    ArangoUser,
 )
 from dataworkspace.apps.core.models import Team
 from dataworkspace.cel import celery_app
@@ -20,49 +23,51 @@ logger = logging.getLogger("app")
 
 def new_private_arangodb_credentials(
     db_user,
-    user,
+    dw_user,
 ):
     password_alphabet = string.ascii_letters + string.digits
 
-    # ArangoDB database names must start with a letter - '_' removed from start of team.schema_name
+    # ArangoDB database names must start with a letter - '_' removed from start of team.schema_name for database.
     team_dbs = [
-        team.schema_name[1:]
-        for team in Team.objects.filter(platform="postgres-and-arango", member=user)
+        team.schema_name.lstrip("_")
+        for team in Team.objects.filter(platform="postgres-and-arango", member=dw_user)
     ]
 
     try:
-        logger.info("Getting new credentials for temporary user in ArangoDB")
+        logger.info("Connecting as root to ArangoDB")
+        database_data = settings.ARANGODB
+        client = ArangoClient(hosts=f"http://{database_data['HOST']}:{database_data['PORT']}")
+        sys_db = client.db(
+            "_system", username="root", password=database_data["PASSWORD"], verify=True
+        )
 
-        if team_dbs:
+        # Create a temporary user in ArangoDB with default permissions
+        db_password = "".join(secrets.choice(password_alphabet) for i in range(64))
+        sys_db.create_user(
+            username=db_user,
+            password=db_password,
+            active=True,
+        )
+        ArangoUser.objects.create(owner=dw_user, username=db_user)
+    except ServerConnectionError:
+        logger.info("ArangoDB connection error")
+    except UserCreateError:
+        logger.info("Unable to create user %s in ArangoDB", db_user)
 
-            # Make team databases
-            database_data = settings.ARANGODB
-            client = ArangoClient(hosts=f"http://{database_data['HOST']}:{database_data['PORT']}")
-            sys_db = client.db("_system", username="root", password=database_data["PASSWORD"])
+    try:
+        for team_db in team_dbs:
+            # Create a team database if it doesnt already exist
+            if not sys_db.has_database(team_db):
+                logger.info("Creating team database %s in ArangoDB", team_db)
+                sys_db.create_database(team_db)
 
-            # Make temporary user
-            db_password = "".join(secrets.choice(password_alphabet) for i in range(64))
-            if not sys_db.has_user(db_user):
-                sys_db.create_user(
-                    username=db_user,
-                    password=db_password,
-                    active=True,
-                )
-
-            # Give user read write access to temporary db
-            for team_db in team_dbs:
-
-                logger.info("Adding credentials for database %s in ArangoDB", team_db)
-                # Create Database if it doesnt already exist
-                if not sys_db.has_database(team_db):
-                    sys_db.create_database(team_db)
-
-                # Add user permissions
-                sys_db.update_permission(
-                    username=db_user,
-                    permission="rw",
-                    database=team_db,
-                )
+            # Give temporary user credentials read write access to team databases
+            logger.info("Adding credentials for database %s in ArangoDB", team_db)
+            sys_db.update_permission(
+                username=db_user,
+                permission="rw",
+                database=team_db,
+            )
 
         return {
             "ARANGO_HOST": database_data["HOST"],
@@ -72,7 +77,7 @@ def new_private_arangodb_credentials(
         }
 
     except Exception:  # pylint: disable=broad-except
-        logger.info("Unable to create temporary user in ArangoDB")
+        logger.info("Unable to add team database permissions for %s in ArangoDB", db_user)
         return {}
 
 
@@ -92,20 +97,18 @@ def delete_unused_arangodb_users():
 def _do_delete_unused_arangodb_users():
     logger.info("delete_unused_arangodb_users: Start")
 
-    # Connect to ArangoDB as root user and return all temporary user credentials
-    database_data = settings.ARANGODB
-
-    # Initialize the ArangoDB client.
-    client = ArangoClient(hosts=f"http://{database_data['HOST']}:{database_data['PORT']}")
-
-    # Connect to "_system" database as root user.
-    sys_db = client.db("_system", username="root", password=database_data["PASSWORD"])
-
     logger.info("delete_unused_arangodb_users: finding temporary database users")
-    # Returns all usernames for temporary users
-    temporary_usernames = [
-        user["username"] for user in sys_db.users() if user["username"].startswith("user_")
-    ]
+    try:
+        database_data = settings.ARANGODB
+        client = ArangoClient(hosts=f"http://{database_data['HOST']}:{database_data['PORT']}")
+        sys_db = client.db(
+            "_system", username="root", password=database_data["PASSWORD"], verify=True
+        )
+        temporary_usernames = [
+            user["username"] for user in sys_db.users() if user["username"].startswith("user_")
+        ]
+    except ServerConnectionError:
+        logger.info("ArangoDB connection error")
 
     logger.info("delete_unused_arangodb_users: waiting in case they were just created")
     gevent.sleep(15)
@@ -127,3 +130,4 @@ def _do_delete_unused_arangodb_users():
             username,
         )
         sys_db.delete_user(username)
+        ArangoUser.objects.filter(username=username).update(deleted_date=datetime.datetime.now())
