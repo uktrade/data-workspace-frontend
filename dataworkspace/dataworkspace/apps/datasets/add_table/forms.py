@@ -1,4 +1,3 @@
-from xml.dom import ValidationErr
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
     GOVUKDesignSystemForm,
