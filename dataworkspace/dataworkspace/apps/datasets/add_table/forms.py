@@ -1,3 +1,5 @@
+from django.forms import ValidationError
+
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
     GOVUKDesignSystemForm,
@@ -5,8 +7,6 @@ from dataworkspace.forms import (
     GOVUKDesignSystemRadiosWidget,
     GOVUKDesignSystemTextWidget,
 )
-from django.forms import ValidationError
-
 
 class TableSchemaForm(GOVUKDesignSystemForm):
     schema = GOVUKDesignSystemRadioField(
@@ -20,7 +20,6 @@ class TableSchemaForm(GOVUKDesignSystemForm):
         super().__init__(*args, **kwargs)
         if "schema_choices" in kwargs.get("initial", {}):
             self.fields["schema"].choices = kwargs.pop("initial")["schema_choices"]
-
 
 class DescriptiveNameForm(GOVUKDesignSystemForm):
 
@@ -38,7 +37,7 @@ class DescriptiveNameForm(GOVUKDesignSystemForm):
     descriptive_name = GOVUKDesignSystemCharField(
         label="Descriptive Name",
         required=True,
-        help_text="It should not contain the words 'record', 'data' or 'dataset'. It should also not contain underscores. For example, Companies in India.",
+        help_text="It should not contain the words 'record', 'data' or 'dataset'. It should also not contain underscores. For example, Companies in India.", # pylint: disable=line-too-long
         widget=GOVUKDesignSystemTextWidget(label_is_heading=False),
         error_messages={"required": "Enter a descriptive name"},
     )
