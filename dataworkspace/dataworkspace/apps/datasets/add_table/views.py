@@ -102,7 +102,8 @@ class DescriptiveNameView(FormView):
     def form_valid(self, form):
         clean_data = form.cleaned_data
         descriptive_name = clean_data["descriptive_name"]
-        # TODO add next link 
+        # TODO add next link
         return HttpResponseRedirect(
             reverse("datasets:add_table:table-name", args=(self.kwargs["pk"], descriptive_name))
         )
+    
