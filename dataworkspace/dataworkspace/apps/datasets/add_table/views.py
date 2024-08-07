@@ -4,11 +4,11 @@ from django.http import HttpResponseRedirect
 
 from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.datasets.constants import DataSetType
-<<<<<<< HEAD
-from dataworkspace.apps.datasets.add_table.forms import TableSchemaForm, DescriptiveNameForm
-=======
-from dataworkspace.apps.datasets.add_table.forms import TableNameForm, TableSchemaForm
->>>>>>> 37682ca8 (Add page for table name form with schema name in text input)
+from dataworkspace.apps.datasets.add_table.forms import (
+    TableNameForm,
+    TableSchemaForm,
+    DescriptiveNameForm,
+)
 
 
 class AddTableView(DetailView):
@@ -113,6 +113,7 @@ class DescriptiveNameView(FormView):
         return HttpResponseRedirect(
             reverse("datasets:add_table:table-name", args=(self.kwargs["pk"], descriptive_name))
         )
+
 
 class TableNameView(FormView):
     template_name = "datasets/add_table/table_name.html"

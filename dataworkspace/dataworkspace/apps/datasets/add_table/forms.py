@@ -24,7 +24,7 @@ class TableSchemaForm(GOVUKDesignSystemForm):
 
 
 class DescriptiveNameForm(GOVUKDesignSystemForm):
-  
+
     def clean_descriptive_name(self):
         cleaned_data = super().clean()
         descriptive_name = cleaned_data["descriptive_name"].lower()
