@@ -25,7 +25,7 @@ class TestDeleteUnusedArangoUsers:
     def test_deletes_expired_arango_users(self):
         user = UserFactory(email="test@foo.bar")
         team = TeamFactory(platform="postgres-and-arango")
-        member = TeamMembershipFactory(team=team, user=user)
+        _ = TeamMembershipFactory(team=team, user=user)
         user_count = ArangoUser.objects.count()
 
         database_data = settings.ARANGODB
@@ -43,7 +43,7 @@ class TestDeleteUnusedArangoUsers:
             delete_unused_arangodb_users()
 
         assert (
-            ArangoUser.objects.filter(user=user_creds_to_drop["ARANGO_USER"]).deleted_date
+            ArangoUser.objects.get(username=user_creds_to_drop["ARANGO_USER"]).deleted_date
             is not None
         )
         assert user_creds_to_drop["ARANGO_USER"] not in [u["username"] for u in sys_db.users()]
