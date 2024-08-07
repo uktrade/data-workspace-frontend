@@ -2952,7 +2952,12 @@ class Pipeline(TimeStampedUserModel):
 
     @property
     def dataflow_grid_view_url(self):
-        return settings.DATAFLOW_API_CONFIG["DATAFLOW_BASE_URL"] + "/dags/" + self.dag_id + "/grid"
+        base_url = (
+            settings.DATAFLOW_API_CONFIG["DATAFLOW_BASE_URL"]
+            if self.data_flow_platform == DataFlowPlatform.GOV_PAAS
+            else settings.DATAFLOW_API_CONFIG["DATAFLOW_BASE_URL_DATA_WORKSPACE_AWS_USER_FACING"]
+        )
+        return f"{base_url}/dags/{self.dag_id}/grid"
 
     def get_absolute_url(self):
         return reverse(f"pipelines:edit-{self.type}", args=(self.id,))
