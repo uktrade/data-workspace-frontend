@@ -50,7 +50,7 @@
   {% block head %}{% endblock %}
 </head>
 
-<body id="body" class="govuk-template__body">
+<body id="body" class="govuk-template__body govuk-frontend-supported">
   {% include 'partials/gtm_body.html' %}
 
   <script nonce="{{ request.csp_nonce }}">
@@ -64,7 +64,7 @@
       <div class="govuk-header__container govuk-width-container">
         <div class="govuk-header__logotype">
           <a href="{{ root_href }}"
-            class="govuk-header__link govuk-header__link--service-name">Data Workspace</a>
+            class="govuk-header__link govuk-header__service-name">Data Workspace</a>
             <strong class="govuk-tag govuk-phase-banner__content__tag ">Beta</strong>
         </div>
         <div class="app-header--suggestion">
@@ -133,7 +133,7 @@
   <footer class="govuk-footer " role="contentinfo">
     <div class="govuk-width-container ">
       <div class="govuk-footer__navigation">
-        <div class="govuk-footer__section">
+        <div class="govuk-footer__section govuk-grid-column-full">
           <h2 class="govuk-footer__heading govuk-heading-m">Services and information</h2>
           <ul class="govuk-footer__list govuk-footer__list--columns-2">
             <li class="govuk-footer__list-item">
@@ -214,13 +214,7 @@
     </div>
   </footer>
 
-  <script nonce="{{ request.csp_nonce }}"
-          src="{% get_static_prefix %}govuk-frontend-3.14.0.min.js"></script>
-  <script nonce="{{ request.csp_nonce }}">
-      window.GOVUKFrontend.initAll();
-  </script>
-
-  {% block footer_scripts %}
-  {% endblock %}
+  {% include "partials/init_govuk_frontend.html" %}
+  {% block footer_scripts %}{% endblock %}
 </body>
 </html>

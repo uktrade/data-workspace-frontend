@@ -1,9 +1,9 @@
-@import "govuk-frontend/govuk/helpers/colour";
+@import "govuk-frontend/dist/govuk/helpers/colour";
 
-@import "govuk-frontend/govuk/settings/media-queries";
-@import "govuk-frontend/govuk/helpers/media-queries";
+@import "govuk-frontend/dist/govuk/settings/media-queries";
+@import "govuk-frontend/dist/govuk/helpers/media-queries";
 
-@import "govuk-frontend/govuk/settings/colours-applied";
+@import "govuk-frontend/dist/govuk/settings/colours-applied";
 
 $light_label_color: govuk-colour("dark-grey");
 
