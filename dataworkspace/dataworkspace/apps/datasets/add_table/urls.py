@@ -32,7 +32,7 @@ urlpatterns = [
         name="descriptive-name",
     ),
     path(
-        "<str:schema>/table-name",
+        "<str:schema>/<str:descriptive_name>/table-name",
         login_required(TableNameView.as_view()),
         name="table-name",
     ),

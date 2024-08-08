@@ -111,7 +111,10 @@ class DescriptiveNameView(FormView):
         clean_data = form.cleaned_data
         descriptive_name = clean_data["descriptive_name"]
         return HttpResponseRedirect(
-            reverse("datasets:add_table:table-name", args=(self.kwargs["pk"], descriptive_name))
+            reverse(
+                "datasets:add_table:table-name",
+                args=(self.kwargs["pk"], self.kwargs["schema"], descriptive_name),
+            )
         )
 
 
@@ -124,6 +127,8 @@ class TableNameView(FormView):
         initial.update(
             {
                 "schema": self.kwargs["schema"],
+                "descriptive_name": self.kwargs["descriptive_name"],
+                "table_names": self.get_all_table_names(),
             }
         )
         return initial
@@ -141,6 +146,19 @@ class TableNameView(FormView):
 
         return len(set(schemas)) > 1
 
+    def get_all_table_names(self):
+        dataset = find_dataset(self.kwargs["pk"], self.request.user)
+        table_names = []
+        if dataset.type == DataSetType.MASTER:
+            tables = list(dataset.sourcetable_set.all())
+            for table in tables:
+                table_names.append(table.name)
+        else:
+            # Need to get reference tables somehow
+            table_names = ["tbd"]
+
+        return table_names
+
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         dataset = find_dataset(self.kwargs["pk"], self.request.user)
@@ -148,3 +166,6 @@ class TableNameView(FormView):
         ctx["model_name"] = dataset.name
         ctx["schema"] = self.kwargs["schema"]
         return ctx
+
+    def form_valid(self, form):
+        return ""

@@ -28,16 +28,19 @@
 
   <div class="govuk-input__wrapper">
     {% if widget.prefix %}
-  <div class="govuk-input__prefix" aria-hidden="true">{{ widget.prefix }}</div>
-   {% endif %}
+      <div class="govuk-input__prefix" aria-hidden="true">{{ widget.prefix }}</div>
+    {% endif %}
   <input
-          class="govuk-input {{ widget.extra_input_classes }}"
-          type="text"
-          name="{{ widget.name }}"
-          {% if widget.help_text %}aria-describedby="{{ id }}-hint" {% endif %}
-          {% include "django/forms/widgets/attrs.html" %}
-          {% include "design_system/partial/data_attributes.html" %}
-          value="{{ widget.value|default_if_none:'' }}"/>
+      class="govuk-input {{ widget.extra_input_classes }}"
+      type="text"
+      name="{{ widget.name }}"
+      {% if widget.help_text %}aria-describedby="{{ id }}-hint" {% endif %}
+      {% include "django/forms/widgets/attrs.html" %}
+      {% include "design_system/partial/data_attributes.html" %}
+      value="{{ widget.value|default_if_none:'' }}"/>
+  {% if widget.suffix %}
+      <div class="govuk-input__suffix" aria-hidden="true">{{ widget.suffix }}</div>
+  {% endif %}
 </div>
 </div>
 {% endwith %}

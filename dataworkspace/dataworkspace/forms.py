@@ -28,6 +28,7 @@ class GOVUKDesignSystemWidgetMixin:
         show_selected_file=False,
         data_attributes: dict = None,
         prefix=None,
+        suffix=None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -41,6 +42,7 @@ class GOVUKDesignSystemWidgetMixin:
             show_selected_file=show_selected_file,
             data_attributes=data_attributes,
             prefix=prefix,
+            suffix=suffix,
         )
 
     def __deepcopy__(self, memo):
