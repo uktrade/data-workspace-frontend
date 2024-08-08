@@ -148,13 +148,17 @@ class TableNameView(FormView):
         dataset = find_dataset(self.kwargs["pk"], self.request.user)
         table_names = []
         if dataset.type == DataSetType.MASTER:
+            print("master set")
             tables = list(dataset.sourcetable_set.all())
+            print("got tables?", tables)
             for table in tables:
+                print("table", table.name)
                 table_names.append(table.name)
         else:
             # Need to get reference tables somehow
             table_names = ["tbd"]
 
+        print(table_names)
         return table_names
 
     def get_context_data(self, **kwargs):

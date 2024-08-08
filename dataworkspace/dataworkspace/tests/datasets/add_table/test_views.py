@@ -20,7 +20,7 @@ class TestAddTable(TestCase):
             government_security_classification=2,
         )
         self.source = factories.SourceTableFactory.create(
-            dataset=self.dataset, schema="test", table="table1"
+            dataset=self.dataset, schema="test", table="table_one"
         )
 
     def test_about_service_page(self):
@@ -73,7 +73,7 @@ class TestAddTable(TestCase):
 
     def test_table_schema_page_when_multiple_schemas(self):
         self.source2 = factories.SourceTableFactory.create(
-            dataset=self.dataset, schema="dbt", table="table2"
+            dataset=self.dataset, schema="dbt", table="table_two"
         )
 
         response = self.client.get(
@@ -104,7 +104,7 @@ class TestAddTable(TestCase):
 
     def test_table_schema_page_when_all_tables_have_same_schema(self):
         self.source2 = factories.SourceTableFactory.create(
-            dataset=self.dataset, schema="test", table="table2"
+            dataset=self.dataset, schema="test", table="table_two"
         )
 
         response = self.client.get(
@@ -132,10 +132,10 @@ class TestAddTable(TestCase):
 
     def test_table_schema_page_when_some_tables_have_same_schema(self):
         self.source2 = factories.SourceTableFactory.create(
-            dataset=self.dataset, schema="dbt", table="table2"
+            dataset=self.dataset, schema="dbt", table="table_two"
         )
         self.source2 = factories.SourceTableFactory.create(
-            dataset=self.dataset, schema="dbt", table="table3"
+            dataset=self.dataset, schema="dbt", table="table"
         )
 
         response = self.client.get(
@@ -209,7 +209,7 @@ class TestDescriptiveNamePage(TestCase):
             government_security_classification=2,
         )
         self.source = factories.SourceTableFactory.create(
-            dataset=self.dataset, schema="test", table="table1"
+            dataset=self.dataset, schema="test", table="table_one"
         )
 
     def test_descriptive_table_name_page(self):
@@ -247,15 +247,15 @@ class TestDescriptiveNamePage(TestCase):
                 {"descriptive_name": word},
             )
 
-        soup = BeautifulSoup(response.content.decode(response.charset))
-        error_header_text = soup.find("h2").get_text(strip=True)
-        error_message_text = (
-            soup.find("ul", class_="govuk-list govuk-error-summary__list").find("a").contents
-        )
+            soup = BeautifulSoup(response.content.decode(response.charset))
+            error_header_text = soup.find("h2").get_text(strip=True)
+            error_message_text = (
+                soup.find("ul", class_="govuk-list govuk-error-summary__list").find("a").contents
+            )
 
-        assert response.status_code == 200
-        assert "There is a problem" in error_header_text
-        assert f"Descriptive name cannot contain the word '{word}'" in error_message_text
+            assert response.status_code == 200
+            assert "There is a problem" in error_header_text
+            assert f"Descriptive name cannot contain the word '{word}'" in error_message_text
 
     def test_error_shows_when_descriptive_table_name_input_contains_underscores(self):
         response = self.client.post(
@@ -308,9 +308,23 @@ class TestTableNamePage(TestCase):
             government_security_classification=2,
         )
         self.source = factories.SourceTableFactory.create(
-            dataset=self.dataset, schema="test", table="table1"
+            dataset=self.dataset, schema="test", table="table_one"
         )
         self.descriptive_name = "my_table"
+
+    def get_post_response(self, table_name):
+        response = self.client.post(
+            reverse(
+                "datasets:add_table:table-name",
+                kwargs={
+                    "pk": self.dataset.id,
+                    "schema": self.source.schema,
+                    "descriptive_name": self.descriptive_name,
+                },
+            ),
+            {"table_name": table_name},
+        )
+        return response
 
     def test_table_name_page(self):
         response = self.client.get(
@@ -346,7 +360,7 @@ class TestTableNamePage(TestCase):
 
     def test_table_name_page_when_multiple_schemas(self):
         self.source2 = factories.SourceTableFactory.create(
-            dataset=self.dataset, schema="dbt", table="table2"
+            dataset=self.dataset, schema="dbt", table="table_two"
         )
 
         response = self.client.get(
@@ -369,17 +383,7 @@ class TestTableNamePage(TestCase):
     def test_error_shows_when_table_name_input_contains_prohibited_word(self):
         words = ["record", "dataset", "data"]
         for word in words:
-            response = self.client.post(
-                reverse(
-                    "datasets:add_table:table-name",
-                    kwargs={
-                        "pk": self.dataset.id,
-                        "schema": self.source.schema,
-                        "descriptive_name": self.descriptive_name,
-                    },
-                ),
-                {"table_name": word},
-            )
+            response = self.get_post_response(word)
 
         soup = BeautifulSoup(response.content.decode(response.charset))
         error_header_text = soup.find("h2").get_text(strip=True)
@@ -390,3 +394,57 @@ class TestTableNamePage(TestCase):
         assert response.status_code == 200
         assert "There is a problem" in error_header_text
         assert f"Table name cannot contain the word '{word}'" in error_message_text
+
+    def test_error_shows_when_table_name_input_is_empty(self):
+        response = self.get_post_response("")
+
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        error_header_text = soup.find("h2").get_text(strip=True)
+        error_message_text = (
+            soup.find("ul", class_="govuk-list govuk-error-summary__list").find("a").contents
+        )
+
+        assert response.status_code == 200
+        assert "There is a problem" in error_header_text
+        assert f"Enter a table name" in error_message_text
+
+    def test_error_shows_when_table_name_input_is_over_42_characters(self):
+        response = self.get_post_response("this_is_a_really_long_table_name_to_test_the_error")
+
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        error_header_text = soup.find("h2").get_text(strip=True)
+        error_message_text = (
+            soup.find("ul", class_="govuk-list govuk-error-summary__list").find("a").contents
+        )
+
+        assert response.status_code == 200
+        assert "There is a problem" in error_header_text
+        assert f"Table name must be 42 characters or less" in error_message_text
+
+    def test_error_shows_when_table_name_contains_special_characters_or_numbers(self):
+        invalid_names = ["specialCharacter@", "has spaces", "numbers123"]
+        for invalid_name in invalid_names:
+            response = self.get_post_response(invalid_name)
+
+            soup = BeautifulSoup(response.content.decode(response.charset))
+            error_header_text = soup.find("h2").get_text(strip=True)
+            error_message_text = (
+                soup.find("ul", class_="govuk-list govuk-error-summary__list").find("a").contents
+            )
+
+            assert response.status_code == 200
+            assert "There is a problem" in error_header_text
+            assert f"Table name cannot contain numbers or special characters" in error_message_text
+
+    def test_error_shows_when_table_name_is_already_in_use(self):
+        response = self.get_post_response(self.source.table)
+
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        error_header_text = soup.find("h2").get_text(strip=True)
+        error_message_text = (
+            soup.find("ul", class_="govuk-list govuk-error-summary__list").find("a").contents
+        )
+
+        assert response.status_code == 200
+        assert "There is a problem" in error_header_text
+        assert f"Table name already in use" in error_message_text
