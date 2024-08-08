@@ -37,7 +37,7 @@ class DescriptiveNameForm(GOVUKDesignSystemForm):
         return descriptive_name
 
     descriptive_name = GOVUKDesignSystemCharField(
-        label="Descriptive Name",
+        label="Enter a descriptive name for your table",
         required=True,
         help_text="It should not contain the words 'record', 'data' or 'dataset'. It should also not contain underscores. For example, Companies in India.",  # pylint: disable=line-too-long
         widget=GOVUKDesignSystemTextWidget(label_is_heading=False),
@@ -74,7 +74,7 @@ class TableNameForm(GOVUKDesignSystemForm):
         elif "dataset" in table_name:
             raise ValidationError("Table name cannot contain the word 'dataset'")
         elif "data" in table_name:
-            raise ValidationError("Descriptive name cannot contain the word 'data'")
+            raise ValidationError("Table name cannot contain the word 'data'")
         elif "record" in table_name:
-            raise ValidationError("Descriptive name cannot contain the word 'record'")
+            raise ValidationError("Table name cannot contain the word 'record'")
         return table_name

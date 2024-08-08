@@ -104,12 +104,10 @@ class DescriptiveNameView(FormView):
             "datasets:add_table:classification-check",
             args=(self.kwargs["pk"], self.kwargs["schema"]),
         )
-        ctx["nextlink"] = ""
         return ctx
 
     def form_valid(self, form):
-        clean_data = form.cleaned_data
-        descriptive_name = clean_data["descriptive_name"]
+        descriptive_name = form.cleaned_data["descriptive_name"]
         return HttpResponseRedirect(
             reverse(
                 "datasets:add_table:table-name",
@@ -165,7 +163,18 @@ class TableNameView(FormView):
         ctx["is_multiple_schemas"] = self.is_multiple_schemas(dataset)
         ctx["model_name"] = dataset.name
         ctx["schema"] = self.kwargs["schema"]
+        ctx["backlink"] = reverse(
+            "datasets:add_table:descriptive-name",
+            args=(self.kwargs["pk"], self.kwargs["schema"]),
+        )
         return ctx
 
     def form_valid(self, form):
-        return ""
+        table_name = form.cleaned_data["table_name"]
+        return HttpResponseRedirect(
+            ("/")
+            # reverse(
+            #     "datasets:add_table:{NEW_PAGE}",
+            #     args=(self.kwargs["pk"], self.kwargs["schema"], self.kwargs["descriptive_name"], table_name),
+            # )
+        )
