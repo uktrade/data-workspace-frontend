@@ -573,6 +573,13 @@ def source_tables_for_app(application_template):
         dataset__published=True,
         dataset__deleted=False,
         published=True,
+    ).values(
+        "database__memorable_name",
+        "schema",
+        "table",
+        "dataset__id",
+        "dataset__name",
+        "dataset__user_access_type",
     )
     req_authorization_tables = SourceTable.objects.filter(
         published=True,
@@ -580,34 +587,42 @@ def source_tables_for_app(application_template):
         dataset__deleted=False,
         dataset__user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
         dataset__datasetapplicationtemplatepermission__application_template=application_template,
+    ).values(
+        "database__memorable_name",
+        "schema",
+        "table",
+        "dataset__id",
+        "dataset__name",
+        "dataset__user_access_type",
     )
     source_tables = [
         {
-            "database": x.database.memorable_name,
-            "schema": x.schema,
-            "table": x.table,
+            "database": x["database__memorable_name"],
+            "schema": x["schema"],
+            "table": x["table"],
             "dataset": {
-                "id": x.dataset.id,
-                "name": x.dataset.name,
-                "user_access_type": x.dataset.user_access_type,
+                "id": x["dataset__id"],
+                "name": x["dataset__name"],
+                "user_access_type": x["dataset__user_access_type"],
             },
         }
         for x in req_authentication_tables.union(req_authorization_tables)
     ]
     reference_dataset_tables = [
         {
-            "database": x.external_database.memorable_name,
+            "database": x["external_database__memorable_name"],
             "schema": "public",
-            "table": x.table_name,
+            "table": x["table_name"],
             "dataset": {
-                "id": x.uuid,
-                "name": x.name,
+                "id": x["uuid"],
+                "name": x["name"],
                 "user_access_type": UserAccessType.REQUIRES_AUTHENTICATION,
             },
         }
         for x in ReferenceDataset.objects.live()
         .filter(published=True, deleted=False)
         .exclude(external_database=None)
+        .values("external_database__memorable_name", "table_name", "uuid", "name")
     ]
     return source_tables + reference_dataset_tables
 
