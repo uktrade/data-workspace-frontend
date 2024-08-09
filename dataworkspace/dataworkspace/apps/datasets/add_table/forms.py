@@ -40,7 +40,7 @@ class DescriptiveNameForm(GOVUKDesignSystemForm):
         label="Enter a descriptive name for your table",
         required=True,
         help_text="It should not contain the words 'record', 'data' or 'dataset'. It should also not contain underscores. For example, Companies in India.",  # pylint: disable=line-too-long
-        widget=GOVUKDesignSystemTextWidget(label_is_heading=False),
+        widget=GOVUKDesignSystemTextWidget(label_is_heading=True, label_size="l"),
         error_messages={"required": "Enter a descriptive name"},
     )
 
