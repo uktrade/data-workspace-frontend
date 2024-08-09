@@ -158,7 +158,6 @@ django==4.2.15
     #   django-js-asset
     #   django-redis
     #   django-staff-sso-client
-    #   django-tinymce
     #   djangorestframework
 django-admin-sortable2==2.1.10
     # via -r requirements.txt
@@ -198,10 +197,6 @@ django-redis==5.4.0
     # via -r requirements.txt
 django-staff-sso-client==4.2.1
     # via -r requirements.txt
-django-tinymce==4.1.0
-    # via
-    #   -r requirements-dev.in
-    #   -r requirements.txt
 django-waffle==2.0.0
     # via -r requirements.txt
 django-webpack-loader==1.4.1

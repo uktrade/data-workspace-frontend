@@ -95,7 +95,6 @@ django==4.2.15
     #   django-js-asset
     #   django-redis
     #   django-staff-sso-client
-    #   django-tinymce
     #   djangorestframework
 django-admin-sortable2==2.1.10
     # via -r requirements.in
@@ -128,8 +127,6 @@ django-maintenance-mode==0.21.0
 django-redis==5.4.0
     # via -r requirements.in
 django-staff-sso-client==4.2.1
-    # via -r requirements.in
-django-tinymce==4.1.0
     # via -r requirements.in
 django-waffle==2.0.0
     # via -r requirements.in
@@ -283,9 +280,7 @@ six==1.15.0
     #   tenacity
     #   zenpy
 smart-open[s3]==6.4.0
-    # via
-    #   -r requirements.in
-    #   smart-open
+    # via -r requirements.in
 soupsieve==2.3.2.post1
     # via beautifulsoup4
 sqlalchemy==2.0.12

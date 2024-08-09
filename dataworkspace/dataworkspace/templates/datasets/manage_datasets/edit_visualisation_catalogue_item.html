@@ -1,4 +1,5 @@
 {% extends '_main.html' %}
+{% load render_bundle from webpack_loader %}
 {% load humanize static datasets_tags core_tags waffle_tags %}
 
 {% block head %}
@@ -194,5 +195,5 @@
       })
     })
   </script>
-  {% include 'partials/tinymce.html' %}
+{% include 'partials/tinymce.html' %}
 {% endblock footer_scripts %}

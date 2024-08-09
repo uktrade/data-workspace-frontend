@@ -2,17 +2,17 @@
 These styles refer to the TinyMCE rich text editor - https://www.tiny.cloud/docs/tinymce/latest/.
 */
 textarea[data-type="rich-text-editor"] + .tox {
-    width: 100% !important;
-    border: 2px solid $govuk-focus-text-colour;
-    border-radius: 0;
+  width: 100% !important;
+  border: 2px solid $govuk-focus-text-colour;
+  border-radius: 0;
 
-    .tox-editor-header {
-        box-shadow: none;
-        border-bottom: 2px solid $govuk-focus-text-colour;
-    }
-    .tox-statusbar__branding{
-        display: none;
-    }
+  .tox-editor-header {
+    box-shadow: none;
+    border-bottom: 2px solid $govuk-focus-text-colour;
+  }
+  .tox-statusbar__branding {
+    display: none;
+  }
 }
 
 /* 
@@ -22,5 +22,5 @@ div[aria-label="Heading 1"].tox-menu-nav__js,
 div[aria-label="Heading 2"].tox-menu-nav__js,
 div[aria-label="Heading 5"].tox-menu-nav__js,
 div[aria-label="Heading 6"].tox-menu-nav__js {
-    display: none;
+  display: none;
 }
