@@ -175,7 +175,7 @@ class TableNameView(FormView):
         return ctx
 
     def form_valid(self, form):
-        table_name = form.cleaned_data["table_name"]
+        # table_name = form.cleaned_data["table_name"]
         return HttpResponseRedirect(
             ("/")
             # reverse(

@@ -406,7 +406,7 @@ class TestTableNamePage(TestCase):
 
         assert response.status_code == 200
         assert "There is a problem" in error_header_text
-        assert f"Enter a table name" in error_message_text
+        assert "Enter a table name" in error_message_text
 
     def test_error_shows_when_table_name_input_is_over_42_characters(self):
         response = self.get_post_response("this_is_a_really_long_table_name_to_test_the_error")
@@ -419,7 +419,7 @@ class TestTableNamePage(TestCase):
 
         assert response.status_code == 200
         assert "There is a problem" in error_header_text
-        assert f"Table name must be 42 characters or less" in error_message_text
+        assert "Table name must be 42 characters or less" in error_message_text
 
     def test_error_shows_when_table_name_contains_special_characters_or_numbers(self):
         invalid_names = ["specialCharacter@", "has spaces", "numbers123"]
@@ -434,7 +434,7 @@ class TestTableNamePage(TestCase):
 
             assert response.status_code == 200
             assert "There is a problem" in error_header_text
-            assert f"Table name cannot contain numbers or special characters" in error_message_text
+            assert "Table name cannot contain numbers or special characters" in error_message_text
 
     def test_error_shows_when_table_name_is_already_in_use(self):
         response = self.get_post_response(self.source.table)
@@ -447,4 +447,4 @@ class TestTableNamePage(TestCase):
 
         assert response.status_code == 200
         assert "There is a problem" in error_header_text
-        assert f"Table name already in use" in error_message_text
+        assert "Table name already in use" in error_message_text
