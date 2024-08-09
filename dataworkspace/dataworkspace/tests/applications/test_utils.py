@@ -1009,8 +1009,6 @@ class TestSyncS3SSOUsers:
                 last_published,
             )
 
-            print(process_staff_results)
-
             assert process_staff_results[0] == [user_1["object"]["dit:StaffSSO:User:userId"]]
             assert process_staff_results[1] == last_published
 
