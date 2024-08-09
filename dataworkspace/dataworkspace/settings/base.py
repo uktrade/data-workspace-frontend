@@ -479,7 +479,6 @@ WEBPACK_SCRIPT_SRC = [] + (
     else []
 )
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
 S3_ASSUME_ROLE_POLICY_DOCUMENT = base64.b64decode(
