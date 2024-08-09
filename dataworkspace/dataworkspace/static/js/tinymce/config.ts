@@ -12,7 +12,7 @@ const tinymce_default_config: TinyMceOptions = {
   plugins:
     'advlist autolink lists link searchreplace visualblocks code codesample fullscreen insertdatetime media table code wordcount',
   toolbar:
-    'undo redo | blocks | bold italic | fontselect fontsizeselect formatselect | alignleft aligncenter alignright alignjustify | numlist bullist checklist | link codesample code',
+    'undo redo | blocks | bold italic | fontselect fontsizeselect formatselect | alignleft aligncenter alignright alignjustify | numlist bullist checklist | link codesample code'
 };
 
 const tinymce_link_config: TinyMceOptions = {

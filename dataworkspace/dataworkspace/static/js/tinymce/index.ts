@@ -18,4 +18,4 @@ import 'tinymce/plugins/fullscreen';
 import 'tinymce/skins/content/default/content';
 import 'tinymce/skins/ui/oxide/skin';
 import 'tinymce/skins/ui/oxide/content';
-import './config'
+import './config';
