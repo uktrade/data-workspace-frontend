@@ -1304,6 +1304,7 @@ def sync_s3_sso_users():
 def _do_get_staff_sso_s3_object_summaries(s3_bucket):
     logger.info("sync_s3_sso_users: Reading files from bucket %s", s3_bucket)
     files = s3_bucket.objects.filter(Prefix="data-flow-exports")
+
     # Get the list of files, oldest first. Process in that order, so any changes in newer files take precedence
     sorted_files = sorted(files, key=lambda x: x.last_modified, reverse=False)
     for file in sorted_files:
@@ -1312,8 +1313,12 @@ def _do_get_staff_sso_s3_object_summaries(s3_bucket):
     return sorted_files
 
 
-def _process_staff_sso_file(client, source_key, last_processed_datetime):
+def _process_staff_sso_file(
+    client, source_key, last_processed_datetime
+) -> tuple[list[int], datetime.datetime]:
     new_last_processed_datetime = last_processed_datetime
+    seen_user_ids = []
+
     with smart_open(
         source_key,
         "r",
@@ -1324,18 +1329,22 @@ def _process_staff_sso_file(client, source_key, last_processed_datetime):
     ) as file_input_stream:  # type: ignore
         logger.info("sync_s3_sso_users: Processing file %s", source_key)
         for line in file_input_stream:
+            if not line or line == "\n":
+                continue
 
             user = json.loads(line)
+            user_obj = user["object"]
+            user_id = user_obj.get("dit:StaffSSO:User:userId")
+
             published = user.get("published")
 
             published_date = parser.parse(published)
 
             if published_date < last_processed_datetime:
                 # This items published date is before the last processed date, can be ignored
+                seen_user_ids.append(user_id)
                 continue
 
-            user_obj = user["object"]
-            user_id = user_obj.get("dit:StaffSSO:User:userId")
             emails = user_obj.get("dit:emailAddress", [])
             primary_email = user_obj.get("dit:StaffSSO:User:contactEmailAddress") or emails[0]
             first_name = user_obj.get("dit:firstName")
@@ -1350,7 +1359,7 @@ def _process_staff_sso_file(client, source_key, last_processed_datetime):
                     last_processed_datetime,
                 )
                 try:
-                    create_user_from_sso(
+                    user = create_user_from_sso(
                         user_id,
                         primary_email,
                         first_name,
@@ -1361,12 +1370,32 @@ def _process_staff_sso_file(client, source_key, last_processed_datetime):
 
                     if published_date > new_last_processed_datetime:
                         new_last_processed_datetime = published_date
+
+                    seen_user_ids.append(user_id)
                 except IntegrityError:
                     logger.exception("sync_s3_sso_users: Failed to create user record")
             else:
-                logger.info("S3_SSO_IMPORT_ENABLED is disabled, user will not be added")
+                logger.info(
+                    "sync_s3_sso_users: S3_SSO_IMPORT_ENABLED is disabled, user %s will not be added",
+                    user_id,
+                )
 
-    return new_last_processed_datetime
+    return seen_user_ids, new_last_processed_datetime
+
+
+def _get_seen_ids_and_last_processed(
+    files, client, last_processed_datetime
+) -> tuple[list[int], datetime.datetime]:
+    seen_user_ids = list[int]()
+    latest_processed_datetime = last_processed_datetime
+
+    for file in files:
+        seen_ids_in_file, new_last_processed = _process_staff_sso_file(
+            client, file.source_key, last_processed_datetime
+        )
+        seen_user_ids.extend(seen_ids_in_file)
+        latest_processed_datetime = new_last_processed
+    return list(set(seen_user_ids)), latest_processed_datetime
 
 
 def _do_sync_s3_sso_users():
@@ -1375,34 +1404,40 @@ def _do_sync_s3_sso_users():
         datetime.datetime.fromtimestamp(0, tz=tzlocal()),
     )
     logger.info("sync_s3_sso_users: Starting with last published date of %s", last_published)
-    ten_seconds_before_last_published = last_published - datetime.timedelta(seconds=10)
 
     new_last_processed = last_published
-
-    # There should only be one file as we delete the files once processed, however the pipeline
-    # frequency might be increased and there are multiple files we need to process. How do we
-    # handle multiple files, with the same data in both? Which file takes priority. Start by processing oldest to newest
 
     s3_resource = get_s3_resource()
     bucket = s3_resource.Bucket(settings.AWS_UPLOADS_BUCKET)
     files = _do_get_staff_sso_s3_object_summaries(bucket)
 
-    for file in files:
-        new_last_processed = _process_staff_sso_file(
-            s3_resource.meta.client, file.source_key, ten_seconds_before_last_published
-        )
-    logger.info("sync_s3_sso_users: New last_published date for cache %s", new_last_processed)
-
-    # At the end of the loop, delete all loaded files
     if len(files) > 0:
+        seen_result = _get_seen_ids_and_last_processed(
+            files, s3_resource.meta.client, new_last_processed
+        )
+        new_last_processed = seen_result[1]
+        if len(seen_result[0]) > 0:
+            unseen_user_profiles = Profile.objects.exclude(
+                user__username__in=seen_result[0]
+            ).filter(sso_status="active")
+
+            logger.info(
+                "sync_s3_sso_users: %s active users exist locally but not in SSO. Marking as inactive",
+                unseen_user_profiles.count(),
+            )
+            unseen_user_profiles.update(sso_status="inactive")
+
+        logger.info("sync_s3_sso_users: New last_published date for cache %s", new_last_processed)
+
+        # At the end of the loop, delete all loaded files
         delete_keys = [{"Key": file.key} for file in files]
         logger.info("sync_s3_sso_users: Deleting keys %s", delete_keys)
         bucket.delete_objects(Delete={"Objects": delete_keys})
-    else:
-        logger.info("sync_s3_sso_users: No files to delete")
 
-    # At the end of the loop set the cache
-    cache.set("s3_sso_sync_last_published", new_last_processed)
+        # At the end of the loop set the cache
+        cache.set("s3_sso_sync_last_published", new_last_processed)
+    else:
+        logger.info("sync_s3_sso_users: No files to process")
 
 
 def fetch_visualisation_log_events(log_group, log_stream):
