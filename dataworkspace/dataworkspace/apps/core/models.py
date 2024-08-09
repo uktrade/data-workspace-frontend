@@ -93,19 +93,13 @@ class DeletableTimestampedUserModel(DeletableModel, TimeStampedUserModel):
 
 class RichTextField(models.TextField):
     def formfield(self, **kwargs):
-        kwargs.update(
-            {"form_class": forms.CharField}
-        )
+        kwargs.update({"form_class": forms.CharField})
         return super().formfield(**kwargs)
 
 
 class RichLinkField(models.TextField):
     def formfield(self, **kwargs):
-        kwargs.update(
-            {
-                "form_class": forms.CharField
-            }
-        )
+        kwargs.update({"form_class": forms.CharField})
         return super().formfield(**kwargs)
 
 

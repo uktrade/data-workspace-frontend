@@ -184,7 +184,7 @@ urlpatterns = [
         "restore-table/status/<str:execution_date>/<str:task_id>",
         login_required(RestoreTableDAGTaskStatusView.as_view()),
         name="restore-table-task-status",
-    )
+    ),
 ]
 
 if settings.DEBUG:
