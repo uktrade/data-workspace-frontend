@@ -1,6 +1,22 @@
 {% extends 'admin/change_form.html' %}
 {% load static core_tags cache %}
+{% block extrastyle %}{{ block.super }}
+<style>
+/* 
+These styles refer to the TinyMCE rich text editor - https://www.tiny.cloud/docs/tinymce/latest/.
+As we don't allow users to use certain heading levels inside the text area we are removing them as an option.
+*/
+div[title="Heading 1"].tox-menu-nav__js,
+div[title="Heading 2"].tox-menu-nav__js,
+div[title="Heading 5"].tox-menu-nav__js,
+div[title="Heading 6"].tox-menu-nav__js {
+    display: none;
+}
+</style>
+{% endblock %}
 {% block after_related_objects %}
+  {% load render_bundle from webpack_loader %}
+  {% render_bundle "tinymce" "js" %}
   {% with adminform.form.instance as instance %}
     {% if instance.id %}
       {{ instance.get_column_config|json_script:"column_data" }}

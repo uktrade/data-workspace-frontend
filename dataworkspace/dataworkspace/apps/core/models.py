@@ -7,8 +7,6 @@ from django.db import models
 from django.db.models.signals import pre_delete, post_delete
 from django.core.validators import RegexValidator
 
-from tinymce.widgets import TinyMCE
-
 # Proxy model to allow us to use SSO ID as the username
 
 
@@ -96,7 +94,7 @@ class DeletableTimestampedUserModel(DeletableModel, TimeStampedUserModel):
 class RichTextField(models.TextField):
     def formfield(self, **kwargs):
         kwargs.update(
-            {"form_class": forms.CharField, "widget": TinyMCE(attrs={"cols": 80, "rows": 30})}
+            {"form_class": forms.CharField}
         )
         return super().formfield(**kwargs)
 
@@ -105,10 +103,7 @@ class RichLinkField(models.TextField):
     def formfield(self, **kwargs):
         kwargs.update(
             {
-                "form_class": forms.CharField,
-                "widget": TinyMCE(
-                    attrs={"cols": 80, "rows": 30}, mce_attrs=settings.TINYMCE_LINK_CONFIG
-                ),
+                "form_class": forms.CharField
             }
         )
         return super().formfield(**kwargs)
