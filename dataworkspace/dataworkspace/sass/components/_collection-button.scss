@@ -1,0 +1,106 @@
+// credit to market-access-python-frontend https://github.com/uktrade/market-access-python-frontend/blob/1f0172bbee5df22ca0e4063c0c88e12f8af758be/core/frontend/src/css/app-components/_dash-button.scss
+
+$small-gap: govuk-spacing(2);
+$big-gap: govuk-spacing(6);
+$background-colour: $govuk-brand-colour;
+
+.collection-buttons-cards-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $small-gap;
+  padding: 0;
+
+  @include mq($from: tablet) {
+    gap: $big-gap;
+  }
+}
+
+.collection-button__item {
+  display: block;
+  width: 100%;
+  padding: 0;
+  @include mq($from: tablet) {
+    width: calc(100% / 2 - (#{$big-gap} * 1) / 2);
+  }
+  @include mq($from: desktop) {
+    width: calc(100% / 3 - (#{$big-gap} * 2) / 3);
+  }
+}
+
+.collection-button__link {
+  @extend .govuk-button;
+  @extend .govuk-button--start;
+  text-align: left;
+  background: $background-colour;
+  margin: 0;
+  box-sizing: border-box;
+  min-height: govuk-em(70, 16);
+  height: 100%;
+  width: 100%;
+  display: block;
+
+  &:hover {
+    background-color: govuk-shade($background-colour, 20);
+  }
+
+  &:focus {
+    .collection-button__heading,
+    .collection-button__text {
+      color: govuk-colour("black");
+    }
+  }
+
+  padding: govuk-spacing(2);
+  @include mq($from: tablet) {
+    padding: govuk-spacing(3);
+  }
+}
+
+.collection-for-all-button__link {
+  @extend .govuk-button;
+  @extend .govuk-button--start;
+  text-align: left;
+  background: white;
+  border: solid;
+  border-width: medium;
+  border-color: $background-colour;
+  color: $background-colour !important;
+  margin: 0;
+  box-sizing: border-box;
+  box-shadow: none;
+  min-height: govuk-em(70, 16);
+  height: 100%;
+  width: 100%;
+  display: block;
+
+  &:hover {
+    @extend .govuk-button, :hover;
+    background-color: govuk-shade(white, 5);
+    color: $background-colour;
+  }
+  padding: govuk-spacing(2);
+  @include mq($from: tablet) {
+    padding: govuk-spacing(3);
+  }
+
+  .collection-button__heading {
+    color: $background-colour;
+  }
+
+  &:focus {
+    .collection-button__heading,
+    .collection-button__text {
+      color: govuk-colour("black");
+    }
+  }
+}
+
+.collection-button__text {
+  @include govuk-font($size: 14);
+  display: block;
+  padding-top: govuk-spacing(2);
+}
+
+.collection-button__heading {
+  color: govuk-colour("white");
+}

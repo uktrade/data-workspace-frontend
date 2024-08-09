@@ -1,0 +1,30 @@
+.app-header--suggestion {
+  display: none;
+}
+@media (min-width: 48.05em) {
+  .app-header--suggestion {
+    display: block;
+    float: right;
+  }
+}
+
+.govuk-header__menu-button {
+  top: 12px; /* The original value is 20px */
+}
+@media (min-width: 40.0625em) {
+  .govuk-header__menu-button {
+    top: 15px; /* The original GDS value */
+  }
+}
+
+.govuk-header__navigation {
+  padding-left: 0;
+  margin: 0 0 govuk-spacing(2) 0;
+  list-style: none;
+}
+
+.home-header {
+  .govuk-header {
+    border-bottom: none;
+  }
+}

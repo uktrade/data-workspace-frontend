@@ -1,5 +1,5 @@
-@import "govuk-frontend/govuk/settings/colours-applied";
-@import "govuk-frontend/govuk/helpers/typography";
+@import "govuk-frontend/dist/govuk/settings/colours-applied";
+@import "govuk-frontend/dist/govuk/helpers/typography";
 
 
 .filter-widget .filter-container {
@@ -26,57 +26,13 @@
   background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEwIDE4QzExLjc3NSAxNy45OTk2IDEzLjQ5ODggMTcuNDA1NCAxNC44OTcgMTYuMzEyTDE5LjI5MyAyMC43MDhMMjAuNzA3IDE5LjI5NEwxNi4zMTEgMTQuODk4QzE3LjQwNSAxMy40OTk3IDE3Ljk5OTYgMTEuNzc1NCAxOCAxMEMxOCA1LjU4OSAxNC40MTEgMiAxMCAyQzUuNTg5IDIgMiA1LjU4OSAyIDEwQzIgMTQuNDExIDUuNTg5IDE4IDEwIDE4Wk0xMCA0QzEzLjMwOSA0IDE2IDYuNjkxIDE2IDEwQzE2IDEzLjMwOSAxMy4zMDkgMTYgMTAgMTZDNi42OTEgMTYgNCAxMy4zMDkgNCAxMEM0IDYuNjkxIDYuNjkxIDQgMTAgNFoiIGZpbGw9ImJsYWNrIi8+Cjwvc3ZnPgo=");
 }
 
-.filters-container .govuk-accordion__controls {
-  display: none;
-}
-
-.ways-to-use-our-data-container {
-  button.govuk-accordion__open-all{
-    display:none;
-  }
-}
-
-.accordion-filter, .ways-to-use-our-data-container {
-
+.accordion-filter {
   .accordion-filter-checkboxes {
     padding-left: 1rem;
   }
 
   .govuk-accordion__section-content {
     padding-top: 0;
-  }
-
-  button.govuk-accordion__section-button {
-    margin-left: 33px;
-    @include govuk-font(19);
-
-    span.govuk-accordion__icon {
-      left: 3px;
-
-      &:after, &:before {
-        content: "";
-        background-color: transparent;
-      }
-
-      &:after {
-        content: "";
-        -webkit-box-sizing: border-box;
-        box-sizing: border-box;
-        display: block;
-        position: absolute;
-        top: 0;
-        right: 0;
-        bottom: 0.3125rem;
-        left: 0.375rem;
-        width: 0.675rem;
-        height: 0.675rem;
-        -webkit-transform: rotate(-225deg);
-        -ms-transform: rotate(-225deg);
-        transform: rotate(-225deg);
-        border-top: 0.125rem solid $govuk-link-colour;
-        border-right: 0.125rem solid $govuk-link-colour;
-      }
-    }
   }
 
   .govuk-accordion__section--expanded {
@@ -92,5 +48,3 @@
     }
   }
 }
-
-

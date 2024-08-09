@@ -14,3 +14,31 @@
   position: relative;
   height: 100vh;
 }
+
+.app-\!-fill-width {
+  width: 100%;
+}
+
+.js-enabled .app-js-hidden {
+  display: none;
+}
+
+.hidden {
+  display: none;
+}
+
+.word-wrap {
+  word-wrap: break-word;
+}
+
+.fixed-table-height {
+  max-height: 100% !important;
+}
+
+.govuk-table__cell--word-wrapper {
+  word-break: break-word;
+}
+
+.app-table_cell--no-border {
+  border-bottom: none;
+}
