@@ -7,6 +7,7 @@ from dataworkspace.apps.datasets.add_table.forms import (
     TableNameForm,
     TableSchemaForm,
     DescriptiveNameForm,
+    UploadCSVForm,
 )
 
 
@@ -155,11 +156,25 @@ class TableNameView(FormView):
         return ctx
 
     def form_valid(self, form):
-        # table_name = form.cleaned_data["table_name"]
+        table_name = form.cleaned_data["table_name"]
         return HttpResponseRedirect(
-            ("/")
-            # reverse(
-            #     "datasets:add_table:{NEW_PAGE}",
-            #     args=(self.kwargs["pk"], self.kwargs["schema"], self.kwargs["descriptive_name"], table_name),
-            # )
+            reverse(
+                "datasets:add_table:upload-csv",
+                args=(self.kwargs["pk"], self.kwargs["schema"], self.kwargs["descriptive_name"], table_name),
+            )
         )
+
+class UploadCSVView(FormView):
+    template_name = "datasets/add_table/upload_csv.html"
+    form_class = UploadCSVForm
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        dataset = find_dataset(self.kwargs["pk"], self.request.user)
+        ctx["model"] = dataset
+        ctx["backlink"] = reverse(
+            "datasets:add_table:table-name",
+            args=(self.kwargs["pk"], self.kwargs["schema"], self.kwargs["descriptive_name"]),
+        )
+        return ctx
+    
