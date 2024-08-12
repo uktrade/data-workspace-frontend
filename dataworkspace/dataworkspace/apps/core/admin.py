@@ -53,11 +53,11 @@ class CSPRichTextEditorMixin:
     # which gives rich-text formatting but unfortunately uses inline scripts to
     # do so - and we don't have a clean way to either hash the inline script on-demand
     # or inject our request CSP nonce.
-    @csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC)
+    @csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC, STYLE_SRC=settings.WEBPACK_SCRIPT_SRC)
     def add_view(self, request, form_url="", extra_context=None):
         return super().add_view(request, form_url, extra_context)
 
-    @csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC)
+    @csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC, STYLE_SRC=settings.WEBPACK_SCRIPT_SRC)
     def change_view(self, request, object_id, form_url="", extra_context=None):
         return super().change_view(request, object_id, form_url, extra_context)
 

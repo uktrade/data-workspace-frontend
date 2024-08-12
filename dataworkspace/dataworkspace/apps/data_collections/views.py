@@ -465,7 +465,7 @@ class CollectionNotesView(UpdateView):
     template_name = "data_collections/collection_notes.html"
     context_object_name = "collection"
 
-    @csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC)
+    @csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC, STYLE_SRC=settings.WEBPACK_SCRIPT_SRC)
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
 
@@ -493,7 +493,7 @@ class CollectionEditView(UpdateView):
     def get_object(self, queryset=None):
         return get_authorised_collection(self.request, self.kwargs["collections_id"])
 
-    @csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC)
+    @csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC, STYLE_SRC=settings.WEBPACK_SCRIPT_SRC)
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
 

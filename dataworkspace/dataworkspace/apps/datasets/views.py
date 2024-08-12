@@ -188,12 +188,12 @@ def _get_tags_as_dict():
     return tags_dict
 
 
-@csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC)
+@csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC, STYLE_SRC=settings.WEBPACK_SCRIPT_SRC)
 def home_view(request):
     return render(request, "datasets/index.html")
 
 
-@csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC)
+@csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC, STYLE_SRC=settings.WEBPACK_SCRIPT_SRC)
 @require_GET
 def find_datasets(request):
     ###############
@@ -1474,7 +1474,7 @@ class DatasetEditView(EditBaseView, UpdateView):
     form_class = DatasetEditForm
     template_name = "datasets/manage_datasets/edit_dataset.html"
 
-    @csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC)
+    @csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC, STYLE_SRC=settings.WEBPACK_SCRIPT_SRC)
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
 
@@ -1519,7 +1519,7 @@ class VisualisationCatalogueItemEditView(EditBaseView, UpdateView):
     form_class = VisualisationCatalogueItemEditForm
     template_name = "datasets/manage_datasets/edit_visualisation_catalogue_item.html"
 
-    @csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC)
+    @csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC, STYLE_SRC=settings.WEBPACK_SCRIPT_SRC)
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
 
