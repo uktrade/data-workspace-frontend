@@ -121,14 +121,14 @@ class TableNameForm(GOVUKDesignSystemForm):
 
 class UploadCSVForm(GOVUKDesignSystemForm):
 
-    def clean_descriptive_name(self):
+    def clean_csv_file(self):
         cleaned_data = super().clean()
-        csv_file_name = cleaned_data["csv_file"].lower()
+        csv_name = cleaned_data['csv_file']._name.replace('.csv','')
         special_charachters=['!',',','@','£','$','%','^','&','*']
         for speccial_character in special_charachters:
-            if speccial_character in csv_file_name:
+            if speccial_character in csv_name:
                 raise ValidationError("File name cannot contain special characters apart from underscores and hyphens")
-        return csv_file_name
+        return csv_name
 
     csv_file = GOVUKDesignSystemFileField(
         required=True,

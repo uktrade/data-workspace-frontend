@@ -178,3 +178,12 @@ class UploadCSVView(FormView):
         )
         return ctx
     
+    def form_valid(self, form):
+        # csv = form.cleaned_data["csv"]
+        return HttpResponseRedirect(
+            ("/")
+            # reverse(
+            #     "datasets:add_table:table-name",
+            #     args=(self.kwargs["pk"], self.kwargs["schema"], self.kwargs["descriptive_name"]),
+            # )
+        )

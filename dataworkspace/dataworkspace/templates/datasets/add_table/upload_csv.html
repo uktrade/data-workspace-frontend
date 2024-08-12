@@ -29,7 +29,7 @@ Add Table - {{ model.name }} - {{ block.super }}{% endblock %}
                 <li>any data you want to set as a date is in the format yyyy-mm-dd</li>
                 <li>ensure columns are formatted as ‘General’ - integer and numeric fields may not upload otherwise</li>
             </ul>
-            <form method="POST" enctype="multipart/form-data">
+            <form method="POST" novalidate enctype="multipart/form-data">
                 {% csrf_token %}
                 {{ form.csv_file }}
                 <button class="govuk-button" type="submit">Continue</button>
