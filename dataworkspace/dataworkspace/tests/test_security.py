@@ -43,26 +43,6 @@ def test_baseline_content_security_policy(client):
         ("admin:index", None, False),
     ),
 )
-def test_dataset_admin_pages_allow_inline_scripts_for_tinymce_support(
-    staff_client, url, factory, unsafe_inline_script
-):
-    args = None
-    if factory:
-        dataset = factory.create()
-        args = (dataset.id,)
-
-    # Log into admin
-    staff_client.get(reverse("admin:index"), follow=True)
-
-    full_url = reverse(url, args=args)
-    response = staff_client.get(full_url, follow=True)
-    script_src = get_csp_section(response, "script-src")
-    assert ("'unsafe-inline'" in script_src) is unsafe_inline_script
-
-    style_src = get_csp_section(response, "style-src")
-    assert "'unsafe-inline'" in style_src
-
-
 def get_csp_section(response, policy_type):
     return next(
         filter(

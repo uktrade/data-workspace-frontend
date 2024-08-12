@@ -1,16 +1,2 @@
 {% load render_bundle from webpack_loader %}
 {% render_bundle "tinymce" "js" %}
-{% for config in TINYMCE_CONFIGS %}
-    <script nonce="{{ request.csp_nonce }}">
-        tinymce.init({
-            selector: "{{config.selector}}",
-            height: "{{config.height}}",
-            width: "{{config.width}}",
-            menubar: false,
-            plugins: "{{config.plugins}}",
-            toolbar: "{{config.toolbar}}",
-            custom_undo_redo_levels: {{config.custom_undo_redo_levels}},
-            license_key: "{{ config.license_key }}"
-        });
-    </script>
-{% endfor %}

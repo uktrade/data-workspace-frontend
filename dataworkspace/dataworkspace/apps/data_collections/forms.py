@@ -117,7 +117,9 @@ class CollectionEditForm(GOVUKDesignSystemModelForm):
     description = GOVUKDesignSystemCharField(
         label="Description (optional)",
         required=False,
-        widget=GOVUKDesignSystemTextareaWidget(label_is_heading=False),
+        widget=GOVUKDesignSystemTextareaWidget(
+            label_is_heading=False, data_attributes={"type": "rich-text-editor"}
+        ),
     )
 
     class Meta:

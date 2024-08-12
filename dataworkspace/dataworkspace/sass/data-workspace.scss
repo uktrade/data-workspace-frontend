@@ -76,7 +76,10 @@
   min-width: 80px;
 }
 
-.scrollable-table table thead th.ref-data-col-universal-unique-identifier-field {
+.scrollable-table
+  table
+  thead
+  th.ref-data-col-universal-unique-identifier-field {
   min-width: 300px;
 }
 
@@ -326,9 +329,7 @@ p.sidebar-section {
   .ag-header-cell-sorted-desc button:focus {
     background-color: #fd0;
     color: $govuk-link-colour;
-    box-shadow:
-      0 -2px #fd0,
-      0 4px #0b0c0c;
+    box-shadow: 0 -2px #fd0, 0 4px #0b0c0c;
     outline: none;
   }
   .sort-none:before {
@@ -404,9 +405,9 @@ p.sidebar-section {
   }
 }
 
-.govuk-checkboxes__conditional_input{ 
+.govuk-checkboxes__conditional_input {
   margin-left: 10px;
-  margin-top: -30px;  
+  margin-top: -30px;
 }
 
 .home-header {
