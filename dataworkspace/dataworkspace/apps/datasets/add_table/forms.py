@@ -124,7 +124,7 @@ class UploadCSVForm(GOVUKDesignSystemForm):
     def clean_csv_file(self):
         cleaned_data = super().clean()
         csv_name = cleaned_data['csv_file']._name.replace('.csv','')
-        special_charachters=['!',',','@','£','$','%','^','&','*']
+        special_charachters=['!',',','@','£','$','%','^','&','*'] #need to regex 
         for speccial_character in special_charachters:
             if speccial_character in csv_name:
                 raise ValidationError("File name cannot contain special characters apart from underscores and hyphens")
@@ -135,9 +135,8 @@ class UploadCSVForm(GOVUKDesignSystemForm):
         label="Upload a file",
         widget=GOVUKDesignSystemFileInputWidget(
             label_is_heading=True,
-            heading="h2",
-            heading_class="govuk-heading-s",
-            extra_label_classes="govuk-!-font-weight-bold",
+            heading="p",
+            heading_class="govuk-body",
             show_selected_file=True,
             attrs={"accept": "text/csv"},
         ),
