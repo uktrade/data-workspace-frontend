@@ -44,14 +44,9 @@ class TableSchemaView(FormView):
 
     def get_schemas(self, dataset):
         schemas = []
-        if dataset.type == DataSetType.MASTER:
-            tables = list(dataset.sourcetable_set.all())
-            for table in tables:
-                schemas.append(table.schema)
-        else:
-            schemas = [
-                "public",
-            ]
+        tables = list(dataset.sourcetable_set.all())
+        for table in tables:
+            schemas.append(table.schema)
 
         return list(set(schemas))
 
@@ -133,26 +128,18 @@ class TableNameView(FormView):
 
     def is_multiple_schemas(self, dataset):
         schemas = []
-        if dataset.type == DataSetType.MASTER:
-            tables = list(dataset.sourcetable_set.all())
-            for table in tables:
-                schemas.append(table.schema)
-        else:
-            schemas = [
-                "public",
-            ]
+        tables = list(dataset.sourcetable_set.all())
+        for table in tables:
+            schemas.append(table.schema)
 
         return len(set(schemas)) > 1
 
     def get_all_table_names(self):
         dataset = find_dataset(self.kwargs["pk"], self.request.user)
         table_names = []
-        if dataset.type == DataSetType.MASTER:
-            tables = list(dataset.sourcetable_set.all())
-            for table in tables:
-                table_names.append(table.name)
-        else:
-            table_names = [dataset.table_name]
+        tables = list(dataset.sourcetable_set.all())
+        for table in tables:
+            table_names.append(table.name)
 
         return table_names
 
