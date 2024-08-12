@@ -382,11 +382,6 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
             "schedule": crontab(minute=0, hour=0),
             "args": (),
         },
-        "sync-sso-users-from-activity-stream": {
-            "task": "dataworkspace.apps.applications.utils.sync_activity_stream_sso_users",
-            "schedule": 60 * 2,
-            "args": (),
-        },
         "sync-sso-users-from-s3": {
             "task": "dataworkspace.apps.applications.utils.sync_s3_sso_users",
             "schedule": crontab(minute="*/15"),  # Run every 15 minutes
@@ -445,11 +440,6 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
         "duplicate-tools-monitor": {
             "task": "dataworkspace.apps.applications.utils.duplicate_tools_monitor",
             "schedule": 60 * 10,
-            "args": (),
-        },
-        "full-sso-user-sync": {
-            "task": "dataworkspace.apps.applications.utils.sync_all_sso_users",
-            "schedule": crontab(minute=0, hour=1),
             "args": (),
         },
         "orphaned-tools-monitor": {
@@ -674,9 +664,6 @@ EXPLORER_DATA_EXPORTERS = [
     ("json", "dataworkspace.apps.explorer.exporters.JSONExporter"),
 ]
 
-ACTIVITY_STREAM_BASE_URL = env.get("ACTIVITY_STREAM_BASE_URL")
-ACTIVITY_STREAM_HAWK_CREDENTIALS_ID = env.get("ACTIVITY_STREAM_HAWK_CREDENTIALS_ID")
-ACTIVITY_STREAM_HAWK_CREDENTIALS_KEY = env.get("ACTIVITY_STREAM_HAWK_CREDENTIALS_KEY")
 
 DATASETS_DB_INSTANCE_ID = env.get("DATASETS_DB_INSTANCE_ID", "analysisworkspace-dev-test-1-aurora")
 PGAUDIT_LOG_SCOPES = env.get("PGAUDIT_LOG_SCOPES")
