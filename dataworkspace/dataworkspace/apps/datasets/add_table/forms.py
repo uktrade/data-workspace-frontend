@@ -1,5 +1,5 @@
+import re
 from django.forms import ValidationError
-
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
     GOVUKDesignSystemForm,
@@ -37,9 +37,44 @@ class DescriptiveNameForm(GOVUKDesignSystemForm):
         return descriptive_name
 
     descriptive_name = GOVUKDesignSystemCharField(
-        label="Descriptive Name",
+        label="Enter a descriptive name for your table",
         required=True,
         help_text="It should not contain the words 'record', 'data' or 'dataset'. It should also not contain underscores. For example, Companies in India.",  # pylint: disable=line-too-long
-        widget=GOVUKDesignSystemTextWidget(label_is_heading=False),
+        widget=GOVUKDesignSystemTextWidget(label_is_heading=True, label_size="l"),
         error_messages={"required": "Enter a descriptive name"},
     )
+
+
+class TableNameForm(GOVUKDesignSystemForm):
+    table_name = GOVUKDesignSystemCharField(
+        label="Enter your table name",
+        required=True,
+        help_text="Your table name needs to be unique, have less than 42 characters and not contain any special characters apart from underscores.",  # pylint: disable=line-too-long
+        error_messages={"required": "Enter a table name"},
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        kwargs = kwargs.pop("initial")
+        schema = kwargs["schema"] + "."
+        descriptive_name = kwargs["descriptive_name"].replace(" ", "_")
+        self.table_names = kwargs["table_names"]
+        self.fields["table_name"].widget = GOVUKDesignSystemTextWidget(prefix=schema)
+        self.fields["table_name"].initial = descriptive_name
+
+    def clean_table_name(self):
+        cleaned_data = super().clean()
+        table_name = str(cleaned_data["table_name"])
+        if len(table_name) > 42:
+            raise ValidationError("Table name must be 42 characters or less")
+        elif bool(re.search(r"[^A-Za-z_]", table_name)):
+            raise ValidationError("Table name cannot contain numbers or special characters")
+        elif table_name in self.table_names:
+            raise ValidationError("Table name already in use")
+        elif "dataset" in table_name:
+            raise ValidationError("Table name cannot contain the word 'dataset'")
+        elif "data" in table_name:
+            raise ValidationError("Table name cannot contain the word 'data'")
+        elif "record" in table_name:
+            raise ValidationError("Table name cannot contain the word 'record'")
+        return table_name
