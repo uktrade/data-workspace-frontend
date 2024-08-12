@@ -3,7 +3,6 @@ from django.views.generic import DetailView, FormView, TemplateView
 from django.http import HttpResponseRedirect
 
 from dataworkspace.apps.datasets.utils import find_dataset
-from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.add_table.forms import (
     TableNameForm,
     TableSchemaForm,
