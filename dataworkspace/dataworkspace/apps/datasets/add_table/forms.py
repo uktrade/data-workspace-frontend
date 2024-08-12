@@ -58,7 +58,6 @@ class TableNameForm(GOVUKDesignSystemForm):
         kwargs = kwargs.pop("initial")
         schema = kwargs["schema"] + "."
         descriptive_name = kwargs["descriptive_name"].replace(" ", "_")
-        print("init", kwargs["table_names"])
         self.table_names = kwargs["table_names"]
         self.fields["table_name"].widget = GOVUKDesignSystemTextWidget(prefix=schema)
         self.fields["table_name"].initial = descriptive_name
@@ -66,8 +65,6 @@ class TableNameForm(GOVUKDesignSystemForm):
     def clean_table_name(self):
         cleaned_data = super().clean()
         table_name = str(cleaned_data["table_name"])
-        print("table name", table_name)
-        print("table_names", self.table_names)
         if len(table_name) > 42:
             raise ValidationError("Table name must be 42 characters or less")
         elif bool(re.search(r"[^A-Za-z_]", table_name)):

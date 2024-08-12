@@ -308,7 +308,7 @@ class TestTableNamePage(TestCase):
             government_security_classification=2,
         )
         self.source = factories.SourceTableFactory.create(
-            dataset=self.dataset, schema="test", table="table_one"
+            dataset=self.dataset, schema="test", table="table_one", name="table_one"
         )
         self.descriptive_name = "my_table"
 
