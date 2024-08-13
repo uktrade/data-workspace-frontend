@@ -25,7 +25,6 @@ def new_private_arangodb_credentials(
     db_user,
     dw_user,
 ):
-    password_alphabet = string.ascii_letters + string.digits
 
     # ArangoDB database names must start with a letter - '_' removed from start of team.schema_name for database.
     team_dbs = [
@@ -33,16 +32,22 @@ def new_private_arangodb_credentials(
         for team in Team.objects.filter(platform="postgres-and-arango", member=dw_user)
     ]
 
+    if not team_dbs:
+        return {}
+
+    database_data = settings.ARANGODB
+
+    password_alphabet = string.ascii_letters + string.digits
+    db_password = "".join(secrets.choice(password_alphabet) for i in range(64))
+
     try:
         logger.info("Connecting as root to ArangoDB")
-        database_data = settings.ARANGODB
         client = ArangoClient(hosts=f"http://{database_data['HOST']}:{database_data['PORT']}")
         sys_db = client.db(
             "_system", username="root", password=database_data["PASSWORD"], verify=True
         )
 
         # Create a temporary user in ArangoDB with default permissions
-        db_password = "".join(secrets.choice(password_alphabet) for i in range(64))
         sys_db.create_user(
             username=db_user,
             password=db_password,
@@ -104,11 +109,13 @@ def _do_delete_unused_arangodb_users():
         sys_db = client.db(
             "_system", username="root", password=database_data["PASSWORD"], verify=True
         )
-        temporary_usernames = [
-            user["username"] for user in sys_db.users() if user["username"].startswith("user_")
-        ]
     except ServerConnectionError:
         logger.info("ArangoDB connection error")
+        return None
+
+    temporary_usernames = [
+        user["username"] for user in sys_db.users() if user["username"].startswith("user_")
+    ]
 
     logger.info("delete_unused_arangodb_users: waiting in case they were just created")
     gevent.sleep(15)
@@ -131,3 +138,4 @@ def _do_delete_unused_arangodb_users():
         )
         sys_db.delete_user(username)
         ArangoUser.objects.filter(username=username).update(deleted_date=datetime.datetime.now())
+    return None

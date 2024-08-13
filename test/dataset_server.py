@@ -87,19 +87,22 @@ async def async_main():
         return web.json_response({"data": rows}, status=200)
 
     async def handle_get_arango_team_database_permission(request):
-        user = os.environ["ARANGO_USER"]
-        password = os.environ["ARANGO_PASSWORD"]
-        host = os.environ["ARANGO_HOST"]
-        port = os.environ["ARANGO_PORT"]
+        user = os.environ.get("ARANGO_USER")
+        password = os.environ.get("ARANGO_PASSWORD")
+        host = os.environ.get("ARANGO_HOST")
+        port = os.environ.get("ARANGO_PORT")
 
-        # Connect to ArangoDB with temporary credentials
-        client = ArangoClient(hosts=f"http://{host}:{port}")
-        db = client.db("_system", username=user, password=password)
+        if user:
+            # Connect to ArangoDB with temporary credentials
+            client = ArangoClient(hosts=f"http://{host}:{port}")
+            db = client.db("_system", username=user, password=password)
 
-        permissions = {
-            "team_test1": db.permission(user, "team_test1"),
-            "team_test2": db.permission(user, "team_test2"),
-        }
+            permissions = {
+                "team_test1": db.permission(user, "team_test1"),
+                "team_test2": db.permission(user, "team_test2"),
+            }
+        else:
+            permissions = "No user credentials."
 
         return web.json_response({"data": permissions}, status=200)
 

@@ -20,8 +20,6 @@ amqp==5.1.1
     #   kombu
 appdirs==1.4.4
     # via pyppeteer
-appnope==0.1.4
-    # via ipython
 asgiref==3.7.2
     # via
     #   -r requirements.txt
@@ -144,7 +142,7 @@ decorator==4.4.2
     # via ipython
 dj-database-url==0.5.0
     # via -r requirements.txt
-django==4.2.14
+django==4.2.15
     # via
     #   -r requirements.txt
     #   django-admin-sortable2
@@ -257,6 +255,7 @@ greenlet==3.0.1
     # via
     #   -r requirements.txt
     #   gevent
+    #   sqlalchemy
 h11==0.13.0
     # via wsproto
 hawk-server-asyncio==0.0.13
@@ -538,6 +537,7 @@ sentry-sdk==2.8.0
 six==1.15.0
     # via
     #   -r requirements.txt
+    #   asttokens
     #   bleach
     #   click-repl
     #   django-compressor
