@@ -59,7 +59,12 @@ class TableNameForm(GOVUKDesignSystemForm):
         schema = kwargs["schema"] + "."
         descriptive_name = kwargs["descriptive_name"].replace(" ", "_")
         self.table_names = kwargs["table_names"]
-        self.fields["table_name"].widget = GOVUKDesignSystemTextWidget(prefix=schema)
+        self.fields["table_name"].widget = GOVUKDesignSystemTextWidget(
+            prefix=schema,
+            enable_character_count=True,
+            character_limit="42",
+            extra_input_classes="govuk-js-character-count",
+        )
         self.fields["table_name"].initial = descriptive_name
 
     def clean_table_name(self):
