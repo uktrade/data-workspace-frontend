@@ -75,17 +75,6 @@ module.exports = {
       }
     ]
   },
-  optimization: {
-    // splitChunks: {
-    //   chunks: 'all',
-    //   cacheGroups: {
-    //     tinymceVendor: {
-    //       test: /[\/]node_moduleslink:tinymce[\/]link:.*js|.*skin.css[\/]|[\/]plugins[\/]/,
-    //       name: 'tinymce'
-    //     }
-    //   }
-    // }
-  },
   resolve: {
     extensions: ['.tsx', '.ts', '.js']
   }
