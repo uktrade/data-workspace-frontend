@@ -473,7 +473,11 @@ YOUR_FILES_CONNECT_SRC = [
     "https://s3.eu-west-2.amazonaws.com",
 ] + ([S3_LOCAL_ENDPOINT_URL] if DEBUG else [])
 
-WEBPACK_SCRIPT_SRC = [] + (["http://0.0.0.0:3000", "'unsafe-eval'"] if DEBUG else [])
+WEBPACK_SCRIPT_SRC = [] + (
+    ["http://0.0.0.0:3000", "'unsafe-eval'", "http://0.0.0.0:3000", "'unsafe-inline'"]
+    if DEBUG
+    else []
+)
 
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 

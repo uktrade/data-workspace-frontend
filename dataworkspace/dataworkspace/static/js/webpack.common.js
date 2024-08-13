@@ -1,5 +1,6 @@
 /* eslint-disable */
 const path = require('path');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 const REACT_APPS = [
   'home-page',
@@ -18,7 +19,7 @@ const REACT_APPS = [
   {}
 );
 
-const APPS = ['tinymce'].reduce(
+const APPS = ['tinymce-editor'].reduce(
   (prev, acc) => ({
     ...prev,
     [acc]: path.join(__dirname, `./${acc}/index`)
@@ -28,7 +29,7 @@ const APPS = ['tinymce'].reduce(
 
 module.exports = {
   context: __dirname,
-  entry: {...APPS, ...REACT_APPS},
+  entry: { ...APPS, ...REACT_APPS },
   output: {
     path: path.resolve('./bundles/'),
     filename: '[name].[contenthash].js',
@@ -50,11 +51,19 @@ module.exports = {
         exclude: /node_modules/
       },
       {
-        test: /\.css$/,
-        use: ['style-loader', 'css-loader']
+        test: /skin.css$/i,
+        use: [MiniCssExtractPlugin.loader, 'css-loader']
       },
       {
-        test: /\.s[ac]ss$/i,
+        test: /content.css$/i,
+        use: ['css-loader']
+      },
+      {
+        test: /FileList.css$/i,
+        use: ['css-loader']
+      },
+      {
+        test: /.scss$/,
         use: [
           // Creates `style` nodes from JS strings
           'style-loader',
@@ -67,7 +76,15 @@ module.exports = {
     ]
   },
   optimization: {
-    minimize: true
+    // splitChunks: {
+    //   chunks: 'all',
+    //   cacheGroups: {
+    //     tinymceVendor: {
+    //       test: /[\/]node_moduleslink:tinymce[\/]link:.*js|.*skin.css[\/]|[\/]plugins[\/]/,
+    //       name: 'tinymce'
+    //     }
+    //   }
+    // }
   },
   resolve: {
     extensions: ['.tsx', '.ts', '.js']

@@ -279,6 +279,10 @@ class GOVUKDesignSystemRichTextField(GOVUKDesignSystemFieldMixin, forms.CharFiel
     widget = GOVUKDesignSystemTextareaWidget(data_attributes={"type": "rich-text-editor"})
 
 
+class GOVUKDesignSystemRichTextLinkField(GOVUKDesignSystemFieldMixin, forms.CharField):
+    widget = GOVUKDesignSystemTextareaWidget(data_attributes={"type": "rich-text-editor-link-only"})
+
+
 class GOVUKDesignSystemModelForm(forms.ModelForm):
     def clean(self):
         """We need to attach errors to widgets so that the fields can be rendered correctly. This slightly breaks

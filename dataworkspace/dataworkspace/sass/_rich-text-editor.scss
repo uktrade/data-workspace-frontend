@@ -1,7 +1,8 @@
 /*
 These styles refer to the TinyMCE rich text editor - https://www.tiny.cloud/docs/tinymce/latest/.
 */
-textarea[data-type="rich-text-editor"] + .tox {
+textarea[data-type="rich-text-editor"] + .tox,
+textarea[data-type="rich-text-editor-link-only"] + .tox {
   width: 100% !important;
   border: 2px solid $govuk-focus-text-colour;
   border-radius: 0;

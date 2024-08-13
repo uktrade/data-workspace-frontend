@@ -298,6 +298,9 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
         form_class.base_fields["authorized_email_domains"].widget.attrs["style"] = "width: 30em;"
         form_class.base_fields["eligibility_criteria"].widget.attrs["style"] = "width: 30em;"
         form_class.base_fields["request_approvers"].widget.attrs["style"] = "width: 30em;"
+        form_class.base_fields["description"].widget.attrs["data-type"] = "rich-text-editor"
+        form_class.base_fields["notes"].widget.attrs["data-type"] = "rich-text-editor"
+        form_class.base_fields["restrictions_on_usage"].widget.attrs["data-type"] = "rich-text-editor-link-only"
         return functools.partial(form_class, user=request.user)
 
     def get_tags(self, obj):

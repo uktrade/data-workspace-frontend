@@ -118,7 +118,7 @@ class CollectionEditForm(GOVUKDesignSystemModelForm):
         label="Description (optional)",
         required=False,
         widget=GOVUKDesignSystemTextareaWidget(
-            label_is_heading=False, data_attributes={"type": "rich-text-editor"}
+            label_is_heading=False
         ),
     )
 

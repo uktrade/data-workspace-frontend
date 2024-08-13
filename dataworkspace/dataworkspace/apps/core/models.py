@@ -95,6 +95,11 @@ class RichTextField(models.TextField):
         kwargs.update({"form_class": forms.CharField})
         return super().formfield(**kwargs)
 
+    def widget_attrs(self, widget):
+        attrs = super().widget_attrs(widget)
+        attrs['data-type'] = 'rich-text-editor'
+        return attrs
+
 
 class RichLinkField(models.TextField):
     def formfield(self, **kwargs):

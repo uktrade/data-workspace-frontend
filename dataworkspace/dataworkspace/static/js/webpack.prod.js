@@ -4,6 +4,7 @@ const { merge } = require('webpack-merge');
 const common = require('./webpack.common.js');
 const BundleTracker = require('webpack-bundle-tracker');
 const TerserPlugin = require('terser-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = merge(common, {
   mode: 'production',
@@ -19,7 +20,8 @@ module.exports = merge(common, {
     new BundleTracker({
       filename: './stats/react_apps-stats.json',
       relativePath: true
-    })
+    }),
+    new MiniCssExtractPlugin()
   ],
   optimization: {
     minimize: true,
@@ -29,7 +31,7 @@ module.exports = merge(common, {
         terserOptions: {
           compress: {
             drop_console: true
-          },
+          }
         }
       })
     ]
