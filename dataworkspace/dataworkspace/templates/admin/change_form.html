@@ -13,7 +13,7 @@ div[title="Heading 6"].tox-menu-nav__js {
 }
 </style>
 {% endblock %}
-{% block after_related_objects %}
+{% block extrahead %}{{ block.super }}
 {% load render_bundle from webpack_loader %}
 {% render_bundle "tinymce-editor" "js" %}
 {% endblock %}
