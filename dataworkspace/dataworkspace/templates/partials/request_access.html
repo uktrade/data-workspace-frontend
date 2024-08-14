@@ -6,7 +6,9 @@
         <strong>
           <span class="govuk-warning-text__assistive">Warning</span>  
           Access to this data is restricted. To find out why check the usage restrictions.
-          {%  if not type == 'visualisation' %}
+          {%  if type == 'graph' %}
+            You can view the graph document collection names but not the data itself. 
+          {%  elif not type == 'visualisation' %}
             You can view the table structure but not the data itself.
           {% endif %}
         </strong>

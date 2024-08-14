@@ -6,6 +6,7 @@ import sys
 import aiopg
 from aiohttp import web
 import psycopg2.sql
+from arango import ArangoClient
 
 
 async def async_main():
@@ -85,8 +86,29 @@ async def async_main():
 
         return web.json_response({"data": rows}, status=200)
 
+    async def handle_get_arango_permission(request):
+        user = os.environ.get("ARANGO_USER")
+        password = os.environ.get("ARANGO_PASSWORD")
+        host = os.environ.get("ARANGO_HOST")
+        port = os.environ.get("ARANGO_PORT")
+        database = request.rel_url.query.get("database")
+        collection = request.rel_url.query.get("collection")
+
+        if user:
+            # Connect to ArangoDB with temporary credentials
+            client = ArangoClient(hosts=f"http://{host}:{port}")
+            db = client.db("_system", username=user, password=password)
+
+            kwargs = {"username": user, "database": database, "collection": collection}
+            permission = db.permission(**kwargs)
+        else:
+            permission = "No user credentials."
+
+        return web.json_response({"data": permission}, status=200)
+
     upstream = web.Application()
     upstream.add_routes([web.post("/stop", handle_stop)])
+    upstream.add_routes([web.get("/arango", handle_get_arango_permission)])
     upstream.add_routes([web.get("/{database}/{table}", handle_dataset)])
     upstream.add_routes([web.get("/{database}/{schema}/{table}", handle_get_schema_table)])
     upstream.add_routes([web.post("/{database}/{schema}/{table}", handle_post_schema_table)])

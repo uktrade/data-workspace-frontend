@@ -465,6 +465,8 @@ class DatasetDetailView(DetailView):
             for source_table in sorted(source_tables, key=lambda x: x.name)
         ]
 
+        arango_graph_documents = self.object.arangodocumentcollection_set.all()
+
         summarised_update_frequency = ",".join(
             sorted({t.get_frequency_display() for t in source_tables})
         )
@@ -493,6 +495,7 @@ class DatasetDetailView(DetailView):
                 "show_pipeline_failed_message": not all(
                     (x.pipeline_last_run_succeeded for x in master_datasets_info)
                 ),
+                "arango_graph_documents": arango_graph_documents,
             }
         )
         return ctx

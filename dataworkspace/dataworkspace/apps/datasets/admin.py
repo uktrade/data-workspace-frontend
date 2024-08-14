@@ -49,6 +49,7 @@ from dataworkspace.apps.datasets.models import (
     ToolQueryAuditLog,
     DataSetSubscription,
     SourceTableFieldDefinition,
+    ArangoDocumentCollection,
 )
 from dataworkspace.apps.datasets.utils import get_dataset_table
 from dataworkspace.apps.datasets.permissions.utils import (
@@ -69,6 +70,9 @@ from dataworkspace.apps.dw_admin.forms import (
     CustomDatasetQueryInlineForm,
     VisualisationCatalogueItemForm,
     VisualisationLinkForm,
+)
+from dataworkspace.apps.arangodb.forms import (
+    ArangoDocumentCollectionForm,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -142,6 +146,13 @@ class SourceLinkInline(admin.TabularInline, SourceReferenceInlineMixin):
 class SourceTableInline(admin.TabularInline, SourceReferenceInlineMixin):
     model = SourceTable
     form = SourceTableForm
+    extra = 1
+    manage_unpublished_permission_codename = "datasets.manage_unpublished_master_datasets"
+
+
+class ArangoDocumentCollectionInline(admin.TabularInline, SourceReferenceInlineMixin):
+    model = ArangoDocumentCollection
+    form = ArangoDocumentCollectionForm
     extra = 1
     manage_unpublished_permission_codename = "datasets.manage_unpublished_master_datasets"
 
@@ -380,7 +391,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
 @admin.register(MasterDataset)
 class MasterDatasetAdmin(CSPRichTextEditorMixin, BaseDatasetAdmin):
     form = MasterDatasetForm
-    inlines = [SourceTableInline, DataSetVisualisationInline]
+    inlines = [SourceTableInline, ArangoDocumentCollectionInline, DataSetVisualisationInline]
     manage_unpublished_permission_codename = "datasets.manage_unpublished_master_datasets"
 
     def save_formset(self, request, form, formset, change):

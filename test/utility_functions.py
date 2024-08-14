@@ -417,6 +417,112 @@ async def create_private_dataset(
     return stdout, stderr, code
 
 
+async def ensure_arango_team_created(team_name: str):
+    python_code = textwrap.dedent(
+        f"""\
+
+        from dataworkspace.apps.core.models import Team
+        Team.objects.get_or_create(name="{team_name}, platform='postgres-and-arango'")
+
+        """
+    ).encode("ascii")
+
+    add_to_team = await asyncio.create_subprocess_shell(
+        "django-admin shell",
+        env=os.environ,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await add_to_team.communicate(python_code)
+    print("stdout")
+    print(stdout)
+    print("stderr")
+    print(stderr)
+    code = await add_to_team.wait()
+
+    return stdout, stderr, code
+
+
+async def add_user_to_arango_team(user_sso_id: str, team_name: str):
+    python_code = textwrap.dedent(
+        f"""\
+
+        from django.contrib.auth import get_user_model
+        from dataworkspace.apps.core.models import Team, TeamMembership
+
+        User = get_user_model()
+
+        user = User.objects.get(profile__sso_id="{user_sso_id}")
+
+        team, _ = Team.objects.get_or_create(name="{team_name}", platform="postgres-and-arango")
+        membership, _ = TeamMembership.objects.get_or_create(user=user, team=team)
+
+        """
+    ).encode("ascii")
+
+    add_to_team = await asyncio.create_subprocess_shell(
+        "django-admin shell",
+        env=os.environ,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await add_to_team.communicate(python_code)
+    print("stdout")
+    print(stdout)
+    print("stderr")
+    print(stderr)
+    code = await add_to_team.wait()
+
+    return stdout, stderr, code
+
+
+async def create_graph_dataset():
+    python_code = textwrap.dedent(
+        """\
+    import factory
+    from dataworkspace.apps.datasets.constants import DataSetType
+    from dataworkspace.tests import factories
+
+    def paragraph(_):
+        from faker import Faker
+        return Faker().paragraph(5)
+
+    master = factories.DataSetFactory(
+        id=4,
+        name=f"Master 4",
+        slug="master-4",
+        description=factory.LazyAttribute(paragraph),
+        type=DataSetType.MASTER,
+        published=True,
+        user_access_type='REQUIRES_AUTHENTICATION',
+    )
+    test_collection = factories.ArangoDocumentCollectionFactory(
+        name="testcollection1",
+        collection="testcollection1",
+        dataset=master,
+    )
+    """
+    ).encode("ascii")
+
+    give_perm = await asyncio.create_subprocess_shell(
+        "django-admin shell",
+        env=os.environ,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await give_perm.communicate(python_code)
+    print("stdout")
+    print(stdout)
+    print("stderr")
+    print(stderr)
+    code = await give_perm.wait()
+
+    return stdout, stderr, code
+
+
 async def create_visusalisation(visualisation_name, user_access_type, link_type, link_identifier):
     python_code = textwrap.dedent(
         f"""\

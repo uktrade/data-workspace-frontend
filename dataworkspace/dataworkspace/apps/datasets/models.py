@@ -924,6 +924,40 @@ class SourceTableFieldDefinition(models.Model):
         )
 
 
+class ArangoDocumentCollection(ReferenceNumberedDatasetSource):
+    """
+    Model for collections of JSON documents stored in the Arango graph database
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(
+        max_length=1024,
+        blank=False,
+        help_text="Used as the displayed text in the download link",
+    )
+    collection = models.CharField(
+        max_length=1024,
+        blank=False,
+        validators=[RegexValidator(regex=r"^[a-zA-Z][a-zA-Z0-9_\.]*$")],
+        db_index=True,
+    )
+    dataset_finder_opted_in = models.BooleanField(
+        default=False,
+        null=False,
+        verbose_name="IAM/IAO opt-in for Dataset Finder",
+        help_text=(
+            "Should this dataset be discoverable through Dataset Finder for all users, "
+            "even if they haven’t been explicitly granted access?"
+        ),
+    )
+
+    class Meta:
+        db_table = "app_arangodocumentcollection"
+
+    def __str__(self):
+        return f"{self.name} ({self.id})"
+
+
 class SourceView(BaseSource):
     view = models.CharField(
         max_length=1024,
