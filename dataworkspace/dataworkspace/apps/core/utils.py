@@ -173,21 +173,21 @@ def new_private_database_credentials(
     valid_for: datetime.timedelta,
     force_create_for_databases: Tuple[str] = tuple(),
 ):
-    db_shared_roles = (
+    db_team_roles = (
         []
         if dw_user is None
-        else ([team.schema_name for team in Team.objects.filter(member=dw_user)])
-    ) + (
-        []
-        if dw_user is None
-        else (
-            [
-                USER_SCHEMA_STEM
-                + db_role_schema_suffix_for_app(permission.visualisation.visualisation_template)
-                for permission in AdminVisualisationUserPermission.objects.filter(user=dw_user)
-            ]
-        )
+        else [team.schema_name for team in Team.objects.filter(member=dw_user)]
     )
+    db_visualisation_roles = (
+        []
+        if dw_user is None
+        else [
+            USER_SCHEMA_STEM
+            + db_role_schema_suffix_for_app(permission.visualisation.visualisation_template)
+            for permission in AdminVisualisationUserPermission.objects.filter(user=dw_user)
+        ]
+    )
+    db_shared_roles = db_team_roles + db_visualisation_roles
 
     # This function can take a while. That isn't great, but also not great to
     # hold a connection to the admin database
@@ -243,17 +243,19 @@ def new_private_database_credentials(
                 preserve_existing_grants_in_schemas=(db_role,),
                 lock_key=GLOBAL_LOCK_ID,
             )
-            # ... which have ownership of a single schema each, its team schema
-            for db_shared_role in db_shared_roles:
+            # ... which have ownership of a single schema each, its team schema. We don't call
+            # sync_roles for the visualisation roles for simplicity/performance. We would have
+            # to pass sync_roles the complete list of tables the visualisation has SELECT on.
+            for db_team_role in db_team_roles:
                 sync_roles(
                     sync_roles_conn,
-                    db_shared_role,
+                    db_team_role,
                     grants=(
-                        SchemaOwnership(db_shared_role),
-                        SchemaCreate(db_shared_role),
-                        SchemaUsage(db_shared_role),
+                        SchemaOwnership(db_team_role),
+                        SchemaCreate(db_team_role),
+                        SchemaUsage(db_team_role),
                     ),
-                    preserve_existing_grants_in_schemas=(db_shared_role,),
+                    preserve_existing_grants_in_schemas=(db_team_role,),
                     lock_key=GLOBAL_LOCK_ID,
                 )
 
