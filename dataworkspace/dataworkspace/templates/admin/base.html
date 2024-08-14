@@ -3,9 +3,20 @@
 {% block extrastyle %}{{ block.super }}
 <style>
 /* 
-These styles refer to the TinyMCE rich text editor - https://www.tiny.cloud/docs/tinymce/latest/.
+These styles refer to the CKEDitor 5 rich text editor - https://ckeditor.com/docs/ckeditor5/latest/index.html
 As we don't allow users to use certain heading levels inside the text area we are removing them as an option.
 */
+
+textarea[data-type="rich-text-editor"] + .ck,
+textarea[data-type="rich-text-editor-link-only"] + .ck {
+  width: 100%;
+}
+
+textarea[data-type="rich-text-editor"] + .ck .ck-content,
+textarea[data-type="rich-text-editor-link-only"] + .ck .ck-content {
+  min-height: 200px;
+}
+
 div[title="Heading 1"].tox-menu-nav__js,
 div[title="Heading 2"].tox-menu-nav__js,
 div[title="Heading 5"].tox-menu-nav__js,

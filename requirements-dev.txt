@@ -24,6 +24,8 @@ amqp==5.1.1
     #   kombu
 appdirs==1.4.4
     # via pyppeteer
+appnope==0.1.4
+    # via ipython
 asgiref==3.7.2
     # via
     #   -r requirements.txt
@@ -162,7 +164,6 @@ django==4.2.15
     #   django-js-asset
     #   django-redis
     #   django-staff-sso-client
-    #   django-tinymce
     #   djangorestframework
 django-admin-sortable2==2.1.10
     # via -r requirements.txt
@@ -202,10 +203,6 @@ django-redis==5.4.0
     # via -r requirements.txt
 django-staff-sso-client==4.2.1
     # via -r requirements.txt
-django-tinymce==4.1.0
-    # via
-    #   -r requirements-dev.in
-    #   -r requirements.txt
 django-waffle==2.0.0
     # via -r requirements.txt
 django-webpack-loader==1.4.1
@@ -259,7 +256,6 @@ greenlet==3.0.1
     # via
     #   -r requirements.txt
     #   gevent
-    #   sqlalchemy
 h11==0.13.0
     # via wsproto
 hawk-server-asyncio==0.0.13
@@ -541,7 +537,6 @@ sentry-sdk==2.8.0
 six==1.15.0
     # via
     #   -r requirements.txt
-    #   asttokens
     #   bleach
     #   click-repl
     #   django-compressor

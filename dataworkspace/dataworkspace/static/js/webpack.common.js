@@ -18,7 +18,7 @@ const REACT_APPS = [
   {}
 );
 
-const APPS = ['tinymce'].reduce(
+const APPS = ['ckeditor'].reduce(
   (prev, acc) => ({
     ...prev,
     [acc]: path.join(__dirname, `./${acc}/index`)

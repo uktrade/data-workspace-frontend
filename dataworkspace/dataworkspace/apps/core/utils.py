@@ -1360,28 +1360,6 @@ def is_user_email_domain_valid(email):
     return email_domain in valid_domains
 
 
-def get_tinymce_configs(configs):
-    """
-    Returns a list of configs for displaying multiple tinymce components in the view.
-    """
-    tiny_mce_configs = []
-    for config in configs:
-        tiny_mce_configs.append(
-            {
-                "selector": config["selector"],
-                "plugins": config.get("plugins") or settings.TINYMCE_DEFAULT_CONFIG["plugins"],
-                "toolbar": config.get("toolbar") or settings.TINYMCE_DEFAULT_CONFIG["toolbar"],
-                "width": config.get("width") or settings.TINYMCE_DEFAULT_CONFIG["width"],
-                "height": config.get("height") or settings.TINYMCE_DEFAULT_CONFIG["height"],
-                "custom_undo_redo_levels": config.get("custom_undo_redo_levels")
-                or settings.TINYMCE_DEFAULT_CONFIG["custom_undo_redo_levels"],
-                "license_key": config.get("license_key")
-                or settings.TINYMCE_DEFAULT_CONFIG["license_key"],
-            }
-        )
-    return tiny_mce_configs
-
-
 def has_tools_cert_expired(cert_date):
     given_datetime = datetime.datetime.combine(cert_date, datetime.datetime.min.time())
     total_days = 366 if calendar.isleap(datetime.date.today().year) else 365
