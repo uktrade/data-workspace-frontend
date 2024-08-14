@@ -1,5 +1,3 @@
-import pytest
-
 from django.urls import reverse
 
 from dataworkspace.tests.common import get_response_csp_as_set
