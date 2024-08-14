@@ -435,10 +435,6 @@ async def ensure_arango_team_created(team_name: str):
         stderr=asyncio.subprocess.PIPE,
     )
     stdout, stderr = await add_to_team.communicate(python_code)
-    print("stdout")
-    print(stdout)
-    print("stderr")
-    print(stderr)
     code = await add_to_team.wait()
 
     return stdout, stderr, code
@@ -469,10 +465,6 @@ async def add_user_to_arango_team(user_sso_id: str, team_name: str):
         stderr=asyncio.subprocess.PIPE,
     )
     stdout, stderr = await add_to_team.communicate(python_code)
-    print("stdout")
-    print(stdout)
-    print("stderr")
-    print(stderr)
     code = await add_to_team.wait()
 
     return stdout, stderr, code
@@ -514,10 +506,6 @@ async def create_graph_dataset():
         stderr=asyncio.subprocess.PIPE,
     )
     stdout, stderr = await give_perm.communicate(python_code)
-    print("stdout")
-    print(stdout)
-    print("stderr")
-    print(stderr)
     code = await give_perm.wait()
 
     return stdout, stderr, code

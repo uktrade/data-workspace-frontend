@@ -150,37 +150,6 @@
   </div>
   {% endif %}
 
-  {% if arango_graph_documents %}
-  <div class="govuk-grid-row govuk-!-margin-top-4" style="overflow-x: auto;" id="data">
-    <div class="govuk-grid-column-full">
-      <h2 class="govuk-heading-m">ArangoDB Graph Documents</h2>
-      {% if not has_access %}
-        {% include 'partials/request_access.html' with type='graph' has_data_access=has_access %}
-      {% endif %}
-      <table class="govuk-table">
-        <thead>
-        <tr class="govuk-table__row">
-          <th class="govuk-table__header govuk-!-width-one-half">Name</th>
-          <th class="govuk-table__header govuk-!-width-one-half">ArangoDB name</th>
-        </tr>
-        </thead>
-        <tbody>
-          {% for collection in arango_graph_documents %}
-          <tr class="govuk-table__row">
-            <td class="govuk-table__cell">
-              {{ collection.name }}
-            </td>
-            <td class="govuk-table__cell">
-              {{ collection.collection }}
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-  {% endif %}
-
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
       {% include "partials/dataset_info_additional.html" with model=model %}
@@ -266,5 +235,6 @@
   {% browser_is_internet_explorer as is_ie %}
   <script src="{% static 'assets/vendor/highlight/highlight.pack.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}">hljs.initHighlightingOnLoad();</script>
+  {% render_bundle "source-dataset" "js" %}
 
 {% endblock %}
