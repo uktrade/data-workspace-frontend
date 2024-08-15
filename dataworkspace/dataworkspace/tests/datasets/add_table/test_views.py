@@ -448,3 +448,44 @@ class TestTableNamePage(TestCase):
         assert response.status_code == 200
         assert "There is a problem" in error_header_text
         assert "Table name already in use" in error_message_text
+
+@pytest.mark.django_db
+class TestUploadCSVPage(TestCase):
+    def setUp(self):
+        self.user = factories.UserFactory.create(is_superuser=False)
+        self.client = Client(**get_http_sso_data(self.user))
+        self.dataset = factories.MasterDataSetFactory.create(
+            published=True,
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
+            information_asset_owner=self.user,
+            government_security_classification=2,
+        )
+        self.source = factories.SourceTableFactory.create(
+            dataset=self.dataset, schema="test", table="table_one", name="table_one"
+        )
+        self.descriptive_name = "my_table"
+        self.table_name = "my_table_name"
+
+    
+    def test_upload_csv_page(self):
+        response = self.client.post(
+            reverse(
+                "datasets:add_table:upload-csv",
+                kwargs={"pk": self.dataset.id, "schema": self.source.schema, "descriptive_name": self.descriptive_name, "table_name": self.table_name},
+            ),
+        )
+
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        header_one_text = (soup.find("h1", class_="govuk-heading-xl").get_text(strip=True))
+        header_two_text = (soup.find("h1", class_="govuk-heading-l").get_text(strip=True))
+        paragraph_one_text = soup.find("p").get_text(strip=True)
+        bullet_points = soup.find_all('ul', class_="govuk-list govuk-list--bullet")
+        bullet_point_text = []
+        for bullet_point in bullet_points:
+            bullet_point_text.extend(bullet_point.find_all("li"))
+
+        assert response.status_code == 200
+        assert "Upload CSV" in header_one_text
+        assert "Before you upload your CSV" in header_two_text
+        assert "Check your CSV against each of the below points. This can help you avoid common issues when the table is being built." in paragraph_one_text
+        assert len(bullet_point_text) == 5

@@ -140,6 +140,7 @@ class DatasetManageSourceTableColumnConfigView(DatasetManageSourceTableView):
                 f"{source.schema}-{source.table}-{datetime.now().isoformat()}",
             )
         except HTTPError:
+            print('HTTPError>>>>>>', HTTPError)
             return HttpResponseRedirect(
                 f"{reverse('datasets:manager:upload-failed')}?filename={filename}&schema="
             )
