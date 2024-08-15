@@ -5,7 +5,7 @@ import signal
 import subprocess
 import sys
 import textwrap
-from contextlib import contextmanager
+from contextlib import AsyncContextManager
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from io import BytesIO
 from urllib.parse import parse_qs
@@ -258,7 +258,7 @@ class SSOServer(multiprocessing.Process):
             httpd.shutdown()
 
 
-@contextmanager
+@AsyncContextManager
 def create_sso(is_logged_in, codes, tokens, auth_to_me):
     proc = SSOServer(args=(is_logged_in, codes, tokens, auth_to_me))
     proc.start()
@@ -324,7 +324,7 @@ class ZendeskServer(multiprocessing.Process):
             httpd.shutdown()
 
 
-@contextmanager
+@AsyncContextManager
 def create_zendesk():
     proc = ZendeskServer()
     proc.start()

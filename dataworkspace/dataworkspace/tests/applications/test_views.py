@@ -1,5 +1,5 @@
 import json
-from contextlib import contextmanager
+from contextlib import AsyncContextManager
 from unittest import mock
 
 import botocore
@@ -22,7 +22,7 @@ from dataworkspace.tests import factories
 from dataworkspace.tests.common import get_http_sso_data
 
 
-@contextmanager
+@AsyncContextManager
 def _visualisation_ui_gitlab_mocks():
     with mock.patch(
         "dataworkspace.apps.applications.views._visualisation_gitlab_project"

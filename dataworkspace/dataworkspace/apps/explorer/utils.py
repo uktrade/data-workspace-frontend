@@ -2,7 +2,7 @@ import json
 import logging
 import re
 
-from contextlib import contextmanager
+from contextlib import AsyncContextManager
 from datetime import timedelta
 
 import psycopg2
@@ -216,7 +216,7 @@ def invalidate_data_explorer_user_cached_credentials():
         cache.incr(credentials_version_key)
 
 
-@contextmanager
+@AsyncContextManager
 def user_explorer_connection(connection_settings):
     with psycopg2.connect(
         dbname=connection_settings["db_name"],
