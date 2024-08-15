@@ -32,10 +32,9 @@ def new_private_arangodb_credentials(
         for team in Team.objects.filter(platform="postgres-and-arango", member=dw_user)
     ]
 
-    if not team_dbs:
-        return {}
-
     database_data = settings.ARANGODB
+    if not team_dbs or not database_data:
+        return {}
 
     password_alphabet = string.ascii_letters + string.digits
     db_password = "".join(secrets.choice(password_alphabet) for i in range(64))
@@ -102,15 +101,19 @@ def delete_unused_arangodb_users():
 def _do_delete_unused_arangodb_users():
     logger.info("delete_unused_arangodb_users: Start")
 
+    database_data = settings.ARANGODB
+    if not database_data:
+        logger.info("delete_unused_arangodb_users: End  ArangoDB connection variables unavailable")
+        return None
+
     logger.info("delete_unused_arangodb_users: finding temporary database users")
     try:
-        database_data = settings.ARANGODB
         client = ArangoClient(hosts=f"http://{database_data['HOST']}:{database_data['PORT']}")
         sys_db = client.db(
             "_system", username="root", password=database_data["PASSWORD"], verify=True
         )
     except ServerConnectionError:
-        logger.info("ArangoDB connection error")
+        logger.info("delete_unused_arangodb_users: End  ArangoDB connection error")
         return None
 
     temporary_usernames = [
