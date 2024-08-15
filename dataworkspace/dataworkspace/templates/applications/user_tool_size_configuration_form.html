@@ -21,13 +21,11 @@
                                         <label class="govuk-label govuk-radios__label" for="id_size_{{ value }}">
                                             {{ config.name }} {% if config.name == form.instance.default_config.size_config.name %}(default){% endif %}
                                         </label>
-                                        <div id="id_size_{{ value }}_hint">
-                                            <div  class="govuk-hint govuk-radios__hint">
-                                                {{ config.cpu|spawner_cpu }} CPU, {{ config.memory|spawner_memory }} memory
-                                            </div>
-                                            <div class="govuk-hint govuk-radios__hint">
-                                                {{ config.description }}
-                                            </div>
+                                        <div  class="govuk-hint govuk-radios__hint">
+                                            {{ config.cpu|spawner_cpu }} CPU, {{ config.memory|spawner_memory }} memory
+                                        </div>
+                                        <div class="govuk-hint govuk-radios__hint">
+                                            {{ config.description }}
                                         </div>
                                     </div>
                                 </div>
