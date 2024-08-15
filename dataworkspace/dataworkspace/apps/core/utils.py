@@ -14,7 +14,7 @@ import re
 import secrets
 import string
 import time
-from contextlib import AsyncContextManager
+from contextlib import asynccontextmanager
 from timeit import default_timer as timer
 from typing import Tuple
 from urllib.parse import unquote
@@ -127,14 +127,14 @@ def db_role_schema_suffix_for_app(application_template):
     return "app_" + application_template.host_basename
 
 
-@AsyncContextManager
+@asynccontextmanager
 def get_cursor(database_memorable_name):
     with connections[database_memorable_name].cursor() as cursor:
         cursor.execute(sql.SQL("SET statement_timeout = '120s'"))
         yield cursor
 
 
-@AsyncContextManager
+@asynccontextmanager
 def transaction_and_lock(cursor, lock_id):
     try:
         cursor.execute(sql.SQL("BEGIN"))

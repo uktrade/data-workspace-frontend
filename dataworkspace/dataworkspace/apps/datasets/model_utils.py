@@ -1,7 +1,7 @@
-from contextlib import AsyncContextManager
+from contextlib import asynccontextmanager
 
 
-@AsyncContextManager
+@asynccontextmanager
 def external_model_class(model_class):
     """
     Remove any related `reference_dataset` fields from a reference dataset record

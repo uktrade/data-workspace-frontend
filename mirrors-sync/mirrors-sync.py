@@ -250,7 +250,7 @@ def s3_hash(payload):
     return hashlib.sha256(payload).hexdigest()
 
 
-@contextlib.AsyncContextManager
+@contextlib.asynccontextmanager
 def logged(logger, message, logger_args):
     try:
         logger.info(message + "...", *logger_args)
