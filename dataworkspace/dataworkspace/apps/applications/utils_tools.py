@@ -58,8 +58,6 @@ def get_groups(request):
                     help_link=None,
                     link=reverse("applications:quicksight_redirect"),
                     has_access=request.user.has_perm("applications.access_quicksight"),
-                    tag="Recommended",
-                    tag_extra_css_class="govuk-tag--blue",
                 ),
                 ToolsViewModel(
                     name="Superset",
@@ -69,8 +67,6 @@ def get_groups(request):
                     help_link=None,
                     link=reverse("applications:superset_redirect"),
                     has_access=request.user.has_perm("applications.start_all_applications"),
-                    tag="New",
-                    tag_extra_css_class="govuk-tag--green",
                 ),
             ],
             "group_description": "create dashboards",
