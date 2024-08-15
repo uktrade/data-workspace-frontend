@@ -298,7 +298,9 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
                     "force_overwrite": "overwrite" in self.request.GET,
                     "table_exists_action": self.request.GET.get("table_exists_action"),
                 }
+                
             )
+        print(self.request.GET["path"])
         return initial
 
     def get_form_kwargs(self):

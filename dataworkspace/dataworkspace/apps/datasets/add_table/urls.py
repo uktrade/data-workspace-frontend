@@ -38,7 +38,7 @@ urlpatterns = [
         name="table-name",
     ),
     path(
-        "<str:schema>/<str:descriptive_name>/<str:table_name>",
+        "<str:schema>/<str:descriptive_name>/<str:table_name>/upload-csv",
         login_required(UploadCSVView.as_view()),
         name="upload-csv",
     ),
