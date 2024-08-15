@@ -1097,7 +1097,7 @@ def get_s3_csv_column_types(path):
 
 def trigger_dataflow_dag(conf, dag, dag_run_id):
     config = settings.DATAFLOW_API_CONFIG
-    trigger_url = f'{config["DATAFLOW_BASE_URL"]}/api/experimental/dags/{dag}/dag_runs'
+    trigger_url = f'{config["DATAFLOW_BASE_URL_DATA_WORKSPACE_AWS_INTERNAL"]}/api/experimental/dags/{dag}/dag_runs'
     hawk_creds = {
         "id": config["DATAFLOW_HAWK_ID"],
         "key": config["DATAFLOW_HAWK_KEY"],
@@ -1148,7 +1148,7 @@ def copy_file_to_uploads_bucket(from_path, to_path):
 def get_dataflow_dag_status(dag, execution_date):
     config = settings.DATAFLOW_API_CONFIG
     url = (
-        f'{config["DATAFLOW_BASE_URL"]}/api/experimental/'
+        f'{config["DATAFLOW_BASE_URL_DATA_WORKSPACE_AWS_INTERNAL"]}/api/experimental/'
         f'dags/{dag}/dag_runs/{execution_date.split("+")[0]}'
     )
     hawk_creds = {
@@ -1174,7 +1174,7 @@ def get_dataflow_dag_status(dag, execution_date):
 def get_dataflow_task_status(dag, execution_date, task_id):
     config = settings.DATAFLOW_API_CONFIG
     url = (
-        f'{config["DATAFLOW_BASE_URL"]}/api/experimental/'
+        f'{config["DATAFLOW_BASE_URL_DATA_WORKSPACE_AWS_INTERNAL"]}/api/experimental/'
         f"dags/{dag}/dag_runs/"
         f'{execution_date.split("+")[0]}/tasks/{task_id}'
     )
@@ -1192,7 +1192,7 @@ def get_dataflow_task_status(dag, execution_date, task_id):
 def get_dataflow_task_log(dag, execution_date, task_id):
     config = settings.DATAFLOW_API_CONFIG
     url = (
-        f'{config["DATAFLOW_BASE_URL"]}/api/experimental/derived-dags/'
+        f'{config["DATAFLOW_BASE_URL_DATA_WORKSPACE_AWS_INTERNAL"]}/api/experimental/derived-dags/'
         f"dag/{dag}/{execution_date.split('+')[0]}/{task_id}/log"
     )
     header = Sender(
