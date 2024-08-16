@@ -434,609 +434,609 @@ class TestSyncQuickSightPermissions:
         assert len(mock_data_client.update_data_source.call_args_list) == 0
 
 
-# class TestSyncS3SSOUsers:
-
-#     @override_settings(
-#         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
-#     )
-#     @override_settings(S3_SSO_IMPORT_ENABLED=True)
-#     def test_sync_without_files_processes_nothing_and_doesnt_call_delete(self):
-#         with mock.patch(
-#             "dataworkspace.apps.applications.utils.get_s3_resource"
-#         ) as mock_get_s3_resource:
-
-#             _do_sync_s3_sso_users()
-#             mock_get_s3_resource().Bucket().delete_objects.assert_not_called()
-
-#     @override_settings(
-#         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
-#     )
-#     @override_settings(S3_SSO_IMPORT_ENABLED=True)
-#     def test_sync_with_empty_files_doesnt_run_db_query_but_deletes_file(self):
-#         with mock.patch(
-#             "dataworkspace.apps.applications.utils.get_s3_resource"
-#         ) as mock_get_s3_resource, mock.patch(
-#             "dataworkspace.apps.applications.utils._do_get_staff_sso_s3_object_summaries"
-#         ) as mock_get_s3_files, mock.patch(
-#             "dataworkspace.apps.applications.utils._get_seen_ids_and_last_processed",
-#             return_value=[[], 1],
-#         ):
-#             mock_get_s3_files.return_value = [
-#                 mock.MagicMock(
-#                     bucket_name="bucket_1",
-#                     key="a/today.jsonl.gz",
-#                     source_key="s3://bucket_1/a/today.jsonl.gz",
-#                     last_modified=datetime.datetime.now().strftime("%Y%m%dT%H%M%S.%dZ"),
-#                 )
-#             ]
-#             _do_sync_s3_sso_users()
-#             mock_get_s3_resource().Bucket().delete_objects.assert_has_calls(
-#                 [
-#                     mock.call(
-#                         Delete={
-#                             "Objects": [
-#                                 {"Key": "a/today.jsonl.gz"},
-#                             ]
-#                         }
-#                     )
-#                 ]
-#             )
-
-#     @override_settings(S3_SSO_IMPORT_ENABLED=True)
-#     @pytest.mark.django_db
-#     def test_sync_without_cache_uses_default_date(
-#         self,
-#     ):
-#         with mock.patch("dataworkspace.apps.applications.utils.get_s3_resource"), mock.patch(
-#             "dataworkspace.apps.applications.utils._do_get_staff_sso_s3_object_summaries"
-#         ) as mock_get_s3_files, mock.patch(
-#             "dataworkspace.apps.applications.utils._get_seen_ids_and_last_processed",
-#             return_value=[[1], 1],
-#         ) as mock_get_seen_ids_and_last_processed:
-
-#             cache.delete("s3_sso_sync_last_published")
-#             mock_get_s3_files.return_value = [
-#                 mock.MagicMock(
-#                     bucket_name="bucket_1",
-#                     key="a/today.jsonl.gz",
-#                     source_key="s3://bucket_1/a/today.jsonl.gz",
-#                     last_modified=datetime.datetime.now().strftime("%Y%m%dT%H%M%S.%dZ"),
-#                 )
-#             ]
-
-#             _do_sync_s3_sso_users()
-#             mock_get_seen_ids_and_last_processed.assert_has_calls(
-#                 [
-#                     mock.call(
-#                         mock_get_s3_files.return_value,
-#                         mock.ANY,
-#                         datetime.datetime.fromtimestamp(
-#                             0, tz=datetime.datetime.now().astimezone().tzinfo
-#                         ),
-#                     )
-#                 ]
-#             )
-
-#     @override_settings(S3_SSO_IMPORT_ENABLED=True)
-#     @pytest.mark.django_db
-#     def test_sync_with_cache_uses_previous_date(
-#         self,
-#     ):
-#         with mock.patch("dataworkspace.apps.applications.utils.get_s3_resource"), mock.patch(
-#             "dataworkspace.apps.applications.utils._do_get_staff_sso_s3_object_summaries"
-#         ) as mock_get_s3_files, mock.patch(
-#             "dataworkspace.apps.applications.utils._get_seen_ids_and_last_processed",
-#             return_value=[[1], 1],
-#         ) as mock_get_seen_ids_and_last_processed:
-#             cache.set("s3_sso_sync_last_published", datetime.datetime(2024, 7, 26, 12))
-#             mock_get_s3_files.return_value = [
-#                 mock.MagicMock(
-#                     bucket_name="bucket_1",
-#                     key="a/today.jsonl.gz",
-#                     source_key="s3://bucket_1/a/today.jsonl.gz",
-#                     last_modified=datetime.datetime.now().strftime("%Y%m%dT%H%M%S.%dZ"),
-#                 )
-#             ]
-
-#             _do_sync_s3_sso_users()
-#             mock_get_seen_ids_and_last_processed.assert_has_calls(
-#                 [
-#                     mock.call(
-#                         mock_get_s3_files.return_value,
-#                         mock.ANY,
-#                         datetime.datetime(2024, 7, 26, 12),
-#                     )
-#                 ]
-#             )
-
-#     @override_settings(S3_SSO_IMPORT_ENABLED=True)
-#     @pytest.mark.django_db
-#     def test_sync_with_active_user_not_in_file_set_to_inactive(
-#         self,
-#     ):
-#         with mock.patch("dataworkspace.apps.applications.utils.get_s3_resource"), mock.patch(
-#             "dataworkspace.apps.applications.utils._do_get_staff_sso_s3_object_summaries"
-#         ) as mock_get_s3_files, mock.patch(
-#             "dataworkspace.apps.applications.utils._get_seen_ids_and_last_processed"
-#         ) as mock_get_seen_ids_and_last_processed:
-#             mock_get_s3_files.return_value = [mock.MagicMock(key="a/today.jsonl.gz")]
-
-#             inactive_user = UserFactory()
-#             inactive_user.profile.sso_status = "inactive"
-#             inactive_user.profile.save()
-
-#             active_user = UserFactory()
-#             active_user.profile.sso_status = "active"
-#             active_user.profile.save()
-
-#             active_user_not_in_file = UserFactory()
-#             active_user_not_in_file.profile.sso_status = "active"
-#             active_user_not_in_file.profile.save()
-
-#             mock_get_seen_ids_and_last_processed.return_value = (
-#                 [
-#                     inactive_user.username,
-#                     active_user.username,
-#                 ],
-#                 datetime.datetime.now(),
-#             )
-
-#             _do_sync_s3_sso_users()
-
-#             User = get_user_model()
-#             assert (
-#                 User.objects.filter(username=active_user.username).first().profile.sso_status
-#                 == "active"
-#             )
-#             assert (
-#                 User.objects.filter(username=active_user_not_in_file.username)
-#                 .first()
-#                 .profile.sso_status
-#                 == "inactive"
-#             )
-#             assert (
-#                 User.objects.filter(username=inactive_user.username).first().profile.sso_status
-#                 == "inactive"
-#             )
-
-#     @override_settings(
-#         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
-#     )
-#     @override_settings(S3_SSO_IMPORT_ENABLED=True)
-#     def test_do_get_staff_sso_s3_object_summaries_with_multiple_files_returns_in_correct_order(
-#         self,
-#     ):
-#         s3_object_1 = mock.MagicMock(
-#             bucket_name="bucket_1", key="a/today.jsonl.gz", last_modified=datetime.datetime.now()
-#         )
-#         s3_object_2 = mock.MagicMock(
-#             bucket_name="bucket_1",
-#             key="c/last_week.jsonl",
-#             last_modified=datetime.datetime.now() - datetime.timedelta(weeks=1),
-#         )
-#         s3_object_3 = mock.MagicMock(
-#             bucket_name="bucket_1",
-#             key="b/yesterday.jsonl",
-#             last_modified=datetime.datetime.now() - datetime.timedelta(days=1),
-#         )
-
-#         mock_bucket = mock.MagicMock()
-#         mock_bucket.objects.filter.return_value = [s3_object_1, s3_object_2, s3_object_3]
-
-#         summaries = _do_get_staff_sso_s3_object_summaries(mock_bucket)
-
-#         assert summaries == [s3_object_2, s3_object_3, s3_object_1]
-
-#     @override_settings(S3_SSO_IMPORT_ENABLED=True)
-#     @pytest.mark.django_db
-#     def test_sync_overwrites_cache_with_newer_last_published_value(
-#         self,
-#     ):
-#         s3_object_1 = mock.MagicMock(
-#             bucket_name="bucket_1", key="a/today.jsonl.gz", last_modified=datetime.datetime.now()
-#         )
-#         with mock.patch(
-#             "dataworkspace.apps.applications.utils.get_s3_resource"
-#         ) as mock_get_s3_resource, mock.patch(
-#             "dataworkspace.apps.applications.utils._get_seen_ids_and_last_processed"
-#         ) as mock_get_seen_ids_and_last_processed:
-#             cache.set(
-#                 "s3_sso_sync_last_published", datetime.datetime(2024, 7, 26, 12, tzinfo=tzlocal())
-#             )
-#             mock_get_s3_resource().Bucket().objects.filter.return_value = [
-#                 s3_object_1,
-#             ]
-#             expected_cache_value = datetime.datetime.now(tz=tzlocal())
-#             mock_get_seen_ids_and_last_processed.return_value = [[1], expected_cache_value]
-#             _do_sync_s3_sso_users()
-#             assert cache.get("s3_sso_sync_last_published") == expected_cache_value
-
-#     @override_settings(S3_SSO_IMPORT_ENABLED=True)
-#     @override_settings(
-#         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
-#     )
-#     @pytest.mark.django_db
-#     def test_sync_s3_request_fails(self):
-#         with mock.patch(
-#             "dataworkspace.apps.applications.utils.get_s3_resource"
-#         ) as mock_get_s3_resource:
-#             with pytest.raises(Exception) as exc:
-#                 mock_get_s3_resource.side_effect = Exception("No bucket")
-#                 _do_sync_s3_sso_users()
-#             assert str(exc.value) == "No bucket"
-
-#         User = get_user_model()
-#         assert not User.objects.all()
-
-#     def test_get_seen_ids_and_last_processed_returns_unique_set_when_duplicate_ids_in_files(
-#         self,
-#     ):
-#         with mock.patch(
-#             "dataworkspace.apps.applications.utils._process_staff_sso_file"
-#         ) as mock_process_staff_sso_file:
-#             mock_process_staff_sso_file.side_effect = [
-#                 ([1, 2, 3, 6, 7, 8], datetime.datetime.now()),
-#                 ([1, 3, 5, 7, 10], datetime.datetime.now()),
-#             ]
-#             result = _get_seen_ids_and_last_processed(
-#                 [
-#                     mock.MagicMock(
-#                         source_key="s3://bucket_1/a.jsonl.gz",
-#                     ),
-#                     mock.MagicMock(
-#                         source_key="s3://bucket_1/b.jsonl.gz",
-#                     ),
-#                 ],
-#                 mock.MagicMock(),
-#                 datetime.datetime.now(),
-#             )
-
-#             assert len(result[0]) == 8
-#             assert result[0] == [1, 2, 3, 5, 6, 7, 8, 10]
-
-#     @override_settings(
-#         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
-#     )
-#     @override_settings(S3_SSO_IMPORT_ENABLED=False)
-#     @pytest.mark.django_db
-#     def test_process_staff_sso_with_s3_import_disabled_doesnt_add_user(self, sso_user_factory):
-
-#         user_1 = sso_user_factory()
-#         user_2 = sso_user_factory()
-#         m_open = mock.mock_open(read_data="\n".join([json.dumps(user_1), json.dumps(user_2)]))
-
-#         with mock.patch(
-#             "dataworkspace.apps.applications.utils.smart_open",
-#             m_open,
-#             create=True,
-#         ):
-#             _process_staff_sso_file(
-#                 mock.MagicMock(),
-#                 "file.jsonl.gz",
-#                 datetime.datetime.fromtimestamp(0, tz=datetime.datetime.now().astimezone().tzinfo),
-#             )
-
-#             User = get_user_model()
-#             assert not User.objects.all()
-
-#     @override_settings(
-#         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
-#     )
-#     @override_settings(S3_SSO_IMPORT_ENABLED=True)
-#     @pytest.mark.django_db
-#     def test_process_staff_sso_file_without_cache_creates_all_users(self, sso_user_factory):
-
-#         user_1 = sso_user_factory()
-#         user_2 = sso_user_factory()
-#         m_open = mock.mock_open(read_data="\n".join([json.dumps(user_1), json.dumps(user_2)]))
-
-#         with mock.patch(
-#             "dataworkspace.apps.applications.utils.smart_open",
-#             m_open,
-#             create=True,
-#         ):
-#             _process_staff_sso_file(
-#                 mock.MagicMock(),
-#                 "file.jsonl.gz",
-#                 datetime.datetime.fromtimestamp(0, tz=datetime.datetime.now().astimezone().tzinfo),
-#             )
-
-#             User = get_user_model()
-#             all_users = User.objects.all()
-
-#             assert len(all_users) == 2
-#             assert str(all_users[0].profile.sso_id) == user_1["object"]["dit:StaffSSO:User:userId"]
-#             assert (
-#                 str(all_users[0].profile.sso_status)
-#                 == user_1["object"]["dit:StaffSSO:User:status"]
-#             )
-#             assert all_users[0].username == user_1["object"]["dit:StaffSSO:User:userId"]
-#             assert all_users[0].email == user_1["object"]["dit:emailAddress"][0]
-#             assert all_users[0].first_name == user_1["object"]["dit:firstName"]
-#             assert all_users[0].last_name == user_1["object"]["dit:lastName"]
-
-#             assert str(all_users[1].profile.sso_id) == user_2["object"]["dit:StaffSSO:User:userId"]
-#             assert (
-#                 str(all_users[1].profile.sso_status)
-#                 == user_2["object"]["dit:StaffSSO:User:status"]
-#             )
-#             assert all_users[1].username == user_2["object"]["dit:StaffSSO:User:userId"]
-#             assert all_users[1].email == user_2["object"]["dit:emailAddress"][0]
-#             assert all_users[1].first_name == user_2["object"]["dit:firstName"]
-#             assert all_users[1].last_name == user_2["object"]["dit:lastName"]
-
-#     @override_settings(
-#         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
-#     )
-#     @override_settings(S3_SSO_IMPORT_ENABLED=True)
-#     @pytest.mark.django_db
-#     def test_process_staff_sso_file_with_cache_ignores_users_before_last_published(
-#         self, sso_user_factory
-#     ):
-#         user_in_past = sso_user_factory(published_date=datetime.datetime(2023, 10, 1))
-#         user_to_be_included = sso_user_factory()
-#         m_open = mock.mock_open(
-#             read_data="\n".join([json.dumps(user_in_past), json.dumps(user_to_be_included)])
-#         )
-
-#         with mock.patch(
-#             "dataworkspace.apps.applications.utils.smart_open",
-#             m_open,
-#             create=True,
-#         ):
-#             _process_staff_sso_file(
-#                 mock.MagicMock(),
-#                 "file.jsonl.gz",
-#                 datetime.datetime(2024, 7, 26, 12, tzinfo=tzlocal()),
-#             )
-
-#             User = get_user_model()
-#             all_users = User.objects.all()
-
-#             assert len(all_users) == 1
-
-#             assert (
-#                 str(all_users[0].profile.sso_id)
-#                 == user_to_be_included["object"]["dit:StaffSSO:User:userId"]
-#             )
-#             assert (
-#                 str(all_users[0].profile.sso_status)
-#                 == user_to_be_included["object"]["dit:StaffSSO:User:status"]
-#             )
-#             assert (
-#                 all_users[0].username == user_to_be_included["object"]["dit:StaffSSO:User:userId"]
-#             )
-#             assert all_users[0].email == user_to_be_included["object"]["dit:emailAddress"][0]
-#             assert all_users[0].first_name == user_to_be_included["object"]["dit:firstName"]
-#             assert all_users[0].last_name == user_to_be_included["object"]["dit:lastName"]
-
-#     @override_settings(
-#         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
-#     )
-#     @override_settings(S3_SSO_IMPORT_ENABLED=True)
-#     @pytest.mark.django_db
-#     def test_process_staff_sso_updates_existing_users_email(self, sso_user_factory):
-
-#         user_1 = sso_user_factory()
-
-#         user = UserFactory.create(email="should_be_changed@test.com")
-#         user.profile.sso_id = user_1["object"]["dit:StaffSSO:User:userId"]
-#         user.save()
-
-#         m_open = mock.mock_open(read_data="\n".join([json.dumps(user_1)]))
-
-#         with mock.patch(
-#             "dataworkspace.apps.applications.utils.smart_open",
-#             m_open,
-#             create=True,
-#         ):
-#             _process_staff_sso_file(
-#                 mock.MagicMock(),
-#                 "file.jsonl.gz",
-#                 datetime.datetime.fromtimestamp(0, tz=datetime.datetime.now().astimezone().tzinfo),
-#             )
-
-#             User = get_user_model()
-#             all_users = User.objects.all()
-
-#             assert len(all_users) == 1
-#             assert str(all_users[0].email) == user_1["object"]["dit:emailAddress"][0]
-
-#     @override_settings(
-#         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
-#     )
-#     @override_settings(S3_SSO_IMPORT_ENABLED=True)
-#     @pytest.mark.django_db
-#     def test_process_staff_sso_creates_role_if_user_can_access_tools(self, sso_user_factory):
-
-#         user_1 = sso_user_factory()
-
-#         can_access_tools_permission = Permission.objects.get(
-#             codename="start_all_applications",
-#             content_type=ContentType.objects.get_for_model(ApplicationInstance),
-#         )
-
-#         user = UserFactory.create(email=user_1["object"]["dit:emailAddress"][0])
-#         user.profile.sso_id = user_1["object"]["dit:StaffSSO:User:userId"]
-#         user.save()
-#         user.user_permissions.add(can_access_tools_permission)
-
-#         m_open = mock.mock_open(read_data="\n".join([json.dumps(user_1)]))
-
-#         with mock.patch(
-#             "dataworkspace.apps.applications.utils.smart_open",
-#             m_open,
-#             create=True,
-#         ), mock.patch(
-#             "dataworkspace.apps.applications.utils.create_tools_access_iam_role_task"
-#         ) as create_tools_access_iam_role_task:
-#             _process_staff_sso_file(
-#                 mock.MagicMock(),
-#                 "file.jsonl.gz",
-#                 datetime.datetime.fromtimestamp(0, tz=datetime.datetime.now().astimezone().tzinfo),
-#             )
-
-#             User = get_user_model()
-#             all_users = User.objects.all()
-
-#             assert len(all_users) == 1
-#             assert create_tools_access_iam_role_task.delay.call_args_list == [
-#                 mock.call(
-#                     user.id,
-#                 )
-#             ]
-
-#     @override_settings(
-#         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
-#     )
-#     @override_settings(S3_SSO_IMPORT_ENABLED=True)
-#     @pytest.mark.django_db
-#     def test_process_staff_sso_doesnt_create_role_if_user_cant_access_tools(
-#         self, sso_user_factory
-#     ):
-
-#         user_1 = sso_user_factory()
-
-#         user = UserFactory.create(email=user_1["object"]["dit:emailAddress"][0])
-#         user.profile.sso_id = user_1["object"]["dit:StaffSSO:User:userId"]
-#         user.save()
-
-#         m_open = mock.mock_open(read_data="\n".join([json.dumps(user_1)]))
-
-#         with mock.patch(
-#             "dataworkspace.apps.applications.utils.smart_open",
-#             m_open,
-#             create=True,
-#         ), mock.patch(
-#             "dataworkspace.apps.applications.utils.create_tools_access_iam_role_task"
-#         ) as create_tools_access_iam_role_task:
-#             _process_staff_sso_file(
-#                 mock.MagicMock(),
-#                 "file.jsonl.gz",
-#                 datetime.datetime.fromtimestamp(0, tz=datetime.datetime.now().astimezone().tzinfo),
-#             )
-
-#             User = get_user_model()
-#             all_users = User.objects.all()
-
-#             assert len(all_users) == 1
-#             assert not create_tools_access_iam_role_task.delay.called
-
-#     @override_settings(
-#         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
-#     )
-#     @override_settings(S3_SSO_IMPORT_ENABLED=True)
-#     @pytest.mark.django_db
-#     def test_process_staff_sso_doesnt_create_role_if_user_already_has_role(self, sso_user_factory):
-
-#         user_1 = sso_user_factory()
-
-#         can_access_tools_permission = Permission.objects.get(
-#             codename="start_all_applications",
-#             content_type=ContentType.objects.get_for_model(ApplicationInstance),
-#         )
-
-#         user = UserFactory.create(email=user_1["object"]["dit:emailAddress"][0])
-#         user.user_permissions.add(can_access_tools_permission)
-#         user.profile.sso_id = user_1["object"]["dit:StaffSSO:User:userId"]
-#         user.profile.tools_access_role_arn = "some-arn"
-#         user.save()
-
-#         m_open = mock.mock_open(read_data="\n".join([json.dumps(user_1)]))
-
-#         with mock.patch(
-#             "dataworkspace.apps.applications.utils.smart_open",
-#             m_open,
-#             create=True,
-#         ), mock.patch(
-#             "dataworkspace.apps.applications.utils.create_tools_access_iam_role_task"
-#         ) as create_tools_access_iam_role_task:
-#             _process_staff_sso_file(
-#                 mock.MagicMock(),
-#                 "file.jsonl.gz",
-#                 datetime.datetime.fromtimestamp(0, tz=datetime.datetime.now().astimezone().tzinfo),
-#             )
-
-#             User = get_user_model()
-#             all_users = User.objects.all()
-
-#             assert len(all_users) == 1
-#             assert not create_tools_access_iam_role_task.delay.called
-
-#     @override_settings(
-#         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
-#     )
-#     @override_settings(S3_SSO_IMPORT_ENABLED=True)
-#     @pytest.mark.django_db
-#     def test_process_staff_sso_with_empty_file_returns_empty_list_and_same_datetime(self):
-#         last_published = datetime.datetime.now(tz=tzlocal())
-#         m_open = mock.mock_open(read_data="\n")
-
-#         with mock.patch(
-#             "dataworkspace.apps.applications.utils.smart_open",
-#             m_open,
-#             create=True,
-#         ):
-#             process_staff_results = _process_staff_sso_file(
-#                 mock.MagicMock(),
-#                 "file.jsonl.gz",
-#                 last_published,
-#             )
-
-#             assert process_staff_results[0] == []
-#             assert process_staff_results[1] == last_published
-
-#     @override_settings(
-#         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
-#     )
-#     @override_settings(S3_SSO_IMPORT_ENABLED=True)
-#     @pytest.mark.django_db
-#     def test_process_staff_sso_returns_same_last_published_when_user_older_than_previous(
-#         self, sso_user_factory
-#     ):
-#         user_1 = sso_user_factory(published_date=datetime.datetime(2024, 1, 1, tzinfo=tzlocal()))
-#         last_published = datetime.datetime.now(tz=tzlocal())
-#         m_open = mock.mock_open(read_data="\n".join([json.dumps(user_1)]))
-
-#         with mock.patch(
-#             "dataworkspace.apps.applications.utils.smart_open",
-#             m_open,
-#             create=True,
-#         ):
-#             process_staff_results = _process_staff_sso_file(
-#                 mock.MagicMock(),
-#                 "file.jsonl.gz",
-#                 last_published,
-#             )
-
-#             assert process_staff_results[0] == [user_1["object"]["dit:StaffSSO:User:userId"]]
-#             assert process_staff_results[1] == last_published
-
-#     @override_settings(
-#         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
-#     )
-#     @override_settings(S3_SSO_IMPORT_ENABLED=True)
-#     @pytest.mark.django_db
-#     def test_process_staff_sso_returns_latest_user_last_published_when_newer_than_previous(
-#         self, sso_user_factory
-#     ):
-#         user_1 = sso_user_factory(published_date=datetime.datetime.now(tz=tzlocal()))
-
-#         m_open = mock.mock_open(read_data="\n".join([json.dumps(user_1)]))
-
-#         with mock.patch(
-#             "dataworkspace.apps.applications.utils.smart_open",
-#             m_open,
-#             create=True,
-#         ):
-#             process_staff_results = _process_staff_sso_file(
-#                 mock.MagicMock(),
-#                 "file.jsonl.gz",
-#                 datetime.datetime(2024, 7, 26, 12, tzinfo=tzlocal()),
-#             )
-
-#             assert process_staff_results[0] == [get_user_model().objects.all().first().username]
-#             assert process_staff_results[1] == parser.parse(user_1["published"])
+class TestSyncS3SSOUsers:
+
+    @override_settings(
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+    )
+    @override_settings(S3_SSO_IMPORT_ENABLED=True)
+    def test_sync_without_files_processes_nothing_and_doesnt_call_delete(self):
+        with mock.patch(
+            "dataworkspace.apps.applications.utils.get_s3_resource"
+        ) as mock_get_s3_resource:
+
+            _do_sync_s3_sso_users()
+            mock_get_s3_resource().Bucket().delete_objects.assert_not_called()
+
+    @override_settings(
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+    )
+    @override_settings(S3_SSO_IMPORT_ENABLED=True)
+    def test_sync_with_empty_files_doesnt_run_db_query_but_deletes_file(self):
+        with mock.patch(
+            "dataworkspace.apps.applications.utils.get_s3_resource"
+        ) as mock_get_s3_resource, mock.patch(
+            "dataworkspace.apps.applications.utils._do_get_staff_sso_s3_object_summaries"
+        ) as mock_get_s3_files, mock.patch(
+            "dataworkspace.apps.applications.utils._get_seen_ids_and_last_processed",
+            return_value=[[], 1],
+        ):
+            mock_get_s3_files.return_value = [
+                mock.MagicMock(
+                    bucket_name="bucket_1",
+                    key="a/today.jsonl.gz",
+                    source_key="s3://bucket_1/a/today.jsonl.gz",
+                    last_modified=datetime.datetime.now().strftime("%Y%m%dT%H%M%S.%dZ"),
+                )
+            ]
+            _do_sync_s3_sso_users()
+            mock_get_s3_resource().Bucket().delete_objects.assert_has_calls(
+                [
+                    mock.call(
+                        Delete={
+                            "Objects": [
+                                {"Key": "a/today.jsonl.gz"},
+                            ]
+                        }
+                    )
+                ]
+            )
+
+    @override_settings(S3_SSO_IMPORT_ENABLED=True)
+    @pytest.mark.django_db
+    def test_sync_without_cache_uses_default_date(
+        self,
+    ):
+        with mock.patch("dataworkspace.apps.applications.utils.get_s3_resource"), mock.patch(
+            "dataworkspace.apps.applications.utils._do_get_staff_sso_s3_object_summaries"
+        ) as mock_get_s3_files, mock.patch(
+            "dataworkspace.apps.applications.utils._get_seen_ids_and_last_processed",
+            return_value=[[1], 1],
+        ) as mock_get_seen_ids_and_last_processed:
+
+            cache.delete("s3_sso_sync_last_published")
+            mock_get_s3_files.return_value = [
+                mock.MagicMock(
+                    bucket_name="bucket_1",
+                    key="a/today.jsonl.gz",
+                    source_key="s3://bucket_1/a/today.jsonl.gz",
+                    last_modified=datetime.datetime.now().strftime("%Y%m%dT%H%M%S.%dZ"),
+                )
+            ]
+
+            _do_sync_s3_sso_users()
+            mock_get_seen_ids_and_last_processed.assert_has_calls(
+                [
+                    mock.call(
+                        mock_get_s3_files.return_value,
+                        mock.ANY,
+                        datetime.datetime.fromtimestamp(
+                            0, tz=datetime.datetime.now().astimezone().tzinfo
+                        ),
+                    )
+                ]
+            )
+
+    @override_settings(S3_SSO_IMPORT_ENABLED=True)
+    @pytest.mark.django_db
+    def test_sync_with_cache_uses_previous_date(
+        self,
+    ):
+        with mock.patch("dataworkspace.apps.applications.utils.get_s3_resource"), mock.patch(
+            "dataworkspace.apps.applications.utils._do_get_staff_sso_s3_object_summaries"
+        ) as mock_get_s3_files, mock.patch(
+            "dataworkspace.apps.applications.utils._get_seen_ids_and_last_processed",
+            return_value=[[1], 1],
+        ) as mock_get_seen_ids_and_last_processed:
+            cache.set("s3_sso_sync_last_published", datetime.datetime(2024, 7, 26, 12))
+            mock_get_s3_files.return_value = [
+                mock.MagicMock(
+                    bucket_name="bucket_1",
+                    key="a/today.jsonl.gz",
+                    source_key="s3://bucket_1/a/today.jsonl.gz",
+                    last_modified=datetime.datetime.now().strftime("%Y%m%dT%H%M%S.%dZ"),
+                )
+            ]
+
+            _do_sync_s3_sso_users()
+            mock_get_seen_ids_and_last_processed.assert_has_calls(
+                [
+                    mock.call(
+                        mock_get_s3_files.return_value,
+                        mock.ANY,
+                        datetime.datetime(2024, 7, 26, 12),
+                    )
+                ]
+            )
+
+    @override_settings(S3_SSO_IMPORT_ENABLED=True)
+    @pytest.mark.django_db
+    def test_sync_with_active_user_not_in_file_set_to_inactive(
+        self,
+    ):
+        with mock.patch("dataworkspace.apps.applications.utils.get_s3_resource"), mock.patch(
+            "dataworkspace.apps.applications.utils._do_get_staff_sso_s3_object_summaries"
+        ) as mock_get_s3_files, mock.patch(
+            "dataworkspace.apps.applications.utils._get_seen_ids_and_last_processed"
+        ) as mock_get_seen_ids_and_last_processed:
+            mock_get_s3_files.return_value = [mock.MagicMock(key="a/today.jsonl.gz")]
+
+            inactive_user = UserFactory()
+            inactive_user.profile.sso_status = "inactive"
+            inactive_user.profile.save()
+
+            active_user = UserFactory()
+            active_user.profile.sso_status = "active"
+            active_user.profile.save()
+
+            active_user_not_in_file = UserFactory()
+            active_user_not_in_file.profile.sso_status = "active"
+            active_user_not_in_file.profile.save()
+
+            mock_get_seen_ids_and_last_processed.return_value = (
+                [
+                    inactive_user.username,
+                    active_user.username,
+                ],
+                datetime.datetime.now(),
+            )
+
+            _do_sync_s3_sso_users()
+
+            User = get_user_model()
+            assert (
+                User.objects.filter(username=active_user.username).first().profile.sso_status
+                == "active"
+            )
+            assert (
+                User.objects.filter(username=active_user_not_in_file.username)
+                .first()
+                .profile.sso_status
+                == "inactive"
+            )
+            assert (
+                User.objects.filter(username=inactive_user.username).first().profile.sso_status
+                == "inactive"
+            )
+
+    @override_settings(
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+    )
+    @override_settings(S3_SSO_IMPORT_ENABLED=True)
+    def test_do_get_staff_sso_s3_object_summaries_with_multiple_files_returns_in_correct_order(
+        self,
+    ):
+        s3_object_1 = mock.MagicMock(
+            bucket_name="bucket_1", key="a/today.jsonl.gz", last_modified=datetime.datetime.now()
+        )
+        s3_object_2 = mock.MagicMock(
+            bucket_name="bucket_1",
+            key="c/last_week.jsonl",
+            last_modified=datetime.datetime.now() - datetime.timedelta(weeks=1),
+        )
+        s3_object_3 = mock.MagicMock(
+            bucket_name="bucket_1",
+            key="b/yesterday.jsonl",
+            last_modified=datetime.datetime.now() - datetime.timedelta(days=1),
+        )
+
+        mock_bucket = mock.MagicMock()
+        mock_bucket.objects.filter.return_value = [s3_object_1, s3_object_2, s3_object_3]
+
+        summaries = _do_get_staff_sso_s3_object_summaries(mock_bucket)
+
+        assert summaries == [s3_object_2, s3_object_3, s3_object_1]
+
+    @override_settings(S3_SSO_IMPORT_ENABLED=True)
+    @pytest.mark.django_db
+    def test_sync_overwrites_cache_with_newer_last_published_value(
+        self,
+    ):
+        s3_object_1 = mock.MagicMock(
+            bucket_name="bucket_1", key="a/today.jsonl.gz", last_modified=datetime.datetime.now()
+        )
+        with mock.patch(
+            "dataworkspace.apps.applications.utils.get_s3_resource"
+        ) as mock_get_s3_resource, mock.patch(
+            "dataworkspace.apps.applications.utils._get_seen_ids_and_last_processed"
+        ) as mock_get_seen_ids_and_last_processed:
+            cache.set(
+                "s3_sso_sync_last_published", datetime.datetime(2024, 7, 26, 12, tzinfo=tzlocal())
+            )
+            mock_get_s3_resource().Bucket().objects.filter.return_value = [
+                s3_object_1,
+            ]
+            expected_cache_value = datetime.datetime.now(tz=tzlocal())
+            mock_get_seen_ids_and_last_processed.return_value = [[1], expected_cache_value]
+            _do_sync_s3_sso_users()
+            assert cache.get("s3_sso_sync_last_published") == expected_cache_value
+
+    @override_settings(S3_SSO_IMPORT_ENABLED=True)
+    @override_settings(
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+    )
+    @pytest.mark.django_db
+    def test_sync_s3_request_fails(self):
+        with mock.patch(
+            "dataworkspace.apps.applications.utils.get_s3_resource"
+        ) as mock_get_s3_resource:
+            with pytest.raises(Exception) as exc:
+                mock_get_s3_resource.side_effect = Exception("No bucket")
+                _do_sync_s3_sso_users()
+            assert str(exc.value) == "No bucket"
+
+        User = get_user_model()
+        assert not User.objects.all()
+
+    def test_get_seen_ids_and_last_processed_returns_unique_set_when_duplicate_ids_in_files(
+        self,
+    ):
+        with mock.patch(
+            "dataworkspace.apps.applications.utils._process_staff_sso_file"
+        ) as mock_process_staff_sso_file:
+            mock_process_staff_sso_file.side_effect = [
+                ([1, 2, 3, 6, 7, 8], datetime.datetime.now()),
+                ([1, 3, 5, 7, 10], datetime.datetime.now()),
+            ]
+            result = _get_seen_ids_and_last_processed(
+                [
+                    mock.MagicMock(
+                        source_key="s3://bucket_1/a.jsonl.gz",
+                    ),
+                    mock.MagicMock(
+                        source_key="s3://bucket_1/b.jsonl.gz",
+                    ),
+                ],
+                mock.MagicMock(),
+                datetime.datetime.now(),
+            )
+
+            assert len(result[0]) == 8
+            assert result[0] == [1, 2, 3, 5, 6, 7, 8, 10]
+
+    @override_settings(
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+    )
+    @override_settings(S3_SSO_IMPORT_ENABLED=False)
+    @pytest.mark.django_db
+    def test_process_staff_sso_with_s3_import_disabled_doesnt_add_user(self, sso_user_factory):
+
+        user_1 = sso_user_factory()
+        user_2 = sso_user_factory()
+        m_open = mock.mock_open(read_data="\n".join([json.dumps(user_1), json.dumps(user_2)]))
+
+        with mock.patch(
+            "dataworkspace.apps.applications.utils.smart_open",
+            m_open,
+            create=True,
+        ):
+            _process_staff_sso_file(
+                mock.MagicMock(),
+                "file.jsonl.gz",
+                datetime.datetime.fromtimestamp(0, tz=datetime.datetime.now().astimezone().tzinfo),
+            )
+
+            User = get_user_model()
+            assert not User.objects.all()
+
+    @override_settings(
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+    )
+    @override_settings(S3_SSO_IMPORT_ENABLED=True)
+    @pytest.mark.django_db
+    def test_process_staff_sso_file_without_cache_creates_all_users(self, sso_user_factory):
+
+        user_1 = sso_user_factory()
+        user_2 = sso_user_factory()
+        m_open = mock.mock_open(read_data="\n".join([json.dumps(user_1), json.dumps(user_2)]))
+
+        with mock.patch(
+            "dataworkspace.apps.applications.utils.smart_open",
+            m_open,
+            create=True,
+        ):
+            _process_staff_sso_file(
+                mock.MagicMock(),
+                "file.jsonl.gz",
+                datetime.datetime.fromtimestamp(0, tz=datetime.datetime.now().astimezone().tzinfo),
+            )
+
+            User = get_user_model()
+            all_users = User.objects.all()
+
+            assert len(all_users) == 2
+            assert str(all_users[0].profile.sso_id) == user_1["object"]["dit:StaffSSO:User:userId"]
+            assert (
+                str(all_users[0].profile.sso_status)
+                == user_1["object"]["dit:StaffSSO:User:status"]
+            )
+            assert all_users[0].username == user_1["object"]["dit:StaffSSO:User:userId"]
+            assert all_users[0].email == user_1["object"]["dit:emailAddress"][0]
+            assert all_users[0].first_name == user_1["object"]["dit:firstName"]
+            assert all_users[0].last_name == user_1["object"]["dit:lastName"]
+
+            assert str(all_users[1].profile.sso_id) == user_2["object"]["dit:StaffSSO:User:userId"]
+            assert (
+                str(all_users[1].profile.sso_status)
+                == user_2["object"]["dit:StaffSSO:User:status"]
+            )
+            assert all_users[1].username == user_2["object"]["dit:StaffSSO:User:userId"]
+            assert all_users[1].email == user_2["object"]["dit:emailAddress"][0]
+            assert all_users[1].first_name == user_2["object"]["dit:firstName"]
+            assert all_users[1].last_name == user_2["object"]["dit:lastName"]
+
+    @override_settings(
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+    )
+    @override_settings(S3_SSO_IMPORT_ENABLED=True)
+    @pytest.mark.django_db
+    def test_process_staff_sso_file_with_cache_ignores_users_before_last_published(
+        self, sso_user_factory
+    ):
+        user_in_past = sso_user_factory(published_date=datetime.datetime(2023, 10, 1))
+        user_to_be_included = sso_user_factory()
+        m_open = mock.mock_open(
+            read_data="\n".join([json.dumps(user_in_past), json.dumps(user_to_be_included)])
+        )
+
+        with mock.patch(
+            "dataworkspace.apps.applications.utils.smart_open",
+            m_open,
+            create=True,
+        ):
+            _process_staff_sso_file(
+                mock.MagicMock(),
+                "file.jsonl.gz",
+                datetime.datetime(2024, 7, 26, 12, tzinfo=tzlocal()),
+            )
+
+            User = get_user_model()
+            all_users = User.objects.all()
+
+            assert len(all_users) == 1
+
+            assert (
+                str(all_users[0].profile.sso_id)
+                == user_to_be_included["object"]["dit:StaffSSO:User:userId"]
+            )
+            assert (
+                str(all_users[0].profile.sso_status)
+                == user_to_be_included["object"]["dit:StaffSSO:User:status"]
+            )
+            assert (
+                all_users[0].username == user_to_be_included["object"]["dit:StaffSSO:User:userId"]
+            )
+            assert all_users[0].email == user_to_be_included["object"]["dit:emailAddress"][0]
+            assert all_users[0].first_name == user_to_be_included["object"]["dit:firstName"]
+            assert all_users[0].last_name == user_to_be_included["object"]["dit:lastName"]
+
+    @override_settings(
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+    )
+    @override_settings(S3_SSO_IMPORT_ENABLED=True)
+    @pytest.mark.django_db
+    def test_process_staff_sso_updates_existing_users_email(self, sso_user_factory):
+
+        user_1 = sso_user_factory()
+
+        user = UserFactory.create(email="should_be_changed@test.com")
+        user.profile.sso_id = user_1["object"]["dit:StaffSSO:User:userId"]
+        user.save()
+
+        m_open = mock.mock_open(read_data="\n".join([json.dumps(user_1)]))
+
+        with mock.patch(
+            "dataworkspace.apps.applications.utils.smart_open",
+            m_open,
+            create=True,
+        ):
+            _process_staff_sso_file(
+                mock.MagicMock(),
+                "file.jsonl.gz",
+                datetime.datetime.fromtimestamp(0, tz=datetime.datetime.now().astimezone().tzinfo),
+            )
+
+            User = get_user_model()
+            all_users = User.objects.all()
+
+            assert len(all_users) == 1
+            assert str(all_users[0].email) == user_1["object"]["dit:emailAddress"][0]
+
+    @override_settings(
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+    )
+    @override_settings(S3_SSO_IMPORT_ENABLED=True)
+    @pytest.mark.django_db
+    def test_process_staff_sso_creates_role_if_user_can_access_tools(self, sso_user_factory):
+
+        user_1 = sso_user_factory()
+
+        can_access_tools_permission = Permission.objects.get(
+            codename="start_all_applications",
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        )
+
+        user = UserFactory.create(email=user_1["object"]["dit:emailAddress"][0])
+        user.profile.sso_id = user_1["object"]["dit:StaffSSO:User:userId"]
+        user.save()
+        user.user_permissions.add(can_access_tools_permission)
+
+        m_open = mock.mock_open(read_data="\n".join([json.dumps(user_1)]))
+
+        with mock.patch(
+            "dataworkspace.apps.applications.utils.smart_open",
+            m_open,
+            create=True,
+        ), mock.patch(
+            "dataworkspace.apps.applications.utils.create_tools_access_iam_role_task"
+        ) as create_tools_access_iam_role_task:
+            _process_staff_sso_file(
+                mock.MagicMock(),
+                "file.jsonl.gz",
+                datetime.datetime.fromtimestamp(0, tz=datetime.datetime.now().astimezone().tzinfo),
+            )
+
+            User = get_user_model()
+            all_users = User.objects.all()
+
+            assert len(all_users) == 1
+            assert create_tools_access_iam_role_task.delay.call_args_list == [
+                mock.call(
+                    user.id,
+                )
+            ]
+
+    @override_settings(
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+    )
+    @override_settings(S3_SSO_IMPORT_ENABLED=True)
+    @pytest.mark.django_db
+    def test_process_staff_sso_doesnt_create_role_if_user_cant_access_tools(
+        self, sso_user_factory
+    ):
+
+        user_1 = sso_user_factory()
+
+        user = UserFactory.create(email=user_1["object"]["dit:emailAddress"][0])
+        user.profile.sso_id = user_1["object"]["dit:StaffSSO:User:userId"]
+        user.save()
+
+        m_open = mock.mock_open(read_data="\n".join([json.dumps(user_1)]))
+
+        with mock.patch(
+            "dataworkspace.apps.applications.utils.smart_open",
+            m_open,
+            create=True,
+        ), mock.patch(
+            "dataworkspace.apps.applications.utils.create_tools_access_iam_role_task"
+        ) as create_tools_access_iam_role_task:
+            _process_staff_sso_file(
+                mock.MagicMock(),
+                "file.jsonl.gz",
+                datetime.datetime.fromtimestamp(0, tz=datetime.datetime.now().astimezone().tzinfo),
+            )
+
+            User = get_user_model()
+            all_users = User.objects.all()
+
+            assert len(all_users) == 1
+            assert not create_tools_access_iam_role_task.delay.called
+
+    @override_settings(
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+    )
+    @override_settings(S3_SSO_IMPORT_ENABLED=True)
+    @pytest.mark.django_db
+    def test_process_staff_sso_doesnt_create_role_if_user_already_has_role(self, sso_user_factory):
+
+        user_1 = sso_user_factory()
+
+        can_access_tools_permission = Permission.objects.get(
+            codename="start_all_applications",
+            content_type=ContentType.objects.get_for_model(ApplicationInstance),
+        )
+
+        user = UserFactory.create(email=user_1["object"]["dit:emailAddress"][0])
+        user.user_permissions.add(can_access_tools_permission)
+        user.profile.sso_id = user_1["object"]["dit:StaffSSO:User:userId"]
+        user.profile.tools_access_role_arn = "some-arn"
+        user.save()
+
+        m_open = mock.mock_open(read_data="\n".join([json.dumps(user_1)]))
+
+        with mock.patch(
+            "dataworkspace.apps.applications.utils.smart_open",
+            m_open,
+            create=True,
+        ), mock.patch(
+            "dataworkspace.apps.applications.utils.create_tools_access_iam_role_task"
+        ) as create_tools_access_iam_role_task:
+            _process_staff_sso_file(
+                mock.MagicMock(),
+                "file.jsonl.gz",
+                datetime.datetime.fromtimestamp(0, tz=datetime.datetime.now().astimezone().tzinfo),
+            )
+
+            User = get_user_model()
+            all_users = User.objects.all()
+
+            assert len(all_users) == 1
+            assert not create_tools_access_iam_role_task.delay.called
+
+    @override_settings(
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+    )
+    @override_settings(S3_SSO_IMPORT_ENABLED=True)
+    @pytest.mark.django_db
+    def test_process_staff_sso_with_empty_file_returns_empty_list_and_same_datetime(self):
+        last_published = datetime.datetime.now(tz=tzlocal())
+        m_open = mock.mock_open(read_data="\n")
+
+        with mock.patch(
+            "dataworkspace.apps.applications.utils.smart_open",
+            m_open,
+            create=True,
+        ):
+            process_staff_results = _process_staff_sso_file(
+                mock.MagicMock(),
+                "file.jsonl.gz",
+                last_published,
+            )
+
+            assert process_staff_results[0] == []
+            assert process_staff_results[1] == last_published
+
+    @override_settings(
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+    )
+    @override_settings(S3_SSO_IMPORT_ENABLED=True)
+    @pytest.mark.django_db
+    def test_process_staff_sso_returns_same_last_published_when_user_older_than_previous(
+        self, sso_user_factory
+    ):
+        user_1 = sso_user_factory(published_date=datetime.datetime(2024, 1, 1, tzinfo=tzlocal()))
+        last_published = datetime.datetime.now(tz=tzlocal())
+        m_open = mock.mock_open(read_data="\n".join([json.dumps(user_1)]))
+
+        with mock.patch(
+            "dataworkspace.apps.applications.utils.smart_open",
+            m_open,
+            create=True,
+        ):
+            process_staff_results = _process_staff_sso_file(
+                mock.MagicMock(),
+                "file.jsonl.gz",
+                last_published,
+            )
+
+            assert process_staff_results[0] == [user_1["object"]["dit:StaffSSO:User:userId"]]
+            assert process_staff_results[1] == last_published
+
+    @override_settings(
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+    )
+    @override_settings(S3_SSO_IMPORT_ENABLED=True)
+    @pytest.mark.django_db
+    def test_process_staff_sso_returns_latest_user_last_published_when_newer_than_previous(
+        self, sso_user_factory
+    ):
+        user_1 = sso_user_factory(published_date=datetime.datetime.now(tz=tzlocal()))
+
+        m_open = mock.mock_open(read_data="\n".join([json.dumps(user_1)]))
+
+        with mock.patch(
+            "dataworkspace.apps.applications.utils.smart_open",
+            m_open,
+            create=True,
+        ):
+            process_staff_results = _process_staff_sso_file(
+                mock.MagicMock(),
+                "file.jsonl.gz",
+                datetime.datetime(2024, 7, 26, 12, tzinfo=tzlocal()),
+            )
+
+            assert process_staff_results[0] == [get_user_model().objects.all().first().username]
+            assert process_staff_results[1] == parser.parse(user_1["published"])
 
 
 class TestSyncActivityStreamSSOUsers:
