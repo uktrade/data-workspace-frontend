@@ -6,7 +6,7 @@ from dataworkspace.forms import (
     GOVUKDesignSystemRadioField,
     GOVUKDesignSystemRadiosWidget,
     GOVUKDesignSystemTextWidget,
-    GOVUKDesignSystemTextCharCountWidget
+    GOVUKDesignSystemTextCharCountWidget,
 )
 
 

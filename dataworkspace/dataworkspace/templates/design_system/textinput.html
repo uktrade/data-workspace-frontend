@@ -1,5 +1,5 @@
 {% with id=widget.attrs.id %}
-<div class="govuk-form-group {% if widget.errors %}govuk-form-group--error{% endif %}" data-maxlength="{{ widget.character_limit }}">
+<div class="govuk-form-group {% if widget.errors %}govuk-form-group--error{% endif %}">
   {% if widget.label_is_heading %}
   <{{ widget.heading }} class="govuk-label-wrapper">
   {% endif %}
