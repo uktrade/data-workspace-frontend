@@ -1,13 +1,9 @@
 from unittest import TestCase
-from freezegun import freeze_time
-import mock
 import pytest
-import requests
 from bs4 import BeautifulSoup
 from django.urls import reverse
-from django.test import Client, override_settings
+from django.test import Client
 from django.core.files.uploadedfile import SimpleUploadedFile
-from dataworkspace.apps.core.storage import ClamAVResponse
 from dataworkspace.tests import factories
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.tests.common import get_http_sso_data
