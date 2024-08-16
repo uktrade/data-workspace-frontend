@@ -5,7 +5,8 @@ import {
   Bold,
   Italic,
   Heading,
-  Link
+  Link,
+  List
 } from 'ckeditor5';
 
 import 'ckeditor5/ckeditor5.css';
@@ -15,9 +16,21 @@ document.addEventListener('DOMContentLoaded', () => {
     .querySelectorAll('textarea[data-type="rich-text-editor"]')
     .forEach((selector) => {
       ClassicEditor.create(selector, {
-        plugins: [Essentials, Bold, Italic, Heading, Link],
+        plugins: [Essentials, Bold, Italic, Heading, Link, List],
         toolbar: {
-          items: ['undo', 'redo', '|', 'bold', 'italic', '|', 'heading', 'link']
+          items: [
+            'undo',
+            'redo',
+            '|',
+            'bold',
+            'italic',
+            '|',
+            'heading',
+            'link',
+            '|',
+            'bulletedList',
+            'numberedList'
+          ]
         }
       }).catch((error) => {
         // eslint-disable-next-line no-console

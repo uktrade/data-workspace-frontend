@@ -7,6 +7,19 @@ These styles refer to the CKEDitor 5 rich text editor - https://ckeditor.com/doc
 As we don't allow users to use certain heading levels inside the text area we are removing them as an option.
 */
 
+
+/*
+As we don't allow users to use certain heading levels inside the text area we are removing them as an option.
+*/
+.ck-heading-dropdown .ck-dropdown__panel ul li:nth-child(2) {
+  display: none;
+}
+
+/*
+Below are style rules to reset some basic styles to the content area else this
+area of the editor will naturally inherit django admin styles.
+*/
+
 textarea[data-type="rich-text-editor"] + .ck,
 textarea[data-type="rich-text-editor-link-only"] + .ck {
   width: 100%;
@@ -18,11 +31,54 @@ textarea[data-type="rich-text-editor-link-only"] + .ck .ck-content {
   color: black;
 }
 
-div[title="Heading 1"].tox-menu-nav__js,
-div[title="Heading 2"].tox-menu-nav__js,
-div[title="Heading 5"].tox-menu-nav__js,
-div[title="Heading 6"].tox-menu-nav__js {
-    display: none;
+.ck-powered-by {
+  display: none;
+}
+
+.module .ck {
+  h3, 
+  h4 {
+      margin-top: 10px !important;
+      padding: 0;
+      font-weight: normal;
+      text-align: left;
+      background: transparent;
+      color: #000
+  }
+
+  h3 {
+    font-size: 20px;
+    margin-bottom: 15px;
+  }
+  h4 {
+    font-size: 19px;
+    margin-bottom: 10px;
+  }
+  p {
+    font-size: 16px;
+    margin-bottom: 5px;
+  }
+
+  ul,ol {
+    padding: 0;
+    margin: 0 0 10px;
+    padding-left: 18px;
+    li {
+        font-size: 16px;
+    }
+    li::marker{
+      display: none;
+    }
+  }
+
+  ul li {
+    list-style-type: disc;
+  }
+
+  ol li {
+    list-style-type: decimal;
+  }
+
 }
 </style>
 {% endblock %}
