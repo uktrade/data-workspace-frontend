@@ -1,0 +1,9 @@
+.govuk-input__wrapper__inner {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  width: 100%;
+  .govuk-hint {
+    grid-column-start: 1;
+    grid-column-end: span 2;
+  }
+}

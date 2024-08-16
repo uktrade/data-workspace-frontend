@@ -6,6 +6,7 @@ from dataworkspace.forms import (
     GOVUKDesignSystemRadioField,
     GOVUKDesignSystemRadiosWidget,
     GOVUKDesignSystemTextWidget,
+    GOVUKDesignSystemTextCharCountWidget
 )
 
 
@@ -59,11 +60,9 @@ class TableNameForm(GOVUKDesignSystemForm):
         schema = kwargs["schema"] + "."
         descriptive_name = kwargs["descriptive_name"].replace(" ", "_")
         self.table_names = kwargs["table_names"]
-        self.fields["table_name"].widget = GOVUKDesignSystemTextWidget(
+        self.fields["table_name"].widget = GOVUKDesignSystemTextCharCountWidget(
             prefix=schema,
-            enable_character_count=True,
             character_limit="42",
-            extra_input_classes="govuk-js-character-count",
         )
         self.fields["table_name"].initial = descriptive_name
 
