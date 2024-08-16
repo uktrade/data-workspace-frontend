@@ -214,7 +214,7 @@ class UploadCSVView(FormView):
             # pylint: disable=raise-missing-from
             return HttpResponseServerError(
                 "Error saving file: {}".format(ex.response["Error"]["Message"])
-            ) #pylint: disable=no-member
+            )  # pylint: disable=no-member
 
         return HttpResponseRedirect(
             reverse(
