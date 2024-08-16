@@ -3,6 +3,8 @@ These styles refer to the CKEDitor 5 rich text editor - https://ckeditor.com/doc
 */
 textarea[data-type="rich-text-editor"] + .ck,
 textarea[data-type="rich-text-editor-link-only"] + .ck {
+  font-family: arial, sans-serif;
+  font-size: 19px;
   width: 100%;
   border: 2px solid $govuk-focus-text-colour;
   .ck-content {
