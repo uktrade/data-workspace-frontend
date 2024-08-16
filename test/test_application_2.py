@@ -1,3 +1,4 @@
+# pylint: not-async-context-manager
 import unittest
 
 import asyncio
