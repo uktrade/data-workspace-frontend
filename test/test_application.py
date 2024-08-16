@@ -1,4 +1,4 @@
-# pylint: not-async-context-manager
+# pylint: disable=not-async-context-manager
 import asyncio
 
 import json
