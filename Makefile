@@ -122,7 +122,9 @@ docker-format: first-use
 .PHONY: format
 format:
 	black .
-
+	flake8 .
+	pylint .
+	
 .PHONY: dev-shell
 dev-shell:
 	docker compose run --rm data-workspace bash

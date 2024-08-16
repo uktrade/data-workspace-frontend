@@ -167,19 +167,24 @@ class TableNameView(FormView):
         return HttpResponseRedirect(
             reverse(
                 "datasets:add_table:upload-csv",
-                args=(self.kwargs["pk"], self.kwargs["schema"], self.kwargs["descriptive_name"], table_name),
+                args=(
+                    self.kwargs["pk"],
+                    self.kwargs["schema"],
+                    self.kwargs["descriptive_name"],
+                    table_name,
+                ),
             )
         )
 
+
 class UploadCSVView(FormView):
     template_name = "datasets/add_table/upload_csv.html"
-    waffle_flag = settings.DATA_UPLOADER_UI_FLAG
     form_class = UploadCSVForm
 
     def _get_file_upload_key(self, file_name, pk):
         return os.path.join(
             get_s3_prefix(str(self.request.user.profile.sso_id)),
-            "_add_table_uploads", # will need to change 
+            "_add_table_uploads",  # will need to change
             str(pk),
             file_name,
         )
@@ -198,13 +203,13 @@ class UploadCSVView(FormView):
         csv_file = form.cleaned_data["csv_file"]
         client = get_s3_client()
         file_name = f"{csv_file.name}!{uuid.uuid4()}"
-        print('self.kwargs', self.kwargs)
+        print("self.kwargs", self.kwargs)
         key = self._get_file_upload_key(file_name, self.kwargs["pk"])
         csv_file.seek(0)
         try:
             client.put_object(
                 Body=csv_file,
-                Bucket=settings.NOTEBOOKS_BUCKET, 
+                Bucket=settings.NOTEBOOKS_BUCKET,
                 Key=key,
             )
         except ClientError as ex:
@@ -215,8 +220,13 @@ class UploadCSVView(FormView):
 
         return HttpResponseRedirect(
             reverse(
-            "datasets:add_table:data-types",
-            args=(self.kwargs["pk"], self.kwargs["schema"], self.kwargs["descriptive_name"], self.kwargs["table_name"]),
+                "datasets:add_table:data-types",
+                args=(
+                    self.kwargs["pk"],
+                    self.kwargs["schema"],
+                    self.kwargs["descriptive_name"],
+                    self.kwargs["table_name"],
+                ),
             )
             + f"?file={file_name}"
         )
