@@ -202,7 +202,6 @@ class UploadCSVView(FormView):
         csv_file = form.cleaned_data["csv_file"]
         client = get_s3_client()
         file_name = f"{csv_file.name}!{uuid.uuid4()}"
-        print("self.kwargs", self.kwargs)
         key = self._get_file_upload_key(file_name, self.kwargs["pk"])
         csv_file.seek(0)
         try:
@@ -215,7 +214,7 @@ class UploadCSVView(FormView):
             # pylint: disable=raise-missing-from
             return HttpResponseServerError(
                 "Error saving file: {}".format(ex.response["Error"]["Message"])
-            )
+            ) #pylint: disable=no-member
 
         return HttpResponseRedirect(
             reverse(
