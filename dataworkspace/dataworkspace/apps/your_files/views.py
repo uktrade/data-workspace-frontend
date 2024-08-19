@@ -299,7 +299,7 @@ class CreateTableConfirmDataTypesView(ValidateSchemaMixin, FormView):
                     "table_exists_action": self.request.GET.get("table_exists_action"),
                 }
             )
-        print(self.request.GET["path"])
+
         return initial
 
     def get_form_kwargs(self):
