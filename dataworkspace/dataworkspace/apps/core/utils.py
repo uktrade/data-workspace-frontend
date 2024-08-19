@@ -292,11 +292,20 @@ def new_private_database_credentials(
                 )
 
             # Make it so by default, objects created by the user are owned by the role
-            cur.execute(
-                sql.SQL("ALTER USER {} SET ROLE {};").format(
-                    sql.Identifier(db_user), sql.Identifier(db_role)
+            # This seems to have a horrible performance impact on connecting, so we don't do it for
+            # contexts that can't create objects. The reason for the performance impact on
+            # connecting is currently unknown, but seems to be related to the number of other roles
+            # granted
+            if not (
+                db_user.endswith("_qs")
+                or db_user.endswith("_superset")
+                or db_user.endswith("_explorer")
+            ):
+                cur.execute(
+                    sql.SQL("ALTER USER {} SET ROLE {};").format(
+                        sql.Identifier(db_user), sql.Identifier(db_role)
+                    )
                 )
-            )
 
             # Give the user reasonable timeouts
             cur.execute(
