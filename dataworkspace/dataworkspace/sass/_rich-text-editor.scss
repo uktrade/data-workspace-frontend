@@ -1,26 +1,27 @@
 /*
-These styles refer to the TinyMCE rich text editor - https://www.tiny.cloud/docs/tinymce/latest/.
+These styles refer to the CKEDitor 5 rich text editor - https://ckeditor.com/docs/ckeditor5/latest/index.html
 */
-textarea[data-type="rich-text-editor"] + .tox {
-    width: 100% !important;
-    border: 2px solid $govuk-focus-text-colour;
-    border-radius: 0;
+textarea[data-type="rich-text-editor"] + .ck,
+textarea[data-type="rich-text-editor-link-only"] + .ck {
+  font-family: arial, sans-serif;
+  font-size: 19px;
+  width: 100%;
+  border: 2px solid $govuk-focus-text-colour;
+  .ck-content {
+    min-height: 200px;
+  }
+  .ck-sticky-panel__content {
+    border-bottom: 2px solid $govuk-focus-text-colour !important;
+  }
+}
 
-    .tox-editor-header {
-        box-shadow: none;
-        border-bottom: 2px solid $govuk-focus-text-colour;
-    }
-    .tox-statusbar__branding{
-        display: none;
-    }
+.ck-powered-by {
+  display: none;
 }
 
 /* 
 As we don't allow users to use certain heading levels inside the text area we are removing them as an option.
 */
-div[aria-label="Heading 1"].tox-menu-nav__js,
-div[aria-label="Heading 2"].tox-menu-nav__js,
-div[aria-label="Heading 5"].tox-menu-nav__js,
-div[aria-label="Heading 6"].tox-menu-nav__js {
-    display: none;
+.ck-heading-dropdown .ck-dropdown__panel ul li:nth-child(2) {
+  display: none;
 }

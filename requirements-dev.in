@@ -27,5 +27,8 @@ remote-pdb
 remote-pdb-client
 pydevd-pycharm
 debugpy
+<<<<<<< HEAD
 django-tinymce
 python-arango
+=======
+>>>>>>> ffe3d20b (feat: due to admin performance issues replace TinyMCE with CKEditor)

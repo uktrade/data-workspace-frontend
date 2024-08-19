@@ -16,7 +16,7 @@ from dataworkspace.apps.data_collections.constants import CollectionUserAccessTy
 class Collection(DeletableTimestampedUserModel):
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
     name = models.CharField(blank=False, null=False, max_length=128)
-    description = RichTextField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
     )

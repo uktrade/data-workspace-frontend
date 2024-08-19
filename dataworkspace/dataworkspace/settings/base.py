@@ -121,7 +121,6 @@ INSTALLED_APPS = [
     "webpack_loader",
     "dataworkspace.apps.data_collections",
     "django_celery_results",
-    "tinymce",
     "dataworkspace.apps.arangodb",
 ]
 
@@ -480,7 +479,11 @@ YOUR_FILES_CONNECT_SRC = [
     "https://s3.eu-west-2.amazonaws.com",
 ] + ([S3_LOCAL_ENDPOINT_URL] if DEBUG else [])
 
-WEBPACK_SCRIPT_SRC = [] + (["http://0.0.0.0:3000", "'unsafe-eval'"] if DEBUG else [])
+WEBPACK_SCRIPT_SRC = [] + (
+    ["http://0.0.0.0:3000", "'unsafe-eval'", "http://0.0.0.0:3000", "'unsafe-inline'"]
+    if DEBUG
+    else []
+)
 
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
@@ -834,19 +837,3 @@ MAINTENANCE_MODE_IGNORE_URLS = (r"^/healthcheck$",)
 MAINTENANCE_MODE_IGNORE_ADMIN_SITE = True
 MAINTENANCE_MODE_GET_CONTEXT = "dataworkspace.apps.maintenance.maintenance.maintenance_context"
 MAINTENANCE_MODE_STATE_BACKEND = "maintenance_mode.backends.CacheBackend"
-
-TINYMCE_DEFAULT_CONFIG = {
-    "height": "320px",
-    "width": "900px",
-    "menubar": False,
-    "plugins": "advlist autolink lists link searchreplace visualblocks code codesample fullscreen insertdatetime media table code wordcount",  # pylint: disable=line-too-long
-    "toolbar": "undo redo | blocks | bold italic | fontselect fontsizeselect formatselect | alignleft aligncenter alignright alignjustify | numlist bullist checklist | link codesample code",  # pylint: disable=line-too-long
-    "custom_undo_redo_levels": 10,
-    "license_key": "gpl",
-}
-
-TINYMCE_LINK_CONFIG = {
-    **TINYMCE_DEFAULT_CONFIG,
-    "plugins": "link",
-    "toolbar": "link",
-}

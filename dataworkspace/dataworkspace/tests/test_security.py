@@ -1,13 +1,6 @@
-import pytest
-
 from django.urls import reverse
 
 from dataworkspace.tests.common import get_response_csp_as_set
-from dataworkspace.tests.factories import (
-    DatacutDataSetFactory,
-    MasterDataSetFactory,
-    ReferenceDatasetFactory,
-)
 
 
 def test_baseline_content_security_policy(client):
@@ -29,38 +22,6 @@ def test_baseline_content_security_policy(client):
     }
 
     assert policies == expected_policies
-
-
-@pytest.mark.parametrize(
-    "url,factory,unsafe_inline_script",
-    (
-        ("admin:datasets_referencedataset_add", None, True),
-        ("admin:datasets_referencedataset_change", ReferenceDatasetFactory, True),
-        ("admin:datasets_masterdataset_add", None, True),
-        ("admin:datasets_masterdataset_change", MasterDataSetFactory, True),
-        ("admin:datasets_datacutdataset_add", None, True),
-        ("admin:datasets_datacutdataset_change", DatacutDataSetFactory, True),
-        ("admin:index", None, False),
-    ),
-)
-def test_dataset_admin_pages_allow_inline_scripts_for_tinymce_support(
-    staff_client, url, factory, unsafe_inline_script
-):
-    args = None
-    if factory:
-        dataset = factory.create()
-        args = (dataset.id,)
-
-    # Log into admin
-    staff_client.get(reverse("admin:index"), follow=True)
-
-    full_url = reverse(url, args=args)
-    response = staff_client.get(full_url, follow=True)
-    script_src = get_csp_section(response, "script-src")
-    assert ("'unsafe-inline'" in script_src) is unsafe_inline_script
-
-    style_src = get_csp_section(response, "style-src")
-    assert "'unsafe-inline'" in style_src
 
 
 def get_csp_section(response, policy_type):

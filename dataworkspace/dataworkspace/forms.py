@@ -3,6 +3,7 @@ import datetime
 import re
 
 from django import forms
+from django.contrib.admin.widgets import AdminTextareaWidget
 from django.core.validators import EmailValidator
 from django.forms import (
     CheckboxInput,
@@ -283,6 +284,12 @@ class GOVUKDesignSystemRichTextField(GOVUKDesignSystemFieldMixin, forms.CharFiel
     widget = GOVUKDesignSystemTextareaWidget(data_attributes={"type": "rich-text-editor"})
 
 
+class GOVUKDesignSystemRichLinkField(GOVUKDesignSystemFieldMixin, forms.CharField):
+    widget = GOVUKDesignSystemTextareaWidget(
+        data_attributes={"type": "rich-text-editor-link-only"}
+    )
+
+
 class GOVUKDesignSystemModelForm(forms.ModelForm):
     def clean(self):
         """We need to attach errors to widgets so that the fields can be rendered correctly. This slightly breaks
@@ -349,3 +356,13 @@ class GOVUKDesignSystemForm(forms.Form):
         non_field_errors = [(None, e) for e in self.non_field_errors()]
 
         return non_field_errors + field_errors
+
+
+class AdminRichTextEditorWidget(AdminTextareaWidget):
+    def __init__(self, attrs=None):
+        super().__init__(attrs={"data-type": "rich-text-editor", **(attrs or {})})
+
+
+class AdminRichLinkEditorWidget(AdminTextareaWidget):
+    def __init__(self, attrs=None):
+        super().__init__(attrs={"data-type": "rich-text-editor-link-only", **(attrs or {})})
