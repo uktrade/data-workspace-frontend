@@ -1,3 +1,4 @@
+# pylint: disable=not-async-context-manager
 import csv
 import io
 import json
