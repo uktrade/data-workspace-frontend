@@ -64,6 +64,13 @@ class TableNameForm(GOVUKDesignSystemForm):
             prefix=schema,
             character_limit="42",
         )
+        self.fields["table_name"].widget.attrs.update(
+            {
+                "label": self.fields["table_name"].label,
+                "help_text": self.fields["table_name"].help_text,
+            }
+        )
+
         self.fields["table_name"].initial = descriptive_name
 
     def clean_table_name(self):

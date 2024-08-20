@@ -344,6 +344,8 @@ class TestTableNamePage(TestCase):
         paragraph_text = soup.find_all("p", {"class": "govuk-body"})[1].contents[0]
         title_text = soup.find("title").get_text(strip=True)
         backlink = soup.find("a", {"class": "govuk-back-link"}).get("href")
+        label = soup.find("label").get_text(strip=True)
+        help_text = soup.find("div", {"class": "govuk-hint"}).get_text(strip=True)
 
         assert (
             f"/datasets/{self.dataset.id}/add-table/{self.source.schema}/descriptive-name"
@@ -356,6 +358,11 @@ class TestTableNamePage(TestCase):
         assert (
             "Your tables schema has been set to the one other tables in the catalogue item use"
             in paragraph_text
+        )
+        assert "Enter your table name" in label
+        assert (
+            "Your table name needs to be unique, have less than 42 characters and not contain any special characters apart from underscores"
+            in help_text
         )
 
     def test_table_name_page_when_multiple_schemas(self):
