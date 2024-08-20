@@ -1,231 +1,11 @@
 @import "vars";
-
-// Macbook Pro:         1440 x 900 @ 2x
-// Dell XPS Cirrus:     1280 x 533 @ 2x
-// GOVUK default width is 960px;
-
-// This value is used for max-width so it *can* be wider than available pixel space
-// $govuk-page-width: 1280px;
-
-// check your --include-path for node-sass if this fails to resolve
-@import "govuk-frontend/govuk/all";
+@import "govuk-frontend/dist/govuk/all";
 
 @import "app-tabs";
 @import "app-copy";
 
-.govuk-panel--confirmation--left {
-  text-align: left;
-}
-
 .govuk-panel--confirmation:focus {
   outline: 5px solid #fd0;
-}
-
-.unknown {
-  color: #bfc1c3;
-}
-
-.scrollable-table {
-  width: 100%;
-  overflow-x: auto;
-  max-height: 560px;
-  padding: 3px;
-}
-
-.scrollable-table:focus {
-  border: 3px solid #0b0c0c;
-  outline: 3px solid #fd0;
-  padding: 0;
-}
-
-.fixed-table-height {
-  max-height: 100% !important;
-}
-
-.scrollable-table table thead th {
-  padding: 15px;
-  background-color: #dee0e2;
-  border-bottom: 0;
-  border-right: 2px solid #fff;
-  font-weight: normal;
-  min-width: 120px;
-  position: relative;
-  vertical-align: middle;
-}
-
-.scrollable-table table tbody td {
-  padding: 15px;
-  vertical-align: top;
-  border: none;
-}
-
-.scrollable-table table tbody tr:nth-child(even) td {
-  background-color: #f8f8f8;
-}
-
-.scrollable-table table thead th.ref-data-col-character-field,
-.scrollable-table table thead th.ref-datetime-field {
-  min-width: 280px;
-}
-
-.scrollable-table table thead th.ref-data-col-id {
-  min-width: 120px;
-}
-
-.scrollable-table table thead th.ref-data-boolean-field {
-  min-width: 80px;
-}
-
-.scrollable-table table thead th.ref-data-col-universal-unique-identifier-field {
-  min-width: 300px;
-}
-
-.pagination {
-  float: right;
-}
-
-.pagination li {
-  display: inline;
-  padding-left: 4px;
-}
-
-/* Loading spinner CSS
-
-Lifted from an issue on the GOV.UK Design System repo (https://github.com/alphagov/govuk-design-system-backlog/issues/28).
-
-Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issuecomment-489061680*/
-.loading-spinner {
-  border: 12px solid #ffffff;
-  border-radius: 50%;
-  border-top-color: #00703c;
-  width: 90px;
-  height: 90px;
-  -webkit-animation: spin 2s linear infinite;
-  animation: spin 2s linear infinite;
-  margin: 0 auto;
-}
-
-.loading-spinner-small {
-  border: 12px solid #ffffff;
-  border-radius: 50%;
-  border-top-color: #00703c;
-  width: 90px;
-  height: 90px;
-  -webkit-animation: spin 2s linear infinite;
-  animation: spin 2s linear infinite;
-  margin: 0 auto;
-}
-
-@-webkit-keyframes spin {
-  0% {
-    -webkit-transform: rotate(0deg);
-  }
-  100% {
-    -webkit-transform: rotate(360deg);
-  }
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-/* The GDS styles assume the presence of the GOV UK logo + crown, which we
-   don't have, so without these tweaks the white Menu button on mobile is too
-   low: too close to the border of the black top bar.
-
-   As with most (but not all) styles in GDS, this position is "mobile-first",
-   with @media min-width to apply styles on larger screen only. This makes it
-   slightly awkward to override a style on only one width of screen: the value
-   of the style on the larger sizes must be copied and pasted after the
-   override in @media min-width blocks. */
-.govuk-header__menu-button {
-  top: 12px; /* The original value is 20px */
-}
-
-@media (min-width: 40.0625em) {
-  .govuk-header__menu-button {
-    top: 15px; /* The original GDS value */
-  }
-}
-
-.app-\!-fill-width {
-  width: 100%;
-}
-
-.js-enabled .app-js-hidden {
-  display: none;
-}
-
-.hidden {
-  display: none;
-}
-
-.app-header--suggestion {
-  display: none;
-}
-
-@media (min-width: 48.05em) {
-  .app-header--suggestion {
-    display: block;
-    float: right;
-  }
-}
-
-.app-table_cell--no-border {
-  border-bottom: none;
-}
-
-.app-taglist {
-  list-style: none;
-  display: inline-block;
-  padding-inline: 0;
-}
-
-.app-taglist__item {
-  display: inline;
-  box-sizing: border-box;
-  margin: 0;
-  border: 2px solid rgba(11, 12, 12, 0.15);
-  border-radius: 4px;
-  padding: 2px 4px;
-}
-
-@mixin sidebar-border {
-  border-top: 2px solid #1d70b8;
-}
-
-.app-related-items {
-  @include sidebar-border;
-  padding-top: 10px;
-}
-
-p.sidebar-section {
-  &:not(:first-child) {
-    @include sidebar-border;
-    padding-top: 20px;
-  }
-}
-
-/* force links from the rich text editor to use GDS colours */
-.dataset-description-richtext a {
-  color: #1d70b8;
-}
-
-.dataset-description-richtext a:active {
-  color: #0b0c0c;
-}
-
-.dataset-description-richtext a:hover {
-  color: #003078;
-}
-
-.dataset-description-richtext a:visited {
-  color: #4c2c92;
 }
 
 .training-screenshot {
@@ -235,142 +15,11 @@ p.sidebar-section {
 .govuk-hint.currently-selected-file {
   font-size: 1rem;
 }
-.enhanced-table {
-  display: none;
-}
-
-.sticky-button-container {
-  position: sticky;
-  bottom: 20px;
-
-  .sticky-button-contents {
-    padding: 1rem 1rem 0 1rem;
-    //set a negative horizontal margin to widen the container
-    //margin:0 -4rem;
-    background-color: govuk-colour("light-grey");
-    border: solid 1px $govuk-border-colour;
-    overflow: hidden;
-  }
-}
-
-.govuk-breadcrumbs__list-item-white:before {
-  border-color: white !important;
-}
 
 .dw-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-}
-
-.enhanced-table-container {
-  .ag-root-wrapper {
-    border-width: 0;
-    font-size: 1rem;
-  }
-  .ag-header {
-    background-color: transparent;
-    border-bottom: 1px solid #b1b4b6;
-  }
-  .ag-header-cell-text {
-    display: inline-block;
-    user-select: text;
-    white-space: nowrap;
-  }
-  .header-wrap {
-    position: relative;
-    color: rgb(29, 112, 184);
-    .ag-icon-none,
-    .ag-icon-desc,
-    .ag-icon-asc {
-      display: none;
-    }
-    button {
-      background-color: rgba(0, 0, 0, 0);
-      border-width: 0;
-      -webkit-box-shadow: 0 0 0 0;
-      -moz-box-shadow: 0 0 0 0;
-      box-shadow: 0 0 0 0;
-      color: #005ea5;
-      cursor: default;
-      font-family: inherit;
-      font-weight: inherit;
-      padding: 0 10px 0 0;
-      position: relative;
-      text-align: inherit;
-      font-size: 1em;
-      margin: 0 4px 0 0;
-    }
-  }
-
-  .ag-header-cell-label {
-    text-transform: lowercase;
-    &.ag-header-cell-label::first-letter {
-      text-transform: uppercase;
-    }
-  }
-  .ag-grid-header-cell,
-  .ag-header-cell-label,
-  .ag-cell-label-container,
-  .ag-header-cell-sortable {
-    cursor: default;
-  }
-  .ag-header-cell-sorted-none button,
-  .ag-header-cell-sorted-asc button,
-  .ag-header-cell-sorted-desc button {
-    color: $govuk-link-colour;
-    cursor: pointer;
-  }
-  .ag-header-cell-sorted-none button:focus,
-  .ag-header-cell-sorted-asc button:focus,
-  .ag-header-cell-sorted-desc button:focus {
-    background-color: #fd0;
-    color: $govuk-link-colour;
-    box-shadow:
-      0 -2px #fd0,
-      0 4px #0b0c0c;
-    outline: none;
-  }
-  .sort-none:before {
-    content: " ▼";
-    position: absolute;
-    right: -3px;
-    top: 10px;
-    font-size: 0.5em;
-  }
-  .sort-none:after {
-    content: " ▲";
-    position: absolute;
-    right: -3px;
-    top: 2px;
-    font-size: 0.5em;
-  }
-  .sort-asc:after {
-    content: " ▲";
-    font-size: 0.8em;
-    position: absolute;
-    right: -5px;
-    top: 2px;
-  }
-  .sort-desc:after {
-    content: " ▼";
-    font-size: 0.8em;
-    position: absolute;
-    right: -5px;
-    top: 2px;
-  }
-  .ag-header-cell,
-  .ag-cell {
-    padding-left: 5px;
-  }
-  .ag-header-cell-resize {
-    right: 1px;
-  }
-
-  .ag-row {
-    background-color: transparent;
-    border-bottom: 1px solid #b1b4b6;
-  }
 }
 
 .badge {
@@ -404,33 +53,30 @@ p.sidebar-section {
   }
 }
 
-.govuk-checkboxes__conditional_input{ 
+.govuk-checkboxes__conditional_input {
   margin-left: 10px;
-  margin-top: -30px;  
+  margin-top: -30px;
 }
 
-.home-header {
-  .govuk-header {
-    border-bottom: none;
-  }
-}
-
-.word-wrap {
-  word-wrap: break-word;
-}
-
-@import "filters";
-@import "search-bar";
-@import "search-results";
-@import "collection-button";
-@import "data-grid";
-@import "dialog";
-@import "grid-breadcrumb";
-@import "summary-list";
-@import "list";
-@import "warning";
-@import "pipeline-error-message";
-@import "tables";
-@import "rich-text-editor";
+@import "./objects/width-container";
+@import "./components/filters";
+@import "./components/header";
+@import "./components/search-bar";
+@import "./components/dialog";
+@import "./components/rich-text";
+@import "./components/loading-spinner";
+@import "./components/summary-list";
+@import "./components/list";
+@import "./components/warning-text";
+@import "./components/search-results";
+@import "./components/collection-button";
+@import "./components/tables";
+@import "./components/data-grid";
+@import "./components/grid-breadcrumb";
+@import "./components/pipeline-error-message";
+@import "./components/pagination";
+@import "./components/sticky-button";
+@import "./components/tag";
+@import "./vendor/ag-grid";
 @import "helpers";
 @import "mixins";

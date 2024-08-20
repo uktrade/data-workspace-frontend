@@ -17,13 +17,13 @@
     {% else %}
       {% if object.dataset.get_government_security_classification_display == "OFFICIAL" %}
         <strong
-          class="govuk-tag govuk-tag--blue">{{ object.dataset.get_government_security_classification_display }}</strong>
+          class="govuk-tag govuk-tag--blue">{{ object.dataset.get_government_security_classification_display|title }}</strong>
       {% else %}
         <strong
-          class="govuk-tag govuk-tag--red">{{ object.dataset.get_government_security_classification_display }}
+          class="govuk-tag govuk-tag--red">{{ object.dataset.get_government_security_classification_display|title }}
           {% if object.dataset.sensitivity.all %}
             {% for sensitivity in object.dataset.sensitivity.all %}
-              {% if not forloop.first %}and{% endif %}</span> {{ sensitivity }}
+              {% if not forloop.first %}and{% endif %}</span> {{ sensitivity|title }}
             {% endfor %}
           {% endif %} </strong>
       {% endif %}

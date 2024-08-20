@@ -1,0 +1,44 @@
+/* Loading spinner CSS
+
+Lifted from an issue on the GOV.UK Design System repo (https://github.com/alphagov/govuk-design-system-backlog/issues/28).
+
+Comment: https://github.com/alphagov/govuk-design-system-backlog/issues/28#issuecomment-489061680*/
+.loading-spinner {
+  border: 12px solid #ffffff;
+  border-radius: 50%;
+  border-top-color: #00703c;
+  width: 90px;
+  height: 90px;
+  -webkit-animation: spin 2s linear infinite;
+  animation: spin 2s linear infinite;
+  margin: 0 auto;
+}
+
+.loading-spinner-small {
+  border: 12px solid #ffffff;
+  border-radius: 50%;
+  border-top-color: #00703c;
+  width: 90px;
+  height: 90px;
+  -webkit-animation: spin 2s linear infinite;
+  animation: spin 2s linear infinite;
+  margin: 0 auto;
+}
+
+@-webkit-keyframes spin {
+  0% {
+    -webkit-transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

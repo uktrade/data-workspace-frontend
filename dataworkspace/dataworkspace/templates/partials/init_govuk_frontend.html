@@ -1,0 +1,7 @@
+{% load static %}  
+<script type="module" nonce="{{ request.csp_nonce }}">
+    import { initAll } from "{% get_static_prefix %}govuk-frontend-5.4.0.min.js"
+    window.GOVUKFrontend = {}
+    window.GOVUKFrontend.initAll = initAll
+    window.GOVUKFrontend.initAll()
+</script>
