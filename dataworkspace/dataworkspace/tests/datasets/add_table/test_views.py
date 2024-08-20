@@ -458,8 +458,6 @@ class TestTableNamePage(TestCase):
         assert "Table name already in use" in error_message_text
 
 
-
-
 @pytest.mark.django_db
 class TestUploadCSVPage(TestCase):
     def setUp(self):

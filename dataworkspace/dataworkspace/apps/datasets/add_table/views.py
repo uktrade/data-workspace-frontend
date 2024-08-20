@@ -16,6 +16,7 @@ from dataworkspace.apps.datasets.add_table.forms import (
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.utils import get_s3_prefix
 
+
 class AddTableView(DetailView):
     template_name = "datasets/add_table/about_this_service.html"
 

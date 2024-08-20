@@ -95,7 +95,6 @@ class TableNameForm(GOVUKDesignSystemForm):
         return table_name
 
 
-
 class UploadCSVForm(GOVUKDesignSystemForm):
 
     def clean_csv_file(self):
@@ -112,8 +111,7 @@ class UploadCSVForm(GOVUKDesignSystemForm):
         label="Upload a file",
         widget=GOVUKDesignSystemFileInputWidget(
             label_is_heading=True,
-            heading="p",
-            heading_class="govuk-body",
+            heading_class="govuk-label",
             show_selected_file=True,
             attrs={"accept": "text/csv"},
         ),
