@@ -1351,6 +1351,9 @@ def _process_staff_sso_file(
             last_name = user_obj.get("dit:lastName")
             status = user_obj.get("dit:StaffSSO:User:status")
 
+            if published_date > new_last_processed_datetime:
+                new_last_processed_datetime = published_date
+
             if settings.S3_SSO_IMPORT_ENABLED:
                 logger.info(
                     "sync_s3_sso_users: User id %s published date %s is after previous date %s, creating the user from sso",
@@ -1368,16 +1371,14 @@ def _process_staff_sso_file(
                         check_tools_access_if_user_exists=True,
                     )
 
-                    if published_date > new_last_processed_datetime:
-                        new_last_processed_datetime = published_date
-
                     seen_user_ids.append(user_id)
                 except IntegrityError:
                     logger.exception("sync_s3_sso_users: Failed to create user record")
             else:
                 logger.info(
-                    "sync_s3_sso_users: S3_SSO_IMPORT_ENABLED is disabled, user %s will not be added",
+                    "sync_s3_sso_users: S3_SSO_IMPORT_ENABLED is disabled, user %s with published date %s will not be added",
                     user_id,
+                    published_date,
                 )
 
     return seen_user_ids, new_last_processed_datetime
