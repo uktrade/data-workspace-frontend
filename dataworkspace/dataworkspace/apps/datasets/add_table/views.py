@@ -138,7 +138,7 @@ class TableNameView(FormView):
         table_names = []
         tables = list(dataset.sourcetable_set.all())
         for table in tables:
-            table_names.append(table.name)
+            table_names.append(table.table)
 
         return table_names
 
