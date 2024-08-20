@@ -485,7 +485,7 @@ class TestUploadCSVPage(TestCase):
         title_text = soup.find("title").get_text(strip=True)
         backlink = soup.find("a", {"class": "govuk-back-link"}).get("href")
         header_one_text = soup.find("h1", class_="govuk-heading-xl").get_text(strip=True)
-        header_two_text = soup.find("h1", class_="govuk-heading-l").get_text(strip=True)
+        header_two_text = soup.find("h2", class_="govuk-heading-l").get_text(strip=True)
         paragraph_one_text = soup.find("p").get_text(strip=True)
         bullet_points = soup.find_all("ul", class_="govuk-list govuk-list--bullet")
         bullet_point_text = [
