@@ -1,10 +1,10 @@
 {% with id=widget.attrs.id %}
-<div class="govuk-form-group {% if widget.errors %}govuk-form-group--error{% endif %}">
+<div class="govuk-form-group govuk-character-count {% if widget.errors %}govuk-form-group--error{% endif %}" data-module="govuk-character-count" data-maxlength="{{ widget.character_limit }}">
   {% if widget.label_is_heading %}
   <{{ widget.heading }} class="govuk-label-wrapper">
   {% endif %}
     <label class="govuk-label {% if widget.label_is_heading %}govuk-label--{{ widget.label_size }}{% endif %} {{ widget.extra_label_classes }}" for="{{ id }}">
-      {{ widget.label }}
+      {{ widget.attrs.label }}
     </label>
   {% if widget.label_is_heading %}
   </{{ widget.heading }}>
@@ -14,9 +14,9 @@
   <div id="{{ id }}-hint">
     {{ widget.help_html }}
   </div>
-  {% elif widget.help_text %}
+  {% elif widget.attrs.help_text %}
   <div id="{{ id }}-hint" class="govuk-hint">
-    {{ widget.help_text }}
+    {{ widget.attrs.help_text }}
   </div>
   {% endif %}
 
@@ -27,14 +27,15 @@
   {% endif %}
 
   <div class="govuk-input__wrapper">
+    <div class="govuk-input__wrapper__inner">
       {% if widget.prefix %}
         <div class="govuk-input__prefix" aria-hidden="true">{{ widget.prefix }}</div>
       {% endif %}
       <input
-        class="govuk-input {{ widget.extra_input_classes }}"
+        class="govuk-input govuk-js-character-count {{ widget.extra_input_classes }}"
         type="text"
         name="{{ widget.name }}"
-        {% if widget.help_text %}aria-describedby="{{ id }}-hint" {% endif %}
+        {% if widget.attrs.help_text %}aria-describedby="{{ id }}-hint" {% endif %}
         {% include "django/forms/widgets/attrs.html" %}
         {% include "design_system/partial/data_attributes.html" %}
         value="{{ widget.value|default_if_none:'' }}"/>
@@ -42,5 +43,9 @@
           <div class="govuk-input__suffix" aria-hidden="true">{{ widget.suffix }}</div>
       {% endif %}
     </div>
+</div>
+  <div id="{{ id }}-info" class="govuk-hint govuk-character-count__message">
+    You can enter up to {{ widget.character_limit }} characters
+  </div>
 </div>
 {% endwith %}

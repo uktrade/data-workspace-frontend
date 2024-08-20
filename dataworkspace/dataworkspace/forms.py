@@ -30,6 +30,8 @@ class GOVUKDesignSystemWidgetMixin:
         data_attributes: dict = None,
         prefix=None,
         suffix=None,
+        character_limit="200",
+        extra_input_classes="",
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -44,6 +46,8 @@ class GOVUKDesignSystemWidgetMixin:
             data_attributes=data_attributes,
             prefix=prefix,
             suffix=suffix,
+            character_limit=character_limit,
+            extra_input_classes=extra_input_classes,
         )
 
     def __deepcopy__(self, memo):
@@ -114,6 +118,10 @@ class GOVUKDesignSystemDateWidget(forms.widgets.MultiWidget):
         context["widget"]["subwidgets"][1].update(self.month_attrs)
         context["widget"]["subwidgets"][2].update(self.year_attrs)
         return context
+
+
+class GOVUKDesignSystemTextCharCountWidget(GOVUKDesignSystemWidgetMixin, forms.widgets.TextInput):
+    template_name = "design_system/textinput_char_count.html"
 
 
 class GOVUKDesignSystemTextWidget(GOVUKDesignSystemWidgetMixin, forms.widgets.TextInput):
