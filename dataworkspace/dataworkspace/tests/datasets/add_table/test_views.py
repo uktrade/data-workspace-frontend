@@ -500,6 +500,14 @@ class TestUploadCSVPage(TestCase):
             for bullet_point in bullet_points
             for li in bullet_point.find_all("li")
         ]
+        bullet_points_two = soup.find_all(
+            "ul", class_="govuk-list govuk-list--bullet govuk-!-margin-bottom-6"
+        )
+        bullet_point_text_two = [
+            li.get_text(strip=True)
+            for bullet_point_two in bullet_points_two
+            for li in bullet_point_two.find_all("li")
+        ]
 
         assert response.status_code == 200
         assert f"/datasets/{self.dataset.id}" in backlink
@@ -511,7 +519,7 @@ class TestUploadCSVPage(TestCase):
             "Check your CSV against each of the below points. This can help you avoid common issues when the table is being built."
             in paragraph_one_text
         )
-        assert len(bullet_point_text) == 5
+        assert len(bullet_point_text) + len(bullet_point_text_two) == 5
 
     def test_csv_upload_fails_when_it_contains_special_chars(self):
 
