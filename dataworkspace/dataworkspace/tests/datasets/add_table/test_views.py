@@ -3,6 +3,7 @@ import pytest
 from bs4 import BeautifulSoup
 from django.urls import reverse
 from django.test import Client
+from django.core.files.uploadedfile import SimpleUploadedFile
 from dataworkspace.tests import factories
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.tests.common import get_http_sso_data
@@ -455,3 +456,120 @@ class TestTableNamePage(TestCase):
         assert response.status_code == 200
         assert "There is a problem" in error_header_text
         assert "Table name already in use" in error_message_text
+
+
+@pytest.mark.django_db
+class TestUploadCSVPage(TestCase):
+    def setUp(self):
+        self.user = factories.UserFactory.create(is_superuser=False)
+        self.client = Client(**get_http_sso_data(self.user))
+        self.dataset = factories.MasterDataSetFactory.create(
+            published=True,
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
+            information_asset_owner=self.user,
+            government_security_classification=2,
+        )
+        self.source = factories.SourceTableFactory.create(
+            dataset=self.dataset, schema="test", table="table_one", name="table_one"
+        )
+        self.descriptive_name = "my_table"
+        self.table_name = "my_table_name"
+
+    def test_upload_csv_page(self):
+        response = self.client.post(
+            reverse(
+                "datasets:add_table:upload-csv",
+                kwargs={
+                    "pk": self.dataset.id,
+                    "schema": self.source.schema,
+                    "descriptive_name": self.descriptive_name,
+                    "table_name": self.table_name,
+                },
+            ),
+        )
+
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        title_text = soup.find("title").get_text(strip=True)
+        backlink = soup.find("a", {"class": "govuk-back-link"}).get("href")
+        header_one_text = soup.find("h1", class_="govuk-heading-xl").get_text(strip=True)
+        header_two_text = soup.find("h2", class_="govuk-heading-l").get_text(strip=True)
+        paragraph_one_text = soup.find("p").get_text(strip=True)
+        bullet_points = soup.find_all("ul", class_="govuk-list govuk-list--bullet")
+        bullet_point_text = [
+            li.get_text(strip=True)
+            for bullet_point in bullet_points
+            for li in bullet_point.find_all("li")
+        ]
+        bullet_points_two = soup.find_all(
+            "ul", class_="govuk-list govuk-list--bullet govuk-!-margin-bottom-6"
+        )
+        bullet_point_text_two = [
+            li.get_text(strip=True)
+            for bullet_point_two in bullet_points_two
+            for li in bullet_point_two.find_all("li")
+        ]
+
+        assert response.status_code == 200
+        assert f"/datasets/{self.dataset.id}" in backlink
+        assert response.status_code == 200
+        assert f"Add Table - {self.dataset.name} - Data Workspace" in title_text
+        assert "Upload CSV" in header_one_text
+        assert "Before you upload your CSV" in header_two_text
+        assert (
+            "Check your CSV against each of the below points. This can help you avoid common issues when the table is being built."
+            in paragraph_one_text
+        )
+        assert len(bullet_point_text) + len(bullet_point_text_two) == 5
+
+    def test_csv_upload_fails_when_it_contains_special_chars(self):
+
+        file1 = SimpleUploadedFile(
+            "sp£c!al-ch@r$.csv",
+            b"id,name\r\nA1,test1\r\nA2,test2\r\n",
+            content_type="text/csv",
+        )
+
+        response = self.client.post(
+            reverse(
+                "datasets:add_table:upload-csv",
+                kwargs={
+                    "pk": self.dataset.id,
+                    "schema": self.source.schema,
+                    "descriptive_name": self.descriptive_name,
+                    "table_name": self.table_name,
+                },
+            ),
+            data={"csv_file": file1},
+        )
+
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        error_message_text = (
+            soup.find("ul", class_="govuk-list govuk-error-summary__list").find("a").contents
+        )
+        assert response.status_code == 200
+        assert (
+            "File name cannot contain special characters apart from underscores and hyphens"
+            in error_message_text
+        )
+
+    def test_csv_upload_fails_when_no_file_is_selected(self):
+
+        response = self.client.post(
+            reverse(
+                "datasets:add_table:upload-csv",
+                kwargs={
+                    "pk": self.dataset.id,
+                    "schema": self.source.schema,
+                    "descriptive_name": self.descriptive_name,
+                    "table_name": self.table_name,
+                },
+            ),
+            data={"csv_file": ""},
+        )
+
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        error_message_text = (
+            soup.find("ul", class_="govuk-list govuk-error-summary__list").find("a").contents
+        )
+        assert response.status_code == 200
+        assert "Select a CSV" in error_message_text

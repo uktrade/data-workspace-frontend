@@ -1,13 +1,20 @@
+import os
+import uuid
+from aiohttp import ClientError
+from django.conf import settings
 from django.urls import reverse
 from django.views.generic import DetailView, FormView, TemplateView
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponseServerError
 
 from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.datasets.add_table.forms import (
     TableNameForm,
     TableSchemaForm,
     DescriptiveNameForm,
+    UploadCSVForm,
 )
+from dataworkspace.apps.core.boto3_client import get_s3_client
+from dataworkspace.apps.core.utils import get_s3_prefix
 
 
 class AddTableView(DetailView):
@@ -155,11 +162,70 @@ class TableNameView(FormView):
         return ctx
 
     def form_valid(self, form):
-        # table_name = form.cleaned_data["table_name"]
+        table_name = form.cleaned_data["table_name"]
         return HttpResponseRedirect(
-            ("/")
-            # reverse(
-            #     "datasets:add_table:{NEW_PAGE}",
-            #     args=(self.kwargs["pk"], self.kwargs["schema"], self.kwargs["descriptive_name"], table_name),
-            # )
+            reverse(
+                "datasets:add_table:upload-csv",
+                args=(
+                    self.kwargs["pk"],
+                    self.kwargs["schema"],
+                    self.kwargs["descriptive_name"],
+                    table_name,
+                ),
+            )
+        )
+
+
+class UploadCSVView(FormView):
+    template_name = "datasets/add_table/upload_csv.html"
+    form_class = UploadCSVForm
+
+    def _get_file_upload_key(self, file_name, pk):
+        return os.path.join(
+            get_s3_prefix(str(self.request.user.profile.sso_id)),
+            "_add_table_uploads",
+            str(pk),
+            file_name,
+        )
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        dataset = find_dataset(self.kwargs["pk"], self.request.user)
+        ctx["model"] = dataset
+        ctx["backlink"] = reverse(
+            "datasets:add_table:table-name",
+            args=(self.kwargs["pk"], self.kwargs["schema"], self.kwargs["descriptive_name"]),
+        )
+        return ctx
+
+    def form_valid(self, form):
+        csv_file = form.cleaned_data["csv_file"]
+        client = get_s3_client()
+        file_name = f"{csv_file.name}!{uuid.uuid4()}"
+        key = self._get_file_upload_key(file_name, self.kwargs["pk"])
+        csv_file.seek(0)
+        try:
+            client.put_object(
+                Body=csv_file,
+                Bucket=settings.NOTEBOOKS_BUCKET,
+                Key=key,
+            )
+        except ClientError as ex:
+            # pylint: disable=raise-missing-from
+            # pylint: disable=no-member
+            return HttpResponseServerError(
+                "Error saving file: {}".format(ex.response["Error"]["Message"])
+            )
+
+        return HttpResponseRedirect(
+            reverse(
+                "datasets:add_table:data-types",
+                args=(
+                    self.kwargs["pk"],
+                    self.kwargs["schema"],
+                    self.kwargs["descriptive_name"],
+                    self.kwargs["table_name"],
+                ),
+            )
+            + f"?file={file_name}"
         )

@@ -1,0 +1,38 @@
+{% extends '_main.html' %}
+
+{% block page_title %}
+Add Table - {{ model.name }} - {{ block.super }}{% endblock %}
+{% if backlink %}
+{% block go_back %}
+<a href="{{ backlink }}" class="govuk-back-link">Back</a>
+{% endblock %}
+{% endif %}
+
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        {% include 'design_system/error_summary.html' with form=form %}
+        <h1 class="govuk-heading-xl">Upload CSV</h1>
+        <h2 class="govuk-heading-l">Before you upload your CSV</h2>
+            <p class="govuk-body">Check your CSV against each of the below points. This can help you avoid common issues when the table is being built.</p>
+            <h2 class="govuk-heading-m">Check your files format and name</h2>
+            <p class="govuk-body">Check that:</p>
+            <ul class="govuk-list govuk-list--bullet">
+                <li>the file has more than one row</li>
+                <li>there are no special characters in the file name (e.g. /*? ) apart from underscores and hyphens</li>
+                <li>Google Sheets documents are downloaded as a standard CSV file</li>
+            </ul>
+            <h2 class="govuk-heading-m">Check your formatting in Excel</h2>
+            <p class="govuk-body">Check that:</p>
+            <ul class="govuk-list govuk-list--bullet govuk-!-margin-bottom-6">
+                <li>any data you want to set as a date is in the format yyyy-mm-dd</li>
+                <li>ensure columns are formatted as ‘General’ - integer and numeric fields may not upload otherwise</li>
+            </ul>
+            <form method="POST" novalidate enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form.csv_file }}
+                <button class="govuk-button" type="submit">Continue</button>
+            </form>
+    </div>
+</div>
+{% endblock %}

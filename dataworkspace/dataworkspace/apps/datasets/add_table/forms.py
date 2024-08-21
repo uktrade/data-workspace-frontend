@@ -1,13 +1,17 @@
 import re
 from django.forms import ValidationError
+from django.core.validators import FileExtensionValidator
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
+    GOVUKDesignSystemFileField,
+    GOVUKDesignSystemFileInputWidget,
     GOVUKDesignSystemForm,
     GOVUKDesignSystemRadioField,
     GOVUKDesignSystemRadiosWidget,
     GOVUKDesignSystemTextWidget,
     GOVUKDesignSystemTextCharCountWidget,
 )
+from dataworkspace.apps.core.storage import malware_file_validator
 
 
 class TableSchemaForm(GOVUKDesignSystemForm):
@@ -89,3 +93,34 @@ class TableNameForm(GOVUKDesignSystemForm):
         elif "record" in table_name:
             raise ValidationError("Table name cannot contain the word 'record'")
         return table_name
+
+
+class UploadCSVForm(GOVUKDesignSystemForm):
+
+    def clean_csv_file(self):
+        cleaned_data = super().clean()
+        csv_name = cleaned_data["csv_file"]._name.replace(".csv", "")
+        if bool(re.search(r"[^A-Za-z_-]", csv_name)):
+            raise ValidationError(
+                "File name cannot contain special characters apart from underscores and hyphens"
+            )
+        return cleaned_data["csv_file"]
+
+    csv_file = GOVUKDesignSystemFileField(
+        required=True,
+        label="Upload a file",
+        widget=GOVUKDesignSystemFileInputWidget(
+            label_is_heading=True,
+            heading_class="govuk-label",
+            show_selected_file=True,
+            attrs={"accept": "text/csv"},
+        ),
+        validators=[
+            FileExtensionValidator(allowed_extensions=["csv"]),
+            malware_file_validator,
+        ],
+        error_messages={
+            "required": "Select a CSV",
+            "invalid_extension": "Invalid file type. Only CSV files are currently supported.",
+        },
+    )
