@@ -229,3 +229,107 @@ class UploadCSVView(FormView):
             )
             + f"?file={file_name}"
         )
+
+class DataTypesView(ValidateSchemaMixin, FormView):
+    template_name = "your_files/create-table-confirm-data-types.html"
+    form_class = CreateTableDataTypesForm
+    required_parameters = [
+        "filename",
+        "schema",
+        "table_name",
+    ]
+
+    def get_initial(self):
+        initial = super().get_initial()
+        if self.request.method == "GET":
+            initial.update(
+                {
+                    "path": self.request.GET["path"],
+                    "schema": self.request.GET["schema"],
+                    "table_name": self.request.GET["table_name"],
+                    "force_overwrite": "overwrite" in self.request.GET,
+                    "table_exists_action": self.request.GET.get("table_exists_action"),
+                }
+            )
+        return initial
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs.update(
+            {
+                "user": self.request.user,
+                "column_definitions": get_s3_csv_file_info(self.request.GET["path"])[
+                    "column_definitions"
+                ],
+            }
+        )
+        return kwargs
+
+    def form_valid(self, form):
+        cleaned = form.cleaned_data
+        include_column_id = False
+
+        file_info = get_s3_csv_file_info(cleaned["path"])
+
+        logger.info(file_info)
+
+        for field in file_info["column_definitions"]:
+            field["data_type"] = SCHEMA_POSTGRES_DATA_TYPE_MAP.get(
+                cleaned[field["column_name"]], PostgresDataTypes.TEXT
+            )
+
+        import_path = settings.DATAFLOW_IMPORTS_BUCKET_ROOT + "/" + cleaned["path"]
+        logger.debug("import_path %s", import_path)
+
+        copy_file_to_uploads_bucket(cleaned["path"], import_path)
+
+        filename = cleaned["path"].split("/")[-1]
+        logger.debug(filename)
+
+        if "auto_generate_id_column" in cleaned and cleaned["auto_generate_id_column"] != "":
+            include_column_id = cleaned["auto_generate_id_column"] == "True"
+
+        conf = {
+            "file_path": import_path,
+            "schema_name": cleaned["schema"],
+            "table_name": cleaned["table_name"],
+            "column_definitions": file_info["column_definitions"],
+            "encoding": file_info["encoding"],
+            "auto_generate_id_column": include_column_id,
+        }
+        if waffle.switch_is_active(settings.INCREMENTAL_S3_IMPORT_PIPELINE_FLAG):
+            conf["incremental"] = (
+                not cleaned.get("force_overwrite", False)
+                and cleaned.get("table_exists_action") == "append"
+            )
+
+        logger.debug("Triggering pipeline %s", get_data_flow_import_pipeline_name())
+        logger.debug(conf)
+        if cleaned["schema"] not in self.all_schemas:
+            conf["db_role"] = cleaned["schema"]
+
+        try:
+            response = trigger_dataflow_dag(
+                conf,
+                get_data_flow_import_pipeline_name(),
+                f'{cleaned["schema"]}-{cleaned["table_name"]}-{datetime.now().isoformat()}',
+            )
+        except HTTPError:
+            return HttpResponseRedirect(
+                f'{reverse("your-files:create-table-failed")}?' f"filename={filename}"
+            )
+
+        params = {
+            "filename": filename,
+            "schema": cleaned["schema"],
+            "table_name": cleaned["table_name"],
+            "execution_date": response["execution_date"],
+        }
+        if waffle.switch_is_active(settings.INCREMENTAL_S3_IMPORT_PIPELINE_FLAG):
+            return HttpResponseRedirect(
+                f'{reverse("your-files:create-table-appending")}?{urlencode(params)}'
+            )
+
+        return HttpResponseRedirect(
+            f'{reverse("your-files:create-table-validating")}?{urlencode(params)}'
+        )
