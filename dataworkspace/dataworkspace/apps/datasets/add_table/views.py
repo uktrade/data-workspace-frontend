@@ -1,6 +1,6 @@
 from django.urls import reverse
 from django.views.generic import DetailView, FormView, TemplateView
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 
 from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.datasets.add_table.forms import (
@@ -8,6 +8,7 @@ from dataworkspace.apps.datasets.add_table.forms import (
     TableSchemaForm,
     DescriptiveNameForm,
 )
+from dataworkspace.apps.datasets.models import DataSet
 
 
 class AddTableView(DetailView):
@@ -21,8 +22,34 @@ class AddTableView(DetailView):
         ctx["model"] = self.object
         ctx["backlink"] = reverse("datasets:dataset_detail", args={self.kwargs["pk"]})
         ctx["nextlink"] = reverse("datasets:add_table:table-schema", args={self.kwargs["pk"]})
-
+        ctx["preview_link"] = reverse("datasets:")
         return ctx
+
+
+class ConfirmationView(TemplateView):
+    template_name = "datasets/add_table/confirmation.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        dataset = find_dataset(self.kwargs["pk"], self.request.user)
+        ctx["backlink"] = reverse("datasets:dataset_detail", args={self.kwargs["pk"]})
+        ctx["edit_link"] = reverse("datasets:edit_dataset", args={self.kwargs["pk"]})
+        ctx["model_name"] = kwargs["table_name"]
+        source_table_id = self.get_source_table_id(dataset, kwargs["table_name"])
+        ctx["preview_link"] = reverse(
+            "datasets:source_table_detail",
+            kwargs={"dataset_uuid": self.kwargs["pk"], "object_id": source_table_id},
+        )
+        return ctx
+
+    def get_source_table_id(self, dataset: DataSet, table_name: str) -> str:
+        source_tables = list(dataset.sourcetable_set.all())
+        source_table_match = [st for st in source_tables if st.table == table_name]
+        if len(source_table_match) < 1:
+            return JsonResponse(
+                {"message": f"Table name {table_name} not found in dataset."}, status=404
+            )
+        return source_table_match[0].id
 
 
 class TableSchemaView(FormView):
@@ -54,7 +81,6 @@ class TableSchemaView(FormView):
         dataset = find_dataset(self.kwargs["pk"], self.request.user)
         schemas = self.get_schemas(dataset)
         ctx["model_name"] = dataset.name
-        ctx["model_id"] = self.kwargs["pk"]
         ctx["schema"] = schemas[0]
         ctx["is_multiple_schemas"] = len(schemas) > 1
         ctx["backlink"] = reverse("datasets:add_table:add-table", args={self.kwargs["pk"]})

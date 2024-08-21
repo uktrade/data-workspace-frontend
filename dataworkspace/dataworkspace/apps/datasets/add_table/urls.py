@@ -3,6 +3,7 @@ from django.urls import path
 from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.datasets.add_table.views import (
     AddTableView,
+    ConfirmationView,
     TableNameView,
     TableSchemaView,
     ClassificationCheckView,
@@ -35,5 +36,10 @@ urlpatterns = [
         "<str:schema>/<str:descriptive_name>/table-name",
         login_required(TableNameView.as_view()),
         name="table-name",
+    ),
+    path(
+        "<str:schema>/<str:descriptive_name>/<str:table_name>/success",
+        login_required(ConfirmationView.as_view()),
+        name="success",
     ),
 ]

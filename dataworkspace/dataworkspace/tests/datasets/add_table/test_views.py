@@ -448,3 +448,50 @@ class TestTableNamePage(TestCase):
         assert response.status_code == 200
         assert "There is a problem" in error_header_text
         assert "Table name already in use" in error_message_text
+
+
+@pytest.mark.django_db
+class TestConfirmationPage(TestCase):
+    def setUp(self):
+        self.user = factories.UserFactory.create(is_superuser=False)
+        self.client = Client(**get_http_sso_data(self.user))
+        self.dataset = factories.MasterDataSetFactory.create(
+            published=True,
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
+            information_asset_owner=self.user,
+            government_security_classification=2,
+        )
+        self.descriptive_name = "test_desc_name"
+        self.schema = "test"
+        self.table = "table_one"
+        self.source = factories.SourceTableFactory.create(
+            dataset=self.dataset, schema=self.schema, table=self.table
+        )
+
+    def test_confirmation_success_page_wellformed(self):
+        response = self.client.get(
+            reverse(
+                "datasets:success",
+                kwargs={
+                    "pk": self.dataset.id,
+                    "descriptive_name": self.descriptive_name,
+                    "schema": self.schema,
+                    "table": self.table,
+                },
+            ),
+        )
+
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        panel_text = soup.find("h1", {"class": "govuk-panel__body"}).contents
+        backlink_href = soup.find("a", {"id": "backlink"}).attrs["href"]
+        editlink_href = soup.find("a", {"id": "editlink"}).attrs["href"]
+        previewlink_href = soup.find("a", {"id": "previewlink"}).attrs["href"]
+        title = soup.find("title")
+        title_text = title.contents[0]
+
+        assert response.status_code == 200
+        assert f"Add Table - {self.table} - Data Workspace" in title_text
+        assert f"Your table name is {self.dataset.name}" in panel_text
+        assert self.dataset.id in backlink_href
+        assert self.dataset.id in editlink_href
+        assert self.dataset.id in previewlink_href
