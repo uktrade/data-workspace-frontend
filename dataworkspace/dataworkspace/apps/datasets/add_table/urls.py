@@ -3,12 +3,12 @@ from django.urls import path
 from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.datasets.add_table.views import (
     AddTableView,
-    DataTypesView,
     TableNameView,
     TableSchemaView,
     ClassificationCheckView,
     DescriptiveNameView,
     UploadCSVView,
+    AddTableDataTypesView,
 )
 
 
@@ -43,10 +43,9 @@ urlpatterns = [
         login_required(UploadCSVView.as_view()),
         name="upload-csv",
     ),
-
     path(
-        "<str:schema>/<str:descriptive_name>/<str:table_name>/<file_name",
-        login_required(DataTypesView.as_view()),
+        "<str:schema>/<str:descriptive_name>/<str:table_name>/<file_name>",
+        login_required(AddTableDataTypesView.as_view()),
         name="data-types",
     ),
 ]

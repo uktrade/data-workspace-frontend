@@ -1,10 +1,14 @@
+from datetime import datetime
 import os
+from urllib.parse import urlencode
 import uuid
+from venv import logger
 from aiohttp import ClientError
 from django.conf import settings
 from django.urls import reverse
 from django.views.generic import DetailView, FormView, TemplateView
 from django.http import HttpResponseRedirect, HttpResponseServerError
+from requests import HTTPError
 
 from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.datasets.add_table.forms import (
@@ -12,9 +16,13 @@ from dataworkspace.apps.datasets.add_table.forms import (
     TableSchemaForm,
     DescriptiveNameForm,
     UploadCSVForm,
+    AddTableDataTypesForm,
 )
 from dataworkspace.apps.core.boto3_client import get_s3_client
-from dataworkspace.apps.core.utils import get_s3_prefix
+from dataworkspace.apps.core.utils import copy_file_to_uploads_bucket, get_data_flow_import_pipeline_name, get_s3_prefix, trigger_dataflow_dag
+from dataworkspace.apps.core.constants import SCHEMA_POSTGRES_DATA_TYPE_MAP, PostgresDataTypes
+from dataworkspace.apps.your_files.utils import get_s3_csv_file_info
+from dataworkspace.apps.your_files.views import ValidateSchemaMixin
 
 
 class AddTableView(DetailView):
@@ -230,13 +238,14 @@ class UploadCSVView(FormView):
             + f"?file={file_name}"
         )
 
-class DataTypesView(ValidateSchemaMixin, FormView):
-    template_name = "your_files/create-table-confirm-data-types.html"
-    form_class = CreateTableDataTypesForm
+class AddTableDataTypesView(ValidateSchemaMixin, FormView):
+    template_name = "add_table/data_types.html"
+    form_class = AddTableDataTypesForm
     required_parameters = [
-        "filename",
+        "file_name",
         "schema",
         "table_name",
+        "desciptive_name",
     ]
 
     def get_initial(self):
@@ -247,6 +256,7 @@ class DataTypesView(ValidateSchemaMixin, FormView):
                     "path": self.request.GET["path"],
                     "schema": self.request.GET["schema"],
                     "table_name": self.request.GET["table_name"],
+                    "desciptive_name": self.request.GET["desciptive_name"],
                     "force_overwrite": "overwrite" in self.request.GET,
                     "table_exists_action": self.request.GET.get("table_exists_action"),
                 }
@@ -297,11 +307,6 @@ class DataTypesView(ValidateSchemaMixin, FormView):
             "encoding": file_info["encoding"],
             "auto_generate_id_column": include_column_id,
         }
-        if waffle.switch_is_active(settings.INCREMENTAL_S3_IMPORT_PIPELINE_FLAG):
-            conf["incremental"] = (
-                not cleaned.get("force_overwrite", False)
-                and cleaned.get("table_exists_action") == "append"
-            )
 
         logger.debug("Triggering pipeline %s", get_data_flow_import_pipeline_name())
         logger.debug(conf)
@@ -325,10 +330,6 @@ class DataTypesView(ValidateSchemaMixin, FormView):
             "table_name": cleaned["table_name"],
             "execution_date": response["execution_date"],
         }
-        if waffle.switch_is_active(settings.INCREMENTAL_S3_IMPORT_PIPELINE_FLAG):
-            return HttpResponseRedirect(
-                f'{reverse("your-files:create-table-appending")}?{urlencode(params)}'
-            )
 
         return HttpResponseRedirect(
             f'{reverse("your-files:create-table-validating")}?{urlencode(params)}'
