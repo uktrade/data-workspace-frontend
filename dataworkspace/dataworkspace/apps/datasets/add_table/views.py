@@ -183,7 +183,7 @@ class UploadCSVView(FormView):
     def _get_file_upload_key(self, file_name, pk):
         return os.path.join(
             get_s3_prefix(str(self.request.user.profile.sso_id)),
-            "_add_table_uploads",  # will need to change
+            "_add_table_uploads",
             str(pk),
             file_name,
         )
