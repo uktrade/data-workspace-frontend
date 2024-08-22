@@ -238,8 +238,8 @@ class UploadCSVView(FormView):
             + f"?file={file_name}"
         )
 
-class AddTableDataTypesView(ValidateSchemaMixin, FormView):
-    template_name = "add_table/data_types.html"
+class AddTableDataTypesView(UploadCSVView, ValidateSchemaMixin, FormView):
+    template_name = "datasets/add_table/data_types.html"
     form_class = AddTableDataTypesForm
     required_parameters = [
         "file_name",
@@ -248,27 +248,34 @@ class AddTableDataTypesView(ValidateSchemaMixin, FormView):
         "desciptive_name",
     ]
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        dataset = find_dataset(self.kwargs["pk"], self.request.user)
+        ctx["model"] = dataset
+        ctx["table_name"] = self.kwargs["table_name"]        
+        ctx["backlink"] = reverse(
+            "datasets:add_table:upload-csv",
+            args=(self.kwargs["pk"], self.kwargs["schema"], self.kwargs["descriptive_name"], self.kwargs["table_name"]),
+        )
+        return ctx
+
     def get_initial(self):
         initial = super().get_initial()
         if self.request.method == "GET":
-            initial.update(
-                {
-                    "path": self.request.GET["path"],
-                    "schema": self.request.GET["schema"],
-                    "table_name": self.request.GET["table_name"],
-                    "desciptive_name": self.request.GET["desciptive_name"],
-                    "force_overwrite": "overwrite" in self.request.GET,
-                    "table_exists_action": self.request.GET.get("table_exists_action"),
-                }
+            initial["path"] = self._get_file_upload_key(
+                self.request.GET["file"], self.kwargs["pk"]
             )
         return initial
 
     def get_form_kwargs(self):
+        print('self: ', self.__dict__)
         kwargs = super().get_form_kwargs()
+        print("kwargs: ", kwargs["initial"]["path"])
+
         kwargs.update(
             {
                 "user": self.request.user,
-                "column_definitions": get_s3_csv_file_info(self.request.GET["path"])[
+                "column_definitions": get_s3_csv_file_info(kwargs["initial"]["path"])[
                     "column_definitions"
                 ],
             }

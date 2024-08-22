@@ -10,8 +10,30 @@ Add Table - {{ model.name }} - {{ block.super }}{% endblock %}
 {% block content %}
 
   <div class="govuk-grid-row">
-    <div class="govuk-grid-column-full">
-      <h1 class="govuk-heading-xl">Choose data types for {{ form.table_name.value }}</h1>
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-xl">Data Types</h1>
+      <p class="govuk-body">Data types affect the efficiency of queries. Selecting the correct data type means quicker queries and cheaper data.</p>
+      <p class="govuk-body">Using a data type that cannot describe your data may cause your table build to fail. For example, numbers with special characters (e.g. '£200') or leading zeroes (e.g. 00234) need to be set as ‘Text’, they cannot be set as 'Numeric'.</p>
+      <details class="govuk-details">
+        <summary class="govuk-details__summary">
+          <span class="govuk-details__summary-text">
+            Data types and when to use them
+          </span>
+        </summary>
+        <ul class="govuk-list govuk-list--bullet">
+            <li><b>Text:</b> a variable-length character string</li>
+            <li><b>Integer:</b> a 4-byte integer that has a range from -2,147,483,648 to 2,147,483,647</li>
+            <li><b>Boolean:</b> can hold one of three values: true, false, or null</li>
+            <li><b>Date:</b> stores dates only</li>
+            <li><b>Datetime:</b> stores both date and time values</li>
+            <li><b>Numeric:</b> stores values up to 131072 digits before the decimal point; up to 16383 digits after the decimal point</li>
+            <li><b>Uuid:</b> (Universal Unique Identifier): a 128-bit value used to uniquely identify an object.  This can also be referred to as GUID.</li>
+          </ul>
+      </details>
+      <h2 class="govuk-heading-l">Choose data types for {{table_name }}</h2>
+      <p class="govuk-body">Data workspace has estimated an appropriate data type for your columns. You must check the data type for each column in the table below and change it if necessary.</p>
+
+       
       {% include 'design_system/error_summary.html' with form=form %}
       <form method="POST" novalidate>
         {% csrf_token %}
