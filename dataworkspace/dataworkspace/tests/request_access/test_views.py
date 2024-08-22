@@ -578,7 +578,11 @@ class TestSelfCertify(TestCase):
         self.user.refresh_from_db()
         user_permissions = self.user.user_permissions.all()
 
-        assert user_permissions.count() == 3
+        assert user_permissions[0].name == "Can access AWS QuickSight"
+        assert user_permissions[0].codename == "access_quicksight"
+        assert user_permissions[1].name == "Can start all applications"
+        assert user_permissions[1].codename == "start_all_applications"
+        assert user_permissions.count() == 2
         assert response.status_code == 302
 
     def test_form_valid_redirects_to_tools_page(self):
