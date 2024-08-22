@@ -54,9 +54,9 @@ def new_private_arangodb_credentials(
         )
         ArangoUser.objects.create(owner=dw_user, username=db_user)
     except ServerConnectionError:
-        logger.info("ArangoDB connection error")
+        logger.exception("ArangoDB connection error")
     except UserCreateError:
-        logger.info("Unable to create user %s in ArangoDB", db_user)
+        logger.exception("Unable to create user %s in ArangoDB", db_user)
 
     try:
         for team_db in team_dbs:
@@ -81,7 +81,7 @@ def new_private_arangodb_credentials(
         }
 
     except Exception:  # pylint: disable=broad-except
-        logger.info("Unable to add team database permissions for %s in ArangoDB", db_user)
+        logger.exception("Unable to add team database permissions for %s in ArangoDB", db_user)
         return {}
 
 
