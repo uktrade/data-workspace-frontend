@@ -241,12 +241,6 @@ class UploadCSVView(FormView):
 class AddTableDataTypesView(UploadCSVView, ValidateSchemaMixin, FormView):
     template_name = "datasets/add_table/data_types.html"
     form_class = AddTableDataTypesForm
-    required_parameters = [
-        "file_name",
-        "schema",
-        "table_name",
-        "desciptive_name",
-    ]
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -283,6 +277,7 @@ class AddTableDataTypesView(UploadCSVView, ValidateSchemaMixin, FormView):
         return kwargs
 
     def form_valid(self, form):
+        print('HELLLLOOOOOO')
         cleaned = form.cleaned_data
         include_column_id = False
 
@@ -310,6 +305,7 @@ class AddTableDataTypesView(UploadCSVView, ValidateSchemaMixin, FormView):
             "file_path": import_path,
             "schema_name": cleaned["schema"],
             "table_name": cleaned["table_name"],
+            "descriptive_name": cleaned["descriptive_name"],
             "column_definitions": file_info["column_definitions"],
             "encoding": file_info["encoding"],
             "auto_generate_id_column": include_column_id,
@@ -339,5 +335,6 @@ class AddTableDataTypesView(UploadCSVView, ValidateSchemaMixin, FormView):
         }
 
         return HttpResponseRedirect(
-            f'{reverse("your-files:create-table-validating")}?{urlencode(params)}'
+            "/"
+            # f'{reverse("data")}?{urlencode(params)}'
         )
