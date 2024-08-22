@@ -41,7 +41,9 @@ def new_private_arangodb_credentials(
 
     try:
         logger.info("Connecting as root to ArangoDB")
-        client = ArangoClient(hosts=f"http://{database_data['HOST']}:{database_data['PORT']}")
+        client = ArangoClient(
+            hosts=f"{database_data['PROTOCOL']}://{database_data['HOST']}:{database_data['PORT']}"
+        )
         sys_db = client.db(
             "_system", username="root", password=database_data["PASSWORD"], verify=True
         )
@@ -108,7 +110,9 @@ def _do_delete_unused_arangodb_users():
 
     logger.info("delete_unused_arangodb_users: finding temporary database users")
     try:
-        client = ArangoClient(hosts=f"http://{database_data['HOST']}:{database_data['PORT']}")
+        client = ArangoClient(
+            hosts=f"{database_data['PROTOCOL']}://{database_data['HOST']}:{database_data['PORT']}"
+        )
         sys_db = client.db(
             "_system", username="root", password=database_data["PASSWORD"], verify=True
         )
