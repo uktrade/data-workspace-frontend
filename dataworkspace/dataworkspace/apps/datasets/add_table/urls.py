@@ -38,7 +38,7 @@ urlpatterns = [
         name="table-name",
     ),
     path(
-        "<str:schema>/<str:descriptive_name>/<str:table_name>/success",
+        "<str:table_name>/success",
         login_required(ConfirmationView.as_view()),
         name="success",
     ),

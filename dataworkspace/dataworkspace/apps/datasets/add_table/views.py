@@ -34,7 +34,7 @@ class ConfirmationView(TemplateView):
         dataset = find_dataset(self.kwargs["pk"], self.request.user)
         ctx["backlink"] = reverse("datasets:dataset_detail", args={self.kwargs["pk"]})
         ctx["edit_link"] = reverse("datasets:edit_dataset", args={self.kwargs["pk"]})
-        ctx["model_name"] = kwargs["table_name"]
+        ctx["model_name"] = dataset.name
         source_table_id = self.get_source_table_id(dataset, kwargs["table_name"])
         ctx["preview_link"] = reverse(
             "datasets:source_table_detail",
