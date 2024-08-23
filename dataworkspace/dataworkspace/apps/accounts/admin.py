@@ -111,8 +111,8 @@ class AppUserEditForm(forms.ModelForm):
         queryset=None,
     )
     certificate_date = forms.DateField(
-        label="Date self-certified",
-        help_text="Date that user last self-certified for tools access",
+        label="Training completion date",
+        help_text="Date that user last completed training for self-certified tool access",
         required=False,
     )
 
