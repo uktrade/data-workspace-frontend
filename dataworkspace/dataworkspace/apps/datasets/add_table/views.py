@@ -6,6 +6,7 @@ from venv import logger
 from aiohttp import ClientError
 from django.conf import settings
 from django.urls import reverse
+from django.core.exceptions import BadRequest
 from django.views.generic import DetailView, FormView, TemplateView
 from django.http import HttpResponseRedirect, HttpResponseServerError
 from requests import HTTPError
@@ -233,55 +234,47 @@ class UploadCSVView(FormView):
                     self.kwargs["schema"],
                     self.kwargs["descriptive_name"],
                     self.kwargs["table_name"],
+                    file_name,
                 ),
             )
-            + f"?file={file_name}"
         )
 
-class AddTableDataTypesView(UploadCSVView, ValidateSchemaMixin, FormView):
+class AddTableDataTypesView(FormView):
     template_name = "datasets/add_table/data_types.html"
     form_class = AddTableDataTypesForm
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        dataset = find_dataset(self.kwargs["pk"], self.request.user)
-        ctx["model"] = dataset
-        ctx["table_name"] = self.kwargs["table_name"]        
-        ctx["backlink"] = reverse(
-            "datasets:add_table:upload-csv",
-            args=(self.kwargs["pk"], self.kwargs["schema"], self.kwargs["descriptive_name"], self.kwargs["table_name"]),
+    
+    def _get_file_upload_key(self, file_name, pk):
+        return os.path.join(
+            get_s3_prefix(str(self.request.user.profile.sso_id)),
+            "_add_table_uploads",
+            str(pk),
+            file_name,
         )
-        return ctx
-
-    def get_initial(self):
-        initial = super().get_initial()
-        if self.request.method == "GET":
-            initial["path"] = self._get_file_upload_key(
-                self.request.GET["file"], self.kwargs["pk"]
-            )
-        return initial
 
     def get_form_kwargs(self):
-        print('self: ', self.__dict__)
         kwargs = super().get_form_kwargs()
-        print("kwargs: ", kwargs["initial"]["path"])
-
         kwargs.update(
             {
                 "user": self.request.user,
-                "column_definitions": get_s3_csv_file_info(kwargs["initial"]["path"])[
+                "column_definitions": get_s3_csv_file_info(self._get_file_upload_key(
+                 self.kwargs["file_name"], self.kwargs["pk"]
+            ))[
                     "column_definitions"
                 ],
             }
         )
         return kwargs
+    
+    def form_invalid(self, form):
+        print('FORM INVALID')
+        print('form', form)
 
     def form_valid(self, form):
-        print('HELLLLOOOOOO')
+        print('blah_form_valid')
         cleaned = form.cleaned_data
         include_column_id = False
 
-        file_info = get_s3_csv_file_info(cleaned["path"])
+        file_info = get_s3_csv_file_info(cleaned["initial"]["path"])
 
         logger.info(file_info)
 
@@ -335,6 +328,19 @@ class AddTableDataTypesView(UploadCSVView, ValidateSchemaMixin, FormView):
         }
 
         return HttpResponseRedirect(
-            "/"
+            reverse(
+                "datasets:add_table")
             # f'{reverse("data")}?{urlencode(params)}'
         )
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        print('cxt:', ctx['view'].__dict__)
+        dataset = find_dataset(self.kwargs["pk"], self.request.user)
+        ctx["model"] = dataset
+        ctx["table_name"] = self.kwargs["table_name"]        
+        ctx["backlink"] = reverse(
+            "datasets:add_table:upload-csv",
+            args=(self.kwargs["pk"], self.kwargs["schema"], self.kwargs["descriptive_name"], self.kwargs["table_name"]),
+        )
+        return ctx

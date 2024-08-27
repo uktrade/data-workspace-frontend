@@ -2,8 +2,8 @@ import re
 from django import forms
 from django.forms import ValidationError
 from django.core.validators import FileExtensionValidator
-from dataworkspace.apps.core.forms import ConditionalSupportTypeRadioWidget
-from dataworkspace.apps.your_files.forms import CreateTableForm
+from dataworkspace.dataworkspace.apps.core.forms import ConditionalSupportTypeRadioWidget
+from dataworkspace.dataworkspace.apps.your_files.forms import CreateTableForm
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
     GOVUKDesignSystemChoiceField,
@@ -134,7 +134,7 @@ class UploadCSVForm(GOVUKDesignSystemForm):
     )
 
 
-class AddTableDataTypesForm(CreateTableForm):
+class AddTableDataTypesForm(UploadCSVForm):
     auto_generate_id_column = GOVUKDesignSystemRadioField(
         label="Do you want to generate an ID column?",
         help_text="This will add an ID column and assign an ID to each row in your table. \

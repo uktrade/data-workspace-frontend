@@ -35,7 +35,7 @@ Add Table - {{ model.name }} - {{ block.super }}{% endblock %}
 
        
       {% include 'design_system/error_summary.html' with form=form %}
-      <form method="POST" novalidate>
+      <form method='post' novalidate>
         {% csrf_token %}
         {{ form.table_name.as_hidden }}
         {{ form.path }}
