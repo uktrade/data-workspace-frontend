@@ -5,6 +5,7 @@ import uuid
 from venv import logger
 from aiohttp import ClientError
 from django.conf import settings
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.core.exceptions import BadRequest
 from django.views.generic import DetailView, FormView, TemplateView
@@ -270,6 +271,7 @@ class AddTableDataTypesView(FormView):
         print('form', form)
 
     def form_valid(self, form):
+        source = self._get_source()
         print('blah_form_valid')
         cleaned = form.cleaned_data
         include_column_id = False
@@ -333,14 +335,32 @@ class AddTableDataTypesView(FormView):
             # f'{reverse("data")}?{urlencode(params)}'
         )
 
+
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         print('cxt:', ctx['view'].__dict__)
         dataset = find_dataset(self.kwargs["pk"], self.request.user)
+        ctx["source"] = dataset.sourcetable_set.all()
         ctx["model"] = dataset
         ctx["table_name"] = self.kwargs["table_name"]        
         ctx["backlink"] = reverse(
             "datasets:add_table:upload-csv",
             args=(self.kwargs["pk"], self.kwargs["schema"], self.kwargs["descriptive_name"], self.kwargs["table_name"]),
         )
+        ctx["table_columns"] = []
+        for x in ctx["model"].get_column_config():
+            ctx["table_columns"].append(
+                {
+                    "field": x["field"],
+                    "data_type": x["dataType"],
+                }
+            )
+        ctx["file_columns"] = []
+        for x in ctx["form"].column_definitions:
+            ctx["file_columns"].append(
+                {
+                    "field": x["header_name"],
+                    "data_type": x["data_type"],
+                }
+            )
         return ctx

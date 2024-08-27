@@ -2,8 +2,7 @@ import re
 from django import forms
 from django.forms import ValidationError
 from django.core.validators import FileExtensionValidator
-from dataworkspace.dataworkspace.apps.core.forms import ConditionalSupportTypeRadioWidget
-from dataworkspace.dataworkspace.apps.your_files.forms import CreateTableForm
+from dataworkspace.apps.core.forms import ConditionalSupportTypeRadioWidget
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
     GOVUKDesignSystemChoiceField,
@@ -134,7 +133,8 @@ class UploadCSVForm(GOVUKDesignSystemForm):
     )
 
 
-class AddTableDataTypesForm(UploadCSVForm):
+class AddTableDataTypesForm(GOVUKDesignSystemForm):
+    path = forms.CharField(widget=forms.HiddenInput())
     auto_generate_id_column = GOVUKDesignSystemRadioField(
         label="Do you want to generate an ID column?",
         help_text="This will add an ID column and assign an ID to each row in your table. \
@@ -145,12 +145,14 @@ class AddTableDataTypesForm(UploadCSVForm):
     )
 
     def __init__(self, *args, **kwargs):
+        
+        kwargs.pop("user")
         self.column_definitions = kwargs.pop("column_definitions")
         self.show_id_form = True
+
         if not self.column_definitions:
             raise ValueError("Definitions for at least one column must be provided")
         super().__init__(*args, **kwargs)
-        self.fields["table_exists_action"].widget = forms.HiddenInput()
 
         for col_def in self.column_definitions:
             if col_def["column_name"] == "id":
