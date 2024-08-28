@@ -1435,10 +1435,12 @@ def _do_sync_s3_sso_users():
         logger.info("sync_s3_sso_users: Deleting keys %s", delete_keys)
         bucket.delete_objects(Delete={"Objects": delete_keys})
 
-        # At the end of the loop set the cache
-        cache.set("s3_sso_sync_last_published", new_last_processed)
     else:
         logger.info("sync_s3_sso_users: No files to process")
+
+    # Always reset the cache
+    logger.info("sync_s3_sso_users: New last_published date for cache %s", new_last_processed)
+    cache.set("s3_sso_sync_last_published", new_last_processed, timeout=30 * 60)  # 30 minutes
 
 
 def fetch_visualisation_log_events(log_group, log_stream):
