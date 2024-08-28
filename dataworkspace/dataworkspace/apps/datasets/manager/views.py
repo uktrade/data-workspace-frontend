@@ -110,6 +110,7 @@ class DatasetManageSourceTableColumnConfigView(DatasetManageSourceTableView):
 
     def form_valid(self, form):
         source = self._get_source()
+        print('sourceeeee', source.__dict__)
         cleaned = form.cleaned_data
         include_column_id = False
 

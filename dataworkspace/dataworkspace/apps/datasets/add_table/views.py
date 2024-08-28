@@ -24,7 +24,8 @@ from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.utils import copy_file_to_uploads_bucket, get_data_flow_import_pipeline_name, get_s3_csv_column_types, get_s3_prefix, trigger_dataflow_dag
 from dataworkspace.apps.core.constants import SCHEMA_POSTGRES_DATA_TYPE_MAP, PostgresDataTypes
 from dataworkspace.apps.your_files.utils import get_s3_csv_file_info
-from dataworkspace.apps.your_files.views import ValidateSchemaMixin
+from dataworkspace.apps.your_files.views import RequiredParameterGetRequestMixin, ValidateSchemaMixin
+from dataworkspace.apps.your_files.models import UploadedTable
 
 
 class AddTableView(DetailView):
@@ -253,7 +254,6 @@ class AddTableDataTypesView(UploadCSVView):
 
     def get_initial(self):
         initial = super().get_initial()
-        print('inital', initial)
         if self.request.method == "GET":
             initial.update(
                 {
@@ -266,7 +266,6 @@ class AddTableDataTypesView(UploadCSVView):
                     "table_exists_action": self.request.GET.get("table_exists_action"),
                 }
             )
-        print('inital', initial)
         return initial
 
     def get_form_kwargs(self):
@@ -283,9 +282,7 @@ class AddTableDataTypesView(UploadCSVView):
 
 
     def form_valid(self, form):
-        print('form-valid')
         cleaned = form.cleaned_data
-        print('cleaned', cleaned)
         include_column_id = False
 
         file_info = get_s3_csv_file_info(cleaned["path"])
@@ -337,21 +334,18 @@ class AddTableDataTypesView(UploadCSVView):
             )
 
         params = {
+            "filename": self.kwargs["file_name"],
             "schema": self.kwargs["schema"],
-            "descriptive_name": self.kwargs["descriptive_name"],
             "table_name": self.kwargs["table_name"],
-            "file_name": self.kwargs["file_name"],
             "execution_date": response["execution_date"],
         }
-
+        
         return HttpResponseRedirect(
-            '/'
+            f'{reverse("your-files:create-table-validating")}?{urlencode(params)}'
         )
-
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        print('cxt:', ctx['view'].__dict__)
         dataset = find_dataset(self.kwargs["pk"], self.request.user)
         ctx["path"] = self._get_file_upload_key(self.kwargs["file_name"], self.kwargs["pk"])
         ctx["source"] = dataset.sourcetable_set.all()
@@ -363,3 +357,148 @@ class AddTableDataTypesView(UploadCSVView):
         )
 
         return ctx
+
+class BaseAddTableTemplateView(RequiredParameterGetRequestMixin, TemplateView):
+    required_parameters = [
+        "filename",
+        "schema",
+        "table_name",
+        "execution_date",
+    ]
+    steps = 5
+    step: int
+
+    def _get_query_parameters(self):
+        return {param: self.request.GET.get(param) for param in self.required_parameters}
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(**{"steps": self.steps, "step": self.step}, **self._get_query_parameters())
+        return context
+    
+class BaseAddTableStepView(BaseAddTableTemplateView):
+    template_name = "your_files/create-table-processing.html"
+    task_name: str
+    next_step_url_name: str
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data()
+        query_params = self._get_query_parameters()
+        query_params["task_name"] = self.task_name
+        context.update(
+            {
+                "task_name": self.task_name,
+                "next_step": f"{reverse(self.next_step_url_name)}?{urlencode(query_params)}",
+            }
+        )
+        return context
+
+
+class AddTableValidatingView(BaseAddTableStepView):
+    task_name = "get-table-config"
+    next_step_url_name = "your-files:create-table-creating-table"
+    step = 1
+
+    def get_context_data(self, **kwargs):
+        print("kwargs1:", self.kwargs)
+        context = super().get_context_data()
+        context.update(
+            {
+                "title": "Validating",
+                "info_text": (
+                    "Your CSV file is being validated against your chosen columns and data types."
+                ),
+            }
+        )
+        return context
+
+
+class AddTableCreatingTableView(BaseAddTableStepView):
+    task_name = "create-temp-tables"
+    next_step_url_name = "your-files:create-table-ingesting"
+    step = 2
+
+    def get_context_data(self, **kwargs):
+        print("kwargs2:", self.kwargs)
+
+        context = super().get_context_data()
+        context.update(
+            {
+                "title": "Creating temporary table",
+                "info_text": (
+                    "Data will be inserted into a temporary table and validated before "
+                    "it is made available."
+                ),
+            }
+        )
+        return context
+
+
+class AddTableIngestingView(BaseAddTableStepView):
+    task_name = "insert-into-temp-table"
+    next_step_url_name = "your-files:create-table-renaming-table"
+    step = 3
+
+    def get_context_data(self, **kwargs):
+        print("kwargs3:", self.kwargs)
+        context = super().get_context_data()
+        context.update(
+            {
+                "title": "Inserting data",
+                "info_text": "Once complete, your data will be validated and your table will be "
+                "made available.",
+            }
+        )
+        return context
+
+
+class AddTableRenamingTableView(BaseAddTableStepView):
+    task_name = "swap-dataset-table-datasets_db"
+    next_step_url_name = "your-files:create-table-success"
+    step = 4
+
+    def get_context_data(self, **kwargs):
+        print("kwargs4:", self.kwargs)
+        context = super().get_context_data()
+        context.update(
+            {
+                "title": "Renaming temporary table",
+                "info_text": "This is the last step, your table is almost ready.",
+            }
+        )
+        return context
+
+
+class AddTableAppendingToTableView(BaseAddTableStepView):
+    task_name = "sync"
+    next_step_url_name = "your-files:create-table-success"
+    step = 4
+
+    def get_context_data(self, **kwargs):
+        print("kwargs4.5:", self.kwargs)
+        context = super().get_context_data()
+        context.update(
+                {
+                    "title": "Creating and inserting into your table",
+                    "info_text": "This is the last step, your table is almost ready.",
+                }
+            )
+        return context
+
+
+class AddTableSuccessView(BaseAddTableTemplateView):
+    template_name = "your_files/create-table-success.html"
+    step = 5
+
+    def get(self, request, *args, **kwargs):
+        print("kwargs5:", self.kwargs)
+
+        UploadedTable.objects.get_or_create(
+                schema=self.kwargs("schema"),
+                table_name=self.kwargs("table_name"),
+                created_by=self.request.user,
+                data_flow_execution_date=datetime.strptime(
+                    self.kwargs("execution_date").split(".")[0], "%Y-%m-%dT%H:%M:%S"
+                ),
+            )
+        return super().get(request, *args, **kwargs)
