@@ -149,22 +149,6 @@ def transaction_and_lock(cursor, lock_id):
         cursor.execute(sql.SQL("COMMIT"))
 
 
-def ensure_db_role(cur, db_role_name):
-    cur.execute(
-        sql.SQL(
-            """
-        DO $$
-        BEGIN
-          CREATE ROLE {role};
-        EXCEPTION WHEN OTHERS THEN
-          RAISE DEBUG 'Role {role} already exists';
-        END
-        $$;
-    """
-        ).format(role=sql.Identifier(db_role_name))
-    )
-
-
 def new_private_database_credentials(
     db_role_and_schema_suffix,
     source_tables,
