@@ -24,7 +24,7 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError, connections
 from django.db.models import Q
 import gevent
-from psycopg2 import connect, sql
+from psycopg2 import sql
 import requests
 from mohawk import Sender
 from pytz import utc
@@ -56,15 +56,17 @@ from dataworkspace.apps.core.utils import (
     GLOBAL_LOCK_ID,
     close_all_connections_if_not_in_atomic_block,
     create_tools_access_iam_role,
-    database_dsn,
     stable_identification_suffix,
     source_tables_for_app,
     source_tables_for_user,
+    database_engine,
+    execute_sql,
     transaction_and_lock,
     new_private_database_credentials,
     postgres_user,
     has_tools_cert_expired,
 )
+
 from dataworkspace.apps.applications.gitlab import gitlab_has_developer_access
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import (
@@ -529,35 +531,38 @@ def _do_delete_unused_datasets_users():
         database_obj = Database.objects.get(memorable_name=memorable_name)
         database_name = database_data["NAME"]
 
-        with connect(database_dsn(database_data)) as conn, conn.cursor() as cur:
+        with database_engine(database_data).connect() as conn:
             logger.info("delete_unused_datasets_users: finding database users")
-            cur.execute(
-                """
-                SELECT usename FROM pg_catalog.pg_user
-                WHERE
-                (
-                    valuntil != 'infinity'
-                    AND usename LIKE 'user_%'
-                    AND usename NOT LIKE '%_qs'
-                    AND usename NOT LIKE '%_quicksight'
-                    AND usename NOT LIKE '%_explorer'
-                    AND usename NOT LIKE '%_superset'
-                )
-                OR
-                (
-                    valuntil != 'infinity'
-                    AND valuntil < now()
-                    AND usename LIKE 'user_%' AND
+            results = execute_sql(
+                conn,
+                sql.SQL(
+                    """
+                    SELECT usename FROM pg_catalog.pg_user
+                    WHERE
                     (
-                        usename LIKE '%_qs'
-                        OR usename LIKE '%_explorer'
-                        OR usename LIKE '%_superset'
+                        valuntil != 'infinity'
+                        AND usename LIKE 'user_%'
+                        AND usename NOT LIKE '%_qs'
+                        AND usename NOT LIKE '%_quicksight'
+                        AND usename NOT LIKE '%_explorer'
+                        AND usename NOT LIKE '%_superset'
                     )
-                )
-                ORDER BY usename;
+                    OR
+                    (
+                        valuntil != 'infinity'
+                        AND valuntil < now()
+                        AND usename LIKE 'user_%' AND
+                        (
+                            usename LIKE '%_qs'
+                            OR usename LIKE '%_explorer'
+                            OR usename LIKE '%_superset'
+                        )
+                    )
+                    ORDER BY usename;
                 """
+                ),
             )
-            usenames = [result[0] for result in cur.fetchall()]
+            usenames = [result[0] for result in results.fetchall()]
 
         logger.info("delete_unused_datasets_users: waiting in case they were just created")
         gevent.sleep(15)
@@ -596,9 +601,9 @@ def _do_delete_unused_datasets_users():
 
         # Multiple concurrent GRANT or REVOKE on the same object can result in
         # "tuple concurrently updated" errors
-        with connect(
-            database_dsn(database_data)
-        ) as conn, conn.cursor() as cur, transaction_and_lock(cur, GLOBAL_LOCK_ID):
+        with database_engine(database_data).connect() as conn, transaction_and_lock(
+            conn, GLOBAL_LOCK_ID
+        ):
             for usename in not_in_use_usernames:
                 try:
                     logger.info(
@@ -606,18 +611,20 @@ def _do_delete_unused_datasets_users():
                         usename,
                     )
 
-                    cur.execute(
+                    execute_sql(
+                        conn,
                         sql.SQL("REVOKE CONNECT ON DATABASE {} FROM {};").format(
                             sql.Identifier(database_name),
                             sql.Identifier(usename),
-                        )
+                        ),
                     )
 
-                    cur.execute(
+                    execute_sql(
+                        conn,
                         sql.SQL("REVOKE ALL PRIVILEGES ON DATABASE {} FROM {};").format(
                             sql.Identifier(database_name),
                             sql.Identifier(usename),
-                        )
+                        ),
                     )
 
                     logger.info(
@@ -634,49 +641,56 @@ def _do_delete_unused_datasets_users():
                         #
                         # REASSIGN OWNED requires privileges on both the source role(s) and
                         # the target role so these are granted first.
-                        cur.execute(
+                        execute_sql(
+                            conn,
                             sql.SQL("GRANT {} TO {};").format(
                                 sql.Identifier(usename),
                                 sql.Identifier(database_data["USER"]),
-                            )
+                            ),
                         )
-                        cur.execute(
+                        execute_sql(
+                            conn,
                             sql.SQL("GRANT {} TO {};").format(
                                 sql.Identifier(db_persistent_role),
                                 sql.Identifier(database_data["USER"]),
-                            )
+                            ),
                         )
 
                         # The REASSIGN OWNED BY means any objects like tables that were
                         # owned by the temporary user get transferred to the permanent user
-                        cur.execute(
+                        execute_sql(
+                            conn,
                             sql.SQL("REASSIGN OWNED BY {} TO {};").format(
                                 sql.Identifier(usename),
                                 sql.Identifier(db_persistent_role),
-                            )
+                            ),
                         )
                         # ... so the only effect of DROP OWNED BY is to REVOKE any
                         # remaining permissions by the temporary user, so it can then get
                         # deleted below
-                        cur.execute(sql.SQL("DROP OWNED BY {};").format(sql.Identifier(usename)))
+                        execute_sql(
+                            conn, sql.SQL("DROP OWNED BY {};").format(sql.Identifier(usename))
+                        )
 
                         # ... and then cleanup the roles on the master user (since there are
                         # performance implications for the master user having a lot of roles,
                         # specifically it can cause slowness on connect)
-                        cur.execute(
+                        execute_sql(
+                            conn,
                             sql.SQL("REVOKE {} FROM {};").format(
                                 sql.Identifier(usename),
                                 sql.Identifier(database_data["USER"]),
-                            )
+                            ),
                         )
-                        cur.execute(
+                        execute_sql(
+                            conn,
                             sql.SQL("REVOKE {} FROM {};").format(
                                 sql.Identifier(db_persistent_role),
                                 sql.Identifier(database_data["USER"]),
-                            )
+                            ),
                         )
 
-                    cur.execute(sql.SQL("DROP USER {};").format(sql.Identifier(usename)))
+                    execute_sql(conn, sql.SQL("DROP USER {};").format(sql.Identifier(usename)))
                 except Exception:  # pylint: disable=broad-except
                     logger.exception(
                         "delete_unused_datasets_users: Failed deleting %s",
