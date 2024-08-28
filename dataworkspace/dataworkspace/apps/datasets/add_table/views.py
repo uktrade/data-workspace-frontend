@@ -21,7 +21,7 @@ from dataworkspace.apps.datasets.add_table.forms import (
     AddTableDataTypesForm,
 )
 from dataworkspace.apps.core.boto3_client import get_s3_client
-from dataworkspace.apps.core.utils import copy_file_to_uploads_bucket, get_data_flow_import_pipeline_name, get_s3_prefix, trigger_dataflow_dag
+from dataworkspace.apps.core.utils import copy_file_to_uploads_bucket, get_data_flow_import_pipeline_name, get_s3_csv_column_types, get_s3_prefix, trigger_dataflow_dag
 from dataworkspace.apps.core.constants import SCHEMA_POSTGRES_DATA_TYPE_MAP, PostgresDataTypes
 from dataworkspace.apps.your_files.utils import get_s3_csv_file_info
 from dataworkspace.apps.your_files.views import ValidateSchemaMixin
@@ -240,43 +240,55 @@ class UploadCSVView(FormView):
             )
         )
 
-class AddTableDataTypesView(FormView):
+class AddTableDataTypesView(UploadCSVView):
     template_name = "datasets/add_table/data_types.html"
     form_class = AddTableDataTypesForm
     
-    def _get_file_upload_key(self, file_name, pk):
-        return os.path.join(
-            get_s3_prefix(str(self.request.user.profile.sso_id)),
-            "_add_table_uploads",
-            str(pk),
-            file_name,
-        )
+    required_parameters = [
+        "schema",
+        "descriptive_name",
+        "table_name",
+        "file_name",
+    ]
+
+    def get_initial(self):
+        initial = super().get_initial()
+        print('inital', initial)
+        if self.request.method == "GET":
+            initial.update(
+                {
+                    "path": self._get_file_upload_key(self.kwargs["file_name"], self.kwargs["pk"]),
+                    "schema": self.kwargs["schema"],
+                    "descriptive_name": self.kwargs["descriptive_name"],
+                    "table_name": self.kwargs["table_name"],
+                    "file_name": self.kwargs["file_name"],
+                    "force_overwrite": "overwrite" in self.request.GET,
+                    "table_exists_action": self.request.GET.get("table_exists_action"),
+                }
+            )
+        print('inital', initial)
+        return initial
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs.update(
             {
                 "user": self.request.user,
-                "column_definitions": get_s3_csv_file_info(self._get_file_upload_key(
-                 self.kwargs["file_name"], self.kwargs["pk"]
-            ))[
+                "column_definitions": get_s3_csv_file_info(self._get_file_upload_key(self.kwargs["file_name"], self.kwargs["pk"]))[
                     "column_definitions"
                 ],
             }
         )
         return kwargs
-    
-    def form_invalid(self, form):
-        print('FORM INVALID')
-        print('form', form)
+
 
     def form_valid(self, form):
-        source = self._get_source()
-        print('blah_form_valid')
+        print('form-valid')
         cleaned = form.cleaned_data
+        print('cleaned', cleaned)
         include_column_id = False
 
-        file_info = get_s3_csv_file_info(cleaned["initial"]["path"])
+        file_info = get_s3_csv_file_info(cleaned["path"])
 
         logger.info(file_info)
 
@@ -296,11 +308,13 @@ class AddTableDataTypesView(FormView):
         if "auto_generate_id_column" in cleaned and cleaned["auto_generate_id_column"] != "":
             include_column_id = cleaned["auto_generate_id_column"] == "True"
 
+
         conf = {
             "file_path": import_path,
-            "schema_name": cleaned["schema"],
-            "table_name": cleaned["table_name"],
-            "descriptive_name": cleaned["descriptive_name"],
+            "schema_name": self.kwargs["schema"],
+            "descriptive_name": self.kwargs["descriptive_name"],
+            "table_name": self.kwargs["table_name"],
+            # "file_name": self.kwargs["file_name"],
             "column_definitions": file_info["column_definitions"],
             "encoding": file_info["encoding"],
             "auto_generate_id_column": include_column_id,
@@ -308,14 +322,14 @@ class AddTableDataTypesView(FormView):
 
         logger.debug("Triggering pipeline %s", get_data_flow_import_pipeline_name())
         logger.debug(conf)
-        if cleaned["schema"] not in self.all_schemas:
-            conf["db_role"] = cleaned["schema"]
+        # if self.kwargs["schema"] not in self.all_schemas:
+        #     conf["db_role"] = cleaned["schema"]
 
         try:
             response = trigger_dataflow_dag(
                 conf,
                 get_data_flow_import_pipeline_name(),
-                f'{cleaned["schema"]}-{cleaned["table_name"]}-{datetime.now().isoformat()}',
+                f'{self.kwargs["schema"]}-{self.kwargs["table_name"]}-{datetime.now().isoformat()}',
             )
         except HTTPError:
             return HttpResponseRedirect(
@@ -323,16 +337,15 @@ class AddTableDataTypesView(FormView):
             )
 
         params = {
-            "filename": filename,
-            "schema": cleaned["schema"],
-            "table_name": cleaned["table_name"],
+            "schema": self.kwargs["schema"],
+            "descriptive_name": self.kwargs["descriptive_name"],
+            "table_name": self.kwargs["table_name"],
+            "file_name": self.kwargs["file_name"],
             "execution_date": response["execution_date"],
         }
 
         return HttpResponseRedirect(
-            reverse(
-                "datasets:add_table")
-            # f'{reverse("data")}?{urlencode(params)}'
+            '/'
         )
 
 
@@ -340,6 +353,7 @@ class AddTableDataTypesView(FormView):
         ctx = super().get_context_data(**kwargs)
         print('cxt:', ctx['view'].__dict__)
         dataset = find_dataset(self.kwargs["pk"], self.request.user)
+        ctx["path"] = self._get_file_upload_key(self.kwargs["file_name"], self.kwargs["pk"])
         ctx["source"] = dataset.sourcetable_set.all()
         ctx["model"] = dataset
         ctx["table_name"] = self.kwargs["table_name"]        
@@ -347,20 +361,5 @@ class AddTableDataTypesView(FormView):
             "datasets:add_table:upload-csv",
             args=(self.kwargs["pk"], self.kwargs["schema"], self.kwargs["descriptive_name"], self.kwargs["table_name"]),
         )
-        ctx["table_columns"] = []
-        for x in ctx["model"].get_column_config():
-            ctx["table_columns"].append(
-                {
-                    "field": x["field"],
-                    "data_type": x["dataType"],
-                }
-            )
-        ctx["file_columns"] = []
-        for x in ctx["form"].column_definitions:
-            ctx["file_columns"].append(
-                {
-                    "field": x["header_name"],
-                    "data_type": x["data_type"],
-                }
-            )
+
         return ctx

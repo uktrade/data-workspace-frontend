@@ -39,6 +39,8 @@ class SourceTableUploadForm(GOVUKDesignSystemForm):
 
 
 class SourceTableUploadColumnConfigForm(GOVUKDesignSystemForm):
+
+
     path = forms.CharField(widget=forms.HiddenInput())
     auto_generate_id_column = GOVUKDesignSystemRadioField(
         label="Do you want to generate an ID column?",
@@ -46,11 +48,10 @@ class SourceTableUploadColumnConfigForm(GOVUKDesignSystemForm):
         The ID will be an increasing integer, e.g. 1, 2, 3.",
         choices=[("True", "Yes"), ("False", "No")],
         widget=ConditionalSupportTypeRadioWidget(heading="h2", label_size="m", small=False),
-        required=False,
+        required=True,
     )
 
     def __init__(self, *args, **kwargs):
-
         self.column_definitions = kwargs.pop("column_definitions")
         self.show_id_form = True
 
@@ -74,3 +75,5 @@ class SourceTableUploadColumnConfigForm(GOVUKDesignSystemForm):
     def get_data_type_fields(self):
         for col_def in self.column_definitions:
             yield self[col_def["column_name"]], ", ".join(map(str, col_def["sample_data"]))
+
+
