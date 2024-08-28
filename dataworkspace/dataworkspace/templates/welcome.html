@@ -25,7 +25,7 @@
         {% include 'partials/gtm_head.html' %}
     </head>
 
-  <body id="body" class="govuk-template__body ">
+  <body id="body" class="govuk-template__body govuk-frontend-supported">
       {% include 'partials/gtm_body.html' %}
         <script nonce="{{ request.csp_nonce }}">
                document.body.className = document.body.className + ' js-enabled';
@@ -35,7 +35,7 @@
       <header class="govuk-header " role="banner" data-module="govuk-header" style="border-bottom: none;">
         <div class="govuk-width-container">
           <div class="govuk-header__logotype">
-            <a href="{{ root_href }}" class="govuk-header__link govuk-header__link--service-name" style="padding-top: 10px;">
+            <a href="{{ root_href }}" class="govuk-header__link govuk-header__service-name" style="padding-top: 10px;">
               Data Workspace
             </a>
           </div>
@@ -210,7 +210,7 @@
       <footer class="govuk-footer " role="contentinfo">
         <div class="govuk-width-container ">
           <div class="govuk-footer__navigation">
-            <div class="govuk-footer__section">
+            <div class="govuk-footer__section govuk-grid-column-full">
               <h2 class="govuk-footer__heading govuk-heading-m">Services and information</h2>
               <ul class="govuk-footer__list govuk-footer__list--columns-2">
                 <li class="govuk-footer__list-item">
@@ -286,15 +286,10 @@
     </footer>
 
     {% block javascript %}
-      <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}govuk-frontend-3.14.0.min.js"></script>
+      <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}govuk-frontend-5.4.0.min.js"></script>
       <script nonce="{{ request.csp_nonce }}" src="{% static 'search-v2.js' %}"></script>
 
-    {% block init_govuk_frontend %}
-      <script nonce="{{ request.csp_nonce }}">
-        window.GOVUKFrontend.initAll();
-      </script>
-    {% endblock %}
-
+      {% include "partials/init_govuk_frontend.html" %}
       {% block footer_additions %} {% endblock footer_additions %}
     {% endblock %}
   </body>

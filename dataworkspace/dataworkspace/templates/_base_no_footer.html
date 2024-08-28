@@ -41,7 +41,7 @@
   {% block head %}{% endblock %}
 </head>
 
-<body id="body" class="govuk-template__body data-grid__body">
+<body id="body" class="govuk-template__body data-grid__body govuk-frontend-supported">
   {% include 'partials/gtm_body.html' %}
 
   <script nonce="{{ request.csp_nonce }}">
@@ -51,8 +51,8 @@
   <a href="{{ request.path }}#main-content" class="govuk-skip-link">Skip to main content</a>
    <header class="govuk-header" role="banner" data-module="govuk-header">
     <div class="govuk-header__container">
-      <div class="govuk-header__logotype">
-        <a href="{{ root_href }}" class="govuk-header__link govuk-header__link--service-name govuk-!-padding-left-2">
+      <div class="govuk-header__logo">
+        <a href="{{ root_href }}" class="govuk-header__link govuk-header__service-name govuk-!-padding-left-2">
           Data Workspace
         </a>
       </div>
@@ -66,14 +66,10 @@
 
   {% block main %}{% endblock %}
 
-  <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}govuk-frontend-3.14.0.min.js"></script>
-  <script nonce="{{ request.csp_nonce }}">
-    window.GOVUKFrontend.initAll();
-  </script>
+  {% block footer_scripts %}{% endblock %}
+
+  {% include "partials/init_govuk_frontend.html" %}
   <script src="{% static 'assets/vendor/highlight/highlight.pack.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}">hljs.initHighlightingOnLoad();</script>
-
-  {% block footer_scripts %}
-  {% endblock %}
 </body>
 </html>

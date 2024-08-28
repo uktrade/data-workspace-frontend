@@ -245,7 +245,6 @@ function TableRowFolder(props) {
         <div className="govuk-form-group" style={{ marginBottom: "0" }}>
           <div className="govuk-checkboxes--small">
             <div className="govuk-checkboxes__item">
-              <div>
                 <input
                   className="govuk-checkboxes__input"
                   type="checkbox"
@@ -255,7 +254,6 @@ function TableRowFolder(props) {
                   }
                 />
                 <label className="govuk-label govuk-checkboxes__label"></label>
-              </div>
             </div>
           </div>
         </div>

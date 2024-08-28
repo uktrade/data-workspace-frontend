@@ -3,6 +3,7 @@ import datetime
 import re
 
 from django import forms
+from django.contrib.admin.widgets import AdminTextareaWidget
 from django.core.validators import EmailValidator
 from django.forms import (
     CheckboxInput,
@@ -29,6 +30,8 @@ class GOVUKDesignSystemWidgetMixin:
         data_attributes: dict = None,
         prefix=None,
         suffix=None,
+        character_limit="200",
+        extra_input_classes="",
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -43,6 +46,8 @@ class GOVUKDesignSystemWidgetMixin:
             data_attributes=data_attributes,
             prefix=prefix,
             suffix=suffix,
+            character_limit=character_limit,
+            extra_input_classes=extra_input_classes,
         )
 
     def __deepcopy__(self, memo):
@@ -113,6 +118,10 @@ class GOVUKDesignSystemDateWidget(forms.widgets.MultiWidget):
         context["widget"]["subwidgets"][1].update(self.month_attrs)
         context["widget"]["subwidgets"][2].update(self.year_attrs)
         return context
+
+
+class GOVUKDesignSystemTextCharCountWidget(GOVUKDesignSystemWidgetMixin, forms.widgets.TextInput):
+    template_name = "design_system/textinput_char_count.html"
 
 
 class GOVUKDesignSystemTextWidget(GOVUKDesignSystemWidgetMixin, forms.widgets.TextInput):
@@ -283,6 +292,12 @@ class GOVUKDesignSystemRichTextField(GOVUKDesignSystemFieldMixin, forms.CharFiel
     widget = GOVUKDesignSystemTextareaWidget(data_attributes={"type": "rich-text-editor"})
 
 
+class GOVUKDesignSystemRichLinkField(GOVUKDesignSystemFieldMixin, forms.CharField):
+    widget = GOVUKDesignSystemTextareaWidget(
+        data_attributes={"type": "rich-text-editor-link-only"}
+    )
+
+
 class GOVUKDesignSystemModelForm(forms.ModelForm):
     def clean(self):
         """We need to attach errors to widgets so that the fields can be rendered correctly. This slightly breaks
@@ -349,3 +364,13 @@ class GOVUKDesignSystemForm(forms.Form):
         non_field_errors = [(None, e) for e in self.non_field_errors()]
 
         return non_field_errors + field_errors
+
+
+class AdminRichTextEditorWidget(AdminTextareaWidget):
+    def __init__(self, attrs=None):
+        super().__init__(attrs={"data-type": "rich-text-editor", **(attrs or {})})
+
+
+class AdminRichLinkEditorWidget(AdminTextareaWidget):
+    def __init__(self, attrs=None):
+        super().__init__(attrs={"data-type": "rich-text-editor-link-only", **(attrs or {})})

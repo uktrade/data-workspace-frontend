@@ -45,7 +45,7 @@ urlpatterns = [
     ),
     path(
         "<str:table_name>/success",
-        login_required(ConfirmationView.as_view()),
+        login_required(UploadCSVView.as_view()),
         name="success",
     ),
 ]
