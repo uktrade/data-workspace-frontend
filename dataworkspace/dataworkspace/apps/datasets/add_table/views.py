@@ -284,6 +284,7 @@ class AddTableDataTypesView(UploadCSVView):
     def form_valid(self, form):
         cleaned = form.cleaned_data
         include_column_id = False
+        print('PAAAATH', cleaned['path'])
 
         file_info = get_s3_csv_file_info(cleaned["path"])
 
@@ -339,10 +340,21 @@ class AddTableDataTypesView(UploadCSVView):
             "table_name": self.kwargs["table_name"],
             "execution_date": response["execution_date"],
         }
+
+        table_created = UploadedTable.objects.get_or_create(
+                schema=self.kwargs["schema"],
+                table_name=self.kwargs["table_name"],
+                created_by=self.request.user,
+                data_flow_execution_date=datetime.strptime(
+                    response["execution_date"].split(".")[0], "%Y-%m-%dT%H:%M:%S"
+                ),
+            )
         
         return HttpResponseRedirect(
             f'{reverse("your-files:create-table-validating")}?{urlencode(params)}'
         )
+
+    
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -493,7 +505,7 @@ class AddTableSuccessView(BaseAddTableTemplateView):
     def get(self, request, *args, **kwargs):
         print("kwargs5:", self.kwargs)
 
-        UploadedTable.objects.get_or_create(
+        table_created = UploadedTable.objects.get_or_create(
                 schema=self.kwargs("schema"),
                 table_name=self.kwargs("table_name"),
                 created_by=self.request.user,
@@ -501,4 +513,5 @@ class AddTableSuccessView(BaseAddTableTemplateView):
                     self.kwargs("execution_date").split(".")[0], "%Y-%m-%dT%H:%M:%S"
                 ),
             )
-        return super().get(request, *args, **kwargs)
+        return table_created
+        # return super().get(request, *args, **kwargs)
