@@ -52,7 +52,7 @@
   top: 2px;
 }
 .browser-breadcrumb:before {
-  content: "/";
+  content: '/';
   vertical-align: middle;
   position: relative;
   color: white;
@@ -153,6 +153,11 @@
   padding: 0 5px 0 8px;
   vertical-align: top;
 }
+
+.govuk-checkboxes__label {
+  padding: 0;
+}
+
 .govuk-table__row:hover .govuk-checkboxes__label:before,
 .govuk-checkboxes--small
   .govuk-checkboxes__item:hover
@@ -219,7 +224,6 @@
   background: #cce2d8;
 }
 .progress-error {
-
   color: #942514;
   background: #f6d7d2;
   text-transform: none;
@@ -245,14 +249,19 @@
   }
 }
 .modal-in {
-  transition: visibility 0s linear 0.1s, opacity 0.3s linear 0.1s,
+  transition:
+    visibility 0s linear 0.1s,
+    opacity 0.3s linear 0.1s,
     top 0.3s ease-out 0.1s;
   visibility: visible;
   opacity: 1;
   top: 0;
 }
 .modal-out {
-  transition: visibility 0s linear 0.3s, opacity 0.3s linear, top 0.3s ease-in;
+  transition:
+    visibility 0s linear 0.3s,
+    opacity 0.3s linear,
+    top 0.3s ease-in;
   visibility: hidden;
   opacity: 0;
   top: -100%;
@@ -292,7 +301,7 @@
     margin-bottom: 0;
   }
 }
-.modal-contents{
+.modal-contents {
   overflow-y: scroll;
   background-color: white;
 }
@@ -314,12 +323,16 @@
   visibility: hidden;
 }
 .modal-backdrop-in {
-  transition: visibility 0s linear 0s, opacity 0.25s linear;
+  transition:
+    visibility 0s linear 0s,
+    opacity 0.25s linear;
   visibility: visible;
   opacity: 0.5;
 }
 .modal-backdrop-out {
-  transition: visibility 0s linear 0.5s, opacity 0.25s linear 0.25s;
+  transition:
+    visibility 0s linear 0.5s,
+    opacity 0.25s linear 0.25s;
   visibility: hidden;
   opacity: 0;
 }
@@ -375,7 +388,6 @@
 
   .modal-footer {
     overflow: hidden;
-
   }
 }
 
@@ -386,30 +398,30 @@
   }
 }
 
-.upload-files__table-container{
+.upload-files__table-container {
   max-height: 275px;
   overflow: scroll;
   margin-bottom: 10px;
   table {
- border-collapse: separate;
-   position: relative;
+    border-collapse: separate;
+    position: relative;
     th {
       position: sticky;
-        top: 0;
-        background-color: white;
+      top: 0;
+      background-color: white;
     }
   }
 }
 
 .upload-files__table-container::-webkit-scrollbar {
-    -webkit-appearance: none;
+  -webkit-appearance: none;
 }
 
-.upload-files__table-container::-webkit-scrollbar:vertical{
-    width: 10px;
-  }
+.upload-files__table-container::-webkit-scrollbar:vertical {
+  width: 10px;
+}
 .upload-files__table-container::-webkit-scrollbar-thumb {
-    border-radius: 8px;
-    border: 2px solid white;
-    background-color: rgba(0, 0, 0, .5);
+  border-radius: 8px;
+  border: 2px solid white;
+  background-color: rgba(0, 0, 0, 0.5);
 }

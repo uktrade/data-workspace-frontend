@@ -10,9 +10,9 @@
         {{ widget.help_html }}
       </div>
       {% elif widget.help_text %}
-      <span id="{{ id }}-hint" class="govuk-hint">
+      <div id="{{ id }}-hint" class="govuk-hint">
         {{ widget.help_text }}
-      </span>
+      </div>
       {% endif %}
 
       {% if widget.errors %}

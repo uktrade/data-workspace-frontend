@@ -13,16 +13,16 @@
         {% else %}
           {% if model.get_government_security_classification_display == "OFFICIAL" %}
             <strong
-              class="govuk-tag govuk-tag--blue">{{ model.get_government_security_classification_display }}</strong>
+              class="govuk-tag govuk-tag--blue">{{ model.get_government_security_classification_display|title }}</strong>
           {% else %}
             {% if model.sensitivity.all %}
               {% for sensitivity in model.sensitivity.all %}
                 <strong
-                  class="govuk-tag govuk-tag--red govuk-!-margin-bottom-1">{{ model.get_government_security_classification_display }} {{ sensitivity }}</strong>
+                  class="govuk-tag govuk-tag--red govuk-!-margin-bottom-1">{{ model.get_government_security_classification_display|title }} {{ sensitivity|title }}</strong>
               {% endfor %}
             {% else %}
               <strong
-                class="govuk-tag govuk-tag--red">{{ model.get_government_security_classification_display }}</strong>
+                class="govuk-tag govuk-tag--red">{{ model.get_government_security_classification_display|title }}</strong>
             {% endif %}
           {% endif %}
         {% endif %}

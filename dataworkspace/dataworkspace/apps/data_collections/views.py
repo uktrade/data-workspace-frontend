@@ -14,7 +14,6 @@ from django.views.decorators.http import require_http_methods
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.conf import settings
 
-from dataworkspace.apps.core.utils import get_tinymce_configs
 from dataworkspace.apps.data_collections.forms import (
     CollectionEditForm,
     CollectionNotesForm,
@@ -473,11 +472,6 @@ class CollectionNotesView(UpdateView):
     @csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC, STYLE_SRC=settings.WEBPACK_SCRIPT_SRC)
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["TINYMCE_CONFIGS"] = get_tinymce_configs([{"selector": "#id_notes"}])
-        return context
 
     def get_object(self, queryset=None):
         return get_authorised_collection(self.request, self.kwargs["collections_id"])

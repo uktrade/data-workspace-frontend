@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "aws-sdk": "^2.1193.0",
+    "ckeditor5": "^43.0.0",
     "classnames": "^2.3.1",
     "draft-js": "^0.11.7",
     "eventemitter3": "^4.0.7",
@@ -21,8 +22,7 @@
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "react-hook-form": "^7.51.5",
-    "styled-components": "^5.3.5",
-    "tinymce": "^7.2.1"
+    "styled-components": "^5.3.5"
   },
   "devDependencies": {
     "@babel/core": "^7.14.6",

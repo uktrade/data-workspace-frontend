@@ -14,45 +14,6 @@
         {% block styles %}
             <link rel="stylesheet" href="{% static 'govuk-frontend.css' %}">
             <link href="{% static 'explorer_custom.css' %}" rel="stylesheet" media="all" />
-            <!--[if lt IE 9]>
-                <script>
-                    (function(){
-                    var elements = [
-                          "abbr",
-                          "article",
-                          "aside",
-                          "audio",
-                          "canvas",
-                          "datalist",
-                          "details",
-                          "figure",
-                          "footer",
-                          "header",
-                          "hgroup",
-                          "main",
-                          "mark",
-                          "menu",
-                          "meter",
-                          "nav",
-                          "output",
-                          "progress",
-                          "section",
-                          "time",
-                          "video"
-                     ]
-                    for (var i = 0; i < elements.length; i++) {
-                        document.createElement(elements[i])
-                    }
-                    })()
-                </script>
-                <style>
-                  .govuk-width-container {
-                      width: 960px;
-                      margin-left: auto !important;
-                      margin-right: auto !important;
-                  }
-                </style>
-                <![endif]-->
         {% endblock styles %}
         {% if GTM_ENABLED %}
           {% block initialGTMDataLayer %}
@@ -65,7 +26,7 @@
         {# Fallback to standard tables if javascript is disabled#}
         <noscript><style>.enhanced-table { display: table }</style></noscript>
     </head>
-    <body class="govuk-template__body">
+    <body class="govuk-template__body govuk-frontend-supported">
       {% include 'partials/gtm_body.html' %}
         <script nonce="{{ request.csp_nonce }}">
             document.body.className = ((document.body.className) ? document.body.className + ' js-enabled' : 'js-enabled')
@@ -76,7 +37,7 @@
         <header class="govuk-header " role="banner" data-module="govuk-header">
             <div class="govuk-header__container govuk-width-container">
                 <div class="govuk-header__logotype" style="width: 100%">
-                  <a href="{% url 'explorer:index' %}" class="govuk-header__link govuk-header__link--service-name">Data Explorer </a>
+                  <a href="{% url 'explorer:index' %}" class="govuk-header__link govuk-header__service-name">Data Explorer </a>
                   <p style="float: right" class="govuk-!-font-size-19 govuk-!-display-inline-block govuk-!-margin-top-0">
                     Uses data on <a class="govuk-header__link" style="text-decoration: underline" href="https://data.trade.gov.uk" target="_blank" rel="noopener noreferrer">Data Workspace</a>
                   </p>
@@ -112,10 +73,10 @@
         </div>
         {% endblock %}
 
-        <footer class="govuk-footer " role="contentinfo">
+        <footer class="govuk-footer" role="contentinfo">
           <div class="govuk-width-container ">
             <div class="govuk-footer__navigation">
-              <div class="govuk-footer__section">
+              <div class="govuk-footer__section govuk-grid-column-full">
                 <h2 class="govuk-footer__heading govuk-heading-m">Services and information</h2>
 
                 <ul class="govuk-footer__list govuk-footer__list">
@@ -169,15 +130,8 @@
         </footer>
 
         {% block javascript %}
-            <script nonce="{{ request.csp_nonce }}" src="{% get_static_prefix %}govuk-frontend-3.14.0.min.js"></script>
-
-            {% block init_govuk_frontend %}
-              <script nonce="{{ request.csp_nonce }}">
-                window.GOVUKFrontend.initAll();
-              </script>
-            {% endblock %}
-
-            {% block footer_additions %} {% endblock footer_additions %}
+           {% include "partials/init_govuk_frontend.html" %}
+           {% block footer_additions %} {% endblock footer_additions %}
         {% endblock %}
     </body>
 </html>

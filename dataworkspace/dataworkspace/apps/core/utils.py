@@ -292,11 +292,20 @@ def new_private_database_credentials(
                 )
 
             # Make it so by default, objects created by the user are owned by the role
-            cur.execute(
-                sql.SQL("ALTER USER {} SET ROLE {};").format(
-                    sql.Identifier(db_user), sql.Identifier(db_role)
+            # This seems to have a horrible performance impact on connecting, so we don't do it for
+            # contexts that can't create objects. The reason for the performance impact on
+            # connecting is currently unknown, but seems to be related to the number of other roles
+            # granted
+            if not (
+                db_user.endswith("_qs")
+                or db_user.endswith("_superset")
+                or db_user.endswith("_explorer")
+            ):
+                cur.execute(
+                    sql.SQL("ALTER USER {} SET ROLE {};").format(
+                        sql.Identifier(db_user), sql.Identifier(db_role)
+                    )
                 )
-            )
 
             # Give the user reasonable timeouts
             cur.execute(
@@ -1099,7 +1108,7 @@ def get_s3_csv_column_types(path):
 
 def trigger_dataflow_dag(conf, dag, dag_run_id):
     config = settings.DATAFLOW_API_CONFIG
-    trigger_url = f'{config["DATAFLOW_BASE_URL"]}/api/experimental/dags/{dag}/dag_runs'
+    trigger_url = f'{config["DATAFLOW_BASE_URL_DATA_WORKSPACE_AWS_INTERNAL"]}/api/experimental/dags/{dag}/dag_runs'
     hawk_creds = {
         "id": config["DATAFLOW_HAWK_ID"],
         "key": config["DATAFLOW_HAWK_KEY"],
@@ -1150,7 +1159,7 @@ def copy_file_to_uploads_bucket(from_path, to_path):
 def get_dataflow_dag_status(dag, execution_date):
     config = settings.DATAFLOW_API_CONFIG
     url = (
-        f'{config["DATAFLOW_BASE_URL"]}/api/experimental/'
+        f'{config["DATAFLOW_BASE_URL_DATA_WORKSPACE_AWS_INTERNAL"]}/api/experimental/'
         f'dags/{dag}/dag_runs/{execution_date.split("+")[0]}'
     )
     hawk_creds = {
@@ -1176,7 +1185,7 @@ def get_dataflow_dag_status(dag, execution_date):
 def get_dataflow_task_status(dag, execution_date, task_id):
     config = settings.DATAFLOW_API_CONFIG
     url = (
-        f'{config["DATAFLOW_BASE_URL"]}/api/experimental/'
+        f'{config["DATAFLOW_BASE_URL_DATA_WORKSPACE_AWS_INTERNAL"]}/api/experimental/'
         f"dags/{dag}/dag_runs/"
         f'{execution_date.split("+")[0]}/tasks/{task_id}'
     )
@@ -1194,7 +1203,7 @@ def get_dataflow_task_status(dag, execution_date, task_id):
 def get_dataflow_task_log(dag, execution_date, task_id):
     config = settings.DATAFLOW_API_CONFIG
     url = (
-        f'{config["DATAFLOW_BASE_URL"]}/api/experimental/derived-dags/'
+        f'{config["DATAFLOW_BASE_URL_DATA_WORKSPACE_AWS_INTERNAL"]}/api/experimental/derived-dags/'
         f"dag/{dag}/{execution_date.split('+')[0]}/{task_id}/log"
     )
     header = Sender(
@@ -1358,28 +1367,6 @@ def is_user_email_domain_valid(email):
     ]
 
     return email_domain in valid_domains
-
-
-def get_tinymce_configs(configs):
-    """
-    Returns a list of configs for displaying multiple tinymce components in the view.
-    """
-    tiny_mce_configs = []
-    for config in configs:
-        tiny_mce_configs.append(
-            {
-                "selector": config["selector"],
-                "plugins": config.get("plugins") or settings.TINYMCE_DEFAULT_CONFIG["plugins"],
-                "toolbar": config.get("toolbar") or settings.TINYMCE_DEFAULT_CONFIG["toolbar"],
-                "width": config.get("width") or settings.TINYMCE_DEFAULT_CONFIG["width"],
-                "height": config.get("height") or settings.TINYMCE_DEFAULT_CONFIG["height"],
-                "custom_undo_redo_levels": config.get("custom_undo_redo_levels")
-                or settings.TINYMCE_DEFAULT_CONFIG["custom_undo_redo_levels"],
-                "license_key": config.get("license_key")
-                or settings.TINYMCE_DEFAULT_CONFIG["license_key"],
-            }
-        )
-    return tiny_mce_configs
 
 
 def has_tools_cert_expired(cert_date):

@@ -1,14 +1,31 @@
+from datetime import datetime
+import os
+from urllib.parse import urlencode
+import uuid
+from venv import logger
+from aiohttp import ClientError
+from django.conf import settings
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.core.exceptions import BadRequest
 from django.views.generic import DetailView, FormView, TemplateView
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect, HttpResponseServerError
+from requests import HTTPError
 
 from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.datasets.add_table.forms import (
     TableNameForm,
     TableSchemaForm,
     DescriptiveNameForm,
+    UploadCSVForm,
+    AddTableDataTypesForm,
 )
-from dataworkspace.apps.datasets.models import DataSet
+from dataworkspace.apps.core.boto3_client import get_s3_client
+from dataworkspace.apps.core.utils import copy_file_to_uploads_bucket, get_data_flow_import_pipeline_name, get_s3_csv_column_types, get_s3_prefix, trigger_dataflow_dag
+from dataworkspace.apps.core.constants import SCHEMA_POSTGRES_DATA_TYPE_MAP, PostgresDataTypes
+from dataworkspace.apps.your_files.utils import get_s3_csv_file_info
+from dataworkspace.apps.your_files.views import RequiredParameterGetRequestMixin, ValidateSchemaMixin
+from dataworkspace.apps.your_files.models import UploadedTable
 
 
 class AddTableView(DetailView):
@@ -164,7 +181,7 @@ class TableNameView(FormView):
         table_names = []
         tables = list(dataset.sourcetable_set.all())
         for table in tables:
-            table_names.append(table.name)
+            table_names.append(table.table)
 
         return table_names
 
@@ -181,11 +198,345 @@ class TableNameView(FormView):
         return ctx
 
     def form_valid(self, form):
-        # table_name = form.cleaned_data["table_name"]
+        table_name = form.cleaned_data["table_name"]
         return HttpResponseRedirect(
-            ("/")
-            # reverse(
-            #     "datasets:add_table:{NEW_PAGE}",
-            #     args=(self.kwargs["pk"], self.kwargs["schema"], self.kwargs["descriptive_name"], table_name),
-            # )
+            reverse(
+                "datasets:add_table:upload-csv",
+                args=(
+                    self.kwargs["pk"],
+                    self.kwargs["schema"],
+                    self.kwargs["descriptive_name"],
+                    table_name,
+                ),
+            )
         )
+
+
+class UploadCSVView(FormView):
+    template_name = "datasets/add_table/upload_csv.html"
+    form_class = UploadCSVForm
+
+    def _get_file_upload_key(self, file_name, pk):
+        return os.path.join(
+            get_s3_prefix(str(self.request.user.profile.sso_id)),
+            "_add_table_uploads",
+            str(pk),
+            file_name,
+        )
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        dataset = find_dataset(self.kwargs["pk"], self.request.user)
+        ctx["model"] = dataset
+        ctx["backlink"] = reverse(
+            "datasets:add_table:table-name",
+            args=(self.kwargs["pk"], self.kwargs["schema"], self.kwargs["descriptive_name"]),
+        )
+        return ctx
+
+    def form_valid(self, form):
+        csv_file = form.cleaned_data["csv_file"]
+        client = get_s3_client()
+        file_name = f"{csv_file.name}!{uuid.uuid4()}"
+        key = self._get_file_upload_key(file_name, self.kwargs["pk"])
+        csv_file.seek(0)
+        try:
+            client.put_object(
+                Body=csv_file,
+                Bucket=settings.NOTEBOOKS_BUCKET,
+                Key=key,
+            )
+        except ClientError as ex:
+            # pylint: disable=raise-missing-from
+            # pylint: disable=no-member
+            return HttpResponseServerError(
+                "Error saving file: {}".format(ex.response["Error"]["Message"])
+            )
+
+        return HttpResponseRedirect(
+            reverse(
+                "datasets:add_table:data-types",
+                args=(
+                    self.kwargs["pk"],
+                    self.kwargs["schema"],
+                    self.kwargs["descriptive_name"],
+                    self.kwargs["table_name"],
+                    file_name,
+                ),
+            )
+        )
+
+class AddTableDataTypesView(UploadCSVView):
+    template_name = "datasets/add_table/data_types.html"
+    form_class = AddTableDataTypesForm
+    
+    required_parameters = [
+        "schema",
+        "descriptive_name",
+        "table_name",
+        "file_name",
+    ]
+
+    def get_initial(self):
+        initial = super().get_initial()
+        if self.request.method == "GET":
+            initial.update(
+                {
+                    "path": self._get_file_upload_key(self.kwargs["file_name"], self.kwargs["pk"]),
+                    "schema": self.kwargs["schema"],
+                    "descriptive_name": self.kwargs["descriptive_name"],
+                    "table_name": self.kwargs["table_name"],
+                    "file_name": self.kwargs["file_name"],
+                    "force_overwrite": "overwrite" in self.request.GET,
+                    "table_exists_action": self.request.GET.get("table_exists_action"),
+                }
+            )
+        return initial
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs.update(
+            {
+                "user": self.request.user,
+                "column_definitions": get_s3_csv_file_info(self._get_file_upload_key(self.kwargs["file_name"], self.kwargs["pk"]))[
+                    "column_definitions"
+                ],
+            }
+        )
+        return kwargs
+
+
+    def form_valid(self, form):
+        cleaned = form.cleaned_data
+        include_column_id = False
+        print('PAAAATH', cleaned['path'])
+
+        file_info = get_s3_csv_file_info(cleaned["path"])
+
+        logger.info(file_info)
+
+        for field in file_info["column_definitions"]:
+            field["data_type"] = SCHEMA_POSTGRES_DATA_TYPE_MAP.get(
+                cleaned[field["column_name"]], PostgresDataTypes.TEXT
+            )
+
+        import_path = settings.DATAFLOW_IMPORTS_BUCKET_ROOT + "/" + cleaned["path"]
+        logger.debug("import_path %s", import_path)
+
+        copy_file_to_uploads_bucket(cleaned["path"], import_path)
+
+        filename = cleaned["path"].split("/")[-1]
+        logger.debug(filename)
+
+        if "auto_generate_id_column" in cleaned and cleaned["auto_generate_id_column"] != "":
+            include_column_id = cleaned["auto_generate_id_column"] == "True"
+
+
+        conf = {
+            "file_path": import_path,
+            "schema_name": self.kwargs["schema"],
+            "descriptive_name": self.kwargs["descriptive_name"],
+            "table_name": self.kwargs["table_name"],
+            # "file_name": self.kwargs["file_name"],
+            "column_definitions": file_info["column_definitions"],
+            "encoding": file_info["encoding"],
+            "auto_generate_id_column": include_column_id,
+        }
+
+        logger.debug("Triggering pipeline %s", get_data_flow_import_pipeline_name())
+        logger.debug(conf)
+        # if self.kwargs["schema"] not in self.all_schemas:
+        #     conf["db_role"] = cleaned["schema"]
+
+        try:
+            response = trigger_dataflow_dag(
+                conf,
+                get_data_flow_import_pipeline_name(),
+                f'{self.kwargs["schema"]}-{self.kwargs["table_name"]}-{datetime.now().isoformat()}',
+            )
+        except HTTPError:
+            return HttpResponseRedirect(
+                f'{reverse("your-files:create-table-failed")}?' f"filename={filename}"
+            )
+
+        params = {
+            "filename": self.kwargs["file_name"],
+            "schema": self.kwargs["schema"],
+            "table_name": self.kwargs["table_name"],
+            "execution_date": response["execution_date"],
+        }
+
+        table_created = UploadedTable.objects.get_or_create(
+                schema=self.kwargs["schema"],
+                table_name=self.kwargs["table_name"],
+                created_by=self.request.user,
+                data_flow_execution_date=datetime.strptime(
+                    response["execution_date"].split(".")[0], "%Y-%m-%dT%H:%M:%S"
+                ),
+            )
+        
+        return HttpResponseRedirect(
+            f'{reverse("your-files:create-table-validating")}?{urlencode(params)}'
+        )
+
+    
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        dataset = find_dataset(self.kwargs["pk"], self.request.user)
+        ctx["path"] = self._get_file_upload_key(self.kwargs["file_name"], self.kwargs["pk"])
+        ctx["source"] = dataset.sourcetable_set.all()
+        ctx["model"] = dataset
+        ctx["table_name"] = self.kwargs["table_name"]        
+        ctx["backlink"] = reverse(
+            "datasets:add_table:upload-csv",
+            args=(self.kwargs["pk"], self.kwargs["schema"], self.kwargs["descriptive_name"], self.kwargs["table_name"]),
+        )
+
+        return ctx
+
+class BaseAddTableTemplateView(RequiredParameterGetRequestMixin, TemplateView):
+    required_parameters = [
+        "filename",
+        "schema",
+        "table_name",
+        "execution_date",
+    ]
+    steps = 5
+    step: int
+
+    def _get_query_parameters(self):
+        return {param: self.request.GET.get(param) for param in self.required_parameters}
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(**{"steps": self.steps, "step": self.step}, **self._get_query_parameters())
+        return context
+    
+class BaseAddTableStepView(BaseAddTableTemplateView):
+    template_name = "your_files/create-table-processing.html"
+    task_name: str
+    next_step_url_name: str
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data()
+        query_params = self._get_query_parameters()
+        query_params["task_name"] = self.task_name
+        context.update(
+            {
+                "task_name": self.task_name,
+                "next_step": f"{reverse(self.next_step_url_name)}?{urlencode(query_params)}",
+            }
+        )
+        return context
+
+
+class AddTableValidatingView(BaseAddTableStepView):
+    task_name = "get-table-config"
+    next_step_url_name = "your-files:create-table-creating-table"
+    step = 1
+
+    def get_context_data(self, **kwargs):
+        print("kwargs1:", self.kwargs)
+        context = super().get_context_data()
+        context.update(
+            {
+                "title": "Validating",
+                "info_text": (
+                    "Your CSV file is being validated against your chosen columns and data types."
+                ),
+            }
+        )
+        return context
+
+
+class AddTableCreatingTableView(BaseAddTableStepView):
+    task_name = "create-temp-tables"
+    next_step_url_name = "your-files:create-table-ingesting"
+    step = 2
+
+    def get_context_data(self, **kwargs):
+        print("kwargs2:", self.kwargs)
+
+        context = super().get_context_data()
+        context.update(
+            {
+                "title": "Creating temporary table",
+                "info_text": (
+                    "Data will be inserted into a temporary table and validated before "
+                    "it is made available."
+                ),
+            }
+        )
+        return context
+
+
+class AddTableIngestingView(BaseAddTableStepView):
+    task_name = "insert-into-temp-table"
+    next_step_url_name = "your-files:create-table-renaming-table"
+    step = 3
+
+    def get_context_data(self, **kwargs):
+        print("kwargs3:", self.kwargs)
+        context = super().get_context_data()
+        context.update(
+            {
+                "title": "Inserting data",
+                "info_text": "Once complete, your data will be validated and your table will be "
+                "made available.",
+            }
+        )
+        return context
+
+
+class AddTableRenamingTableView(BaseAddTableStepView):
+    task_name = "swap-dataset-table-datasets_db"
+    next_step_url_name = "your-files:create-table-success"
+    step = 4
+
+    def get_context_data(self, **kwargs):
+        print("kwargs4:", self.kwargs)
+        context = super().get_context_data()
+        context.update(
+            {
+                "title": "Renaming temporary table",
+                "info_text": "This is the last step, your table is almost ready.",
+            }
+        )
+        return context
+
+
+class AddTableAppendingToTableView(BaseAddTableStepView):
+    task_name = "sync"
+    next_step_url_name = "your-files:create-table-success"
+    step = 4
+
+    def get_context_data(self, **kwargs):
+        print("kwargs4.5:", self.kwargs)
+        context = super().get_context_data()
+        context.update(
+                {
+                    "title": "Creating and inserting into your table",
+                    "info_text": "This is the last step, your table is almost ready.",
+                }
+            )
+        return context
+
+
+class AddTableSuccessView(BaseAddTableTemplateView):
+    template_name = "your_files/create-table-success.html"
+    step = 5
+
+    def get(self, request, *args, **kwargs):
+        print("kwargs5:", self.kwargs)
+
+        table_created = UploadedTable.objects.get_or_create(
+                schema=self.kwargs("schema"),
+                table_name=self.kwargs("table_name"),
+                created_by=self.request.user,
+                data_flow_execution_date=datetime.strptime(
+                    self.kwargs("execution_date").split(".")[0], "%Y-%m-%dT%H:%M:%S"
+                ),
+            )
+        return table_created
+        # return super().get(request, *args, **kwargs)

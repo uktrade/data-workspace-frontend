@@ -1,12 +1,24 @@
 import re
+from django import forms
 from django.forms import ValidationError
+from django.core.validators import FileExtensionValidator
+from dataworkspace.apps.core.forms import ConditionalSupportTypeRadioWidget
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
+    GOVUKDesignSystemChoiceField,
+    GOVUKDesignSystemFileField,
+    GOVUKDesignSystemFileInputWidget,
     GOVUKDesignSystemForm,
     GOVUKDesignSystemRadioField,
     GOVUKDesignSystemRadiosWidget,
+    GOVUKDesignSystemSelectWidget,
     GOVUKDesignSystemTextWidget,
+    GOVUKDesignSystemTextCharCountWidget,
 )
+from dataworkspace.apps.core.utils import (
+    get_postgres_datatype_choices,
+)
+from dataworkspace.apps.core.storage import malware_file_validator
 
 
 class TableSchemaForm(GOVUKDesignSystemForm):
@@ -59,7 +71,17 @@ class TableNameForm(GOVUKDesignSystemForm):
         schema = kwargs["schema"] + "."
         descriptive_name = kwargs["descriptive_name"].replace(" ", "_")
         self.table_names = kwargs["table_names"]
-        self.fields["table_name"].widget = GOVUKDesignSystemTextWidget(prefix=schema)
+        self.fields["table_name"].widget = GOVUKDesignSystemTextCharCountWidget(
+            prefix=schema,
+            character_limit="42",
+        )
+        self.fields["table_name"].widget.attrs.update(
+            {
+                "label": self.fields["table_name"].label,
+                "help_text": self.fields["table_name"].help_text,
+            }
+        )
+
         self.fields["table_name"].initial = descriptive_name
 
     def clean_table_name(self):
@@ -78,3 +100,72 @@ class TableNameForm(GOVUKDesignSystemForm):
         elif "record" in table_name:
             raise ValidationError("Table name cannot contain the word 'record'")
         return table_name
+
+
+class UploadCSVForm(GOVUKDesignSystemForm):
+
+    def clean_csv_file(self):
+        cleaned_data = super().clean()
+        csv_name = cleaned_data["csv_file"]._name.replace(".csv", "")
+        if bool(re.search(r"[^A-Za-z_-]", csv_name)):
+            raise ValidationError(
+                "File name cannot contain special characters apart from underscores and hyphens"
+            )
+        return cleaned_data["csv_file"]
+
+    csv_file = GOVUKDesignSystemFileField(
+        required=True,
+        label="Upload a file",
+        widget=GOVUKDesignSystemFileInputWidget(
+            label_is_heading=True,
+            heading_class="govuk-label",
+            show_selected_file=True,
+            attrs={"accept": "text/csv"},
+        ),
+        validators=[
+            FileExtensionValidator(allowed_extensions=["csv"]),
+            malware_file_validator,
+        ],
+        error_messages={
+            "required": "Select a CSV",
+            "invalid_extension": "Invalid file type. Only CSV files are currently supported.",
+        },
+    )
+
+
+class AddTableDataTypesForm(GOVUKDesignSystemForm):
+    path = forms.CharField(widget=forms.HiddenInput())
+    auto_generate_id_column = GOVUKDesignSystemRadioField(
+        label="Do you want to generate an ID column?",
+        help_text="This will add an ID column and assign an ID to each row in your table. \
+        The ID will be an increasing integer, e.g. 1, 2, 3.",
+        choices=[("True", "Yes"), ("False", "No")],
+        widget=ConditionalSupportTypeRadioWidget(heading="h2", label_size="m", small=False),
+        required=True,
+    )
+
+    def __init__(self, *args, **kwargs):
+        kwargs.pop("user")
+        self.column_definitions = kwargs.pop("column_definitions")
+        self.show_id_form = True
+
+        if not self.column_definitions:
+            raise ValueError("Definitions for at least one column must be provided")
+        super().__init__(*args, **kwargs)
+
+        for col_def in self.column_definitions:
+            if col_def["column_name"] == "id":
+                self.show_id_form = False
+            self.fields[col_def["column_name"]] = GOVUKDesignSystemChoiceField(
+                label=col_def["column_name"],
+                initial=col_def["data_type"],
+                choices=get_postgres_datatype_choices(),
+                widget=GOVUKDesignSystemSelectWidget(
+                    label_is_heading=False,
+                    extra_label_classes="govuk-visually-hidden",
+                ),
+            )
+
+    def get_data_type_fields(self):
+        for col_def in self.column_definitions:
+            yield self[col_def["column_name"]], ", ".join(map(str, col_def["sample_data"]))

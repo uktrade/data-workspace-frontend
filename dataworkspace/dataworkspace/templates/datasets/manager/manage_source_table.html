@@ -27,13 +27,13 @@
         {% if source.dataset.government_security_classification %}
           {% if source.dataset.get_government_security_classification_display == "OFFICIAL" %}
             <strong
-              class="govuk-tag govuk-tag--blue">{{ source.dataset.get_government_security_classification_display }}</strong>
+              class="govuk-tag govuk-tag--blue">{{ source.dataset.get_government_security_classification_display|title }}</strong>
           {% else %}
             <strong
-              class="govuk-tag govuk-tag--red govuk-!-margin-bottom-4">{{ source.dataset.get_government_security_classification_display }}
+              class="govuk-tag govuk-tag--red govuk-!-margin-bottom-4">{{ source.dataset.get_government_security_classification_display|title }}
               {% if source.dataset.sensitivity.all %}
                 {% for sensitivity in source.dataset.sensitivity.all %}
-                  {% if not forloop.first %}<span>and{% endif %}</span> {{ sensitivity }}
+                  {% if not forloop.first %}<span>and{% endif %}</span> {{ sensitivity|title }}
                 {% endfor %}
               {% endif %}
             </strong>
@@ -56,13 +56,13 @@
       <strong class="govuk-tag govuk-tag--yellow">Awaiting classification</strong>
       {% else %}{% if source.dataset.get_government_security_classification_display == "OFFICIAL" %}
         <strong
-          class="govuk-tag govuk-tag--blue">{{ source.dataset.get_government_security_classification_display }}</strong>
+          class="govuk-tag govuk-tag--blue">{{ source.dataset.get_government_security_classification_display|title }}</strong>
       {% else %}
         <strong
-          class="govuk-tag govuk-tag--red govuk-!-margin-bottom-4">{{ source.dataset.get_government_security_classification_display }}
+          class="govuk-tag govuk-tag--red govuk-!-margin-bottom-4">{{ source.dataset.get_government_security_classification_display|title }}
           {% if source.dataset.sensitivity.all %}
             {% for sensitivity in source.dataset.sensitivity.all %}
-              {% if not forloop.first %}<span>and {% endif %}</span>{{ sensitivity }}
+              {% if not forloop.first %}<span>and {% endif %}</span>{{ sensitivity|title }}
             {% endfor %}
           {% endif %}
         </strong>
