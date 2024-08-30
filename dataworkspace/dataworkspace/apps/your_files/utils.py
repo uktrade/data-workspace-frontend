@@ -20,18 +20,24 @@ from dataworkspace.apps.core.utils import (
 logger = logging.getLogger("app")
 
 
-def get_s3_csv_file_info(path):
+def get_s3_csv_file_data(
+    path: str, range: str = "bytes=0-102400", reader=csv.reader
+) -> tuple[list, str]:
     client = get_s3_client()
 
     logger.debug(path)
 
-    file = client.get_object(Bucket=settings.NOTEBOOKS_BUCKET, Key=path, Range="bytes=0-102400")
+    file = client.get_object(Bucket=settings.NOTEBOOKS_BUCKET, Key=path, Range=range)
     raw = file["Body"].read()
 
     encoding, decoded = _get_encoding_and_decoded_bytes(raw)
 
     fh = StringIO(decoded, newline="")
-    rows = list(csv.reader(fh))
+    return list(reader(fh)), encoding
+
+
+def get_s3_csv_file_info(path):
+    rows, encoding = get_s3_csv_file_data(path)
 
     return {"encoding": encoding, "column_definitions": _get_csv_column_types(rows)}
 

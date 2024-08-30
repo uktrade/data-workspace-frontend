@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.db import models
 
 
@@ -19,6 +21,15 @@ SCHEMA_POSTGRES_DATA_TYPE_MAP = {
     "numeric": PostgresDataTypes.NUMERIC,
     "text": PostgresDataTypes.TEXT,
     "UUID": PostgresDataTypes.UUID,
+}
+SCHEMA_POSTGRES_TO_PYTHON_DATA_TYPE_MAP = {
+    PostgresDataTypes.BIGINT: int,
+    PostgresDataTypes.BOOLEAN: bool,
+    PostgresDataTypes.DATE: datetime,
+    PostgresDataTypes.TIMESTAMP: str,
+    PostgresDataTypes.NUMERIC: float,
+    PostgresDataTypes.TEXT: str,
+    PostgresDataTypes.UUID: str,
 }
 TABLESCHEMA_FIELD_TYPE_MAP = {
     "number": "numeric",

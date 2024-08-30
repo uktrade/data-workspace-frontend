@@ -1,0 +1,34 @@
+{% extends '_main.html' %} {% block page_title %}Add Table - {{ model.name }} -
+{{ block.super }}{% endblock %} {% if backlink %} {% block go_back %}
+<a href="{{ backlink }}" class="govuk-back-link">Back</a>
+{% endblock %} {% endif %} {% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <h1 class="govuk-heading-xl">{{ error_header }}</h1>
+
+    <p class="govuk-body">{{ error_explanation }}</p>
+
+    <p class="govuk-body">{{ error_action }}</p>
+
+    <p class="govuk-body">
+      Once you've fixed the error,
+      <a class="govuk-link" href=" {{ backlink }} ">re-upload your file</a>.
+    </p>
+
+    <h2 class="govuk-heading-m">If you continue to get an error</h2>
+
+    <p class="govuk-body">
+      Data Workspace can only identify one error at a time. This means that you
+      could get the same or a different error more than once. If this happens
+      you'll need to fix each error in turn.
+    </p>
+
+    <p class="govuk-body">
+      If you're unable to solve your error,
+      <a class="govuk-link" href="/support-and-feedback/" target="_blank"
+        >contact us</a
+      >.
+    </p>
+  </div>
+</div>
+{% endblock %}

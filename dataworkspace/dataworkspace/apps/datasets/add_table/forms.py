@@ -1,7 +1,11 @@
 import re
+from csv import DictReader
+
 from django import forms
 from django.forms import ValidationError
+from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
+
 from dataworkspace.apps.core.forms import ConditionalSupportTypeRadioWidget
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
@@ -19,6 +23,7 @@ from dataworkspace.apps.core.utils import (
     get_postgres_datatype_choices,
 )
 from dataworkspace.apps.core.storage import malware_file_validator
+from dataworkspace.apps.your_files.utils import get_s3_csv_file_data
 
 
 class TableSchemaForm(GOVUKDesignSystemForm):
@@ -165,6 +170,38 @@ class AddTableDataTypesForm(GOVUKDesignSystemForm):
                     extra_label_classes="govuk-visually-hidden",
                 ),
             )
+
+    def clean(self):
+        print("clean data!!!")
+        cleaned = self.cleaned_data
+        print(cleaned)
+        # print(list(self.get_data_type_fields())))
+        rows = get_s3_csv_file_data(cleaned["path"], reader=DictReader)[0]
+        heading_error = "There's an error in a column which has been set as: '%s'"
+        heading_parse = "Your CSV contains a value that cannot be set as '%s'."
+        action = "You need to check all columns set as '%s' data type and fix the error."
+        cols_user_submitted = {
+            k: v for k, v in cleaned.items() if k not in ["path", "auto_generate_id_column"]
+        }
+        for col_lbl, col_val in cols_user_submitted.items():
+            if col_val == "boolean":
+                try:
+                    [bool(row[col_lbl]) for row in rows]
+                except:
+                    raise ValidationError(
+                        [
+                            ValidationError((heading_parse), code="heading", params=("Boolean",)),
+                            ValidationError(
+                                (
+                                    "A boolean can only be one of three possible values: true, false, or null. You have a value in a column set as 'Boolean' which is impossible."
+                                ),
+                                code="explanation",
+                            ),
+                            ValidationError((action), code="action", params=("Boolean",)),
+                        ]
+                    )
+            if col_val == "":
+                pass
 
     def get_data_type_fields(self):
         for col_def in self.column_definitions:
