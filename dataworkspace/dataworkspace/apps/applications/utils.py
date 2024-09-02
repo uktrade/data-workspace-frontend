@@ -1371,7 +1371,6 @@ def _process_staff_sso_file(
                         check_tools_access_if_user_exists=True,
                     )
 
-                    seen_user_ids.append(user_id)
                 except IntegrityError:
                     logger.exception("sync_s3_sso_users: Failed to create user record")
             else:
@@ -1380,6 +1379,8 @@ def _process_staff_sso_file(
                     user_id,
                     published_date,
                 )
+
+            seen_user_ids.append(user_id)
 
     return seen_user_ids, new_last_processed_datetime
 
@@ -1421,12 +1422,18 @@ def _do_sync_s3_sso_users():
             unseen_user_profiles = Profile.objects.exclude(
                 user__username__in=seen_result[0]
             ).filter(sso_status="active")
-
-            logger.info(
-                "sync_s3_sso_users: %s active users exist locally but not in SSO. Marking as inactive",
-                unseen_user_profiles.count(),
-            )
-            unseen_user_profiles.update(sso_status="inactive")
+            if settings.S3_SSO_IMPORT_ENABLED:
+                logger.info(
+                    "sync_s3_sso_users: %s active users exist locally but not in SSO. Marking as inactive",
+                    unseen_user_profiles.count(),
+                )
+                unseen_user_profiles.update(sso_status="inactive")
+            else:
+                logger.info(
+                    """sync_s3_sso_users: %s active users exist locally but not in SSO.
+                    S3_SSO_IMPORT_ENABLED is FALSE so they will not be deactivated""",
+                    unseen_user_profiles.count(),
+                )
 
         logger.info("sync_s3_sso_users: New last_published date for cache %s", new_last_processed)
 
