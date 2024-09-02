@@ -342,7 +342,7 @@ class AddTableDataTypesView(UploadCSVView):
             "table_name": self.kwargs["table_name"],
             "execution_date": response["execution_date"],
         }
-        
+        print('got to the redirect')
         return HttpResponseRedirect(
             reverse("datasets:add_table:add-table-validating", args=(self.kwargs["pk"],)) + "?" + urlencode(params)
         )
@@ -408,7 +408,6 @@ class AddTableValidatingView(BaseAddTableStepView):
     step = 1
 
     def get_context_data(self, **kwargs):
-        print("kwargs1:", self.kwargs)
         context = super().get_context_data()
         context.update(
             {
@@ -427,7 +426,6 @@ class AddTableCreatingTableView(BaseAddTableStepView):
     step = 2
 
     def get_context_data(self, **kwargs):
-        print("kwargs2:", self.kwargs)
 
         context = super().get_context_data()
         context.update(
@@ -448,7 +446,6 @@ class AddTableIngestingView(BaseAddTableStepView):
     step = 3
 
     def get_context_data(self, **kwargs):
-        print("kwargs3:", self.kwargs)
         context = super().get_context_data()
         context.update(
             {
@@ -466,7 +463,6 @@ class AddTableRenamingTableView(BaseAddTableStepView):
     step = 4
 
     def get_context_data(self, **kwargs):
-        print("kwargs4:", self.kwargs)
         context = super().get_context_data()
         context.update(
             {
@@ -483,7 +479,6 @@ class AddTableAppendingToTableView(BaseAddTableStepView):
     step = 4
 
     def get_context_data(self, **kwargs):
-        print("kwargs4.5:", self.kwargs)
         context = super().get_context_data()
         context.update(
                 {
@@ -499,15 +494,10 @@ class AddTableSuccessView(BaseAddTableTemplateView):
     step = 5
 
     def get(self, request, *args, **kwargs):
-        print("kwargs5:", self.kwargs)
         params = self._get_query_parameters()
-        print('params', params)
 
-        print("HELLO CAITLIN")
         dataset = find_dataset(self.kwarg["pk"], user)
-        print("dataset123", dataset)
         database = Database.objects.get_or_create(memorable_name="datasets")[0]
-        print("DATABASE123", database)
         SourceTable.objects.get_or_create(
             schema="public",
             dataset=dataset,
