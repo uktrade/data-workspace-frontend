@@ -26,6 +26,7 @@ class Profile(models.Model):
     first_login = models.DateTimeField(null=True)
 
     tools_certification_date = models.DateField(null=True, blank=True)
+    is_renewal_email_sent = models.BooleanField(default=False)
 
     class Meta:
         db_table = "app_profile"

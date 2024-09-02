@@ -294,6 +294,7 @@ class SelfCertifyView(FormView):
         user_profile = Profile.objects.get(user_id=user_id)
 
         user_profile.tools_certification_date = certificate_date
+        user_profile.is_renewal_email_sent = False
         user_profile.save()
 
         user = get_user_model().objects.get(id=user_id)
