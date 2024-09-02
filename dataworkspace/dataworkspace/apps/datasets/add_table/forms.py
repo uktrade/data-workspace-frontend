@@ -172,10 +172,7 @@ class AddTableDataTypesForm(GOVUKDesignSystemForm):
             )
 
     def clean(self):
-        print("clean data!!!")
         cleaned = self.cleaned_data
-        print(cleaned)
-        # print(list(self.get_data_type_fields())))
         rows = get_s3_csv_file_data(cleaned["path"], reader=DictReader)[0]
         heading_error = "There's an error in a column which has been set as: '%s'"
         heading_parse = "Your CSV contains a value that cannot be set as '%s'."
@@ -184,6 +181,7 @@ class AddTableDataTypesForm(GOVUKDesignSystemForm):
             k: v for k, v in cleaned.items() if k not in ["path", "auto_generate_id_column"]
         }
         for col_lbl, col_val in cols_user_submitted.items():
+            # Generic boolean error
             if col_val == "boolean":
                 try:
                     [bool(row[col_lbl]) for row in rows]
@@ -200,8 +198,6 @@ class AddTableDataTypesForm(GOVUKDesignSystemForm):
                             ValidationError((action), code="action", params=("Boolean",)),
                         ]
                     )
-            if col_val == "":
-                pass
 
     def get_data_type_fields(self):
         for col_def in self.column_definitions:
