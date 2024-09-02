@@ -607,13 +607,11 @@ class TestDataTypesView(TestCase):
     @mock.patch("dataworkspace.apps.datasets.add_table.views.trigger_dataflow_dag")
     @mock.patch("dataworkspace.apps.datasets.add_table.views.copy_file_to_uploads_bucket")
     @mock.patch("dataworkspace.apps.datasets.add_table.views.get_s3_csv_file_info")
-    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.your_files.forms.get_user_s3_prefixes")
 
     def test_success(
         self,
         mock_get_s3_prefix,
-        client,
         mock_get_file_info,
         mock_copy_file,
         mock_trigger_dag,
@@ -634,7 +632,7 @@ class TestDataTypesView(TestCase):
         mock_get_file_info.return_value = file_info_return_value
 
     
-        response = client.post(
+        response = self.client.post(
             reverse("datasets:add_table:data-types", 
                 args=(
                     self.dataset.id,
