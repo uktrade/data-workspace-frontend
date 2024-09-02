@@ -77,31 +77,6 @@ pipeline {
       }
     }
 
-    stage('release: staging') {
-      when {
-          expression {
-              milestone label: "release-staging"
-              input message: 'Deploy to staging?'
-              return true
-          }
-          beforeAgent true
-      }
-
-      parallel {
-        stage('release: data-workspace') {
-          steps {
-            ecs_pipeline_admin("data-workspace-staging", params.GIT_COMMIT)
-          }
-        }
-        stage('release: data-workspace-celery') {
-          steps {
-            ecs_pipeline_celery("data-workspace-staging", params.GIT_COMMIT)
-          }
-        }
-      }
-    }
-
-
     stage('release: prod') {
       when {
           expression {
