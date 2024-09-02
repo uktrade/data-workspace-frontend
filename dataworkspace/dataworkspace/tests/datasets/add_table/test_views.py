@@ -1,3 +1,4 @@
+from datetime import datetime
 from unittest import TestCase
 from urllib.parse import urlencode
 import uuid
@@ -8,6 +9,7 @@ import boto3
 from bs4 import BeautifulSoup
 from django.urls import reverse
 from django.test import Client
+from dataworkspace.tests.conftest import get_client, get_user_data
 from django.core.files.uploadedfile import SimpleUploadedFile
 from mock import mock
 from dataworkspace.tests import factories
@@ -596,7 +598,6 @@ class TestDataTypesView(TestCase):
         )
         self.descriptive_name = "my_table"
         self.table_name = "my_table_name"
-        self.file_name = 'file_name'
         self.file1 = SimpleUploadedFile(
             "allowed_chars-.csv",
             b"id,name\r\nA1,test1\r\nA2,test2\r\n",
@@ -604,71 +605,69 @@ class TestDataTypesView(TestCase):
         )
 
     @freeze_time("2021-01-01 01:01:01")
-    @mock.patch("dataworkspace.apps.datasets.add_table.views.trigger_dataflow_dag")
-    @mock.patch("dataworkspace.apps.datasets.add_table.views.copy_file_to_uploads_bucket")
-    @mock.patch("dataworkspace.apps.datasets.add_table.views.get_s3_csv_file_info")
-    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
-    @mock.patch("dataworkspace.apps.your_files.forms.get_user_s3_prefixes")
-
-    def test_success(
+    @pytest.mark.django_db
+    @mock.patch("dataworkspace.apps.datasets.manager.views.trigger_dataflow_dag")
+    @mock.patch("dataworkspace.apps.datasets.manager.views.copy_file_to_uploads_bucket")
+    @mock.patch("dataworkspace.apps.datasets.manager.views.get_s3_csv_column_types")
+    @mock.patch("dataworkspace.apps.datasets.manager.views.get_s3_prefix")
+    def test_data_types_page(
         self,
         mock_get_s3_prefix,
-        client,
-        mock_get_file_info,
+        mock_get_column_types,
         mock_copy_file,
         mock_trigger_dag,
     ):
         mock_get_s3_prefix.return_value = "user/federated/abc"
-        file_info_return_value = {
-            "encoding": "utf-8-sig",
-            "column_definitions": [
-                {
-                    "header_name": "Field 1",
-                    "column_name": "field1",
-                    "data_type": "text",
-                    "sample_data": [1, 2, 3],
-                }
-            ],
-        }
-
-        mock_get_file_info.return_value = file_info_return_value
-
-    
-        response = client.post(
-            reverse("datasets:add_table:data-types", 
-                args=(
-                    self.dataset.id,
-                    self.source.schema,
-                    self.descriptive_name,
-                    self.table_name,
-                    "allowed_chars.csv",
-                ),
-            ), data={
-                "path": "user/federated/abc/allowed_chars.csv",
-                "schema": self.source.schema,
-                "table_name": self.table_name,
-                "field1": "integer",
+        mock_trigger_dag.return_value = {"execution_date": datetime.now()}
+        mock_get_column_types.return_value = [
+            {
+                "header_name": "ID",
+                "column_name": "id",
+                "data_type": "text",
+                "sample_data": ["a", "b", "c"],
             },
-            
-            follow=True,
+            {
+                "header_name": "name",
+                "column_name": "name",
+                "data_type": "text",
+                "sample_data": ["d", "e", "f"],
+            },
+        ]
+
+        response = self.client.post(
+            reverse(
+                "datasets:add_table:data-types",
+                kwargs={
+                    "pk": self.dataset.id,
+                    "schema": self.source.schema,
+                    "descriptive_name": self.descriptive_name,
+                    "table_name": self.table_name,
+                    "file_name": "file1.csv",
+                }, 
+            ),
         )
-        # assert b"Validating" in response.content
-        print(response.content)
-        mock_get_file_info.assert_called_with("user/federated/abc/allowed_chars.csv")
+        assert response.status_code == 302
+        assert (
+            response["Location"]
+            == reverse(
+                "datasets:add_table:add-table-validating",
+                kwargs={self.dataset_id},
+            )
+            + f"?filename=file1.csv&schema={self.source.schema}&table_name={self.source.table}&"
+            f"execution_date=2021-01-01+01%3A01%3A01"
+        )
         mock_copy_file.assert_called_with(
-            "user/federated/abc/allowed_chars.csv",
-            "data-flow-imports/user/federated/abc/allowed_chars.csv",
+            "user/federated/abc/file1.csv",
+            "data-flow-imports/user/federated/abc/file1.csv",
         )
         mock_trigger_dag.assert_called_with(
             {
-                "db_role": self.source.schema,
-                "file_path": "data-flow-imports/user/federated/abc/allowed_chars.csv",
-                "schema_name": self.source.schemas,
-                "table_name": "a_csv",
-                "encoding": file_info_return_value["encoding"],
-                "column_definitions": file_info_return_value["column_definitions"],
+                "file_path": "data-flow-imports/user/federated/abc/file1.csv",
+                "schema_name": self.source.schema,
+                "table_name": self.source.table,
+                "column_definitions": mock_get_column_types.return_value,
                 "auto_generate_id_column": False,
             },
             "DataWorkspaceS3ImportPipeline",
-            "test_schema-a_csv-2021-01-01T01:01:01",
+            "test-table1-2021-01-01T01:01:01",
         )
