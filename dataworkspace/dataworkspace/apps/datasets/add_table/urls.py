@@ -2,6 +2,7 @@ from django.urls import path
 
 from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.datasets.add_table.views import (
+    AddTableSuccessView,
     AddTableView,
     AddTableAppendingToTableView,
     AddTableCreatingTableView,
@@ -43,39 +44,48 @@ urlpatterns = [
         login_required(TableNameView.as_view()),
         name="table-name",
     ),
+
+
     path(
         "<str:schema>/<str:descriptive_name>/<str:table_name>/upload-csv",
         login_required(UploadCSVView.as_view()),
         name="upload-csv",
     ),
+
+    
     path(
         "<str:schema>/<str:descriptive_name>/<str:table_name>/<str:file_name>/data-types",
         login_required(AddTableDataTypesView.as_view()),
         name="data-types",
     ),
     path(
-        "create-table/validating",
+        "validating",
         login_required(AddTableValidatingView.as_view()),
-        name="create-table-validating",
+        name="add-table-validating",
     ),
     path(
-        "create-table/creating-table",
+        "creating-table",
         login_required(AddTableCreatingTableView.as_view()),
-        name="create-table-creating-table",
+        name="add-table-creating-table",
     ),
     path(
-        "create-table/ingesting",
+        "ingesting",
         login_required(AddTableIngestingView.as_view()),
-        name="create-table-ingesting",
+        name="add-table-ingesting",
     ),
     path(
-        "create-table/renaming-table",
+        "renaming-table",
         login_required(AddTableRenamingTableView.as_view()),
-        name="create-table-renaming-table",
+        name="add-table-renaming-table",
     ),
     path(
-        "create-table/appending",
+        "appending",
         login_required(AddTableAppendingToTableView.as_view()),
-        name="create-table-appending",
+        name="add-table-appending",
+    ),
+    path(
+        "add-table/success",
+        login_required(AddTableSuccessView.as_view()),
+        name="add-table-success",
     ),
 ]

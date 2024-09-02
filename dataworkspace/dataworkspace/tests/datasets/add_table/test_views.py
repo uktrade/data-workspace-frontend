@@ -1,9 +1,15 @@
 from unittest import TestCase
+from urllib.parse import urlencode
+import uuid
+from freezegun import freeze_time
 import pytest
+import botocore
+import boto3
 from bs4 import BeautifulSoup
 from django.urls import reverse
 from django.test import Client
 from django.core.files.uploadedfile import SimpleUploadedFile
+from mock import mock
 from dataworkspace.tests import factories
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.tests.common import get_http_sso_data
@@ -573,3 +579,96 @@ class TestUploadCSVPage(TestCase):
         )
         assert response.status_code == 200
         assert "Select a CSV" in error_message_text
+
+@pytest.mark.django_db
+class TestDataTypesView(TestCase):
+    def setUp(self):
+        self.user = factories.UserFactory.create(is_superuser=False)
+        self.client = Client(**get_http_sso_data(self.user))
+        self.dataset = factories.MasterDataSetFactory.create(
+            published=True,
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
+            information_asset_owner=self.user,
+            government_security_classification=2,
+        )
+        self.source = factories.SourceTableFactory.create(
+            dataset=self.dataset, schema="test", table="table_one", name="table_one"
+        )
+        self.descriptive_name = "my_table"
+        self.table_name = "my_table_name"
+        self.file_name = 'file_name'
+        self.file1 = SimpleUploadedFile(
+            "allowed_chars-.csv",
+            b"id,name\r\nA1,test1\r\nA2,test2\r\n",
+            content_type="text/csv",
+        )
+
+    @freeze_time("2021-01-01 01:01:01")
+    @mock.patch("dataworkspace.apps.datasets.add_table.views.trigger_dataflow_dag")
+    @mock.patch("dataworkspace.apps.datasets.add_table.views.copy_file_to_uploads_bucket")
+    @mock.patch("dataworkspace.apps.datasets.add_table.views.get_s3_csv_file_info")
+    @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
+    @mock.patch("dataworkspace.apps.your_files.forms.get_user_s3_prefixes")
+
+    def test_success(
+        self,
+        mock_get_s3_prefix,
+        client,
+        mock_get_file_info,
+        mock_copy_file,
+        mock_trigger_dag,
+    ):
+        mock_get_s3_prefix.return_value = "user/federated/abc"
+        file_info_return_value = {
+            "encoding": "utf-8-sig",
+            "column_definitions": [
+                {
+                    "header_name": "Field 1",
+                    "column_name": "field1",
+                    "data_type": "text",
+                    "sample_data": [1, 2, 3],
+                }
+            ],
+        }
+
+        mock_get_file_info.return_value = file_info_return_value
+
+    
+        response = client.post(
+            reverse("datasets:add_table:data-types", 
+                args=(
+                    self.dataset.id,
+                    self.source.schema,
+                    self.descriptive_name,
+                    self.table_name,
+                    "allowed_chars.csv",
+                ),
+            ), data={
+                "path": "user/federated/abc/allowed_chars.csv",
+                "schema": self.source.schema,
+                "table_name": self.table_name,
+                "field1": "integer",
+            },
+            
+            follow=True,
+        )
+        # assert b"Validating" in response.content
+        print(response.content)
+        mock_get_file_info.assert_called_with("user/federated/abc/allowed_chars.csv")
+        mock_copy_file.assert_called_with(
+            "user/federated/abc/allowed_chars.csv",
+            "data-flow-imports/user/federated/abc/allowed_chars.csv",
+        )
+        mock_trigger_dag.assert_called_with(
+            {
+                "db_role": self.source.schema,
+                "file_path": "data-flow-imports/user/federated/abc/allowed_chars.csv",
+                "schema_name": self.source.schemas,
+                "table_name": "a_csv",
+                "encoding": file_info_return_value["encoding"],
+                "column_definitions": file_info_return_value["column_definitions"],
+                "auto_generate_id_column": False,
+            },
+            "DataWorkspaceS3ImportPipeline",
+            "test_schema-a_csv-2021-01-01T01:01:01",
+        )
