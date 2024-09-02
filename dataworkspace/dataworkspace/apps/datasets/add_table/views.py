@@ -26,6 +26,9 @@ from dataworkspace.apps.core.constants import SCHEMA_POSTGRES_DATA_TYPE_MAP, Pos
 from dataworkspace.apps.your_files.utils import get_s3_csv_file_info
 from dataworkspace.apps.your_files.views import RequiredParameterGetRequestMixin, ValidateSchemaMixin
 from dataworkspace.apps.your_files.models import UploadedTable
+from dataworkspace.apps.datasets.models import SourceTable
+from dataworkspace.apps.core.models import Database
+from dataworkspace.tests.conftest import user
 
 
 class AddTableView(DetailView):
@@ -309,7 +312,6 @@ class AddTableDataTypesView(UploadCSVView):
     def form_valid(self, form):
         cleaned = form.cleaned_data
         include_column_id = False
-        print('PAAAATH', cleaned['path'])
 
         file_info = get_s3_csv_file_info(cleaned["path"])
 
@@ -365,20 +367,11 @@ class AddTableDataTypesView(UploadCSVView):
             "table_name": self.kwargs["table_name"],
             "execution_date": response["execution_date"],
         }
-
-        table_created = UploadedTable.objects.get_or_create(
-                schema=self.kwargs["schema"],
-                table_name=self.kwargs["table_name"],
-                created_by=self.request.user,
-                data_flow_execution_date=datetime.strptime(
-                    response["execution_date"].split(".")[0], "%Y-%m-%dT%H:%M:%S"
-                ),
-            )
         
         return HttpResponseRedirect(
-            f'{reverse("your-files:create-table-validating")}?{urlencode(params)}'
+            reverse("datasets:add_table:add-table-validating", args=(self.kwargs["pk"],)) + "?" + urlencode(params)
         )
-
+        # reverse("datasets:add_table:add-table-validating", args=(self.kwargs["pk"])) + "?" + params.urlencode()
     
 
     def get_context_data(self, **kwargs):
@@ -425,15 +418,18 @@ class BaseAddTableStepView(BaseAddTableTemplateView):
         context.update(
             {
                 "task_name": self.task_name,
-                "next_step": f"{reverse(self.next_step_url_name)}?{urlencode(query_params)}",
+                "next_step": f"{reverse(self.next_step_url_name, args=(self.kwargs['pk'],))}?{urlencode(query_params)}",
             }
         )
         return context
+    # return f"{reverse('datasets:dataset_detail', args=(obj['dataset_id'],))}#{obj['slug']}"
+
+                            # f"{reverse(self.next_step_url_name)}?{urlencode(query_params)}",
 
 
 class AddTableValidatingView(BaseAddTableStepView):
     task_name = "get-table-config"
-    next_step_url_name = "your-files:create-table-creating-table"
+    next_step_url_name = "datasets:add_table:add-table-creating-table"
     step = 1
 
     def get_context_data(self, **kwargs):
@@ -452,7 +448,7 @@ class AddTableValidatingView(BaseAddTableStepView):
 
 class AddTableCreatingTableView(BaseAddTableStepView):
     task_name = "create-temp-tables"
-    next_step_url_name = "your-files:create-table-ingesting"
+    next_step_url_name = "datasets:add_table:add-table-ingesting"
     step = 2
 
     def get_context_data(self, **kwargs):
@@ -473,7 +469,7 @@ class AddTableCreatingTableView(BaseAddTableStepView):
 
 class AddTableIngestingView(BaseAddTableStepView):
     task_name = "insert-into-temp-table"
-    next_step_url_name = "your-files:create-table-renaming-table"
+    next_step_url_name = "datasets:add_table:add-table-renaming-table"
     step = 3
 
     def get_context_data(self, **kwargs):
@@ -491,7 +487,7 @@ class AddTableIngestingView(BaseAddTableStepView):
 
 class AddTableRenamingTableView(BaseAddTableStepView):
     task_name = "swap-dataset-table-datasets_db"
-    next_step_url_name = "your-files:create-table-success"
+    next_step_url_name = "datasets:add_table:add-table-success"
     step = 4
 
     def get_context_data(self, **kwargs):
@@ -508,7 +504,7 @@ class AddTableRenamingTableView(BaseAddTableStepView):
 
 class AddTableAppendingToTableView(BaseAddTableStepView):
     task_name = "sync"
-    next_step_url_name = "your-files:create-table-success"
+    next_step_url_name = "datasets:add_table:add-table-success"
     step = 4
 
     def get_context_data(self, **kwargs):
@@ -529,14 +525,18 @@ class AddTableSuccessView(BaseAddTableTemplateView):
 
     def get(self, request, *args, **kwargs):
         print("kwargs5:", self.kwargs)
+        params = self._get_query_parameters()
+        print('params', params)
 
-        table_created = UploadedTable.objects.get_or_create(
-                schema=self.kwargs("schema"),
-                table_name=self.kwargs("table_name"),
-                created_by=self.request.user,
-                data_flow_execution_date=datetime.strptime(
-                    self.kwargs("execution_date").split(".")[0], "%Y-%m-%dT%H:%M:%S"
-                ),
-            )
-        return table_created
-        # return super().get(request, *args, **kwargs)
+        print("HELLO CAITLIN")
+        dataset = find_dataset(self.kwarg["pk"], user)
+        print("dataset123", dataset)
+        database = Database.objects.get_or_create(memorable_name="datasets")[0]
+        print("DATABASE123", database)
+        SourceTable.objects.get_or_create(
+            schema="public",
+            dataset=dataset,
+            table="desc_name",
+            database=database
+        )
+        return "yay"
