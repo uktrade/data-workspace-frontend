@@ -457,8 +457,6 @@ class TestCreateTableViews:
             f'{reverse("your-files:create-table-confirm-data-types")}?{urlencode(params)}',
         )
 
-        print(response.content)
-
         assert b"Do you want to generate an ID column?" in response.content
         assert (
             b"This will add an ID column and assign an ID to each row in your table."

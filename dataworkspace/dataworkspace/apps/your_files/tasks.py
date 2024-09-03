@@ -79,7 +79,6 @@ def collect_your_files_stats_single_user(user_id):
             _sync_user_storage(user, paginator)
 
     except redis.exceptions.LockError as exc:
-        print(exc)
         logger.info("your_files_stats: Unable to acquire lock to sync user your files stats")
 
 

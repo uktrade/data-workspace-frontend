@@ -599,11 +599,43 @@ class TestDataTypesView(TestCase):
         )
         self.descriptive_name = "my_table"
         self.table_name = "my_table_name"
-        self.file1 = SimpleUploadedFile(
-            "allowed_chars-.csv",
-            b"id,name\r\nA1,test1\r\nA2,test2\r\n",
-            content_type="text/csv",
+        self.file_name= "allowed_chars-.csv"
+
+    def test_data_types_page(self):
+        response = self.client.get(
+            reverse(
+                "datasets:add_table:data-types",
+                kwargs={
+                    "pk": self.dataset.id,
+                    "schema": self.source.schema,
+                    "descriptive_name": self.descriptive_name,
+                    "table_name": self.table_name,
+                    "file_name": self.file_name,
+                },
+            ),
+            )
+        
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        title_text = soup.find("title").get_text(strip=True)
+        backlink = soup.find("a", {"class": "govuk-back-link"}).get("href")
+        header_one_text = soup.find("h1", class_="govuk-heading-xl").get_text(strip=True)
+        header_two_text = soup.find("h2", class_="govuk-heading-l").get_text(strip=True)
+        form_header_text = soup.find("h2", class_="govuk-fieldset__heading").get_text(strip=True)
+        paragraph_one_text = soup.find("p").get_text(strip=True)
+        assert response.status_code == 200
+        assert f"/datasets/{self.dataset.id}" in backlink
+        assert f"Add Table - {self.dataset.name} - Data Workspace" in title_text
+        assert "Data types" in header_one_text
+        assert f"Choose data types for {self.table_name}" in header_two_text
+        assert (
+            "Data types affect the efficiency of queries. Selecting the correct data type means quicker queries and cheaper data."
+            in paragraph_one_text
         )
+        assert "Do you want to generate an ID column?" in form_header_text
+
+        
+
+
 
     @freeze_time("2021-01-01 01:01:01")
     @pytest.mark.django_db
@@ -611,7 +643,7 @@ class TestDataTypesView(TestCase):
     @mock.patch("dataworkspace.apps.datasets.add_table.views.copy_file_to_uploads_bucket")
     @mock.patch("dataworkspace.apps.datasets.add_table.views.get_s3_prefix")
     @mock.patch("dataworkspace.apps.datasets.add_table.views.get_s3_csv_file_info")
-    def test_data_types_page(
+    def test_data_types_page_triggers_the_dag(
         self,
         mock_get_s3_csv_file_info,
         mock_get_s3_prefix,
@@ -658,7 +690,6 @@ class TestDataTypesView(TestCase):
                 "name": "text",
                 "auto_generate_id_column": True,
             },
-            follow=False,
         )
 
         assert response.status_code == 302
@@ -688,3 +719,5 @@ class TestDataTypesView(TestCase):
             "DataWorkspaceS3ImportPipeline",
             f"test-{self.table_name}-2021-01-01T01:01:01",
         )
+
+   
