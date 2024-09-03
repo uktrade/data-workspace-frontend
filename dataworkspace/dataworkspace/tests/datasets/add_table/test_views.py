@@ -1,15 +1,10 @@
 from datetime import datetime
 from unittest import TestCase
-from urllib.parse import urlencode
-import uuid
 from freezegun import freeze_time
 import pytest
-import botocore
-import boto3
 from bs4 import BeautifulSoup
 from django.urls import reverse
 from django.test import Client
-from dataworkspace.tests.conftest import get_client, get_user_data
 from django.core.files.uploadedfile import SimpleUploadedFile
 from mock import mock
 from dataworkspace.tests import factories
@@ -599,7 +594,7 @@ class TestDataTypesView(TestCase):
         )
         self.descriptive_name = "my_table"
         self.table_name = "my_table_name"
-        self.file_name= "allowed_chars-.csv"
+        self.file_name = "allowed_chars-.csv"
 
     def test_data_types_page(self):
         response = self.client.get(
@@ -613,8 +608,8 @@ class TestDataTypesView(TestCase):
                     "file_name": self.file_name,
                 },
             ),
-            )
-        
+        )
+
         soup = BeautifulSoup(response.content.decode(response.charset))
         title_text = soup.find("title").get_text(strip=True)
         backlink = soup.find("a", {"class": "govuk-back-link"}).get("href")
@@ -632,10 +627,6 @@ class TestDataTypesView(TestCase):
             in paragraph_one_text
         )
         assert "Do you want to generate an ID column?" in form_header_text
-
-        
-
-
 
     @freeze_time("2021-01-01 01:01:01")
     @pytest.mark.django_db
@@ -719,5 +710,3 @@ class TestDataTypesView(TestCase):
             "DataWorkspaceS3ImportPipeline",
             f"test-{self.table_name}-2021-01-01T01:01:01",
         )
-
-   

@@ -5,9 +5,7 @@ import uuid
 from venv import logger
 from aiohttp import ClientError
 from django.conf import settings
-from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from django.core.exceptions import BadRequest
 from django.views.generic import DetailView, FormView, TemplateView
 from django.http import HttpResponseRedirect, HttpResponseServerError
 from requests import HTTPError
@@ -32,8 +30,6 @@ from dataworkspace.apps.your_files.utils import get_s3_csv_file_info
 from dataworkspace.apps.your_files.views import (
     RequiredParameterGetRequestMixin,
 )
-from dataworkspace.apps.datasets.models import SourceTable
-from dataworkspace.tests.conftest import user
 
 
 class AddTableView(DetailView):
@@ -507,6 +503,7 @@ class AddTableSuccessView(BaseAddTableTemplateView):
 
     def get_initial(self, request):
         caitlin_test()
+
     def get(self, request, *args, **kwargs):
         print("kwargs5:", self.kwargs)
         # dataset = find_dataset(self.kwargs["pk"], self.request.user)
