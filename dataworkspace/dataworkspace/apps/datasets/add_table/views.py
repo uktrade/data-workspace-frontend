@@ -194,7 +194,7 @@ class UploadCSVView(FormView):
     template_name = "datasets/add_table/upload_csv.html"
     form_class = UploadCSVForm
 
-    def _get_file_upload_key(self, file_name, pk):
+    def get_file_upload_key(self, file_name, pk):
         return os.path.join(
             get_s3_prefix(str(self.request.user.profile.sso_id)),
             "_add_table_uploads",
@@ -216,7 +216,7 @@ class UploadCSVView(FormView):
         csv_file = form.cleaned_data["csv_file"]
         client = get_s3_client()
         file_name = f"{csv_file.name}!{uuid.uuid4()}"
-        key = self._get_file_upload_key(file_name, self.kwargs["pk"])
+        key = self.get_file_upload_key(file_name, self.kwargs["pk"])
         csv_file.seek(0)
         try:
             client.put_object(
@@ -241,7 +241,7 @@ class UploadCSVView(FormView):
                     self.kwargs["table_name"],
                     file_name,
                 ),
-            )
+            ) 
         )
 
 class AddTableDataTypesView(UploadCSVView):
@@ -260,7 +260,7 @@ class AddTableDataTypesView(UploadCSVView):
         if self.request.method == "GET":
             initial.update(
                 {
-                    "path": self._get_file_upload_key(self.kwargs["file_name"], self.kwargs["pk"]),
+                    "path": self.get_file_upload_key(self.kwargs["file_name"], self.kwargs["pk"]),
                     "schema": self.kwargs["schema"],
                     "descriptive_name": self.kwargs["descriptive_name"],
                     "table_name": self.kwargs["table_name"],
@@ -276,7 +276,7 @@ class AddTableDataTypesView(UploadCSVView):
         kwargs.update(
             {
                 "user": self.request.user,
-                "column_definitions": get_s3_csv_file_info(self._get_file_upload_key(self.kwargs["file_name"], self.kwargs["pk"]))[
+                "column_definitions": get_s3_csv_file_info(self.get_file_upload_key(self.kwargs["file_name"], self.kwargs["pk"]))[
                     "column_definitions"
                 ],
             }
@@ -352,7 +352,7 @@ class AddTableDataTypesView(UploadCSVView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         dataset = find_dataset(self.kwargs["pk"], self.request.user)
-        ctx["path"] = self._get_file_upload_key(self.kwargs["file_name"], self.kwargs["pk"])
+        ctx["path"] = self.get_file_upload_key(self.kwargs["file_name"], self.kwargs["pk"])
         ctx["source"] = dataset.sourcetable_set.all()
         ctx["model"] = dataset
         ctx["table_name"] = self.kwargs["table_name"]        
@@ -494,14 +494,15 @@ class AddTableSuccessView(BaseAddTableTemplateView):
     step = 5
 
     def get(self, request, *args, **kwargs):
-        params = self._get_query_parameters()
+        print("kwargs5:", self.kwargs)
 
-        dataset = find_dataset(self.kwarg["pk"], user)
-        database = Database.objects.get_or_create(memorable_name="datasets")[0]
         SourceTable.objects.get_or_create(
-            schema="public",
-            dataset=dataset,
-            table="desc_name",
-            database=database
-        )
-        return "yay"
+                schema=self.kwargs("schema"),
+                table_name=self.kwargs("table_name"),
+                created_by=self.request.user,
+                data_flow_execution_date=datetime.strptime(
+                    self.kwargs("execution_date").split(".")[0], "%Y-%m-%dT%H:%M:%S"
+                ),
+            )
+        return 'YAY'
+        # return super().get(request, *args, **kwargs)

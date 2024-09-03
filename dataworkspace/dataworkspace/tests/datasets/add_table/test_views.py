@@ -606,11 +606,13 @@ class TestDataTypesView(TestCase):
 
     @freeze_time("2021-01-01 01:01:01")
     @pytest.mark.django_db
+    # @mock.patch("dataworkspace.apps.datasets.add_table.views.get_file_upload_key")
     @mock.patch("dataworkspace.apps.datasets.add_table.views.trigger_dataflow_dag")
     @mock.patch("dataworkspace.apps.datasets.add_table.views.copy_file_to_uploads_bucket")
     @mock.patch("dataworkspace.apps.datasets.add_table.views.get_s3_csv_column_types")
     @mock.patch("dataworkspace.apps.datasets.add_table.views.get_s3_prefix")
     @mock.patch("dataworkspace.apps.datasets.add_table.views.get_s3_csv_file_info")
+
     def test_data_types_page(
         self,
         mock_get_s3_csv_file_info,
@@ -618,7 +620,7 @@ class TestDataTypesView(TestCase):
         mock_get_column_types,
         mock_copy_file,
         mock_trigger_dag,
-        
+        # mock_get_file_upload_key,
     ):
         mock_get_s3_prefix.return_value = "user/federated/abc"
         mock_trigger_dag.return_value = {"execution_date": datetime.now()}
@@ -647,30 +649,43 @@ class TestDataTypesView(TestCase):
                     "table_name": self.table_name,
                     "file_name": "allowed_chars-.csv",
                 }, 
-            ),
+            ), 
+            data={
+                 "path": "user/federated/abc/allowed_chars-.csv",
+                 "id": "text",
+                 "name": "text",
+                 "auto_generate_id_column": True,
+                 }, 
+                 follow = False
         )
-        assert response.status_code == 200
+
+        assert response.status_code == 302
         assert (
             response["Location"] 
             == reverse(
                 "datasets:add_table:add-table-validating",
                 args=(self.dataset.id,),
             )
-            + f"?filename=allowed_chars-.csv!{uuid.uuid4()}%&schema={self.source.schema}&table_name={self.source.table}&"
+            + f"?filename=allowed_chars-.csv&schema={self.source.schema}&table_name={self.table_name}&"
             f"execution_date=2021-01-01+01%3A01%3A01"
         )
         mock_copy_file.assert_called_with(
-            "user/federated/abc/file1.csv",
-            "data-flow-imports/user/federated/abc/file1.csv",
+            "user/federated/abc/allowed_chars-.csv",
+            "data-flow-imports/user/federated/abc/allowed_chars-.csv",
         )
         mock_trigger_dag.assert_called_with(
             {
                 "file_path": "data-flow-imports/user/federated/abc/allowed_chars-.csv",
                 "schema_name": self.source.schema,
-                "table_name": self.source.table,
-                "column_definitions": mock_get_s3_csv_file_info(self._get_file_upload_key("allowed_chars-.csv", self.dataset_id)).return_value,
-                "auto_generate_id_column": False,
+                "descriptive_name": self.descriptive_name,
+                "table_name": self.table_name,
+                "column_definitions": mock_get_column_types.return_value,
+                "encoding": "utf-8-sig",
             },
             "DataWorkspaceS3ImportPipeline",
             "test-table1-2021-01-01T01:01:01",
         )
+
+
+# E           Expected: trigger_dataflow_dag({'file_path': 'data-flow-imports/user/federated/abc/allowed_chars-.csv', 'schema_name': 'test', 'descriptive_name': 'my_table', 'table_name': 'my_table_name', 'column_definitions': [{'header_name': 'ID', 'column_name': 'id', 'data_type': 'text', 'sample_data': ['a', 'b', 'c']}, {'header_name': 'name', 'column_name': 'name', 'data_type': 'text', 'sample_data': ['d', 'e', 'f']}], 'encoding': 'utf-8-sig'}, 'DataWorkspaceS3ImportPipeline', 'test-table1-2021-01-01T01:01:01')
+# E           Actual: trigger_dataflow_dag({'file_path': 'data-flow-imports/user/federated/abc/allowed_chars-.csv', 'schema_name': 'test', 'descriptive_name': 'my_table', 'table_name': 'my_table_name', 'column_definitions': <MagicMock name='get_s3_csv_file_info().__getitem__()' id='281472983974384'>, 'encoding': <MagicMock name='get_s3_csv_file_info().__getitem__()' id='281472983974384'>, 'auto_generate_id_column': True}, 'DataWorkspaceS3ImportPipeline', 'test-my_table_name-2021-01-01T01:01:01')
