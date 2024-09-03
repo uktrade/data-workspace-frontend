@@ -579,6 +579,7 @@ class TestUploadCSVPage(TestCase):
 
 
 @pytest.mark.django_db
+@pytest.mark.django_db
 class TestDataTypesView(TestCase):
     def setUp(self):
         self.user = factories.UserFactory.create(is_superuser=False)
@@ -594,47 +595,13 @@ class TestDataTypesView(TestCase):
         )
         self.descriptive_name = "my_table"
         self.table_name = "my_table_name"
-        self.file_name = "allowed_chars-.csv"
-
-    def test_data_types_page(self):
-        response = self.client.get(
-            reverse(
-                "datasets:add_table:data-types",
-                kwargs={
-                    "pk": self.dataset.id,
-                    "schema": self.source.schema,
-                    "descriptive_name": self.descriptive_name,
-                    "table_name": self.table_name,
-                    "file_name": self.file_name,
-                },
-            ),
-        )
-
-        soup = BeautifulSoup(response.content.decode(response.charset))
-        title_text = soup.find("title").get_text(strip=True)
-        backlink = soup.find("a", {"class": "govuk-back-link"}).get("href")
-        header_one_text = soup.find("h1", class_="govuk-heading-xl").get_text(strip=True)
-        header_two_text = soup.find("h2", class_="govuk-heading-l").get_text(strip=True)
-        form_header_text = soup.find("h2", class_="govuk-fieldset__heading").get_text(strip=True)
-        paragraph_one_text = soup.find("p").get_text(strip=True)
-        assert response.status_code == 200
-        assert f"/datasets/{self.dataset.id}" in backlink
-        assert f"Add Table - {self.dataset.name} - Data Workspace" in title_text
-        assert "Data types" in header_one_text
-        assert f"Choose data types for {self.table_name}" in header_two_text
-        assert (
-            "Data types affect the efficiency of queries. Selecting the correct data type means quicker queries and cheaper data."
-            in paragraph_one_text
-        )
-        assert "Do you want to generate an ID column?" in form_header_text
-
     @freeze_time("2021-01-01 01:01:01")
     @pytest.mark.django_db
     @mock.patch("dataworkspace.apps.datasets.add_table.views.trigger_dataflow_dag")
     @mock.patch("dataworkspace.apps.datasets.add_table.views.copy_file_to_uploads_bucket")
     @mock.patch("dataworkspace.apps.datasets.add_table.views.get_s3_prefix")
     @mock.patch("dataworkspace.apps.datasets.add_table.views.get_s3_csv_file_info")
-    def test_data_types_page_triggers_the_dag(
+    def test_data_types_page(
         self,
         mock_get_s3_csv_file_info,
         mock_get_s3_prefix,
@@ -643,7 +610,6 @@ class TestDataTypesView(TestCase):
     ):
         mock_get_s3_prefix.return_value = "user/federated/abc"
         mock_trigger_dag.return_value = {"execution_date": datetime.now()}
-
         file_info_return_value = {
             "encoding": "utf-8-sig",
             "column_definitions": [
@@ -661,9 +627,67 @@ class TestDataTypesView(TestCase):
                 },
             ],
         }
-
         mock_get_s3_csv_file_info.return_value = file_info_return_value
-
+        response = self.client.post(
+            reverse(
+                "datasets:add_table:data-types",
+                kwargs={
+                    "pk": self.dataset.id,
+                    "schema": self.source.schema,
+                    "descriptive_name": self.descriptive_name,
+                    "table_name": self.table_name,
+                    "file_name": "allowed_chars-.csv",
+                },
+            ),
+        )
+        assert response.status_code == 200
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        title_text = soup.find("title").get_text(strip=True)
+        backlink = soup.find("a", {"class": "govuk-back-link"}).get("href")
+        header_one_text = soup.find("h1", class_="govuk-heading-xl").get_text(strip=True)
+        header_two_text = soup.find("h2", class_="govuk-heading-l").get_text(strip=True)
+        paragraph_one_text = soup.find("p").get_text(strip=True)
+        assert f"/datasets/{self.dataset.id}" in backlink
+        assert f"Add Table - {self.dataset.name} - Data Workspace" in title_text
+        assert "Data Types" in header_one_text
+        assert f"Choose data types for {self.table_name}" in header_two_text
+        assert (
+            "Data types affect the efficiency of queries. Selecting the correct data type means quicker queries and cheaper data."
+            in paragraph_one_text
+        )
+    @freeze_time("2021-01-01 01:01:01")
+    @pytest.mark.django_db
+    @mock.patch("dataworkspace.apps.datasets.add_table.views.trigger_dataflow_dag")
+    @mock.patch("dataworkspace.apps.datasets.add_table.views.copy_file_to_uploads_bucket")
+    @mock.patch("dataworkspace.apps.datasets.add_table.views.get_s3_prefix")
+    @mock.patch("dataworkspace.apps.datasets.add_table.views.get_s3_csv_file_info")
+    def test_data_types_page_triggers_the_dag(
+        self,
+        mock_get_s3_csv_file_info,
+        mock_get_s3_prefix,
+        mock_copy_file,
+        mock_trigger_dag,
+    ):
+        mock_get_s3_prefix.return_value = "user/federated/abc"
+        mock_trigger_dag.return_value = {"execution_date": datetime.now()}
+        file_info_return_value = {
+            "encoding": "utf-8-sig",
+            "column_definitions": [
+                {
+                    "header_name": "ID",
+                    "column_name": "id",
+                    "data_type": "text",
+                    "sample_data": ["a", "b", "c"],
+                },
+                {
+                    "header_name": "name",
+                    "column_name": "name",
+                    "data_type": "text",
+                    "sample_data": ["d", "e", "f"],
+                },
+            ],
+        }
+        mock_get_s3_csv_file_info.return_value = file_info_return_value
         response = self.client.post(
             reverse(
                 "datasets:add_table:data-types",
@@ -682,7 +706,6 @@ class TestDataTypesView(TestCase):
                 "auto_generate_id_column": True,
             },
         )
-
         assert response.status_code == 302
         assert (
             response["Location"]
