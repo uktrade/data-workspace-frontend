@@ -609,33 +609,37 @@ class TestDataTypesView(TestCase):
     @pytest.mark.django_db
     @mock.patch("dataworkspace.apps.datasets.add_table.views.trigger_dataflow_dag")
     @mock.patch("dataworkspace.apps.datasets.add_table.views.copy_file_to_uploads_bucket")
-    @mock.patch("dataworkspace.apps.datasets.add_table.views.get_s3_csv_column_types")
     @mock.patch("dataworkspace.apps.datasets.add_table.views.get_s3_prefix")
     @mock.patch("dataworkspace.apps.datasets.add_table.views.get_s3_csv_file_info")
     def test_data_types_page(
         self,
         mock_get_s3_csv_file_info,
         mock_get_s3_prefix,
-        mock_get_column_types,
         mock_copy_file,
         mock_trigger_dag,
     ):
         mock_get_s3_prefix.return_value = "user/federated/abc"
         mock_trigger_dag.return_value = {"execution_date": datetime.now()}
-        mock_get_column_types.return_value = [
-            {
-                "header_name": "ID",
-                "column_name": "id",
-                "data_type": "text",
-                "sample_data": ["a", "b", "c"],
-            },
-            {
-                "header_name": "name",
-                "column_name": "name",
-                "data_type": "text",
-                "sample_data": ["d", "e", "f"],
-            },
-        ]
+
+        file_info_return_value = {
+            "encoding": "utf-8-sig",
+            "column_definitions": [
+                {
+                    "header_name": "ID",
+                    "column_name": "id",
+                    "data_type": "text",
+                    "sample_data": ["a", "b", "c"],
+                },
+                {
+                    "header_name": "name",
+                    "column_name": "name",
+                    "data_type": "text",
+                    "sample_data": ["d", "e", "f"],
+                },
+            ],
+        }
+
+        mock_get_s3_csv_file_info.return_value = file_info_return_value
 
         response = self.client.post(
             reverse(
@@ -677,7 +681,9 @@ class TestDataTypesView(TestCase):
                 "schema_name": self.source.schema,
                 "descriptive_name": self.descriptive_name,
                 "table_name": self.table_name,
-                "column_definitions": mock_get_column_types.return_value,
+                "column_definitions": file_info_return_value["column_definitions"],
+                "encoding": file_info_return_value["encoding"],
+                "auto_generate_id_column": True,
             },
             "DataWorkspaceS3ImportPipeline",
             f"test-{self.table_name}-2021-01-01T01:01:01",

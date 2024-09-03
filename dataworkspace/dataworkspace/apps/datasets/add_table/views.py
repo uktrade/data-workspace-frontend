@@ -24,7 +24,6 @@ from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.utils import (
     copy_file_to_uploads_bucket,
     get_data_flow_import_pipeline_name,
-    get_s3_csv_column_types,
     get_s3_prefix,
     trigger_dataflow_dag,
 )
@@ -32,11 +31,8 @@ from dataworkspace.apps.core.constants import SCHEMA_POSTGRES_DATA_TYPE_MAP, Pos
 from dataworkspace.apps.your_files.utils import get_s3_csv_file_info
 from dataworkspace.apps.your_files.views import (
     RequiredParameterGetRequestMixin,
-    ValidateSchemaMixin,
 )
-from dataworkspace.apps.your_files.models import UploadedTable
 from dataworkspace.apps.datasets.models import SourceTable
-from dataworkspace.apps.core.models import Database
 from dataworkspace.tests.conftest import user
 
 
