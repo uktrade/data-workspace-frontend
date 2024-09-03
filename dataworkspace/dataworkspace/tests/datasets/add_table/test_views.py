@@ -595,6 +595,7 @@ class TestDataTypesView(TestCase):
         )
         self.descriptive_name = "my_table"
         self.table_name = "my_table_name"
+
     @freeze_time("2021-01-01 01:01:01")
     @pytest.mark.django_db
     @mock.patch("dataworkspace.apps.datasets.add_table.views.trigger_dataflow_dag")
@@ -655,6 +656,7 @@ class TestDataTypesView(TestCase):
             "Data types affect the efficiency of queries. Selecting the correct data type means quicker queries and cheaper data."
             in paragraph_one_text
         )
+
     @freeze_time("2021-01-01 01:01:01")
     @pytest.mark.django_db
     @mock.patch("dataworkspace.apps.datasets.add_table.views.trigger_dataflow_dag")
