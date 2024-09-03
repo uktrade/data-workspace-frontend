@@ -30,7 +30,7 @@ from dataworkspace.apps.your_files.utils import get_s3_csv_file_info
 from dataworkspace.apps.your_files.views import (
     RequiredParameterGetRequestMixin,
 )
-from dataworkspace.dataworkspace.apps.core.models import Database
+from dataworkspace.apps.core.models import Database
 
 
 class AddTableView(DetailView):
@@ -503,7 +503,7 @@ class AddTableSuccessView(BaseAddTableTemplateView):
     step = 5
 
     def get_initial(self, request):
-        caitlin_test()
+        caitlin_test(self.request.user)
 
     def get(self, request, *args, **kwargs):
         print("kwargs5:", self.kwargs)
