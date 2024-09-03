@@ -21,10 +21,19 @@ from dataworkspace.apps.datasets.add_table.forms import (
     AddTableDataTypesForm,
 )
 from dataworkspace.apps.core.boto3_client import get_s3_client
-from dataworkspace.apps.core.utils import copy_file_to_uploads_bucket, get_data_flow_import_pipeline_name, get_s3_csv_column_types, get_s3_prefix, trigger_dataflow_dag
+from dataworkspace.apps.core.utils import (
+    copy_file_to_uploads_bucket,
+    get_data_flow_import_pipeline_name,
+    get_s3_csv_column_types,
+    get_s3_prefix,
+    trigger_dataflow_dag,
+)
 from dataworkspace.apps.core.constants import SCHEMA_POSTGRES_DATA_TYPE_MAP, PostgresDataTypes
 from dataworkspace.apps.your_files.utils import get_s3_csv_file_info
-from dataworkspace.apps.your_files.views import RequiredParameterGetRequestMixin, ValidateSchemaMixin
+from dataworkspace.apps.your_files.views import (
+    RequiredParameterGetRequestMixin,
+    ValidateSchemaMixin,
+)
 from dataworkspace.apps.your_files.models import UploadedTable
 from dataworkspace.apps.datasets.models import SourceTable
 from dataworkspace.apps.core.models import Database
@@ -241,13 +250,14 @@ class UploadCSVView(FormView):
                     self.kwargs["table_name"],
                     file_name,
                 ),
-            ) 
+            )
         )
+
 
 class AddTableDataTypesView(UploadCSVView):
     template_name = "datasets/add_table/data_types.html"
     form_class = AddTableDataTypesForm
-    
+
     required_parameters = [
         "schema",
         "descriptive_name",
@@ -276,13 +286,12 @@ class AddTableDataTypesView(UploadCSVView):
         kwargs.update(
             {
                 "user": self.request.user,
-                "column_definitions": get_s3_csv_file_info(self.get_file_upload_key(self.kwargs["file_name"], self.kwargs["pk"]))[
-                    "column_definitions"
-                ],
+                "column_definitions": get_s3_csv_file_info(
+                    self.get_file_upload_key(self.kwargs["file_name"], self.kwargs["pk"])
+                )["column_definitions"],
             }
         )
         return kwargs
-
 
     def form_valid(self, form):
         cleaned = form.cleaned_data
@@ -307,7 +316,6 @@ class AddTableDataTypesView(UploadCSVView):
 
         if "auto_generate_id_column" in cleaned and cleaned["auto_generate_id_column"] != "":
             include_column_id = cleaned["auto_generate_id_column"] == "True"
-
 
         conf = {
             "file_path": import_path,
@@ -342,12 +350,13 @@ class AddTableDataTypesView(UploadCSVView):
             "table_name": self.kwargs["table_name"],
             "execution_date": response["execution_date"],
         }
-        print('got to the redirect')
+        print("got to the redirect")
         return HttpResponseRedirect(
-            reverse("datasets:add_table:add-table-validating", args=(self.kwargs["pk"],)) + "?" + urlencode(params)
+            reverse("datasets:add_table:add-table-validating", args=(self.kwargs["pk"],))
+            + "?"
+            + urlencode(params)
         )
         # reverse("datasets:add_table:add-table-validating", args=(self.kwargs["pk"])) + "?" + params.urlencode()
-    
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -355,13 +364,19 @@ class AddTableDataTypesView(UploadCSVView):
         ctx["path"] = self.get_file_upload_key(self.kwargs["file_name"], self.kwargs["pk"])
         ctx["source"] = dataset.sourcetable_set.all()
         ctx["model"] = dataset
-        ctx["table_name"] = self.kwargs["table_name"]        
+        ctx["table_name"] = self.kwargs["table_name"]
         ctx["backlink"] = reverse(
             "datasets:add_table:upload-csv",
-            args=(self.kwargs["pk"], self.kwargs["schema"], self.kwargs["descriptive_name"], self.kwargs["table_name"]),
+            args=(
+                self.kwargs["pk"],
+                self.kwargs["schema"],
+                self.kwargs["descriptive_name"],
+                self.kwargs["table_name"],
+            ),
         )
 
         return ctx
+
 
 class BaseAddTableTemplateView(RequiredParameterGetRequestMixin, TemplateView):
     required_parameters = [
@@ -380,7 +395,8 @@ class BaseAddTableTemplateView(RequiredParameterGetRequestMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         context.update(**{"steps": self.steps, "step": self.step}, **self._get_query_parameters())
         return context
-    
+
+
 class BaseAddTableStepView(BaseAddTableTemplateView):
     template_name = "your_files/create-table-processing.html"
     task_name: str
@@ -397,9 +413,10 @@ class BaseAddTableStepView(BaseAddTableTemplateView):
             }
         )
         return context
+
     # return f"{reverse('datasets:dataset_detail', args=(obj['dataset_id'],))}#{obj['slug']}"
 
-                            # f"{reverse(self.next_step_url_name)}?{urlencode(query_params)}",
+    # f"{reverse(self.next_step_url_name)}?{urlencode(query_params)}",
 
 
 class AddTableValidatingView(BaseAddTableStepView):
@@ -481,11 +498,11 @@ class AddTableAppendingToTableView(BaseAddTableStepView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data()
         context.update(
-                {
-                    "title": "Creating and inserting into your table",
-                    "info_text": "This is the last step, your table is almost ready.",
-                }
-            )
+            {
+                "title": "Creating and inserting into your table",
+                "info_text": "This is the last step, your table is almost ready.",
+            }
+        )
         return context
 
 
@@ -497,12 +514,12 @@ class AddTableSuccessView(BaseAddTableTemplateView):
         print("kwargs5:", self.kwargs)
 
         SourceTable.objects.get_or_create(
-                schema=self.kwargs("schema"),
-                table_name=self.kwargs("table_name"),
-                created_by=self.request.user,
-                data_flow_execution_date=datetime.strptime(
-                    self.kwargs("execution_date").split(".")[0], "%Y-%m-%dT%H:%M:%S"
-                ),
-            )
-        return 'YAY'
+            schema=self.kwargs("schema"),
+            table_name=self.kwargs("table_name"),
+            created_by=self.request.user,
+            data_flow_execution_date=datetime.strptime(
+                self.kwargs("execution_date").split(".")[0], "%Y-%m-%dT%H:%M:%S"
+            ),
+        )
+        return "YAY"
         # return super().get(request, *args, **kwargs)
