@@ -30,7 +30,8 @@ from dataworkspace.apps.your_files.utils import get_s3_csv_file_info
 from dataworkspace.apps.your_files.views import (
     RequiredParameterGetRequestMixin,
 )
-from dataworkspace.apps.your_files.models import UploadedTable
+from dataworkspace.apps.core.models import Database
+from dataworkspace.apps.datasets.models import SourceTable
 
 
 class AddTableView(DetailView):
@@ -492,18 +493,18 @@ class AddTableAppendingToTableView(BaseAddTableStepView):
         return context
 
 
-class AddTableSuccessView(BaseAddTableStepView):
+class AddTableSuccessView(BaseAddTableTemplateView):
     template_name = "your_files/create-table-success.html"
     step = 5
 
     def get(self, request, *args, **kwargs):
-        if "execution_date" in request.GET:
-            UploadedTable.objects.get_or_create(
-                schema=request.GET.get("schema"),
-                table_name=request.GET.get("table_name"),
-                data_flow_execution_date=datetime.strptime(
-                    request.GET.get("execution_date").split(".")[0], "%Y-%m-%dT%H:%M:%S"
-                ),
-                created_by=self.request.user,
-            )
+        dataset = find_dataset(self.kwargs["pk"], self.request.user)
+        database = Database.objects.get_or_create(memorable_name="datasets")[0]
+        SourceTable.objects.get_or_create(
+            schema=self._get_query_parameters()["schema"],
+            dataset=dataset,
+            database=database,
+            name=self._get_query_parameters()["table_name"],
+            table=self._get_query_parameters()["table_name"],
+        )
         return super().get(request, *args, **kwargs)
