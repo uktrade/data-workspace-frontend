@@ -511,7 +511,7 @@ class AddTableSuccessView(BaseAddTableTemplateView):
         )
         context["backlink"] = reverse("datasets:dataset_detail", args={self.kwargs["pk"]})
         context["edit_link"] = reverse("datasets:edit_dataset", args={self.kwargs["pk"]})
-        context["model_name"] = dataset.name
+        context["model_name"] = source_table.name
         context["preview_link"] = reverse(
             "datasets:source_table_detail",
             kwargs={"dataset_uuid": self.kwargs["pk"], "object_id": source_table.id},
