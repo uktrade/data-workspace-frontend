@@ -494,17 +494,26 @@ class AddTableAppendingToTableView(BaseAddTableStepView):
 
 
 class AddTableSuccessView(BaseAddTableTemplateView):
-    template_name = "your_files/create-table-success.html"
+
+    template_name = "datasets/add_table/confirmation.html"
     step = 5
 
-    def get(self, request, *args, **kwargs):
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         dataset = find_dataset(self.kwargs["pk"], self.request.user)
         database = Database.objects.get_or_create(memorable_name="datasets")[0]
-        SourceTable.objects.get_or_create(
+        source_table, _ = SourceTable.objects.get_or_create(
             schema=self._get_query_parameters()["schema"],
             dataset=dataset,
             database=database,
             name=self._get_query_parameters()["table_name"],
             table=self._get_query_parameters()["table_name"],
         )
-        return super().get(request, *args, **kwargs)
+        context["backlink"] = reverse("datasets:dataset_detail", args={self.kwargs["pk"]})
+        context["edit_link"] = reverse("datasets:edit_dataset", args={self.kwargs["pk"]})
+        context["model_name"] = dataset.name
+        context["preview_link"] = reverse(
+            "datasets:source_table_detail",
+            kwargs={"dataset_uuid": self.kwargs["pk"], "object_id": source_table.id},
+        )
+        return context

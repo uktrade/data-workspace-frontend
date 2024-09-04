@@ -80,7 +80,7 @@ urlpatterns = [
         name="add-table-appending",
     ),
     path(
-        "add-table/success",
+        "success",
         login_required(AddTableSuccessView.as_view()),
         name="add-table-success",
     ),
