@@ -30,7 +30,6 @@ from dataworkspace.apps.your_files.utils import get_s3_csv_file_info
 from dataworkspace.apps.your_files.views import (
     RequiredParameterGetRequestMixin,
 )
-from dataworkspace.apps.core.models import Database
 from dataworkspace.dataworkspace.apps.your_files.models import UploadedTable
 
 
