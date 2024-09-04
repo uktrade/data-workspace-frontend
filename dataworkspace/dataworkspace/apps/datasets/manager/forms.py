@@ -40,7 +40,6 @@ class SourceTableUploadForm(GOVUKDesignSystemForm):
 
 class SourceTableUploadColumnConfigForm(GOVUKDesignSystemForm):
 
-
     path = forms.CharField(widget=forms.HiddenInput())
     auto_generate_id_column = GOVUKDesignSystemRadioField(
         label="Do you want to generate an ID column?",
@@ -75,5 +74,3 @@ class SourceTableUploadColumnConfigForm(GOVUKDesignSystemForm):
     def get_data_type_fields(self):
         for col_def in self.column_definitions:
             yield self[col_def["column_name"]], ", ".join(map(str, col_def["sample_data"]))
-
-

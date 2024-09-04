@@ -44,15 +44,11 @@ urlpatterns = [
         login_required(TableNameView.as_view()),
         name="table-name",
     ),
-
-
     path(
         "<str:schema>/<str:descriptive_name>/<str:table_name>/upload-csv",
         login_required(UploadCSVView.as_view()),
         name="upload-csv",
     ),
-
-    
     path(
         "<str:schema>/<str:descriptive_name>/<str:table_name>/<str:file_name>/data-types",
         login_required(AddTableDataTypesView.as_view()),

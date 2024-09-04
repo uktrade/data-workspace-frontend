@@ -1,15 +1,10 @@
 from datetime import datetime
 from unittest import TestCase
-from urllib.parse import urlencode
-import uuid
 from freezegun import freeze_time
 import pytest
-import botocore
-import boto3
 from bs4 import BeautifulSoup
 from django.urls import reverse
 from django.test import Client
-from dataworkspace.tests.conftest import get_client, get_user_data
 from django.core.files.uploadedfile import SimpleUploadedFile
 from mock import mock
 from dataworkspace.tests import factories
@@ -582,6 +577,8 @@ class TestUploadCSVPage(TestCase):
         assert response.status_code == 200
         assert "Select a CSV" in error_message_text
 
+
+@pytest.mark.django_db
 @pytest.mark.django_db
 class TestDataTypesView(TestCase):
     def setUp(self):
@@ -598,45 +595,40 @@ class TestDataTypesView(TestCase):
         )
         self.descriptive_name = "my_table"
         self.table_name = "my_table_name"
-        self.file1 = SimpleUploadedFile(
-            "allowed_chars-.csv",
-            b"id,name\r\nA1,test1\r\nA2,test2\r\n",
-            content_type="text/csv",
-        )
 
     @freeze_time("2021-01-01 01:01:01")
     @pytest.mark.django_db
     @mock.patch("dataworkspace.apps.datasets.add_table.views.trigger_dataflow_dag")
     @mock.patch("dataworkspace.apps.datasets.add_table.views.copy_file_to_uploads_bucket")
-    @mock.patch("dataworkspace.apps.datasets.add_table.views.get_s3_csv_column_types")
     @mock.patch("dataworkspace.apps.datasets.add_table.views.get_s3_prefix")
     @mock.patch("dataworkspace.apps.datasets.add_table.views.get_s3_csv_file_info")
     def test_data_types_page(
         self,
         mock_get_s3_csv_file_info,
         mock_get_s3_prefix,
-        mock_get_column_types,
         mock_copy_file,
         mock_trigger_dag,
-        
     ):
         mock_get_s3_prefix.return_value = "user/federated/abc"
         mock_trigger_dag.return_value = {"execution_date": datetime.now()}
-        mock_get_column_types.return_value = [
-            {
-                "header_name": "ID",
-                "column_name": "id",
-                "data_type": "text",
-                "sample_data": ["a", "b", "c"],
-            },
-            {
-                "header_name": "name",
-                "column_name": "name",
-                "data_type": "text",
-                "sample_data": ["d", "e", "f"],
-            },
-        ]
-
+        file_info_return_value = {
+            "encoding": "utf-8-sig",
+            "column_definitions": [
+                {
+                    "header_name": "ID",
+                    "column_name": "id",
+                    "data_type": "text",
+                    "sample_data": ["a", "b", "c"],
+                },
+                {
+                    "header_name": "name",
+                    "column_name": "name",
+                    "data_type": "text",
+                    "sample_data": ["d", "e", "f"],
+                },
+            ],
+        }
+        mock_get_s3_csv_file_info.return_value = file_info_return_value
         response = self.client.post(
             reverse(
                 "datasets:add_table:data-types",
@@ -646,31 +638,100 @@ class TestDataTypesView(TestCase):
                     "descriptive_name": self.descriptive_name,
                     "table_name": self.table_name,
                     "file_name": "allowed_chars-.csv",
-                }, 
+                },
             ),
         )
         assert response.status_code == 200
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        title_text = soup.find("title").get_text(strip=True)
+        backlink = soup.find("a", {"class": "govuk-back-link"}).get("href")
+        header_one_text = soup.find("h1", class_="govuk-heading-xl").get_text(strip=True)
+        header_two_text = soup.find("h2", class_="govuk-heading-l").get_text(strip=True)
+        paragraph_one_text = soup.find("p").get_text(strip=True)
+        assert f"/datasets/{self.dataset.id}" in backlink
+        assert f"Add Table - {self.dataset.name} - Data Workspace" in title_text
+        assert "Data Types" in header_one_text
+        assert f"Choose data types for {self.table_name}" in header_two_text
         assert (
-            response["Location"] 
+            "Data types affect the efficiency of queries. Selecting the correct data type means quicker queries and cheaper data."
+            in paragraph_one_text
+        )
+
+    @freeze_time("2021-01-01 01:01:01")
+    @pytest.mark.django_db
+    @mock.patch("dataworkspace.apps.datasets.add_table.views.trigger_dataflow_dag")
+    @mock.patch("dataworkspace.apps.datasets.add_table.views.copy_file_to_uploads_bucket")
+    @mock.patch("dataworkspace.apps.datasets.add_table.views.get_s3_prefix")
+    @mock.patch("dataworkspace.apps.datasets.add_table.views.get_s3_csv_file_info")
+    def test_data_types_page_triggers_the_dag(
+        self,
+        mock_get_s3_csv_file_info,
+        mock_get_s3_prefix,
+        mock_copy_file,
+        mock_trigger_dag,
+    ):
+        mock_get_s3_prefix.return_value = "user/federated/abc"
+        mock_trigger_dag.return_value = {"execution_date": datetime.now()}
+        file_info_return_value = {
+            "encoding": "utf-8-sig",
+            "column_definitions": [
+                {
+                    "header_name": "ID",
+                    "column_name": "id",
+                    "data_type": "text",
+                    "sample_data": ["a", "b", "c"],
+                },
+                {
+                    "header_name": "name",
+                    "column_name": "name",
+                    "data_type": "text",
+                    "sample_data": ["d", "e", "f"],
+                },
+            ],
+        }
+        mock_get_s3_csv_file_info.return_value = file_info_return_value
+        response = self.client.post(
+            reverse(
+                "datasets:add_table:data-types",
+                kwargs={
+                    "pk": self.dataset.id,
+                    "schema": self.source.schema,
+                    "descriptive_name": self.descriptive_name,
+                    "table_name": self.table_name,
+                    "file_name": "allowed_chars-.csv",
+                },
+            ),
+            data={
+                "path": "user/federated/abc/allowed_chars-.csv",
+                "id": "text",
+                "name": "text",
+                "auto_generate_id_column": True,
+            },
+        )
+        assert response.status_code == 302
+        assert (
+            response["Location"]
             == reverse(
                 "datasets:add_table:add-table-validating",
                 args=(self.dataset.id,),
             )
-            + f"?filename=allowed_chars-.csv!{uuid.uuid4()}%&schema={self.source.schema}&table_name={self.source.table}&"
+            + f"?filename=allowed_chars-.csv&schema={self.source.schema}&table_name={self.table_name}&"
             f"execution_date=2021-01-01+01%3A01%3A01"
         )
         mock_copy_file.assert_called_with(
-            "user/federated/abc/file1.csv",
-            "data-flow-imports/user/federated/abc/file1.csv",
+            "user/federated/abc/allowed_chars-.csv",
+            "data-flow-imports/user/federated/abc/allowed_chars-.csv",
         )
         mock_trigger_dag.assert_called_with(
             {
                 "file_path": "data-flow-imports/user/federated/abc/allowed_chars-.csv",
                 "schema_name": self.source.schema,
-                "table_name": self.source.table,
-                "column_definitions": mock_get_s3_csv_file_info(self._get_file_upload_key("allowed_chars-.csv", self.dataset_id)).return_value,
-                "auto_generate_id_column": False,
+                "descriptive_name": self.descriptive_name,
+                "table_name": self.table_name,
+                "column_definitions": file_info_return_value["column_definitions"],
+                "encoding": file_info_return_value["encoding"],
+                "auto_generate_id_column": True,
             },
             "DataWorkspaceS3ImportPipeline",
-            "test-table1-2021-01-01T01:01:01",
+            f"test-{self.table_name}-2021-01-01T01:01:01",
         )

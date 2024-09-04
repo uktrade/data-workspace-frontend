@@ -1,4 +1,5 @@
 import datetime
+import logging
 from urllib.parse import urlencode
 
 import botocore
@@ -342,6 +343,7 @@ class TestCreateTableViews:
             },
         )
         assert response.status_code == 302
+        logging.warning(response)
         assert reverse("your-files:create-schema") in response.get("location")
 
     @mock.patch("dataworkspace.apps.your_files.forms.get_schema_for_user")
@@ -381,6 +383,7 @@ class TestCreateTableViews:
             "table_name": "test_table",
         }
         assert response.status_code == 302
+        logging.warning(response)
         assert (
             response.get("location")
             == f'{reverse("your-files:create-table-confirm-name")}?{urlencode(params)}'
@@ -456,8 +459,6 @@ class TestCreateTableViews:
         response = client.get(
             f'{reverse("your-files:create-table-confirm-data-types")}?{urlencode(params)}',
         )
-
-        print(response.content)
 
         assert b"Do you want to generate an ID column?" in response.content
         assert (
@@ -859,6 +860,7 @@ class TestRestoreTableViews:
             "task_name": "restore-swap-table-datasets_db",
         }
         assert response.status_code == 302
+
         assert (
             response.get("location")
             == f'{reverse("your-files:restore-table-in-progress", args=(t.id,))}?{urlencode(expected_params)}'
