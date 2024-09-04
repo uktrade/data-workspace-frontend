@@ -31,6 +31,7 @@ from dataworkspace.apps.your_files.views import (
     RequiredParameterGetRequestMixin,
 )
 from dataworkspace.apps.core.models import Database
+from dataworkspace.dataworkspace.apps.your_files.models import UploadedTable
 
 
 class AddTableView(DetailView):
@@ -323,8 +324,6 @@ class AddTableDataTypesView(UploadCSVView):
 
         logger.debug("Triggering pipeline %s", get_data_flow_import_pipeline_name())
         logger.debug(conf)
-        # if self.kwargs["schema"] not in self.all_schemas:
-        #     conf["db_role"] = cleaned["schema"]
 
         try:
             response = trigger_dataflow_dag(
@@ -348,7 +347,6 @@ class AddTableDataTypesView(UploadCSVView):
             + "?"
             + urlencode(params)
         )
-        # reverse("datasets:add_table:add-table-validating", args=(self.kwargs["pk"])) + "?" + params.urlencode()
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -370,6 +368,7 @@ class AddTableDataTypesView(UploadCSVView):
         return ctx
 
 
+# the below views are not yet full complete and are related to ticket DT-2258
 class BaseAddTableTemplateView(RequiredParameterGetRequestMixin, TemplateView):
     required_parameters = [
         "filename",
@@ -405,10 +404,6 @@ class BaseAddTableStepView(BaseAddTableTemplateView):
             }
         )
         return context
-
-    # return f"{reverse('datasets:dataset_detail', args=(obj['dataset_id'],))}#{obj['slug']}"
-
-    # f"{reverse(self.next_step_url_name)}?{urlencode(query_params)}",
 
 
 class AddTableValidatingView(BaseAddTableStepView):
@@ -498,40 +493,18 @@ class AddTableAppendingToTableView(BaseAddTableStepView):
         return context
 
 
-class AddTableSuccessView(BaseAddTableTemplateView):
+class CreateTableSuccessView(BaseAddTableStepView):
     template_name = "your_files/create-table-success.html"
     step = 5
 
-    def get_initial(self, request):
-        caitlin_test(self.request.user)
-
     def get(self, request, *args, **kwargs):
-        print("kwargs5:", self.kwargs)
-        # dataset = find_dataset(self.kwargs["pk"], self.request.user)
-        # database = Database.objects.get_or_create(memorable_name="datasets")[0]
-
-        # SourceTable.objects.get_or_create(
-        #     schema=self.kwargs("schema"),
-        #     dataset=dataset,
-        #     database=database,
-        #     # table=self.kwargs("table_name"),
-        # )
-        # caitlin_test(self.request.user)
-        # return table_created
+        if "execution_date" in request.GET:
+            UploadedTable.objects.get_or_create(
+                schema=request.GET.get("schema"),
+                table_name=request.GET.get("table_name"),
+                data_flow_execution_date=datetime.strptime(
+                    request.GET.get("execution_date").split(".")[0], "%Y-%m-%dT%H:%M:%S"
+                ),
+                created_by=self.request.user,
+            )
         return super().get(request, *args, **kwargs)
-
-
-def caitlin_test(user):
-    print("HELLO CAITLIN")
-    dataset = find_dataset("c60a1b76-f19a-4939-bcbf-de83a01454ec", user)
-    print("dataset123", dataset)
-    database = Database.objects.get_or_create(memorable_name="datasets")[0]
-    print("DATABASE123", database)
-    # SourceTable.objects.get_or_create(
-    #     schema="public",
-    #     dataset=dataset,
-    #     name="desc_name3",
-    #     table="desc_name3",
-    #     database=database,
-    # )
-    return "yay"
