@@ -30,7 +30,7 @@ from dataworkspace.apps.your_files.utils import get_s3_csv_file_info
 from dataworkspace.apps.your_files.views import (
     RequiredParameterGetRequestMixin,
 )
-from dataworkspace.dataworkspace.apps.your_files.models import UploadedTable
+from dataworkspace.apps.your_files.models import UploadedTable
 
 
 class AddTableView(DetailView):
@@ -492,7 +492,7 @@ class AddTableAppendingToTableView(BaseAddTableStepView):
         return context
 
 
-class CreateTableSuccessView(BaseAddTableStepView):
+class AddTableSuccessView(BaseAddTableStepView):
     template_name = "your_files/create-table-success.html"
     step = 5
 
