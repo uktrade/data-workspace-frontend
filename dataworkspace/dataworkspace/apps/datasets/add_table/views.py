@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 import os
 import uuid
+from urllib.parse import urlencode
 
 from aiohttp import ClientError
 from django.conf import settings
@@ -9,7 +10,6 @@ from django.urls import reverse
 from django.views.generic import DetailView, FormView, TemplateView
 from django.http import HttpResponseRedirect, HttpResponseServerError
 from requests import HTTPError
-from urllib.parse import urlencode
 
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.constants import SCHEMA_POSTGRES_DATA_TYPE_MAP, PostgresDataTypes
