@@ -343,7 +343,6 @@ class TestCreateTableViews:
             },
         )
         assert response.status_code == 302
-        logging.warning(response)
         assert reverse("your-files:create-schema") in response.get("location")
 
     @mock.patch("dataworkspace.apps.your_files.forms.get_schema_for_user")
@@ -383,7 +382,6 @@ class TestCreateTableViews:
             "table_name": "test_table",
         }
         assert response.status_code == 302
-        logging.warning(response)
         assert (
             response.get("location")
             == f'{reverse("your-files:create-table-confirm-name")}?{urlencode(params)}'
