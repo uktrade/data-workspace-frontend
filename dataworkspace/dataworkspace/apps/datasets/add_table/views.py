@@ -17,7 +17,6 @@ from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.core.utils import (
     copy_file_to_uploads_bucket,
     get_data_flow_import_pipeline_name,
-    get_s3_csv_file_info,
     get_s3_prefix,
     trigger_dataflow_dag,
 )
@@ -33,6 +32,7 @@ from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.your_files.views import (
     RequiredParameterGetRequestMixin,
 )
+from dataworkspace.apps.your_files.utils import get_s3_csv_file_info
 
 logger = logging.getLogger(__name__)
 
