@@ -579,7 +579,6 @@ class TestUploadCSVPage(TestCase):
 
 
 @pytest.mark.django_db
-@pytest.mark.django_db
 class TestDataTypesView(TestCase):
     def setUp(self):
         self.user = factories.UserFactory.create(is_superuser=False)
