@@ -490,7 +490,6 @@ class TestUploadCSVPage(TestCase):
                 },
             ),
         )
-
         soup = BeautifulSoup(response.content.decode(response.charset))
         title_text = soup.find("title").get_text(strip=True)
         backlink = soup.find("a", {"class": "govuk-back-link"}).get("href")
