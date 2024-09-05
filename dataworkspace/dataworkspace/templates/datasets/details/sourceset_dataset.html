@@ -91,6 +91,13 @@
       {% if not has_access %}
         {% include 'partials/request_access.html' with type='master' has_data_access=has_access %}
       {% endif %}
+
+      <div class="button-wrap">
+        <a class="govuk-button govuk-button--secondary" href="{% url 'datasets:add_table:add-table' model.id %}">
+          Add a new table <a>
+      </a>
+
+      </div>
       <table class="govuk-table">
         <thead>
         <tr class="govuk-table__row">
