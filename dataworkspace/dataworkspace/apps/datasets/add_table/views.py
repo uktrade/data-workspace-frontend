@@ -316,7 +316,6 @@ class AddTableDataTypesView(UploadCSVView):
             "schema_name": self.kwargs["schema"],
             "descriptive_name": self.kwargs["descriptive_name"],
             "table_name": self.kwargs["table_name"],
-            # "file_name": self.kwargs["file_name"],
             "column_definitions": file_info["column_definitions"],
             "encoding": file_info["encoding"],
             "auto_generate_id_column": include_column_id,
@@ -368,7 +367,6 @@ class AddTableDataTypesView(UploadCSVView):
         return ctx
 
 
-# the below views are not yet full complete and are related to ticket DT-2258
 class BaseAddTableTemplateView(RequiredParameterGetRequestMixin, TemplateView):
     required_parameters = [
         "filename",
@@ -491,7 +489,6 @@ class AddTableAppendingToTableView(BaseAddTableStepView):
             }
         )
         return context
-
 
 class AddTableSuccessView(BaseAddTableTemplateView):
 
