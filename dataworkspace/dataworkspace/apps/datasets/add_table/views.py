@@ -490,6 +490,7 @@ class AddTableAppendingToTableView(BaseAddTableStepView):
         )
         return context
 
+
 class AddTableSuccessView(BaseAddTableTemplateView):
 
     template_name = "datasets/add_table/confirmation.html"

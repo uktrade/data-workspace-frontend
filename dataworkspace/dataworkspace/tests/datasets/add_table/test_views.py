@@ -735,6 +735,7 @@ class TestDataTypesView(TestCase):
             f"test-{self.table_name}-2021-01-01T01:01:01",
         )
 
+
 @pytest.mark.django_db
 class TestAddTableConfirmation(TestCase):
     def setUp(self):
@@ -769,5 +770,5 @@ class TestAddTableConfirmation(TestCase):
         assert "Table added" == panel_header_one
         assert self.source.name in panel_body
         assert dataset_id in back_link
-        assert dataset_id  in edit_link
+        assert dataset_id in edit_link
         assert dataset_id in preview_link
