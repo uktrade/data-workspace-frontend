@@ -1,10 +1,14 @@
+from datetime import datetime
 import os
+from urllib.parse import urlencode
 import uuid
+from venv import logger
 from aiohttp import ClientError
 from django.conf import settings
 from django.urls import reverse
 from django.views.generic import DetailView, FormView, TemplateView
 from django.http import HttpResponseRedirect, HttpResponseServerError
+from requests import HTTPError
 
 from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.datasets.add_table.forms import (
@@ -12,9 +16,23 @@ from dataworkspace.apps.datasets.add_table.forms import (
     TableSchemaForm,
     DescriptiveNameForm,
     UploadCSVForm,
+    AddTableDataTypesForm,
 )
 from dataworkspace.apps.core.boto3_client import get_s3_client
-from dataworkspace.apps.core.utils import get_s3_prefix
+from dataworkspace.apps.core.utils import (
+    copy_file_to_uploads_bucket,
+    get_data_flow_import_pipeline_name,
+    get_s3_prefix,
+    trigger_dataflow_dag,
+)
+from dataworkspace.apps.core.constants import SCHEMA_POSTGRES_DATA_TYPE_MAP, PostgresDataTypes
+from dataworkspace.apps.your_files.utils import get_s3_csv_file_info
+from dataworkspace.apps.your_files.views import (
+    RequiredParameterGetRequestMixin,
+)
+from dataworkspace.apps.core.models import Database
+from dataworkspace.apps.datasets.models import SourceTable
+
 
 class AddTableView(DetailView):
     template_name = "datasets/add_table/about_this_service.html"
@@ -179,7 +197,7 @@ class UploadCSVView(FormView):
     template_name = "datasets/add_table/upload_csv.html"
     form_class = UploadCSVForm
 
-    def _get_file_upload_key(self, file_name, pk):
+    def get_file_upload_key(self, file_name, pk):
         return os.path.join(
             get_s3_prefix(str(self.request.user.profile.sso_id)),
             "_add_table_uploads",
@@ -201,7 +219,7 @@ class UploadCSVView(FormView):
         csv_file = form.cleaned_data["csv_file"]
         client = get_s3_client()
         file_name = f"{csv_file.name}!{uuid.uuid4()}"
-        key = self._get_file_upload_key(file_name, self.kwargs["pk"])
+        key = self.get_file_upload_key(file_name, self.kwargs["pk"])
         csv_file.seek(0)
         try:
             client.put_object(
@@ -224,10 +242,11 @@ class UploadCSVView(FormView):
                     self.kwargs["schema"],
                     self.kwargs["descriptive_name"],
                     self.kwargs["table_name"],
+                    file_name,
                 ),
             )
-            + f"?file={file_name}"
         )
+
 
 class AddTableDataTypesView(UploadCSVView):
     template_name = "datasets/add_table/data_types.html"
