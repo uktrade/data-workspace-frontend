@@ -1,20 +1,38 @@
+import logging
 import os
 import uuid
+from datetime import datetime
+
 from aiohttp import ClientError
 from django.conf import settings
 from django.urls import reverse
 from django.views.generic import DetailView, FormView, TemplateView
 from django.http import HttpResponseRedirect, HttpResponseServerError
+from requests import HTTPError
+from urllib.parse import urlencode
 
-from dataworkspace.apps.datasets.utils import find_dataset
+from dataworkspace.apps.core.boto3_client import get_s3_client
+from dataworkspace.apps.core.constants import SCHEMA_POSTGRES_DATA_TYPE_MAP, PostgresDataTypes
+from dataworkspace.apps.core.utils import (
+    copy_file_to_uploads_bucket,
+    get_data_flow_import_pipeline_name,
+    get_s3_csv_file_info,
+    get_s3_prefix,
+    trigger_dataflow_dag,
+)
 from dataworkspace.apps.datasets.add_table.forms import (
+    AddTableDataTypesForm,
+    DescriptiveNameForm,
     TableNameForm,
     TableSchemaForm,
-    DescriptiveNameForm,
     UploadCSVForm,
 )
-from dataworkspace.apps.core.boto3_client import get_s3_client
-from dataworkspace.apps.core.utils import get_s3_prefix
+from dataworkspace.apps.datasets.models import Database, SourceTable
+from dataworkspace.apps.datasets.utils import find_dataset
+from dataworkspace.apps.your_files.views import RequiredParameterGetRequestMixin
+
+logger = logging.getLogger(__name__)
+
 
 class AddTableView(DetailView):
     template_name = "datasets/add_table/about_this_service.html"
@@ -228,6 +246,7 @@ class UploadCSVView(FormView):
             )
             + f"?file={file_name}"
         )
+
 
 class AddTableDataTypesView(UploadCSVView):
     template_name = "datasets/add_table/data_types.html"
