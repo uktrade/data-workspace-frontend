@@ -1,5 +1,4 @@
 import datetime
-import logging
 from urllib.parse import urlencode
 
 import botocore
