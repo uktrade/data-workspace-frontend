@@ -490,7 +490,6 @@ class TestUploadCSVPage(TestCase):
                 },
             ),
         )
-
         soup = BeautifulSoup(response.content.decode(response.charset))
         title_text = soup.find("title").get_text(strip=True)
         backlink = soup.find("a", {"class": "govuk-back-link"}).get("href")
@@ -734,3 +733,41 @@ class TestDataTypesView(TestCase):
             "DataWorkspaceS3ImportPipeline",
             f"test-{self.table_name}-2021-01-01T01:01:01",
         )
+
+
+@pytest.mark.django_db
+class TestAddTableConfirmation(TestCase):
+    def setUp(self):
+        self.user = factories.UserFactory.create(is_superuser=False)
+        self.client = Client(**get_http_sso_data(self.user))
+        self.dataset = factories.MasterDataSetFactory.create(
+            published=True,
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
+            information_asset_owner=self.user,
+            government_security_classification=2,
+        )
+        self.source = factories.SourceTableFactory.create(
+            dataset=self.dataset, schema="test", table="my_table_name"
+        )
+        self.descriptive_name = "my_table"
+        self.table_name = "my_table_name"
+
+    def test_confirmation_page(self):
+        response = self.client.get(
+            reverse("datasets:add_table:add-table-success", kwargs={"pk": self.dataset.id})
+            + f"?filename=allowed_chars-.csv&schema={self.source.schema}&table_name={self.table_name}&"
+            f"execution_date=2021-01-01+01%3A01%3A01",
+        )
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        panel_header_one = soup.find("h1", {"class": "govuk-panel__title"}).contents[0]
+        panel_body = soup.find("div", {"class": "govuk-panel__body"}).contents[0]
+        back_link = soup.find("a", {"id": "backlink"}).attrs["href"]
+        edit_link = soup.find("a", {"id": "editlink"}).attrs["href"]
+        preview_link = soup.find("a", {"id": "previewlink"}).attrs["href"]
+        dataset_id = str(self.dataset.id)
+        assert response.status_code == 200
+        assert "Table added" == panel_header_one
+        assert self.source.name in panel_body
+        assert dataset_id in back_link
+        assert dataset_id in edit_link
+        assert dataset_id in preview_link

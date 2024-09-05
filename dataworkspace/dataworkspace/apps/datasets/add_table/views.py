@@ -1,8 +1,9 @@
+import logging
 from datetime import datetime
 import os
-from urllib.parse import urlencode
 import uuid
-from venv import logger
+from urllib.parse import urlencode
+
 from aiohttp import ClientError
 from django.conf import settings
 from django.urls import reverse
@@ -10,28 +11,30 @@ from django.views.generic import DetailView, FormView, TemplateView
 from django.http import HttpResponseRedirect, HttpResponseServerError
 from requests import HTTPError
 
-from dataworkspace.apps.datasets.utils import find_dataset
-from dataworkspace.apps.datasets.add_table.forms import (
-    TableNameForm,
-    TableSchemaForm,
-    DescriptiveNameForm,
-    UploadCSVForm,
-    AddTableDataTypesForm,
-)
 from dataworkspace.apps.core.boto3_client import get_s3_client
+from dataworkspace.apps.core.constants import SCHEMA_POSTGRES_DATA_TYPE_MAP, PostgresDataTypes
+from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.core.utils import (
     copy_file_to_uploads_bucket,
     get_data_flow_import_pipeline_name,
     get_s3_prefix,
     trigger_dataflow_dag,
 )
-from dataworkspace.apps.core.constants import SCHEMA_POSTGRES_DATA_TYPE_MAP, PostgresDataTypes
-from dataworkspace.apps.your_files.utils import get_s3_csv_file_info
+from dataworkspace.apps.datasets.add_table.forms import (
+    AddTableDataTypesForm,
+    DescriptiveNameForm,
+    TableNameForm,
+    TableSchemaForm,
+    UploadCSVForm,
+)
+from dataworkspace.apps.datasets.models import SourceTable
+from dataworkspace.apps.datasets.utils import find_dataset
 from dataworkspace.apps.your_files.views import (
     RequiredParameterGetRequestMixin,
 )
-from dataworkspace.apps.core.models import Database
-from dataworkspace.apps.datasets.models import SourceTable
+from dataworkspace.apps.your_files.utils import get_s3_csv_file_info
+
+logger = logging.getLogger(__name__)
 
 
 class AddTableView(DetailView):
@@ -367,7 +370,6 @@ class AddTableDataTypesView(UploadCSVView):
         return ctx
 
 
-# the below views are not yet fully complete and are related to ticket DT-2258
 class BaseAddTableTemplateView(RequiredParameterGetRequestMixin, TemplateView):
     required_parameters = [
         "filename",
@@ -493,17 +495,26 @@ class AddTableAppendingToTableView(BaseAddTableStepView):
 
 
 class AddTableSuccessView(BaseAddTableTemplateView):
-    template_name = "your_files/create-table-success.html"
+
+    template_name = "datasets/add_table/confirmation.html"
     step = 5
 
-    def get(self, request, *args, **kwargs):
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         dataset = find_dataset(self.kwargs["pk"], self.request.user)
         database = Database.objects.get_or_create(memorable_name="datasets_1")[0]
-        SourceTable.objects.get_or_create(
+        source_table, _ = SourceTable.objects.get_or_create(
             schema=self._get_query_parameters()["schema"],
             dataset=dataset,
             database=database,
             name=self._get_query_parameters()["table_name"],
             table=self._get_query_parameters()["table_name"],
         )
-        return super().get(request, *args, **kwargs)
+        context["backlink"] = reverse("datasets:dataset_detail", args={self.kwargs["pk"]})
+        context["edit_link"] = reverse("datasets:edit_dataset", args={self.kwargs["pk"]})
+        context["model_name"] = source_table.name
+        context["preview_link"] = reverse(
+            "datasets:source_table_detail",
+            kwargs={"dataset_uuid": self.kwargs["pk"], "object_id": source_table.id},
+        )
+        return context

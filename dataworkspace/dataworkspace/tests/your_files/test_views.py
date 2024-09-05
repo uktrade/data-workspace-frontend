@@ -857,6 +857,7 @@ class TestRestoreTableViews:
             "task_name": "restore-swap-table-datasets_db",
         }
         assert response.status_code == 302
+
         assert (
             response.get("location")
             == f'{reverse("your-files:restore-table-in-progress", args=(t.id,))}?{urlencode(expected_params)}'
