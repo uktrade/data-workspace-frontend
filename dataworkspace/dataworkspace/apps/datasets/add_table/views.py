@@ -390,7 +390,7 @@ class BaseAddTableTemplateView(RequiredParameterGetRequestMixin, TemplateView):
 
 
 class BaseAddTableStepView(BaseAddTableTemplateView):
-    template_name = "your_files/create-table-processing.html"
+    template_name = "datasets/add_table/create-table-processing.html"
     task_name: str
     next_step_url_name: str
 
