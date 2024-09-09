@@ -29,4 +29,9 @@ urlpatterns = [
         views.ToolQueryAuditLogViewSet.as_view({"get": "list"}),
         name="tool-query-audit-logs",
     ),
+    path(
+        "data-cuts",
+        views.DataCutViewSet.as_view({"get": "list"}),
+        name="data-cuts",
+    ),
 ]
