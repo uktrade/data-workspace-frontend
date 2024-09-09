@@ -48,6 +48,7 @@ Add Table - {{ model.name }} - {{ block.super }}{% endblock %}
     {{ form.schema }}
     {{ form.force_overwrite }}
     {{ form.table_exists_action }}
+    <div class="govuk-grid-column-full">
     <table class="govuk-table">
       <thead class="govuk-table__head">
         <tr class="govuk-table__row">
@@ -70,6 +71,7 @@ Add Table - {{ model.name }} - {{ block.super }}{% endblock %}
         {% endfor %}
       </tbody>
     </table>
+  </div>
     <div class="govuk-grid-column-two-thirds">
       {% if form.show_id_form %}
       {{ form.auto_generate_id_column }}
