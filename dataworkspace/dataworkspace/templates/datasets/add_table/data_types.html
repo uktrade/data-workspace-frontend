@@ -9,67 +9,75 @@ Add Table - {{ model.name }} - {{ block.super }}{% endblock %}
 {% endif %}
 {% block content %}
 
-  <div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
-      <h1 class="govuk-heading-xl">Data Types</h1>
-      <p class="govuk-body">Data types affect the efficiency of queries. Selecting the correct data type means quicker queries and cheaper data.</p>
-      <p class="govuk-body">Using a data type that cannot describe your data may cause your table build to fail. For example, numbers with special characters (e.g. '£200') or leading zeroes (e.g. 00234) need to be set as ‘Text’, they cannot be set as 'Numeric'.</p>
-      <details class="govuk-details">
-        <summary class="govuk-details__summary">
-          <span class="govuk-details__summary-text">
-            Data types and when to use them
-          </span>
-        </summary>
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <h1 class="govuk-heading-xl">Data Types</h1>
+    <p class="govuk-body">Data types affect the efficiency of queries. Selecting the correct data type means quicker
+      queries and cheaper data.</p>
+    <p class="govuk-body">Using a data type that cannot describe your data may cause your table build to fail. For
+      example, numbers with special characters (e.g. '£200') or leading zeroes (e.g. 00234) need to be set as ‘Text’,
+      they cannot be set as 'Numeric'.</p>
+    <details class="govuk-details">
+      <summary class="govuk-details__summary">
+        <span class="govuk-details__summary-text">
+          Data types and when to use them
+        </span>
+      </summary>
+      <div class="govuk-details__text">
         <ul class="govuk-list govuk-list--bullet">
-            <li><b>Text:</b> a variable-length character string</li>
-            <li><b>Integer:</b> a 4-byte integer that has a range from -2,147,483,648 to 2,147,483,647</li>
-            <li><b>Boolean:</b> can hold one of three values: true, false, or null</li>
-            <li><b>Date:</b> stores dates only</li>
-            <li><b>Datetime:</b> stores both date and time values</li>
-            <li><b>Numeric:</b> stores values up to 131072 digits before the decimal point; up to 16383 digits after the decimal point</li>
-            <li><b>Uuid:</b> (Universal Unique Identifier): a 128-bit value used to uniquely identify an object.  This can also be referred to as GUID.</li>
-          </ul>
-      </details>
-      <h2 class="govuk-heading-l">Choose data types for {{table_name }}</h2>
-      <p class="govuk-body">Data workspace has estimated an appropriate data type for your columns. You must check the data type for each column in the table below and change it if necessary.</p>
-
-       
-      {% include 'design_system/error_summary.html' with form=form %}
-      <form method='post' novalidate>
-        {% csrf_token %}
-        {{ form.table_name.as_hidden }}
-        {{ form.path }}
-        {{ form.schema }}
-        {{ form.force_overwrite }}
-        {{ form.table_exists_action }}
-        <table class="govuk-table">
-          <thead class="govuk-table__head">
-            <tr class="govuk-table__row">
-              <th scope="col" class="govuk-table__header govuk-!-width-one-quarter">Column</th>
-              <th scope="col" class="govuk-table__header govuk-!-width-one-quarter">Data type</th>
-              <th scope="col" class="govuk-table__header">Sample data from first few rows</th>
-            </tr>
-          </thead>
-          <tbody class="govuk-table__body">
-            {% for data_type_field, sample in form.get_data_type_fields %}
-              <tr class="govuk-table__row">
-                <th scope="row" class="govuk-table__header">
-                  <span style="word-break:break-all">
-                  {{ data_type_field.label }}
-                  </span>
-                </th>
-                <td class="govuk-table__cell">{{ data_type_field }}</td>
-                <td class="govuk-table__cell">{{ sample }}</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-        {% if form.show_id_form %}
-          {{ form.auto_generate_id_column }}
-        {% endif %}
-        <br />
-        <button type="submit" class="govuk-button">Continue</button>
-      </form>
-    </div>
+          <li><b>Text:</b> a variable-length character string</li>
+          <li><b>Integer:</b> a 4-byte integer that has a range from -2,147,483,648 to 2,147,483,647</li>
+          <li><b>Boolean:</b> can hold one of three values: true, false, or null</li>
+          <li><b>Date:</b> stores dates only</li>
+          <li><b>Datetime:</b> stores both date and time values</li>
+          <li><b>Numeric:</b> stores values up to 131072 digits before the decimal point; up to 16383 digits after the
+            decimal point</li>
+          <li><b>Uuid:</b> (Universal Unique Identifier): a 128-bit value used to uniquely identify an object. This can
+            also be referred to as GUID.</li>
+        </ul>
+      </div>
+    </details>
+    <h2 class="govuk-heading-l">Choose data types for {{table_name }}</h2>
+    <p class="govuk-body">Data workspace has estimated an appropriate data type for your columns. You must check the
+      data type for each column in the table below and change it if necessary.</p>
   </div>
+  {% include 'design_system/error_summary.html' with form=form %}
+  <form method='post' novalidate>
+    {% csrf_token %}
+    {{ form.table_name.as_hidden }}
+    {{ form.path }}
+    {{ form.schema }}
+    {{ form.force_overwrite }}
+    {{ form.table_exists_action }}
+    <table class="govuk-table">
+      <thead class="govuk-table__head">
+        <tr class="govuk-table__row">
+          <th scope="col" class="govuk-table__header govuk-!-width-one-quarter">Column</th>
+          <th scope="col" class="govuk-table__header govuk-!-width-one-quarter">Data type</th>
+          <th scope="col" class="govuk-table__header">Sample data from first few rows</th>
+        </tr>
+      </thead>
+      <tbody class="govuk-table__body">
+        {% for data_type_field, sample in form.get_data_type_fields %}
+        <tr class="govuk-table__row">
+          <th scope="row" class="govuk-table__header">
+            <span style="word-break:break-all">
+              {{ data_type_field.label }}
+            </span>
+          </th>
+          <td class="govuk-table__cell">{{ data_type_field }}</td>
+          <td class="govuk-table__cell">{{ sample }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="govuk-grid-column-two-thirds">
+      {% if form.show_id_form %}
+      {{ form.auto_generate_id_column }}
+      {% endif %}
+      <br />
+      <button type="submit" class="govuk-button">Continue</button>
+  </form>
+</div>
+</div>
 {% endblock %}
