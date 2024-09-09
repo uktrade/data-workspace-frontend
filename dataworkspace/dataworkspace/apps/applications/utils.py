@@ -1419,20 +1419,23 @@ def _do_sync_s3_sso_users():
         )
         new_last_processed = seen_result[1]
         if len(seen_result[0]) > 0:
-            unseen_user_profiles = Profile.objects.exclude(
-                user__username__in=seen_result[0]
-            ).filter(sso_status="active")
+            unseen_user_profiles = (
+                Profile.objects.exclude(user__username__in=seen_result[0])
+                .filter(sso_status="active")
+                .select_related("user")
+            )
+            logger.info(
+                "sync_s3_sso_users: active users exist locally but not in SSO %s",
+                list(unseen_user_profiles.values_list("user__id", flat=True)),
+            )
             if settings.S3_SSO_IMPORT_ENABLED:
                 logger.info(
-                    "sync_s3_sso_users: %s active users exist locally but not in SSO. Marking as inactive",
-                    unseen_user_profiles.count(),
+                    "sync_s3_sso_users: Marking users as inactive",
                 )
                 unseen_user_profiles.update(sso_status="inactive")
             else:
                 logger.info(
-                    """sync_s3_sso_users: %s active users exist locally but not in SSO.
-                    S3_SSO_IMPORT_ENABLED is FALSE so they will not be deactivated""",
-                    unseen_user_profiles.count(),
+                    "sync_s3_sso_users: S3_SSO_IMPORT_ENABLED is FALSE, no changes to active user",
                 )
 
         logger.info("sync_s3_sso_users: New last_published date for cache %s", new_last_processed)
