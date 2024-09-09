@@ -18,6 +18,7 @@ from dataworkspace.apps.core.utils import (
     copy_file_to_uploads_bucket,
     get_data_flow_import_pipeline_name,
     get_s3_prefix,
+    get_task_error_message_template,
     trigger_dataflow_dag,
 )
 from dataworkspace.apps.datasets.add_table.forms import (
@@ -335,7 +336,7 @@ class AddTableDataTypesView(UploadCSVView):
             )
         except HTTPError:
             return HttpResponseRedirect(
-                f'{reverse("your-files:create-table-failed")}?' f"filename={filename}"
+                f'{reverse("datasets:add_table:create-table-failed")}?' f"filename={filename}"
             )
 
         params = {
@@ -518,3 +519,18 @@ class AddTableSuccessView(BaseAddTableTemplateView):
             kwargs={"dataset_uuid": self.kwargs["pk"], "object_id": source_table.id},
         )
         return context
+
+class AddTableFailedView(BaseAddTableTemplateView):
+    next_step_url_name = "manage-source-table"
+    step = 5
+    template_name = "datasets/add_table/upload_failed.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['reupload_csv'] = reverse("datasets:add_table:upload-csv", args=(self.kwargs["pk"], self.kwargs["schema"], self.kwargs["descriptive_name"], self.kwargs["table_name"],))
+        ctx['backlink'] = reverse("datasets:add_table:data-types", args=(self.kwargs["pk"], self.kwargs["schema"], self.kwargs["descriptive_name"], self.kwargs["table_name"], self.kwargs["file_name"],))
+        if "execution_date" in self.request.GET and "task_name" in self.request.GET:
+            ctx["error_message_template"] = get_task_error_message_template(
+                self.request.GET["execution_date"], self.request.GET["task_name"]
+            )
+        return ctx

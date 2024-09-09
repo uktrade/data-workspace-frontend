@@ -2,6 +2,7 @@ from django.urls import path
 
 from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.datasets.add_table.views import (
+    AddTableFailedView,
     AddTableSuccessView,
     AddTableView,
     AddTableAppendingToTableView,
@@ -83,5 +84,10 @@ urlpatterns = [
         "success",
         login_required(AddTableSuccessView.as_view()),
         name="add-table-success",
+    ),
+    path(
+        "failed",
+        login_required(AddTableFailedView.as_view()),
+        name="create-table-failed",
     ),
 ]
