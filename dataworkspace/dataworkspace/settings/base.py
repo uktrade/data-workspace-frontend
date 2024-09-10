@@ -464,8 +464,7 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
         },
         "self_certify_renewal_email_notification": {
             "task": "dataworkspace.apps.applications.utils.self_certify_renewal_email_notification",
-            # "schedule": crontab(hour=4, minute=0),
-            "schedule": crontab(minute="*/60"), #remove this on release
+            "schedule": crontab(hour=4, minute=0),
             "args": (),
         },
     }
