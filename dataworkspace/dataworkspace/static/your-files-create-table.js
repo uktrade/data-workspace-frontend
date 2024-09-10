@@ -10,11 +10,6 @@ function buildFailureUrl(failureRedirectUrl, taskName) {
 }
 
 function pollForDagStateChange(taskStatusUrl, successRedirectUrl, failureRedirectUrl, taskName) {
-  console.log('taskStatusUrl')
-  console.log('successRedirectUrl', successRedirectUrl)
-  console.log('failureRedirectUrl', failureRedirectUrl)
-  console.log('taskName', taskName)
-
   var xhr = new XMLHttpRequest();
   xhr.open('GET', taskStatusUrl);
   xhr.onreadystatechange = function() {

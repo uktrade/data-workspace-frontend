@@ -340,6 +340,7 @@ class AddTableDataTypesView(UploadCSVView):
             )
 
         params = {
+            "descriptive_name": self.kwargs["descriptive_name"],
             "filename": self.kwargs["file_name"],
             "schema": self.kwargs["schema"],
             "table_name": self.kwargs["table_name"],
@@ -377,6 +378,7 @@ class BaseAddTableTemplateView(RequiredParameterGetRequestMixin, TemplateView):
         "schema",
         "table_name",
         "execution_date",
+        "descriptive_name",
     ]
     steps = 5
     step: int
@@ -403,6 +405,7 @@ class BaseAddTableStepView(BaseAddTableTemplateView):
             {
                 "task_name": self.task_name,
                 "next_step": f"{reverse(self.next_step_url_name, args=(self.kwargs['pk'],))}?{urlencode(query_params)}",
+                "failure_url": f"{reverse('datasets:add_table:create-table-failed', args=(self.kwargs['pk'],))}?{urlencode(query_params)}",
             }
         )
         return context
@@ -520,6 +523,7 @@ class AddTableSuccessView(BaseAddTableTemplateView):
         )
         return context
 
+
 class AddTableFailedView(BaseAddTableTemplateView):
     next_step_url_name = "manage-source-table"
     step = 5
@@ -527,8 +531,26 @@ class AddTableFailedView(BaseAddTableTemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['reupload_csv'] = reverse("datasets:add_table:upload-csv", args=(self.kwargs["pk"], self.kwargs["schema"], self.kwargs["descriptive_name"], self.kwargs["table_name"],))
-        ctx['backlink'] = reverse("datasets:add_table:data-types", args=(self.kwargs["pk"], self.kwargs["schema"], self.kwargs["descriptive_name"], self.kwargs["table_name"], self.kwargs["file_name"],))
+        query_params = self._get_query_parameters()
+        ctx["next_step"] = reverse(
+            "datasets:add_table:upload-csv",
+            args=(
+                self.kwargs["pk"],
+                query_params["schema"],
+                query_params["descriptive_name"],
+                query_params["table_name"],
+            ),
+        )
+        ctx["backlink"] = reverse(
+            "datasets:add_table:data-types",
+            args=(
+                self.kwargs["pk"],
+                query_params["schema"],
+                query_params["descriptive_name"],
+                query_params["table_name"],
+                query_params["filename"],
+            ),
+        )
         if "execution_date" in self.request.GET and "task_name" in self.request.GET:
             ctx["error_message_template"] = get_task_error_message_template(
                 self.request.GET["execution_date"], self.request.GET["task_name"]
