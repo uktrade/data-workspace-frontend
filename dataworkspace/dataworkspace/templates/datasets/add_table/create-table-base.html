@@ -1,0 +1,6 @@
+{% extends '_main.html' %}
+{% load static %}
+{% block footer_scripts %}
+  {{ block.super }}
+  <script nonce="{{ request.csp_nonce }}" src="{% static 'your-files-create-table.js' %}"></script>
+{% endblock footer_scripts %}

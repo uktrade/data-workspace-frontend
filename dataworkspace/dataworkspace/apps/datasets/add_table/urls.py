@@ -2,12 +2,19 @@ from django.urls import path
 
 from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.datasets.add_table.views import (
+    AddTableSuccessView,
     AddTableView,
+    AddTableAppendingToTableView,
+    AddTableCreatingTableView,
+    AddTableIngestingView,
+    AddTableRenamingTableView,
+    AddTableValidatingView,
     TableNameView,
     TableSchemaView,
     ClassificationCheckView,
     DescriptiveNameView,
     UploadCSVView,
+    AddTableDataTypesView,
 )
 
 
@@ -41,5 +48,40 @@ urlpatterns = [
         "<str:schema>/<str:descriptive_name>/<str:table_name>/upload-csv",
         login_required(UploadCSVView.as_view()),
         name="upload-csv",
+    ),
+    path(
+        "<str:schema>/<str:descriptive_name>/<str:table_name>/<str:file_name>/data-types",
+        login_required(AddTableDataTypesView.as_view()),
+        name="data-types",
+    ),
+    path(
+        "validating",
+        login_required(AddTableValidatingView.as_view()),
+        name="add-table-validating",
+    ),
+    path(
+        "creating-table",
+        login_required(AddTableCreatingTableView.as_view()),
+        name="add-table-creating-table",
+    ),
+    path(
+        "ingesting",
+        login_required(AddTableIngestingView.as_view()),
+        name="add-table-ingesting",
+    ),
+    path(
+        "renaming-table",
+        login_required(AddTableRenamingTableView.as_view()),
+        name="add-table-renaming-table",
+    ),
+    path(
+        "appending",
+        login_required(AddTableAppendingToTableView.as_view()),
+        name="add-table-appending",
+    ),
+    path(
+        "success",
+        login_required(AddTableSuccessView.as_view()),
+        name="add-table-success",
     ),
 ]

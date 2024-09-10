@@ -1,9 +1,12 @@
+from datetime import datetime
 from unittest import TestCase
+from freezegun import freeze_time
 import pytest
 from bs4 import BeautifulSoup
 from django.urls import reverse
 from django.test import Client
 from django.core.files.uploadedfile import SimpleUploadedFile
+from mock import mock
 from dataworkspace.tests import factories
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.tests.common import get_http_sso_data
@@ -485,7 +488,6 @@ class TestUploadCSVPage(TestCase):
                 },
             ),
         )
-
         soup = BeautifulSoup(response.content.decode(response.charset))
         title_text = soup.find("title").get_text(strip=True)
         backlink = soup.find("a", {"class": "govuk-back-link"}).get("href")
@@ -573,3 +575,199 @@ class TestUploadCSVPage(TestCase):
         )
         assert response.status_code == 200
         assert "Select a CSV" in error_message_text
+
+
+@pytest.mark.django_db
+class TestDataTypesView(TestCase):
+    def setUp(self):
+        self.user = factories.UserFactory.create(is_superuser=False)
+        self.client = Client(**get_http_sso_data(self.user))
+        self.dataset = factories.MasterDataSetFactory.create(
+            published=True,
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
+            information_asset_owner=self.user,
+            government_security_classification=2,
+        )
+        self.source = factories.SourceTableFactory.create(
+            dataset=self.dataset, schema="test", table="table_one", name="table_one"
+        )
+        self.descriptive_name = "my_table"
+        self.table_name = "my_table_name"
+
+    @freeze_time("2021-01-01 01:01:01")
+    @pytest.mark.django_db
+    @mock.patch("dataworkspace.apps.datasets.add_table.views.trigger_dataflow_dag")
+    @mock.patch("dataworkspace.apps.datasets.add_table.views.copy_file_to_uploads_bucket")
+    @mock.patch("dataworkspace.apps.datasets.add_table.views.get_s3_prefix")
+    @mock.patch("dataworkspace.apps.datasets.add_table.views.get_s3_csv_file_info")
+    def test_data_types_page(
+        self,
+        mock_get_s3_csv_file_info,
+        mock_get_s3_prefix,
+        mock_copy_file,
+        mock_trigger_dag,
+    ):
+        mock_get_s3_prefix.return_value = "user/federated/abc"
+        mock_trigger_dag.return_value = {"execution_date": datetime.now()}
+        file_info_return_value = {
+            "encoding": "utf-8-sig",
+            "column_definitions": [
+                {
+                    "header_name": "ID",
+                    "column_name": "id",
+                    "data_type": "text",
+                    "sample_data": ["a", "b", "c"],
+                },
+                {
+                    "header_name": "name",
+                    "column_name": "name",
+                    "data_type": "text",
+                    "sample_data": ["d", "e", "f"],
+                },
+            ],
+        }
+        mock_get_s3_csv_file_info.return_value = file_info_return_value
+        response = self.client.post(
+            reverse(
+                "datasets:add_table:data-types",
+                kwargs={
+                    "pk": self.dataset.id,
+                    "schema": self.source.schema,
+                    "descriptive_name": self.descriptive_name,
+                    "table_name": self.table_name,
+                    "file_name": "allowed_chars-.csv",
+                },
+            ),
+        )
+        assert response.status_code == 200
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        title_text = soup.find("title").get_text(strip=True)
+        backlink = soup.find("a", {"class": "govuk-back-link"}).get("href")
+        header_one_text = soup.find("h1", class_="govuk-heading-xl").get_text(strip=True)
+        header_two_text = soup.find("h2", class_="govuk-heading-l").get_text(strip=True)
+        paragraph_one_text = soup.find("p").get_text(strip=True)
+        assert f"/datasets/{self.dataset.id}" in backlink
+        assert f"Add Table - {self.dataset.name} - Data Workspace" in title_text
+        assert "Data Types" in header_one_text
+        assert f"Choose data types for {self.table_name}" in header_two_text
+        assert (
+            "Data types affect the efficiency of queries. Selecting the correct data type means quicker queries and cheaper data."
+            in paragraph_one_text
+        )
+
+    @freeze_time("2021-01-01 01:01:01")
+    @pytest.mark.django_db
+    @mock.patch("dataworkspace.apps.datasets.add_table.views.trigger_dataflow_dag")
+    @mock.patch("dataworkspace.apps.datasets.add_table.views.copy_file_to_uploads_bucket")
+    @mock.patch("dataworkspace.apps.datasets.add_table.views.get_s3_prefix")
+    @mock.patch("dataworkspace.apps.datasets.add_table.views.get_s3_csv_file_info")
+    def test_data_types_page_triggers_the_dag(
+        self,
+        mock_get_s3_csv_file_info,
+        mock_get_s3_prefix,
+        mock_copy_file,
+        mock_trigger_dag,
+    ):
+        mock_get_s3_prefix.return_value = "user/federated/abc"
+        mock_trigger_dag.return_value = {"execution_date": datetime.now()}
+        file_info_return_value = {
+            "encoding": "utf-8-sig",
+            "column_definitions": [
+                {
+                    "header_name": "ID",
+                    "column_name": "id",
+                    "data_type": "text",
+                    "sample_data": ["a", "b", "c"],
+                },
+                {
+                    "header_name": "name",
+                    "column_name": "name",
+                    "data_type": "text",
+                    "sample_data": ["d", "e", "f"],
+                },
+            ],
+        }
+        mock_get_s3_csv_file_info.return_value = file_info_return_value
+        response = self.client.post(
+            reverse(
+                "datasets:add_table:data-types",
+                kwargs={
+                    "pk": self.dataset.id,
+                    "schema": self.source.schema,
+                    "descriptive_name": self.descriptive_name,
+                    "table_name": self.table_name,
+                    "file_name": "allowed_chars-.csv",
+                },
+            ),
+            data={
+                "path": "user/federated/abc/allowed_chars-.csv",
+                "id": "text",
+                "name": "text",
+                "auto_generate_id_column": True,
+            },
+        )
+        assert response.status_code == 302
+        assert (
+            response["Location"]
+            == reverse(
+                "datasets:add_table:add-table-validating",
+                args=(self.dataset.id,),
+            )
+            + f"?filename=allowed_chars-.csv&schema={self.source.schema}&table_name={self.table_name}&"
+            f"execution_date=2021-01-01+01%3A01%3A01"
+        )
+        mock_copy_file.assert_called_with(
+            "user/federated/abc/allowed_chars-.csv",
+            "data-flow-imports/user/federated/abc/allowed_chars-.csv",
+        )
+        mock_trigger_dag.assert_called_with(
+            {
+                "file_path": "data-flow-imports/user/federated/abc/allowed_chars-.csv",
+                "schema_name": self.source.schema,
+                "descriptive_name": self.descriptive_name,
+                "table_name": self.table_name,
+                "column_definitions": file_info_return_value["column_definitions"],
+                "encoding": file_info_return_value["encoding"],
+                "auto_generate_id_column": True,
+            },
+            "DataWorkspaceS3ImportPipeline",
+            f"test-{self.table_name}-2021-01-01T01:01:01",
+        )
+
+
+@pytest.mark.django_db
+class TestAddTableConfirmation(TestCase):
+    def setUp(self):
+        self.user = factories.UserFactory.create(is_superuser=False)
+        self.client = Client(**get_http_sso_data(self.user))
+        self.dataset = factories.MasterDataSetFactory.create(
+            published=True,
+            user_access_type=UserAccessType.REQUIRES_AUTHORIZATION,
+            information_asset_owner=self.user,
+            government_security_classification=2,
+        )
+        self.source = factories.SourceTableFactory.create(
+            dataset=self.dataset, schema="test", table="my_table_name"
+        )
+        self.descriptive_name = "my_table"
+        self.table_name = "my_table_name"
+
+    def test_confirmation_page(self):
+        response = self.client.get(
+            reverse("datasets:add_table:add-table-success", kwargs={"pk": self.dataset.id})
+            + f"?filename=allowed_chars-.csv&schema={self.source.schema}&table_name={self.table_name}&"
+            f"execution_date=2021-01-01+01%3A01%3A01",
+        )
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        panel_header_one = soup.find("h1", {"class": "govuk-panel__title"}).contents[0]
+        panel_body = soup.find("div", {"class": "govuk-panel__body"}).contents[0]
+        back_link = soup.find("a", {"id": "backlink"}).attrs["href"]
+        edit_link = soup.find("a", {"id": "editlink"}).attrs["href"]
+        preview_link = soup.find("a", {"id": "previewlink"}).attrs["href"]
+        dataset_id = str(self.dataset.id)
+        assert response.status_code == 200
+        assert "Table added" == panel_header_one
+        assert self.source.name in panel_body
+        assert dataset_id in back_link
+        assert dataset_id in edit_link
+        assert dataset_id in preview_link

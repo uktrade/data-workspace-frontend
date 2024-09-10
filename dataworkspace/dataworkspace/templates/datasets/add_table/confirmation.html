@@ -1,0 +1,45 @@
+{% extends '_main.html' %} {% block page_title %} Add Table - {{ model.name }} -
+{{ block.super }}{% endblock %} {% if backlink %} {% block go_back %}
+<a class="govuk-back-link" href="{{ backlink }}" id="backlink">Back</a>
+{% endblock %} {% endif %} {% block content %}
+<div class="govuk-panel govuk-panel--confirmation">
+  <h1 class="govuk-panel__title">Table added</h1>
+  <div class="govuk-panel__body">
+    Your table name is<br /><strong>{{ model_name }}</strong>
+  </div>
+</div>
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <h1 class="govuk-heading-l">Next Steps</h1>
+    <h2 class="govuk-heading-m">Update the catalogue item description</h2>
+    <p class="govuk-body">
+      You should
+      <a class="govuk-link" href="{{ edit_link }}" id="editlink"
+        >update the catalogue description</a
+      >
+      if your new table:
+    </p>
+    <ul class="govuk-list govuk-list--bullet">
+      <li>adds a new use case</li>
+      <li>has new keywords or covers a new area</li>
+      <li>has acronyms or information that cover a new area</li>
+    </ul>
+    <h2 class="govuk-heading-m">View your data</h2>
+    <p class="govuk-body">Your data has now been converted into a table.</p>
+    <a class="govuk-link" href="{{ preview_link }}" id="previewlink">
+      <button class="govuk-button" data-module="govuk-button" type="submit">
+        Preview data
+      </button>
+    </a>
+    <div class="govuk-grid-row">
+      <div class="govuk-grid-column-two-thirds">
+        <p class="govuk-body">
+          <a class="govuk-link" href="{{ backlink }}" id="backlink"
+            >Return to catalogue item</a
+          >
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
