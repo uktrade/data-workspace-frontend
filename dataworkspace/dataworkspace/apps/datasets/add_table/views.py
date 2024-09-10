@@ -1,7 +1,7 @@
 import logging
-from datetime import datetime
 import os
 import uuid
+from datetime import datetime
 from urllib.parse import urlencode
 
 from aiohttp import ClientError
@@ -224,6 +224,7 @@ class UploadCSVView(FormView):
         client = get_s3_client()
         file_name = f"{csv_file.name}!{uuid.uuid4()}"
         key = self.get_file_upload_key(file_name, self.kwargs["pk"])
+        key = self.get_file_upload_key(file_name, self.kwargs["pk"])
         csv_file.seek(0)
         try:
             client.put_object(
@@ -246,6 +247,7 @@ class UploadCSVView(FormView):
                     self.kwargs["schema"],
                     self.kwargs["descriptive_name"],
                     self.kwargs["table_name"],
+                    file_name,
                     file_name,
                 ),
             )

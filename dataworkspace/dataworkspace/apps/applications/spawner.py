@@ -91,9 +91,13 @@ def spawn(
         valid_for=datetime.timedelta(days=31),
     )
 
-    arangodb_credentials = new_private_arangodb_credentials(
-        db_user,
-        user,
+    arangodb_credentials = (
+        new_private_arangodb_credentials(
+            db_user,
+            user,
+        )
+        if application_instance.application_template.application_type == "TOOL"
+        else {}
     )
 
     mlflow_authorised_hosts, sub = (
@@ -323,23 +327,27 @@ class FargateSpawner:
             logger.info("Starting %s", cmd)
 
             user_email = user.email
+
+            if application_instance.application_template.application_type == "TOOL":
+                role_arn, s3_prefixes = create_tools_access_iam_role(
+                    user.id, user_email, user_efs_access_point_id
+                )
+                s3_env = {
+                    "S3_PREFIX": s3_prefixes["home"],
+                    "S3_REGION": s3_region,
+                    "S3_HOST": s3_host,
+                    "S3_BUCKET": s3_bucket,
+                    **{
+                        f"S3_PREFIX_TEAM_{clean_db_identifier(name).upper()}": prefix
+                        for name, prefix in s3_prefixes.items()
+                        if name != "home"
+                    },
+                }
+            else:
+                role_arn = None
+                s3_env = {}
+
             close_admin_db_connection_if_not_in_atomic_block()
-
-            role_arn, s3_prefixes = create_tools_access_iam_role(
-                user.id, user_email, user_efs_access_point_id
-            )
-
-            s3_env = {
-                "S3_PREFIX": s3_prefixes["home"],
-                "S3_REGION": s3_region,
-                "S3_HOST": s3_host,
-                "S3_BUCKET": s3_bucket,
-                **{
-                    f"S3_PREFIX_TEAM_{clean_db_identifier(name).upper()}": prefix
-                    for name, prefix in s3_prefixes.items()
-                    if name != "home"
-                },
-            }
 
             mlflow_env = {}
             if mlflow_authorised_hosts:
@@ -732,7 +740,7 @@ def _fargate_new_task_definition(
         }
 
     register_tag_response = client.register_task_definition(
-        taskRoleArn=role_arn,
+        **({"taskRoleArn": role_arn} if role_arn is not None else {}),
         **{
             key: value
             for key, value in describe_task_response["taskDefinition"].items()
@@ -824,8 +832,8 @@ def _fargate_task_run(
     return client.run_task(
         cluster=cluster_name,
         taskDefinition=definition_arn,
-        overrides={
-            "taskRoleArn": role_arn,
+        overrides=({"taskRoleArn": role_arn} if role_arn is not None else {})
+        | {
             "cpu": cpu,
             "memory": memory,
             "containerOverrides": [

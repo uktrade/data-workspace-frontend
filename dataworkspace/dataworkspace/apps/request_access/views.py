@@ -300,7 +300,6 @@ class SelfCertifyView(FormView):
 
         permission_codenames = [
             "start_all_applications",
-            "develop_visualisations",
             "access_quicksight",
         ]
         content_type = ContentType.objects.get_for_model(ApplicationInstance)

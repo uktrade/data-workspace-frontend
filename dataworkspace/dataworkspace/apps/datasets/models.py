@@ -2925,7 +2925,9 @@ class Pipeline(TimeStampedUserModel):
         choices=PipelineScheduleType.choices, default=PipelineScheduleType.DAILY
     )
     data_flow_platform = models.CharField(
-        max_length=255, choices=DataFlowPlatform.choices, default=DataFlowPlatform.GOV_PAAS
+        max_length=255,
+        choices=DataFlowPlatform.choices,
+        default=DataFlowPlatform.DATA_WORKSPACE_AWS,
     )
 
     class Meta:

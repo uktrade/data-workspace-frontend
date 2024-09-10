@@ -1371,7 +1371,6 @@ def _process_staff_sso_file(
                         check_tools_access_if_user_exists=True,
                     )
 
-                    seen_user_ids.append(user_id)
                 except IntegrityError:
                     logger.exception("sync_s3_sso_users: Failed to create user record")
             else:
@@ -1380,6 +1379,8 @@ def _process_staff_sso_file(
                     user_id,
                     published_date,
                 )
+
+            seen_user_ids.append(user_id)
 
     return seen_user_ids, new_last_processed_datetime
 
@@ -1418,15 +1419,24 @@ def _do_sync_s3_sso_users():
         )
         new_last_processed = seen_result[1]
         if len(seen_result[0]) > 0:
-            unseen_user_profiles = Profile.objects.exclude(
-                user__username__in=seen_result[0]
-            ).filter(sso_status="active")
-
-            logger.info(
-                "sync_s3_sso_users: %s active users exist locally but not in SSO. Marking as inactive",
-                unseen_user_profiles.count(),
+            unseen_user_profiles = (
+                Profile.objects.exclude(user__username__in=seen_result[0])
+                .filter(sso_status="active")
+                .select_related("user")
             )
-            unseen_user_profiles.update(sso_status="inactive")
+            logger.info(
+                "sync_s3_sso_users: active users exist locally but not in SSO %s",
+                list(unseen_user_profiles.values_list("user__id", flat=True)),
+            )
+            if settings.S3_SSO_IMPORT_ENABLED:
+                logger.info(
+                    "sync_s3_sso_users: Marking users as inactive",
+                )
+                unseen_user_profiles.update(sso_status="inactive")
+            else:
+                logger.info(
+                    "sync_s3_sso_users: S3_SSO_IMPORT_ENABLED is FALSE, no changes to active user",
+                )
 
         logger.info("sync_s3_sso_users: New last_published date for cache %s", new_last_processed)
 
@@ -1435,10 +1445,12 @@ def _do_sync_s3_sso_users():
         logger.info("sync_s3_sso_users: Deleting keys %s", delete_keys)
         bucket.delete_objects(Delete={"Objects": delete_keys})
 
-        # At the end of the loop set the cache
-        cache.set("s3_sso_sync_last_published", new_last_processed)
     else:
         logger.info("sync_s3_sso_users: No files to process")
+
+    # Always reset the cache
+    logger.info("sync_s3_sso_users: New last_published date for cache %s", new_last_processed)
+    cache.set("s3_sso_sync_last_published", new_last_processed, timeout=30 * 60)  # 30 minutes
 
 
 def fetch_visualisation_log_events(log_group, log_stream):
