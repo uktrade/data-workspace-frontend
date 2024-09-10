@@ -541,16 +541,6 @@ class AddTableFailedView(BaseAddTableTemplateView):
                 query_params["table_name"],
             ),
         )
-        ctx["backlink"] = reverse(
-            "datasets:add_table:data-types",
-            args=(
-                self.kwargs["pk"],
-                query_params["schema"],
-                query_params["descriptive_name"],
-                query_params["table_name"],
-                query_params["filename"],
-            ),
-        )
         if "execution_date" in self.request.GET and "task_name" in self.request.GET:
             ctx["error_message_template"] = get_task_error_message_template(
                 self.request.GET["execution_date"], self.request.GET["task_name"]
