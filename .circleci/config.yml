@@ -85,7 +85,7 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - v3.9-python-{{ checksum "requirements-dev.txt" }}-v4
+            - v3.9-python-{{ checksum "requirements-dev.txt" }}-v5
       - run:
           name: Install requirements
           command: |
@@ -93,7 +93,7 @@ jobs:
             . venv/bin/activate
             pip install -r requirements-dev.txt
       - save_cache:
-          key: v3.9-python-{{ checksum "requirements-dev.txt" }}-v4
+          key: v3.9-python-{{ checksum "requirements-dev.txt" }}-v5
           paths:
             - "venv"
       - run:
