@@ -2225,7 +2225,7 @@ def _self_certify_renewal_email_notification():
                 user.email,
             )
 
-    for user_profile in Profile.objects.filter(is_renewal_email_sent = False).select_related("user"):
+    for user_profile in Profile.objects.filter(is_renewal_email_sent=False).select_related("user"):
         if is_tools_cert_renewal_due(user_profile.tools_certification_date):
             send_notify_email(user_profile.user, user_profile)
     logger.info("_self_certify_renewal_email_notification: Stop")
