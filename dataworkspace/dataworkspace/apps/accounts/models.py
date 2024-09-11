@@ -6,7 +6,6 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
-from sqlalchemy import true
 from dataworkspace.apps.core.utils import USER_SCHEMA_STEM, stable_identification_suffix
 from dataworkspace.apps.core.models import TimeStampedModel
 from dataworkspace.apps.eventlog.models import EventLog
