@@ -78,4 +78,10 @@ export const fetchYourRecentTools = async () => {
   >(`/${API_BASE_URL}/recent_tools?page_size=2`, transformRecentToolsResponse);
 };
 
+export const fetchProfileHomepageSettings = async () => {
+  const response = await fetch(`/${API_BASE_URL}/homepage-settings`);
+  const data = await response.formData();
+  console.log(data);
+}
+
 export { patchFeedback, postFeedback } from './inline-feedback';

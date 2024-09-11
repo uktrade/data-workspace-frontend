@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { FetchDataContainer, InnerContainer } from '../../components';
 import { GREY_4 } from '../../constants';
 import {
+  fetchProfileHomepageSettings,
   fetchRecentCollections,
   fetchRecentItems,
   fetchYourBookmarks,
@@ -45,6 +46,9 @@ const HomePage = () => (
     <YourSection>
       <InnerContainer>
         <div>
+          <FetchDataContainer fetchApi={() => fetchProfileHomepageSettings()}>
+            {(data) => <>{console.log(data)}</>}
+          </FetchDataContainer>
           <FetchDataContainer fetchApi={() => fetchRecentItems()}>
             {(data) => <RecentItems items={data} />}
           </FetchDataContainer>
