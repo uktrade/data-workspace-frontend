@@ -707,13 +707,14 @@ class TestDataTypesView(TestCase):
             },
         )
         assert response.status_code == 302
+        print(response["Location"])
         assert (
             response["Location"]
             == reverse(
                 "datasets:add_table:add-table-validating",
                 args=(self.dataset.id,),
             )
-            + f"?filename=allowed_chars-.csv&schema={self.source.schema}&table_name={self.table_name}&"
+            + f"?descriptive_name={self.descriptive_name}&filename=allowed_chars-.csv&schema={self.source.schema}&table_name={self.table_name}&"
             f"execution_date=2021-01-01+01%3A01%3A01"
         )
         mock_copy_file.assert_called_with(
@@ -755,7 +756,7 @@ class TestAddTableConfirmation(TestCase):
     def test_confirmation_page(self):
         response = self.client.get(
             reverse("datasets:add_table:add-table-success", kwargs={"pk": self.dataset.id})
-            + f"?filename=allowed_chars-.csv&schema={self.source.schema}&table_name={self.table_name}&"
+            + f"?descriptive_name={self.descriptive_name}&filename=allowed_chars-.csv&schema={self.source.schema}&table_name={self.table_name}&"
             f"execution_date=2021-01-01+01%3A01%3A01",
         )
         soup = BeautifulSoup(response.content.decode(response.charset))
