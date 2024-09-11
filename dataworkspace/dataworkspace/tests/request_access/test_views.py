@@ -552,6 +552,7 @@ class TestSelfCertify(TestCase):
             "certificate_date_2": self.certificate_date.year,
             "declaration": True,
         }
+        self.is_renewal_email_sent = True
 
     def test_user_sees_self_certify_form_when_email_is_allowed_to_self_certify(self):
         response = self.client.get(self.url)
@@ -573,6 +574,14 @@ class TestSelfCertify(TestCase):
         assert self.user.profile.tools_certification_date == self.certificate_date
         assert response.status_code == 302
 
+    def test_renewal_notification_gets_reset_to_default(self):
+        response = self.client.post(self.url, self.form_data)
+        self.user.refresh_from_db()
+
+        assert self.user.profile.tools_certification_date == self.certificate_date
+        assert self.user.profile.is_renewal_email_sent is False
+        assert response.status_code == 302
+
     def test_permissions_get_set_for_user(self):
         response = self.client.post(self.url, self.form_data)
         self.user.refresh_from_db()
@@ -591,7 +600,6 @@ class TestSelfCertify(TestCase):
         assert response.url == "/tools?access=true"
 
     def test_self_certify_errors_for_invalid_date_format(self):
-
         self.form_data = {
             "certificate_date_0": "40",
             "certificate_date_1": "14",
@@ -612,7 +620,6 @@ class TestSelfCertify(TestCase):
 
 @pytest.mark.django_db
 class TestStataAccessJourney(TestCase):
-
     def setUp(self):
         self.user = factories.UserFactory.create(
             is_superuser=False, email="valid-domain@trade.gov.uk"

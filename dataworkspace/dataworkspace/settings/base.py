@@ -328,6 +328,7 @@ NOTIFY_COLLECTIONS_NOTIFICATION_USER_ADDED_ID = "679046c0-dcc2-43fc-9cae-d6f817c
 NOTIFY_COLLECTIONS_NOTIFICATION_USER_REMOVED_ID = "a6c40ab6-eaa5-4f60-93da-92525da3fa54"
 
 NOTIFY_COLLECTIONS_USER_REQUESTED_ACCESS = "935a456d-c724-4c68-9756-fceeefa4704e"
+NOTIFY_SELF_CERTIFY_RENEWAL_TEMPLATE_ID = "0262af18-ab80-4028-95f8-063d096d4a81"
 
 CELERY_BROKER_URL = env["REDIS_URL"]
 CELERY_RESULT_BACKEND = "django-db"
@@ -459,6 +460,11 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
         "your-files-stats-collection": {
             "task": "dataworkspace.apps.your_files.tasks.collect_your_files_stats_all_users",
             "schedule": crontab(minute="30"),
+            "args": (),
+        },
+        "self_certify_renewal_email_notification": {
+            "task": "dataworkspace.apps.applications.utils.self_certify_renewal_email_notification",
+            "schedule": crontab(hour=4, minute=0),
             "args": (),
         },
     }

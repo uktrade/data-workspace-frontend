@@ -33,6 +33,7 @@ def send_email(template_id, email_address, personalisation=None, reference=None)
     # pylint: disable=unsupported-membership-test
     if "id" in response:
         # pylint: disable=unsubscriptable-object
-        return response["id"]
+        respond_id = response["id"]
+        return respond_id
     else:
         raise EmailSendFailureException(response)

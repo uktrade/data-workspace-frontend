@@ -64,6 +64,7 @@ from dataworkspace.apps.core.utils import (
     new_private_database_credentials,
     postgres_user,
     has_tools_cert_expired,
+    is_tools_cert_renewal_due,
 )
 from dataworkspace.apps.applications.gitlab import gitlab_has_developer_access
 from dataworkspace.apps.datasets.constants import UserAccessType
@@ -74,6 +75,7 @@ from dataworkspace.apps.datasets.models import (
 from dataworkspace.cel import celery_app
 from dataworkspace.datasets_db import extract_queried_tables_from_sql_query
 from dataworkspace.apps.core.boto3_client import get_s3_resource, get_sts_client
+from dataworkspace.notify import EmailSendFailureException, send_email
 
 
 logger = logging.getLogger("app")
@@ -2184,3 +2186,46 @@ def _remove_tools_access_for_users_with_expired_cert():
                 remove_tools_access(user)
 
     logger.info("_remove_tools_access: End")
+
+
+@celery_app.task()
+@close_all_connections_if_not_in_atomic_block
+def self_certify_renewal_email_notification():
+    try:
+        with cache.lock(
+            "_self_certify_renewal_email_notification", blocking_timeout=0, timeout=1800
+        ):
+            _self_certify_renewal_email_notification()
+    except redis.exceptions.LockNotOwnedError:
+        logger.info("send_notify_email: Lock not owned - running on another instance?")
+    except redis.exceptions.LockError:
+        logger.info("send_notify_email: Unable to grab lock - running on another instance?")
+
+
+def _self_certify_renewal_email_notification():
+    logger.info("_self_certify_renewal_email_notification: Start")
+
+    def send_notify_email(user, user_profile):
+        logger.info(
+            "send_notification_emails: Sending notification for self certify renewal for  %s",
+            user.email,
+        )
+        try:
+            send_email(
+                template_id=settings.NOTIFY_SELF_CERTIFY_RENEWAL_TEMPLATE_ID,
+                email_address=user.email,
+            )
+        except EmailSendFailureException:
+            logger.exception("Failed to send email")
+        else:
+            user_profile.is_renewal_email_sent = True
+            user_profile.save()
+            logger.info(
+                "send_notification_emails: is_renewal_email_sent for %s is set",
+                user.email,
+            )
+
+    for user_profile in Profile.objects.filter(is_renewal_email_sent=False).select_related("user"):
+        if is_tools_cert_renewal_due(user_profile.tools_certification_date):
+            send_notify_email(user_profile.user, user_profile)
+    logger.info("_self_certify_renewal_email_notification: Stop")
