@@ -6,6 +6,7 @@ from dataworkspace.apps.datasets.models import (
     SourceTable,
     ToolQueryAuditLog,
     ToolQueryAuditLogTable,
+    CustomDatasetQuery,
 )
 
 _PURPOSES = {
@@ -106,4 +107,18 @@ class ToolQueryAuditLogSerializer(serializers.ModelSerializer):
             "rolename",
             "timestamp",
             "tables",
+        ]
+
+
+class DataCutSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = CustomDatasetQuery
+        fields = [
+            "id",
+            "name",
+            "dataset",
+            "created_date",
+            "modified_date",
+            "query",
         ]
