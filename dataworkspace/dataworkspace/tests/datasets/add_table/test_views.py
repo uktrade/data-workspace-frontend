@@ -707,7 +707,6 @@ class TestDataTypesView(TestCase):
             },
         )
         assert response.status_code == 302
-        print(response["Location"])
         assert (
             response["Location"]
             == reverse(
