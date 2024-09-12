@@ -405,8 +405,7 @@ class BaseAddTableStepView(BaseAddTableTemplateView):
             {
                 "task_name": self.task_name,
                 "next_step": f"{reverse(self.next_step_url_name, args=(self.kwargs['pk'],))}?{urlencode(query_params)}",
-                "failure_url": f"{reverse('datasets:add_table:create-table-failed', args=(self.kwargs['pk'],))}?\
-                {urlencode(query_params)}",
+                "failure_url": f"{reverse('datasets:add_table:create-table-failed', args=(self.kwargs['pk'],))}?{urlencode(query_params)}",
             }
         )
         return context
