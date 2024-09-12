@@ -5,6 +5,7 @@ import json
 import os
 import random
 import string
+from unittest.mock import call, patch
 
 import botocore
 from django.conf import settings
@@ -13,6 +14,7 @@ from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.test import override_settings
+
 
 from dateutil import parser
 from dateutil.tz import tzlocal
@@ -23,7 +25,7 @@ import mock
 import pytest
 import redis
 
-
+from dataworkspace.apps.accounts.models import Profile
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.applications.utils import (
     _do_sync_tool_query_logs,
@@ -37,7 +39,9 @@ from dataworkspace.apps.applications.utils import (
     _get_seen_ids_and_last_processed,
     _do_get_staff_sso_s3_object_summaries,
     remove_tools_access_for_users_with_expired_cert,
+    self_certify_renewal_email_notification,
 )
+
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import ToolQueryAuditLog, ToolQueryAuditLogTable
 from dataworkspace.tests import factories
@@ -435,7 +439,6 @@ class TestSyncQuickSightPermissions:
 
 
 class TestSyncS3SSOUsers:
-
     @override_settings(
         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
     )
@@ -444,7 +447,6 @@ class TestSyncS3SSOUsers:
         with mock.patch(
             "dataworkspace.apps.applications.utils.get_s3_resource"
         ) as mock_get_s3_resource:
-
             _do_sync_s3_sso_users()
             mock_get_s3_resource().Bucket().delete_objects.assert_not_called()
 
@@ -493,7 +495,6 @@ class TestSyncS3SSOUsers:
             "dataworkspace.apps.applications.utils._get_seen_ids_and_last_processed",
             return_value=[[1], 1],
         ) as mock_get_seen_ids_and_last_processed:
-
             cache.delete("s3_sso_sync_last_published")
             mock_get_s3_files.return_value = [
                 mock.MagicMock(
@@ -700,7 +701,6 @@ class TestSyncS3SSOUsers:
     @override_settings(S3_SSO_IMPORT_ENABLED=False)
     @pytest.mark.django_db
     def test_process_staff_sso_with_s3_import_disabled_doesnt_add_user(self, sso_user_factory):
-
         user_1 = sso_user_factory()
         user_2 = sso_user_factory()
         m_open = mock.mock_open(read_data="\n".join([json.dumps(user_1), json.dumps(user_2)]))
@@ -725,7 +725,6 @@ class TestSyncS3SSOUsers:
     @override_settings(S3_SSO_IMPORT_ENABLED=True)
     @pytest.mark.django_db
     def test_process_staff_sso_file_without_cache_creates_all_users(self, sso_user_factory):
-
         user_1 = sso_user_factory()
         user_2 = sso_user_factory()
         m_open = mock.mock_open(read_data="\n".join([json.dumps(user_1), json.dumps(user_2)]))
@@ -816,7 +815,6 @@ class TestSyncS3SSOUsers:
     @override_settings(S3_SSO_IMPORT_ENABLED=True)
     @pytest.mark.django_db
     def test_process_staff_sso_updates_existing_users_email(self, sso_user_factory):
-
         user_1 = sso_user_factory()
 
         user = UserFactory.create(email="should_be_changed@test.com")
@@ -848,7 +846,6 @@ class TestSyncS3SSOUsers:
     @override_settings(S3_SSO_IMPORT_ENABLED=True)
     @pytest.mark.django_db
     def test_process_staff_sso_creates_role_if_user_can_access_tools(self, sso_user_factory):
-
         user_1 = sso_user_factory()
 
         can_access_tools_permission = Permission.objects.get(
@@ -894,7 +891,6 @@ class TestSyncS3SSOUsers:
     def test_process_staff_sso_doesnt_create_role_if_user_cant_access_tools(
         self, sso_user_factory
     ):
-
         user_1 = sso_user_factory()
 
         user = UserFactory.create(email=user_1["object"]["dit:emailAddress"][0])
@@ -928,7 +924,6 @@ class TestSyncS3SSOUsers:
     @override_settings(S3_SSO_IMPORT_ENABLED=True)
     @pytest.mark.django_db
     def test_process_staff_sso_doesnt_create_role_if_user_already_has_role(self, sso_user_factory):
-
         user_1 = sso_user_factory()
 
         can_access_tools_permission = Permission.objects.get(
@@ -1681,7 +1676,6 @@ class TestLongRunningQueryAlerts:
 
 
 class TestRemoveToolsAccessForUsersWithExpiredCert:
-
     permissions_codenames = (
         "start_all_applications",
         "develop_visualisations",
@@ -1748,3 +1742,72 @@ class TestRemoveToolsAccessForUsersWithExpiredCert:
             codename__in=self.permissions_codenames
         ).exists()
         assert can_start_tools is False
+
+
+class TestSelfCertifyRenewalEmailNotification:
+    total_days = 366 if calendar.isleap(datetime.date.today().year) else 365
+    year_ago_cert_date = datetime.datetime.now() - datetime.timedelta(days=total_days)
+    one_day_ago = datetime.datetime.now() - datetime.timedelta(days=1)
+
+    def setup_cert(self, user, cert_date):
+        user.profile.tools_certification_date = cert_date
+        user.profile.is_renewal_email_sent = False
+        user.save()
+
+    @pytest.mark.django_db
+    @override_settings(NOTIFY_SELF_CERTIFY_RENEWAL_TEMPLATE_ID="000000000000000000000000010")
+    @patch("dataworkspace.apps.applications.utils.send_email")
+    def test_email_is_sent(self, mock_send_email, user):
+        self.setup_cert(user, self.year_ago_cert_date)
+
+        self_certify_renewal_email_notification()
+        user_profile = (
+            Profile.objects.filter(sso_id=user.profile.sso_id).select_related("user").first()
+        )
+
+        assert mock_send_email.call_args_list == [
+            call(
+                template_id="000000000000000000000000010",
+                email_address=user.email,
+            )
+        ]
+        assert user_profile.is_renewal_email_sent is True
+
+    @pytest.mark.django_db
+    @override_settings(NOTIFY_SELF_CERTIFY_RENEWAL_TEMPLATE_ID="000000000000000000000000010")
+    @patch("dataworkspace.apps.applications.utils.send_email")
+    def test_email_is_not_sent(self, mock_send_email, user):
+        self.setup_cert(user, self.one_day_ago)
+
+        self_certify_renewal_email_notification()
+        user_profile = (
+            Profile.objects.filter(sso_id=user.profile.sso_id).select_related("user").first()
+        )
+
+        mock_send_email.assert_not_called()
+        assert user_profile.is_renewal_email_sent is False
+
+    @pytest.mark.django_db
+    @override_settings(NOTIFY_SELF_CERTIFY_RENEWAL_TEMPLATE_ID="000000000000000000000000010")
+    @patch("dataworkspace.apps.applications.utils.send_email")
+    def test_email_is_not_sent_when_the_service_fails(self, mock_send_email, user):
+        self.setup_cert(user, self.year_ago_cert_date)
+
+        mock_send_email.side_effect = Exception("Email is not sent")
+
+        with pytest.raises(Exception) as e:
+            self_certify_renewal_email_notification()
+
+            assert e.value is mock_send_email.side_effect
+
+    @pytest.mark.django_db
+    @override_settings(NOTIFY_SELF_CERTIFY_RENEWAL_TEMPLATE_ID="000000000000000000000000010")
+    @patch("dataworkspace.apps.applications.utils.send_email")
+    def test_renewel_email_is_not_sent_when_cert_date_is_missing(self, mock_send_email, user):
+        self.setup_cert(user, None)
+        self_certify_renewal_email_notification()
+        user_profile = (
+            Profile.objects.filter(sso_id=user.profile.sso_id).select_related("user").first()
+        )
+        mock_send_email.assert_not_called()
+        assert user_profile.is_renewal_email_sent is False

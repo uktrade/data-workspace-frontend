@@ -21,6 +21,7 @@ from dataworkspace.apps.core.utils import (
     new_private_database_credentials,
     is_user_email_domain_valid,
     has_tools_cert_expired,
+    is_tools_cert_renewal_due,
 )
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.management.commands.ensure_databases_configured import (
@@ -258,6 +259,23 @@ class TestIsEmailDomainValid:
     )
     def test_is_user_email_domain_valid_for_various_domains(self, email, assertion):
         assert is_user_email_domain_valid(email) == assertion
+
+
+class TestIsSelfCertifyRenewalDue:
+    @pytest.mark.django_db
+    @freeze_time("2024-08-30")
+    def test_cert_date_has_twenty_nine_days_left(self):
+        assert is_tools_cert_renewal_due(datetime.date(year=2023, month=9, day=29)) is True
+
+    @pytest.mark.django_db
+    @freeze_time("2024-08-30")
+    def test_cert_date_has_more_than_thirty_days_before_expiry(self):
+        assert is_tools_cert_renewal_due(datetime.date(year=2023, month=10, day=22)) is False
+
+    @pytest.mark.django_db
+    @freeze_time("2024-08-31")
+    def test_cert_date_has_thirty_days_left(self):
+        assert is_tools_cert_renewal_due(datetime.date(year=2023, month=9, day=30)) is True
 
 
 class TestHasToolsCertExpired:

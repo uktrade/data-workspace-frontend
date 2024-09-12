@@ -115,6 +115,11 @@ class AppUserEditForm(forms.ModelForm):
         help_text="Date that user last completed training for self-certified tool access",
         required=False,
     )
+    is_renewal_email_notified = forms.BooleanField(
+        label="Email renewal notification status",
+        help_text="User should receieve self certify renewal email notification 30 days before expiry",
+        required=False,
+    )
 
     class Meta:
         model = get_user_model()
@@ -175,6 +180,7 @@ class AppUserEditForm(forms.ModelForm):
             VisualisationCatalogueItem.objects.live().order_by("name", "id")
         )
         self.fields["certificate_date"].initial = instance.profile.tools_certification_date
+        self.fields["is_renewal_email_notified"].initial = instance.profile.is_renewal_email_sent
 
 
 admin.site.unregister(get_user_model())
@@ -287,6 +293,7 @@ class AppUserAdmin(UserAdmin):
                     "is_staff",
                     "is_superuser",
                     "certificate_date",
+                    "is_renewal_email_notified",
                 ]
             },
         ),
@@ -576,6 +583,8 @@ class AppUserAdmin(UserAdmin):
 
         if "certificate_date" in form.cleaned_data:
             obj.profile.tools_certification_date = form.cleaned_data["certificate_date"]
+        if "is_renewal_email_notified" in form.cleaned_data:
+            obj.profile.is_renewal_email_sent = form.cleaned_data["is_renewal_email_notified"]
 
         super().save_model(request, obj, form, change)
 

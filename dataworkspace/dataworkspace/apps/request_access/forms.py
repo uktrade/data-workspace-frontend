@@ -120,7 +120,6 @@ class ToolsAccessRequestFormPart3(GOVUKDesignSystemModelForm):
 
 
 class SelfCertifyForm(GOVUKDesignSystemForm):
-
     invalid_date_message = (
         "The date on your Security and Data Protection certificate must be a real date"
     )

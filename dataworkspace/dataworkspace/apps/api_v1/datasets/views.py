@@ -33,10 +33,12 @@ from dataworkspace.apps.datasets.models import (
     ToolQueryAuditLog,
     VisualisationCatalogueItem,
     ReferenceDatasetField,
+    CustomDatasetQuery,
 )
 from dataworkspace.apps.api_v1.datasets.serializers import (
     CatalogueItemSerializer,
     ToolQueryAuditLogSerializer,
+    DataCutSerializer,
 )
 from dataworkspace.apps.datasets.data_dictionary.service import DataDictionaryService
 
@@ -520,3 +522,16 @@ def data_dictionary_api_view_GET(request, source_uuid):
         ],
     }
     return Response(response, status=status.HTTP_200_OK)
+
+
+class DataCutViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint to list data cut items for consumption by data flow.
+    """
+
+    queryset = CustomDatasetQuery.objects.all()
+
+    serializer_class = DataCutSerializer
+    # PageNumberPagination is used instead of CursorPagination
+    # as filters cannot be applied to a union-ed queryset.
+    pagination_class = PageNumberPagination

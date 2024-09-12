@@ -17,6 +17,7 @@ from dataworkspace.apps.datasets.models import (
     DataSet,
     ReferenceDataset,
     SourceTable,
+    CustomDatasetQuery,
 )
 from dataworkspace.tests import factories
 from dataworkspace.tests.api_v1.base import BaseAPIViewTest
@@ -681,5 +682,33 @@ class TestDataDictionaryView:
                 for item in dictionary.items
             ],
         }
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["results"] == [expected]
+
+
+@pytest.mark.django_db
+class TestDataCutView:
+    def test_success(self, unauthenticated_client):
+        with freeze_time("2020-01-01 00:00:00"):
+            dataset = factories.DatacutDataSetFactory()
+            database = factories.DatabaseFactory(memorable_name="my_database")
+            query = factories.CustomDatasetQueryFactory(
+                dataset=dataset,
+                database=database,
+                query="SELECT * FROM source_table LIMIT 10",
+                frequency=CustomDatasetQuery.FREQ_ANNUALLY,
+            )
+        url = "/api/v1/dataset/data-cuts"
+        response = unauthenticated_client.get(url)
+
+        expected = {
+            "id": query.id,
+            "name": query.name,
+            "dataset": str(query.dataset.id),
+            "created_date": query.created_date.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "modified_date": query.modified_date.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "query": query.query,
+        }
+
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["results"] == [expected]
