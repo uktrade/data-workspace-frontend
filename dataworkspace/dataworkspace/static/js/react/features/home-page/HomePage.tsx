@@ -1,10 +1,14 @@
+// @ts-nocheck
+import { useEffect, useReducer } from 'react';
+
 import { MEDIA_QUERIES, SPACING_POINTS } from '@govuk-react/constants';
 import styled from 'styled-components';
 
 import { FetchDataContainer, InnerContainer } from '../../components';
 import { GREY_4 } from '../../constants';
+import { useReducerWithMiddleware } from '../../hooks/useReducerWithMiddleware';
 import {
-  fetchProfileHomepageSettings,
+  fetchHomepageTiles,
   fetchRecentCollections,
   fetchRecentItems,
   fetchYourBookmarks,
@@ -15,6 +19,7 @@ import RecentCollections from './components/RecentCollections';
 import RecentItems from './components/RecentItems';
 import RecentTools from './components/RecentTools';
 import YourBookmarks from './components/YourBookmarks';
+import { homePageReducer, initialState } from './reducer';
 
 const YourSection = styled('div')`
   padding: ${SPACING_POINTS['6']}px 0 ${SPACING_POINTS['8']}px 0;
@@ -41,37 +46,34 @@ const SupportSection = styled('section')`
   padding: ${SPACING_POINTS['6']}px 0 ${SPACING_POINTS['9']}px 0;
 `;
 
-const HomePage = () => (
-  <main role="main" id="main-content">
-    <YourSection>
-      <InnerContainer>
-        <div>
-          <FetchDataContainer fetchApi={() => fetchProfileHomepageSettings()}>
+const HomePage = () => {
+  const [state, dispatch] = useReducer(homePageReducer, initialState);
+
+  useEffect(() => {
+    dispatch({ type: 'FETCH_TILES' });
+  }, []);
+
+  return (
+    <main role="main" id="main-content">
+      <YourSection>
+        <button onClick={() => dispatch({ type: 'FETCH_TILES' })}>
+          click me
+        </button>
+        <InnerContainer>
+          <div>
+            {/* <FetchDataContainer fetchApi={() => fetchProfileHomepageSettings()}>
             {(data) => <>{console.log(data)}</>}
-          </FetchDataContainer>
-          <FetchDataContainer fetchApi={() => fetchRecentItems()}>
-            {(data) => <RecentItems items={data} />}
-          </FetchDataContainer>
-          <FetchDataContainer fetchApi={() => fetchYourRecentTools()}>
-            {(data) => <RecentTools tools={data} />}
-          </FetchDataContainer>
-        </div>
-        <div>
-          <FetchDataContainer fetchApi={() => fetchRecentCollections()}>
-            {(data) => <RecentCollections collections={data} />}
-          </FetchDataContainer>
-          <FetchDataContainer fetchApi={() => fetchYourBookmarks()}>
-            {(data) => <YourBookmarks bookmarks={data} />}
-          </FetchDataContainer>
-        </div>
-      </InnerContainer>
-    </YourSection>
-    <SupportSection>
-      <InnerContainer>
-        <SupportYou />
-      </InnerContainer>
-    </SupportSection>
-  </main>
-);
+          </FetchDataContainer> */}
+          </div>
+        </InnerContainer>
+      </YourSection>
+      <SupportSection>
+        <InnerContainer>
+          <SupportYou />
+        </InnerContainer>
+      </SupportSection>
+    </main>
+  );
+};
 
 export default HomePage;
