@@ -33,6 +33,8 @@ from dataworkspace.apps.your_files.views import (
     RequiredParameterGetRequestMixin,
 )
 from dataworkspace.apps.your_files.utils import get_s3_csv_file_info
+from dataworkspace.apps.eventlog.models import EventLog
+from dataworkspace.apps.eventlog.utils import log_event
 
 logger = logging.getLogger(__name__)
 
@@ -516,5 +518,10 @@ class AddTableSuccessView(BaseAddTableTemplateView):
         context["preview_link"] = reverse(
             "datasets:source_table_detail",
             kwargs={"dataset_uuid": self.kwargs["pk"], "object_id": source_table.id},
+        )
+        log_event(
+            self.request.user,
+            event_type=EventLog.TYPE_ADD_TABLE_TO_SOURCE_DATASET,
+            related_object=dataset,
         )
         return context
