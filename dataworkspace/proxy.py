@@ -543,6 +543,7 @@ async def async_main():
                 {
                     "failure_message": "Unable to start the application",
                     "application_id": application.get("id", ""),
+                    "show_build_log": True,
                 },
             )
 
@@ -554,6 +555,7 @@ async def async_main():
                 {
                     "failure_message": f"Attempted to start the application, but it {application['state']}",
                     "application_id": application.get("id", ""),
+                    "show_build_log": True,
                 },
             )
 

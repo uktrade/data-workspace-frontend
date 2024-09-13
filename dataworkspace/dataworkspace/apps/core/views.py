@@ -127,6 +127,9 @@ def public_error_500_application_view(request):
     app_id = request.GET.get("application_id", "")
     if app_id != "":
         application = ApplicationInstance.objects.get(pk=app_id)
+        build_log = None
+        if request.GET.get("show_build_log", False):
+            build_log = f"{settings.GITLAB_URL}/deployment/docker-ecr/-/jobs/{application.spawner_application_instance_id}"
         if application.application_template.include_in_dw_stats:
             log_event(
                 request.user,
@@ -136,6 +139,7 @@ def public_error_500_application_view(request):
                     "tool": application.application_template.nice_name,
                     "started": application.spawner_created_at,
                     "failure_message": request.GET.get("failure_message", None),
+                    "build_log_url": build_log,
                 },
             )
     return render(
