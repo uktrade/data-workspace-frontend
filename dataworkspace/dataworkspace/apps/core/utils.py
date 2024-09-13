@@ -1202,9 +1202,9 @@ def get_dataflow_task_log(dag, execution_date, task_id):
         content_type="",
     ).request_header
     response = requests.get(url, headers={"Authorization": header, "Content-Type": ""})
-    print(response)
-    print(response.text)
-    print(response.json())
+    print("response debug", response)
+    print("response debug", response.text)
+    print("response debug", response.json())
     response.raise_for_status()
     return response.json().get("log")
 
