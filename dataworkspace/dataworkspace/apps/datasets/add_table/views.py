@@ -504,7 +504,7 @@ class AddTableSuccessView(BaseAddTableTemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         dataset = find_dataset(self.kwargs["pk"], self.request.user)
-        database = Database.objects.get_or_create(memorable_name="datasets_1")[0]
+        database = Database.objects.filter(memorable_name__contains="datasets").first()
         source_table, _ = SourceTable.objects.get_or_create(
             schema=self._get_query_parameters()["schema"],
             dataset=dataset,

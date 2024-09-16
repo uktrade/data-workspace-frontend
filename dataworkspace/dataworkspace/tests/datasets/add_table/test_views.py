@@ -738,6 +738,7 @@ class TestDataTypesView(TestCase):
 @pytest.mark.django_db
 class TestAddTableConfirmation(TestCase):
     def setUp(self):
+        self.database = factories.DatabaseFactory.create(memorable_name="datasets_1")
         self.user = factories.UserFactory.create(is_superuser=False)
         self.client = Client(**get_http_sso_data(self.user))
         self.dataset = factories.MasterDataSetFactory.create(
