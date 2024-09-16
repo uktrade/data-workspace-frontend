@@ -771,3 +771,13 @@ class TestAddTableConfirmation(TestCase):
         assert dataset_id in back_link
         assert dataset_id in edit_link
         assert dataset_id in preview_link
+
+    @mock.patch("dataworkspace.apps.datasets.add_table.views.log_event")
+    def test_event_log_has_been_added(self, mock_log_event):
+        response = self.client.get(
+            reverse("datasets:add_table:add-table-success", kwargs={"pk": self.dataset.id})
+            + f"?filename=allowed_chars-.csv&schema={self.source.schema}&table_name={self.table_name}&"
+            f"execution_date=2021-01-01+01%3A01%3A01",
+        )
+        mock_log_event.assert_called_with(self.user, event_type=57, related_object=self.dataset)
+        assert response.status_code == 200

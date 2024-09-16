@@ -63,6 +63,7 @@ class EventLog(models.Model):
     TYPE_USER_DATACUT_GRID_VIEW_FAILED = 54
     TYPE_DATASET_NOTIFICATION_SENT_TO_USER = 55
     TYPE_STATA_ACCESS_REQUEST = 56
+    TYPE_ADD_TABLE_TO_SOURCE_DATASET = 57
 
     _TYPE_CHOICES = (
         (TYPE_DATASET_SOURCE_LINK_DOWNLOAD, "Dataset source link download"),
@@ -123,6 +124,7 @@ class EventLog(models.Model):
         (TYPE_USER_DATACUT_GRID_VIEW_FAILED, "Datacut grid failed to load for user"),
         (TYPE_DATASET_NOTIFICATION_SENT_TO_USER, "Dataset nofitication sent to user"),
         (TYPE_STATA_ACCESS_REQUEST, "Stata access request"),
+        (TYPE_ADD_TABLE_TO_SOURCE_DATASET, "Added table to source dataset"),
     )
     user = models.ForeignKey(get_user_model(), on_delete=models.DO_NOTHING, related_name="events")
     id = models.BigAutoField(primary_key=True)
