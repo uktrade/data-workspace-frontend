@@ -267,6 +267,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
                     "restrictions_on_usage",
                     "type",
                     "dictionary_published",
+                    "esda",
                 ]
             },
         ),

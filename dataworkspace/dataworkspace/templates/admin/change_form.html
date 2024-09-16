@@ -1,5 +1,9 @@
 {% extends "admin/change_form.html" %}
-{% block extrahead %}{{ block.super }}
-{% load render_bundle from webpack_loader %}
-{% render_bundle "ckeditor" "js" %}
+
+{% block extrahead %}
+    {{ block.super }}
+    {% load static %}
+    <script nonce="{{ request.csp_nonce }}" src="{% static 'confirm-esda-change.js' %}" type="text/javascript"></script>
+    {% load render_bundle from webpack_loader %}
+    {% render_bundle "ckeditor" "js" %}
 {% endblock %}

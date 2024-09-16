@@ -199,9 +199,6 @@ class DataSetSubscription(TimeStampedUserModel):
 
     objects = DataSetSubscriptionManager()
 
-    esda = models.Choices(choices = ((True, "Yes"), (False, "No")), label="ESDA", 
-                              initial='No', widget=forms.Select(), required=True)
-
     class Meta:
         verbose_name = "DataSet Subscription"
         verbose_name_plural = "DataSet Subscriptions"
@@ -325,6 +322,7 @@ class DataSet(DeletableTimestampedUserModel):
         null=True,
         blank=True,
     )
+    esda = models.BooleanField(default=False, verbose_name="ESDA")
 
     class Meta:
         db_table = "app_dataset"
