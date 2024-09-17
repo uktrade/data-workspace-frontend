@@ -33,4 +33,10 @@ urlpatterns = [
             namespace="inline_feedback",
         ),
     ),
+    path(
+        "",
+        include(
+            ("dataworkspace.apps.api_v2.your_profile.urls", "api_v2"), namespace="your_profile",
+        ),
+    ),
 ]

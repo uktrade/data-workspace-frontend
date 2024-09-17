@@ -12,6 +12,17 @@ from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 
 
+class HomePageProfile(models.Model):
+    user = models.OneToOneField(get_user_model(), on_delete=models.PROTECT)
+    bookmarks = models.BooleanField(default=True)
+    recent_collections = models.BooleanField(default=True)
+    recent_items = models.BooleanField(default=True)
+    recent_tools = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "app_homepage_profile"
+
+
 class Profile(models.Model):
     user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE)
     sso_id = models.UUIDField(unique=True, default=uuid.uuid4)
@@ -26,11 +37,6 @@ class Profile(models.Model):
     first_login = models.DateTimeField(null=True)
 
     tools_certification_date = models.DateField(null=True, blank=True)
-
-    bookmarks = models.BooleanField(default=True)
-    recent_collections = models.BooleanField(default=True)
-    recent_items = models.BooleanField(default=True)
-    recent_tools = models.BooleanField(default=True)
 
     class Meta:
         db_table = "app_profile"
