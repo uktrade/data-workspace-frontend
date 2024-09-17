@@ -24,7 +24,7 @@
     window.pollForDagStateChange(
         '{% url "create-table-task-status" execution_date task_name as status_url %}{{ status_url|escapejs }}',
         '{{ next_step|escapejs }}',
-        '{% url "your-files:create-table-failed" as failure_url %}{{ failure_url|escapejs }}',
+        '{{ failure_url|escapejs }}',
         '{{ task_name }}'
     );
   </script>

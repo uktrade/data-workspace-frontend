@@ -1,7 +1,7 @@
 import logging
-from datetime import datetime
 import os
 import uuid
+from datetime import datetime
 from urllib.parse import urlencode
 
 from aiohttp import ClientError
@@ -18,6 +18,7 @@ from dataworkspace.apps.core.utils import (
     copy_file_to_uploads_bucket,
     get_data_flow_import_pipeline_name,
     get_s3_prefix,
+    get_task_error_message_template,
     trigger_dataflow_dag,
 )
 from dataworkspace.apps.datasets.add_table.forms import (
@@ -337,10 +338,11 @@ class AddTableDataTypesView(UploadCSVView):
             )
         except HTTPError:
             return HttpResponseRedirect(
-                f'{reverse("your-files:create-table-failed")}?' f"filename={filename}"
+                f'{reverse("datasets:add_table:create-table-failed")}?' f"filename={filename}"
             )
 
         params = {
+            "descriptive_name": self.kwargs["descriptive_name"],
             "filename": self.kwargs["file_name"],
             "schema": self.kwargs["schema"],
             "table_name": self.kwargs["table_name"],
@@ -378,6 +380,7 @@ class BaseAddTableTemplateView(RequiredParameterGetRequestMixin, TemplateView):
         "schema",
         "table_name",
         "execution_date",
+        "descriptive_name",
     ]
     steps = 5
     step: int
@@ -404,6 +407,7 @@ class BaseAddTableStepView(BaseAddTableTemplateView):
             {
                 "task_name": self.task_name,
                 "next_step": f"{reverse(self.next_step_url_name, args=(self.kwargs['pk'],))}?{urlencode(query_params)}",
+                "failure_url": f"{reverse('datasets:add_table:create-table-failed', args=(self.kwargs['pk'],))}?{urlencode(query_params)}",
             }
         )
         return context
@@ -525,3 +529,27 @@ class AddTableSuccessView(BaseAddTableTemplateView):
             related_object=dataset,
         )
         return context
+
+
+class AddTableFailedView(BaseAddTableTemplateView):
+    next_step_url_name = "manage-source-table"
+    step = 5
+    template_name = "datasets/add_table/upload_failed.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        query_params = self._get_query_parameters()
+        ctx["next_step"] = reverse(
+            "datasets:add_table:upload-csv",
+            args=(
+                self.kwargs["pk"],
+                query_params["schema"],
+                query_params["descriptive_name"],
+                query_params["table_name"],
+            ),
+        )
+        if "execution_date" in self.request.GET and "task_name" in self.request.GET:
+            ctx["error_message_template"] = get_task_error_message_template(
+                self.request.GET["execution_date"], self.request.GET["task_name"]
+            )
+        return ctx

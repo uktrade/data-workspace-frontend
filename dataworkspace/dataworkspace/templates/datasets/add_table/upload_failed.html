@@ -1,0 +1,31 @@
+{% extends '_main.html' %}
+{% load static %}
+{% block page_title %} Add Table - {{ model.name }} - {{ block.super }}{% endblock page_title %}
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      {% if error_message_template %}
+        {% include error_message_template %}
+      {% else %}
+        <h1 class="govuk-heading-xl">
+          There's a problem with your CSV
+        </h1>
+        <p class="govuk-body">Your table has not been added.</p>
+        <p class="govuk-body">There's an error in your CSV. Data Workspace cannot identify what caused the error or what column it's in.</p>
+        <p class="govuk-body">You need to check:</p>
+        <ul class="govuk-list govuk-list--bullet">
+          <li>you have followed the steps on the <a href="{{ next_step }}">upload page</a></li>
+          <li>you have chosen data types that can describe your data</li>
+        </ul>
+      {% endif %}
+
+      <h2 class="govuk-heading-m">If you continue to get an error</h2>
+
+      <p class="govuk-body">Data Workspace can only identify one error at a time. This means that you could get the same or a different error more
+      than once. If this happens you'll need to fix each error in turn.</p>
+
+      <p class="govuk-body">If you're unable to solve your error, <a href="/contact-us" class="govuk-link">contact us</a>.</p>
+
+    </div>
+  </div>
+{% endblock content %}
