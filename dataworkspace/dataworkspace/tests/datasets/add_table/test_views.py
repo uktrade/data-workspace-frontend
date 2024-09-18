@@ -13,7 +13,7 @@ from dataworkspace.tests.common import get_http_sso_data
 
 
 @pytest.mark.django_db
-class TestAddTablePageAccess(TestCase):
+class TestAddTablePagePermissions(TestCase):
     def test_user_without_permissons_get_redirected(self):
         user = factories.UserFactory.create(is_superuser=False)
         client = Client(**get_http_sso_data(user))
