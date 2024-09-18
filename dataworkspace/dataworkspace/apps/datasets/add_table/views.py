@@ -9,8 +9,8 @@ from django.conf import settings
 from django.urls import reverse
 from django.views.generic import DetailView, FormView, TemplateView
 from django.http import HttpResponseRedirect, HttpResponseServerError
-from requests import HTTPError
 from django.shortcuts import redirect
+from requests import HTTPError
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.constants import SCHEMA_POSTGRES_DATA_TYPE_MAP, PostgresDataTypes
 from dataworkspace.apps.core.models import Database
@@ -413,7 +413,7 @@ class BaseAddTableStepView(BaseAddTableTemplateView):
             {
                 "task_name": self.task_name,
                 "next_step": f"{reverse(self.next_step_url_name, args=(self.kwargs['pk'],))}?{urlencode(query_params)}",
-                "failure_url": f"{reverse('datasets:add_table:create-table-failed', args=(self.kwargs['pk'],))}?{urlencode(query_params)}",
+                "failure_url": f"{reverse('datasets:add_table:create-table-failed', args=(self.kwargs['pk'],))}?{urlencode(query_params)}",  # pylint: disable=line-too-long
             }
         )
         return context
