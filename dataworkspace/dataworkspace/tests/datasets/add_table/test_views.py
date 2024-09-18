@@ -59,7 +59,7 @@ class TestAddTablePage(TestCase):
     def setUp(self):
         self.user = factories.UserFactory.create(is_superuser=False)
         self.client = Client(**get_http_sso_data(self.user))
-        self.dataset = factories.MasterDataSetFactory.create()
+        self.dataset = factories.MasterDataSetFactory.create(information_asset_owner=self.user)
 
     def test_about_service_page(self):
         response = self.client.get(
