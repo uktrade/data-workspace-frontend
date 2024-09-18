@@ -523,7 +523,7 @@ class AddTableSuccessView(BaseAddTableTemplateView):
             name=self._get_query_parameters()["table_name"],
             table=self._get_query_parameters()["table_name"],
             data_grid_download_enabled=True,
-            data_grid_download_limit=self.default_download_limit
+            data_grid_download_limit=self.default_download_limit,
         )
         context["backlink"] = reverse("datasets:dataset_detail", args={self.kwargs["pk"]})
         context["edit_link"] = reverse("datasets:edit_dataset", args={self.kwargs["pk"]})

@@ -464,13 +464,10 @@ class DataSet(DeletableTimestampedUserModel):
         )
 
     def user_can_add_table(self, user):
-        return (
-            user.id in (
-                self.information_asset_owner_id,
-                self.information_asset_manager_id,
-            )
-            + tuple(self.data_catalogue_editors.values_list("id", flat=True))
-        )
+        return user.id in (
+            self.information_asset_owner_id,
+            self.information_asset_manager_id,
+        ) + tuple(self.data_catalogue_editors.values_list("id", flat=True))
 
     def user_has_bookmarked(self, user):
         return self.datasetbookmark_set.filter(user=user).exists()

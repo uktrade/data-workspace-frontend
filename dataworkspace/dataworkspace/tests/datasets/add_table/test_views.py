@@ -23,7 +23,7 @@ class TestAddTablePageAccess(TestCase):
             reverse("datasets:add_table:add-table", kwargs={"pk": dataset.id}),
         )
         assert response.status_code == 302
-        assert response["Location"] == f'/datasets/{dataset.id}'
+        assert response["Location"] == f"/datasets/{dataset.id}"
 
     def test_iam_user_can_access_page(self):
         user = factories.UserFactory.create(is_superuser=False)
