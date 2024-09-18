@@ -13,6 +13,48 @@ from dataworkspace.tests.common import get_http_sso_data
 
 
 @pytest.mark.django_db
+class TestAddTablePageAccess(TestCase):
+    def test_user_without_permissons_get_redirected(self):
+        user = factories.UserFactory.create(is_superuser=False)
+        client = Client(**get_http_sso_data(user))
+        dataset = factories.MasterDataSetFactory.create()
+
+        response = client.get(
+            reverse("datasets:add_table:add-table", kwargs={"pk": dataset.id}),
+        )
+        assert response.status_code == 302
+        assert response["Location"] == f'/datasets/{dataset.id}'
+
+    def test_iam_user_can_access_page(self):
+        user = factories.UserFactory.create(is_superuser=False)
+        client = Client(**get_http_sso_data(user))
+        dataset = factories.MasterDataSetFactory.create(information_asset_manager=user)
+        response = client.get(
+            reverse("datasets:add_table:add-table", kwargs={"pk": dataset.id}),
+        )
+        assert response.status_code == 200
+
+    def test_iao_user_can_access_page(self):
+        user = factories.UserFactory.create(is_superuser=False)
+        client = Client(**get_http_sso_data(user))
+        dataset = factories.MasterDataSetFactory.create(information_asset_owner=user)
+        response = client.get(
+            reverse("datasets:add_table:add-table", kwargs={"pk": dataset.id}),
+        )
+        assert response.status_code == 200
+
+    def test_editor_user_can_access_page(self):
+        user = factories.UserFactory.create(is_superuser=False)
+        client = Client(**get_http_sso_data(user))
+        dataset = factories.MasterDataSetFactory.create()
+        dataset.data_catalogue_editors.set([user])
+        response = client.get(
+            reverse("datasets:add_table:add-table", kwargs={"pk": dataset.id}),
+        )
+        assert response.status_code == 200
+
+
+@pytest.mark.django_db
 class TestAddTablePage(TestCase):
     def setUp(self):
         self.user = factories.UserFactory.create(is_superuser=False)
@@ -739,7 +781,7 @@ class TestDataTypesView(TestCase):
 class TestAddTableConfirmation(TestCase):
     def setUp(self):
         self.database = factories.DatabaseFactory.create(memorable_name="datasets_1")
-        self.user = factories.UserFactory.create(is_superuser=False)
+        self.user = factories.UserFactory.create(is_superuser=True)
         self.client = Client(**get_http_sso_data(self.user))
         self.dataset = factories.MasterDataSetFactory.create(
             published=True,
@@ -777,7 +819,7 @@ class TestAddTableConfirmation(TestCase):
     def test_event_log_has_been_added(self, mock_log_event):
         response = self.client.get(
             reverse("datasets:add_table:add-table-success", kwargs={"pk": self.dataset.id})
-            + f"?filename=allowed_chars-.csv&schema={self.source.schema}&table_name={self.table_name}&"
+            + f"?descriptive_name={self.descriptive_name}&filename=allowed_chars-.csv&schema={self.source.schema}&table_name={self.table_name}&"
             f"execution_date=2021-01-01+01%3A01%3A01",
         )
         mock_log_event.assert_called_with(self.user, event_type=57, related_object=self.dataset)
