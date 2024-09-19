@@ -115,6 +115,22 @@ class AppUserEditForm(forms.ModelForm):
         help_text="Date that user last completed training for self-certified tool access",
         required=False,
     )
+    show_bookmarks = forms.BooleanField(
+        label="Show bookmarks",
+        required=False,
+    )
+    show_recent_tools = forms.BooleanField(
+        label="Show recent tools",
+        required=False,
+    )
+    show_recent_collections = forms.BooleanField(
+        label="Show recent collections",
+        required=False,
+    )
+    show_recent_items = forms.BooleanField(
+        label="Show recent items",
+        required=False,
+    )
 
     class Meta:
         model = get_user_model()
@@ -175,6 +191,10 @@ class AppUserEditForm(forms.ModelForm):
             VisualisationCatalogueItem.objects.live().order_by("name", "id")
         )
         self.fields["certificate_date"].initial = instance.profile.tools_certification_date
+        self.fields["show_bookmarks"].initial = instance.profile.show_bookmarks
+        self.fields["show_recent_items"].initial = instance.profile.show_recent_items
+        self.fields["show_recent_tools"].initial = instance.profile.show_recent_tools
+        self.fields["show_recent_collections"].initial = instance.profile.show_recent_collections
 
 
 admin.site.unregister(get_user_model())
@@ -287,6 +307,17 @@ class AppUserAdmin(UserAdmin):
                     "is_staff",
                     "is_superuser",
                     "certificate_date",
+                ]
+            },
+        ),
+        (
+            "Home page profile",
+            {
+                "fields": [
+                    "show_bookmarks",
+                    "show_recent_items",
+                    "show_recent_collections",
+                    "show_recent_tools",
                 ]
             },
         ),

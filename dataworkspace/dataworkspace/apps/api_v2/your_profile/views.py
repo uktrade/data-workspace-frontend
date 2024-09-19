@@ -18,7 +18,7 @@ class ProfileViewSet(ModelViewSet):
     serializer_class = ProfileSerializer
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated]
+    pagination_class = None
 
     def get_queryset(self):
-        qs = super().get_queryset().filter(user=self.request.user)
-        return qs
+        return super().get_queryset().filter(user=self.request.user)
