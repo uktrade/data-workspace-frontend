@@ -9,8 +9,8 @@ from django.conf import settings
 from django.urls import reverse
 from django.views.generic import DetailView, FormView, TemplateView
 from django.http import HttpResponseRedirect, HttpResponseServerError
+from django.shortcuts import redirect
 from requests import HTTPError
-
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.constants import SCHEMA_POSTGRES_DATA_TYPE_MAP, PostgresDataTypes
 from dataworkspace.apps.core.models import Database
@@ -42,6 +42,12 @@ logger = logging.getLogger(__name__)
 
 class AddTableView(DetailView):
     template_name = "datasets/add_table/about_this_service.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        source = self.get_object()
+        if not source.user_can_add_table(self.request.user):
+            return redirect(reverse("datasets:dataset_detail", args={self.kwargs["pk"]}))
+        return super().dispatch(request, *args, **kwargs)
 
     def get_object(self, queryset=None):
         return find_dataset(self.kwargs["pk"], self.request.user)
@@ -407,7 +413,7 @@ class BaseAddTableStepView(BaseAddTableTemplateView):
             {
                 "task_name": self.task_name,
                 "next_step": f"{reverse(self.next_step_url_name, args=(self.kwargs['pk'],))}?{urlencode(query_params)}",
-                "failure_url": f"{reverse('datasets:add_table:create-table-failed', args=(self.kwargs['pk'],))}?{urlencode(query_params)}",
+                "failure_url": f"{reverse('datasets:add_table:create-table-failed', args=(self.kwargs['pk'],))}?{urlencode(query_params)}",  # pylint: disable=line-too-long
             }
         )
         return context
@@ -504,6 +510,7 @@ class AddTableSuccessView(BaseAddTableTemplateView):
 
     template_name = "datasets/add_table/confirmation.html"
     step = 5
+    default_download_limit = 5000
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -515,6 +522,8 @@ class AddTableSuccessView(BaseAddTableTemplateView):
             database=database,
             name=self._get_query_parameters()["table_name"],
             table=self._get_query_parameters()["table_name"],
+            data_grid_download_enabled=True,
+            data_grid_download_limit=self.default_download_limit,
         )
         context["backlink"] = reverse("datasets:dataset_detail", args={self.kwargs["pk"]})
         context["edit_link"] = reverse("datasets:edit_dataset", args={self.kwargs["pk"]})

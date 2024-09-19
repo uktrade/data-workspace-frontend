@@ -141,7 +141,7 @@ class AddTableDataTypesForm(GOVUKDesignSystemForm):
         The ID will be an increasing integer, e.g. 1, 2, 3.",
         choices=[("True", "Yes"), ("False", "No")],
         widget=ConditionalSupportTypeRadioWidget(heading="h2", label_size="m", small=False),
-        required=True,
+        required=False,
     )
 
     def __init__(self, *args, **kwargs):
