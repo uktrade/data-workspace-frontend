@@ -25,8 +25,9 @@ from django.db.models import (
     Func,
     Q,
     Prefetch,
+    TextField,
 )
-from django.db.models.functions import TruncDay
+from django.db.models.functions import Cast, TruncDay
 from django.forms.models import model_to_dict
 from django.http import (
     Http404,
@@ -1046,34 +1047,57 @@ class DataCutPreviewView(DetailView):
 class DatasetUsageHistoryView(View):
     def get(self, request, dataset_uuid, **kwargs):
         dataset = find_dataset(dataset_uuid, request.user, kwargs["model_class"])
-
+        source_table_ids = dataset.sourcetable_set.annotate(
+                str_id=Cast("id", output_field=TextField())
+            ).values_list("str_id", flat=True)
+        table_view_events = EventLog.objects.filter(
+                object_id__in=source_table_ids, event_type=EventLog.TYPE_DATA_TABLE_VIEW
+            )
+        table_views = (
+                table_view_events.annotate(event=Value("Viewed"))
+                .annotate(day=TruncDay("timestamp"))
+                .annotate(email=F("user__email"))
+                .annotate(
+                    object=Func(
+                        F("extra"),
+                        Value("data_table_tablename"),
+                        function="jsonb_extract_path_text",
+                        output_field=CharField(),
+                    ),
+                )
+                .values("day", "email", "object", "event")
+                .annotate(count=Count("id"))
+            )
         if dataset.type == DataSetType.MASTER:
             tables = list(dataset.sourcetable_set.values_list("table", flat=True))
+            queries = (
+                ToolQueryAuditLogTable.objects.filter(table__in=tables)
+                .annotate(event=Value("Queried"))
+                .annotate(day=TruncDay("audit_log__timestamp"))
+                .annotate(email=F("audit_log__user__email"))
+                .annotate(object=F("table"))
+                .values("day", "email", "object", "event")
+                .annotate(count=Count("id"))
+            )
+            all_events = sorted(
+                list(queries) + list(table_views), key=lambda x: x["day"], reverse=True
+            )
             return render(
                 request,
                 "datasets/dataset_usage_history.html",
                 context={
                     "dataset": dataset,
-                    "event_description": "Queried",
-                    "rows": ToolQueryAuditLogTable.objects.filter(table__in=tables)
-                    .annotate(day=TruncDay("audit_log__timestamp"))
-                    .annotate(email=F("audit_log__user__email"))
-                    .annotate(object=F("table"))
-                    .order_by("-day")
-                    .values("day", "email", "object")
-                    .annotate(count=Count("id"))[:100],
+                    "rows": all_events[:100],
                 },
             )
-
+        download_view_types = [EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD,
+                        EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD]
         return render(
             request,
             "datasets/dataset_usage_history.html",
             context={
                 "dataset": dataset,
-                "event_description": (
-                    "Viewed" if dataset.type == DataSetType.VISUALISATION else "Downloaded"
-                ),
-                "rows": dataset.events.filter(
+                "rows": (table_views & dataset.events.filter(
                     event_type__in=[
                         EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD,
                         EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
@@ -1082,6 +1106,7 @@ class DatasetUsageHistoryView(View):
                         EventLog.TYPE_VIEW_QUICKSIGHT_VISUALISATION,
                     ]
                 )
+                .annotate(event=Value("Downloaded" if dataset.events.filter(event_type__in=download_view_types).count() > 0 else "Viewed"))
                 .annotate(day=TruncDay("timestamp"))
                 .annotate(email=F("user__email"))
                 .annotate(
@@ -1094,8 +1119,8 @@ class DatasetUsageHistoryView(View):
                     ),
                 )
                 .order_by("-day")
-                .values("day", "email", "object")
-                .annotate(count=Count("id"))[:100],
+                .values("day", "email", "object", "event")
+                .annotate(count=Count("id")))[:100],
             },
         )
 
