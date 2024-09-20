@@ -11,6 +11,10 @@
             <p class="govuk-body">{{ message }}</p>
         {% endif %}
 
+        {% if build_log %}
+            <p class="govuk-body">{{ build_log }}</p>
+        {% endif %}
+
         <p class="govuk-body">Please try again.</p>
 
         <p class="govuk-body">If the problem continues, please <a class="govuk-link" href="{% url 'support' %}">contact the Data Workspace Support Team</a>.</p>
