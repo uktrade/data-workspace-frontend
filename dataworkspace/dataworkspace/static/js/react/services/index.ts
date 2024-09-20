@@ -79,7 +79,7 @@ export const fetchYourRecentTools = async () => {
   >(`/${API_BASE_URL}/recent_tools?page_size=2`, transformRecentToolsResponse);
 };
 
-export const fetchHomepageTiles = async () => {
+export const fetchProfile = async () => {
   const response = await new Promise((resolve, reject) => {
     setTimeout(() => {
       resolve({

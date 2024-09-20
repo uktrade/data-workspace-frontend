@@ -1,10 +1,6 @@
-from django.db.models import Q
-from rest_framework import status, mixins
-from rest_framework.viewsets import GenericViewSet, ModelViewSet
+from rest_framework.viewsets import ModelViewSet
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 
 from dataworkspace.apps.accounts.models import (
     Profile

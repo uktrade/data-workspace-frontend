@@ -4,22 +4,22 @@ import { useEffect, useReducer } from 'react';
 import { MEDIA_QUERIES, SPACING_POINTS } from '@govuk-react/constants';
 import styled from 'styled-components';
 
-import { FetchDataContainer, InnerContainer } from '../../components';
+import { FETCH_PROFILE } from '../../actions';
+import { FetchDataContainer2, InnerContainer } from '../../components';
 import { GREY_4 } from '../../constants';
-import { useReducerWithMiddleware } from '../../hooks/useReducerWithMiddleware';
-import {
-  fetchHomepageTiles,
-  fetchRecentCollections,
-  fetchRecentItems,
-  fetchYourBookmarks,
-  fetchYourRecentTools
-} from '../../services';
+// import RecentCollections from './components/RecentCollections';
+// import RecentItems from './components/RecentItems';
+// import RecentTools from './components/RecentTools';
+// import YourBookmarks from './components/YourBookmarks';
+import { homePageReducer, initialState } from '../../reducers';
+// import {
+//   fetchHomepageTiles,
+//   fetchRecentCollections,
+//   fetchRecentItems,
+//   fetchYourBookmarks,
+//   fetchYourRecentTools
+// } from '../../services';
 import SupportYou from '../support/Support';
-import RecentCollections from './components/RecentCollections';
-import RecentItems from './components/RecentItems';
-import RecentTools from './components/RecentTools';
-import YourBookmarks from './components/YourBookmarks';
-import { homePageReducer, initialState } from './reducer';
 
 const YourSection = styled('div')`
   padding: ${SPACING_POINTS['6']}px 0 ${SPACING_POINTS['8']}px 0;
@@ -61,9 +61,9 @@ const HomePage = () => {
         </button>
         <InnerContainer>
           <div>
-            {/* <FetchDataContainer fetchApi={() => fetchProfileHomepageSettings()}>
-            {(data) => <>{console.log(data)}</>}
-          </FetchDataContainer> */}
+            <FetchDataContainer2 action={FETCH_PROFILE}>
+              {(data) => <>{console.log(data)}</>}
+            </FetchDataContainer2>
           </div>
         </InnerContainer>
       </YourSection>
