@@ -107,7 +107,7 @@ class UploadCSVForm(GOVUKDesignSystemForm):
     def clean_csv_file(self):
         cleaned_data = super().clean()
         csv_name = cleaned_data["csv_file"]._name.replace(".csv", "")
-        if bool(re.search(r"[^A-Za-z_-]", csv_name)):
+        if not bool(re.search(r"^[A-Za-z0-9_-]+$", csv_name)):
             raise ValidationError(
                 "File name cannot contain special characters apart from underscores and hyphens"
             )
