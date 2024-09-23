@@ -1,17 +1,15 @@
 // @ts-nocheck
-import { useEffect, useReducer } from 'react';
 
 import { MEDIA_QUERIES, SPACING_POINTS } from '@govuk-react/constants';
 import styled from 'styled-components';
 
-import { FETCH_PROFILE } from '../../actions';
-import { FetchDataContainer2, InnerContainer } from '../../components';
+import { InnerContainer } from '../../components';
 import { GREY_4 } from '../../constants';
+import { HomePageProvider } from '../../context/provider';
 // import RecentCollections from './components/RecentCollections';
 // import RecentItems from './components/RecentItems';
 // import RecentTools from './components/RecentTools';
 // import YourBookmarks from './components/YourBookmarks';
-import { homePageReducer, initialState } from '../../reducers';
 // import {
 //   fetchHomepageTiles,
 //   fetchRecentCollections,
@@ -20,6 +18,7 @@ import { homePageReducer, initialState } from '../../reducers';
 //   fetchYourRecentTools
 // } from '../../services';
 import SupportYou from '../support/Support';
+import TilesContainer from './components/TilesContainer';
 
 const YourSection = styled('div')`
   padding: ${SPACING_POINTS['6']}px 0 ${SPACING_POINTS['8']}px 0;
@@ -47,32 +46,21 @@ const SupportSection = styled('section')`
 `;
 
 const HomePage = () => {
-  const [state, dispatch] = useReducer(homePageReducer, initialState);
-
-  useEffect(() => {
-    dispatch({ type: 'FETCH_TILES' });
-  }, []);
-
   return (
-    <main role="main" id="main-content">
-      <YourSection>
-        <button onClick={() => dispatch({ type: 'FETCH_TILES' })}>
-          click me
-        </button>
-        <InnerContainer>
-          <div>
-            <FetchDataContainer2 action={FETCH_PROFILE}>
-              {(data) => <>{console.log(data)}</>}
-            </FetchDataContainer2>
-          </div>
-        </InnerContainer>
-      </YourSection>
-      <SupportSection>
-        <InnerContainer>
-          <SupportYou />
-        </InnerContainer>
-      </SupportSection>
-    </main>
+    <HomePageProvider>
+      <main role="main" id="main-content">
+        <YourSection>
+          <InnerContainer>
+            <TilesContainer />
+          </InnerContainer>
+        </YourSection>
+        <SupportSection>
+          <InnerContainer>
+            <SupportYou />
+          </InnerContainer>
+        </SupportSection>
+      </main>
+    </HomePageProvider>
   );
 };
 

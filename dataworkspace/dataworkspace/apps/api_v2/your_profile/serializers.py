@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.db.models import QuerySet
 
 from dataworkspace.apps.accounts.models import (
     Profile

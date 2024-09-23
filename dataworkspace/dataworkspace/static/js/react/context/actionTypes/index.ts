@@ -1,0 +1,4 @@
+export const FETCHED_PROFILE = 'FETCHED_PROFILE';
+export const FETCH_PROFILE_ERROR = 'FETCH_PROFILE_ERROR';
+export const IS_LOADING = 'IS_LOADING';
+export const IS_LOADED = 'IS_LOADED';

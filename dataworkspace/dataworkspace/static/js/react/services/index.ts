@@ -79,22 +79,4 @@ export const fetchYourRecentTools = async () => {
   >(`/${API_BASE_URL}/recent_tools?page_size=2`, transformRecentToolsResponse);
 };
 
-export const fetchProfile = async () => {
-  const response = await new Promise((resolve, reject) => {
-    setTimeout(() => {
-      resolve({
-        user_profile: {
-          homepage_tiles: {
-            recent_items: true,
-            recent_collections: true,
-            recent_tools: true,
-            bookmarks: true
-          }
-        }
-      });
-    }, 1000);
-  });
-  return response;
-};
-
 export { patchFeedback, postFeedback } from './inline-feedback';

@@ -608,6 +608,9 @@ class AppUserAdmin(UserAdmin):
         if "certificate_date" in form.cleaned_data:
             obj.profile.tools_certification_date = form.cleaned_data["certificate_date"]
 
+        if "show_bookmarks" in form.cleaned_data:
+            obj.profile.show_bookmarks = form.cleaned_data["show_bookmarks"]
+
         super().save_model(request, obj, form, change)
 
         if update_quicksight_permissions:

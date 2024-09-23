@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -7,11 +8,7 @@ const mount = (Component: React.ElementType, id: string) => {
   const props = dataProps ? JSON.parse(dataProps) : {};
   const root = createRoot(rootElement);
 
-  root.render(
-    <StrictMode>
-      <Component {...props} />
-    </StrictMode>
-  );
+  root.render(<Component {...props} />);
 };
 
 export default mount;
