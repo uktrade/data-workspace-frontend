@@ -1,6 +1,6 @@
 // @ts-nocheck
 
-import { MEDIA_QUERIES, SPACING_POINTS } from '@govuk-react/constants';
+import { SPACING_POINTS } from '@govuk-react/constants';
 import styled from 'styled-components';
 
 import { InnerContainer } from '../../components';
@@ -9,40 +9,24 @@ import { HomePageProvider } from '../../context/provider';
 import SupportYou from '../support/Support';
 import Widgets from './components/Widgets';
 
-const YourSection = styled('div')`
-  padding: ${SPACING_POINTS['6']}px 0 ${SPACING_POINTS['8']}px 0;
-  background-color: ${GREY_4};
-  > div > div {
-    > div > div {
-      margin-bottom: 15px;
-    }
-    ${MEDIA_QUERIES.TABLET} {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-gap: 30px;
-      > div > div {
-        margin-bottom: ${SPACING_POINTS['6']}px;
-        &:last-child {
-          margin-bottom: 0;
-        }
-      }
-    }
-  }
-`;
-
 const SupportSection = styled('section')`
   padding: ${SPACING_POINTS['6']}px 0 ${SPACING_POINTS['9']}px 0;
+`;
+
+const GreyStripe = styled('div')`
+  padding: ${SPACING_POINTS['6']}px 0 ${SPACING_POINTS['8']}px 0;
+  background-color: ${GREY_4};
 `;
 
 const HomePage = ({ csrf_token }) => {
   return (
     <HomePageProvider>
       <main role="main" id="main-content">
-        <YourSection>
+        <GreyStripe id="moo">
           <InnerContainer>
             <Widgets token={csrf_token} />
           </InnerContainer>
-        </YourSection>
+        </GreyStripe>
         <SupportSection>
           <InnerContainer>
             <SupportYou />

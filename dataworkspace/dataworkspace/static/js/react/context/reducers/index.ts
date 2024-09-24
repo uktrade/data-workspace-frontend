@@ -23,8 +23,13 @@ export const homePageReducer = (state, { type, payload }) => {
       return {
         ...state,
         user: payload.user,
-        selectedTiles: payload.selectedTiles,
         data: payload,
+        hasSelectedTiles: Boolean(
+          payload.recentCollections ||
+            payload.recentItems ||
+            payload.recentTools ||
+            payload.bookmarks
+        ),
         loading: false
       };
     case OPEN_HOMEPAGE_MODAL:
