@@ -51,7 +51,7 @@
 {% endblock %}
 {% block content %}
   {% csrf_token %}
-  <div id="home-page"></div>
+   {% include "partials/react-slot.html" with mount_id="home-page" test_id="home-page" %}
 {% endblock %}
 {% block footer_scripts %}
   {% if form.source.field.choices %}

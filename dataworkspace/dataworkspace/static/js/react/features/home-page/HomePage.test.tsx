@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { render, waitFor } from '@testing-library/react';
 
 import HomePage from './HomePage';

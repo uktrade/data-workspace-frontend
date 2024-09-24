@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 
 import { SPACING_POINTS } from '@govuk-react/constants';

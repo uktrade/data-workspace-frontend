@@ -10,6 +10,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = [
+            "user",
             "show_bookmarks",
             "show_recent_collections",
             "show_recent_items",

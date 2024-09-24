@@ -28,6 +28,18 @@ export default class ApiProxy {
     return { data, status };
   }
 
+  static async patch(endpoint, payload, token) {
+    const jsonData = JSON.stringify(payload);
+    const headers = await ApiProxy.getHeaders(token);
+    const requestOptions = {
+      method: 'PATCH',
+      headers: headers,
+      body: jsonData
+    };
+    console.log('requestOptions', requestOptions);
+    return await ApiProxy.handleFetch(endpoint, requestOptions);
+  }
+
   static async post(endpoint, payload, token) {
     const jsonData = JSON.stringify(payload);
     const headers = await ApiProxy.getHeaders(token);

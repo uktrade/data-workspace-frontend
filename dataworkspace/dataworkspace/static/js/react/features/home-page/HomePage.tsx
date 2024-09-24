@@ -6,24 +6,13 @@ import styled from 'styled-components';
 import { InnerContainer } from '../../components';
 import { GREY_4 } from '../../constants';
 import { HomePageProvider } from '../../context/provider';
-// import RecentCollections from './components/RecentCollections';
-// import RecentItems from './components/RecentItems';
-// import RecentTools from './components/RecentTools';
-// import YourBookmarks from './components/YourBookmarks';
-// import {
-//   fetchHomepageTiles,
-//   fetchRecentCollections,
-//   fetchRecentItems,
-//   fetchYourBookmarks,
-//   fetchYourRecentTools
-// } from '../../services';
 import SupportYou from '../support/Support';
-import TilesContainer from './components/TilesContainer';
+import Widgets from './components/Widgets';
 
 const YourSection = styled('div')`
   padding: ${SPACING_POINTS['6']}px 0 ${SPACING_POINTS['8']}px 0;
   background-color: ${GREY_4};
-  > div {
+  > div > div {
     > div > div {
       margin-bottom: 15px;
     }
@@ -45,13 +34,13 @@ const SupportSection = styled('section')`
   padding: ${SPACING_POINTS['6']}px 0 ${SPACING_POINTS['9']}px 0;
 `;
 
-const HomePage = () => {
+const HomePage = ({ csrf_token }) => {
   return (
     <HomePageProvider>
       <main role="main" id="main-content">
         <YourSection>
           <InnerContainer>
-            <TilesContainer />
+            <Widgets token={csrf_token} />
           </InnerContainer>
         </YourSection>
         <SupportSection>

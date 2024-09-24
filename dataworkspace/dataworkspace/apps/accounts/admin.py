@@ -611,6 +611,15 @@ class AppUserAdmin(UserAdmin):
         if "show_bookmarks" in form.cleaned_data:
             obj.profile.show_bookmarks = form.cleaned_data["show_bookmarks"]
 
+        if "show_recent_collections" in form.cleaned_data:
+            obj.profile.show_recent_collections = form.cleaned_data["show_recent_collections"]
+
+        if "show_recent_items" in form.cleaned_data:
+            obj.profile.show_recent_items = form.cleaned_data["show_recent_items"]
+
+        if "show_recent_tools" in form.cleaned_data:
+            obj.profile.show_recent_tools = form.cleaned_data["show_recent_tools"]
+
         super().save_model(request, obj, form, change)
 
         if update_quicksight_permissions:
