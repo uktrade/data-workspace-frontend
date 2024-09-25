@@ -107,7 +107,7 @@ class UploadCSVForm(GOVUKDesignSystemForm):
     def clean_csv_file(self):
         cleaned_data = super().clean()
         csv_name = cleaned_data["csv_file"]._name.replace(".csv", "")
-        if bool(re.search(r"[^A-Za-z_-]", csv_name)):
+        if not bool(re.search(r"^[A-Za-z0-9_-]+$", csv_name)):
             raise ValidationError(
                 "File name cannot contain special characters apart from underscores and hyphens"
             )
@@ -141,7 +141,7 @@ class AddTableDataTypesForm(GOVUKDesignSystemForm):
         The ID will be an increasing integer, e.g. 1, 2, 3.",
         choices=[("True", "Yes"), ("False", "No")],
         widget=ConditionalSupportTypeRadioWidget(heading="h2", label_size="m", small=False),
-        required=True,
+        required=False,
     )
 
     def __init__(self, *args, **kwargs):
