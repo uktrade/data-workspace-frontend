@@ -322,7 +322,11 @@ class DataSet(DeletableTimestampedUserModel):
         null=True,
         blank=True,
     )
-    esda = models.BooleanField(default=False, verbose_name="ESDA")
+    esda = models.BooleanField(
+        default=False,
+        verbose_name="Make this an ESDA (Essential Shared Data Asset) \
+          and share metadata on this data asset with other departments.",
+    )
 
     class Meta:
         db_table = "app_dataset"

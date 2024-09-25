@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
     esdaFieldCheckBox.addEventListener("change", function (event) {
       if (
         confirm(
-          `Please confirm that you want to set ESDA to ${event.target.checked}.`
+          `Please confirm that you want to change the ESDA (Essential Shared Data Asset) specification to ${event.target.checked}.`
         )
       ) {
         event.target.dataset.esda = event.target.checked;
