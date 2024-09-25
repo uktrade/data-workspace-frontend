@@ -1026,8 +1026,8 @@ class DataCutPreviewView(DetailView):
 class DatasetUsageHistoryView(View):
     def get(self, request, dataset_uuid, **kwargs):
         dataset = find_dataset(dataset_uuid, request.user, kwargs["model_class"])
-        # collect table views from attached source tabled
         if dataset.type in [DataSetType.DATACUT, DataSetType.MASTER]:
+            # collect table views from attached source tables
             if dataset.type == DataSetType.DATACUT:
                 tables = dataset.customdatasetquery_set
             else:
@@ -1059,8 +1059,8 @@ class DatasetUsageHistoryView(View):
             )
         else:
             table_views = []
-        # collect SQL query information from PostGres logs
         if dataset.type == DataSetType.MASTER:
+            # collect SQL query information from PostGres logs
             tables = list(dataset.sourcetable_set.values_list("table", flat=True))
             all_other_events = (
                 ToolQueryAuditLogTable.objects.filter(table__in=tables)
@@ -1072,6 +1072,7 @@ class DatasetUsageHistoryView(View):
                 .annotate(count=Count("id"))
             )
         else:
+            # DataCuts, Visualisation dataset events
             download_view_types = [
                 EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD,
                 EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
@@ -1107,7 +1108,7 @@ class DatasetUsageHistoryView(View):
                 .values("day", "email", "object", "event")
                 .annotate(count=Count("id"))
             )
-        # convert to standard python objects to combine two different model types
+        # convert Django QuerySet to standard python objects to combine two different model types
         all_events = sorted(
             list(all_other_events) + list(table_views), key=lambda x: x["day"], reverse=True
         )
