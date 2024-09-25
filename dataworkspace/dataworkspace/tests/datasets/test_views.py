@@ -2803,7 +2803,12 @@ class TestDatasetUsageHistory:
     @pytest.mark.parametrize(
         "url_name, fixture_name, event_factory, event_type",
         (
-            ("usage_history", "dataset", factories.DatasetLinkDownloadEventFactory, "Downloaded",),
+            (
+                "usage_history",
+                "dataset",
+                factories.DatasetLinkDownloadEventFactory,
+                "Downloaded",
+            ),
             (
                 "visualisation_usage_history",
                 "visualisation",
@@ -2833,9 +2838,8 @@ class TestDatasetUsageHistory:
             "email": "test-user@example.com",
             "object": "Test Event",
             "count": 1,
-            "event": event_type
+            "event": event_type,
         } in response.context["rows"]
-        
 
     @pytest.mark.django_db
     @pytest.mark.parametrize(
