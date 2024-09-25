@@ -1107,6 +1107,7 @@ class DatasetUsageHistoryView(View):
                 .values("day", "email", "object", "event")
                 .annotate(count=Count("id"))
             )
+        # conver to standard python objects to combine two different model types
         all_events = sorted(
             list(all_other_events) + list(table_views), key=lambda x: x["day"], reverse=True
         )
