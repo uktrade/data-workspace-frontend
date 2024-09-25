@@ -1059,7 +1059,7 @@ class DatasetUsageHistoryView(View):
             )
         else:
             table_views = []
-        # collect SQL qury information from PostGres logs
+        # collect SQL query information from PostGres logs
         if dataset.type == DataSetType.MASTER:
             tables = list(dataset.sourcetable_set.values_list("table", flat=True))
             all_other_events = (
