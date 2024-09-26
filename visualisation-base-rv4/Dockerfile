@@ -28,9 +28,9 @@ RUN \
     rm -rf /var/lib/apt/lists/* && \
 	apt-get update && \
     apt-get install -y \
-		r-base-dev=4.4.0-2~bullseyecran.0 \
-		r-base=4.0.4-2~bullseyecran.0 \
-		r-recommended=4.0.4-2~bullseyecran.0 && \
+		r-base-dev=4.4.1-1~bullseyecran.0 \
+		r-base=4.4.1-1~bullseyecran.0 \
+		r-recommended=4.4.1-1~bullseyecran.0 && \
 	rm -rf /var/lib/apt/lists/* && \
 	# Remove the last line from sources: the CRAN debian repo that has R itself, which we don't mirror
 	sed -i '$d' /etc/apt/sources.list && \
