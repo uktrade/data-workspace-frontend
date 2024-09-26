@@ -3138,6 +3138,7 @@ class TestMasterDatasetUsageHistory:
             "email": "test-user@example.com",
             "object": "test_table",
             "count": 1,
+            "event": "Queried",
         } in response.context["rows"]
 
     @pytest.mark.parametrize(
@@ -3175,6 +3176,7 @@ class TestMasterDatasetUsageHistory:
             "email": "test-user@example.com",
             "object": "test_table",
             "count": 1,
+            "event": "Queried",
         } in response.context["rows"]
 
         assert {
@@ -3182,6 +3184,7 @@ class TestMasterDatasetUsageHistory:
             "email": "test-user@example.com",
             "object": "test_table_2",
             "count": 2,
+            "event": "Queried",
         } in response.context["rows"]
 
     @pytest.mark.parametrize(
@@ -3226,6 +3229,7 @@ class TestMasterDatasetUsageHistory:
             "email": "test-user@example.com",
             "object": "test_table",
             "count": 1,
+            "event": "Queried",
         } in response.context["rows"]
 
         assert {
@@ -3233,6 +3237,7 @@ class TestMasterDatasetUsageHistory:
             "email": "test-user@example.com",
             "object": "test_table_2",
             "count": 3,
+            "event": "Queried",
         } in response.context["rows"]
 
         assert {
@@ -3240,6 +3245,7 @@ class TestMasterDatasetUsageHistory:
             "email": "test-user-2@example.com",
             "object": "test_table_2",
             "count": 1,
+            "event": "Queried",
         } in response.context["rows"]
 
     @pytest.mark.parametrize(
@@ -3303,6 +3309,7 @@ class TestMasterDatasetUsageHistory:
             "email": "test-user@example.com",
             "object": "test_table",
             "count": 1,
+            "event": "Queried",
         } in response.context["rows"]
 
         assert {
@@ -3310,6 +3317,7 @@ class TestMasterDatasetUsageHistory:
             "email": "test-user@example.com",
             "object": "test_table_2",
             "count": 3,
+            "event": "Queried",
         } in response.context["rows"]
 
         assert {
@@ -3317,6 +3325,7 @@ class TestMasterDatasetUsageHistory:
             "email": "test-user-2@example.com",
             "object": "test_table_2",
             "count": 1,
+            "event": "Queried",
         } in response.context["rows"]
 
         assert {
@@ -3324,6 +3333,7 @@ class TestMasterDatasetUsageHistory:
             "email": "test-user@example.com",
             "object": "test_table",
             "count": 1,
+            "event": "Queried",
         } in response.context["rows"]
 
         assert {
@@ -3331,6 +3341,7 @@ class TestMasterDatasetUsageHistory:
             "email": "test-user-2@example.com",
             "object": "test_table",
             "count": 4,
+            "event": "Queried",
         } in response.context["rows"]
 
         assert {
@@ -3338,6 +3349,7 @@ class TestMasterDatasetUsageHistory:
             "email": "test-user@example.com",
             "object": "test_table_2",
             "count": 1,
+            "event": "Queried",
         } in response.context["rows"]
 
 
