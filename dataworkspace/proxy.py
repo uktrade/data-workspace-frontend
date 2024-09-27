@@ -512,7 +512,6 @@ async def async_main():
                 {
                     "failure_message": "Application " + application["state"],
                     "application_id": application.get("id", ""),
-                    "show_build_log": True,
                 },
             )
 
