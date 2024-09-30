@@ -2801,18 +2801,24 @@ class TestDatasetUsageHistory:
 
     @pytest.mark.django_db
     @pytest.mark.parametrize(
-        "url_name, fixture_name, event_factory",
+        "url_name, fixture_name, event_factory, event_type",
         (
-            ("usage_history", "dataset", factories.DatasetLinkDownloadEventFactory),
+            (
+                "usage_history",
+                "dataset",
+                factories.DatasetLinkDownloadEventFactory,
+                "Downloaded",
+            ),
             (
                 "visualisation_usage_history",
                 "visualisation",
                 factories.VisualisationViewedEventFactory,
+                "Viewed",
             ),
         ),
     )
     def test_one_event_by_one_user_on_the_same_day(
-        self, url_name, fixture_name, event_factory, staff_client, request
+        self, url_name, fixture_name, event_factory, event_type, staff_client, request
     ):
         catalogue_item = request.getfixturevalue(fixture_name)
         user = factories.UserFactory(email="test-user@example.com")
@@ -2832,23 +2838,26 @@ class TestDatasetUsageHistory:
             "email": "test-user@example.com",
             "object": "Test Event",
             "count": 1,
+            "event": event_type,
         } in response.context["rows"]
 
     @pytest.mark.django_db
     @pytest.mark.parametrize(
-        "url_name, fixture_name, event_factory1, event_factory2",
+        "url_name, fixture_name, event_factory1, event_factory2, event_type",
         (
             (
                 "usage_history",
                 "dataset",
                 factories.DatasetLinkDownloadEventFactory,
                 factories.DatasetQueryDownloadEventFactory,
+                "Downloaded",
             ),
             (
                 "visualisation_usage_history",
                 "visualisation",
                 factories.VisualisationViewedEventFactory,
                 factories.SupersetVisualisationViewedEventFactory,
+                "Viewed",
             ),
         ),
     )
@@ -2858,6 +2867,7 @@ class TestDatasetUsageHistory:
         fixture_name,
         event_factory1,
         event_factory2,
+        event_type,
         staff_client,
         request,
     ):
@@ -2880,12 +2890,12 @@ class TestDatasetUsageHistory:
         response = staff_client.get(url)
         assert response.status_code == 200
         assert len(response.context["rows"]) == 2
-
         assert {
             "day": datetime(2021, 1, 1, tzinfo=timezone.utc),
             "email": "test-user@example.com",
             "object": "Test Event 1",
             "count": 1,
+            "event": event_type,
         } in response.context["rows"]
 
         assert {
@@ -2893,23 +2903,26 @@ class TestDatasetUsageHistory:
             "email": "test-user@example.com",
             "object": "Test Event 2",
             "count": 2,
+            "event": event_type,
         } in response.context["rows"]
 
     @pytest.mark.django_db
     @pytest.mark.parametrize(
-        "url_name, fixture_name, event_factory1, event_factory2",
+        "url_name, fixture_name, event_factory1, event_factory2, event_type",
         (
             (
                 "usage_history",
                 "dataset",
                 factories.DatasetLinkDownloadEventFactory,
                 factories.DatasetQueryDownloadEventFactory,
+                "Downloaded",
             ),
             (
                 "visualisation_usage_history",
                 "visualisation",
                 factories.VisualisationViewedEventFactory,
                 factories.SupersetVisualisationViewedEventFactory,
+                "Viewed",
             ),
         ),
     )
@@ -2919,6 +2932,7 @@ class TestDatasetUsageHistory:
         fixture_name,
         event_factory1,
         event_factory2,
+        event_type,
         staff_client,
         request,
     ):
@@ -2953,6 +2967,7 @@ class TestDatasetUsageHistory:
             "email": "test-user@example.com",
             "object": "Test Event 1",
             "count": 1,
+            "event": event_type,
         } in response.context["rows"]
 
         assert {
@@ -2960,6 +2975,7 @@ class TestDatasetUsageHistory:
             "email": "test-user@example.com",
             "object": "Test Event 2",
             "count": 3,
+            "event": event_type,
         } in response.context["rows"]
 
         assert {
@@ -2967,23 +2983,26 @@ class TestDatasetUsageHistory:
             "email": "test-user-2@example.com",
             "object": "Test Event 2",
             "count": 1,
+            "event": event_type,
         } in response.context["rows"]
 
     @pytest.mark.django_db
     @pytest.mark.parametrize(
-        "url_name, fixture_name, event_factory1, event_factory2",
+        "url_name, fixture_name, event_factory1, event_factory2, event_type",
         (
             (
                 "usage_history",
                 "dataset",
                 factories.DatasetLinkDownloadEventFactory,
                 factories.DatasetQueryDownloadEventFactory,
+                "Downloaded",
             ),
             (
                 "visualisation_usage_history",
                 "visualisation",
                 factories.VisualisationViewedEventFactory,
                 factories.SupersetVisualisationViewedEventFactory,
+                "Viewed",
             ),
         ),
     )
@@ -2993,6 +3012,7 @@ class TestDatasetUsageHistory:
         fixture_name,
         event_factory1,
         event_factory2,
+        event_type,
         staff_client,
         request,
     ):
@@ -3046,6 +3066,7 @@ class TestDatasetUsageHistory:
             "email": "test-user@example.com",
             "object": "Test Event 1",
             "count": 1,
+            "event": event_type,
         } in response.context["rows"]
 
         assert {
@@ -3053,6 +3074,7 @@ class TestDatasetUsageHistory:
             "email": "test-user@example.com",
             "object": "Test Event 2",
             "count": 3,
+            "event": event_type,
         } in response.context["rows"]
 
         assert {
@@ -3060,6 +3082,7 @@ class TestDatasetUsageHistory:
             "email": "test-user-2@example.com",
             "object": "Test Event 2",
             "count": 1,
+            "event": event_type,
         } in response.context["rows"]
 
         assert {
@@ -3067,6 +3090,7 @@ class TestDatasetUsageHistory:
             "email": "test-user@example.com",
             "object": "Test Event 1",
             "count": 1,
+            "event": event_type,
         } in response.context["rows"]
 
         assert {
@@ -3074,6 +3098,7 @@ class TestDatasetUsageHistory:
             "email": "test-user-2@example.com",
             "object": "Test Event 1",
             "count": 4,
+            "event": event_type,
         } in response.context["rows"]
 
         assert {
@@ -3081,6 +3106,7 @@ class TestDatasetUsageHistory:
             "email": "test-user@example.com",
             "object": "Test Event 2",
             "count": 1,
+            "event": event_type,
         } in response.context["rows"]
 
 
@@ -3112,6 +3138,7 @@ class TestMasterDatasetUsageHistory:
             "email": "test-user@example.com",
             "object": "test_table",
             "count": 1,
+            "event": "Queried",
         } in response.context["rows"]
 
     @pytest.mark.parametrize(
@@ -3149,6 +3176,7 @@ class TestMasterDatasetUsageHistory:
             "email": "test-user@example.com",
             "object": "test_table",
             "count": 1,
+            "event": "Queried",
         } in response.context["rows"]
 
         assert {
@@ -3156,6 +3184,7 @@ class TestMasterDatasetUsageHistory:
             "email": "test-user@example.com",
             "object": "test_table_2",
             "count": 2,
+            "event": "Queried",
         } in response.context["rows"]
 
     @pytest.mark.parametrize(
@@ -3200,6 +3229,7 @@ class TestMasterDatasetUsageHistory:
             "email": "test-user@example.com",
             "object": "test_table",
             "count": 1,
+            "event": "Queried",
         } in response.context["rows"]
 
         assert {
@@ -3207,6 +3237,7 @@ class TestMasterDatasetUsageHistory:
             "email": "test-user@example.com",
             "object": "test_table_2",
             "count": 3,
+            "event": "Queried",
         } in response.context["rows"]
 
         assert {
@@ -3214,6 +3245,7 @@ class TestMasterDatasetUsageHistory:
             "email": "test-user-2@example.com",
             "object": "test_table_2",
             "count": 1,
+            "event": "Queried",
         } in response.context["rows"]
 
     @pytest.mark.parametrize(
@@ -3277,6 +3309,7 @@ class TestMasterDatasetUsageHistory:
             "email": "test-user@example.com",
             "object": "test_table",
             "count": 1,
+            "event": "Queried",
         } in response.context["rows"]
 
         assert {
@@ -3284,6 +3317,7 @@ class TestMasterDatasetUsageHistory:
             "email": "test-user@example.com",
             "object": "test_table_2",
             "count": 3,
+            "event": "Queried",
         } in response.context["rows"]
 
         assert {
@@ -3291,6 +3325,7 @@ class TestMasterDatasetUsageHistory:
             "email": "test-user-2@example.com",
             "object": "test_table_2",
             "count": 1,
+            "event": "Queried",
         } in response.context["rows"]
 
         assert {
@@ -3298,6 +3333,7 @@ class TestMasterDatasetUsageHistory:
             "email": "test-user@example.com",
             "object": "test_table",
             "count": 1,
+            "event": "Queried",
         } in response.context["rows"]
 
         assert {
@@ -3305,6 +3341,7 @@ class TestMasterDatasetUsageHistory:
             "email": "test-user-2@example.com",
             "object": "test_table",
             "count": 4,
+            "event": "Queried",
         } in response.context["rows"]
 
         assert {
@@ -3312,6 +3349,7 @@ class TestMasterDatasetUsageHistory:
             "email": "test-user@example.com",
             "object": "test_table_2",
             "count": 1,
+            "event": "Queried",
         } in response.context["rows"]
 
 

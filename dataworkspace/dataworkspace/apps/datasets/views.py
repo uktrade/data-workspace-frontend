@@ -17,16 +17,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.core import serializers
 from django.core.paginator import Paginator
 from django.db import ProgrammingError
-from django.db.models import (
-    Count,
-    F,
-    CharField,
-    Value,
-    Func,
-    Q,
-    Prefetch,
-)
-from django.db.models.functions import TruncDay
+from django.db.models import CharField, Count, F, Func, Prefetch, Q, TextField, Value
+from django.db.models.functions import Cast, TruncDay
 from django.forms.models import model_to_dict
 from django.http import (
     Http404,
@@ -41,11 +33,7 @@ from django.http import (
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils.decorators import method_decorator
-from django.views.decorators.http import (
-    require_GET,
-    require_POST,
-    require_http_methods,
-)
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 from django.views.generic import DetailView, FormView, TemplateView, UpdateView, View
 from psycopg2 import sql
 
@@ -54,8 +42,8 @@ from dataworkspace.apps.accounts.models import UserDataTableView
 from dataworkspace.apps.api_v1.core.views import invalidate_superset_user_cached_credentials
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.core.boto3_client import get_s3_client
-
 from dataworkspace.apps.core.errors import DatasetPermissionDenied, DatasetPreviewDisabledError
+from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.core.utils import (
     StreamingHttpResponseWithoutDjangoDbConnection,
     database_dsn,
@@ -63,20 +51,13 @@ from dataworkspace.apps.core.utils import (
     table_data,
     view_exists,
 )
-from dataworkspace.apps.core.models import (
-    Database,
-)
-from dataworkspace.apps.datasets.constants import (
-    DataSetType,
-    DataLinkType,
-)
-from dataworkspace.apps.datasets.constants import TagType
+from dataworkspace.apps.datasets.constants import DataLinkType, DataSetType, TagType
 from dataworkspace.apps.datasets.forms import (
     DatasetEditForm,
     DatasetSearchForm,
     EligibilityCriteriaForm,
-    RelatedMastersSortForm,
     RelatedDataCutsSortForm,
+    RelatedMastersSortForm,
     RelatedVisualisationsSortForm,
     UserSearchForm,
     VisualisationCatalogueItemEditForm,
@@ -86,15 +67,15 @@ from dataworkspace.apps.datasets.models import (
     DataCutDataset,
     DataSet,
     DataSetUserPermission,
-    PendingAuthorizedUsers,
     MasterDataset,
+    PendingAuthorizedUsers,
     ReferenceDataset,
     SourceLink,
-    SourceView,
-    VisualisationCatalogueItem,
     SourceTable,
-    ToolQueryAuditLogTable,
+    SourceView,
     Tag,
+    ToolQueryAuditLogTable,
+    VisualisationCatalogueItem,
     VisualisationUserPermission,
 )
 from dataworkspace.apps.datasets.permissions.utils import (
@@ -107,11 +88,11 @@ from dataworkspace.apps.datasets.utils import (
     clean_dataset_restrictions_on_usage,
     dataset_type_to_manage_unpublished_permission_codename,
     find_dataset,
-    get_code_snippets_for_table,
     get_code_snippets_for_query,
     get_code_snippets_for_reference_table,
-    get_tools_links_for_user,
+    get_code_snippets_for_table,
     get_recently_viewed_catalogue_pages,
+    get_tools_links_for_user,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event, log_permission_change
@@ -761,7 +742,6 @@ class SourceLinkDownloadView(DetailView):
         source_link = get_object_or_404(
             SourceLink, id=self.kwargs.get("source_link_id"), dataset=dataset
         )
-
         log_event(
             request.user,
             EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD,
@@ -1046,41 +1026,72 @@ class DataCutPreviewView(DetailView):
 class DatasetUsageHistoryView(View):
     def get(self, request, dataset_uuid, **kwargs):
         dataset = find_dataset(dataset_uuid, request.user, kwargs["model_class"])
-
-        if dataset.type == DataSetType.MASTER:
-            tables = list(dataset.sourcetable_set.values_list("table", flat=True))
-            return render(
-                request,
-                "datasets/dataset_usage_history.html",
-                context={
-                    "dataset": dataset,
-                    "event_description": "Queried",
-                    "rows": ToolQueryAuditLogTable.objects.filter(table__in=tables)
-                    .annotate(day=TruncDay("audit_log__timestamp"))
-                    .annotate(email=F("audit_log__user__email"))
-                    .annotate(object=F("table"))
-                    .order_by("-day")
-                    .values("day", "email", "object")
-                    .annotate(count=Count("id"))[:100],
-                },
+        if dataset.type in [DataSetType.DATACUT, DataSetType.MASTER]:
+            # collect table views from attached source tables
+            if dataset.type == DataSetType.DATACUT:
+                tables = dataset.customdatasetquery_set
+            else:
+                tables = dataset.sourcetable_set
+            table_ids = tables.annotate(str_id=Cast("id", output_field=TextField())).values_list(
+                "str_id", flat=True
             )
-
-        return render(
-            request,
-            "datasets/dataset_usage_history.html",
-            context={
-                "dataset": dataset,
-                "event_description": (
-                    "Viewed" if dataset.type == DataSetType.VISUALISATION else "Downloaded"
-                ),
-                "rows": dataset.events.filter(
-                    event_type__in=[
-                        EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD,
-                        EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
+            table_view_events = EventLog.objects.filter(
+                object_id__in=table_ids, event_type=EventLog.TYPE_DATA_TABLE_VIEW
+            )
+            table_views = (
+                table_view_events.annotate(event=Value("Viewed"))
+                .annotate(day=TruncDay("timestamp"))
+                .annotate(email=F("user__email"))
+                .annotate(
+                    object=Func(
+                        F("extra"),
+                        Value(
+                            "data_table_name"
+                            if dataset.type == DataSetType.DATACUT
+                            else "data_table_tablename"
+                        ),
+                        function="jsonb_extract_path_text",
+                        output_field=CharField(),
+                    ),
+                )
+                .values("day", "email", "object", "event")
+                .annotate(count=Count("id"))
+            )
+        else:
+            table_views = []
+        if dataset.type == DataSetType.MASTER:
+            # collect SQL query information from PostGres logs
+            tables = list(dataset.sourcetable_set.values_list("table", flat=True))
+            all_other_events = (
+                ToolQueryAuditLogTable.objects.filter(table__in=tables)
+                .annotate(event=Value("Queried"))
+                .annotate(day=TruncDay("audit_log__timestamp"))
+                .annotate(email=F("audit_log__user__email"))
+                .annotate(object=F("table"))
+                .values("day", "email", "object", "event")
+                .annotate(count=Count("id"))
+            )
+        else:
+            # DataCuts, Visualisation dataset events
+            download_view_types = [
+                EventLog.TYPE_DATASET_SOURCE_LINK_DOWNLOAD,
+                EventLog.TYPE_DATASET_CUSTOM_QUERY_DOWNLOAD,
+            ]
+            all_other_events = (
+                dataset.events.filter(
+                    event_type__in=download_view_types
+                    + [
                         EventLog.TYPE_VIEW_VISUALISATION_TEMPLATE,
                         EventLog.TYPE_VIEW_SUPERSET_VISUALISATION,
                         EventLog.TYPE_VIEW_QUICKSIGHT_VISUALISATION,
                     ]
+                )
+                .annotate(
+                    event=Value(
+                        "Downloaded"
+                        if dataset.events.filter(event_type__in=download_view_types).count() > 0
+                        else "Viewed"
+                    )
                 )
                 .annotate(day=TruncDay("timestamp"))
                 .annotate(email=F("user__email"))
@@ -1094,8 +1105,19 @@ class DatasetUsageHistoryView(View):
                     ),
                 )
                 .order_by("-day")
-                .values("day", "email", "object")
-                .annotate(count=Count("id"))[:100],
+                .values("day", "email", "object", "event")
+                .annotate(count=Count("id"))
+            )
+        # convert Django QuerySet to standard python objects to combine two different model types
+        all_events = sorted(
+            list(all_other_events) + list(table_views), key=lambda x: x["day"], reverse=True
+        )
+        return render(
+            request,
+            "datasets/dataset_usage_history.html",
+            context={
+                "dataset": dataset,
+                "rows": all_events[:100],
             },
         )
 
