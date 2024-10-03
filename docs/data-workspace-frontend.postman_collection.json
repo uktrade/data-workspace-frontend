@@ -1,0 +1,137 @@
+{
+	"info": {
+		"_postman_id": "83e61590-33da-4c6e-90ce-a319c2e5e1b6",
+		"name": "data-workspace-frontend",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "38756713"
+	},
+	"item": [
+		{
+			"name": "API V1 (Hawk)",
+			"item": [
+				{
+					"name": "Catalogue Items",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true,
+						"disabledSystemHeaders": {}
+					},
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/plain",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{data_workspace_host}}/api/v1/dataset/catalogue-items",
+							"protocol": "https",
+							"host": [
+								"{{data_workspace_host}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"dataset",
+								"catalogue-items"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"/*****************************************************************************/",
+					"",
+					"const hawkId = pm.variables.get('data_workspace_hawk_id');",
+					"const hawkKey = pm.variables.get('data_workspace_hawk_key');",
+					"",
+					"/*****************************************************************************/",
+					"",
+					"const timestamp = parseInt(new Date().getTime() / 1000);",
+					"const nonce = CryptoJS.enc.Base64.stringify(CryptoJS.lib.WordArray.random(6));",
+					"const url = pm.request.url;",
+					"const body = pm.request.body.raw;",
+					"",
+					"// Data Workspace Hawk needs the signer to act as though its HTTP, not HTTPS",
+					"// even if the request is made over HTTPS",
+					"// const port = url.port || (url.protocol == 'https' && 443) || 80;",
+					"const port = 80;",
+					"",
+					"const canonicalPayload = `` +",
+					"    `hawk.1.payload\\n${pm.request.headers.get('content-type')}\\n${body}\\n`;",
+					"const hash = CryptoJS.enc.Base64.stringify(CryptoJS.SHA256(canonicalPayload));",
+					"const canonicalRequest = `` +",
+					"    `hawk.1.header\\n${timestamp}\\n${nonce}\\n${request.method}\\n${url.getPathWithQuery()}\\n` +",
+					"    `${pm.variables.replaceIn(url.getHost())}\\n${port}\\n${hash}\\n\\n`;",
+					"const mac = CryptoJS.enc.Base64.stringify(CryptoJS.HmacSHA256(canonicalRequest, hawkKey));",
+					"",
+					"pm.request.headers.add({",
+					"    key: 'Authorization',",
+					"    value: `` +",
+					"        `Hawk mac=\"${mac}\", hash=\"${hash}\", id=\"${hawkId}\", ` +",
+					"        `ts=\"${timestamp}\", nonce=\"${nonce}\"`",
+					"});"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "data_workspace_host",
+			"value": "set-me-in-postman-environment",
+			"type": "string"
+		},
+		{
+			"key": "data_workspace_hawk_id",
+			"value": "set-me-in-postman-environment",
+			"type": "string"
+		},
+		{
+			"key": "data_workspace_hawk_key",
+			"value": "set-me-in-postman-environment",
+			"type": "string"
+		}
+	]
+}
