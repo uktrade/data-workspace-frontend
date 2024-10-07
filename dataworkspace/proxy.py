@@ -79,6 +79,7 @@ async def async_main():
     ga_tracking_id = env.get("GA_TRACKING_ID")
     mirror_remote_root = env["MIRROR_REMOTE_ROOT"]
     mirror_local_root = "/__mirror/"
+    notebooks_bucket = env.get("NOTEBOOKS_BUCKET")
     required_admin_headers = (
         "cookie",
         "host",
@@ -315,6 +316,11 @@ async def async_main():
     def is_mirror_requested(request):
         return request.url.path.startswith(mirror_local_root)
 
+    def is_static_visualisation_requested(request):
+        return request.url.host == root_domain_no_port and request.url.path.startswith(
+            "/visualisations/link/"
+        )
+
     def is_requesting_credentials(request):
         return (
             request.url.host == root_domain_no_port
@@ -398,6 +404,7 @@ async def async_main():
         query = downstream_request.url.query
         app_requested = is_app_requested(downstream_request)
         mirror_requested = is_mirror_requested(downstream_request)
+        static_visualisation_requested = is_static_visualisation_requested(downstream_request)
         superset_requested = is_superset_requested(downstream_request)
         flower_requested = is_flower_requested(downstream_request)
         mlflow_requested = is_mlflow_requested(downstream_request)
@@ -417,6 +424,8 @@ async def async_main():
                 )
             if mirror_requested:
                 return await handle_mirror(downstream_request, method, path)
+            if static_visualisation_requested:
+                return await handle_static_visualisation(downstream_request, method, path)
             if superset_requested:
                 return await handle_superset(downstream_request, method, path, query)
             if flower_requested:
@@ -730,6 +739,39 @@ async def async_main():
     async def handle_mirror(downstream_request, method, path):
         mirror_path = path[len(mirror_local_root) :]
         upstream_url = URL(mirror_remote_root + mirror_path)
+        return await handle_http(
+            downstream_request,
+            method,
+            CIMultiDict(mirror_headers(downstream_request)),
+            upstream_url,
+            {},
+            await get_data(downstream_request),
+            default_http_timeout,
+        )
+
+    async def handle_static_visualisation(downstream_request, method, path):
+        path_in_vis = "/".join(path.split("/")[4:])
+
+        # Paths from the browser are more more easily handled if we are "in" the folder for the
+        # visualisation
+        if path_in_vis == "" and not path.endswith("/"):
+            return web.Response(
+                status=302,
+                headers={"Location": path + "/"},
+            )
+
+        path_in_vis = (
+            f"{path_in_vis}index.html"
+            if (path_in_vis == "" or path_in_vis[-1] == "/")
+            else path_in_vis
+        )
+        folder = (
+            "test-visualisation"
+            if "6dc7e71f-023d-43e6-91fc-e2b88805b624" in path
+            else "test-visualisation-2"
+        )
+        target_key = f"teams/_team_observable_firebreak/{folder}/{path_in_vis}"
+        upstream_url = URL(f"https://s3.eu-west-2.amazonaws.com/{notebooks_bucket}/{target_key}")
         return await handle_http(
             downstream_request,
             method,
