@@ -24,8 +24,6 @@ amqp==5.1.1
     #   kombu
 appdirs==1.4.4
     # via pyppeteer
-appnope==0.1.4
-    # via ipython
 asgiref==3.7.2
     # via
     #   -r requirements.txt
@@ -148,7 +146,7 @@ decorator==4.4.2
     # via ipython
 dj-database-url==0.5.0
     # via -r requirements.txt
-django==4.2.15
+django==4.2.16
     # via
     #   -r requirements.txt
     #   django-admin-sortable2
@@ -256,6 +254,7 @@ greenlet==3.0.1
     # via
     #   -r requirements.txt
     #   gevent
+    #   sqlalchemy
 h11==0.13.0
     # via wsproto
 hawk-server-asyncio==0.0.13
@@ -270,8 +269,9 @@ ijson==3.1.3
     # via
     #   -r requirements.txt
     #   tabulator
-importlib-metadata==4.11.3
+importlib-metadata==8.2.0
     # via
+    #   -r requirements.txt
     #   pyppeteer
     #   python-arango
 iniconfig==1.1.1
@@ -460,7 +460,9 @@ pytest-mock==3.5.1
 pytest-timeout==1.4.2
     # via -r requirements-dev.in
 python-arango==7.5.8
-    # via -r requirements-dev.in
+    # via
+    #   -r requirements-dev.in
+    #   -r requirements.txt
 python-dateutil==2.8.2
     # via
     #   -r requirements.txt
@@ -517,7 +519,9 @@ requests-oauthlib==1.3.0
     #   -r requirements.txt
     #   django-staff-sso-client
 requests-toolbelt==1.0.0
-    # via python-arango
+    # via
+    #   -r requirements.txt
+    #   python-arango
 rfc3986==1.4.0
     # via
     #   -r requirements.txt
@@ -537,6 +541,7 @@ sentry-sdk==2.8.0
 six==1.15.0
     # via
     #   -r requirements.txt
+    #   asttokens
     #   bleach
     #   click-repl
     #   django-compressor
@@ -679,8 +684,10 @@ yarl==1.9.4
     #   aiohttp
 zenpy==2.0.21
     # via -r requirements.txt
-zipp==3.19.1
-    # via importlib-metadata
+zipp==3.19.2
+    # via
+    #   -r requirements.txt
+    #   importlib-metadata
 zope-event==4.5.0
     # via
     #   -r requirements.txt
