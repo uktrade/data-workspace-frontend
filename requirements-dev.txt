@@ -148,7 +148,7 @@ decorator==4.4.2
     # via ipython
 dj-database-url==0.5.0
     # via -r requirements.txt
-django==4.2.15
+django==4.2.16
     # via
     #   -r requirements.txt
     #   django-admin-sortable2
