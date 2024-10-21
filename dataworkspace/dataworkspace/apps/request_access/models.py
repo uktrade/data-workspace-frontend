@@ -39,7 +39,9 @@ class AccessRequest(TimeStampedModel):
     reason_for_spss_and_stata = models.TextField(null=True)
     zendesk_reference_number = models.CharField(max_length=256, null=True)
 
-    data_access_status = models.CharField(max_length=256, choices=DataAccessStatus.choices, null=True)
+    data_access_status = models.CharField(
+        max_length=256, choices=DataAccessStatus.choices, null=True
+    )
 
     def __str__(self):
         return f"{self.requester} - Zendesk reference number: {self.zendesk_reference_number}"
