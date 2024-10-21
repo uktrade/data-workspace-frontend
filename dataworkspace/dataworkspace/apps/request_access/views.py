@@ -182,6 +182,7 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
     template_name = "request_access/confirmation-page.html"
 
     def get(self, request, *args, **kwargs):
+        print('access_request', request.__dict__)
         access_request = self.get_object()
 
         stata_reason = self.request.session.get("reason_for_spss_and_stata")
@@ -208,11 +209,12 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
                 and catalogue_item.request_approvers is not None
                 and len(catalogue_item.request_approvers) > 0
             ):
-                access_request.zendesk_reference_number = zendesk.notify_dataset_access_request(
-                    request,
-                    access_request,
-                    catalogue_item,
-                )
+                print('yay')
+                # access_request.zendesk_reference_number = zendesk.notify_dataset_access_request(
+                #     request,
+                #     access_request,
+                #     catalogue_item,
+                # )
             elif (
                 isinstance(catalogue_item, VisualisationCatalogueItem)
                 and catalogue_item.request_approvers is not None
@@ -233,11 +235,12 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
                 )
 
             else:
-                access_request.zendesk_reference_number = zendesk.create_zendesk_ticket(
-                    request,
-                    access_request,
-                    catalogue_item,
-                )
+                print('mooooooooooo')
+                # access_request.zendesk_reference_number = zendesk.create_zendesk_ticket(
+                #     request,
+                #     access_request,
+                #     catalogue_item,
+                # )
             access_request.save()
 
             if catalogue_item:
