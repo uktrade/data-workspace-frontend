@@ -30,22 +30,20 @@
     <div class="govuk-grid-row">
         <div class=""govuk-section-break govuk-section-break--visible"">
             <h1 class="govuk-heading-xl">Manage access to {{ obj.name }}</h1>
-            <table class="govuk-table">
+             <table class="govuk-table">
                 <caption class="govuk-table__caption govuk-table__caption--l">Users who have requested access</caption>
                 <tbody class="govuk-table__body">
                   {% if requested_users.count != 0 %} 
-                  {% for user in authorised_users %}
+                  {% for user in requested_users %}
                     <tr class="govuk-table__row">
                       <td class="govuk-table__cell">{{ user.first_name }} {{ user.last_name }}</td>
                       <td class="govuk-table__cell">{{ user.email }}</td>
                       <td class="govuk-table__cell"><button type="submit" class="govuk-button govuk-button--secondary" data-module="govuk-button"><a class="govuk-link" href="{% url 'datasets:remove_authorized_user' obj.id summary.id user.id %}"></a>Remove User</button></td>
                     </tr>
-    
-  
                   {% endfor %}
                   {% endif %}
                 </tbody>
-              </table>
+              </table> 
             <table class="govuk-table">
               <caption class="govuk-table__caption govuk-table__caption--l">Users who have access</caption>
               <tbody class="govuk-table__body">

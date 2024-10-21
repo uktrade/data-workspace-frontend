@@ -1849,18 +1849,7 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
             if isinstance(self.obj, DataSet)
             else reverse("datasets:edit_visualisation_catalogue_item", args=[self.obj.pk])
         )
-
-        access_requests = AccessRequest.objects.filter(catalogue_item_id=self.obj.pk)
-
-        for request in access_requests:
-            user = get_user_model().objects.get(email=request.contact_email)
-            first_name = user.first_name
-            last_name = user.last_name
-            print('name:', first_name, last_name)
-            # first_name = request.contact_email.split(".")[0]
-            # print("email: ", request.contact_email)
-            # print("last_name: ", request.contact_email.split(".").split("@"))
-
+        context["requested_users"] = [get_user_model().objects.get(email=request.contact_email) for request in AccessRequest.objects.filter(catalogue_item_id=self.obj.pk, data_access_status="waiting")]
         context["summary"] = self.summary
         context["authorised_users"] = get_user_model().objects.filter(
             id__in=json.loads(self.summary.users if self.summary.users else "[]")
