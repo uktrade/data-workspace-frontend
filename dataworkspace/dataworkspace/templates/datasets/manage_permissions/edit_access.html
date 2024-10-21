@@ -1,0 +1,67 @@
+{% extends '_main.html' %}
+{% load humanize static datasets_tags core_tags waffle_tags %}
+
+{% block page_title %}{{ obj.name }} - {{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-three-quarters">
+      <div class="govuk-breadcrumbs">
+        <ol class="govuk-breadcrumbs__list">
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="/">Home</a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="{{ obj.get_absolute_url }}">{{ obj.name }}</a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            <a class="govuk-breadcrumbs__link" href="{{ obj_edit_url }}">Manage this dataset</a>
+          </li>
+          <li class="govuk-breadcrumbs__list-item">
+            Manage access
+          </li>
+        </ol>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block content %}
+    <div class="govuk-grid-row">
+        <div class=""govuk-section-break govuk-section-break--visible"">
+            <h1 class="govuk-heading-xl">Manage access to {{ obj.name }}</h1>
+            <table class="govuk-table">
+                <caption class="govuk-table__caption govuk-table__caption--l">Users who have requested access</caption>
+                <tbody class="govuk-table__body">
+                  {% if requested_users.count != 0 %} 
+                  {% for user in authorised_users %}
+                    <tr class="govuk-table__row">
+                      <td class="govuk-table__cell">{{ user.first_name }} {{ user.last_name }}</td>
+                      <td class="govuk-table__cell">{{ user.email }}</td>
+                      <td class="govuk-table__cell"><button type="submit" class="govuk-button govuk-button--secondary" data-module="govuk-button"><a class="govuk-link" href="{% url 'datasets:remove_authorized_user' obj.id summary.id user.id %}"></a>Remove User</button></td>
+                    </tr>
+    
+  
+                  {% endfor %}
+                  {% endif %}
+                </tbody>
+              </table>
+            <table class="govuk-table">
+              <caption class="govuk-table__caption govuk-table__caption--l">Users who have access</caption>
+              <tbody class="govuk-table__body">
+                {% if authorised_users.count == 0 %}
+                  <h2 class="govuk-heading-m">There are currently no authorized users</h2>
+                {% endif %}
+                {% for user in authorised_users %}
+                  <tr class="govuk-table__row">
+                    <td class="govuk-table__cell">{{ user.first_name }} {{ user.last_name }}</td>
+                    <td class="govuk-table__cell">{{ user.email }}</td>
+                    <td class="govuk-table__cell"><button type="submit" class="govuk-button govuk-button--secondary" data-module="govuk-button"><a class="govuk-link" href="{% url 'datasets:remove_authorized_user' obj.id summary.id user.id %}"></a>Remove User</button></td>
+                  </tr>
+
+                {% endfor %}
+              </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
