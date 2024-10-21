@@ -7,6 +7,12 @@ from dataworkspace.apps.core.models import (  # pylint: disable=import-error
 from dataworkspace.apps.core import storage
 
 
+class DataAccessStatus(models.TextChoices):
+    confirmed = "confirmed"
+    waiting = "waiting"
+    declined = "declined"
+
+
 class AccessRequest(TimeStampedModel):
     JOURNEY_TOOLS_ACCESS = "tools_access_only"
     JOURNEY_DATASET_ACCESS = "dataset_access_only"
@@ -32,6 +38,8 @@ class AccessRequest(TimeStampedModel):
     line_manager_email_address = models.CharField(max_length=256, null=True)
     reason_for_spss_and_stata = models.TextField(null=True)
     zendesk_reference_number = models.CharField(max_length=256, null=True)
+
+    data_access_status = models.CharField(max_length=256, choices=DataAccessStatus.choices, null=True)
 
     def __str__(self):
         return f"{self.requester} - Zendesk reference number: {self.zendesk_reference_number}"
