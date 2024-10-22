@@ -1,3 +1,4 @@
+from datetime import date, datetime, timedelta
 import json
 import logging
 import re
@@ -1833,28 +1834,28 @@ class DatasetEditPermissionsView(EditBaseView, View):
 
 class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
     template_name = "datasets/manage_permissions/edit_summary.html"
-    access_requests = AccessRequest.objects.all()
-    print()
 
     def get_context_data(self, **kwargs):
-
         if waffle.flag_is_active(self.request, settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW):
             self.template_name = "datasets/manage_permissions/edit_access.html"
 
         context = super().get_context_data(**kwargs)
-
         context["obj"] = self.obj
         context["obj_edit_url"] = (
             reverse("datasets:edit_dataset", args=[self.obj.pk])
             if isinstance(self.obj, DataSet)
             else reverse("datasets:edit_visualisation_catalogue_item", args=[self.obj.pk])
         )
-        context["requested_users"] = [get_user_model().objects.get(email=request.contact_email) for request in AccessRequest.objects.filter(catalogue_item_id=self.obj.pk, data_access_status="waiting")]
         context["summary"] = self.summary
         context["authorised_users"] = get_user_model().objects.filter(
             id__in=json.loads(self.summary.users if self.summary.users else "[]")
         )
-
+        requests = AccessRequest.objects.filter(catalogue_item_id=self.obj.pk, data_access_status="waiting")
+        for request in requests:
+            date_requested = request.created_date.replace(tzinfo=None).day
+            days_ago = (datetime.today() - timedelta(days=date_requested))
+            print("days_ago:", days_ago.day)
+        context["requested_users"] = [get_user_model().objects.get(email=request.contact_email) for request in requests]
         context["waffle_flag"] = waffle.flag_is_active(
             self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"
         )
