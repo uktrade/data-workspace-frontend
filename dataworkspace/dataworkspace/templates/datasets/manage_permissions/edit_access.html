@@ -28,19 +28,21 @@
 
 {% block content %}
     <div class="govuk-grid-row">
-        <div class=""govuk-section-break govuk-section-break--visible"">
+        <div class="govuk-grid-column-full">
             <h1 class="govuk-heading-xl">Manage access to {{ obj.name }}</h1>
              <table class="govuk-table">
                 <caption class="govuk-table__caption govuk-table__caption--l">Users who have requested access</caption>
                 <tbody class="govuk-table__body">
                   {% if requested_users.count != 0 %} 
-                  {% for user in requested_users %}
+                    {% for user in requested_users %} 
                     <tr class="govuk-table__row">
-                      <td class="govuk-table__cell">{{ user.first_name }} {{ user.last_name }}</td>
-                      <td class="govuk-table__cell">{{ user.email }}</td>
+                      <td class="govuk-table__cell "> <span class="govuk-body govuk-!-font-weight-bold">{{ user.first_name }} {{ user.last_name }}</span>
+                         <br> {{ user.email }} <br> 
+                         <span class="govuk-caption-m"> Requested: {% if user.days_ago == 0 %} Today {% else %} {{ user.days_ago }} days ago {% endif %}</span>
+                        </td>
                       <td class="govuk-table__cell"><a class="govuk-link" href="{% url 'datasets:remove_authorized_user' obj.id summary.id user.id %}">Review access request</a></td>
                     </tr>
-                  {% endfor %}
+                    {% endfor %}
                   {% endif %}
                 </tbody>
               </table> 
@@ -52,11 +54,11 @@
                 {% endif %}
                 {% for user in authorised_users %}
                   <tr class="govuk-table__row">
-                    <td class="govuk-table__cell">{{ user.first_name }} {{ user.last_name }}</td>
-                    <td class="govuk-table__cell">{{ user.email }}</td>
+                    <td class="govuk-table__cell"><span class="govuk-body govuk-!-font-weight-bold">{{ user.first_name }} {{ user.last_name }}</span>
+                        <br>{{ user.email }}
+                    </td>
                     <td class="govuk-table__cell"><button type="submit" class="govuk-button govuk-button--secondary" data-module="govuk-button"><a class="govuk-link" href="{% url 'datasets:remove_authorized_user' obj.id summary.id user.id %}"></a>Remove User</button></td>
                   </tr>
-
                 {% endfor %}
               </tbody>
             </table>

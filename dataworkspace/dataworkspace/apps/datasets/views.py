@@ -1841,6 +1841,8 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
 
         context = super().get_context_data(**kwargs)
         context["obj"] = self.obj
+        print("obj", self.obj.__dict__)
+
         context["obj_edit_url"] = (
             reverse("datasets:edit_dataset", args=[self.obj.pk])
             if isinstance(self.obj, DataSet)
@@ -1850,12 +1852,30 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
         context["authorised_users"] = get_user_model().objects.filter(
             id__in=json.loads(self.summary.users if self.summary.users else "[]")
         )
+        print('auth', context["authorised_users"].__dict__)
+        context["authorised_users"]
         requests = AccessRequest.objects.filter(catalogue_item_id=self.obj.pk, data_access_status="waiting")
+        requested_users = []
         for request in requests:
-            date_requested = request.created_date.replace(tzinfo=None).day
-            days_ago = (datetime.today() - timedelta(days=date_requested))
-            print("days_ago:", days_ago.day)
-        context["requested_users"] = [get_user_model().objects.get(email=request.contact_email) for request in requests]
+            requested_users.append({
+                "id": get_user_model().objects.get(email=request.contact_email).id,
+                "first_name": get_user_model().objects.get(email=request.contact_email).first_name,
+                "last_name": get_user_model().objects.get(email=request.contact_email).last_name,
+                "email": get_user_model().objects.get(email=request.contact_email).email,
+                "days_ago": (datetime.today() - request.created_date.replace(tzinfo=None)).days + 1,
+                "IAM": False,
+                "IAO": False,
+                "catalogue_editor": False,
+            })
+            if get_user_model().objects.get(id=self.obj.information_asset_owner_id) == get_user_model().objects.get(email=request.contact_email):
+                requested_users["IAO"] = True
+            elif get_user_model().objects.get(id=self.obj.information_asset_manager_id) == get_user_model().objects.get(email=request.contact_email):
+                requested_users["IAM"] = True
+                
+
+        context["requested_users"] = requested_users
+        print("requests", requested_users)
+
         context["waffle_flag"] = waffle.flag_is_active(
             self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"
         )
