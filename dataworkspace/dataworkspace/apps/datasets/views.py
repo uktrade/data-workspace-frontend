@@ -1849,10 +1849,15 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
             else reverse("datasets:edit_visualisation_catalogue_item", args=[self.obj.pk])
         )
         context["summary"] = self.summary
+        print('summary', context["summary"].__dict__)
         context["authorised_users"] = get_user_model().objects.filter(
             id__in=json.loads(self.summary.users if self.summary.users else "[]")
         )
-        print('auth', context["authorised_users"].__dict__)
+
+        context["iao"] = get_user_model().objects.get(id=self.obj.information_asset_owner_id).email
+        context["iam"] = get_user_model().objects.get(id=self.obj.information_asset_manager_id).email
+
+        # print('auth', context["authorised_users"].__dict__)
         context["authorised_users"]
         requests = AccessRequest.objects.filter(catalogue_item_id=self.obj.pk, data_access_status="waiting")
         requested_users = []
@@ -1863,15 +1868,7 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
                 "last_name": get_user_model().objects.get(email=request.contact_email).last_name,
                 "email": get_user_model().objects.get(email=request.contact_email).email,
                 "days_ago": (datetime.today() - request.created_date.replace(tzinfo=None)).days + 1,
-                "IAM": False,
-                "IAO": False,
-                "catalogue_editor": False,
             })
-            if get_user_model().objects.get(id=self.obj.information_asset_owner_id) == get_user_model().objects.get(email=request.contact_email):
-                requested_users["IAO"] = True
-            elif get_user_model().objects.get(id=self.obj.information_asset_manager_id) == get_user_model().objects.get(email=request.contact_email):
-                requested_users["IAM"] = True
-                
 
         context["requested_users"] = requested_users
         print("requests", requested_users)

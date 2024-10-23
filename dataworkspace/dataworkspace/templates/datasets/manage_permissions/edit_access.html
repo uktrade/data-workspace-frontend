@@ -55,6 +55,7 @@
                 {% for user in authorised_users %}
                   <tr class="govuk-table__row">
                     <td class="govuk-table__cell"><span class="govuk-body govuk-!-font-weight-bold">{{ user.first_name }} {{ user.last_name }}</span>
+                       {% if user.email in iao %}(Information Asset Owner){% elif user in iam %} (Information Asset Manager) {% endif%}
                         <br>{{ user.email }}
                     </td>
                     <td class="govuk-table__cell"><button type="submit" class="govuk-button govuk-button--secondary" data-module="govuk-button"><a class="govuk-link" href="{% url 'datasets:remove_authorized_user' obj.id summary.id user.id %}"></a>Remove User</button></td>
