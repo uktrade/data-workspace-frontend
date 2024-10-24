@@ -27,6 +27,17 @@
 {% endblock %}
 
 {% block content %}
+<dialog id="popup">
+  <form>
+      <div class="govuk-!-padding-bottom-2">
+            <h1 class="govuk-heading-l">Are you sure you want to remove <span id="userToRemove"></span>?</h1>
+      </div>
+     <div class="govuk-button-group">
+      <button class="govuk-button" id="removeUser" data-module="govuk-button">Yes, remove user</button>
+      <button id="closePopUp"><p>Cancel</p></button>
+    </div>
+    </form>
+</dialog>
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
             <h1 class="govuk-heading-l">Edit permissions for {{ obj.name }}</h1>
@@ -38,9 +49,9 @@
                 {% endif %}
                 {% for user in authorised_users %}
                   <tr class="govuk-table__row">
-                    <td class="govuk-table__cell">{{ user.first_name }} {{ user.last_name }}</td>
+                    <td class="govuk-table__cell" id="userName">{{ user.first_name }} {{ user.last_name }}</td>
                     <td class="govuk-table__cell">{{ user.email }}</td>
-                    <td class="govuk-table__cell"><a class="govuk-link" href="{% url 'datasets:remove_authorized_user' obj.id summary.id user.id %}">Remove</a></td>
+                    <td class="govuk-table__cell"><button type="submit" class="govuk-button govuk-button--secondary" data-module="govuk-button" data-href="{% url 'datasets:remove_authorized_user' obj.id summary.id user.id %}" >Remove</button></td>
                   </tr>
                 {% endfor %}
               </tbody>
@@ -67,3 +78,29 @@
         </div>
     </div>
 {% endblock %}
+{% block footer_scripts %}
+<script nonce="{{ request.csp_nonce }}">
+
+  document.addEventListener("DOMContentLoaded", function () {
+    var removeLink;
+    document.querySelectorAll('button[data-href]').forEach(function(link){
+      link.addEventListener('click', function(event){
+        event.preventDefault();
+        removeLink = this.getAttribute('data-href')
+        var linkText = document.getElementById('userName').textContent
+        document.getElementById('userToRemove').textContent = linkText
+        document.getElementById("popup").showModal();
+      })
+
+    })
+    document.getElementById("removeUser").addEventListener("click", function (e) {
+      window.location.href = removeLink
+    });
+    document.getElementById("closePopUp").addEventListener("click", function (e) {
+      e.stopPropagation();
+      e.preventDefault();
+      document.getElementById("popup").close();
+    });
+  });
+  </script>
+{% endblock footer_scripts %}
