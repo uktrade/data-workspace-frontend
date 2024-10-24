@@ -40,6 +40,7 @@ from psycopg2 import sql
 from dataworkspace import datasets_db
 from dataworkspace.apps.accounts.models import UserDataTableView
 from dataworkspace.apps.api_v1.core.views import invalidate_superset_user_cached_credentials
+from dataworkspace.apps.request_access.models import AccessRequest
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.errors import DatasetPermissionDenied, DatasetPreviewDisabledError
@@ -61,6 +62,7 @@ from dataworkspace.apps.datasets.forms import (
     RelatedVisualisationsSortForm,
     UserSearchForm,
     VisualisationCatalogueItemEditForm,
+    ReviewAccessForm
 )
 from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
@@ -1869,6 +1871,44 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
             return HttpResponseRedirect(
                 reverse("datasets:edit_visualisation_catalogue_item", args=[self.obj.id])
             )
+
+
+class DataSetReviewAccess(EditBaseView, FormView):
+    form_class = ReviewAccessForm
+    template_name = "datasets/manage_permissions/review_access.html"
+
+    def get_form_kwargs(self):
+        kwargs = super(DataSetReviewAccess, self).get_form_kwargs()
+        args = self.kwargs
+        user_id = args['user_id']
+        [user] = get_user_model().objects.filter(
+            id=user_id
+        )
+        kwargs['requester'] = user
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        args = self.kwargs
+        user_id = args['user_id']
+        context = super().get_context_data(**kwargs)
+        context["obj"] = self.obj
+        print('self.obj.eligibility_criteria', self.obj.eligibility_criteria)
+        context['eligibility_criteria'] = self.obj.eligibility_criteria
+        [user] = get_user_model().objects.filter(
+            id=user_id
+        )
+        context['full_name'] = f"{user.first_name} {user.last_name}"
+        context['email'] = user.email
+        access_request = AccessRequest.objects.filter(requester=user_id).latest('created_date')
+        context['is_eligible'] = access_request.eligibility_criteria_met
+        context['reason_for_access'] = access_request.reason_for_access
+        context["obj_edit_url"] = (
+            reverse("datasets:edit_dataset", args=[self.obj.pk])
+            if isinstance(self.obj, DataSet)
+            else reverse("datasets:edit_visualisation_catalogue_item", args=[self.obj.pk])
+        )
+        context["obj_manage_url"] = reverse("datasets:edit_permissions", args=[self.obj.id])
+        return context
 
 
 class DatasetAuthorisedUsersSearchView(UserSearchFormView):

@@ -11,6 +11,7 @@ from django.contrib.auth import get_user_model
 from dataworkspace.apps.datasets.constants import AggregationType, DataSetType, TagType
 from .models import DataSet, SourceLink, Tag, VisualisationCatalogueItem
 from .search import SORT_FIELD_MAP, SearchDatasetsFilters
+from dataworkspace.apps.core.forms import ConditionalSupportTypeRadioWidget
 from ...forms import (
     GOVUKDesignSystemChoiceField,
     GOVUKDesignSystemForm,
@@ -756,3 +757,35 @@ class ChartAggregateForm(GOVUKDesignSystemForm):
             self.fields["aggregate_field"].widget.custom_context["errors"] = [err]
             raise forms.ValidationError({"aggregate_field": err})
         return cleaned_data
+
+
+class ReviewAccessForm(GOVUKDesignSystemForm):
+
+    def __init__(self, *args, **kwargs):
+        self.requester = kwargs.pop('requester')
+        super(ReviewAccessForm, self).__init__(*args, **kwargs)
+        first_name = self.requester.first_name
+        last_name = self.requester.last_name
+        full_name = f"{first_name} {last_name}"
+        self.fields['action_type'].choices = [('grant', f"Grant {full_name} access to this dataset"), ('other', f"Deny {full_name} access to this dataset")]
+
+    class ActionTypes(models.TextChoices):
+        GRANT = "grant", f"Grant"
+        DENY = "other", "Deny"
+
+    action_type = GOVUKDesignSystemRadioField(
+        label="Actions you can take",
+        choices=ActionTypes.choices,
+        widget=ConditionalSupportTypeRadioWidget(heading="h2"),
+        error_messages={"required": "Please select the type of support you require."},
+    )
+
+    message = GOVUKDesignSystemTextareaField(
+        required=False,
+        label="Why are you denying access to this data?",
+        help_text="Your answer below will be emailed to the requestor",
+        widget=GOVUKDesignSystemTextareaWidget(
+            label_is_heading=False,
+            attrs={"rows": 5},
+        ),
+    )
