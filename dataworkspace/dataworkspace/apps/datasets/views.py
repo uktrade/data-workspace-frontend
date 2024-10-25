@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 import logging
 import uuid
@@ -97,6 +98,8 @@ from dataworkspace.apps.datasets.utils import (
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event, log_permission_change
 from dataworkspace.apps.explorer.utils import invalidate_data_explorer_user_cached_credentials
+from dataworkspace.apps.request_access.models import AccessRequest
+from dataworkspace.zendesk import get_username
 
 logger = logging.getLogger("app")
 
@@ -1832,6 +1835,8 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
     template_name = "datasets/manage_permissions/edit_summary.html"
 
     def get_context_data(self, **kwargs):
+        if waffle.flag_is_active(self.request, settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW):
+            self.template_name = "datasets/manage_permissions/edit_access.html"
         context = super().get_context_data(**kwargs)
         context["user_removed"] = self.request.GET.get("user_removed", None)
         context["obj"] = self.obj
@@ -1844,6 +1849,21 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
         context["authorised_users"] = get_user_model().objects.filter(
             id__in=json.loads(self.summary.users if self.summary.users else "[]")
         )
+        context["iao"] = get_user_model().objects.get(id=self.obj.information_asset_owner_id).email
+        context["iam"] = get_user_model().objects.get(id=self.obj.information_asset_manager_id).email
+        context["data_catalogue_editors"] = self.obj.data_catalogue_editors.all().values_list()[0][7]
+        context["authorised_users"]
+        requests = AccessRequest.objects.filter(catalogue_item_id=self.obj.pk, data_access_status="waiting")
+        requested_users = []
+        for request in requests:
+            requested_users.append({
+                "id": get_user_model().objects.get(email=request.contact_email).id,
+                "first_name": get_user_model().objects.get(email=request.contact_email).first_name,
+                "last_name": get_user_model().objects.get(email=request.contact_email).last_name,
+                "email": get_user_model().objects.get(email=request.contact_email).email,
+                "days_ago": (datetime.today() - request.created_date.replace(tzinfo=None)).days + 1,
+            })
+        context["requested_users"] = requested_users
         context["waffle_flag"] = waffle.flag_is_active(
             self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"
         )
@@ -1954,7 +1974,7 @@ class DatasetRemoveAuthorisedUserView(EditBaseView, View):
         )
 
 
-@require_POST
+@ require_POST
 def log_data_preview_load_time(request, dataset_uuid, source_id):
     try:
         received_json_data = json.loads(request.body)
