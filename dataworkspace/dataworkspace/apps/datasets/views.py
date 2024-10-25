@@ -1833,13 +1833,13 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["user_removed"] = self.request.GET.get("user_removed", None)
         context["obj"] = self.obj
         context["obj_edit_url"] = (
             reverse("datasets:edit_dataset", args=[self.obj.pk])
             if isinstance(self.obj, DataSet)
             else reverse("datasets:edit_visualisation_catalogue_item", args=[self.obj.pk])
         )
-
         context["summary"] = self.summary
         context["authorised_users"] = get_user_model().objects.filter(
             id__in=json.loads(self.summary.users if self.summary.users else "[]")
@@ -1914,16 +1914,13 @@ class DatasetAddAuthorisedUserView(EditBaseView, View):
 class DatasetAddAuthorisedUsersView(EditBaseView, View):
     def post(self, request, *args, **kwargs):
         summary = PendingAuthorizedUsers.objects.get(id=self.kwargs.get("summary_id"))
-        users = json.loads(summary.users if summary.users else "[]")
+        users = json.loads(summary.users) if summary.users else []
         for selected_user in self.request.POST.getlist("selected-user"):
             user = get_user_model().objects.get(id=selected_user)
-
             if user.id not in users:
                 users.append(user.id)
-
         summary.users = json.dumps(users)
         summary.save()
-
         return HttpResponseRedirect(
             reverse(
                 "datasets:edit_permissions_summary",
@@ -1939,8 +1936,7 @@ class DatasetRemoveAuthorisedUserView(EditBaseView, View):
     def get(self, request, *args, **kwargs):
         summary = PendingAuthorizedUsers.objects.get(id=self.kwargs.get("summary_id"))
         user = get_user_model().objects.get(id=self.kwargs.get("user_id"))
-
-        users = json.loads(summary.users if summary.users else "[]")
+        users = json.loads(summary.users) if summary.users else []
         if user.id in users:
             summary.users = json.dumps([user_id for user_id in users if user_id != user.id])
             summary.save()
@@ -1953,6 +1949,8 @@ class DatasetRemoveAuthorisedUserView(EditBaseView, View):
                     self.kwargs.get("summary_id"),
                 ],
             )
+            + "?user_removed="
+            + user.get_full_name()
         )
 
 

@@ -18,7 +18,7 @@
             <a class="govuk-breadcrumbs__link" href="{{ obj_edit_url }}">Manage this dataset</a>
           </li>
           <li class="govuk-breadcrumbs__list-item">
-            Manage permissions
+            Manage access
           </li>
         </ol>
       </div>
@@ -28,55 +28,58 @@
 
 {% block content %}
 <dialog id="popup">
-  <form>
+  <form id="formRemoveUser" method="get">
+    {% csrf_token %}
       <div class="govuk-!-padding-bottom-2">
             <h1 class="govuk-heading-l">Are you sure you want to remove <span id="userToRemove"></span>?</h1>
       </div>
      <div class="govuk-button-group">
-      <button class="govuk-button" id="removeUser" data-module="govuk-button">Yes, remove user</button>
-      <button id="closePopUp"><p>Cancel</p></button>
+      <button class="govuk-button" id="removeUser" data-module="govuk-button" type="submit">Yes, remove user</button>
+      <a class="govuk-link" href="#" id="closePopUp">Cancel</button>
     </div>
-    </form>
+  </form>
 </dialog>
-    <div class="govuk-grid-row">
-        <div class="govuk-grid-column-two-thirds">
-            <h1 class="govuk-heading-l">Edit permissions for {{ obj.name }}</h1>
-            <table class="govuk-table">
-              <caption class="govuk-table__caption govuk-table__caption--m">Users with access</caption>
-              <tbody class="govuk-table__body">
-                {% if authorised_users.count == 0 %}
-                  <h2 class="govuk-heading-m">There are currently no authorized users</h2>
-                {% endif %}
-                {% for user in authorised_users %}
-                  <tr class="govuk-table__row">
-                    <td class="govuk-table__cell" id="userName">{{ user.first_name }} {{ user.last_name }}</td>
-                    <td class="govuk-table__cell">{{ user.email }}</td>
-                    <td class="govuk-table__cell"><button type="submit" class="govuk-button govuk-button--secondary" data-module="govuk-button" data-href="{% url 'datasets:remove_authorized_user' obj.id summary.id user.id %}" >Remove</button></td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-            <div class="govuk-body">
-              {% if waffle_flag %}
-              <a class="govuk-link" href="{% url 'datasets:search_authorized_users' obj.id summary.id %}">Add users</a>
-              {% else %}
-              <a class="govuk-link" href="{% url 'datasets:search_authorized_users' obj.id summary.id %}">Add another user</a>
-              {% endif %}
-            </div>
-            <div class="govuk-body">
-              <a class="govuk-link" href="{{ obj.get_usage_history_url }}">View usage history</a>
-            </div>
-            <form method="POST">
-              {% csrf_token %}
-              <div class="govuk-button-group">
-                <button class="govuk-button" data-module="govuk-button">
-                    Save and continue
+{% if user_removed != None %}
+<div class="govuk-notification-banner govuk-notification-banner--success" role="alert" aria-labelledby="govuk-notification-banner-title" data-module="govuk-notification-banner">
+  <div class="govuk-notification-banner__header">
+    <h2 class="govuk-notification-banner__title" id="govuk-notification-banner-title">
+      Success
+    </h2>
+  </div>
+  <div class="govuk-notification-banner__content">
+    <p class="govuk-body"></p><span id="notificationBannerUserRemovedUserName">{{ user_removed }}'s</span> access to data has been removed. An email has been sent out to let them know they no longer have access to the data.</p>
+  </div>
+</div>
+{% endif %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <h1 class="govuk-heading-l">Edit permissions for {{ obj.name }}</h1>
+      <table class="govuk-table">
+        <caption class="govuk-table__caption govuk-table__caption--m">Users with access</caption>
+        <tbody class="govuk-table__body">
+          {% if authorised_users.count == 0 %}
+            <h2 class="govuk-heading-m">There are currently no authorized users</h2>
+          {% endif %}
+          {% for user in authorised_users %}
+            <tr class="govuk-table__row">
+              <th scope="row" class="govuk-table__header">
+                <h3 class="govuk-heading-s" id="userName">{{ user.first_name }} {{ user.last_name }}</h3>
+                <p class="govuk-body">{{ user.email }}</p>
+              </th>
+              <td class="govuk-table__cell">
+                <button type="submit" class="govuk-button govuk-button--secondary" data-module="govuk-button" data-href="{% url 'datasets:remove_authorized_user' obj.id summary.id user.id %}">
+                  Remove
                 </button>
-                <a class="govuk-link" href="{{ obj_edit_url }}">Cancel</a>
-              </div>
-            </form>
-        </div>
-    </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="govuk-body">
+        <a class="govuk-link" href="{% url 'datasets:dataset_detail' obj.id %}">View catalogue page</a>
+      </div>
+  </div>
+</div>
 {% endblock %}
 {% block footer_scripts %}
 <script nonce="{{ request.csp_nonce }}">
@@ -87,14 +90,12 @@
       link.addEventListener('click', function(event){
         event.preventDefault();
         removeLink = this.getAttribute('data-href')
+        document.getElementById("formRemoveUser").action = removeLink
         var linkText = document.getElementById('userName').textContent
         document.getElementById('userToRemove').textContent = linkText
+        document.getElementById('userToRemove').value = removeLink
         document.getElementById("popup").showModal();
       })
-
-    })
-    document.getElementById("removeUser").addEventListener("click", function (e) {
-      window.location.href = removeLink
     });
     document.getElementById("closePopUp").addEventListener("click", function (e) {
       e.stopPropagation();
