@@ -182,3 +182,8 @@ def saved_grid_config(user, source):
 @register.filter
 def timedelta_to_minutes(td):
     return round(td.total_seconds() / 60, 2)
+
+
+@register.filter
+def format_table_name(table_name):
+    return table_name.capitalize().replace("_", " ")
