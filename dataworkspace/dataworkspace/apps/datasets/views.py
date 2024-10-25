@@ -1849,16 +1849,21 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
             else reverse("datasets:edit_visualisation_catalogue_item", args=[self.obj.pk])
         )
         context["summary"] = self.summary
-        print('summary', context["summary"].__dict__)
+        print('summary', type(context["summary"].users))
         context["authorised_users"] = get_user_model().objects.filter(
             id__in=json.loads(self.summary.users if self.summary.users else "[]")
         )
 
         context["iao"] = get_user_model().objects.get(id=self.obj.information_asset_owner_id).email
+        print("iao", context["iao"])
         context["iam"] = get_user_model().objects.get(id=self.obj.information_asset_manager_id).email
+        print("iam", context["iam"])
+
+        # context["data_catalogue_editors"] = self.obj.data_catalogue_editors.all()
 
         # print('auth', context["authorised_users"].__dict__)
         context["authorised_users"]
+        print('auth users:', context["authorised_users"])
         requests = AccessRequest.objects.filter(catalogue_item_id=self.obj.pk, data_access_status="waiting")
         requested_users = []
         for request in requests:
