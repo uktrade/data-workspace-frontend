@@ -46,7 +46,7 @@
                 </tbody>
               </table> 
               {% endif %}
-            <table class="govuk-table">
+            <table class="govuk-table govuk-!-margin-bottom-4">
               <caption class="govuk-table__caption govuk-table__caption--l">Users who have access</caption>
               <tbody class="govuk-table__body">
                 {% if authorised_users.count == 0 %}
@@ -64,7 +64,7 @@
                     <td class="govuk-table__cell"> </td> 
 
                     {% else %}
-                    <td class="govuk-table__cell govuk-!-text-align-right "><button type="submit" class="govuk-button govuk-button--secondary govuk-!-margin-bottom-0" data-module="govuk-button"><a class="govuk-link" href="{% url 'datasets:remove_authorized_user' obj.id summary.id user.id %}"></a>Remove User</button></td>
+                    <td class="govuk-table__cell govuk-!-text-align-right table-cell--vertical-align-middle"><button type="submit" class="govuk-button govuk-button--secondary govuk-!-margin-bottom-0" data-module="govuk-button"><a class="govuk-link" href="{% url 'datasets:remove_authorized_user' obj.id summary.id user.id %}"></a>Remove User</button></td>
                     {% endif %}
                 </tr>
                 {% endfor %}
