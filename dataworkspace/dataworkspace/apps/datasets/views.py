@@ -1833,37 +1833,24 @@ class DatasetEditPermissionsView(EditBaseView, View):
 
 
 class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
-    template_name = "datasets/manage_permissions/edit_summary.html"
+    template_name = "datasets/manage_permissions/edit_access.html"
 
     def get_context_data(self, **kwargs):
-        if waffle.flag_is_active(self.request, settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW):
-            self.template_name = "datasets/manage_permissions/edit_access.html"
-
         context = super().get_context_data(**kwargs)
         context["obj"] = self.obj
-        print("obj", self.obj.__dict__)
-
         context["obj_edit_url"] = (
             reverse("datasets:edit_dataset", args=[self.obj.pk])
             if isinstance(self.obj, DataSet)
             else reverse("datasets:edit_visualisation_catalogue_item", args=[self.obj.pk])
         )
         context["summary"] = self.summary
-        print('summary', type(context["summary"].users))
         context["authorised_users"] = get_user_model().objects.filter(
             id__in=json.loads(self.summary.users if self.summary.users else "[]")
         )
-
         context["iao"] = get_user_model().objects.get(id=self.obj.information_asset_owner_id).email
-        print("iao", context["iao"])
         context["iam"] = get_user_model().objects.get(id=self.obj.information_asset_manager_id).email
-        print("iam", context["iam"])
-
-        # context["data_catalogue_editors"] = self.obj.data_catalogue_editors.all()
-
-        # print('auth', context["authorised_users"].__dict__)
+        context["data_catalogue_editors"] = self.obj.data_catalogue_editors.all().values_list()[0][7]
         context["authorised_users"]
-        print('auth users:', context["authorised_users"])
         requests = AccessRequest.objects.filter(catalogue_item_id=self.obj.pk, data_access_status="waiting")
         requested_users = []
         for request in requests:
