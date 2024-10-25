@@ -1836,6 +1836,8 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
     template_name = "datasets/manage_permissions/edit_access.html"
 
     def get_context_data(self, **kwargs):
+        if waffle.flag_is_active(self.request, settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW):
+            self.template_name = "datasets/manage_permissions/edit_access.html"
         context = super().get_context_data(**kwargs)
         context["obj"] = self.obj
         context["obj_edit_url"] = (
