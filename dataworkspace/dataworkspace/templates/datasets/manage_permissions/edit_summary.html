@@ -55,7 +55,9 @@
   <div class="govuk-grid-column-two-thirds">
     <h1 class="govuk-heading-l">Edit permissions for {{ obj.name }}</h1>
       <table class="govuk-table">
-        <caption class="govuk-table__caption govuk-table__caption--m">Users with access</caption>
+        {% if authorised_users.count > 0 %}
+          <caption class="govuk-table__caption govuk-table__caption--m">Users with access</caption>
+        {% endif %}
         <tbody class="govuk-table__body">
           {% if authorised_users.count == 0 %}
             <h2 class="govuk-heading-m">There are currently no authorized users</h2>
@@ -63,11 +65,11 @@
           {% for user in authorised_users %}
             <tr class="govuk-table__row">
               <th scope="row" class="govuk-table__header">
-                <h3 class="govuk-heading-s" id="userName">{{ user.first_name }} {{ user.last_name }}</h3>
+                <h3 class="govuk-heading-s">{{ user.first_name }} {{ user.last_name }}</h3>
                 <p class="govuk-body">{{ user.email }}</p>
               </th>
               <td class="govuk-table__cell">
-                <button type="submit" class="govuk-button govuk-button--secondary" data-module="govuk-button" data-href="{% url 'datasets:remove_authorized_user' obj.id summary.id user.id %}">
+                <button type="submit" class="govuk-button govuk-button--secondary" data-module="govuk-button" data-href="{% url 'datasets:remove_authorized_user' obj.id summary.id user.id %}" id="{{ user.first_name }} {{ user.last_name }}">
                   Remove
                 </button>
               </td>
@@ -90,10 +92,9 @@
       link.addEventListener('click', function(event){
         event.preventDefault();
         removeLink = this.getAttribute('data-href')
+        user_name = this.getAttribute("id")
         document.getElementById("formRemoveUser").action = removeLink
-        var linkText = document.getElementById('userName').textContent
-        document.getElementById('userToRemove').textContent = linkText
-        document.getElementById('userToRemove').value = removeLink
+        document.getElementById('userToRemove').textContent = user_name
         document.getElementById("popup").showModal();
       })
     });
