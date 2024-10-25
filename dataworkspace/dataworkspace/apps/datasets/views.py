@@ -1833,7 +1833,7 @@ class DatasetEditPermissionsView(EditBaseView, View):
 
 
 class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
-    template_name = "datasets/manage_permissions/edit_access.html"
+    template_name = "datasets/manage_permissions/edit_summary.html"
 
     def get_context_data(self, **kwargs):
         if waffle.flag_is_active(self.request, settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW):
@@ -1863,10 +1863,7 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
                 "email": get_user_model().objects.get(email=request.contact_email).email,
                 "days_ago": (datetime.today() - request.created_date.replace(tzinfo=None)).days + 1,
             })
-
         context["requested_users"] = requested_users
-        print("requests", requested_users)
-
         context["waffle_flag"] = waffle.flag_is_active(
             self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"
         )
