@@ -1853,9 +1853,11 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
         context["iam"] = (
             get_user_model().objects.get(id=self.obj.information_asset_manager_id).email
         )
-        context["data_catalogue_editors"] = self.obj.data_catalogue_editors.all().values_list()[0][
-            7
-        ]
+        data_catalogue_editors = []
+        for user in self.obj.data_catalogue_editors.all():
+            data_catalogue_editors.append(user.email)
+        context["data_catalogue_editors"] = data_catalogue_editors
+        context["authorised_users"]
         requests = AccessRequest.objects.filter(
             catalogue_item_id=self.obj.pk, data_access_status="waiting"
         )
@@ -1901,67 +1903,6 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
             return HttpResponseRedirect(
                 reverse("datasets:edit_visualisation_catalogue_item", args=[self.obj.id])
             )
-
-
-class DatasetAuthorisedUsersSearchView(UserSearchFormView):
-    template_name = "datasets/search_authorised_users.html"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["summary_id"] = self.kwargs.get("summary_id")
-        context["waffle_flag"] = waffle.flag_is_active(
-            self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"
-        )
-        return context
-
-    def get_success_url(self):
-        return reverse(
-            "datasets:search_authorized_users",
-            args=[self.obj.pk, self.kwargs.get("summary_id")],
-        )
-
-
-class DatasetAddAuthorisedUserView(EditBaseView, View):
-    def get(self, request, *args, **kwargs):
-        summary = PendingAuthorizedUsers.objects.get(id=self.kwargs.get("summary_id"))
-        user = get_user_model().objects.get(id=self.kwargs.get("user_id"))
-
-        users = json.loads(summary.users) if summary.users else []
-        if user.id not in users:
-            users.append(user.id)
-            summary.users = json.dumps(users)
-            summary.save()
-
-        return HttpResponseRedirect(
-            reverse(
-                "datasets:edit_permissions_summary",
-                args=[
-                    self.obj.id,
-                    self.kwargs.get("summary_id"),
-                ],
-            )
-        )
-
-
-class DatasetAddAuthorisedUsersView(EditBaseView, View):
-    def post(self, request, *args, **kwargs):
-        summary = PendingAuthorizedUsers.objects.get(id=self.kwargs.get("summary_id"))
-        users = json.loads(summary.users) if summary.users else []
-        for selected_user in self.request.POST.getlist("selected-user"):
-            user = get_user_model().objects.get(id=selected_user)
-            if user.id not in users:
-                users.append(user.id)
-        summary.users = json.dumps(users)
-        summary.save()
-        return HttpResponseRedirect(
-            reverse(
-                "datasets:edit_permissions_summary",
-                args=[
-                    self.obj.id,
-                    self.kwargs.get("summary_id"),
-                ],
-            )
-        )
 
 
 class DatasetRemoveAuthorisedUserView(EditBaseView, View):

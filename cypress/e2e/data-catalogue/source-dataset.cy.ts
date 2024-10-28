@@ -1,7 +1,6 @@
 import {
   sourceWithTable,
   sourceWithTableNoPermissions,
-  datacutWithNoPermissions,
 } from "../../fixtures/datasets";
 import {
   assertTextAndLinks,
@@ -64,7 +63,7 @@ describe("Source dataset catalogue", () => {
         rows: [
           [
             {
-              text: "source_data_set",
+              text: "Source data set",
             },
             {
               text: "public.test_dataset",
@@ -189,7 +188,7 @@ describe("Source dataset catalogue", () => {
         rows: [
           [
             {
-              text: "source_data_set",
+              text: "Source data set",
             },
             {
               text: "public.test_dataset",

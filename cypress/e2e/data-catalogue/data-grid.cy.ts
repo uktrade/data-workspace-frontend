@@ -37,7 +37,7 @@ describe("Data grid filters", () => {
           ],
         },
       }).as("getData");
-      cy.get("a").contains("source_data_set").click();
+      cy.get("a").contains("Source data set").click();
       checkRequestBody("@getData", '"filters":{}');
       cy.get("span.ag-icon.ag-icon-menu").last().click();
 
