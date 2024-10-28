@@ -99,7 +99,7 @@ from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event, log_permission_change
 from dataworkspace.apps.explorer.utils import invalidate_data_explorer_user_cached_credentials
 from dataworkspace.apps.request_access.models import AccessRequest
-from dataworkspace.zendesk import get_username
+from dataworkspace.notify import send_email
 
 logger = logging.getLogger("app")
 
@@ -1972,7 +1972,18 @@ class DatasetRemoveAuthorisedUserView(EditBaseView, View):
         if user.id in users:
             summary.users = json.dumps([user_id for user_id in users if user_id != user.id])
             summary.save()
-
+        name_dataset = find_dataset(self.obj.pk, request.user).name
+        url_dataset = request.build_absolute_uri(
+            reverse("datasets:dataset_detail", args=[self.obj.pk])
+        )
+        send_email(
+            settings.NOTIFY_DATASET_ACCESS_REMOVE_TEMPLATE_ID,
+            user.email,
+            personalisation={
+                "dataset_name": name_dataset,
+                "dataset_url": url_dataset,
+            },
+        )
         return HttpResponseRedirect(
             reverse(
                 "datasets:edit_permissions_summary",
