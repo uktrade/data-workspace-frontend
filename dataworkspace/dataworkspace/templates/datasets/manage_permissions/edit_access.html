@@ -40,7 +40,7 @@
                             <br> {{ user.email }} <br> 
                             <span class="govuk-caption-m"> Requested: {% if user.days_ago == 0 %} Today {% else %} {{ user.days_ago }} days ago {% endif %}</span>
                             </td>
-                        <td class="govuk-table__cell govuk-!-text-align-right"><a class="govuk-link" href="{% url 'datasets:remove_authorized_user' obj.id summary.id user.id %}">Review access request</a></td>
+                        <td class="govuk-table__cell govuk-!-text-align-right"><a class="govuk-link" href="#">Review access request</a></td>
                         </tr>
                     {% endfor %}
                 </tbody>
