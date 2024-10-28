@@ -76,9 +76,21 @@ def cleanup_temporary_query_tables():
         ):
             with connections[query_log.connection].cursor() as cursor:
                 logger.info("Dropping temporary query table %s", table_schema_and_name)
-                cursor.execute(f"GRANT {db_role} TO {server_db_user}")
-                cursor.execute(f"DROP TABLE IF EXISTS {table_schema_and_name}")
-                cursor.execute(f"REVOKE {db_role} FROM {server_db_user}")
+                cursor.execute(
+                    "GRANT %s TO %s",
+                    (
+                        db_role,
+                        server_db_user,
+                    ),
+                )
+                cursor.execute("DROP TABLE IF EXISTS %s", (table_schema_and_name,))
+                cursor.execute(
+                    "REVOKE %s FROM %s",
+                    (
+                        db_role,
+                        server_db_user,
+                    ),
+                )
 
 
 def _prefix_column(index, column):
@@ -143,7 +155,7 @@ def _run_query(conn, query_log, page, limit, timeout, output_table):
     start_time = time.time()
     sql = query_log.sql.rstrip().rstrip(";")
     try:
-        cursor.execute(f"SET statement_timeout = {timeout}")
+        cursor.execute("SET statement_timeout = %s", (timeout,))
 
         if sql.strip().upper().startswith("EXPLAIN"):
             cursor.execute(
@@ -164,7 +176,7 @@ def _run_query(conn, query_log, page, limit, timeout, output_table):
         # It adds a prefix of col_x_ to duplicated column returned from the query and
         # these prefixed column names are used to create a table containing the
         # query results. The prefixes are removed when the results are returned.
-        cursor.execute(f"SELECT * FROM ({sql}) sq LIMIT 0")
+        cursor.execute("SELECT * FROM (%s) sq LIMIT 0", (sql,))
         column_names = list(zip(*cursor.description))[0]
         duplicated_column_names = set(c for c in column_names if column_names.count(c) > 1)
         prefixed_sql_columns = [
@@ -174,7 +186,13 @@ def _run_query(conn, query_log, page, limit, timeout, output_table):
             )
             for i, col in enumerate(cursor.description, 1)
         ]
-        cursor.execute(f'CREATE TABLE {output_table} ({", ".join(prefixed_sql_columns)})')
+        cursor.execute(
+            "CREATE TABLE %s (%s)",
+            (
+                output_table,
+                ", ".join(prefixed_sql_columns),
+            ),
+        )
         limit_clause = ""
         if limit is not None:
             limit_clause = f"LIMIT {limit}"
@@ -184,9 +202,15 @@ def _run_query(conn, query_log, page, limit, timeout, output_table):
             offset = f" OFFSET {(page - 1) * limit}"
 
         cursor.execute(
-            f"INSERT INTO {output_table} SELECT * FROM ({sql}) sq {limit_clause}{offset}"
+            "INSERT INTO %s SELECT * FROM (%s) sq %s%s",
+            (
+                output_table,
+                sql,
+                limit_clause,
+                offset,
+            ),
         )
-        cursor.execute(f"SELECT COUNT(*) FROM ({sql}) sq")
+        cursor.execute("SELECT COUNT(*) FROM (%s) sq", (sql,))
     except psycopg2.errors.QueryCanceled as e:  # pylint: disable=no-member
         logger.info("Query cancelled: %s", e)
         return
