@@ -1852,9 +1852,10 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
         context["iam"] = (
             get_user_model().objects.get(id=self.obj.information_asset_manager_id).email
         )
-        context["data_catalogue_editors"] = self.obj.data_catalogue_editors.all().values_list()[0][
-            7
-        ]
+        data_catalogue_editors = []
+        for user in self.obj.data_catalogue_editors.all():
+            data_catalogue_editors.append(user.email)
+        context["data_catalogue_editors"] = data_catalogue_editors
         context["authorised_users"]
         requests = AccessRequest.objects.filter(
             catalogue_item_id=self.obj.pk, data_access_status="waiting"
