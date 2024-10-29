@@ -5,6 +5,7 @@ from mock import call, Mock, MagicMock, patch
 from django.core.serializers.json import DjangoJSONEncoder
 from django.test import TestCase
 from freezegun import freeze_time
+from psycopg2.sql import Identifier, SQL
 import pytest
 import six
 
@@ -28,7 +29,6 @@ from dataworkspace.tests.explorer.factories import (
     SimpleQueryFactory,
 )
 from dataworkspace.tests.factories import UserFactory
-from psycopg2.sql import Identifier, SQL
 
 
 class TestTasks(TestCase):
