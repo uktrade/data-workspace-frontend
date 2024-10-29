@@ -80,9 +80,24 @@ class TestTasks(TestCase):
         cleanup_temporary_query_tables()
 
         expected_calls = [
-            call("GRANT _user_12b9377c TO postgres"),
-            call(f"DROP TABLE IF EXISTS _user_12b9377c._data_explorer_tmp_query_{query_log_1.id}"),
-            call("REVOKE _user_12b9377c FROM postgres"),
+            call(
+                "GRANT %s TO %s",
+                (
+                    "_user_12b9377c",
+                    "postgres",
+                ),
+            ),
+            call(
+                "DROP TABLE IF EXISTS %s",
+                (f"_user_12b9377c._data_explorer_tmp_query_{query_log_1.id}",),
+            ),
+            call(
+                "REVOKE %s FROM %s",
+                (
+                    "_user_12b9377c",
+                    "postgres",
+                ),
+            ),
         ]
         mock_cursor.execute.assert_has_calls(expected_calls)
 
@@ -123,16 +138,25 @@ class TestExecuteQuery:
         query_log_id = QueryLog.objects.first().id
 
         expected_calls = [
-            call("SET statement_timeout = 10000"),
-            call("SELECT * FROM (select * from foo) sq LIMIT 0"),
+            call("SET statement_timeout = %s", (10000,)),
+            call("SELECT * FROM (%s) sq LIMIT 0", ("select * from foo",)),
             call(
-                f'CREATE TABLE _user_12b9377c._data_explorer_tmp_query_{query_log_id} ("foo" integer, "bar" text)'
+                f"CREATE TABLE %s (%s)",
+                (
+                    f"_user_12b9377c._data_explorer_tmp_query_{query_log_id}",
+                    '"foo" integer, "bar" text',
+                ),
             ),
             call(
-                f"INSERT INTO _user_12b9377c._data_explorer_tmp_query_{query_log_id}"
-                " SELECT * FROM (select * from foo) sq LIMIT 100"
+                "INSERT INTO %s SELECT * FROM %s sq %s %s",
+                (
+                    f"_user_12b9377c._data_explorer_tmp_query_{query_log_id}",
+                    "(select * from foo)",
+                    "LIMIT",
+                    100,
+                ),
             ),
-            call("SELECT COUNT(*) FROM (select * from foo) sq"),
+            call("SELECT COUNT(*) FROM (%s) sq", ("select * from foo",)),
         ]
         self.mock_cursor.execute.assert_has_calls(expected_calls)
 
