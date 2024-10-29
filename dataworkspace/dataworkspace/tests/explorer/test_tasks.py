@@ -139,8 +139,12 @@ class TestExecuteQuery:
         query_log_id = QueryLog.objects.first().id
 
         expected_calls = [
-            call("SET statement_timeout = %s", (10000,)),
-            call(SQL("SELECT * FROM ({query}) sq LIMIT 0").format(query=SQL("select * from foo"))),
+            call("SET statement_timeout = %s", ("10000",)),
+            call(
+                SQL("SELECT * FROM ({query}) sq {limit}").format(
+                    query=SQL("select * from foo"), limit=SQL("LIMIT 0")
+                )
+            ),
             call(
                 SQL("CREATE TABLE {schema_table} ({cols})").format(
                     schema_table=Identifier(
@@ -225,7 +229,7 @@ class TestExecuteQuery:
         query_log_id = QueryLog.objects.first().id
 
         expected_calls = [
-            call("SET statement_timeout = %s", (10000,)),
+            call("SET statement_timeout = %s", ("10000",)),
             call(
                 SQL("SELECT * FROM {query} sq {limit}").format(
                     query=SQL("select * from foo"), limit=SQL("LIMIT 0")
@@ -240,17 +244,16 @@ class TestExecuteQuery:
             call(
                 SQL(
                     """INSERT INTO {schema_table}
-                    SELECT * FROM ({}) sq {limit}"""
+                    SELECT * FROM ({sql}) sq {limit}"""
                 ).format(
                     schema_table=Identifier(
-                        "_user_12b9377c",
-                        f"_data_explorer_tmp_query_{query_log_id}",
-                        sql=SQL("select * from foo"),
-                        limit=SQL("LIMIT 100"),
-                    )
+                        "_user_12b9377c", f"_data_explorer_tmp_query_{query_log_id}"
+                    ),
+                    sql=SQL("select * from foo"),
+                    limit=SQL("LIMIT 100"),
                 )
             ),
-            call(SQL("SELECT COUNT(*) FROM (select * from foo) sq")),
+            call(SQL("SELECT COUNT(*) FROM ({sql}) sq").format(sql=SQL("select * from foo"))),
         ]
         self.mock_cursor.execute.assert_has_calls(expected_calls)
 
