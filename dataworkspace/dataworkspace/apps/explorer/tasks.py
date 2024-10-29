@@ -8,7 +8,6 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.db import connections, IntegrityError, transaction
 
-import psycopg2.sql
 from pytz import utc
 
 from dataworkspace.apps.core.utils import (
@@ -196,14 +195,11 @@ def _run_query(conn, query_log, page, limit, timeout, output_table):
             for i, col in enumerate(cursor.description, 1)
         ]
         cols_formatted = ", ".join(prefixed_sql_columns)
-        print("cols_formatted", cols_formatted)
         output_table_schema, output_table_name = output_table.split(".")
-        query = psycopg2.sql.SQL("CREATE TABLE {output_table} ({cols_formatted})").format(
+        cursor.execute(psycopg2.sql.SQL("CREATE TABLE {output_table} ({cols_formatted})").format(
             output_table=psycopg2.sql.Identifier(output_table_schema, output_table_name),
             cols_formatted=psycopg2.sql.SQL(cols_formatted),
-        )
-        print("myquery", query.as_string(conn))
-        cursor.execute(query)
+        ))
         limit_clause = ""
         if limit is not None:
             limit_clause = f"LIMIT {limit}"
