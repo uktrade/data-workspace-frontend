@@ -78,19 +78,23 @@ def cleanup_temporary_query_tables():
             with connections[query_log.connection].cursor() as cursor:
                 logger.info("Dropping temporary query table %s", table_schema_and_name)
                 cursor.execute(
-                    "GRANT %s TO %s",
-                    (
-                        db_role,
-                        server_db_user,
+                    psycopg2.sql.SQL("GRANT {role} TO {user}").format(
+                        role=psycopg2.sql.Identifier(db_role),
+                        user=psycopg2.sql.Identifier(server_db_user),
                     ),
                 )
-                cursor.execute("DROP TABLE IF EXISTS %s", (table_schema_and_name,))
                 cursor.execute(
-                    "REVOKE %s FROM %s",
-                    (
-                        db_role,
-                        server_db_user,
-                    ),
+                    psycopg2.sql.SQL("DROP TABLE IF EXISTS {table_schema_name}").format(
+                        table_schema_name=psycopg2.sql.Identifier(table_schema_and_name)
+                    )
+                )
+                cursor.execute(
+                    psycopg2.sql.SQL(
+                        "REVOKE {role} FROM {user}".format(
+                            role=psycopg2.sql.Identifier(db_role),
+                            user=psycopg2.sql.Identifier(server_db_user),
+                        )
+                    )
                 )
 
 
@@ -192,12 +196,14 @@ def _run_query(conn, query_log, page, limit, timeout, output_table):
             for i, col in enumerate(cursor.description, 1)
         ]
         cols_formatted = ", ".join(prefixed_sql_columns)
-        cursor.execute(
-            psycopg2.sql.SQL("CREATE TABLE {output_table} ({cols_formatted})").format(
-                output_table=psycopg2.sql.Identifier(output_table),
-                cols_formatted=psycopg2.sql.SQL(cols_formatted),
-            )
+        print("cols_formatted", cols_formatted)
+        output_table_schema, output_table_name = output_table.split(".")
+        query = psycopg2.sql.SQL("CREATE TABLE {output_table} ({cols_formatted})").format(
+            output_table=psycopg2.sql.Identifier(output_table_schema, output_table_name),
+            cols_formatted=psycopg2.sql.SQL(cols_formatted),
         )
+        print("myquery", query.as_string(conn))
+        cursor.execute(query)
         limit_clause = ""
         if limit is not None:
             limit_clause = f"LIMIT {limit}"
@@ -210,7 +216,7 @@ def _run_query(conn, query_log, page, limit, timeout, output_table):
             psycopg2.sql.SQL(
                 "INSERT INTO {output_table} SELECT * FROM ({sql}) sq {limit_clause}{offset}"
             ).format(
-                output_table=psycopg2.sql.Identifier(output_table),
+                output_table=psycopg2.sql.Identifier(output_table_schema, output_table_name),
                 sql=psycopg2.sql.SQL(sql),
                 limit_clause=psycopg2.sql.SQL(limit_clause),
                 offset=psycopg2.sql.SQL(offset),
