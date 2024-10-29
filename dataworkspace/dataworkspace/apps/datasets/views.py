@@ -1942,7 +1942,7 @@ class DataSetReviewAccess(EditBaseView, FormView):
         else:
             messages.success(
                 self.request,
-                f"An email has been sent to {user.first_name} {user.last_name} to let them know their access request was not successful.",
+                f"An email has been sent to {user.first_name} {user.last_name} to let them know their access request was not successful.",  # pylint: disable=line-too-long
             )
             # TODO: Send email to user # pylint: disable=fixme
         return HttpResponseRedirect(
