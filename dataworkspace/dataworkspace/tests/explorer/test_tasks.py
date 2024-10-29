@@ -139,12 +139,8 @@ class TestExecuteQuery:
         query_log_id = QueryLog.objects.first().id
 
         expected_calls = [
-            call("SET statement_timeout = %s", ("10000",)),
-            call(
-                SQL("SELECT * FROM ({query}) sq {limit}").format(
-                    query=SQL("select * from foo"), limit=SQL("LIMIT 0")
-                )
-            ),
+            call("SET statement_timeout = %s", (10000,)),
+            call(SQL("SELECT * FROM ({query}) sq LIMIT 0").format(query=SQL("select * from foo"))),
             call(
                 SQL("CREATE TABLE {schema_table} ({cols})").format(
                     schema_table=Identifier(
@@ -182,12 +178,8 @@ class TestExecuteQuery:
         query_log_id = QueryLog.objects.first().id
 
         expected_calls = [
-            call("SET statement_timeout = %s", ("10000",)),
-            call(
-                SQL("SELECT * FROM ({query}) sq {limit}").format(
-                    query=SQL("select * from foo"), limit=SQL("LIMIT 0")
-                )
-            ),
+            call("SET statement_timeout = %s", (10000,)),
+            call(SQL("SELECT * FROM ({query}) sq LIMIT 0").format(query=SQL("select * from foo"))),
             call(
                 SQL("CREATE TABLE {schema_table}  {cols}").format(
                     schema_table=Identifier(
@@ -229,23 +221,16 @@ class TestExecuteQuery:
         query_log_id = QueryLog.objects.first().id
 
         expected_calls = [
-            call("SET statement_timeout = %s", ("10000",)),
-            call(
-                SQL("SELECT * FROM {query} sq {limit}").format(
-                    query=SQL("select * from foo"), limit=SQL("LIMIT 0")
-                )
-            ),
+            call("SET statement_timeout = %s", (10000,)),
+            call(SQL("SELECT * FROM {query} sq LIMIT 0").format(query=SQL("select * from foo"))),
             call(
                 SQL("CREATE TABLE {table}{cols}").format(
                     table=Identifier("_user_12b9377c", f"_data_explorer_tmp_query_{query_log_id}"),
-                    cols=SQL('("col_1_bar" integer, "col_2_bar" text)'),
+                    cols=SQL('"col_1_bar" integer, "col_2_bar" text'),
                 )
             ),
             call(
-                SQL(
-                    """INSERT INTO {schema_table}
-                    SELECT * FROM ({sql}) sq {limit}"""
-                ).format(
+                SQL("INSERT INTO {schema_table} SELECT * FROM ({sql}) sq {limit}").format(
                     schema_table=Identifier(
                         "_user_12b9377c", f"_data_explorer_tmp_query_{query_log_id}"
                     ),
