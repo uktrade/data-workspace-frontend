@@ -141,7 +141,7 @@ class TestExecuteQuery:
             call("SET statement_timeout = %s", (10000,)),
             call("SELECT * FROM (%s) sq LIMIT 0", ("select * from foo",)),
             call(
-                f"CREATE TABLE %s (%s)",
+                "CREATE TABLE %s (%s)",
                 (
                     f"_user_12b9377c._data_explorer_tmp_query_{query_log_id}",
                     '"foo" integer, "bar" text',
