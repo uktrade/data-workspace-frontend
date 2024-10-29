@@ -317,12 +317,14 @@ class UserToolConfiguration(models.Model):
     SIZE_MEDIUM = 2
     SIZE_LARGE = 3
     SIZE_EXTRA_LARGE = 4
+    SIZE_2X_EXTRA_LARGE = 5
 
     _SIZES = (
         (SIZE_SMALL, "Small"),
         (SIZE_MEDIUM, "Medium"),
         (SIZE_LARGE, "Large"),
         (SIZE_EXTRA_LARGE, "Extra Large"),
+        (SIZE_2X_EXTRA_LARGE, "2x Extra Large"),
     )
 
     SIZE_CONFIGS = {
@@ -342,13 +344,19 @@ class UserToolConfiguration(models.Model):
             dict(_SIZES)[SIZE_LARGE],
             16384,
             2048,
-            "Allows up to 2 parallel processes for faster analysis, and supports datasets of up to 16 gigabytes in memory.",
+            "Allows up to 2 parallel processes for faster analysis and supports datasets of up to 16 gigabytes in memory.",
         ),
         SIZE_EXTRA_LARGE: SizeConfig(
             dict(_SIZES)[SIZE_EXTRA_LARGE],
             30720,
             4096,
-            "Allows up to 4 parallel processes for faster analysis, and supports datasets of up to 30 gigabytes in memory.",
+            "Allows up to 4 parallel processes for faster analysis and supports datasets of up to 30 gigabytes in memory.",
+        ),
+        SIZE_2X_EXTRA_LARGE: SizeConfig(
+            dict(_SIZES)[SIZE_2X_EXTRA_LARGE],
+            61440,
+            8192,
+            "Allows up to 8 parallel processes for faster analysis and supports datasets of up to 60 gigabytes in memory.",
         ),
     }
 

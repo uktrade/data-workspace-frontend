@@ -99,7 +99,7 @@ from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event, log_permission_change
 from dataworkspace.apps.explorer.utils import invalidate_data_explorer_user_cached_credentials
 from dataworkspace.apps.request_access.models import AccessRequest
-from dataworkspace.zendesk import get_username
+from dataworkspace.notify import send_email
 
 logger = logging.getLogger("app")
 
@@ -1838,6 +1838,7 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
         if waffle.flag_is_active(self.request, settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW):
             self.template_name = "datasets/manage_permissions/edit_access.html"
         context = super().get_context_data(**kwargs)
+        context["user_removed"] = self.request.GET.get("user_removed", None)
         context["obj"] = self.obj
         context["obj_edit_url"] = (
             reverse("datasets:edit_dataset", args=[self.obj.pk])
@@ -1846,22 +1847,35 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
         )
         context["summary"] = self.summary
         context["authorised_users"] = get_user_model().objects.filter(
-            id__in=json.loads(self.summary.users if self.summary.users else "[]")
+            id__in=json.loads(self.summary.users) if self.summary.users else []
         )
         context["iao"] = get_user_model().objects.get(id=self.obj.information_asset_owner_id).email
-        context["iam"] = get_user_model().objects.get(id=self.obj.information_asset_manager_id).email
-        context["data_catalogue_editors"] = self.obj.data_catalogue_editors.all().values_list()[0][7]
-        context["authorised_users"]
-        requests = AccessRequest.objects.filter(catalogue_item_id=self.obj.pk, data_access_status="waiting")
+        context["iam"] = (
+            get_user_model().objects.get(id=self.obj.information_asset_manager_id).email
+        )
+        data_catalogue_editors = []
+        for user in self.obj.data_catalogue_editors.all():
+            data_catalogue_editors.append(user.email)
+        context["data_catalogue_editors"] = data_catalogue_editors
+        requests = AccessRequest.objects.filter(
+            catalogue_item_id=self.obj.pk, data_access_status="waiting"
+        )
         requested_users = []
         for request in requests:
-            requested_users.append({
-                "id": get_user_model().objects.get(email=request.contact_email).id,
-                "first_name": get_user_model().objects.get(email=request.contact_email).first_name,
-                "last_name": get_user_model().objects.get(email=request.contact_email).last_name,
-                "email": get_user_model().objects.get(email=request.contact_email).email,
-                "days_ago": (datetime.today() - request.created_date.replace(tzinfo=None)).days + 1,
-            })
+            requested_users.append(
+                {
+                    "id": get_user_model().objects.get(email=request.contact_email).id,
+                    "first_name": get_user_model()
+                    .objects.get(email=request.contact_email)
+                    .first_name,
+                    "last_name": get_user_model()
+                    .objects.get(email=request.contact_email)
+                    .last_name,
+                    "email": get_user_model().objects.get(email=request.contact_email).email,
+                    "days_ago": (datetime.today() - request.created_date.replace(tzinfo=None)).days
+                    + 1,
+                }
+            )
         context["requested_users"] = requested_users
         context["waffle_flag"] = waffle.flag_is_active(
             self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"
@@ -1871,7 +1885,7 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
     def post(self, request, *args, **kwargs):
         authorized_users = set(
             get_user_model().objects.filter(
-                id__in=json.loads(self.summary.users if self.summary.users else "[]")
+                id__in=json.loads(self.summary.users) if self.summary.users else []
             )
         )
         if isinstance(self.obj, DataSet):
@@ -1958,12 +1972,22 @@ class DatasetRemoveAuthorisedUserView(EditBaseView, View):
     def get(self, request, *args, **kwargs):
         summary = PendingAuthorizedUsers.objects.get(id=self.kwargs.get("summary_id"))
         user = get_user_model().objects.get(id=self.kwargs.get("user_id"))
-
-        users = json.loads(summary.users if summary.users else "[]")
+        users = json.loads(summary.users) if summary.users else []
         if user.id in users:
             summary.users = json.dumps([user_id for user_id in users if user_id != user.id])
             summary.save()
-
+        name_dataset = find_dataset(self.obj.pk, request.user).name
+        url_dataset = request.build_absolute_uri(
+            reverse("datasets:dataset_detail", args=[self.obj.pk])
+        )
+        send_email(
+            settings.NOTIFY_DATASET_ACCESS_REMOVE_TEMPLATE_ID,
+            user.email,
+            personalisation={
+                "dataset_name": name_dataset,
+                "dataset_url": url_dataset,
+            },
+        )
         return HttpResponseRedirect(
             reverse(
                 "datasets:edit_permissions_summary",
@@ -1972,6 +1996,8 @@ class DatasetRemoveAuthorisedUserView(EditBaseView, View):
                     self.kwargs.get("summary_id"),
                 ],
             )
+            + "?user_removed="
+            + user.get_full_name()
         )
 
 
