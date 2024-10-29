@@ -8,6 +8,7 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.db import connections, IntegrityError, transaction
 
+import psycopg2.sql
 from pytz import utc
 
 from dataworkspace.apps.core.utils import (
@@ -176,7 +177,11 @@ def _run_query(conn, query_log, page, limit, timeout, output_table):
         # It adds a prefix of col_x_ to duplicated column returned from the query and
         # these prefixed column names are used to create a table containing the
         # query results. The prefixes are removed when the results are returned.
-        cursor.execute("SELECT * FROM (%s) sq LIMIT 0", (sql,))
+        cursor.execute(
+            psycopg2.sql.SQL("SELECT * FROM ({user_query}) sq LIMIT 0").format(
+                user_query=psycopg2.sql.SQL(sql)
+            )
+        )
         column_names = list(zip(*cursor.description))[0]
         duplicated_column_names = set(c for c in column_names if column_names.count(c) > 1)
         prefixed_sql_columns = [
@@ -186,12 +191,12 @@ def _run_query(conn, query_log, page, limit, timeout, output_table):
             )
             for i, col in enumerate(cursor.description, 1)
         ]
+        cols_formatted = ", ".join(prefixed_sql_columns)
         cursor.execute(
-            "CREATE TABLE %s (%s)",
-            (
-                output_table,
-                ", ".join(prefixed_sql_columns),
-            ),
+            psycopg2.sql.SQL("CREATE TABLE {output_table} ({cols_formatted})").format(
+                output_table=psycopg2.sql.Identifier(output_table),
+                cols_formatted=psycopg2.sql.SQL(cols_formatted),
+            )
         )
         limit_clause = ""
         if limit is not None:
@@ -202,15 +207,18 @@ def _run_query(conn, query_log, page, limit, timeout, output_table):
             offset = f" OFFSET {(page - 1) * limit}"
 
         cursor.execute(
-            "INSERT INTO %s SELECT * FROM (%s) sq %s%s",
-            (
-                output_table,
-                sql,
-                limit_clause,
-                offset,
+            psycopg2.sql.SQL(
+                "INSERT INTO {output_table} SELECT * FROM ({sql}) sq {limit_clause}{offset}"
+            ).format(
+                output_table=psycopg2.sql.Identifier(output_table),
+                sql=psycopg2.sql.SQL(sql),
+                limit_clause=psycopg2.sql.SQL(limit_clause),
+                offset=psycopg2.sql.SQL(offset),
             ),
         )
-        cursor.execute("SELECT COUNT(*) FROM (%s) sq", (sql,))
+        cursor.execute(
+            psycopg2.sql.SQL("SELECT COUNT(*) FROM ({sql}) sq").format(sql=psycopg2.sql.SQL(sql))
+        )
     except psycopg2.errors.QueryCanceled as e:  # pylint: disable=no-member
         logger.info("Query cancelled: %s", e)
         return
