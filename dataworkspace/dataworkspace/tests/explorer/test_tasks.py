@@ -94,7 +94,7 @@ class TestTasks(TestCase):
                 )
             ),
             call(
-                SQL("REVOKE {user} FROM {role}}").format(
+                SQL("REVOKE {user} FROM {role}").format(
                     user=Identifier("_user_12b9377c"),
                     role=Identifier("postgres"),
                 ),
@@ -150,11 +150,11 @@ class TestExecuteQuery:
                 ),
             ),
             call(
-                SQL("INSERT INTO {schema_table} SELECT * FROM {sql} sq {limit}").format(
+                SQL("INSERT INTO {schema_table} SELECT * FROM ({sql}) sq {limit}").format(
                     schema_table=Identifier(
                         "_user_12b9377c", f"_data_explorer_tmp_query_{query_log_id}"
                     ),
-                    sql=SQL("(select * from foo)"),
+                    sql=SQL("select * from foo"),
                     limit=SQL("LIMIT 100"),
                 ),
             ),
@@ -186,7 +186,9 @@ class TestExecuteQuery:
             ),
             call(
                 SQL("CREATE TABLE {schema_table}  {cols}").format(
-                    query=Identifier("_user_12b9377c", f"_data_explorer_tmp_query_{query_log_id}"),
+                    schema_table=Identifier(
+                        "_user_12b9377c", f"_data_explorer_tmp_query_{query_log_id}"
+                    ),
                     cols=SQL('("foo" integer, "bar" text)'),
                 )
             ),
