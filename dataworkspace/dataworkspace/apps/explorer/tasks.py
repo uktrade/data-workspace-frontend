@@ -68,7 +68,8 @@ def cleanup_temporary_query_tables():
         server_db_user = DATABASES_DATA[query_log.connection]["USER"]
         db_role = f"{USER_SCHEMA_STEM}{db_role_schema_suffix_for_user(query_log.run_by_user)}"
         table_schema_and_name = tempory_query_table_name(query_log.run_by_user, query_log.id)
-
+        print("db_role")
+        print("server_db_user", server_db_user)
         with cache.lock(
             f'database-grant--{DATABASES_DATA[query_log.connection]["NAME"]}--{db_role}--v4',
             blocking_timeout=3,
@@ -76,6 +77,7 @@ def cleanup_temporary_query_tables():
         ):
             with connections[query_log.connection].cursor() as cursor:
                 logger.info("Dropping temporary query table %s", table_schema_and_name)
+                output_table_schema, output_table_name = table_schema_and_name.split(".")
                 cursor.execute(
                     psycopg2.sql.SQL("GRANT {role} TO {user}").format(
                         role=psycopg2.sql.Identifier(db_role),
@@ -84,15 +86,15 @@ def cleanup_temporary_query_tables():
                 )
                 cursor.execute(
                     psycopg2.sql.SQL("DROP TABLE IF EXISTS {table_schema_name}").format(
-                        table_schema_name=psycopg2.sql.Identifier(table_schema_and_name)
+                        table_schema_name=psycopg2.sql.Identifier(
+                            output_table_schema, output_table_name
+                        )
                     )
                 )
                 cursor.execute(
-                    psycopg2.sql.SQL(
-                        "REVOKE {role} FROM {user}".format(
-                            role=psycopg2.sql.Identifier(db_role),
-                            user=psycopg2.sql.Identifier(server_db_user),
-                        )
+                    psycopg2.sql.SQL("REVOKE {role} FROM {user}").format(
+                        role=psycopg2.sql.Identifier(db_role),
+                        user=psycopg2.sql.Identifier(server_db_user),
                     )
                 )
 

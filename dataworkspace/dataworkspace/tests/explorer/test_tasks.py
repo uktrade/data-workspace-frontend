@@ -83,7 +83,8 @@ class TestTasks(TestCase):
         expected_calls = [
             call(
                 SQL("GRANT {user} TO {role}").format(
-                    user=Identifier("_user_12b9377c"), role=Identifier("postgres")
+                    role=Identifier("postgres"),
+                    user=Identifier("_user_12b9377c"),
                 ),
             ),
             call(
@@ -95,8 +96,8 @@ class TestTasks(TestCase):
             ),
             call(
                 SQL("REVOKE {user} FROM {role}").format(
-                    user=Identifier("_user_12b9377c"),
                     role=Identifier("postgres"),
+                    user=Identifier("_user_12b9377c"),
                 ),
             ),
         ]
@@ -150,12 +151,13 @@ class TestExecuteQuery:
                 ),
             ),
             call(
-                SQL("INSERT INTO {schema_table} SELECT * FROM ({sql}) sq {limit}").format(
+                SQL("INSERT INTO {schema_table} SELECT * FROM ({sql}) sq {limit}{offset}").format(
                     schema_table=Identifier(
                         "_user_12b9377c", f"_data_explorer_tmp_query_{query_log_id}"
                     ),
                     sql=SQL("select * from foo"),
                     limit=SQL("LIMIT 100"),
+                    offset=SQL(""),
                 ),
             ),
             call(SQL("SELECT COUNT(*) FROM ({sql}) sq").format(sql=SQL("select * from foo"))),
@@ -181,24 +183,23 @@ class TestExecuteQuery:
             call("SET statement_timeout = %s", (10000,)),
             call(SQL("SELECT * FROM ({query}) sq LIMIT 0").format(query=SQL("select * from foo"))),
             call(
-                SQL("CREATE TABLE {schema_table}  {cols}").format(
+                SQL("CREATE TABLE {schema_table} ({cols})").format(
                     schema_table=Identifier(
                         "_user_12b9377c", f"_data_explorer_tmp_query_{query_log_id}"
                     ),
-                    cols=SQL('("foo" integer, "bar" text)'),
+                    cols=SQL('"foo" integer, "bar" text'),
                 )
             ),
             call(
                 SQL(
-                    """INSERT INTO {schema_table}
-                SELECT * FROM ({query}) sq {limit} {offset}"""
+                    "INSERT INTO {schema_table} SELECT * FROM ({query}) sq {limit}{offset}"
                 ).format(
                     schema_table=Identifier(
                         "_user_12b9377c", f"_data_explorer_tmp_query_{query_log_id}"
                     ),
                     query=SQL("select * from foo"),
                     limit=SQL("LIMIT 100"),
-                    offset=SQL("OFFSET 100"),
+                    offset=SQL(" OFFSET 100"),
                 )
             ),
             call(SQL("SELECT COUNT(*) FROM ({query}) sq").format(query=SQL("select * from foo"))),
@@ -222,20 +223,21 @@ class TestExecuteQuery:
 
         expected_calls = [
             call("SET statement_timeout = %s", (10000,)),
-            call(SQL("SELECT * FROM {query} sq LIMIT 0").format(query=SQL("select * from foo"))),
+            call(SQL("SELECT * FROM ({query}) sq LIMIT 0").format(query=SQL("select * from foo"))),
             call(
-                SQL("CREATE TABLE {table}{cols}").format(
+                SQL("CREATE TABLE {table} ({cols})").format(
                     table=Identifier("_user_12b9377c", f"_data_explorer_tmp_query_{query_log_id}"),
                     cols=SQL('"col_1_bar" integer, "col_2_bar" text'),
                 )
             ),
             call(
-                SQL("INSERT INTO {schema_table} SELECT * FROM ({sql}) sq {limit}").format(
+                SQL("INSERT INTO {schema_table} SELECT * FROM ({sql}) sq {limit}{offset}").format(
                     schema_table=Identifier(
                         "_user_12b9377c", f"_data_explorer_tmp_query_{query_log_id}"
                     ),
                     sql=SQL("select * from foo"),
                     limit=SQL("LIMIT 100"),
+                    offset=SQL(""),
                 )
             ),
             call(SQL("SELECT COUNT(*) FROM ({sql}) sq").format(sql=SQL("select * from foo"))),
