@@ -140,12 +140,6 @@ urlpatterns = [
         name="dataset_visualisation",
     ),
     path(
-        "<uuid:dataset_uuid>/visualisation-preview/<int:object_id>/",
-        login_required(views.DatasetVisualisationPreview.as_view()),
-        {"model_class": models.DataSet},
-        name="dataset_visualisation-preview",
-    ),
-    path(
         "<uuid:dataset_uuid>/datacut/<int:query_id>/columns",
         login_required(views.CustomQueryColumnDetails.as_view()),
         name="custom_query_column_details",

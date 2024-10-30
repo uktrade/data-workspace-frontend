@@ -1420,21 +1420,6 @@ class DatasetVisualisationPreview(View):
         return JsonResponse(vega_definition)
 
 
-class DatasetVisualisationView(View):
-    def get(self, request, dataset_uuid, object_id, **kwargs):
-        model_class = kwargs["model_class"]
-        dataset = find_dataset(dataset_uuid, self.request.user, model_class)
-
-        if not dataset.user_has_access(request.user):
-            return HttpResponseForbidden()
-
-        visualisation = dataset.visualisations.live().get(id=object_id)
-
-        return render(
-            request,
-            "datasets/visualisation.html",
-            context={"dataset_uuid": dataset_uuid, "visualisation": visualisation},
-        )
 
 
 class CustomQueryColumnDetails(View):
