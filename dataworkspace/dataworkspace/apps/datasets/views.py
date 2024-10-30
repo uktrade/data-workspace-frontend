@@ -1420,8 +1420,6 @@ class DatasetVisualisationPreview(View):
         return JsonResponse(vega_definition)
 
 
-
-
 class CustomQueryColumnDetails(View):
     def get(self, request, dataset_uuid, query_id):
         dataset = find_dataset(dataset_uuid, self.request.user, DataCutDataset)
