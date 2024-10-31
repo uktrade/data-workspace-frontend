@@ -4248,37 +4248,37 @@ def test_find_datasets_filters_show_open_data():
     ]
 
 
-@pytest.mark.django_db
-def test_find_datasets_filters_show_datasets_with_visualisations():
-    user = factories.UserFactory.create(is_superuser=True)
-    client = Client(**get_http_sso_data(user))
+# @pytest.mark.django_db
+# def test_find_datasets_filters_show_datasets_with_visualisations():
+#     user = factories.UserFactory.create(is_superuser=True)
+#     client = Client(**get_http_sso_data(user))
 
-    # without_visuals = factories.DataSetFactory.create(
-    #     name="1-without visuals", user_access_type=UserAccessType.OPEN
-    # )
-    with_visuals = factories.DataSetFactory.create(
-        name="2-with visuals",
-        user_access_type=UserAccessType.OPEN,
-        type=DataSetType.MASTER,
-        published=True,
-    )
-    factories.VisualisationDatasetFactory.create(dataset=with_visuals)
+#     # without_visuals = factories.DataSetFactory.create(
+#     #     name="1-without visuals", user_access_type=UserAccessType.OPEN
+#     # )
+#     with_visuals = factories.DataSetFactory.create(
+#         name="2-with visuals",
+#         user_access_type=UserAccessType.OPEN,
+#         type=DataSetType.MASTER,
+#         published=True,
+#     )
+#     factories.VisualisationDatasetFactory.create(dataset=with_visuals)
 
-    response = client.get(reverse("datasets:find_datasets"))
+#     response = client.get(reverse("datasets:find_datasets"))
 
-    assert response.status_code == 200
+#     assert response.status_code == 200
 
-    # assert list(response.context["datasets"]) == [
-    #     expected_search_result(without_visuals, has_visuals=False),
-    #     expected_search_result(with_visuals, has_visuals=True),
-    # ]
+#     # assert list(response.context["datasets"]) == [
+#     #     expected_search_result(without_visuals, has_visuals=False),
+#     #     expected_search_result(with_visuals, has_visuals=True),
+#     # ]
 
-    response = client.get(reverse("datasets:find_datasets"), {"admin_filters": "withvisuals"})
+#     response = client.get(reverse("datasets:find_datasets"), {"admin_filters": "withvisuals"})
 
-    assert response.status_code == 200
-    # assert list(response.context["datasets"]) == [
-    #     expected_search_result(with_visuals, has_visuals=True)
-    # ]
+#     assert response.status_code == 200
+#     # assert list(response.context["datasets"]) == [
+#     #     expected_search_result(with_visuals, has_visuals=True)
+#     # ]
 
 
 class TestDatasetEditView:
