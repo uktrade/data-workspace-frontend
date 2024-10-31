@@ -17,15 +17,6 @@ from escapejson import escapejson
 register = template.Library()
 
 
-# @register.simple_tag()
-# def visualisation_link_or_plain_text(text, condition, dataset_uuid, object_id):
-#     if condition:
-#         url = reverse("datasets:dataset_visualisation", args=[dataset_uuid, object_id])
-#         return mark_safe(f"<a class='govuk-link' href='{url}'>{text}</a>")
-
-#     return text
-
-
 @register.simple_tag(takes_context=True)
 def url_replace(context, **kwargs):
     query = context["request"].GET.copy()

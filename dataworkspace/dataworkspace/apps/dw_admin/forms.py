@@ -630,10 +630,6 @@ class SourceViewForm(forms.ModelForm):
         self.fields["dataset"].queryset = DataCutDataset.objects.live()
 
 
-# class DataSetVisualisationForm(forms.ModelForm):
-#     model = DataSetVisualisation
-
-
 class SourceTableForm(forms.ModelForm):
     model = SourceTable
 
