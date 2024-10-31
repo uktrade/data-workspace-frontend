@@ -49,7 +49,6 @@ from dataworkspace.tests.factories import (
     VisualisationUserPermissionFactory,
     VisualisationLinkFactory,
 )
-from dataworkspace.tests.request_access.factories import AccessRequestFactory
 
 from dataworkspace.tests.conftest import get_client, get_user_data
 from dataworkspace.apps.applications.models import ApplicationInstance

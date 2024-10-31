@@ -41,7 +41,6 @@ from psycopg2 import sql
 from dataworkspace import datasets_db
 from dataworkspace.apps.accounts.models import UserDataTableView
 from dataworkspace.apps.api_v1.core.views import invalidate_superset_user_cached_credentials
-from dataworkspace.apps.request_access.models import AccessRequest
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.errors import DatasetPermissionDenied, DatasetPreviewDisabledError
