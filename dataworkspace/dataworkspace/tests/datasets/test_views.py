@@ -5,7 +5,6 @@ from urllib.parse import quote_plus
 from uuid import uuid4
 
 from bs4 import BeautifulSoup
-import factory.fuzzy
 import faker
 import mock
 import psycopg2
@@ -4254,9 +4253,9 @@ def test_find_datasets_filters_show_datasets_with_visualisations():
     user = factories.UserFactory.create(is_superuser=True)
     client = Client(**get_http_sso_data(user))
 
-    without_visuals = factories.DataSetFactory.create(
-        name="1-without visuals", user_access_type=UserAccessType.OPEN
-    )
+    # without_visuals = factories.DataSetFactory.create(
+    #     name="1-without visuals", user_access_type=UserAccessType.OPEN
+    # )
     with_visuals = factories.DataSetFactory.create(
         name="2-with visuals",
         user_access_type=UserAccessType.OPEN,

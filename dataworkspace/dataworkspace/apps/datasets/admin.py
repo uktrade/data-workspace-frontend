@@ -142,6 +142,7 @@ class SourceTableInline(admin.TabularInline, SourceReferenceInlineMixin):
     extra = 1
     manage_unpublished_permission_codename = "datasets.manage_unpublished_master_datasets"
 
+
 class SourceViewInline(admin.TabularInline, SourceReferenceInlineMixin):
     model = SourceView
     extra = 1
@@ -369,6 +370,7 @@ class MasterDatasetAdmin(CSPRichTextEditorMixin, BaseDatasetAdmin):
     form = MasterDatasetForm
     inlines = [SourceTableInline]
     manage_unpublished_permission_codename = "datasets.manage_unpublished_master_datasets"
+
 @admin.register(DataCutDataset)
 class DataCutDatasetAdmin(CSPRichTextEditorMixin, BaseDatasetAdmin):
     form = DataCutDatasetForm

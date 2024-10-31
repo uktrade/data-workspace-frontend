@@ -10,7 +10,6 @@ import pytz
 
 from django import template
 from django.contrib.contenttypes.models import ContentType
-from django.urls import reverse
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from escapejson import escapejson

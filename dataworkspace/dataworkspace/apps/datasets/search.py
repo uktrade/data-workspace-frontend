@@ -9,7 +9,6 @@ from django.contrib.postgres.search import SearchRank, SearchQuery
 from django.core.cache import cache
 from django.db.models import (
     Count,
-    Exists,
     F,
     CharField,
     IntegerField,
@@ -20,7 +19,6 @@ from django.db.models import (
     Case,
     When,
     BooleanField,
-    OuterRef,
     FilteredRelation,
 )
 from django.db.models import QuerySet
@@ -302,6 +300,8 @@ def _annotate_combined_published_date(datasets: QuerySet) -> tuple:
 
     return datasets.annotate(published_date=F("published_at"))
 def _annotate_is_open_data(datasets):
+
+    
     """
     Adds boolean annotation which is True if the dataset is opendata.
     All reference datasets are open otherwise they are open when the user access type is OPEN
