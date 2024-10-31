@@ -68,8 +68,6 @@ def cleanup_temporary_query_tables():
         server_db_user = DATABASES_DATA[query_log.connection]["USER"]
         db_role = f"{USER_SCHEMA_STEM}{db_role_schema_suffix_for_user(query_log.run_by_user)}"
         table_schema_and_name = tempory_query_table_name(query_log.run_by_user, query_log.id)
-        print("db_role")
-        print("server_db_user", server_db_user)
         with cache.lock(
             f'database-grant--{DATABASES_DATA[query_log.connection]["NAME"]}--{db_role}--v4',
             blocking_timeout=3,
