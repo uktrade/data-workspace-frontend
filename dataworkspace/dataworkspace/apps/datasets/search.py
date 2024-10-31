@@ -299,9 +299,10 @@ def _annotate_combined_published_date(datasets: QuerySet) -> tuple:
         return datasets.annotate(published_date=F("initial_published_at"))
 
     return datasets.annotate(published_date=F("published_at"))
+
+
 def _annotate_is_open_data(datasets):
 
-    
     """
     Adds boolean annotation which is True if the dataset is opendata.
     All reference datasets are open otherwise they are open when the user access type is OPEN

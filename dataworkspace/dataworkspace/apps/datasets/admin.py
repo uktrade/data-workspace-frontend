@@ -371,6 +371,7 @@ class MasterDatasetAdmin(CSPRichTextEditorMixin, BaseDatasetAdmin):
     inlines = [SourceTableInline]
     manage_unpublished_permission_codename = "datasets.manage_unpublished_master_datasets"
 
+
 @admin.register(DataCutDataset)
 class DataCutDatasetAdmin(CSPRichTextEditorMixin, BaseDatasetAdmin):
     form = DataCutDatasetForm

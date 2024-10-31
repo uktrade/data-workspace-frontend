@@ -10,6 +10,7 @@ from dataworkspace.apps.core.models import (
     NewsletterSubscription,
 )
 
+
 class TimeStampedUserAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         if not obj.pk:

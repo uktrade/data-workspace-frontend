@@ -575,6 +575,7 @@ class DataSet(DeletableTimestampedUserModel):
             or self.sourcelink_set.exclude(frequency="No longer updated").count() > 0
         )
 
+
 class DataSetUserPermission(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
