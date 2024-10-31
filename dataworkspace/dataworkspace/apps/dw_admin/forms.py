@@ -19,7 +19,6 @@ from dataworkspace.apps.datasets.models import (
     SensitivityType,
     SourceLink,
     DataSet,
-    DataSetVisualisation,
     ReferenceDataset,
     ReferenceDatasetField,
     CustomDatasetQuery,
@@ -631,8 +630,8 @@ class SourceViewForm(forms.ModelForm):
         self.fields["dataset"].queryset = DataCutDataset.objects.live()
 
 
-class DataSetVisualisationForm(forms.ModelForm):
-    model = DataSetVisualisation
+# class DataSetVisualisationForm(forms.ModelForm):
+#     model = DataSetVisualisation
 
 
 class SourceTableForm(forms.ModelForm):

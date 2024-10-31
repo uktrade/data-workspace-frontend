@@ -63,14 +63,14 @@ class PublisherTagFactory(TagFactory):
     type = TagType.PUBLISHER
 
 
-class VisualisationDatasetFactory(factory.django.DjangoModelFactory):
-    name = factory.fuzzy.FuzzyText()
-    summary = factory.fuzzy.FuzzyText()
-    gds_phase_name = "prototype"
-    database = factory.SubFactory(DatabaseFactory)
+# class VisualisationDatasetFactory(factory.django.DjangoModelFactory):
+#     name = factory.fuzzy.FuzzyText()
+#     summary = factory.fuzzy.FuzzyText()
+#     gds_phase_name = "prototype"
+#     database = factory.SubFactory(DatabaseFactory)
 
-    class Meta:
-        model = "datasets.DataSetVisualisation"
+#     class Meta:
+#         model = "datasets.DataSetVisualisation"
 
 
 class DataSetFactory(factory.django.DjangoModelFactory):

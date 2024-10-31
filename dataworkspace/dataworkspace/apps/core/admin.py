@@ -11,8 +11,7 @@ from dataworkspace.apps.core.models import (
 )
 
 
-class DeletableTimeStampedUserTabularInline(admin.TabularInline):
-    exclude = ["created_date", "updated_date", "created_by", "updated_by", "deleted"]
+
 
 
 class TimeStampedUserAdmin(admin.ModelAdmin):
