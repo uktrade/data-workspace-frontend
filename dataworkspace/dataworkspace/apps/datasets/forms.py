@@ -5,10 +5,13 @@ import json
 import waffle
 
 from django import forms
+from django.db import models
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
+
 from dataworkspace.apps.datasets.constants import AggregationType, DataSetType, TagType
+from dataworkspace.apps.core.forms import ConditionalSupportTypeRadioWidget
 from .models import DataSet, SourceLink, Tag, VisualisationCatalogueItem
 from .search import SORT_FIELD_MAP, SearchDatasetsFilters
 from ...forms import (
@@ -756,3 +759,51 @@ class ChartAggregateForm(GOVUKDesignSystemForm):
             self.fields["aggregate_field"].widget.custom_context["errors"] = [err]
             raise forms.ValidationError({"aggregate_field": err})
         return cleaned_data
+
+
+class ReviewAccessForm(GOVUKDesignSystemForm):
+
+    def __init__(self, *args, **kwargs):
+        self.requester = kwargs.pop("requester")
+        super().__init__(*args, **kwargs)
+        first_name = self.requester.first_name
+        last_name = self.requester.last_name
+        full_name = f"{first_name} {last_name}"
+        self.fields["action_type"].choices = [
+            ("grant", f"Grant {full_name} access to this dataset"),
+            ("other", f"Deny {full_name} access to this dataset"),
+        ]
+
+    class ActionTypes(models.TextChoices):
+        GRANT = "grant", "grant"
+        DENY = "other", "other"
+
+    action_type = GOVUKDesignSystemRadioField(
+        required=True,
+        label="Actions you can take",
+        choices=ActionTypes.choices,
+        widget=ConditionalSupportTypeRadioWidget(heading="h2"),
+    )
+
+    message = GOVUKDesignSystemTextareaField(
+        required=False,
+        label="Why are you denying access to this data?",
+        help_text="Your answer below will be emailed to the requestor",
+        widget=GOVUKDesignSystemTextareaWidget(
+            label_is_heading=False,
+            attrs={"rows": 5},
+        ),
+    )
+
+    def clean(self):
+        cleaned = super().clean()
+        action_type = self.cleaned_data.get("action_type", None)
+        if (
+            action_type
+            and cleaned["action_type"] == self.ActionTypes.DENY
+            and not cleaned["message"]
+        ):
+            raise forms.ValidationError(
+                {"message": "Enter the reason(s) why you are denying access to this data"}
+            )
+        return cleaned

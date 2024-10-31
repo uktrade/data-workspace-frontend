@@ -312,4 +312,9 @@ urlpatterns = [
             namespace="add_table",
         ),
     ),
+    path(
+        "<uuid:pk>/review-access/<int:user_id>",
+        login_required(views.DataSetReviewAccess.as_view()),
+        name="review_access",
+    ),
 ]

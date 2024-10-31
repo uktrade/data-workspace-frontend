@@ -5127,3 +5127,121 @@ def test_master_dataset_detail_page_shows_pipeline_failures(client, metadata_db)
         len([x for x in response.context["master_datasets_info"] if x.pipeline_last_run_succeeded])
         == 1
     )
+
+
+class TestDataSetReviewAccess:
+    def setUp(self, eligibility_criteria=False, eligibility_criteria_met=True):
+        criteria = [eligibility_criteria] if eligibility_criteria else None
+        self.user = factories.UserFactory.create(is_superuser=True)
+        self.client = Client(**get_http_sso_data(self.user))
+        self.user_requestor = factories.UserFactory.create(
+            first_name="Bob",
+            last_name="Testerten",
+            email="bob.testerten@contact-email.com",
+            is_superuser=False,
+        )
+        self.dataset = factories.DataSetFactory.create(
+            published=True,
+            type=DataSetType.MASTER,
+            name="Master",
+            eligibility_criteria=criteria,
+        )
+        AccessRequestFactory(
+            id=self.user_requestor.id,
+            requester_id=self.user_requestor.id,
+            catalogue_item_id=self.dataset.id,
+            contact_email=self.user_requestor.email,
+            reason_for_access="I need it",
+            eligibility_criteria_met=eligibility_criteria_met,
+        )
+
+    def assert_common(self, include_eligibility_requirements=False):
+        response = self.client.get(
+            reverse(
+                "datasets:review_access",
+                kwargs={"pk": self.dataset.id, "user_id": self.user_requestor.id},
+            )
+        )
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        header_one = soup.find("h1")
+        requester_section_header = header_one.find_next_sibling("h2")
+        requester_section_name = requester_section_header.find_next_sibling("p")
+        requester_section_email = requester_section_name.find_next_sibling("p")
+        requester_reason_section_header = soup.find_all("h2")[1]
+        requester_reason_section_reason = requester_reason_section_header.find_next_sibling("p")
+
+        form = soup.find("form")
+        form_legend = form.find("legend")
+        label_grant = form.find_all("label")[0]
+        label_deny = form.find_all("label")[1]
+        label_why_deny = form.find_all("label")[2]
+        [input_grant] = form.find("input", {"id": "id_action_type_0"}).get_attribute_list("value")
+        [input_deny] = form.find("input", {"id": "id_action_type_1"}).get_attribute_list("value")
+        form.find("textarea", {"id": "id_message"})
+
+        assert response.status_code == 200
+        assert header_one.get_text() == "Review Bob Testerten's access to Master"
+        assert requester_section_header.get_text() == "Requestor"
+        assert requester_section_name.get_text() == "Bob Testerten"
+        assert requester_section_email.get_text() == "bob.testerten@contact-email.com"
+        assert requester_reason_section_header.get_text() == "Requestor's reason for access"
+        assert requester_reason_section_reason.get_text() == "I need it"
+
+        assert form_legend.find("h2").get_text() == "Actions you can take"
+        assert label_grant.get_text() == "Grant Bob Testerten access to this dataset"
+        assert input_grant == "grant"
+        assert label_deny.get_text() == "Deny Bob Testerten access to this dataset"
+        assert input_deny == "other"
+        assert "Why are you denying access to this data?" in label_why_deny.get_text()
+        if include_eligibility_requirements:
+            self.assert_eligibility_requirements_details(soup)
+
+        return [soup, response]
+
+    def assert_eligibility_requirements_details(self, soup):
+        eligibility_requirements_summary = soup.find("summary")
+        eligibility_requirements_reason = eligibility_requirements_summary.find_next_sibling(
+            "div"
+        ).find_next("p")
+        assert (
+            "Eligibility requirements needed to access this data"
+            in eligibility_requirements_summary.get_text()
+        )
+        assert eligibility_requirements_reason.get_text() == "You need to be eligible"
+
+    @pytest.mark.django_db
+    def test_user_has_met_eligibility_requirements(self):
+        self.setUp("You need to be eligible")
+        [soup, _] = self.assert_common()
+        self.assert_eligibility_requirements_details(soup)
+        requesters_eligibility_requirements_answer = soup.find("details").find_next_sibling("p")
+        assert (
+            requesters_eligibility_requirements_answer.get_text()
+            == "The requestor answered that they do meet the eligibility requirements"
+        )
+
+    @pytest.mark.django_db
+    def test_user_has_not_met_eligibility_requirements(self):
+        self.setUp("You need to be eligible", eligibility_criteria_met=False)
+        [soup, _] = self.assert_common()
+        self.assert_eligibility_requirements_details(soup)
+        requesters_eligibility_requirements_answer = soup.find("details").find_next_sibling("p")
+        requesters_eligibility_override_message = (
+            requesters_eligibility_requirements_answer.find_next_sibling("p")
+        )
+        assert (
+            requesters_eligibility_requirements_answer.get_text()
+            == "The requestor answered that they do not meet the eligibility requirements"
+        )
+        assert (
+            requesters_eligibility_override_message.get_text()
+            == "You can still grant them access if they have a good reason for it."
+        )
+
+    @pytest.mark.django_db
+    def test_dataset_does_not_have_eligibility_requirements(self):
+        self.setUp()
+        [_, response] = self.assert_common()
+        assert "Have the eligibility requirements been met?" not in response.content.decode(
+            response.charset
+        )
