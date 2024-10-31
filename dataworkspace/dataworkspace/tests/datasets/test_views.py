@@ -1,6 +1,7 @@
 from datetime import timedelta, date, datetime, timezone
 import json
 import random
+import re
 from urllib.parse import quote_plus
 from uuid import uuid4
 
@@ -51,6 +52,7 @@ from dataworkspace.tests.factories import (
 
 from dataworkspace.tests.conftest import get_client, get_user_data
 from dataworkspace.apps.applications.models import ApplicationInstance
+from dataworkspace.tests.request_access.factories import AccessRequestFactory
 
 
 def test_eligibility_criteria_list(client):
@@ -4334,6 +4336,129 @@ class TestDatasetEditView:
         assert user_1.email.encode() in response.content
         assert user_2.email.encode() not in response.content
 
+    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
+    def test_edit_access_page_shows_iam_iao_flag(self, client, user):
+        user_1 = factories.UserFactory.create(
+            first_name="Vyvyan",
+            last_name="Holland",
+            email="vyvyan.holland@businessandtrade.gov.uk",
+        )
+
+        dataset = factories.DataSetFactory.create(
+            name="Test",
+            published=True,
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+            type=DataSetType.MASTER,
+        )
+        dataset.information_asset_owner = user
+        dataset.information_asset_manager = user_1
+        dataset.save()
+        factories.DataSetUserPermissionFactory.create(dataset=dataset, user=user_1)
+
+        response = client.get(
+            reverse(
+                "datasets:edit_permissions",
+                args=(dataset.pk,),
+            ),
+            follow=True,
+        )
+        assert response.status_code == 200
+
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        assert f"Manage access to {dataset.name}" in soup.find("h1").contents
+        assert "Users who have access" in soup.find("caption").contents
+
+        table_cells = soup.find_all("td", class_="govuk-table__cell")
+        for cell in table_cells:
+            span = cell.find("span", class_="govuk-body govuk-!-font-weight-bold")
+            if span:
+                name = span.get_text(strip=True)
+                assert user_1.first_name, user_1.last_name in name
+                full_text = cell.get_text(strip=True)
+                role_match = re.search(r"\((.*?)\)", full_text)
+                role = role_match.group(1) if role_match else None
+                assert "Information Asset Manager" in role
+                email = full_text.replace(f"{name} ({role})", "").strip()
+                assert user_1.email in email
+
+        assert user_1.email.encode() in response.content
+
+    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
+    def test_edit_access_page_shows_existing_authorized_users(self, client, user):
+        user_1 = factories.UserFactory.create(
+            first_name="Vyvyan",
+            last_name="Holland",
+            email="vyvyan.holland@businessandtrade.gov.uk",
+        )
+
+        dataset = factories.DataSetFactory.create(
+            name="Test",
+            published=True,
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+            type=DataSetType.MASTER,
+        )
+        dataset.information_asset_owner = user
+        dataset.save()
+        factories.DataSetUserPermissionFactory.create(dataset=dataset, user=user_1)
+
+        response = client.get(
+            reverse(
+                "datasets:edit_permissions",
+                args=(dataset.pk,),
+            ),
+            follow=True,
+        )
+        assert response.status_code == 200
+
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        assert f"Manage access to {dataset.name}" in soup.find("h1").contents
+        assert "Users who have access" in soup.find("caption").contents
+
+        table_cells = soup.find_all("td", class_="govuk-table__cell")
+        for cell in table_cells:
+            span = cell.find("span", class_="govuk-body govuk-!-font-weight-bold")
+            if span:
+                name = span.get_text(strip=True)
+                assert user_1.first_name, user_1.last_name in name
+                email = cell.get_text(strip=True).replace(name, "").strip()
+                assert user_1.email in email
+        assert user_1.email.encode() in response.content
+
+    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
+    def test_edit_access_page_shows_requesting_users(self, client, user):
+        user_1 = factories.UserFactory.create(
+            first_name="Vyvyan",
+            last_name="Holland",
+            email="vyvyan.holland@businessandtrade.gov.uk",
+        )
+        dataset = factories.DataSetFactory.create(
+            name="Test",
+            published=True,
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+            type=DataSetType.MASTER,
+        )
+        request_1 = AccessRequestFactory(requester=user_1, catalogue_item_id=dataset.id)
+        dataset.information_asset_owner = user
+        dataset.save()
+
+        response = client.get(
+            reverse(
+                "datasets:edit_permissions",
+                args=(dataset.pk,),
+            ),
+            follow=True,
+        )
+        assert response.status_code == 200
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        table_cells = soup.find_all("td", class_="govuk-table__cell")
+        for cell in table_cells:
+            span = cell.find("span", class_="govuk-body govuk-!-font-weight-bold")
+            if span:
+                name = span.get_text(strip=True)
+                assert request_1.first_name, request_1.last_name in name
+                email = cell.get_text(strip=True).replace(name, "").strip()
+                assert request_1.email in email
+
     @override_flag(settings.ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK, active=True)
     def test_add_user_search_shows_relevant_results(self, client, user):
         user_1 = factories.UserFactory.create(email="john@example.com")
@@ -4511,6 +4636,7 @@ class TestVisualisationCatalogueItemEditView:
             user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
         )
         visualisation_catalogue_item.information_asset_owner = user
+        visualisation_catalogue_item.information_asset_manager = user
         visualisation_catalogue_item.save()
         factories.VisualisationUserPermissionFactory.create(
             visualisation=visualisation_catalogue_item, user=user_1
@@ -4536,6 +4662,7 @@ class TestVisualisationCatalogueItemEditView:
             user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
         )
         visualisation_catalogue_item.information_asset_owner = user
+        visualisation_catalogue_item.information_asset_manager = user
         visualisation_catalogue_item.save()
         response = client.get(
             reverse(
