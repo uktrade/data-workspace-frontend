@@ -9,7 +9,6 @@ from django.contrib.postgres.search import SearchRank, SearchQuery
 from django.core.cache import cache
 from django.db.models import (
     Count,
-    Exists,
     F,
     CharField,
     IntegerField,
@@ -20,7 +19,6 @@ from django.db.models import (
     Case,
     When,
     BooleanField,
-    OuterRef,
     FilteredRelation,
 )
 from django.db.models import QuerySet
@@ -35,7 +33,6 @@ from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType, T
 from dataworkspace.apps.datasets.models import (
     ReferenceDataset,
     DataSet,
-    DataSetVisualisation,
     VisualisationCatalogueItem,
     ToolQueryAuditLog,
 )
@@ -192,8 +189,6 @@ def _get_datasets_data_for_user_matching_query(
     datasets = _annotate_data_type(datasets)
     datasets = _annotate_is_open_data(datasets)
 
-    datasets = _annotate_has_visuals(datasets)
-
     datasets = _annotate_combined_published_date(datasets)
 
     datasets = _annotate_is_owner(datasets, user)
@@ -218,7 +213,6 @@ def _get_datasets_data_for_user_matching_query(
         "data_type",
         "published",
         "is_open_data",
-        "has_visuals",
         "has_access",
         "is_bookmarked",
         "table_match",
@@ -305,28 +299,6 @@ def _annotate_combined_published_date(datasets: QuerySet) -> tuple:
         return datasets.annotate(published_date=F("initial_published_at"))
 
     return datasets.annotate(published_date=F("published_at"))
-
-
-def _annotate_has_visuals(datasets):
-    """
-    Adds a bool annotation to queryset if the dataset has visuals
-    @param datasets: django queryset
-    @return: the annotated dataset
-    """
-    if datasets.model is ReferenceDataset or datasets.model is VisualisationCatalogueItem:
-        datasets = datasets.annotate(has_visuals=Value(False, BooleanField()))
-    if datasets.model is DataSet:
-        datasets = datasets.annotate(
-            has_visuals=Case(
-                When(
-                    Exists(DataSetVisualisation.objects.filter(dataset_id=OuterRef("id"))),
-                    then=True,
-                ),
-                default=False,
-                output_field=BooleanField(),
-            )
-        )
-    return datasets
 
 
 def _annotate_is_open_data(datasets):

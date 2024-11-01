@@ -139,7 +139,6 @@ def _matches_filters(
         )
         and (unpublished or data["published"])
         and (not opendata or data["is_open_data"])
-        and (not withvisuals or data["has_visuals"])
         and (not data_type or data_type == [None] or data["data_type"] in data_type)
         and (not source_ids or source_ids.intersection(set(data["source_tag_ids"])))
         and (not topic_ids or topic_ids.intersection(set(data["topic_tag_ids"])))
@@ -1387,57 +1386,6 @@ class DataGridDataView(DetailView):
                 "download_limit": source.data_grid_download_limit,
                 "records": records,
             }
-        )
-
-
-class DatasetVisualisationPreview(View):
-    def _get_vega_definition(self, visualisation):
-        vega_definition = json.loads(visualisation.vega_definition_json)
-
-        if visualisation.query:
-            with psycopg2.connect(
-                database_dsn(settings.DATABASES_DATA[visualisation.database.memorable_name])
-            ) as connection:
-                with connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
-                    cursor.execute(visualisation.query)
-                    data = cursor.fetchall()
-            try:
-                # vega-lite, 'data' is a dictionary
-                vega_definition["data"]["values"] = data
-            except TypeError:
-                # vega, 'data' is a list, and we support setting the query
-                # results as the first item
-                vega_definition["data"][0]["values"] = data
-
-        return vega_definition
-
-    def get(self, request, dataset_uuid, object_id, **kwargs):
-        model_class = kwargs["model_class"]
-        dataset = find_dataset(dataset_uuid, request.user, model_class)
-
-        if not dataset.user_has_access(request.user):
-            return HttpResponseForbidden()
-
-        visualisation = dataset.visualisations.get(id=object_id)
-        vega_definition = self._get_vega_definition(visualisation)
-
-        return JsonResponse(vega_definition)
-
-
-class DatasetVisualisationView(View):
-    def get(self, request, dataset_uuid, object_id, **kwargs):
-        model_class = kwargs["model_class"]
-        dataset = find_dataset(dataset_uuid, self.request.user, model_class)
-
-        if not dataset.user_has_access(request.user):
-            return HttpResponseForbidden()
-
-        visualisation = dataset.visualisations.live().get(id=object_id)
-
-        return render(
-            request,
-            "datasets/visualisation.html",
-            context={"dataset_uuid": dataset_uuid, "visualisation": visualisation},
         )
 
 
