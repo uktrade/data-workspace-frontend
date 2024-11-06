@@ -576,18 +576,6 @@ class DataSet(DeletableTimestampedUserModel):
         )
 
 
-class DataSetVisualisation(DeletableTimestampedUserModel):
-    name = models.CharField(max_length=255)
-    summary = models.TextField()
-    vega_definition_json = models.TextField()
-    database = models.ForeignKey(Database, default=None, on_delete=models.CASCADE)
-    query = models.TextField(null=True, blank=True)
-
-    dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE, related_name="visualisations")
-
-    gds_phase_name = models.CharField(max_length=25, default="", blank=True)
-
-
 class DataSetUserPermission(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)

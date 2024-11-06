@@ -5,6 +5,7 @@ from mock import call, Mock, MagicMock, patch
 from django.core.serializers.json import DjangoJSONEncoder
 from django.test import TestCase
 from freezegun import freeze_time
+from psycopg2.sql import Identifier, SQL
 import pytest
 import six
 
@@ -80,9 +81,25 @@ class TestTasks(TestCase):
         cleanup_temporary_query_tables()
 
         expected_calls = [
-            call("GRANT _user_12b9377c TO postgres"),
-            call(f"DROP TABLE IF EXISTS _user_12b9377c._data_explorer_tmp_query_{query_log_1.id}"),
-            call("REVOKE _user_12b9377c FROM postgres"),
+            call(
+                SQL("GRANT {user} TO {role}").format(
+                    role=Identifier("postgres"),
+                    user=Identifier("_user_12b9377c"),
+                ),
+            ),
+            call(
+                SQL("DROP TABLE IF EXISTS {schema_table}").format(
+                    schema_table=Identifier(
+                        "_user_12b9377c", f"_data_explorer_tmp_query_{query_log_1.id}"
+                    )
+                )
+            ),
+            call(
+                SQL("REVOKE {user} FROM {role}").format(
+                    role=Identifier("postgres"),
+                    user=Identifier("_user_12b9377c"),
+                ),
+            ),
         ]
         mock_cursor.execute.assert_has_calls(expected_calls)
 
@@ -123,16 +140,27 @@ class TestExecuteQuery:
         query_log_id = QueryLog.objects.first().id
 
         expected_calls = [
-            call("SET statement_timeout = 10000"),
-            call("SELECT * FROM (select * from foo) sq LIMIT 0"),
+            call("SET statement_timeout = %s", (10000,)),
+            call(SQL("SELECT * FROM ({query}) sq LIMIT 0").format(query=SQL("select * from foo"))),
             call(
-                f'CREATE TABLE _user_12b9377c._data_explorer_tmp_query_{query_log_id} ("foo" integer, "bar" text)'
+                SQL("CREATE TABLE {schema_table} ({cols})").format(
+                    schema_table=Identifier(
+                        "_user_12b9377c", f"_data_explorer_tmp_query_{query_log_id}"
+                    ),
+                    cols=SQL('"foo" integer, "bar" text'),
+                ),
             ),
             call(
-                f"INSERT INTO _user_12b9377c._data_explorer_tmp_query_{query_log_id}"
-                " SELECT * FROM (select * from foo) sq LIMIT 100"
+                SQL("INSERT INTO {schema_table} SELECT * FROM ({sql}) sq {limit}{offset}").format(
+                    schema_table=Identifier(
+                        "_user_12b9377c", f"_data_explorer_tmp_query_{query_log_id}"
+                    ),
+                    sql=SQL("select * from foo"),
+                    limit=SQL("LIMIT 100"),
+                    offset=SQL(""),
+                ),
             ),
-            call("SELECT COUNT(*) FROM (select * from foo) sq"),
+            call(SQL("SELECT COUNT(*) FROM ({sql}) sq").format(sql=SQL("select * from foo"))),
         ]
         self.mock_cursor.execute.assert_has_calls(expected_calls)
 
@@ -152,16 +180,29 @@ class TestExecuteQuery:
         query_log_id = QueryLog.objects.first().id
 
         expected_calls = [
-            call("SET statement_timeout = 10000"),
-            call("SELECT * FROM (select * from foo) sq LIMIT 0"),
+            call("SET statement_timeout = %s", (10000,)),
+            call(SQL("SELECT * FROM ({query}) sq LIMIT 0").format(query=SQL("select * from foo"))),
             call(
-                f'CREATE TABLE _user_12b9377c._data_explorer_tmp_query_{query_log_id} ("foo" integer, "bar" text)'
+                SQL("CREATE TABLE {schema_table} ({cols})").format(
+                    schema_table=Identifier(
+                        "_user_12b9377c", f"_data_explorer_tmp_query_{query_log_id}"
+                    ),
+                    cols=SQL('"foo" integer, "bar" text'),
+                )
             ),
             call(
-                f"INSERT INTO _user_12b9377c._data_explorer_tmp_query_{query_log_id}"
-                " SELECT * FROM (select * from foo) sq LIMIT 100 OFFSET 100"
+                SQL(
+                    "INSERT INTO {schema_table} SELECT * FROM ({query}) sq {limit}{offset}"
+                ).format(
+                    schema_table=Identifier(
+                        "_user_12b9377c", f"_data_explorer_tmp_query_{query_log_id}"
+                    ),
+                    query=SQL("select * from foo"),
+                    limit=SQL("LIMIT 100"),
+                    offset=SQL(" OFFSET 100"),
+                )
             ),
-            call("SELECT COUNT(*) FROM (select * from foo) sq"),
+            call(SQL("SELECT COUNT(*) FROM ({query}) sq").format(query=SQL("select * from foo"))),
         ]
         self.mock_cursor.execute.assert_has_calls(expected_calls)
 
@@ -181,17 +222,25 @@ class TestExecuteQuery:
         query_log_id = QueryLog.objects.first().id
 
         expected_calls = [
-            call("SET statement_timeout = 10000"),
-            call("SELECT * FROM (select * from foo) sq LIMIT 0"),
+            call("SET statement_timeout = %s", (10000,)),
+            call(SQL("SELECT * FROM ({query}) sq LIMIT 0").format(query=SQL("select * from foo"))),
             call(
-                f"CREATE TABLE _user_12b9377c._data_explorer_tmp_query_{query_log_id}"
-                ' ("col_1_bar" integer, "col_2_bar" text)'
+                SQL("CREATE TABLE {table} ({cols})").format(
+                    table=Identifier("_user_12b9377c", f"_data_explorer_tmp_query_{query_log_id}"),
+                    cols=SQL('"col_1_bar" integer, "col_2_bar" text'),
+                )
             ),
             call(
-                f"INSERT INTO _user_12b9377c._data_explorer_tmp_query_{query_log_id}"
-                " SELECT * FROM (select * from foo) sq LIMIT 100"
+                SQL("INSERT INTO {schema_table} SELECT * FROM ({sql}) sq {limit}{offset}").format(
+                    schema_table=Identifier(
+                        "_user_12b9377c", f"_data_explorer_tmp_query_{query_log_id}"
+                    ),
+                    sql=SQL("select * from foo"),
+                    limit=SQL("LIMIT 100"),
+                    offset=SQL(""),
+                )
             ),
-            call("SELECT COUNT(*) FROM (select * from foo) sq"),
+            call(SQL("SELECT COUNT(*) FROM ({sql}) sq").format(sql=SQL("select * from foo"))),
         ]
         self.mock_cursor.execute.assert_has_calls(expected_calls)
 

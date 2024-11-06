@@ -1,5 +1,4 @@
 from datetime import datetime
-import ast
 import json
 import logging
 import uuid
@@ -64,6 +63,7 @@ from dataworkspace.apps.datasets.forms import (
     RelatedVisualisationsSortForm,
     UserSearchForm,
     VisualisationCatalogueItemEditForm,
+    ReviewAccessForm,
 )
 from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
@@ -140,7 +140,6 @@ def _matches_filters(
         )
         and (unpublished or data["published"])
         and (not opendata or data["is_open_data"])
-        and (not withvisuals or data["has_visuals"])
         and (not data_type or data_type == [None] or data["data_type"] in data_type)
         and (not source_ids or source_ids.intersection(set(data["source_tag_ids"])))
         and (not topic_ids or topic_ids.intersection(set(data["topic_tag_ids"])))
@@ -1391,57 +1390,6 @@ class DataGridDataView(DetailView):
         )
 
 
-class DatasetVisualisationPreview(View):
-    def _get_vega_definition(self, visualisation):
-        vega_definition = json.loads(visualisation.vega_definition_json)
-
-        if visualisation.query:
-            with psycopg2.connect(
-                database_dsn(settings.DATABASES_DATA[visualisation.database.memorable_name])
-            ) as connection:
-                with connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
-                    cursor.execute(visualisation.query)
-                    data = cursor.fetchall()
-            try:
-                # vega-lite, 'data' is a dictionary
-                vega_definition["data"]["values"] = data
-            except TypeError:
-                # vega, 'data' is a list, and we support setting the query
-                # results as the first item
-                vega_definition["data"][0]["values"] = data
-
-        return vega_definition
-
-    def get(self, request, dataset_uuid, object_id, **kwargs):
-        model_class = kwargs["model_class"]
-        dataset = find_dataset(dataset_uuid, request.user, model_class)
-
-        if not dataset.user_has_access(request.user):
-            return HttpResponseForbidden()
-
-        visualisation = dataset.visualisations.get(id=object_id)
-        vega_definition = self._get_vega_definition(visualisation)
-
-        return JsonResponse(vega_definition)
-
-
-class DatasetVisualisationView(View):
-    def get(self, request, dataset_uuid, object_id, **kwargs):
-        model_class = kwargs["model_class"]
-        dataset = find_dataset(dataset_uuid, self.request.user, model_class)
-
-        if not dataset.user_has_access(request.user):
-            return HttpResponseForbidden()
-
-        visualisation = dataset.visualisations.live().get(id=object_id)
-
-        return render(
-            request,
-            "datasets/visualisation.html",
-            context={"dataset_uuid": dataset_uuid, "visualisation": visualisation},
-        )
-
-
 class CustomQueryColumnDetails(View):
     def get(self, request, dataset_uuid, query_id):
         dataset = find_dataset(dataset_uuid, self.request.user, DataCutDataset)
@@ -1924,6 +1872,84 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
             )
 
 
+class DataSetReviewAccess(EditBaseView, FormView):
+    form_class = ReviewAccessForm
+    template_name = "datasets/manage_permissions/review_access.html"
+
+    def form_valid(self, form):
+        [user] = get_user_model().objects.filter(id=self.kwargs["user_id"])
+        summary = (
+            PendingAuthorizedUsers.objects.all()
+            .filter(created_by_id=self.request.user)
+            .order_by("-id")
+            .first()
+        )
+        has_granted_access = self.request.POST["action_type"] == "grant"
+
+        if has_granted_access:
+            permissions = DataSetUserPermission.objects.filter(dataset=self.obj)
+            users_with_permission = [p.user.id for p in permissions]
+            users_with_permission.append(user.id)
+            new_user_summary = PendingAuthorizedUsers.objects.create(
+                created_by=self.request.user, users=json.dumps(users_with_permission)
+            )
+            new_user_summary.save()
+            authorized_users = set(
+                get_user_model().objects.filter(
+                    id__in=json.loads(new_user_summary.users if new_user_summary.users else "[]")
+                )
+            )
+            AccessRequest.objects.all().filter(id=user.id).update(data_access_status="confirmed")
+            process_dataset_authorized_users_change(
+                set(authorized_users), self.request.user, self.obj, False, False, True
+            )
+            messages.success(
+                self.request,
+                f"An email has been sent to {user.first_name} {user.last_name} to let them know they now have access.",
+            )
+            # TODO: Send email to user # pylint: disable=fixme
+        else:
+            messages.success(
+                self.request,
+                f"An email has been sent to {user.first_name} {user.last_name} to let them know their access request was not successful.",  # pylint: disable=line-too-long
+            )
+            # TODO: Send email to user # pylint: disable=fixme
+        return HttpResponseRedirect(
+            reverse(
+                "datasets:edit_permissions_summary",
+                args=[self.obj.id, new_user_summary.id if has_granted_access else summary.id],
+            )
+        )
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        args = self.kwargs
+        user_id = args["user_id"]
+        [user] = get_user_model().objects.filter(id=user_id)
+        kwargs["requester"] = user
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        args = self.kwargs
+        user_id = args["user_id"]
+        context = super().get_context_data(**kwargs)
+        context["obj"] = self.obj
+        context["eligibility_criteria"] = self.obj.eligibility_criteria
+        [user] = get_user_model().objects.filter(id=user_id)
+        context["full_name"] = f"{user.first_name} {user.last_name}"
+        context["email"] = user.email
+        access_request = AccessRequest.objects.filter(requester=user_id).latest("created_date")
+        context["is_eligible"] = access_request.eligibility_criteria_met
+        context["reason_for_access"] = access_request.reason_for_access
+        context["obj_edit_url"] = (
+            reverse("datasets:edit_dataset", args=[self.obj.pk])
+            if isinstance(self.obj, DataSet)
+            else reverse("datasets:edit_visualisation_catalogue_item", args=[self.obj.pk])
+        )
+        context["obj_manage_url"] = reverse("datasets:edit_permissions", args=[self.obj.id])
+        return context
+
+
 class DatasetAuthorisedUsersSearchView(UserSearchFormView):
     template_name = "datasets/search_authorised_users.html"
 
@@ -1996,18 +2022,20 @@ class DatasetRemoveAuthorisedUserView(EditBaseView, View):
         if user.id in users:
             summary.users = json.dumps([user_id for user_id in users if user_id != user.id])
             summary.save()
-        name_dataset = find_dataset(self.obj.pk, request.user).name
-        url_dataset = request.build_absolute_uri(
-            reverse("datasets:dataset_detail", args=[self.obj.pk])
-        )
-        send_email(
-            settings.NOTIFY_DATASET_ACCESS_REMOVE_TEMPLATE_ID,
-            user.email,
-            personalisation={
-                "dataset_name": name_dataset,
-                "dataset_url": url_dataset,
-            },
-        )
+        if waffle.flag_is_active(self.request, settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW):
+            name_dataset = find_dataset(self.obj.pk, request.user).name
+            url_dataset = request.build_absolute_uri(
+                reverse("datasets:dataset_detail", args=[self.obj.pk])
+            )
+            send_email(
+                settings.NOTIFY_DATASET_ACCESS_REMOVE_TEMPLATE_ID,
+                user.email,
+                personalisation={
+                    "dataset_name": name_dataset,
+                    "dataset_url": url_dataset,
+                },
+            )
+
         return HttpResponseRedirect(
             reverse(
                 "datasets:edit_permissions_summary",
