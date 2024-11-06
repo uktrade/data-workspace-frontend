@@ -1,4 +1,5 @@
 from datetime import datetime
+import ast
 import json
 import logging
 import uuid
@@ -10,6 +11,7 @@ import psycopg2
 import waffle
 from botocore.exceptions import ClientError
 from csp.decorators import csp_update
+from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
@@ -1834,6 +1836,10 @@ class DatasetEditPermissionsView(EditBaseView, View):
 class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
     template_name = "datasets/manage_permissions/edit_summary.html"
 
+    @csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC, STYLE_SRC=settings.WEBPACK_SCRIPT_SRC)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
     def get_context_data(self, **kwargs):
         if waffle.flag_is_active(self.request, settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW):
             self.template_name = "datasets/manage_permissions/edit_access.html"
@@ -1846,17 +1852,31 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
             else reverse("datasets:edit_visualisation_catalogue_item", args=[self.obj.pk])
         )
         context["summary"] = self.summary
-        context["authorised_users"] = get_user_model().objects.filter(
-            id__in=json.loads(self.summary.users) if self.summary.users else []
+        iao = get_user_model().objects.get(id=self.obj.information_asset_owner_id).email
+        iam = get_user_model().objects.get(id=self.obj.information_asset_manager_id).email
+        # used to populate data property of ConfirmRemoveUser dialog
+        data_catalogue_editors = [user.email for user in self.obj.data_catalogue_editors.all()]
+        context["authorised_users"] = json.dumps(
+            [
+                {
+                    "data_catalogue_editor": u.email in data_catalogue_editors,
+                    "email": u.email,
+                    "first_name": u.first_name,
+                    "iam": u.email == iam,
+                    "iao": u.email == iao,
+                    "id": u.id,
+                    "last_name": u.last_name,
+                    "remove_user_url": reverse(
+                        "datasets:remove_authorized_user",
+                        args=[self.obj.id, self.summary.id, u.id],
+                    ),
+                }
+                for u in get_user_model().objects.filter(
+                    id__in=json.loads(self.summary.users) if self.summary.users else []
+                )
+            ]
         )
-        context["iao"] = get_user_model().objects.get(id=self.obj.information_asset_owner_id).email
-        context["iam"] = (
-            get_user_model().objects.get(id=self.obj.information_asset_manager_id).email
-        )
-        data_catalogue_editors = []
-        for user in self.obj.data_catalogue_editors.all():
-            data_catalogue_editors.append(user.email)
-        context["data_catalogue_editors"] = data_catalogue_editors
+
         requests = AccessRequest.objects.filter(
             catalogue_item_id=self.obj.pk, data_access_status="waiting"
         )
@@ -1980,6 +2000,7 @@ class DatasetRemoveAuthorisedUserView(EditBaseView, View):
         url_dataset = request.build_absolute_uri(
             reverse("datasets:dataset_detail", args=[self.obj.pk])
         )
+        """
         send_email(
             settings.NOTIFY_DATASET_ACCESS_REMOVE_TEMPLATE_ID,
             user.email,
@@ -1988,6 +2009,7 @@ class DatasetRemoveAuthorisedUserView(EditBaseView, View):
                 "dataset_url": url_dataset,
             },
         )
+        """
         return HttpResponseRedirect(
             reverse(
                 "datasets:edit_permissions_summary",
@@ -2001,7 +2023,7 @@ class DatasetRemoveAuthorisedUserView(EditBaseView, View):
         )
 
 
-@ require_POST
+@require_POST
 def log_data_preview_load_time(request, dataset_uuid, source_id):
     try:
         received_json_data = json.loads(request.body)
