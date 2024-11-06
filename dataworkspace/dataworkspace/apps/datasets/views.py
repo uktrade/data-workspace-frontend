@@ -10,7 +10,6 @@ import psycopg2
 import waffle
 from botocore.exceptions import ClientError
 from csp.decorators import csp_update
-from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
