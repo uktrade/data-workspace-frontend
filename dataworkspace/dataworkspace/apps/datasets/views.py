@@ -1786,46 +1786,72 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
     def get_context_data(self, **kwargs):
         if waffle.flag_is_active(self.request, settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW):
             self.template_name = "datasets/manage_permissions/edit_access.html"
-        context = super().get_context_data(**kwargs)
-        context["user_removed"] = self.request.GET.get("user_removed", None)
-        context["obj"] = self.obj
-        context["obj_edit_url"] = (
-            reverse("datasets:edit_dataset", args=[self.obj.pk])
-            if isinstance(self.obj, DataSet)
-            else reverse("datasets:edit_visualisation_catalogue_item", args=[self.obj.pk])
-        )
-        context["summary"] = self.summary
-        context["authorised_users"] = get_user_model().objects.filter(
-            id__in=json.loads(self.summary.users) if self.summary.users else []
-        )
-        context["iao"] = get_user_model().objects.get(id=self.obj.information_asset_owner_id).email
-        context["iam"] = (
-            get_user_model().objects.get(id=self.obj.information_asset_manager_id).email
-        )
-        data_catalogue_editors = []
-        for user in self.obj.data_catalogue_editors.all():
-            data_catalogue_editors.append(user.email)
-        context["data_catalogue_editors"] = data_catalogue_editors
-        requests = AccessRequest.objects.filter(
-            catalogue_item_id=self.obj.pk, data_access_status="waiting"
-        )
-        requested_users = []
-        for request in requests:
-            request_user = get_user_model().objects.get(id=request.id)
-            requested_users.append(
-                {
-                    "id": request_user.id,
-                    "first_name": request_user.first_name,
-                    "last_name": request_user.last_name,
-                    "email": request_user.email,
-                    "days_ago": (datetime.today() - request.created_date.replace(tzinfo=None)).days
-                    + 1,
-                }
+            context = super().get_context_data(**kwargs)
+            context["user_removed"] = self.request.GET.get("user_removed", None)
+            context["obj"] = self.obj
+            context["obj_edit_url"] = (
+                reverse("datasets:edit_dataset", args=[self.obj.pk])
+                if isinstance(self.obj, DataSet)
+                else reverse("datasets:edit_visualisation_catalogue_item", args=[self.obj.pk])
             )
-        context["requested_users"] = requested_users
-        context["waffle_flag"] = waffle.flag_is_active(
-            self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"
-        )
+            context["summary"] = self.summary
+            context["authorised_users"] = get_user_model().objects.filter(
+                id__in=json.loads(self.summary.users) if self.summary.users else []
+            )
+            iao_email = (
+                get_user_model().objects.get(id=self.obj.information_asset_owner_id).email
+                if self.obj.information_asset_owner_id
+                else ""
+            )
+            iam_email = (
+                get_user_model().objects.get(id=self.obj.information_asset_manager_id).email
+                if self.obj.information_asset_manager_id
+                else ""
+            )
+            context["iao"] = iao_email
+            context["iam"] = iam_email
+            data_catalogue_editors = []
+            for user in self.obj.data_catalogue_editors.all():
+                data_catalogue_editors.append(user.email)
+            context["data_catalogue_editors"] = data_catalogue_editors
+            requests = AccessRequest.objects.filter(
+                catalogue_item_id=self.obj.pk, data_access_status="waiting"
+            )
+            requested_users = []
+            for request in requests:
+                request_user = get_user_model().objects.get(id=request.requester.id)
+                requested_users.append(
+                    {
+                        "id": request_user.id,
+                        "first_name": request_user.first_name,
+                        "last_name": request_user.last_name,
+                        "email": request_user.email,
+                        "days_ago": (
+                            datetime.today() - request.created_date.replace(tzinfo=None)
+                        ).days
+                        + 1,
+                    }
+                )
+            context["requested_users"] = requested_users
+            context["waffle_flag"] = waffle.flag_is_active(
+                self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"
+            )
+        else:
+            context = super().get_context_data(**kwargs)
+            context["obj"] = self.obj
+            context["obj_edit_url"] = (
+                reverse("datasets:edit_dataset", args=[self.obj.pk])
+                if isinstance(self.obj, DataSet)
+                else reverse("datasets:edit_visualisation_catalogue_item", args=[self.obj.pk])
+            )
+
+            context["summary"] = self.summary
+            context["authorised_users"] = get_user_model().objects.filter(
+                id__in=json.loads(self.summary.users if self.summary.users else "[]")
+            )
+            context["waffle_flag"] = waffle.flag_is_active(
+                self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"
+            )
         return context
 
     def post(self, request, *args, **kwargs):
@@ -1865,7 +1891,10 @@ class DataSetReviewAccess(EditBaseView, FormView):
         has_granted_access = self.request.POST["action_type"] == "grant"
 
         if has_granted_access:
-            permissions = DataSetUserPermission.objects.filter(dataset=self.obj)
+            if self.obj.type in (DataSetType.MASTER, DataSetType.DATACUT):
+                permissions = DataSetUserPermission.objects.filter(dataset=self.obj)
+            else:
+                permissions = VisualisationUserPermission.objects.filter(visualisation=self.obj)
             users_with_permission = [p.user.id for p in permissions]
             users_with_permission.append(user.id)
             new_user_summary = PendingAuthorizedUsers.objects.create(
@@ -1874,24 +1903,55 @@ class DataSetReviewAccess(EditBaseView, FormView):
             new_user_summary.save()
             authorized_users = set(
                 get_user_model().objects.filter(
-                    id__in=json.loads(new_user_summary.users if new_user_summary.users else "[]")
+                    id__in=json.loads(new_user_summary.users if new_user_summary.users else [])
                 )
             )
-            AccessRequest.objects.all().filter(id=user.id).update(data_access_status="confirmed")
-            process_dataset_authorized_users_change(
-                set(authorized_users), self.request.user, self.obj, False, False, True
+            AccessRequest.objects.all().filter(requester_id=user.id).update(
+                data_access_status="confirmed"
+            )
+
+            if self.obj.type in (DataSetType.MASTER, DataSetType.DATACUT):
+                process_dataset_authorized_users_change(
+                    set(authorized_users), self.request.user, self.obj, False, False, True
+                )
+            else:
+                process_visualisation_catalogue_item_authorized_users_change(
+                    set(authorized_users), self.request.user, self.obj, False, False
+                )
+
+            absolute_url = self.request.build_absolute_uri(
+                reverse("datasets:dataset_detail", args=[self.obj.id])
+            )
+            send_email(
+                settings.NOTIFY_DATASET_ACCESS_GRANTED_TEMPLATE_ID,
+                user.email,
+                personalisation={
+                    "email_address": user.email,
+                    "dataset_name": self.obj.name,
+                    "dataset_url": absolute_url,
+                },
             )
             messages.success(
                 self.request,
                 f"An email has been sent to {user.first_name} {user.last_name} to let them know they now have access.",
             )
-            # TODO: Send email to user # pylint: disable=fixme
         else:
+            AccessRequest.objects.all().filter(requester_id=user.id).update(
+                data_access_status="declined"
+            )
+            send_email(
+                settings.NOTIFY_DATASET_ACCESS_DENIED_TEMPLATE_ID,
+                user.email,
+                personalisation={
+                    "email_address": user.email,
+                    "dataset_name": self.obj.name,
+                    "deny_reasoning": form.cleaned_data["message"],
+                },
+            )
             messages.success(
                 self.request,
                 f"An email has been sent to {user.first_name} {user.last_name} to let them know their access request was not successful.",  # pylint: disable=line-too-long
             )
-            # TODO: Send email to user # pylint: disable=fixme
         return HttpResponseRedirect(
             reverse(
                 "datasets:edit_permissions_summary",

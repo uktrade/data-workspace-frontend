@@ -1,5 +1,6 @@
 import logging
 import urllib.parse
+import waffle
 
 from django.conf import settings
 from django.urls import reverse
@@ -141,7 +142,9 @@ def update_zendesk_ticket(ticket_id, comment=None, status=None):
 
 def notify_dataset_access_request(request, access_request, dataset):
     dataset_url = request.build_absolute_uri(dataset.get_absolute_url())
-    request_approvers_emails = dataset.request_approvers
+    request_approvers_emails = dataset.request_approvers or [
+        dataset.information_asset_manager.email
+    ]
     message = f"""
 An access request has been sent to the relevent person or team to assess you request.
 
@@ -170,8 +173,15 @@ If access has not been granted to the requestor within 5 working days, this will
         tag="dataset-access-request",
     )
 
-    authorize_url = request.build_absolute_uri(
-        reverse("datasets:edit_permissions", args=[dataset.id])
+    authorize_url = (
+        request.build_absolute_uri(
+            reverse(
+                "datasets:review_access",
+                kwargs={"pk": dataset.id, "user_id": request.user.id},
+            )
+        )
+        if waffle.flag_is_active(request, settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW)
+        else request.build_absolute_uri(reverse("datasets:edit_permissions", args=[dataset.id]))
     )
 
     contacts = set()
@@ -183,7 +193,11 @@ If access has not been granted to the requestor within 5 working days, this will
 
     for contact in contacts:
         send_email(
-            settings.NOTIFY_DATASET_ACCESS_REQUEST_TEMPLATE_ID,
+            (
+                settings.NOTIFY_DATASET_ACCESS_REQUEST_TEMPLATE_ID
+                if waffle.flag_is_active(request, settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW)
+                else settings.LEGACY_NOTIFY_DATASET_ACCESS_REQUEST_TEMPLATE_ID
+            ),
             contact,
             personalisation={
                 "dataset_name": dataset.name,
