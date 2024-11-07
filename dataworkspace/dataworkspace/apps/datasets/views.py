@@ -1799,10 +1799,10 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
             else reverse("datasets:edit_visualisation_catalogue_item", args=[self.obj.pk])
         )
         context["summary"] = self.summary
-        iao = get_user_model().objects.get(id=self.obj.information_asset_owner_id).email
-        iam = get_user_model().objects.get(id=self.obj.information_asset_manager_id).email
         # used to populate data property of ConfirmRemoveUser dialog
         data_catalogue_editors = [user.email for user in self.obj.data_catalogue_editors.all()]
+        iam = get_user_model().objects.get(id=self.obj.information_asset_manager_id).email
+        iao = get_user_model().objects.get(id=self.obj.information_asset_owner_id).email
         context["authorised_users"] = json.dumps(
             [
                 {
@@ -1816,14 +1816,13 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
                     "remove_user_url": reverse(
                         "datasets:remove_authorized_user",
                         args=[self.obj.id, self.summary.id, u.id],
-                    ),
+                    ) if waffle.flag_is_active(self.request, settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW) else None,
                 }
                 for u in get_user_model().objects.filter(
                     id__in=json.loads(self.summary.users) if self.summary.users else []
                 )
             ]
         )
-
         requests = AccessRequest.objects.filter(
             catalogue_item_id=self.obj.pk, data_access_status="waiting"
         )

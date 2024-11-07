@@ -4229,6 +4229,7 @@ def test_find_datasets_filters_show_open_data():
 
 
 class TestDatasetEditView:
+    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
     def test_only_iam_or_iao_can_edit_dataset(self, client, user):
         dataset = factories.DataSetFactory.create(
             published=True,
@@ -4255,6 +4256,7 @@ class TestDatasetEditView:
         )
         assert response.status_code == 200
 
+    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
     def test_edit_permissions_page_shows_existing_authorized_users(self, client, user):
         user_1 = factories.UserFactory.create()
         user_2 = factories.UserFactory.create()
@@ -4280,95 +4282,7 @@ class TestDatasetEditView:
         assert user_1.email.encode() in response.content
         assert user_2.email.encode() not in response.content
 
-    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
-    def test_edit_access_page_shows_iam_iao_flag(self, client, user):
-        user_1 = factories.UserFactory.create(
-            first_name="Vyvyan",
-            last_name="Holland",
-            email="vyvyan.holland@businessandtrade.gov.uk",
-        )
-
-        dataset = factories.DataSetFactory.create(
-            name="Test",
-            published=True,
-            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
-            type=DataSetType.MASTER,
-        )
-        dataset.information_asset_owner = user
-        dataset.information_asset_manager = user_1
-        dataset.save()
-        factories.DataSetUserPermissionFactory.create(dataset=dataset, user=user_1)
-
-        response = client.get(
-            reverse(
-                "datasets:edit_permissions",
-                args=(dataset.pk,),
-            ),
-            follow=True,
-        )
-        assert response.status_code == 200
-
-        soup = BeautifulSoup(response.content.decode(response.charset))
-        assert f"Manage access to {dataset.name}" in soup.find("h1").contents
-        assert "Users who have access" in soup.find("caption").contents
-
-        table_cells = soup.find_all("td", class_="govuk-table__cell")
-        for cell in table_cells:
-            span = cell.find("span", class_="govuk-body govuk-!-font-weight-bold")
-            if span:
-                name = span.get_text(strip=True)
-                assert user_1.first_name, user_1.last_name in name
-                full_text = cell.get_text(strip=True)
-                role_match = re.search(r"\((.*?)\)", full_text)
-                role = role_match.group(1) if role_match else None
-                assert "Information Asset Manager" in role
-                email = full_text.replace(f"{name} ({role})", "").strip()
-                assert user_1.email in email
-
-        assert user_1.email.encode() in response.content
-
-    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
-    def test_edit_access_page_shows_existing_authorized_users(self, client, user):
-        user_1 = factories.UserFactory.create(
-            first_name="Vyvyan",
-            last_name="Holland",
-            email="vyvyan.holland@businessandtrade.gov.uk",
-        )
-
-        dataset = factories.DataSetFactory.create(
-            name="Test",
-            published=True,
-            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
-            type=DataSetType.MASTER,
-        )
-        dataset.information_asset_owner = user
-        dataset.save()
-        factories.DataSetUserPermissionFactory.create(dataset=dataset, user=user_1)
-
-        response = client.get(
-            reverse(
-                "datasets:edit_permissions",
-                args=(dataset.pk,),
-            ),
-            follow=True,
-        )
-        assert response.status_code == 200
-
-        soup = BeautifulSoup(response.content.decode(response.charset))
-        assert f"Manage access to {dataset.name}" in soup.find("h1").contents
-        assert "Users who have access" in soup.find("caption").contents
-
-        table_cells = soup.find_all("td", class_="govuk-table__cell")
-        for cell in table_cells:
-            span = cell.find("span", class_="govuk-body govuk-!-font-weight-bold")
-            if span:
-                name = span.get_text(strip=True)
-                assert user_1.first_name, user_1.last_name in name
-                email = cell.get_text(strip=True).replace(name, "").strip()
-                assert user_1.email in email
-        assert user_1.email.encode() in response.content
-
-    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
+    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=False)
     def test_edit_access_page_shows_requesting_users(self, client, user):
         user_1 = factories.UserFactory.create(
             first_name="Vyvyan",
@@ -4403,6 +4317,7 @@ class TestDatasetEditView:
                 email = cell.get_text(strip=True).replace(name, "").strip()
                 assert request_1.email in email
 
+    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=False)
     @override_flag(settings.ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK, active=True)
     def test_add_user_search_shows_relevant_results(self, client, user):
         user_1 = factories.UserFactory.create(email="john@example.com")
@@ -4437,6 +4352,7 @@ class TestDatasetEditView:
         assert user_2.email.encode() in response.content
         assert user_2.first_name.encode() in response.content
 
+    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=False)
     def test_add_user_select_adds_user_to_authorized_users_summary(self, client, user):
         user_1 = factories.UserFactory.create(email="john@example.com")
 
@@ -4471,7 +4387,9 @@ class TestDatasetEditView:
         assert response.status_code == 200
         assert user_1.email.encode() in response.content
 
-    def test_remove_removes_user_from_authorized_users_summary(self, client, user):
+    @mock.patch("dataworkspace.apps.datasets.views.send_email")
+    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
+    def test_remove_removes_user_from_authorized_users_summary(self, mock_send_email, client, user):
         user_1 = factories.UserFactory.create(email="john@example.com")
 
         dataset = factories.DataSetFactory.create(
@@ -4492,13 +4410,13 @@ class TestDatasetEditView:
         )
         assert response.status_code == 200
         assert user_1.email.encode() in response.content
-
-        soup = BeautifulSoup(response.content.decode(response.charset))
-        remove_url = soup.findAll("a", href=True, text="Remove")[0]["href"]
+        remove_url = json.loads(response.context_data["authorised_users"])[0]["remove_user_url"]
         response = client.get(remove_url, follow=True)
         assert response.status_code == 200
+        mock_send_email.assert_called_once()
         assert b"There are currently no authorized users" in response.content
 
+    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
     def test_add_user_save_and_continue_creates_dataset_permissions(self, client, user):
         user_1 = factories.UserFactory.create(email="john@example.com")
 
