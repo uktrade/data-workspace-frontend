@@ -8,10 +8,6 @@ import styled from 'styled-components';
 
 import Modal from '../../components/ConfirmDialog/';
 
-const ContainerTable = styled('div')`
-  padding-bottom: 4px;
-`;
-
 const SpanBold = styled('span')`
   font-weight: bold;
 `;
@@ -48,7 +44,7 @@ const ConfirmRemoveUser = ({
       {data.length < 1 ? (
         <H2>There are currently no authorized users</H2>
       ) : (
-        <ContainerTable>
+        <div>
           <H2>Users who have access</H2>
           <Table>
             {data.map((user) => (
@@ -69,14 +65,15 @@ const ConfirmRemoveUser = ({
                 ) : (
                   <Table.Cell
                     style={{
-                      height: '100%',
-                      verticalAlign: 'bottom'
+                      verticalAlign: 'middle',
+                      textAlign: 'right'
                     }}
                   >
                     <Button
                       buttonColour="#f3f2f1"
                       buttonTextColour="#0b0c0c"
                       onClick={() => openModal(user)}
+                      style={{ marginBottom: 0 }}
                     >
                       Remove User
                     </Button>
@@ -85,7 +82,7 @@ const ConfirmRemoveUser = ({
               </Table.Row>
             ))}
           </Table>
-        </ContainerTable>
+        </div>
       )}
       {isOpen && selectedUser && (
         <Modal

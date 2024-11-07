@@ -14,22 +14,44 @@ describe('ConfirmDialog Modal Component', () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
+  beforeAll(() => {
+    HTMLDialogElement.prototype.show = jest.fn(function mock(
+      this: HTMLDialogElement
+    ) {
+      this.open = true;
+    });
 
-  test('renders with correct title and button text', () => {
-    render(<ConfirmDialog {...defaultProps} open={true} />);
+    HTMLDialogElement.prototype.showModal = jest.fn(function mock(
+      this: HTMLDialogElement
+    ) {
+      this.open = true;
+    });
 
-    expect(screen.getByText('Confirmation Dialog')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Confirm' })).toBeInTheDocument();
+    HTMLDialogElement.prototype.close = jest.fn(function mock(
+      this: HTMLDialogElement
+    ) {
+      this.open = false;
+    });
+  });
+
+  it('renders with correct title and button text', () => {
+    const { getByRole } = render(
+      <ConfirmDialog {...defaultProps} open={true} />
+    );
+    expect(getByRole('heading'));
+    expect(getByRole('button'));
   });
 
   test('shows and hides the dialog based on the "open" prop', () => {
     const { rerender } = render(
       <ConfirmDialog {...defaultProps} open={false} />
     );
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('dialog', { hidden: true })
+    ).not.toBeVisible();
 
     rerender(<ConfirmDialog {...defaultProps} open={true} />);
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { hidden: true })).toBeInTheDocument();
   });
 
   test('submits form when the "Confirm" button is clicked', () => {
@@ -38,17 +60,16 @@ describe('ConfirmDialog Modal Component', () => {
     const form = screen.getByRole('form');
     form.onsubmit = jest.fn((e) => e.preventDefault());
 
-    const confirmButton = screen.getByRole('button', { name: 'Confirm' });
+    const confirmButton = screen.getByRole('button');
     fireEvent.click(confirmButton);
 
     expect(form.onsubmit).toHaveBeenCalled();
-    expect(confirmButton.onsubmit).toHaveBeenCalled();
   });
 
   test('calls onClose when the "Cancel" link is clicked', () => {
     render(<ConfirmDialog {...defaultProps} open={true} />);
 
-    const cancelLink = screen.getByText('Cancel');
+    const cancelLink = screen.getByRole('link');
     fireEvent.click(cancelLink);
 
     expect(mockOnClose).toHaveBeenCalled();

@@ -1,17 +1,16 @@
-/* eslint-disable */
 import { useEffect, useRef } from 'react';
-import Button from '@govuk-react/button';
-import Heading from '@govuk-react/heading';
-import Link from '@govuk-react/link';
+
+import { FONT_SIZE, SPACING_POINTS } from '@govuk-react/constants';
+import { Button, H2, Link } from 'govuk-react';
 import styled from 'styled-components';
 
-interface ConfirmDialogProps {
+type ConfirmDialogProps = {
   actionUrl: string;
   buttonText: string;
   onClose: () => void;
   open: boolean;
   title: string;
-}
+};
 
 const ContainerButtonGroup = styled('div')`
   display: flex;
@@ -35,12 +34,16 @@ export const ConfirmDialog = (props: ConfirmDialogProps) => {
   }, [props.open]);
   return (
     <Dialog ref={refModal}>
-      <Heading size="LARGE">{props.title}</Heading>
+      <H2 size="LARGE">{props.title}</H2>
       <ContainerButtonGroup>
-        <form action={props.actionUrl} method="GET">
+        <form
+          action={props.actionUrl}
+          aria-label="form"
+          method="GET"
+          name="submitRemoveUser"
+        >
           <Button
-            data-module="govuk-button"
-            style={{ marginRight: '16px' }}
+            style={{ marginRight: SPACING_POINTS[4] }}
             onSubmit={closeModal}
             type={'submit'}
           >
@@ -49,7 +52,11 @@ export const ConfirmDialog = (props: ConfirmDialogProps) => {
           <Link
             href="javascript:;"
             onClick={props.onClose}
-            style={{ fontSize: '1.4em', marginTop: '0.2em' }}
+            style={{
+              display: 'inline-block',
+              fontSize: FONT_SIZE.SIZE_24,
+              marginTop: SPACING_POINTS[1]
+            }}
           >
             Cancel
           </Link>
