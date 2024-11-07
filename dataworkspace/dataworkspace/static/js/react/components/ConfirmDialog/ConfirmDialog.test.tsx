@@ -46,9 +46,7 @@ describe('ConfirmDialog Modal Component', () => {
     const { rerender } = render(
       <ConfirmDialog {...defaultProps} open={false} />
     );
-    expect(
-      screen.queryByRole('dialog', { hidden: true })
-    ).not.toBeVisible();
+    expect(screen.queryByRole('dialog', { hidden: true })).not.toBeVisible();
 
     rerender(<ConfirmDialog {...defaultProps} open={true} />);
     expect(screen.getByRole('dialog', { hidden: true })).toBeInTheDocument();
