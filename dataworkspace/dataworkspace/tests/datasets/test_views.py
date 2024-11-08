@@ -4237,6 +4237,13 @@ class TestDatasetEditView:
             type=DataSetType.MASTER,
         )
 
+    def test_only_iam_or_iao_can_edit_dataset(self, client, user):
+        dataset = factories.DataSetFactory.create(
+            published=True,
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+            type=DataSetType.MASTER,
+        )
+
         response = client.get(
             reverse(
                 "datasets:edit_dataset",
@@ -4282,7 +4289,79 @@ class TestDatasetEditView:
         assert user_1.email.encode() in response.content
         assert user_2.email.encode() not in response.content
 
-    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=False)
+    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
+    def test_edit_access_page_shows_iam_iao_flag(self, client, user):
+        user_1 = factories.UserFactory.create(
+            first_name="Vyvyan",
+            last_name="Holland",
+            email="vyvyan.holland@businessandtrade.gov.uk",
+        )
+
+        dataset = factories.DataSetFactory.create(
+            name="Test",
+            published=True,
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+            type=DataSetType.MASTER,
+        )
+        dataset.information_asset_owner = user
+        dataset.information_asset_manager = user_1
+        dataset.save()
+        factories.DataSetUserPermissionFactory.create(dataset=dataset, user=user_1)
+
+        response = client.get(
+            reverse(
+                "datasets:edit_permissions",
+                args=(dataset.pk,),
+            ),
+            follow=True,
+        )
+        assert response.status_code == 200
+
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        assert f"Manage access to {dataset.name}" in soup.find("h1").contents
+        auth_users = json.loads(response.context_data["authorised_users"])
+        assert any([au for au in auth_users if au["iam"] == True and au["id"] == user_1.id])
+
+    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
+    def test_edit_access_page_shows_existing_authorized_users(self, client, user):
+        user_1 = factories.UserFactory.create(
+            first_name="Vyvyan",
+            last_name="Holland",
+            email="vyvyan.holland@businessandtrade.gov.uk",
+        )
+
+        dataset = factories.DataSetFactory.create(
+            name="Test",
+            published=True,
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+            type=DataSetType.MASTER,
+        )
+        dataset.information_asset_owner = user
+        dataset.save()
+        factories.DataSetUserPermissionFactory.create(dataset=dataset, user=user_1)
+
+        response = client.get(
+            reverse(
+                "datasets:edit_permissions",
+                args=(dataset.pk,),
+            ),
+            follow=True,
+        )
+        assert response.status_code == 200
+
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        assert f"Manage access to {dataset.name}" in soup.find("h1").contents
+        auth_users = json.loads(response.context_data["authorised_users"])
+        print(auth_users)
+
+        assert [user_1.first_name, user_1.last_name, user_1.email] in [
+            [u["first_name"], u["last_name"], u["email"]]
+            for u in auth_users
+            if user_1.id == u["id"]
+        ]
+        assert user_1.email.encode() in response.content
+
+    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
     def test_edit_access_page_shows_requesting_users(self, client, user):
         user_1 = factories.UserFactory.create(
             first_name="Vyvyan",
@@ -4317,7 +4396,6 @@ class TestDatasetEditView:
                 email = cell.get_text(strip=True).replace(name, "").strip()
                 assert request_1.email in email
 
-    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=False)
     @override_flag(settings.ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK, active=True)
     def test_add_user_search_shows_relevant_results(self, client, user):
         user_1 = factories.UserFactory.create(email="john@example.com")
@@ -4389,7 +4467,9 @@ class TestDatasetEditView:
 
     @mock.patch("dataworkspace.apps.datasets.views.send_email")
     @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
-    def test_remove_removes_user_from_authorized_users_summary(self, mock_send_email, client, user):
+    def test_remove_removes_user_from_authorized_users_summary(
+        self, mock_send_email, client, user
+    ):
         user_1 = factories.UserFactory.create(email="john@example.com")
 
         dataset = factories.DataSetFactory.create(
@@ -4414,9 +4494,9 @@ class TestDatasetEditView:
         response = client.get(remove_url, follow=True)
         assert response.status_code == 200
         mock_send_email.assert_called_once()
-        assert b"There are currently no authorized users" in response.content
+        assert len(json.loads(response.context_data["authorised_users"])) == 0
 
-    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
+    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=False)
     def test_add_user_save_and_continue_creates_dataset_permissions(self, client, user):
         user_1 = factories.UserFactory.create(email="john@example.com")
 
@@ -4991,7 +5071,7 @@ def test_master_dataset_detail_page_shows_pipeline_failures(client, metadata_db)
     )
 
 
-class TestDataSetReviewAccess:
+class TestDatasetReviewAccess:
     def setUp(self, eligibility_criteria=False, eligibility_criteria_met=True):
         criteria = [eligibility_criteria] if eligibility_criteria else None
         self.user = factories.UserFactory.create(is_superuser=True)
@@ -5106,4 +5186,248 @@ class TestDataSetReviewAccess:
         [_, response] = self.assert_common()
         assert "Have the eligibility requirements been met?" not in response.content.decode(
             response.charset
+        )
+
+
+@pytest.mark.django_db
+class TestDatasetReviewAccessApproval:
+    def setUp(self, is_visualisation=False, name="Master", dataset_type=DataSetType.MASTER):
+        self.user = factories.UserFactory.create(is_superuser=True)
+        self.client = Client(**get_http_sso_data(self.user))
+        self.user_requestor = factories.UserFactory.create(
+            first_name="Bob",
+            last_name="Testerten",
+            email="bob.testerten@contact-email.com",
+            is_superuser=False,
+        )
+        if not is_visualisation:
+            self.dataset = factories.DataSetFactory.create(
+                published=True,
+                type=dataset_type,
+                name=name,
+                eligibility_criteria=["you must be eligible"],
+            )
+            self.accessRequest = AccessRequestFactory(
+                id=self.user_requestor.id,
+                requester_id=self.user_requestor.id,
+                catalogue_item_id=self.dataset.id,
+                contact_email=self.user_requestor.email,
+                reason_for_access="I need it",
+                eligibility_criteria_met=True,
+            )
+        else:
+            self.dataset = factories.VisualisationCatalogueItemFactory.create(
+                published=True,
+                name="Visualisation",
+            )
+            AccessRequestFactory(
+                id=self.user_requestor.id,
+                requester_id=self.user_requestor.id,
+                catalogue_item_id=self.dataset.id,
+                contact_email=self.user_requestor.email,
+                reason_for_access="I need it",
+            )
+
+    @mock.patch("dataworkspace.apps.datasets.views.send_email")
+    def test_master_dataset_approval_with_email_sent(self, mock_send_email):
+        self.setUp()
+        response = self.client.post(
+            reverse(
+                "datasets:review_access",
+                kwargs={"pk": self.dataset.id, "user_id": self.user_requestor.id},
+            ),
+            {"action_type": "grant"},
+        )
+        redirect_response = self.client.get(response.url)
+        soup = BeautifulSoup(redirect_response.content.decode(redirect_response.charset))
+        notification_banner = soup.find("div", attrs={"data-module", "govuk-notification-banner"})
+        success_header = notification_banner.find_next("h2").get_text()
+        success_message = notification_banner.find_next("p").get_text()
+        mock_send_email.assert_called_with(
+            "b4913195-3695-4972-8f21-0853610be0b4",
+            self.user_requestor.email,
+            personalisation={
+                "email_address": self.user_requestor.email,
+                "dataset_name": "Master",
+                "dataset_url": f"http://testserver/datasets/{self.dataset.id}",
+            },
+        )
+        assert response.status_code == 302
+        assert redirect_response.status_code == 200
+        assert "Success" in success_header
+        assert (
+            "An email has been sent to Bob Testerten to let them know they now have access."
+            in success_message
+        )
+
+    @mock.patch("dataworkspace.apps.datasets.views.send_email")
+    def test_datacut_dataset_approval_with_email_sent(self, mock_send_email):
+        self.setUp(name="Datacut", dataset_type=DataSetType.DATACUT)
+        response = self.client.post(
+            reverse(
+                "datasets:review_access",
+                kwargs={"pk": self.dataset.id, "user_id": self.user_requestor.id},
+            ),
+            {"action_type": "grant"},
+        )
+        redirect_response = self.client.get(response.url)
+        soup = BeautifulSoup(redirect_response.content.decode(redirect_response.charset))
+        notification_banner = soup.find("div", attrs={"data-module", "govuk-notification-banner"})
+        success_header = notification_banner.find_next("h2").get_text()
+        success_message = notification_banner.find_next("p").get_text()
+        mock_send_email.assert_called_with(
+            "b4913195-3695-4972-8f21-0853610be0b4",
+            self.user_requestor.email,
+            personalisation={
+                "email_address": self.user_requestor.email,
+                "dataset_name": "Datacut",
+                "dataset_url": f"http://testserver/datasets/{self.dataset.id}",
+            },
+        )
+        assert response.status_code == 302
+        assert redirect_response.status_code == 200
+        assert "Success" in success_header
+        assert (
+            "An email has been sent to Bob Testerten to let them know they now have access."
+            in success_message
+        )
+
+    @mock.patch("dataworkspace.apps.datasets.views.send_email")
+    def test_visualisation_dataset_approval_with_email_sent(self, mock_send_email):
+        self.setUp(is_visualisation=True)
+        response = self.client.post(
+            reverse(
+                "datasets:review_access",
+                kwargs={"pk": self.dataset.id, "user_id": self.user_requestor.id},
+            ),
+            {"action_type": "grant"},
+        )
+        redirect_response = self.client.get(response.url)
+        soup = BeautifulSoup(redirect_response.content.decode(redirect_response.charset))
+        notification_banner = soup.find("div", attrs={"data-module", "govuk-notification-banner"})
+        success_header = notification_banner.find_next("h2").get_text()
+        success_message = notification_banner.find_next("p").get_text()
+        mock_send_email.assert_called_with(
+            "b4913195-3695-4972-8f21-0853610be0b4",
+            self.user_requestor.email,
+            personalisation={
+                "email_address": self.user_requestor.email,
+                "dataset_name": "Visualisation",
+                "dataset_url": f"http://testserver/datasets/{self.dataset.id}",
+            },
+        )
+        assert response.status_code == 302
+        assert redirect_response.status_code == 200
+        assert "Success" in success_header
+        assert (
+            "An email has been sent to Bob Testerten to let them know they now have access."
+            in success_message
+        )
+
+    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
+    @mock.patch("dataworkspace.apps.datasets.views.send_email")
+    def test_master_dataset_access_denied_with_email_sent(self, mock_send_email):
+        self.setUp()
+        factories.PendingAuthorizedUsersFactory.create(
+            id="1", users='["6"]', created_by_id=self.user.id
+        )
+        response = self.client.post(
+            reverse(
+                "datasets:review_access",
+                kwargs={"pk": self.dataset.id, "user_id": self.user_requestor.id},
+            ),
+            {"action_type": "other", "message": "Because no"},
+        )
+        redirect_response = self.client.get(response.url)
+        soup = BeautifulSoup(redirect_response.content.decode(redirect_response.charset))
+        notification_banner = soup.find("div", attrs={"data-module", "govuk-notification-banner"})
+        success_header = notification_banner.find_next("h2").get_text()
+        success_message = notification_banner.find_next("p").get_text()
+        mock_send_email.assert_called_with(
+            "320947ff-0da4-44b2-bf41-1fafd77e1905",
+            self.user_requestor.email,
+            personalisation={
+                "email_address": self.user_requestor.email,
+                "dataset_name": "Master",
+                "deny_reasoning": "Because no",
+            },
+        )
+        assert response.status_code == 302
+        assert redirect_response.status_code == 200
+        assert "Success" in success_header
+        assert (
+            "An email has been sent to Bob Testerten to let them know their access request was not successful."
+            in success_message
+        )
+
+    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
+    @mock.patch("dataworkspace.apps.datasets.views.send_email")
+    def test_datacut_dataset_access_denied_with_email_sent(self, mock_send_email):
+        self.setUp(name="Datacut", dataset_type=DataSetType.DATACUT)
+        factories.PendingAuthorizedUsersFactory.create(
+            id="1", users='["6"]', created_by_id=self.user.id
+        )
+        response = self.client.post(
+            reverse(
+                "datasets:review_access",
+                kwargs={"pk": self.dataset.id, "user_id": self.user_requestor.id},
+            ),
+            {"action_type": "other", "message": "Because no"},
+        )
+        redirect_response = self.client.get(response.url)
+        soup = BeautifulSoup(redirect_response.content.decode(redirect_response.charset))
+        notification_banner = soup.find("div", attrs={"data-module", "govuk-notification-banner"})
+        success_header = notification_banner.find_next("h2").get_text()
+        success_message = notification_banner.find_next("p").get_text()
+        mock_send_email.assert_called_with(
+            "320947ff-0da4-44b2-bf41-1fafd77e1905",
+            self.user_requestor.email,
+            personalisation={
+                "email_address": self.user_requestor.email,
+                "dataset_name": "Datacut",
+                "deny_reasoning": "Because no",
+            },
+        )
+        assert response.status_code == 302
+        assert redirect_response.status_code == 200
+        assert "Success" in success_header
+        assert (
+            "An email has been sent to Bob Testerten to let them know their access request was not successful."
+            in success_message
+        )
+
+    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
+    @mock.patch("dataworkspace.apps.datasets.views.send_email")
+    def test_visualisation_dataset_access_denied_with_email_sent(self, mock_send_email):
+        self.setUp(is_visualisation=True)
+        factories.PendingAuthorizedUsersFactory.create(
+            id="1", users='["6"]', created_by_id=self.user.id
+        )
+        response = self.client.post(
+            reverse(
+                "datasets:review_access",
+                kwargs={"pk": self.dataset.id, "user_id": self.user_requestor.id},
+            ),
+            {"action_type": "other", "message": "Because no"},
+        )
+        redirect_response = self.client.get(response.url)
+        soup = BeautifulSoup(redirect_response.content.decode(redirect_response.charset))
+        notification_banner = soup.find("div", attrs={"data-module", "govuk-notification-banner"})
+        success_header = notification_banner.find_next("h2").get_text()
+        success_message = notification_banner.find_next("p").get_text()
+        mock_send_email.assert_called_with(
+            "320947ff-0da4-44b2-bf41-1fafd77e1905",
+            self.user_requestor.email,
+            personalisation={
+                "email_address": self.user_requestor.email,
+                "dataset_name": "Visualisation",
+                "deny_reasoning": "Because no",
+            },
+        )
+        assert response.status_code == 302
+        assert redirect_response.status_code == 200
+        assert "Success" in success_header
+        assert (
+            "An email has been sent to Bob Testerten to let them know their access request was not successful."
+            in success_message
         )

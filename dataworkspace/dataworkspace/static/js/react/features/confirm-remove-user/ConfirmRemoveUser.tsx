@@ -12,7 +12,7 @@ const SpanBold = styled('span')`
   font-weight: bold;
 `;
 
-interface UserInterface {
+type User = {
   data_catalogue_editor: boolean;
   email: string;
   first_name: string;
@@ -21,21 +21,21 @@ interface UserInterface {
   id: string;
   last_name: string;
   remove_user_url: string;
-}
+};
 
 const ConfirmRemoveUser = ({
   data
 }: {
-  data: Array<UserInterface>;
+  data: Array<User>;
 }): React.ReactNode => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<UserInterface | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   const closeModal = () => {
     setIsOpen(false);
     setSelectedUser(null);
   };
-  const openModal = (user: UserInterface) => {
+  const openModal = (user: User) => {
     setSelectedUser(user);
     setIsOpen(true);
   };
