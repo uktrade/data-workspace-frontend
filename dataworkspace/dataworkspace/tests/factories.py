@@ -482,3 +482,10 @@ class InlineFeedbackFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = "core.UserInlineFeedbackSurvey"
+
+
+class PendingAuthorizedUsersFactory(factory.django.DjangoModelFactory):
+    users = factory.SubFactory(UserFactory)
+
+    class Meta:
+        model = "datasets.PendingAuthorizedUsers"

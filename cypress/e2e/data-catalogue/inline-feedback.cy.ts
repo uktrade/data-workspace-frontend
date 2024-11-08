@@ -15,7 +15,7 @@ const negativeChoices = [
 ];
 
 const assertPayload = (wasItHelpful: boolean) => {
-  cy.wait('@postInlineFeedback').its('request.body').should('include', {
+  cy.wait('@postInline').its('request.body').should('include', {
     was_this_page_helpful: wasItHelpful,
     location: 'data-catalogue'
   });
@@ -49,21 +49,21 @@ const assertAdditionalForm = (
         : 'Help us improve this page by giving more detail (optional)'
   });
 
-  cy.findByRole('button', { name: 'Send feedback' });
+  cy.findByRole('button', { name: 'Send ' });
   cy.findByRole('link', { name: 'Cancel' });
 };
 
-describe('Data catalogue inline feedback', () => {
+describe('Data catalogue inline ', () => {
   beforeEach(() => {
     cy.visit('/datasets/');
     cy.intercept({
       method: 'POST',
-      url: '/api/v2/inline_feedback'
-    }).as('postInlineFeedback');
+      url: '/api/v2/inline_'
+    }).as('postInline');
     cy.intercept({
       method: 'PATCH',
-      url: '/api/v2/inline_feedback/*'
-    }).as('patchAdditonalFeedback');
+      url: '/api/v2/inline_/*'
+    }).as('patchAdditonal');
   });
 
   context('when a user visits the data catalogue page', () => {
@@ -71,7 +71,7 @@ describe('Data catalogue inline feedback', () => {
       cy.visit('/datasets/');
     });
 
-    it('should display an inline feedback form', () => {
+    it('should display an inline  form', () => {
       cy.findByRole('heading', {
         level: 2,
         name: 'Was this page helpful?'
@@ -93,10 +93,10 @@ describe('Data catalogue inline feedback', () => {
     });
   });
 
-  context('when a user submits additional positive feedback', () => {
-    it('should update the original feedback post with more data', () => {
+  context('when a user submits additional positive ', () => {
+    it('should update the original  post with more data', () => {
       cy.findByRole('button', { name: 'Yes' }).click();
-      cy.wait('@postInlineFeedback').then((interception) => {
+      cy.wait('@postInline').then((interception) => {
         const id = interception.response.body.id;
         positiveChoices.forEach((name) => {
           cy.findByRole('checkbox', { name }).click();
@@ -105,14 +105,14 @@ describe('Data catalogue inline feedback', () => {
         cy.findByRole('textbox', {
           name: 'Is there anything else you can tell us? (optional)'
         }).type('This page is fantastic');
-        cy.findByRole('button', { name: 'Send feedback' }).click();
-        cy.wait('@patchAdditonalFeedback')
+        cy.findByRole('button', { name: 'Send ' }).click();
+        cy.wait('@patchAdditonal')
           .its('response.body')
           .should('include', {
             id: id,
             location: 'data-catalogue',
             was_this_page_helpful: true,
-            inline_feedback_choices: positiveChoices.join(','),
+            inline__choices: positiveChoices.join(','),
             more_detail: 'This page is fantastic'
           });
         cy.findByRole('group', {
@@ -122,10 +122,10 @@ describe('Data catalogue inline feedback', () => {
     });
   });
 
-  context('when a user submits additional negative feedback', () => {
-    it('should update the original feedback post with more data', () => {
+  context('when a user submits additional negative ', () => {
+    it('should update the original  post with more data', () => {
       cy.findByRole('button', { name: 'No' }).click();
-      cy.wait('@postInlineFeedback').then((interception) => {
+      cy.wait('@postInline').then((interception) => {
         const id = interception.response.body.id;
         negativeChoices.forEach((name) => {
           cy.findByRole('checkbox', { name }).click();
@@ -133,14 +133,14 @@ describe('Data catalogue inline feedback', () => {
         cy.findByRole('textbox', {
           name: 'Help us improve this page by giving more detail (optional)'
         }).type('This page is not so great');
-        cy.findByRole('button', { name: 'Send feedback' }).click();
-        cy.wait('@patchAdditonalFeedback')
+        cy.findByRole('button', { name: 'Send ' }).click();
+        cy.wait('@patchAdditonal')
           .its('response.body')
           .should('include', {
             id: id,
             location: 'data-catalogue',
             was_this_page_helpful: false,
-            inline_feedback_choices: negativeChoices.join(','),
+            inline__choices: negativeChoices.join(','),
             more_detail: 'This page is not so great'
           });
         cy.findByRole('group', {
@@ -152,11 +152,11 @@ describe('Data catalogue inline feedback', () => {
   
   context('when a user resets the form', () => {
     it('should hide the addtional form', () => {
-      cy.findByTestId('additional-feedback').should('not.exist');
+      cy.findByTestId('additional-').should('not.exist');
       cy.findByRole('button', { name: 'Yes' }).click();
-      cy.findByTestId('additional-feedback').should('exist');
+      cy.findByTestId('additional-').should('exist');
       cy.findByRole('link', { name: 'Cancel' }).click();
-      cy.findByTestId('additional-feedback').should('not.exist');
+      cy.findByTestId('additional-').should('not.exist');
     });
   });
 });

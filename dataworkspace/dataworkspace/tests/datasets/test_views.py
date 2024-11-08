@@ -1,7 +1,6 @@
 from datetime import timedelta, date, datetime, timezone
 import json
 import random
-import re
 from urllib.parse import quote_plus
 from uuid import uuid4
 
@@ -4236,14 +4235,6 @@ class TestDatasetEditView:
             user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
             type=DataSetType.MASTER,
         )
-
-    def test_only_iam_or_iao_can_edit_dataset(self, client, user):
-        dataset = factories.DataSetFactory.create(
-            published=True,
-            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
-            type=DataSetType.MASTER,
-        )
-
         response = client.get(
             reverse(
                 "datasets:edit_dataset",
@@ -4320,7 +4311,7 @@ class TestDatasetEditView:
         soup = BeautifulSoup(response.content.decode(response.charset))
         assert f"Manage access to {dataset.name}" in soup.find("h1").contents
         auth_users = json.loads(response.context_data["authorised_users"])
-        assert any([au for au in auth_users if au["iam"] == True and au["id"] == user_1.id])
+        assert any([au for au in auth_users if au["iam"] is True and au["id"] == user_1.id])
 
     @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
     def test_edit_access_page_shows_existing_authorized_users(self, client, user):
