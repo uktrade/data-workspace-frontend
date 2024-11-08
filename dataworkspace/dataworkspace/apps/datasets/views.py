@@ -1803,8 +1803,7 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
             data_catalogue_editors = [user.email for user in self.obj.data_catalogue_editors.all()]
             iam = get_user_model().objects.get(id=self.obj.information_asset_manager_id).email
             iao = get_user_model().objects.get(id=self.obj.information_asset_owner_id).email
-            context["authorised_users"] = json.dumps(
-                [
+            context["authorised_users"] = json.dumps([
                     {
                         "data_catalogue_editor": u.email in data_catalogue_editors,
                         "email": u.email,
@@ -1821,8 +1820,8 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
                     for u in get_user_model().objects.filter(
                         id__in=json.loads(self.summary.users) if self.summary.users else []
                     )
-                ]
-            )
+                ])
+            
             requests = AccessRequest.objects.filter(
                 catalogue_item_id=self.obj.pk, data_access_status="waiting"
             )

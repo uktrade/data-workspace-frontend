@@ -60,7 +60,7 @@
           </tbody>
         </table> 
         {% endif %}
-        {% include "partials/react-slot.html" with mount_id="confirm-remove-user" data=authorised_users test_id="confirm-remove-user" %}
+        {% include "partials/react-slot-data.html" with mount_id="confirm-remove-user" data=authorised_users test_id="confirm-remove-user" %}
       <div class="govuk-body">
           <a class="govuk-link" href="{% url 'datasets:dataset_detail' obj.id %}">View catalogue page</a>
         </div>
