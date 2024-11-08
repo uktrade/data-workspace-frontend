@@ -5387,7 +5387,6 @@ class TestDatasetReviewAccessApproval:
             in success_message
         )
 
-    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
     @mock.patch("dataworkspace.apps.datasets.views.send_email")
     def test_visualisation_dataset_access_denied_with_email_sent(self, mock_send_email):
         self.setUp(is_visualisation=True)
