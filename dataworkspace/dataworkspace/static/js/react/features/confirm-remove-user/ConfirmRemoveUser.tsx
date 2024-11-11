@@ -6,7 +6,7 @@ import Table from '@govuk-react/table';
 import { Paragraph } from 'govuk-react';
 import styled from 'styled-components';
 
-import Modal from '../../components/ConfirmDialog/';
+import ConfirmDialog from '../../components/ConfirmDialog/';
 
 const SpanBold = styled('span')`
   font-weight: bold;
@@ -85,13 +85,13 @@ const ConfirmRemoveUser = ({
         </div>
       )}
       {isOpen && selectedUser && (
-        <Modal
+        <ConfirmDialog
           actionUrl={selectedUser.remove_user_url}
           title={`Are you sure you want to remove ${selectedUser?.first_name} ${selectedUser?.last_name}'s access to this data?`}
           open={isOpen}
           onClose={closeModal}
           buttonText={'Yes, Remove User'}
-        ></Modal>
+        ></ConfirmDialog>
       )}
     </>
   );
