@@ -1,6 +1,6 @@
 {% extends '_main.html' %}
 {% load humanize static datasets_tags core_tags waffle_tags %}
-
+{% load render_bundle from webpack_loader %}
 {% block page_title %}{{ obj.name }} - {{ block.super }}{% endblock %}
 
 {% block breadcrumbs %}
@@ -27,41 +27,46 @@
 {% endblock %}
 
 {% block content %}
-    <div class="govuk-grid-row">
-        <div class=""govuk-section-break govuk-section-break--visible"">
-            <h1 class="govuk-heading-xl">Manage access to {{ obj.name }}</h1>
-            <table class="govuk-table">
-                <caption class="govuk-table__caption govuk-table__caption--l">Users who have requested access</caption>
-                <tbody class="govuk-table__body">
-                  {% if requested_users.count != 0 %} 
-                  {% for user in authorised_users %}
-                    <tr class="govuk-table__row">
-                      <td class="govuk-table__cell">{{ user.first_name }} {{ user.last_name }}</td>
-                      <td class="govuk-table__cell">{{ user.email }}</td>
-                      <td class="govuk-table__cell"><button type="submit" class="govuk-button govuk-button--secondary" data-module="govuk-button"><a class="govuk-link" href="{% url 'datasets:remove_authorized_user' obj.id summary.id user.id %}"></a>Remove User</button></td>
-                    </tr>
-    
-  
-                  {% endfor %}
-                  {% endif %}
-                </tbody>
-              </table>
-            <table class="govuk-table">
-              <caption class="govuk-table__caption govuk-table__caption--l">Users who have access</caption>
+{% if user_removed is not None %}
+<div class="govuk-notification-banner govuk-notification-banner--success" role="alert" aria-labelled by="govuk-notification-banner-title" data-module="govuk-notification-banner">
+  <div class="govuk-notification-banner__header">
+    <h2 class="govuk-notification-banner__title" id="govuk-notification-banner-title">
+      Success
+    </h2>
+  </div>
+  <div class="govuk-notification-banner__content">
+    <h3 class="govuk-notification-banner__heading">
+      {{ user_removed }}'s access to data has been removed. An email has been sent out to let them know that they no longer have access to the data.
+    </h3>
+  </div>
+</div>
+{% endif %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full ">
+      <h1 class="govuk-heading-xl">Manage access to {{ obj.name }}</h1>
+      {% if requested_users %} 
+        <table class="govuk-table govuk-!-margin-bottom-8">
+          <h2 class="govuk-heading-m">Users who have requested access</h2>
               <tbody class="govuk-table__body">
-                {% if authorised_users.count == 0 %}
-                  <h2 class="govuk-heading-m">There are currently no authorized users</h2>
-                {% endif %}
-                {% for user in authorised_users %}
+                  {% for user in requested_users %} 
                   <tr class="govuk-table__row">
-                    <td class="govuk-table__cell">{{ user.first_name }} {{ user.last_name }}</td>
-                    <td class="govuk-table__cell">{{ user.email }}</td>
-                    <td class="govuk-table__cell"><button type="submit" class="govuk-button govuk-button--secondary" data-module="govuk-button"><a class="govuk-link" href="{% url 'datasets:remove_authorized_user' obj.id summary.id user.id %}"></a>Remove User</button></td>
+                  <td class="govuk-table__cell "> <span class="govuk-body govuk-!-font-weight-bold">{{ user.first_name }} {{ user.last_name }}</span>
+                      <br> {{ user.email }} <br> 
+                      <span class="govuk-caption-m"> Requested: {% if user.days_ago == 0 %} Today {% else %} {{ user.days_ago }} days ago {% endif %}</span>
+                      </td>
+                  <td class="govuk-table__cell govuk-!-text-align-right"><a class="govuk-link" href="#">Review access request</a></td>
                   </tr>
-
-                {% endfor %}
-              </tbody>
-            </table>
+              {% endfor %}
+          </tbody>
+        </table> 
+        {% endif %}
+        {% include "partials/react-slot-data.html" with mount_id="confirm-remove-user" data=authorised_users test_id="confirm-remove-user" %}
+      <div class="govuk-body">
+          <a class="govuk-link" href="{% url 'datasets:dataset_detail' obj.id %}">View catalogue page</a>
         </div>
-    </div>
+  </div>
+</div>
+{% endblock %}
+{% block footer_scripts %}
+{% render_bundle 'confirm-remove-user' 'js' %}
 {% endblock %}
