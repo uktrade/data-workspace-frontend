@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 from datetime import datetime
+=======
+from datetime import date, datetime, timedelta
+>>>>>>> 13e4cd23 (adding date of request)
 import json
 import logging
 import re
@@ -1783,10 +1787,13 @@ class DatasetEditPermissionsView(EditBaseView, View):
 
 class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
     template_name = "datasets/manage_permissions/edit_summary.html"
+<<<<<<< HEAD
 
     @csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC, STYLE_SRC=settings.WEBPACK_SCRIPT_SRC)
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
+=======
+>>>>>>> 13e4cd23 (adding date of request)
 
     def get_context_data(self, **kwargs):
         if waffle.flag_is_active(self.request, settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW):
@@ -1825,6 +1832,7 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
                 ]
             )
 
+<<<<<<< HEAD
             requests = AccessRequest.objects.filter(
                 catalogue_item_id=self.obj.pk, data_access_status="waiting"
             )
@@ -1862,6 +1870,28 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
             context["waffle_flag"] = waffle.flag_is_active(
                 self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"
             )
+=======
+        context = super().get_context_data(**kwargs)
+        context["obj"] = self.obj
+        context["obj_edit_url"] = (
+            reverse("datasets:edit_dataset", args=[self.obj.pk])
+            if isinstance(self.obj, DataSet)
+            else reverse("datasets:edit_visualisation_catalogue_item", args=[self.obj.pk])
+        )
+        context["summary"] = self.summary
+        context["authorised_users"] = get_user_model().objects.filter(
+            id__in=json.loads(self.summary.users if self.summary.users else "[]")
+        )
+        requests = AccessRequest.objects.filter(catalogue_item_id=self.obj.pk, data_access_status="waiting")
+        for request in requests:
+            date_requested = request.created_date.replace(tzinfo=None).day
+            days_ago = (datetime.today() - timedelta(days=date_requested))
+            print("days_ago:", days_ago.day)
+        context["requested_users"] = [get_user_model().objects.get(email=request.contact_email) for request in requests]
+        context["waffle_flag"] = waffle.flag_is_active(
+            self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"
+        )
+>>>>>>> 13e4cd23 (adding date of request)
         return context
 
     def post(self, request, *args, **kwargs):
