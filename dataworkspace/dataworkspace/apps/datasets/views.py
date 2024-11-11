@@ -1,7 +1,6 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 import json
 import logging
-import re
 import uuid
 from collections import defaultdict, namedtuple
 from itertools import chain
