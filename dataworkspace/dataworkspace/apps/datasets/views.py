@@ -1,6 +1,7 @@
 from datetime import datetime
 import json
 import logging
+import re
 import uuid
 from collections import defaultdict, namedtuple
 from itertools import chain
@@ -2096,7 +2097,7 @@ class DatasetRemoveAuthorisedUserView(EditBaseView, View):
         )
 
 
-@require_POST
+@ require_POST
 def log_data_preview_load_time(request, dataset_uuid, source_id):
     try:
         received_json_data = json.loads(request.body)

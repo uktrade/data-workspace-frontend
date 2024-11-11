@@ -63,16 +63,6 @@ class PublisherTagFactory(TagFactory):
     type = TagType.PUBLISHER
 
 
-class VisualisationDatasetFactory(factory.django.DjangoModelFactory):
-    name = factory.fuzzy.FuzzyText()
-    summary = factory.fuzzy.FuzzyText()
-    gds_phase_name = "prototype"
-    database = factory.SubFactory(DatabaseFactory)
-
-    class Meta:
-        model = "datasets.DataSetVisualisation"
-
-
 class DataSetFactory(factory.django.DjangoModelFactory):
     grouping = factory.SubFactory(DataGroupingFactory)
     name = factory.fuzzy.FuzzyText()
@@ -492,3 +482,10 @@ class InlineFeedbackFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = "core.UserInlineFeedbackSurvey"
+
+
+class PendingAuthorizedUsersFactory(factory.django.DjangoModelFactory):
+    users = factory.SubFactory(UserFactory)
+
+    class Meta:
+        model = "datasets.PendingAuthorizedUsers"

@@ -68,7 +68,6 @@ def cleanup_temporary_query_tables():
         server_db_user = DATABASES_DATA[query_log.connection]["USER"]
         db_role = f"{USER_SCHEMA_STEM}{db_role_schema_suffix_for_user(query_log.run_by_user)}"
         table_schema_and_name = tempory_query_table_name(query_log.run_by_user, query_log.id)
-
         with cache.lock(
             f'database-grant--{DATABASES_DATA[query_log.connection]["NAME"]}--{db_role}--v4',
             blocking_timeout=3,
@@ -76,9 +75,26 @@ def cleanup_temporary_query_tables():
         ):
             with connections[query_log.connection].cursor() as cursor:
                 logger.info("Dropping temporary query table %s", table_schema_and_name)
-                cursor.execute(f"GRANT {db_role} TO {server_db_user}")
-                cursor.execute(f"DROP TABLE IF EXISTS {table_schema_and_name}")
-                cursor.execute(f"REVOKE {db_role} FROM {server_db_user}")
+                output_table_schema, output_table_name = table_schema_and_name.split(".")
+                cursor.execute(
+                    psycopg2.sql.SQL("GRANT {role} TO {user}").format(
+                        role=psycopg2.sql.Identifier(db_role),
+                        user=psycopg2.sql.Identifier(server_db_user),
+                    ),
+                )
+                cursor.execute(
+                    psycopg2.sql.SQL("DROP TABLE IF EXISTS {table_schema_name}").format(
+                        table_schema_name=psycopg2.sql.Identifier(
+                            output_table_schema, output_table_name
+                        )
+                    )
+                )
+                cursor.execute(
+                    psycopg2.sql.SQL("REVOKE {role} FROM {user}").format(
+                        role=psycopg2.sql.Identifier(db_role),
+                        user=psycopg2.sql.Identifier(server_db_user),
+                    )
+                )
 
 
 def _prefix_column(index, column):
@@ -143,7 +159,7 @@ def _run_query(conn, query_log, page, limit, timeout, output_table):
     start_time = time.time()
     sql = query_log.sql.rstrip().rstrip(";")
     try:
-        cursor.execute(f"SET statement_timeout = {timeout}")
+        cursor.execute("SET statement_timeout = %s", (timeout,))
 
         if sql.strip().upper().startswith("EXPLAIN"):
             cursor.execute(
@@ -164,7 +180,11 @@ def _run_query(conn, query_log, page, limit, timeout, output_table):
         # It adds a prefix of col_x_ to duplicated column returned from the query and
         # these prefixed column names are used to create a table containing the
         # query results. The prefixes are removed when the results are returned.
-        cursor.execute(f"SELECT * FROM ({sql}) sq LIMIT 0")
+        cursor.execute(
+            psycopg2.sql.SQL("SELECT * FROM ({user_query}) sq LIMIT 0").format(
+                user_query=psycopg2.sql.SQL(sql)
+            )
+        )
         column_names = list(zip(*cursor.description))[0]
         duplicated_column_names = set(c for c in column_names if column_names.count(c) > 1)
         prefixed_sql_columns = [
@@ -174,7 +194,14 @@ def _run_query(conn, query_log, page, limit, timeout, output_table):
             )
             for i, col in enumerate(cursor.description, 1)
         ]
-        cursor.execute(f'CREATE TABLE {output_table} ({", ".join(prefixed_sql_columns)})')
+        cols_formatted = ", ".join(prefixed_sql_columns)
+        output_table_schema, output_table_name = output_table.split(".")
+        cursor.execute(
+            psycopg2.sql.SQL("CREATE TABLE {output_table} ({cols_formatted})").format(
+                output_table=psycopg2.sql.Identifier(output_table_schema, output_table_name),
+                cols_formatted=psycopg2.sql.SQL(cols_formatted),
+            )
+        )
         limit_clause = ""
         if limit is not None:
             limit_clause = f"LIMIT {limit}"
@@ -184,9 +211,18 @@ def _run_query(conn, query_log, page, limit, timeout, output_table):
             offset = f" OFFSET {(page - 1) * limit}"
 
         cursor.execute(
-            f"INSERT INTO {output_table} SELECT * FROM ({sql}) sq {limit_clause}{offset}"
+            psycopg2.sql.SQL(
+                "INSERT INTO {output_table} SELECT * FROM ({sql}) sq {limit_clause}{offset}"
+            ).format(
+                output_table=psycopg2.sql.Identifier(output_table_schema, output_table_name),
+                sql=psycopg2.sql.SQL(sql),
+                limit_clause=psycopg2.sql.SQL(limit_clause),
+                offset=psycopg2.sql.SQL(offset),
+            ),
         )
-        cursor.execute(f"SELECT COUNT(*) FROM ({sql}) sq")
+        cursor.execute(
+            psycopg2.sql.SQL("SELECT COUNT(*) FROM ({sql}) sq").format(sql=psycopg2.sql.SQL(sql))
+        )
     except psycopg2.errors.QueryCanceled as e:  # pylint: disable=no-member
         logger.info("Query cancelled: %s", e)
         return
