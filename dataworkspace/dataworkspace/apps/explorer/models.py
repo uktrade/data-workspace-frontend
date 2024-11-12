@@ -19,7 +19,8 @@ logger = logging.getLogger(__name__)
 def swap_params(sql, params):
     p = params.items() if params else {}
     for k, v in p:
-        regex = re.compile(r"\$\$%s(?:\:([^\$]+))?\$\$" % str(k).lower(), re.I)
+        pattern = re.escape(r"\$\$%s(?:\:([^\$]+))?\$\$" % str(k).lower())
+        regex = re.compile(pattern, re.I)
         sql = regex.sub(str(v), sql)
     return sql
 
