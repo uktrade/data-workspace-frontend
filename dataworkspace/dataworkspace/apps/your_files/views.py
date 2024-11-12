@@ -15,6 +15,7 @@ from django.http import (
 )
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.generic import DetailView, FormView, TemplateView, ListView
 from psycopg2 import sql
 from requests import HTTPError
@@ -150,13 +151,13 @@ class CreateTableConfirmSchemaView(RequiredParameterGetRequestMixin, FormView):
 
         if params["schema"] == "new":
             del params["schema"]
-            return HttpResponseRedirect(
-                f'{reverse("your-files:create-schema")}?{urlencode(params)}'
-            )
-
-        return HttpResponseRedirect(
-            f'{reverse("your-files:create-table-confirm-name")}?{urlencode(params)}'
-        )
+            target = f'{reverse("your-files:create-schema")}?{urlencode(params)}'
+        else:
+            target = f'{reverse("your-files:create-table-confirm-name")}?{urlencode(params)}'
+        if url_has_allowed_host_and_scheme(target, settings.ALLOWED_HOSTS) is True:
+            return HttpResponseRedirect(target)
+        else:
+            return HttpResponseRedirect("/")
 
 
 class CreateSchemaView(FormView):
@@ -270,9 +271,11 @@ class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, ValidateSchem
                 "schema": form.cleaned_data["schema"],
                 "overwrite": form.cleaned_data["force_overwrite"],
             }
-            return HttpResponseRedirect(
-                f'{reverse("your-files:create-table-table-exists")}?{urlencode(params)}'
-            )
+            target = f'{reverse("your-files:create-table-table-exists")}?{urlencode(params)}'
+            if url_has_allowed_host_and_scheme(target, settings.ALLOWED_HOSTS) is True:
+                return HttpResponseRedirect(target)
+            else:
+                return HttpResponseRedirect("/")
 
         # Otherwise just redisplay the form (likely an invalid table name)
         return super().form_invalid(form)
