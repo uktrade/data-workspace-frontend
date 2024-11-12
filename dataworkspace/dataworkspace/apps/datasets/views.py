@@ -1783,6 +1783,10 @@ class DatasetEditPermissionsView(EditBaseView, View):
 class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
     template_name = "datasets/manage_permissions/edit_summary.html"
 
+    @csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC, STYLE_SRC=settings.WEBPACK_SCRIPT_SRC)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
     def get_context_data(self, **kwargs):
         if waffle.flag_is_active(self.request, settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW):
             self.template_name = "datasets/manage_permissions/edit_access.html"
@@ -1795,44 +1799,49 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
                 else reverse("datasets:edit_visualisation_catalogue_item", args=[self.obj.pk])
             )
             context["summary"] = self.summary
-            context["authorised_users"] = get_user_model().objects.filter(
-                id__in=json.loads(self.summary.users) if self.summary.users else []
+            # used to populate data property of ConfirmRemoveUser dialog
+            data_catalogue_editors = [user.email for user in self.obj.data_catalogue_editors.all()]
+            iam = get_user_model().objects.get(id=self.obj.information_asset_manager_id).email
+            iao = get_user_model().objects.get(id=self.obj.information_asset_owner_id).email
+            context["authorised_users"] = json.dumps(
+                [
+                    {
+                        "data_catalogue_editor": u.email in data_catalogue_editors,
+                        "email": u.email,
+                        "first_name": u.first_name,
+                        "iam": u.email == iam,
+                        "iao": u.email == iao,
+                        "id": u.id,
+                        "last_name": u.last_name,
+                        "remove_user_url": reverse(
+                            "datasets:remove_authorized_user",
+                            args=[self.obj.id, self.summary.id, u.id],
+                        ),
+                    }
+                    for u in get_user_model().objects.filter(
+                        id__in=json.loads(self.summary.users) if self.summary.users else []
+                    )
+                ]
             )
-            iao_email = (
-                get_user_model().objects.get(id=self.obj.information_asset_owner_id).email
-                if self.obj.information_asset_owner_id
-                else ""
-            )
-            iam_email = (
-                get_user_model().objects.get(id=self.obj.information_asset_manager_id).email
-                if self.obj.information_asset_manager_id
-                else ""
-            )
-            context["iao"] = iao_email
-            context["iam"] = iam_email
-            data_catalogue_editors = []
-            for user in self.obj.data_catalogue_editors.all():
-                data_catalogue_editors.append(user.email)
-            context["data_catalogue_editors"] = data_catalogue_editors
+
             requests = AccessRequest.objects.filter(
                 catalogue_item_id=self.obj.pk, data_access_status="waiting"
             )
-            requested_users = []
-            for request in requests:
-                request_user = get_user_model().objects.get(id=request.requester.id)
-                requested_users.append(
-                    {
-                        "id": request_user.id,
-                        "first_name": request_user.first_name,
-                        "last_name": request_user.last_name,
-                        "email": request_user.email,
-                        "days_ago": (
-                            datetime.today() - request.created_date.replace(tzinfo=None)
-                        ).days
-                        + 1,
-                    }
-                )
-            context["requested_users"] = requested_users
+            context["requested_users"] = [
+                {
+                    "id": get_user_model().objects.get(email=request.contact_email).id,
+                    "first_name": get_user_model()
+                    .objects.get(email=request.contact_email)
+                    .first_name,
+                    "last_name": get_user_model()
+                    .objects.get(email=request.contact_email)
+                    .last_name,
+                    "email": get_user_model().objects.get(email=request.contact_email).email,
+                    "days_ago": (datetime.today() - request.created_date.replace(tzinfo=None)).days
+                    + 1,
+                }
+                for request in requests
+            ]
             context["waffle_flag"] = waffle.flag_is_active(
                 self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"
             )

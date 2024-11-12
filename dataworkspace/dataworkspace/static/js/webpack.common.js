@@ -9,7 +9,8 @@ const REACT_APPS = [
   'visualisations',
   'your-files',
   'your-files-v2',
-  'data-catalogue-feedback'
+  'data-catalogue-feedback',
+  'confirm-remove-user'
 ].reduce(
   (prev, acc) => ({
     ...prev,
