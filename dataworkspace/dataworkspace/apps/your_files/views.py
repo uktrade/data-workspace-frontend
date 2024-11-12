@@ -154,7 +154,7 @@ class CreateTableConfirmSchemaView(RequiredParameterGetRequestMixin, FormView):
             target = f'{reverse("your-files:create-schema")}?{urlencode(params)}'
         else:
             target = f'{reverse("your-files:create-table-confirm-name")}?{urlencode(params)}'
-        if url_has_allowed_host_and_scheme(target) is True:
+        if url_has_allowed_host_and_scheme(target, settings.ALLOWED_HOSTS) is True:
             return HttpResponseRedirect(target)
         else:
             return HttpResponseRedirect("/")
@@ -272,7 +272,7 @@ class CreateTableConfirmNameView(RequiredParameterGetRequestMixin, ValidateSchem
                 "overwrite": form.cleaned_data["force_overwrite"],
             }
             target = f'{reverse("your-files:create-table-table-exists")}?{urlencode(params)}'
-            if url_has_allowed_host_and_scheme(target) is True:
+            if url_has_allowed_host_and_scheme(target, settings.ALLOWED_HOSTS) is True:
                 return HttpResponseRedirect(target)
             else:
                 return HttpResponseRedirect("/")
