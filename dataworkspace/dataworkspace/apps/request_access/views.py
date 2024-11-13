@@ -207,6 +207,7 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
                             catalogue_item,
                         )
                     )
+                access_request.save()
             else:
                 if (
                     isinstance(catalogue_item, VisualisationCatalogueItem)
