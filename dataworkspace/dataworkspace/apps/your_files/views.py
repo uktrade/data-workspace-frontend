@@ -181,10 +181,11 @@ class CreateSchemaView(FormView):
         except ProgrammingError as e:
             form.add_error(error=str(e), field="schema")
             return super().form_invalid(form)
-
-        return HttpResponseRedirect(
-            f'{reverse("your-files:create-table-confirm-name")}?{urlencode(params)}'
-        )
+        target = f'{reverse("your-files:create-table-confirm-name")}?{urlencode(params)}'
+        if url_has_allowed_host_and_scheme(target, settings.ALLOWED_HOSTS) is True:
+            return HttpResponseRedirect(target)
+        else:
+            return HttpResponseRedirect("/")
 
 
 class ValidateSchemaMixin:
