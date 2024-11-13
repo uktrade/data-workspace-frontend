@@ -4365,7 +4365,12 @@ class TestDatasetEditView:
             user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
             type=DataSetType.MASTER,
         )
-        request_1 = AccessRequestFactory(requester=user_1, catalogue_item_id=dataset.id)
+        AccessRequestFactory(
+            requester=user_1,
+            contact_email=user_1.email,
+            catalogue_item_id=dataset.id,
+            data_access_status="waiting",
+        )
         dataset.information_asset_owner = user
         dataset.save()
 
@@ -4378,14 +4383,13 @@ class TestDatasetEditView:
         )
         assert response.status_code == 200
         soup = BeautifulSoup(response.content.decode(response.charset))
-        table_cells = soup.find_all("td", class_="govuk-table__cell")
-        for cell in table_cells:
-            span = cell.find("span", class_="govuk-body govuk-!-font-weight-bold")
-            if span:
-                name = span.get_text(strip=True)
-                assert request_1.first_name, request_1.last_name in name
-                email = cell.get_text(strip=True).replace(name, "").strip()
-                assert request_1.email in email
+        td_cell_1 = soup.find_all("td")[0].get_text()
+        td_cell_2 = soup.find_all("td")[1]
+        review_access_link = td_cell_2.find("a").get("href")
+        assert "vyvyan.holland@businessandtrade.gov.uk" in td_cell_1
+        assert "Vyvyan Holland" in td_cell_1
+        assert "Review access request" in td_cell_2.get_text()
+        assert review_access_link == f"/datasets/{dataset.id}/review-access/{user_1.id}"
 
     @override_flag(settings.ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK, active=True)
     def test_add_user_search_shows_relevant_results(self, client, user):
