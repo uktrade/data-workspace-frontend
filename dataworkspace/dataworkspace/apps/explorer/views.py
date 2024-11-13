@@ -11,6 +11,7 @@ from django.template import loader
 from django.contrib.auth.views import LoginView
 from django.contrib import messages
 from django.db.models import Count
+from django.utils.html import escape
 from django.http import (
     Http404,
     HttpResponse,
@@ -433,7 +434,7 @@ class QueryView(View):
             return HttpResponseRedirect(self.get_edit_sql_url(request, query))
 
         else:
-            return HttpResponseBadRequest(f"Unknown form action: {action}")
+            return HttpResponseBadRequest(f"Unknown form action: {escape(action)}")
 
     @staticmethod
     def get_edit_sql_url(request, query):
