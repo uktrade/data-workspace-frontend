@@ -16,9 +16,12 @@ document.addEventListener("DOMContentLoaded", () => {
     cellRenderer: function (cellData) {
       var editButton = document.createElement("a");
       editButton.href =
-        `/admin/app/referencedata/${instanceDetails.id}/data/` +
-        cellData.data._id +
-        "/change/";
+        // ref: purify.min.js
+        DOMPurify.sanitize(
+          `/admin/app/referencedata/${instanceDetails.id}/data/` +
+            cellData.data._id +
+            "/change/"
+        );
       editButton.title = "Edit this record";
       editButton.type = "button";
       editButton.className = "button";

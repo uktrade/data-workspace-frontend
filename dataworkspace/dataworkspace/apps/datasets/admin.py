@@ -535,6 +535,7 @@ class ReferenceDatasetAdmin(CSPRichTextEditorMixin, SortableAdminBase, Permissio
             "dayjs.min.js",
             "js/grid-utils.js",
             "data-grid.js",
+            "purify.min.js",
             "ref-dataset-admin.js",
         )
         css = {"grid": ["ag-grid-theme.css"]}
