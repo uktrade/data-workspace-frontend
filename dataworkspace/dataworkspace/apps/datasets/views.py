@@ -1772,8 +1772,10 @@ class DatasetEditPermissionsView(EditBaseView, View):
             permissions = DataSetUserPermission.objects.filter(dataset=self.obj)
         else:
             permissions = VisualisationUserPermission.objects.filter(visualisation=self.obj)
-
-        users = json.dumps([p.user.id for p in permissions])
+        iam_id = get_user_model().objects.get(id=self.obj.information_asset_manager_id).id
+        iao_id = get_user_model().objects.get(id=self.obj.information_asset_owner_id).id
+        user_ids = [p.user.id for p in permissions] + [iam_id, iao_id]
+        users = json.dumps(user_ids)
         summary = PendingAuthorizedUsers.objects.create(created_by=request.user, users=users)
         return HttpResponseRedirect(
             reverse("datasets:edit_permissions_summary", args=[self.obj.id, summary.id])
@@ -1823,8 +1825,7 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
                             id__in=json.loads(self.summary.users) if self.summary.users else []
                         )
                     ],
-                    key=lambda x: x["iam"] or x["iao"],
-                    reverse=True,
+                    key=lambda x: x["first_name"],
                 )
             )
 

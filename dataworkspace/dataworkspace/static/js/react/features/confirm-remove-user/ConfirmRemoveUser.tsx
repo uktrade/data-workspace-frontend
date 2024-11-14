@@ -23,6 +23,20 @@ type User = {
   remove_user_url: string;
 };
 
+const populateUserTypeSuffix = function (user: User) {
+  let user_type_suffix = '';
+  if (user.data_catalogue_editor) {
+    user_type_suffix += '(Catalogue editor) ';
+  }
+  if (user.iam) {
+    user_type_suffix += '(Information Asset Manager) ';
+  }
+  if (user.iao) {
+    user_type_suffix += '(Information Asset Owner)';
+  }
+  return user_type_suffix.trim();
+};
+
 const ConfirmRemoveUser = ({
   data
 }: {
@@ -51,13 +65,7 @@ const ConfirmRemoveUser = ({
               <Table.Row key={user.id}>
                 <Table.Cell style={{ paddingBottom: '1px' }}>
                   <SpanBold>{`${user.first_name} ${user.last_name} `}</SpanBold>
-                  {user.iao
-                    ? '(Information Asset Owner)'
-                    : user.iam
-                      ? '(Information Asset Manager)'
-                      : user.data_catalogue_editor
-                        ? '(Catalogue editor)'
-                        : ''}
+                  {populateUserTypeSuffix(user)}
                   <Paragraph>{user.email}</Paragraph>
                 </Table.Cell>
                 {[user.iam, user.iao].some((x) => x == true) ? (
