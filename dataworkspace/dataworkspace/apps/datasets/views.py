@@ -1804,7 +1804,7 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
             iam = get_user_model().objects.get(id=self.obj.information_asset_manager_id).email
             iao = get_user_model().objects.get(id=self.obj.information_asset_owner_id).email
             context["authorised_users"] = json.dumps(
-                sorted(
+                sorted(  # IAM or IAO should appear at top of list
                     [
                         {
                             "data_catalogue_editor": u.email in data_catalogue_editors,
