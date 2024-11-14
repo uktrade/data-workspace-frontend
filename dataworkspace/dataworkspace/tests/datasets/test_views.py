@@ -4528,11 +4528,8 @@ class TestDatasetEditView:
         assert len(DataSetUserPermission.objects.all()) == 3  # includes iam & iao
         assert DataSetUserPermission.objects.all()[0].dataset == dataset
         assert all(
-            [
-                e.user
-                in [user_1, dataset.information_asset_owner, dataset.information_asset_manager]
-                for e in DataSetUserPermission.objects.all()
-            ]
+            e.user in [user_1, dataset.information_asset_owner, dataset.information_asset_manager]
+            for e in DataSetUserPermission.objects.all()
         )
 
 
