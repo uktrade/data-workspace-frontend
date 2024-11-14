@@ -4411,7 +4411,6 @@ class TestDatasetEditView:
             follow=True,
         )
         assert response.status_code == 200
-        assert b"There are currently no authorized users" in response.content
 
         soup = BeautifulSoup(response.content.decode(response.charset))
         search_url = soup.findAll("a", href=True, text="Add users")[0]["href"]
@@ -4444,7 +4443,6 @@ class TestDatasetEditView:
             follow=True,
         )
         assert response.status_code == 200
-        assert b"There are currently no authorized users" in response.content
 
         soup = BeautifulSoup(response.content.decode(response.charset))
         search_url = soup.findAll("a", href=True, text="Add another user")[0]["href"]
@@ -4489,7 +4487,7 @@ class TestDatasetEditView:
         response = client.get(remove_url, follow=True)
         assert response.status_code == 200
         mock_send_email.assert_called_once()
-        assert len(json.loads(response.context_data["authorised_users"])) == 0
+        assert len(json.loads(response.context_data["authorised_users"])) == 2  # iam & iao
 
     @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=False)
     def test_add_user_save_and_continue_creates_dataset_permissions(self, client, user):
@@ -4514,7 +4512,6 @@ class TestDatasetEditView:
 
         response = client.get(summary_page_url)
         assert response.status_code == 200
-        assert b"There are currently no authorized users" in response.content
 
         soup = BeautifulSoup(response.content.decode(response.charset))
         search_url = soup.findAll("a", href=True, text="Add another user")[0]["href"]
@@ -4532,10 +4529,12 @@ class TestDatasetEditView:
 
         assert len(DataSetUserPermission.objects.all()) == 0
         response = client.post(summary_page_url)
-        assert len(DataSetUserPermission.objects.all()) == 1
-
+        assert len(DataSetUserPermission.objects.all()) == 3  # includes iam & iao
         assert DataSetUserPermission.objects.all()[0].dataset == dataset
-        assert DataSetUserPermission.objects.all()[0].user == user_1
+        assert all(
+            e.user in [user_1, dataset.information_asset_owner, dataset.information_asset_manager]
+            for e in DataSetUserPermission.objects.all()
+        )
 
 
 class TestVisualisationCatalogueItemEditView:
@@ -4613,7 +4612,6 @@ class TestVisualisationCatalogueItemEditView:
 
         response = client.get(summary_page_url)
         assert response.status_code == 200
-        assert b"There are currently no authorized users" in response.content
 
         soup = BeautifulSoup(response.content.decode(response.charset))
         search_url = soup.findAll("a", href=True, text="Add another user")[0]["href"]

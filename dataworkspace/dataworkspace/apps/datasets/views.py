@@ -1772,8 +1772,10 @@ class DatasetEditPermissionsView(EditBaseView, View):
             permissions = DataSetUserPermission.objects.filter(dataset=self.obj)
         else:
             permissions = VisualisationUserPermission.objects.filter(visualisation=self.obj)
-
-        users = json.dumps([p.user.id for p in permissions])
+        iam_id = get_user_model().objects.get(id=self.obj.information_asset_manager_id).id
+        iao_id = get_user_model().objects.get(id=self.obj.information_asset_owner_id).id
+        user_ids = [p.user.id for p in permissions] + [iam_id, iao_id]
+        users = json.dumps(user_ids)
         summary = PendingAuthorizedUsers.objects.create(created_by=request.user, users=users)
         return HttpResponseRedirect(
             reverse("datasets:edit_permissions_summary", args=[self.obj.id, summary.id])
@@ -1804,24 +1806,27 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
             iam = get_user_model().objects.get(id=self.obj.information_asset_manager_id).email
             iao = get_user_model().objects.get(id=self.obj.information_asset_owner_id).email
             context["authorised_users"] = json.dumps(
-                [
-                    {
-                        "data_catalogue_editor": u.email in data_catalogue_editors,
-                        "email": u.email,
-                        "first_name": u.first_name,
-                        "iam": u.email == iam,
-                        "iao": u.email == iao,
-                        "id": u.id,
-                        "last_name": u.last_name,
-                        "remove_user_url": reverse(
-                            "datasets:remove_authorized_user",
-                            args=[self.obj.id, self.summary.id, u.id],
-                        ),
-                    }
-                    for u in get_user_model().objects.filter(
-                        id__in=json.loads(self.summary.users) if self.summary.users else []
-                    )
-                ]
+                sorted(  # IAM or IAO should appear at top of list
+                    [
+                        {
+                            "data_catalogue_editor": u.email in data_catalogue_editors,
+                            "email": u.email,
+                            "first_name": u.first_name,
+                            "iam": u.email == iam,
+                            "iao": u.email == iao,
+                            "id": u.id,
+                            "last_name": u.last_name,
+                            "remove_user_url": reverse(
+                                "datasets:remove_authorized_user",
+                                args=[self.obj.id, self.summary.id, u.id],
+                            ),
+                        }
+                        for u in get_user_model().objects.filter(
+                            id__in=json.loads(self.summary.users) if self.summary.users else []
+                        )
+                    ],
+                    key=lambda x: x["first_name"],
+                )
             )
 
             requests = AccessRequest.objects.filter(
@@ -2069,6 +2074,17 @@ class DatasetRemoveAuthorisedUserView(EditBaseView, View):
         if user.id in users:
             summary.users = json.dumps([user_id for user_id in users if user_id != user.id])
             summary.save()
+        users = set(get_user_model().objects.exclude(id__in=[user.id]))
+        if isinstance(self.obj, DataSet):
+            process_dataset_authorized_users_change(
+                users, request.user, self.obj, False, False, True
+            )
+            messages.success(request, "Dataset permissions updated")
+        else:
+            process_visualisation_catalogue_item_authorized_users_change(
+                users, request.user, self.obj, False, False
+            )
+            messages.success(request, "Visualisation permissions updated")
         if waffle.flag_is_active(self.request, settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW):
             name_dataset = find_dataset(self.obj.pk, request.user).name
             url_dataset = request.build_absolute_uri(
@@ -2082,7 +2098,6 @@ class DatasetRemoveAuthorisedUserView(EditBaseView, View):
                     "dataset_url": url_dataset,
                 },
             )
-
         return HttpResponseRedirect(
             reverse(
                 "datasets:edit_permissions_summary",
