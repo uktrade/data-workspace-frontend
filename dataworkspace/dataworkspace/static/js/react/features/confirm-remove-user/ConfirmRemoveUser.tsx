@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 
 import { Button } from '@govuk-react/button';
-import { H2 } from '@govuk-react/heading';
 import Table from '@govuk-react/table';
 import { Paragraph } from 'govuk-react';
 import styled from 'styled-components';
@@ -42,10 +41,9 @@ const ConfirmRemoveUser = ({
   return (
     <>
       {data.length < 1 ? (
-        <H2>There are currently no authorized users</H2>
+        <div></div>
       ) : (
         <div>
-          <H2>Users who have access</H2>
           <Table>
             {data.map((user) => (
               <Table.Row key={user.id}>
