@@ -1,6 +1,7 @@
-from datetime import timedelta, date, datetime, timezone
 import json
 import random
+from datetime import timedelta, date, datetime, timezone
+from os import environ
 from urllib.parse import quote_plus
 from uuid import uuid4
 
@@ -4484,6 +4485,7 @@ class TestDatasetEditView:
         assert response.status_code == 200
         mock_send_email.assert_called_once()
         assert len(json.loads(response.context_data["authorised_users"])) == 2  # iam & iao
+        environ["ENVIRONMENT"] = "Dev"
 
     @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=False)
     def test_add_user_save_and_continue_creates_dataset_permissions(self, client, user):
@@ -4633,7 +4635,8 @@ class TestVisualisationCatalogueItemEditView:
             VisualisationUserPermission.objects.all()[0].visualisation
             == visualisation_catalogue_item
         )
-        assert VisualisationUserPermission.objects.all()[0].user == user_1
+        print(VisualisationUserPermission.objects.all())
+        assert set(vup.user for vup in VisualisationUserPermission.objects.all()) == set([user, user_1])
 
 
 class TestDatasetManagerViews:

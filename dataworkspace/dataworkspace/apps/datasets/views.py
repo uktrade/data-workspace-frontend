@@ -2089,15 +2089,14 @@ class DatasetRemoveAuthorisedUserView(EditBaseView, View):
             url_dataset = request.build_absolute_uri(
                 reverse("datasets:dataset_detail", args=[self.obj.pk])
             )
-            if settings.ENVIRONMENT != "Dev":
-                send_email(
-                    settings.NOTIFY_DATASET_ACCESS_REMOVE_TEMPLATE_ID,
-                    user.email,
-                    personalisation={
-                        "dataset_name": name_dataset,
-                        "dataset_url": url_dataset,
-                    },
-                )
+            send_email(
+                settings.NOTIFY_DATASET_ACCESS_REMOVE_TEMPLATE_ID,
+                user.email,
+                personalisation={
+                    "dataset_name": name_dataset,
+                    "dataset_url": url_dataset,
+                },
+            )
         return HttpResponseRedirect(
             reverse(
                 "datasets:edit_permissions_summary",
