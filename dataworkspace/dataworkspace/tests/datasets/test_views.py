@@ -4625,7 +4625,9 @@ class TestVisualisationCatalogueItemEditView:
 
         assert len(VisualisationUserPermission.objects.all()) == 0
         response = client.post(summary_page_url)
-        assert len(VisualisationUserPermission.objects.all()) == 1
+        assert (
+            len(VisualisationUserPermission.objects.all()) == 2
+        )  # iam and iao permissions created on summary page
 
         assert (
             VisualisationUserPermission.objects.all()[0].visualisation
