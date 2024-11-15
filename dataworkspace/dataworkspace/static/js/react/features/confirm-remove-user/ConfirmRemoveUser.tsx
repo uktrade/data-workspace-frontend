@@ -40,9 +40,7 @@ const ConfirmRemoveUser = ({
   };
   return (
     <>
-      {data.length < 1 ? (
-        <div></div>
-      ) : (
+      {data.length && (
         <div>
           <Table>
             {data.map((user) => (
