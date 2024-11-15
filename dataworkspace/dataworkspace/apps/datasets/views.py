@@ -2074,17 +2074,16 @@ class DatasetRemoveAuthorisedUserView(EditBaseView, View):
         if user.id in users:
             summary.users = json.dumps([user_id for user_id in users if user_id != user.id])
             summary.save()
-        users = set(get_user_model().objects.exclude(id__in=[user.id]))
+        # get user objects from user ids as a set
+        auth_users = set(get_user_model().objects.filter(id__in=json.loads(summary.users)))
         if isinstance(self.obj, DataSet):
             process_dataset_authorized_users_change(
-                users, request.user, self.obj, False, False, True
+                auth_users, request.user, self.obj, False, False, True
             )
-            messages.success(request, "Dataset permissions updated")
         else:
             process_visualisation_catalogue_item_authorized_users_change(
-                users, request.user, self.obj, False, False
+                auth_users, request.user, self.obj, False, False
             )
-            messages.success(request, "Visualisation permissions updated")
         if waffle.flag_is_active(self.request, settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW):
             name_dataset = find_dataset(self.obj.pk, request.user).name
             url_dataset = request.build_absolute_uri(

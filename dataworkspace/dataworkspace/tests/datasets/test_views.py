@@ -1,6 +1,6 @@
-from datetime import timedelta, date, datetime, timezone
 import json
 import random
+from datetime import timedelta, date, datetime, timezone
 from urllib.parse import quote_plus
 from uuid import uuid4
 
@@ -4629,13 +4629,18 @@ class TestVisualisationCatalogueItemEditView:
 
         assert len(VisualisationUserPermission.objects.all()) == 0
         response = client.post(summary_page_url)
-        assert len(VisualisationUserPermission.objects.all()) == 1
+        assert (
+            len(VisualisationUserPermission.objects.all()) == 2
+        )  # iam and iao permissions created on summary page
 
         assert (
             VisualisationUserPermission.objects.all()[0].visualisation
             == visualisation_catalogue_item
         )
-        assert VisualisationUserPermission.objects.all()[0].user == user_1
+        print(VisualisationUserPermission.objects.all())
+        assert set(vup.user for vup in VisualisationUserPermission.objects.all()) == set(
+            [user, user_1]
+        )
 
 
 class TestDatasetManagerViews:
