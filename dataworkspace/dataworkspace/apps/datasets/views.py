@@ -2080,12 +2080,10 @@ class DatasetRemoveAuthorisedUserView(EditBaseView, View):
             process_dataset_authorized_users_change(
                 auth_users, request.user, self.obj, False, False, True
             )
-            messages.success(request, "Dataset permissions updated")
         else:
             process_visualisation_catalogue_item_authorized_users_change(
                 auth_users, request.user, self.obj, False, False
             )
-            messages.success(request, "Visualisation permissions updated")
         if waffle.flag_is_active(self.request, settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW):
             name_dataset = find_dataset(self.obj.pk, request.user).name
             url_dataset = request.build_absolute_uri(

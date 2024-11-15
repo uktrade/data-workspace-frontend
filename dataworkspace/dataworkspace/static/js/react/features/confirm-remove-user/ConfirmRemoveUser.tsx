@@ -25,9 +25,6 @@ type User = {
 
 const populateUserTypeSuffix = function (user: User) {
   let user_type_suffix = '';
-  if (user.data_catalogue_editor) {
-    user_type_suffix += '(Catalogue editor) ';
-  }
   if (user.iam) {
     user_type_suffix += '(Information Asset Manager) ';
   }
