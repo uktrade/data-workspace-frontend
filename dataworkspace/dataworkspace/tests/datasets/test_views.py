@@ -4310,6 +4310,9 @@ class TestDatasetEditView:
 
         soup = BeautifulSoup(response.content.decode(response.charset))
         assert f"Manage access to {dataset.name}" in soup.find("h1").contents
+        assert "Add User" in soup.find("a", class_="govuk-link").find(
+            "button", class_="govuk-button govuk-button--secondary govuk-!-static-margin-bottom-6"
+        ).contents[0].get_text(strip=True)
         auth_users = json.loads(response.context_data["authorised_users"])
         assert any(au for au in auth_users if au["iam"] is True and au["id"] == user_1.id)
 
