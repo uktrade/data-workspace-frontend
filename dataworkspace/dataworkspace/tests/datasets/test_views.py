@@ -4636,7 +4636,9 @@ class TestVisualisationCatalogueItemEditView:
             == visualisation_catalogue_item
         )
         print(VisualisationUserPermission.objects.all())
-        assert set(vup.user for vup in VisualisationUserPermission.objects.all()) == set([user, user_1])
+        assert set(vup.user for vup in VisualisationUserPermission.objects.all()) == set(
+            [user, user_1]
+        )
 
 
 class TestDatasetManagerViews:
