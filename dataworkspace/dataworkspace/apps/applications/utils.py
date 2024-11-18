@@ -1125,8 +1125,6 @@ def create_user_from_sso(
     if changed:
         logger.info("User %s with email %s has changed, saving updates", user.username, user.email)
         user.save()
-    else:
-        logger.info("User %s with email %s has NOT changed", user.username, user.email)
 
     return user
 
@@ -1220,31 +1218,24 @@ def _process_staff_sso_file(
             if published_date > new_last_processed_datetime:
                 new_last_processed_datetime = published_date
 
-            if settings.S3_SSO_IMPORT_ENABLED:
-                logger.info(
-                    "sync_s3_sso_users: User id %s published date %s is after previous date %s, creating the user from sso",
+            logger.info(
+                "sync_s3_sso_users: User id %s published date %s is after previous date %s, creating the user from sso",
+                user_id,
+                published_date,
+                last_processed_datetime,
+            )
+            try:
+                user = create_user_from_sso(
                     user_id,
-                    published_date,
-                    last_processed_datetime,
+                    primary_email,
+                    first_name,
+                    last_name,
+                    status,
+                    check_tools_access_if_user_exists=True,
                 )
-                try:
-                    user = create_user_from_sso(
-                        user_id,
-                        primary_email,
-                        first_name,
-                        last_name,
-                        status,
-                        check_tools_access_if_user_exists=True,
-                    )
 
-                except IntegrityError:
-                    logger.exception("sync_s3_sso_users: Failed to create user record")
-            else:
-                logger.info(
-                    "sync_s3_sso_users: S3_SSO_IMPORT_ENABLED is disabled, user %s with published date %s will not be added",
-                    user_id,
-                    published_date,
-                )
+            except IntegrityError:
+                logger.exception("sync_s3_sso_users: Failed to create user record")
 
             seen_user_ids.append(user_id)
 
@@ -1294,15 +1285,8 @@ def _do_sync_s3_sso_users():
                 "sync_s3_sso_users: active users exist locally but not in SSO %s",
                 list(unseen_user_profiles.values_list("user__id", flat=True)),
             )
-            if settings.S3_SSO_IMPORT_ENABLED:
-                logger.info(
-                    "sync_s3_sso_users: Marking users as inactive",
-                )
-                unseen_user_profiles.update(sso_status="inactive")
-            else:
-                logger.info(
-                    "sync_s3_sso_users: S3_SSO_IMPORT_ENABLED is FALSE, no changes to active user",
-                )
+
+            unseen_user_profiles.update(sso_status="inactive")
 
         logger.info("sync_s3_sso_users: New last_published date for cache %s", new_last_processed)
 

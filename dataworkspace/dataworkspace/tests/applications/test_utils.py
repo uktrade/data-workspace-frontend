@@ -545,7 +545,6 @@ class TestSyncS3SSOUsers:
             )
 
     @pytest.mark.django_db
-    @override_settings(S3_SSO_IMPORT_ENABLED=True)
     def test_sync_with_active_user_not_in_file_set_to_inactive(
         self,
     ):
@@ -690,30 +689,6 @@ class TestSyncS3SSOUsers:
         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
     )
     @pytest.mark.django_db
-    def test_process_staff_sso_with_s3_import_disabled_doesnt_add_user(self, sso_user_factory):
-        user_1 = sso_user_factory()
-        user_2 = sso_user_factory()
-        m_open = mock.mock_open(read_data="\n".join([json.dumps(user_1), json.dumps(user_2)]))
-
-        with mock.patch(
-            "dataworkspace.apps.applications.utils.smart_open",
-            m_open,
-            create=True,
-        ):
-            _process_staff_sso_file(
-                mock.MagicMock(),
-                "file.jsonl.gz",
-                datetime.datetime.fromtimestamp(0, tz=datetime.datetime.now().astimezone().tzinfo),
-            )
-
-            User = get_user_model()
-            assert not User.objects.all()
-
-    @override_settings(
-        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
-    )
-    @override_settings(S3_SSO_IMPORT_ENABLED=True)
-    @pytest.mark.django_db
     def test_process_staff_sso_file_without_cache_creates_all_users(self, sso_user_factory):
         user_1 = sso_user_factory()
         user_2 = sso_user_factory()
@@ -731,7 +706,9 @@ class TestSyncS3SSOUsers:
             )
 
             User = get_user_model()
-            all_users = User.objects.all()
+            all_users = User.objects.all().order_by("date_joined")
+
+            print(all_users)
 
             assert len(all_users) == 2
             assert str(all_users[0].profile.sso_id) == user_1["object"]["dit:StaffSSO:User:userId"]
@@ -758,7 +735,6 @@ class TestSyncS3SSOUsers:
         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
     )
     @pytest.mark.django_db
-    @override_settings(S3_SSO_IMPORT_ENABLED=True)
     def test_process_staff_sso_file_with_cache_ignores_users_before_last_published(
         self, sso_user_factory
     ):
@@ -803,7 +779,6 @@ class TestSyncS3SSOUsers:
         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
     )
     @pytest.mark.django_db
-    @override_settings(S3_SSO_IMPORT_ENABLED=True)
     def test_process_staff_sso_updates_existing_users_email(self, sso_user_factory):
         user_1 = sso_user_factory()
 
@@ -834,7 +809,6 @@ class TestSyncS3SSOUsers:
         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
     )
     @pytest.mark.django_db
-    @override_settings(S3_SSO_IMPORT_ENABLED=True)
     def test_process_staff_sso_creates_role_if_user_can_access_tools(self, sso_user_factory):
         user_1 = sso_user_factory()
 
@@ -997,7 +971,6 @@ class TestSyncS3SSOUsers:
         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
     )
     @pytest.mark.django_db
-    @override_settings(S3_SSO_IMPORT_ENABLED=True)
     def test_process_staff_sso_returns_latest_user_last_published_when_newer_than_previous(
         self, sso_user_factory
     ):
