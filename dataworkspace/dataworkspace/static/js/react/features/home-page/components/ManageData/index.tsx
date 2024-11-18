@@ -6,7 +6,7 @@ import Link from '@govuk-react/link';
 import styled from 'styled-components';
 
 import { Tile } from '../../../../components';
-import { DIVIDER_COLOUR } from '../../../../constants';
+import { MID_GREY } from '../../../../constants';
 
 export type ManagedDataProps = {
   count: string;
@@ -14,8 +14,7 @@ export type ManagedDataProps = {
 };
 
 const Divider = styled('hr')`
-  color:${DIVIDER_COLOUR}
-  height: 15px;
+  color:${MID_GREY}
   margin-top: ${SPACING_POINTS['4']}px;
 `;
 
@@ -42,8 +41,8 @@ const ManagedData: React.FC<Record<'managed_data_stats', ManagedDataProps>> = ({
           Keeping your data up-to-date helps improve the quality of our data
           catalogue.{' '}
           <Link href="https://data-services-help.trade.gov.uk/data-workspace/add-share-and-manage-data/manage-data/">
-            Learn how to maintain and managed data you're responsabile on Data
-            Workspace
+            Learn how to maintain and managed data you're responsible for on
+            Data Workspace
           </Link>
         </StyledParagraph>
       </Tile>
