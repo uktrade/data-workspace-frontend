@@ -1,22 +1,16 @@
 import React from 'react';
 
-import { SPACING_POINTS } from '@govuk-react/constants';
 import { typography } from '@govuk-react/lib';
 import Link from '@govuk-react/link';
+import { SectionBreak } from 'govuk-react';
 import styled from 'styled-components';
 
 import { Tile } from '../../../../components';
-import { MID_GREY } from '../../../../constants';
 
 export type ManagedDataProps = {
   count: string;
   managed_data_url: string | null;
 };
-
-const Divider = styled('hr')`
-  color:${MID_GREY}
-  margin-top: ${SPACING_POINTS['4']}px;
-`;
 
 const StyledParagraph = styled('p')`
   ${typography.font({ size: 16 })};
@@ -36,7 +30,7 @@ const ManagedData: React.FC<Record<'managed_data_stats', ManagedDataProps>> = ({
             View and manage your data
           </Link>
         </div>
-        <Divider></Divider>
+        <SectionBreak level="MEDIUM" visible></SectionBreak>
         <StyledParagraph>
           Keeping your data up-to-date helps improve the quality of our data
           catalogue.{' '}

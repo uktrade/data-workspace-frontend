@@ -20,6 +20,12 @@ const Dialog = styled('dialog')`
   padding-top: 25px;
 `;
 
+const StyledLink = styled(Link)`
+  display: inline-block
+  fontSize: ${FONT_SIZE.SIZE_24}
+  marginTop: ${SPACING_POINTS[1]}
+`;
+
 export const ConfirmDialog = (props: ConfirmDialogProps) => {
   const refModal = useRef<HTMLDialogElement>(null);
   const closeModal = function () {
@@ -49,17 +55,9 @@ export const ConfirmDialog = (props: ConfirmDialogProps) => {
           >
             {props.buttonText}
           </Button>
-          <Link
-            href="javascript:;"
-            onClick={props.onClose}
-            style={{
-              display: 'inline-block',
-              fontSize: FONT_SIZE.SIZE_24,
-              marginTop: SPACING_POINTS[1]
-            }}
-          >
+          <StyledLink href="javascript:;" onClick={props.onClose}>
             Cancel
-          </Link>
+          </StyledLink>
         </form>
       </ContainerButtonGroup>
     </Dialog>
