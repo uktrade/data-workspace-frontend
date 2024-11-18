@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-import { FONT_SIZE, SPACING_POINTS } from '@govuk-react/constants';
+import { SPACING_POINTS } from '@govuk-react/constants';
 import { Button, H2, Link } from 'govuk-react';
 import styled from 'styled-components';
 
@@ -21,9 +21,9 @@ const Dialog = styled('dialog')`
 `;
 
 const StyledLink = styled(Link)`
-  display: inline-block
-  fontSize: ${FONT_SIZE.SIZE_24}
-  marginTop: ${SPACING_POINTS[1]}
+  display: inline-block;
+  font-size: 20px;
+  margin-top: 5px;
 `;
 
 export const ConfirmDialog = (props: ConfirmDialogProps) => {
