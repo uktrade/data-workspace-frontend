@@ -1123,7 +1123,10 @@ def create_user_from_sso(
         user.profile.sso_status = sso_status
 
     if changed:
+        logger.info("User %s with email %s has changed, saving updates", user.username, user.email)
         user.save()
+    else:
+        logger.info("User %s with email %s has NOT changed", user.username, user.email)
 
     return user
 
