@@ -81,11 +81,11 @@ describe('RecentCollections', () => {
       );
     });
     it('should not render a link to helpcentre guidance', () => {
-      const { getByRole } = render(
+      const { queryByRole } = render(
         <ManagedData managed_data_stats={managed_data_stats_no_dataset} />
       );
       expect(
-        getByRole('link', {
+        queryByRole('link', {
           // eslint-disable-next-line quotes
           name: "Learn how to maintain and manage data you're responsible for on Data Workspace"
         })
