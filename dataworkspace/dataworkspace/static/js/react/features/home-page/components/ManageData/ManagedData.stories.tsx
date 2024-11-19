@@ -9,12 +9,12 @@ const MultipleDatasets: ManagedDataProps = {
 };
 
 const SingularDataset: ManagedDataProps = {
-  count: 5,
+  count: 1,
   managed_data_url: '/datasets?q='
 };
 
 const NoDatasets: ManagedDataProps = {
-  count: 5,
+  count: 0,
   managed_data_url: '/datasets?q='
 };
 
