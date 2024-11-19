@@ -33,14 +33,14 @@
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
           {% include 'design_system/error_summary.html' with form=form %}
-            <h1 class="govuk-heading-l">Review {{full_name}}'s access to {{obj.name}}</h1>
-            <h2 class="govuk-heading-m">Requestor</h2>
-            <p class="govuk-body govuk-!-margin-0"><strong>{{full_name}}</strong></p>
+            <h1 class="govuk-heading-xl">Review {{full_name}}'s access to {{obj.name}}</h1>
+            <h2 class="govuk-heading-l govuk-!-font-size-27">Requestor</h2>
+            <p class="govuk-body"><strong>{{full_name}}</strong></p>
             <p class="govuk-body">{{email}}</p>
-            <h2 class="govuk-heading-m">Requestor's reason for access</h2>
-            <p class="govuk-body {% if not eligibility_criteria %}govuk-!-margin-bottom-7{% endif %}">{{reason_for_access}}</p>
+            <h2 class="govuk-heading-l govuk-!-font-size-27">Requestor's reason for access</h2>
+            <p class="govuk-body">{{reason_for_access}}</p>
             {% if eligibility_criteria is not null %}
-            <h2 class="govuk-heading-m">Have the eligibility requirements been met?</h2>
+            <h2 class="govuk-heading-l govuk-!-font-size-27">Have the eligibility requirements been met?</h2>
             <details class="govuk-details govuk govuk-!-margin-bottom-4" data-module="govuk-details">
               <summary class="govuk-details__summary">
                 <span class="govuk-details__summary-text">
@@ -80,4 +80,11 @@
             </form>
         </div>
     </div>
+<script nonce="{{ request.csp_nonce }}">
+  document.addEventListener('DOMContentLoaded', () => {
+        document.getElementsByClassName("govuk-fieldset__heading")[0].classList.add("govuk-!-font-size-27");
+        document.getElementsByClassName("govuk-form-group")[0].style.marginBottom = "10px";
+        document.getElementsByClassName("govuk-button")[0].style.marginTop = "15px";
+    });
+</script>
 {% endblock %}
