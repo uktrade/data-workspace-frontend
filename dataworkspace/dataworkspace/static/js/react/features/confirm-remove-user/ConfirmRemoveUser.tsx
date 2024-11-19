@@ -23,13 +23,12 @@ type User = {
 };
 
 const UserTypeSuffix: React.FC<Record<'user', User>> = function ({ user }) {
-  let user_type_suffix = '';
   if (user.iam) {
-    user_type_suffix = '(Information Asset Manager)';
+    return '(Information Asset Manager)';
   } else if (user.iao) {
-    user_type_suffix = '(Information Asset Owner)';
+    return '(Information Asset Owner)';
   }
-  return <>{user_type_suffix}</>;
+  return null;
 };
 
 const ConfirmRemoveUser = ({
