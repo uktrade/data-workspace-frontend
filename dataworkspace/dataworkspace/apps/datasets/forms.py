@@ -8,6 +8,7 @@ from django import forms
 from django.db import models
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.validators import EMPTY_VALUES
 
 
 from dataworkspace.apps.datasets.constants import AggregationType, DataSetType, TagType
@@ -773,6 +774,11 @@ class ReviewAccessForm(GOVUKDesignSystemForm):
             ("grant", f"Grant {full_name} access to this dataset"),
             ("other", f"Deny {full_name} access to this dataset"),
         ]
+        action_type = self.initial.get("action_type") or self.data.get("action_type")
+        if action_type == self.ActionTypes.DENY:
+            self.fields["message"].required = True
+        else:
+            self.fields["message"].required = False
 
     class ActionTypes(models.TextChoices):
         GRANT = "grant", "grant"
@@ -786,24 +792,26 @@ class ReviewAccessForm(GOVUKDesignSystemForm):
     )
 
     message = GOVUKDesignSystemTextareaField(
-        required=False,
+        required=True,
         label="Why are you denying access to this data?",
         help_text="Your answer below will be emailed to the requestor",
         widget=GOVUKDesignSystemTextareaWidget(
             label_is_heading=False,
             attrs={"rows": 5},
         ),
+        error_messages={"required": "Enter the reason(s) why you are denying access to the data."},
     )
 
     def clean(self):
         cleaned = super().clean()
         action_type = self.cleaned_data.get("action_type", None)
+
         if (
             action_type
             and cleaned["action_type"] == self.ActionTypes.DENY
-            and not cleaned["message"]
+            and cleaned.get("message") in EMPTY_VALUES
         ):
-            raise forms.ValidationError(
-                {"message": "Enter the reason(s) why you are denying access to this data"}
+            self.add_error(
+                "message", "Enter the reason(s) why you are denying access to the data."
             )
         return cleaned

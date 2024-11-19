@@ -17,7 +17,8 @@ const ContainerButtonGroup = styled('div')`
 `;
 
 const Dialog = styled('dialog')`
-  padding-top: 25px;
+  padding: 30px 30px 0px;
+  width: 660px;
 `;
 
 export const ConfirmDialog = (props: ConfirmDialogProps) => {
