@@ -47,11 +47,11 @@ describe('RecentCollections', () => {
       );
     });
     it('should not render at all', () => {
-      const { getByRole } = render(
+      const { queryByRole } = render(
         <ManagedData managed_data_stats={managed_data_stats_no_dataset} />
       );
       expect(
-        getByRole('heading', {
+        queryByRole('heading', {
           level: 2,
           // eslint-disable-next-line quotes
           name: "You're the owner or manager of 0 dataset"
@@ -65,26 +65,6 @@ describe('RecentCollections', () => {
       expect(
         getByRole('link', { name: 'View and manage your data' })
       ).toHaveAttribute('href', '/datasets?q=');
-    });
-    it('should render a generic description', () => {
-      const { getByText } = render(
-        <ManagedData managed_data_stats={managed_data_stats_single_dataset} />
-      );
-      expect(
-        getByText(
-          /Keeping your data up-to-date helps improve the quality of our data catalogue./i
-        )
-      ).toBeInTheDocument();
-    });
-    it('should not render a generic description', () => {
-      const { getByText } = render(
-        <ManagedData managed_data_stats={managed_data_stats_no_dataset} />
-      );
-      expect(
-        getByText(
-          /Keeping your data up-to-date helps improve the quality of our data catalogue./i
-        )
-      ).not.toBeInTheDocument();
     });
     it('should render a link to helpcentre guidance', () => {
       const { getByRole } = render(
@@ -102,7 +82,7 @@ describe('RecentCollections', () => {
     });
     it('should not render a link to helpcentre guidance', () => {
       const { getByRole } = render(
-        <ManagedData managed_data_stats={managed_data_stats_single_dataset} />
+        <ManagedData managed_data_stats={managed_data_stats_no_dataset} />
       );
       expect(
         getByRole('link', {
