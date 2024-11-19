@@ -2,8 +2,8 @@ import { DATA_USAGE_KEYS } from './constants';
 import type {
   DataUsageKeys,
   DataUsageResponse,
+  ManagedDataResponse,
   TransformedDataUsageResponse,
-  TransformedManageDataResponse,
   TransformedYourBookmarksResponse,
   TransformedYourRecentCollectionResponse,
   TransformedYourRecentItemsResponse,
@@ -23,8 +23,8 @@ export const transformDataUsageResponse = (
   }));
 
 export const transformManageDataResponse = (
-  response: TransformedManageDataResponse
-): TransformedManageDataResponse => {
+  response: ManagedDataResponse
+): ManagedDataResponse => {
   return { count: response.count, managed_data_url: response.managed_data_url };
 };
 
