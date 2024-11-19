@@ -41,7 +41,7 @@ const YourSection = styled('div')`
 const LandscapeYourSection = styled('div')`
   display: grid;
   grid-column: 1 / span 2;
-  grid-row: 1; /* Places it in the first row */
+  grid-row: 1;
 `;
 
 const SupportSection = styled('section')`
