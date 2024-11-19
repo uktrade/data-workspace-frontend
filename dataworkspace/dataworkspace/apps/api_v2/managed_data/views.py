@@ -1,6 +1,5 @@
 from django.db.models import Q
 from django.urls import reverse
-from django.utils.http import urlencode
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
@@ -37,4 +36,3 @@ class ManagedDataViewSet(TimestampFilterMixin, viewsets.ModelViewSet):
         managed_data_url = f"{reverse('datasets:find_datasets')}{kwargs}"
         count = self.get_queryset().count()
         return Response({'count': count, "managed_data_url": managed_data_url})
-    
