@@ -1257,6 +1257,12 @@ def _get_seen_ids_and_last_processed(
     return list(set(seen_user_ids)), latest_processed_datetime
 
 
+def _is_full_sync(files):
+    is_full_sync = all("full" in file.key for file in files)
+    logger.info("sync_s3_sso_users: is full sync: %s", is_full_sync)
+    return is_full_sync
+
+
 def _do_sync_s3_sso_users():
     last_published = cache.get(
         "s3_sso_sync_last_published",
@@ -1275,7 +1281,7 @@ def _do_sync_s3_sso_users():
             files, s3_resource.meta.client, new_last_processed
         )
         new_last_processed = seen_result[1]
-        if len(seen_result[0]) > 0:
+        if len(seen_result[0]) > 0 and _is_full_sync(files):
             unseen_user_profiles = (
                 Profile.objects.exclude(user__username__in=seen_result[0])
                 .filter(sso_status="active")

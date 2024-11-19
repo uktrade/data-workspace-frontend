@@ -38,6 +38,7 @@ from dataworkspace.apps.applications.utils import (
     _do_get_staff_sso_s3_object_summaries,
     remove_tools_access_for_users_with_expired_cert,
     self_certify_renewal_email_notification,
+    _is_full_sync,
 )
 
 from dataworkspace.apps.datasets.constants import UserAccessType
@@ -545,14 +546,16 @@ class TestSyncS3SSOUsers:
             )
 
     @pytest.mark.django_db
-    def test_sync_with_active_user_not_in_file_set_to_inactive(
+    def test_sync_with_active_user_not_in_file_set_to_inactive_for_full_sync(
         self,
     ):
         with mock.patch("dataworkspace.apps.applications.utils.get_s3_resource"), mock.patch(
             "dataworkspace.apps.applications.utils._do_get_staff_sso_s3_object_summaries"
         ) as mock_get_s3_files, mock.patch(
             "dataworkspace.apps.applications.utils._get_seen_ids_and_last_processed"
-        ) as mock_get_seen_ids_and_last_processed:
+        ) as mock_get_seen_ids_and_last_processed, mock.patch(
+            "dataworkspace.apps.applications.utils._is_full_sync", return_value=True
+        ):
             mock_get_s3_files.return_value = [mock.MagicMock(key="a/today.jsonl.gz")]
 
             inactive_user = UserFactory()
@@ -591,6 +594,39 @@ class TestSyncS3SSOUsers:
             assert (
                 User.objects.filter(username=inactive_user.username).first().profile.sso_status
                 == "inactive"
+            )
+
+    @pytest.mark.django_db
+    def test_sync_with_active_user_not_in_file_not_changed_for_partial_sync(
+        self,
+    ):
+        with mock.patch("dataworkspace.apps.applications.utils.get_s3_resource"), mock.patch(
+            "dataworkspace.apps.applications.utils._do_get_staff_sso_s3_object_summaries"
+        ) as mock_get_s3_files, mock.patch(
+            "dataworkspace.apps.applications.utils._get_seen_ids_and_last_processed"
+        ) as mock_get_seen_ids_and_last_processed, mock.patch(
+            "dataworkspace.apps.applications.utils._is_full_sync", return_value=False
+        ):
+            mock_get_s3_files.return_value = [mock.MagicMock(key="a/today.jsonl.gz")]
+
+            active_user_not_in_file = UserFactory()
+            active_user_not_in_file.profile.sso_status = "active"
+            active_user_not_in_file.profile.save()
+
+            mock_get_seen_ids_and_last_processed.return_value = (
+                [],
+                datetime.datetime.now(),
+            )
+
+            _do_sync_s3_sso_users()
+
+            User = get_user_model()
+
+            assert (
+                User.objects.filter(username=active_user_not_in_file.username)
+                .first()
+                .profile.sso_status
+                == "active"
             )
 
     @override_settings(
@@ -707,8 +743,6 @@ class TestSyncS3SSOUsers:
 
             User = get_user_model()
             all_users = User.objects.all().order_by("date_joined")
-
-            print(all_users)
 
             assert len(all_users) == 2
             assert str(all_users[0].profile.sso_id) == user_1["object"]["dit:StaffSSO:User:userId"]
@@ -991,6 +1025,44 @@ class TestSyncS3SSOUsers:
 
             assert process_staff_results[0] == [get_user_model().objects.all().first().username]
             assert process_staff_results[1] == parser.parse(user_1["published"])
+
+    @override_settings(
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+    )
+    @pytest.mark.parametrize(
+        ("filenames"),
+        (
+            (["full"]),
+            (["full_", "full"]),
+        ),
+    )
+    def test_is_full_sync_returns_true_when_all_files_contain_full(self, filenames):
+        files = [
+            mock.MagicMock(
+                key=filename,
+            )
+            for filename in filenames
+        ]
+        assert _is_full_sync(files)
+
+    @override_settings(
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+    )
+    @pytest.mark.parametrize(
+        ("filenames"),
+        (
+            (["anything"]),
+            (["anything", "full"]),
+        ),
+    )
+    def test_is_full_sync_returns_false_when_all_files_do_not_contain_full(self, filenames):
+        files = [
+            mock.MagicMock(
+                key=filename,
+            )
+            for filename in filenames
+        ]
+        assert _is_full_sync(files) is False
 
 
 class TestCreateToolsAccessIAMRoleTask:
