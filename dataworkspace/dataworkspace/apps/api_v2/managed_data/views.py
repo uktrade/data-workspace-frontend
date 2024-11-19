@@ -30,9 +30,9 @@ class ManagedDataViewSet(TimestampFilterMixin, viewsets.ModelViewSet):
             .filter(Q(information_asset_manager=user_id) | Q(information_asset_owner=user_id))
         )
 
-    @action(detail=False, methods=['get'], url_path='stats')
+    @action(detail=False, methods=["get"], url_path="stats")
     def stats(self, request, *args, **kwargs):
         kwargs = "?q=&sort=relevance&my_datasets=owned"
         managed_data_url = f"{reverse('datasets:find_datasets')}{kwargs}"
         count = self.get_queryset().count()
-        return Response({'count': count, "managed_data_url": managed_data_url})
+        return Response({"count": count, "managed_data_url": managed_data_url})
