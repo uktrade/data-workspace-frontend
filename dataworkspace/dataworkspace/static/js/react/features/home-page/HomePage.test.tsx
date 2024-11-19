@@ -43,7 +43,15 @@ describe('HomePage', () => {
   it('should render 6 articles', async () => {
     const { getAllByRole } = render(<HomePage />);
     await waitFor(() => {
-      expect(getAllByRole('article')).toHaveLength(6);
+      expect(getAllByRole('article')).toHaveLength(7);
+    });
+  });
+  it('should render managed data', async () => {
+    const { getByRole } = render(<HomePage />);
+    await waitFor(() => {
+      expect(
+        getByRole('link', { name: 'View and manage your data' })
+      ).toBeInTheDocument();
     });
   });
   it('should render your recent items', async () => {

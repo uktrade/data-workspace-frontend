@@ -8,7 +8,7 @@ import styled from 'styled-components';
 import { Tile } from '../../../../components';
 
 export type ManagedDataProps = {
-  count: string;
+  count: number;
   managed_data_url: string;
 };
 
@@ -20,10 +20,10 @@ const ManagedData: React.FC<Record<'managed_data_stats', ManagedDataProps>> = ({
   managed_data_stats
 }) => (
   <>
-    {managed_data_stats && (
+    {managed_data_stats?.count > 0 && (
       <Tile
         as="article"
-        title={`You're the owner or manager of ${managed_data_stats.count} dataset${Number(managed_data_stats.count) > 1 ? 's' : ''}`}
+        title={`You're the owner or manager of ${managed_data_stats.count} dataset${managed_data_stats.count > 1 ? 's' : ''}`}
       >
         <div>
           <Link href={`${managed_data_stats.managed_data_url}`}>

@@ -10,8 +10,8 @@ import {
 import {
   type DataType,
   type DataUsageResponse,
+  type ManagedDataResponse,
   type TransformedDataUsageResponse,
-  type TransformedManageDataResponse,
   type TransformedYourBookmarksResponse,
   type TransformedYourRecentCollectionResponse,
   type TransformedYourRecentItemsResponse,
@@ -47,10 +47,10 @@ export const fetchDataUsage = async (dataType: DataType, id: string) => {
 };
 
 export const fetchManageData = async () => {
-  return handleResponse<
-    TransformedManageDataResponse,
-    TransformedManageDataResponse
-  >(`/${API_BASE_URL}/managed_data/stats/`, transformManageDataResponse);
+  return handleResponse<ManagedDataResponse, ManagedDataResponse>(
+    `/${API_BASE_URL}/managed_data/stats/`,
+    transformManageDataResponse
+  );
 };
 
 export const fetchRecentCollections = async () => {
