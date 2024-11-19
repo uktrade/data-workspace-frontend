@@ -775,10 +775,7 @@ class ReviewAccessForm(GOVUKDesignSystemForm):
             ("other", f"Deny {full_name} access to this dataset"),
         ]
         action_type = self.initial.get("action_type") or self.data.get("action_type")
-        if action_type == self.ActionTypes.DENY:
-            self.fields["message"].required = True
-        else:
-            self.fields["message"].required = False
+        self.fields["message"].required = action_type == self.ActionTypes.DENY
 
     class ActionTypes(models.TextChoices):
         GRANT = "grant", "grant"
