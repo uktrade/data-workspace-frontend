@@ -192,8 +192,12 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
             if access_request.catalogue_item_id
             else None
         )
-        if not access_request.zendesk_reference_number:
 
+        # In Dev Ignore the API call to Zendesk and notify
+        if settings.ENVIRONMENT == "Dev":
+            return super().get(request, *args, **kwargs)
+
+        if not access_request.zendesk_reference_number:
             if waffle.flag_is_active(request, settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW):
                 if (
                     isinstance(catalogue_item, VisualisationCatalogueItem)

@@ -6,7 +6,7 @@ import pytest
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import Client
+from django.test import Client, override_settings
 from django.urls import reverse
 
 from dataworkspace.apps.applications.models import ApplicationInstance
@@ -96,6 +96,7 @@ class TestDatasetAccessOnly:
     @pytest.mark.django_db
     @mock.patch("dataworkspace.apps.request_access.views.zendesk.Zenpy")
     @mock.patch("dataworkspace.apps.core.storage._upload_to_clamav")
+    @override_settings(ENVIRONMENT="Production")
     def test_zendesk_ticket_created_after_form_submission(
         self, mock_upload_to_clamav, mock_zendesk_client, client, user, metadata_db
     ):
@@ -288,6 +289,7 @@ class TestToolsAccessOnly:
     @mock.patch("dataworkspace.apps.core.boto3_client.boto3.client")
     @mock.patch("dataworkspace.apps.request_access.views.zendesk.Zenpy")
     @mock.patch("dataworkspace.apps.core.storage._upload_to_clamav")
+    @override_settings(ENVIRONMENT="Production")
     def test_zendesk_ticket_created_after_form_submission(
         self,
         mock_upload_to_clamav,
