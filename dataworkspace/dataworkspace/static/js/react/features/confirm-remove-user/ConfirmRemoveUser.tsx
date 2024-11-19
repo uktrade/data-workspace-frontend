@@ -31,15 +31,14 @@ type User = {
   remove_user_url: string;
 };
 
-const populateUserTypeSuffix = function (user: User) {
+const UserTypeSuffix: React.FC<Record<'user', User>> = function ({ user }) {
   let user_type_suffix = '';
   if (user.iam) {
-    user_type_suffix += '(Information Asset Manager) ';
+    user_type_suffix = '(Information Asset Manager)';
+  } else if (user.iao) {
+    user_type_suffix = '(Information Asset Owner)';
   }
-  if (user.iao) {
-    user_type_suffix += '(Information Asset Owner)';
-  }
-  return user_type_suffix.trim();
+  return <>{user_type_suffix}</>;
 };
 
 const ConfirmRemoveUser = ({
@@ -67,7 +66,7 @@ const ConfirmRemoveUser = ({
               <Table.Row key={user.id}>
                 <UserNameTableCell>
                   <SpanBold>{`${user.first_name} ${user.last_name} `}</SpanBold>
-                  {populateUserTypeSuffix(user)}
+                  <UserTypeSuffix user={user} />
                   <Paragraph>{user.email}</Paragraph>
                 </UserNameTableCell>
                 {[user.iam, user.iao].some((x) => x == true) ? (
