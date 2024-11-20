@@ -155,7 +155,7 @@ describe("Removing access", () => {
     });
     it("should remove the users access to the dataset", () => {
       cy.findByRole("button", {
-        name: "Remove User",
+        name: "Remove user",
       }).click();
       cy.findByRole("dialog").within(() => {
         cy.findByRole("heading", {
