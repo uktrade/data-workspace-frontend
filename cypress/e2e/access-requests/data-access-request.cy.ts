@@ -140,9 +140,7 @@ describe("Approving and denying the data access request", () => {
       }).should("be.visible");
       cy.get("table").within(() => {
         cy.get("tr").should("have.length", 2);
-        cy.get("td").contains(
-          "Bob Testerson (Information Asset Manager) (Information Asset Owner)"
-        );
+        cy.get("td").contains("Bob Testerson (Information Asset Manager)");
         cy.get("td").contains("Vyvyan Holland");
       });
     });
