@@ -488,7 +488,7 @@ class TestTableNamePage(TestCase):
 
             assert response.status_code == 200
             assert "There is a problem" in error_header_text
-            assert "Table name cannot contain numbers or special characters" in error_message_text
+            assert "Table name cannot contain special characters" in error_message_text
 
     def test_error_shows_when_table_name_is_already_in_use(self):
         response = self.get_post_response(self.source.table)
