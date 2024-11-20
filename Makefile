@@ -13,13 +13,14 @@ docker-a11y = docker compose -f docker-compose.yml -f docker-compose.a11y.yml -p
 e2e-export-models = auth.User core.Database \
 	accounts.Profile datasets.SensitivityType \
 	datasets.Dataset datasets.SourceLink \
+	datasets.MasterDataset \
 	datasets.SourceTable \
-	datasets.DatasetUserPermission \
+	datasets.DataSetuserPermission \
 	datasets.SourceTableFieldDefinition \
 	datasets.SourceView \
 	datasets.DatasetBookmark \
 	datasets.CustomDatasetQuery \
-	data_collections.Collection
+	data_collections.Collection \
 
 .PHONY: help test
 help:
@@ -70,6 +71,15 @@ docker-e2e-build-run:
 .PHONY: docker-e2e-start
 docker-e2e-start:
 	$(docker-e2e) up --build --renew-anon-volumes --force-recreate -d
+
+.PHONY: docker-e2e-up
+docker-e2e-up:
+	$(docker-e2e) up -d
+
+.PHONY: docker-e2e-down
+docker-e2e-down:
+	$(docker-e2e) down
+
 
 .PHONY: docker-a11y-build
 docker-a11y-build:

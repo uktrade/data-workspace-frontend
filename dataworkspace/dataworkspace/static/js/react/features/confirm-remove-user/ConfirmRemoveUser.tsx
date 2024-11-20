@@ -22,15 +22,13 @@ type User = {
   remove_user_url: string;
 };
 
-const populateUserTypeSuffix = function (user: User) {
-  let user_type_suffix = '';
+const UserTypeSuffix: React.FC<Record<'user', User>> = function ({ user }) {
   if (user.iam) {
-    user_type_suffix += '(Information Asset Manager) ';
+    return '(Information Asset Manager)';
+  } else if (user.iao) {
+    return '(Information Asset Owner)';
   }
-  if (user.iao) {
-    user_type_suffix += '(Information Asset Owner)';
-  }
-  return user_type_suffix.trim();
+  return null;
 };
 
 const ConfirmRemoveUser = ({
@@ -58,7 +56,7 @@ const ConfirmRemoveUser = ({
               <Table.Row key={user.id}>
                 <Table.Cell style={{ paddingBottom: '1px' }}>
                   <SpanBold>{`${user.first_name} ${user.last_name} `}</SpanBold>
-                  {populateUserTypeSuffix(user)}
+                  <UserTypeSuffix user={user} />
                   <Paragraph>{user.email}</Paragraph>
                 </Table.Cell>
                 {[user.iam, user.iao].some((x) => x == true) ? (
@@ -76,7 +74,7 @@ const ConfirmRemoveUser = ({
                       onClick={() => openModal(user)}
                       style={{ marginBottom: 0 }}
                     >
-                      Remove User
+                      Remove user
                     </Button>
                   </Table.Cell>
                 )}

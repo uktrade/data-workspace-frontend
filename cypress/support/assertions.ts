@@ -80,10 +80,21 @@ const assertDataAccessNotification = (id: DataCatalogueIDType) => {
   );
 };
 
+const assertSuccessNotification = (message: string) => {
+  cy.findByRole("heading", {
+    name: "Success",
+    level: 2,
+  }).should("be.visible");
+  cy.findByRole("alert").within(() => {
+    cy.findByText(message).should("be.visible");
+  });
+};
+
 export {
   assertTable,
   assertTextAndLinks,
   assertDatasetTitle,
   assertLinksToManageDataset,
   assertDataAccessNotification,
+  assertSuccessNotification,
 };

@@ -1936,15 +1936,17 @@ class DataSetReviewAccess(EditBaseView, FormView):
             absolute_url = self.request.build_absolute_uri(
                 reverse("datasets:dataset_detail", args=[self.obj.id])
             )
-            send_email(
-                settings.NOTIFY_DATASET_ACCESS_GRANTED_TEMPLATE_ID,
-                user.email,
-                personalisation={
-                    "email_address": user.email,
-                    "dataset_name": self.obj.name,
-                    "dataset_url": absolute_url,
-                },
-            )
+            # In Dev Ignore the API call to Zendesk and notify
+            if settings.ENVIRONMENT != "Dev":
+                send_email(
+                    settings.NOTIFY_DATASET_ACCESS_GRANTED_TEMPLATE_ID,
+                    user.email,
+                    personalisation={
+                        "email_address": user.email,
+                        "dataset_name": self.obj.name,
+                        "dataset_url": absolute_url,
+                    },
+                )
             messages.success(
                 self.request,
                 f"An email has been sent to {user.first_name} {user.last_name} to let them know they now have access.",
@@ -1953,15 +1955,17 @@ class DataSetReviewAccess(EditBaseView, FormView):
             AccessRequest.objects.all().filter(requester_id=user.id).update(
                 data_access_status="declined"
             )
-            send_email(
-                settings.NOTIFY_DATASET_ACCESS_DENIED_TEMPLATE_ID,
-                user.email,
-                personalisation={
-                    "email_address": user.email,
-                    "dataset_name": self.obj.name,
-                    "deny_reasoning": form.cleaned_data["message"],
-                },
-            )
+            # In Dev Ignore the API call to Zendesk and notify
+            if settings.ENVIRONMENT != "Dev":
+                send_email(
+                    settings.NOTIFY_DATASET_ACCESS_DENIED_TEMPLATE_ID,
+                    user.email,
+                    personalisation={
+                        "email_address": user.email,
+                        "dataset_name": self.obj.name,
+                        "deny_reasoning": form.cleaned_data["message"],
+                    },
+                )
             messages.success(
                 self.request,
                 f"An email has been sent to {user.first_name} {user.last_name} to let them know their access request was not successful.",  # pylint: disable=line-too-long
@@ -2089,14 +2093,18 @@ class DatasetRemoveAuthorisedUserView(EditBaseView, View):
             url_dataset = request.build_absolute_uri(
                 reverse("datasets:dataset_detail", args=[self.obj.pk])
             )
-            send_email(
-                settings.NOTIFY_DATASET_ACCESS_REMOVE_TEMPLATE_ID,
-                user.email,
-                personalisation={
-                    "dataset_name": name_dataset,
-                    "dataset_url": url_dataset,
-                },
-            )
+
+            # In Dev Ignore the API call to Zendesk and notify
+            if settings.ENVIRONMENT != "Dev":
+                send_email(
+                    settings.NOTIFY_DATASET_ACCESS_REMOVE_TEMPLATE_ID,
+                    user.email,
+                    personalisation={
+                        "dataset_name": name_dataset,
+                        "dataset_url": url_dataset,
+                    },
+                )
+
         return HttpResponseRedirect(
             reverse(
                 "datasets:edit_permissions_summary",
