@@ -163,7 +163,7 @@ describe("Removing access", () => {
           level: 2,
         }).should("be.visible");
         cy.findByRole("button", {
-          name: "Yes, Remove User",
+          name: "Yes, Remove user",
         }).click();
       });
       assertSuccessNotification(
