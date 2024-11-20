@@ -89,8 +89,8 @@ class TableNameForm(GOVUKDesignSystemForm):
         table_name = str(cleaned_data["table_name"])
         if len(table_name) > 42:
             raise ValidationError("Table name must be 42 characters or less")
-        elif bool(re.search(r"[^A-Za-z_]", table_name)):
-            raise ValidationError("Table name cannot contain numbers or special characters")
+        elif bool(re.search(r"[^A-Za-z0-9_]", table_name)):
+            raise ValidationError("Table name cannot contain special characters")
         elif table_name in self.table_names:
             raise ValidationError("Table name already in use")
         elif "dataset" in table_name:
