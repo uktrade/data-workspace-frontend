@@ -74,7 +74,7 @@ const ConfirmRemoveUser = ({
                       onClick={() => openModal(user)}
                       style={{ marginBottom: 0 }}
                     >
-                      Remove User
+                      Remove user
                     </Button>
                   </Table.Cell>
                 )}
