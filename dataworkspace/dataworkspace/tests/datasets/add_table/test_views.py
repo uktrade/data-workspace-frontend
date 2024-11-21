@@ -354,7 +354,7 @@ class TestTableNamePage(TestCase):
             government_security_classification=2,
         )
         self.source = factories.SourceTableFactory.create(
-            dataset=self.dataset, schema="test", table="table_one", name="table_one"
+            dataset=self.dataset, schema="test", table="table_one", name="table_1"
         )
         self.descriptive_name = "my_table"
 
@@ -475,8 +475,8 @@ class TestTableNamePage(TestCase):
         assert "There is a problem" in error_header_text
         assert "Table name must be 42 characters or less" in error_message_text
 
-    def test_error_shows_when_table_name_contains_special_characters_or_numbers(self):
-        invalid_names = ["specialCharacter@", "has spaces", "numbers123"]
+    def test_error_shows_when_table_name_contains_special_characters(self):
+        invalid_names = ["specialCharacter@", "has spaces"]
         for invalid_name in invalid_names:
             response = self.get_post_response(invalid_name)
 
@@ -488,7 +488,7 @@ class TestTableNamePage(TestCase):
 
             assert response.status_code == 200
             assert "There is a problem" in error_header_text
-            assert "Table name cannot contain numbers or special characters" in error_message_text
+            assert "Table name cannot contain special characters" in error_message_text
 
     def test_error_shows_when_table_name_is_already_in_use(self):
         response = self.get_post_response(self.source.table)
