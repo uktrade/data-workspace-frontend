@@ -14,6 +14,7 @@ export type ManagedDataProps = {
 
 const StyledParagraph = styled('p')`
   ${typography.font({ size: 16 })};
+  margin: 0;
 `;
 
 const ManagedData: React.FC<Record<'managed_data_stats', ManagedDataProps>> = ({
@@ -23,18 +24,17 @@ const ManagedData: React.FC<Record<'managed_data_stats', ManagedDataProps>> = ({
     {managed_data_stats?.count > 0 && (
       <Tile
         as="article"
+        contentWrapper={true}
         title={`You're the owner or manager of ${managed_data_stats.count} dataset${managed_data_stats.count > 1 ? 's' : ''}`}
       >
-        <div>
-          <Link href={`${managed_data_stats.managed_data_url}`}>
-            View and manage your data
-          </Link>
-        </div>
+        <Link href={`${managed_data_stats.managed_data_url}`}>
+          View and manage your data
+        </Link>
         <SectionBreak level="MEDIUM" visible></SectionBreak>
         <StyledParagraph>
           Keeping your data up-to-date helps improve the quality of our data
           catalogue.{' '}
-          <Link href="https://data-services-help.trade.gov.uk/data-workspace/add-share-and-manage-data/manage-data/">
+          <Link href="https://data-services-help.trade.gov.uk/data-workspace/how-to/data-owner-basics/managing-data-key-tasks-and-responsibilities">
             Learn how to maintain and manage data you're responsible for on Data
             Workspace
           </Link>
