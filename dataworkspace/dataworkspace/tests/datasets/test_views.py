@@ -4310,6 +4310,9 @@ class TestDatasetEditView:
 
         soup = BeautifulSoup(response.content.decode(response.charset))
         assert f"Manage access to {dataset.name}" in soup.find("h1").contents
+        assert "Add User" in soup.find("a", class_="govuk-link").find(
+            "button", class_="govuk-button govuk-button--secondary govuk-!-static-margin-bottom-6"
+        ).contents[0].get_text(strip=True)
         auth_users = json.loads(response.context_data["authorised_users"])
         assert any(au for au in auth_users if au["iam"] is True and au["id"] == user_1.id)
 
@@ -4460,6 +4463,7 @@ class TestDatasetEditView:
 
     @mock.patch("dataworkspace.apps.datasets.views.send_email")
     @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
+    @override_settings(ENVIRONMENT="Production")
     def test_remove_removes_user_from_authorized_users_summary(
         self, mock_send_email, client, user
     ):
@@ -5227,6 +5231,7 @@ class TestDatasetReviewAccessApproval:
             )
 
     @mock.patch("dataworkspace.apps.datasets.views.send_email")
+    @override_settings(ENVIRONMENT="Production")
     def test_master_dataset_approval_with_email_sent(self, mock_send_email):
         self.setUp()
         response = self.client.post(
@@ -5259,6 +5264,7 @@ class TestDatasetReviewAccessApproval:
         )
 
     @mock.patch("dataworkspace.apps.datasets.views.send_email")
+    @override_settings(ENVIRONMENT="Production")
     def test_datacut_dataset_approval_with_email_sent(self, mock_send_email):
         self.setUp(name="Datacut", dataset_type=DataSetType.DATACUT)
         response = self.client.post(
@@ -5291,6 +5297,7 @@ class TestDatasetReviewAccessApproval:
         )
 
     @mock.patch("dataworkspace.apps.datasets.views.send_email")
+    @override_settings(ENVIRONMENT="Production")
     def test_visualisation_dataset_approval_with_email_sent(self, mock_send_email):
         self.setUp(is_visualisation=True)
         response = self.client.post(
@@ -5323,6 +5330,7 @@ class TestDatasetReviewAccessApproval:
         )
 
     @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
+    @override_settings(ENVIRONMENT="Production")
     @mock.patch("dataworkspace.apps.datasets.views.send_email")
     def test_master_dataset_access_denied_with_email_sent(self, mock_send_email):
         self.setUp()
@@ -5359,6 +5367,7 @@ class TestDatasetReviewAccessApproval:
         )
 
     @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
+    @override_settings(ENVIRONMENT="Production")
     @mock.patch("dataworkspace.apps.datasets.views.send_email")
     def test_datacut_dataset_access_denied_with_email_sent(self, mock_send_email):
         self.setUp(name="Datacut", dataset_type=DataSetType.DATACUT)
@@ -5395,6 +5404,7 @@ class TestDatasetReviewAccessApproval:
         )
 
     @mock.patch("dataworkspace.apps.datasets.views.send_email")
+    @override_settings(ENVIRONMENT="Production")
     def test_visualisation_dataset_access_denied_with_email_sent(self, mock_send_email):
         self.setUp(is_visualisation=True)
         factories.PendingAuthorizedUsersFactory.create(

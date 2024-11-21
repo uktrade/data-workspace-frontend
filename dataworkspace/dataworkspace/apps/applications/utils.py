@@ -7,8 +7,6 @@ import re
 import urllib.parse
 from collections import defaultdict
 from typing import Dict, List
-from dateutil import parser
-from dateutil.tz import tzlocal
 
 import boto3
 import botocore
@@ -26,7 +24,6 @@ from django.db.models import Q
 import gevent
 from psycopg2 import connect, sql
 import requests
-from mohawk import Sender
 from pytz import utc
 from smart_open import open as smart_open
 
@@ -1088,6 +1085,7 @@ def create_user_from_sso(
         user.profile.sso_status = sso_status
         try:
             user.save()
+            logger.info("User %s with email %s has been created", user.username, user.email)
         except IntegrityError:
             # A concurrent request may have overtaken this one and created a user
             user = get_user_by_sso_id(sso_id)
@@ -1124,34 +1122,10 @@ def create_user_from_sso(
         user.profile.sso_status = sso_status
 
     if changed:
+        logger.info("User %s with email %s has changed, saving updates", user.username, user.email)
         user.save()
 
     return user
-
-
-def hawk_request(method, url, body):
-    hawk_id = settings.ACTIVITY_STREAM_HAWK_CREDENTIALS_ID
-    hawk_key = settings.ACTIVITY_STREAM_HAWK_CREDENTIALS_KEY
-
-    if not hawk_id or not hawk_key:
-        raise HawkException("Hawk id or key not configured")
-
-    content_type = "application/json"
-    header = Sender(
-        {"id": hawk_id, "key": hawk_key, "algorithm": "sha256"},
-        url,
-        method,
-        content=body,
-        content_type=content_type,
-    ).request_header
-
-    response = requests.request(
-        method,
-        url,
-        data=body,
-        headers={"Authorization": header, "Content-Type": content_type},
-    )
-    return response.status_code, response.content
 
 
 @celery_app.task(autoretry_for=(redis.exceptions.LockError,))
@@ -1182,119 +1156,6 @@ def _do_create_tools_access_iam_role(user_id):
 
 @celery_app.task(autoretry_for=(redis.exceptions.LockError,))
 @close_all_connections_if_not_in_atomic_block
-def sync_activity_stream_sso_users():
-    try:
-        with cache.lock("sso_sync_last_published_lock", blocking_timeout=0, timeout=1800):
-            _do_sync_activity_stream_sso_users()
-    except redis.exceptions.LockError:
-        logger.info("sync_activity_stream_sso_users: Unable to acquire lock. Not running")
-
-
-def _do_sync_activity_stream_sso_users(page_size=1000):
-    last_published = cache.get(
-        "activity_stream_sync_last_published", datetime.datetime.utcfromtimestamp(0)
-    )
-    logger.info(
-        "sync_activity_stream_sso_users: Starting with last published date of %s", last_published
-    )
-
-    endpoint = f"{settings.ACTIVITY_STREAM_BASE_URL}/v3/activities/_search"
-    ten_seconds_before_last_published = last_published - datetime.timedelta(seconds=10)
-
-    query = {
-        "size": page_size,
-        "query": {
-            "bool": {
-                "filter": [
-                    {"term": {"object.type": "dit:StaffSSO:User"}},
-                    {
-                        "range": {
-                            "published": {
-                                "gte": f"{ten_seconds_before_last_published.strftime('%Y-%m-%dT%H:%M:%S')}"
-                            }
-                        }
-                    },
-                ]
-            }
-        },
-        "sort": [{"published": "asc"}, {"id": "asc"}],
-    }
-
-    while True:
-        try:
-            logger.info(
-                "sync_activity_stream_sso_users: Calling activity stream with query %s",
-                json.dumps(query),
-            )
-            status_code, response = hawk_request(
-                "GET",
-                endpoint,
-                json.dumps(query),
-            )
-        except HawkException as e:
-            logger.error(
-                "sync_activity_stream_sso_users: Failed to call activity stream with error %s", e
-            )
-            break
-
-        if status_code != 200:
-            raise Exception(f"Failed to fetch SSO users: {response}")
-
-        response_json = json.loads(response)
-
-        if "failures" in response_json["_shards"]:
-            raise Exception(
-                f"Failed to fetch SSO users: {json.dumps(response_json['_shards']['failures'])}"
-            )
-
-        records = response_json["hits"]["hits"]
-
-        if not records:
-            break
-
-        logger.info(
-            "sync_activity_stream_sso_users: Fetched %d record(s) from activity stream",
-            len(records),
-        )
-
-        for record in records:
-            obj = record["_source"]["object"]
-
-            user_id = obj["dit:StaffSSO:User:userId"]
-            emails = obj["dit:emailAddress"]
-            primary_email = obj["dit:StaffSSO:User:contactEmailAddress"] or emails[0]
-            logger.info("sync_activity_stream_sso_users: processing user %s", primary_email)
-
-            try:
-                create_user_from_sso(
-                    user_id,
-                    primary_email,
-                    obj["dit:firstName"],
-                    obj["dit:lastName"],
-                    obj["dit:StaffSSO:User:status"],
-                    check_tools_access_if_user_exists=True,
-                )
-            except IntegrityError:
-                logger.exception("sync_activity_stream_sso_users: Failed to create user record")
-
-        last_published_str = records[-1]["_source"]["published"]
-        last_published = datetime.datetime.strptime(last_published_str, "%Y-%m-%dT%H:%M:%S.%fZ")
-
-        if len(records) < page_size:
-            break
-
-        # paginate to next batch of records
-        query["search_after"] = records[-1]["sort"]
-
-    cache.set("activity_stream_sync_last_published", last_published)
-    logger.info(
-        "sync_activity_stream_sso_users: Finished with new last published date of %s",
-        last_published,
-    )
-
-
-@celery_app.task(autoretry_for=(redis.exceptions.LockError,))
-@close_all_connections_if_not_in_atomic_block
 def sync_s3_sso_users():
     try:
         with cache.lock("sso_sync_last_published_lock", blocking_timeout=0, timeout=1800):
@@ -1315,10 +1176,8 @@ def _do_get_staff_sso_s3_object_summaries(s3_bucket):
     return sorted_files
 
 
-def _process_staff_sso_file(
-    client, source_key, last_processed_datetime
-) -> tuple[list[int], datetime.datetime]:
-    new_last_processed_datetime = last_processed_datetime
+def _process_staff_sso_file(client, source_key) -> list[int]:
+
     seen_user_ids = []
 
     with smart_open(
@@ -1338,91 +1197,63 @@ def _process_staff_sso_file(
             user_obj = user["object"]
             user_id = user_obj.get("dit:StaffSSO:User:userId")
 
-            published = user.get("published")
-
-            published_date = parser.parse(published)
-
-            if published_date < last_processed_datetime:
-                # This items published date is before the last processed date, can be ignored
-                seen_user_ids.append(user_id)
-                continue
-
             emails = user_obj.get("dit:emailAddress", [])
             primary_email = user_obj.get("dit:StaffSSO:User:contactEmailAddress") or emails[0]
             first_name = user_obj.get("dit:firstName")
             last_name = user_obj.get("dit:lastName")
             status = user_obj.get("dit:StaffSSO:User:status")
 
-            if published_date > new_last_processed_datetime:
-                new_last_processed_datetime = published_date
-
-            if settings.S3_SSO_IMPORT_ENABLED:
-                logger.info(
-                    "sync_s3_sso_users: User id %s published date %s is after previous date %s, creating the user from sso",
+            logger.info(
+                "sync_s3_sso_users: Processing user id %s",
+                user_id,
+            )
+            try:
+                user = create_user_from_sso(
                     user_id,
-                    published_date,
-                    last_processed_datetime,
+                    primary_email,
+                    first_name,
+                    last_name,
+                    status,
+                    check_tools_access_if_user_exists=True,
                 )
-                try:
-                    user = create_user_from_sso(
-                        user_id,
-                        primary_email,
-                        first_name,
-                        last_name,
-                        status,
-                        check_tools_access_if_user_exists=True,
-                    )
 
-                except IntegrityError:
-                    logger.exception("sync_s3_sso_users: Failed to create user record")
-            else:
-                logger.info(
-                    "sync_s3_sso_users: S3_SSO_IMPORT_ENABLED is disabled, user %s with published date %s will not be added",
-                    user_id,
-                    published_date,
-                )
+            except IntegrityError:
+                logger.exception("sync_s3_sso_users: Failed to create user record")
 
             seen_user_ids.append(user_id)
 
-    return seen_user_ids, new_last_processed_datetime
+    return seen_user_ids
 
 
-def _get_seen_ids_and_last_processed(
-    files, client, last_processed_datetime
-) -> tuple[list[int], datetime.datetime]:
+def _get_seen_ids(files, client) -> list[int]:
     seen_user_ids = list[int]()
-    latest_processed_datetime = last_processed_datetime
 
     for file in files:
-        seen_ids_in_file, new_last_processed = _process_staff_sso_file(
-            client, file.source_key, last_processed_datetime
-        )
+        seen_ids_in_file = _process_staff_sso_file(client, file.source_key)
         seen_user_ids.extend(seen_ids_in_file)
-        latest_processed_datetime = new_last_processed
-    return list(set(seen_user_ids)), latest_processed_datetime
+    return list(set(seen_user_ids))
+
+
+def _is_full_sync(files):
+    is_full_sync = all("full" in file.key for file in files)
+    logger.info("sync_s3_sso_users: is full sync: %s", is_full_sync)
+    return is_full_sync
 
 
 def _do_sync_s3_sso_users():
-    last_published = cache.get(
-        "s3_sso_sync_last_published",
-        datetime.datetime.fromtimestamp(0, tz=tzlocal()),
-    )
-    logger.info("sync_s3_sso_users: Starting with last published date of %s", last_published)
 
-    new_last_processed = last_published
+    logger.info("sync_s3_sso_users: Starting sync of users in S3 file")
 
     s3_resource = get_s3_resource()
     bucket = s3_resource.Bucket(settings.AWS_UPLOADS_BUCKET)
     files = _do_get_staff_sso_s3_object_summaries(bucket)
 
     if len(files) > 0:
-        seen_result = _get_seen_ids_and_last_processed(
-            files, s3_resource.meta.client, new_last_processed
-        )
-        new_last_processed = seen_result[1]
-        if len(seen_result[0]) > 0:
+        seen_ids = _get_seen_ids(files, s3_resource.meta.client)
+
+        if len(seen_ids) > 0 and _is_full_sync(files):
             unseen_user_profiles = (
-                Profile.objects.exclude(user__username__in=seen_result[0])
+                Profile.objects.exclude(user__username__in=seen_ids)
                 .filter(sso_status="active")
                 .select_related("user")
             )
@@ -1430,29 +1261,18 @@ def _do_sync_s3_sso_users():
                 "sync_s3_sso_users: active users exist locally but not in SSO %s",
                 list(unseen_user_profiles.values_list("user__id", flat=True)),
             )
-            if settings.S3_SSO_IMPORT_ENABLED:
-                logger.info(
-                    "sync_s3_sso_users: Marking users as inactive",
-                )
-                unseen_user_profiles.update(sso_status="inactive")
-            else:
-                logger.info(
-                    "sync_s3_sso_users: S3_SSO_IMPORT_ENABLED is FALSE, no changes to active user",
-                )
 
-        logger.info("sync_s3_sso_users: New last_published date for cache %s", new_last_processed)
+            unseen_user_profiles.update(sso_status="inactive")
 
         # At the end of the loop, delete all loaded files
         delete_keys = [{"Key": file.key} for file in files]
         logger.info("sync_s3_sso_users: Deleting keys %s", delete_keys)
         bucket.delete_objects(Delete={"Objects": delete_keys})
 
+        logger.info("sync_s3_sso_users: Finished sync of users in S3 file")
+
     else:
         logger.info("sync_s3_sso_users: No files to process")
-
-    # Always reset the cache
-    logger.info("sync_s3_sso_users: New last_published date for cache %s", new_last_processed)
-    cache.set("s3_sso_sync_last_published", new_last_processed, timeout=30 * 60)  # 30 minutes
 
 
 def fetch_visualisation_log_events(log_group, log_stream):
@@ -1980,93 +1800,6 @@ def duplicate_tools_monitor():
             _run_duplicate_tools_monitor()
     except redis.exceptions.LockError:
         logger.info("duplicate_tools_alert: Unable to acquire lock to monitor for duplicate tools")
-
-
-@celery_app.task()
-@close_all_connections_if_not_in_atomic_block
-def sync_all_sso_users():
-    with cache.lock("sso_sync_last_published_lock", blocking_timeout=0, timeout=3600):
-        user_model = get_user_model()
-        all_users = user_model.objects.all()
-        seen_user_ids = []
-        query = {
-            "size": 1000,
-            "query": {
-                "bool": {
-                    "filter": [
-                        {"term": {"object.type": "dit:StaffSSO:User"}},
-                    ]
-                }
-            },
-            "sort": [{"published": "asc"}, {"id": "asc"}],
-        }
-        while True:
-            try:
-                logger.info("Calling activity stream with query %s", json.dumps(query))
-                status_code, response = hawk_request(
-                    "GET",
-                    f"{settings.ACTIVITY_STREAM_BASE_URL}/v3/activities/_search",
-                    json.dumps(query),
-                )
-            except HawkException as e:
-                logger.error("Failed to call activity stream with error %s", e)
-                break
-
-            if status_code != 200:
-                raise Exception(f"Failed to fetch SSO users: {response}")
-
-            response_json = json.loads(response)
-
-            if "failures" in response_json["_shards"]:
-                raise Exception(
-                    f"Failed to fetch SSO users: {json.dumps(response_json['_shards']['failures'])}"
-                )
-
-            records = response_json["hits"]["hits"]
-
-            if not records:
-                break
-
-            logger.info("Fetched %d record(s) from activity stream", len(records))
-
-            for record in records:
-                obj = record["_source"]["object"]
-                sso_id = obj["dit:StaffSSO:User:userId"]
-                logger.info("Syncing SSO record for user %s", sso_id)
-
-                try:
-                    user = all_users.get(username=sso_id)
-                except user_model.DoesNotExist:
-                    continue
-
-                changed = False
-
-                if user.first_name != obj["dit:firstName"]:
-                    changed = True
-                    user.first_name = obj["dit:firstName"]
-
-                if user.last_name != obj["dit:firstName"]:
-                    changed = True
-                    user.last_name = obj["dit:lastName"]
-
-                if user.profile.sso_status != obj["dit:StaffSSO:User:status"]:
-                    changed = True
-                    user.profile.sso_status = obj["dit:StaffSSO:User:status"]
-
-                if changed:
-                    user.save()
-
-            seen_user_ids.append(user.id)
-            query["search_after"] = records[-1]["sort"]
-
-        unseen_user_profiles = Profile.objects.exclude(user_id__in=seen_user_ids).filter(
-            sso_status="active"
-        )
-        logger.info(
-            "%s active users exist locally but not in SSO. Marking as inactive",
-            unseen_user_profiles.count(),
-        )
-        unseen_user_profiles.update(sso_status="inactive")
 
 
 def _run_orphaned_tools_monitor():

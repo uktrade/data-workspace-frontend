@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 
 import { Button } from '@govuk-react/button';
-import { H2 } from '@govuk-react/heading';
 import Table from '@govuk-react/table';
 import { Paragraph } from 'govuk-react';
 import styled from 'styled-components';
@@ -32,15 +31,13 @@ type User = {
   remove_user_url: string;
 };
 
-const populateUserTypeSuffix = function (user: User) {
-  let user_type_suffix = '';
+const UserTypeSuffix: React.FC<Record<'user', User>> = function ({ user }) {
   if (user.iam) {
-    user_type_suffix += '(Information Asset Manager) ';
+    return '(Information Asset Manager)';
+  } else if (user.iao) {
+    return '(Information Asset Owner)';
   }
-  if (user.iao) {
-    user_type_suffix += '(Information Asset Owner)';
-  }
-  return user_type_suffix.trim();
+  return null;
 };
 
 const ConfirmRemoveUser = ({
@@ -61,17 +58,14 @@ const ConfirmRemoveUser = ({
   };
   return (
     <>
-      {data.length < 1 ? (
-        <H2>There are currently no authorized users</H2>
-      ) : (
+      {data.length && (
         <div>
-          <H2>Users who have access</H2>
           <Table>
             {data.map((user) => (
               <Table.Row key={user.id}>
                 <UserNameTableCell>
                   <SpanBold>{`${user.first_name} ${user.last_name} `}</SpanBold>
-                  {populateUserTypeSuffix(user)}
+                  <UserTypeSuffix user={user} />
                   <Paragraph>{user.email}</Paragraph>
                 </UserNameTableCell>
                 {[user.iam, user.iao].some((x) => x == true) ? (
@@ -84,7 +78,7 @@ const ConfirmRemoveUser = ({
                       onClick={() => openModal(user)}
                       style={{ marginBottom: 0 }}
                     >
-                      Remove User
+                      Remove user
                     </Button>
                   </RemoveUserTableCell>
                 )}
@@ -99,7 +93,7 @@ const ConfirmRemoveUser = ({
           title={`Are you sure you want to remove ${selectedUser?.first_name} ${selectedUser?.last_name}'s access to this data?`}
           open={isOpen}
           onClose={closeModal}
-          buttonText={'Yes, Remove User'}
+          buttonText={'Yes, remove user'}
         ></ConfirmDialog>
       )}
     </>

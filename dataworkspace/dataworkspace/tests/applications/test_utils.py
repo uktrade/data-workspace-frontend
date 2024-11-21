@@ -2,7 +2,6 @@
 import calendar
 import datetime
 import json
-import os
 import random
 import string
 from unittest.mock import call, patch
@@ -16,9 +15,6 @@ from django.core.cache import cache
 from django.test import override_settings
 
 
-from dateutil import parser
-from dateutil.tz import tzlocal
-
 from freezegun import freeze_time
 from waffle.testutils import override_switch
 import mock
@@ -31,15 +27,15 @@ from dataworkspace.apps.applications.utils import (
     _do_sync_tool_query_logs,
     delete_unused_datasets_users,
     _do_create_tools_access_iam_role,
-    _do_sync_activity_stream_sso_users,
     long_running_query_alert,
     sync_quicksight_permissions,
     _do_sync_s3_sso_users,
     _process_staff_sso_file,
-    _get_seen_ids_and_last_processed,
+    _get_seen_ids,
     _do_get_staff_sso_s3_object_summaries,
     remove_tools_access_for_users_with_expired_cert,
     self_certify_renewal_email_notification,
+    _is_full_sync,
 )
 
 from dataworkspace.apps.datasets.constants import UserAccessType
@@ -442,7 +438,6 @@ class TestSyncS3SSOUsers:
     @override_settings(
         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
     )
-    @override_settings(S3_SSO_IMPORT_ENABLED=True)
     def test_sync_without_files_processes_nothing_and_doesnt_call_delete(self):
         with mock.patch(
             "dataworkspace.apps.applications.utils.get_s3_resource"
@@ -453,15 +448,14 @@ class TestSyncS3SSOUsers:
     @override_settings(
         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
     )
-    @override_settings(S3_SSO_IMPORT_ENABLED=True)
     def test_sync_with_empty_files_doesnt_run_db_query_but_deletes_file(self):
         with mock.patch(
             "dataworkspace.apps.applications.utils.get_s3_resource"
         ) as mock_get_s3_resource, mock.patch(
             "dataworkspace.apps.applications.utils._do_get_staff_sso_s3_object_summaries"
         ) as mock_get_s3_files, mock.patch(
-            "dataworkspace.apps.applications.utils._get_seen_ids_and_last_processed",
-            return_value=[[], 1],
+            "dataworkspace.apps.applications.utils._get_seen_ids",
+            return_value=[],
         ):
             mock_get_s3_files.return_value = [
                 mock.MagicMock(
@@ -484,82 +478,17 @@ class TestSyncS3SSOUsers:
                 ]
             )
 
-    @override_settings(S3_SSO_IMPORT_ENABLED=True)
     @pytest.mark.django_db
-    def test_sync_without_cache_uses_default_date(
+    def test_sync_with_active_user_not_in_file_set_to_inactive_for_full_sync(
         self,
     ):
         with mock.patch("dataworkspace.apps.applications.utils.get_s3_resource"), mock.patch(
             "dataworkspace.apps.applications.utils._do_get_staff_sso_s3_object_summaries"
         ) as mock_get_s3_files, mock.patch(
-            "dataworkspace.apps.applications.utils._get_seen_ids_and_last_processed",
-            return_value=[[1], 1],
-        ) as mock_get_seen_ids_and_last_processed:
-            cache.delete("s3_sso_sync_last_published")
-            mock_get_s3_files.return_value = [
-                mock.MagicMock(
-                    bucket_name="bucket_1",
-                    key="a/today.jsonl.gz",
-                    source_key="s3://bucket_1/a/today.jsonl.gz",
-                    last_modified=datetime.datetime.now().strftime("%Y%m%dT%H%M%S.%dZ"),
-                )
-            ]
-
-            _do_sync_s3_sso_users()
-            mock_get_seen_ids_and_last_processed.assert_has_calls(
-                [
-                    mock.call(
-                        mock_get_s3_files.return_value,
-                        mock.ANY,
-                        datetime.datetime.fromtimestamp(
-                            0, tz=datetime.datetime.now().astimezone().tzinfo
-                        ),
-                    )
-                ]
-            )
-
-    @override_settings(S3_SSO_IMPORT_ENABLED=True)
-    @pytest.mark.django_db
-    def test_sync_with_cache_uses_previous_date(
-        self,
-    ):
-        with mock.patch("dataworkspace.apps.applications.utils.get_s3_resource"), mock.patch(
-            "dataworkspace.apps.applications.utils._do_get_staff_sso_s3_object_summaries"
-        ) as mock_get_s3_files, mock.patch(
-            "dataworkspace.apps.applications.utils._get_seen_ids_and_last_processed",
-            return_value=[[1], 1],
-        ) as mock_get_seen_ids_and_last_processed:
-            cache.set("s3_sso_sync_last_published", datetime.datetime(2024, 7, 26, 12))
-            mock_get_s3_files.return_value = [
-                mock.MagicMock(
-                    bucket_name="bucket_1",
-                    key="a/today.jsonl.gz",
-                    source_key="s3://bucket_1/a/today.jsonl.gz",
-                    last_modified=datetime.datetime.now().strftime("%Y%m%dT%H%M%S.%dZ"),
-                )
-            ]
-
-            _do_sync_s3_sso_users()
-            mock_get_seen_ids_and_last_processed.assert_has_calls(
-                [
-                    mock.call(
-                        mock_get_s3_files.return_value,
-                        mock.ANY,
-                        datetime.datetime(2024, 7, 26, 12),
-                    )
-                ]
-            )
-
-    @override_settings(S3_SSO_IMPORT_ENABLED=True)
-    @pytest.mark.django_db
-    def test_sync_with_active_user_not_in_file_set_to_inactive(
-        self,
-    ):
-        with mock.patch("dataworkspace.apps.applications.utils.get_s3_resource"), mock.patch(
-            "dataworkspace.apps.applications.utils._do_get_staff_sso_s3_object_summaries"
-        ) as mock_get_s3_files, mock.patch(
-            "dataworkspace.apps.applications.utils._get_seen_ids_and_last_processed"
-        ) as mock_get_seen_ids_and_last_processed:
+            "dataworkspace.apps.applications.utils._get_seen_ids"
+        ) as mock_get_seen_ids, mock.patch(
+            "dataworkspace.apps.applications.utils._is_full_sync", return_value=True
+        ):
             mock_get_s3_files.return_value = [mock.MagicMock(key="a/today.jsonl.gz")]
 
             inactive_user = UserFactory()
@@ -574,13 +503,10 @@ class TestSyncS3SSOUsers:
             active_user_not_in_file.profile.sso_status = "active"
             active_user_not_in_file.profile.save()
 
-            mock_get_seen_ids_and_last_processed.return_value = (
-                [
-                    inactive_user.username,
-                    active_user.username,
-                ],
-                datetime.datetime.now(),
-            )
+            mock_get_seen_ids.return_value = [
+                inactive_user.username,
+                active_user.username,
+            ]
 
             _do_sync_s3_sso_users()
 
@@ -600,10 +526,39 @@ class TestSyncS3SSOUsers:
                 == "inactive"
             )
 
+    @pytest.mark.django_db
+    def test_sync_with_active_user_not_in_file_not_changed_for_partial_sync(
+        self,
+    ):
+        with mock.patch("dataworkspace.apps.applications.utils.get_s3_resource"), mock.patch(
+            "dataworkspace.apps.applications.utils._do_get_staff_sso_s3_object_summaries"
+        ) as mock_get_s3_files, mock.patch(
+            "dataworkspace.apps.applications.utils._get_seen_ids"
+        ) as mock_get_seen_ids, mock.patch(
+            "dataworkspace.apps.applications.utils._is_full_sync", return_value=False
+        ):
+            mock_get_s3_files.return_value = [mock.MagicMock(key="a/today.jsonl.gz")]
+
+            active_user_not_in_file = UserFactory()
+            active_user_not_in_file.profile.sso_status = "active"
+            active_user_not_in_file.profile.save()
+
+            mock_get_seen_ids.return_value = []
+
+            _do_sync_s3_sso_users()
+
+            User = get_user_model()
+
+            assert (
+                User.objects.filter(username=active_user_not_in_file.username)
+                .first()
+                .profile.sso_status
+                == "active"
+            )
+
     @override_settings(
         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
     )
-    @override_settings(S3_SSO_IMPORT_ENABLED=True)
     def test_do_get_staff_sso_s3_object_summaries_with_multiple_files_returns_in_correct_order(
         self,
     ):
@@ -628,31 +583,6 @@ class TestSyncS3SSOUsers:
 
         assert summaries == [s3_object_2, s3_object_3, s3_object_1]
 
-    @override_settings(S3_SSO_IMPORT_ENABLED=True)
-    @pytest.mark.django_db
-    def test_sync_overwrites_cache_with_newer_last_published_value(
-        self,
-    ):
-        s3_object_1 = mock.MagicMock(
-            bucket_name="bucket_1", key="a/today.jsonl.gz", last_modified=datetime.datetime.now()
-        )
-        with mock.patch(
-            "dataworkspace.apps.applications.utils.get_s3_resource"
-        ) as mock_get_s3_resource, mock.patch(
-            "dataworkspace.apps.applications.utils._get_seen_ids_and_last_processed"
-        ) as mock_get_seen_ids_and_last_processed:
-            cache.set(
-                "s3_sso_sync_last_published", datetime.datetime(2024, 7, 26, 12, tzinfo=tzlocal())
-            )
-            mock_get_s3_resource().Bucket().objects.filter.return_value = [
-                s3_object_1,
-            ]
-            expected_cache_value = datetime.datetime.now(tz=tzlocal())
-            mock_get_seen_ids_and_last_processed.return_value = [[1], expected_cache_value]
-            _do_sync_s3_sso_users()
-            assert cache.get("s3_sso_sync_last_published") == expected_cache_value
-
-    @override_settings(S3_SSO_IMPORT_ENABLED=True)
     @override_settings(
         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
     )
@@ -669,17 +599,17 @@ class TestSyncS3SSOUsers:
         User = get_user_model()
         assert not User.objects.all()
 
-    def test_get_seen_ids_and_last_processed_returns_unique_set_when_duplicate_ids_in_files(
+    def test_get_seen_ids_returns_unique_set_when_duplicate_ids_in_files(
         self,
     ):
         with mock.patch(
             "dataworkspace.apps.applications.utils._process_staff_sso_file"
         ) as mock_process_staff_sso_file:
             mock_process_staff_sso_file.side_effect = [
-                ([1, 2, 3, 6, 7, 8], datetime.datetime.now()),
-                ([1, 3, 5, 7, 10], datetime.datetime.now()),
+                [1, 2, 3, 6, 7, 8],
+                [1, 3, 5, 7, 10],
             ]
-            result = _get_seen_ids_and_last_processed(
+            result = _get_seen_ids(
                 [
                     mock.MagicMock(
                         source_key="s3://bucket_1/a.jsonl.gz",
@@ -689,18 +619,16 @@ class TestSyncS3SSOUsers:
                     ),
                 ],
                 mock.MagicMock(),
-                datetime.datetime.now(),
             )
 
-            assert len(result[0]) == 8
-            assert result[0] == [1, 2, 3, 5, 6, 7, 8, 10]
+            assert len(result) == 8
+            assert result == [1, 2, 3, 5, 6, 7, 8, 10]
 
     @override_settings(
         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
     )
-    @override_settings(S3_SSO_IMPORT_ENABLED=False)
     @pytest.mark.django_db
-    def test_process_staff_sso_with_s3_import_disabled_doesnt_add_user(self, sso_user_factory):
+    def test_process_staff_sso_file_creates_all_users(self, sso_user_factory):
         user_1 = sso_user_factory()
         user_2 = sso_user_factory()
         m_open = mock.mock_open(read_data="\n".join([json.dumps(user_1), json.dumps(user_2)]))
@@ -713,35 +641,10 @@ class TestSyncS3SSOUsers:
             _process_staff_sso_file(
                 mock.MagicMock(),
                 "file.jsonl.gz",
-                datetime.datetime.fromtimestamp(0, tz=datetime.datetime.now().astimezone().tzinfo),
             )
 
             User = get_user_model()
-            assert not User.objects.all()
-
-    @override_settings(
-        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
-    )
-    @override_settings(S3_SSO_IMPORT_ENABLED=True)
-    @pytest.mark.django_db
-    def test_process_staff_sso_file_without_cache_creates_all_users(self, sso_user_factory):
-        user_1 = sso_user_factory()
-        user_2 = sso_user_factory()
-        m_open = mock.mock_open(read_data="\n".join([json.dumps(user_1), json.dumps(user_2)]))
-
-        with mock.patch(
-            "dataworkspace.apps.applications.utils.smart_open",
-            m_open,
-            create=True,
-        ):
-            _process_staff_sso_file(
-                mock.MagicMock(),
-                "file.jsonl.gz",
-                datetime.datetime.fromtimestamp(0, tz=datetime.datetime.now().astimezone().tzinfo),
-            )
-
-            User = get_user_model()
-            all_users = User.objects.all()
+            all_users = User.objects.all().order_by("date_joined")
 
             assert len(all_users) == 2
             assert str(all_users[0].profile.sso_id) == user_1["object"]["dit:StaffSSO:User:userId"]
@@ -767,52 +670,6 @@ class TestSyncS3SSOUsers:
     @override_settings(
         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
     )
-    @override_settings(S3_SSO_IMPORT_ENABLED=True)
-    @pytest.mark.django_db
-    def test_process_staff_sso_file_with_cache_ignores_users_before_last_published(
-        self, sso_user_factory
-    ):
-        user_in_past = sso_user_factory(published_date=datetime.datetime(2023, 10, 1))
-        user_to_be_included = sso_user_factory()
-        m_open = mock.mock_open(
-            read_data="\n".join([json.dumps(user_in_past), json.dumps(user_to_be_included)])
-        )
-
-        with mock.patch(
-            "dataworkspace.apps.applications.utils.smart_open",
-            m_open,
-            create=True,
-        ):
-            _process_staff_sso_file(
-                mock.MagicMock(),
-                "file.jsonl.gz",
-                datetime.datetime(2024, 7, 26, 12, tzinfo=tzlocal()),
-            )
-
-            User = get_user_model()
-            all_users = User.objects.all()
-
-            assert len(all_users) == 1
-
-            assert (
-                str(all_users[0].profile.sso_id)
-                == user_to_be_included["object"]["dit:StaffSSO:User:userId"]
-            )
-            assert (
-                str(all_users[0].profile.sso_status)
-                == user_to_be_included["object"]["dit:StaffSSO:User:status"]
-            )
-            assert (
-                all_users[0].username == user_to_be_included["object"]["dit:StaffSSO:User:userId"]
-            )
-            assert all_users[0].email == user_to_be_included["object"]["dit:emailAddress"][0]
-            assert all_users[0].first_name == user_to_be_included["object"]["dit:firstName"]
-            assert all_users[0].last_name == user_to_be_included["object"]["dit:lastName"]
-
-    @override_settings(
-        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
-    )
-    @override_settings(S3_SSO_IMPORT_ENABLED=True)
     @pytest.mark.django_db
     def test_process_staff_sso_updates_existing_users_email(self, sso_user_factory):
         user_1 = sso_user_factory()
@@ -831,7 +688,6 @@ class TestSyncS3SSOUsers:
             _process_staff_sso_file(
                 mock.MagicMock(),
                 "file.jsonl.gz",
-                datetime.datetime.fromtimestamp(0, tz=datetime.datetime.now().astimezone().tzinfo),
             )
 
             User = get_user_model()
@@ -843,7 +699,6 @@ class TestSyncS3SSOUsers:
     @override_settings(
         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
     )
-    @override_settings(S3_SSO_IMPORT_ENABLED=True)
     @pytest.mark.django_db
     def test_process_staff_sso_creates_role_if_user_can_access_tools(self, sso_user_factory):
         user_1 = sso_user_factory()
@@ -870,7 +725,6 @@ class TestSyncS3SSOUsers:
             _process_staff_sso_file(
                 mock.MagicMock(),
                 "file.jsonl.gz",
-                datetime.datetime.fromtimestamp(0, tz=datetime.datetime.now().astimezone().tzinfo),
             )
 
             User = get_user_model()
@@ -886,7 +740,6 @@ class TestSyncS3SSOUsers:
     @override_settings(
         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
     )
-    @override_settings(S3_SSO_IMPORT_ENABLED=True)
     @pytest.mark.django_db
     def test_process_staff_sso_doesnt_create_role_if_user_cant_access_tools(
         self, sso_user_factory
@@ -909,7 +762,6 @@ class TestSyncS3SSOUsers:
             _process_staff_sso_file(
                 mock.MagicMock(),
                 "file.jsonl.gz",
-                datetime.datetime.fromtimestamp(0, tz=datetime.datetime.now().astimezone().tzinfo),
             )
 
             User = get_user_model()
@@ -921,7 +773,6 @@ class TestSyncS3SSOUsers:
     @override_settings(
         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
     )
-    @override_settings(S3_SSO_IMPORT_ENABLED=True)
     @pytest.mark.django_db
     def test_process_staff_sso_doesnt_create_role_if_user_already_has_role(self, sso_user_factory):
         user_1 = sso_user_factory()
@@ -949,7 +800,6 @@ class TestSyncS3SSOUsers:
             _process_staff_sso_file(
                 mock.MagicMock(),
                 "file.jsonl.gz",
-                datetime.datetime.fromtimestamp(0, tz=datetime.datetime.now().astimezone().tzinfo),
             )
 
             User = get_user_model()
@@ -961,10 +811,8 @@ class TestSyncS3SSOUsers:
     @override_settings(
         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
     )
-    @override_settings(S3_SSO_IMPORT_ENABLED=True)
     @pytest.mark.django_db
     def test_process_staff_sso_with_empty_file_returns_empty_list_and_same_datetime(self):
-        last_published = datetime.datetime.now(tz=tzlocal())
         m_open = mock.mock_open(read_data="\n")
 
         with mock.patch(
@@ -975,500 +823,47 @@ class TestSyncS3SSOUsers:
             process_staff_results = _process_staff_sso_file(
                 mock.MagicMock(),
                 "file.jsonl.gz",
-                last_published,
             )
 
-            assert process_staff_results[0] == []
-            assert process_staff_results[1] == last_published
+            assert process_staff_results == []
 
     @override_settings(
         CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
     )
-    @override_settings(S3_SSO_IMPORT_ENABLED=True)
-    @pytest.mark.django_db
-    def test_process_staff_sso_returns_same_last_published_when_user_older_than_previous(
-        self, sso_user_factory
-    ):
-        user_1 = sso_user_factory(published_date=datetime.datetime(2024, 1, 1, tzinfo=tzlocal()))
-        last_published = datetime.datetime.now(tz=tzlocal())
-        m_open = mock.mock_open(read_data="\n".join([json.dumps(user_1)]))
-
-        with mock.patch(
-            "dataworkspace.apps.applications.utils.smart_open",
-            m_open,
-            create=True,
-        ):
-            process_staff_results = _process_staff_sso_file(
-                mock.MagicMock(),
-                "file.jsonl.gz",
-                last_published,
-            )
-
-            assert process_staff_results[0] == [user_1["object"]["dit:StaffSSO:User:userId"]]
-            assert process_staff_results[1] == last_published
-
-    @override_settings(
-        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+    @pytest.mark.parametrize(
+        ("filenames"),
+        (
+            (["full"]),
+            (["full_", "full"]),
+        ),
     )
-    @override_settings(S3_SSO_IMPORT_ENABLED=True)
-    @pytest.mark.django_db
-    def test_process_staff_sso_returns_latest_user_last_published_when_newer_than_previous(
-        self, sso_user_factory
-    ):
-        user_1 = sso_user_factory(published_date=datetime.datetime.now(tz=tzlocal()))
-
-        m_open = mock.mock_open(read_data="\n".join([json.dumps(user_1)]))
-
-        with mock.patch(
-            "dataworkspace.apps.applications.utils.smart_open",
-            m_open,
-            create=True,
-        ):
-            process_staff_results = _process_staff_sso_file(
-                mock.MagicMock(),
-                "file.jsonl.gz",
-                datetime.datetime(2024, 7, 26, 12, tzinfo=tzlocal()),
+    def test_is_full_sync_returns_true_when_all_files_contain_full(self, filenames):
+        files = [
+            mock.MagicMock(
+                key=filename,
             )
-
-            assert process_staff_results[0] == [get_user_model().objects.all().first().username]
-            assert process_staff_results[1] == parser.parse(user_1["published"])
-
-
-class TestSyncActivityStreamSSOUsers:
-    @pytest.mark.django_db
-    @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
-    @override_settings(ACTIVITY_STREAM_BASE_URL="http://activity.stream")
-    @override_settings(
-        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
-    )
-    def test_sync_calls_activity_stream(self, mock_hawk_request):
-        with open(
-            os.path.join(
-                os.path.dirname(__file__),
-                "test_fixture_activity_stream_sso_empty.json",
-            ),
-            "r",
-        ) as file:
-            empty_result = (200, file.read())
-
-        mock_hawk_request.return_value = empty_result
-
-        _do_sync_activity_stream_sso_users()
-
-        assert mock_hawk_request.call_args_list == [
-            mock.call(
-                "GET",
-                "http://activity.stream/v3/activities/_search",
-                mock.ANY,
-            )
+            for filename in filenames
         ]
+        assert _is_full_sync(files)
 
-    @pytest.mark.django_db
-    @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
-    @override_settings(ACTIVITY_STREAM_BASE_URL="http://activity.stream")
-    def test_sync_first_time(self, mock_hawk_request):
-        cache.delete("activity_stream_sync_last_published")
-        with open(
-            os.path.join(
-                os.path.dirname(__file__),
-                "test_fixture_activity_stream_sso_empty.json",
-            ),
-            "r",
-        ) as file:
-            empty_result = (200, file.read())
-
-        mock_hawk_request.side_effect = [empty_result]
-
-        _do_sync_activity_stream_sso_users()
-
-        assert mock_hawk_request.call_args_list == [
-            mock.call(
-                "GET",
-                "http://activity.stream/v3/activities/_search",
-                json.dumps(
-                    {
-                        "size": 1000,
-                        "query": {
-                            "bool": {
-                                "filter": [
-                                    {"term": {"object.type": "dit:StaffSSO:User"}},
-                                    {"range": {"published": {"gte": "1969-12-31T23:59:50"}}},
-                                ]
-                            }
-                        },
-                        "sort": [{"published": "asc"}, {"id": "asc"}],
-                    }
-                ),
+    @override_settings(
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+    )
+    @pytest.mark.parametrize(
+        ("filenames"),
+        (
+            (["anything"]),
+            (["anything", "full"]),
+        ),
+    )
+    def test_is_full_sync_returns_false_when_all_files_do_not_contain_full(self, filenames):
+        files = [
+            mock.MagicMock(
+                key=filename,
             )
+            for filename in filenames
         ]
-
-    @pytest.mark.django_db
-    @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
-    @override_settings(ACTIVITY_STREAM_BASE_URL="http://activity.stream")
-    def test_sync_with_cache_set(self, mock_hawk_request):
-        cache.set("activity_stream_sync_last_published", datetime.datetime(2020, 1, 1, 12))
-        with open(
-            os.path.join(
-                os.path.dirname(__file__),
-                "test_fixture_activity_stream_sso_empty.json",
-            ),
-            "r",
-        ) as file:
-            empty_result = (200, file.read())
-
-        mock_hawk_request.return_value = empty_result
-
-        _do_sync_activity_stream_sso_users()
-
-        assert mock_hawk_request.call_args_list == [
-            mock.call(
-                "GET",
-                "http://activity.stream/v3/activities/_search",
-                json.dumps(
-                    {
-                        "size": 1000,
-                        "query": {
-                            "bool": {
-                                "filter": [
-                                    {"term": {"object.type": "dit:StaffSSO:User"}},
-                                    {"range": {"published": {"gte": "2020-01-01T11:59:50"}}},
-                                ]
-                            }
-                        },
-                        "sort": [{"published": "asc"}, {"id": "asc"}],
-                    }
-                ),
-            )
-        ]
-
-    @pytest.mark.django_db
-    @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
-    @override_settings(ACTIVITY_STREAM_BASE_URL="http://activity.stream")
-    def test_sync_pagination(self, mock_hawk_request):
-        cache.delete("activity_stream_sync_last_published")
-        with open(
-            os.path.join(
-                os.path.dirname(__file__),
-                "test_fixture_activity_stream_sso_john_smith.json",
-            ),
-            "r",
-        ) as file:
-            user_john_smith = (200, file.read())
-
-        with open(
-            os.path.join(
-                os.path.dirname(__file__),
-                "test_fixture_activity_stream_sso_empty.json",
-            ),
-            "r",
-        ) as file:
-            empty_result = (200, file.read())
-
-        mock_hawk_request.side_effect = [user_john_smith, empty_result]
-
-        _do_sync_activity_stream_sso_users(page_size=1)
-
-        assert mock_hawk_request.call_args_list == [
-            mock.call(
-                "GET",
-                "http://activity.stream/v3/activities/_search",
-                json.dumps(
-                    {
-                        "size": 1,
-                        "query": {
-                            "bool": {
-                                "filter": [
-                                    {"term": {"object.type": "dit:StaffSSO:User"}},
-                                    {"range": {"published": {"gte": "1969-12-31T23:59:50"}}},
-                                ]
-                            }
-                        },
-                        "sort": [{"published": "asc"}, {"id": "asc"}],
-                    }
-                ),
-            ),
-            mock.call(
-                "GET",
-                "http://activity.stream/v3/activities/_search",
-                json.dumps(
-                    {
-                        "size": 1,
-                        "query": {
-                            "bool": {
-                                "filter": [
-                                    {"term": {"object.type": "dit:StaffSSO:User"}},
-                                    {"range": {"published": {"gte": "1969-12-31T23:59:50"}}},
-                                ]
-                            }
-                        },
-                        "sort": [{"published": "asc"}, {"id": "asc"}],
-                        "search_after": [
-                            1000000000000,
-                            "dit:StaffSSO:User:00000000-0000-0000-0000-000000000000:Update",
-                        ],
-                    }
-                ),
-            ),
-        ]
-
-        assert cache.get("activity_stream_sync_last_published") == datetime.datetime(
-            2020, 1, 1, 12
-        )
-
-    @pytest.mark.django_db
-    @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
-    @override_settings(
-        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
-    )
-    def test_sync_creates_user(self, mock_hawk_request):
-        with open(
-            os.path.join(
-                os.path.dirname(__file__),
-                "test_fixture_activity_stream_sso_john_smith.json",
-            ),
-            "r",
-        ) as file:
-            user_john_smith = (200, file.read())
-
-        with open(
-            os.path.join(
-                os.path.dirname(__file__),
-                "test_fixture_activity_stream_sso_empty.json",
-            ),
-            "r",
-        ) as file:
-            empty_result = (200, file.read())
-
-        mock_hawk_request.side_effect = [user_john_smith, empty_result]
-
-        _do_sync_activity_stream_sso_users()
-
-        User = get_user_model()
-        all_users = User.objects.all()
-
-        assert len(all_users) == 1
-        assert str(all_users[0].profile.sso_id) == "00000000-0000-0000-0000-000000000000"
-        assert all_users[0].email == "john.smith@trade.gov.uk"
-        assert all_users[0].username == "00000000-0000-0000-0000-000000000000"
-        assert all_users[0].first_name == "John"
-        assert all_users[0].last_name == "Smith"
-
-    @pytest.mark.django_db
-    @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
-    @override_settings(
-        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
-    )
-    def test_sync_updates_existing_users_email(self, mock_hawk_request):
-        # set the email to something different to what the activity stream
-        # will return to test that it gets updated
-        user = UserFactory.create(email="john.smith@gmail.com")
-        user.profile.sso_id = "00000000-0000-0000-0000-000000000000"
-        user.save()
-
-        with open(
-            os.path.join(
-                os.path.dirname(__file__),
-                "test_fixture_activity_stream_sso_john_smith.json",
-            ),
-            "r",
-        ) as file:
-            user_john_smith = (200, file.read())
-
-        with open(
-            os.path.join(
-                os.path.dirname(__file__),
-                "test_fixture_activity_stream_sso_empty.json",
-            ),
-            "r",
-        ) as file:
-            empty_result = (200, file.read())
-
-        mock_hawk_request.side_effect = [user_john_smith, empty_result]
-
-        _do_sync_activity_stream_sso_users()
-
-        User = get_user_model()
-        all_users = User.objects.all()
-
-        assert len(all_users) == 1
-        assert str(all_users[0].email) == "john.smith@trade.gov.uk"
-
-    @pytest.mark.django_db
-    @mock.patch("dataworkspace.apps.applications.utils.create_tools_access_iam_role_task")
-    @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
-    @override_settings(
-        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
-    )
-    def test_sync_creates_role_if_user_can_access_tools(
-        self, mock_hawk_request, create_tools_access_iam_role_task
-    ):
-        can_access_tools_permission = Permission.objects.get(
-            codename="start_all_applications",
-            content_type=ContentType.objects.get_for_model(ApplicationInstance),
-        )
-        user = UserFactory.create(email="john.smith@trade.gov.uk")
-        user.profile.sso_id = "00000000-0000-0000-0000-000000000000"
-        user.save()
-        user.user_permissions.add(can_access_tools_permission)
-
-        with open(
-            os.path.join(
-                os.path.dirname(__file__),
-                "test_fixture_activity_stream_sso_john_smith.json",
-            ),
-            "r",
-        ) as file:
-            user_john_smith = (200, file.read())
-
-        with open(
-            os.path.join(
-                os.path.dirname(__file__),
-                "test_fixture_activity_stream_sso_empty.json",
-            ),
-            "r",
-        ) as file:
-            empty_result = (200, file.read())
-
-        mock_hawk_request.side_effect = [user_john_smith, empty_result]
-
-        _do_sync_activity_stream_sso_users()
-
-        User = get_user_model()
-        all_users = User.objects.all()
-
-        assert len(all_users) == 1
-        assert create_tools_access_iam_role_task.delay.call_args_list == [
-            mock.call(
-                user.id,
-            )
-        ]
-
-    @pytest.mark.django_db
-    @mock.patch("dataworkspace.apps.applications.utils.create_tools_access_iam_role_task")
-    @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
-    @override_settings(
-        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
-    )
-    def test_sync_doesnt_create_role_if_user_cant_access_tools(
-        self, mock_hawk_request, create_tools_access_iam_role_task
-    ):
-        user = UserFactory.create(email="john.smith@trade.gov.uk")
-        user.profile.sso_id = "00000000-0000-0000-0000-000000000000"
-        user.save()
-
-        with open(
-            os.path.join(
-                os.path.dirname(__file__),
-                "test_fixture_activity_stream_sso_john_smith.json",
-            ),
-            "r",
-        ) as file:
-            user_john_smith = (200, file.read())
-
-        with open(
-            os.path.join(
-                os.path.dirname(__file__),
-                "test_fixture_activity_stream_sso_empty.json",
-            ),
-            "r",
-        ) as file:
-            empty_result = (200, file.read())
-
-        mock_hawk_request.side_effect = [user_john_smith, empty_result]
-
-        _do_sync_activity_stream_sso_users()
-
-        User = get_user_model()
-        all_users = User.objects.all()
-
-        assert len(all_users) == 1
-        assert not create_tools_access_iam_role_task.delay.called
-
-    @pytest.mark.django_db
-    @mock.patch("dataworkspace.apps.applications.utils.create_tools_access_iam_role_task")
-    @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
-    @override_settings(
-        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
-    )
-    def test_sync_doesnt_create_role_if_user_already_has_role(
-        self, mock_hawk_request, create_tools_access_iam_role_task
-    ):
-        can_access_tools_permission = Permission.objects.get(
-            codename="start_all_applications",
-            content_type=ContentType.objects.get_for_model(ApplicationInstance),
-        )
-        user = UserFactory.create(email="john.smith@trade.gov.uk")
-        user.user_permissions.add(can_access_tools_permission)
-        user.profile.sso_id = "00000000-0000-0000-0000-000000000000"
-        user.profile.tools_access_role_arn = "some-arn"
-        user.save()
-
-        with open(
-            os.path.join(
-                os.path.dirname(__file__),
-                "test_fixture_activity_stream_sso_john_smith.json",
-            ),
-            "r",
-        ) as file:
-            user_john_smith = (200, file.read())
-
-        with open(
-            os.path.join(
-                os.path.dirname(__file__),
-                "test_fixture_activity_stream_sso_empty.json",
-            ),
-            "r",
-        ) as file:
-            empty_result = (200, file.read())
-
-        mock_hawk_request.side_effect = [user_john_smith, empty_result]
-
-        _do_sync_activity_stream_sso_users()
-
-        User = get_user_model()
-        all_users = User.objects.all()
-
-        assert len(all_users) == 1
-        assert not create_tools_access_iam_role_task.delay.called
-
-    @pytest.mark.django_db
-    @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
-    @override_settings(
-        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
-    )
-    def test_sync_hawk_request_fails(self, mock_hawk_request):
-        mock_hawk_request.return_value = 500, "Unable to reach shard"
-
-        with pytest.raises(Exception) as e:
-            _do_sync_activity_stream_sso_users()
-            assert str(e.value) == "Failed to fetch SSO users: Unable to reach shard"
-
-        User = get_user_model()
-        assert not User.objects.all()
-
-    @pytest.mark.django_db
-    @mock.patch("dataworkspace.apps.applications.utils.hawk_request")
-    @override_settings(
-        CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
-    )
-    def test_sync_failures_in_response(self, mock_hawk_request):
-        with open(
-            os.path.join(
-                os.path.dirname(__file__),
-                "test_fixture_activity_stream_sso_failures.json",
-            ),
-            "r",
-        ) as file:
-            failure_response = (200, file.read())
-
-        mock_hawk_request.return_value = failure_response
-
-        with pytest.raises(Exception) as e:
-            _do_sync_activity_stream_sso_users()
-            assert str(e.value) == "Failed to fetch SSO users: An error occured"
-
-        User = get_user_model()
-        assert not User.objects.all()
+        assert _is_full_sync(files) is False
 
 
 class TestCreateToolsAccessIAMRoleTask:

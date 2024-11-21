@@ -15,30 +15,30 @@ describe("Homepage dashboard", () => {
       cy.findByRole("heading", {
         level: 2,
         name: "How we can support you",
-      }).should("exist");
+      }).should("be.visible");
     });
 
     it("should show a 'Get help' article", () => {
       cy.findByRole("heading", {
         level: 3,
         name: "Get help",
-      }).should("exist");
+      }).should("be.visible");
       cy.findByRole("heading", {
         level: 4,
         name: "Suggested articles",
-      }).should("exist");
+      }).should("be.visible");
     });
 
     it("should show a 'Get in touch' article", () => {
       cy.findByRole("heading", {
         level: 3,
         name: "Get in touch",
-      }).should("exist");
+      }).should("be.visible");
       ["Message", "Community", "Work"].forEach((message) => {
         cy.findByRole("heading", {
           level: 4,
           name: message,
-        }).should("exist");
+        }).should("be.visible");
       });
     });
   });
@@ -61,7 +61,7 @@ describe("Homepage dashboard", () => {
       cy.findByRole("heading", {
         level: 2,
         name: "Your recent items",
-      }).should("exist");
+      }).should("be.visible");
       cy.findByRole("link", { name: "Data cut - links" }).should("not.exist");
       cy.findByRole("link", { name: "Data types on Data Workspace" }).should(
         "exist"
@@ -74,11 +74,13 @@ describe("Homepage dashboard", () => {
       cy.findByRole("heading", {
         level: 2,
         name: "Your recent collections",
-      }).should("exist");
-      cy.findByRole("link", { name: "Create a collection" }).should("exist");
+      }).should("be.visible");
+      cy.findByRole("link", { name: "Create a collection" }).should(
+        "be.visible"
+      );
       cy.findByRole("link", {
         name: "Find out more about collections",
-      }).should("exist");
+      }).should("be.visible");
       cy.findByRole("link", {
         name: "Personal collection a",
       }).should("not.exist");
@@ -89,8 +91,8 @@ describe("Homepage dashboard", () => {
       cy.findByRole("heading", {
         level: 2,
         name: "Your recent tools",
-      }).should("exist");
-      cy.findByRole("link", { name: "Visit tools" }).should("exist");
+      }).should("be.visible");
+      cy.findByRole("link", { name: "Visit tools" }).should("be.visible");
       cy.findByRole("link", { name: "Find out more about tools" }).should(
         "exist"
       );
@@ -102,7 +104,7 @@ describe("Homepage dashboard", () => {
       cy.findByRole("heading", {
         level: 2,
         name: "Your bookmarks",
-      }).should("exist");
+      }).should("be.visible");
       cy.findByRole("link", { name: "Data cut - links" }).should("not.exist");
       cy.findByRole("link", { name: "View all bookmarks" }).should("not.exist");
     });
@@ -110,10 +112,62 @@ describe("Homepage dashboard", () => {
 
   context("When an exisiting user visits the page", () => {
     beforeEach(() => {
-      cy.intercept(endpoints.recentItems).as("recentItems");
-      cy.intercept(endpoints.recentCollections).as("recentCollections");
-      cy.intercept(endpoints.recentTools).as("recentTools");
-      cy.intercept(endpoints.yourBookmarks).as("yourBookmarks");
+      cy.intercept(endpoints.recentItems, {
+        results: [
+          {
+            id: 1,
+            timestamp: "2024-11-14T13:20:56.068509Z",
+            event_type: "Dataset view",
+            user_id: 2,
+            related_object: {
+              id: "1234",
+              type: "Source dataset",
+              name: "Some source dataset",
+            },
+            extra: {
+              path: "/datasets/1234",
+            },
+          },
+        ],
+      }).as("recentItems");
+      cy.intercept(endpoints.recentCollections, {
+        results: [
+          {
+            name: "Ian's source data set",
+            datasets: [],
+            visualisation_catalogue_items: [],
+            collection_url: "/collections/1234",
+          },
+        ],
+      }).as("recentCollections");
+      cy.intercept(endpoints.recentTools, {
+        results: [
+          {
+            id: 1,
+            extra: {
+              tool: "Data Explorer",
+            },
+            tool_url: "/tools/explorer/redirect",
+          },
+          {
+            id: 2,
+            extra: {
+              tool: "Superset",
+            },
+            tool_url: "/tools/superset/redirect",
+          },
+        ],
+      }).as("recentTools");
+      cy.intercept(endpoints.yourBookmarks, {
+        results: [
+          {
+            id: "1234",
+            name: "Some bookmarked dataset",
+            url: "/datasets/1234",
+            created: "2023-12-18T15:22:42.860061Z",
+          },
+        ],
+      }).as("yourBookmarks");
       cy.visit("/");
     });
 
@@ -122,8 +176,10 @@ describe("Homepage dashboard", () => {
       cy.findByRole("heading", {
         level: 2,
         name: "Your recent items",
-      }).should("exist");
-      cy.findByRole("link", { name: "Data cut - links" }).should("exist");
+      }).should("be.visible");
+      cy.findByRole("link", { name: "Some source dataset" }).should(
+        "be.visible"
+      );
       cy.findByRole("link", { name: "Data types on Data Workspace" }).should(
         "not.exist"
       );
@@ -134,7 +190,7 @@ describe("Homepage dashboard", () => {
       cy.findByRole("heading", {
         level: 2,
         name: "Your recent collections",
-      }).should("exist");
+      }).should("be.visible");
       cy.findByRole("link", { name: "Create a collection" }).should(
         "not.exist"
       );
@@ -142,8 +198,8 @@ describe("Homepage dashboard", () => {
         name: "Find out more about collections",
       }).should("not.exist");
       cy.findAllByRole("link", {
-        name: "Personal collection a",
-      }).should("exist");
+        name: "Ian's source data set",
+      }).should("be.visible");
     });
 
     it("should show the 'Your recent tools' section with tools", () => {
@@ -151,12 +207,12 @@ describe("Homepage dashboard", () => {
       cy.findByRole("heading", {
         level: 2,
         name: "Your recent tools",
-      }).should("exist");
+      }).should("be.visible");
       cy.findAllByRole("link", { name: "Visit tools" }).should("not.exist");
       cy.findAllByRole("link", { name: "Find out more about tools" }).should(
         "not.exist"
       );
-      cy.findByRole("link", { name: "Superset" }).should("exist");
+      cy.findByRole("link", { name: "Superset" }).should("be.visible");
     });
 
     it("should show the 'Your bookmarks' section with bookmarks", () => {
@@ -164,11 +220,15 @@ describe("Homepage dashboard", () => {
       cy.findByRole("heading", {
         level: 2,
         name: "Your bookmarks",
-      }).should("exist");
+      }).should("be.visible");
       cy.findByTestId("your-bookmarks").within(($form) => {
-        cy.findByRole("link", { name: "Source dataset" }).should("exist");
+        cy.findByRole("link", { name: "Some bookmarked dataset" }).should(
+          "exist"
+        );
       });
-      cy.findByRole("link", { name: "View all bookmarks" }).should("exist");
+      cy.findByRole("link", { name: "View all bookmarks" }).should(
+        "be.visible"
+      );
     });
   });
 });

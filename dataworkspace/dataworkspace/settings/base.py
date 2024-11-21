@@ -110,6 +110,7 @@ INSTALLED_APPS = [
     "dataworkspace.apps.dw_admin",
     "dataworkspace.apps.api_v1",
     "dataworkspace.apps.api_v2",
+    "dataworkspace.apps.test_endpoints",
     "dataworkspace.apps.eventlog",
     "dataworkspace.apps.request_data",
     "dataworkspace.apps.request_access",
@@ -388,11 +389,6 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
             "schedule": crontab(minute=0, hour=0),
             "args": (),
         },
-        "sync-sso-users-from-activity-stream": {
-            "task": "dataworkspace.apps.applications.utils.sync_activity_stream_sso_users",
-            "schedule": 60 * 2,
-            "args": (),
-        },
         "sync-sso-users-from-s3": {
             "task": "dataworkspace.apps.applications.utils.sync_s3_sso_users",
             "schedule": crontab(minute="*/15"),  # Run every 15 minutes
@@ -453,11 +449,6 @@ if not strtobool(env.get("DISABLE_CELERY_BEAT_SCHEDULE", "0")):
             "schedule": 60 * 10,
             "args": (),
         },
-        "full-sso-user-sync": {
-            "task": "dataworkspace.apps.applications.utils.sync_all_sso_users",
-            "schedule": crontab(minute=0, hour=1),
-            "args": (),
-        },
         "orphaned-tools-monitor": {
             "task": "dataworkspace.apps.applications.utils.orphaned_tools_monitor",
             "schedule": 60 * 60 * 2,
@@ -510,7 +501,6 @@ S3_POLICY_DOCUMENT_TEMPLATE = base64.b64decode(env["S3_POLICY_DOCUMENT_TEMPLATE_
 S3_PERMISSIONS_BOUNDARY_ARN = env["S3_PERMISSIONS_BOUNDARY_ARN"]
 S3_ROLE_PREFIX = env["S3_ROLE_PREFIX"]
 S3_NOTEBOOKS_BUCKET_ARN = env["S3_NOTEBOOKS_BUCKET_ARN"]
-S3_SSO_IMPORT_ENABLED = env.get("S3_SSO_IMPORT_ENABLED", False)
 EFS_ID = env["EFS_ID"]
 
 YOUR_FILES_ENABLED = env.get("YOUR_FILES_ENABLED", "False") == "True"
@@ -680,9 +670,6 @@ EXPLORER_DATA_EXPORTERS = [
     ("json", "dataworkspace.apps.explorer.exporters.JSONExporter"),
 ]
 
-ACTIVITY_STREAM_BASE_URL = env.get("ACTIVITY_STREAM_BASE_URL")
-ACTIVITY_STREAM_HAWK_CREDENTIALS_ID = env.get("ACTIVITY_STREAM_HAWK_CREDENTIALS_ID")
-ACTIVITY_STREAM_HAWK_CREDENTIALS_KEY = env.get("ACTIVITY_STREAM_HAWK_CREDENTIALS_KEY")
 
 DATASETS_DB_INSTANCE_ID = env.get("DATASETS_DB_INSTANCE_ID", "analysisworkspace-dev-test-1-aurora")
 PGAUDIT_LOG_SCOPES = env.get("PGAUDIT_LOG_SCOPES")
