@@ -183,7 +183,7 @@ describe("Homepage dashboard", () => {
     });
 
     it("should show the 'Managed Data' section with with a figure", () => {
-      cy.wait("@recentItems");
+      cy.wait("@managedData");
       cy.findByRole("heading", {
         level: 2,
         name: "You're the owner or manager of 50 datasets",
