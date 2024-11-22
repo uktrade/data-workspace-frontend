@@ -62,7 +62,7 @@
         {% endif %}
         <h2 class="govuk-heading-l">Users who have access</h2>
           <a class="govuk-link" href="{% url 'datasets:search_authorized_users' obj.id summary.id %}"><button type="submit" class="govuk-button govuk-button--secondary govuk-!-static-margin-bottom-6" data-module="govuk-button">
-            Add User
+            Add users
           </button></a>
         {% include "partials/react-slot-data.html" with mount_id="confirm-remove-user" data=authorised_users test_id="confirm-remove-user" %}
       <div class="govuk-body">

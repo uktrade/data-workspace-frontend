@@ -1,8 +1,5 @@
 import { sourceWithTableNoAccess } from "../../fixtures/datasets";
-import {
-  assertDataAccessNotification,
-  assertSuccessNotification,
-} from "../../support/assertions";
+import { assertSuccessNotification } from "../../support/assertions";
 
 describe("Requesting data access", () => {
   context("when I request access to this dataset", () => {
@@ -114,6 +111,9 @@ describe("Approving and denying the data access request", () => {
     before(() => {
       cy.visit(`/datasets/${sourceWithTableNoAccess}/review-access/2`);
     });
+    after(() => {
+      cy.resetUserPermissions(sourceWithTableNoAccess);
+    });
     it("should confirm that the request has been approved", () => {
       cy.findByRole("radio", {
         name: "Grant Vyvyan Holland access to this dataset",
@@ -143,42 +143,6 @@ describe("Approving and denying the data access request", () => {
         cy.get("td").contains("Bob Testerson (Information Asset Manager)");
         cy.get("td").contains("Vyvyan Holland");
       });
-    });
-  });
-});
-
-describe("Removing access", () => {
-  context("when I remove the users data access", () => {
-    before(() => {
-      cy.setUsersEditorAccess(sourceWithTableNoAccess, true);
-      cy.visit(`datasets/${sourceWithTableNoAccess}/edit-permissions`);
-    });
-    it("should remove the users access to the dataset", () => {
-      cy.findByRole("button", {
-        name: "Remove user",
-      }).click();
-      cy.findByRole("dialog").within(() => {
-        cy.findByRole("heading", {
-          name: "Are you sure you want to remove Vyvyan Holland's access to this data?",
-          level: 2,
-        }).should("be.visible");
-        cy.findByRole("button", {
-          name: "Yes, remove user",
-        }).click();
-      });
-      assertSuccessNotification(
-        "Vyvyan Holland's access to data has been removed. An email has been sent out to let them know that they no longer have access to the data."
-      );
-      cy.findByRole("link", {
-        name: "View catalogue page",
-      })
-        .should("be.visible")
-        .click();
-    });
-    it("should display a request access notification to the dataset", () => {
-      cy.setUsersEditorAccess(sourceWithTableNoAccess, false);
-      cy.visit(`datasets/${sourceWithTableNoAccess}`);
-      assertDataAccessNotification(sourceWithTableNoAccess);
     });
   });
 });

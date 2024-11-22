@@ -1,11 +1,34 @@
 $positions: top, right, bottom, left;
+$textPositions: left, right;
 
+// Govuk style border classes
 @mixin govuk-border($position, $color: $govuk-border-colour) {
   .govuk-border--#{$position} {
     border-#{$position}: 1px solid $color;
   }
 }
 
+// Table cell vertical alignment
+@mixin table-cell-vertical-align($position) {
+  .table-cell--vertical-align-#{$position} {
+    vertical-align: $position;
+  }
+}
+
+// Table cell text alignment
+@mixin table-cell-text-align($textPosition) {
+  .table-cell--text-align-#{$textPosition} {
+    text-align: $textPosition;
+  }
+}
+
+// Apply top|right|bottom|left positions to all mixins
 @each $position in $positions {
   @include govuk-border($position);
+  @include table-cell-vertical-align($position);
+}
+
+// Apply left|right positions to all mixins
+@each $textPosition in $textPositions {
+  @include table-cell-text-align($textPosition);
 }

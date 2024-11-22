@@ -30,21 +30,26 @@
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       {% include 'design_system/error_summary.html' with form=form %}
-      <h1 class="govuk-heading-l">Edit permissions for {{ obj.name }}</h1>
+      {% flag ALLOW_REQUEST_ACCESS_TO_DATA_FLOW %}
+        <h1 class="govuk-heading-l govuk-!-margin-bottom-3">Give a user access to {{ obj.name }}</h1>
+        {% else %}
+        <h1 class="govuk-heading-l">Edit permissions for {{ obj.name }}</h1>
+      {% endflag %}
       <form method="post" enctype="multipart/form-data" novalidate>
         {% csrf_token %}
         <fieldset class="govuk-fieldset">
-          <div class="govuk-form-group">
+          <div class="govuk-form-group govuk-!-margin-bottom-4">
             {% if waffle_flag %}
               {{ form.search }}
             {% else %}
-              <label class="govuk-label  govuk-!-font-weight-bold" for="id_search">
-                Search by email address or name
+              <label class="govuk-label govuk-visually-hidden" for="id_search">
+                Search
               </label>
+              <div class="govuk-hint">Search by email address or name</div>
               <input class="govuk-input" type="text" name="search" id="id_search" value="{{ search_query }}">
             {% endif %}
           </div>
-          <button type="submit" class="govuk-button" data-prevent-double-click="true">Search</button>
+          <button type="submit" class="govuk-button govuk-button--secondary" data-prevent-double-click="true">Search</button>
         </fieldset>
       </form>
       {% if non_matches %}
@@ -57,61 +62,76 @@
         {% endfor %}
       </ul>
       {% endif %} 
+      </div>
       {% if search_results %}
         {% if waffle_flag %}
-        <fieldset class="govuk-fieldset" aria-describedby="search-hint">
-            <div>
-              <h1 class="govuk-heading-l" style="float: left">
-                Found {{ search_results|length }} matching user{% if search_results|length > 1 %}s{% endif %}
-              </h1>
-              <button type="button" class="select-deselect-toggle" id="toggle-search-results">
-                Deselect all users
-              </button>
-            </div>
-          </fieldset>
-        <form action="{% url 'datasets:add_authorized_users' obj.id summary_id %}" method="post"
-              enctype="multipart/form-data" novalidate>
-          {% csrf_token %}
-          <fieldset class="govuk-fieldset">
-            <div class="govuk-form-group">
-              <div class="govuk-checkboxes govuk-!-margin-bottom-6" data-module="govuk-checkboxes" id="select-user-checkboxes-group">
-                {% for result in search_results %}
-                  <div class="govuk-checkboxes__item">
-                    <input class="govuk-checkboxes__input" id="{{ result.id }}" name="selected-user"
-                           type="checkbox"
-                           value="{{ result.id }}"
-                           checked
-                    >
-                    <label class="govuk-label govuk-checkboxes__label" for="{{ result.id }}">
-                      {{ result.first_name }} {{ result.last_name }} ({{ result.email }})
-                    </label>
-                  </div>
-                {% endfor %}
+        <div class="govuk-grid-column-two-thirds">
+          <fieldset class="govuk-fieldset" aria-describedby="search-hint">
+              <div>
+                <h1 class="govuk-heading-l" style="float: left">
+                  Found {{ search_results|length }} matching user{% if search_results|length > 1 %}s{% endif %}
+                </h1>
+                <button type="button" class="select-deselect-toggle" id="toggle-search-results">
+                  Deselect all users
+                </button>
               </div>
-            </div>
-            <button type="submit" class="govuk-button" data-prevent-double-click="true">Add selected users</button>
-          </fieldset>
-        </form>
-          {% else %}
+            </fieldset>
+          <form action="{% url 'datasets:add_authorized_users' obj.id summary_id %}" method="post"
+                enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            <fieldset class="govuk-fieldset">
+              <div class="govuk-form-group">
+                <div class="govuk-checkboxes govuk-!-margin-bottom-6" data-module="govuk-checkboxes" id="select-user-checkboxes-group">
+                  {% for result in search_results %}
+                    <div class="govuk-checkboxes__item">
+                      <input class="govuk-checkboxes__input" id="{{ result.id }}" name="selected-user"
+                            type="checkbox"
+                            value="{{ result.id }}"
+                            checked
+                      >
+                      <label class="govuk-label govuk-checkboxes__label" for="{{ result.id }}">
+                        {{ result.first_name }} {{ result.last_name }} ({{ result.email }})
+                      </label>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+              <button type="submit" class="govuk-button" data-prevent-double-click="true">Add selected users</button>
+            </fieldset>
+          </form>
+        </div>
+        {% else %}
+         <div class="govuk-grid-column-full">
           <table class="govuk-table">
-                    <caption class="govuk-table__caption govuk-table__caption--m">Found {{ search_results.count }} matching user{% if search_results.count > 1 %}s{% else %} for {{ search_query }}{% endif %}</caption>
-                    <tbody class="govuk-table__body">
-                        {% for result in search_results %}
-                        <tr class="govuk-table__row">
-                            <td class="govuk-table__cell">{{ result.first_name }} {{ result.last_name }}</td>
-                            <td class="govuk-table__cell">{{ result.email }}</td>
-                            <td class="govuk-table__cell"><a class="govuk-link" href="{% url 'datasets:add_authorized_user' obj.id summary_id result.id %}">Select</a></td>
-                          </tr>
-                        {% endfor %}
-                    </tbody>
-                  </table>
+              <caption class="govuk-table__caption govuk-table__caption--m govuk-!-margin-bottom-0">Found {{ search_results.count }} matching user{% if search_results.count > 1 %}s{% else %} for {{ search_query }}{% endif %}</caption>
+              <tbody class="govuk-table__body">
+                  {% for result in search_results %}
+                  <tr class="govuk-table__row">
+                      <td class="govuk-table__cell table-cell--vertical-align-bottom"><strong>{{ result.first_name }} {{ result.last_name }}</strong><div>{{ result.email }}</div></td>
+                      {% flag ALLOW_REQUEST_ACCESS_TO_DATA_FLOW %}
+                        <td class="govuk-table__cell table-cell--text-align-right">
+                          <form action="{% url 'datasets:add_authorized_user' obj.id summary_id result.id %}" method="post" novalidate>
+                            {% csrf_token %}
+                            <button type="submit" class="govuk-button govuk-!-margin-bottom-0">Add user</button>
+                          </form>
+                        </td>
+                      {% else %}
+                        <td class="govuk-table__cell"><a class="govuk-link" href="{% url 'datasets:add_authorized_user' obj.id summary_id result.id %}">Select</a></td>
+                      {% endflag %}
+                    </tr>
+                  {% endfor %}
+              </tbody>
+            </table>
+          </div>
           {% endif %}
       {% else %}
           {% if search_query and not non_matches %}
+          <div class="govuk-grid-column-full">
             <h2 class="govuk-heading-m">Found 0 results</h2>
+            <p class="govuk-body">The user you're giving access to must have a DBT or SSO account.</p>
+          </div>
           {% endif %}
       {% endif %}
-    </div>
   </div>
 {% endblock %}
 
@@ -135,6 +155,7 @@
         }
         })
     }
+    {% if waffle_flag %}
     document.getElementById('select-user-checkboxes-group').addEventListener("change", function (e) {
         let checker = arr => arr.every(v => v === true);
         let checkboxesChecked = [];
@@ -146,5 +167,6 @@
         }
       }
     )
+    {% endif %}
   </script>
 {% endblock %}

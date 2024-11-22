@@ -2025,6 +2025,54 @@ class DatasetAuthorisedUsersSearchView(UserSearchFormView):
 
 
 class DatasetAddAuthorisedUserView(EditBaseView, View):
+
+    def post(self, request, *args, **kwargs):
+        user = get_user_model().objects.get(id=self.kwargs.get("user_id"))
+        authorized_users = set(
+            get_user_model().objects.filter(
+                id__in=json.loads(self.summary.users) if self.summary.users else []
+            )
+        )
+        authorized_users.add(user)
+
+        if isinstance(self.obj, DataSet):
+            process_dataset_authorized_users_change(
+                authorized_users, request.user, self.obj, False, False, True
+            )
+        else:
+            process_visualisation_catalogue_item_authorized_users_change(
+                authorized_users, request.user, self.obj, False, False
+            )
+
+        absolute_url = self.request.build_absolute_uri(
+            reverse("datasets:dataset_detail", args=[self.obj.id])
+        )
+
+        if settings.ENVIRONMENT != "Dev":
+            send_email(
+                settings.NOTIFY_DATASET_ACCESS_GRANTED_TEMPLATE_ID,
+                user.email,
+                personalisation={
+                    "email_address": user.email,
+                    "dataset_name": self.obj.name,
+                    "dataset_url": absolute_url,
+                },
+            )
+
+        messages.success(
+            self.request,
+            f"An email has been sent to {user.first_name} {user.last_name} to let them know they now have access.",
+        )
+
+        return HttpResponseRedirect(
+            reverse(
+                "datasets:edit_permissions",
+                args=[
+                    self.obj.id,
+                ],
+            )
+        )
+
     def get(self, request, *args, **kwargs):
         summary = PendingAuthorizedUsers.objects.get(id=self.kwargs.get("summary_id"))
         user = get_user_model().objects.get(id=self.kwargs.get("user_id"))
