@@ -4310,7 +4310,7 @@ class TestDatasetEditView:
 
         soup = BeautifulSoup(response.content.decode(response.charset))
         assert f"Manage access to {dataset.name}" in soup.find("h1").contents
-        assert "Add User" in soup.find("a", class_="govuk-link").find(
+        assert "Add user" in soup.find("a", class_="govuk-link").find(
             "button", class_="govuk-button govuk-button--secondary govuk-!-static-margin-bottom-6"
         ).contents[0].get_text(strip=True)
         auth_users = json.loads(response.context_data["authorised_users"])
@@ -5247,7 +5247,7 @@ class TestDatasetReviewAccessApproval:
         success_header = notification_banner.find_next("h2").get_text()
         success_message = notification_banner.find_next("p").get_text()
         mock_send_email.assert_called_with(
-            "b4913195-3695-4972-8f21-0853610be0b4",
+            settings.NOTIFY_DATASET_ACCESS_GRANTED_TEMPLATE_ID,
             self.user_requestor.email,
             personalisation={
                 "email_address": self.user_requestor.email,
@@ -5280,7 +5280,7 @@ class TestDatasetReviewAccessApproval:
         success_header = notification_banner.find_next("h2").get_text()
         success_message = notification_banner.find_next("p").get_text()
         mock_send_email.assert_called_with(
-            "b4913195-3695-4972-8f21-0853610be0b4",
+            settings.NOTIFY_DATASET_ACCESS_GRANTED_TEMPLATE_ID,
             self.user_requestor.email,
             personalisation={
                 "email_address": self.user_requestor.email,
@@ -5313,7 +5313,7 @@ class TestDatasetReviewAccessApproval:
         success_header = notification_banner.find_next("h2").get_text()
         success_message = notification_banner.find_next("p").get_text()
         mock_send_email.assert_called_with(
-            "b4913195-3695-4972-8f21-0853610be0b4",
+            settings.NOTIFY_DATASET_ACCESS_GRANTED_TEMPLATE_ID,
             self.user_requestor.email,
             personalisation={
                 "email_address": self.user_requestor.email,
@@ -5349,8 +5349,9 @@ class TestDatasetReviewAccessApproval:
         notification_banner = soup.find("div", attrs={"data-module", "govuk-notification-banner"})
         success_header = notification_banner.find_next("h2").get_text()
         success_message = notification_banner.find_next("p").get_text()
+
         mock_send_email.assert_called_with(
-            "320947ff-0da4-44b2-bf41-1fafd77e1905",
+            settings.NOTIFY_DATASET_ACCESS_DENIED_TEMPLATE_ID,
             self.user_requestor.email,
             personalisation={
                 "email_address": self.user_requestor.email,
@@ -5387,7 +5388,7 @@ class TestDatasetReviewAccessApproval:
         success_header = notification_banner.find_next("h2").get_text()
         success_message = notification_banner.find_next("p").get_text()
         mock_send_email.assert_called_with(
-            "320947ff-0da4-44b2-bf41-1fafd77e1905",
+            settings.NOTIFY_DATASET_ACCESS_DENIED_TEMPLATE_ID,
             self.user_requestor.email,
             personalisation={
                 "email_address": self.user_requestor.email,
@@ -5423,7 +5424,7 @@ class TestDatasetReviewAccessApproval:
         success_header = notification_banner.find_next("h2").get_text()
         success_message = notification_banner.find_next("p").get_text()
         mock_send_email.assert_called_with(
-            "320947ff-0da4-44b2-bf41-1fafd77e1905",
+            settings.NOTIFY_DATASET_ACCESS_DENIED_TEMPLATE_ID,
             self.user_requestor.email,
             personalisation={
                 "email_address": self.user_requestor.email,
@@ -5437,4 +5438,52 @@ class TestDatasetReviewAccessApproval:
         assert (
             "An email has been sent to Bob Testerten to let them know their access request was not successful."
             in success_message
+        )
+
+
+@pytest.mark.django_db
+class TestDatasetAddAuthorisedUserView:
+
+    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
+    @mock.patch("dataworkspace.apps.datasets.views.send_email")
+    @override_settings(ENVIRONMENT="Production")
+    def test_user_gets_added_to_dataset_and_gets_emailed(self, mock_send_email):
+        user = factories.UserFactory.create(is_superuser=True)
+        client = Client(**get_http_sso_data(user))
+        user_requestor = factories.UserFactory.create(
+            first_name="Bob",
+            last_name="Testerten",
+            email="bob.testerten@contact-email.com",
+            is_superuser=False,
+        )
+
+        dataset = factories.DataSetFactory.create(
+            published=True,
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+            type=DataSetType.MASTER,
+            name="Master",
+        )
+
+        factories.PendingAuthorizedUsersFactory.create(
+            id="1", users='["6"]', created_by_id=user.id
+        )
+
+        factories.DataSetUserPermissionFactory.create(dataset=dataset, user=user)
+
+        client.post(
+            reverse(
+                "datasets:add_authorized_user",
+                kwargs={"pk": dataset.id, "user_id": user_requestor.id, "summary_id": "1"},
+            ),
+        )
+
+        assert dataset.datasetuserpermission_set.filter(user=user_requestor).exists() is True
+        mock_send_email.assert_called_with(
+            settings.NOTIFY_DATASET_ACCESS_GRANTED_TEMPLATE_ID,
+            user_requestor.email,
+            personalisation={
+                "email_address": user_requestor.email,
+                "dataset_name": dataset.name,
+                "dataset_url": f"http://testserver/datasets/{dataset.id}",
+            },
         )
