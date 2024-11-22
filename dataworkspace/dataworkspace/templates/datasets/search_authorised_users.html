@@ -42,10 +42,9 @@
             {% if waffle_flag %}
               {{ form.search }}
             {% else %}
-              <label class="govuk-label govuk-visually-hidden" for="id_search">
-                Search
+              <label class="govuk-label govuk-secondary-text-colour govuk-!-margin-bottom-2" for="id_search">
+                Search by email address or name
               </label>
-              <div class="govuk-hint">Search by email address or name</div>
               <input class="govuk-input" type="text" name="search" id="id_search" value="{{ search_query }}">
             {% endif %}
           </div>
