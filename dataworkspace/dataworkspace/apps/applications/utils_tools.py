@@ -164,6 +164,8 @@ def get_grouped_tools(request):
             link=link(application_template),
             has_access=request.user.has_perm("applications.start_all_applications"),
             help_link=application_template.application_help_link,
+            tag=application_template.tag,
+            tag_extra_css_class=application_template.tag_extra_css_class,
         )
 
         vm.instance = application_instances.get(application_template, None)

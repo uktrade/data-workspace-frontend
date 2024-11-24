@@ -101,6 +101,22 @@ class ApplicationTemplate(TimeStampedModel):
         unique=False,
         help_text="A link to a Help Centre article that explains how to use this tool.",
     )
+    tag = models.CharField(
+        max_length=128,
+        blank=True,
+        null=False,
+        help_text="The text of a short tag displayed next to the tool on the tools page. "
+        + "This would typically be used to highlight if a tool is new, recommended, or deprecated.",
+    )
+    tag_extra_css_class = models.CharField(
+        max_length=128,
+        blank=True,
+        null=False,
+        verbose_name="Tag class",
+        help_text="A CSS class applied to the tag if present. "
+        + "This would typically be one of the govuk-tag--* classes used to style the tag "
+        + "component from the GOV.UK Design System.",
+    )
 
     _GROUPS = (
         ("Visualisation Tools", "Visualisation Tools"),
