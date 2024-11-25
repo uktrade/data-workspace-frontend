@@ -21,12 +21,12 @@ import mock
 import pytest
 import redis
 
+from dataworkspace.apps.core.utils import _do_create_tools_access_iam_role
 from dataworkspace.apps.accounts.models import Profile
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.applications.utils import (
     _do_sync_tool_query_logs,
     delete_unused_datasets_users,
-    _do_create_tools_access_iam_role,
     long_running_query_alert,
     sync_quicksight_permissions,
     _do_sync_s3_sso_users,
@@ -757,7 +757,7 @@ class TestSyncS3SSOUsers:
             m_open,
             create=True,
         ), mock.patch(
-            "dataworkspace.apps.applications.utils.create_tools_access_iam_role_task"
+            "dataworkspace.apps.core.utils.create_tools_access_iam_role_task"
         ) as create_tools_access_iam_role_task:
             _process_staff_sso_file(
                 mock.MagicMock(),
@@ -795,7 +795,7 @@ class TestSyncS3SSOUsers:
             m_open,
             create=True,
         ), mock.patch(
-            "dataworkspace.apps.applications.utils.create_tools_access_iam_role_task"
+            "dataworkspace.apps.core.utils.create_tools_access_iam_role_task"
         ) as create_tools_access_iam_role_task:
             _process_staff_sso_file(
                 mock.MagicMock(),
@@ -868,7 +868,7 @@ class TestSyncS3SSOUsers:
 
 class TestCreateToolsAccessIAMRoleTask:
     @pytest.mark.django_db
-    @mock.patch("dataworkspace.apps.applications.utils.create_tools_access_iam_role")
+    @mock.patch("dataworkspace.apps.core.utils.create_tools_access_iam_role")
     def test_task_creates_iam_role(self, mock_create_tools_access_iam_role):
         user = UserFactory.create(username="00000000-0000-0000-0000-000000000001")
         user.profile.sso_id = "00000000-0000-0000-0000-000000000001"
@@ -886,7 +886,7 @@ class TestCreateToolsAccessIAMRoleTask:
         ]
 
     @pytest.mark.django_db
-    @mock.patch("dataworkspace.apps.applications.utils.create_tools_access_iam_role")
+    @mock.patch("dataworkspace.apps.core.utils.create_tools_access_iam_role")
     @mock.patch("logging.Logger.exception")
     def test_task_fails_non_existent_user(self, mock_logger, mock_create_tools_access_iam_role):
         _do_create_tools_access_iam_role(2)
