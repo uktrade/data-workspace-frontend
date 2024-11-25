@@ -1,23 +1,29 @@
 import { render } from '@testing-library/react';
 
-import { ManagedDataResponse } from '../../../../types';
+import type { ManagedDataProps } from '.';
 import ManagedData from '.';
 
-describe('RecentCollections', () => {
-  const managed_data_stats_multiple_datasets: ManagedDataResponse = {
-    count: 5,
-    managed_data_url: '/datasets?q='
-  };
+describe('ManagedData', () => {
+  const managed_data_stats_multiple_datasets: ManagedDataProps[] = [
+    {
+      count: 5,
+      managed_data_url: '/datasets?q='
+    }
+  ];
 
-  const managed_data_stats_single_dataset: ManagedDataResponse = {
-    count: 1,
-    managed_data_url: '/datasets?q='
-  };
+  const managed_data_stats_single_dataset: ManagedDataProps[] = [
+    {
+      count: 1,
+      managed_data_url: '/datasets?q='
+    }
+  ];
 
-  const managed_data_stats_no_dataset: ManagedDataResponse = {
-    count: 0,
-    managed_data_url: '/datasets?q='
-  };
+  const managed_data_stats_no_dataset: ManagedDataProps[] = [
+    {
+      count: 0,
+      managed_data_url: '/datasets?q='
+    }
+  ];
 
   describe('With results', () => {
     it('should render a title', () => {

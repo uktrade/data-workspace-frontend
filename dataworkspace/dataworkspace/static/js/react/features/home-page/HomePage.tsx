@@ -38,25 +38,28 @@ const YourSection = styled('div')`
   }
 `;
 
-const LandscapeYourSection = styled('div')`
+const SupportSection = styled('section')`
+  padding: ${SPACING_POINTS['6']}px 0 ${SPACING_POINTS['9']}px 0;
+`;
+
+const ManagedDataContainer = styled('div')`
   display: grid;
   grid-column: 1 / span 2;
   grid-row: 1;
-`;
-
-const SupportSection = styled('section')`
-  padding: ${SPACING_POINTS['6']}px 0 ${SPACING_POINTS['9']}px 0;
 `;
 
 const HomePage = () => (
   <main role="main" id="main-content">
     <YourSection>
       <InnerContainer>
-        <LandscapeYourSection>
-          <FetchDataContainer fetchApi={() => fetchManageData()}>
+        <ManagedDataContainer>
+          <FetchDataContainer
+            renderIfDataEmpty={false}
+            fetchApi={() => fetchManageData()}
+          >
             {(data) => <ManagedData managed_data_stats={data} />}
           </FetchDataContainer>
-        </LandscapeYourSection>
+        </ManagedDataContainer>
         <div>
           <FetchDataContainer fetchApi={() => fetchRecentItems()}>
             {(data) => <RecentItems items={data} />}

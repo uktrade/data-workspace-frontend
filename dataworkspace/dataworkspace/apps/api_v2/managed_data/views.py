@@ -35,4 +35,5 @@ class ManagedDataViewSet(TimestampFilterMixin, viewsets.ModelViewSet):
         kwargs = "?q=&sort=relevance&my_datasets=owned"
         managed_data_url = f"{reverse('datasets:find_datasets')}{kwargs}"
         count = self.get_queryset().count()
-        return Response({"count": count, "managed_data_url": managed_data_url})
+        results = [{"count": count, "managed_data_url": managed_data_url}] if count > 0 else []
+        return Response({"results": results})

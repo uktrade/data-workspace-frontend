@@ -17,17 +17,17 @@ const StyledParagraph = styled('p')`
   margin: 0;
 `;
 
-const ManagedData: React.FC<Record<'managed_data_stats', ManagedDataProps>> = ({
-  managed_data_stats
-}) => (
+const ManagedData: React.FC<
+  Record<'managed_data_stats', ManagedDataProps[]>
+> = ({ managed_data_stats }) => (
   <>
-    {managed_data_stats?.count > 0 && (
+    {managed_data_stats?.length > 0 && (
       <Tile
         as="article"
         contentWrapper={true}
-        title={`You're the owner or manager of ${managed_data_stats.count} dataset${managed_data_stats.count > 1 ? 's' : ''}`}
+        title={`You're the owner or manager of ${managed_data_stats[0].count} dataset${managed_data_stats[0].count > 1 ? 's' : ''}`}
       >
-        <Link href={`${managed_data_stats.managed_data_url}`}>
+        <Link href={`${managed_data_stats[0].managed_data_url}`}>
           View and manage your data
         </Link>
         <SectionBreak level="MEDIUM" visible></SectionBreak>

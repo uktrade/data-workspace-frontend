@@ -3,20 +3,26 @@ import type { Meta, StoryObj } from '@storybook/react';
 import type { ManagedDataProps } from '.';
 import ManagedData from '.';
 
-const MultipleDatasets: ManagedDataProps = {
-  count: 5,
-  managed_data_url: '/datasets?q='
-};
+const MultipleDatasets: ManagedDataProps[] = [
+  {
+    count: 5,
+    managed_data_url: '/datasets?q='
+  }
+];
 
-const SingularDataset: ManagedDataProps = {
-  count: 1,
-  managed_data_url: '/datasets?q='
-};
+const SingularDataset: ManagedDataProps[] = [
+  {
+    count: 1,
+    managed_data_url: '/datasets?q='
+  }
+];
 
-const NoDatasets: ManagedDataProps = {
-  count: 0,
-  managed_data_url: '/datasets?q='
-};
+const NoDatasets: ManagedDataProps[] = [
+  {
+    count: 0,
+    managed_data_url: '/datasets?q='
+  }
+];
 
 const meta = {
   title: 'Managed Data',
