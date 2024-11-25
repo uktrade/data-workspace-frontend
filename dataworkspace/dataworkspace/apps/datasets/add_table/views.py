@@ -520,7 +520,7 @@ class AddTableSuccessView(BaseAddTableTemplateView):
             schema=self._get_query_parameters()["schema"],
             dataset=dataset,
             database=database,
-            name=self._get_query_parameters()["table_name"],
+            name=self._get_query_parameters()["descriptive_name"],
             table=self._get_query_parameters()["table_name"],
             data_grid_download_enabled=True,
             data_grid_download_limit=self.default_download_limit,

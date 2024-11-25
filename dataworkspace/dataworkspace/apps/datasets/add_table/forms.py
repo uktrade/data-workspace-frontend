@@ -39,12 +39,12 @@ class DescriptiveNameForm(GOVUKDesignSystemForm):
 
     def clean_descriptive_name(self):
         cleaned_data = super().clean()
-        descriptive_name = cleaned_data["descriptive_name"].lower()
+        descriptive_name = cleaned_data["descriptive_name"]
         words = ["record", "dataset", "data"]
         for word in words:
-            if word in descriptive_name:
+            if word in descriptive_name.lower():
                 raise ValidationError(f"Descriptive name cannot contain the word '{word}'")
-        if "_" in descriptive_name:
+        if "_" in descriptive_name.lower():
             raise ValidationError("Descriptive name cannot contain underscores")
         return descriptive_name
 
@@ -69,7 +69,7 @@ class TableNameForm(GOVUKDesignSystemForm):
         super().__init__(*args, **kwargs)
         kwargs = kwargs.pop("initial")
         schema = kwargs["schema"] + "."
-        descriptive_name = kwargs["descriptive_name"].replace(" ", "_")
+        descriptive_name = kwargs["descriptive_name"].replace(" ", "_").lower()
         self.table_names = kwargs["table_names"]
         self.fields["table_name"].widget = GOVUKDesignSystemTextCharCountWidget(
             prefix=schema,
