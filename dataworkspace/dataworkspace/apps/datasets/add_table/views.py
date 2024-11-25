@@ -138,7 +138,7 @@ class DescriptiveNameView(FormView):
 
     def form_valid(self, form):
         descriptive_name = form.cleaned_data["descriptive_name"]
-        print('DN:', descriptive_name)
+        print('descriptivenameview descriptive_name:', descriptive_name)
         return HttpResponseRedirect(
             reverse(
                 "datasets:add_table:table-name",
@@ -160,6 +160,7 @@ class TableNameView(FormView):
                 "table_names": self.get_all_table_names(),
             }
         )
+        print('tablenameview, descriptive_name:', self.kwargs["descriptive_name"])
         return initial
 
     def is_multiple_schemas(self, dataset):
@@ -226,6 +227,8 @@ class UploadCSVView(FormView):
             "datasets:add_table:table-name",
             args=(self.kwargs["pk"], self.kwargs["schema"], self.kwargs["descriptive_name"]),
         )
+        print('uploadcsvview descriptive_name:', self.kwargs["descriptive_name"])
+
         return ctx
 
     def form_valid(self, form):
@@ -377,7 +380,7 @@ class AddTableDataTypesView(UploadCSVView):
                 self.kwargs["table_name"],
             ),
         )
-
+        print('datatypes descriptive_name:', self.kwargs["descriptive_name"])
         return ctx
 
 
@@ -521,7 +524,7 @@ class AddTableSuccessView(BaseAddTableTemplateView):
             schema=self._get_query_parameters()["schema"],
             dataset=dataset,
             database=database,
-            name=self._get_query_parameters()["table_name"],
+            name=self._get_query_parameters()["descriptive_name"],
             table=self._get_query_parameters()["table_name"],
             data_grid_download_enabled=True,
             data_grid_download_limit=self.default_download_limit,
@@ -533,6 +536,8 @@ class AddTableSuccessView(BaseAddTableTemplateView):
             "datasets:source_table_detail",
             kwargs={"dataset_uuid": self.kwargs["pk"], "object_id": source_table.id},
         )
+        print('Add table:', self._get_query_parameters()["descriptive_name"])
+        print('source_table.name: ', source_table.name)
         log_event(
             self.request.user,
             event_type=EventLog.TYPE_ADD_TABLE_TO_SOURCE_DATASET,
