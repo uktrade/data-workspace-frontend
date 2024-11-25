@@ -1215,7 +1215,7 @@ def get_team_prefixes(user):
 @close_all_connections_if_not_in_atomic_block
 def create_tools_access_iam_role_task(user_id):
     with cache.lock(
-        "create_tools_access_iam_role_task",
+        f"create_tools_access_iam_role_task_{user_id}",
         blocking_timeout=0,
         timeout=360,
     ):
