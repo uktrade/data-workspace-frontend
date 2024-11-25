@@ -7,8 +7,17 @@ import styled from 'styled-components';
 
 import ConfirmDialog from '../../components/ConfirmDialog/';
 
+const RemoveUserTableCell = styled(Table.Cell)`
+  vertical-align: middle;
+  text-align: right;
+`;
+
 const SpanBold = styled('span')`
   font-weight: bold;
+`;
+
+const UserNameTableCell = styled(Table.Cell)`
+  padding-bottom: 1px;
 `;
 
 type User = {
@@ -54,20 +63,15 @@ const ConfirmRemoveUser = ({
           <Table>
             {data.map((user) => (
               <Table.Row key={user.id}>
-                <Table.Cell style={{ paddingBottom: '1px' }}>
+                <UserNameTableCell>
                   <SpanBold>{`${user.first_name} ${user.last_name} `}</SpanBold>
                   <UserTypeSuffix user={user} />
                   <Paragraph>{user.email}</Paragraph>
-                </Table.Cell>
+                </UserNameTableCell>
                 {[user.iam, user.iao].some((x) => x == true) ? (
                   <Table.Cell></Table.Cell>
                 ) : (
-                  <Table.Cell
-                    style={{
-                      verticalAlign: 'middle',
-                      textAlign: 'right'
-                    }}
-                  >
+                  <RemoveUserTableCell>
                     <Button
                       buttonColour="#f3f2f1"
                       buttonTextColour="#0b0c0c"
@@ -76,7 +80,7 @@ const ConfirmRemoveUser = ({
                     >
                       Remove user
                     </Button>
-                  </Table.Cell>
+                  </RemoveUserTableCell>
                 )}
               </Table.Row>
             ))}

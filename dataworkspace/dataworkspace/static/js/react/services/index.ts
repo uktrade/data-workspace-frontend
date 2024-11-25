@@ -1,6 +1,7 @@
 import { API_BASE_URL } from '../constants';
 import {
   transformDataUsageResponse,
+  transformManageDataResponse,
   transformRecentCollectionsResponse,
   transformRecentItemsResponse,
   transformRecentToolsResponse,
@@ -9,6 +10,7 @@ import {
 import {
   type DataType,
   type DataUsageResponse,
+  type ManagedDataResponse,
   type TransformedDataUsageResponse,
   type TransformedYourBookmarksResponse,
   type TransformedYourRecentCollectionResponse,
@@ -41,6 +43,13 @@ export const fetchDataUsage = async (dataType: DataType, id: string) => {
   return handleResponse<DataUsageResponse, TransformedDataUsageResponse>(
     `/${API_BASE_URL}/${dataType}/${id}/stats/`,
     transformDataUsageResponse
+  );
+};
+
+export const fetchManageData = async () => {
+  return handleResponse<ManagedDataResponse, ManagedDataResponse>(
+    `/${API_BASE_URL}/managed_data/stats/`,
+    transformManageDataResponse
   );
 };
 

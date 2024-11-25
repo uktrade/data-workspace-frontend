@@ -2,6 +2,7 @@ import { DATA_USAGE_KEYS } from './constants';
 import type {
   DataUsageKeys,
   DataUsageResponse,
+  ManagedDataResponse,
   TransformedDataUsageResponse,
   TransformedYourBookmarksResponse,
   TransformedYourRecentCollectionResponse,
@@ -20,6 +21,12 @@ export const transformDataUsageResponse = (
     label: DATA_USAGE_KEYS[key as DataUsageKeys],
     value: Math.round(response[key as keyof unknown] * 1000) / 1000
   }));
+
+export const transformManageDataResponse = (
+  response: ManagedDataResponse
+): ManagedDataResponse => {
+  return { count: response.count, managed_data_url: response.managed_data_url };
+};
 
 export const transformRecentCollectionsResponse = (
   response: YourRecentCollectionResponse

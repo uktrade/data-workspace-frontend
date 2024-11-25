@@ -23,6 +23,11 @@ export type TransformedDataUsageResponse = {
   value: number;
 }[];
 
+export type ManagedDataResponse = {
+  count: number;
+  managed_data_url: string;
+};
+
 export type YourRecentCollectionResponse = {
   results: {
     name: string;

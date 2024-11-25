@@ -17,6 +17,7 @@ type TileProps = {
   as?: React.ElementType;
   headerSize?: number;
   headerLevel?: 1 | 2 | 3 | 4 | 5;
+  contentWrapper?: boolean;
   children: ReactNode;
   dataTest?: string;
 };
@@ -38,11 +39,16 @@ const Header: React.FC<HeaderProps> = ({
   return header[headerLevel];
 };
 
+const ContentWrapper = styled('div')`
+  margin-top: 30px;
+`;
+
 const Tile: React.FC<TileProps> = ({
   title,
   headerSize = 27,
   headerLevel = 2,
   as,
+  contentWrapper = false,
   children,
   dataTest
 }) => {
@@ -53,7 +59,13 @@ const Tile: React.FC<TileProps> = ({
         <Header headerLevel={headerLevel} headerSize={headerSize}>
           {title}
         </Header>
-        {children}
+        {contentWrapper ? (
+          <>
+            <ContentWrapper>{children}</ContentWrapper>{' '}
+          </>
+        ) : (
+          <>{children} </>
+        )}
       </InnerContainer>
     </Component>
   );
