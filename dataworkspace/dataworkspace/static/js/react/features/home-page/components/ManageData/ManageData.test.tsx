@@ -18,12 +18,7 @@ describe('ManagedData', () => {
     }
   ];
 
-  const managed_data_stats_no_dataset: ManagedDataProps[] = [
-    {
-      count: 0,
-      managed_data_url: '/datasets?q='
-    }
-  ];
+  const managed_data_stats_no_dataset: ManagedDataProps[] = [];
 
   describe('With results', () => {
     it('should render a title', () => {
