@@ -102,7 +102,7 @@
         {% else %}
          <div class="govuk-grid-column-full">
           <table class="govuk-table">
-              <caption class="govuk-table__caption govuk-table__caption--m govuk-!-margin-bottom-0">Found {{ search_results.count }} matching user{% if search_results.count > 1 %}s{% else %} for {{ search_query }}{% endif %}</caption>
+              <caption class="govuk-table__caption govuk-table__caption--m govuk-!-margin-bottom-0">Found {{ search_results|length }} matching user{% if search_results|length > 1 %}s{% else %} for {{ search_query }}{% endif %}</caption>
               <tbody class="govuk-table__body">
                   {% for result in search_results %}
                   <tr class="govuk-table__row">
@@ -111,7 +111,11 @@
                         <td class="govuk-table__cell table-cell--text-align-right">
                           <form action="{% url 'datasets:add_authorized_user' obj.id summary_id result.id %}" method="post" novalidate>
                             {% csrf_token %}
-                            <button type="submit" class="govuk-button govuk-!-margin-bottom-0">Add user</button>
+                            {% if result.has_access %}
+                              User is already a member
+                            {% else %}
+                              <button type="submit" class="govuk-button govuk-!-margin-bottom-0">Add user</button>
+                            {% endif %}
                           </form>
                         </td>
                       {% else %}
