@@ -1648,19 +1648,23 @@ class UserSearchFormView(EditBaseView, FormView):
                 if isinstance(self.obj, DataSet):
                     permissions = DataSetUserPermission.objects.filter(dataset=self.obj)
                 else:
-                    permissions = VisualisationUserPermission.objects.filter(visualisation=self.obj)
+                    permissions = VisualisationUserPermission.objects.filter(
+                        visualisation=self.obj
+                    )
 
                 users_with_permission = [p.user.id for p in permissions]
                 search_results = []
 
                 for user in users:
-                    search_results.append({
-                        "id": user.id,
-                        "first_name": user.first_name,
-                        "last_name": user.last_name,
-                        "email": user.email,
-                        "has_access": user.id in users_with_permission
-                    })
+                    search_results.append(
+                        {
+                            "id": user.id,
+                            "first_name": user.first_name,
+                            "last_name": user.last_name,
+                            "email": user.email,
+                            "has_access": user.id in users_with_permission,
+                        }
+                    )
 
                 context["search_results"] = search_results
             context["search_query"] = search_query
