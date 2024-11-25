@@ -36,6 +36,24 @@
     }
   },
   {
+    "model": "auth.user",
+    "pk": 3,
+    "fields": {
+      "password": "!66U6PxGMZicWtltyo4dThbXaa8tmejXhu7QN6iad",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "20a0353f-a7d1-4851-9af8-1bcaff152b63",
+      "first_name": "Jack",
+      "last_name": "Sparrow",
+      "email": "jack.sparrow@businessandtrade.gov.uk",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2024-01-04T12:53:52.272Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
     "model": "core.database",
     "pk": "ac99394d-336c-4de9-8c9f-c5bd38d0b670",
     "fields": {
@@ -69,6 +87,20 @@
       "sso_status": "active",
       "home_directory_efs_access_point_id": null,
       "first_login": "2024-01-04T12:53:52.321Z",
+      "tools_certification_date": null,
+      "is_renewal_email_sent": false
+    }
+  },
+  {
+    "model": "accounts.profile",
+    "pk": 3,
+    "fields": {
+      "user": 3,
+      "sso_id": "093972f7-2bd1-4336-8240-8c7b15c863d2",
+      "tools_access_role_arn": "",
+      "sso_status": "active",
+      "home_directory_efs_access_point_id": null,
+      "first_login": null,
       "tools_certification_date": null,
       "is_renewal_email_sent": false
     }
@@ -116,7 +148,7 @@
       "published_at": "2024-01-12",
       "dictionary_published": true,
       "eligibility_criteria": null,
-      "number_of_downloads": 92,
+      "number_of_downloads": 106,
       "information_asset_owner": 1,
       "information_asset_manager": 1,
       "reference_code": null,
@@ -234,7 +266,7 @@
     "pk": "7533af71-45ec-49fc-92c8-03d421af7250",
     "fields": {
       "created_date": "2024-11-15T14:43:07.444Z",
-      "modified_date": "2024-11-15T14:43:07.444Z",
+      "modified_date": "2024-11-22T11:39:31.015Z",
       "deleted": false,
       "created_by": 2,
       "updated_by": 2,
@@ -272,7 +304,7 @@
       "government_security_classification": 1,
       "esda": false,
       "tags": [],
-      "data_catalogue_editors": [],
+      "data_catalogue_editors": [1],
       "sensitivity": []
     }
   },
@@ -614,7 +646,7 @@
   },
   {
     "model": "datasets.datasetuserpermission",
-    "pk": 6,
+    "pk": 36,
     "fields": { "user": 1, "dataset": "7533af71-45ec-49fc-92c8-03d421af7250" }
   },
   {
