@@ -1,5 +1,5 @@
 const endpoints = {
-  managedData: "/api/v2/managed_data/stats/*",
+  managedData: "/api/v2/managed_data/stats/",
   recentItems: "/api/v2/recent_items/*",
   recentCollections: "/api/v2/collections/*",
   recentTools: "/api/v2/recent_tools/*",
@@ -46,7 +46,7 @@ describe("Homepage dashboard", () => {
 
   context("When a user visits the page for the first time", () => {
     beforeEach(() => {
-      cy.intercept(endpoints.managedData, {}).as("managedData");
+      cy.intercept(endpoints.managedData, { count: 0, managed_data_url: 'such-and-such'}).as("managedData");
       cy.intercept(endpoints.recentItems, { results: [] }).as("recentItems");
       cy.intercept(endpoints.recentCollections, { results: [] }).as(
         "recentCollections"
@@ -189,7 +189,7 @@ describe("Homepage dashboard", () => {
         name: "You're the owner or manager of 50 datasets",
       }).should("be.visible");
       cy.findByRole("link", { name: "View and manage your data" }).should('have.attr', 'href', '/datasets/?q=&sort=relevance&my_datasets=owned');
-      cy.findByRole("link", { name: "Learn how to maintain and manage data you're responsible for on Data Workspace" }).should('have.attr', 'href', 'https://data-services-help.trade.gov.uk/data-workspace/how-to/data-owner-basics/managing-data-key-tasks-and-responsibilities');
+      cy.findByRole("link", { name: /Learn how to maintain and manage data/i }).should('have.attr', 'href', 'https://data-services-help.trade.gov.uk/data-workspace/how-to/data-owner-basics/managing-data-key-tasks-and-responsibilities');
     });
 
     it("should show the 'Your recent items' section with items", () => {
