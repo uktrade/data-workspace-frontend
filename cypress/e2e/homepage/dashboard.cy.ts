@@ -46,7 +46,7 @@ describe("Homepage dashboard", () => {
 
   context("When a user visits the page for the first time", () => {
     beforeEach(() => {
-      cy.intercept(endpoints.managedData, {}).as("managedData");
+      cy.intercept(endpoints.managedData, {}).as("managedData/stats");
       cy.intercept(endpoints.recentItems, { results: [] }).as("recentItems");
       cy.intercept(endpoints.recentCollections, { results: [] }).as(
         "recentCollections"
@@ -59,7 +59,7 @@ describe("Homepage dashboard", () => {
     });
 
     it("should not show the managed data tile", () => {
-      cy.wait("@managedData");
+      cy.wait("@managedData/stats");
       cy.get('article').contains("You're the owner or manager of ").should('not.exist');
     });
 
@@ -122,7 +122,7 @@ describe("Homepage dashboard", () => {
       cy.intercept(endpoints.managedData, {
         "count": 50,
         "managed_data_url": "/datasets/?q=&sort=relevance&my_datasets=owned"
-      }).as("managedData");
+      }).as("managedData/stats");
       cy.intercept(endpoints.recentItems, {
         results: [
           {
@@ -183,7 +183,7 @@ describe("Homepage dashboard", () => {
     });
 
     it("should show the 'Managed Data' section with with a figure", () => {
-      cy.wait("@managedData");
+      cy.wait("@managedData/stats");
       cy.findByRole("heading", {
         level: 2,
         name: "You're the owner or manager of 50 datasets",
