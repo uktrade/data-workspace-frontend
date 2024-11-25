@@ -77,7 +77,7 @@ describe('RecentCollections', () => {
         })
       ).toHaveAttribute(
         'href',
-        'https://data-services-help.trade.gov.uk/data-workspace/add-share-and-manage-data/manage-data/'
+        'https://data-services-help.trade.gov.uk/data-workspace/how-to/data-owner-basics/managing-data-key-tasks-and-responsibilities'
       );
     });
     it('should not render a link to helpcentre guidance', () => {
