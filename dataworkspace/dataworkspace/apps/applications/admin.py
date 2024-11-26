@@ -394,6 +394,8 @@ class ToolTemplateAdmin(admin.ModelAdmin):
                     "group_name",
                     "application_summary",
                     "application_help_link",
+                    "tag",
+                    "tag_extra_css_class",
                     "spawner",
                     "spawner_time",
                     "spawner_options",
