@@ -564,7 +564,7 @@ class TestUploadCSVPage(TestCase):
             "Check your CSV against each of the below points. This can help you avoid common issues when the table is being built."
             in paragraph_one_text
         )
-        assert len(bullet_point_text) + len(bullet_point_text_two) == 5
+        assert len(bullet_point_text) + len(bullet_point_text_two) == 6
 
     def test_csv_upload_fails_when_it_contains_special_chars(self):
         file1 = SimpleUploadedFile(
