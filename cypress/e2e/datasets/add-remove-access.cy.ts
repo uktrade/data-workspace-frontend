@@ -5,7 +5,7 @@ import {
 
 import { sourceWithTableNoAccess } from "../../fixtures/datasets";
 
-describe("Adding and removing access to a dataset", () => {
+describe("Adding and removing user access to a dataset", () => {
   context("when I view the manage access page", () => {
     before(() => {
       cy.setUsersEditorAccess(sourceWithTableNoAccess, true);
@@ -26,6 +26,38 @@ describe("Adding and removing access to a dataset", () => {
       });
     });
   });
+
+  context("when I search for users", () => {
+    beforeEach(() => {
+      cy.setUsersEditorAccess(sourceWithTableNoAccess, true);
+      cy.visit(`datasets/${sourceWithTableNoAccess}/edit-permissions`);
+    });
+    it("should show a search title for one user", () => {
+      cy.findByRole("button", { name: "Add users" })
+        .should("be.visible")
+        .click();
+      cy.findByRole("textbox", {
+        name: "Search by email address or name",
+      })
+        .should("be.visible")
+        .type("vyvyan");
+      cy.findByRole("button", { name: "Search" }).should("be.visible").click();
+      cy.findByText("Found 1 matching user for vyvyan").should("be.visible");
+    });
+    it("should show a search title for multiple users", () => {
+      cy.findByRole("button", { name: "Add users" })
+        .should("be.visible")
+        .click();
+      cy.findByRole("textbox", {
+        name: "Search by email address or name",
+      })
+        .should("be.visible")
+        .type("businessandtrade");
+      cy.findByRole("button", { name: "Search" }).should("be.visible").click();
+      cy.findByText("Found 2 matching users").should("be.visible");
+    });
+  });
+
   context("when I search and add a user", () => {
     before(() => {
       cy.setUsersEditorAccess(sourceWithTableNoAccess, true);
@@ -57,13 +89,9 @@ describe("Adding and removing access to a dataset", () => {
         "An email has been sent to Vyvyan Holland to let them know they now have access."
       );
     });
-  });
-  context("when I view the manage access page", () => {
-    before(() => {
+    it("should show two users that have access", () => {
       cy.setUsersEditorAccess(sourceWithTableNoAccess, true);
       cy.visit(`datasets/${sourceWithTableNoAccess}/edit-permissions`);
-    });
-    it("should show two users that has access", () => {
       cy.findByRole("heading", {
         name: "Manage access to Source dataset - access request",
         level: 1,
@@ -79,6 +107,32 @@ describe("Adding and removing access to a dataset", () => {
       });
     });
   });
+
+  context("when I search and try to add a user that already has access", () => {
+    before(() => {
+      cy.setUsersEditorAccess(sourceWithTableNoAccess, true);
+      cy.visit(`datasets/${sourceWithTableNoAccess}/edit-permissions`);
+    });
+    it("should display one user with a label that says they already has access", () => {
+      cy.findByRole("button", { name: "Add users" })
+        .should("be.visible")
+        .click();
+
+      cy.findByRole("textbox", {
+        name: "Search by email address or name",
+      })
+        .should("be.visible")
+        .type("vyvyan");
+      cy.findByRole("button", { name: "Search" }).should("be.visible").click();
+      cy.get("table").within(() => {
+        cy.get("tr").should("have.length", 1);
+        cy.get("td").contains("Vyvyan Holland");
+        cy.get("td").contains("User is already a member");
+      });
+      cy.findAllByRole("button", { name: "Add user" }).should("not.exist");
+    });
+  });
+
   context("when I remove the users data access", () => {
     beforeEach(() => {
       cy.visit(`datasets/${sourceWithTableNoAccess}/edit-permissions`);
