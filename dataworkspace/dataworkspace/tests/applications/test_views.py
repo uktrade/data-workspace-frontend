@@ -4,6 +4,7 @@ from unittest import mock
 
 import botocore
 import pytest
+from bs4 import BeautifulSoup
 from django.contrib.admin.models import LogEntry
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
@@ -630,6 +631,34 @@ class TestToolsPage:
         assert tool.tool_configuration.size_config.name == "Extra Large"
         assert tool.tool_configuration.size_config.cpu == 4096
         assert tool.tool_configuration.size_config.memory == 30720
+
+    @pytest.mark.django_db
+    def test_tool_with_tag_and_class_is_shown_on_tools_page(self):
+        # Create tools with and without a tag
+        factories.ApplicationTemplateFactory(
+            nice_name="Tool with tag", tag="The tool tag", tag_extra_css_class="a-tag-class"
+        )
+        factories.ApplicationTemplateFactory(nice_name="Tool without tag")
+
+        # Request the tools page
+        user = get_user_model().objects.create()
+        client = Client(**get_http_sso_data(user))
+        response = client.get(reverse("applications:tools"), follow=True)
+        content = response.content.decode(response.charset)
+        assert response.status_code == 200
+
+        # Assert that the tag is in the tool-name header, and it has the right class
+        soup = BeautifulSoup(content)
+        header = soup.find(lambda tag: tag.name == "h3" and "Tool with tag" in tag.text)
+        tag = header.find("strong", string="The tool tag")
+        assert "a-tag-class" in tag["class"]
+
+        # Assert the tag and class is shown once, in spite of there being multiple tools
+        # (The name of each tool is shown twice, once in the header and once in the button)
+        assert content.count("Tool with tag") == 2
+        assert content.count("Tool without tag") == 2
+        assert content.count("The tool tag") == 1
+        assert content.count("a-tag-class") == 1
 
 
 class TestUserToolSizeConfigurationView:
