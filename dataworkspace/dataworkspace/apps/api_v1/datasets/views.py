@@ -332,6 +332,8 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
         "slug",
         "purpose",
         "source_tags",
+        "publisher_tags",
+        "topic_tags",
         "draft",
         "dictionary",
         "personal_data",
@@ -355,6 +357,20 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
             source_tags=ArrayAgg(
                 "tags__name",
                 filter=models.Q(tags__type=TagType.SOURCE),
+                distinct=True,
+            )
+        )
+        .annotate(
+            publisher_tags=ArrayAgg(
+                "tags__name",
+                filter=models.Q(tags__type=TagType.PUBLISHER),
+                distinct=True,
+            )
+        )
+        .annotate(
+            topic_tags=ArrayAgg(
+                "tags__name",
+                filter=models.Q(tags__type=TagType.TOPIC),
                 distinct=True,
             )
         )
@@ -403,6 +419,20 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
                     distinct=True,
                 )
             )
+            .annotate(
+                publisher_tags=ArrayAgg(
+                    "tags__name",
+                    filter=models.Q(tags__type=TagType.PUBLISHER),
+                    distinct=True,
+                )
+            )
+            .annotate(
+                topic_tags=ArrayAgg(
+                    "tags__name",
+                    filter=models.Q(tags__type=TagType.TOPIC),
+                    distinct=True,
+                )
+            )
             .annotate(user_ids=Value([], output_field=ArrayField(models.IntegerField())))
             .annotate(draft=F("is_draft"))
             .annotate(dictionary=F("published"))
@@ -427,6 +457,20 @@ class CatalogueItemsInstanceViewSet(viewsets.ModelViewSet):
                 source_tags=ArrayAgg(
                     "tags__name",
                     filter=models.Q(tags__type=TagType.SOURCE),
+                    distinct=True,
+                )
+            )
+            .annotate(
+                publisher_tags=ArrayAgg(
+                    "tags__name",
+                    filter=models.Q(tags__type=TagType.PUBLISHER),
+                    distinct=True,
+                )
+            )
+            .annotate(
+                topic_tags=ArrayAgg(
+                    "tags__name",
+                    filter=models.Q(tags__type=TagType.TOPIC),
                     distinct=True,
                 )
             )
