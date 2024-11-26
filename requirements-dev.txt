@@ -8,7 +8,7 @@ aiohappyeyeballs==2.3.5
     # via
     #   -r requirements.txt
     #   aiohttp
-aiohttp==3.10.2
+aiohttp==3.11.7
     # via
     #   -r requirements.txt
     #   elasticsearch
@@ -24,6 +24,8 @@ amqp==5.1.1
     #   kombu
 appdirs==1.4.4
     # via pyppeteer
+appnope==0.1.4
+    # via ipython
 asgiref==3.7.2
     # via
     #   -r requirements.txt
@@ -254,7 +256,6 @@ greenlet==3.0.1
     # via
     #   -r requirements.txt
     #   gevent
-    #   sqlalchemy
 h11==0.13.0
     # via wsproto
 hawk-server-asyncio==0.0.13
@@ -394,6 +395,11 @@ prompt-toolkit==3.0.38
     #   click-repl
     #   ipython
     #   remote-pdb-client
+propcache==0.2.0
+    # via
+    #   -r requirements.txt
+    #   aiohttp
+    #   yarl
 psutil==5.7.2
     # via -r requirements.txt
 psycogreen==1.0.2
@@ -541,7 +547,6 @@ sentry-sdk==2.8.0
 six==1.15.0
     # via
     #   -r requirements.txt
-    #   asttokens
     #   bleach
     #   click-repl
     #   django-compressor
@@ -678,7 +683,7 @@ xlrd==2.0.1
     #   tabulator
 xlsxwriter==1.2.8
     # via -r requirements.txt
-yarl==1.9.4
+yarl==1.18.0
     # via
     #   -r requirements.txt
     #   aiohttp
