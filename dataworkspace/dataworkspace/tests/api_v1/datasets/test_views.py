@@ -21,7 +21,7 @@ from dataworkspace.apps.datasets.models import (
 )
 from dataworkspace.tests import factories
 from dataworkspace.tests.api_v1.base import BaseAPIViewTest
-from dataworkspace.apps.datasets.constants import DataSetType
+from dataworkspace.apps.datasets.constants import DataSetType, TagType
 
 
 def flush_database(connection):
@@ -466,7 +466,21 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
             "dictionary_published": getattr(dataset, "dictionary_published", None),
             "licence": dataset.licence or None,
             "purpose": purpose,
-            "source_tags": [t.name for t in dataset.tags.all()] if dataset.tags.all() else None,
+            "source_tags": (
+                [t.name for t in dataset.tags.all() if t.type == TagType.SOURCE]
+                if dataset.tags.all()
+                else None
+            ),
+            "publisher_tags": (
+                [t.name for t in dataset.tags.all() if t.type == TagType.PUBLISHER]
+                if dataset.tags.all()
+                else None
+            ),
+            "topic_tags": (
+                [t.name for t in dataset.tags.all() if t.type == TagType.TOPIC]
+                if dataset.tags.all()
+                else None
+            ),
             "personal_data": personal_data,
             "retention_policy": retention_policy,
             "eligibility_criteria": list(eligibility_criteria) if eligibility_criteria else None,
@@ -507,7 +521,13 @@ class TestCatalogueItemsAPIView(BaseAPIViewTest):
                 eligibility_criteria=["eligibility"],
             )
         datacut.data_catalogue_editors.set([catalogue_editor])
-        datacut.tags.set([factories.SourceTagFactory()])
+        datacut.tags.set(
+            [
+                factories.SourceTagFactory(),
+                factories.TopicTagFactory(),
+                factories.PublisherTagFactory(),
+            ]
+        )
 
         with freeze_time("2020-01-01 00:01:00"):
             master_dataset = factories.MasterDataSetFactory(
