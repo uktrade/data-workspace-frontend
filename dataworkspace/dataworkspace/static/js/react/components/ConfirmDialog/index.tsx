@@ -18,13 +18,17 @@ const ContainerButtonGroup = styled('div')`
 
 const Dialog = styled('dialog')`
   padding: 30px 30px 0px;
-  width: 660px;
+  width: 600px;
 `;
 
 const StyledLink = styled(Link)`
   display: inline-block;
   font-size: 20px;
-  margin-top: 5px;
+`;
+
+const StyledForm = styled('form')`
+  display: flex;
+  align-items: baseline;
 `;
 
 export const ConfirmDialog = (props: ConfirmDialogProps) => {
@@ -43,7 +47,7 @@ export const ConfirmDialog = (props: ConfirmDialogProps) => {
     <Dialog ref={refModal}>
       <H2 size="LARGE">{props.title}</H2>
       <ContainerButtonGroup>
-        <form
+        <StyledForm
           action={props.actionUrl}
           aria-label="form"
           method="GET"
@@ -59,7 +63,7 @@ export const ConfirmDialog = (props: ConfirmDialogProps) => {
           <StyledLink href="javascript:;" onClick={props.onClose}>
             Cancel
           </StyledLink>
-        </form>
+        </StyledForm>
       </ContainerButtonGroup>
     </Dialog>
   );

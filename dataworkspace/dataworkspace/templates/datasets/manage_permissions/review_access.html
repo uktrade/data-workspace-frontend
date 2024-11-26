@@ -34,15 +34,14 @@
         <div class="govuk-grid-column-two-thirds">
           {% include 'design_system/error_summary.html' with form=form %}
             <h1 class="govuk-heading-xl">Review {{full_name}}'s access to {{obj.name}}</h1>
-            <h2 class="govuk-heading-l govuk-!-font-size-27">Requestor</h2>
-            <p class="govuk-body"><strong>{{full_name}}</strong></p>
-            <p class="govuk-body">{{email}}</p>
-            <h2 class="govuk-heading-l govuk-!-font-size-27">Requestor's reason for access</h2>
-            <p class="govuk-body">{{reason_for_access}}</p>
+            <h2 class="govuk-heading-l govuk-!-font-size-27 govuk-!-margin-bottom-4">Requestor</h2>
+            <p class="govuk-body"><strong>{{full_name}}</strong><br />{{email}}</p>
+            <h2 class="govuk-heading-l govuk-!-font-size-27 govuk-!-margin-bottom-4">Requestor's reason for access</h2>
+            <p class="govuk-body govuk-!-margin-bottom-7">{{reason_for_access}}</p>
             {% if eligibility_criteria is not null %}
-            <h2 class="govuk-heading-l govuk-!-font-size-27">Have the eligibility requirements been met?</h2>
+            <h2 class="govuk-heading-l govuk-!-font-size-27 govuk-!-padding-top-0 govuk-!-margin-bottom-4">Have the eligibility requirements been met?</h2>
             <details class="govuk-details govuk govuk-!-margin-bottom-4" data-module="govuk-details">
-              <summary class="govuk-details__summary">
+              <summary class="govuk-details__summary govuk-!-margin-bottom-0">
                 <span class="govuk-details__summary-text">
                   Eligibility requirements needed to access this data
                 </span>
@@ -60,7 +59,7 @@
               </div>
             </details>
               {% if is_eligible %}
-                <p class="govuk-body"><strong>The requestor answered that they do meet the eligibility requirements</strong></p>
+                <p class="govuk-body govuk-!-margin-bottom-7"><strong>The requestor answered that they do meet the eligibility requirements</strong></p>
                 {% else %}
                 <p class="govuk-body"><strong>The requestor answered that they do not meet the eligibility requirements</strong></p>
                 <p class="govuk-body govuk-!-margin-bottom-7">You can still grant them access if they have a good reason for it.</p>
