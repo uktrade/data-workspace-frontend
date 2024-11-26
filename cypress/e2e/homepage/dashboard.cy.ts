@@ -46,7 +46,7 @@ describe("Homepage dashboard", () => {
 
   context("When a user visits the page for the first time", () => {
     beforeEach(() => {
-      cy.intercept(endpoints.managedData, { count: 0, managed_data_url: 'such-and-such'}).as("managedData");
+      cy.intercept(endpoints.managedData, { results: [] }).as("managedData");
       cy.intercept(endpoints.recentItems, { results: [] }).as("recentItems");
       cy.intercept(endpoints.recentCollections, { results: [] }).as(
         "recentCollections"
@@ -120,8 +120,11 @@ describe("Homepage dashboard", () => {
   context("When an exisiting user visits the page", () => {
     beforeEach(() => {
       cy.intercept(endpoints.managedData, {
-        "count": 50,
-        "managed_data_url": "/datasets/?q=&sort=relevance&my_datasets=owned"
+        results: [{
+          "count": 50,
+          "managed_data_url": "/datasets/?q=&sort=relevance&my_datasets=owned"
+        }
+        ]
       }).as("managedData");
       cy.intercept(endpoints.recentItems, {
         results: [

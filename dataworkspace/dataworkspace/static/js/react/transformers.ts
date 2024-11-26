@@ -4,6 +4,7 @@ import type {
   DataUsageResponse,
   ManagedDataResponse,
   TransformedDataUsageResponse,
+  TransformedManagedDataResponse,
   TransformedYourBookmarksResponse,
   TransformedYourRecentCollectionResponse,
   TransformedYourRecentItemsResponse,
@@ -24,9 +25,11 @@ export const transformDataUsageResponse = (
 
 export const transformManageDataResponse = (
   response: ManagedDataResponse
-): ManagedDataResponse => {
-  return { count: response.count, managed_data_url: response.managed_data_url };
-};
+): TransformedManagedDataResponse =>
+  response.results.map(({ count, managed_data_url }) => ({
+    count: count,
+    managed_data_url: managed_data_url
+  }));
 
 export const transformRecentCollectionsResponse = (
   response: YourRecentCollectionResponse

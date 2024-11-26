@@ -14,15 +14,21 @@ const ErrorMessage = styled('p')`
 
 type FetchDataContainerProps<Result> = {
   fetchApi: () => Promise<Result>;
+  renderIfDataEmpty?: boolean;
   children: (data: Result) => React.ReactNode;
 };
 
 type FetchDataContainer = <Result>({
   fetchApi,
+  renderIfDataEmpty,
   children
 }: FetchDataContainerProps<Result>) => React.ReactNode;
 
-const FetchDataContainer: FetchDataContainer = ({ fetchApi, children }) => {
+const FetchDataContainer: FetchDataContainer = ({
+  fetchApi,
+  renderIfDataEmpty = true,
+  children
+}) => {
   type ApiReturn = ReturnType<typeof fetchApi>;
   type Result = Awaited<ApiReturn>;
   const [data, setData] = useState<unknown>([]);
@@ -45,19 +51,23 @@ const FetchDataContainer: FetchDataContainer = ({ fetchApi, children }) => {
     }
     fetchData();
   }, []);
-
+  const hasData = data && (Array.isArray(data) ? data.length > 0 : true);
   return (
-    <LoadingBox loading={loading}>
-      <>
-        {error ? (
-          <ErrorMessage data-testid="data-usage-error">
-            Error: {error}
-          </ErrorMessage>
-        ) : (
-          children(data as Result)
-        )}
-      </>
-    </LoadingBox>
+    <>
+      {hasData || renderIfDataEmpty ? (
+        <LoadingBox loading={loading}>
+          <>
+            {error ? (
+              <ErrorMessage data-testid="data-usage-error">
+                Error: {error}
+              </ErrorMessage>
+            ) : (
+              children(data as Result)
+            )}
+          </>
+        </LoadingBox>
+      ) : null}
+    </>
   );
 };
 

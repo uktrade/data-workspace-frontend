@@ -12,6 +12,7 @@ import {
   type DataUsageResponse,
   type ManagedDataResponse,
   type TransformedDataUsageResponse,
+  type TransformedManagedDataResponse,
   type TransformedYourBookmarksResponse,
   type TransformedYourRecentCollectionResponse,
   type TransformedYourRecentItemsResponse,
@@ -47,7 +48,7 @@ export const fetchDataUsage = async (dataType: DataType, id: string) => {
 };
 
 export const fetchManageData = async () => {
-  return handleResponse<ManagedDataResponse, ManagedDataResponse>(
+  return handleResponse<ManagedDataResponse, TransformedManagedDataResponse>(
     `/${API_BASE_URL}/managed_data/stats/`,
     transformManageDataResponse
   );
