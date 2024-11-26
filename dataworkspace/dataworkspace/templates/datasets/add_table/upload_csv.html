@@ -20,7 +20,8 @@ Add Table - {{ model.name }} - {{ block.super }}{% endblock %}
             <ul class="govuk-list govuk-list--bullet">
                 <li>the file has more than one row</li>
                 <li>there are no special characters in the file name (e.g. /*? ) apart from underscores and hyphens</li>
-                <li>Google Sheets documents are downloaded as a standard CSV file</li>
+                <li>the file type is CSV UTF-8 (comma delimited) instead of any other CSV file type</li>
+                <li>Google Sheets documents are downloaded as CSV UTF-8 (comma delimited)</li>
             </ul>
             <h2 class="govuk-heading-m">Check your formatting in Excel</h2>
             <p class="govuk-body">Check that:</p>
