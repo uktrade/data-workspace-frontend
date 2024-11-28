@@ -1213,16 +1213,16 @@ def get_team_prefixes(user):
 
 @celery_app.task(autoretry_for=(redis.exceptions.LockError,))
 @close_all_connections_if_not_in_atomic_block
-def create_tools_access_iam_role_task(user_id):
+def create_tools_access_iam_role_task(user_id, force=False):
     with cache.lock(
         f"create_tools_access_iam_role_task_{user_id}",
         blocking_timeout=0,
         timeout=360,
     ):
-        _do_create_tools_access_iam_role(user_id)
+        _do_create_tools_access_iam_role(user_id, force=force)
 
 
-def _do_create_tools_access_iam_role(user_id):
+def _do_create_tools_access_iam_role(user_id, force=False):
     User = get_user_model()
     try:
         user = User.objects.get(id=user_id)
@@ -1233,14 +1233,15 @@ def _do_create_tools_access_iam_role(user_id):
             user.id,
             user.email,
             user.profile.home_directory_efs_access_point_id,
+            force=force,
         )
         gevent.sleep(1)
 
 
-def create_tools_access_iam_role(user_id, user_email_address, access_point_id):
+def create_tools_access_iam_role(user_id, user_email_address, access_point_id, force=False):
     user = get_user_model().objects.get(id=user_id)
     s3_prefixes = get_user_s3_prefixes(user)
-    if user.profile.tools_access_role_arn:
+    if not force and user.profile.tools_access_role_arn:
         return user.profile.tools_access_role_arn, s3_prefixes
 
     iam_client = get_iam_client()
@@ -1344,8 +1345,7 @@ def team_membership_post_save(instance, **kwargs):
     When a team member is added to a team, update their tools access
     to include the team s3 prefix
     """
-    if kwargs["created"] and instance.user.profile.tools_access_role_arn:
-        update_tools_access_policy_task.delay(instance.user_id)
+    create_tools_access_iam_role_task.delay(instance.user_id, force=True)
 
 
 @receiver(post_delete, sender=TeamMembership)
@@ -1354,8 +1354,7 @@ def team_membership_post_delete(instance, **_):
     When a team member is removed from a team, update their tools access
     to remove the team s3 prefix
     """
-    if instance.user.profile.tools_access_role_arn:
-        update_tools_access_policy_task.delay(instance.user_id)
+    create_tools_access_iam_role_task.delay(instance.user_id, force=True)
 
 
 def get_postgres_datatype_choices():

@@ -882,6 +882,7 @@ class TestCreateToolsAccessIAMRoleTask:
                 user.id,
                 user.email,
                 "some-access-point-id",
+                force=False,
             )
         ]
 

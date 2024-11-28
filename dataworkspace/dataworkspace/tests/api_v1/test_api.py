@@ -171,7 +171,6 @@ def test_adding_user_to_team_after_email_change_gives_permission_to_team_folder(
     # Add the user to the team_b
     TeamMembershipFactory(team=team_b, user=user)
 
-    # Assert the user still cannot access the team_b folder. This is not desirable behaviour, but
-    # this evidences that a bug exists to be fixed later.
+    # Assert the user can now access both team folders (roughly)
     assert team_a_prefix in get_policy_statements()
-    assert team_b_prefix not in get_policy_statements()
+    assert team_b_prefix in get_policy_statements()
