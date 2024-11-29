@@ -1289,7 +1289,7 @@ def create_tools_access_iam_role(user_id, user_email_address, access_point_id):
 
     # Cache the role_arn so it can be retrieved in the future without calling AWS
     user.profile.tools_access_role_arn = role_arn
-    user.save()
+    user.profile.save(update_fields=["tools_access_role_arn"])
 
     return role_arn, s3_prefixes
 
