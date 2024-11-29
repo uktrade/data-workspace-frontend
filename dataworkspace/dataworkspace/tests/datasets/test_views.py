@@ -5110,7 +5110,6 @@ class TestDatasetReviewAccess:
         header_one = soup.find("h1")
         requester_section_header = header_one.find_next_sibling("h2")
         requester_section_name = requester_section_header.find_next_sibling("p")
-        requester_section_email = requester_section_name.find_next_sibling("p")
         requester_reason_section_header = soup.find_all("h2")[1]
         requester_reason_section_reason = requester_reason_section_header.find_next_sibling("p")
 
@@ -5126,8 +5125,7 @@ class TestDatasetReviewAccess:
         assert response.status_code == 200
         assert header_one.get_text() == "Review Bob Testerten's access to Master"
         assert requester_section_header.get_text() == "Requestor"
-        assert requester_section_name.get_text() == "Bob Testerten"
-        assert requester_section_email.get_text() == "bob.testerten@contact-email.com"
+        assert requester_section_name.get_text() == "Bob Testertenbob.testerten@contact-email.com"
         assert requester_reason_section_header.get_text() == "Requestor's reason for access"
         assert requester_reason_section_reason.get_text() == "I need it"
 
