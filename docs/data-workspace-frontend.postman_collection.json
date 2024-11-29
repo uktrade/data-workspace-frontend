@@ -1,7 +1,8 @@
 {
 	"info": {
-		"_postman_id": "83e61590-33da-4c6e-90ce-a319c2e5e1b6",
+		"_postman_id": "74b35b99-86c9-4c0a-bd9b-a31f23677019",
 		"name": "data-workspace-frontend",
+		"description": "To use this collection you need to set up a Postman \"environment\" with 3 variables:\n\n1. **data_workspace_host** - The hostname of the environment to connect to\n    \n2. **data_workspace_hawk_id -** The HAWK ID used to sign requests\n    \n3. **data_workspace_hawk_key -** The HAWK key (secret) used to sign requests",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "38756713"
 	},
@@ -10,7 +11,282 @@
 			"name": "API V1 (Hawk)",
 			"item": [
 				{
-					"name": "Catalogue Items",
+					"name": "Application Instances",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true,
+						"disabledSystemHeaders": {}
+					},
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/plain",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{data_workspace_host}}/api/v1/dataset/catalogue-items",
+							"protocol": "https",
+							"host": [
+								"{{data_workspace_host}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"dataset",
+								"catalogue-items"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Catalogue Items (Dataset)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true,
+						"disabledSystemHeaders": {}
+					},
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/plain",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{data_workspace_host}}/api/v1/dataset/catalogue-items",
+							"protocol": "https",
+							"host": [
+								"{{data_workspace_host}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"dataset",
+								"catalogue-items"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Catalogue Items (Reference Dataset)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true,
+						"disabledSystemHeaders": {}
+					},
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/plain",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{data_workspace_host}}/api/v1/dataset/catalogue-items",
+							"protocol": "https",
+							"host": [
+								"{{data_workspace_host}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"dataset",
+								"catalogue-items"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Events",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true,
+						"disabledSystemHeaders": {}
+					},
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/plain",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{data_workspace_host}}/api/v1/dataset/catalogue-items",
+							"protocol": "https",
+							"host": [
+								"{{data_workspace_host}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"dataset",
+								"catalogue-items"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Teams",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true,
+						"disabledSystemHeaders": {}
+					},
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/plain",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{data_workspace_host}}/api/v1/dataset/catalogue-items",
+							"protocol": "https",
+							"host": [
+								"{{data_workspace_host}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"dataset",
+								"catalogue-items"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Users",
 					"event": [
 						{
 							"listen": "prerequest",
