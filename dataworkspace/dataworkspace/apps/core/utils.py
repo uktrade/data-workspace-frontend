@@ -134,19 +134,31 @@ def get_cursor(database_memorable_name):
         yield cursor
 
 
+def execute_sql(conn, sql_obj):
+    # This avoids "argument 1 must be psycopg2.extensions.connection, not PGConnectionProxy"
+    # which can happen when elastic-apm wraps the connection object when using psycopg2
+    unwrapped_connection = getattr(
+        conn.connection.driver_connection, "__wrapped__", conn.connection.driver_connection
+    )
+    return conn.execute(sa.text(sql_obj.as_string(unwrapped_connection)))
+
+
 @contextmanager
-def transaction_and_lock(cursor, lock_id):
+def transaction_and_lock(conn, lock_id):
     try:
-        cursor.execute(sql.SQL("BEGIN"))
-        cursor.execute(
-            sql.SQL("SELECT pg_advisory_xact_lock({lock_id})").format(lock_id=sql.Literal(lock_id))
+        conn.begin()
+        execute_sql(
+            conn,
+            sql.SQL("SELECT pg_advisory_xact_lock({lock_id})").format(
+                lock_id=sql.Literal(lock_id)
+            ),
         )
         yield
-    except Exception:  # pylint: disable=broad-except
-        cursor.execute(sql.SQL("ROLLBACK"))
+    except Exception:
+        conn.rollback()
         raise
     else:
-        cursor.execute(sql.SQL("COMMIT"))
+        conn.commit()
 
 
 def new_private_database_credentials(
@@ -200,6 +212,9 @@ def new_private_database_credentials(
         )
 
         with database_engine(database_data).connect() as sync_roles_conn:
+            execute_sql(sync_roles_conn, sql.SQL("SET statement_timeout = '120s'"))
+            sync_roles_conn.commit()
+
             # Temporary database user that can login, and has membership of
             sync_roles(
                 sync_roles_conn,
@@ -243,91 +258,100 @@ def new_private_database_credentials(
                     lock_key=GLOBAL_LOCK_ID,
                 )
 
-        # PostgreSQL doesn't handle concurrent
-        # - GRANT/REVOKEs on the same database object
-        # - ALTER USER ... SET
-        # Either can result in "tuple concurrentl updated" errors. So we lock.
-        with get_cursor(database_memorable_name) as cur, transaction_and_lock(cur, GLOBAL_LOCK_ID):
-            # Temporarily grant the current user the roles to be able to manage them below
-            all_roles = [db_role, db_user] + db_shared_roles
-            cur.execute(
-                sql.SQL("GRANT {all_roles} TO CURRENT_USER").format(
-                    all_roles=sql.SQL(",").join(sql.Identifier(role) for role in all_roles)
+            # PostgreSQL doesn't handle concurrent
+            # - GRANT/REVOKEs on the same database object
+            # - ALTER USER ... SET
+            # Either can result in "tuple concurrentl updated" errors. So we lock.
+            with transaction_and_lock(sync_roles_conn, GLOBAL_LOCK_ID):
+                # Temporarily grant the current user the roles to be able to manage them below
+                all_roles = [db_role, db_user] + db_shared_roles
+                execute_sql(
+                    sync_roles_conn,
+                    sql.SQL("GRANT {all_roles} TO CURRENT_USER").format(
+                        all_roles=sql.SQL(",").join(sql.Identifier(role) for role in all_roles)
+                    ),
                 )
-            )
 
-            # If the user creates tables in any of the shared schemas, make sure the corresponding
-            # role for that schema have all privilege on them (which unfortunately does not
-            # mean ownership)
-            for db_shared_role in db_shared_roles:
-                cur.execute(
+                # If the user creates tables in any of the shared schemas, make sure the corresponding
+                # role for that schema have all privilege on them (which unfortunately does not
+                # mean ownership)
+                for db_shared_role in db_shared_roles:
+                    execute_sql(
+                        sync_roles_conn,
+                        sql.SQL(
+                            """
+                            ALTER DEFAULT PRIVILEGES
+                            FOR USER {}
+                            IN SCHEMA {}
+                            GRANT ALL ON TABLES TO {};
+                            """
+                        ).format(
+                            sql.Identifier(db_role),
+                            sql.Identifier(db_shared_role),
+                            sql.Identifier(db_shared_role),
+                        ),
+                    )
+
+                # Make it so by default, objects created by the user are owned by the role
+                # This seems to have a horrible performance impact on connecting, so we don't do it for
+                # contexts that can't create objects. The reason for the performance impact on
+                # connecting is currently unknown, but seems to be related to the number of other roles
+                # granted
+                if not (
+                    db_user.endswith("_qs")
+                    or db_user.endswith("_superset")
+                    or db_user.endswith("_explorer")
+                ):
+                    execute_sql(
+                        sync_roles_conn,
+                        sql.SQL("ALTER USER {} SET ROLE {};").format(
+                            sql.Identifier(db_user), sql.Identifier(db_role)
+                        ),
+                    )
+
+                # Give the user reasonable timeouts
+                execute_sql(
+                    sync_roles_conn,
                     sql.SQL(
-                        """
-                        ALTER DEFAULT PRIVILEGES
-                        FOR USER {}
-                        IN SCHEMA {}
-                        GRANT ALL ON TABLES TO {};
-                        """
-                    ).format(
-                        sql.Identifier(db_role),
-                        sql.Identifier(db_shared_role),
-                        sql.Identifier(db_shared_role),
-                    )
+                        "ALTER USER {} SET idle_in_transaction_session_timeout = '60min';"
+                    ).format(sql.Identifier(db_user)),
+                )
+                execute_sql(
+                    sync_roles_conn,
+                    sql.SQL("ALTER USER {} SET statement_timeout = '60min';").format(
+                        sql.Identifier(db_user)
+                    ),
+                )
+                execute_sql(
+                    sync_roles_conn,
+                    sql.SQL("ALTER USER {} SET pgaudit.log = {};").format(
+                        sql.Identifier(db_user),
+                        sql.Literal(settings.PGAUDIT_LOG_SCOPES),
+                    ),
+                )
+                execute_sql(
+                    sync_roles_conn,
+                    sql.SQL("ALTER USER {} SET pgaudit.log_catalog = off;").format(
+                        sql.Identifier(db_user),
+                        sql.Literal(settings.PGAUDIT_LOG_SCOPES),
+                    ),
+                )
+                execute_sql(
+                    sync_roles_conn,
+                    sql.SQL("ALTER USER {} WITH CONNECTION LIMIT {};").format(
+                        sql.Identifier(db_user),
+                        sql.Literal(50 if db_user.endswith("_qs") else 10),
+                    ),
                 )
 
-            # Make it so by default, objects created by the user are owned by the role
-            # This seems to have a horrible performance impact on connecting, so we don't do it for
-            # contexts that can't create objects. The reason for the performance impact on
-            # connecting is currently unknown, but seems to be related to the number of other roles
-            # granted
-            if not (
-                db_user.endswith("_qs")
-                or db_user.endswith("_superset")
-                or db_user.endswith("_explorer")
-            ):
-                cur.execute(
-                    sql.SQL("ALTER USER {} SET ROLE {};").format(
-                        sql.Identifier(db_user), sql.Identifier(db_role)
-                    )
+                # Make sure we don't keep the roles in the current user (we don't need them, and
+                # the master user having a lot of roles can slow login)
+                execute_sql(
+                    sync_roles_conn,
+                    sql.SQL("REVOKE {all_roles} FROM CURRENT_USER").format(
+                        all_roles=sql.SQL(",").join(sql.Identifier(role) for role in all_roles)
+                    ),
                 )
-
-            # Give the user reasonable timeouts
-            cur.execute(
-                sql.SQL("ALTER USER {} SET idle_in_transaction_session_timeout = '60min';").format(
-                    sql.Identifier(db_user)
-                )
-            )
-            cur.execute(
-                sql.SQL("ALTER USER {} SET statement_timeout = '60min';").format(
-                    sql.Identifier(db_user)
-                )
-            )
-            cur.execute(
-                sql.SQL("ALTER USER {} SET pgaudit.log = {};").format(
-                    sql.Identifier(db_user),
-                    sql.Literal(settings.PGAUDIT_LOG_SCOPES),
-                )
-            )
-            cur.execute(
-                sql.SQL("ALTER USER {} SET pgaudit.log_catalog = off;").format(
-                    sql.Identifier(db_user),
-                    sql.Literal(settings.PGAUDIT_LOG_SCOPES),
-                )
-            )
-            cur.execute(
-                sql.SQL("ALTER USER {} WITH CONNECTION LIMIT {};").format(
-                    sql.Identifier(db_user),
-                    sql.Literal(50 if db_user.endswith("_qs") else 10),
-                )
-            )
-
-            # Make sure we don't keep the roles in the current user (we don't need them, and
-            # the master user having a lot of roles can slow login)
-            cur.execute(
-                sql.SQL("REVOKE {all_roles} FROM CURRENT_USER").format(
-                    all_roles=sql.SQL(",").join(sql.Identifier(role) for role in all_roles)
-                )
-            )
 
         logger.info(
             "Generated new credentials for permanent role %s in %s seconds",
