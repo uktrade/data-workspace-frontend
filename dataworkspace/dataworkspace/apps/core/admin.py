@@ -65,8 +65,8 @@ class TeamAdmin(CSPRichTextEditorMixin, admin.ModelAdmin):
 
 
 class NewsletterSubscriptionAdmin(admin.ModelAdmin):
+    autocomplete_fields = ("user",)
     list_display = (
-        "user",
         "email_address",
         "is_active",
     )
