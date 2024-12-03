@@ -1,11 +1,58 @@
 
 <style>
-    
+    .owner-insights {
+        font-family: arial, sans-serif;
+        background-color: #1d70b8;
+        width: 100%;
+        color: white;
+        padding: 10px;
+    }
+
+    .owner-insights__caption {
+        text-align: left;
+        padding: 10px;
+        font-size: 24px;
+        background-color: #1d70b8;
+    }
+
+    .owner-insights__header {
+        font-size: 36px;
+        font-weigt: 700;
+    }
+
+    .owner-insights__header,
+    .owner-insights__cell {
+        text-align: left;
+        font-weight: normal;
+    }
+
+     .owner-insights__cell {
+        font-size: 16px;
+        font-weigt: 700;
+     }
 </style>
 
+<table class="owner-insights">
+    <caption class="owner-insights__caption">Owner insights</caption>
+    <thead class="govuk-table__head">
+    <tr class="govuk-table__row">
+        <th scope="col" class="owner-insights__header">1750</th>
+        <th scope="col" class="owner-insights__header">Yes</th>
+        <th scope="col" class="owner-insights__header">Yes</th>
+        <th scope="col" class="owner-insights__header">Yes</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td class="owner-insights__cell">Views in the last 28 days</td>
+        <td class="owner-insights__cell">Description is up to date</td>
+        <td class="owner-insights__cell">Description is up to date</td>
+        <td class="owner-insights__cell">Description is up to date</td>
+    </tr>
+    </tbody>
+</table>
 
-
-<div style="background-color: #1d70b8;" class="govuk-!-padding-4"> 
+{% comment %} <div style="background-color: #1d70b8;" class="govuk-!-padding-4"> 
 
     <h1 class="govuk-heading-m" style="color: white;">Owner insights</h1>
 
@@ -39,4 +86,4 @@
         <p class="govuk-body govuk-!-font-size-16 govuk-!-font-weight-bold" style="color: white;">Outstanding access requests</p>
     </div>
 </div>
-</div>
+</div> {% endcomment %}
