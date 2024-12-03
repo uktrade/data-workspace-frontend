@@ -926,63 +926,6 @@ def get_s3_prefix(user_sso_id):
     return "user/federated/" + stable_identification_suffix(user_sso_id, short=False) + "/"
 
 
-def create_tools_access_iam_role(user_id, user_email_address, access_point_id):
-    user = get_user_model().objects.get(id=user_id)
-    s3_prefixes = get_user_s3_prefixes(user)
-    if user.profile.tools_access_role_arn:
-        return user.profile.tools_access_role_arn, s3_prefixes
-
-    iam_client = get_iam_client()
-
-    assume_role_policy_document = settings.S3_ASSUME_ROLE_POLICY_DOCUMENT
-    permissions_boundary_arn = settings.S3_PERMISSIONS_BOUNDARY_ARN
-    role_prefix = settings.S3_ROLE_PREFIX
-
-    role_name = role_prefix + user_email_address
-    max_attempts = 10
-
-    try:
-        iam_client.create_role(
-            RoleName=role_name,
-            Path="/",
-            AssumeRolePolicyDocument=assume_role_policy_document,
-            PermissionsBoundary=permissions_boundary_arn,
-        )
-    except iam_client.exceptions.EntityAlreadyExistsException:
-        # If the role already exists, we might need to update its assume role
-        # policy document
-        for i in range(0, max_attempts):
-            try:
-                iam_client.update_assume_role_policy(
-                    RoleName=role_name, PolicyDocument=assume_role_policy_document
-                )
-            except iam_client.exceptions.NoSuchEntityException:
-                if i == max_attempts - 1:
-                    raise
-                gevent.sleep(1)
-            else:
-                break
-
-    for i in range(0, max_attempts):
-        try:
-            role_arn = iam_client.get_role(RoleName=role_name)["Role"]["Arn"]
-            logger.info("User (%s) set up AWS role... done (%s)", user_email_address, role_arn)
-        except iam_client.exceptions.NoSuchEntityException:
-            if i == max_attempts - 1:
-                raise
-            gevent.sleep(1)
-        else:
-            break
-
-    update_user_tool_access_policy(user, access_point_id)
-
-    # Cache the role_arn so it can be retrieved in the future without calling AWS
-    user.profile.tools_access_role_arn = role_arn
-    user.save()
-
-    return role_arn, s3_prefixes
-
-
 def without_duplicates_preserve_order(seq):
     # https://stackoverflow.com/a/480227/1319998
     seen = set()
@@ -1268,6 +1211,90 @@ def get_team_prefixes(user):
     ]
 
 
+@celery_app.task(autoretry_for=(redis.exceptions.LockError,))
+@close_all_connections_if_not_in_atomic_block
+def create_tools_access_iam_role_task(user_id, force=False):
+    with cache.lock(
+        f"create_tools_access_iam_role_task_{user_id}",
+        blocking_timeout=0,
+        timeout=360,
+    ):
+        _do_create_tools_access_iam_role(user_id, force=force)
+
+
+def _do_create_tools_access_iam_role(user_id, force=False):
+    User = get_user_model()
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        logger.exception("User id %d does not exist", user_id)
+    else:
+        create_tools_access_iam_role(
+            user.id,
+            user.email,
+            user.profile.home_directory_efs_access_point_id,
+            force=force,
+        )
+        gevent.sleep(1)
+
+
+def create_tools_access_iam_role(user_id, user_email_address, access_point_id, force=False):
+    user = get_user_model().objects.get(id=user_id)
+    s3_prefixes = get_user_s3_prefixes(user)
+    if not force and user.profile.tools_access_role_arn:
+        return user.profile.tools_access_role_arn, s3_prefixes
+
+    iam_client = get_iam_client()
+
+    assume_role_policy_document = settings.S3_ASSUME_ROLE_POLICY_DOCUMENT
+    permissions_boundary_arn = settings.S3_PERMISSIONS_BOUNDARY_ARN
+    role_prefix = settings.S3_ROLE_PREFIX
+
+    role_name = role_prefix + user_email_address
+    max_attempts = 10
+
+    try:
+        iam_client.create_role(
+            RoleName=role_name,
+            Path="/",
+            AssumeRolePolicyDocument=assume_role_policy_document,
+            PermissionsBoundary=permissions_boundary_arn,
+        )
+    except iam_client.exceptions.EntityAlreadyExistsException:
+        # If the role already exists, we might need to update its assume role
+        # policy document
+        for i in range(0, max_attempts):
+            try:
+                iam_client.update_assume_role_policy(
+                    RoleName=role_name, PolicyDocument=assume_role_policy_document
+                )
+            except iam_client.exceptions.NoSuchEntityException:
+                if i == max_attempts - 1:
+                    raise
+                gevent.sleep(1)
+            else:
+                break
+
+    for i in range(0, max_attempts):
+        try:
+            role_arn = iam_client.get_role(RoleName=role_name)["Role"]["Arn"]
+            logger.info("User (%s) set up AWS role... done (%s)", user_email_address, role_arn)
+        except iam_client.exceptions.NoSuchEntityException:
+            if i == max_attempts - 1:
+                raise
+            gevent.sleep(1)
+        else:
+            break
+
+    update_user_tool_access_policy(user, access_point_id)
+
+    # Cache the role_arn so it can be retrieved in the future without calling AWS
+    user.profile.tools_access_role_arn = role_arn
+    user.profile.save(update_fields=["tools_access_role_arn"])
+
+    return role_arn, s3_prefixes
+
+
 def update_user_tool_access_policy(user, access_point_id):
     max_attempts = 10
     iam_client = get_iam_client()
@@ -1318,8 +1345,7 @@ def team_membership_post_save(instance, **kwargs):
     When a team member is added to a team, update their tools access
     to include the team s3 prefix
     """
-    if kwargs["created"] and instance.user.profile.tools_access_role_arn:
-        update_tools_access_policy_task.delay(instance.user_id)
+    create_tools_access_iam_role_task.delay(instance.user_id, force=True)
 
 
 @receiver(post_delete, sender=TeamMembership)
@@ -1328,8 +1354,7 @@ def team_membership_post_delete(instance, **_):
     When a team member is removed from a team, update their tools access
     to remove the team s3 prefix
     """
-    if instance.user.profile.tools_access_role_arn:
-        update_tools_access_policy_task.delay(instance.user_id)
+    create_tools_access_iam_role_task.delay(instance.user_id, force=True)
 
 
 def get_postgres_datatype_choices():
