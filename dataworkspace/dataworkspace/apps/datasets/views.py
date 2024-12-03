@@ -354,11 +354,6 @@ def find_datasets(request):
             default=None,
         )
 
-    def show_owner_insights(request):
-        print('request:', request)
-        # def get_collection_count(self, obj):
-        #     return obj.collection_set.count()
-
     return render(
         request,
         "datasets/data_catalogue.html",
