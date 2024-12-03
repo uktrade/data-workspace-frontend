@@ -354,6 +354,11 @@ def find_datasets(request):
             default=None,
         )
 
+    def show_owner_insights(request):
+        print('request:', request)
+        # def get_collection_count(self, obj):
+        #     return obj.collection_set.count()
+
     return render(
         request,
         "datasets/data_catalogue.html",
@@ -364,6 +369,8 @@ def find_datasets(request):
             "datasets": datasets,
             "data_type": dict(data_types),
             "show_admin_filters": has_unpublished_dataset_access(request.user)
+            and request.user.is_superuser,
+            "show_owner_insights": has_unpublished_dataset_access(request.user)
             and request.user.is_superuser,
             "ACCESSIBLE_AUTOCOMPLETE_FLAG": settings.ACCESSIBLE_AUTOCOMPLETE_FLAG,
             "search_type": "searchBar" if filters.query else "noSearch",
