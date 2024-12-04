@@ -1,6 +1,12 @@
 FROM node:16-alpine AS builder
 WORKDIR /app
 COPY dataworkspace/dataworkspace/static/js .
+# manually set npm cache (logs) config to avoid any write-access errors
+RUN rm -rf ./.npm-cache || true # just to be sure
+RUN mkdir -p ./.npm-cache || true # just to be sure
+RUN npm cache clean -f
+RUN npm config set cache ./npm-cache
+
 RUN npm ci --include=dev
 RUN npm run build
 
