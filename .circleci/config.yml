@@ -28,7 +28,7 @@ jobs:
 
   docker-test-unit:
     docker:
-      - image: cimg/python:3.11.11
+      - image: cimg/python:3.10.16
     parallelism: 4
     steps:
       - checkout
@@ -55,7 +55,7 @@ jobs:
 
   docker-test-integration:
     docker:
-      - image: cimg/python:3.11.11
+      - image: cimg/python:3.10.16
     parallelism: 4
     steps:
       - checkout
@@ -79,7 +79,7 @@ jobs:
 
   check-linting:
     docker:
-      - image: cimg/python:3.11.11
+      - image: cimg/python:3.10.16
     resource_class: small
     steps:
       - checkout
