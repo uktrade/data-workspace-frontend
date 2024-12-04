@@ -209,9 +209,11 @@
                   {% endif %}
                 </dl>
               </div>
+              {% if dataset.is_owner == True %}
               <div >
                 {% include "partials/owner_insights.html" %}
               </div>
+              {% endif %}
 
               {% if not dataset.has_access %}
                 <div class="govuk-inset-text govuk-!-margin-bottom-0">

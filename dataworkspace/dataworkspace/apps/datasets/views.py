@@ -223,6 +223,16 @@ def find_datasets(request):
 
     tags_dict = _get_tags_as_dict()
     for dataset in datasets:
+
+        # get owned datasets
+        if dataset['is_owner'] == True:
+            # get amount of requests per owned dataset
+            dataset["number_of_requests"] = len(AccessRequest.objects.filter(
+                catalogue_item_id=dataset["id"], data_access_status="waiting"
+            ))
+            date_of_description = [item['short_description'] for item in matched_datasets if item['is_owner'] == True]
+            print("date_of_description", date_of_description)
+
         dataset["sources"] = [
             tags_dict.get(str(source_id)) for source_id in dataset["source_tag_ids"]
         ]
@@ -364,8 +374,6 @@ def find_datasets(request):
             "datasets": datasets,
             "data_type": dict(data_types),
             "show_admin_filters": has_unpublished_dataset_access(request.user)
-            and request.user.is_superuser,
-            "show_owner_insights": has_unpublished_dataset_access(request.user)
             and request.user.is_superuser,
             "ACCESSIBLE_AUTOCOMPLETE_FLAG": settings.ACCESSIBLE_AUTOCOMPLETE_FLAG,
             "search_type": "searchBar" if filters.query else "noSearch",
