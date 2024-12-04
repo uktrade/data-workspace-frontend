@@ -28,7 +28,7 @@ jobs:
 
   docker-test-unit:
     docker:
-      - image: cimg/python:3.9
+      - image: cimg/python:3.12.8
     parallelism: 4
     steps:
       - checkout
@@ -55,7 +55,7 @@ jobs:
 
   docker-test-integration:
     docker:
-      - image: cimg/python:3.9
+      - image: cimg/python:3.12.8
     parallelism: 4
     steps:
       - checkout
@@ -79,21 +79,21 @@ jobs:
 
   check-linting:
     docker:
-      - image: cimg/python:3.9
+      - image: cimg/python:3.12.8
     resource_class: small
     steps:
       - checkout
       - restore_cache:
           keys:
-            - v3.9-python-{{ checksum "requirements-dev.txt" }}-v5
+            - v3.12.8-python-{{ checksum "requirements-dev.txt" }}-v5
       - run:
           name: Install requirements
           command: |
-            python3 -m venv venv
+            python -m venv venv
             . venv/bin/activate
             pip install -r requirements-dev.txt
       - save_cache:
-          key: v3.9-python-{{ checksum "requirements-dev.txt" }}-v5
+          key: v3.12.8-python-{{ checksum "requirements-dev.txt" }}-v5
           paths:
             - "venv"
       - run:
