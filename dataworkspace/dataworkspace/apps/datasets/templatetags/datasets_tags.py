@@ -176,4 +176,4 @@ def timedelta_to_minutes(td):
 
 @register.filter
 def format_table_name(table_name):
-    return table_name.capitalize().replace("_", " ")
+    return table_name.replace("_", " ")
