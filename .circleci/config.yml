@@ -4,7 +4,7 @@ jobs:
   docker-test-unit-js:
     working_directory: ~/repo/dataworkspace/dataworkspace/static/js
     docker:
-      - image: cimg/node:16.20
+      - image: cimg/node:18
     steps:
       - checkout:
           path: ~/repo
