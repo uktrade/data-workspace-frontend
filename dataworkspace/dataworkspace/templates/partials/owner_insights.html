@@ -1,72 +1,73 @@
 
 <style>
-    .owner-insights {
+    .data-insights {
         font-family: arial, sans-serif;
         background-color: #1d70b8;
         width: 100%;
         color: white;
+        padding: 10px 10px 10px 10px;
     }
 
-    .owner-insights__caption {
+    .data-insights__caption {
+        line-height: 30px;
         text-align: left;
-        padding-left: 20px;
-        padding-top: 20px;
-        padding-bottom: 20px;
+        padding: 20px 0 10px 20px;
         font-size: 24px;
         background-color: #1d70b8;
     }
 
-    .owner-insights__header {
+    .data-insights__header {
+        padding: 0 0 0 10px;
+        vertical-align:top;
         font-size: 36px;
-        padding-left: 20px;
-        padding-bottom: 5px;
-
         font-weight: 700;
-    }
-
-    .owner-insights__header,
-    .owner-insights__cell {
-        padding-left: 20px;
+        font-style: normal;
         text-align: left;
-        font-weight: bold;
+
     }
 
-     .owner-insights__cell {
+    .data-insights__cell {
+        padding-left: 10px;
+        padding-right: 10px;
+        text-align: left;
+    }
+
+     .data-insights__cell {
+        vertical-align:top;
         text-align: left;
         font-size: 16px;
-        padding-bottom: 20px;
-        
-        padding-right: 20px;
-
+        padding: 5px 10px 10px 10px;
         font-weight: 700;
+        font-style: normal;
+
      }
 
    
 </style>
 
-<table class="owner-insights">
-    <caption class="owner-insights__caption">Owner insights</caption>
+<table class="data-insights">
+    <caption class="data-insights__caption">Data insights</caption>
     <thead class="govuk-table__head">
     <tr class="govuk-table__row">
-        <th scope="col" class="owner-insights__header">1750</th>
-        <th scope="col" class="owner-insights__header">Yes</th>
-        <th scope="col" class="owner-insights__header">5/7</th>
-        <th scope="col" class="owner-insights__header">15</th>
+        <th scope="col" class="data-insights__header">1750</th>
+        <th scope="col" class="data-insights__header">Yes</th>
+        <th scope="col" class="data-insights__header">5/7</th>
+        <th scope="col" class="data-insights__header">15</th>
     </tr>
     </thead>
     <tbody>
     <tr>
-        <td class="owner-insights__cell">Views in the last 28 days</td>
-        <td class="owner-insights__cell">Description is up to date</td>
-        <td class="owner-insights__cell">Completed data dictionaries</td>
-        <td class="owner-insights__cell">Outstanding access requests</td>
+        <td class="data-insights__cell">Views in the last 28 days</td>
+        <td class="data-insights__cell">Description updated in last 6 months</td>
+        <td class="data-insights__cell">Completed data dictionaries</td>
+        <td class="data-insights__cell">Outstanding access requests</td>
     </tr>
     </tbody>
 </table>
 
 {% comment %} <div style="background-color: #1d70b8;" class="govuk-!-padding-4"> 
 
-    <h1 class="govuk-heading-m" style="color: white;">Owner insights</h1>
+    <h1 class="govuk-heading-m" style="color: white;">data insights</h1>
 
 
 <div class="govuk-grid-row">
