@@ -15,6 +15,9 @@
   "resolutions": {
     "cross-spawn": " 7.0.6"
   },
+  "engines": {
+    "node": "18"
+  },
   "dependencies": {
     "aws-sdk": "^2.1193.0",
     "ckeditor5": "^43.1.1",

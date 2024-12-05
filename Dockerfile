@@ -1,4 +1,4 @@
-FROM node:16-alpine AS builder
+FROM node:18-alpine AS builder
 WORKDIR /app
 COPY dataworkspace/dataworkspace/static/js .
 RUN npm ci --include=dev
