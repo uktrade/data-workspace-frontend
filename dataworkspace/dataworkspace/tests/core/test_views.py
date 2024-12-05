@@ -9,9 +9,7 @@ import pytest
 import requests_mock
 from botocore.response import StreamingBody
 from bs4 import BeautifulSoup
-from waffle.testutils import override_flag
 
-from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.test import override_settings, Client
 from django.urls import reverse
@@ -303,8 +301,8 @@ def test_footer_links(request_client):
         (True, "/tools/quicksight/redirect", "Open QuickSight"),
         (
             False,
-            "/request-access/",
-            "Request access to QuickSight",
+            "/request-access/self-certify",
+            "Get access to QuickSight",
         ),
     ),
 )
@@ -342,7 +340,6 @@ def test_quicksight_link_only_shown_to_user_with_permission(
 )
 @override_settings(QUICKSIGHT_SSO_URL="https://quicksight")
 @pytest.mark.django_db
-@override_flag(settings.TOOLS_SELF_CERTIFY, active=True)
 def test_quicksight_link_only_shown_to_user_with_permission_with_feature_flag(
     has_quicksight_access, expected_href, expected_text
 ):
@@ -368,8 +365,8 @@ def test_quicksight_link_only_shown_to_user_with_permission_with_feature_flag(
         (True, "https://appstream", "Open STATA"),
         (
             False,
-            "/request-access/",
-            "Request access to STATA",
+            "/request-access/self-certify",
+            "Get access to STATA",
         ),
     ),
 )
@@ -405,7 +402,6 @@ def test_appstream_link_only_shown_to_user_with_permission(
 )
 @override_settings(APPSTREAM_URL="https://appstream")
 @pytest.mark.django_db
-@override_flag(settings.TOOLS_SELF_CERTIFY, active=True)
 def test_appstream_link_only_shown_to_user_with_permission_with_feature_flag(
     has_appstream_update, expected_href, expected_text
 ):
@@ -445,7 +441,6 @@ def test_appstream_link_only_shown_to_user_with_permission_with_feature_flag(
     ),
 )
 @pytest.mark.django_db
-@override_flag(settings.TOOLS_SELF_CERTIFY, active=True)
 def test_tools_links_with_invalid_email(expected_href, expected_text):
     user = UserFactory.create(is_staff=False, is_superuser=False, email="ian@gmail.com")
     user.save()
@@ -485,7 +480,6 @@ def test_tools_links_with_invalid_email(expected_href, expected_text):
     ),
 )
 @pytest.mark.django_db
-@override_flag(settings.TOOLS_SELF_CERTIFY, active=True)
 def test_tools_links_with_valid_email(expected_href, expected_text):
     user = UserFactory.create(is_staff=False, is_superuser=False, email="ian@trade.gov.uk")
     user.save()
@@ -511,7 +505,6 @@ def test_tools_links_with_valid_email(expected_href, expected_text):
     ),
 )
 @pytest.mark.django_db
-@override_flag(settings.TOOLS_SELF_CERTIFY, active=True)
 def test_stata_link_after_tools_access_has_been_granted(expected_href, expected_text):
     user = UserFactory.create(is_staff=False, is_superuser=False, email="ian@trade.gov.uk")
     start_all_applications = Permission.objects.get(codename="start_all_applications")
@@ -552,7 +545,6 @@ def test_stata_link_after_tools_access_has_been_granted(expected_href, expected_
     ),
 )
 @pytest.mark.django_db
-@override_flag(settings.TOOLS_SELF_CERTIFY, active=True)
 def test_all_tool_links_after_access_has_been_granted(expected_href, expected_text):
     user = UserFactory.create(is_staff=False, is_superuser=False, email="ian@trade.gov.uk")
     permission_codenames = [

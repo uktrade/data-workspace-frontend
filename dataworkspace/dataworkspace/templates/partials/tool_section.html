@@ -18,23 +18,19 @@
       <div class="govuk-grid-row">
         <div class="govuk-grid-column-one-half"><p class="govuk-body"></p></div>
         <div class="govuk-grid-column-one-half">
-            {% flag TOOLS_SELF_CERTIFY %}
-                  {% if application_name == "STATA" %}
-                        {% if is_self_certified %}
-                            <a class="govuk-button govuk-button--secondary" href="{% url 'request-access:stata-access-index' %}">Request access to {{ application_name }}</a>
-                          {% else %}
-                            {% if user_has_tools_access %}
-                              <a class="govuk-button govuk-button--secondary" href="{% url 'request-access:stata-access-index' %}">Request access to {{ application_name }}</a>
-                            {% else %}
-                              <a class="govuk-button govuk-button--secondary" href="{% url 'request-access:self-certify-page' %}">Request access to {{ application_name }}</a>
-                            {% endif %}
-                          {% endif %}
-                  {% else %}
-                    <a class="govuk-button govuk-button--secondary" href="{% url 'request-access:self-certify-page' %}">Get access to {{ application_name }}</a>
-                  {% endif %}
+        {% if application_name == "STATA" %}
+            {% if is_self_certified %}
+              <a class="govuk-button govuk-button--secondary" href="{% url 'request-access:stata-access-index' %}">Request access to {{ application_name }}</a>
+            {% else %}
+              {% if user_has_tools_access %}
+                <a class="govuk-button govuk-button--secondary" href="{% url 'request-access:stata-access-index' %}">Request access to {{ application_name }}</a>
               {% else %}
-                  <a class="govuk-button govuk-button--secondary" href="{% url 'request-access:index' %}">Request access to {{ application_name }}</a>
-            {% endflag %}
+                <a class="govuk-button govuk-button--secondary" href="{% url 'request-access:self-certify-page' %}">Request access to {{ application_name }}</a>
+              {% endif %}
+            {% endif %}
+        {% else %}
+          <a class="govuk-button govuk-button--secondary" href="{% url 'request-access:self-certify-page' %}">Get access to {{ application_name }}</a>
+        {% endif %}
         </div>
       </div>
     {% elif instance %}
