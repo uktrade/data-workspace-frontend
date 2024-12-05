@@ -366,7 +366,7 @@ def test_quicksight_link_only_shown_to_user_with_permission_with_feature_flag(
         (
             False,
             "/request-access/self-certify",
-            "Get access to STATA",
+            "Request access to STATA",
         ),
     ),
 )
