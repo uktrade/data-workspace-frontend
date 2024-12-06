@@ -1,0 +1,47 @@
+{% extends '_main.html' %}
+
+{% load waffle_tags %}
+
+{% block page_title %}Get your custom visualisation reviewed - {{ block.super }}{% endblock page_title %}
+{% block breadcrumbs %}
+<a href="{% url 'support' %}" class="govuk-back-link">Back</a>
+{% endblock %}
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <h1 class="govuk-heading-xl">Get your custom visualisation reviewed</h1>
+        <p class="govuk-body-m">Users who can code in R or Python can create custom visualisations and host them on Data
+            Workspace.
+            <a class="govuk-link"
+                href="https://data-services-help.trade.gov.uk/data-workspace/tools-and-languages/custom-visualisations/">Read
+                our guidance to find out more.</a>
+        </p>
+        <h2 class="govuk-heading-m">When to use this service</h2>
+        <p class="govuk-body-m">Use this service if you've created a custom visualisation and need someone from the Data
+            Workspace team to approve it.</p>
+        <p class="govuk-body-m">Your visualisation must be peer reviewed by a member of your team before it's reviewed
+            by us.</p>
+        <p class="govuk-body-m">Read our <a class="govuk-link"
+                href="https://data-services-help.trade.gov.uk/data-workspace/tools-and-languages/custom-visualisations/publish-an-rpython-visualisation/">guidance
+                on publishing
+                visualisations</a> for an overview of the process.</p>
+        <h2 class="govuk-heading-m">When not to use this service</h2>
+        <p class="govuk-body-m">If you would like to us to create a visualisation or you need support creating one, you
+            should use the <a class="govuk-link" href="{% url 'support-analysis-dataset' %}">data analysis support
+                option</a>.</p>
+        <div class="govuk-!-padding-top-2"></div>
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            {{ form.email }}
+            <fieldset class="govuk-fieldset">
+                {{ form.message }}
+            </fieldset>
+            <div class="govuk-radios govuk-radios--conditional" data-module="govuk-radios">
+                {{ form.support_type }}
+            </div>
+            <button type="submit" class="govuk-button">Submit</button>
+        </form>
+    </div>
+</div>
+</div>
+{% endblock %}

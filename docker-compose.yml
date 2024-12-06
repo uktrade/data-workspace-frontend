@@ -109,6 +109,7 @@ services:
       dockerfile: Dockerfile
     networks:
       - data-infrastructure-shared-network
+      - test
     ports:
       - '4563-4599:4563-4599'
     environment:
@@ -172,6 +173,7 @@ services:
       - "data-workspace-redis"
       - "data-workspace-es"
       - "data-workspace-arango"
+      - "data-workspace-localstack"
     depends_on:
       - "data-workspace-test-results"
     extra_hosts:

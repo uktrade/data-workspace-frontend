@@ -14,10 +14,7 @@ us - {{ block.super }} {% endblock page_title %} {% block breadcrumbs %}
     {% include 'design_system/error_summary.html' with form=form %}
     <form method="post">
       {% csrf_token %}
-      <div
-        class="govuk-radios govuk-radios--conditional"
-        data-module="govuk-radios"
-      >
+      <div class="govuk-radios govuk-radios--conditional" data-module="govuk-radios">
         {{ form.contact_type }}
       </div>
       <button type="submit" class="govuk-button">Continue</button>

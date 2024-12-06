@@ -41,6 +41,8 @@ class CatalogueItemSerializer(serializers.Serializer):
     information_asset_manager = serializers.IntegerField()
     enquiries_contact = serializers.IntegerField()
     source_tags = serializers.ListField()
+    publisher_tags = serializers.ListField()
+    topic_tags = serializers.ListField()
     licence = serializers.CharField()
     personal_data = serializers.CharField()
     retention_policy = serializers.CharField()
@@ -69,6 +71,8 @@ class CatalogueItemSerializer(serializers.Serializer):
         )
         instance["purpose"] = _PURPOSES[int(instance["purpose"])]
         instance["source_tags"] = instance["source_tags"] or None
+        instance["publisher_tags"] = instance["publisher_tags"] or None
+        instance["topic_tags"] = instance["topic_tags"] or None
         instance["licence"] = instance["licence"] or None
         instance["personal_data"] = instance["personal_data"] or None
         instance["retention_policy"] = instance["retention_policy"] or None

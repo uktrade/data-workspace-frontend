@@ -35,10 +35,8 @@ from dataworkspace.apps.datasets.models import (
     AdminVisualisationUserPermission,
 )
 from dataworkspace.apps.applications.models import ApplicationInstance
-from dataworkspace.apps.applications.utils import (
-    create_tools_access_iam_role_task,
-    sync_quicksight_permissions,
-)
+from dataworkspace.apps.applications.utils import sync_quicksight_permissions
+from dataworkspace.apps.core.utils import create_tools_access_iam_role_task
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_permission_change
 from dataworkspace.apps.explorer.schema import clear_schema_info_cache_for_user

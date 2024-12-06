@@ -5,11 +5,18 @@
   "main": "webpack.config.js",
   "scripts": {
     "dev": "./node_modules/.bin/webpack serve --config webpack.dev.js --hot",
+    "preinstall": "npx npm-force-resolutions",
     "build": "./node_modules/.bin/webpack build --config webpack.prod.js",
     "test": "jest --coverage --maxWorkers 2",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "lint": "eslint --ext .ts,.tsx ."
+  },
+  "resolutions": {
+    "cross-spawn": " 7.0.6"
+  },
+  "engines": {
+    "node": "18"
   },
   "dependencies": {
     "aws-sdk": "^2.1193.0",

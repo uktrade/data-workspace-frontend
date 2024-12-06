@@ -4,7 +4,7 @@ jobs:
   docker-test-unit-js:
     working_directory: ~/repo/dataworkspace/dataworkspace/static/js
     docker:
-      - image: cimg/node:16.20
+      - image: cimg/node:18.20.4
     steps:
       - checkout:
           path: ~/repo
@@ -28,7 +28,7 @@ jobs:
 
   docker-test-unit:
     docker:
-      - image: cimg/python:3.9
+      - image: cimg/python:3.10.16
     parallelism: 4
     steps:
       - checkout
@@ -55,7 +55,7 @@ jobs:
 
   docker-test-integration:
     docker:
-      - image: cimg/python:3.9
+      - image: cimg/python:3.10.16
     parallelism: 4
     steps:
       - checkout
@@ -79,13 +79,13 @@ jobs:
 
   check-linting:
     docker:
-      - image: cimg/python:3.9
+      - image: cimg/python:3.10.16
     resource_class: small
     steps:
       - checkout
       - restore_cache:
           keys:
-            - v3.9-python-{{ checksum "requirements-dev.txt" }}-v5
+            - v3.10.16-python-{{ checksum "requirements-dev.txt" }}-v6
       - run:
           name: Install requirements
           command: |
@@ -93,7 +93,7 @@ jobs:
             . venv/bin/activate
             pip install -r requirements-dev.txt
       - save_cache:
-          key: v3.9-python-{{ checksum "requirements-dev.txt" }}-v5
+          key: v3.10.6-python-{{ checksum "requirements-dev.txt" }}-v6
           paths:
             - "venv"
       - run:

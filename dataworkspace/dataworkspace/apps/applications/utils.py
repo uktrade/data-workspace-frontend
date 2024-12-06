@@ -52,7 +52,7 @@ from dataworkspace.apps.core.models import Database, DatabaseUser
 from dataworkspace.apps.core.utils import (
     GLOBAL_LOCK_ID,
     close_all_connections_if_not_in_atomic_block,
-    create_tools_access_iam_role,
+    create_tools_access_iam_role_task,
     database_dsn,
     stable_identification_suffix,
     source_tables_for_app,
@@ -1126,32 +1126,6 @@ def create_user_from_sso(
         user.save()
 
     return user
-
-
-@celery_app.task(autoretry_for=(redis.exceptions.LockError,))
-@close_all_connections_if_not_in_atomic_block
-def create_tools_access_iam_role_task(user_id):
-    with cache.lock(
-        "create_tools_access_iam_role_task",
-        blocking_timeout=0,
-        timeout=360,
-    ):
-        _do_create_tools_access_iam_role(user_id)
-
-
-def _do_create_tools_access_iam_role(user_id):
-    User = get_user_model()
-    try:
-        user = User.objects.get(id=user_id)
-    except User.DoesNotExist:
-        logger.exception("User id %d does not exist", user_id)
-    else:
-        create_tools_access_iam_role(
-            user.id,
-            user.email,
-            user.profile.home_directory_efs_access_point_id,
-        )
-        gevent.sleep(1)
 
 
 @celery_app.task(autoretry_for=(redis.exceptions.LockError,))

@@ -112,7 +112,6 @@ INSTALLED_APPS = [
     "dataworkspace.apps.api_v2",
     "dataworkspace.apps.test_endpoints",
     "dataworkspace.apps.eventlog",
-    "dataworkspace.apps.request_data",
     "dataworkspace.apps.request_access",
     "dataworkspace.apps.your_files",
     "django_extensions",
@@ -476,6 +475,7 @@ GTM_CONTAINER_ENVIRONMENT_PARAMS = env.get("GTM_CONTAINER_ENVIRONMENT_PARAMS", "
 AWS_UPLOADS_BUCKET = env["UPLOADS_BUCKET"]
 S3_LOCAL_ENDPOINT_URL = env.get("S3_LOCAL_ENDPOINT_URL", "")
 STS_LOCAL_ENDPOINT_URL = env.get("STS_LOCAL_ENDPOINT_URL", "")
+IAM_LOCAL_ENDPOINT_URL = env.get("IAM_LOCAL_ENDPOINT_URL", "")
 
 YOUR_FILES_CONNECT_SRC = [
     APPLICATION_ROOT_DOMAIN,
