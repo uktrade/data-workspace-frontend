@@ -8,7 +8,6 @@ const REACT_APPS = [
   'reference-dataset',
   'visualisations',
   'your-files',
-  'your-files-v2',
   'data-catalogue-feedback',
   'confirm-remove-user'
 ].reduce(

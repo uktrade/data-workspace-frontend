@@ -18,9 +18,7 @@ from dataworkspace.apps.request_access.forms import (  # pylint: disable=import-
     DatasetAccessRequestForm,
     SelfCertifyForm,
     StataAccessForm,
-    ToolsAccessRequestFormPart1,
-    ToolsAccessRequestFormPart2,
-    ToolsAccessRequestFormPart3,
+    ToolsAccessRequestForm,
 )
 
 from dataworkspace import zendesk
@@ -75,7 +73,7 @@ class DatasetAccessRequest(CreateView):
                 catalogue_item_id=catalogue_item.id if catalogue_item else None,
             )
             return HttpResponseRedirect(
-                reverse("request-access:tools-1", kwargs={"pk": access_request.pk})
+                reverse("request-access:tools", kwargs={"pk": access_request.pk})
             )
         elif user_has_dataset_access and user_has_tools_access:
             return render(request, "request_access/you_have_access.html")
@@ -108,7 +106,7 @@ class DatasetAccessRequest(CreateView):
             )
 
         return HttpResponseRedirect(
-            reverse("request-access:tools-1", kwargs={"pk": access_request.pk})
+            reverse("request-access:tools", kwargs={"pk": access_request.pk})
         )
 
 
@@ -128,35 +126,13 @@ class DatasetAccessRequestUpdate(RequestAccessMixin, UpdateView):
     def get_success_url(self):
         if self.object.journey == self.object.JOURNEY_DATASET_ACCESS:
             return reverse("request-access:summary-page", kwargs={"pk": self.object.pk})
-        return reverse("request-access:tools-1", kwargs={"pk": self.object.pk})
+        return reverse("request-access:tools", kwargs={"pk": self.object.pk})
 
 
-class ToolsAccessRequestPart1(RequestAccessMixin, UpdateView):
+class ToolsAccessRequest(RequestAccessMixin, UpdateView):
     model = models.AccessRequest
-    template_name = "request_access/tools_1.html"
-    form_class = ToolsAccessRequestFormPart1
-
-    def get_success_url(self):
-        if waffle.flag_is_active(self.request, "TOOLS_SELF_CERTIFY"):
-            return reverse("request-access:summary-page", kwargs={"pk": self.object.pk})
-        return reverse("request-access:tools-2", kwargs={"pk": self.object.pk})
-
-
-class ToolsAccessRequestPart2(RequestAccessMixin, UpdateView):
-    model = models.AccessRequest
-    template_name = "request_access/tools_2.html"
-    form_class = ToolsAccessRequestFormPart2
-
-    def get_success_url(self):
-        if self.object.spss_and_stata:
-            return reverse("request-access:tools-3", kwargs={"pk": self.object.pk})
-        return reverse("request-access:summary-page", kwargs={"pk": self.object.pk})
-
-
-class ToolsAccessRequestPart3(UpdateView):
-    model = models.AccessRequest
-    template_name = "request_access/tools_3.html"
-    form_class = ToolsAccessRequestFormPart3
+    template_name = "request_access/tools.html"
+    form_class = ToolsAccessRequestForm
 
     def get_success_url(self):
         return reverse("request-access:summary-page", kwargs={"pk": self.object.pk})

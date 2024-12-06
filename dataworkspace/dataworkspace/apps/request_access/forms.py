@@ -10,7 +10,6 @@ from dataworkspace.forms import (
     GOVUKDesignSystemDateField,
     GOVUKDesignSystemForm,
     GOVUKDesignSystemModelForm,
-    GOVUKDesignSystemRadiosWidget,
     GOVUKDesignSystemCharField,
     GOVUKDesignSystemSingleCheckboxWidget,
     GOVUKDesignSystemTextareaField,
@@ -58,7 +57,7 @@ class DatasetAccessRequestForm(GOVUKDesignSystemModelForm):
             ] = f"You are logged in as {initial_email}"
 
 
-class ToolsAccessRequestFormPart1(GOVUKDesignSystemModelForm):
+class ToolsAccessRequestForm(GOVUKDesignSystemModelForm):
     class Meta:
         model = AccessRequest
         fields = ["training_screenshot"]
@@ -73,49 +72,6 @@ class ToolsAccessRequestFormPart1(GOVUKDesignSystemModelForm):
             show_selected_file=True,
         ),
         error_messages={"required": "You must upload proof that you've completed the training."},
-    )
-
-
-class ToolsAccessRequestFormPart2(GOVUKDesignSystemModelForm):
-    class Meta:
-        model = AccessRequest
-        fields = ["spss_and_stata"]
-
-    spss_and_stata = GOVUKDesignSystemBooleanField(
-        label="Stata",
-        help_html=render_to_string("request_access/spss-and-stata-hint.html"),
-        required=False,
-        widget=GOVUKDesignSystemRadiosWidget(
-            label_is_heading=False,
-            extra_label_classes="govuk-!-font-weight-bold",
-            choices=((True, "Yes"), (False, "No")),
-        ),
-    )
-
-
-class ToolsAccessRequestFormPart3(GOVUKDesignSystemModelForm):
-    class Meta:
-        model = AccessRequest
-        fields = ["line_manager_email_address", "reason_for_spss_and_stata"]
-
-    line_manager_email_address = GOVUKDesignSystemCharField(
-        label="What is your line manager's email address?",
-        help_text="We will use this to email your line manager to ask for approval.",
-        widget=GOVUKDesignSystemTextWidget(
-            label_is_heading=False, extra_label_classes="govuk-!-font-weight-bold"
-        ),
-        error_messages={"required": "You must provide your line manager's email address."},
-    )
-
-    reason_for_spss_and_stata = GOVUKDesignSystemTextareaField(
-        label="What is your reason for needing Stata?",
-        help_text="We're asking these questions to give you access to Stata tools.",
-        widget=GOVUKDesignSystemTextareaWidget(
-            label_is_heading=False,
-            extra_label_classes="govuk-!-font-weight-bold",
-            attrs={"rows": 5},
-        ),
-        error_messages={"required": "Enter a reason for needing STATA."},
     )
 
 

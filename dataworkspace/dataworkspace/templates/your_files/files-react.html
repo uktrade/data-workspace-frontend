@@ -24,11 +24,7 @@
 {% block content %}
   <h1 class="govuk-heading-l">Your files</h1>
 
-  {% if your_files_v2_flag %}
-    <div id="your-files-app-v2"></div>
-  {% else %}
-    <div id="your-files-app"></div>
-  {% endif %}
+  <div id="your-files-app"></div>
   
   <!-- Icons provided by Font Awesome https://fontawesome.com/license -->
   <div>
@@ -53,9 +49,5 @@
     console.log(YOURFILES_CONFIG.credentialsUrl);
   </script>
 
-  {% if your_files_v2_flag %}
-    {% render_bundle "your-files-v2" "js" %}
-  {% else %}
-    {% render_bundle "your-files" "js" %}
-  {% endif %}
+  {% render_bundle "your-files" "js" %}
 {% endblock %}

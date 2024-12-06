@@ -43,6 +43,7 @@ class AddDatasetRequestForm(GOVUKDesignSystemForm):
             label_is_heading=True,
             attrs={"rows": 5},
         ),
+        error_messages={"required": "Please tell us about the data you want to add."},
     )
 
 
@@ -73,6 +74,7 @@ class SupportAnalysisDatasetForm(GOVUKDesignSystemForm):
             label_is_heading=True,
             attrs={"rows": 5},
         ),
+        error_messages={"required": "Please tell us what you need support with."},
     )
 
 

@@ -9,9 +9,7 @@ from dataworkspace.apps.request_access.views import (
     SelfCertifyView,
     StataAccessView,
     StataAccessRequest,
-    ToolsAccessRequestPart1,
-    ToolsAccessRequestPart2,
-    ToolsAccessRequestPart3,
+    ToolsAccessRequest,
 )
 
 urlpatterns = [
@@ -32,18 +30,8 @@ urlpatterns = [
     ),
     path(
         "<int:pk>/tools",
-        login_required(ToolsAccessRequestPart1.as_view()),
-        name="tools-1",
-    ),
-    path(
-        "<int:pk>/spss-stata",
-        login_required(ToolsAccessRequestPart2.as_view()),
-        name="tools-2",
-    ),
-    path(
-        "<int:pk>/spss-stata-reason",
-        login_required(ToolsAccessRequestPart3.as_view()),
-        name="tools-3",
+        login_required(ToolsAccessRequest.as_view()),
+        name="tools",
     ),
     path(
         "<int:pk>/summary",

@@ -9,9 +9,7 @@ import pytest
 import requests_mock
 from botocore.response import StreamingBody
 from bs4 import BeautifulSoup
-from waffle.testutils import override_flag
 
-from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.test import override_settings, Client
 from django.urls import reverse
@@ -57,6 +55,7 @@ class TestSupportViews(BaseTestCase):
             reverse("support"), {"email": "a@b.com", "support_type": "tech"}
         )
         self.assertRedirects(response, f'{reverse("technical-support")}?email=a@b.com')
+        self.assertRedirects(response, f'{reverse("technical-support")}?email=a@b.com')
 
     def test_add_new_dataset_redirect(self):
         response = self._authenticated_post(
@@ -83,6 +82,12 @@ class TestSupportViews(BaseTestCase):
         self.assertContains(
             response,
             "Your reference number<br /><strong>999</strong>",
+            "Request received",
+            html=True,
+        )
+        self.assertContains(
+            response,
+            "Your reference number<br /><strong>999</strong>",
             html=True,
         )
         mock_create_request.assert_called_once()
@@ -92,9 +97,11 @@ class TestSupportViews(BaseTestCase):
         mock_create_request.return_value = 999
         response = self._authenticated_post(
             f'{reverse("add-dataset-request")}?tag=add-dataset-request',
+            f'{reverse("add-dataset-request")}?tag=add-dataset-request',
             data={
                 "email": "noreply@example.com",
                 "message": "A test message",
+                "support_type": "dataset",
                 "support_type": "dataset",
             },
         )
@@ -106,9 +113,16 @@ class TestSupportViews(BaseTestCase):
         self.assertContains(
             response,
             "Your reference number<br /><strong>999</strong>",
+            "Application complete",
+            html=True,
+        )
+        self.assertContains(
+            response,
+            "Your reference number<br /><strong>999</strong>",
             html=True,
         )
         mock_create_request.assert_called_once_with(
+            mock.ANY, "noreply@example.com", "A test message", tag="add_dataset_request"
             mock.ANY, "noreply@example.com", "A test message", tag="add_dataset_request"
         )
 
@@ -126,6 +140,12 @@ class TestSupportViews(BaseTestCase):
         )
         self.assertContains(
             response,
+            "Request received",
+            html=True,
+        )
+        self.assertContains(
+            response,
+            "Your reference number<br /><strong>999</strong>",
             "Request received",
             html=True,
         )
@@ -179,6 +199,12 @@ class TestSupportViews(BaseTestCase):
         assert response.status_code == 200
         self.assertContains(
             response,
+            "Request received",
+            html=True,
+        )
+        self.assertContains(
+            response,
+            "Your reference number<br /><strong>999</strong>",
             "Request received",
             html=True,
         )
@@ -325,8 +351,8 @@ def test_footer_links(request_client):
         (True, "/tools/quicksight/redirect", "Open QuickSight"),
         (
             False,
-            "/request-access/",
-            "Request access to QuickSight",
+            "/request-access/self-certify",
+            "Get access to QuickSight",
         ),
     ),
 )
@@ -364,7 +390,6 @@ def test_quicksight_link_only_shown_to_user_with_permission(
 )
 @override_settings(QUICKSIGHT_SSO_URL="https://quicksight")
 @pytest.mark.django_db
-@override_flag(settings.TOOLS_SELF_CERTIFY, active=True)
 def test_quicksight_link_only_shown_to_user_with_permission_with_feature_flag(
     has_quicksight_access, expected_href, expected_text
 ):
@@ -390,7 +415,7 @@ def test_quicksight_link_only_shown_to_user_with_permission_with_feature_flag(
         (True, "https://appstream", "Open STATA"),
         (
             False,
-            "/request-access/",
+            "/request-access/self-certify",
             "Request access to STATA",
         ),
     ),
@@ -427,7 +452,6 @@ def test_appstream_link_only_shown_to_user_with_permission(
 )
 @override_settings(APPSTREAM_URL="https://appstream")
 @pytest.mark.django_db
-@override_flag(settings.TOOLS_SELF_CERTIFY, active=True)
 def test_appstream_link_only_shown_to_user_with_permission_with_feature_flag(
     has_appstream_update, expected_href, expected_text
 ):
@@ -467,7 +491,6 @@ def test_appstream_link_only_shown_to_user_with_permission_with_feature_flag(
     ),
 )
 @pytest.mark.django_db
-@override_flag(settings.TOOLS_SELF_CERTIFY, active=True)
 def test_tools_links_with_invalid_email(expected_href, expected_text):
     user = UserFactory.create(is_staff=False, is_superuser=False, email="ian@gmail.com")
     user.save()
@@ -507,7 +530,6 @@ def test_tools_links_with_invalid_email(expected_href, expected_text):
     ),
 )
 @pytest.mark.django_db
-@override_flag(settings.TOOLS_SELF_CERTIFY, active=True)
 def test_tools_links_with_valid_email(expected_href, expected_text):
     user = UserFactory.create(is_staff=False, is_superuser=False, email="ian@trade.gov.uk")
     user.save()
@@ -533,7 +555,6 @@ def test_tools_links_with_valid_email(expected_href, expected_text):
     ),
 )
 @pytest.mark.django_db
-@override_flag(settings.TOOLS_SELF_CERTIFY, active=True)
 def test_stata_link_after_tools_access_has_been_granted(expected_href, expected_text):
     user = UserFactory.create(is_staff=False, is_superuser=False, email="ian@trade.gov.uk")
     start_all_applications = Permission.objects.get(codename="start_all_applications")
@@ -574,7 +595,6 @@ def test_stata_link_after_tools_access_has_been_granted(expected_href, expected_
     ),
 )
 @pytest.mark.django_db
-@override_flag(settings.TOOLS_SELF_CERTIFY, active=True)
 def test_all_tool_links_after_access_has_been_granted(expected_href, expected_text):
     user = UserFactory.create(is_staff=False, is_superuser=False, email="ian@trade.gov.uk")
     permission_codenames = [
@@ -770,6 +790,7 @@ class TestContactUsViews(BaseTestCase):
         response = self._authenticated_post(reverse("contact-us"), {"contact_type": ""})
         assert response.status_code == 200
         self.assertContains(response, "Select what you would like to do")
+        self.assertContains(response, "Select what you would like to do")
 
     def test_invalid_contact_type_returns_expected_error(self):
         response = self._authenticated_post(reverse("contact-us"), {"contact_type": "NOT_REAL"})
@@ -852,7 +873,7 @@ class TestFeedbackViews(BaseTestCase):
             url_with_params,
             {
                 "survey_source": "csat-download-link",
-                "how_satisfied": "very-satisfied",
+                "how_satisfied": "very-satified",
                 "trying_to_do": "other",
                 "trying_to_do_other_message": "Hello",
                 "improve_service": "abc",
