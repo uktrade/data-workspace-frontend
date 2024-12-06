@@ -12,9 +12,9 @@ from dataworkspace.forms import (
     GOVUKDesignSystemMultipleChoiceField,
     GOVUKDesignSystemRadioField,
     GOVUKDesignSystemRadiosWidget,
-    GOVUKDesignSystemTextWidget,
     GOVUKDesignSystemTextareaField,
     GOVUKDesignSystemTextareaWidget,
+    GOVUKDesignSystemTextWidget,
     GOVUKDesignSystemWidgetMixin,
 )
 
@@ -31,10 +31,57 @@ class ConditionalSupportTypeCheckboxWidget(
     option_template_name = "core/partial/support_type_checkbox_option.html"
 
 
+class AddDatasetRequestForm(GOVUKDesignSystemForm):
+    email = forms.EmailField(widget=forms.HiddenInput())
+    message = GOVUKDesignSystemTextareaField(
+        help_html=render_to_string("core/partial/add-dataset-request-hint.html"),
+        label="Tell us about the data you want to add",
+        required=True,
+        widget=GOVUKDesignSystemTextareaWidget(
+            heading="h2",
+            label_size="m",
+            label_is_heading=True,
+            attrs={"rows": 5},
+        ),
+    )
+
+
+class CustomVisualisationReviewForm(GOVUKDesignSystemForm):
+    email = forms.EmailField(widget=forms.HiddenInput())
+    message = GOVUKDesignSystemTextareaField(
+        help_html=render_to_string("core/partial/custom-visualisation-review-hint.html"),
+        label="Tell us about your visualisation",
+        required=True,
+        widget=GOVUKDesignSystemTextareaWidget(
+            heading="h2",
+            label_size="m",
+            label_is_heading=True,
+            attrs={"rows": 5},
+        ),
+        error_messages={"required": "Enter information about your visualisation."},
+    )
+
+
+class SupportAnalysisDatasetForm(GOVUKDesignSystemForm):
+    email = forms.EmailField(widget=forms.HiddenInput())
+    message = GOVUKDesignSystemTextareaField(
+        label="Tell us what you need support with",
+        required=True,
+        widget=GOVUKDesignSystemTextareaWidget(
+            heading="h2",
+            label_size="m",
+            label_is_heading=True,
+            attrs={"rows": 5},
+        ),
+    )
+
+
 class SupportForm(GOVUKDesignSystemForm):
     class SupportTypes(models.TextChoices):
-        TECH_SUPPORT = "tech", "I would like to have technical support"
-        NEW_DATASET = "dataset", "I would like to add a new dataset"
+        TECH_SUPPORT = "tech", "I need technical support"
+        NEW_DATASET = "dataset", "I want to add a new dataset"
+        DATA_ANALYSIS_SUPPORT = "analysis", "I need data analysis support or advice"
+        VISUALISATION_REVIEW = "visualisation", "I need a custom visualisation reviewed"
         OTHER = "other", "Other"
 
     email = GOVUKDesignSystemEmailField(
@@ -88,7 +135,7 @@ class UserSatisfactionSurveyForm(GOVUKDesignSystemForm):
         required=True,
         label="1. What were you trying to do today?",
         help_text="Select all options that are relevant to you.",
-        widget=ConditionalSupportTypeCheckboxWidget(heading="h2", label_size="m", small=True),
+        widget=ConditionalSupportTypeCheckboxWidget(heading="h2", label_size="m"),
         choices=[(t.value, t.label) for t in TryingToDoType],
         error_messages={
             "required": "Select at least one option for what were you trying to do today"
@@ -104,15 +151,9 @@ class UserSatisfactionSurveyForm(GOVUKDesignSystemForm):
     how_satisfied = GOVUKDesignSystemRadioField(
         required=True,
         label="2. How do you feel about your experience of using Data Workspace today?",
-        widget=GOVUKDesignSystemRadiosWidget(heading="h2", label_size="m", small=True),
+        widget=GOVUKDesignSystemRadiosWidget(heading="h2", label_size="m"),
         choices=[(t.value, t.label) for t in HowSatisfiedType],
         error_messages={"required": "Select how Data Workspace made you feel today"},
-    )
-
-    describe_experience = GOVUKDesignSystemTextareaField(
-        required=False,
-        label="3. Describe your experience (optional)",
-        widget=GOVUKDesignSystemTextareaWidget(heading="h2", label_size="m"),
     )
 
     improve_service = GOVUKDesignSystemTextareaField(
@@ -184,5 +225,5 @@ class ContactUsForm(GOVUKDesignSystemForm):
     def clean_contact_type(self):
         contact_type = self.cleaned_data.get("contact_type")
         if not contact_type:
-            raise forms.ValidationError("Select an option for what you would like to do")
+            raise forms.ValidationError("Select what you would like to do")
         return contact_type

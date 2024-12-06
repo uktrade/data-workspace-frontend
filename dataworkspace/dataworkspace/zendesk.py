@@ -276,6 +276,7 @@ If access has not been granted to the requestor within 5 working days, this will
 
 
 def create_support_request(user, email, message, tag=None, subject=None):
+    # In Dev Ignore the API call to Zendesk and notify
     client = Zenpy(
         subdomain=settings.ZENDESK_SUBDOMAIN,
         email=settings.ZENDESK_EMAIL,
