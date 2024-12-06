@@ -4,30 +4,30 @@
 
 {% block page_title %}Support and feedback - {{ block.super }}{% endblock page_title %}
 {% block breadcrumbs %}
-  <a href="{% url 'support' %}" class="govuk-back-link">Back</a>
+<a href="{% url 'support' %}" class="govuk-back-link">Back</a>
 {% endblock %}
 {% block content %}
-  <div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
-      {% include 'design_system/error_summary.html' with form=form %}
-      <h1 class="govuk-heading-l">Technical support</h1>
-      <p class="govuk-body">
-        Please use this form to briefly explain us about the technical issue you have been experiencing on Data Workspace.
-      </p>
-      <form method="post">
-        {% csrf_token %}
-        {{ form.email }}
-        {{ form.what_were_you_doing }}
-        {{ form.what_happened }}
-        {{ form.what_should_have_happened }}
-        <div class="govuk-radios govuk-radios--conditional" data-module="govuk-radios">
-          {{ form.support_type }}
-          <div class="govuk-radios__conditional govuk-radios__conditional--hidden" id="conditional-message">
-            {{ form.message }}
-          </div>
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    {% include 'design_system/error_summary.html' with form=form %}
+    <h1 class="govuk-heading-l">Technical support</h1>
+    <p class="govuk-body">
+      Please use this form to briefly explain us about the technical issue you have been experiencing on Data Workspace.
+    </p>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.email }}
+      {{ form.what_were_you_doing }}
+      {{ form.what_happened }}
+      {{ form.what_should_have_happened }}
+      <div class="govuk-radios govuk-radios--conditional" data-module="govuk-radios">
+        {{ form.support_type }}
+        <div class="govuk-radios__conditional govuk-radios__conditional--hidden" id="conditional-message">
+          {{ form.message }}
         </div>
-        <button type="submit" class="govuk-button">Send</button>
-      </form>
-    </div>
+      </div>
+      <button type="submit" class="govuk-button">Send</button>
+    </form>
   </div>
+</div>
 {% endblock %}

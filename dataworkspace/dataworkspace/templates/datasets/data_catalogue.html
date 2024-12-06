@@ -274,7 +274,7 @@
               <li>check the spelling of your keywords</li>
               <li>use more general keywords</li>
               <li>select or deselect different filters</li>
-              <li><a class="govuk-link" href="{% url 'request_data:index' %}?tag=data-request">ask for us to add the
+              <li><a class="govuk-link" href="{% url 'add-dataset-request' %}?email={{request.user.email}}&tag=data-request">ask for us to add the
                 dataset</a></li>
             </ul>
           </div>

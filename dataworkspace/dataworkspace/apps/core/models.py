@@ -141,23 +141,19 @@ class DatabaseUser(TimeStampedModel):
 
 
 class HowSatisfiedType(models.TextChoices):
-    very_satified = "very-satified", "Very satisfied"
-    satified = "satified", "Satisfied"
+    very_satisfied = "very-satisfied", "Very satisfied"
+    satisfied = "satisfied", "Satisfied"
     neither = "neither", "Neither satisfied nor dissatisfied"
     dissatisfied = "dissatisfied", "Dissatisfied"
     very_dissatisfied = "very-dissatisfied", "Very dissatisfied"
 
 
 class TryingToDoType(models.TextChoices):
-    looking = "looking", "Looking for data"
-    access_data = "access-data", "Trying to access data"
+    looking = "find-data", "Find data"
+    access_data = "access-data", "Access data"
     analyse_data = "analyse-data", "Analyse data"
-    share_date = "share-date", "Share data"
     use_tool = "use-tool", "Use tools"
-    create_visualisation = "create-visualisation", "Create a data visualisation"
-    share_visualisation = "share-visualisation", "Share a data visualisation"
-    view_visualisation = "view-visualisation", "View a data visualisation"
-    support_guidance = "support-guidance", "Looking for support or guidance"
+    use_visualisation = "use-visualisation", "Use a data visualisation"
     other = "other", "Other"
 
 
@@ -171,7 +167,6 @@ class UserSatisfactionSurvey(TimeStampedModel):
     trying_to_do = models.TextField(null=True, blank=True, choices=TryingToDoType.choices)
     trying_to_do_other_message = models.TextField(null=True, blank=True)
     improve_service = models.TextField(null=True, blank=True)
-    describe_experience = models.TextField(null=True, blank=True)
     survey_source = models.CharField(
         max_length=32, null=True, blank=True, choices=SurveySource.choices
     )
