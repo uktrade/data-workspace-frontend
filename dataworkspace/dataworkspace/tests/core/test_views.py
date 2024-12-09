@@ -55,7 +55,6 @@ class TestSupportViews(BaseTestCase):
             reverse("support"), {"email": "a@b.com", "support_type": "tech"}
         )
         self.assertRedirects(response, f'{reverse("technical-support")}?email=a@b.com')
-        self.assertRedirects(response, f'{reverse("technical-support")}?email=a@b.com')
 
     def test_add_new_dataset_redirect(self):
         response = self._authenticated_post(
@@ -85,11 +84,6 @@ class TestSupportViews(BaseTestCase):
             "Request received",
             html=True,
         )
-        self.assertContains(
-            response,
-            "Your reference number<br /><strong>999</strong>",
-            html=True,
-        )
         mock_create_request.assert_called_once()
 
     @mock.patch("dataworkspace.apps.core.views.create_support_request")
@@ -114,11 +108,6 @@ class TestSupportViews(BaseTestCase):
             response,
             "Your reference number<br /><strong>999</strong>",
             "Application complete",
-            html=True,
-        )
-        self.assertContains(
-            response,
-            "Your reference number<br /><strong>999</strong>",
             html=True,
         )
         mock_create_request.assert_called_once_with(
@@ -146,11 +135,6 @@ class TestSupportViews(BaseTestCase):
             response,
             "Your reference number<br /><strong>999</strong>",
             "Request received",
-            html=True,
-        )
-        self.assertContains(
-            response,
-            "Your reference number<br /><strong>999</strong>",
             html=True,
         )
         mock_create_request.assert_called_once_with(
@@ -205,11 +189,6 @@ class TestSupportViews(BaseTestCase):
             response,
             "Your reference number<br /><strong>999</strong>",
             "Request received",
-            html=True,
-        )
-        self.assertContains(
-            response,
-            "Your reference number<br /><strong>999</strong>",
             html=True,
         )
         mock_create_request.assert_called_once_with(
