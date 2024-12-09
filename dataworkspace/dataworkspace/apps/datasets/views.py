@@ -1853,21 +1853,31 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
             requests = AccessRequest.objects.filter(
                 catalogue_item_id=self.obj.pk, data_access_status="waiting"
             )
-            context["requested_users"] = [
-                {
-                    "id": get_user_model().objects.get(email=request.contact_email).id,
-                    "first_name": get_user_model()
-                    .objects.get(email=request.contact_email)
-                    .first_name,
-                    "last_name": get_user_model()
-                    .objects.get(email=request.contact_email)
-                    .last_name,
-                    "email": get_user_model().objects.get(email=request.contact_email).email,
-                    "days_ago": (datetime.today() - request.created_date.replace(tzinfo=None)).days
-                    + 1,
-                }
-                for request in requests
-            ]
+
+            requested_users = []
+
+            for request in requests:
+                try:
+                    user = get_user_model().objects.get(email=request.contact_email)
+                    requested_users.append(
+                        {
+                            "id": user.id,
+                            "first_name": user.first_name,
+                            "last_name": user.last_name,
+                            "email": user.email,
+                            "days_ago": (
+                                datetime.today() - request.created_date.replace(tzinfo=None)
+                            ).days
+                            + 1,
+                        }
+                    )
+                except get_user_model().DoesNotExist:
+                    logger.exception(
+                        "User with email: %s no longer exists.", request.contact_email
+                    )
+                    continue
+
+            context["requested_users"] = requested_users
             context["waffle_flag"] = waffle.flag_is_active(
                 self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"
             )
