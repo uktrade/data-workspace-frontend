@@ -123,7 +123,6 @@ class TestSupportViews(BaseTestCase):
         )
         mock_create_request.assert_called_once_with(
             mock.ANY, "noreply@example.com", "A test message", tag="add_dataset_request"
-            mock.ANY, "noreply@example.com", "A test message", tag="add_dataset_request"
         )
 
     @mock.patch("dataworkspace.apps.core.views.create_support_request")
