@@ -1873,9 +1873,7 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
                         }
                     )
                 except ObjectDoesNotExist:
-                    logger.error(
-                        "User with email: %s no longer exists.", request.contact_email
-                    )
+                    logger.error("User with email: %s no longer exists.", request.contact_email)
                     continue
 
             context["requested_users"] = requested_users
