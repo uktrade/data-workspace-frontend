@@ -5485,3 +5485,79 @@ class TestDatasetAddAuthorisedUserView:
                 "dataset_url": f"http://testserver/datasets/{dataset.id}",
             },
         )
+
+
+@pytest.mark.django_db
+class TestDatasetEditPermissionsSummaryView:
+
+    def setUp(self, email="bob.testerten@contact-email.com"):
+        self.user = factories.UserFactory.create(is_superuser=True)
+        self.client = Client(**get_http_sso_data(self.user))
+        self.user_requestor = factories.UserFactory.create(
+            first_name="Bob",
+            last_name="Testerten",
+            email="bob.testerten@contact-email.com",
+            is_superuser=False,
+        )
+        self.dataset = factories.DataSetFactory.create(
+            published=True,
+            type=DataSetType.MASTER,
+            name="Master",
+        )
+        AccessRequestFactory(
+            id=self.user_requestor.id,
+            requester_id=self.user_requestor.id,
+            catalogue_item_id=self.dataset.id,
+            contact_email=email,
+            reason_for_access="I need it",
+            eligibility_criteria_met=True,
+            data_access_status="waiting",
+        )
+        factories.PendingAuthorizedUsersFactory.create(
+            id="1", users=f"[{self.user_requestor.id}]", created_by_id=self.user.id
+        )
+
+    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
+    def test_access_requests_display_when_pending_users_exist(self):
+        self.setUp()
+        response = self.client.get(
+            reverse(
+                "datasets:edit_permissions_summary",
+                args=[
+                    self.dataset.id,
+                    "1",
+                ],
+            ),
+        )
+
+        soup = BeautifulSoup(response.content.decode(response.charset))
+
+        user_access_request_header = soup.find("h2").text
+        user_access_request = soup.find("td").text
+
+        assert user_access_request_header == "Users who have requested access"
+        assert "bob.testerten@contact-email.com" in user_access_request
+
+    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
+    @mock.patch("logging.Logger.exception")
+    def test_access_requests_do_not_display_when_non_users_exist(self, mock_logger):
+        self.setUp(email="bob.testerten@some-email.com")
+        response = self.client.get(
+            reverse(
+                "datasets:edit_permissions_summary",
+                args=[
+                    self.dataset.id,
+                    "1",
+                ],
+            ),
+        )
+
+        soup = BeautifulSoup(response.content.decode(response.charset))
+
+        main = soup.find("main").text
+
+        assert "Users who have requested access" not in main
+        assert "bob.testerten@some-email.com" not in main
+        assert mock_logger.call_args_list == [
+            mock.call("User with email: %s no longer exists.", "bob.testerten@some-email.com")
+        ]
