@@ -81,7 +81,6 @@ class TestSupportViews(BaseTestCase):
         self.assertContains(
             response,
             "Your reference number<br /><strong>999</strong>",
-            "Request received",
             html=True,
         )
         mock_create_request.assert_called_once()
@@ -91,11 +90,9 @@ class TestSupportViews(BaseTestCase):
         mock_create_request.return_value = 999
         response = self._authenticated_post(
             f'{reverse("add-dataset-request")}?tag=add-dataset-request',
-            f'{reverse("add-dataset-request")}?tag=add-dataset-request',
             data={
                 "email": "noreply@example.com",
                 "message": "A test message",
-                "support_type": "dataset",
                 "support_type": "dataset",
             },
         )
@@ -107,7 +104,6 @@ class TestSupportViews(BaseTestCase):
         self.assertContains(
             response,
             "Your reference number<br /><strong>999</strong>",
-            "Application complete",
             html=True,
         )
         mock_create_request.assert_called_once_with(
@@ -134,7 +130,6 @@ class TestSupportViews(BaseTestCase):
         self.assertContains(
             response,
             "Your reference number<br /><strong>999</strong>",
-            "Request received",
             html=True,
         )
         mock_create_request.assert_called_once_with(
@@ -188,7 +183,6 @@ class TestSupportViews(BaseTestCase):
         self.assertContains(
             response,
             "Your reference number<br /><strong>999</strong>",
-            "Request received",
             html=True,
         )
         mock_create_request.assert_called_once_with(
@@ -850,14 +844,14 @@ class TestFeedbackViews(BaseTestCase):
             url_with_params,
             {
                 "survey_source": "csat-download-link",
-                "how_satisfied": "very-satified",
+                "how_satisfied": "very-satisfied",
                 "trying_to_do": "other",
                 "trying_to_do_other_message": "Hello",
                 "improve_service": "abc",
             },
         )
         assert response.status_code == 200
-
+        print(response.rendered_content)
         survey_entry = UserSatisfactionSurvey.objects.first()
         assert survey_entry.survey_source == "csat-download-link"
 
