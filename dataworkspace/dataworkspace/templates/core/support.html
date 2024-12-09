@@ -3,42 +3,60 @@
 {% load waffle_tags %}
 
 {% block page_title %}Support and feedback - {{ block.super }}{% endblock page_title %}
-{% block breadcrumbs %}
-  <div class="govuk-breadcrumbs">
-    <ol class="govuk-breadcrumbs__list">
-      <li class="govuk-breadcrumbs__list-item">
-        <a class="govuk-breadcrumbs__link" href="{% url 'root' %}">Home</a>
-      </li>
-      <li class="govuk-breadcrumbs__list-item">Support</li>
-    </ol>
-  </div>
-{% endblock %}
 {% block content %}
-  <div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
-      {% if ticket_id %}
-        <h1 class="govuk-heading-l">Support request received</h1>
-        <p class="govuk-body">
-          Your request has been received. Your reference is: <strong>{{ ticket_id }}</strong>.
-        </p>
-        <p class="govuk-body">
-          You will receive a confirmation email to the address you provided.
-        </p>
-        <a class="govuk-button" href="{% url 'root' %}">Back</a>
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    {% if ticket_id %}
+    <div class="govuk-!-padding-top-2">
+      <div class="govuk-panel govuk-panel--confirmation">
+        {% if request.GET.add_dataset %}
+        <h1 class="govuk-panel__title">Application complete</h1>
+        {% else %}
+        <h1 class="govuk-panel__title">Request received</h1>
+        {% endif %}
+        <div class="govuk-panel__body">
+          Your reference number<br /><strong>{{ ticket_id }}</strong>
+        </div>
+      </div>
+    </div>
+    <div class="govuk-!-padding-top-3">
+      <h2 class="govuk-heading-m">What happens next</h2>
+      <p class="govuk-body">
+        We have sent you a confirmation email.
+      </p>
+      <p class="govuk-body">
+        Our Service Level Agreement (SLA) commits us to respond within 5 days. However, we are usually much
+        faster.
+      </p>
+      {% if request.GET.add_dataset %}
+      <h2 class="govuk-heading-m">Be prepared by filling in our data onboarding form</h2>
+      <p class="govuk-body-m">Once we have evaluated your request we'll ask you to fill in our data onboarding form.
+        You can download this form here and see a filled out example linked at the bottom of this guidance.</p>
+      <p class="govuk-body-m">
+        <a class="govuk-link" href="{% url 'root' %}">Return home</a>
+      </p>
       {% else %}
-        {% include 'design_system/error_summary.html' with form=form %}
-        <form method="post">
-          {% csrf_token %}
-          <div class="govuk-radios govuk-radios--conditional" data-module="govuk-radios">
-            {{ form.support_type }}
-            <div class="govuk-radios__conditional govuk-radios__conditional--hidden" id="conditional-message">
-              {{ form.message }}
-            </div>
-          </div>
-          {{ form.email }}
-          <button type="submit" class="govuk-button">Continue</button>
-        </form>
+      <div class="govuk-!-padding-top-2">
+        <p class="govuk-body-m">
+          <a class="govuk-link" href="{% url 'root' %}">Return home</a>
+        </p>
+      </div>
       {% endif %}
     </div>
+    {% else %}
+    {% include 'design_system/error_summary.html' with form=form %}
+    <form method="post">
+      {% csrf_token %}
+      <div class="govuk-radios govuk-radios--conditional" data-module="govuk-radios">
+        {{ form.support_type }}
+        <div class="govuk-radios__conditional govuk-radios__conditional--hidden" id="conditional-message">
+          {{ form.message }}
+        </div>
+      </div>
+      {{ form.email }}
+      <button type="submit" class="govuk-button">Continue</button>
+    </form>
+    {% endif %}
   </div>
+</div>
 {% endblock %}

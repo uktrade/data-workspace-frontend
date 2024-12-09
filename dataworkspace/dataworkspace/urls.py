@@ -2,39 +2,42 @@ import logging
 
 from django.conf import settings
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import include, path
 
 from dataworkspace.apps.accounts.utils import login_required
+from dataworkspace.apps.appstream.views import (
+    appstream_admin_view,
+    appstream_fleetstatus,
+    appstream_restart,
+    appstream_view,
+)
 from dataworkspace.apps.core.views import (
+    AddDatasetRequestView,
+    ContactUsView,
     CreateTableDAGStatusView,
     CreateTableDAGTaskStatusView,
+    CustomVisualisationReviewView,
+    NewsletterSubscriptionView,
     RestoreTableDAGTaskStatusView,
+    ServeS3UploadedFileView,
+    SupportAnalysisDatasetView,
+    SupportView,
     TechnicalSupportView,
+    UserSatisfactionSurveyView,
     about_page_view,
-    public_error_500_application_view,
-    welcome_page_view,
+    healthcheck_view,
     public_error_403_csrf_html_view,
     public_error_403_html_view,
     public_error_403_invalid_tool_user_html_view,
     public_error_403_tool_permission_denied_html_view,
     public_error_403_visualisation_html_view,
     public_error_404_html_view,
+    public_error_500_application_view,
     public_error_500_html_view,
-    healthcheck_view,
-    SupportView,
-    NewsletterSubscriptionView,
     table_data_view,
-    UserSatisfactionSurveyView,
-    ServeS3UploadedFileView,
-    ContactUsView,
+    welcome_page_view,
 )
 from dataworkspace.apps.datasets.views import home_view
-from dataworkspace.apps.appstream.views import (
-    appstream_view,
-    appstream_admin_view,
-    appstream_restart,
-    appstream_fleetstatus,
-)
 
 logger = logging.getLogger("app")
 
@@ -93,13 +96,6 @@ urlpatterns = [
         include(("dataworkspace.apps.explorer.urls", "explorer"), namespace="explorer"),
     ),
     path(
-        "request-data/",
-        include(
-            ("dataworkspace.apps.request_data.urls", "request_data"),
-            namespace="request-data",
-        ),
-    ),
-    path(
         "request-access/",
         include(
             ("dataworkspace.apps.request_access.urls", "request_access"),
@@ -130,6 +126,21 @@ urlpatterns = [
         "feedback/",
         login_required(UserSatisfactionSurveyView.as_view()),
         name="feedback",
+    ),
+    path(
+        "support/add-dataset-request/",
+        login_required(AddDatasetRequestView.as_view()),
+        name="add-dataset-request",
+    ),
+    path(
+        "support/custom-visualisation-review/",
+        login_required(CustomVisualisationReviewView.as_view()),
+        name="custom-visualisation-review",
+    ),
+    path(
+        "support/support-analysis-dataset/",
+        login_required(SupportAnalysisDatasetView.as_view()),
+        name="support-analysis-dataset",
     ),
     path(
         "newsletter_subscription/",

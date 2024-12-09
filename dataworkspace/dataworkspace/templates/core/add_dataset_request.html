@@ -1,0 +1,47 @@
+{% extends '_main.html' %}
+
+{% load waffle_tags %}
+
+{% block page_title %}Get your custom visualisation reviewed - {{ block.super }}{% endblock page_title %}
+{% block breadcrumbs %}
+<a href="{% url 'support' %}" class="govuk-back-link">Back</a>
+{% endblock %}
+{% block content %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <h1 class="govuk-heading-xl">Add a new dataset</h1>
+        <h2 class="govuk-heading-m">When to use this service</h2>
+        <p class="govuk-body-m">Fill in the input box below to start the process of creating a new catalogue item.</p>
+        <p class="govuk-body-m">If you want to add a table to an existing source dataset you must use the <a
+                class="govuk-link"
+                href="https://data-services-help.trade.gov.uk/data-workspace/add-share-and-manage-data/adding-data/add-a-new-table-to-a-catalogue-page/">
+                add a new
+                table</a> process.</p>
+        <div class="govuk-!-padding-top-5">
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                {{ form.email }}
+                <fieldset class="govuk-fieldset">
+                    {{ form.message }}
+                </fieldset>
+                {{ form.support_type }}
+                <h2 class="govuk-heading-m">When you should use this service</h2>
+                <p class="govuk-body-m">Our Service Level Agreement (SLA) commits us to respond within 5 days. However,
+                    we are usually much faster.
+                </p>
+                <p class="govuk-body-m">Once we have evaluated your request we'll ask you to fill in our <a
+                        class="govuk-link"
+                        href=" https://dbis.sharepoint.com/:w:/s/DIT260/ESmYmIYH8jJGqIZlGEh2PsQBm7SN2BI9XbD6WW8-aFFqyg?e=gz1H9R">onboarding
+                        form</a>. You can download this form and see a filled out example linked at the bottom of
+                    <a class="govuk-link"
+                        href="https://data-services-help.trade.gov.uk/data-workspace/add-share-and-manage-data/creating-and-updating-a-catalogue-pages/create-a-catalogue-page-for-your-data/">this
+                        guidance</a>.
+                </p>
+                <div class="govuk-!-padding-top-2">
+                    <button type="submit" class="govuk-button">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

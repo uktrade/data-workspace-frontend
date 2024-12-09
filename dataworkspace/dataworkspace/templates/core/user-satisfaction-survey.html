@@ -3,42 +3,57 @@
 {% load waffle_tags %}
 
 {% block page_title %}
-    Leave feedback - {{ block.super }}
+Give feedback on Data Workspace - {{ block.super }}
 {% endblock page_title %}
 {% block go_back %}
-    {% if 'success' not in request.GET %}<a href="{{ referer }}" class="govuk-back-link">Back</a>{% endif %}
+{% if 'success' not in request.GET %}<a href="{{ referer }}" class="govuk-back-link">Back</a>{% endif %}
 {% endblock %}
 {% block content %}
-    <div class="govuk-grid-row">
-        <div class="govuk-grid-column-two-thirds">
-            {% include 'design_system/error_summary.html' with form=form %}
-            {% if 'success' in request.GET %}
-                <h1 class="govuk-heading-l">Thank you for your feedback!</h1>
-                <p class="govuk-body-m">We are working hard to constantly improving our sevice and your feedback is valuable to us.</p>
-                <a class="govuk-button" href="{% url 'root' %}">Return home</a>
-            {% else %}
-                <h1 class="govuk-heading-xl">Leave feedback</h1>
-                <p class="govuk-body-m">
-                    Fill in this short form to tell us about your experience of using this website. This form has 4 questions. It should take you less than 3 minutes to complete.
-                </p>
-                <p class="govuk-body-m">
-                    We are unable to respond to any feedback you leave here. For a response, fill out the <a class="govuk-link govuk-link--no-visited-state"
-    href="{% url 'support' %}">support form.</a>
-                </p>
-                <form method="post" enctype="multipart/form-data" novalidate>
-                    {% csrf_token %}
-                    <fieldset class="govuk-fieldset">
-                        {{ form.survey_source }}
-                        <div class="govuk-checkboxes" data-module="govuk-checkboxes">
-                            {{ form.trying_to_do }}
-                            <div class="govuk-checkboxes__conditional govuk-checkboxes__conditional_input govuk-checkboxes__conditional--hidden"
-                                id="conditional-message">{{ form.trying_to_do_other_message }}</div>
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        {% include 'design_system/error_summary.html' with form=form %}
+        {% if 'success' in request.GET %}
+        <h1 class="govuk-heading-l">Thank you for your feedback!</h1>
+        <p class="govuk-body-m">We are constantly improving this sevice and your feedback is valuable to us.</p>
+        <p class="govuk-body-m">We regularly review feedback and use it to improve the service. Sign up to our monthly
+            newsletter to find out more anout new features and changes.</p>
+        <p class="govuk-body-m">
+            <a class="govuk-link" href="{% url 'root' %}">Return home</a>
+        </p>
+        {% else %}
+        <h1 class="govuk-heading-xl">Give feedback on Data Workspace</h1>
+        <p class="govuk-body-m">
+            Use this form to tell us about your experience using Data Workspace. Your feedback is anonymous and you will
+            not recieve a response.
+        </p>
+        <p class="govuk-body-m">
+            <strong>
+                If you need help with an issue or query
+            </strong>
+        </p>
+        <p class="govuk-body-m">
+            Use our <a class="govuk-link govuk-link--no-visited-state" href="{% url 'support' %}">support form.</a>
+        </p>
+        <div class="govuk-!-padding-top-5">
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                <fieldset class="govuk-fieldset">
+                    {{ form.survey_source }}
+                    <div class="govuk-checkboxes" data-module="govuk-checkboxes">
+                        {{ form.trying_to_do }}
+                        <div class="govuk-!-padding-top-2">
+                            <div class="govuk-!-padding-left-2">
+                                <div class="govuk-checkboxes__conditional govuk-checkboxes__conditional_input govuk-checkboxes__conditional--hidden"
+                                    id="conditional-message">{{ form.trying_to_do_other_message }}</div>
+                            </div>
                         </div>
-                        {{ form.how_satisfied }} {{ form.describe_experience }} {{ form.improve_service }}
-                    </fieldset>
-                    <button type="submit" class="govuk-button">Submit feedback</button>
-                </form>
-            {% endif %}
+                    </div>
+                    {{ form.how_satisfied }} {{ form.improve_service }}
+                </fieldset>
+                <button type="submit" class="govuk-button">Submit feedback</button>
+            </form>
         </div>
+        {% endif %}
     </div>
+</div>
 {% endblock %}
