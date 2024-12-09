@@ -42,6 +42,7 @@ from psycopg2 import sql
 from dataworkspace import datasets_db
 from dataworkspace.apps.accounts.models import UserDataTableView
 from dataworkspace.apps.api_v1.core.views import invalidate_superset_user_cached_credentials
+from dataworkspace.apps.api_v2.datasets.serializers import DatasetStatsSerializer, ReferenceDatasetStatsSerializer
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.errors import DatasetPermissionDenied, DatasetPreviewDisabledError
@@ -54,6 +55,7 @@ from dataworkspace.apps.core.utils import (
     view_exists,
 )
 from dataworkspace.apps.datasets.constants import DataLinkType, DataSetType, TagType
+from dataworkspace.apps.datasets.data_dictionary.service import DataDictionaryService
 from dataworkspace.apps.datasets.forms import (
     DatasetEditForm,
     DatasetSearchForm,
@@ -230,16 +232,27 @@ def find_datasets(request):
             dataset["number_of_requests"] = len(AccessRequest.objects.filter(
                 catalogue_item_id=dataset["id"], data_access_status="waiting"
             ))
-            date_of_description = [item['short_description'] for item in matched_datasets if item['is_owner'] == True]
-            print("date_of_description", date_of_description)
 
-        dataset["sources"] = [
-            tags_dict.get(str(source_id)) for source_id in dataset["source_tag_ids"]
-        ]
-        dataset["topics"] = [tags_dict.get(str(topic_id)) for topic_id in dataset["topic_tag_ids"]]
-        dataset["publishers"] = [
-            tags_dict.get(str(publisher_id)) for publisher_id in dataset["publisher_tag_ids"]
-        ]
+        dataset["count"] = EventLog.objects.filter(event_type=EventLog.TYPE_DATASET_VIEW, object_id=dataset["id"]).count()
+
+        service = DataDictionaryService()
+        dataset["source_tables_amount"] = SourceTable.objects.filter(dataset_id=dataset["id"]).count()
+        source_tables = SourceTable.objects.filter(dataset_id=dataset["id"])
+        dataset['filled_dicts'] = 0
+        for source_table in source_tables:
+            for column in service.get_dictionary(source_table.id).items:
+                if column.definition:
+                    dataset['filled_dicts'] += 1
+                else:
+                    print('Nothing here')
+
+        # # dataset["sources"] = [
+        # #     tags_dict.get(str(source_id)) for source_id in dataset["source_tag_ids"]
+        # # ]
+        # # dataset["topics"] = [tags_dict.get(str(topic_id)) for topic_id in dataset["topic_tag_ids"]]
+        # # dataset["publishers"] = [
+        # #     tags_dict.get(str(publisher_id)) for publisher_id in dataset["publisher_tag_ids"]
+        # # ]
 
     ######################################################################
     # Augment results with last updated dates, avoiding queries-per-result
