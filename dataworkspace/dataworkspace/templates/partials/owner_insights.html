@@ -52,7 +52,9 @@
         <th scope="col" class="data-insights__header">{{ dataset.count }}</th>
         <th scope="col" class="data-insights__header">Yes</th>
         <th scope="col" class="data-insights__header">{{ dataset.filled_dicts }} / {{ dataset.source_tables_amount }}</th>
+        {% if dataset.number_of_requests > 0 %}
         <th scope="col" class="data-insights__header">{{ dataset.number_of_requests }}</th>
+        {% endif %}
     </tr>
     </thead>
     <tbody>
@@ -60,7 +62,10 @@
         <td class="data-insights__cell">Views in the last 28 days</td>
         <td class="data-insights__cell">Description updated in last 6 months</td>
         <td class="data-insights__cell">Completed data dictionaries</td>
+        {% if dataset.number_of_requests > 0 %}
         <td class="data-insights__cell">Outstanding access requests</td>
+        {% endif %}
+
     </tr>
     </tbody>
 </table>
