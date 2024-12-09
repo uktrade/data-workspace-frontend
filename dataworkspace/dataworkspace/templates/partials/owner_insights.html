@@ -49,9 +49,9 @@
     <caption class="data-insights__caption">Data insights</caption>
     <thead class="govuk-table__head">
     <tr class="govuk-table__row">
-        <th scope="col" class="data-insights__header">1750</th>
+        <th scope="col" class="data-insights__header">{{ dataset.count }}</th>
         <th scope="col" class="data-insights__header">Yes</th>
-        <th scope="col" class="data-insights__header">5/7</th>
+        <th scope="col" class="data-insights__header">{{ dataset.filled_dicts }} / {{ dataset.source_tables_amount }}</th>
         <th scope="col" class="data-insights__header">{{ dataset.number_of_requests }}</th>
     </tr>
     </thead>
