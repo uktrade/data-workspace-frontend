@@ -228,6 +228,7 @@ def find_datasets(request):
 
         # get owned datasets
         if dataset['is_owner'] == True:
+            print('dataset', dataset)
             # get amount of requests per owned dataset
             dataset["number_of_requests"] = len(AccessRequest.objects.filter(
                 catalogue_item_id=dataset["id"], data_access_status="waiting"
@@ -240,11 +241,10 @@ def find_datasets(request):
         source_tables = SourceTable.objects.filter(dataset_id=dataset["id"])
         dataset['filled_dicts'] = 0
         for source_table in source_tables:
-            for column in service.get_dictionary(source_table.id).items:
-                if column.definition:
-                    dataset['filled_dicts'] += 1
-                else:
-                    print('Nothing here')
+            items = service.get_dictionary(source_table.id).items
+            matches = [column for column in items if column.definition]
+            if len(matches) > 0 and len(matches) == len(items):
+                dataset['filled_dicts'] += 1
 
         # # dataset["sources"] = [
         # #     tags_dict.get(str(source_id)) for source_id in dataset["source_tag_ids"]
