@@ -5539,7 +5539,7 @@ class TestDatasetEditPermissionsSummaryView:
         assert "bob.testerten@contact-email.com" in user_access_request
 
     @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
-    @mock.patch("logging.Logger.exception")
+    @mock.patch("logging.Logger.error")
     def test_access_requests_do_not_display_when_non_users_exist(self, mock_logger):
         self.setUp(email="bob.testerten@some-email.com")
         response = self.client.get(
