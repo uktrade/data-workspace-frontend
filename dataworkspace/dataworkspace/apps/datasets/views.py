@@ -12,7 +12,7 @@ from botocore.exceptions import ClientError
 from csp.decorators import csp_update
 from django.conf import settings
 from django.contrib import messages
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
@@ -1859,7 +1859,7 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
             User = get_user_model()
             for request in requests:
                 try:
-                    user = User.objects.get(email=request.contact_email)
+                    user = User.objects.get(email=request.contact_email, is_active=True)
                     requested_users.append(
                         {
                             "id": user.id,
@@ -1874,6 +1874,9 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
                     )
                 except ObjectDoesNotExist:
                     logger.error("User with email: %s no longer exists.", request.contact_email)
+                    continue
+                except MultipleObjectsReturned:
+                    logger.error("More than one %s returned", request.contact_email)
                     continue
 
             context["requested_users"] = requested_users
