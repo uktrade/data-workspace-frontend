@@ -209,7 +209,7 @@
                   {% endif %}
                 </dl>
               </div>
-              {% if dataset.is_owner == True %}
+              {% if dataset.is_owner == True and dataset.data_type == 1 or dataset.data_type == 2 %}
               <div >
                 {% include "partials/owner_insights.html" %}
               </div>
