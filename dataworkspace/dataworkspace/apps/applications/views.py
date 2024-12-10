@@ -522,7 +522,7 @@ def visualisation_branch_html_GET(request, gitlab_project, branch_name):
     production_commit_id = None
     for tag in tags:
         possible_host_basename, _, host_basename_or_commit_id = tag.rpartition("--")
-        if possible_host_basename:
+        if possible_host_basename and host_basename_or_commit_id != "prod":
             production_commit_id = host_basename_or_commit_id
             break
 
@@ -572,9 +572,27 @@ def visualisation_branch_html_GET(request, gitlab_project, branch_name):
 
 def visualisation_branch_html_POST(request, gitlab_project, branch_name):
     release_commit = request.POST["release-commit"]
+
+    # A "release" of a visualisation adds two tags to the previously generated image for that
+    # commit
+    #
+    # 1. A tag with the basename of the visualistion but "--prod" appended. This is so it can match
+    #    an ECR lifecycle rule that does _not_ expire images that end in "--prod" (or at least,
+    #    expires them in an extremely long time like 1000 years)
+    # 2. A tag with the basename of the visualisation. This is then used to identify and so run
+    #    the released visualisation
+    #
+    # In a future release we could simplify and toughen this and only use the "--prod".
     application_template = _application_template(gitlab_project)
-    get_spawner(application_template.spawner).retag(
-        application_options(application_template),
+    spawner = get_spawner(application_template.spawner)
+    options = application_options(application_template)
+    spawner.retag(
+        options,
+        f"{application_template.host_basename}--{release_commit}",
+        f"{application_template.host_basename}--prod",
+    )
+    spawner.retag(
+        options,
         f"{application_template.host_basename}--{release_commit}",
         application_template.host_basename,
     )
