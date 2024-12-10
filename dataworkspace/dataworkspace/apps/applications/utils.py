@@ -146,9 +146,14 @@ def application_template_tag_user_commit_from_host(public_host):
 
     matching = matching_tools + matching_visualisations
 
-    # Visualisations are all in the same docker repo with different tags,
-    # while tools are each in their own repo
-    tag = public_host if matching_visualisations else None
+    # Visualisations are all in the same docker repo with different tags and so we need to set the
+    # tag, while tools are each in their own repo and we take the tag from its task definition
+    if commit_id and matching_visualisations:
+        tag = public_host
+    elif not commit_id and matching_visualisations:
+        tag = public_host + "--prod"
+    else:
+        tag = None
 
     if not matching:
         raise ApplicationTemplate.DoesNotExist()
