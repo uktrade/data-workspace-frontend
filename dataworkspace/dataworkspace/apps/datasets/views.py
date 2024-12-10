@@ -42,7 +42,6 @@ from psycopg2 import sql
 from dataworkspace import datasets_db
 from dataworkspace.apps.accounts.models import UserDataTableView
 from dataworkspace.apps.api_v1.core.views import invalidate_superset_user_cached_credentials
-from dataworkspace.apps.api_v2.datasets.serializers import DatasetStatsSerializer, ReferenceDatasetStatsSerializer
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.errors import DatasetPermissionDenied, DatasetPreviewDisabledError
@@ -226,25 +225,29 @@ def find_datasets(request):
     tags_dict = _get_tags_as_dict()
     for dataset in datasets:
 
-        # get owned datasets
-        if dataset['is_owner'] == True:
-            print('dataset', dataset)
-            # get amount of requests per owned dataset
-            dataset["number_of_requests"] = len(AccessRequest.objects.filter(
-                catalogue_item_id=dataset["id"], data_access_status="waiting"
-            ))
+        if dataset["is_owner"] == True:
+            dataset["number_of_requests"] = len(
+                AccessRequest.objects.filter(
+                    catalogue_item_id=dataset["id"], data_access_status="waiting"
+                )
+            )
 
-        dataset["count"] = EventLog.objects.filter(event_type=EventLog.TYPE_DATASET_VIEW, object_id=dataset["id"]).count()
+        dataset["type"] = None
+        dataset["count"] = EventLog.objects.filter(
+            event_type=EventLog.TYPE_DATASET_VIEW, object_id=dataset["id"]
+        ).count()
 
         service = DataDictionaryService()
-        dataset["source_tables_amount"] = SourceTable.objects.filter(dataset_id=dataset["id"]).count()
+        dataset["source_tables_amount"] = SourceTable.objects.filter(
+            dataset_id=dataset["id"]
+        ).count()
         source_tables = SourceTable.objects.filter(dataset_id=dataset["id"])
-        dataset['filled_dicts'] = 0
+        dataset["filled_dicts"] = 0
         for source_table in source_tables:
             items = service.get_dictionary(source_table.id).items
             matches = [column for column in items if column.definition]
             if len(matches) > 0 and len(matches) == len(items):
-                dataset['filled_dicts'] += 1
+                dataset["filled_dicts"] += 1
 
     ######################################################################
     # Augment results with last updated dates, avoiding queries-per-result
@@ -1471,7 +1474,6 @@ class DatasetEditView(EditBaseView, UpdateView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["request"] = self.request
-        print("kwargs", kwargs)
         return kwargs
 
     def get_success_url(self):
@@ -1489,13 +1491,13 @@ class DatasetEditView(EditBaseView, UpdateView):
 
         if "description" in form.changed_data:
 
-            log_permission_change(self.request.user,
-                                  self.object,
-                                  EventLog.TYPE_CHANGED_DATASET_DESCRIPTION,
-                                  {"description": self.object.description},
-                                  f"description set to {self.object.description}",
-
-                                  )
+            log_permission_change(
+                self.request.user,
+                self.object,
+                EventLog.TYPE_CHANGED_DATASET_DESCRIPTION,
+                {"description": self.object.description},
+                f"description set to {self.object.description}",
+            )
 
         if "authorized_email_domains" in form.changed_data:
             log_permission_change(
