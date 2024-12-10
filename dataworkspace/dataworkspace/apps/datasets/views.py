@@ -1859,7 +1859,7 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
             User = get_user_model()
             for request in requests:
                 try:
-                    user = User.objects.get(email=request.contact_email)
+                    user = User.objects.get(email=request.contact_email, is_active=True)
                     requested_users.append(
                         {
                             "id": user.id,
