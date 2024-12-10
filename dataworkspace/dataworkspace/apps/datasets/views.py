@@ -54,6 +54,7 @@ from dataworkspace.apps.core.utils import (
     view_exists,
 )
 from dataworkspace.apps.datasets.constants import DataLinkType, DataSetType, TagType
+from dataworkspace.apps.datasets.data_dictionary.service import DataDictionaryService
 from dataworkspace.apps.datasets.forms import (
     DatasetEditForm,
     DatasetSearchForm,
@@ -223,13 +224,30 @@ def find_datasets(request):
 
     tags_dict = _get_tags_as_dict()
     for dataset in datasets:
-        dataset["sources"] = [
-            tags_dict.get(str(source_id)) for source_id in dataset["source_tag_ids"]
-        ]
-        dataset["topics"] = [tags_dict.get(str(topic_id)) for topic_id in dataset["topic_tag_ids"]]
-        dataset["publishers"] = [
-            tags_dict.get(str(publisher_id)) for publisher_id in dataset["publisher_tag_ids"]
-        ]
+
+        if dataset["is_owner"] == True:
+            dataset["number_of_requests"] = len(
+                AccessRequest.objects.filter(
+                    catalogue_item_id=dataset["id"], data_access_status="waiting"
+                )
+            )
+
+        dataset["type"] = None
+        dataset["count"] = EventLog.objects.filter(
+            event_type=EventLog.TYPE_DATASET_VIEW, object_id=dataset["id"]
+        ).count()
+
+        service = DataDictionaryService()
+        dataset["source_tables_amount"] = SourceTable.objects.filter(
+            dataset_id=dataset["id"]
+        ).count()
+        source_tables = SourceTable.objects.filter(dataset_id=dataset["id"])
+        dataset["filled_dicts"] = 0
+        for source_table in source_tables:
+            items = service.get_dictionary(source_table.id).items
+            matches = [column for column in items if column.definition]
+            if len(matches) > 0 and len(matches) == len(items):
+                dataset["filled_dicts"] += 1
 
     ######################################################################
     # Augment results with last updated dates, avoiding queries-per-result
@@ -1470,6 +1488,17 @@ class DatasetEditView(EditBaseView, UpdateView):
         }
 
     def form_valid(self, form):
+
+        if "description" in form.changed_data:
+
+            log_permission_change(
+                self.request.user,
+                self.object,
+                EventLog.TYPE_CHANGED_DATASET_DESCRIPTION,
+                {"description": self.object.description},
+                f"description set to {self.object.description}",
+            )
+
         if "authorized_email_domains" in form.changed_data:
             log_permission_change(
                 self.request.user,

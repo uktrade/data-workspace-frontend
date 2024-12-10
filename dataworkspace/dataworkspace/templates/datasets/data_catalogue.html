@@ -195,6 +195,7 @@
                       N/A
                     {% endfor %}
                   </dd>
+
                   {% if dataset.topics %}
                     <dt>Topics:</dt>
                     <dd>
@@ -208,6 +209,11 @@
                   {% endif %}
                 </dl>
               </div>
+              {% if dataset.is_owner == True and dataset.data_type == 1 or dataset.data_type == 2 %}
+              <div >
+                {% include "partials/owner_insights.html" %}
+              </div>
+              {% endif %}
 
               {% if not dataset.has_access %}
                 <div class="govuk-inset-text govuk-!-margin-bottom-0">
