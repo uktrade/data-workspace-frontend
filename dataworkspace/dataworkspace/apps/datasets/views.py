@@ -1471,6 +1471,7 @@ class DatasetEditView(EditBaseView, UpdateView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["request"] = self.request
+        print("kwargs", kwargs)
         return kwargs
 
     def get_success_url(self):
@@ -1487,10 +1488,14 @@ class DatasetEditView(EditBaseView, UpdateView):
     def form_valid(self, form):
 
         if "description" in form.changed_data:
-            log_event(self.request.user,
-                      self.object,
-                      EventLog.TYPE_CHANGED_DATASET_DESCRIPTION,
-                      )
+
+            log_permission_change(self.request.user,
+                                  self.object,
+                                  EventLog.TYPE_CHANGED_DATASET_DESCRIPTION,
+                                  {"description": self.object.description},
+                                  f"description set to {self.object.description}",
+
+                                  )
 
         if "authorized_email_domains" in form.changed_data:
             log_permission_change(
