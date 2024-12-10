@@ -246,14 +246,6 @@ def find_datasets(request):
             if len(matches) > 0 and len(matches) == len(items):
                 dataset['filled_dicts'] += 1
 
-        # # dataset["sources"] = [
-        # #     tags_dict.get(str(source_id)) for source_id in dataset["source_tag_ids"]
-        # # ]
-        # # dataset["topics"] = [tags_dict.get(str(topic_id)) for topic_id in dataset["topic_tag_ids"]]
-        # # dataset["publishers"] = [
-        # #     tags_dict.get(str(publisher_id)) for publisher_id in dataset["publisher_tag_ids"]
-        # # ]
-
     ######################################################################
     # Augment results with last updated dates, avoiding queries-per-result
 
@@ -1493,6 +1485,13 @@ class DatasetEditView(EditBaseView, UpdateView):
         }
 
     def form_valid(self, form):
+
+        if "description" in form.changed_data:
+            log_event(self.request.user,
+                      self.object,
+                      EventLog.TYPE_CHANGED_DATASET_DESCRIPTION,
+                      )
+
         if "authorized_email_domains" in form.changed_data:
             log_permission_change(
                 self.request.user,
