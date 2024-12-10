@@ -517,7 +517,7 @@ def visualisation_branch_html_GET(request, gitlab_project, branch_name):
     host_basename = application_template.host_basename
     production_link = f"{request.scheme}://{host_basename}.{settings.APPLICATION_ROOT_DOMAIN}/"
     tags = get_spawner(application_template.spawner).tags_for_tag(
-        application_options(application_template), application_template.host_basename
+        application_options(application_template), f"{host_basename}--prod"
     )
     production_commit_id = None
     for tag in tags:
@@ -573,16 +573,13 @@ def visualisation_branch_html_GET(request, gitlab_project, branch_name):
 def visualisation_branch_html_POST(request, gitlab_project, branch_name):
     release_commit = request.POST["release-commit"]
 
-    # A "release" of a visualisation adds two tags to the previously generated image for that
+    # A "release" of a visualisation adds a tag to the previously generated image for that
     # commit
     #
-    # 1. A tag with the basename of the visualistion but "--prod" appended. This is so it can match
-    #    an ECR lifecycle rule that does _not_ expire images that end in "--prod" (or at least,
-    #    expires them in an extremely long time like 1000 years)
-    # 2. A tag with the basename of the visualisation. This is then used to identify and so run
-    #    the released visualisation
-    #
-    # In a future release we could simplify and toughen this and only use the "--prod".
+    # This tag is the basename of the visualistion with "--prod" appended. This is so it can match
+    # an ECR lifecycle rule that does _not_ expire images that end in "--prod" (or at least,
+    # expires them in an extremely long time like 1000 years)
+
     application_template = _application_template(gitlab_project)
     spawner = get_spawner(application_template.spawner)
     options = application_options(application_template)
@@ -590,11 +587,6 @@ def visualisation_branch_html_POST(request, gitlab_project, branch_name):
         options,
         f"{application_template.host_basename}--{release_commit}",
         f"{application_template.host_basename}--prod",
-    )
-    spawner.retag(
-        options,
-        f"{application_template.host_basename}--{release_commit}",
-        application_template.host_basename,
     )
 
     try:
