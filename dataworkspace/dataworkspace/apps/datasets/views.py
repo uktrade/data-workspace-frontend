@@ -1557,7 +1557,7 @@ class VisualisationCatalogueItemEditView(EditBaseView, UpdateView):
                 {"description": self.object.description},
                 f"description set to {self.object.description}",
             )
-            
+
         if "authorized_email_domains" in form.changed_data:
             log_permission_change(
                 self.request.user,
