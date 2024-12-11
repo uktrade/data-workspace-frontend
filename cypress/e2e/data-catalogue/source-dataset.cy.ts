@@ -63,7 +63,7 @@ describe("Source dataset catalogue", () => {
         rows: [
           [
             {
-              text: "Source data set",
+              text: "source data set",
             },
             {
               text: "public.test_dataset",
@@ -188,7 +188,7 @@ describe("Source dataset catalogue", () => {
         rows: [
           [
             {
-              text: "Source data set",
+              text: "source data set",
             },
             {
               text: "public.test_dataset",
