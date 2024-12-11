@@ -231,8 +231,6 @@ def find_datasets(request):
                     catalogue_item_id=dataset["id"], data_access_status="waiting"
                 )
             )
-
-        dataset["type"] = None
         dataset["count"] = EventLog.objects.filter(
             event_type=EventLog.TYPE_DATASET_VIEW, object_id=dataset["id"]
         ).count()
@@ -1549,6 +1547,17 @@ class VisualisationCatalogueItemEditView(EditBaseView, UpdateView):
         }
 
     def form_valid(self, form):
+
+        if "description" in form.changed_data:
+
+            log_permission_change(
+                self.request.user,
+                self.object,
+                EventLog.TYPE_CHANGED_DATASET_DESCRIPTION,
+                {"description": self.object.description},
+                f"description set to {self.object.description}",
+            )
+            
         if "authorized_email_domains" in form.changed_data:
             log_permission_change(
                 self.request.user,
