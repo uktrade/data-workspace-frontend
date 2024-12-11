@@ -1498,6 +1498,43 @@ def test_dataset_shows_external_link_warning(source_urls, show_warning):
     ) is show_warning
 
 
+def test_only_owned_datasets_display_insights(user, client):
+    ds1 = factories.DataSetFactory.create(
+        name="Dataset",
+        information_asset_manager=user,
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+    )
+    ds2 = factories.ReferenceDatasetFactory.create(name="Reference", information_asset_manager=user,)
+    ds3 = factories.VisualisationCatalogueItemFactory.create(
+        name="Visualisation", information_asset_manager=user, user_access_type=UserAccessType.REQUIRES_AUTHENTICATION
+    )
+    ds4 = factories.DataSetFactory.create(
+        published=True,
+        information_asset_manager=user,
+        type=DataSetType.DATACUT,
+        name=f"Datacut",
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+    )
+
+    # All available datasets
+    response = client.get(reverse("datasets:find_datasets"))
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(ds1, is_owner=True),
+        expected_search_result(ds2),
+        expected_search_result(ds3),
+        expected_search_result(ds4),
+    ]
+
+    # User is IAM
+    response = client.get(reverse("datasets:find_datasets"), {"my_datasets": "owned"})
+    assert response.status_code == 200
+    assert list(response.context["datasets"]) == [
+        expected_search_result(ds1, is_owner=True),
+    ]
+
+
+
 class DatasetsCommon:
     def _get_database(self):
         return factories.DatabaseFactory.create(memorable_name="my_database")
