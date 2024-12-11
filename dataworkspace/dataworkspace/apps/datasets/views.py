@@ -222,10 +222,9 @@ def find_datasets(request):
     ########################################################
     # Augment results with tags, avoiding queries-per-result
 
-    tags_dict = _get_tags_as_dict()
     for dataset in datasets:
 
-        if dataset["is_owner"] == True:
+        if dataset["is_owner"]:
             dataset["number_of_requests"] = len(
                 AccessRequest.objects.filter(
                     catalogue_item_id=dataset["id"], data_access_status="waiting"
