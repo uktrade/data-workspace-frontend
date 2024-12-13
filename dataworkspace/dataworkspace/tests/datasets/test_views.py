@@ -1359,7 +1359,7 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
     response = client.get(reverse("datasets:find_datasets"))
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ds1, is_owner=True),
+        expected_search_result(ds1, is_owner=True, number_of_requests=mock.ANY, count=mock.ANY, source_tables_amount=mock.ANY, filled_dicts=mock.ANY),
         expected_search_result(ds2),
         expected_search_result(ds3),
     ]
@@ -1368,7 +1368,7 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
     response = client.get(reverse("datasets:find_datasets"), {"my_datasets": "owned"})
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ds1, is_owner=True),
+        expected_search_result(ds1, is_owner=True, number_of_requests=mock.ANY, count=mock.ANY, source_tables_amount=mock.ANY, filled_dicts=mock.ANY),
     ]
 
     # User is IAO
@@ -1377,8 +1377,8 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
     response = client.get(reverse("datasets:find_datasets"), {"my_datasets": "owned"})
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ds1, is_owner=True),
-        expected_search_result(ds3, is_owner=True),
+        expected_search_result(ds1, is_owner=True, number_of_requests=mock.ANY, count=mock.ANY, source_tables_amount=mock.ANY, filled_dicts=mock.ANY),
+        expected_search_result(ds3, is_owner=True, number_of_requests=mock.ANY, count=mock.ANY, source_tables_amount=mock.ANY, filled_dicts=mock.ANY),
     ]
 
     # User is IAM and IAO
@@ -1387,8 +1387,8 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
     response = client.get(reverse("datasets:find_datasets"), {"my_datasets": "owned"})
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ds1, is_owner=True),
-        expected_search_result(ds3, is_owner=True),
+        expected_search_result(ds1, is_owner=True, number_of_requests=mock.ANY, count=mock.ANY, source_tables_amount=mock.ANY, filled_dicts=mock.ANY),
+        expected_search_result(ds3, is_owner=True, number_of_requests=mock.ANY, count=mock.ANY, source_tables_amount=mock.ANY, filled_dicts=mock.ANY),
     ]
 
 
