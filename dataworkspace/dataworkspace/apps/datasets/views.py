@@ -222,6 +222,16 @@ def find_datasets(request):
     ########################################################
     # Augment results with tags, avoiding queries-per-result
 
+    tags_dict = _get_tags_as_dict()
+    for dataset in datasets:
+        dataset["sources"] = [
+            tags_dict.get(str(source_id)) for source_id in dataset["source_tag_ids"]
+        ]
+        dataset["topics"] = [tags_dict.get(str(topic_id)) for topic_id in dataset["topic_tag_ids"]]
+        dataset["publishers"] = [
+            tags_dict.get(str(publisher_id)) for publisher_id in dataset["publisher_tag_ids"]
+        ]
+
     ######################################################################
     # Augment results with last updated dates, avoiding queries-per-result
 
@@ -353,21 +363,21 @@ def find_datasets(request):
                     catalogue_item_id=dataset["id"], data_access_status="waiting"
                 )
             )
-        dataset["count"] = EventLog.objects.filter(
-            event_type=EventLog.TYPE_DATASET_VIEW, object_id=dataset["id"]
-        ).count()
+            dataset["count"] = EventLog.objects.filter(
+                event_type=EventLog.TYPE_DATASET_VIEW, object_id=dataset["id"]
+            ).count()
 
-        service = DataDictionaryService()
-        dataset["source_tables_amount"] = SourceTable.objects.filter(
-            dataset_id=dataset["id"]
-        ).count()
-        source_tables = SourceTable.objects.filter(dataset_id=dataset["id"])
-        dataset["filled_dicts"] = 0
-        for source_table in source_tables:
-            items = service.get_dictionary(source_table.id).items
-            matches = [column for column in items if column.definition]
-            if len(matches) > 0 and len(matches) == len(items):
-                dataset["filled_dicts"] += 1
+            service = DataDictionaryService()
+            dataset["source_tables_amount"] = SourceTable.objects.filter(
+                dataset_id=dataset["id"]
+            ).count()
+            source_tables = SourceTable.objects.filter(dataset_id=dataset["id"])
+            dataset["filled_dicts"] = 0
+            for source_table in source_tables:
+                items = service.get_dictionary(source_table.id).items
+                matches = [column for column in items if column.definition]
+                if len(matches) > 0 and len(matches) == len(items):
+                    dataset["filled_dicts"] += 1
 
     return render(
         request,

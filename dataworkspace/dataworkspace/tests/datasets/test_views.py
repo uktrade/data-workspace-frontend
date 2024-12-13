@@ -259,22 +259,18 @@ def expected_search_result(catalogue_item, **kwargs):
         "data_type": mock.ANY,
         "published": catalogue_item.published,
         "has_access": True,
+        "publishers": mock.ANY,
         "is_bookmarked": False,
         "table_match": False,
         "is_subscribed": False,
         "is_open_data": getattr(catalogue_item, "user_access_type", None) == UserAccessType.OPEN,
         "sources": mock.ANY,
         "topics": mock.ANY,
-        "publishers": mock.ANY,
         "last_updated": mock.ANY,
         "average_unique_users_daily": mock.ANY,
         "is_owner": False,
         "is_contact": False,
         "is_editor": False,
-        "filled_dicts": mock.ANY,
-        "count": mock.ANY,
-        "number_of_requests": mock.ANY,
-        "source_tables_amount": mock.ANY,
     }
     result.update(**kwargs)
     return result
@@ -969,7 +965,7 @@ def test_find_datasets_filters_by_access_requires_authenticate(access_type):
         name="Master - public",
         user_access_type=access_type,
     )
-
+    print("expected_search_result(public_master)", expected_search_result(public_master))
     factories.DataSetUserPermissionFactory.create(user=user2, dataset=public_master)
     response = client.get(reverse("datasets:find_datasets"), {"status": ["access"]})
 
