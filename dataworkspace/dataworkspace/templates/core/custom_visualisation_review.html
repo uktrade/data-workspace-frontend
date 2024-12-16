@@ -14,7 +14,7 @@
             Workspace.
             <a class="govuk-link"
                 href="https://data-services-help.trade.gov.uk/data-workspace/tools-and-languages/custom-visualisations/">Read
-                our guidance to find out more.</a>
+                our guidance to find out more</a>
         </p>
         <h2 class="govuk-heading-m">When to use this service</h2>
         <p class="govuk-body-m">Use this service if you've created a custom visualisation and need someone from the Data
@@ -27,20 +27,21 @@
                 visualisations</a> for an overview of the process.</p>
         <h2 class="govuk-heading-m">When not to use this service</h2>
         <p class="govuk-body-m">If you would like to us to create a visualisation or you need support creating one, you
-            should use the <a class="govuk-link" href="{% url 'support-analysis-dataset' %}">data analysis support
-                option</a>.</p>
-        <div class="govuk-!-padding-top-2"></div>
-        <form method="post" enctype="multipart/form-data" novalidate>
-            {% csrf_token %}
-            {{ form.email }}
-            <fieldset class="govuk-fieldset">
-                {{ form.message }}
-            </fieldset>
-            <div class="govuk-radios govuk-radios--conditional" data-module="govuk-radios">
-                {{ form.support_type }}
-            </div>
-            <button type="submit" class="govuk-button">Submit</button>
-        </form>
+            should use the <a class="govuk-link" href="{% url 'support-analysis-dataset' %}?email={{request.user.email}}&tag=data-analysis-support-request">data analysis support
+                option</a></p>
+        <div class="govuk-!-padding-top-2">
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                {{ form.email }}
+                <fieldset class="govuk-fieldset">
+                    {{ form.message }}
+                </fieldset>
+                <div class="govuk-radios govuk-radios--conditional" data-module="govuk-radios">
+                    {{ form.support_type }}
+                </div>
+                <button type="submit" class="govuk-button">Submit</button>
+            </form>
+        </div>
     </div>
 </div>
 </div>

@@ -41,14 +41,17 @@ Give feedback on Data Workspace - {{ block.super }}
                     {{ form.survey_source }}
                     <div class="govuk-checkboxes" data-module="govuk-checkboxes">
                         {{ form.trying_to_do }}
-                        <div class="govuk-!-padding-top-2">
+                        <div class="govuk-!-padding-top-2 govuk-!-padding-bottom-2">
                             <div class="govuk-!-padding-left-2">
                                 <div class="govuk-checkboxes__conditional govuk-checkboxes__conditional_input govuk-checkboxes__conditional--hidden"
                                     id="conditional-message">{{ form.trying_to_do_other_message }}</div>
                             </div>
                         </div>
                     </div>
-                    {{ form.how_satisfied }} {{ form.improve_service }}
+                    {{ form.how_satisfied }} 
+                    <div class="govuk-!-padding-top-2">
+                        {{ form.improve_service }}
+                    </div>
                 </fieldset>
                 <button type="submit" class="govuk-button">Submit feedback</button>
             </form>

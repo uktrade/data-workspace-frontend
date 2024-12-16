@@ -851,7 +851,6 @@ class TestFeedbackViews(BaseTestCase):
             },
         )
         assert response.status_code == 200
-        print(response.rendered_content)
         survey_entry = UserSatisfactionSurvey.objects.first()
         assert survey_entry.survey_source == "csat-download-link"
 

@@ -42,6 +42,7 @@ class AddDatasetRequestForm(GOVUKDesignSystemForm):
             label_size="m",
             label_is_heading=True,
             attrs={"rows": 5},
+            extra_label_classes="govuk-!-static-margin-0",
         ),
         error_messages={"required": "Please tell us about the data you want to add."},
     )
@@ -57,6 +58,7 @@ class CustomVisualisationReviewForm(GOVUKDesignSystemForm):
             heading="h2",
             label_size="m",
             label_is_heading=True,
+            extra_label_classes="govuk-!-static-margin-0",
             attrs={"rows": 5},
         ),
         error_messages={"required": "Enter information about your visualisation."},
@@ -135,7 +137,7 @@ class UserSatisfactionSurveyForm(GOVUKDesignSystemForm):
 
     trying_to_do = GOVUKDesignSystemMultipleChoiceField(
         required=True,
-        label="1. What were you trying to do today?",
+        label="What were you trying to do today?",
         help_text="Select all options that are relevant to you.",
         widget=ConditionalSupportTypeCheckboxWidget(heading="h2", label_size="m"),
         choices=[(t.value, t.label) for t in TryingToDoType],
@@ -152,7 +154,7 @@ class UserSatisfactionSurveyForm(GOVUKDesignSystemForm):
 
     how_satisfied = GOVUKDesignSystemRadioField(
         required=True,
-        label="2. How do you feel about your experience of using Data Workspace today?",
+        label="How do you feel about your experience of using Data Workspace today?",
         widget=GOVUKDesignSystemRadiosWidget(heading="h2", label_size="m"),
         choices=[(t.value, t.label) for t in HowSatisfiedType],
         error_messages={"required": "Select how Data Workspace made you feel today"},
@@ -160,9 +162,13 @@ class UserSatisfactionSurveyForm(GOVUKDesignSystemForm):
 
     improve_service = GOVUKDesignSystemTextareaField(
         required=False,
-        label="4. How could we improve the service? (optional)",
+        label="How could we improve the service? (optional)",
         help_html=render_to_string("core/partial/user-survey-improve-service-hint.html"),
-        widget=GOVUKDesignSystemTextareaWidget(heading="h2", label_size="m"),
+        widget=GOVUKDesignSystemTextareaWidget(
+            heading="h2",
+            label_size="m",
+            # extra_label_classes="govuk-!-static-margin-0",
+        ),
     )
 
     def clean_trying_to_do_other_message(self):
