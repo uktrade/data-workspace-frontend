@@ -184,6 +184,11 @@
                   <dd>{{ data_type|get_key:dataset.data_type }}</dd>
                   <dt>Last updated:</dt>
                   <dd>
+                    {% if show_pipeline_failed_message %}
+                    <div class="govuk-grid-column-one-half">
+                        {% include '../partials/pipeline-error-message.html' %}
+                    </div>
+                    {% endif %}
                   {{ dataset.last_updated|date_with_gmt_offset|default_if_none:"N/A" }}
                   </dd>
                   <dt>Publisher:</dt>

@@ -374,6 +374,7 @@ def find_datasets(request):
             source_tables = SourceTable.objects.filter(dataset_id=dataset["id"])
             dataset["filled_dicts"] = 0
             for source_table in source_tables:
+                pipeline_last_run_succeeded = source_table.pipeline_last_run_success()
                 items = service.get_dictionary(source_table.id).items
                 matches = [column for column in items if column.definition]
                 if len(matches) > 0 and len(matches) == len(items):
@@ -393,6 +394,9 @@ def find_datasets(request):
             "ACCESSIBLE_AUTOCOMPLETE_FLAG": settings.ACCESSIBLE_AUTOCOMPLETE_FLAG,
             "search_type": "searchBar" if filters.query else "noSearch",
             "has_filters": filters.has_filters(),
+            "show_pipeline_failed_message": not all(
+                (x.pipeline_last_run_succeeded for x in source_tables)
+            ),
         },
     )
 
