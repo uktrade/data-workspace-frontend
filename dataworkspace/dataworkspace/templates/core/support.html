@@ -30,16 +30,19 @@
       </p>
       {% if request.GET.add_dataset == 'True' %}
       <h2 class="govuk-heading-m">Be prepared by filling in our data onboarding form</h2>
-      <p class="govuk-body-m">Once we have evaluated your request we'll ask you to fill in our data onboarding form.
-        You can <a
+      <p class="govuk-body-m">Once we have evaluated your request we'll ask you to fill in our data <a
         class="govuk-link"
-        href="https://dbis.sharepoint.com/:w:/s/DIT260/ESmYmIYH8jJGqIZlGEh2PsQBm7SN2BI9XbD6WW8-aFFqyg?e=gz1H9R">download this form here</a> and see a filled out example linked at the bottom of <a
+        href="https://dbis.sharepoint.com/:w:/s/DIT260/ESmYmIYH8jJGqIZlGEh2PsQBm7SN2BI9XbD6WW8-aFFqyg?e=gz1H9R">onboarding form</a>.
+        You can download this form here and see a filled out example linked at the bottom of <a
         class="govuk-link"
         href="https://data-services-help.trade.gov.uk/data-workspace/add-share-and-manage-data/creating-and-updating-a-catalogue-pages/create-a-catalogue-page-for-your-data/">this guidance</a>.</p>
       <p class="govuk-body-m">
         <a class="govuk-link" href="{% url 'root' %}">Return home</a>
       </p>
       {% else %}
+        {% if request.GET.data_analyst == 'True' %}
+        <p class="govuk-body-m">We'll prioritise your request and contact you to discuss how we can best support you.</p>
+        {% endif %}
       <div class="govuk-!-padding-top-2">
         <p class="govuk-body-m">
           <a class="govuk-link" href="{% url 'root' %}">Return home</a>
