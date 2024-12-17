@@ -1359,7 +1359,14 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
     response = client.get(reverse("datasets:find_datasets"))
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ds1, is_owner=True, number_of_requests=mock.ANY, count=mock.ANY, source_tables_amount=mock.ANY, filled_dicts=mock.ANY),
+        expected_search_result(
+            ds1,
+            is_owner=True,
+            number_of_requests=mock.ANY,
+            count=mock.ANY,
+            source_tables_amount=mock.ANY,
+            filled_dicts=mock.ANY,
+        ),
         expected_search_result(ds2),
         expected_search_result(ds3),
     ]
@@ -1368,7 +1375,14 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
     response = client.get(reverse("datasets:find_datasets"), {"my_datasets": "owned"})
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ds1, is_owner=True, number_of_requests=mock.ANY, count=mock.ANY, source_tables_amount=mock.ANY, filled_dicts=mock.ANY),
+        expected_search_result(
+            ds1,
+            is_owner=True,
+            number_of_requests=mock.ANY,
+            count=mock.ANY,
+            source_tables_amount=mock.ANY,
+            filled_dicts=mock.ANY,
+        ),
     ]
 
     # User is IAO
@@ -1377,8 +1391,22 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
     response = client.get(reverse("datasets:find_datasets"), {"my_datasets": "owned"})
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ds1, is_owner=True, number_of_requests=mock.ANY, count=mock.ANY, source_tables_amount=mock.ANY, filled_dicts=mock.ANY),
-        expected_search_result(ds3, is_owner=True, number_of_requests=mock.ANY, count=mock.ANY, source_tables_amount=mock.ANY, filled_dicts=mock.ANY),
+        expected_search_result(
+            ds1,
+            is_owner=True,
+            number_of_requests=mock.ANY,
+            count=mock.ANY,
+            source_tables_amount=mock.ANY,
+            filled_dicts=mock.ANY,
+        ),
+        expected_search_result(
+            ds3,
+            is_owner=True,
+            number_of_requests=mock.ANY,
+            count=mock.ANY,
+            source_tables_amount=mock.ANY,
+            filled_dicts=mock.ANY,
+        ),
     ]
 
     # User is IAM and IAO
@@ -1387,8 +1415,22 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
     response = client.get(reverse("datasets:find_datasets"), {"my_datasets": "owned"})
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ds1, is_owner=True, number_of_requests=mock.ANY, count=mock.ANY, source_tables_amount=mock.ANY, filled_dicts=mock.ANY),
-        expected_search_result(ds3, is_owner=True, number_of_requests=mock.ANY, count=mock.ANY, source_tables_amount=mock.ANY, filled_dicts=mock.ANY),
+        expected_search_result(
+            ds1,
+            is_owner=True,
+            number_of_requests=mock.ANY,
+            count=mock.ANY,
+            source_tables_amount=mock.ANY,
+            filled_dicts=mock.ANY,
+        ),
+        expected_search_result(
+            ds3,
+            is_owner=True,
+            number_of_requests=mock.ANY,
+            count=mock.ANY,
+            source_tables_amount=mock.ANY,
+            filled_dicts=mock.ANY,
+        ),
     ]
 
 
@@ -1399,29 +1441,78 @@ def test_shows_data_insights_on_datasets_and_datacuts_for_owners(user, client):
         information_asset_owner=user,
         user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
     )
+    ds2 = factories.DataSetFactory.create(
+        name="Dataset2",
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+    )
     dc = factories.DataSetFactory.create(
         name="Datacut",
-        information_asset_owner=user,
+        type=DataSetType.DATACUT,
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+    )
+    dc2 = factories.DataSetFactory.create(
+        name="Datacut2",
         type=DataSetType.DATACUT,
         user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
     )
     ref = factories.ReferenceDatasetFactory.create(name="ReferenceDataset")
     vis = factories.VisualisationCatalogueItemFactory.create(
-        name="VisualisationCatalogueItem", user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+        name="VisualisationCatalogueItem",
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
     )
 
-    # Only shows on dataset and datacuts
+    # Only shows on owned dataset
     response = client.get(reverse("datasets:find_datasets"))
     assert response.status_code == 200
-    
+
     datasets = [
-        expected_search_result(ds, is_owner=True, number_of_requests=mock.ANY, count=mock.ANY, source_tables_amount=mock.ANY, filled_dicts=mock.ANY),
-        expected_search_result(dc, is_owner=True, number_of_requests=mock.ANY, count=mock.ANY, source_tables_amount=mock.ANY, filled_dicts=mock.ANY),
+        expected_search_result(
+            ds,
+            is_owner=True,
+            number_of_requests=mock.ANY,
+            count=mock.ANY,
+            source_tables_amount=mock.ANY,
+            filled_dicts=mock.ANY,
+        ),
+        expected_search_result(ds2),
+        expected_search_result(dc),
+        expected_search_result(dc2),
         expected_search_result(ref),
         expected_search_result(vis),
     ]
-    for dataset in datasets: 
+    for dataset in datasets:
         assert dataset in response.context["datasets"]
+
+    # Only shows on owned dataset and datacuts
+    dc.information_asset_owner = user
+    dc.save()
+    response = client.get(reverse("datasets:find_datasets"))
+    assert response.status_code == 200
+    datasets = [
+        expected_search_result(
+            ds,
+            is_owner=True,
+            number_of_requests=mock.ANY,
+            count=mock.ANY,
+            source_tables_amount=mock.ANY,
+            filled_dicts=mock.ANY,
+        ),
+        expected_search_result(ds2),
+        expected_search_result(
+            dc,
+            is_owner=True,
+            number_of_requests=mock.ANY,
+            count=mock.ANY,
+            source_tables_amount=mock.ANY,
+            filled_dicts=mock.ANY,
+        ),
+        expected_search_result(dc2),
+        expected_search_result(ref),
+        expected_search_result(vis),
+    ]
+    for dataset in datasets:
+        assert dataset in response.context["datasets"]
+
 
 @pytest.mark.parametrize(
     "permissions, result_dataset_names",
