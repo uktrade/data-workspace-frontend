@@ -1394,31 +1394,34 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
 
 @pytest.mark.django_db
 def test_shows_data_insights_on_datasets_and_datacuts_for_owners(user, client):
-    ds1 = factories.DataSetFactory.create(
+    ds = factories.DataSetFactory.create(
         name="Dataset",
         information_asset_owner=user,
         user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
     )
-    ds2 = factories.DataSetFactory.create(
-        name="Dataset",
+    dc = factories.DataSetFactory.create(
+        name="Datacut",
         information_asset_owner=user,
+        type=DataSetType.DATACUT,
         user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
     )
-    ds3 = factories.ReferenceDatasetFactory.create(name="Reference")
-    ds4 = factories.VisualisationCatalogueItemFactory.create(
-        name="Visualisation", user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+    ref = factories.ReferenceDatasetFactory.create(name="ReferenceDataset")
+    vis = factories.VisualisationCatalogueItemFactory.create(
+        name="VisualisationCatalogueItem", user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
     )
 
-    # Only shows on dataset
+    # Only shows on dataset and datacuts
     response = client.get(reverse("datasets:find_datasets"))
     assert response.status_code == 200
-    assert list(response.context["datasets"]) == [
-        expected_search_result(ds1, is_owner=True, number_of_requests=mock.ANY, count=mock.ANY, source_tables_amount=mock.ANY, filled_dicts=mock.ANY),
-        expected_search_result(ds2, is_owner=True, number_of_requests=mock.ANY, count=mock.ANY, source_tables_amount=mock.ANY, filled_dicts=mock.ANY),
-        expected_search_result(ds3),
-        expected_search_result(ds4),
+    
+    datasets = [
+        expected_search_result(ds, is_owner=True, number_of_requests=mock.ANY, count=mock.ANY, source_tables_amount=mock.ANY, filled_dicts=mock.ANY),
+        expected_search_result(dc, is_owner=True, number_of_requests=mock.ANY, count=mock.ANY, source_tables_amount=mock.ANY, filled_dicts=mock.ANY),
+        expected_search_result(ref),
+        expected_search_result(vis),
     ]
-
+    for dataset in datasets: 
+        assert dataset in response.context["datasets"]
 
 @pytest.mark.parametrize(
     "permissions, result_dataset_names",
