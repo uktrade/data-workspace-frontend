@@ -965,7 +965,6 @@ def test_find_datasets_filters_by_access_requires_authenticate(access_type):
         name="Master - public",
         user_access_type=access_type,
     )
-    print("expected_search_result(public_master)", expected_search_result(public_master))
     factories.DataSetUserPermissionFactory.create(user=user2, dataset=public_master)
     response = client.get(reverse("datasets:find_datasets"), {"status": ["access"]})
 
