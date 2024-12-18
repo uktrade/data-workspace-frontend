@@ -57,5 +57,5 @@ class RequestDataPage(_BaseWorkspacePage):
 
 
 class RequestDataConfirmationPage(_BaseWorkspacePage):
-    _url_regex = r"/support/success/(.*)\?add_dataset=True"
-    _url_path = "/support/success/1234567890987654321?add_dataset=True"
+    _url_regex = r"/support/success/(.*)\?add_dataset=True&data_analyst=False"
+    _url_path = "/support/success/1234567890987654321?add_dataset=True&data_analyst=False"
