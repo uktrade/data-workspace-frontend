@@ -55,7 +55,7 @@ describe("Requesting data access", () => {
       cy.get("form").findByRole("button", { name: "Submit" }).click();
 
       cy.findByRole("heading", {
-        name: "Request complete",
+        name: "Request received",
         level: 1,
       }).should("be.visible");
 
