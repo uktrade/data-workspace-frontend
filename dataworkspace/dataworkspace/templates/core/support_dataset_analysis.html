@@ -1,0 +1,53 @@
+{% extends '_main.html' %}
+
+{% load waffle_tags %}
+
+{% block page_title %}Get support with data analysis- {{ block.super }}{% endblock page_title %}
+{% block breadcrumbs %}
+<a href="{% url 'support' %}" class="govuk-back-link">Back</a>
+{% endblock %}
+{% block content %}
+{% if form.errors %}
+<div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="govuk-error-summary">
+  <h2 class="govuk-error-summary__title" id="error-summary-title">
+    There is a problem
+  </h2>
+  <div class="govuk-error-summary__body">
+    <ul class="govuk-list govuk-error-summary__list">
+    {% for field, errors in form.errors.items %}
+        {% for error in errors %}
+            <li>
+            <a href="#id_{{ field }}">{{ error }}</a>
+            </li>
+        {% endfor %}
+    {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endif %}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <h1 class="govuk-heading-xl">Get support with data analysis</h1>
+        <p class="govuk-body-m">Our data analysts can help you develop dashboards, reports, and visualisations.</p>
+        <p class="govuk-body">They can also give guidance on:</p>
+        <div class="govuk-!-padding-left-2">
+            <ul class="govuk-list govuk-list--bullet">
+                <li>cleaning data</li>
+                <li>matching data</li>
+                <li>transforming and organising data</li>
+                <li>finding trends and patterns in data</li>
+            </ul>
+        </div>
+        <div class="govuk-!-padding-top-2">
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                {{ form.email }}
+                <fieldset class="govuk-fieldset">
+                    {{ form.message }}
+                </fieldset>
+                <button type="submit" class="govuk-button">Submit</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

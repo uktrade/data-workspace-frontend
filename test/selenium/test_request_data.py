@@ -5,7 +5,6 @@ import requests
 
 from django.core.cache import cache
 
-from dataworkspace.apps.request_data.models import RoleType, SecurityClassificationType
 from test.selenium.common import get_driver  # pylint: disable=wrong-import-order
 from test.selenium.conftest import (  # pylint: disable=wrong-import-order
     create_sso,
@@ -14,13 +13,7 @@ from test.selenium.conftest import (  # pylint: disable=wrong-import-order
 from test.selenium.workspace_pages import (  # pylint: disable=wrong-import-order
     ContactUsPage,
     HomePage,
-    RequestDataOwnerOrManagerPage,
-    RequestDataDescriptionPage,
-    RequestDataPurposePage,
-    RequestDataSecurityClassificationPage,
-    RequestDataLocationPage,
-    RequestDataCheckAnswersPage,
-    RequestDataLicencePage,
+    RequestDataConfirmationPage,
 )
 
 
@@ -76,45 +69,12 @@ class TestRequestData:
         support_page = contact_us_page.select_get_help_option()
         request_data_page = support_page.select_new_dataset_option()
 
-        who_are_you_page = request_data_page.click_start()
-
-        # Answer the "who are you" question - we aren't IAM/IAO so will need to say who one of them is in next
-        # question.
-        who_are_you_page.select_role(RoleType.other)
-        owner_or_manager_page = who_are_you_page.click_continue(RequestDataOwnerOrManagerPage)
-
-        # Answer the "name of IAM/IAO" question
-        owner_or_manager_page.enter_name("Bobby Tables")
-        description_page = owner_or_manager_page.click_continue(RequestDataDescriptionPage)
-
-        # Answer the "describe the data" question
-        description_page.enter_description("It’s data about DIT")
-        purpose_page = description_page.click_continue(RequestDataPurposePage)
-
-        # Answer the "purpose of data" question
-        purpose_page.enter_purpose(
-            "Do you want to build a dashbooaardd? Yes I want to build a dashboard!"
-        )
-        security_classification_page = purpose_page.click_continue(
-            RequestDataSecurityClassificationPage
-        )
-
-        # Answer the "security classification" question
-        security_classification_page.select_security_classification(
-            SecurityClassificationType.personal
-        )
-        location_page = security_classification_page.click_continue(RequestDataLocationPage)
-
-        # Answer the "location of data" question
-        location_page.enter_location("It’s in this very easy to access API")
-        licence_page = location_page.click_continue(RequestDataLicencePage)
-
-        # Answer the "licence of data" question
-        licence_page.enter_location("Completely public, open data with no licence")
-        check_answers_page = licence_page.click_continue(RequestDataCheckAnswersPage)
+        # fill in form with message
+        message = "the data is such and such"
+        request_data_page.enter_description(message)
 
         # Confirm that the answers are correct
-        confirmation_page = check_answers_page.click_accept()
+        confirmation_page = request_data_page.click_submit(RequestDataConfirmationPage)
         assert "1234567890987654321" in confirmation_page.get_html()
 
         # Check that the request data has been posted to Zendesk
@@ -124,13 +84,4 @@ class TestRequestData:
 
         assert len(submitted_tickets) == 1
         ticket_data = submitted_tickets[0]["ticket"]
-        assert "Bobby Tables" in ticket_data["description"]
-        assert "It’s data about DIT" in ticket_data["description"]
-        assert (
-            "Do you want to build a dashbooaardd? Yes I want to build a dashboard!"
-            in ticket_data["description"]
-        )
-        assert "It’s in this very easy to access API" in ticket_data["description"]
-        assert "Completely public, open data with no licence" in ticket_data["description"]
-        assert "request-data@test.com" in ticket_data["description"]
-        assert "Iwantsome Lovelydata" in ticket_data["description"]
+        assert message in ticket_data["description"]

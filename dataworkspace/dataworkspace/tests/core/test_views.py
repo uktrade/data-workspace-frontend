@@ -30,8 +30,10 @@ class TestSupportViews(BaseTestCase):
         response = self._authenticated_get(reverse("support"))
         # pylint: disable=no-member
         assert response.status_code == 200
-        self.assertContains(response, "I would like to have technical support")
-        self.assertContains(response, "I would like to add a new dataset")
+        self.assertContains(response, "I need technical support")
+        self.assertContains(response, "I want to add a new dataset")
+        self.assertContains(response, "I need data analysis support or advice")
+        self.assertContains(response, "I need a custom visualisation reviewed")
         self.assertContains(response, "Other")
 
     def test_invalid_email(self):
@@ -52,13 +54,13 @@ class TestSupportViews(BaseTestCase):
         response = self._authenticated_post(
             reverse("support"), {"email": "a@b.com", "support_type": "tech"}
         )
-        self.assertRedirects(response, reverse("technical-support") + "?email=a@b.com")
+        self.assertRedirects(response, f'{reverse("technical-support")}?email=a@b.com')
 
     def test_add_new_dataset_redirect(self):
         response = self._authenticated_post(
             reverse("support"), {"email": "a@b.com", "support_type": "dataset"}
         )
-        self.assertRedirects(response, reverse("request-data:index"))
+        self.assertRedirects(response, f'{reverse("add-dataset-request")}?email=a@b.com')
 
     @mock.patch("dataworkspace.apps.core.views.create_support_request")
     def test_other(self, mock_create_request):
@@ -73,7 +75,12 @@ class TestSupportViews(BaseTestCase):
         )
         self.assertContains(
             response,
-            "Your request has been received. Your reference is: " "<strong>999</strong>.",
+            "Request received",
+            html=True,
+        )
+        self.assertContains(
+            response,
+            "Your reference number<br /><strong>999</strong>",
             html=True,
         )
         mock_create_request.assert_called_once()
@@ -82,20 +89,25 @@ class TestSupportViews(BaseTestCase):
     def test_create_tagged_support_request(self, mock_create_request):
         mock_create_request.return_value = 999
         response = self._authenticated_post(
-            reverse("support") + "?tag=data-request",
+            f'{reverse("add-dataset-request")}?tag=add-dataset-request',
             data={
                 "email": "noreply@example.com",
                 "message": "A test message",
-                "support_type": "other",
+                "support_type": "dataset",
             },
         )
         self.assertContains(
             response,
-            "Your request has been received. Your reference is: " "<strong>999</strong>.",
+            "Application complete",
+            html=True,
+        )
+        self.assertContains(
+            response,
+            "Your reference number<br /><strong>999</strong>",
             html=True,
         )
         mock_create_request.assert_called_once_with(
-            mock.ANY, "noreply@example.com", "A test message", tag="data_request"
+            mock.ANY, "noreply@example.com", "A test message", tag="add_dataset_request"
         )
 
     @mock.patch("dataworkspace.apps.core.views.create_support_request")
@@ -112,7 +124,12 @@ class TestSupportViews(BaseTestCase):
         )
         self.assertContains(
             response,
-            "Your request has been received. Your reference is: " "<strong>999</strong>.",
+            "Request received",
+            html=True,
+        )
+        self.assertContains(
+            response,
+            "Your reference number<br /><strong>999</strong>",
             html=True,
         )
         mock_create_request.assert_called_once_with(
@@ -160,7 +177,12 @@ class TestSupportViews(BaseTestCase):
         assert response.status_code == 200
         self.assertContains(
             response,
-            "Your request has been received. Your reference is: " "<strong>999</strong>.",
+            "Request received",
+            html=True,
+        )
+        self.assertContains(
+            response,
+            "Your reference number<br /><strong>999</strong>",
             html=True,
         )
         mock_create_request.assert_called_once_with(
@@ -739,7 +761,7 @@ class TestContactUsViews(BaseTestCase):
     def test_missing_contact_type_returns_expected_error(self):
         response = self._authenticated_post(reverse("contact-us"), {"contact_type": ""})
         assert response.status_code == 200
-        self.assertContains(response, "Select an option for what you would like to do")
+        self.assertContains(response, "Select what you would like to do")
 
     def test_invalid_contact_type_returns_expected_error(self):
         response = self._authenticated_post(reverse("contact-us"), {"contact_type": "NOT_REAL"})
@@ -798,22 +820,20 @@ class TestFeedbackViews(BaseTestCase):
             reverse("feedback"),
             {
                 "survey_source": "contact-us",
-                "how_satisfied": "very-satified",
+                "how_satisfied": "very-satisfied",
                 "trying_to_do": "other",
                 "trying_to_do_other_message": "Hello",
                 "improve_service": "abc",
-                "describe_experience": "def",
             },
         )
         assert response.status_code == 200
 
         survey_entry = UserSatisfactionSurvey.objects.first()
         assert survey_entry.survey_source == "contact-us"
-        assert survey_entry.how_satisfied == "very-satified"
+        assert survey_entry.how_satisfied == "very-satisfied"
         assert survey_entry.trying_to_do == "other"
         assert survey_entry.trying_to_do_other_message == "Hello"
         assert survey_entry.improve_service == "abc"
-        assert survey_entry.describe_experience == "def"
 
     def test_survey_source_is_set_correctly_when_entering_form_from_link(self):
         url = reverse("feedback")
@@ -824,15 +844,13 @@ class TestFeedbackViews(BaseTestCase):
             url_with_params,
             {
                 "survey_source": "csat-download-link",
-                "how_satisfied": "very-satified",
+                "how_satisfied": "very-satisfied",
                 "trying_to_do": "other",
                 "trying_to_do_other_message": "Hello",
                 "improve_service": "abc",
-                "describe_experience": "def",
             },
         )
         assert response.status_code == 200
-
         survey_entry = UserSatisfactionSurvey.objects.first()
         assert survey_entry.survey_source == "csat-download-link"
 

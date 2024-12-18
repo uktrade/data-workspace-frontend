@@ -79,7 +79,6 @@ class _BasePage:
 
         else:
             new_page = new_page_class(self._driver)
-
         assert self._driver.current_url == new_page.url
         return new_page
 

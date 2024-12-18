@@ -7,10 +7,10 @@ from django.contrib import messages
 from django.http import (
     HttpResponse,
     HttpResponseBadRequest,
-    HttpResponseRedirect,
     HttpResponseForbidden,
     HttpResponseNotAllowed,
     HttpResponseNotFound,
+    HttpResponseRedirect,
     HttpResponseServerError,
     JsonResponse,
 )
@@ -19,30 +19,31 @@ from django.urls import reverse
 from django.views import View
 from django.views.generic import FormView
 from requests import HTTPError
+
 from dataworkspace.apps.applications.models import ApplicationInstance, VisualisationTemplate
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.forms import (
+    AddDatasetRequestForm,
     ContactUsForm,
+    CustomVisualisationReviewForm,
     NewsletterSubscriptionForm,
+    SupportAnalysisDatasetForm,
     SupportForm,
     TechnicalSupportForm,
     UserSatisfactionSurveyForm,
 )
-from dataworkspace.apps.core.models import (
-    UserSatisfactionSurvey,
-    NewsletterSubscription,
-)
+from dataworkspace.apps.core.models import NewsletterSubscription, UserSatisfactionSurvey
 from dataworkspace.apps.core.storage import S3FileStorage
 from dataworkspace.apps.core.utils import (
     StreamingHttpResponseWithoutDjangoDbConnection,
     can_access_schema_table,
+    check_db,
     get_data_flow_import_pipeline_name,
     get_dataflow_dag_status,
     get_dataflow_task_status,
     table_data,
     table_exists,
     view_exists,
-    check_db,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
@@ -163,7 +164,12 @@ class SupportView(FormView):
     form_class = SupportForm
     template_name = "core/support.html"
 
-    ZENDESK_TAGS = {"data-request": "data_request"}
+    ZENDESK_TAGS = {
+        "data-request": "data_request",
+        "add-dataset-request": "add_dataset_request",
+        "custom-visualisation-request": "custom_visualisation_request",
+        "data-analysis-support-request": "data_analysis_support_request",
+    }
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data()
@@ -177,17 +183,76 @@ class SupportView(FormView):
 
     def form_valid(self, form):
         cleaned = form.cleaned_data
-
-        if cleaned["support_type"] == form.SupportTypes.NEW_DATASET:
-            return HttpResponseRedirect(reverse("request_data:index"))
-
-        if cleaned["support_type"] == form.SupportTypes.TECH_SUPPORT:
+        support_Type = cleaned["support_type"]
+        if support_Type == form.SupportTypes.NEW_DATASET:
+            return HttpResponseRedirect(
+                f'{reverse("add-dataset-request")}?email={cleaned["email"]}'
+            )
+        elif support_Type == form.SupportTypes.TECH_SUPPORT:
             return HttpResponseRedirect(f'{reverse("technical-support")}?email={cleaned["email"]}')
-
+        elif support_Type == form.SupportTypes.DATA_ANALYSIS_SUPPORT:
+            return HttpResponseRedirect(
+                f'{reverse("support-analysis-dataset")}?email={cleaned["email"]}'
+            )
+        elif support_Type == form.SupportTypes.VISUALISATION_REVIEW:
+            return HttpResponseRedirect(
+                f'{reverse("custom-visualisation-review")}?email={cleaned["email"]}'
+            )
         tag = self.ZENDESK_TAGS.get(self.request.GET.get("tag"))
         ticket_id = create_support_request(
             self.request.user, cleaned["email"], cleaned["message"], tag=tag
         )
+        return HttpResponseRedirect(
+            f'{reverse("support-success", kwargs={"ticket_id": ticket_id})}'
+        )
+
+
+class SupportRequestView(SupportView):
+    def get(self, request, *args, **kwargs):
+        if "email" not in self.request.GET:
+            return HttpResponseBadRequest("Expected an `email` parameter")
+        return super().get(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        cleaned = form.cleaned_data
+        tag = self.ZENDESK_TAGS.get(self.request.GET.get("tag"))
+        ticket_id = create_support_request(
+            self.request.user, cleaned["email"], cleaned["message"], tag=tag
+        )
+        add_dataset = isinstance(self, AddDatasetRequestView)
+        data_analyst = isinstance(self, SupportAnalysisDatasetView)
+        return HttpResponseRedirect(
+            f'{reverse("support-success", kwargs={"ticket_id": ticket_id})}?add_dataset={add_dataset}&data_analyst={data_analyst}'  # pylint: disable=line-too-long
+        )
+
+
+class AddDatasetRequestView(SupportRequestView):
+    form_class = AddDatasetRequestForm
+    template_name = "core/add_dataset_request.html"
+
+
+class CustomVisualisationReviewView(SupportRequestView):
+    form_class = CustomVisualisationReviewForm
+    template_name = "core/custom_visualisation_review.html"
+
+
+class SupportAnalysisDatasetView(SupportRequestView):
+    form_class = SupportAnalysisDatasetForm
+    template_name = "core/support_dataset_analysis.html"
+
+
+class TechnicalSupportView(SupportRequestView):
+    form_class = TechnicalSupportForm
+    template_name = "core/technical_support.html"
+
+    def form_valid(self, form):
+        cleaned = form.cleaned_data
+        message = (
+            f'What were you trying to do?\n{cleaned["what_were_you_doing"]}\n\n'
+            f'What happened?\n{cleaned["what_happened"]}\n\n'
+            f'What should have happened?\n{cleaned["what_should_have_happened"]}'
+        )
+        ticket_id = create_support_request(self.request.user, cleaned["email"], message)
         return HttpResponseRedirect(reverse("support-success", kwargs={"ticket_id": ticket_id}))
 
 
@@ -273,10 +338,8 @@ class UserSatisfactionSurveyView(FormView):
             trying_to_do=",".join(cleaned["trying_to_do"]),
             improve_service=cleaned["improve_service"],
             trying_to_do_other_message=cleaned["trying_to_do_other_message"],
-            describe_experience=cleaned["describe_experience"],
             survey_source=cleaned["survey_source"],
         )
-
         return HttpResponseRedirect(f'{reverse("feedback")}?success=1')
 
 
@@ -308,31 +371,6 @@ def table_data_view(request, database, schema, table):
         return HttpResponseNotFound()
     else:
         return table_data(request.user.email, database, schema, table)
-
-
-class TechnicalSupportView(FormView):
-    form_class = TechnicalSupportForm
-    template_name = "core/technical_support.html"
-
-    def get(self, request, *args, **kwargs):
-        if "email" not in self.request.GET:
-            return HttpResponseBadRequest("Expected an `email` parameter")
-        return super().get(request, *args, **kwargs)
-
-    def get_initial(self):
-        initial = super().get_initial()
-        initial["email"] = self.request.GET["email"]
-        return initial
-
-    def form_valid(self, form):
-        cleaned = form.cleaned_data
-        message = (
-            f'What were you trying to do?\n{cleaned["what_were_you_doing"]}\n\n'
-            f'What happened?\n{cleaned["what_happened"]}\n\n'
-            f'What should have happened?\n{cleaned["what_should_have_happened"]}'
-        )
-        ticket_id = create_support_request(self.request.user, cleaned["email"], message)
-        return HttpResponseRedirect(reverse("support-success", kwargs={"ticket_id": ticket_id}))
 
 
 class ServeS3UploadedFileView(View):
