@@ -222,8 +222,7 @@ class SupportRequestView(SupportView):
         add_dataset = isinstance(self, AddDatasetRequestView)
         data_analyst = isinstance(self, SupportAnalysisDatasetView)
         return HttpResponseRedirect(
-            f'{reverse("support-success", kwargs={"ticket_id": ticket_id})}?add_dataset={add_dataset}\
-            &data_analyst={data_analyst}'
+            f'{reverse("support-success", kwargs={"ticket_id": ticket_id})}?add_dataset={add_dataset}&data_analyst={data_analyst}'  # pylint: disable=line-too-long
         )
 
 
