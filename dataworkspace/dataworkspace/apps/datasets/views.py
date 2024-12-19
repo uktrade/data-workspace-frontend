@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import logging
 import uuid
@@ -364,7 +364,7 @@ def find_datasets(request):
                 )
             )
             dataset["count"] = EventLog.objects.filter(
-                event_type=EventLog.TYPE_DATASET_VIEW, object_id=dataset["id"]
+                event_type=EventLog.TYPE_DATASET_VIEW, object_id=dataset["id"], timestamp__gte=datetime.now() - timedelta(days=28)
             ).count()
 
             service = DataDictionaryService()
@@ -372,14 +372,14 @@ def find_datasets(request):
                 dataset_id=dataset["id"]
             ).count()
             source_tables = SourceTable.objects.filter(dataset_id=dataset["id"])
+            dataset["show_pipeline_failed_message"] = not all(
+                (source_table.pipeline_last_run_success() for source_table in source_tables))
             dataset["filled_dicts"] = 0
             for source_table in source_tables:
-                pipeline_last_run_succeeded = source_table.pipeline_last_run_success()
                 items = service.get_dictionary(source_table.id).items
                 matches = [column for column in items if column.definition]
                 if len(matches) > 0 and len(matches) == len(items):
                     dataset["filled_dicts"] += 1
-
     return render(
         request,
         "datasets/data_catalogue.html",
@@ -394,9 +394,6 @@ def find_datasets(request):
             "ACCESSIBLE_AUTOCOMPLETE_FLAG": settings.ACCESSIBLE_AUTOCOMPLETE_FLAG,
             "search_type": "searchBar" if filters.query else "noSearch",
             "has_filters": filters.has_filters(),
-            "show_pipeline_failed_message": not all(
-                (x.pipeline_last_run_succeeded for x in source_tables)
-            ),
         },
     )
 

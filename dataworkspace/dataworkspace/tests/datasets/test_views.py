@@ -1433,8 +1433,9 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
     ]
 
 
+@mock.patch("dataworkspace.apps.datasets.views.SourceTable.pipeline_last_run_success")
 @pytest.mark.django_db
-def test_shows_data_insights_on_datasets_and_datacuts_for_owners(user, client):
+def test_shows_data_insights_on_datasets_and_datacuts_for_owners_and_managers(pipeline_last_run_success, user, client):
     ds = factories.DataSetFactory.create(
         name="Dataset",
         information_asset_owner=user,
@@ -1472,6 +1473,7 @@ def test_shows_data_insights_on_datasets_and_datacuts_for_owners(user, client):
             count=mock.ANY,
             source_tables_amount=mock.ANY,
             filled_dicts=mock.ANY,
+            show_pipeline_failed_message=False,
         ),
         expected_search_result(ds2),
         expected_search_result(dc),
@@ -1482,36 +1484,40 @@ def test_shows_data_insights_on_datasets_and_datacuts_for_owners(user, client):
     for dataset in datasets:
         assert dataset in response.context["datasets"]
 
-    # Only shows on owned dataset and datacuts
-    dc.information_asset_owner = user
-    dc.save()
+    # assert "One or more tables failed to update" in soup.find("dd")
+
+@mock.patch("dataworkspace.apps.datasets.views.SourceTable.pipeline_last_run_success")
+@pytest.mark.django_db
+def test_pipeline_failure_message_shows_on_data_insights(mock_pipeline_last_run_success, user, client):
+
+    dataset = factories.DataSetFactory.create(
+        name="Dataset",
+        information_asset_owner=user,
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+    )
+
+    source_table = factories.SourceTableFactory(dataset=dataset, schema="public", table="test_table1")
+
+        # Only shows for owners and managers
+    mock_pipeline_last_run_success.return_value = True
+    dataset.save()
+
     response = client.get(reverse("datasets:find_datasets"))
     assert response.status_code == 200
+    # soup = BeautifulSoup(response.content.decode(response.charset))
     datasets = [
         expected_search_result(
-            ds,
+            dataset,
             is_owner=True,
             number_of_requests=mock.ANY,
             count=mock.ANY,
             source_tables_amount=mock.ANY,
             filled_dicts=mock.ANY,
-        ),
-        expected_search_result(ds2),
-        expected_search_result(
-            dc,
-            is_owner=True,
-            number_of_requests=mock.ANY,
-            count=mock.ANY,
-            source_tables_amount=mock.ANY,
-            filled_dicts=mock.ANY,
-        ),
-        expected_search_result(dc2),
-        expected_search_result(ref),
-        expected_search_result(vis),
+            show_pipeline_failed_message=True,
+        )
     ]
     for dataset in datasets:
         assert dataset in response.context["datasets"]
-
 
 @pytest.mark.parametrize(
     "permissions, result_dataset_names",

@@ -42,3 +42,10 @@
 .app-table_cell--no-border {
   border-bottom: none;
 }
+
+.error-message {
+  text-align: left;
+  color: govuk-colour("red") !important;
+  font-weight: 700 !important;
+  @include govuk-font($size: 19);
+}

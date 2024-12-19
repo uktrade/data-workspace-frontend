@@ -182,13 +182,17 @@
                 <dl>
                   <dt>Data type:</dt>
                   <dd>{{ data_type|get_key:dataset.data_type }}</dd>
-                  <dt>Last updated:</dt>
-                  <dd>
-                    {% if show_pipeline_failed_message %}
-                    <div class="govuk-grid-column-one-half">
-                        {% include '../partials/pipeline-error-message.html' %}
-                    </div>
+                    {% if dataset.is_owner == True and dataset.data_type == 1 or dataset.data_type == 2 %}
+                      {% if show_pipeline_failed_message %} 
+                      <div>
+                        <dt class="error-message">Last updated:</dt>
+                        <dd class="error-message">One or more tables failed to update</dd>
+                      </div>  
+                      {% else %}
+                        <dt>Last updated:</dt>
+                      {% endif %}
                     {% endif %}
+                  <dd>
                   {{ dataset.last_updated|date_with_gmt_offset|default_if_none:"N/A" }}
                   </dd>
                   <dt>Publisher:</dt>
