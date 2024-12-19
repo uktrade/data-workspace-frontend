@@ -3,7 +3,6 @@ from django.urls import reverse
 from rest_framework import status
 
 from dataworkspace.tests import factories
-from dataworkspace.apps.eventlog.models import EventLog
 
 
 @pytest.mark.django_db
