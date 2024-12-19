@@ -27,7 +27,10 @@ class ManagedDataViewSet(TimestampFilterMixin, viewsets.ModelViewSet):
         return (
             super()
             .get_queryset()
-            .filter(Q(information_asset_manager=user_id) | Q(information_asset_owner=user_id))
+            .filter(
+                (Q(information_asset_manager=user_id) | Q(information_asset_owner=user_id))
+                & Q(published=True)
+            )
         )
 
     @action(detail=False, methods=["get"], url_path="stats")
