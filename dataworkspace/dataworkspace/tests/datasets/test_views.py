@@ -259,13 +259,13 @@ def expected_search_result(catalogue_item, **kwargs):
         "data_type": mock.ANY,
         "published": catalogue_item.published,
         "has_access": True,
+        "publishers": mock.ANY,
         "is_bookmarked": False,
         "table_match": False,
         "is_subscribed": False,
         "is_open_data": getattr(catalogue_item, "user_access_type", None) == UserAccessType.OPEN,
         "sources": mock.ANY,
         "topics": mock.ANY,
-        "publishers": mock.ANY,
         "last_updated": mock.ANY,
         "average_unique_users_daily": mock.ANY,
         "is_owner": False,
@@ -965,7 +965,6 @@ def test_find_datasets_filters_by_access_requires_authenticate(access_type):
         name="Master - public",
         user_access_type=access_type,
     )
-
     factories.DataSetUserPermissionFactory.create(user=user2, dataset=public_master)
     response = client.get(reverse("datasets:find_datasets"), {"status": ["access"]})
 
@@ -1359,7 +1358,14 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
     response = client.get(reverse("datasets:find_datasets"))
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ds1, is_owner=True),
+        expected_search_result(
+            ds1,
+            is_owner=True,
+            number_of_requests=mock.ANY,
+            count=mock.ANY,
+            source_tables_amount=mock.ANY,
+            filled_dicts=mock.ANY,
+        ),
         expected_search_result(ds2),
         expected_search_result(ds3),
     ]
@@ -1368,7 +1374,14 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
     response = client.get(reverse("datasets:find_datasets"), {"my_datasets": "owned"})
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ds1, is_owner=True),
+        expected_search_result(
+            ds1,
+            is_owner=True,
+            number_of_requests=mock.ANY,
+            count=mock.ANY,
+            source_tables_amount=mock.ANY,
+            filled_dicts=mock.ANY,
+        ),
     ]
 
     # User is IAO
@@ -1377,8 +1390,26 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
     response = client.get(reverse("datasets:find_datasets"), {"my_datasets": "owned"})
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ds1, is_owner=True),
-        expected_search_result(ds3, is_owner=True),
+        expected_search_result(
+            ds1,
+            is_owner=True,
+            number_of_requests=mock.ANY,
+            count=mock.ANY,
+            source_tables_amount=mock.ANY,
+            filled_dicts=mock.ANY,
+            show_pipeline_failed_message=False,
+
+        ),
+        expected_search_result(
+            ds3,
+            is_owner=True,
+            number_of_requests=mock.ANY,
+            count=mock.ANY,
+            source_tables_amount=mock.ANY,
+            filled_dicts=mock.ANY,
+            show_pipeline_failed_message=False,
+
+        ),
     ]
 
     # User is IAM and IAO
@@ -1387,9 +1418,118 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
     response = client.get(reverse("datasets:find_datasets"), {"my_datasets": "owned"})
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ds1, is_owner=True),
-        expected_search_result(ds3, is_owner=True),
+        expected_search_result(
+            ds1,
+            is_owner=True,
+            number_of_requests=mock.ANY,
+            count=mock.ANY,
+            source_tables_amount=mock.ANY,
+            filled_dicts=mock.ANY,
+            show_pipeline_failed_message=False,
+
+        ),
+        expected_search_result(
+            ds3,
+            is_owner=True,
+            number_of_requests=mock.ANY,
+            count=mock.ANY,
+            source_tables_amount=mock.ANY,
+            filled_dicts=mock.ANY,
+            show_pipeline_failed_message=False,
+
+        ),
     ]
+
+
+@mock.patch("dataworkspace.apps.datasets.views.SourceTable.pipeline_last_run_success")
+@pytest.mark.django_db
+def test_shows_data_insights_on_datasets_and_datacuts_for_owners_and_managers(
+    pipeline_last_run_success, user, client
+):
+    dataset = factories.DataSetFactory.create(
+        name="Dataset",
+        information_asset_owner=user,
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+    )
+    dataset2 = factories.DataSetFactory.create(
+        name="Dataset2",
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+    )
+    datacut = factories.DataSetFactory.create(
+        name="Datacut",
+        type=DataSetType.DATACUT,
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+    )
+    datacut2 = factories.DataSetFactory.create(
+        name="Datacut2",
+        type=DataSetType.DATACUT,
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+    )
+    refdataset = factories.ReferenceDatasetFactory.create(name="ReferenceDataset")
+    visualisation = factories.VisualisationCatalogueItemFactory.create(
+        name="VisualisationCatalogueItem",
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+    )
+
+    # Only shows on owned dataset
+    response = client.get(reverse("datasets:find_datasets"))
+    assert response.status_code == 200
+
+    datasets = [
+        expected_search_result(
+            dataset,
+            is_owner=True,
+            number_of_requests=mock.ANY,
+            count=mock.ANY,
+            source_tables_amount=mock.ANY,
+            filled_dicts=mock.ANY,
+            show_pipeline_failed_message=False,
+        ),
+        expected_search_result(dataset2),
+        expected_search_result(datacut),
+        expected_search_result(datacut2),
+        expected_search_result(refdataset),
+        expected_search_result(visualisation),
+    ]
+    for dataset in datasets:
+        assert dataset in response.context["datasets"]
+
+
+@mock.patch("dataworkspace.apps.datasets.views.SourceTable.pipeline_last_run_success")
+@pytest.mark.django_db
+def test_pipeline_failure_message_shows_on_data_insights(
+    mock_pipeline_last_run_success, user, client
+):
+
+    dataset = factories.DataSetFactory.create(
+        name="Dataset",
+        information_asset_owner=user,
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+    )
+
+    # source_table = factories.SourceTableFactory(
+    #     dataset=dataset, schema="public", table="test_table1"
+    # )
+
+    # Only shows pipeline error on owned datasets
+    mock_pipeline_last_run_success.return_value = True
+    dataset.save()
+
+    response = client.get(reverse("datasets:find_datasets"))
+    assert response.status_code == 200
+    datasets = [
+        expected_search_result(
+            dataset,
+            is_owner=True,
+            number_of_requests=mock.ANY,
+            count=mock.ANY,
+            source_tables_amount=mock.ANY,
+            filled_dicts=mock.ANY,
+            show_pipeline_failed_message=True,
+        )
+    ]
+    for dataset in datasets:
+        assert dataset in response.context["datasets"]
 
 
 @pytest.mark.parametrize(
