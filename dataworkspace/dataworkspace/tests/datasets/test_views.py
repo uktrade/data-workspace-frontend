@@ -1397,6 +1397,8 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
             count=mock.ANY,
             source_tables_amount=mock.ANY,
             filled_dicts=mock.ANY,
+            show_pipeline_failed_message=False,
+
         ),
         expected_search_result(
             ds3,
@@ -1405,6 +1407,8 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
             count=mock.ANY,
             source_tables_amount=mock.ANY,
             filled_dicts=mock.ANY,
+            show_pipeline_failed_message=False,
+
         ),
     ]
 
@@ -1421,6 +1425,8 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
             count=mock.ANY,
             source_tables_amount=mock.ANY,
             filled_dicts=mock.ANY,
+            show_pipeline_failed_message=False,
+
         ),
         expected_search_result(
             ds3,
@@ -1429,6 +1435,8 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
             count=mock.ANY,
             source_tables_amount=mock.ANY,
             filled_dicts=mock.ANY,
+            show_pipeline_failed_message=False,
+
         ),
     ]
 
@@ -1438,27 +1446,27 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
 def test_shows_data_insights_on_datasets_and_datacuts_for_owners_and_managers(
     pipeline_last_run_success, user, client
 ):
-    ds = factories.DataSetFactory.create(
+    dataset = factories.DataSetFactory.create(
         name="Dataset",
         information_asset_owner=user,
         user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
     )
-    ds2 = factories.DataSetFactory.create(
+    dataset2 = factories.DataSetFactory.create(
         name="Dataset2",
         user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
     )
-    dc = factories.DataSetFactory.create(
+    datacut = factories.DataSetFactory.create(
         name="Datacut",
         type=DataSetType.DATACUT,
         user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
     )
-    dc2 = factories.DataSetFactory.create(
+    datacut2 = factories.DataSetFactory.create(
         name="Datacut2",
         type=DataSetType.DATACUT,
         user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
     )
-    ref = factories.ReferenceDatasetFactory.create(name="ReferenceDataset")
-    vis = factories.VisualisationCatalogueItemFactory.create(
+    refdataset = factories.ReferenceDatasetFactory.create(name="ReferenceDataset")
+    visualisation = factories.VisualisationCatalogueItemFactory.create(
         name="VisualisationCatalogueItem",
         user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
     )
@@ -1469,7 +1477,7 @@ def test_shows_data_insights_on_datasets_and_datacuts_for_owners_and_managers(
 
     datasets = [
         expected_search_result(
-            ds,
+            dataset,
             is_owner=True,
             number_of_requests=mock.ANY,
             count=mock.ANY,
@@ -1477,16 +1485,14 @@ def test_shows_data_insights_on_datasets_and_datacuts_for_owners_and_managers(
             filled_dicts=mock.ANY,
             show_pipeline_failed_message=False,
         ),
-        expected_search_result(ds2),
-        expected_search_result(dc),
-        expected_search_result(dc2),
-        expected_search_result(ref),
-        expected_search_result(vis),
+        expected_search_result(dataset2),
+        expected_search_result(datacut),
+        expected_search_result(datacut2),
+        expected_search_result(refdataset),
+        expected_search_result(visualisation),
     ]
     for dataset in datasets:
         assert dataset in response.context["datasets"]
-
-    # assert "One or more tables failed to update" in soup.find("dd")
 
 
 @mock.patch("dataworkspace.apps.datasets.views.SourceTable.pipeline_last_run_success")
@@ -1501,17 +1507,16 @@ def test_pipeline_failure_message_shows_on_data_insights(
         user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
     )
 
-    source_table = factories.SourceTableFactory(
-        dataset=dataset, schema="public", table="test_table1"
-    )
+    # source_table = factories.SourceTableFactory(
+    #     dataset=dataset, schema="public", table="test_table1"
+    # )
 
-    # Only shows for owners and managers
+    # Only shows pipeline error on owned datasets
     mock_pipeline_last_run_success.return_value = True
     dataset.save()
 
     response = client.get(reverse("datasets:find_datasets"))
     assert response.status_code == 200
-    # soup = BeautifulSoup(response.content.decode(response.charset))
     datasets = [
         expected_search_result(
             dataset,
