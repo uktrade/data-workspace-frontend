@@ -364,7 +364,9 @@ def find_datasets(request):
                 )
             )
             dataset["count"] = EventLog.objects.filter(
-                event_type=EventLog.TYPE_DATASET_VIEW, object_id=dataset["id"], timestamp__gte=datetime.now() - timedelta(days=28)
+                event_type=EventLog.TYPE_DATASET_VIEW,
+                object_id=dataset["id"],
+                timestamp__gte=datetime.now() - timedelta(days=28),
             ).count()
 
             service = DataDictionaryService()
@@ -373,7 +375,8 @@ def find_datasets(request):
             ).count()
             source_tables = SourceTable.objects.filter(dataset_id=dataset["id"])
             dataset["show_pipeline_failed_message"] = not all(
-                (source_table.pipeline_last_run_success() for source_table in source_tables))
+                (source_table.pipeline_last_run_success() for source_table in source_tables)
+            )
             dataset["filled_dicts"] = 0
             for source_table in source_tables:
                 items = service.get_dictionary(source_table.id).items

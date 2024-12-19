@@ -1435,7 +1435,9 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
 
 @mock.patch("dataworkspace.apps.datasets.views.SourceTable.pipeline_last_run_success")
 @pytest.mark.django_db
-def test_shows_data_insights_on_datasets_and_datacuts_for_owners_and_managers(pipeline_last_run_success, user, client):
+def test_shows_data_insights_on_datasets_and_datacuts_for_owners_and_managers(
+    pipeline_last_run_success, user, client
+):
     ds = factories.DataSetFactory.create(
         name="Dataset",
         information_asset_owner=user,
@@ -1486,9 +1488,12 @@ def test_shows_data_insights_on_datasets_and_datacuts_for_owners_and_managers(pi
 
     # assert "One or more tables failed to update" in soup.find("dd")
 
+
 @mock.patch("dataworkspace.apps.datasets.views.SourceTable.pipeline_last_run_success")
 @pytest.mark.django_db
-def test_pipeline_failure_message_shows_on_data_insights(mock_pipeline_last_run_success, user, client):
+def test_pipeline_failure_message_shows_on_data_insights(
+    mock_pipeline_last_run_success, user, client
+):
 
     dataset = factories.DataSetFactory.create(
         name="Dataset",
@@ -1496,9 +1501,11 @@ def test_pipeline_failure_message_shows_on_data_insights(mock_pipeline_last_run_
         user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
     )
 
-    source_table = factories.SourceTableFactory(dataset=dataset, schema="public", table="test_table1")
+    source_table = factories.SourceTableFactory(
+        dataset=dataset, schema="public", table="test_table1"
+    )
 
-        # Only shows for owners and managers
+    # Only shows for owners and managers
     mock_pipeline_last_run_success.return_value = True
     dataset.save()
 
@@ -1518,6 +1525,7 @@ def test_pipeline_failure_message_shows_on_data_insights(mock_pipeline_last_run_
     ]
     for dataset in datasets:
         assert dataset in response.context["datasets"]
+
 
 @pytest.mark.parametrize(
     "permissions, result_dataset_names",
