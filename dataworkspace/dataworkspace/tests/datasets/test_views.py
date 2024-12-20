@@ -1365,6 +1365,7 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
             count=mock.ANY,
             source_tables_amount=mock.ANY,
             filled_dicts=mock.ANY,
+            show_pipeline_failed_message=False,
         ),
         expected_search_result(ds2),
         expected_search_result(ds3),
@@ -1381,6 +1382,7 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
             count=mock.ANY,
             source_tables_amount=mock.ANY,
             filled_dicts=mock.ANY,
+            show_pipeline_failed_message=False,
         ),
     ]
 
@@ -1398,7 +1400,6 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
             source_tables_amount=mock.ANY,
             filled_dicts=mock.ANY,
             show_pipeline_failed_message=False,
-
         ),
         expected_search_result(
             ds3,
@@ -1408,7 +1409,6 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
             source_tables_amount=mock.ANY,
             filled_dicts=mock.ANY,
             show_pipeline_failed_message=False,
-
         ),
     ]
 
@@ -1426,7 +1426,6 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
             source_tables_amount=mock.ANY,
             filled_dicts=mock.ANY,
             show_pipeline_failed_message=False,
-
         ),
         expected_search_result(
             ds3,
@@ -1436,15 +1435,14 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
             source_tables_amount=mock.ANY,
             filled_dicts=mock.ANY,
             show_pipeline_failed_message=False,
-
         ),
     ]
 
 
-@mock.patch("dataworkspace.apps.datasets.views.SourceTable.pipeline_last_run_success")
+@mock.patch("dataworkspace.apps.datasets.views.find_datasets")
 @pytest.mark.django_db
 def test_shows_data_insights_on_datasets_and_datacuts_for_owners_and_managers(
-    pipeline_last_run_success, user, client
+    mock_find_dataset, user, client
 ):
     dataset = factories.DataSetFactory.create(
         name="Dataset",
@@ -1471,10 +1469,13 @@ def test_shows_data_insights_on_datasets_and_datacuts_for_owners_and_managers(
         user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
     )
 
+    # mock_find_dataset.return_value = 'Blah'
+    print(">>>>>>", mock_find_dataset.return_value.__dict__)
     # Only shows on owned dataset
     response = client.get(reverse("datasets:find_datasets"))
-    assert response.status_code == 200
+    print("<<<<<<", expected_search_result(dataset))
 
+    assert response.status_code == 200
     datasets = [
         expected_search_result(
             dataset,
@@ -1507,9 +1508,9 @@ def test_pipeline_failure_message_shows_on_data_insights(
         user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
     )
 
-    # source_table = factories.SourceTableFactory(
-    #     dataset=dataset, schema="public", table="test_table1"
-    # )
+    source_table = factories.SourceTableFactory(
+        dataset=dataset, schema="public", table="test_table1"
+    )
 
     # Only shows pipeline error on owned datasets
     mock_pipeline_last_run_success.return_value = True
@@ -1525,7 +1526,7 @@ def test_pipeline_failure_message_shows_on_data_insights(
             count=mock.ANY,
             source_tables_amount=mock.ANY,
             filled_dicts=mock.ANY,
-            show_pipeline_failed_message=True,
+            show_pipeline_failed_message=False,
         )
     ]
     for dataset in datasets:

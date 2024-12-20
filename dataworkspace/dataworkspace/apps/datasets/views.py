@@ -383,6 +383,7 @@ def find_datasets(request):
                 matches = [column for column in items if column.definition]
                 if len(matches) > 0 and len(matches) == len(items):
                     dataset["filled_dicts"] += 1
+
     return render(
         request,
         "datasets/data_catalogue.html",
