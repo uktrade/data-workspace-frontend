@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import logging
 import uuid
@@ -54,6 +54,7 @@ from dataworkspace.apps.core.utils import (
     view_exists,
 )
 from dataworkspace.apps.datasets.constants import DataLinkType, DataSetType, TagType
+from dataworkspace.apps.datasets.data_dictionary.service import DataDictionaryService
 from dataworkspace.apps.datasets.forms import (
     DatasetEditForm,
     DatasetSearchForm,
@@ -353,6 +354,35 @@ def find_datasets(request):
             ),
             default=None,
         )
+
+    for dataset in datasets:
+
+        if dataset["is_owner"]:
+            dataset["number_of_requests"] = len(
+                AccessRequest.objects.filter(
+                    catalogue_item_id=dataset["id"], data_access_status="waiting"
+                )
+            )
+            dataset["count"] = EventLog.objects.filter(
+                event_type=EventLog.TYPE_DATASET_VIEW,
+                object_id=dataset["id"],
+                timestamp__gte=datetime.now() - timedelta(days=28),
+            ).count()
+
+            service = DataDictionaryService()
+            dataset["source_tables_amount"] = SourceTable.objects.filter(
+                dataset_id=dataset["id"]
+            ).count()
+            source_tables = SourceTable.objects.filter(dataset_id=dataset["id"])
+            dataset["show_pipeline_failed_message"] = not all(
+                (source_table.pipeline_last_run_success() for source_table in source_tables)
+            )
+            dataset["filled_dicts"] = 0
+            for source_table in source_tables:
+                items = service.get_dictionary(source_table.id).items
+                matches = [column for column in items if column.definition]
+                if len(matches) > 0 and len(matches) == len(items):
+                    dataset["filled_dicts"] += 1
 
     return render(
         request,
@@ -1470,6 +1500,17 @@ class DatasetEditView(EditBaseView, UpdateView):
         }
 
     def form_valid(self, form):
+
+        if "description" in form.changed_data:
+
+            log_permission_change(
+                self.request.user,
+                self.object,
+                EventLog.TYPE_CHANGED_DATASET_DESCRIPTION,
+                {"description": self.object.description},
+                f"description set to {self.object.description}",
+            )
+
         if "authorized_email_domains" in form.changed_data:
             log_permission_change(
                 self.request.user,
@@ -1520,6 +1561,17 @@ class VisualisationCatalogueItemEditView(EditBaseView, UpdateView):
         }
 
     def form_valid(self, form):
+
+        if "description" in form.changed_data:
+
+            log_permission_change(
+                self.request.user,
+                self.object,
+                EventLog.TYPE_CHANGED_DATASET_DESCRIPTION,
+                {"description": self.object.description},
+                f"description set to {self.object.description}",
+            )
+
         if "authorized_email_domains" in form.changed_data:
             log_permission_change(
                 self.request.user,
