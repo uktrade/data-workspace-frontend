@@ -1439,11 +1439,8 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
     ]
 
 
-@mock.patch("dataworkspace.apps.datasets.views.find_datasets")
 @pytest.mark.django_db
-def test_shows_data_insights_on_datasets_and_datacuts_for_owners_and_managers(
-    mock_find_dataset, user, client
-):
+def test_shows_data_insights_on_datasets_and_datacuts_for_owners_and_managers(user, client):
     dataset = factories.DataSetFactory.create(
         name="Dataset",
         information_asset_owner=user,
@@ -1469,12 +1466,10 @@ def test_shows_data_insights_on_datasets_and_datacuts_for_owners_and_managers(
         user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
     )
 
-    mock_find_dataset.return_value = True
-    print(">>>>>>", mock_find_dataset.return_value.__dict__)
     # Only shows on owned dataset
     response = client.get(reverse("datasets:find_datasets"))
-
     assert response.status_code == 200
+
     datasets = [
         expected_search_result(
             dataset,
@@ -1495,28 +1490,21 @@ def test_shows_data_insights_on_datasets_and_datacuts_for_owners_and_managers(
         assert dataset in response.context["datasets"]
 
 
-@mock.patch("dataworkspace.apps.datasets.views.SourceTable.pipeline_last_run_success")
+@mock.patch("dataworkspace.apps.datasets.views.show_pipeline_failed_message_on_dataset")
 @pytest.mark.django_db
 def test_pipeline_failure_message_shows_on_data_insights(
-    mock_pipeline_last_run_success, user, client
+    mock_show_pipeline_failed_message_on_dataset, user, client
 ):
-
     dataset = factories.DataSetFactory.create(
         name="Dataset",
         information_asset_owner=user,
         user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
     )
-
-    source_table = factories.SourceTableFactory(
-        dataset=dataset, schema="public", table="test_table1"
-    )
-
     # Only shows pipeline error on owned datasets
-    mock_pipeline_last_run_success.return_value = True
-    dataset.save()
-
+    mock_show_pipeline_failed_message_on_dataset._mock_return_value = True
     response = client.get(reverse("datasets:find_datasets"))
     assert response.status_code == 200
+
     datasets = [
         expected_search_result(
             dataset,
@@ -1525,11 +1513,11 @@ def test_pipeline_failure_message_shows_on_data_insights(
             count=mock.ANY,
             source_tables_amount=mock.ANY,
             filled_dicts=mock.ANY,
-            show_pipeline_failed_message=False,
-        )
+            show_pipeline_failed_message=True,
+        ),
     ]
     for dataset in datasets:
-        assert dataset in response.context["datasets"]
+        assert dataset in list(response.context["datasets"])
 
 
 @pytest.mark.parametrize(

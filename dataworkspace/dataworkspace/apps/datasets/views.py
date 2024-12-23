@@ -355,7 +355,7 @@ def find_datasets(request):
             default=None,
         )
 
-    # Data Insights for IAMs and IAOs 
+    # Data Insights for IAMs and IAOs
 
     for dataset in datasets:
 
@@ -376,8 +376,9 @@ def find_datasets(request):
                 dataset_id=dataset["id"]
             ).count()
             source_tables = SourceTable.objects.filter(dataset_id=dataset["id"])
-            dataset["show_pipeline_failed_message"] = not all(
-                (source_table.pipeline_last_run_success() for source_table in source_tables)
+
+            dataset["show_pipeline_failed_message"] = show_pipeline_failed_message_on_dataset(
+                source_tables
             )
             dataset["filled_dicts"] = 0
             for source_table in source_tables:
@@ -402,6 +403,10 @@ def find_datasets(request):
             "has_filters": filters.has_filters(),
         },
     )
+
+
+def show_pipeline_failed_message_on_dataset(source_tables):
+    return not all((source_table.pipeline_last_run_success() for source_table in source_tables))
 
 
 class DatasetDetailView(DetailView):
