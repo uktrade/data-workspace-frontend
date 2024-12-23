@@ -1469,11 +1469,10 @@ def test_shows_data_insights_on_datasets_and_datacuts_for_owners_and_managers(
         user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
     )
 
-    # mock_find_dataset.return_value = 'Blah'
+    mock_find_dataset.return_value = True
     print(">>>>>>", mock_find_dataset.return_value.__dict__)
     # Only shows on owned dataset
     response = client.get(reverse("datasets:find_datasets"))
-    print("<<<<<<", expected_search_result(dataset))
 
     assert response.status_code == 200
     datasets = [
