@@ -18,7 +18,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db.models import CharField, Value
 
 from django.urls import reverse
-from django.test import Client, override_settings
+from django.test import Client, TestCase, override_settings
 from freezegun import freeze_time
 from lxml import html
 from waffle.testutils import override_flag
@@ -1530,6 +1530,98 @@ def test_pipeline_failure_message_shows_on_data_insights(
     ]
     for dataset in datasets:
         assert dataset in list(response.context["datasets"])
+
+
+@mock.patch("dataworkspace.apps.datasets.views.log_permission_change")
+@pytest.mark.django_db
+class TestDescriptionChangeEventLog(TestCase):
+    def setUp(self):
+        self.user = factories.UserFactory.create(is_superuser=False)
+        self.client = Client(**get_http_sso_data(self.user))
+        self.description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla ex ex, vulputate vel condimentum a, ornare quis felis. Proin ut bibendum arcu. Donec a ligula eros. Mauris pellentesque nisi eu."
+        self.new_description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam fringilla non ante et lobortis. Nam mollis sagittis facilisis. Nam suscipit, leo et condimentum sagittis, dolor risus bibendum massa, a luctus mauris."
+        self.dataset = factories.DataSetFactory.create(
+            name="Dataset",
+            information_asset_owner=self.user,
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+            description=self.description,
+        )
+        self.visualisation = factories.VisualisationCatalogueItemFactory.create(
+            name="VisualisationCatalogueItem",
+            information_asset_owner=self.user,
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+            description=self.description,
+        )
+
+    def test_eventlog_runs_when_dataset_description_changed(self, mock_log_permission_change):
+        response = self.client.post(
+            reverse("datasets:edit_dataset", args=(self.dataset.id,)),
+            data={
+                "name": self.dataset.name,
+                "short_description": "test",
+                "government_security_classification": 2,
+                "description": self.new_description,
+            },
+        )
+        assert response.status_code == 302
+        mock_log_permission_change.assert_called_with(
+            self.user,
+            self.dataset,
+            58,
+            {"description": self.new_description},
+            f"description set to {self.new_description}",
+        )
+
+    def test_eventlog_does_not_runs_when_dataset_description_has_not_changed(
+        self, mock_log_permission_change
+    ):
+        eventlog_count = EventLog.objects.count()
+        response = self.client.post(
+            reverse("datasets:edit_dataset", args=(self.dataset.id,)),
+            data={
+                "name": "test",
+                "short_description": "test",
+                "government_security_classification": 2,
+                "description": self.description,
+            },
+        )
+        assert response.status_code == 302
+        assert (
+            EventLog.objects.filter(event_type=EventLog.TYPE_CHANGED_DATASET_DESCRIPTION).count()
+            == eventlog_count
+        )
+
+    def test_eventlog_runs_when_vis_description_changed(self, mock_log_permission_change):
+        response = self.client.post(
+            reverse("datasets:edit_visualisation_catalogue_item", args=(self.visualisation.id,)),
+            data={
+                "name": self.dataset.name,
+                "short_description": "test",
+                "description": self.new_description,
+            },
+        )
+        assert response.status_code == 302
+        mock_log_permission_change.assert_called_with(
+            self.user,
+            self.visualisation,
+            58,
+            {"description": self.new_description},
+            f"description set to {self.new_description}",
+        )
+
+    def test_eventlog_does_not_runs_when_vis_description_has_not_changed(
+        self, mock_log_permission_change
+    ):
+        eventlog_count = EventLog.objects.count()
+        response = self.client.post(
+            reverse("datasets:edit_visualisation_catalogue_item", args=(self.visualisation.id,)),
+            data={"name": "test", "short_description": "test", "description": self.description},
+        )
+        assert response.status_code == 302
+        assert (
+            EventLog.objects.filter(event_type=EventLog.TYPE_CHANGED_DATASET_DESCRIPTION).count()
+            == eventlog_count
+        )
 
 
 @pytest.mark.parametrize(

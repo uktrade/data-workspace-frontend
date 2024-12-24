@@ -183,7 +183,7 @@
                   <dt>Data type:</dt>
                   <dd>{{ data_type|get_key:dataset.data_type }}</dd>
                     {% if dataset.is_owner == True and dataset.data_type == 1 or dataset.data_type == 2 %}
-                      {% if not show_pipeline_failed_message %} 
+                      {% if show_pipeline_failed_message %} 
                       <div>
                         <dt class="error-message">Last updated:</dt>
                         <dd class="error-message">One or more tables failed to update</dd>
