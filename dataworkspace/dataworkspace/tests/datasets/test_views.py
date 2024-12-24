@@ -1453,6 +1453,7 @@ def test_shows_data_insights_on_datasets_and_datacuts_for_owners_and_managers(us
     datacut = factories.DataSetFactory.create(
         name="Datacut",
         type=DataSetType.DATACUT,
+        information_asset_owner=user,
         user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
     )
     datacut2 = factories.DataSetFactory.create(
@@ -1466,7 +1467,7 @@ def test_shows_data_insights_on_datasets_and_datacuts_for_owners_and_managers(us
         user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
     )
 
-    # Only shows on owned dataset
+    # Only shows on owned dataset or datacut
     response = client.get(reverse("datasets:find_datasets"))
     assert response.status_code == 200
 
@@ -1481,7 +1482,15 @@ def test_shows_data_insights_on_datasets_and_datacuts_for_owners_and_managers(us
             show_pipeline_failed_message=False,
         ),
         expected_search_result(dataset2),
-        expected_search_result(datacut),
+        expected_search_result(
+            datacut,
+            is_owner=True,
+            number_of_requests=mock.ANY,
+            count=mock.ANY,
+            source_tables_amount=mock.ANY,
+            filled_dicts=mock.ANY,
+            show_pipeline_failed_message=False,
+        ),
         expected_search_result(datacut2),
         expected_search_result(refdataset),
         expected_search_result(visualisation),
@@ -1500,10 +1509,13 @@ def test_pipeline_failure_message_shows_on_data_insights(
         information_asset_owner=user,
         user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
     )
+
     # Only shows pipeline error on owned datasets
     mock_show_pipeline_failed_message_on_dataset._mock_return_value = True
     response = client.get(reverse("datasets:find_datasets"))
     assert response.status_code == 200
+    soup = BeautifulSoup(response.content.decode(response.charset))
+    assert "One or more tables failed to update" in soup.find("dd", class_="error-message")
 
     datasets = [
         expected_search_result(
