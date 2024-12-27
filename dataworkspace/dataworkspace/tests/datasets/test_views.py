@@ -1514,8 +1514,6 @@ def test_pipeline_failure_message_shows_on_data_insights(
     mock_show_pipeline_failed_message_on_dataset._mock_return_value = True
     response = client.get(reverse("datasets:find_datasets"))
     assert response.status_code == 200
-    soup = BeautifulSoup(response.content.decode(response.charset))
-    assert "One or more tables failed to update" in soup.find("dd", class_="error-message")
 
     datasets = [
         expected_search_result(
@@ -1529,7 +1527,9 @@ def test_pipeline_failure_message_shows_on_data_insights(
         ),
     ]
     for dataset in datasets:
-        assert dataset in list(response.context["datasets"])
+        assert dataset in response.context["datasets"]
+    soup = BeautifulSoup(response.content.decode(response.charset))
+    assert "One or more tables failed to update" in soup.find("dd", class_="error-message")
 
 
 @mock.patch("dataworkspace.apps.datasets.views.log_permission_change")
@@ -1538,8 +1538,8 @@ class TestDescriptionChangeEventLog(TestCase):
     def setUp(self):
         self.user = factories.UserFactory.create(is_superuser=False)
         self.client = Client(**get_http_sso_data(self.user))
-        self.description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla ex ex, vulputate vel condimentum a, ornare quis felis. Proin ut bibendum arcu. Donec a ligula eros. Mauris pellentesque nisi eu."
-        self.new_description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam fringilla non ante et lobortis. Nam mollis sagittis facilisis. Nam suscipit, leo et condimentum sagittis, dolor risus bibendum massa, a luctus mauris."
+        self.description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla ex ex, vulputate vel condimentum a, ornare quis felis. Proin ut bibendum arcu. Donec a ligula eros. Mauris pellentesque nisi eu."  # pylint: disable=line-too-long
+        self.new_description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam fringilla non ante et lobortis. Nam mollis sagittis facilisis. Nam suscipit, leo et condimentum sagittis, dolor risus bibendum massa, a luctus mauris."  # pylint: disable=line-too-long
         self.dataset = factories.DataSetFactory.create(
             name="Dataset",
             information_asset_owner=self.user,
