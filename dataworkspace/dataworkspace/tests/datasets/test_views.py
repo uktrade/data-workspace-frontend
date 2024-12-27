@@ -1468,8 +1468,8 @@ def test_shows_data_insights_on_datasets_and_datacuts_for_owners_and_managers(us
     )
 
     # Only shows on owned dataset or datacut
-    response = client.get(reverse("datasets:find_datasets"))
-    assert response.status_code == 200
+    dataset_search_responses = client.get(reverse("datasets:find_datasets"))
+    assert dataset_search_responses.status_code == 200
 
     datasets = [
         expected_search_result(
@@ -1496,7 +1496,7 @@ def test_shows_data_insights_on_datasets_and_datacuts_for_owners_and_managers(us
         expected_search_result(visualisation),
     ]
     for dataset in datasets:
-        assert dataset in response.context["datasets"]
+        assert dataset in dataset_search_responses.context["datasets"]
 
 
 @mock.patch("dataworkspace.apps.datasets.views.show_pipeline_failed_message_on_dataset")
