@@ -18,7 +18,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db.models import CharField, Value
 
 from django.urls import reverse
-from django.test import Client, override_settings
+from django.test import Client, TestCase, override_settings
 from freezegun import freeze_time
 from lxml import html
 from waffle.testutils import override_flag
@@ -259,13 +259,13 @@ def expected_search_result(catalogue_item, **kwargs):
         "data_type": mock.ANY,
         "published": catalogue_item.published,
         "has_access": True,
+        "publishers": mock.ANY,
         "is_bookmarked": False,
         "table_match": False,
         "is_subscribed": False,
         "is_open_data": getattr(catalogue_item, "user_access_type", None) == UserAccessType.OPEN,
         "sources": mock.ANY,
         "topics": mock.ANY,
-        "publishers": mock.ANY,
         "last_updated": mock.ANY,
         "average_unique_users_daily": mock.ANY,
         "is_owner": False,
@@ -965,7 +965,6 @@ def test_find_datasets_filters_by_access_requires_authenticate(access_type):
         name="Master - public",
         user_access_type=access_type,
     )
-
     factories.DataSetUserPermissionFactory.create(user=user2, dataset=public_master)
     response = client.get(reverse("datasets:find_datasets"), {"status": ["access"]})
 
@@ -1359,7 +1358,15 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
     response = client.get(reverse("datasets:find_datasets"))
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ds1, is_owner=True),
+        expected_search_result(
+            ds1,
+            is_owner=True,
+            number_of_requests=mock.ANY,
+            count=mock.ANY,
+            source_tables_amount=mock.ANY,
+            filled_dicts=mock.ANY,
+            show_pipeline_failed_message=False,
+        ),
         expected_search_result(ds2),
         expected_search_result(ds3),
     ]
@@ -1368,7 +1375,15 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
     response = client.get(reverse("datasets:find_datasets"), {"my_datasets": "owned"})
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ds1, is_owner=True),
+        expected_search_result(
+            ds1,
+            is_owner=True,
+            number_of_requests=mock.ANY,
+            count=mock.ANY,
+            source_tables_amount=mock.ANY,
+            filled_dicts=mock.ANY,
+            show_pipeline_failed_message=False,
+        ),
     ]
 
     # User is IAO
@@ -1377,8 +1392,24 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
     response = client.get(reverse("datasets:find_datasets"), {"my_datasets": "owned"})
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ds1, is_owner=True),
-        expected_search_result(ds3, is_owner=True),
+        expected_search_result(
+            ds1,
+            is_owner=True,
+            number_of_requests=mock.ANY,
+            count=mock.ANY,
+            source_tables_amount=mock.ANY,
+            filled_dicts=mock.ANY,
+            show_pipeline_failed_message=False,
+        ),
+        expected_search_result(
+            ds3,
+            is_owner=True,
+            number_of_requests=mock.ANY,
+            count=mock.ANY,
+            source_tables_amount=mock.ANY,
+            filled_dicts=mock.ANY,
+            show_pipeline_failed_message=False,
+        ),
     ]
 
     # User is IAM and IAO
@@ -1387,9 +1418,210 @@ def test_find_datasets_filters_by_asset_ownership(user, client):
     response = client.get(reverse("datasets:find_datasets"), {"my_datasets": "owned"})
     assert response.status_code == 200
     assert list(response.context["datasets"]) == [
-        expected_search_result(ds1, is_owner=True),
-        expected_search_result(ds3, is_owner=True),
+        expected_search_result(
+            ds1,
+            is_owner=True,
+            number_of_requests=mock.ANY,
+            count=mock.ANY,
+            source_tables_amount=mock.ANY,
+            filled_dicts=mock.ANY,
+            show_pipeline_failed_message=False,
+        ),
+        expected_search_result(
+            ds3,
+            is_owner=True,
+            number_of_requests=mock.ANY,
+            count=mock.ANY,
+            source_tables_amount=mock.ANY,
+            filled_dicts=mock.ANY,
+            show_pipeline_failed_message=False,
+        ),
     ]
+
+
+@pytest.mark.django_db
+def test_shows_data_insights_on_datasets_and_datacuts_for_owners_and_managers(user, client):
+    dataset = factories.DataSetFactory.create(
+        name="Dataset",
+        information_asset_owner=user,
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+    )
+    dataset2 = factories.DataSetFactory.create(
+        name="Dataset2",
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+    )
+    datacut = factories.DataSetFactory.create(
+        name="Datacut",
+        type=DataSetType.DATACUT,
+        information_asset_owner=user,
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+    )
+    datacut2 = factories.DataSetFactory.create(
+        name="Datacut2",
+        type=DataSetType.DATACUT,
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+    )
+    refdataset = factories.ReferenceDatasetFactory.create(name="ReferenceDataset")
+    visualisation = factories.VisualisationCatalogueItemFactory.create(
+        name="VisualisationCatalogueItem",
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+    )
+
+    # Only shows on owned dataset or datacut
+    dataset_search_responses = client.get(reverse("datasets:find_datasets"))
+    assert dataset_search_responses.status_code == 200
+
+    datasets = [
+        expected_search_result(
+            dataset,
+            is_owner=True,
+            number_of_requests=mock.ANY,
+            count=mock.ANY,
+            source_tables_amount=mock.ANY,
+            filled_dicts=mock.ANY,
+            show_pipeline_failed_message=False,
+        ),
+        expected_search_result(dataset2),
+        expected_search_result(
+            datacut,
+            is_owner=True,
+            number_of_requests=mock.ANY,
+            count=mock.ANY,
+            source_tables_amount=mock.ANY,
+            filled_dicts=mock.ANY,
+            show_pipeline_failed_message=False,
+        ),
+        expected_search_result(datacut2),
+        expected_search_result(refdataset),
+        expected_search_result(visualisation),
+    ]
+    for dataset in datasets:
+        assert dataset in dataset_search_responses.context["datasets"]
+
+
+@mock.patch("dataworkspace.apps.datasets.views.show_pipeline_failed_message_on_dataset")
+@pytest.mark.django_db
+def test_pipeline_failure_message_shows_on_data_insights(
+    mock_show_pipeline_failed_message_on_dataset, user, client
+):
+    dataset = factories.DataSetFactory.create(
+        name="Dataset",
+        information_asset_owner=user,
+        user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+    )
+
+    # Only shows pipeline error on owned datasets
+    mock_show_pipeline_failed_message_on_dataset._mock_return_value = True
+    response = client.get(reverse("datasets:find_datasets"))
+    assert response.status_code == 200
+
+    datasets = [
+        expected_search_result(
+            dataset,
+            is_owner=True,
+            number_of_requests=mock.ANY,
+            count=mock.ANY,
+            source_tables_amount=mock.ANY,
+            filled_dicts=mock.ANY,
+            show_pipeline_failed_message=True,
+        ),
+    ]
+    for dataset in datasets:
+        assert dataset in response.context["datasets"]
+    soup = BeautifulSoup(response.content.decode(response.charset))
+    assert "One or more tables failed to update" in soup.find("dd", class_="error-message")
+
+
+@mock.patch("dataworkspace.apps.datasets.views.log_permission_change")
+@pytest.mark.django_db
+class TestDescriptionChangeEventLog(TestCase):
+    def setUp(self):
+        self.user = factories.UserFactory.create(is_superuser=False)
+        self.client = Client(**get_http_sso_data(self.user))
+        self.description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla ex ex, vulputate vel condimentum a, ornare quis felis. Proin ut bibendum arcu. Donec a ligula eros. Mauris pellentesque nisi eu."  # pylint: disable=line-too-long
+        self.new_description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam fringilla non ante et lobortis. Nam mollis sagittis facilisis. Nam suscipit, leo et condimentum sagittis, dolor risus bibendum massa, a luctus mauris."  # pylint: disable=line-too-long
+        self.dataset = factories.DataSetFactory.create(
+            name="Dataset",
+            information_asset_owner=self.user,
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+            description=self.description,
+        )
+        self.visualisation = factories.VisualisationCatalogueItemFactory.create(
+            name="VisualisationCatalogueItem",
+            information_asset_owner=self.user,
+            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
+            description=self.description,
+        )
+
+    def test_eventlog_runs_when_dataset_description_changed(self, mock_log_permission_change):
+        response = self.client.post(
+            reverse("datasets:edit_dataset", args=(self.dataset.id,)),
+            data={
+                "name": self.dataset.name,
+                "short_description": "test",
+                "government_security_classification": 2,
+                "description": self.new_description,
+            },
+        )
+        assert response.status_code == 302
+        mock_log_permission_change.assert_called_with(
+            self.user,
+            self.dataset,
+            58,
+            {"description": self.new_description},
+            f"description set to {self.new_description}",
+        )
+
+    def test_eventlog_does_not_runs_when_dataset_description_has_not_changed(
+        self, mock_log_permission_change
+    ):
+        eventlog_count = EventLog.objects.count()
+        response = self.client.post(
+            reverse("datasets:edit_dataset", args=(self.dataset.id,)),
+            data={
+                "name": "test",
+                "short_description": "test",
+                "government_security_classification": 2,
+                "description": self.description,
+            },
+        )
+        assert response.status_code == 302
+        assert (
+            EventLog.objects.filter(event_type=EventLog.TYPE_CHANGED_DATASET_DESCRIPTION).count()
+            == eventlog_count
+        )
+
+    def test_eventlog_runs_when_vis_description_changed(self, mock_log_permission_change):
+        response = self.client.post(
+            reverse("datasets:edit_visualisation_catalogue_item", args=(self.visualisation.id,)),
+            data={
+                "name": self.dataset.name,
+                "short_description": "test",
+                "description": self.new_description,
+            },
+        )
+        assert response.status_code == 302
+        mock_log_permission_change.assert_called_with(
+            self.user,
+            self.visualisation,
+            58,
+            {"description": self.new_description},
+            f"description set to {self.new_description}",
+        )
+
+    def test_eventlog_does_not_runs_when_vis_description_has_not_changed(
+        self, mock_log_permission_change
+    ):
+        eventlog_count = EventLog.objects.count()
+        response = self.client.post(
+            reverse("datasets:edit_visualisation_catalogue_item", args=(self.visualisation.id,)),
+            data={"name": "test", "short_description": "test", "description": self.description},
+        )
+        assert response.status_code == 302
+        assert (
+            EventLog.objects.filter(event_type=EventLog.TYPE_CHANGED_DATASET_DESCRIPTION).count()
+            == eventlog_count
+        )
 
 
 @pytest.mark.parametrize(

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import logging
 import uuid
@@ -54,6 +54,7 @@ from dataworkspace.apps.core.utils import (
     view_exists,
 )
 from dataworkspace.apps.datasets.constants import DataLinkType, DataSetType, TagType
+from dataworkspace.apps.datasets.data_dictionary.service import DataDictionaryService
 from dataworkspace.apps.datasets.forms import (
     DatasetEditForm,
     DatasetSearchForm,
@@ -354,6 +355,10 @@ def find_datasets(request):
             default=None,
         )
 
+    # Data Insights for IAMs and IAOs
+    for dataset in datasets:
+        get_owner_insights(dataset)
+
     return render(
         request,
         "datasets/data_catalogue.html",
@@ -370,6 +375,36 @@ def find_datasets(request):
             "has_filters": filters.has_filters(),
         },
     )
+
+
+def show_pipeline_failed_message_on_dataset(source_tables):
+    return not all((source_table.pipeline_last_run_success() for source_table in source_tables))
+
+
+def get_owner_insights(dataset):
+    if dataset["is_owner"]:
+        dataset["number_of_requests"] = len(
+            AccessRequest.objects.filter(
+                catalogue_item_id=dataset["id"], data_access_status="waiting"
+            )
+        )
+        dataset["count"] = EventLog.objects.filter(
+            event_type=EventLog.TYPE_DATASET_VIEW,
+            object_id=dataset["id"],
+            timestamp__gte=datetime.now() - timedelta(days=28),
+        ).count()
+        source_tables = SourceTable.objects.filter(dataset_id=dataset["id"])
+        dataset["source_tables_amount"] = source_tables.count()
+        dataset["show_pipeline_failed_message"] = show_pipeline_failed_message_on_dataset(
+            source_tables
+        )
+        service = DataDictionaryService()
+        dataset["filled_dicts"] = 0
+        for source_table in source_tables:
+            items = service.get_dictionary(source_table.id).items
+            matches = [column for column in items if column.definition]
+            if len(matches) > 0 and len(matches) == len(items):
+                dataset["filled_dicts"] += 1
 
 
 class DatasetDetailView(DetailView):
@@ -1470,6 +1505,17 @@ class DatasetEditView(EditBaseView, UpdateView):
         }
 
     def form_valid(self, form):
+
+        if "description" in form.changed_data:
+
+            log_permission_change(
+                self.request.user,
+                self.object,
+                EventLog.TYPE_CHANGED_DATASET_DESCRIPTION,
+                {"description": self.object.description},
+                f"description set to {self.object.description}",
+            )
+
         if "authorized_email_domains" in form.changed_data:
             log_permission_change(
                 self.request.user,
@@ -1520,6 +1566,17 @@ class VisualisationCatalogueItemEditView(EditBaseView, UpdateView):
         }
 
     def form_valid(self, form):
+
+        if "description" in form.changed_data:
+
+            log_permission_change(
+                self.request.user,
+                self.object,
+                EventLog.TYPE_CHANGED_DATASET_DESCRIPTION,
+                {"description": self.object.description},
+                f"description set to {self.object.description}",
+            )
+
         if "authorized_email_domains" in form.changed_data:
             log_permission_change(
                 self.request.user,

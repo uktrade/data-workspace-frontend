@@ -182,7 +182,18 @@
                 <dl>
                   <dt>Data type:</dt>
                   <dd>{{ data_type|get_key:dataset.data_type }}</dd>
-                  <dt>Last updated:</dt>
+                    {% if dataset.is_owner == True %}
+                      {% if dataset.data_type == 1 or dataset.data_type == 2 %}
+                        {% if dataset.show_pipeline_failed_message %} 
+                          <div>
+                            <dt class="error-message">Last updated:</dt>
+                            <dd class="error-message">One or more tables failed to update</dd>
+                          </div>  
+                          {% else %}
+                          <dt>Last updated:</dt>
+                        {% endif %}
+                      {% endif %}
+                    {% endif %}
                   <dd>
                   {{ dataset.last_updated|date_with_gmt_offset|default_if_none:"N/A" }}
                   </dd>
@@ -195,6 +206,7 @@
                       N/A
                     {% endfor %}
                   </dd>
+
                   {% if dataset.topics %}
                     <dt>Topics:</dt>
                     <dd>
@@ -208,6 +220,13 @@
                   {% endif %}
                 </dl>
               </div>
+              {% if dataset.is_owner == True %}
+                {% if dataset.data_type == 1 or dataset.data_type == 2 %}
+                  <div >
+                    {% include "partials/data_insights.html" %}
+                  </div>
+                {% endif %}
+              {% endif %}
 
               {% if not dataset.has_access %}
                 <div class="govuk-inset-text govuk-!-margin-bottom-0">
