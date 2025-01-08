@@ -157,7 +157,7 @@ class Tag(TimeStampedModel):
         return f"{dict(TagType.choices).get(self.type)}: {self.name}"
 
 
-class DatasetReferenceCode(TimeStampedModel):
+class DatasetReferenceCode(TimeStampedModel):  # delete this
     code = models.CharField(
         max_length=20,
         unique=True,

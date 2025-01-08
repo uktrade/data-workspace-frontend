@@ -237,7 +237,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
                     "name",
                     "slug",
                     "tags",
-                    "reference_code",
+                    # "reference_code",
                     "short_description",
                     "description",
                     "notes",
