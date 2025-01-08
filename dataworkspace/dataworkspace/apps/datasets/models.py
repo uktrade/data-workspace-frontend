@@ -292,9 +292,9 @@ class DataSet(DeletableTimestampedUserModel):
         related_name="data_catalogue_edit_datasets",
         blank=True,
     )
-    reference_code = models.ForeignKey(
-        DatasetReferenceCode, null=True, blank=True, on_delete=models.SET_NULL
-    )
+    # reference_code = models.ForeignKey(
+    #     DatasetReferenceCode, null=True, blank=True, on_delete=models.SET_NULL
+    # ) 
     events = GenericRelation(EventLog)
     authorized_email_domains = ArrayField(
         models.CharField(max_length=256),
@@ -332,9 +332,9 @@ class DataSet(DeletableTimestampedUserModel):
         db_table = "app_dataset"
         indexes = (GinIndex(fields=["search_vector_english"]),)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._original_reference_code = self.reference_code
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #     # self._original_reference_code = self.reference_code 
 
     def __str__(self):
         return self.name
@@ -361,11 +361,11 @@ class DataSet(DeletableTimestampedUserModel):
         # If the model's reference code has changed as part of this update reset the reference
         # number for any associated sources. This will trigger the source to update it's reference
         # number inline with the new reference code (if any).
-        if self.reference_code != self._original_reference_code:
-            self._original_reference_code = self.reference_code
-            for obj in self.related_objects():
-                obj.reference_number = None
-                obj.save()
+        # if self.reference_code != self._original_reference_code:
+        #     self._original_reference_code = self.reference_code
+        #     for obj in self.related_objects():
+        #         obj.reference_number = None
+        #         obj.save()
 
         tag_names = " ".join([x.name for x in self.tags.all()])
         DataSet.objects.filter(id=self.id).update(
