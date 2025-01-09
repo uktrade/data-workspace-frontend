@@ -243,9 +243,9 @@ class DataSet(DeletableTimestampedUserModel):
         ],
         default=DataSetType.DATACUT,
     )
-    name = models.CharField(blank=False, null=False, max_length=128)
+    name = models.TextField(null=True, blank=True, max_length=128)
     slug = models.SlugField(max_length=50, db_index=True, null=False, blank=False)
-    short_description = models.CharField(blank=False, null=False, max_length=256)
+    short_description = models.TextField(null=True, blank=True, max_length=255)
     grouping = models.ForeignKey(DataGrouping, null=True, on_delete=models.CASCADE)
     description = RichTextField(null=False, blank=False)
     notes = RichTextField(null=True, blank=True)
@@ -260,7 +260,7 @@ class DataSet(DeletableTimestampedUserModel):
         null=True, blank=True, max_length=1024, help_text="Link to license (optional)"
     )
     retention_policy = models.TextField(null=True, blank=True)
-    personal_data = models.CharField(null=True, blank=True, max_length=128)
+    personal_data = models.TextField(null=True, blank=True, max_length=128)
     restrictions_on_usage = RichLinkField(null=True, blank=True)
     user_access_type = models.CharField(
         max_length=64,
