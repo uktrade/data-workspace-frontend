@@ -315,7 +315,7 @@ class DataSet(DeletableTimestampedUserModel):
     government_security_classification = models.IntegerField(
         choices=SecurityClassificationAndHandlingInstructionType.choices,
         null=True,
-        blank=True,
+        blank=False,
     )
     sensitivity = models.ManyToManyField(
         SensitivityType,
