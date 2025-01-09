@@ -281,6 +281,13 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
             )
         }
 
+    def render_change_form(self, request, context, add=False, change=False, form_url='', obj=None):
+        context.update({
+            'show_save': False,
+            'show_save_and_add_another': False,
+        })
+        return super().render_change_form(request, context, add, change, form_url, obj)
+
     def get_form(self, request, obj=None, **kwargs):  # pylint: disable=W0221
         form_class = super().get_form(request, obj=None, **kwargs)
         form_class.base_fields["authorized_email_domains"].widget.attrs["style"] = "width: 30em;"
@@ -305,6 +312,34 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
     get_average_unique_users_daily.admin_order_field = "average_unique_users_daily"
     get_average_unique_users_daily.short_description = "Average unique daily users"
 
+
+    change_form_template = "admin/custom_change_form.html" # Here
+    
+    def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        
+        extra_context['custom_button'] = True # Here
+        
+        return super().changeform_view(request, object_id, form_url, extra_context)
+
+    def response_add(self, request, obj, post_url_continue=None): # Here
+
+        if "_custom_button" in request.POST:
+            # Do something
+            return super().response_add(request, obj, post_url_continue)
+        else:
+            # Do something
+            return super().response_add(request, obj, post_url_continue)
+
+    def response_change(self, request, obj): # Here
+        
+        if "_custom_button" in request.POST:
+            # Do something
+            return super().response_change(request, obj)
+        else:
+            # Do something
+            return super().response_change(request, obj)
+        
     @transaction.atomic
     def save_model(self, request, obj, form, change):
         authorized_users = set(
