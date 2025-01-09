@@ -15,7 +15,7 @@ from django.contrib.admin.options import BaseModelAdmin
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.forms import formset_factory
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils.html import format_html
@@ -312,34 +312,25 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
     get_average_unique_users_daily.admin_order_field = "average_unique_users_daily"
     get_average_unique_users_daily.short_description = "Average unique daily users"
 
+    change_form_template = "admin/custom_change_form.html"  # Here
 
-    change_form_template = "admin/custom_change_form.html" # Here
-    
     def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
         extra_context = extra_context or {}
-        
-        extra_context['custom_button'] = True # Here
-        
+
+        extra_context['custom_button'] = True  # Here
+
         return super().changeform_view(request, object_id, form_url, extra_context)
 
-    def response_add(self, request, obj, post_url_continue=None): # Here
+    def response_change(self, request, obj):  # Here
+        print("obj", obj.id)
+        if "_save_and_view" in request.POST:
+            print('save and view')
+            return HttpResponseRedirect(reverse("datasets:dataset_detail", args=[obj.id]))
 
-        if "_custom_button" in request.POST:
-            # Do something
-            return super().response_add(request, obj, post_url_continue)
+            # return super().response_change(request, obj)
         else:
-            # Do something
-            return super().response_add(request, obj, post_url_continue)
+            return super().response_change(request, obj)
 
-    def response_change(self, request, obj): # Here
-        
-        if "_custom_button" in request.POST:
-            # Do something
-            return super().response_change(request, obj)
-        else:
-            # Do something
-            return super().response_change(request, obj)
-        
     @transaction.atomic
     def save_model(self, request, obj, form, change):
         authorized_users = set(
