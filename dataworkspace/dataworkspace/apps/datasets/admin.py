@@ -281,11 +281,13 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
             )
         }
 
-    def render_change_form(self, request, context, add=False, change=False, form_url='', obj=None):
-        context.update({
-            'show_save': False,
-            'show_save_and_add_another': False,
-        })
+    def render_change_form(self, request, context, add=False, change=False, form_url="", obj=None):
+        context.update(
+            {
+                "show_save": False,
+                "show_save_and_add_another": False,
+            }
+        )
         return super().render_change_form(request, context, add, change, form_url, obj)
 
     def get_form(self, request, obj=None, **kwargs):  # pylint: disable=W0221
@@ -314,20 +316,16 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
 
     change_form_template = "admin/custom_change_form.html"  # Here
 
-    def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
+    def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
         extra_context = extra_context or {}
 
-        extra_context['custom_button'] = True  # Here
+        extra_context["custom_button"] = True  # Here
 
         return super().changeform_view(request, object_id, form_url, extra_context)
 
     def response_change(self, request, obj):  # Here
-        print("obj", obj.id)
         if "_save_and_view" in request.POST:
-            print('save and view')
             return HttpResponseRedirect(reverse("datasets:dataset_detail", args=[obj.id]))
-
-            # return super().response_change(request, obj)
         else:
             return super().response_change(request, obj)
 
