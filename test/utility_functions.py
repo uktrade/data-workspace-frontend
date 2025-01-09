@@ -383,7 +383,6 @@ async def create_private_dataset(
             DatasetReferenceCode,
         )
         from dataworkspace.apps.datasets.constants import DataSetType
-        reference_code, _ = DatasetReferenceCode.objects.get_or_create(code='TEST')
         dataset = DataSet.objects.create(
             name="{dataset_name}",
             description="test_desc",
@@ -391,7 +390,6 @@ async def create_private_dataset(
             slug="{dataset_name}",
             id="{dataset_id}",
             published=True,
-            reference_code=reference_code,
             type=DataSetType.{dataset_type}.value,
         )
         SourceTable.objects.create(

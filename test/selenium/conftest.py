@@ -71,7 +71,6 @@ def create_dataset(dataset_id, dataset_name, table_id, database, user_access_typ
             DatasetReferenceCode,
         )
         from dataworkspace.apps.datasets.constants import DataSetType
-        reference_code, _ = DatasetReferenceCode.objects.get_or_create(code='TEST')
         dataset, _ = DataSet.objects.update_or_create(
             id="{dataset_id}",
             defaults=dict(
@@ -80,7 +79,6 @@ def create_dataset(dataset_id, dataset_name, table_id, database, user_access_typ
                 short_description="test_short_desc",
                 slug="{dataset_name}",
                 published=True,
-                reference_code=reference_code,
                 type=DataSetType.MASTER,
                 user_access_type="{user_access_type}"
             ),
