@@ -269,7 +269,7 @@ class DataSet(DeletableTimestampedUserModel):
     )
     published = models.BooleanField(default=False)
     published_at = models.DateField(null=True, blank=True)
-    dictionary_published = models.BooleanField(default=False)
+    dictionary_published = models.BooleanField(default=True)
     eligibility_criteria = ArrayField(models.CharField(max_length=256), null=True)
     number_of_downloads = models.PositiveIntegerField(default=0)
     tags = models.ManyToManyField(Tag, related_name="+", blank=True)

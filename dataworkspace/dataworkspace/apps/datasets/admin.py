@@ -253,7 +253,6 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
                     "personal_data",
                     "restrictions_on_usage",
                     "type",
-                    "dictionary_published",
                     "esda",
                 ]
             },

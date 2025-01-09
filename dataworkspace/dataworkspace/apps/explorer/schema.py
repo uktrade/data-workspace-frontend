@@ -68,7 +68,7 @@ Table = namedtuple("Table", ["name", "columns"])
 
 
 class TableName(namedtuple("TableName", ["schema", "name"])):
-    dictionary_published = False
+    dictionary_published = True
 
     def __str__(self):
         return f"{self.schema}.{self.name}"
