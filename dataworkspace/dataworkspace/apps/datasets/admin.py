@@ -314,16 +314,16 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
     get_average_unique_users_daily.admin_order_field = "average_unique_users_daily"
     get_average_unique_users_daily.short_description = "Average unique daily users"
 
-    change_form_template = "admin/custom_change_form.html"  # Here
+    change_form_template = "admin/custom_change_form.html"
 
     def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
         extra_context = extra_context or {}
 
-        extra_context["custom_button"] = True  # Here
+        extra_context["custom_button"] = True
 
         return super().changeform_view(request, object_id, form_url, extra_context)
 
-    def response_change(self, request, obj):  # Here
+    def response_change(self, request, obj):
         if "_save_and_view" in request.POST:
             return HttpResponseRedirect(reverse("datasets:dataset_detail", args=[obj.id]))
         else:
