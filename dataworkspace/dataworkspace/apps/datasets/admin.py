@@ -844,6 +844,7 @@ class VisualisationLinkInline(admin.TabularInline, ManageUnpublishedDatasetsMixi
 @admin.register(VisualisationCatalogueItem)
 class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStampedUserAdmin):
     form = VisualisationCatalogueItemForm
+    prepopulated_fields = {"slug": ("name",)}
     list_display = (
         "name",
         "short_description",
@@ -870,7 +871,7 @@ class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStamp
                 "fields": [
                     "published",
                     "name",
-                    "slug",
+                    "slug", # commenting out this kills it. needs to force update?
                     "tags",
                     "short_description",
                     "description",
