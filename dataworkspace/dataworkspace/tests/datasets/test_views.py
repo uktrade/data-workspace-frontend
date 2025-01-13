@@ -1617,7 +1617,12 @@ class TestDescriptionChangeEventLog(TestCase):
         eventlog_count = EventLog.objects.count()
         response = self.client.post(
             reverse("datasets:edit_visualisation_catalogue_item", args=(self.visualisation.id,)),
-            data={"name": "test", "short_description": "test", "government_security_classification": 2, "description": self.description},
+            data={
+                "name": "test",
+                "short_description": "test",
+                "government_security_classification": 2,
+                "description": self.description,
+            },
         )
         assert response.status_code == 302
         assert (

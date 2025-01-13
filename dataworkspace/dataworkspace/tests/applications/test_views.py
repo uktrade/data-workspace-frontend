@@ -71,7 +71,7 @@ class TestDataVisualisationUICataloguePage:
                     "short_description": "summary",
                     "user_access_type": UserAccessType.OPEN,
                     "enquiries_contact": user.email,
-                    "government_security_classification": 1
+                    "government_security_classification": 1,
                 },
                 follow=True,
             )
@@ -119,7 +119,7 @@ class TestDataVisualisationUICataloguePage:
                     "short_description": "summary",
                     "user_access_type": expected_type,
                     "enquiries_contact": user.email,
-                    "government_security_classification": 1
+                    "government_security_classification": 1,
                 },
                 follow=True,
             )
