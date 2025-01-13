@@ -2564,11 +2564,12 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     visualisation_template = models.OneToOneField(
         VisualisationTemplate, on_delete=models.CASCADE, null=True, blank=True
     )
-    name = models.CharField(max_length=255, null=False, blank=False)
+    name = models.TextField(max_length=128, null=False, blank=False)
     slug = models.SlugField(max_length=50, db_index=True, unique=True, null=False, blank=False)
     tags = models.ManyToManyField(Tag, related_name="+", blank=True)
-    short_description = models.CharField(max_length=255)
+    short_description = models.TextField(max_length=128)
     description = RichTextField(null=True, blank=True)
+    notes = RichTextField(null=True, blank=True)
     enquiries_contact = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -2585,7 +2586,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     )
     licence = models.CharField(null=False, blank=True, max_length=256)
     retention_policy = models.TextField(null=True, blank=True)
-    personal_data = models.CharField(null=True, blank=True, max_length=128)
+    personal_data = models.TextField(null=True, blank=True, max_length=128)
     restrictions_on_usage = RichLinkField(null=True, blank=True)
     published = models.BooleanField(default=False)
 
@@ -2644,7 +2645,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     government_security_classification = models.IntegerField(
         choices=SecurityClassificationAndHandlingInstructionType.choices,
         null=True,
-        blank=True,
+        blank=False,
     )
     sensitivity = models.ManyToManyField(
         SensitivityType,
