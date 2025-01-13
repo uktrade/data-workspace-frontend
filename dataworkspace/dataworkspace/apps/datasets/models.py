@@ -2569,6 +2569,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     tags = models.ManyToManyField(Tag, related_name="+", blank=True)
     short_description = models.TextField(max_length=128)
     description = RichTextField(null=True, blank=True)
+    notes = RichTextField(null=True, blank=True)
     enquiries_contact = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
