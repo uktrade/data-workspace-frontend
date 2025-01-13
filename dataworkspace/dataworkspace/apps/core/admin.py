@@ -67,6 +67,7 @@ class TeamAdmin(CSPRichTextEditorMixin, admin.ModelAdmin):
         "schema_name",
     )
     list_per_page = 500
+    search_fields = ["name", "schema_name"]
 
 
 class NewsletterSubscriptionAdmin(admin.ModelAdmin):
