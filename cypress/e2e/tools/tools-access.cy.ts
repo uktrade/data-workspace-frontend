@@ -224,7 +224,7 @@ describe('Tools access', () => {
     });
 
     it('should error when certifcate date is in the future', () => {
-      setCertificateDate('01', '01', '2025');
+      setCertificateDate('01', '01', '3000');
       acceptDeclaration();
       cy.findByRole('button', { name: 'Submit' }).click();
       assertErrorMessages([
