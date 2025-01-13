@@ -321,8 +321,8 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
         extra_context["custom_button"] = True
 
         return super().changeform_view(request, object_id, form_url, extra_context)
-    
-    def response_add(self, request, obj, post_url_continue=None): 
+
+    def response_add(self, request, obj, post_url_continue=None):
         if "_save_and_view" in request.POST:
             return HttpResponseRedirect(reverse("datasets:dataset_detail", args=[obj.id]))
         else:
@@ -957,7 +957,7 @@ class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStamp
                 application_type="VISUALISATION"
             )
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
-    
+
     change_form_template = "admin/custom_change_form.html"
 
     def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
@@ -967,7 +967,7 @@ class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStamp
 
         return super().changeform_view(request, object_id, form_url, extra_context)
 
-    def response_add(self, request, obj, post_url_continue=None): 
+    def response_add(self, request, obj, post_url_continue=None):
         if "_save_and_view" in request.POST:
             return HttpResponseRedirect(reverse("datasets:dataset_detail", args=[obj.id]))
         else:
