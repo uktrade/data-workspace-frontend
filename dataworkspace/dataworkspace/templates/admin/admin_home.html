@@ -31,6 +31,7 @@
           <p>{% translate 'None available' %}</p>
           {% else %}
           <ul class="actionlist">
+          <p></p>
           {% for entry in admin_log %}
           <li class="{% if entry.is_addition %}addlink{% endif %}{% if entry.is_change %}changelink{% endif %}{% if entry.is_deletion %}deletelink{% endif %}">
               {% if entry.is_deletion or not entry.get_admin_url %}
