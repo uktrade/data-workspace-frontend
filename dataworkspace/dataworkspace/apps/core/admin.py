@@ -66,6 +66,7 @@ class TeamAdmin(CSPRichTextEditorMixin, admin.ModelAdmin):
         "name",
         "schema_name",
     )
+    list_per_page = 500
 
 
 class NewsletterSubscriptionAdmin(admin.ModelAdmin):
