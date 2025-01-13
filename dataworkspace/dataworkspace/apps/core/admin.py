@@ -62,6 +62,10 @@ class CSPRichTextEditorMixin:
 class TeamAdmin(CSPRichTextEditorMixin, admin.ModelAdmin):
     readonly_fields = ["schema_name"]
     inlines = (TeamMembershipAdmin,)
+    list_display = (
+        "name",
+        "schema_name",
+    )
 
 
 class NewsletterSubscriptionAdmin(admin.ModelAdmin):
