@@ -3034,6 +3034,7 @@ class TestDatasetAdminPytest:
                 "charts-INITIAL_FORMS": "0",
                 "charts-MIN_NUM_FORMS": "0",
                 "charts-MAX_NUM_FORMS": "1000",
+                "government_security_classification": 1,
             },
             follow=True,
         )
@@ -3098,6 +3099,7 @@ class TestDatasetAdminPytest:
                 "charts-INITIAL_FORMS": "0",
                 "charts-MIN_NUM_FORMS": "0",
                 "charts-MAX_NUM_FORMS": "1000",
+                "government_security_classification": 1,
             },
             follow=True,
         )
@@ -3152,6 +3154,7 @@ class TestDatasetAdminPytest:
                 "charts-INITIAL_FORMS": "0",
                 "charts-MIN_NUM_FORMS": "0",
                 "charts-MAX_NUM_FORMS": "1000",
+                "government_security_classification": 1,
             },
             follow=True,
         )
@@ -3242,6 +3245,7 @@ class TestDatasetAdminPytest:
                 "charts-INITIAL_FORMS": "0",
                 "charts-MIN_NUM_FORMS": "0",
                 "charts-MAX_NUM_FORMS": "1000",
+                "government_security_classification": 1,
             },
             follow=True,
         )
@@ -3294,6 +3298,7 @@ class TestDatasetAdminPytest:
                 "charts-INITIAL_FORMS": "0",
                 "charts-MIN_NUM_FORMS": "0",
                 "charts-MAX_NUM_FORMS": "1000",
+                "government_security_classification": 1,
             },
             follow=True,
         )
@@ -3409,6 +3414,7 @@ class TestDatasetAdminPytest:
                 "charts-INITIAL_FORMS": "0",
                 "charts-MIN_NUM_FORMS": "0",
                 "charts-MAX_NUM_FORMS": "1000",
+                "government_security_classification": 1,
             },
             follow=True,
         )
@@ -3461,6 +3467,7 @@ class TestDatasetAdminPytest:
                 "charts-INITIAL_FORMS": "0",
                 "charts-MIN_NUM_FORMS": "0",
                 "charts-MAX_NUM_FORMS": "1000",
+                "government_security_classification": 1,
             },
             follow=True,
         )
@@ -3516,6 +3523,7 @@ class TestDatasetAdminPytest:
                 "charts-INITIAL_FORMS": "0",
                 "charts-MIN_NUM_FORMS": "0",
                 "charts-MAX_NUM_FORMS": "1000",
+                "government_security_classification": 1,
             },
             follow=True,
         )
@@ -3580,6 +3588,7 @@ class TestDatasetAdminPytest:
                 "charts-INITIAL_FORMS": "0",
                 "charts-MIN_NUM_FORMS": "0",
                 "charts-MAX_NUM_FORMS": "1000",
+                "government_security_classification": 1,
             },
             follow=True,
         )
@@ -3639,6 +3648,7 @@ class TestDatasetAdminPytest:
                 "charts-INITIAL_FORMS": "0",
                 "charts-MIN_NUM_FORMS": "0",
                 "charts-MAX_NUM_FORMS": "1000",
+                "government_security_classification": 1,
             },
             follow=True,
         )
@@ -3732,6 +3742,7 @@ class TestDatasetAdminPytest:
                 "charts-INITIAL_FORMS": "0",
                 "charts-MIN_NUM_FORMS": "0",
                 "charts-MAX_NUM_FORMS": "1000",
+                "government_security_classification": 1,
             },
             follow=True,
         )
@@ -3777,6 +3788,7 @@ class TestDatasetAdminPytest:
                 "charts-INITIAL_FORMS": "0",
                 "charts-MIN_NUM_FORMS": "0",
                 "charts-MAX_NUM_FORMS": "1000",
+                "government_security_classification": 1,
             },
             follow=True,
         )
