@@ -4,6 +4,7 @@ import sys
 import mock
 
 from botocore.exceptions import ClientError
+from bs4 import BeautifulSoup
 
 from django.apps import apps
 from django.contrib.auth import get_user_model
@@ -2607,6 +2608,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 "charts-INITIAL_FORMS": "0",
                 "charts-MIN_NUM_FORMS": "0",
                 "charts-MAX_NUM_FORMS": "1000",
+                "government_security_classification": 1,
             },
         )
         self.assertContains(response, "was changed successfully")
@@ -2650,6 +2652,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 "charts-INITIAL_FORMS": "0",
                 "charts-MIN_NUM_FORMS": "0",
                 "charts-MAX_NUM_FORMS": "1000",
+                "government_security_classification": 1,
             },
         )
         dataset.refresh_from_db()
@@ -2706,8 +2709,11 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 "charts-INITIAL_FORMS": "0",
                 "charts-MIN_NUM_FORMS": "0",
                 "charts-MAX_NUM_FORMS": "1000",
+                "government_security_classification": 1,
             },
         )
+        soup = BeautifulSoup(response.content.decode(response.charset))
+        print(soup)
         self.assertContains(response, "was changed successfully")
         self.assertEqual(dataset.sourcelink_set.count(), link_count - 1)
 
@@ -2845,6 +2851,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 "charts-INITIAL_FORMS": "0",
                 "charts-MIN_NUM_FORMS": "0",
                 "charts-MAX_NUM_FORMS": "1000",
+                "government_security_classification": 1,
             },
         )
         self.assertEqual(response.status_code, 200)
@@ -2899,6 +2906,7 @@ class TestDatasetAdmin(BaseAdminTestCase):
                 "charts-INITIAL_FORMS": "0",
                 "charts-MIN_NUM_FORMS": "0",
                 "charts-MAX_NUM_FORMS": "1000",
+                "government_security_classification": 1,
             },
         )
         self.assertContains(response, "was changed successfully")
