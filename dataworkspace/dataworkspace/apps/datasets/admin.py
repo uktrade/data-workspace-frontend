@@ -252,7 +252,7 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
                     "sensitivity",
                     "personal_data",
                     "restrictions_on_usage",
-                    "type",
+                    #"type",
                     "esda",
                 ]
             },
