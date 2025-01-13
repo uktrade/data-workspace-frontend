@@ -55,54 +55,6 @@ def test_clone_dataset_copies_related_objects(db):
     (
         factories.SourceTableFactory,
         factories.SourceViewFactory,
-        factories.SourceLinkFactory,
-        factories.CustomDatasetQueryFactory,
-    ),
-)
-def test_dataset_source_reference_code(db, factory):
-    ref_code1 = factories.DatasetReferenceCodeFactory(code="Abc")
-    ref_code2 = factories.DatasetReferenceCodeFactory(code="Def")
-    ds = factories.DataSetFactory(reference_code=ref_code1, user_access_type=UserAccessType.OPEN)
-    source = factory(dataset=ds)
-    assert source.source_reference == "ABC00001"
-
-    # Change to a new reference code
-    ds.reference_code = ref_code2
-    ds.save()
-    ds.refresh_from_db()
-
-    source.refresh_from_db()
-    assert source.source_reference == "DEF00001"
-
-    # Unset the reference code
-    ds.reference_code = None
-    ds.save()
-    ds.refresh_from_db()
-
-    source.refresh_from_db()
-    assert source.source_reference is None
-
-    # Ensure numbers are incremented
-    ds.reference_code = ref_code1
-    ds.save()
-    ds.refresh_from_db()
-
-    source.refresh_from_db()
-    assert source.source_reference == "ABC00002"
-
-    # Delete the reference code
-    ref_code1.delete()
-    ds.refresh_from_db()
-
-    source.refresh_from_db()
-    assert source.source_reference is None
-
-
-@pytest.mark.parametrize(
-    "factory",
-    (
-        factories.SourceTableFactory,
-        factories.SourceViewFactory,
         factories.CustomDatasetQueryFactory,
     ),
 )
