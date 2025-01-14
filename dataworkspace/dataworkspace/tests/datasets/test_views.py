@@ -1538,6 +1538,7 @@ class TestDescriptionChangeEventLog(TestCase):
     def setUp(self):
         self.user = factories.UserFactory.create(is_superuser=False)
         self.client = Client(**get_http_sso_data(self.user))
+        self.government_security_classification = 2
         self.description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla ex ex, vulputate vel condimentum a, ornare quis felis. Proin ut bibendum arcu. Donec a ligula eros. Mauris pellentesque nisi eu."  # pylint: disable=line-too-long
         self.new_description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam fringilla non ante et lobortis. Nam mollis sagittis facilisis. Nam suscipit, leo et condimentum sagittis, dolor risus bibendum massa, a luctus mauris."  # pylint: disable=line-too-long
         self.dataset = factories.DataSetFactory.create(
@@ -1598,6 +1599,7 @@ class TestDescriptionChangeEventLog(TestCase):
                 "name": self.dataset.name,
                 "short_description": "test",
                 "description": self.new_description,
+                "government_security_classification": 2,
             },
         )
         assert response.status_code == 302
@@ -1615,7 +1617,12 @@ class TestDescriptionChangeEventLog(TestCase):
         eventlog_count = EventLog.objects.count()
         response = self.client.post(
             reverse("datasets:edit_visualisation_catalogue_item", args=(self.visualisation.id,)),
-            data={"name": "test", "short_description": "test", "description": self.description},
+            data={
+                "name": "test",
+                "short_description": "test",
+                "government_security_classification": 2,
+                "description": self.description,
+            },
         )
         assert response.status_code == 302
         assert (
