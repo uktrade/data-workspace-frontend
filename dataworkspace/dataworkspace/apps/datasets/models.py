@@ -243,9 +243,9 @@ class DataSet(DeletableTimestampedUserModel):
         ],
         default=DataSetType.DATACUT,
     )
-    name = models.CharField(blank=False, null=False, max_length=128)
+    name = models.TextField(null=True, blank=True, max_length=128)
     slug = models.SlugField(max_length=50, db_index=True, null=False, blank=False)
-    short_description = models.CharField(blank=False, null=False, max_length=256)
+    short_description = models.TextField(null=True, blank=True, max_length=255)
     grouping = models.ForeignKey(DataGrouping, null=True, on_delete=models.CASCADE)
     description = RichTextField(null=False, blank=False)
     notes = RichTextField(null=True, blank=True)
@@ -260,7 +260,7 @@ class DataSet(DeletableTimestampedUserModel):
         null=True, blank=True, max_length=1024, help_text="Link to license (optional)"
     )
     retention_policy = models.TextField(null=True, blank=True)
-    personal_data = models.CharField(null=True, blank=True, max_length=128)
+    personal_data = models.TextField(null=True, blank=True, max_length=128)
     restrictions_on_usage = RichLinkField(null=True, blank=True)
     user_access_type = models.CharField(
         max_length=64,
@@ -269,7 +269,7 @@ class DataSet(DeletableTimestampedUserModel):
     )
     published = models.BooleanField(default=False)
     published_at = models.DateField(null=True, blank=True)
-    dictionary_published = models.BooleanField(default=False)
+    dictionary_published = models.BooleanField(default=True)
     eligibility_criteria = ArrayField(models.CharField(max_length=256), null=True)
     number_of_downloads = models.PositiveIntegerField(default=0)
     tags = models.ManyToManyField(Tag, related_name="+", blank=True)
@@ -315,7 +315,7 @@ class DataSet(DeletableTimestampedUserModel):
     government_security_classification = models.IntegerField(
         choices=SecurityClassificationAndHandlingInstructionType.choices,
         null=True,
-        blank=True,
+        blank=False,
     )
     sensitivity = models.ManyToManyField(
         SensitivityType,
@@ -2564,11 +2564,12 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     visualisation_template = models.OneToOneField(
         VisualisationTemplate, on_delete=models.CASCADE, null=True, blank=True
     )
-    name = models.CharField(max_length=255, null=False, blank=False)
+    name = models.TextField(max_length=128, null=False, blank=False)
     slug = models.SlugField(max_length=50, db_index=True, unique=True, null=False, blank=False)
     tags = models.ManyToManyField(Tag, related_name="+", blank=True)
-    short_description = models.CharField(max_length=255)
-    description = RichTextField(null=True, blank=True)
+    short_description = models.TextField(null=True, blank=False, max_length=255)
+    description = RichTextField(null=True, blank=False)
+    notes = RichTextField(null=True, blank=True)
     enquiries_contact = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -2585,7 +2586,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     )
     licence = models.CharField(null=False, blank=True, max_length=256)
     retention_policy = models.TextField(null=True, blank=True)
-    personal_data = models.CharField(null=True, blank=True, max_length=128)
+    personal_data = models.TextField(null=True, blank=True, max_length=128)
     restrictions_on_usage = RichLinkField(null=True, blank=True)
     published = models.BooleanField(default=False)
 
@@ -2644,7 +2645,7 @@ class VisualisationCatalogueItem(DeletableTimestampedUserModel):
     government_security_classification = models.IntegerField(
         choices=SecurityClassificationAndHandlingInstructionType.choices,
         null=True,
-        blank=True,
+        blank=False,
     )
     sensitivity = models.ManyToManyField(
         SensitivityType,

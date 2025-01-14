@@ -129,9 +129,7 @@
               {{ source_table.schema }}.{{ source_table.table }}
               {% if source_table.type == source_table_type %}
                 {% if not has_access %}
-                  {% if model.dictionary_published or request.user|can_edit_dataset:model %}
                     (<a href="{% url "datasets:data_dictionary" source_uuid=source_table.id %}?dataset_uuid={{dataset.id}}" class="govuk-link">Data dictionary</a>)
-                  {% endif %}
                 {% endif %}
               {% endif %}
             </td>

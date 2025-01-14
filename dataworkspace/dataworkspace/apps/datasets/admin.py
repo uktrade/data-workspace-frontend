@@ -15,7 +15,7 @@ from django.contrib.admin.options import BaseModelAdmin
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.forms import formset_factory
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils.html import format_html
@@ -253,7 +253,6 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
                     "personal_data",
                     "restrictions_on_usage",
                     "type",
-                    "dictionary_published",
                     "esda",
                 ]
             },
@@ -281,6 +280,15 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
             )
         }
 
+    def render_change_form(self, request, context, add=False, change=False, form_url="", obj=None):
+        context.update(
+            {
+                "show_save": False,
+                "show_save_and_add_another": False,
+            }
+        )
+        return super().render_change_form(request, context, add, change, form_url, obj)
+
     def get_form(self, request, obj=None, **kwargs):  # pylint: disable=W0221
         form_class = super().get_form(request, obj=None, **kwargs)
         form_class.base_fields["authorized_email_domains"].widget.attrs["style"] = "width: 30em;"
@@ -304,6 +312,27 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
 
     get_average_unique_users_daily.admin_order_field = "average_unique_users_daily"
     get_average_unique_users_daily.short_description = "Average unique daily users"
+
+    change_form_template = "admin/custom_change_form.html"
+
+    def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
+        extra_context = extra_context or {}
+
+        extra_context["custom_button"] = True
+
+        return super().changeform_view(request, object_id, form_url, extra_context)
+
+    def response_add(self, request, obj, post_url_continue=None):
+        if "_save_and_view" in request.POST:
+            return HttpResponseRedirect(reverse("datasets:dataset_detail", args=[obj.id]))
+        else:
+            return super().response_change(request, obj)
+
+    def response_change(self, request, obj):
+        if "_save_and_view" in request.POST:
+            return HttpResponseRedirect(reverse("datasets:dataset_detail", args=[obj.id]))
+        else:
+            return super().response_change(request, obj)
 
     @transaction.atomic
     def save_model(self, request, obj, form, change):
@@ -815,6 +844,7 @@ class VisualisationLinkInline(admin.TabularInline, ManageUnpublishedDatasetsMixi
 @admin.register(VisualisationCatalogueItem)
 class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStampedUserAdmin):
     form = VisualisationCatalogueItemForm
+    prepopulated_fields = {"slug": ("name",)}
     list_display = (
         "name",
         "short_description",
@@ -822,6 +852,7 @@ class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStamp
         "get_tags",
         "get_bookmarks",
         "get_average_unique_users_daily",
+        "slug",
     )
     list_filter = ("tags",)
     search_fields = ["name"]
@@ -845,6 +876,7 @@ class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStamp
                     "tags",
                     "short_description",
                     "description",
+                    "notes",
                     "enquiries_contact",
                     "secondary_enquiries_contact",
                     "information_asset_owner",
@@ -889,6 +921,15 @@ class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStamp
             )
         }
 
+    def render_change_form(self, request, context, add=False, change=False, form_url="", obj=None):
+        context.update(
+            {
+                "show_save": False,
+                "show_save_and_add_another": False,
+            }
+        )
+        return super().render_change_form(request, context, add, change, form_url, obj)
+
     def get_form(self, request, obj=None, **kwargs):  # pylint: disable=W0221
         form_class = super().get_form(request, obj=None, **kwargs)
         form_class.base_fields["authorized_email_domains"].widget.attrs["style"] = "width: 30em;"
@@ -919,6 +960,27 @@ class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStamp
                 application_type="VISUALISATION"
             )
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    change_form_template = "admin/custom_change_form.html"
+
+    def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
+        extra_context = extra_context or {}
+
+        extra_context["custom_button"] = True
+
+        return super().changeform_view(request, object_id, form_url, extra_context)
+
+    def response_add(self, request, obj, post_url_continue=None):
+        if "_save_and_view" in request.POST:
+            return HttpResponseRedirect(reverse("datasets:dataset_detail", args=[obj.id]))
+        else:
+            return super().response_change(request, obj)
+
+    def response_change(self, request, obj):
+        if "_save_and_view" in request.POST:
+            return HttpResponseRedirect(reverse("datasets:dataset_detail", args=[obj.id]))
+        else:
+            return super().response_change(request, obj)
 
     @transaction.atomic
     def save_model(self, request, obj, form, change):

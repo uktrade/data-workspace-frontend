@@ -36,11 +36,9 @@
                 <a href="{% url "datasets:data_dictionary" source_uuid=model.uuid %}?dataset_uuid={{model.uuid}}" class="govuk-link" target="_blank">Data dictionary</a>
               {% else %}
                 {% if object.type == 1 %}
-                    {% if object.dataset.dictionary_published or request.user|can_edit_dataset:object.dataset %}
                     <a href="{% url "datasets:data_dictionary" source_uuid=object.id %}?dataset_uuid={{ object.dataset.id }}" target="_blank" class="govuk-link govuk-!-margin-top-1 govuk-!-font-size-16">
                         Data dictionary
                     </a>
-                    {% endif %}
                 {% endif %}
               {% endif %}
             </div>
