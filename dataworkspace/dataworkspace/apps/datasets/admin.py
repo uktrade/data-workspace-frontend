@@ -844,6 +844,7 @@ class VisualisationLinkInline(admin.TabularInline, ManageUnpublishedDatasetsMixi
 @admin.register(VisualisationCatalogueItem)
 class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStampedUserAdmin):
     form = VisualisationCatalogueItemForm
+    prepopulated_fields = {"slug": ("name",)}
     list_display = (
         "name",
         "short_description",
@@ -851,6 +852,7 @@ class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStamp
         "get_tags",
         "get_bookmarks",
         "get_average_unique_users_daily",
+        "slug",
     )
     list_filter = ("tags",)
     search_fields = ["name"]
@@ -874,6 +876,7 @@ class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStamp
                     "tags",
                     "short_description",
                     "description",
+                    "notes",
                     "enquiries_contact",
                     "secondary_enquiries_contact",
                     "information_asset_owner",

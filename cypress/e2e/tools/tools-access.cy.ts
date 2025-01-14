@@ -193,7 +193,7 @@ describe('Tools access', () => {
     });
 
     it('should error when the declaration has NOT been checked and date is in the future', () => {
-      setCertificateDate('01', '01', '2025');
+      setCertificateDate('01', '01', '3000');
       cy.findByRole('button', { name: 'Submit' }).click();
       cy.findByRole('link', {
         name: 'Check the box to agree with the declaration statement'
@@ -224,7 +224,7 @@ describe('Tools access', () => {
     });
 
     it('should error when certifcate date is in the future', () => {
-      setCertificateDate('01', '01', '2025');
+      setCertificateDate('01', '01', '3000');
       acceptDeclaration();
       cy.findByRole('button', { name: 'Submit' }).click();
       assertErrorMessages([
