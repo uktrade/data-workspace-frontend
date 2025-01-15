@@ -173,15 +173,11 @@ If access has not been granted to the requestor within 5 working days, this will
         tag="dataset-access-request",
     )
 
-    authorize_url = (
-        request.build_absolute_uri(
-            reverse(
-                "datasets:review_access",
-                kwargs={"pk": dataset.id, "user_id": request.user.id},
-            )
+    authorize_url = request.build_absolute_uri(
+        reverse(
+            "datasets:review_access",
+            kwargs={"pk": dataset.id, "user_id": request.user.id},
         )
-        if waffle.flag_is_active(request, settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW)
-        else request.build_absolute_uri(reverse("datasets:edit_permissions", args=[dataset.id]))
     )
 
     contacts = set()
@@ -193,11 +189,7 @@ If access has not been granted to the requestor within 5 working days, this will
 
     for contact in contacts:
         send_email(
-            (
-                settings.NOTIFY_DATASET_ACCESS_REQUEST_TEMPLATE_ID
-                if waffle.flag_is_active(request, settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW)
-                else settings.LEGACY_NOTIFY_DATASET_ACCESS_REQUEST_TEMPLATE_ID
-            ),
+            (settings.NOTIFY_DATASET_ACCESS_REQUEST_TEMPLATE_ID),
             contact,
             personalisation={
                 "dataset_name": dataset.name,

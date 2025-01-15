@@ -174,100 +174,17 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
             return super().get(request, *args, **kwargs)
 
         if not access_request.zendesk_reference_number:
-            if waffle.flag_is_active(request, settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW):
-                if (
-                    isinstance(catalogue_item, VisualisationCatalogueItem)
-                    and catalogue_item.visualisation_template is not None
-                    or isinstance(catalogue_item, DataSet)
-                ):
-                    access_request.zendesk_reference_number = (
-                        zendesk.notify_dataset_access_request(
-                            request,
-                            access_request,
-                            catalogue_item,
-                        )
-                    )
-                access_request.save()
-            else:
-                if (
-                    isinstance(catalogue_item, VisualisationCatalogueItem)
-                    and catalogue_item.visualisation_template is not None
-                ):
-                    access_request.zendesk_reference_number = (
-                        zendesk.notify_visualisation_access_request(
-                            request,
-                            access_request,
-                            catalogue_item,
-                        )
-                    )
-                elif (
-                    isinstance(catalogue_item, DataSet)
-                    and catalogue_item.request_approvers is not None
-                    and len(catalogue_item.request_approvers) > 0
-                ):
-                    access_request.zendesk_reference_number = (
-                        zendesk.notify_dataset_access_request(
-                            request,
-                            access_request,
-                            catalogue_item,
-                        )
-                    )
-                elif (
-                    isinstance(catalogue_item, VisualisationCatalogueItem)
-                    and catalogue_item.request_approvers is not None
-                    and len(catalogue_item.request_approvers) > 0
-                ):
-                    access_request.zendesk_reference_number = (
-                        zendesk.notify_dataset_access_request(
-                            request,
-                            access_request,
-                            catalogue_item,
-                        )
-                    )
-                elif stata_reason:
-                    access_request.reason_for_spss_and_stata = stata_reason
-                    access_request.zendesk_reference_number = zendesk.create_zendesk_ticket(
-                        request,
-                        access_request,
-                        catalogue_item=None,
-                        stata_description=stata_reason,
-                    )
-
-                else:
-                    access_request.zendesk_reference_number = zendesk.create_zendesk_ticket(
-                        request,
-                        access_request,
-                        catalogue_item,
-                    )
-                access_request.save()
-
-                if catalogue_item:
-                    log_event(
-                        request.user,
-                        EventLog.TYPE_DATASET_ACCESS_REQUEST,
-                        catalogue_item,
-                        extra={
-                            "ticket_reference": access_request.zendesk_reference_number,
-                        },
-                    )
-                elif stata_reason:
-                    log_event(
-                        request.user,
-                        EventLog.TYPE_STATA_ACCESS_REQUEST,
-                        extra={
-                            "ticket_reference": access_request.zendesk_reference_number,
-                            "reason_for_spss_and_stata": access_request.reason_for_spss_and_stata,
-                        },
-                    )
-                else:
-                    log_event(
-                        request.user,
-                        EventLog.TYPE_TOOLS_ACCESS_REQUEST,
-                        extra={
-                            "ticket_reference": access_request.zendesk_reference_number,
-                        },
-                    )
-
+            if (
+                isinstance(catalogue_item, VisualisationCatalogueItem)
+                and catalogue_item.visualisation_template is not None
+                or isinstance(catalogue_item, DataSet)
+            ):
+                access_request.zendesk_reference_number = zendesk.notify_dataset_access_request(
+                    request,
+                    access_request,
+                    catalogue_item,
+                )
+            access_request.save()
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):

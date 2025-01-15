@@ -35,11 +35,7 @@
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       {% include 'design_system/error_summary.html' with form=form %}
-      {% flag ALLOW_REQUEST_ACCESS_TO_DATA_FLOW %}
-        <h1 class="govuk-heading-l govuk-!-margin-bottom-3">Give a user access to {{ obj.name }}</h1>
-        {% else %}
-        <h1 class="govuk-heading-l">Edit permissions for {{ obj.name }}</h1>
-      {% endflag %}
+      <h1 class="govuk-heading-l govuk-!-margin-bottom-3">Give a user access to {{ obj.name }}</h1>
       <form method="post" enctype="multipart/form-data" novalidate>
         {% csrf_token %}
         <fieldset class="govuk-fieldset">
@@ -112,7 +108,6 @@
                   {% for result in search_results %}
                   <tr class="govuk-table__row">
                       <td class="govuk-table__cell table-cell--vertical-align-bottom"><strong>{{ result.first_name }} {{ result.last_name }}</strong><div>{{ result.email }}</div></td>
-                      {% flag ALLOW_REQUEST_ACCESS_TO_DATA_FLOW %}
                         <td class="govuk-table__cell table-cell--text-align-right">
                           <form action="{% url 'datasets:add_authorized_user' obj.id summary_id result.id %}" method="post" novalidate>
                             {% csrf_token %}
@@ -123,9 +118,6 @@
                             {% endif %}
                           </form>
                         </td>
-                      {% else %}
-                        <td class="govuk-table__cell"><a class="govuk-link" href="{% url 'datasets:add_authorized_user' obj.id summary_id result.id %}">Select</a></td>
-                      {% endflag %}
                     </tr>
                   {% endfor %}
               </tbody>
