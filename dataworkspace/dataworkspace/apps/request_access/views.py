@@ -175,7 +175,7 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
 
         if not access_request.zendesk_reference_number:
             if waffle.flag_is_active(request, settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW):
-                if (isinstance(catalogue_item, (DataSet, VisualisationCatalogueItem))):
+                if isinstance(catalogue_item, (DataSet, VisualisationCatalogueItem)):
                     access_request.zendesk_reference_number = (
                         zendesk.notify_dataset_access_request(
                             request,
