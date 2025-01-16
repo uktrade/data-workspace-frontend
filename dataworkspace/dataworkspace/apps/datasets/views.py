@@ -1869,93 +1869,88 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
         return super().dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        if waffle.flag_is_active(self.request, settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW):
-            self.template_name = "datasets/manage_permissions/edit_access.html"
-            context = super().get_context_data(**kwargs)
-            context["user_removed"] = self.request.GET.get("user_removed", None)
-            context["obj"] = self.obj
-            context["obj_edit_url"] = (
-                reverse("datasets:edit_dataset", args=[self.obj.pk])
-                if isinstance(self.obj, DataSet)
-                else reverse("datasets:edit_visualisation_catalogue_item", args=[self.obj.pk])
-            )
-            context["summary"] = self.summary
-            # used to populate data property of ConfirmRemoveUser dialog
-            data_catalogue_editors = [user.email for user in self.obj.data_catalogue_editors.all()]
-            iam = get_user_model().objects.get(id=self.obj.information_asset_manager_id).email
-            iao = get_user_model().objects.get(id=self.obj.information_asset_owner_id).email
-            context["authorised_users"] = json.dumps(
-                sorted(  # IAM or IAO should appear at top of list
-                    [
-                        {
-                            "data_catalogue_editor": u.email in data_catalogue_editors,
-                            "email": u.email,
-                            "first_name": u.first_name,
-                            "iam": u.email == iam,
-                            "iao": u.email == iao,
-                            "id": u.id,
-                            "last_name": u.last_name,
-                            "remove_user_url": reverse(
-                                "datasets:remove_authorized_user",
-                                args=[self.obj.id, self.summary.id, u.id],
-                            ),
-                        }
-                        for u in get_user_model().objects.filter(
-                            id__in=json.loads(self.summary.users) if self.summary.users else []
-                        )
-                    ],
-                    key=lambda x: x["first_name"],
-                )
-            )
-
-            requests = AccessRequest.objects.filter(
-                catalogue_item_id=self.obj.pk, data_access_status="waiting"
-            )
-
-            requested_users = []
-            User = get_user_model()
-            for request in requests:
-                try:
-                    user = User.objects.get(email=request.contact_email, is_active=True)
-                    requested_users.append(
-                        {
-                            "id": user.id,
-                            "first_name": user.first_name,
-                            "last_name": user.last_name,
-                            "email": user.email,
-                            "days_ago": (
-                                datetime.today() - request.created_date.replace(tzinfo=None)
-                            ).days
-                            + 1,
-                        }
+        self.template_name = "datasets/manage_permissions/edit_access.html"
+        context = super().get_context_data(**kwargs)
+        context["user_removed"] = self.request.GET.get("user_removed", None)
+        context["obj"] = self.obj
+        context["obj_edit_url"] = (
+            reverse("datasets:edit_dataset", args=[self.obj.pk])
+            if isinstance(self.obj, DataSet)
+            else reverse("datasets:edit_visualisation_catalogue_item", args=[self.obj.pk])
+        )
+        context["summary"] = self.summary
+        # used to populate data property of ConfirmRemoveUser dialog
+        data_catalogue_editors = [user.email for user in self.obj.data_catalogue_editors.all()]
+        iam = get_user_model().objects.get(id=self.obj.information_asset_manager_id).email
+        iao = get_user_model().objects.get(id=self.obj.information_asset_owner_id).email
+        context["authorised_users"] = json.dumps(
+            sorted(  # IAM or IAO should appear at top of list
+                [
+                    {
+                        "data_catalogue_editor": u.email in data_catalogue_editors,
+                        "email": u.email,
+                        "first_name": u.first_name,
+                        "iam": u.email == iam,
+                        "iao": u.email == iao,
+                        "id": u.id,
+                        "last_name": u.last_name,
+                        "remove_user_url": reverse(
+                            "datasets:remove_authorized_user",
+                            args=[self.obj.id, self.summary.id, u.id],
+                        ),
+                    }
+                    for u in get_user_model().objects.filter(
+                        id__in=json.loads(self.summary.users) if self.summary.users else []
                     )
-                except ObjectDoesNotExist:
-                    logger.error("User with email: %s no longer exists.", request.contact_email)
-                    continue
-                except MultipleObjectsReturned:
-                    logger.error("More than one %s returned", request.contact_email)
-                    continue
+                ],
+                key=lambda x: x["first_name"],
+            )
+        )
+        requests = AccessRequest.objects.filter(
+            catalogue_item_id=self.obj.pk, data_access_status="waiting"
+        )
+        requested_users = []
+        User = get_user_model()
+        for request in requests:
+            try:
+                user = User.objects.get(email=request.contact_email, is_active=True)
+                requested_users.append(
+                    {
+                        "id": user.id,
+                        "first_name": user.first_name,
+                        "last_name": user.last_name,
+                        "email": user.email,
+                        "days_ago": (
+                            datetime.today() - request.created_date.replace(tzinfo=None)
+                        ).days
+                        + 1,
+                    }
+                )
+            except ObjectDoesNotExist:
+                logger.error("User with email: %s no longer exists.", request.contact_email)
+                continue
+            except MultipleObjectsReturned:
+                logger.error("More than one %s returned", request.contact_email)
+                continue
+        context["requested_users"] = requested_users
+        context["waffle_flag"] = waffle.flag_is_active(
+            self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"
+        )
+        context = super().get_context_data(**kwargs)
+        context["obj"] = self.obj
+        context["obj_edit_url"] = (
+            reverse("datasets:edit_dataset", args=[self.obj.pk])
+            if isinstance(self.obj, DataSet)
+            else reverse("datasets:edit_visualisation_catalogue_item", args=[self.obj.pk])
+        )
 
-            context["requested_users"] = requested_users
-            context["waffle_flag"] = waffle.flag_is_active(
-                self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"
-            )
-        else:
-            context = super().get_context_data(**kwargs)
-            context["obj"] = self.obj
-            context["obj_edit_url"] = (
-                reverse("datasets:edit_dataset", args=[self.obj.pk])
-                if isinstance(self.obj, DataSet)
-                else reverse("datasets:edit_visualisation_catalogue_item", args=[self.obj.pk])
-            )
-
-            context["summary"] = self.summary
-            context["authorised_users"] = get_user_model().objects.filter(
-                id__in=json.loads(self.summary.users if self.summary.users else "[]")
-            )
-            context["waffle_flag"] = waffle.flag_is_active(
-                self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"
-            )
+        context["summary"] = self.summary
+        context["authorised_users"] = get_user_model().objects.filter(
+            id__in=json.loads(self.summary.users if self.summary.users else "[]")
+        )
+        context["waffle_flag"] = waffle.flag_is_active(
+            self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"
+        )
         return context
 
     def post(self, request, *args, **kwargs):
@@ -2226,23 +2221,20 @@ class DatasetRemoveAuthorisedUserView(EditBaseView, View):
             process_visualisation_catalogue_item_authorized_users_change(
                 auth_users, request.user, self.obj, False, False
             )
-        if waffle.flag_is_active(self.request, settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW):
-            name_dataset = find_dataset(self.obj.pk, request.user).name
-            url_dataset = request.build_absolute_uri(
-                reverse("datasets:dataset_detail", args=[self.obj.pk])
+        name_dataset = find_dataset(self.obj.pk, request.user).name
+        url_dataset = request.build_absolute_uri(
+            reverse("datasets:dataset_detail", args=[self.obj.pk])
+        )
+        # In Dev Ignore the API call to Zendesk and notify
+        if settings.ENVIRONMENT != "Dev":
+            send_email(
+                settings.NOTIFY_DATASET_ACCESS_REMOVE_TEMPLATE_ID,
+                user.email,
+                personalisation={
+                    "dataset_name": name_dataset,
+                    "dataset_url": url_dataset,
+                },
             )
-
-            # In Dev Ignore the API call to Zendesk and notify
-            if settings.ENVIRONMENT != "Dev":
-                send_email(
-                    settings.NOTIFY_DATASET_ACCESS_REMOVE_TEMPLATE_ID,
-                    user.email,
-                    personalisation={
-                        "dataset_name": name_dataset,
-                        "dataset_url": url_dataset,
-                    },
-                )
-
         return HttpResponseRedirect(
             reverse(
                 "datasets:edit_permissions_summary",

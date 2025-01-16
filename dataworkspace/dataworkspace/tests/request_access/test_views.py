@@ -150,11 +150,12 @@ class TestDatasetAccessOnly:
         assert ticket.subject == "Data set access request received - A master"
         assert (
             ticket.description
-            == f"""An access request has been sent to the relevent person or team to assess you request.
+            == f"""
+An access request has been sent to the relevent person or team to assess you request.
 
 There is no need to action this ticket until a further notification is received.
 
-Data Set: A master (http://testserver/datasets/{dataset.name}#{dataset_url})
+Data Set: A master (http://testserver{dataset_url})
 
 Requestor frank.exampleson@test.com
 People finder link: https://people.trade.gov.uk/people-and-teams/search/?query=Frank%20Exampleson&filters=teams&filters=people
@@ -167,8 +168,8 @@ Information Asset Manager: {dataset.information_asset_manager.email}
 Request Approver: {dataset.information_asset_manager.email}
 
 If access has not been granted to the requestor within 5 working days, this will trigger an update to this Zendesk ticket to resolve the request.
-
-""")
+"""
+        )
 
 
 class TestDatasetAndToolsAccess:

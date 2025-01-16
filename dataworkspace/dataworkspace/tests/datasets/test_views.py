@@ -4460,7 +4460,6 @@ def test_find_datasets_filters_show_open_data():
 
 
 class TestDatasetEditView:
-    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
     def test_only_iam_or_iao_can_edit_dataset(self, client, user):
         dataset = factories.DataSetFactory.create(
             published=True,
@@ -4486,7 +4485,6 @@ class TestDatasetEditView:
         )
         assert response.status_code == 200
 
-    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
     def test_edit_permissions_page_shows_existing_authorized_users(self, client, user):
         user_1 = factories.UserFactory.create()
         user_2 = factories.UserFactory.create()
@@ -4512,7 +4510,6 @@ class TestDatasetEditView:
         assert user_1.email.encode() in response.content
         assert user_2.email.encode() not in response.content
 
-    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
     def test_edit_access_page_shows_iam_iao_flag(self, client, user):
         user_1 = factories.UserFactory.create(
             first_name="Vyvyan",
@@ -4548,7 +4545,6 @@ class TestDatasetEditView:
         auth_users = json.loads(response.context_data["authorised_users"])
         assert any(au for au in auth_users if au["iam"] is True and au["id"] == user_1.id)
 
-    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
     def test_edit_access_page_shows_existing_authorized_users(self, client, user):
         user_1 = factories.UserFactory.create(
             first_name="Vyvyan",
@@ -4587,7 +4583,6 @@ class TestDatasetEditView:
         ]
         assert user_1.email.encode() in response.content
 
-    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
     def test_edit_access_page_shows_requesting_users(self, client, user):
         user_1 = factories.UserFactory.create(
             first_name="Vyvyan",
@@ -4659,42 +4654,7 @@ class TestDatasetEditView:
         assert user_2.email.encode() in response.content
         assert user_2.first_name.encode() in response.content
 
-    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=False)
-    def test_add_user_select_adds_user_to_authorized_users_summary(self, client, user):
-        user_1 = factories.UserFactory.create(email="john@example.com")
-
-        dataset = factories.DataSetFactory.create(
-            published=True,
-            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
-            type=DataSetType.MASTER,
-        )
-        dataset.information_asset_owner = user
-        dataset.save()
-        response = client.get(
-            reverse(
-                "datasets:edit_permissions",
-                args=(dataset.pk,),
-            ),
-            follow=True,
-        )
-        assert response.status_code == 200
-
-        soup = BeautifulSoup(response.content.decode(response.charset))
-        search_url = soup.findAll("a", href=True, text="Add another user")[0]["href"]
-        response = client.post(search_url, data={"search": "John"}, follow=True)
-        assert response.status_code == 200
-        assert b"Found 1 matching user" in response.content
-        assert user_1.email.encode() in response.content
-        assert user_1.first_name.encode() in response.content
-
-        soup = BeautifulSoup(response.content.decode(response.charset))
-        select_url = soup.findAll("a", href=True, text="Select")[0]["href"]
-        response = client.get(select_url, follow=True)
-        assert response.status_code == 200
-        assert user_1.email.encode() in response.content
-
     @mock.patch("dataworkspace.apps.datasets.views.send_email")
-    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
     @override_settings(ENVIRONMENT="Production")
     def test_remove_removes_user_from_authorized_users_summary(
         self, mock_send_email, client, user
@@ -4724,53 +4684,6 @@ class TestDatasetEditView:
         assert response.status_code == 200
         mock_send_email.assert_called_once()
         assert len(json.loads(response.context_data["authorised_users"])) == 2  # iam & iao
-
-    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=False)
-    def test_add_user_save_and_continue_creates_dataset_permissions(self, client, user):
-        user_1 = factories.UserFactory.create(email="john@example.com")
-
-        dataset = factories.DataSetFactory.create(
-            published=True,
-            user_access_type=UserAccessType.REQUIRES_AUTHENTICATION,
-            type=DataSetType.MASTER,
-        )
-        dataset.information_asset_owner = user
-        dataset.save()
-        response = client.get(
-            reverse(
-                "datasets:edit_permissions",
-                args=(dataset.pk,),
-            )
-        )
-        assert response.status_code == 302
-
-        summary_page_url = response.get("location")
-
-        response = client.get(summary_page_url)
-        assert response.status_code == 200
-
-        soup = BeautifulSoup(response.content.decode(response.charset))
-        search_url = soup.findAll("a", href=True, text="Add another user")[0]["href"]
-        response = client.post(search_url, data={"search": "John"}, follow=True)
-        assert response.status_code == 200
-        assert b"Found 1 matching user" in response.content
-        assert user_1.email.encode() in response.content
-        assert user_1.first_name.encode() in response.content
-
-        soup = BeautifulSoup(response.content.decode(response.charset))
-        select_url = soup.findAll("a", href=True, text="Select")[0]["href"]
-        response = client.get(select_url, follow=True)
-        assert response.status_code == 200
-        assert user_1.email.encode() in response.content
-
-        assert len(DataSetUserPermission.objects.all()) == 0
-        response = client.post(summary_page_url)
-        assert len(DataSetUserPermission.objects.all()) == 3  # includes iam & iao
-        assert DataSetUserPermission.objects.all()[0].dataset == dataset
-        assert all(
-            e.user in [user_1, dataset.information_asset_owner, dataset.information_asset_manager]
-            for e in DataSetUserPermission.objects.all()
-        )
 
 
 class TestVisualisationCatalogueItemEditView:
@@ -5559,7 +5472,6 @@ class TestDatasetReviewAccessApproval:
             in success_message
         )
 
-    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
     @override_settings(ENVIRONMENT="Production")
     @mock.patch("dataworkspace.apps.datasets.views.send_email")
     def test_master_dataset_access_denied_with_email_sent(self, mock_send_email):
@@ -5597,7 +5509,6 @@ class TestDatasetReviewAccessApproval:
             in success_message
         )
 
-    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
     @override_settings(ENVIRONMENT="Production")
     @mock.patch("dataworkspace.apps.datasets.views.send_email")
     def test_datacut_dataset_access_denied_with_email_sent(self, mock_send_email):
@@ -5673,8 +5584,6 @@ class TestDatasetReviewAccessApproval:
 
 @pytest.mark.django_db
 class TestDatasetAddAuthorisedUserView:
-
-    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
     @mock.patch("dataworkspace.apps.datasets.views.send_email")
     @override_settings(ENVIRONMENT="Production")
     def test_user_gets_added_to_dataset_and_gets_emailed(self, mock_send_email):
@@ -5749,7 +5658,6 @@ class TestDatasetEditPermissionsSummaryView:
             id="1", users=f"[{self.user_requestor.id}]", created_by_id=self.user.id
         )
 
-    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
     def test_access_requests_display_when_pending_users_exist(self):
         self.setUp()
         response = self.client.get(
@@ -5770,7 +5678,6 @@ class TestDatasetEditPermissionsSummaryView:
         assert user_access_request_header == "Users who have requested access"
         assert "bob.testerten@contact-email.com" in user_access_request
 
-    @override_flag(settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW, active=True)
     @mock.patch("logging.Logger.error")
     def test_access_requests_do_not_display_when_non_users_exist(self, mock_logger):
         self.setUp(email="bob.testerten@some-email.com")
