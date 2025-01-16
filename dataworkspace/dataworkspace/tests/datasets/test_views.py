@@ -29,7 +29,6 @@ from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType
 from dataworkspace.apps.datasets.models import (
     DataSet,
-    DataSetUserPermission,
     ReferenceDataset,
     VisualisationCatalogueItem,
     VisualisationUserPermission,

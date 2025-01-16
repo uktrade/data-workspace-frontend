@@ -1,4 +1,3 @@
-import waffle
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
@@ -11,9 +10,7 @@ from django.views.generic import CreateView, DetailView, FormView, UpdateView
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import DataSet, VisualisationCatalogueItem
-from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.datasets.utils import find_dataset
-from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.apps.request_access.forms import (  # pylint: disable=import-error
     DatasetAccessRequestForm,
     SelfCertifyForm,
