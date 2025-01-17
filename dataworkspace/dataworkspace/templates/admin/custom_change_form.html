@@ -4,6 +4,8 @@
 {% block extrahead %}{{ block.super }}
 <script src="{% url 'admin:jsi18n' %}"></script>
 {{ media }}
+    {% load render_bundle from webpack_loader %}
+    {% render_bundle "ckeditor" "js" %}
 {% endblock %}
 
 {% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static "admin/css/forms.css" %}">{% endblock %}
