@@ -8,7 +8,6 @@ import pytest
 from botocore.response import StreamingBody
 from pytz import UTC
 
-from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import CustomDatasetQuery, SourceLink, SourceTable
 from dataworkspace.tests import factories
 
