@@ -118,7 +118,6 @@ class ManageUnpublishedDatasetsMixin(BaseModelAdmin):
 
 
 class SourceReferenceInlineMixin(ManageUnpublishedDatasetsMixin):
-    readonly_fields = ("source_reference",)
     exclude = ("reference_number",)
 
     def source_reference(self, instance):
