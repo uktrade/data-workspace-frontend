@@ -4541,7 +4541,7 @@ class TestDatasetEditView:
         assert "Add user" in soup.find("a", class_="govuk-link").find(
             "button", class_="govuk-button govuk-button--secondary govuk-!-static-margin-bottom-6"
         ).contents[0].get_text(strip=True)
-        auth_users = json.loads(response.context_data["authorised_users"])
+        auth_users = json.loads(response.context_data["authorised_users"].values())
         assert any(au for au in auth_users if au["iam"] is True and au["id"] == user_1.id)
 
     def test_edit_access_page_shows_existing_authorized_users(self, client, user):
@@ -4572,8 +4572,7 @@ class TestDatasetEditView:
 
         soup = BeautifulSoup(response.content.decode(response.charset))
         assert f"Manage access to {dataset.name}" in soup.find("h1").contents
-        auth_users = json.loads(response.context_data["authorised_users"])
-        print(auth_users)
+        auth_users = json.loads(response.context_data["authorised_users"].values())
 
         assert [user_1.first_name, user_1.last_name, user_1.email] in [
             [u["first_name"], u["last_name"], u["email"]]
@@ -4682,7 +4681,7 @@ class TestDatasetEditView:
         response = client.get(remove_url, follow=True)
         assert response.status_code == 200
         mock_send_email.assert_called_once()
-        assert len(json.loads(response.context_data["authorised_users"])) == 2  # iam & iao
+        assert len(response.context_data["authorised_users"]) == 2  # iam & iao
 
 
 class TestVisualisationCatalogueItemEditView:
