@@ -541,34 +541,6 @@ async def give_user_dataset_perms(name):
     return stdout, stderr, code
 
 
-async def dataset_finder_opt_in_dataset(schema, table, opted_in=True):
-    python_code = textwrap.dedent(
-        f"""\
-        from dataworkspace.apps.datasets.models import (
-            SourceTable,
-        )
-        st = SourceTable.objects.get(
-            schema="{schema}",
-            table="{table}",
-        )
-        st.dataset_finder_opted_in = {opted_in}
-        st.save()
-        """
-    ).encode("ascii")
-
-    give_perm = await asyncio.create_subprocess_shell(
-        "django-admin shell",
-        env=os.environ,
-        stdin=asyncio.subprocess.PIPE,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
-    stdout, stderr = await give_perm.communicate(python_code)
-    code = await give_perm.wait()
-
-    return stdout, stderr, code
-
-
 async def give_user_visualisation_perms(name):
     python_code = textwrap.dedent(
         f"""\

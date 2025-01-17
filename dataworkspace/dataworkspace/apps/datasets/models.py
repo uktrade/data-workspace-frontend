@@ -772,15 +772,6 @@ class SourceTable(BaseSource):
         validators=[RegexValidator(regex=r"^[a-zA-Z][a-zA-Z0-9_\.]*$")],
         db_index=True,
     )
-    dataset_finder_opted_in = models.BooleanField(
-        default=False,
-        null=False,
-        verbose_name="IAM/IAO opt-in for Dataset Finder",
-        help_text=(
-            "Should this dataset be discoverable through Dataset Finder for all users, "
-            "even if they haven’t been explicitly granted access?"
-        ),
-    )
     data_grid_enabled = models.BooleanField(
         default=True,
         help_text="Allow users to filter, sort and export data from within the browser",
