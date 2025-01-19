@@ -4771,7 +4771,6 @@ class TestVisualisationCatalogueItemEditView:
         assert user_1.first_name.encode() in response.content
 
         soup = BeautifulSoup(response.content.decode(response.charset))
-        print(soup)
         action = soup.find("form", {"action": True}).get("action")
         response = client.get(action, follow=True)
         assert response.status_code == 200
@@ -5452,7 +5451,6 @@ class TestDatasetReviewAccessApproval:
             ),
             {"action_type": "grant"},
         )
-        print(response.content)
         redirect_response = self.client.get(response.url)
         soup = BeautifulSoup(redirect_response.content.decode(redirect_response.charset))
         notification_banner = soup.find("div", attrs={"data-module", "govuk-notification-banner"})
@@ -5562,7 +5560,6 @@ class TestDatasetReviewAccessApproval:
             ),
             {"action_type": "other", "message": "Because no"},
         )
-        print(response)
         redirect_response = self.client.get(response.url)
         soup = BeautifulSoup(redirect_response.content.decode(redirect_response.charset))
         notification_banner = soup.find("div", attrs={"data-module", "govuk-notification-banner"})
