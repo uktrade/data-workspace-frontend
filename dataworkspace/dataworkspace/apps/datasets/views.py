@@ -1881,8 +1881,6 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
         context["summary"] = self.summary
         # used to populate data property of ConfirmRemoveUser dialog
         data_catalogue_editors = [user.email for user in self.obj.data_catalogue_editors.all()]
-        print(self.obj)
-        print(self.obj.information_asset_manager_id)
         iam = get_user_model().objects.get(id=self.obj.information_asset_manager_id).email
         iao = get_user_model().objects.get(id=self.obj.information_asset_owner_id).email
         context["authorised_users"] = json.dumps(
