@@ -1881,6 +1881,8 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
         context["summary"] = self.summary
         # used to populate data property of ConfirmRemoveUser dialog
         data_catalogue_editors = [user.email for user in self.obj.data_catalogue_editors.all()]
+        print(self.obj)
+        print(self.obj.information_asset_manager_id)
         iam = get_user_model().objects.get(id=self.obj.information_asset_manager_id).email
         iao = get_user_model().objects.get(id=self.obj.information_asset_owner_id).email
         context["authorised_users"] = json.dumps(
@@ -1906,9 +1908,11 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
                 key=lambda x: x["first_name"],
             )
         )
+
         requests = AccessRequest.objects.filter(
             catalogue_item_id=self.obj.pk, data_access_status="waiting"
         )
+
         requested_users = []
         User = get_user_model()
         for request in requests:
@@ -1932,23 +1936,8 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
             except MultipleObjectsReturned:
                 logger.error("More than one %s returned", request.contact_email)
                 continue
-        context["requested_users"] = requested_users
-        context["waffle_flag"] = waffle.flag_is_active(
-            self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"
-        )
-        context = super().get_context_data(**kwargs)
-        context["obj"] = self.obj
-        context["obj_edit_url"] = (
-            reverse("datasets:edit_dataset", args=[self.obj.pk])
-            if isinstance(self.obj, DataSet)
-            else reverse("datasets:edit_visualisation_catalogue_item", args=[self.obj.pk])
-        )
 
-        context["summary"] = self.summary
-        context["authorised_users"] = json.dumps(list(get_user_model().objects.filter(
-            id__in=json.loads(self.summary.users if self.summary.users else "[]")
-        ).values()), default=str)
-        print("authorised users", context["authorised_users"])
+        context["requested_users"] = requested_users
         context["waffle_flag"] = waffle.flag_is_active(
             self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"
         )
@@ -2236,6 +2225,7 @@ class DatasetRemoveAuthorisedUserView(EditBaseView, View):
                     "dataset_url": url_dataset,
                 },
             )
+
         return HttpResponseRedirect(
             reverse(
                 "datasets:edit_permissions_summary",

@@ -1,5 +1,6 @@
 import json
 import random
+import re
 from datetime import timedelta, date, datetime, timezone
 from urllib.parse import quote_plus
 from uuid import uuid4
@@ -4541,7 +4542,7 @@ class TestDatasetEditView:
         assert "Add user" in soup.find("a", class_="govuk-link").find(
             "button", class_="govuk-button govuk-button--secondary govuk-!-static-margin-bottom-6"
         ).contents[0].get_text(strip=True)
-        auth_users = json.loads(response.context_data["authorised_users"].values())
+        auth_users = json.loads(response.context_data["authorised_users"])
         assert any(au for au in auth_users if au["iam"] is True and au["id"] == user_1.id)
 
     def test_edit_access_page_shows_existing_authorized_users(self, client, user):
@@ -4572,7 +4573,7 @@ class TestDatasetEditView:
 
         soup = BeautifulSoup(response.content.decode(response.charset))
         assert f"Manage access to {dataset.name}" in soup.find("h1").contents
-        auth_users = json.loads(response.context_data["authorised_users"].values())
+        auth_users = json.loads(response.context_data["authorised_users"])
 
         assert [user_1.first_name, user_1.last_name, user_1.email] in [
             [u["first_name"], u["last_name"], u["email"]]
@@ -4641,7 +4642,7 @@ class TestDatasetEditView:
         assert response.status_code == 200
 
         soup = BeautifulSoup(response.content.decode(response.charset))
-        search_url = soup.findAll("a", href=True, text="Add users")[0]["href"]
+        search_url = soup.findAll("a", href=True, string=re.compile(".*Add users"))[0]["href"]
         response = client.post(
             search_url, data={"search": "john@example.com\njohn@example2.com"}, follow=True
         )
@@ -4677,11 +4678,12 @@ class TestDatasetEditView:
         )
         assert response.status_code == 200
         assert user_1.email.encode() in response.content
-        remove_url = json.loads(response.context_data["authorised_users"])[0]["remove_user_url"]
+        auth_users = json.loads(response.context_data["authorised_users"])
+        remove_url = auth_users[0]["remove_user_url"]
         response = client.get(remove_url, follow=True)
         assert response.status_code == 200
         mock_send_email.assert_called_once()
-        assert len(response.context_data["authorised_users"]) == 2  # iam & iao
+        assert len(json.loads(response.context_data["authorised_users"])) == 2  # iam & iao
 
 
 class TestVisualisationCatalogueItemEditView:
@@ -4761,7 +4763,7 @@ class TestVisualisationCatalogueItemEditView:
         assert response.status_code == 200
 
         soup = BeautifulSoup(response.content.decode(response.charset))
-        search_url = soup.findAll("a", href=True, text="Add another user")[0]["href"]
+        search_url = soup.findAll("a", href=True, string=re.compile(".*Add user"))[0]["href"]
         response = client.post(search_url, data={"search": "John"}, follow=True)
         assert response.status_code == 200
         assert b"Found 1 matching user" in response.content
@@ -4769,8 +4771,9 @@ class TestVisualisationCatalogueItemEditView:
         assert user_1.first_name.encode() in response.content
 
         soup = BeautifulSoup(response.content.decode(response.charset))
-        select_url = soup.findAll("a", href=True, text="Select")[0]["href"]
-        response = client.get(select_url, follow=True)
+        print(soup)
+        action = soup.find("form", {"action": True}).get("action")
+        response = client.get(action, follow=True)
         assert response.status_code == 200
         assert user_1.email.encode() in response.content
 
@@ -4784,7 +4787,6 @@ class TestVisualisationCatalogueItemEditView:
             VisualisationUserPermission.objects.all()[0].visualisation
             == visualisation_catalogue_item
         )
-        print(VisualisationUserPermission.objects.all())
         assert set(vup.user for vup in VisualisationUserPermission.objects.all()) == set(
             [user, user_1]
         )
@@ -5362,6 +5364,8 @@ class TestDatasetReviewAccessApproval:
             self.dataset = factories.VisualisationCatalogueItemFactory.create(
                 published=True,
                 name="Visualisation",
+                information_asset_manager=self.user,
+                information_asset_owner=self.user,
             )
             AccessRequestFactory(
                 id=self.user_requestor.id,
@@ -5448,6 +5452,7 @@ class TestDatasetReviewAccessApproval:
             ),
             {"action_type": "grant"},
         )
+        print(response.content)
         redirect_response = self.client.get(response.url)
         soup = BeautifulSoup(redirect_response.content.decode(redirect_response.charset))
         notification_banner = soup.find("div", attrs={"data-module", "govuk-notification-banner"})
@@ -5557,6 +5562,7 @@ class TestDatasetReviewAccessApproval:
             ),
             {"action_type": "other", "message": "Because no"},
         )
+        print(response)
         redirect_response = self.client.get(response.url)
         soup = BeautifulSoup(redirect_response.content.decode(redirect_response.charset))
         notification_banner = soup.find("div", attrs={"data-module", "govuk-notification-banner"})
