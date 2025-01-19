@@ -1936,9 +1936,6 @@ class DatasetEditPermissionsSummaryView(EditBaseView, TemplateView):
                 continue
 
         context["requested_users"] = requested_users
-        context["waffle_flag"] = waffle.flag_is_active(
-            self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"
-        )
         return context
 
     def post(self, request, *args, **kwargs):
