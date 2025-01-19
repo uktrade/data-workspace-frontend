@@ -641,7 +641,6 @@ class SourceTableForm(forms.ModelForm):
             "schema",
             "frequency",
             "table",
-            "dataset_finder_opted_in",
             "data_grid_enabled",
             "data_grid_download_enabled",
             "data_grid_download_limit",
