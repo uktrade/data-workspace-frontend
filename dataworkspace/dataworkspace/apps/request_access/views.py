@@ -168,12 +168,14 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
         if settings.ENVIRONMENT == "Dev":
             return super().get(request, *args, **kwargs)
 
-        if not access_request.zendesk_reference_number and isinstance(catalogue_item, (DataSet, VisualisationCatalogueItem)):
+        if not access_request.zendesk_reference_number and isinstance(
+            catalogue_item, (DataSet, VisualisationCatalogueItem)
+        ):
             access_request.zendesk_reference_number = zendesk.notify_dataset_access_request(
-                    request,
-                    access_request,
-                    catalogue_item,
-                )
+                request,
+                access_request,
+                catalogue_item,
+            )
             access_request.save()
         return super().get(request, *args, **kwargs)
 
