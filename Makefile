@@ -44,7 +44,7 @@ docker-build:
 	docker compose --profile test build
 
 .PHONY: docker-test-unit
-docker-test-unit: TESTS ?= /dataworkspace
+docker-test-unit: TESTS ?= /dataworkspace/dataworkspace
 docker-test-unit: docker-build
 	docker compose --profile test -p data-workspace-test run data-workspace-test pytest -vv --junitxml=/test-results/junit.xml $(TESTS)
 
