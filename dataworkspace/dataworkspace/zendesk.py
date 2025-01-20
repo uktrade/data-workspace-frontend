@@ -1,11 +1,10 @@
 import logging
 import urllib.parse
-import waffle
 
 from django.conf import settings
 from django.urls import reverse
 from zenpy import Zenpy
-from zenpy.lib.api_objects import Ticket, User, Comment, CustomField
+from zenpy.lib.api_objects import Comment, CustomField, Ticket, User
 
 from dataworkspace.notify import generate_token, send_email
 
@@ -163,7 +162,7 @@ Information Asset Manager: {dataset.information_asset_manager.email if dataset.i
 Request Approver: {", ".join(request_approvers_emails)}
 
 If access has not been granted to the requestor within 5 working days, this will trigger an update to this Zendesk ticket to resolve the request.
-    """
+"""
 
     ticket_reference = create_support_request(
         request.user,
@@ -173,15 +172,11 @@ If access has not been granted to the requestor within 5 working days, this will
         tag="dataset-access-request",
     )
 
-    authorize_url = (
-        request.build_absolute_uri(
-            reverse(
-                "datasets:review_access",
-                kwargs={"pk": dataset.id, "user_id": request.user.id},
-            )
+    authorize_url = request.build_absolute_uri(
+        reverse(
+            "datasets:review_access",
+            kwargs={"pk": dataset.id, "user_id": request.user.id},
         )
-        if waffle.flag_is_active(request, settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW)
-        else request.build_absolute_uri(reverse("datasets:edit_permissions", args=[dataset.id]))
     )
 
     contacts = set()
@@ -193,11 +188,7 @@ If access has not been granted to the requestor within 5 working days, this will
 
     for contact in contacts:
         send_email(
-            (
-                settings.NOTIFY_DATASET_ACCESS_REQUEST_TEMPLATE_ID
-                if waffle.flag_is_active(request, settings.ALLOW_REQUEST_ACCESS_TO_DATA_FLOW)
-                else settings.LEGACY_NOTIFY_DATASET_ACCESS_REQUEST_TEMPLATE_ID
-            ),
+            (settings.NOTIFY_DATASET_ACCESS_REQUEST_TEMPLATE_ID),
             contact,
             personalisation={
                 "dataset_name": dataset.name,

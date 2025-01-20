@@ -20,8 +20,7 @@ set -e
     django-admin waffle_flag HOME_PAGE_FLAG --everyone --create
     django-admin waffle_flag ACCESSIBLE_AUTOCOMPLETE_FLAG --everyone --create
     django-admin waffle_flag SUGGESTED_SEARCHES_FLAG --everyone --create
-    django-admin waffle_flag ALLOW_REQUEST_ACCESS_TO_DATA_FLOW --everyone --create
-
+    
     # nginx is configured to log to stdout/stderr, _except_ before
     # it manages to read its config file. To avoid errors on startup,
     # we configure its prefix to be a writable location
