@@ -5360,11 +5360,23 @@ class TestDatasetReviewAccessApproval:
                 eligibility_criteria_met=True,
             )
         else:
+            user_iam = factories.UserFactory.create(
+                first_name="Frank",
+                last_name="Example",
+                email="frank.example@contact-email.com",
+                is_superuser=False,
+            )
+            user_iao = factories.UserFactory.create(
+                first_name="Roberta",
+                last_name="Powell",
+                email="roberta.powell@contact-email.com",
+                is_superuser=False,
+            )
             self.dataset = factories.VisualisationCatalogueItemFactory.create(
                 published=True,
                 name="Visualisation",
-                information_asset_manager=self.user,
-                information_asset_owner=self.user,
+                information_asset_manager=user_iam,
+                information_asset_owner=user_iao,
             )
             AccessRequestFactory(
                 id=self.user_requestor.id,
