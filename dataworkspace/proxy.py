@@ -135,21 +135,27 @@ async def async_main():
             f"connect-src *.google-analytics.com *.analytics.google.com *.googletagmanager.com;"
         )
 
-    # A running application should only connect to self: this is where we have the most
-    # concern because we run the least-trusted code
+    # A running application should only connect to 'self': this is where we have the most
+    # concern because we run the least-trusted code. We make something that appears to be an
+    # exception for VS Code, but it opens up to a domain that is guaranteed to not exist. The
+    # reason why this is useful is that VS Code makes request to an 'external' domain for
+    # resources, but these requests that are intercepted by service workers and handled internally.
+    # Note that because the domain cannot exist, in that it cannot resolve to an IP address, means
+    # that we're not really opening up the CSP beyond 'self', and this just allows components of
+    # VS Code to communicate with each other
     def csp_application_running_direct(host, public_host):
         return csp_common + (
             "default-src 'self';"
-            "base-uri 'self';"
+            "base-uri 'self' https://*.vscode-cdn.invalid/;"
             # Safari does not have a 'self' for WebSockets
             f"connect-src 'self' wss://{host};"
-            "font-src 'self' data:;"
+            "font-src 'self' data: https://*.vscode-cdn.invalid/;"
             "form-action 'self';"
             f"frame-ancestors 'self' {root_domain} {public_host}.{root_domain};"
             "img-src 'self' data: blob:;"
             # Both JupyterLab and RStudio need `unsafe-eval`
-            "script-src 'unsafe-inline' 'unsafe-eval' 'self' data:;"
-            "style-src 'unsafe-inline' 'self' data:;"
+            "script-src 'unsafe-inline' 'unsafe-eval' 'self' data: https://*.vscode-cdn.invalid/;"
+            "style-src 'unsafe-inline' 'self' data: https://*.vscode-cdn.invalid/;"
             "worker-src 'self' blob:;"
         )
 
