@@ -10,6 +10,7 @@ from django.test import Client, override_settings
 from django.urls import reverse
 
 from dataworkspace.apps.applications.models import ApplicationInstance
+from dataworkspace.apps.core.storage import ClamAVResponse
 from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType
 from dataworkspace.apps.request_access.models import AccessRequest
 from dataworkspace.apps.request_access.views import StataAccessView
@@ -17,8 +18,6 @@ from dataworkspace.tests.common import get_http_sso_data
 from dataworkspace.tests.datasets.test_views import DatasetsCommon
 from dataworkspace.tests.factories import DataSetFactory
 from dataworkspace.tests.request_access import factories
-
-from dataworkspace.apps.core.storage import ClamAVResponse
 
 
 class TestDatasetAccessOnly:
@@ -96,9 +95,10 @@ class TestDatasetAccessOnly:
     @pytest.mark.django_db
     @mock.patch("dataworkspace.apps.request_access.views.zendesk.Zenpy")
     @mock.patch("dataworkspace.apps.core.storage._upload_to_clamav")
+    @mock.patch("dataworkspace.zendesk.send_email")
     @override_settings(ENVIRONMENT="Production")
     def test_zendesk_ticket_created_after_form_submission(
-        self, mock_upload_to_clamav, mock_zendesk_client, client, user, metadata_db
+        self, send_email, mock_upload_to_clamav, mock_zendesk_client, client, user, metadata_db
     ):
         class MockTicket:
             @property
@@ -106,6 +106,7 @@ class TestDatasetAccessOnly:
                 return type("ticket", (object,), {"id": 1})()
 
         mock_zenpy_client = mock.MagicMock()
+        send_email.return_value = "mock_response_id"
         mock_zenpy_client.tickets.create.return_value = MockTicket()
 
         mock_zendesk_client.return_value = mock_zenpy_client
@@ -144,24 +145,28 @@ class TestDatasetAccessOnly:
         assert len(mock_zenpy_client.tickets.create.call_args_list) == 1
         call_args, _ = mock_zenpy_client.tickets.create.call_args_list[0]
         ticket = call_args[0]
-
-        assert ticket.subject == "Access Request for A master"
+        dataset_url = dataset.get_absolute_url()
+        assert ticket.subject == "Data set access request received - A master"
         assert (
             ticket.description
-            == f"""Access request for
+            == f"""
+An access request has been sent to the relevent person or team to assess you request.
 
-Username:   Frank Exampleson
-Journey:    Dataset access
-Dataset:    A master
-SSO Login:  frank.exampleson@test.com
-People search: https://people.trade.gov.uk/people-and-teams/search/?query=Frank%20Exampleson&filters=teams&filters=people
-Stata Request Description: N/A
+There is no need to action this ticket until a further notification is received.
 
+Data Set: A master (http://testserver{dataset_url})
 
-Details for the request can be found at
+Requestor frank.exampleson@test.com
+People finder link: https://people.trade.gov.uk/people-and-teams/search/?query=Frank%20Exampleson&filters=teams&filters=people
 
-http://testserver/admin/request_access/accessrequest/{access_requests[0].pk}/change/
+Requestor’s response to why access is needed:
+I need it
 
+Information Asset Manager: {dataset.information_asset_manager.email}
+
+Request Approver: {dataset.information_asset_manager.email}
+
+If access has not been granted to the requestor within 5 working days, this will trigger an update to this Zendesk ticket to resolve the request.
 """
         )
 
