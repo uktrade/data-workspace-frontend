@@ -1,8 +1,8 @@
 [
-{
-    "model": "auth.user",
-    "pk": 1,
-    "fields": {
+    {
+      "model": "auth.user",
+      "pk": 1,
+      "fields": {
         "password": "!f0VRSUHPpsF7OqhXrqc5VzdQlA0JnOUSUqnkGt6L",
         "last_login": null,
         "is_superuser": false,
@@ -15,12 +15,12 @@
         "date_joined": "2024-01-04T12:53:52.272Z",
         "groups": [],
         "user_permissions": []
-    }
-},
-{
-    "model": "auth.user",
-    "pk": 2,
-    "fields": {
+      }
+    },
+    {
+      "model": "auth.user",
+      "pk": 2,
+      "fields": {
         "password": "!77U6PxGMZicWtltyo4dThbXaa8tmejXhu7QN6iar",
         "last_login": null,
         "is_superuser": false,
@@ -33,12 +33,12 @@
         "date_joined": "2024-01-04T12:53:52.272Z",
         "groups": [],
         "user_permissions": []
-    }
-},
-{
-    "model": "auth.user",
-    "pk": 3,
-    "fields": {
+      }
+    },
+    {
+      "model": "auth.user",
+      "pk": 3,
+      "fields": {
         "password": "!66U6PxGMZicWtltyo4dThbXaa8tmejXhu7QN6iad",
         "last_login": null,
         "is_superuser": false,
@@ -51,22 +51,22 @@
         "date_joined": "2024-01-04T12:53:52.272Z",
         "groups": [],
         "user_permissions": []
-    }
-},
-{
-    "model": "core.database",
-    "pk": "ac99394d-336c-4de9-8c9f-c5bd38d0b670",
-    "fields": {
+      }
+    },
+    {
+      "model": "core.database",
+      "pk": "ac99394d-336c-4de9-8c9f-c5bd38d0b670",
+      "fields": {
         "created_date": "2024-01-08T09:40:24.143Z",
         "modified_date": "2024-01-08T09:40:24.143Z",
         "memorable_name": "datasets",
         "is_public": false
-    }
-},
-{
-    "model": "accounts.profile",
-    "pk": 1,
-    "fields": {
+      }
+    },
+    {
+      "model": "accounts.profile",
+      "pk": 1,
+      "fields": {
         "user": 1,
         "sso_id": "13b532f8-a496-4c62-9bbd-3b3040a7bd13",
         "tools_access_role_arn": "",
@@ -75,12 +75,12 @@
         "first_login": "2024-01-04T12:53:52.321Z",
         "tools_certification_date": null,
         "is_renewal_email_sent": false
-    }
-},
-{
-    "model": "accounts.profile",
-    "pk": 2,
-    "fields": {
+      }
+    },
+    {
+      "model": "accounts.profile",
+      "pk": 2,
+      "fields": {
         "user": 2,
         "sso_id": "20a0353f-a7d1-4851-9af8-1bcaff152b60",
         "tools_access_role_arn": "",
@@ -89,12 +89,12 @@
         "first_login": "2024-01-04T12:53:52.321Z",
         "tools_certification_date": null,
         "is_renewal_email_sent": false
-    }
-},
-{
-    "model": "accounts.profile",
-    "pk": 3,
-    "fields": {
+      }
+    },
+    {
+      "model": "accounts.profile",
+      "pk": 3,
+      "fields": {
         "user": 3,
         "sso_id": "093972f7-2bd1-4336-8240-8c7b15c863d2",
         "tools_access_role_arn": "",
@@ -103,33 +103,27 @@
         "first_login": null,
         "tools_certification_date": null,
         "is_renewal_email_sent": false
-    }
-},
-{
-    "model": "datasets.sensitivitytype",
-    "pk": 1,
-    "fields": {
-        "name": "PERSONAL"
-    }
-},
-{
-    "model": "datasets.sensitivitytype",
-    "pk": 2,
-    "fields": {
-        "name": "COMMERCIAL"
-    }
-},
-{
-    "model": "datasets.sensitivitytype",
-    "pk": 3,
-    "fields": {
-        "name": "LOCSEN"
-    }
-},
-{
-    "model": "datasets.dataset",
-    "pk": "161d4b68-4b0d-4d96-80dc-d2f9867ff515",
-    "fields": {
+      }
+    },
+    {
+      "model": "datasets.sensitivitytype",
+      "pk": 1,
+      "fields": { "name": "PERSONAL" }
+    },
+    {
+      "model": "datasets.sensitivitytype",
+      "pk": 2,
+      "fields": { "name": "COMMERCIAL" }
+    },
+    {
+      "model": "datasets.sensitivitytype",
+      "pk": 3,
+      "fields": { "name": "LOCSEN" }
+    },
+    {
+      "model": "datasets.dataset",
+      "pk": "161d4b68-4b0d-4d96-80dc-d2f9867ff515",
+      "fields": {
         "created_date": "2024-01-12T14:18:19.489Z",
         "modified_date": "2024-02-22T10:37:33.227Z",
         "deleted": false,
@@ -170,15 +164,13 @@
         "esda": false,
         "tags": [],
         "data_catalogue_editors": [],
-        "sensitivity": [
-            2
-        ]
-    }
-},
-{
-    "model": "datasets.dataset",
-    "pk": "3112a785-6bd9-4e56-bc67-10b6cccb5db7",
-    "fields": {
+        "sensitivity": [2]
+      }
+    },
+    {
+      "model": "datasets.dataset",
+      "pk": "3112a785-6bd9-4e56-bc67-10b6cccb5db7",
+      "fields": {
         "created_date": "2024-01-12T09:24:49.567Z",
         "modified_date": "2024-02-22T10:37:33.198Z",
         "deleted": false,
@@ -220,12 +212,12 @@
         "tags": [],
         "data_catalogue_editors": [],
         "sensitivity": []
-    }
-},
-{
-    "model": "datasets.dataset",
-    "pk": "406291aa-e35e-41a9-ab05-6355c5cc92d6",
-    "fields": {
+      }
+    },
+    {
+      "model": "datasets.dataset",
+      "pk": "406291aa-e35e-41a9-ab05-6355c5cc92d6",
+      "fields": {
         "created_date": "2024-01-12T13:57:10.044Z",
         "modified_date": "2024-02-22T10:37:33.117Z",
         "deleted": false,
@@ -266,17 +258,15 @@
         "esda": false,
         "tags": [],
         "data_catalogue_editors": [],
-        "sensitivity": [
-            2
-        ]
-    }
-},
-{
-    "model": "datasets.dataset",
-    "pk": "7533af71-45ec-49fc-92c8-03d421af7250",
-    "fields": {
+        "sensitivity": [2]
+      }
+    },
+    {
+      "model": "datasets.dataset",
+      "pk": "7533af71-45ec-49fc-92c8-03d421af7250",
+      "fields": {
         "created_date": "2024-11-15T14:43:07.444Z",
-        "modified_date": "2025-01-16T20:38:27.792Z",
+        "modified_date": "2024-11-22T11:39:31.015Z",
         "deleted": false,
         "created_by": 2,
         "updated_by": 2,
@@ -314,16 +304,14 @@
         "government_security_classification": 1,
         "esda": false,
         "tags": [],
-        "data_catalogue_editors": [
-            2
-        ],
+        "data_catalogue_editors": [1],
         "sensitivity": []
-    }
-},
-{
-    "model": "datasets.dataset",
-    "pk": "b603337f-0073-43ac-9dc4-05a8d5cf635d",
-    "fields": {
+      }
+    },
+    {
+      "model": "datasets.dataset",
+      "pk": "b603337f-0073-43ac-9dc4-05a8d5cf635d",
+      "fields": {
         "created_date": "2024-01-12T14:29:16.808Z",
         "modified_date": "2024-02-22T10:37:33.040Z",
         "deleted": false,
@@ -364,15 +352,13 @@
         "esda": false,
         "tags": [],
         "data_catalogue_editors": [],
-        "sensitivity": [
-            2
-        ]
-    }
-},
-{
-    "model": "datasets.dataset",
-    "pk": "c9e3eeac-4dd3-4c3d-8350-18ae2064311b",
-    "fields": {
+        "sensitivity": [2]
+      }
+    },
+    {
+      "model": "datasets.dataset",
+      "pk": "c9e3eeac-4dd3-4c3d-8350-18ae2064311b",
+      "fields": {
         "created_date": "2024-01-12T14:32:50.390Z",
         "modified_date": "2024-02-22T10:37:33.149Z",
         "deleted": false,
@@ -414,12 +400,12 @@
         "tags": [],
         "data_catalogue_editors": [],
         "sensitivity": []
-    }
-},
-{
-    "model": "datasets.dataset",
-    "pk": "d7094267-ddfc-40f3-a4a8-ca4f30a0992f",
-    "fields": {
+      }
+    },
+    {
+      "model": "datasets.dataset",
+      "pk": "d7094267-ddfc-40f3-a4a8-ca4f30a0992f",
+      "fields": {
         "created_date": "2024-01-12T10:16:35.298Z",
         "modified_date": "2024-02-22T10:37:33.257Z",
         "deleted": false,
@@ -460,15 +446,13 @@
         "esda": false,
         "tags": [],
         "data_catalogue_editors": [],
-        "sensitivity": [
-            2
-        ]
-    }
-},
-{
-    "model": "datasets.dataset",
-    "pk": "f66c88c3-b6de-4c18-921f-8cd409861eab",
-    "fields": {
+        "sensitivity": [2]
+      }
+    },
+    {
+      "model": "datasets.dataset",
+      "pk": "f66c88c3-b6de-4c18-921f-8cd409861eab",
+      "fields": {
         "created_date": "2024-02-21T13:29:25.231Z",
         "modified_date": "2024-02-22T10:37:33.161Z",
         "deleted": false,
@@ -509,15 +493,13 @@
         "esda": false,
         "tags": [],
         "data_catalogue_editors": [],
-        "sensitivity": [
-            2
-        ]
-    }
-},
-{
-    "model": "datasets.sourcelink",
-    "pk": "23d0cb66-cf24-4f9f-b3ec-e81481b2bdb1",
-    "fields": {
+        "sensitivity": [2]
+      }
+    },
+    {
+      "model": "datasets.sourcelink",
+      "pk": "23d0cb66-cf24-4f9f-b3ec-e81481b2bdb1",
+      "fields": {
         "created_date": "2024-01-12T14:18:19.525Z",
         "modified_date": "2024-01-12T14:18:19.525Z",
         "dataset": "161d4b68-4b0d-4d96-80dc-d2f9867ff515",
@@ -527,12 +509,12 @@
         "url": "http://some.data.com/download.csv",
         "format": "CSV",
         "frequency": "daily"
-    }
-},
-{
-    "model": "datasets.sourcelink",
-    "pk": "29e06634-63d6-451d-b06a-0582a8ea4344",
-    "fields": {
+      }
+    },
+    {
+      "model": "datasets.sourcelink",
+      "pk": "29e06634-63d6-451d-b06a-0582a8ea4344",
+      "fields": {
         "created_date": "2024-01-12T14:29:16.838Z",
         "modified_date": "2024-01-12T14:29:16.838Z",
         "dataset": "b603337f-0073-43ac-9dc4-05a8d5cf635d",
@@ -542,12 +524,12 @@
         "url": "http://some.data.com/download.csv",
         "format": "CSV",
         "frequency": "daily"
-    }
-},
-{
-    "model": "datasets.sourcelink",
-    "pk": "2c7caa2a-5148-4d46-9fa3-c6c8b3291c36",
-    "fields": {
+      }
+    },
+    {
+      "model": "datasets.sourcelink",
+      "pk": "2c7caa2a-5148-4d46-9fa3-c6c8b3291c36",
+      "fields": {
         "created_date": "2024-02-14T14:29:42.338Z",
         "modified_date": "2024-02-14T14:29:42.338Z",
         "dataset": "b603337f-0073-43ac-9dc4-05a8d5cf635d",
@@ -557,12 +539,12 @@
         "url": "http://some.data.com/download-2.csv",
         "format": "CSV",
         "frequency": "daily"
-    }
-},
-{
-    "model": "datasets.sourcelink",
-    "pk": "f2c63efe-b04d-4108-a11a-4054e76e37c2",
-    "fields": {
+      }
+    },
+    {
+      "model": "datasets.sourcelink",
+      "pk": "f2c63efe-b04d-4108-a11a-4054e76e37c2",
+      "fields": {
         "created_date": "2024-02-15T12:00:10.261Z",
         "modified_date": "2024-02-15T12:00:10.261Z",
         "dataset": "161d4b68-4b0d-4d96-80dc-d2f9867ff515",
@@ -572,12 +554,12 @@
         "url": "http://some.data.com/download-2.csv",
         "format": "CSV",
         "frequency": "daily"
-    }
-},
-{
-    "model": "datasets.sourcetable",
-    "pk": "1bbdc4dd-1532-49ef-87cc-b53c2d197d26",
-    "fields": {
+      }
+    },
+    {
+      "model": "datasets.sourcetable",
+      "pk": "1bbdc4dd-1532-49ef-87cc-b53c2d197d26",
+      "fields": {
         "created_date": "2024-01-12T09:24:49.609Z",
         "modified_date": "2024-01-12T09:24:49.609Z",
         "dataset": "3112a785-6bd9-4e56-bc67-10b6cccb5db7",
@@ -593,12 +575,12 @@
         "data_grid_download_limit": null,
         "disable_data_grid_interaction": false,
         "published": true
-    }
-},
-{
-    "model": "datasets.sourcetable",
-    "pk": "2708f1a1-9a6c-4b2f-b580-1ab0bcb14879",
-    "fields": {
+      }
+    },
+    {
+      "model": "datasets.sourcetable",
+      "pk": "2708f1a1-9a6c-4b2f-b580-1ab0bcb14879",
+      "fields": {
         "created_date": "2024-11-15T14:43:07.587Z",
         "modified_date": "2024-11-15T14:43:07.587Z",
         "dataset": "7533af71-45ec-49fc-92c8-03d421af7250",
@@ -614,12 +596,12 @@
         "data_grid_download_limit": null,
         "disable_data_grid_interaction": false,
         "published": true
-    }
-},
-{
-    "model": "datasets.sourcetable",
-    "pk": "f29eef9f-4cfb-467a-a475-38928d3f0e32",
-    "fields": {
+      }
+    },
+    {
+      "model": "datasets.sourcetable",
+      "pk": "f29eef9f-4cfb-467a-a475-38928d3f0e32",
+      "fields": {
         "created_date": "2024-02-22T08:27:15.788Z",
         "modified_date": "2024-02-22T08:27:15.788Z",
         "dataset": "d7094267-ddfc-40f3-a4a8-ca4f30a0992f",
@@ -635,60 +617,42 @@
         "data_grid_download_limit": null,
         "disable_data_grid_interaction": false,
         "published": true
-    }
-},
-{
-    "model": "datasets.datasetuserpermission",
-    "pk": 1,
-    "fields": {
-        "user": 2,
-        "dataset": "161d4b68-4b0d-4d96-80dc-d2f9867ff515"
-    }
-},
-{
-    "model": "datasets.datasetuserpermission",
-    "pk": 2,
-    "fields": {
-        "user": 2,
-        "dataset": "406291aa-e35e-41a9-ab05-6355c5cc92d6"
-    }
-},
-{
-    "model": "datasets.datasetuserpermission",
-    "pk": 3,
-    "fields": {
-        "user": 2,
-        "dataset": "b603337f-0073-43ac-9dc4-05a8d5cf635d"
-    }
-},
-{
-    "model": "datasets.datasetuserpermission",
-    "pk": 4,
-    "fields": {
-        "user": 2,
-        "dataset": "3112a785-6bd9-4e56-bc67-10b6cccb5db7"
-    }
-},
-{
-    "model": "datasets.datasetuserpermission",
-    "pk": 5,
-    "fields": {
-        "user": 1,
-        "dataset": "f66c88c3-b6de-4c18-921f-8cd409861eab"
-    }
-},
-{
-    "model": "datasets.datasetuserpermission",
-    "pk": 36,
-    "fields": {
-        "user": 1,
-        "dataset": "7533af71-45ec-49fc-92c8-03d421af7250"
-    }
-},
-{
-    "model": "datasets.sourceview",
-    "pk": "5690bb76-ab7c-4be7-a9da-5b7e817e9de9",
-    "fields": {
+      }
+    },
+    {
+      "model": "datasets.datasetuserpermission",
+      "pk": 1,
+      "fields": { "user": 2, "dataset": "161d4b68-4b0d-4d96-80dc-d2f9867ff515" }
+    },
+    {
+      "model": "datasets.datasetuserpermission",
+      "pk": 2,
+      "fields": { "user": 2, "dataset": "406291aa-e35e-41a9-ab05-6355c5cc92d6" }
+    },
+    {
+      "model": "datasets.datasetuserpermission",
+      "pk": 3,
+      "fields": { "user": 2, "dataset": "b603337f-0073-43ac-9dc4-05a8d5cf635d" }
+    },
+    {
+      "model": "datasets.datasetuserpermission",
+      "pk": 4,
+      "fields": { "user": 2, "dataset": "3112a785-6bd9-4e56-bc67-10b6cccb5db7" }
+    },
+    {
+      "model": "datasets.datasetuserpermission",
+      "pk": 5,
+      "fields": { "user": 1, "dataset": "f66c88c3-b6de-4c18-921f-8cd409861eab" }
+    },
+    {
+      "model": "datasets.datasetuserpermission",
+      "pk": 36,
+      "fields": { "user": 1, "dataset": "7533af71-45ec-49fc-92c8-03d421af7250" }
+    },
+    {
+      "model": "datasets.sourceview",
+      "pk": "5690bb76-ab7c-4be7-a9da-5b7e817e9de9",
+      "fields": {
         "created_date": "2024-01-12T13:57:10.074Z",
         "modified_date": "2024-01-12T13:57:10.074Z",
         "dataset": "b603337f-0073-43ac-9dc4-05a8d5cf635d",
@@ -698,21 +662,21 @@
         "schema": "public",
         "frequency": 1,
         "view": "view"
-    }
-},
-{
-    "model": "datasets.datasetbookmark",
-    "pk": 1,
-    "fields": {
+      }
+    },
+    {
+      "model": "datasets.datasetbookmark",
+      "pk": 1,
+      "fields": {
         "user": 2,
         "dataset": "3112a785-6bd9-4e56-bc67-10b6cccb5db7",
         "created_date": "2024-02-01T15:53:46.379Z"
-    }
-},
-{
-    "model": "datasets.customdatasetquery",
-    "pk": 1,
-    "fields": {
+      }
+    },
+    {
+      "model": "datasets.customdatasetquery",
+      "pk": 1,
+      "fields": {
         "created_date": "2024-02-14T15:17:08.667Z",
         "modified_date": "2024-02-14T15:17:08.667Z",
         "dataset": "b603337f-0073-43ac-9dc4-05a8d5cf635d",
@@ -723,12 +687,12 @@
         "frequency": 1,
         "reviewed": true,
         "data_grid_enabled": true
-    }
-},
-{
-    "model": "datasets.customdatasetquery",
-    "pk": 2,
-    "fields": {
+      }
+    },
+    {
+      "model": "datasets.customdatasetquery",
+      "pk": 2,
+      "fields": {
         "created_date": "2024-02-21T13:29:25.241Z",
         "modified_date": "2024-02-21T13:29:25.241Z",
         "dataset": "f66c88c3-b6de-4c18-921f-8cd409861eab",
@@ -739,12 +703,12 @@
         "frequency": 1,
         "reviewed": true,
         "data_grid_enabled": true
-    }
-},
-{
-    "model": "data_collections.collection",
-    "pk": "616c6a6a-0e82-4a02-8e3b-9821eadb16bc",
-    "fields": {
+      }
+    },
+    {
+      "model": "data_collections.collection",
+      "pk": "616c6a6a-0e82-4a02-8e3b-9821eadb16bc",
+      "fields": {
         "created_date": "2024-01-29T10:34:14.531Z",
         "modified_date": "2024-01-29T10:34:14.531Z",
         "deleted": false,
@@ -755,12 +719,12 @@
         "owner": 2,
         "notes": null,
         "user_access_type": "REQUIRES_AUTHORIZATION"
-    }
-},
-{
-    "model": "data_collections.collection",
-    "pk": "83583644-36a5-4841-b62b-9df6dbbd5512",
-    "fields": {
+      }
+    },
+    {
+      "model": "data_collections.collection",
+      "pk": "83583644-36a5-4841-b62b-9df6dbbd5512",
+      "fields": {
         "created_date": "2024-01-29T10:34:35.735Z",
         "modified_date": "2024-01-29T10:34:35.736Z",
         "deleted": false,
@@ -771,12 +735,12 @@
         "owner": 1,
         "notes": null,
         "user_access_type": "REQUIRES_AUTHENTICATION"
-    }
-},
-{
-    "model": "data_collections.collection",
-    "pk": "fbf1d333-128a-4d59-8eae-25e955d713b8",
-    "fields": {
+      }
+    },
+    {
+      "model": "data_collections.collection",
+      "pk": "fbf1d333-128a-4d59-8eae-25e955d713b8",
+      "fields": {
         "created_date": "2024-01-29T10:35:01.133Z",
         "modified_date": "2024-01-29T10:35:01.133Z",
         "deleted": false,
@@ -787,6 +751,6 @@
         "owner": 2,
         "notes": null,
         "user_access_type": "REQUIRES_AUTHORIZATION"
+      }
     }
-}
-]
+  ]
