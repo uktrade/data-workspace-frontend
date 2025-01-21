@@ -35,14 +35,7 @@
         {% csrf_token %}
         <fieldset class="govuk-fieldset">
           <div class="govuk-form-group">
-            {% if waffle_flag %}
-              {{ form.search }}
-            {% else %}
-              <label class="govuk-label  govuk-!-font-weight-bold" for="id_search">
-                Search by email address or name
-              </label>
-              <input class="govuk-input" type="text" name="search" id="id_search" value="{{ search_query }}">
-            {% endif %}
+            {{ form.search }}
           </div>
           <button type="submit" class="govuk-button" data-prevent-double-click="true">Search</button>
         </fieldset>
@@ -58,7 +51,6 @@
       </ul>
       {% endif %}
       {% if search_results %}
-        {% if waffle_flag %}
         <fieldset class="govuk-fieldset" aria-describedby="search-hint">
             <div>
               <h1 class="govuk-heading-l" style="float: left">
@@ -68,7 +60,7 @@
                 Deselect all users
               </button>
             </div>
-          </fieldset>
+        </fieldset>
         <form action="{% url 'datasets:add_authorised_editors' obj.id %}" method="post"
               enctype="multipart/form-data" novalidate>
           {% csrf_token %}
@@ -92,20 +84,6 @@
             <button type="submit" class="govuk-button" data-prevent-double-click="true">Add selected users</button>
           </fieldset>
         </form>
-          {% else %}
-          <table class="govuk-table">
-                    <caption class="govuk-table__caption govuk-table__caption--m">Found {{ search_results.count }} matching user{% if search_results.count > 1 %}s{% else %} for {{ search_query }}{% endif %}</caption>
-                    <tbody class="govuk-table__body">
-                        {% for result in search_results %}
-                        <tr class="govuk-table__row">
-                            <td class="govuk-table__cell">{{ result.first_name }} {{ result.last_name }}</td>
-                            <td class="govuk-table__cell">{{ result.email }}</td>
-                            <td class="govuk-table__cell"><a class="govuk-link" href="{% url 'datasets:add_authorised_editor' obj.id result.id %}">Select</a></td>
-                          </tr>
-                        {% endfor %}
-                    </tbody>
-                  </table>
-          {% endif %}
       {% else %}
           {% if search_query and not non_matches %}
             <h2 class="govuk-heading-m">Found 0 results</h2>

@@ -40,14 +40,7 @@
         {% csrf_token %}
         <fieldset class="govuk-fieldset">
           <div class="govuk-form-group govuk-!-margin-bottom-4">
-            {% if waffle_flag %}
-              {{ form.search }}
-            {% else %}
-              <label class="govuk-label govuk-secondary-text-colour govuk-!-margin-bottom-2" for="id_search">
-                Search by email address or name
-              </label>
-              <input class="govuk-input" type="text" name="search" id="id_search" value="{{ search_query }}">
-            {% endif %}
+            {{ form.search }}
           </div>
           <button type="submit" class="govuk-button govuk-button--secondary" data-prevent-double-click="true">Search</button>
         </fieldset>
@@ -64,7 +57,6 @@
       {% endif %} 
       </div>
       {% if search_results %}
-        {% if waffle_flag %}
         <div class="govuk-grid-column-two-thirds">
           <fieldset class="govuk-fieldset" aria-describedby="search-hint">
               <div>
@@ -100,30 +92,6 @@
             </fieldset>
           </form>
         </div>
-        {% else %}
-         <div class="govuk-grid-column-full">
-          <table class="govuk-table">
-              <caption class="govuk-table__caption govuk-table__caption--m govuk-!-margin-bottom-0">Found {{ search_results|length }} matching user{% if search_results|length > 1 %}s{% else %} for {{ search_query }}{% endif %}</caption>
-              <tbody class="govuk-table__body">
-                  {% for result in search_results %}
-                  <tr class="govuk-table__row">
-                      <td class="govuk-table__cell table-cell--vertical-align-bottom"><strong>{{ result.first_name }} {{ result.last_name }}</strong><div>{{ result.email }}</div></td>
-                      <td class="govuk-table__cell table-cell--text-align-right">
-                        <form action="{% url 'datasets:add_authorized_user' obj.id summary_id result.id %}" method="post" novalidate>
-                          {% csrf_token %}
-                          {% if result.has_access %}
-                            User is already a member
-                          {% else %}
-                            <button type="submit" class="govuk-button govuk-!-margin-bottom-0">Add user</button>
-                          {% endif %}
-                        </form>
-                      </td>
-                    </tr>
-                  {% endfor %}
-              </tbody>
-            </table>
-          </div>
-          {% endif %}
       {% else %}
           {% if search_query and not non_matches %}
           <div class="govuk-grid-column-full">
@@ -155,7 +123,6 @@
         }
         })
     }
-    {% if waffle_flag %}
     document.getElementById('select-user-checkboxes-group').addEventListener("change", function (e) {
         let checker = arr => arr.every(v => v === true);
         let checkboxesChecked = [];
@@ -167,6 +134,5 @@
         }
       }
     )
-    {% endif %}
   </script>
 {% endblock %}

@@ -4615,7 +4615,6 @@ class TestDatasetEditView:
         assert "Review access request" in td_cell_2.get_text()
         assert review_access_link == f"/datasets/{dataset.id}/review-access/{user_1.id}"
 
-    @override_flag(settings.ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK, active=True)
     def test_add_user_search_shows_relevant_results(self, client, user):
         user_1 = factories.UserFactory.create(email="john@example.com")
         user_2 = factories.UserFactory.create(email="john@example2.com")
