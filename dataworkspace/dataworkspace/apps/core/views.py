@@ -16,6 +16,7 @@ from django.http import (
 )
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils.timezone import now, timedelta
 from django.views import View
 from django.views.generic import FormView
 from requests import HTTPError
@@ -463,3 +464,17 @@ class ContactUsView(FormView):
         if cleaned["contact_type"] == form.ContactTypes.GET_HELP:
             return HttpResponseRedirect(reverse("support"))
         return HttpResponseRedirect(reverse("feedback"))
+
+
+class SetNotificationCookie(View):
+    def post(self, request, *args, **kwargs):
+        # id_campaign = request.POST.get("id_campaign")
+        id_campaign = "placholder"
+        # config_notification_banner = NotificationBannerConfig.objects.filter(campaign_id=id_campaign)
+        # date_expiry = config_notification_banner.expiry_date
+        date_expiry = now() + timedelta(days=1)
+        if now() >= date_expiry:
+            response = JsonResponse({"message": f"campaign {id_campaign} expired"})
+        else:
+            action = request.POST.get("action")
+            response.set_cookie(f"{id_campaign}_{action}", "true", expires=date_expiry)
