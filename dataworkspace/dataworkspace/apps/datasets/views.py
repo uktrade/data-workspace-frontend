@@ -174,9 +174,31 @@ def _get_tags_as_dict():
     return tags_dict
 
 
+def show_survey_banner(request):
+    accepted = request.COOKIES.get("survey_accepted")
+    dismissed = request.COOKIES.get("suvery_dismissed")
+    # neither accepted nor dismissed
+    if all(s is None for s in [accepted, dismissed]):
+        return True
+    # dismissed and accepted could both be true so check accepted first
+    elif accepted is not None:
+        return False
+    elif dismissed is not None:
+        # config_notification = NotificationConfig.Objects.filter(campaign_id="survey") or simply NofiticationConfig.Objects.first()
+        date_expiry = datetime.strptime("2025/03/03", "%H/%m/%d")  # config_notifaction.expiry_date
+        cookie_expiration = datetime.strptime(
+            request.COOKIES.get("survey_dismissed_expiration"), "%Y-%m-%dT%%H:%M:%S"
+        )
+        # is is the last week?
+        days_left = (cookie_expiration - datetime.now()).days
+        if days_left <= 7:
+            return True
+    return False
+
+
 @csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC)
 def home_view(request):
-    return render(request, "datasets/index.html")
+    return render(request, "datasets/index.html", {"show_survey": show_survey_banner(request)})
 
 
 @csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC)
