@@ -1,21 +1,19 @@
 import base64
-
 import json
 import os
 import urllib.request
 from distutils.util import strtobool
 
 from celery.schedules import crontab
+from django.conf.locale.en import formats as en_formats
+from django.contrib import auth
 from sentry_sdk.integrations.aiohttp import AioHttpIntegration
 from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.redis import RedisIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
-
-from django.contrib import auth
-from django.conf.locale.en import formats as en_formats
-
 import sentry
+
 from dataworkspace.utils import normalise_environment
 
 sentry.init_sentry(
@@ -756,7 +754,6 @@ DATA_UPLOADER_UI_FLAG = "DATA_UPLOADER_UI"
 ACCESSIBLE_AUTOCOMPLETE_FLAG = "ACCESSIBLE_AUTOCOMPLETE_FLAG"
 SUGGESTED_SEARCHES_FLAG = "SUGGESTED_SEARCHES_FLAG"
 ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK = "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"
-ALLOW_REQUEST_ACCESS_TO_DATA_FLOW = "ALLOW_REQUEST_ACCESS_TO_DATA_FLOW"
 SECURITY_CLASSIFICATION_FLAG = "SECURITY_CLASSIFICATION_FLAG"
 REFERENCE_DATASET_PIPELINE_SYNC = "REFERENCE_DATASET_PIPELINE_SYNC"
 EXPLORER_CSV_INJECTION_PROTECTION_FLAG = "EXPLORER_CSV_INJECTION_PROTECTION_FLAG"
