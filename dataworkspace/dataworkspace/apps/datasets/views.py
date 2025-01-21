@@ -7,7 +7,6 @@ from itertools import chain
 from typing import Set
 
 import psycopg2
-import waffle
 from botocore.exceptions import ClientError
 from csp.decorators import csp_update
 from django.conf import settings
