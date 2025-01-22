@@ -101,6 +101,7 @@ from dataworkspace.apps.datasets.utils import (
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event, log_permission_change
 from dataworkspace.apps.explorer.utils import invalidate_data_explorer_user_cached_credentials
+from dataworkspace.apps.notification_banner.models import NotificationBanner
 from dataworkspace.apps.request_access.models import AccessRequest
 from dataworkspace.notify import send_email
 
@@ -176,7 +177,10 @@ def _get_tags_as_dict():
 
 @csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC)
 def home_view(request):
-    return render(request, "datasets/index.html")
+    banner = NotificationBanner.objects.first()
+    if banner:
+        print('banner', banner.__dict__)
+        return render(request, "datasets/index.html", {'banner': banner})
 
 
 @csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC)

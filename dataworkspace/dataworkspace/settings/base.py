@@ -112,6 +112,7 @@ INSTALLED_APPS = [
     "dataworkspace.apps.eventlog",
     "dataworkspace.apps.request_access",
     "dataworkspace.apps.your_files",
+    "dataworkspace.apps.notification_banner",
     "django_extensions",
     "dataworkspace.apps.explorer",
     "dynamic_models",
