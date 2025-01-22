@@ -7,7 +7,6 @@ from itertools import chain
 from typing import Set
 
 import psycopg2
-import waffle
 from botocore.exceptions import ClientError
 from csp.decorators import csp_update
 from django.conf import settings
@@ -1740,9 +1739,6 @@ class DatasetAuthorisedEditorsSearchView(UserSearchFormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["waffle_flag"] = waffle.flag_is_active(
-            self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"
-        )
         return context
 
     def get_success_url(self):
@@ -2082,9 +2078,6 @@ class DatasetAuthorisedUsersSearchView(UserSearchFormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["summary_id"] = self.kwargs.get("summary_id")
-        context["waffle_flag"] = waffle.flag_is_active(
-            self.request, "ALLOW_USER_ACCESS_TO_DASHBOARD_IN_BULK"
-        )
         return context
 
     def get_success_url(self):
