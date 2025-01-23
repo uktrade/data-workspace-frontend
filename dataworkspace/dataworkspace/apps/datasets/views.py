@@ -177,10 +177,9 @@ def _get_tags_as_dict():
 
 @csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC)
 def home_view(request):
-    banner = NotificationBanner.objects.first()
-    if banner:
-        print('banner', banner.__dict__)
-        return render(request, "datasets/index.html", {'banner': banner})
+    banner = NotificationBanner.objects.filter(banner_live=True)
+    print('banner', banner)
+    return render(request, "datasets/index.html", {'banner': banner})
 
 
 @csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC)
