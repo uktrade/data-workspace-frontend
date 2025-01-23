@@ -15,7 +15,7 @@ def notification_banner_context(request):
     """
     settings = get_notification_banner()
     content = settings.banner_content if settings else ""
-    published = settings.banner_live if settings else ""
+    published = settings.published if settings else ""
     end_date = settings.banner_link_text if settings else ""
 
     return {"content": content,
