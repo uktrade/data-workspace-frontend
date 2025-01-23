@@ -1,20 +1,29 @@
 from datetime import datetime
 from django.db import models
 import bleach
+from jsonschema import ValidationError
+
+from dataworkspace.apps.core.models import RichTextField
 
 
 class NotificationBanner(models.Model):
-    banner_text = models.CharField(max_length=255)
-    banner_link_text = models.CharField(max_length=255, blank=True)
-    banner_link = models.CharField(max_length=255, blank=True)
-    banner_live = models.BooleanField(default=False)
-    banner_end_date = models.DateField(default=datetime.now())
+    content = RichTextField(default='blah')
+    published = models.BooleanField(default=False)
+    end_date = models.DateField(default=datetime.now())
 
     def save(self, *args, **kwargs):
-        self.banner_text = bleach.clean(self.banner_text, tags=["br"], strip=True)
-        self.banner_link_text = bleach.clean(self.banner_link_text, tags=["br"], strip=True)
-        self.banner_link = bleach.clean(self.banner_link, tags=["br"], strip=True)
-        super().save(*args, **kwargs)
+        self.content = bleach.clean(self.content, tags=["br"], strip=True)
+        # Create only one Abc instance
+        if not self.pk and NotificationBanner.objects.exists():
+            # This below line will render error by breaking page, you will see
+            raise ValidationError(
+                "There can be only one NotificationBanner you can not add another"
+            )
+            # OR you can ever return None from here,
+            # this will not save any data only you can update existing once
+            return None
+        return super(NotificationBanner, self).save(*args, **kwargs)
+        # super().save(*args, **kwargs)
 
     def __str__(self):
         return "Banner Settings"
