@@ -48,6 +48,9 @@
 {% block search_bar %}
 <div class="app-site-search__container">
   <div class="govuk-width-container">
+    <p class="govuk-body">
+      <a href="#" class="govuk-link" rel="noreferrer noopener" target="_blank">ypg</a>
+    </p>
   <form id="live-search-form" action="{% url 'datasets:find_datasets' %}" method="get" data-test="search-form">
     {% include 'partials/search_bar.html' with title="Search Data Workspace" gettingStartedLink=True %}
   </form>
