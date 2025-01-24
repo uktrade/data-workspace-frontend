@@ -32,7 +32,7 @@
     }
 
     .notification-banner__content a:focus {
-        color: #000000;
+        color: #ffffff;
         background-color: yellow;
     }
 
@@ -41,13 +41,19 @@
         margin: 0px;
     }
 
-    .govuk-width-container {
-        display: flex;
+    .notification-banner__inner-content {
+        display: grid;
+        grid-template-columns: 30px 1fr 75px;
         align-items: center;
     }
 
     .notification-banner__icon {
         margin-right:10px
+    }
+
+
+    .notification-banner__dismiss {
+        text-align: right;
     }
 
     .notification-banner__dismiss a {
@@ -56,6 +62,8 @@
         font-weight: 400;
         color: #ffffff;
     }
+
+    
 
 
 
@@ -139,6 +147,7 @@
                 </div>
             </div>
             <div class="notification-banner__dismiss" id="notification-banner-dismiss"> <a href="#">Dismiss</a> </div>
+        </div>
         </div>
         </div>
     </div>
