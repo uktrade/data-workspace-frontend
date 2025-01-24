@@ -17,11 +17,11 @@
 
 {% block header %}
   <div class="home-header">
-
     {{ block.super }}
-    {% include 'partials/notification_banner.html' %}
-
+    
   </div>
+  {% include 'partials/notification_banner.html' %}
+
 {% endblock %}
 
 {% block initialGTMDataLayer %}
@@ -44,6 +44,7 @@
 {% endblock %}
 
 {% block page_title %}Search - {{ block.super }}{% endblock %}
+
 {% block search_bar %}
 <div class="app-site-search__container">
   <div class="govuk-width-container">
