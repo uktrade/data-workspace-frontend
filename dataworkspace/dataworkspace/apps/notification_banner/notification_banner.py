@@ -1,4 +1,3 @@
-
 from dataworkspace.apps.notification_banner.models import NotificationBanner
 
 
@@ -18,6 +17,4 @@ def notification_banner_context(request):
     published = settings.published if settings else ""
     end_date = settings.banner_link_text if settings else ""
 
-    return {"content": content,
-            "published": published,
-            "end_date": end_date}
+    return {"content": content, "published": published, "end_date": end_date}

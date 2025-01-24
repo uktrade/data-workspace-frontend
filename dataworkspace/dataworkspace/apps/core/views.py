@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+import json
 import logging
 import os
 
@@ -41,12 +43,14 @@ from dataworkspace.apps.core.utils import (
     get_data_flow_import_pipeline_name,
     get_dataflow_dag_status,
     get_dataflow_task_status,
+    is_last_days_remaining_notification_banner,
     table_data,
     table_exists,
     view_exists,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
+from dataworkspace.apps.notification_banner.models import NotificationBanner
 from dataworkspace.zendesk import create_support_request
 
 logger = logging.getLogger("app")
@@ -463,3 +467,40 @@ class ContactUsView(FormView):
         if cleaned["contact_type"] == form.ContactTypes.GET_HELP:
             return HttpResponseRedirect(reverse("support"))
         return HttpResponseRedirect(reverse("feedback"))
+
+
+class SetNotificationCookie(View):
+    def post(self, request, *args, **kwargs):
+        banner = NotificationBanner.objects.filter(published=True).first()
+        if banner is None:
+            return JsonResponse({"message": "No published notification banners available."})
+        body = json.loads(request.body.decode())
+        action = body.get("action")
+        notification_action_values = ["accepted", "dismissed"]
+        if action not in notification_action_values:
+            return JsonResponse(
+                {
+                    "message": f"'action' parameter values must be one of: {', '.join(notification_action_values)}. Your arg: {action}."
+                }
+            )
+        date_expiry = banner.end_date
+        if datetime.now(timezone.utc).date() >= date_expiry:
+            response = JsonResponse({"message": f"campaign {banner.campaign_name} expired"})
+        else:
+            response = render(request, "datasets/index.html", {"banner": banner})
+            """
+            If doing any action (dismissing) during the last chance window the window
+            shouldn't show again. This should be the case whether it's your first time
+            seeing the banner or your second time dismissing (first time as non last-chance,
+            second as last-chance).
+            """
+            if is_last_days_remaining_notification_banner(banner):
+                action = "accepted"
+            response.set_cookie(
+                f"{banner.campaign_name}_{action}",
+                "true",
+                expires=date_expiry.strftime("%a, %d-%b-%Y %H:%M:%S GMT"),
+                httponly=True,
+                samesite="Lax",
+            )
+        return response

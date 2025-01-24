@@ -1,38 +1,102 @@
 <style>
+  .notification-banner__background {
+    background-color: #003399;
+  }
 
-    .notification-banner__background {
-      background-color: #003399;
-    }
-    
-    .notification-banner-content {
-        font-family: Arial;
-        font-size: 16px;
-        font-weight: 400;
-        text-align: left;
-        color: #ffffff;
-        padding: 10px;
-        margin-bottom: 0px;
-        margin-top: 0px;
-    }
-    .notification-banner__link-text{
-        font-family: Arial;
-        font-size: 16px;
-        font-weight: 400;
-        text-align: left;
-        color: #ffffff;
-        padding: 10px;
-        margin-bottom: 0px;
-        margin-top: 0px;
-
-    }
-
+  .notification-banner-content {
+    font-family: Arial;
+    font-size: 16px;
+    font-weight: 400;
+    text-align: left;
+    color: #ffffff;
+    padding: 10px;
+    margin-bottom: 0px;
+    margin-top: 0px;
+  }
+  .notification-banner__link-text {
+    font-family: Arial;
+    font-size: 16px;
+    font-weight: 400;
+    text-align: left;
+    color: #ffffff;
+    padding: 10px;
+    margin-bottom: 0px;
+    margin-top: 0px;
+  }
 </style>
 
 <div class="notification-banner__background">
-    <div class="govuk-grid-row">
-        <div class="govuk-width-container">
-        <p class="notification-banner-content">{{ banner.content }}
-        </p>
-        </div>
+  <div class="govuk-grid-row">
+    <div class="govuk-width-container">
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 20 20"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <g clip-path="url(#clip0_1688_948)">
+          <path
+            d="M7.7163 17.6131C7.71625 17.6183 7.71591 17.6235 7.71591 17.6287C7.71591 18.9383 8.77757 20 10.0872 20C11.3968 20 12.4585 18.9383 12.4585 17.6287C12.4585 17.6235 12.4582 17.6183 12.4581 17.6131H7.62922H7.7163ZM17.5711 14.6489L15.437 11.5139V7.60257C15.437 4.9648 13.5584 2.76605 11.0662 2.27055V1.06611C11.0662 0.477343 10.5889 0 10.0001 0C9.41127 0 8.93397 0.477343 8.93397 1.06611V2.27059C6.4418 2.76614 4.56325 4.96488 4.56325 7.60262V11.5139L2.42908 14.649C2.31877 14.811 2.25474 15.0001 2.24385 15.1958C2.23297 15.3915 2.27565 15.5865 2.36731 15.7598C2.45896 15.933 2.59613 16.078 2.76404 16.1792C2.93195 16.2803 3.12426 16.3337 3.32028 16.3337H16.6799C16.8759 16.3337 17.0682 16.2803 17.2361 16.1792C17.4041 16.078 17.5412 15.933 17.6329 15.7597C17.7245 15.5865 17.7672 15.3915 17.7563 15.1958C17.7455 15 17.6814 14.811 17.5711 14.6489Z"
+            fill="white"
+          />
+        </g>
+        <defs>
+          <clipPath id="clip0_1688_948">
+            <rect width="20" height="20" fill="white" />
+          </clipPath>
+        </defs>
+      </svg>
+      <p id="notification-banner-content">
+        {% if last_chance %}
+            {{ banner.last_chance_content|safe }}
+        {% else %}
+            {{ banner.content|safe }}
+        {% endif %}
+      </p>
+      <a href="#" id="notification_banner_dismissed">Dismiss</a>
     </div>
+  </div>
 </div>
+{% block footer_additions %}
+<script nonce="{{ request.csp_nonce }}">
+  function addNotificationBannerEvents() {
+    const accepted_selector =
+      "#notification-banner-content a:not([id='notification_banner_dismissed'])"; // get the first link within the pragraph that doesn't equal the dismiss banner
+    const accepted_link = document.querySelector(accepted_selector);
+    if (accepted_link) {
+      accepted_link.addEventListener("click", function () {
+        postNotificationAction("accepted");
+      });
+    }
+    const dismiss_link = document.getElementById(
+      "notification_banner_dismissed"
+    );
+    console.log(dismiss_link);
+    if (dismiss_link) {
+      dismiss_link.addEventListener("click", function () {
+        postNotificationAction("dismissed");
+      });
+    }
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", (event) => {
+      addNotificationBannerEvents();
+    });
+  } else {
+    addNotificationBannerEvents();
+  }
+  function postNotificationAction(action) {
+    const response = fetch("set-notification-cookie/", {
+      method: "POST",
+      body: JSON.stringify({
+        action: action,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": "{{ csrf_token }}",
+      },
+    });
+  }
+</script>
+{% endblock %}

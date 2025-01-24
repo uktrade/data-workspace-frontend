@@ -66,6 +66,7 @@ from dataworkspace.apps.datasets.models import (
     ReferenceDataset,
     AdminVisualisationUserPermission,
 )
+from dataworkspace.apps.notification_banner.models import NotificationBanner
 from dataworkspace.cel import celery_app
 
 logger = logging.getLogger("app")
@@ -1392,3 +1393,14 @@ def is_tools_cert_renewal_due(cert_date):
     date_difference = cert_datetime - datetime.datetime.now()
     days_left = date_difference.days + total_days
     return bool(days_left <= 30)
+
+
+def is_last_days_remaining_notification_banner(banner: NotificationBanner) -> bool:
+    if banner is None:
+        return False
+    date_expiry = banner.end_date
+    date_now = datetime.datetime.now(datetime.timezone.utc).date()
+    days_left = (date_expiry - date_now).days
+    if not banner.last_chance_days:
+        return False
+    return days_left <= banner.last_chance_days
