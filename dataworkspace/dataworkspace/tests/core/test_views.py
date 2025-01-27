@@ -11,7 +11,7 @@ from botocore.response import StreamingBody
 from bs4 import BeautifulSoup
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
-from django.test import Client, override_settings
+from django.test import Client, RequestFactory, override_settings
 from django.urls import reverse
 
 from dataworkspace.apps.applications.models import ApplicationInstance
