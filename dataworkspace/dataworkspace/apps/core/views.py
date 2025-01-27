@@ -519,7 +519,7 @@ class SetNotificationCookie(View):
             )
 
         if is_last_days_remaining_notification_banner(banner) is True:
-            """ If doing any action (dismissing) during the last chance window the window
+            """If doing any action (dismissing) during the last chance window the window
             shouldn't show again. This should be the case whether it's your first time
             seeing the banner or your second time dismissing (first time as non last-chance,
             second as last-chance). Therefore set as 'accepted' as 'dismissed' with the
