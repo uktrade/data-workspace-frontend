@@ -16,7 +16,7 @@ import string
 import time
 from contextlib import contextmanager
 from timeit import default_timer as timer
-from typing import Tuple
+from typing import Tuple, Union
 from urllib.parse import unquote
 
 import boto3
@@ -1396,11 +1396,28 @@ def is_tools_cert_renewal_due(cert_date):
 
 
 def is_last_days_remaining_notification_banner(banner: NotificationBanner) -> bool:
-    if banner is None:
+    if banner is None or not banner.last_chance_days:
         return False
+    date_now = datetime.datetime.now(datetime.timezone.utc).date()
+    days_left = (banner.end_date - date_now).days
+    return days_left <= banner.last_chance_days
+
+
+def get_notification_banner(request) -> Union[NotificationBanner, None]:
+    banner = NotificationBanner.objects.filter(published=True).first()
+    if banner is None:
+        return None
+    # check if campaign expired first
     date_expiry = banner.end_date
     date_now = datetime.datetime.now(datetime.timezone.utc).date()
-    days_left = (date_expiry - date_now).days
-    if not banner.last_chance_days:
-        return False
-    return days_left <= banner.last_chance_days
+    if date_now >= date_expiry:
+        return None
+    campaign_name = banner.campaign_name
+    state = request.COOKIES.get(campaign_name)
+    # dismissed and accepted could both be true so check accepted first
+    if state == "accepted":
+        return None
+    elif state == "dismissed":
+        if is_last_days_remaining_notification_banner(banner):
+            return banner
+    return banner

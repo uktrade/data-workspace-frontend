@@ -485,22 +485,23 @@ class SetNotificationCookie(View):
             )
         date_expiry = banner.end_date
         if datetime.now(timezone.utc).date() >= date_expiry:
-            response = JsonResponse({"message": f"campaign {banner.campaign_name} expired"})
-        else:
-            response = render(request, "datasets/index.html", {"banner": banner})
+            return JsonResponse({"message": f"campaign {banner.campaign_name} expired"})
+
+        if is_last_days_remaining_notification_banner(banner) is True:
             """
             If doing any action (dismissing) during the last chance window the window
             shouldn't show again. This should be the case whether it's your first time
             seeing the banner or your second time dismissing (first time as non last-chance,
-            second as last-chance).
+            second as last-chance). Therefore set as 'accepted' as 'dismissed' with the
+            last-chance logic means it would keep on showing.
             """
-            if is_last_days_remaining_notification_banner(banner):
-                action = "accepted"
-            response.set_cookie(
-                f"{banner.campaign_name}_{action}",
-                "true",
-                expires=date_expiry.strftime("%a, %d-%b-%Y %H:%M:%S GMT"),
-                httponly=True,
-                samesite="Lax",
-            )
+            action = "accepted"
+        response = JsonResponse({"message": f"banner {action}"})
+        response.set_cookie(
+            banner.campaign_name,
+            action,
+            expires=date_expiry.strftime("%a, %d-%b-%Y %H:%M:%S GMT"),
+            httponly=True,
+            samesite="Lax",
+        )
         return response
