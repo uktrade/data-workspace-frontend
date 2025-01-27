@@ -8,5 +8,5 @@ class NotificationBannerSettingsAdmin(admin.ModelAdmin):
     list_display = ("content", "published", "end_date")
 
     # disables the option to add a new Notification Banner
-    def has_add_permission(self, request, obj=None):
+    def has_add_permission(self, request):
         return False
