@@ -22,6 +22,8 @@
       {% include 'partials/notification_banner.html' %}
     {% endif %}
   </div>
+  {% include 'partials/notification_banner.html' %}
+
 {% endblock %}
 
 {% block initialGTMDataLayer %}
@@ -44,9 +46,11 @@
 {% endblock %}
 
 {% block page_title %}Search - {{ block.super }}{% endblock %}
+
 {% block search_bar %}
 <div class="app-site-search__container">
   <div class="govuk-width-container">
+
   <form id="live-search-form" action="{% url 'datasets:find_datasets' %}" method="get" data-test="search-form">
     {% include 'partials/search_bar.html' with title="Search Data Workspace" gettingStartedLink=True %}
   </form>
