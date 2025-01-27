@@ -7,9 +7,9 @@ from dataworkspace.apps.core.models import RichTextField
 
 
 class NotificationBanner(models.Model):
-    content = RichTextField(default='blah')
+    content = RichTextField(default=False, null=True)
     published = models.BooleanField(default=False)
-    end_date = models.DateField(default=datetime.now())
+    end_date = models.DateField(default=False, null=True)
 
     def save(self, *args, **kwargs):
         self.content = bleach.clean(self.content, tags=["br"], strip=True)
