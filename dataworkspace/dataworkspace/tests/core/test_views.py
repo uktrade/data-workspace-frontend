@@ -1055,4 +1055,4 @@ class TestHomeViewNotifcationBanner:
         )
         assert response.status_code == 200
         assert self.banner.campaign_name in response.cookies
-        assert "accepted" == self.client.cookies.get(self.banner.campaign_name).value
+        assert self.client.cookies.get(self.banner.campaign_name).value == "accepted"
