@@ -1,4 +1,4 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 
 from dataworkspace.apps.core.admin import CSPRichTextEditorMixin
 from dataworkspace.apps.notification_banner.models import NotificationBanner
