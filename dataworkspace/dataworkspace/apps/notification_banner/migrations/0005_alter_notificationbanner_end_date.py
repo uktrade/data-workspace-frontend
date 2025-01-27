@@ -17,8 +17,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="notificationbanner",
             name="end_date",
-            field=models.DateField(
-                default=datetime.datetime(2025, 1, 23, 9, 50, 9, 998132)
-            ),
+            field=models.DateField(default=datetime.datetime(2025, 1, 23, 9, 50, 9, 998132)),
         ),
     ]
