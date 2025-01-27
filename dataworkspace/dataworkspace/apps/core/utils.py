@@ -1420,4 +1420,5 @@ def get_notification_banner(request) -> Union[NotificationBanner, None]:
     elif state == "dismissed":
         if is_last_days_remaining_notification_banner(banner):
             return banner
+        return None
     return banner
