@@ -2,9 +2,9 @@ import json
 import logging
 import uuid
 from collections import defaultdict, namedtuple
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from itertools import chain
-from typing import Set, Union
+from typing import Set
 
 import psycopg2
 from botocore.exceptions import ClientError
@@ -49,6 +49,7 @@ from dataworkspace.apps.core.utils import (
     StreamingHttpResponseWithoutDjangoDbConnection,
     database_dsn,
     is_last_days_remaining_notification_banner,
+    get_notification_banner,
     streaming_query_response,
     table_data,
     view_exists,
@@ -101,7 +102,6 @@ from dataworkspace.apps.datasets.utils import (
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event, log_permission_change
 from dataworkspace.apps.explorer.utils import invalidate_data_explorer_user_cached_credentials
-from dataworkspace.apps.notification_banner.models import NotificationBanner
 from dataworkspace.apps.request_access.models import AccessRequest
 from dataworkspace.notify import send_email
 
@@ -2307,27 +2307,3 @@ class SaveUserDataGridView(View):
         except UserDataTableView.DoesNotExist:
             pass
         return HttpResponse(status=200)
-
-
-def get_notification_banner(request) -> Union[NotificationBanner, None]:
-    banner = NotificationBanner.objects.filter(published=True).first()
-    if banner is None:
-        return None
-    # check if campaign expired first
-    date_expiry = banner.end_date
-    date_now = datetime.now(timezone.utc).date()
-    if date_now >= date_expiry:
-        return None
-    campaign_name = banner.campaign_name
-    accepted = request.COOKIES.get(f"{campaign_name}_accepted")
-    dismissed = request.COOKIES.get(f"{campaign_name}_dismissed")
-    # neither accepted nor dismissed
-    if not any((accepted, dismissed)):
-        return banner
-    # dismissed and accepted could both be true so check accepted first
-    elif accepted:
-        return None
-    last_days = is_last_days_remaining_notification_banner(banner)
-    if dismissed is not None and last_days:
-        return banner
-    return None

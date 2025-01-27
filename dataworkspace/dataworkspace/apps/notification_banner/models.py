@@ -13,9 +13,10 @@ class NotificationBanner(models.Model):
     last_chance_content = RichTextField(
         blank=True,
         help_text="(Optional) Message to run within 'last_chance_days' window. Will be shown to users that have dismissed or not engaged with the banner.",
+        null=True,
     )
     last_chance_days = models.IntegerField(
-        blank=True, help_text="(Optional) Days remaining to run 'last chance message'."
+        blank=True, help_text="(Optional) Days remaining to run 'last chance message'.", null=True
     )
     end_date = models.DateField()
     published = models.BooleanField(default=False)
@@ -37,8 +38,6 @@ class NotificationBanner(models.Model):
             raise ValidationError(
                 "There can be only one NotificationBanner you can not add another"
             )
-            # OR you can ever return None from here,
-            # this will not save any data only you can update existing once
             return None
         return super(NotificationBanner, self).save(*args, **kwargs)
 
