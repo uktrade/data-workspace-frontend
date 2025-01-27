@@ -168,6 +168,7 @@
   function addNotificationBannerEvents() {
     const accepted_link = document.querySelector("#notification-banner-content a");
     if (accepted_link) {
+      accepted_link.setAttribute("target", "_blank")
       accepted_link.addEventListener("click", function () {
         postNotificationAction("accepted");
       });
