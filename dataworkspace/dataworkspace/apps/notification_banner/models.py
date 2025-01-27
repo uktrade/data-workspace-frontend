@@ -39,7 +39,7 @@ class NotificationBanner(models.Model):
             raise ValidationError(
                 "There can be only one NotificationBanner you can not add another"
             )
-        return super(NotificationBanner, self).save(*args, **kwargs)
+        return super().save(*args, **kwargs)
 
     def __str__(self):
         return "Notification Banner"
