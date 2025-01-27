@@ -14,9 +14,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="notificationbanner",
             name="content",
-            field=dataworkspace.apps.core.models.RichTextField(
-                default=False, null=True
-            ),
+            field=dataworkspace.apps.core.models.RichTextField(default=False, null=True),
         ),
         migrations.AlterField(
             model_name="notificationbanner",
