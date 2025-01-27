@@ -49,6 +49,8 @@ from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.core.utils import (
     StreamingHttpResponseWithoutDjangoDbConnection,
     database_dsn,
+    is_last_days_remaining_notification_banner,
+    get_notification_banner,
     streaming_query_response,
     table_data,
     view_exists,
@@ -101,7 +103,6 @@ from dataworkspace.apps.datasets.utils import (
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event, log_permission_change
 from dataworkspace.apps.explorer.utils import invalidate_data_explorer_user_cached_credentials
-from dataworkspace.apps.notification_banner.models import NotificationBanner
 from dataworkspace.apps.request_access.models import AccessRequest
 from dataworkspace.notify import send_email
 
@@ -177,8 +178,12 @@ def _get_tags_as_dict():
 
 @csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC)
 def home_view(request):
-    banner = NotificationBanner.objects.first()
-    return render(request, "datasets/index.html", {"banner": banner})
+    banner = get_notification_banner(request)
+    return render(
+        request,
+        "datasets/index.html",
+        {"banner": banner, "last_chance": is_last_days_remaining_notification_banner(banner)},
+    )
 
 
 @csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC)

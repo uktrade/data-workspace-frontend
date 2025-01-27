@@ -1,4 +1,7 @@
 <style>
+  .notification-banner__background {
+    background-color: #003399;
+  }
 
     .notification-banner {
         background-color: #003399;
@@ -52,14 +55,12 @@
     .notification-banner__dismiss {
         text-align: right;
     }
-
     .notification-banner__dismiss a {
         font-family: Arial;
         font-size: 16px;
         font-weight: 400;
         color: #ffffff;
     }
-
     .notification-banner__dismiss a:hover {
         color: #ffffff;
         text-underline-offset: 2px;
@@ -92,10 +93,56 @@
                 </defs>
               </svg>
             <div class="notification-banner__content" id="notification-banner-content">
-                <div> {{ banner.content }}</div>
+                <div> 
+                {% if last_chance %}
+                    {{ banner.last_chance_content|safe }}
+                {% else %}
+                    {{ banner.content|safe }}
+                {% endif %}
+                </div>
             </div>
-            <div class="notification-banner__dismiss" id="dismiss"> <a href="#">Dismiss</a> </div>
+            <div class="notification-banner__dismiss" id="notification-banner-dismiss"> <a href="#">Dismiss</a> </div>
         </div>
         </div>
     </div>
+  </div>
 </div>
+{% block footer_additions %}
+<script nonce="{{ request.csp_nonce }}">
+  function addNotificationBannerEvents() {
+    const accepted_link = document.querySelector("#notification-banner-content a");
+    if (accepted_link) {
+      accepted_link.addEventListener("click", function () {
+        postNotificationAction("accepted");
+      });
+    }
+    const dismiss_link = document.querySelector(
+      "#notification-banner-dismiss a"
+    );
+    if (dismiss_link) {
+      dismiss_link.addEventListener("click", function () {
+        postNotificationAction("dismissed");
+      });
+    }
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", (event) => {
+      addNotificationBannerEvents();
+    });
+  } else {
+    addNotificationBannerEvents();
+  }
+  function postNotificationAction(action) {
+    const response = fetch("set-notification-cookie/", {
+      method: "POST",
+      body: JSON.stringify({
+        action: action,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": "{{ csrf_token }}",
+      },
+    });
+  }
+</script>
+{% endblock %}
