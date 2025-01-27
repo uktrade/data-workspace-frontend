@@ -55,14 +55,12 @@
     .notification-banner__dismiss {
         text-align: right;
     }
-
     .notification-banner__dismiss a {
         font-family: Arial;
         font-size: 16px;
         font-weight: 400;
         color: #ffffff;
     }
-
     .notification-banner__dismiss a:hover {
         color: #ffffff;
         text-underline-offset: 2px;
@@ -157,7 +155,10 @@
                 </div>
             </div>
             <div class="notification-banner__dismiss" id="notification-banner-dismiss"> <a href="#">Dismiss</a> </div>
+<<<<<<< HEAD
         </div>
+=======
+>>>>>>> ed8d6f19 (rebasing)
         </div>
         </div>
     </div>
@@ -168,7 +169,10 @@
   function addNotificationBannerEvents() {
     const accepted_link = document.querySelector("#notification-banner-content a");
     if (accepted_link) {
+<<<<<<< HEAD
       accepted_link.setAttribute("target", "_blank")
+=======
+>>>>>>> ed8d6f19 (rebasing)
       accepted_link.addEventListener("click", function () {
         postNotificationAction("accepted");
       });

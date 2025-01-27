@@ -1,6 +1,9 @@
 import re
+<<<<<<< HEAD
 
 from django.db import models
+=======
+>>>>>>> ed8d6f19 (rebasing)
 import bleach
 from django.db import models
 from jsonschema import ValidationError
@@ -27,6 +30,7 @@ class NotificationBanner(models.Model):
         self.content = bleach.clean(self.content, tags=["br", "a"], strip=True)
         self.campaign_name = re.sub(r"[^\w_)+]", "", self.campaign_name)
         if self.last_chance_content and not self.last_chance_days:
+<<<<<<< HEAD
             raise ValidationError(
                 "Can't have 'last chance' content without setting the time window in which the message will display."
             )
@@ -37,9 +41,16 @@ class NotificationBanner(models.Model):
         # Create only one Abc instance
         if not self.pk and NotificationBanner.objects.filter(published=True).exists():
             # This below line will render error by breaking page, you will see
+=======
+>>>>>>> ed8d6f19 (rebasing)
             raise ValidationError(
-                "There can be only one NotificationBanner you can not add another"
+                "Can't have 'last chance' content without setting the time window in which the message will display."
             )
+        elif self.last_chance_days and not self.last_chance_content:
+            raise ValidationError(
+                "Can't have 'last chance' days remaining without setting the 'last chance' content that will display"
+            )
+
         return super().save(*args, **kwargs)
 
     def __str__(self):
