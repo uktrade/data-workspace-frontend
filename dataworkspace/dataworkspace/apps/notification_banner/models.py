@@ -12,7 +12,8 @@ class NotificationBanner(models.Model):
     content = RichTextField()
     last_chance_content = RichTextField(
         blank=True,
-        help_text="(Optional) Message to run within 'last_chance_days' window. Will be shown to users that have dismissed or not engaged with the banner.",
+        help_text="(Optional) Message to run within 'last_chance_days' window. \
+              Will be shown to users that have dismissed or not engaged with the banner.",
         null=True,
     )
     last_chance_days = models.IntegerField(

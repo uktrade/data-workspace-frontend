@@ -483,7 +483,8 @@ class SetNotificationCookie(View):
         if action not in notification_action_values:
             return JsonResponse(
                 {
-                    "message": f"'action' parameter values must be one of: {', '.join(notification_action_values)}. Your arg: {action}."
+                    "message": f"'action' parameter values must be one of: \
+                    {', '.join(notification_action_values)}. Your arg: {action}."
                 },
                 status=400,
             )
@@ -494,8 +495,7 @@ class SetNotificationCookie(View):
             )
 
         if is_last_days_remaining_notification_banner(banner) is True:
-            """
-            If doing any action (dismissing) during the last chance window the window
+            """ If doing any action (dismissing) during the last chance window the window
             shouldn't show again. This should be the case whether it's your first time
             seeing the banner or your second time dismissing (first time as non last-chance,
             second as last-chance). Therefore set as 'accepted' as 'dismissed' with the
