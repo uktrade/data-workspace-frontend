@@ -1,12 +1,9 @@
-from base64 import urlsafe_b64encode
 import calendar
 import csv
 import datetime
-import json
-from functools import wraps
 import hashlib
-from io import StringIO
 import itertools
+import json
 import logging
 import os
 import random
@@ -14,24 +11,30 @@ import re
 import secrets
 import string
 import time
+from base64 import urlsafe_b64encode
 from contextlib import contextmanager
+from functools import wraps
+from io import StringIO
 from timeit import default_timer as timer
 from typing import Tuple, Union
 from urllib.parse import unquote
 
 import boto3
+import gevent
+import gevent.queue
+import psycopg2
+import requests
+import sqlalchemy as sa
 import waffle
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
-from django.db import connections, connection
+from django.db import connection, connections
 from django.db.models import Q
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.http import StreamingHttpResponse
-import gevent
-import gevent.queue
 from mohawk import Sender
 from pg_sync_roles import (
     DatabaseConnect,
@@ -43,28 +46,25 @@ from pg_sync_roles import (
     TableSelect,
     sync_roles,
 )
-import psycopg2
 from psycopg2 import connect, sql
 from psycopg2.sql import SQL
-import requests
-import sqlalchemy as sa
 from tableschema import Schema
-import redis
 
-from dataworkspace.apps.core.boto3_client import get_s3_client, get_iam_client
+import redis
+from dataworkspace.apps.core.boto3_client import get_iam_client, get_s3_client
 from dataworkspace.apps.core.constants import (
     DATA_FLOW_TASK_ERROR_MAP,
-    PostgresDataTypes,
     SCHEMA_POSTGRES_DATA_TYPE_MAP,
     TABLESCHEMA_FIELD_TYPE_MAP,
+    PostgresDataTypes,
 )
 from dataworkspace.apps.core.models import DatabaseUser, Team, TeamMembership
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import (
-    DataSet,
-    SourceTable,
-    ReferenceDataset,
     AdminVisualisationUserPermission,
+    DataSet,
+    ReferenceDataset,
+    SourceTable,
 )
 from dataworkspace.apps.notification_banner.models import NotificationBanner
 from dataworkspace.cel import celery_app
@@ -1420,4 +1420,5 @@ def get_notification_banner(request) -> Union[NotificationBanner, None]:
     elif state == "dismissed":
         if is_last_days_remaining_notification_banner(banner):
             return banner
+        return None
     return banner

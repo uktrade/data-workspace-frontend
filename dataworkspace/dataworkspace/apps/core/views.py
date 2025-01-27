@@ -1,12 +1,13 @@
-from datetime import datetime, timezone
 import json
 import logging
 import os
+from datetime import datetime, timezone
 
 from botocore.exceptions import ClientError
 from django.conf import settings
 from django.contrib import messages
 from django.http import (
+    HttpRequest,
     HttpResponse,
     HttpResponseBadRequest,
     HttpResponseForbidden,
@@ -470,10 +471,12 @@ class ContactUsView(FormView):
 
 
 class SetNotificationCookie(View):
-    def post(self, request, *args, **kwargs):
+    def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
         banner = NotificationBanner.objects.filter(published=True).first()
         if banner is None:
-            return JsonResponse({"message": "No published notification banners available."})
+            return JsonResponse(
+                {"message": "No published notification banners available."}, status=404
+            )
         body = json.loads(request.body.decode())
         action = body.get("action")
         notification_action_values = ["accepted", "dismissed"]
@@ -481,11 +484,14 @@ class SetNotificationCookie(View):
             return JsonResponse(
                 {
                     "message": f"'action' parameter values must be one of: {', '.join(notification_action_values)}. Your arg: {action}."
-                }
+                },
+                status=400,
             )
         date_expiry = banner.end_date
         if datetime.now(timezone.utc).date() >= date_expiry:
-            return JsonResponse({"message": f"campaign {banner.campaign_name} expired"})
+            return JsonResponse(
+                {"message": f"campaign {banner.campaign_name} expired"}, status=400
+            )
 
         if is_last_days_remaining_notification_banner(banner) is True:
             """
@@ -496,7 +502,7 @@ class SetNotificationCookie(View):
             last-chance logic means it would keep on showing.
             """
             action = "accepted"
-        response = JsonResponse({"message": f"banner {action}"})
+        response = JsonResponse({"message": f"banner {banner.campaign_name} {action}"}, status=200)
         response.set_cookie(
             banner.campaign_name,
             action,

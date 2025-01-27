@@ -1,27 +1,29 @@
 import io
-from urllib.parse import urlencode
 import uuid
+from datetime import date, timedelta
+from urllib.parse import urlencode
 
 import botocore
 import mock
-
 import pytest
 import requests_mock
 from botocore.response import StreamingBody
 from bs4 import BeautifulSoup
-
 from django.contrib.auth.models import Permission
-from django.test import override_settings, Client
-from django.urls import reverse
 from django.contrib.contenttypes.models import ContentType
-from dataworkspace.apps.applications.models import ApplicationInstance
+from django.contrib.sessions.middleware import SessionMiddleware
+from django.test import Client, RequestFactory, override_settings
+from django.urls import reverse
 
+from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.core.models import NewsletterSubscription, UserSatisfactionSurvey
-from dataworkspace.tests.common import (
-    BaseTestCase,
-    get_http_sso_data,
-    get_connect_src_from_csp,
+from dataworkspace.apps.core.utils import (
+    get_notification_banner,
+    is_last_days_remaining_notification_banner,
 )
+from dataworkspace.apps.notification_banner.models import NotificationBanner
+from dataworkspace.tests import factories
+from dataworkspace.tests.common import BaseTestCase, get_connect_src_from_csp, get_http_sso_data
 from dataworkspace.tests.factories import UserFactory
 
 
@@ -406,7 +408,7 @@ def test_appstream_link_only_shown_to_user_with_permission(
 
     response = client.get(reverse("applications:tools"))
 
-    soup = BeautifulSoup(response.content.decode(response.charset))
+    soup = BeautifulSoup(response.content.decode(response.charset), features="lxml")
     quicksight_link = soup.find("a", href=True, text=expected_text)
     assert quicksight_link.get("href") == expected_href
 
@@ -864,3 +866,194 @@ class TestFeedbackViews(BaseTestCase):
 
         form = response.context["form"]
         assert form["trying_to_do"].initial == "analyse-data"
+
+
+@pytest.mark.django_db
+class TestHomeViewNotifcationBanner:
+    def setUp(self, last_chance=False):
+        if last_chance is True:
+            self.banner = NotificationBanner.objects.create(
+                campaign_name="test",
+                content="content",
+                end_date=date.today() + timedelta(days=3),
+                last_chance_days=3,
+                last_chance_content="last chance now",
+                published=True,
+            )
+        else:
+            self.banner = NotificationBanner.objects.create(
+                campaign_name="test",
+                content="content",
+                end_date=date.today() + timedelta(days=1),
+                published=True,
+            )
+        self.user = factories.UserFactory.create(is_superuser=True)
+        self.client = Client(**get_http_sso_data(self.user))
+        self.request = RequestFactory()
+
+    def test_get_banner_no_banner(self):
+        self.user = factories.UserFactory.create(is_superuser=True)
+        self.client = Client(**get_http_sso_data(self.user))
+        response = self.client.get(reverse("root"))
+        soup = BeautifulSoup(response.content.decode(response.charset), features="lxml")
+        notification_banner_div = soup.find_all("div", class_="notification-banner")
+        assert len(notification_banner_div) == 0
+
+        self.request = RequestFactory()
+        request = self.request.get(reverse("root"))
+        banner = get_notification_banner(request)
+        assert banner is None
+
+    def test_get_banner_not_dismissed_or_accepted(self):
+        self.setUp()
+        response = self.client.get(reverse("root"))
+        soup = BeautifulSoup(response.content.decode(response.charset), features="lxml")
+        notification_banner_div = soup.find_all("div", class_="notification-banner")
+        assert len(notification_banner_div) == 1
+
+        request = self.request.get(reverse("root"))
+        banner = get_notification_banner(request)
+        assert banner == self.banner
+
+    def test_get_banner_accepted(self):
+        self.setUp()
+        self.client.cookies[self.banner.campaign_name] = "accepted"
+        response = self.client.get(reverse("root"))
+        soup = BeautifulSoup(response.content.decode(response.charset), features="lxml")
+        notification_banner_div = soup.find_all("div", class_="notification-banner")
+        assert len(notification_banner_div) == 0
+
+        request = self.request.get(reverse("root"))
+        request.COOKIES[self.banner.campaign_name] = "accepted"
+        banner = get_notification_banner(request)
+        assert banner is None
+
+    def test_get_banner_dismissed(self):
+        self.setUp()
+        self.client.cookies[self.banner.campaign_name] = "dismissed"
+        response = self.client.get(reverse("root"))
+        soup = BeautifulSoup(response.content.decode(response.charset), features="lxml")
+        notification_banner_div = soup.find_all("div", class_="notification-banner")
+        assert len(notification_banner_div) == 0
+
+        request = self.request.get(reverse("root"))
+        request.COOKIES[self.banner.campaign_name] = "dismissed"
+        banner = get_notification_banner(request)
+        assert banner is None
+
+    def test_get_banner_reappears_when_already_dismissed_in_last_days(self):
+        self.setUp(last_chance=True)
+        self.client.cookies[self.banner.campaign_name] = "dismissed"
+        response = self.client.get(reverse("root"))
+        soup = BeautifulSoup(response.content.decode(response.charset), features="lxml")
+        notification_banner_div = soup.find_all("div", class_="notification-banner")
+        assert len(notification_banner_div) == 1
+
+        request = self.request.get(reverse("root"))
+        request.COOKIES[self.banner.campaign_name] = "dismissed"
+        banner = get_notification_banner(request)
+        assert banner == self.banner
+
+    def test_get_banner_doesnt_appear_when_already_accepted_in_last_days(self):
+        self.setUp(last_chance=True)
+        self.client.cookies[self.banner.campaign_name] = "accepted"
+        response = self.client.get(reverse("root"))
+        soup = BeautifulSoup(response.content.decode(response.charset), features="lxml")
+        notification_banner_div = soup.find_all("div", class_="notification-banner")
+        assert len(notification_banner_div) == 0
+
+        request = self.request.get(reverse("root"))
+        request.COOKIES[self.banner.campaign_name] = "accepted"
+        banner = get_notification_banner(request)
+        assert banner is None
+
+    def test_get_banner_unpublished(self):
+        self.setUp()
+        self.banner.published = False
+        self.banner.save()
+        response = self.client.get(reverse("root"))
+        soup = BeautifulSoup(response.content.decode(response.charset), features="lxml")
+        notification_banner_div = soup.find_all("div", class_="notification-banner")
+        assert len(notification_banner_div) == 0
+
+        request = self.request.get(reverse("root"))
+        banner = get_notification_banner(request)
+        assert banner is None
+
+    def test_get_banner_expired(self):
+        self.setUp()
+        self.banner.end_date = date.today() - timedelta(days=1)
+        self.banner.save()
+        response = self.client.get(reverse("root"))
+        soup = BeautifulSoup(response.content.decode(response.charset), features="lxml")
+        notification_banner_div = soup.find_all("div", class_="notification-banner")
+        assert len(notification_banner_div) == 0
+
+        request = self.request.get(reverse("root"))
+        banner = get_notification_banner(request)
+        assert banner is None
+
+    def test_is_not_last_days_no_last_chance(self):
+        self.setUp()
+        assert not is_last_days_remaining_notification_banner(self.banner)
+
+    def test_is_last_days_when_last_day(self):
+        self.setUp(last_chance=True)
+        assert is_last_days_remaining_notification_banner(self.banner)
+
+    def test_set_cookie_success(self):
+        self.setUp()
+        response = self.client.post(
+            reverse("set_notification_cookie"),
+            {"action": "accepted"},
+            content_type="application/json",
+        )
+        assert response.status_code == 200
+        assert f"banner {self.banner.campaign_name} accepted" == response.json().get("message")
+
+    def test_set_cookie_invalid(self):
+        self.setUp()
+        response = self.client.post(
+            reverse("set_notification_cookie"),
+            {"action": "invalid"},
+            content_type="application/json",
+        )
+        assert response.status_code == 400
+        assert self.banner.campaign_name not in response.cookies
+        assert "'action' parameter values must be one of:" in response.json().get("message")
+
+    def test_set_cookie_campaign_expired(self):
+        self.setUp()
+        self.banner.end_date = date.today() - timedelta(days=3)
+        self.banner.save()
+        response = self.client.post(
+            reverse("set_notification_cookie"),
+            {"action": "accepted"},
+            content_type="application/json",
+        )
+        assert response.status_code == 400
+        assert self.banner.campaign_name not in response.cookies.keys()
+        assert "expired" in response.json().get("message")
+
+    def test_set_cookie_no_banner(self):
+        self.user = factories.UserFactory.create(is_superuser=True)
+        self.client = Client(**get_http_sso_data(self.user))
+        response = self.client.post(
+            reverse("set_notification_cookie"),
+            {"action": "accepted"},
+            content_type="application/json",
+        )
+        assert response.status_code == 404
+        assert len(response.cookies.items()) == 0
+        assert "No published notification banners available" in response.json().get("message")
+
+    def test_set_cookie_when_dismissed_in_last_days(self):
+        self.setUp(last_chance=True)
+        response = self.client.post(
+            reverse("set_notification_cookie"),
+            {"action": "dismissed"},
+            content_type="application/json",
+        )
+        assert response.status_code == 200
+        assert self.banner.campaign_name in response.cookies
+        assert "accepted" == self.client.cookies.get(self.banner.campaign_name).value
