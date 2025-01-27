@@ -18,9 +18,10 @@
 {% block header %}
   <div class="home-header">
     {{ block.super }}
+    {% if banner %}
+      {% include 'partials/notification_banner.html' %}
+    {% endif %}
   </div>
-  {% include 'partials/notification_banner.html' %}
-
 {% endblock %}
 
 {% block initialGTMDataLayer %}

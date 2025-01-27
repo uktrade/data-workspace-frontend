@@ -20,6 +20,7 @@ from dataworkspace.apps.core.views import (
     NewsletterSubscriptionView,
     RestoreTableDAGTaskStatusView,
     ServeS3UploadedFileView,
+    SetNotificationCookie,
     SupportAnalysisDatasetView,
     SupportView,
     TechnicalSupportView,
@@ -199,6 +200,9 @@ urlpatterns = [
         "restore-table/status/<str:execution_date>/<str:task_id>",
         login_required(RestoreTableDAGTaskStatusView.as_view()),
         name="restore-table-task-status",
+    ),
+    path(
+        "set-notification-cookie/", SetNotificationCookie.as_view(), name="set_notification_cookie"
     ),
 ]
 
