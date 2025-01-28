@@ -33,12 +33,7 @@ class NotificationBanner(models.Model):
             raise ValidationError(
                 "Can't have 'last chance' days remaining without setting the 'last chance' content that will display"
             )
-        # Create only one Abc instance
-        if not self.pk and NotificationBanner.objects.filter(published=True).exists():
-            # This below line will render error by breaking page, you will see
-            raise ValidationError(
-                "There can be only one NotificationBanner you can not add another"
-            )
+
         return super().save(*args, **kwargs)
 
     def __str__(self):
