@@ -531,6 +531,6 @@ class SetNotificationCookie(View):
             expires=date_expiry.strftime("%a, %d-%b-%Y %H:%M:%S GMT"),
             httponly=True,
             samesite="Lax",
-            secure=True',
+            secure=True,
         )
         return response
