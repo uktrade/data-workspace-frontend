@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 
@@ -126,8 +127,10 @@ def public_error_500_html_view(request):
 
 def public_error_500_application_view(request):
     app_id = request.GET.get("application_id", "")
+    spawner_instance_id = None
     if app_id != "":
         application = ApplicationInstance.objects.get(pk=app_id)
+        spawner_instance_id = json.loads(application.spawner_application_instance_id or "{}")
         if application.application_template.include_in_dw_stats:
             log_event(
                 request.user,
@@ -139,9 +142,31 @@ def public_error_500_application_view(request):
                     "failure_message": request.GET.get("failure_message", None),
                 },
             )
-    return render(
-        request, "errors/error_500.html", {"message": request.GET.get("message", None)}, status=500
-    )
+    if (
+        spawner_instance_id
+        and spawner_instance_id.get("pipeline_id")
+        and not spawner_instance_id.get("task_arn")
+    ):
+        build_log_url = (
+            settings.GITLAB_URL_FOR_TOOLS
+            + f"deployment/docker-ecr/-/pipelines/{spawner_instance_id.get('pipeline_id')}"
+        )
+        return render(
+            request,
+            "errors/error_500_visualisation_docker_build.html",
+            {
+                "message": request.GET.get("message", None),
+                "build_log_url": build_log_url,
+            },
+            status=500,
+        )
+    else:
+        return render(
+            request,
+            "errors/error_500.html",
+            {"message": request.GET.get("message", None)},
+            status=500,
+        )
 
 
 def healthcheck_view(request):
