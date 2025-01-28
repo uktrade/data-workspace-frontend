@@ -1,4 +1,5 @@
 import re
+
 import bleach
 from django.db import models
 from jsonschema import ValidationError
