@@ -14,6 +14,10 @@ class NotificationBannerSettingsAdmin(CSPRichTextEditorMixin, admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
         if obj.published:
-            self.message_user(request, "Notification Banner has been published", level=messages.SUCCESS)
+            self.message_user(
+                request, "Notification Banner has been published", level=messages.SUCCESS
+            )
         else:
-            self.message_user(request, "Notification Banner has been unpublished", level=messages.SUCCESS)
+            self.message_user(
+                request, "Notification Banner has been unpublished", level=messages.SUCCESS
+            )
