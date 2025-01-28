@@ -1,3 +1,6 @@
+// @ts-ignore
+import React from 'react';
+
 import type { Meta, StoryObj } from '@storybook/react';
 
 import type { RecentItemProps } from '.';

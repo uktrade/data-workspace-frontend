@@ -1,3 +1,6 @@
+// @ts-ignore
+import React from 'react';
+
 import { SPACING } from '@govuk-react/constants';
 import { typography } from '@govuk-react/lib';
 import type { Meta, StoryObj } from '@storybook/react';

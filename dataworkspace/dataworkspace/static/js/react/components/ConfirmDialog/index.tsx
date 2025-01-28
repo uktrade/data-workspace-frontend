@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import { SPACING_POINTS } from '@govuk-react/constants';
 import { Button, H2, Link } from 'govuk-react';
@@ -31,7 +31,7 @@ const StyledForm = styled('form')`
   align-items: baseline;
 `;
 
-export const ConfirmDialog = (props: ConfirmDialogProps) => {
+export const ConfirmDialog: React.FC<ConfirmDialogProps> = (props) => {
   const refModal = useRef<HTMLDialogElement>(null);
   const closeModal = function () {
     refModal.current?.close();

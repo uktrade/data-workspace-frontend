@@ -1,4 +1,5 @@
 /* eslint-disable */
+const path = require('path');
 const webpack = require('webpack');
 const { merge } = require('webpack-merge');
 const common = require('./webpack.common.js');
@@ -17,7 +18,8 @@ module.exports = merge(common, {
       }
     }),
     new BundleTracker({
-      filename: './stats/react_apps-stats.json',
+      path: path.resolve('./stats/'),
+      filename: 'react_apps-stats.json',
       relativePath: true
     })
   ],
