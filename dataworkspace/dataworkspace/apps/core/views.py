@@ -140,7 +140,12 @@ def public_error_500_application_view(request):
                 },
             )
     return render(
-        request, "errors/error_500.html", {"message": request.GET.get("message", None)}, status=500
+        request,
+        "errors/error_500.html",
+        {
+            "message": request.GET.get("message", None),
+        },
+        status=500
     )
 
 
