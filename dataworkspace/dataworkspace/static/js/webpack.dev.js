@@ -1,4 +1,5 @@
 /* eslint-disable */
+const path = require('path');
 const webpack = require('webpack');
 const { merge } = require('webpack-merge');
 const common = require('./webpack.common.js');
@@ -15,7 +16,10 @@ module.exports = merge(common, {
         NODE_ENV: JSON.stringify('development')
       }
     }),
-    new BundleTracker({ filename: './stats/react_apps-stats-hot.json' }),
+    new BundleTracker({ 
+      path: path.resolve('./stats/'),
+      filename: 'react_apps-stats-hot.json' 
+    }),
     new webpack.HotModuleReplacementPlugin()
   ],
   devServer: {

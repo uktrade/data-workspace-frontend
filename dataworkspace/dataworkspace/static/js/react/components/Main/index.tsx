@@ -1,7 +1,6 @@
 import React, { ReactNode } from 'react';
 
 import { SPACING } from '@govuk-react/constants';
-import PropTypes from 'prop-types';
 import styled from 'styled-components';
 
 import { InnerContainer } from '../../components';
@@ -26,16 +25,5 @@ const Main: React.FC<MainProps> = ({ children, ...props }) => (
     <InnerContainer>{children}</InnerContainer>
   </OuterContainer>
 );
-
-Main.propTypes = {
-  /**
-   * Text for main
-   */
-  children: PropTypes.node
-};
-
-Main.defaultProps = {
-  children: undefined
-};
 
 export default Main;
