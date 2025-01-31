@@ -43,12 +43,15 @@ def test_basic_response(client, user):
         table="my_table",
         dataset=ds,
     )
+    factories.AccessRequestFactory(requester=user, catalogue_item_id=ds.id)
     response = client.get(reverse(ENDPOINT))
     assert response.status_code == status.HTTP_200_OK
     results = response.json()["results"]
     user_results = [r for r in results if r["email"] == user.email]
     assert len(user_results) == 1
-    assert len(user_results[0]["owned_datasets"]) == 3
+    owned_datasets = user_results[0]["owned_datasets"]
+    assert len(owned_datasets) == 3
+    assert [d for d in owned_datasets if d["name"] == ds.name][0]["access_request_count"] == 1
     assert len(user_results[0]["owned_source_tables"]) == 1
 
 
