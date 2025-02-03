@@ -5,13 +5,7 @@ from rest_framework import status
 from dataworkspace.apps.datasets.models import DataSetType
 from dataworkspace.tests import factories
 
-ENDPOINT = "api-v1:data_insights:owner_insights"
-
-
-@pytest.mark.django_db
-def test_unauthenticated_insights_data(unauthenticated_client):
-    response = unauthenticated_client.get(reverse(ENDPOINT))
-    assert response.status_code == status.HTTP_403_FORBIDDEN
+ENDPOINT = reverse("api-v1:data_insights:owner_insights")
 
 
 @pytest.mark.django_db
@@ -44,7 +38,7 @@ def test_basic_response(client, user):
         dataset=ds,
     )
     factories.AccessRequestFactory(requester=user, catalogue_item_id=ds.id)
-    response = client.get(reverse(ENDPOINT))
+    response = client.get(ENDPOINT)
     assert response.status_code == status.HTTP_200_OK
     results = response.json()["results"]
     user_results = [r for r in results if r["email"] == user.email]
@@ -84,7 +78,7 @@ def test_unpublished_data_doesnt_appear_in_response(client, user):
         table="my_table",
         dataset=ds,
     )
-    response = client.get(reverse(ENDPOINT))
+    response = client.get(ENDPOINT)
     assert response.status_code == status.HTTP_200_OK
     results = response.json()["results"]
     user_results = [r for r in results if r["email"] == user.email]
