@@ -320,8 +320,10 @@ class BaseDatasetAdmin(PermissionedDatasetAdmin):
     def response_add(self, request, obj, post_url_continue=None):
         if "_save_and_view" in request.POST:
             return HttpResponseRedirect(reverse("datasets:dataset_detail", args=[obj.id]))
+        elif "_continue" in request.POST:
+            return super().response_add(request, obj, post_url_continue)
         else:
-            return super().response_change(request, obj)
+            return super().response_add(request, obj)
 
     def response_change(self, request, obj):
         if "_save_and_view" in request.POST:
@@ -405,6 +407,38 @@ class DataCutDatasetAdmin(CSPRichTextEditorMixin, BaseDatasetAdmin):
         CustomDatasetQueryInline,
     ]
     manage_unpublished_permission_codename = "datasets.manage_unpublished_datacut_datasets"
+
+    def render_change_form(self, request, context, add=False, change=False, form_url="", obj=None):
+        context.update(
+            {
+                "show_save": False,
+                "show_save_and_add_another": False,
+            }
+        )
+        return super().render_change_form(request, context, add, change, form_url, obj)
+
+    change_form_template = "admin/custom_change_form.html"
+
+    def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
+        extra_context = extra_context or {}
+
+        extra_context["custom_button"] = True
+
+        return super().changeform_view(request, object_id, form_url, extra_context)
+
+    def response_add(self, request, obj, post_url_continue=None):
+        if "_save_and_view" in request.POST:
+            return HttpResponseRedirect(reverse("datasets:dataset_detail", args=[obj.id]))
+        elif "_continue" in request.POST:
+            return super().response_add(request, obj, post_url_continue)
+        else:
+            return super().response_add(request, obj, post_url_continue)
+
+    def response_change(self, request, obj):
+        if "_save_and_view" in request.POST:
+            return HttpResponseRedirect(reverse("datasets:dataset_detail", args=[obj.id]))
+        else:
+            return super().response_change(request, obj)
 
 
 @admin.register(Tag)
@@ -965,8 +999,10 @@ class VisualisationCatalogueItemAdmin(CSPRichTextEditorMixin, DeletableTimeStamp
     def response_add(self, request, obj, post_url_continue=None):
         if "_save_and_view" in request.POST:
             return HttpResponseRedirect(reverse("datasets:dataset_detail", args=[obj.id]))
+        elif "_continue" in request.POST:
+            return super().response_add(request, obj, post_url_continue)
         else:
-            return super().response_change(request, obj)
+            return super().response_add(request, obj, post_url_continue)
 
     def response_change(self, request, obj):
         if "_save_and_view" in request.POST:
