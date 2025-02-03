@@ -1,26 +1,22 @@
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.forms import SplitArrayField, SplitArrayWidget
 from django.core.exceptions import ValidationError
-from django.forms import (
-    Textarea,
-    HiddenInput,
-    CharField,
-)
+from django.forms import CharField, HiddenInput, Textarea
 
 from dataworkspace.apps.applications.models import VisualisationApproval
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import VisualisationCatalogueItem
 from dataworkspace.forms import (
-    GOVUKDesignSystemChoiceField,
-    GOVUKDesignSystemModelForm,
-    GOVUKDesignSystemSelectWidget,
-    GOVUKDesignSystemTextWidget,
-    GOVUKDesignSystemTextareaWidget,
-    GOVUKDesignSystemSingleCheckboxWidget,
-    GOVUKDesignSystemCharField,
-    GOVUKDesignSystemEmailValidationModelChoiceField,
     GOVUKDesignSystemBooleanField,
+    GOVUKDesignSystemCharField,
+    GOVUKDesignSystemChoiceField,
+    GOVUKDesignSystemEmailValidationModelChoiceField,
+    GOVUKDesignSystemModelForm,
     GOVUKDesignSystemRichTextField,
+    GOVUKDesignSystemSelectWidget,
+    GOVUKDesignSystemSingleCheckboxWidget,
+    GOVUKDesignSystemTextareaWidget,
+    GOVUKDesignSystemTextWidget,
 )
 
 

@@ -7,9 +7,9 @@ from tableschema import Schema
 
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.constants import (
-    PostgresDataTypes,
     SCHEMA_POSTGRES_DATA_TYPE_MAP,
     TABLESCHEMA_FIELD_TYPE_MAP,
+    PostgresDataTypes,
 )
 from dataworkspace.apps.core.utils import (
     USER_SCHEMA_STEM,

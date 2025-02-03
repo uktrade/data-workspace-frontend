@@ -5,15 +5,14 @@ from collections import namedtuple
 from itertools import groupby
 
 import psycopg2
-from psycopg2.extras import RealDictCursor
-
 from django.conf import settings
 from django.core.cache import cache
 from django.db.models import F, Func, Value
+from psycopg2.extras import RealDictCursor
 
+from dataworkspace.apps.datasets.models import ReferenceDataset, SourceTable
 from dataworkspace.apps.explorer.connections import connections
 from dataworkspace.apps.explorer.utils import get_user_explorer_connection_settings
-from dataworkspace.apps.datasets.models import SourceTable, ReferenceDataset
 
 logger = logging.getLogger(__name__)
 

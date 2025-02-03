@@ -1,9 +1,8 @@
 import json
 
-
-from django.db import IntegrityError
 from django.conf import settings
 from django.core.management.base import BaseCommand
+from django.db import IntegrityError
 
 from dataworkspace.apps.applications.models import ApplicationTemplate
 

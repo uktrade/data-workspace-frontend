@@ -1,8 +1,8 @@
 import logging
-import requests
 
+import requests
 from django.conf import settings
-from django.contrib.admin.models import LogEntry, ADDITION
+from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache

@@ -13,8 +13,8 @@ from dataworkspace.apps.datasets.subscriptions.forms import (
 )
 from dataworkspace.apps.datasets.subscriptions.utils import (
     subscribe,
-    unsubscribe_from_all,
     unsubscribe,
+    unsubscribe_from_all,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event

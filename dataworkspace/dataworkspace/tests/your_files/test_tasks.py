@@ -2,17 +2,15 @@ from datetime import datetime
 
 import mock
 import pytest
-
-
 from waffle.testutils import override_switch
 
 from dataworkspace.apps.core.utils import get_s3_prefix
+from dataworkspace.apps.your_files.models import YourFilesUserPrefixStats
 from dataworkspace.apps.your_files.tasks import (
+    _sync_user_storage,
     collect_your_files_stats_all_users,
     collect_your_files_stats_single_user,
-    _sync_user_storage,
 )
-from dataworkspace.apps.your_files.models import YourFilesUserPrefixStats
 from dataworkspace.tests import factories
 
 

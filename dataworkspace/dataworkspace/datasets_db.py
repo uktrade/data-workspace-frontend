@@ -1,16 +1,16 @@
-from collections import defaultdict, deque
 import hashlib
 import json
 import logging
+from collections import defaultdict, deque
 from typing import Tuple
 
 import pglast
 import psycopg2
-from psycopg2 import sql
-from psycopg2.sql import Literal, SQL
 import pytz
 from django.conf import settings
 from django.db import connections
+from psycopg2 import sql
+from psycopg2.sql import SQL, Literal
 
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.utils import TYPE_CODES_REVERSED

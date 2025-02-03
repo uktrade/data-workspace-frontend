@@ -1,5 +1,6 @@
-from dataworkspace.apps.test_endpoints.datasets import views
 from django.urls import path
+
+from dataworkspace.apps.test_endpoints.datasets import views
 
 urlpatterns = [
     path(

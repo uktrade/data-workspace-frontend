@@ -5,8 +5,8 @@ from django.core.management.base import BaseCommand
 from dataworkspace.apps.datasets.constants import DataSetType, TagType
 from dataworkspace.apps.datasets.management.commands._create_utils import (
     create_fake_dataset,
-    create_fake_visualisation_dataset,
     create_fake_reference_dataset,
+    create_fake_visualisation_dataset,
     get_random_tag,
 )
 

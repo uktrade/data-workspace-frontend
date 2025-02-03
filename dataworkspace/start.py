@@ -11,10 +11,10 @@ from elasticapm.instrumentation.control import instrument; instrument()  # noqa:
 
 import signal
 
+import gevent
 from django.conf import settings
 from django.core.wsgi import get_wsgi_application
 from django.utils.autoreload import run_with_reloader
-import gevent
 from gevent.pywsgi import WSGIServer
 
 

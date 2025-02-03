@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
+from dataworkspace.apps.applications.models import VisualisationApproval
 from dataworkspace.apps.datasets.models import (
     DataSet,
     ReferenceDataset,
@@ -8,7 +9,6 @@ from dataworkspace.apps.datasets.models import (
     VisualisationLink,
 )
 from dataworkspace.apps.eventlog.models import EventLog
-from dataworkspace.apps.applications.models import VisualisationApproval
 from dataworkspace.apps.explorer.models import Query
 
 

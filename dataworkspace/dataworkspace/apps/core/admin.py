@@ -1,13 +1,13 @@
 from csp.decorators import csp_update
-from django.contrib import admin
 from django.conf import settings
+from django.contrib import admin
 
 from dataworkspace.apps.core.models import (
     MLFlowAuthorisedUser,
     MLFlowInstance,
+    NewsletterSubscription,
     Team,
     TeamMembership,
-    NewsletterSubscription,
 )
 
 

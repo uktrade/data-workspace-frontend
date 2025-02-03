@@ -3,10 +3,7 @@ from datetime import datetime
 
 from django import forms
 from django.contrib import admin, messages
-from django.contrib.admin.widgets import (
-    AdminTextInputWidget,
-    FilteredSelectMultiple,
-)
+from django.contrib.admin.widgets import AdminTextInputWidget, FilteredSelectMultiple
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Permission
@@ -21,28 +18,26 @@ from dataworkspace.apps.accounts.utils import (
     add_user_access_profile,
     remove_user_access_profile,
 )
+from dataworkspace.apps.applications.models import ApplicationInstance
+from dataworkspace.apps.applications.utils import sync_quicksight_permissions
 from dataworkspace.apps.core.utils import (
+    create_tools_access_iam_role_task,
     stable_identification_suffix,
 )
 from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType
 from dataworkspace.apps.datasets.models import (
+    AdminVisualisationUserPermission,
+    DataCutDataset,
     DataSet,
     DataSetUserPermission,
     MasterDataset,
-    DataCutDataset,
     VisualisationCatalogueItem,
     VisualisationUserPermission,
-    AdminVisualisationUserPermission,
 )
-from dataworkspace.apps.applications.models import ApplicationInstance
-from dataworkspace.apps.applications.utils import sync_quicksight_permissions
-from dataworkspace.apps.core.utils import create_tools_access_iam_role_task
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_permission_change
 from dataworkspace.apps.explorer.schema import clear_schema_info_cache_for_user
-from dataworkspace.apps.explorer.utils import (
-    remove_data_explorer_user_cached_credentials,
-)
+from dataworkspace.apps.explorer.utils import remove_data_explorer_user_cached_credentials
 from dataworkspace.apps.your_files.models import YourFilesUserPrefixStats
 
 logger = logging.getLogger("app")

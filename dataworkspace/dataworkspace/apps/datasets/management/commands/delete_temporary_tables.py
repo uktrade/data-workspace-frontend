@@ -1,8 +1,7 @@
-from psycopg2 import connect
 import psycopg2.sql
-
 from django.conf import settings
 from django.core.management.base import BaseCommand
+from psycopg2 import connect
 
 from dataworkspace.apps.core.utils import database_dsn
 

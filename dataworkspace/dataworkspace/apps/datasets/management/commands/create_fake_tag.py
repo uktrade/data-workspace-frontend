@@ -1,6 +1,7 @@
 import sys
-from faker import Faker  # noqa
+
 from django.core.management.base import BaseCommand
+from faker import Faker  # noqa
 
 from dataworkspace.apps.datasets.constants import TagType
 from dataworkspace.apps.datasets.models import Tag

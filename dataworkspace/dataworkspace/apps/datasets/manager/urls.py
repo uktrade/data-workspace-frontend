@@ -16,7 +16,6 @@ from dataworkspace.apps.datasets.manager.views import (
     SourceTableUploadValidatingView,
 )
 
-
 urlpatterns = [
     path(
         "<uuid:source_uuid>",

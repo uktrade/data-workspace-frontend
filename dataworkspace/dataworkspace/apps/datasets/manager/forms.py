@@ -1,16 +1,16 @@
-from django.core.validators import FileExtensionValidator
 from django import forms
+from django.core.validators import FileExtensionValidator
 
+from dataworkspace.apps.core.forms import ConditionalSupportTypeRadioWidget
 from dataworkspace.apps.core.storage import malware_file_validator
 from dataworkspace.apps.core.utils import get_postgres_datatype_choices
-from dataworkspace.apps.core.forms import ConditionalSupportTypeRadioWidget
 from dataworkspace.forms import (
     GOVUKDesignSystemChoiceField,
     GOVUKDesignSystemFileField,
     GOVUKDesignSystemFileInputWidget,
     GOVUKDesignSystemForm,
-    GOVUKDesignSystemSelectWidget,
     GOVUKDesignSystemRadioField,
+    GOVUKDesignSystemSelectWidget,
 )
 
 

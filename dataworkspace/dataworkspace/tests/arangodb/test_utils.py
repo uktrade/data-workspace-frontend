@@ -1,23 +1,16 @@
 import mock
 import pytest
 from django.conf import settings
-from arango import ArangoClient
 
-from dataworkspace.apps.core.utils import (
-    postgres_user,
-)
+from arango import ArangoClient
 from dataworkspace.apps.arangodb.models import ArangoUser
 from dataworkspace.apps.arangodb.utils import (
-    new_private_arangodb_credentials,
     delete_unused_arangodb_users,
+    new_private_arangodb_credentials,
 )
-from dataworkspace.tests.factories import (
-    UserFactory,
-)
-from dataworkspace.tests.core.factories import (
-    TeamFactory,
-    TeamMembershipFactory,
-)
+from dataworkspace.apps.core.utils import postgres_user
+from dataworkspace.tests.core.factories import TeamFactory, TeamMembershipFactory
+from dataworkspace.tests.factories import UserFactory
 
 
 class TestDeleteUnusedArangoUsers:

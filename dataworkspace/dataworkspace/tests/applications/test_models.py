@@ -3,8 +3,8 @@ from django.contrib.contenttypes.models import ContentType
 
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.tests.factories import (
-    VisualisationTemplateFactory,
     VisualisationApprovalFactory,
+    VisualisationTemplateFactory,
 )
 
 

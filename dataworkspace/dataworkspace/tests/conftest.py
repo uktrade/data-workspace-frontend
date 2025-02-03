@@ -1,15 +1,13 @@
 import psycopg2
 import pytest
-
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.test import Client, TestCase, override_settings
 
 from dataworkspace.apps.core.utils import database_dsn
-from dataworkspace.tests import factories
-
 from dataworkspace.cel import celery_app
+from dataworkspace.tests import factories
 
 
 @pytest.fixture

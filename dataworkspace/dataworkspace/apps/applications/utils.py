@@ -10,6 +10,8 @@ from typing import Dict, List
 
 import boto3
 import botocore
+import gevent
+import requests
 import waffle
 from botocore.config import Config
 from botocore.exceptions import ClientError
@@ -21,27 +23,26 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, connections
 from django.db.models import Q
-import gevent
 from psycopg2 import connect, sql
-import requests
 from pytz import utc
 from smart_open import open as smart_open
 
 import redis
-
 from dataworkspace.apps.accounts.models import Profile
 from dataworkspace.apps.accounts.utils import get_user_by_sso_id
-from dataworkspace.apps.applications.spawner import (
-    get_spawner,
-    stop,
-    _fargate_task_describe,
-    _fargate_task_stop,
-)
+from dataworkspace.apps.applications.gitlab import gitlab_has_developer_access
 from dataworkspace.apps.applications.models import (
     ApplicationInstance,
     ApplicationInstanceDbUsers,
     ApplicationTemplate,
 )
+from dataworkspace.apps.applications.spawner import (
+    _fargate_task_describe,
+    _fargate_task_stop,
+    get_spawner,
+    stop,
+)
+from dataworkspace.apps.core.boto3_client import get_s3_resource, get_sts_client
 from dataworkspace.apps.core.errors import (
     DatasetPermissionDenied,
     ManageVisualisationsPermissionDeniedError,
@@ -54,26 +55,20 @@ from dataworkspace.apps.core.utils import (
     close_all_connections_if_not_in_atomic_block,
     create_tools_access_iam_role_task,
     database_dsn,
-    stable_identification_suffix,
-    source_tables_for_app,
-    source_tables_for_user,
-    transaction_and_lock,
-    new_private_database_credentials,
-    postgres_user,
     has_tools_cert_expired,
     is_tools_cert_renewal_due,
+    new_private_database_credentials,
+    postgres_user,
+    source_tables_for_app,
+    source_tables_for_user,
+    stable_identification_suffix,
+    transaction_and_lock,
 )
-from dataworkspace.apps.applications.gitlab import gitlab_has_developer_access
 from dataworkspace.apps.datasets.constants import UserAccessType
-from dataworkspace.apps.datasets.models import (
-    ToolQueryAuditLog,
-    VisualisationCatalogueItem,
-)
+from dataworkspace.apps.datasets.models import ToolQueryAuditLog, VisualisationCatalogueItem
 from dataworkspace.cel import celery_app
 from dataworkspace.datasets_db import extract_queried_tables_from_sql_query
-from dataworkspace.apps.core.boto3_client import get_s3_resource, get_sts_client
 from dataworkspace.notify import EmailSendFailureException, send_email
-
 
 logger = logging.getLogger("app")
 

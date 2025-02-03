@@ -1,8 +1,9 @@
-import pytest
-
-from django.contrib.auth.models import Permission, User
-from django.apps import apps
 from importlib import import_module
+
+import pytest
+from django.apps import apps
+from django.contrib.auth.models import Permission, User
+
 from dataworkspace.tests import factories
 
 

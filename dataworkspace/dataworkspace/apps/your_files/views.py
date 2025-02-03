@@ -1,27 +1,26 @@
+import logging
 from datetime import datetime
 from urllib.parse import urlencode
 
-import logging
 import waffle
-
 from csp.decorators import csp_update
-from django.db.utils import ProgrammingError
 from django.conf import settings
+from django.db.utils import ProgrammingError
 from django.http import (
     Http404,
+    HttpResponseBadRequest,
     HttpResponseForbidden,
     HttpResponseRedirect,
-    HttpResponseBadRequest,
 )
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
-from django.views.generic import DetailView, FormView, TemplateView, ListView
+from django.views.generic import DetailView, FormView, ListView, TemplateView
 from psycopg2 import sql
 from requests import HTTPError
 
 from dataworkspace import datasets_db
-from dataworkspace.apps.core.constants import PostgresDataTypes, SCHEMA_POSTGRES_DATA_TYPE_MAP
+from dataworkspace.apps.core.constants import SCHEMA_POSTGRES_DATA_TYPE_MAP, PostgresDataTypes
 from dataworkspace.apps.core.utils import (
     clean_db_identifier,
     copy_file_to_uploads_bucket,
@@ -30,8 +29,8 @@ from dataworkspace.apps.core.utils import (
     get_data_flow_import_pipeline_name,
     get_random_data_sample,
     get_s3_prefix,
-    get_team_prefixes,
     get_task_error_message_template,
+    get_team_prefixes,
     get_team_schemas_for_user,
     trigger_dataflow_dag,
 )

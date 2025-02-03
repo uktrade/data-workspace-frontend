@@ -3,10 +3,11 @@ import io
 import mock
 import pytest
 from django.test import override_settings
+
 from dataworkspace.apps.core.storage import (
-    S3FileStorage,
-    ClamAVResponse,
     AntiVirusServiceErrorException,
+    ClamAVResponse,
+    S3FileStorage,
     malware_file_validator,
 )
 

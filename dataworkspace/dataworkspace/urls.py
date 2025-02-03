@@ -203,9 +203,9 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
-    from django.contrib.staticfiles.urls import (  # pylint: disable=ungrouped-imports
+    from django.contrib.staticfiles.urls import (
         staticfiles_urlpatterns,
-    )
+    )  # pylint: disable=ungrouped-imports
 
     urlpatterns += staticfiles_urlpatterns()
 

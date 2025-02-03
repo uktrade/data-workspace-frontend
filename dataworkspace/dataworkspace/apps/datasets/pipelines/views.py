@@ -1,21 +1,19 @@
 import logging
+
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from django.urls.base import reverse_lazy
 from django.views import View
-from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, DeleteView, FormView, UpdateView
-from django.urls import reverse
+from django.views.generic.list import ListView
 from requests import RequestException
 
 from dataworkspace.apps.core.errors import PipelineBuilderPermissionDeniedError
 from dataworkspace.apps.datasets.models import Pipeline
-from dataworkspace.apps.datasets.pipelines.forms import (
-    PipelineTypeForm,
-    SQLPipelineEditForm,
-)
+from dataworkspace.apps.datasets.pipelines.forms import PipelineTypeForm, SQLPipelineEditForm
 from dataworkspace.apps.datasets.pipelines.utils import (
     delete_pipeline_from_dataflow,
     list_pipelines,

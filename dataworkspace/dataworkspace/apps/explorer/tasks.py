@@ -1,13 +1,12 @@
 import threading
-from datetime import datetime, timedelta
 import time
+from datetime import datetime, timedelta
 
 import psycopg2
 from celery.utils.log import get_task_logger
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
-from django.db import connections, IntegrityError, transaction
-
+from django.db import IntegrityError, connections, transaction
 from pytz import utc
 
 from dataworkspace.apps.core.utils import (
@@ -17,15 +16,15 @@ from dataworkspace.apps.core.utils import (
     db_role_schema_suffix_for_user,
 )
 from dataworkspace.apps.explorer.constants import QueryLogState
-from dataworkspace.apps.explorer.models import QueryLog, PlaygroundSQL
+from dataworkspace.apps.explorer.models import PlaygroundSQL, QueryLog
 from dataworkspace.apps.explorer.utils import (
     get_user_explorer_connection_settings,
     tempory_query_table_name,
     user_explorer_connection,
 )
-from dataworkspace.utils import TYPE_CODES_REVERSED
 from dataworkspace.cel import celery_app
 from dataworkspace.settings.base import DATABASES_DATA
+from dataworkspace.utils import TYPE_CODES_REVERSED
 
 logger = get_task_logger(__name__)
 

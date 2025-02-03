@@ -8,7 +8,6 @@ from dataworkspace.apps.api_v1.views import (
     aws_credentials_api_view,
 )
 
-
 urlpatterns = [
     path(
         "application/<str:public_host>",

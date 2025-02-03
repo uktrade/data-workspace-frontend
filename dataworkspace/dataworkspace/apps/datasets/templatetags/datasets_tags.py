@@ -1,13 +1,11 @@
 import json
-
 from datetime import datetime
 from typing import Optional
 from urllib import parse
 
+import pytz
 from dateutil import parser
 from dateutil.relativedelta import relativedelta
-import pytz
-
 from django import template
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone

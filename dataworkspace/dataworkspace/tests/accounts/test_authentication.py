@@ -1,10 +1,11 @@
 import uuid
 
 import pytest
-from mock import mock
-from django.db import IntegrityError
 from django.contrib.auth import get_user_model
+from django.db import IntegrityError
 from django.test.client import RequestFactory
+from mock import mock
+
 from dataworkspace.apps.accounts.backends import AuthbrokerBackendUsernameIsEmail
 from dataworkspace.apps.applications.utils import create_user_from_sso
 from dataworkspace.tests import factories

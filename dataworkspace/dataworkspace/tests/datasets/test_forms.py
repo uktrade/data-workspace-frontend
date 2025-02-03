@@ -1,7 +1,7 @@
 import pytest
 from bs4 import BeautifulSoup
 from django import forms
-from django.template import Template, Context
+from django.template import Context, Template
 
 from dataworkspace.apps.datasets.forms import FilterWidget
 

@@ -2,7 +2,6 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.forms import CharField, Field, ModelForm, ValidationError
 from django.forms.widgets import HiddenInput, Select
-
 from pglast import parser
 
 from dataworkspace.apps.explorer.models import Query
@@ -10,9 +9,9 @@ from dataworkspace.forms import (
     GOVUKDesignSystemBooleanField,
     GOVUKDesignSystemEmailValidationModelChoiceField,
     GOVUKDesignSystemForm,
-    GOVUKDesignSystemTextWidget,
     GOVUKDesignSystemTextareaField,
     GOVUKDesignSystemTextareaWidget,
+    GOVUKDesignSystemTextWidget,
 )
 
 

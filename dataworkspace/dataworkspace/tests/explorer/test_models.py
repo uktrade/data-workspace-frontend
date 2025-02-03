@@ -9,15 +9,8 @@ from dataworkspace.apps.explorer.models import (
     shared_dict_update,
     swap_params,
 )
-
-from dataworkspace.apps.explorer.utils import (
-    EXPLORER_PARAM_TOKEN,
-    get_params_from_request,
-    param,
-)
-
-
-from dataworkspace.tests.explorer.factories import SimpleQueryFactory, QueryLogFactory
+from dataworkspace.apps.explorer.utils import EXPLORER_PARAM_TOKEN, get_params_from_request, param
+from dataworkspace.tests.explorer.factories import QueryLogFactory, SimpleQueryFactory
 
 
 @pytest.mark.django_db(transaction=True)

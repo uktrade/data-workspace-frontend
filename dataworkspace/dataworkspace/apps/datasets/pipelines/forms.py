@@ -1,5 +1,4 @@
 import pglast
-
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
@@ -8,6 +7,7 @@ from django.forms import ChoiceField, widgets
 
 from dataworkspace.apps.datasets.constants import PipelineScheduleType, PipelineType
 from dataworkspace.apps.datasets.models import Pipeline
+from dataworkspace.apps.datasets.pipelines.utils import split_schema_table
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
     GOVUKDesignSystemChoiceField,
@@ -16,11 +16,10 @@ from dataworkspace.forms import (
     GOVUKDesignSystemRadioField,
     GOVUKDesignSystemRadiosWidget,
     GOVUKDesignSystemSelectWidget,
-    GOVUKDesignSystemTextWidget,
     GOVUKDesignSystemTextareaField,
     GOVUKDesignSystemTextareaWidget,
+    GOVUKDesignSystemTextWidget,
 )
-from dataworkspace.apps.datasets.pipelines.utils import split_schema_table
 
 
 def validate_schema_and_table(value):

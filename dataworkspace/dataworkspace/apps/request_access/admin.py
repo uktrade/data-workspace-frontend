@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 
-from dataworkspace.apps.datasets.models import DataSet, VisualisationCatalogueItem, DataCutDataset
+from dataworkspace.apps.datasets.models import DataCutDataset, DataSet, VisualisationCatalogueItem
 from dataworkspace.apps.request_access.models import AccessRequest
 
 

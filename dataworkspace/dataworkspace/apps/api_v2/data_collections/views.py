@@ -1,14 +1,13 @@
-from rest_framework import viewsets, serializers
+from rest_framework import serializers, viewsets
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
-
-from dataworkspace.apps.api_v2.pagination import LastModifiedCursorPagination
-from dataworkspace.apps.data_collections.models import Collection
 
 from dataworkspace.apps.api_v2.datasets.serializers import (
     DatasetSerializer,
     VisualisationDatasetSerializer,
 )
+from dataworkspace.apps.api_v2.pagination import LastModifiedCursorPagination
+from dataworkspace.apps.data_collections.models import Collection
 
 
 class DataCollectionSerializer(serializers.ModelSerializer):

@@ -6,23 +6,24 @@ try:
     from django.urls import reverse
 except ImportError:
     from django.core.urlresolvers import reverse
+
+import pytest
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.db import connections
-from django.contrib.auth import get_user_model
 from django.forms.models import model_to_dict
-import pytest
 
 from dataworkspace.apps.core.utils import USER_SCHEMA_STEM, stable_identification_suffix
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.explorer.constants import QueryLogState
-from dataworkspace.apps.explorer.models import Query, QueryLog, PlaygroundSQL
-from dataworkspace.tests.factories import UserFactory
+from dataworkspace.apps.explorer.models import PlaygroundSQL, Query, QueryLog
 from dataworkspace.tests.explorer.factories import (
+    PlaygroundSQLFactory,
     QueryLogFactory,
     SimpleQueryFactory,
-    PlaygroundSQLFactory,
 )
+from dataworkspace.tests.factories import UserFactory
 
 
 def create_temporary_results_table(querylog):

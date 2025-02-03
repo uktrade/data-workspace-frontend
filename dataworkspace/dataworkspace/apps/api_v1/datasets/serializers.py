@@ -3,10 +3,10 @@ from rest_framework import serializers
 
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import (
+    CustomDatasetQuery,
     SourceTable,
     ToolQueryAuditLog,
     ToolQueryAuditLogTable,
-    CustomDatasetQuery,
 )
 
 _PURPOSES = {

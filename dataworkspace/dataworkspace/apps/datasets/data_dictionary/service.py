@@ -5,12 +5,11 @@ from django.shortcuts import get_object_or_404
 
 from dataworkspace import datasets_db
 from dataworkspace.apps.datasets.models import (
-    SourceTable,
-    SourceTableFieldDefinition,
     ReferenceDataset,
     ReferenceDatasetField,
+    SourceTable,
+    SourceTableFieldDefinition,
 )
-
 from dataworkspace.utils import TYPE_CODES_REVERSED
 
 logger = logging.getLogger(__name__)

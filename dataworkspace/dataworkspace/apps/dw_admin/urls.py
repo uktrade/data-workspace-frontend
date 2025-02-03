@@ -3,11 +3,11 @@ from django.urls import path
 from dataworkspace.apps.dw_admin.views import (
     DataWorkspaceStatsView,
     DataWorkspaceTrendsView,
-    ReferenceDatasetAdminEditView,
-    ReferenceDatasetAdminDeleteView,
     ReferenceDatasetAdminDeleteAllView,
-    SourceLinkUploadView,
+    ReferenceDatasetAdminDeleteView,
+    ReferenceDatasetAdminEditView,
     ReferenceDatasetAdminUploadView,
+    SourceLinkUploadView,
 )
 
 urlpatterns = [

@@ -1,7 +1,6 @@
 import datetime
 import re
 import time
-from freezegun import freeze_time
 
 import mock
 import psycopg2
@@ -9,30 +8,27 @@ import pytest
 from django.conf import settings
 from django.db import connections
 from django.test import override_settings
+from freezegun import freeze_time
 
 from dataworkspace.apps.applications.utils import delete_unused_datasets_users
 from dataworkspace.apps.core.models import DatabaseUser
 from dataworkspace.apps.core.utils import (
     database_dsn,
-    get_random_data_sample,
-    postgres_user,
-    source_tables_for_user,
     db_role_schema_suffix_for_user,
-    new_private_database_credentials,
-    is_user_email_domain_valid,
+    get_random_data_sample,
     has_tools_cert_expired,
     is_tools_cert_renewal_due,
+    is_user_email_domain_valid,
+    new_private_database_credentials,
+    postgres_user,
+    source_tables_for_user,
 )
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.management.commands.ensure_databases_configured import (
     Command as ensure_databases_configured,
 )
 from dataworkspace.tests import factories
-from dataworkspace.tests.factories import (
-    UserFactory,
-    SourceTableFactory,
-    MasterDataSetFactory,
-)
+from dataworkspace.tests.factories import MasterDataSetFactory, SourceTableFactory, UserFactory
 
 
 class TestGetRandomSample:

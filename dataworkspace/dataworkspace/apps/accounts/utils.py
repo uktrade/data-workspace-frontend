@@ -1,18 +1,17 @@
 import logging
 from functools import wraps
 
+import requests
+from django.conf import settings
 from django.contrib.auth import (
-    SESSION_KEY,
     BACKEND_SESSION_KEY,
     HASH_SESSION_KEY,
+    SESSION_KEY,
     authenticate,
     get_user_model,
 )
-from django.conf import settings
 from django.contrib.sessions.backends.base import CreateError
 from django.http import HttpResponseForbidden
-import requests
-
 
 logger = logging.getLogger("app")
 

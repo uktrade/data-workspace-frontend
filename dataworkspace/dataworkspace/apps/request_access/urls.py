@@ -7,8 +7,8 @@ from dataworkspace.apps.request_access.views import (
     DatasetAccessRequest,
     DatasetAccessRequestUpdate,
     SelfCertifyView,
-    StataAccessView,
     StataAccessRequest,
+    StataAccessView,
     ToolsAccessRequest,
 )
 

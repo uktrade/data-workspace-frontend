@@ -1,4 +1,3 @@
-from datetime import datetime, timedelta, date
 import calendar
 import itertools
 import json
@@ -6,8 +5,9 @@ import logging
 import random
 import re
 from contextlib import closing
+from datetime import date, datetime, timedelta
 from io import StringIO
-from urllib.parse import urlsplit, urlencode
+from urllib.parse import urlencode, urlsplit
 
 import boto3
 import botocore
@@ -17,33 +17,27 @@ from botocore.config import Config
 from csp.decorators import csp_exempt, csp_update
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.admin.models import LogEntry, CHANGE
+from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core import serializers
-from django.core.validators import EmailValidator
 from django.core.exceptions import ValidationError
+from django.core.validators import EmailValidator
 from django.db import IntegrityError, transaction
 from django.db.models import Q
-from django.http import HttpResponse, Http404, HttpResponseRedirect
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.encoding import force_str
 from django.views.decorators.http import require_GET
 from django.views.generic.edit import UpdateView
-from dataworkspace.apps.datasets.models import Pipeline
-from dataworkspace.apps.core.utils import USER_SCHEMA_STEM
-from dataworkspace.apps.core.utils import db_role_schema_suffix_for_app
-from dataworkspace.datasets_db import extract_queried_tables_from_sql_query
-from dataworkspace.apps.accounts.models import Profile
 
-from dataworkspace.apps.api_v1.views import (
-    get_api_visible_application_instance_by_public_host,
-)
+from dataworkspace.apps.accounts.models import Profile
+from dataworkspace.apps.api_v1.views import get_api_visible_application_instance_by_public_host
 from dataworkspace.apps.applications.forms import (
-    VisualisationsUICatalogueItemForm,
     VisualisationApprovalForm,
+    VisualisationsUICatalogueItemForm,
 )
 from dataworkspace.apps.applications.gitlab import (
     DEVELOPER_ACCESS_LEVEL,
@@ -59,40 +53,40 @@ from dataworkspace.apps.applications.models import (
     VisualisationApproval,
     VisualisationTemplate,
 )
+from dataworkspace.apps.applications.spawner import get_spawner
 from dataworkspace.apps.applications.utils import (
     application_options,
     fetch_visualisation_log_events,
     get_quicksight_dashboard_name_url,
+    stop_spawner_and_application,
     sync_quicksight_permissions,
 )
-from dataworkspace.apps.applications.utils_tools import (
-    get_grouped_tools,
-)
-
-
-from dataworkspace.apps.applications.spawner import get_spawner
-from dataworkspace.apps.applications.utils import stop_spawner_and_application
+from dataworkspace.apps.applications.utils_tools import get_grouped_tools
 from dataworkspace.apps.core.errors import (
     DeveloperPermissionRequiredError,
     ManageVisualisationsPermissionDeniedError,
     ToolPermissionDeniedError,
 )
 from dataworkspace.apps.core.utils import (
+    USER_SCHEMA_STEM,
+    db_role_schema_suffix_for_app,
     source_tables_for_app,
     source_tables_for_user,
 )
 from dataworkspace.apps.core.views import public_error_500_html_view
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import (
-    MasterDataset,
     DataSetApplicationTemplatePermission,
+    MasterDataset,
+    Pipeline,
     VisualisationCatalogueItem,
-    VisualisationUserPermission,
     VisualisationLink,
+    VisualisationUserPermission,
 )
 from dataworkspace.apps.datasets.pipelines.views import save_pipeline_to_dataflow
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
+from dataworkspace.datasets_db import extract_queried_tables_from_sql_query
 from dataworkspace.notify import decrypt_token, send_email
 from dataworkspace.zendesk import update_zendesk_ticket
 

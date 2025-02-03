@@ -1,20 +1,18 @@
 from django.urls import path
 
 from dataworkspace.apps.accounts.utils import login_required
-
 from dataworkspace.apps.applications.views import (
+    visualisation_approvals_html_view,
+    visualisation_branch_html_view,
+    visualisation_catalogue_item_html_view,
+    visualisation_datasets_html_view,
     visualisation_latest_log_GET,
     visualisation_link_html_view,
-    visualisations_html_view,
+    visualisation_publish_html_view,
     visualisation_users_give_access_html_view,
     visualisation_users_with_access_html_view,
-    visualisation_catalogue_item_html_view,
-    visualisation_approvals_html_view,
-    visualisation_datasets_html_view,
-    visualisation_publish_html_view,
-    visualisation_branch_html_view,
+    visualisations_html_view,
 )
-
 
 urlpatterns = [
     path("", login_required(visualisations_html_view), name="root"),

@@ -1,7 +1,9 @@
 import uuid
+
 import factory
-from dataworkspace.tests.factories import UserFactory
+
 from dataworkspace.apps.core.models import Team, TeamMembership
+from dataworkspace.tests.factories import UserFactory
 
 
 class TeamFactory(factory.django.DjangoModelFactory):

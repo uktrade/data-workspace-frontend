@@ -1,22 +1,18 @@
+import datetime
+import logging
 import secrets
 import string
-import logging
-import datetime
 
+import gevent
+from arango.exceptions import ServerConnectionError, UserCreateError
 from django.conf import settings
 from django.core.cache import cache
-import gevent
-import redis
 
+import redis
 from arango import ArangoClient
-from arango.exceptions import ServerConnectionError, UserCreateError
-from dataworkspace.apps.arangodb.models import (
-    ApplicationInstanceArangoUsers,
-    ArangoUser,
-)
+from dataworkspace.apps.arangodb.models import ApplicationInstanceArangoUsers, ArangoUser
 from dataworkspace.apps.core.models import Team
 from dataworkspace.cel import celery_app
-
 
 logger = logging.getLogger("app")
 

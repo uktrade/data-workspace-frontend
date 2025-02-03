@@ -1,10 +1,8 @@
 from django.conf import settings
 from django.db import models
 
-from dataworkspace.apps.core.models import (  # pylint: disable=import-error
-    TimeStampedModel,
-)
 from dataworkspace.apps.core import storage
+from dataworkspace.apps.core.models import TimeStampedModel  # pylint: disable=import-error
 
 
 class DataAccessStatus(models.TextChoices):

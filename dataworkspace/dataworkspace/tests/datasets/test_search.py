@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta, timezone
+
 import pytest
 from freezegun import freeze_time
 
 from dataworkspace.apps.datasets.search import (
-    calculate_visualisation_average,
     calculate_dataset_average,
+    calculate_visualisation_average,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.tests import factories

@@ -1,12 +1,11 @@
 import string
 import uuid
 from datetime import datetime, timedelta
-from freezegun import freeze_time
 
 import factory.fuzzy
-
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from freezegun import freeze_time
 
 from dataworkspace.apps.datasets.constants import DataSetType, TagType
 from dataworkspace.apps.eventlog.models import EventLog

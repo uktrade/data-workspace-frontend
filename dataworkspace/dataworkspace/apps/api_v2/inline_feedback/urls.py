@@ -1,4 +1,5 @@
 from django.urls import path
+
 from dataworkspace.apps.api_v2.inline_feedback import views
 
 urlpatterns = [

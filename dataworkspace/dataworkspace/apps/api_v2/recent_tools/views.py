@@ -1,12 +1,13 @@
-from rest_framework import viewsets
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.authentication import SessionAuthentication
-from rest_framework.permissions import IsAuthenticated
 from django.db.models import F
+from rest_framework import viewsets
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
 
-from .serializers import RecentToolsSerializer
 from dataworkspace.apps.api_v1.mixins import TimestampFilterMixin
 from dataworkspace.apps.eventlog.models import EventLog
+
+from .serializers import RecentToolsSerializer
 
 
 class TimestampPageNumberPagination(PageNumberPagination):

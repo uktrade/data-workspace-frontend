@@ -2,17 +2,12 @@ import json
 from datetime import date, datetime
 from unittest.mock import MagicMock, patch
 
+import pytest
+import six
 from django.core.serializers.json import DjangoJSONEncoder
 from django.test import TestCase
 
-import pytest
-import six
-
-from dataworkspace.apps.explorer.exporters import (
-    CSVExporter,
-    ExcelExporter,
-    JSONExporter,
-)
+from dataworkspace.apps.explorer.exporters import CSVExporter, ExcelExporter, JSONExporter
 from dataworkspace.apps.explorer.utils import get_total_pages
 from dataworkspace.tests.explorer.factories import QueryLogFactory
 from dataworkspace.tests.factories import UserFactory

@@ -1,46 +1,45 @@
 import json
 
-
 import psycopg2
 from django.conf import settings
 from django.contrib.postgres.aggregates.general import ArrayAgg
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
-from django.db.models import F, Q, Value, Case, When
+from django.db.models import Case, F, Q, Value, When
 from django.db.models.functions import Substr
 from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
-from django.contrib.postgres.fields import ArrayField
-from rest_framework import viewsets, status
+from rest_framework import status, viewsets
+from rest_framework.decorators import api_view
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
 
+from dataworkspace.apps.api_v1.datasets.serializers import (
+    CatalogueItemSerializer,
+    DataCutSerializer,
+    ToolQueryAuditLogSerializer,
+)
 from dataworkspace.apps.api_v1.mixins import TimestampFilterMixin
 from dataworkspace.apps.api_v1.pagination import TimestampCursorPagination
 from dataworkspace.apps.core.utils import (
-    database_dsn,
     StreamingHttpResponseWithoutDjangoDbConnection,
+    database_dsn,
 )
 from dataworkspace.apps.datasets.constants import (
     DataSetType,
-    TagType,
     SecurityClassificationAndHandlingInstructionType,
-)
-from dataworkspace.apps.datasets.models import (
-    SourceTable,
-    DataSet,
-    ReferenceDataset,
-    ToolQueryAuditLog,
-    VisualisationCatalogueItem,
-    ReferenceDatasetField,
-    CustomDatasetQuery,
-)
-from dataworkspace.apps.api_v1.datasets.serializers import (
-    CatalogueItemSerializer,
-    ToolQueryAuditLogSerializer,
-    DataCutSerializer,
+    TagType,
 )
 from dataworkspace.apps.datasets.data_dictionary.service import DataDictionaryService
+from dataworkspace.apps.datasets.models import (
+    CustomDatasetQuery,
+    DataSet,
+    ReferenceDataset,
+    ReferenceDatasetField,
+    SourceTable,
+    ToolQueryAuditLog,
+    VisualisationCatalogueItem,
+)
 
 
 def _get_dataset_columns(connection, source_table):

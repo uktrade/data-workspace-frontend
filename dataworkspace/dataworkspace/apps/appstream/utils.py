@@ -1,6 +1,5 @@
 import boto3
 import gevent
-
 from django.conf import settings
 
 

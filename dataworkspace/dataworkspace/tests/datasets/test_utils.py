@@ -1,12 +1,12 @@
 import datetime
-from unittest.mock import call, MagicMock, patch
-import pytz
+from unittest.mock import MagicMock, call, patch
 
+import pytest
+import pytz
 from django.conf import settings
 from django.db import connections
 from django.test import override_settings
 from freezegun import freeze_time
-import pytest
 
 from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.apps.datasets.constants import DataSetType

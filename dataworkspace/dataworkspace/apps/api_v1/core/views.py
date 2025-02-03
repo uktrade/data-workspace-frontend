@@ -10,17 +10,17 @@ from rest_framework.pagination import PageNumberPagination
 
 from dataworkspace.apps.accounts.utils import get_user_by_sso_id
 from dataworkspace.apps.api_v1.core.serializers import (
-    UserSatisfactionSurveySerializer,
     NewsletterSubscriptionSerializer,
     TeamSerializer,
     UserInlineFeedbackSurveySerializer,
+    UserSatisfactionSurveySerializer,
 )
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.core.models import (
-    UserSatisfactionSurvey,
     NewsletterSubscription,
     Team,
     UserInlineFeedbackSurvey,
+    UserSatisfactionSurvey,
 )
 from dataworkspace.apps.core.utils import (
     generate_jwt_token,

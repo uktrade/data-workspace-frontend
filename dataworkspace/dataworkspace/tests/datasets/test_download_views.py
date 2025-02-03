@@ -11,7 +11,7 @@ from django.urls import reverse
 
 from dataworkspace.apps.core.utils import database_dsn
 from dataworkspace.apps.datasets.constants import UserAccessType
-from dataworkspace.apps.datasets.models import SourceLink, DataSet
+from dataworkspace.apps.datasets.models import DataSet, SourceLink
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.tests import factories
 

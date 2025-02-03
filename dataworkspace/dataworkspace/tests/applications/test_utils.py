@@ -7,46 +7,38 @@ import string
 from unittest.mock import call, patch
 
 import botocore
+import mock
+import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.test import override_settings
-
-
 from freezegun import freeze_time
 from waffle.testutils import override_switch
-import mock
-import pytest
-import redis
 
-from dataworkspace.apps.core.utils import _do_create_tools_access_iam_role
+import redis
 from dataworkspace.apps.accounts.models import Profile
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.applications.utils import (
+    _do_get_staff_sso_s3_object_summaries,
+    _do_sync_s3_sso_users,
     _do_sync_tool_query_logs,
+    _get_seen_ids,
+    _is_full_sync,
+    _process_staff_sso_file,
     delete_unused_datasets_users,
     long_running_query_alert,
-    sync_quicksight_permissions,
-    _do_sync_s3_sso_users,
-    _process_staff_sso_file,
-    _get_seen_ids,
-    _do_get_staff_sso_s3_object_summaries,
     remove_tools_access_for_users_with_expired_cert,
     self_certify_renewal_email_notification,
-    _is_full_sync,
+    sync_quicksight_permissions,
 )
-
+from dataworkspace.apps.core.utils import _do_create_tools_access_iam_role
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import ToolQueryAuditLog, ToolQueryAuditLogTable
 from dataworkspace.tests import factories
-
-from dataworkspace.tests.factories import (
-    UserFactory,
-    MasterDataSetFactory,
-    SourceTableFactory,
-)
+from dataworkspace.tests.factories import MasterDataSetFactory, SourceTableFactory, UserFactory
 
 
 class TestDeleteUnusedDatasetsUsers:

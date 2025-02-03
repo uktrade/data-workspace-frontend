@@ -2,13 +2,13 @@ from django.urls import path
 
 from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.applications.views import (
-    application_spawning_html_view,
+    UserToolSizeConfigurationView,
     application_running_html_view,
+    application_spawning_html_view,
     data_explorer_redirect,
+    quicksight_start_polling_sync_and_redirect,
     superset_redirect,
     tools_html_view,
-    quicksight_start_polling_sync_and_redirect,
-    UserToolSizeConfigurationView,
 )
 
 urlpatterns = [

@@ -1,19 +1,18 @@
 from django.contrib import admin
 from django.db.models import Count, Q
+
+from dataworkspace.apps.core.admin import CSPRichTextEditorMixin, DeletableTimeStampedUserAdmin
 from dataworkspace.apps.data_collections.forms import (
     CollectionDatasetForm,
     CollectionUserForm,
     CollectionVisualisationForm,
 )
-from dataworkspace.apps.core.admin import CSPRichTextEditorMixin, DeletableTimeStampedUserAdmin
 from dataworkspace.apps.data_collections.models import (
     Collection,
     CollectionDatasetMembership,
     CollectionUserMembership,
     CollectionVisualisationCatalogueItemMembership,
 )
-
-
 from dataworkspace.apps.datasets.models import DataSet
 
 

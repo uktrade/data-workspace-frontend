@@ -1,13 +1,15 @@
 from unittest import mock
-from django.test import TestCase, RequestFactory
+
 import pytest
-from dataworkspace.apps.maintenance.models import MaintenanceSettings
+from django.test import RequestFactory, TestCase
+
 from dataworkspace.apps.maintenance.maintenance import (
+    MaintenanceMiddleware,
     get_maintenance_settings,
     maintenance_context,
     update_maintenance_status,
-    MaintenanceMiddleware,
 )
+from dataworkspace.apps.maintenance.models import MaintenanceSettings
 
 
 @pytest.mark.django_db

@@ -2,8 +2,8 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 
-from dataworkspace.tests import factories
 from dataworkspace.apps.eventlog.models import EventLog
+from dataworkspace.tests import factories
 
 
 @pytest.mark.django_db
