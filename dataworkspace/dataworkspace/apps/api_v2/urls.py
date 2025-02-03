@@ -40,11 +40,4 @@ urlpatterns = [
             namespace="managed_data",
         ),
     ),
-    path(
-        "data_insights/",
-        include(
-            ("dataworkspace.apps.api_v2.data_insights.urls", "data_insights"),
-            namespace="data_insights",
-        ),
-    ),
 ]

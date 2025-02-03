@@ -1,6 +1,6 @@
 from django.urls import path
 
-from dataworkspace.apps.api_v2.data_insights.views import OwnerInsightsViewSet
+from dataworkspace.apps.api_v1.data_insights.views import OwnerInsightsViewSet
 
 urlpatterns = [
     path(
