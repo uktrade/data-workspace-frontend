@@ -3,12 +3,12 @@ import logging
 import secrets
 import string
 
+from django.conf import settings
+from django.core.cache import cache
 import gevent
 import redis
 from arango import ArangoClient
 from arango.exceptions import ServerConnectionError, UserCreateError
-from django.conf import settings
-from django.core.cache import cache
 
 from dataworkspace.apps.arangodb.models import ApplicationInstanceArangoUsers, ArangoUser
 from dataworkspace.apps.core.models import Team
