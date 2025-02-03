@@ -2,10 +2,9 @@ import base64
 import json
 import os
 import urllib.request
-from distutils.util import strtobool
 
-import sentry
 from celery.schedules import crontab
+from distutils.util import strtobool
 from django.conf.locale.en import formats as en_formats
 from django.contrib import auth
 from sentry_sdk.integrations.aiohttp import AioHttpIntegration
@@ -13,6 +12,7 @@ from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.redis import RedisIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+import sentry
 
 from dataworkspace.utils import normalise_environment
 

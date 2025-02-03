@@ -132,9 +132,9 @@ def get_user_cached_credentials_key(user):
 
 
 def get_user_explorer_connection_settings(user, alias):
-    from dataworkspace.apps.explorer.connections import (
+    from dataworkspace.apps.explorer.connections import (  # pylint: disable=import-outside-toplevel
         connections,
-    )  # pylint: disable=import-outside-toplevel
+    )  
 
     if not alias:
         alias = settings.EXPLORER_DEFAULT_CONNECTION
