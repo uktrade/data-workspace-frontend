@@ -1118,7 +1118,7 @@ class CustomDatasetQuery(ReferenceNumberedDatasetSource):
     def get_preview_data(self):
         from dataworkspace.apps.core.utils import (  # pylint: disable=cyclic-import,import-outside-toplevel
             get_random_data_sample,
-        )  
+        ) 
 
         database_name = self.database.memorable_name
         columns = datasets_db.get_columns(database_name, query=self.query)
