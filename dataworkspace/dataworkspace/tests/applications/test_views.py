@@ -13,9 +13,9 @@ from django.test import Client, override_settings
 from django.urls import reverse
 
 from dataworkspace.apps.applications.models import (
-    VisualisationApproval,
     ApplicationInstance,
     UserToolConfiguration,
+    VisualisationApproval,
 )
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import Pipeline

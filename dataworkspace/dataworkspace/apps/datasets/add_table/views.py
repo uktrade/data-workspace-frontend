@@ -6,11 +6,12 @@ from urllib.parse import urlencode
 
 from aiohttp import ClientError
 from django.conf import settings
-from django.urls import reverse
-from django.views.generic import DetailView, FormView, TemplateView
 from django.http import HttpResponseRedirect, HttpResponseServerError
 from django.shortcuts import redirect
+from django.urls import reverse
+from django.views.generic import DetailView, FormView, TemplateView
 from requests import HTTPError
+
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.constants import SCHEMA_POSTGRES_DATA_TYPE_MAP, PostgresDataTypes
 from dataworkspace.apps.core.models import Database
@@ -30,12 +31,10 @@ from dataworkspace.apps.datasets.add_table.forms import (
 )
 from dataworkspace.apps.datasets.models import SourceTable
 from dataworkspace.apps.datasets.utils import find_dataset
-from dataworkspace.apps.your_files.views import (
-    RequiredParameterGetRequestMixin,
-)
-from dataworkspace.apps.your_files.utils import get_s3_csv_file_info
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
+from dataworkspace.apps.your_files.utils import get_s3_csv_file_info
+from dataworkspace.apps.your_files.views import RequiredParameterGetRequestMixin
 
 logger = logging.getLogger(__name__)
 

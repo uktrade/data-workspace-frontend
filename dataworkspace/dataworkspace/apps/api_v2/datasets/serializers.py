@@ -1,16 +1,13 @@
 from django.db.models import Q, TextField
+from django.db.models.functions import Cast
 from django.urls import reverse
 from rest_framework import serializers
 
-from django.db.models.functions import Cast
-
+from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import (
     DataSet,
     ReferenceDataset,
     VisualisationCatalogueItem,
-)
-from dataworkspace.apps.datasets.constants import (
-    DataSetType,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 

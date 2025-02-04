@@ -2,22 +2,21 @@ from django.urls import path
 
 from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.datasets.add_table.views import (
-    AddTableFailedView,
-    AddTableSuccessView,
-    AddTableView,
     AddTableAppendingToTableView,
     AddTableCreatingTableView,
+    AddTableDataTypesView,
+    AddTableFailedView,
     AddTableIngestingView,
     AddTableRenamingTableView,
+    AddTableSuccessView,
     AddTableValidatingView,
-    TableNameView,
-    TableSchemaView,
+    AddTableView,
     ClassificationCheckView,
     DescriptiveNameView,
+    TableNameView,
+    TableSchemaView,
     UploadCSVView,
-    AddTableDataTypesView,
 )
-
 
 urlpatterns = [
     path(

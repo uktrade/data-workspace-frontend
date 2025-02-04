@@ -9,8 +9,7 @@ import botocore
 from adminsortable2.admin import SortableAdminBase, SortableInlineAdminMixin
 from django import forms
 from django.conf import settings
-from django.contrib import admin
-from django.contrib import messages
+from django.contrib import admin, messages
 from django.contrib.admin.options import BaseModelAdmin
 from django.contrib.auth import get_user_model
 from django.db import transaction
@@ -23,15 +22,13 @@ from django.utils.safestring import mark_safe
 
 from dataworkspace.apps.applications.models import VisualisationTemplate
 from dataworkspace.apps.applications.utils import get_data_source_id
-from dataworkspace.apps.core.admin import (
-    DeletableTimeStampedUserAdmin,
-    CSPRichTextEditorMixin,
-)
+from dataworkspace.apps.core.admin import CSPRichTextEditorMixin, DeletableTimeStampedUserAdmin
 from dataworkspace.apps.datasets.constants import TagType
 from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
     DataCutDataset,
     DatasetReferenceCode,
+    DataSetSubscription,
     MasterDataset,
     Pipeline,
     PipelineVersion,
@@ -39,22 +36,22 @@ from dataworkspace.apps.datasets.models import (
     ReferenceDatasetField,
     SourceLink,
     SourceTable,
+    SourceTableFieldDefinition,
     SourceView,
     Tag,
+    ToolQueryAuditLog,
     VisualisationCatalogueItem,
     VisualisationLink,
     VisualisationLinkSqlQuery,
-    ToolQueryAuditLog,
-    DataSetSubscription,
-    SourceTableFieldDefinition,
 )
-from dataworkspace.apps.datasets.utils import get_dataset_table
 from dataworkspace.apps.datasets.permissions.utils import (
     process_dataset_authorized_users_change,
     process_visualisation_catalogue_item_authorized_users_change,
 )
+from dataworkspace.apps.datasets.utils import get_dataset_table
 from dataworkspace.apps.dw_admin.forms import (
     CustomDatasetQueryForm,
+    CustomDatasetQueryInlineForm,
     DataCutDatasetForm,
     MasterDatasetForm,
     ReferenceDataFieldInlineForm,
@@ -63,7 +60,6 @@ from dataworkspace.apps.dw_admin.forms import (
     SourceLinkForm,
     SourceTableForm,
     SourceViewForm,
-    CustomDatasetQueryInlineForm,
     VisualisationCatalogueItemForm,
     VisualisationLinkForm,
 )

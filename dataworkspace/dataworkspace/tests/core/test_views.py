@@ -1,27 +1,21 @@
 import io
-from urllib.parse import urlencode
 import uuid
+from urllib.parse import urlencode
 
 import botocore
 import mock
-
 import pytest
 import requests_mock
 from botocore.response import StreamingBody
 from bs4 import BeautifulSoup
-
 from django.contrib.auth.models import Permission
-from django.test import override_settings, Client
-from django.urls import reverse
 from django.contrib.contenttypes.models import ContentType
-from dataworkspace.apps.applications.models import ApplicationInstance
+from django.test import Client, override_settings
+from django.urls import reverse
 
+from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.core.models import NewsletterSubscription, UserSatisfactionSurvey
-from dataworkspace.tests.common import (
-    BaseTestCase,
-    get_http_sso_data,
-    get_connect_src_from_csp,
-)
+from dataworkspace.tests.common import BaseTestCase, get_connect_src_from_csp, get_http_sso_data
 from dataworkspace.tests.factories import UserFactory
 
 

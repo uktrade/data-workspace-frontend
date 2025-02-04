@@ -4,23 +4,22 @@ import time
 from urllib.parse import urlencode
 
 import psycopg2
-
 from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.template import loader
-from django.contrib.auth.views import LoginView
 from django.contrib import messages
+from django.contrib.auth import get_user_model
+from django.contrib.auth.views import LoginView
 from django.db.models import Count
-from django.utils.html import escape
 from django.http import (
     Http404,
     HttpResponse,
-    HttpResponseRedirect,
     HttpResponseBadRequest,
+    HttpResponseRedirect,
     JsonResponse,
 )
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template import loader
 from django.urls import reverse, reverse_lazy
+from django.utils.html import escape
 from django.views.generic import ListView
 from django.views.generic.base import TemplateView, View
 from django.views.generic.edit import CreateView, DeleteView, FormView, UpdateView
@@ -32,17 +31,16 @@ from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.apps.explorer.constants import QueryLogState
 from dataworkspace.apps.explorer.exporters import get_exporter_class
 from dataworkspace.apps.explorer.forms import QueryForm, ShareQueryForm
-from dataworkspace.apps.explorer.models import Query, QueryLog, PlaygroundSQL
+from dataworkspace.apps.explorer.models import PlaygroundSQL, Query, QueryLog
 from dataworkspace.apps.explorer.schema import (
     get_user_schema_info,
     match_datasets_with_schema_info,
 )
-from dataworkspace.notify import send_email
 from dataworkspace.apps.explorer.tasks import submit_query_for_execution
 from dataworkspace.apps.explorer.utils import (
+    QueryException,
     fetch_query_results,
     get_total_pages,
-    QueryException,
     url_get_log_id,
     url_get_page,
     url_get_params,
@@ -50,6 +48,7 @@ from dataworkspace.apps.explorer.utils import (
     url_get_rows,
     url_get_show,
 )
+from dataworkspace.notify import send_email
 
 
 class SafeLoginView(LoginView):

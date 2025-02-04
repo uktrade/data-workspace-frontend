@@ -5,30 +5,30 @@ import os
 import time
 from functools import reduce
 from uuid import UUID
-import bleach
 
-import sqlparse
+import bleach
 import boto3
 import botocore
 import requests
+import sqlparse
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
-from django.db import connections, IntegrityError, transaction
-from django.db.models import Q, Max
+from django.db import IntegrityError, connections, transaction
+from django.db.models import Max, Q
 from django.db.utils import DatabaseError
 from django.http import Http404
 from django.urls import reverse
 from django.utils.safestring import mark_safe
-from psycopg2.sql import Identifier, Literal, SQL, Composed
+from psycopg2.sql import SQL, Composed, Identifier, Literal
 from waffle import switch_is_active
 from redis.exceptions import LockError, LockNotOwnedError
 
+from dataworkspace.apps.core.errors import DatasetUnpublishedError
 from dataworkspace.apps.core.utils import (
     close_all_connections_if_not_in_atomic_block,
     stable_identification_suffix,
 )
-from dataworkspace.apps.core.errors import DatasetUnpublishedError
 from dataworkspace.apps.datasets.models import (
     CustomDatasetQuery,
     CustomDatasetQueryTable,
@@ -51,14 +51,13 @@ from dataworkspace.datasets_db import (
     extract_queried_tables_from_sql_query,
     get_custom_dataset_query_changelog,
     get_data_hash,
-    get_reference_dataset_changelog,
-    get_source_table_changelog,
     get_earliest_tables_last_updated_date,
+    get_reference_dataset_changelog,
     get_rows_number,
+    get_source_table_changelog,
 )
 from dataworkspace.notify import EmailSendFailureException, send_email
 from dataworkspace.utils import TYPE_CODES_REVERSED
-
 
 logger = logging.getLogger("app")
 

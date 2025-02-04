@@ -1,11 +1,13 @@
 import re
 import uuid
+
 from django import forms
 from django.contrib.auth import get_user_model
-from django.db import models
-from django.db.models.signals import pre_delete, post_delete
 from django.core.validators import RegexValidator
-from dataworkspace.forms import AdminRichTextEditorWidget, AdminRichLinkEditorWidget
+from django.db import models
+from django.db.models.signals import post_delete, pre_delete
+
+from dataworkspace.forms import AdminRichLinkEditorWidget, AdminRichTextEditorWidget
 
 # Proxy model to allow us to use SSO ID as the username
 

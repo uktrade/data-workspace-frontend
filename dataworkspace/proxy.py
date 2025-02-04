@@ -1,5 +1,4 @@
 import asyncio
-
 import base64
 import hmac
 import ipaddress
@@ -8,26 +7,25 @@ import logging
 import os
 import random
 import secrets
-import sys
 import string
-import uuid
+import sys
 import urllib
+import uuid
 
 import aiohttp
 import ecs_logging
+import redis.asyncio as redis
 from aiohttp import web
-
 from elasticapm.contrib.aiohttp import ElasticAPM
 from hawkserver import authenticate_hawk_header
 from multidict import CIMultiDict
+from proxy_session import SESSION_KEY, redis_session_middleware
+from sentry import init_sentry
 from sentry_sdk import set_user
 from sentry_sdk.integrations.aiohttp import AioHttpIntegration
 from yarl import URL
-from sentry import init_sentry
-import redis.asyncio as redis
 
 from dataworkspace.utils import normalise_environment
-from proxy_session import SESSION_KEY, redis_session_middleware
 
 
 class UserException(Exception):

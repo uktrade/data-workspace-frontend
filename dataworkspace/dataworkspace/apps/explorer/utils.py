@@ -1,13 +1,11 @@
 import json
 import logging
 import re
-
 from contextlib import contextmanager
 from datetime import timedelta
 
 import psycopg2
 import sqlparse
-
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.contrib.auth.forms import AuthenticationForm
@@ -16,15 +14,14 @@ from django.core.cache import cache
 from django.shortcuts import get_object_or_404
 
 from dataworkspace.apps.core.utils import (
-    close_admin_db_connection_if_not_in_atomic_block,
-    new_private_database_credentials,
-    source_tables_for_user,
-    db_role_schema_suffix_for_user,
-    postgres_user,
     USER_SCHEMA_STEM,
+    close_admin_db_connection_if_not_in_atomic_block,
+    db_role_schema_suffix_for_user,
+    new_private_database_credentials,
+    postgres_user,
+    source_tables_for_user,
 )
 from dataworkspace.apps.explorer.models import QueryLog
-
 
 logger = logging.getLogger("app")
 EXPLORER_PARAM_TOKEN = "$$"

@@ -1,8 +1,10 @@
 import uuid
-from django.db import models
+
 from django.contrib.auth import get_user_model
-from dataworkspace.apps.core.models import TimeStampedModel
+from django.db import models
+
 from dataworkspace.apps.applications.models import ApplicationInstance
+from dataworkspace.apps.core.models import TimeStampedModel
 
 
 class ApplicationInstanceArangoUsers(TimeStampedModel):

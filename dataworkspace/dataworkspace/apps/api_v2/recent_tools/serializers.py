@@ -1,7 +1,8 @@
-from rest_framework import serializers
 from django.urls import reverse
-from dataworkspace.apps.eventlog.models import EventLog
+from rest_framework import serializers
+
 from dataworkspace.apps.applications.utils import get_tool_url_for_user
+from dataworkspace.apps.eventlog.models import EventLog
 
 
 class RecentToolsSerializer(serializers.ModelSerializer):

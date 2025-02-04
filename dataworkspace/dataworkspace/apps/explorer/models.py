@@ -8,10 +8,7 @@ from django.db import models
 from django.urls import reverse
 from dynamic_models.models import AbstractFieldSchema, AbstractModelSchema  # noqa: I202
 
-from dataworkspace.apps.explorer.constants import (
-    QueryLogState,
-)
-
+from dataworkspace.apps.explorer.constants import QueryLogState
 
 logger = logging.getLogger(__name__)
 

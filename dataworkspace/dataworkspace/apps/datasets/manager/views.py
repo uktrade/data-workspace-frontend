@@ -16,7 +16,7 @@ from waffle.mixins import WaffleFlagMixin
 
 from dataworkspace import datasets_db
 from dataworkspace.apps.core.boto3_client import get_s3_client
-from dataworkspace.apps.core.constants import PostgresDataTypes, SCHEMA_POSTGRES_DATA_TYPE_MAP
+from dataworkspace.apps.core.constants import SCHEMA_POSTGRES_DATA_TYPE_MAP, PostgresDataTypes
 from dataworkspace.apps.core.utils import (
     copy_file_to_uploads_bucket,
     get_data_flow_import_pipeline_name,

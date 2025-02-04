@@ -2,45 +2,43 @@ import logging
 from datetime import datetime, time, timedelta
 
 import waffle
-
 from django.conf import settings
 from django.contrib.postgres.aggregates.general import ArrayAgg, BoolOr
-from django.contrib.postgres.search import SearchRank, SearchQuery
+from django.contrib.postgres.search import SearchQuery, SearchRank
 from django.core.cache import cache
 from django.db.models import (
+    BooleanField,
+    Case,
+    CharField,
     Count,
     F,
-    CharField,
-    IntegerField,
+    FilteredRelation,
     FloatField,
+    IntegerField,
     Q,
+    QuerySet,
     Sum,
     Value,
-    Case,
     When,
-    BooleanField,
-    FilteredRelation,
 )
-from django.db.models import QuerySet
-from django.db.models.functions import Lower
 from django.db.models.fields.json import KeyTextTransform
+from django.db.models.functions import Lower
 from django.http import JsonResponse
 from pytz import utc
-import redis
 
+import redis
 from dataworkspace.apps.core.utils import close_all_connections_if_not_in_atomic_block
-from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType, TagType
+from dataworkspace.apps.datasets.constants import DataSetType, TagType, UserAccessType
 from dataworkspace.apps.datasets.models import (
-    ReferenceDataset,
     DataSet,
-    VisualisationCatalogueItem,
+    ReferenceDataset,
     ToolQueryAuditLog,
+    VisualisationCatalogueItem,
 )
 from dataworkspace.apps.datasets.utils import (
     dataset_type_to_manage_unpublished_permission_codename,
 )
 from dataworkspace.apps.eventlog.models import EventLog
-
 from dataworkspace.cel import celery_app
 
 logger = logging.getLogger("app")

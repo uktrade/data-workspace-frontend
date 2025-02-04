@@ -12,13 +12,13 @@ from dataworkspace.apps.data_collections.models import (
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
     GOVUKDesignSystemEmailField,
+    GOVUKDesignSystemForm,
     GOVUKDesignSystemModelForm,
     GOVUKDesignSystemRadioField,
-    GOVUKDesignSystemForm,
     GOVUKDesignSystemRadiosWidget,
     GOVUKDesignSystemRichTextField,
-    GOVUKDesignSystemTextWidget,
     GOVUKDesignSystemTextareaWidget,
+    GOVUKDesignSystemTextWidget,
 )
 
 

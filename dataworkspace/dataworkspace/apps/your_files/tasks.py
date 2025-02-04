@@ -3,20 +3,18 @@ import time
 from datetime import datetime
 
 import pytz
+import waffle
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 
-import waffle
 import redis
-
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.utils import (
     close_all_connections_if_not_in_atomic_block,
     get_s3_prefix,
 )
 from dataworkspace.apps.your_files.models import YourFilesUserPrefixStats
-
 from dataworkspace.cel import celery_app
 
 logger = logging.getLogger("app")

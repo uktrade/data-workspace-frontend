@@ -1,20 +1,20 @@
 import logging
-import gevent
 
+import gevent
 from django.conf import settings
 from django.contrib import messages
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 
-from dataworkspace.apps.appstream.utils import (
-    get_fleet_status,
-    get_app_sessions,
-    scale_fleet,
-    get_fleet_scale,
-    check_fleet_running,
-    restart_fleet,
-)
 from dataworkspace.apps.appstream.forms import AppstreamAdminForm
+from dataworkspace.apps.appstream.utils import (
+    check_fleet_running,
+    get_app_sessions,
+    get_fleet_scale,
+    get_fleet_status,
+    restart_fleet,
+    scale_fleet,
+)
 
 logger = logging.getLogger("app")
 

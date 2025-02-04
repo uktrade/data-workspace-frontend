@@ -2,7 +2,6 @@
 """
 
 import datetime
-
 import json
 import logging
 import os
@@ -10,45 +9,39 @@ import re
 import subprocess
 
 import boto3
-from botocore.exceptions import ClientError
 import gevent
-
+from botocore.exceptions import ClientError
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
-from dataworkspace.cel import celery_app
-from dataworkspace.apps.core.models import Database
-from dataworkspace.apps.applications.models import (
-    ApplicationInstance,
-    ApplicationInstanceDbUsers,
-)
-from dataworkspace.apps.arangodb.models import ApplicationInstanceArangoUsers
 from dataworkspace.apps.applications.gitlab import (
     ECR_PROJECT_ID,
-    SUCCESS_PIPELINE_STATUSES,
     RUNNING_PIPELINE_STATUSES,
+    SUCCESS_PIPELINE_STATUSES,
     gitlab_api_v4,
     gitlab_api_v4_ecr_pipeline_trigger,
 )
+from dataworkspace.apps.applications.models import ApplicationInstance, ApplicationInstanceDbUsers
+from dataworkspace.apps.arangodb.models import ApplicationInstanceArangoUsers
+from dataworkspace.apps.arangodb.utils import new_private_arangodb_credentials
+from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.core.utils import (
+    USER_SCHEMA_STEM,
     clean_db_identifier,
     close_admin_db_connection_if_not_in_atomic_block,
     close_all_connections_if_not_in_atomic_block,
     create_tools_access_iam_role,
-    generate_jwt_token,
-    stable_identification_suffix,
-    source_tables_for_user,
+    db_role_schema_suffix_for_app,
     db_role_schema_suffix_for_user,
+    generate_jwt_token,
+    new_private_database_credentials,
     postgres_user,
     source_tables_for_app,
-    db_role_schema_suffix_for_app,
-    new_private_database_credentials,
+    source_tables_for_user,
+    stable_identification_suffix,
     write_credentials_to_bucket,
-    USER_SCHEMA_STEM,
 )
-from dataworkspace.apps.arangodb.utils import (
-    new_private_arangodb_credentials,
-)
+from dataworkspace.cel import celery_app
 
 logger = logging.getLogger("app")
 

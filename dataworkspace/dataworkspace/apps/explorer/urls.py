@@ -10,11 +10,11 @@ from dataworkspace.apps.explorer.views import (
     ListQueryView,
     PlayQueryView,
     QueryLogResultView,
+    QueryLogUpdateView,
     QueryView,
     RunningQueryView,
     ShareQueryConfirmationView,
     ShareQueryView,
-    QueryLogUpdateView,
     UserSchemaAccordian,
 )
 

@@ -1,26 +1,22 @@
 import json
 from datetime import date, datetime, timedelta
-from mock import call, Mock, MagicMock, patch
 
+import pytest
+import six
 from django.core.serializers.json import DjangoJSONEncoder
 from django.test import TestCase
 from freezegun import freeze_time
-from psycopg2.sql import Identifier, SQL
-import pytest
-import six
+from mock import MagicMock, Mock, call, patch
+from psycopg2.sql import SQL, Identifier
 
-from dataworkspace.apps.explorer.exporters import (
-    CSVExporter,
-    ExcelExporter,
-    JSONExporter,
-)
+from dataworkspace.apps.explorer.exporters import CSVExporter, ExcelExporter, JSONExporter
 from dataworkspace.apps.explorer.models import PlaygroundSQL, QueryLog
 from dataworkspace.apps.explorer.tasks import (
     _run_querylog_query,
-    truncate_querylogs,
     cleanup_playground_sql_table,
     cleanup_temporary_query_tables,
     submit_query_for_execution,
+    truncate_querylogs,
 )
 from dataworkspace.apps.explorer.utils import InvalidExplorerConnectionException
 from dataworkspace.tests.explorer.factories import (

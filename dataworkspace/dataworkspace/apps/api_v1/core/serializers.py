@@ -1,10 +1,10 @@
 from rest_framework import serializers
 
 from dataworkspace.apps.core.models import (
-    UserSatisfactionSurvey,
     NewsletterSubscription,
     Team,
     UserInlineFeedbackSurvey,
+    UserSatisfactionSurvey,
 )
 
 

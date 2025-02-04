@@ -1,9 +1,7 @@
 from rest_framework import viewsets
 from rest_framework.pagination import CursorPagination
 
-from dataworkspace.apps.api_v1.applications.serializers import (
-    ApplicationInstanceSerializer,
-)
+from dataworkspace.apps.api_v1.applications.serializers import ApplicationInstanceSerializer
 from dataworkspace.apps.applications.models import ApplicationInstance
 
 

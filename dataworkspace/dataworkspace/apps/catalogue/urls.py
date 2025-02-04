@@ -2,11 +2,10 @@ from django.urls import path
 
 from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.catalogue.views import (
+    ReferenceDatasetDetailView,
     datagroup_item_view,
     dataset_full_path_view,
-    ReferenceDatasetDetailView,
 )
-
 
 urlpatterns = [
     # Old redirect URLs

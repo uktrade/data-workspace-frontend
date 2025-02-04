@@ -1,9 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 
-from dataworkspace.apps.core.models import (
-    TimeStampedUserModel,
-)
+from dataworkspace.apps.core.models import TimeStampedUserModel
 
 
 class UploadedTable(TimeStampedUserModel):

@@ -1,12 +1,12 @@
-from django.urls import reverse
 from django.conf import settings
+from django.urls import reverse
+
 from dataworkspace.apps.applications.models import (
+    ApplicationInstance,
+    ApplicationTemplate,
     SizeConfig,
     UserToolConfiguration,
-    ApplicationTemplate,
-    ApplicationInstance,
 )
-
 from dataworkspace.apps.applications.utils import stable_identification_suffix
 
 

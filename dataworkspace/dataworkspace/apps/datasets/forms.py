@@ -1,34 +1,34 @@
+import json
+import logging
 from collections import defaultdict
 from functools import partial
-import logging
-import json
-import waffle
 
+import waffle
 from django import forms
-from django.db import models
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.validators import EMPTY_VALUES
+from django.db import models
 
-
-from dataworkspace.apps.datasets.constants import AggregationType, DataSetType, TagType
 from dataworkspace.apps.core.forms import ConditionalSupportTypeRadioWidget
-from .models import DataSet, SourceLink, Tag, VisualisationCatalogueItem
-from .search import SORT_FIELD_MAP, SearchDatasetsFilters
+from dataworkspace.apps.datasets.constants import AggregationType, DataSetType, TagType
+
 from ...forms import (
+    GOVUKDesignSystemCharField,
     GOVUKDesignSystemChoiceField,
     GOVUKDesignSystemForm,
-    GOVUKDesignSystemCharField,
     GOVUKDesignSystemModelForm,
     GOVUKDesignSystemRadioField,
     GOVUKDesignSystemRadiosWidget,
+    GOVUKDesignSystemRichLinkField,
+    GOVUKDesignSystemRichTextField,
     GOVUKDesignSystemSelectWidget,
-    GOVUKDesignSystemTextWidget,
     GOVUKDesignSystemTextareaField,
     GOVUKDesignSystemTextareaWidget,
-    GOVUKDesignSystemRichTextField,
-    GOVUKDesignSystemRichLinkField,
+    GOVUKDesignSystemTextWidget,
 )
+from .models import DataSet, SourceLink, Tag, VisualisationCatalogueItem
+from .search import SORT_FIELD_MAP, SearchDatasetsFilters
 
 logger = logging.getLogger("app")
 

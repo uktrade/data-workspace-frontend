@@ -2,11 +2,10 @@
 
 import uuid
 
+import ckeditor.fields
+import django.db.models.deletion
 from django.conf import settings
 from django.db import migrations, models
-import django.db.models.deletion
-
-import ckeditor.fields
 
 
 class Migration(migrations.Migration):

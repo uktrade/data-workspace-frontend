@@ -1,4 +1,5 @@
 from unittest import mock
+
 import pytest
 from django.conf import settings
 from django.contrib.auth.models import Permission
@@ -9,9 +10,9 @@ from rest_framework import status
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.tests import factories
-from dataworkspace.tests.factories import UserFactory
 from dataworkspace.tests.api_v1.base import BaseAPIViewTest
 from dataworkspace.tests.core.factories import TeamFactory
+from dataworkspace.tests.factories import UserFactory
 
 
 @pytest.mark.django_db

@@ -1,8 +1,6 @@
 from rest_framework import serializers
 
-from dataworkspace.apps.datasets.models import (
-    DataSet,
-)
+from dataworkspace.apps.datasets.models import DataSet
 
 
 class DatasetSerializer(serializers.ModelSerializer):

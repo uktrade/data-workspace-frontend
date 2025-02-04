@@ -1,4 +1,5 @@
 from django.conf import settings
+
 from dataworkspace.apps.applications.models import ApplicationInstance
 
 

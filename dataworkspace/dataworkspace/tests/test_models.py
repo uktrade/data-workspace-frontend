@@ -1,11 +1,10 @@
 from datetime import date, datetime, timezone
-import mock
 
+import mock
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.db import connection, connections, ProgrammingError
+from django.db import ProgrammingError, connection, connections
 from django.db.models import ProtectedError
-
 from freezegun import freeze_time
 
 from dataworkspace.apps.core.models import Database

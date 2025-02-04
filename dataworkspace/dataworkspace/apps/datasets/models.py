@@ -10,74 +10,59 @@ from dataclasses import dataclass
 from datetime import datetime
 from functools import reduce
 from io import StringIO
-
-from typing import Optional, List
+from typing import List, Optional
 
 import waffle
-from psycopg2 import sql
-
 from botocore.exceptions import ClientError
-
 from django import forms
 from django.apps import apps
-from django.core.cache import cache
-from django.core import serializers
-from django.db import (
-    DatabaseError,
-    models,
-    connection,
-    connections,
-    transaction,
-    ProgrammingError,
-)
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ValidationError
-from django.core.validators import RegexValidator
-from django.urls import reverse
-from django.db.models import F, ProtectedError, Count, Q
-from django.db.models.signals import m2m_changed
-from django.dispatch import receiver
 from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import SearchVector, SearchVectorField
-from django.utils.text import slugify
+from django.core import serializers
+from django.core.cache import cache
+from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
+from django.db import DatabaseError, ProgrammingError, connection, connections, models, transaction
+from django.db.models import Count, F, ProtectedError, Q
+from django.db.models.signals import m2m_changed
+from django.dispatch import receiver
+from django.urls import reverse
 from django.utils import timezone
+from django.utils.text import slugify
+from psycopg2 import sql
 from requests import HTTPError
 
 from dataworkspace import datasets_db
+from dataworkspace.apps.applications.models import ApplicationTemplate, VisualisationTemplate
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.core.models import (
-    TimeStampedModel,
-    DeletableTimestampedUserModel,
-    TimeStampedUserModel,
     Database,
     DeletableQuerySet,
+    DeletableTimestampedUserModel,
     MLFlowInstance,
-    RichTextField,
     RichLinkField,
+    RichTextField,
+    TimeStampedModel,
+    TimeStampedUserModel,
 )
-from dataworkspace.apps.applications.models import (
-    ApplicationTemplate,
-    VisualisationTemplate,
-)
-
 from dataworkspace.apps.datasets.constants import (
-    DataFlowPlatform,
-    DataSetType,
-    DataLinkType,
-    GRID_DATA_TYPE_MAP,
     GRID_ACRONYM_MAP,
+    GRID_DATA_TYPE_MAP,
+    DataFlowPlatform,
+    DataLinkType,
+    DataSetType,
     PipelineScheduleType,
-    SecurityClassificationAndHandlingInstructionType,
     PipelineType,
+    SecurityClassificationAndHandlingInstructionType,
     TagType,
     UserAccessType,
 )
 from dataworkspace.apps.datasets.model_utils import external_model_class
-
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 from dataworkspace.apps.your_files.models import UploadedTable
@@ -1523,8 +1508,8 @@ class ReferenceDataset(DeletableTimestampedUserModel):
     def _sync_to_datasets_db(self):
         # pylint: disable=import-outside-toplevel
         from dataworkspace.apps.core.utils import (
-            trigger_dataflow_dag,
             get_data_flow_import_pipeline_name,
+            trigger_dataflow_dag,
         )
 
         s3_path = f"{settings.DATAFLOW_IMPORTS_BUCKET_ROOT}/reference/{self.table_name}.csv"

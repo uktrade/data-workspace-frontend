@@ -1,5 +1,5 @@
-from django.forms import Form, ChoiceField, MultipleChoiceField
 import pytest
+from django.forms import ChoiceField, Form, MultipleChoiceField
 
 from dataworkspace.apps.core.templatetags.core_filters import (
     design_system_rich_text,

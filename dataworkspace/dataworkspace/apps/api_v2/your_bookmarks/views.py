@@ -1,7 +1,7 @@
 from django.db.models import F, IntegerField, Value
 from rest_framework import viewsets
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.authentication import SessionAuthentication
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 
 from dataworkspace.apps.api_v2.datasets.serializers import BookmarkedDatasetSerializer

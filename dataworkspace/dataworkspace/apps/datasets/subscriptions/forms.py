@@ -1,6 +1,4 @@
 from dataworkspace.apps.datasets.constants import NotificationType
-
-
 from dataworkspace.apps.datasets.models import DataSetSubscription
 from dataworkspace.forms import (
     GOVUKDesignSystemModelForm,

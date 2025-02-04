@@ -7,10 +7,10 @@ from django.db.models import Q
 from django.urls import reverse
 
 from dataworkspace.apps.core.models import DeletableTimestampedUserModel, RichTextField
+from dataworkspace.apps.data_collections.constants import CollectionUserAccessType
 from dataworkspace.apps.datasets.models import DataSet, VisualisationCatalogueItem
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
-from dataworkspace.apps.data_collections.constants import CollectionUserAccessType
 
 
 class Collection(DeletableTimestampedUserModel):

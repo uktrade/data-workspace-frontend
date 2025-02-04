@@ -5,12 +5,10 @@ from datetime import datetime
 
 import gevent
 import pytz
-
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError
 from django.http import JsonResponse
-
 from psycopg2 import connect, sql
 
 from dataworkspace.apps.applications.models import (
@@ -21,15 +19,14 @@ from dataworkspace.apps.applications.models import (
 from dataworkspace.apps.applications.spawner import spawn
 from dataworkspace.apps.applications.utils import (
     api_application_dict,
-    application_options,
     application_api_is_allowed,
+    application_options,
     application_template_tag_user_commit_from_host,
     get_api_visible_application_instance_by_public_host,
     set_application_stopped,
 )
 from dataworkspace.apps.core.boto3_client import get_sts_client
-from dataworkspace.apps.core.utils import database_dsn
-from dataworkspace.apps.core.utils import create_tools_access_iam_role
+from dataworkspace.apps.core.utils import create_tools_access_iam_role, database_dsn
 
 SCHEMA_STRING = {"dataType": "STRING", "semantics": {"conceptType": "DIMENSION"}}
 

@@ -1,13 +1,14 @@
 import uuid
 
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.contrib.auth import get_user_model
-from dataworkspace.apps.core.utils import USER_SCHEMA_STEM, stable_identification_suffix
+
 from dataworkspace.apps.core.models import TimeStampedModel
+from dataworkspace.apps.core.utils import USER_SCHEMA_STEM, stable_identification_suffix
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
 

@@ -2,11 +2,10 @@ import json
 import re
 
 import requests
+from django.conf import settings
 from mohawk import Sender
 
 from dataworkspace.apps.datasets.constants import DataFlowPlatform
-from django.conf import settings
-
 
 API_URL_GOV_PAAS = (
     f"{settings.DATAFLOW_API_CONFIG['DATAFLOW_BASE_URL']}/api/experimental/derived-dags"

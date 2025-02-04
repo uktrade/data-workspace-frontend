@@ -6,7 +6,6 @@ from botocore.exceptions import ClientError
 from celery import states
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import DAILY, rrule
-
 from django import forms
 from django.conf import settings
 from django.contrib import messages
@@ -14,41 +13,33 @@ from django.contrib.admin import helpers
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.db.models import (
-    Avg,
-    Count,
-    DurationField,
-    ExpressionWrapper,
-    F,
-    Sum,
-    Value,
-)
+from django.db.models import Avg, Count, DurationField, ExpressionWrapper, F, Sum, Value
 from django.db.models.functions import Concat, TruncDate
-from django.http import Http404, HttpResponseServerError, HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect, HttpResponseServerError
 from django.shortcuts import get_object_or_404
 from django.template.defaultfilters import filesizeformat
 from django.urls import reverse
 from django.utils.timesince import timesince
-from django.views.generic import FormView, CreateView, TemplateView
+from django.views.generic import CreateView, FormView, TemplateView
 from django_celery_results.models import TaskResult
 
 from dataworkspace.apps.applications.models import ApplicationInstance
 from dataworkspace.apps.core.boto3_client import get_s3_client
 from dataworkspace.apps.datasets.models import (
+    DataSet,
     Notification,
     ReferenceDataset,
     ReferenceDatasetField,
-    SourceLink,
-    DataSet,
     ReferenceDatasetUploadLog,
     ReferenceDatasetUploadLogRecord,
+    SourceLink,
     SourceTable,
 )
 from dataworkspace.apps.dw_admin.forms import (
-    ReferenceDataRowDeleteForm,
-    ReferenceDataRowDeleteAllForm,
-    SourceLinkUploadForm,
     ReferenceDataRecordUploadForm,
+    ReferenceDataRowDeleteAllForm,
+    ReferenceDataRowDeleteForm,
+    SourceLinkUploadForm,
     clean_identifier,
 )
 from dataworkspace.apps.eventlog.constants import SystemStatLogEventType

@@ -6,8 +6,8 @@ from django import forms
 from django.contrib.admin.widgets import AdminTextareaWidget
 from django.core.validators import EmailValidator
 from django.forms import (
-    CheckboxInput,
     CharField,
+    CheckboxInput,
     EmailField,
     ModelChoiceField,
     MultiValueField,

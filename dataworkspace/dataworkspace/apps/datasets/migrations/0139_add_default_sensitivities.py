@@ -2,7 +2,6 @@
 
 from django.db import migrations
 
-
 DEFAULT_SENSITIVITIES = [
     "PERSONAL",
     "COMMERCIAL",

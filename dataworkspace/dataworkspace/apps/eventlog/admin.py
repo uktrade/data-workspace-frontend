@@ -5,7 +5,7 @@ from datetime import datetime
 from django.contrib import admin
 from django.contrib.admin.templatetags.admin_urls import admin_urlname
 from django.http import HttpResponse
-from django.urls import reverse, NoReverseMatch
+from django.urls import NoReverseMatch, reverse
 from django.utils.html import format_html
 
 from dataworkspace.apps.eventlog.models import EventLog, SystemStatLog

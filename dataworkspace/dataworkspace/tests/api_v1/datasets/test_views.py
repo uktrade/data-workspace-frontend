@@ -11,17 +11,17 @@ from rest_framework import status
 
 from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.core.utils import database_dsn
+from dataworkspace.apps.datasets.constants import DataSetType, TagType
 from dataworkspace.apps.datasets.data_dictionary.service import DataDictionaryService
 from dataworkspace.apps.datasets.models import (
+    CustomDatasetQuery,
     DataGrouping,
     DataSet,
     ReferenceDataset,
     SourceTable,
-    CustomDatasetQuery,
 )
 from dataworkspace.tests import factories
 from dataworkspace.tests.api_v1.base import BaseAPIViewTest
-from dataworkspace.apps.datasets.constants import DataSetType, TagType
 
 
 def flush_database(connection):

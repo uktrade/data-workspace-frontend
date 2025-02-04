@@ -1,8 +1,12 @@
 import re
+
 from django import forms
-from django.forms import ValidationError
 from django.core.validators import FileExtensionValidator
+from django.forms import ValidationError
+
 from dataworkspace.apps.core.forms import ConditionalSupportTypeRadioWidget
+from dataworkspace.apps.core.storage import malware_file_validator
+from dataworkspace.apps.core.utils import get_postgres_datatype_choices
 from dataworkspace.forms import (
     GOVUKDesignSystemCharField,
     GOVUKDesignSystemChoiceField,
@@ -12,13 +16,9 @@ from dataworkspace.forms import (
     GOVUKDesignSystemRadioField,
     GOVUKDesignSystemRadiosWidget,
     GOVUKDesignSystemSelectWidget,
-    GOVUKDesignSystemTextWidget,
     GOVUKDesignSystemTextCharCountWidget,
+    GOVUKDesignSystemTextWidget,
 )
-from dataworkspace.apps.core.utils import (
-    get_postgres_datatype_choices,
-)
-from dataworkspace.apps.core.storage import malware_file_validator
 
 
 class TableSchemaForm(GOVUKDesignSystemForm):

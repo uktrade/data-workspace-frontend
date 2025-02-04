@@ -1,5 +1,5 @@
-from django.db import models
 import bleach
+from django.db import models
 
 
 class MaintenanceSettings(models.Model):

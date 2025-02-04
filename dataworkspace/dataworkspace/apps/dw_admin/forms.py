@@ -1,6 +1,7 @@
 import csv
 import uuid
 
+from adminsortable2.admin import CustomInlineFormSet
 from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import get_user_model
@@ -10,22 +11,20 @@ from django.db.models import Q
 from django.forms.widgets import SelectMultiple
 from django.template.loader import get_template
 from django.utils.safestring import mark_safe
-
-from adminsortable2.admin import CustomInlineFormSet
 from django_better_admin_arrayfield.forms.fields import DynamicArrayField
 
 from dataworkspace.apps.datasets.constants import DataSetType
 from dataworkspace.apps.datasets.models import (
-    SensitivityType,
-    SourceLink,
-    DataSet,
-    ReferenceDataset,
-    ReferenceDatasetField,
     CustomDatasetQuery,
     DataCutDataset,
-    SourceView,
-    SourceTable,
+    DataSet,
     MasterDataset,
+    ReferenceDataset,
+    ReferenceDatasetField,
+    SensitivityType,
+    SourceLink,
+    SourceTable,
+    SourceView,
     VisualisationCatalogueItem,
     VisualisationLink,
 )

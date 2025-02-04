@@ -1,35 +1,33 @@
-from functools import partial
 import inspect
 import sys
-import mock
+from functools import partial
 
+import mock
+import pytest
 from botocore.exceptions import ClientError
 from bs4 import BeautifulSoup
-
 from django.apps import apps
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
-from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.urls import reverse
 from django.test import Client
-import pytest
+from django.urls import reverse
 
 from dataworkspace.apps.datasets.constants import DataSetType, UserAccessType
 from dataworkspace.apps.datasets.models import (
+    CustomDatasetQuery,
+    DataSet,
     ReferenceDataset,
     ReferenceDatasetField,
-    SourceLink,
-    ReferenceDatasetUploadLogRecord,
     ReferenceDatasetUploadLog,
-    DataSet,
-    CustomDatasetQuery,
+    ReferenceDatasetUploadLogRecord,
+    SourceLink,
     SourceTable,
 )
 from dataworkspace.apps.explorer.utils import get_user_explorer_connection_settings
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import BaseAdminTestCase, get_http_sso_data
-
 
 LONG_DATASET_DESCRIPTION = "This is a very long dataset description. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam."  # pylint: disable=line-too-long
 

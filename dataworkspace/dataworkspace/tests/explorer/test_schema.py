@@ -4,17 +4,10 @@ import pytest
 from django.conf import settings
 from django.core.cache import cache
 
-from dataworkspace.apps.core.models import (
-    Database,
-)
+from dataworkspace.apps.core.models import Database
+from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.explorer import schema
-from dataworkspace.apps.datasets.constants import (
-    UserAccessType,
-)
-from dataworkspace.tests.factories import (
-    MasterDataSetFactory,
-    SourceTableFactory,
-)
+from dataworkspace.tests.factories import MasterDataSetFactory, SourceTableFactory
 
 
 class TestSchemaInfo:

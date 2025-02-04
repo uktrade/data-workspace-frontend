@@ -1,10 +1,11 @@
-from rest_framework import status, mixins
-from rest_framework.viewsets import GenericViewSet
+from rest_framework import mixins, status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet
 
 from dataworkspace.apps.core.models import UserInlineFeedbackSurvey
+
 from .serializers import FeedbackSerializer
 
 

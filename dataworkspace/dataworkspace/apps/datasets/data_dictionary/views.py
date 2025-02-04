@@ -2,13 +2,14 @@ import logging
 
 from django.contrib import messages
 from django.http import HttpResponseForbidden
-from django.shortcuts import redirect, render, get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views import View
 
-from dataworkspace.apps.datasets.models import SourceTable, DataSetType, ReferenceDataset
+from dataworkspace.apps.datasets.models import DataSetType, ReferenceDataset, SourceTable
 from dataworkspace.apps.datasets.utils import find_dataset
-from .service import DataDictionaryService, DataDictionary
+
+from .service import DataDictionary, DataDictionaryService
 
 logger = logging.getLogger(__name__)
 

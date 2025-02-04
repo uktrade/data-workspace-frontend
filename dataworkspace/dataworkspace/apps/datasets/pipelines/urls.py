@@ -3,10 +3,10 @@ from django.urls import path
 from dataworkspace.apps.accounts.utils import login_required
 from dataworkspace.apps.datasets.pipelines import views
 from dataworkspace.apps.datasets.pipelines.forms import (
-    SQLPipelineCreateForm,
-    SQLPipelineEditForm,
     SharepointPipelineCreateForm,
     SharepointPipelineEditForm,
+    SQLPipelineCreateForm,
+    SQLPipelineEditForm,
 )
 
 urlpatterns = [

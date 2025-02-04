@@ -1,16 +1,16 @@
 import datetime
 from unittest.mock import patch
-from mock import mock
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
+from mock import mock
 
+from dataworkspace.apps.data_collections.constants import CollectionUserAccessType
+from dataworkspace.apps.data_collections.models import Collection, CollectionUserMembership
+from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.tests import factories
 from dataworkspace.tests.conftest import get_client, get_user_data
-from dataworkspace.apps.data_collections.models import CollectionUserMembership, Collection
-from dataworkspace.apps.eventlog.models import EventLog
-from dataworkspace.apps.data_collections.constants import CollectionUserAccessType
 
 
 def test_collection_authentication(client, user):

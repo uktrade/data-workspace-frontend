@@ -3,9 +3,9 @@
 from django.db import migrations, models
 
 from dataworkspace.apps.core.utils import (
+    USER_SCHEMA_STEM,
     db_role_schema_suffix_for_app,
     db_role_schema_suffix_for_user,
-    USER_SCHEMA_STEM,
 )
 
 

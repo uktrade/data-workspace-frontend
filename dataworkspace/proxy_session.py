@@ -33,7 +33,6 @@ import time
 
 from aiohttp import web
 
-
 COOKIE_MAX_AGE = 60 * 60 * 10
 
 REDIS_KEY_PREFIX = "data_workspace_session___cookie"

@@ -11,10 +11,7 @@ from dataworkspace.apps.core.errors import ToolInvalidUserError
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.tests import factories
 from dataworkspace.tests.common import BaseTestCase
-from dataworkspace.tests.core.factories import (
-    TeamFactory,
-    TeamMembershipFactory,
-)
+from dataworkspace.tests.core.factories import TeamFactory, TeamMembershipFactory
 from dataworkspace.tests.factories import UserFactory
 
 

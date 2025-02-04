@@ -1,34 +1,31 @@
 import logging
 
 from csp.decorators import csp_update
+from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
-from django.db import transaction, IntegrityError
+from django.db import IntegrityError, transaction
 from django.db.models import Prefetch, Q
-from django.contrib import messages
 from django.http import Http404, HttpResponseRedirect
-
-
-from django.views.generic import CreateView, DetailView, FormView, ListView, UpdateView
-from django.views.decorators.http import require_http_methods
 from django.shortcuts import get_object_or_404, redirect, render, reverse
-from django.conf import settings
+from django.views.decorators.http import require_http_methods
+from django.views.generic import CreateView, DetailView, FormView, ListView, UpdateView
 
 from dataworkspace.apps.data_collections.forms import (
     CollectionEditForm,
     CollectionNotesForm,
     CollectionUserAddForm,
-    SelectCollectionForMembershipForm,
     RequestAccessToCollectionForm,
+    SelectCollectionForMembershipForm,
 )
 from dataworkspace.apps.data_collections.models import (
     Collection,
     CollectionDatasetMembership,
+    CollectionUserAccessType,
     CollectionUserMembership,
     CollectionVisualisationCatalogueItemMembership,
-    CollectionUserAccessType,
 )
-
 from dataworkspace.apps.datasets.constants import DataSetType, TagType
 from dataworkspace.apps.datasets.models import Tag
 from dataworkspace.apps.eventlog.models import EventLog

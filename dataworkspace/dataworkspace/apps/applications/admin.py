@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.core import serializers
 from django.db import transaction
-from django.db.models import Count, FloatField, Max, Min, Sum, F, Func, Value, Q
+from django.db.models import Count, F, FloatField, Func, Max, Min, Q, Sum, Value
 from django.db.models.functions import Least
 from django.forms import Textarea
 
@@ -20,18 +20,14 @@ from dataworkspace.apps.applications.models import (
     ToolTemplate,
     VisualisationTemplate,
 )
+from dataworkspace.apps.applications.utils import MetricsException, application_instance_max_cpu
 from dataworkspace.apps.datasets.constants import UserAccessType
 from dataworkspace.apps.datasets.models import (
     DataSet,
     DataSetApplicationTemplatePermission,
     MasterDataset,
-    VisualisationCatalogueItem,
     MLFlowApplicationTemplatePermission,
-)
-
-from dataworkspace.apps.applications.utils import (
-    MetricsException,
-    application_instance_max_cpu,
+    VisualisationCatalogueItem,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_permission_change
