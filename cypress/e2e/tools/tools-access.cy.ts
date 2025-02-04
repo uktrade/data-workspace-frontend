@@ -245,7 +245,7 @@ describe('Tools access', () => {
   context('When a user successfully submits the form', () => {
     it('should show a success message and have access to tools', () => {
       cy.visit('/request-access/self-certify');
-      setCertificateDate('01', '02', '2024');
+      setCertificateDate('01', '01', new Date().getFullYear().toString());
       acceptDeclaration();
       cy.findByRole('button', { name: 'Submit' }).click();
       cy.findByRole('alert').within(() => {
