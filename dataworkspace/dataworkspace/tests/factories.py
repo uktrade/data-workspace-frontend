@@ -488,3 +488,17 @@ class PendingAuthorizedUsersFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = "datasets.PendingAuthorizedUsers"
+
+
+class AccessRequestFactory(factory.django.DjangoModelFactory):
+    requester = factory.SubFactory(UserFactory)
+    catalogue_item_id = factory.LazyAttribute(lambda _: uuid.uuid4())
+    contact_email = "frank@example.com"
+    eligibility_criteria_met = True
+    reason_for_access = "I want it"
+    zendesk_reference_number = "ref123"
+
+    data_access_status = "waiting"
+
+    class Meta:
+        model = "request_access.AccessRequest"
