@@ -44,7 +44,7 @@ describe('RecentCollections', () => {
       );
       expect(
         queryByText(
-          /You've currently not created a collection, or you're not a part of an existing collection./i
+          /You've currently not created a collection, or you're not part of an existing collection./i
         )
       ).not.toBeInTheDocument();
     });
@@ -93,7 +93,7 @@ describe('RecentCollections', () => {
       const { getByText } = render(<RecentCollections collections={[]} />);
       expect(
         getByText(
-          /You've currently not created a collection, or you're not a part of an existing collection./i
+          /You've currently not created a collection, or you're not part of an existing collection./i
         )
       ).toBeInTheDocument();
     });
