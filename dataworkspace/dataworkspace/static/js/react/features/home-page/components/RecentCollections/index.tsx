@@ -76,7 +76,7 @@ const RecentCollections: React.FC<Record<'collections', Collection[]>> = ({
           share data, dashboards and notes.
         </StyledParagraph>
         <StyledParagraph>
-          You've currently not created a collection, or you're not apart of an
+          You've currently not created a collection, or you're not a part of an
           existing collection.
         </StyledParagraph>
         <StyledButtonContainer>
