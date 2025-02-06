@@ -21,6 +21,7 @@ e2e-export-models = auth.User core.Database \
 	datasets.DatasetBookmark \
 	datasets.CustomDatasetQuery \
 	data_collections.Collection \
+	notification_banner.NotificationBanner \
 
 .PHONY: help test
 help:

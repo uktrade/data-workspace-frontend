@@ -1,0 +1,115 @@
+.notification-banner__background {
+  background-color: dbt-colour("dark-blue");
+}
+
+.notification-banner {
+  background-color: dbt-colour("dark-blue");
+  border-top: solid #01339a;
+  position: relative;
+  padding: govuk-spacing(2);
+}
+
+.notification-banner__content {
+  @include govuk-font($size: 16);
+  text-align: left;
+  color: govuk-colour("white");
+  display: inline-block;
+  margin: 0px;
+}
+
+.notification-banner__content a {
+  color: govuk-colour("white");
+}
+
+.notification-banner__content a:hover {
+  color: govuk-colour("white");
+  text-underline-offset: 2px;
+  text-decoration-thickness: 2.5px;
+  text-decoration-skip-ink: none;
+}
+
+.notification-banner__content a:focus {
+  color: govuk-colour("black");
+  background-color: yellow;
+}
+
+.notification-banner__content p {
+  color: govuk-colour("white");
+  margin: 0px;
+}
+
+.notification-banner__inner-content {
+  display: grid;
+  grid-template-columns: 30px 1fr 75px;
+  align-items: center;
+}
+
+.notification-banner__icon {
+  margin-right: govuk-spacing(2);
+}
+
+.notification-banner__dismiss {
+  text-align: right;
+}
+.notification-banner__dismiss a {
+  @include govuk-font($size: 16);
+  color: govuk-colour("white");
+}
+.notification-banner__dismiss a:hover {
+  color: govuk-colour("white");
+  text-underline-offset: 2px;
+  text-decoration-thickness: 2.5px;
+  text-decoration-skip-ink: none;
+}
+
+.notification-banner__dismiss a:focus {
+  color: govuk-colour("black");
+  background-color: yellow;
+}
+
+.notification-banner__content a:hover {
+  color: govuk-colour("white");
+  text-underline-offset: 2px;
+  text-decoration-thickness: 2.5px;
+  text-decoration-skip-ink: none;
+}
+
+.notification-banner__content a:focus {
+  color: govuk-colour("black");
+  background-color: yellow;
+}
+
+.notification-banner__content p {
+  color: govuk-colour("white");
+  margin: 0px;
+}
+
+.notification-banner__inner-content {
+  display: grid;
+  grid-template-columns: 30px 1fr 75px;
+  align-items: center;
+}
+
+.notification-banner__icon {
+  margin-right: govuk-spacing(2);
+}
+
+.notification-banner__dismiss {
+  text-align: right;
+}
+
+.notification-banner__dismiss a {
+  color: govuk-colour("white");
+}
+
+.notification-banner__dismiss a:hover {
+  color: govuk-colour("white");
+  text-underline-offset: 2px;
+  text-decoration-thickness: 2.5px;
+  text-decoration-skip-ink: none;
+}
+
+.notification-banner__dismiss a:focus {
+  color: govuk-colour("black");
+  background-color: govuk-colour("yellow");
+}

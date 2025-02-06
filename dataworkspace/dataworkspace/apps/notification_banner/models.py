@@ -1,18 +1,16 @@
 import re
-<<<<<<< HEAD
 
-from django.db import models
-=======
->>>>>>> ed8d6f19 (rebasing)
 import bleach
 from django.db import models
-from jsonschema import ValidationError
+from django.core.exceptions import ValidationError
 
 from dataworkspace.apps.core.models import RichTextField
 
 
 class NotificationBanner(models.Model):
-    campaign_name = models.TextField()
+    campaign_name = models.CharField(
+        max_length=255, help_text="To be used as the cookie name(spaces will be removed on save)"
+    )
     content = RichTextField()
     last_chance_content = RichTextField(
         blank=True,
@@ -26,23 +24,11 @@ class NotificationBanner(models.Model):
     end_date = models.DateField()
     published = models.BooleanField(default=False)
 
-    def save(self, *args, **kwargs):
-        self.content = bleach.clean(self.content, tags=["br", "a"], strip=True)
-        self.campaign_name = re.sub(r"[^\w_)+]", "", self.campaign_name)
-        if self.last_chance_content and not self.last_chance_days:
-<<<<<<< HEAD
-            raise ValidationError(
-                "Can't have 'last chance' content without setting the time window in which the message will display."
-            )
-        elif self.last_chance_days and not self.last_chance_content:
-            raise ValidationError(
-                "Can't have 'last chance' days remaining without setting the 'last chance' content that will display"
-            )
+    def clean(self):
         # Create only one Abc instance
         if not self.pk and NotificationBanner.objects.filter(published=True).exists():
             # This below line will render error by breaking page, you will see
-=======
->>>>>>> ed8d6f19 (rebasing)
+
             raise ValidationError(
                 "Can't have 'last chance' content without setting the time window in which the message will display."
             )
@@ -50,6 +36,10 @@ class NotificationBanner(models.Model):
             raise ValidationError(
                 "Can't have 'last chance' days remaining without setting the 'last chance' content that will display"
             )
+
+    def save(self, *args, **kwargs):
+        self.content = bleach.clean(self.content, tags=["br", "a"], strip=True)
+        self.campaign_name = re.sub(r"[^\w_)+]", "", self.campaign_name)
 
         return super().save(*args, **kwargs)
 

@@ -1,135 +1,3 @@
-<style>
-  .notification-banner__background {
-    background-color: #003399;
-  }
-
-    .notification-banner {
-        background-color: #003399;
-        border-top: solid #01339a;
-        position: relative;
-        padding: 10px;
-    }
-    
-    .notification-banner__content {
-        font-family: Arial;
-        font-size: 16px;
-        font-weight: 400;
-        text-align: left;
-        color: #ffffff;
-        display:inline-block;
-        margin: 0px;
-    }
-
-    .notification-banner__content a {
-        color: #ffffff;
-    }
-
-    .notification-banner__content a:hover {
-        color: #ffffff;
-        text-underline-offset: 2px;
-        text-decoration-thickness: 2.5px;
-        text-decoration-skip-ink: none;
-    }
-
-    .notification-banner__content a:focus {
-        color: #000000;
-        background-color: yellow;
-    }
-
-    .notification-banner__content p {
-        color: #ffffff;
-        margin: 0px;
-    }
-
-    .notification-banner__inner-content {
-        display: grid;
-        grid-template-columns: 30px 1fr 75px;
-        align-items: center;
-    }
-
-    .notification-banner__icon {
-        margin-right:10px
-    }
-
-
-    .notification-banner__dismiss {
-        text-align: right;
-    }
-    .notification-banner__dismiss a {
-        font-family: Arial;
-        font-size: 16px;
-        font-weight: 400;
-        color: #ffffff;
-    }
-    .notification-banner__dismiss a:hover {
-        color: #ffffff;
-        text-underline-offset: 2px;
-        text-decoration-thickness: 2.5px;
-        text-decoration-skip-ink: none;
-    }
-
-    .notification-banner__dismiss a:focus {
-        color: #000000;
-        background-color: yellow;
-    }
-
-
-
-    .notification-banner__content a:hover {
-        color: #ffffff;
-        text-underline-offset: 2px;
-        text-decoration-thickness: 2.5px;
-        text-decoration-skip-ink: none;
-    }
-
-    .notification-banner__content a:focus {
-        color: #000000;
-        background-color: yellow;
-    }
-
-    .notification-banner__content p {
-        color: #ffffff;
-        margin: 0px;
-    }
-
-    .notification-banner__inner-content {
-        display: grid;
-        grid-template-columns: 30px 1fr 75px;
-        align-items: center;
-    }
-
-    .notification-banner__icon {
-        margin-right:10px
-    }
-
-
-    .notification-banner__dismiss {
-        text-align: right;
-    }
-
-    .notification-banner__dismiss a {
-        font-family: Arial;
-        font-size: 16px;
-        font-weight: 400;
-        color: #ffffff;
-    }
-
-    .notification-banner__dismiss a:hover {
-        color: #ffffff;
-        text-underline-offset: 2px;
-        text-decoration-thickness: 2.5px;
-        text-decoration-skip-ink: none;
-    }
-
-    .notification-banner__dismiss a:focus {
-        color: #000000;
-        background-color: yellow;
-    }
-
-
-
-</style>
-
 <div class="notification-banner" role="region" aria-labelledby="notification-banner-content">
     <div class="govuk-grid-row">
         <div class="govuk-width-container">
@@ -146,7 +14,7 @@
                 </defs>
               </svg>
             <div class="notification-banner__content" id="notification-banner-content">
-                <div> 
+                <div>
                 {% if last_chance %}
                     {{ banner.last_chance_content|safe }}
                 {% else %}
@@ -155,10 +23,7 @@
                 </div>
             </div>
             <div class="notification-banner__dismiss" id="notification-banner-dismiss"> <a href="#">Dismiss</a> </div>
-<<<<<<< HEAD
         </div>
-=======
->>>>>>> ed8d6f19 (rebasing)
         </div>
         </div>
     </div>
@@ -166,44 +31,44 @@
 </div>
 {% block footer_additions %}
 <script nonce="{{ request.csp_nonce }}">
-  function addNotificationBannerEvents() {
-    const accepted_link = document.querySelector("#notification-banner-content a");
-    if (accepted_link) {
-<<<<<<< HEAD
-      accepted_link.setAttribute("target", "_blank")
-=======
->>>>>>> ed8d6f19 (rebasing)
-      accepted_link.addEventListener("click", function () {
-        postNotificationAction("accepted");
-      });
-    }
-    const dismiss_link = document.querySelector(
-      "#notification-banner-dismiss a"
-    );
-    if (dismiss_link) {
-      dismiss_link.addEventListener("click", function () {
-        postNotificationAction("dismissed");
-      });
-    }
-  }
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", (event) => {
-      addNotificationBannerEvents();
-    });
-  } else {
-    addNotificationBannerEvents();
-  }
-  function postNotificationAction(action) {
-    const response = fetch("set-notification-cookie/", {
-      method: "POST",
-      body: JSON.stringify({
-        action: action,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": "{{ csrf_token }}",
-      },
-    });
-  }
+  document.addEventListener("DOMContentLoaded", (event) => {
+        const accepted_link = document.querySelectorAll("#notification-banner-content a");
+        const dismiss_link = document.querySelector("#notification-banner-dismiss a");
+
+        if (accepted_link) {
+          Array.from(accepted_link).map((link)=>{
+            link.addEventListener("click", async function (e) {
+              e.preventDefault()
+              // Wait for the POST to finish before following the link
+              await postNotificationAction("accepted");
+              window.location = e.target.href
+            })
+          })
+        }
+
+        if (dismiss_link) {
+          dismiss_link.addEventListener("click", async function (e) {
+            e.preventDefault()
+            // Wait for the POST to finish before reloading the page
+            await postNotificationAction("dismissed");
+            window.location.reload()
+          });
+        }
+      
+
+      async function postNotificationAction(action) {
+          await fetch("set-notification-cookie/", {
+          method: "POST",
+          body: JSON.stringify({
+            action: action,
+          }),
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}",
+          },
+        });
+      }
+  })
+
 </script>
 {% endblock %}

@@ -58,6 +58,7 @@
   margin-top: -30px;
 }
 
+@import "colors";
 @import "./objects/width-container";
 @import "./components/filters";
 @import "./components/header";
@@ -79,7 +80,7 @@
 @import "./components/sticky-button";
 @import "./components/tag";
 @import "./components/data-insights";
+@import "./components/notification-banner";
 @import "./vendor/ag-grid";
-@import "colors";
 @import "helpers";
 @import "mixins";
