@@ -60,13 +60,13 @@ class OwnerInsightsSerializer(serializers.ModelSerializer):
         source_tables = SourceTable.objects.filter(dataset_id__in=dataset_ids)
         service_ds = DataDictionaryService()
         for source_table in source_tables:
-            get_last_run = source_table.get_pipeline_last_success_date()
+            last_run_success = source_table.pipeline_last_run_success()
             st.append(
                 {
                     "id": source_table.id,
                     "name": source_table.name,
                     "data_dictionaries": service_ds.get_dictionary(source_table.id).items,
-                    "pipeline_last_run_success": get_last_run,
+                    "pipeline_last_run_success": last_run_success,
                 }
             )
         return st
