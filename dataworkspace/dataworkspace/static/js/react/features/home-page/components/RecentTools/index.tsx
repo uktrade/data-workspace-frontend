@@ -27,10 +27,11 @@ const RecentToolsList = styled('ul')`
   list-style: none;
   margin: ${SPACING_POINTS['4']}px 0;
   padding: 0;
-  display: flex;
 `;
 
 const RecentToolsListItem = styled('li')`
+  display: flex;
+
   &:first-child div {
     padding-right: ${SPACING_POINTS['4']}px;
   }
