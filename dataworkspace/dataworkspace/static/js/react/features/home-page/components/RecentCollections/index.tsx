@@ -7,7 +7,13 @@ import { Button } from 'govuk-react';
 import styled from 'styled-components';
 
 import { Tile } from '../../../../components';
-import { LINK_COLOUR, LINK_HOVER_COLOUR, WHITE } from '../../../../constants';
+import {
+  BLACK,
+  FOCUS_COLOUR,
+  LINK_COLOUR,
+  LINK_HOVER_COLOUR,
+  WHITE
+} from '../../../../constants';
 import URLS from '../../../../urls';
 
 export type Collection = {
@@ -34,6 +40,11 @@ const CollectionTilesContainer = styled('div')`
     }
     &:last-child {
       margin-right: 0;
+    }
+    &:focus {
+      color: ${BLACK};
+      background-color: ${FOCUS_COLOUR};
+      outline: none;
     }
   }
 `;
@@ -76,7 +87,7 @@ const RecentCollections: React.FC<Record<'collections', Collection[]>> = ({
           share data, dashboards and notes.
         </StyledParagraph>
         <StyledParagraph>
-          You've currently not created a collection, or you're not apart of an
+          You've currently not created a collection, or you're not part of an
           existing collection.
         </StyledParagraph>
         <StyledButtonContainer>

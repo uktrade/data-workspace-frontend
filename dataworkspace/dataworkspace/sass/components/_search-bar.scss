@@ -147,7 +147,9 @@ $icon-size: 40px;
   $_app-site-search-option-background-color: #fafafa;
   background-color: $_app-site-search-option-background-color;
 }
-.app-site-search__option--focused:nth-child(even).app-site-search__option--focused {
+.app-site-search__option--focused:nth-child(
+    even
+  ).app-site-search__option--focused {
   background-color: govuk-colour("blue") !important;
 }
 
@@ -330,6 +332,11 @@ $icon-size: 40px;
     margin: 0;
     a {
       color: govuk-colour("white");
+      &:focus {
+        color: govuk-colour("black");
+        background-color: govuk-colour("yellow");
+        outline: none;
+      }
     }
   }
 }
