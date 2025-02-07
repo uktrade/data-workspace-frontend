@@ -5,15 +5,15 @@
 .notification-banner {
   background-color: dbt-colour("dark-blue");
   position: relative;
-  padding: govuk-spacing(2);
+  padding: 8px 0 govuk-spacing(2);
 }
 
-.notification-banner__content {
+.notification-banner__content p {
   @include govuk-font($size: 16);
   text-align: left;
   color: govuk-colour("white");
   display: inline-block;
-  margin: 0px;
+  margin: 2px 0 0;
 }
 
 .notification-banner__content a {
@@ -30,11 +30,6 @@
 .notification-banner__content a:focus {
   color: govuk-colour("black");
   background-color: yellow;
-}
-
-.notification-banner__content p {
-  color: govuk-colour("white");
-  margin: 0px;
 }
 
 .notification-banner__inner-content {
@@ -76,11 +71,6 @@
 .notification-banner__content a:focus {
   color: govuk-colour("black");
   background-color: yellow;
-}
-
-.notification-banner__content p {
-  color: govuk-colour("white");
-  margin: 0px;
 }
 
 .notification-banner__inner-content {

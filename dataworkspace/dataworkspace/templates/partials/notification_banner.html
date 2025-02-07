@@ -14,13 +14,13 @@
                 </defs>
               </svg>
             <div class="notification-banner__content" id="notification-banner-content">
-                <div>
+                <p class="govuk-body">
                 {% if last_chance %}
                     {{ banner.last_chance_content|safe }}
                 {% else %}
                     {{ banner.content|safe }}
                 {% endif %}
-                </div>
+                </p>
             </div>
             <div class="notification-banner__dismiss" id="notification-banner-dismiss"> <a href="#">Dismiss</a> </div>
         </div>
