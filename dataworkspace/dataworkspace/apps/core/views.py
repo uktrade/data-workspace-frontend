@@ -1,11 +1,13 @@
 import json
 import logging
 import os
+from datetime import datetime, timezone
 
 from botocore.exceptions import ClientError
 from django.conf import settings
 from django.contrib import messages
 from django.http import (
+    HttpRequest,
     HttpResponse,
     HttpResponseBadRequest,
     HttpResponseForbidden,
@@ -42,12 +44,14 @@ from dataworkspace.apps.core.utils import (
     get_data_flow_import_pipeline_name,
     get_dataflow_dag_status,
     get_dataflow_task_status,
+    is_last_days_remaining_notification_banner,
     table_data,
     table_exists,
     view_exists,
 )
 from dataworkspace.apps.eventlog.models import EventLog
 from dataworkspace.apps.eventlog.utils import log_event
+from dataworkspace.apps.notification_banner.models import NotificationBanner
 from dataworkspace.zendesk import create_support_request
 
 logger = logging.getLogger("app")
@@ -488,3 +492,45 @@ class ContactUsView(FormView):
         if cleaned["contact_type"] == form.ContactTypes.GET_HELP:
             return HttpResponseRedirect(reverse("support"))
         return HttpResponseRedirect(reverse("feedback"))
+
+
+class SetNotificationCookie(View):
+    def post(self, request: HttpRequest, *args, **kwargs) -> JsonResponse:
+        banner = NotificationBanner.objects.filter(published=True).first()
+        if banner is None:
+            return JsonResponse(
+                {"message": "No published notification banners available."}, status=404
+            )
+        body = json.loads(request.body.decode())
+        action = body.get("action")
+        notification_action_values = ["accepted", "dismissed"]
+        if action not in notification_action_values:
+            return JsonResponse(
+                {
+                    "message": f"'action' parameter values must be one of: \
+                    {', '.join(notification_action_values)}. Your arg: {action}."
+                },
+                status=400,
+            )
+        date_expiry = banner.end_date
+        if datetime.now(timezone.utc).date() >= date_expiry:
+            return JsonResponse(
+                {"message": f"campaign {banner.campaign_name} expired"}, status=400
+            )
+
+        if is_last_days_remaining_notification_banner(banner) is True:
+            # If doing any action (dismissing) during the last chance window the window
+            # seeing the banner or your second time dismissing (first time as non last-chance,
+            # second as last-chance). Therefore set as 'accepted' as 'dismissed' with the
+            # last-chance logic means it would keep on showing.
+            action = "accepted"
+        response = JsonResponse({"message": f"banner {banner.campaign_name} {action}"}, status=200)
+        response.set_cookie(
+            banner.campaign_name,
+            action,
+            expires=date_expiry.strftime("%a, %d-%b-%Y %H:%M:%S GMT"),
+            httponly=True,
+            samesite="Lax",
+            secure=bool(settings.ENVIRONMENT != "Dev"),
+        )
+        return response

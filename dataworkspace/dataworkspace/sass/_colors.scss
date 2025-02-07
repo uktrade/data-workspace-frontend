@@ -1,3 +1,16 @@
+$dbt-colours: (
+  "dark-blue": #003399,
+) !default;
+
+@function dbt-colour($colour) {
+  @if not map-has-key($dbt-colours, $colour) {
+    @error "Unknown colour `#{$colour}`";
+  }
+
+  @return map-get($dbt-colours, $colour);
+}
+
+// Helpers
 .govuk-secondary-text-colour {
   color: govuk-colour("dark-grey");
 }

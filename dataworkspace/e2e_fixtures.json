@@ -569,7 +569,6 @@
       "schema": "public",
       "frequency": 1,
       "table": "test_dataset",
-      "dataset_finder_opted_in": false,
       "data_grid_enabled": true,
       "data_grid_download_enabled": false,
       "data_grid_download_limit": null,
@@ -590,7 +589,6 @@
       "schema": "public",
       "frequency": 1,
       "table": "test_dataset",
-      "dataset_finder_opted_in": false,
       "data_grid_enabled": true,
       "data_grid_download_enabled": false,
       "data_grid_download_limit": null,
@@ -611,7 +609,6 @@
       "schema": "public",
       "frequency": 1,
       "table": "test_dataset",
-      "dataset_finder_opted_in": false,
       "data_grid_enabled": true,
       "data_grid_download_enabled": false,
       "data_grid_download_limit": null,
@@ -751,6 +748,18 @@
       "owner": 2,
       "notes": null,
       "user_access_type": "REQUIRES_AUTHORIZATION"
+    }
+  },
+  {
+    "model": "notification_banner.notificationbanner",
+    "pk": 1,
+    "fields": {
+      "campaign_name": "test_notification",
+      "content": "This is a notification. To engage with this information <a href=\"/datasets\">follow this link</a>.",
+      "last_chance_content": "<p>This is the last chance content as this notification expires in x days time.</p>",
+      "last_chance_days": 2,
+      "end_date": "2025-02-07",
+      "published": true
     }
   }
 ]

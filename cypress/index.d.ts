@@ -16,5 +16,10 @@ declare namespace Cypress {
     resetAllPermissions(
       dataSetId: import("./fixtures/datasets").DataCatalogueIDType
     ): Chainable<Element>;
+    updateNotificationBanner(
+      notificationId: number,
+      lastChanceDays: number,
+      endDate: string
+    ): Chainable<Element>;
   }
 }
