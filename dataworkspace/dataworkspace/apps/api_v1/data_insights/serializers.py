@@ -47,7 +47,7 @@ class OwnerInsightsSerializer(serializers.ModelSerializer):
                         AccessRequest.objects.filter(
                             Q(catalogue_item_id=OuterRef("id")) & Q(data_access_status="waiting")
                         )
-                        .values("id")
+                        .values("catalogue_item_id")
                         .annotate(count=Count("id"))
                         .values("count"),
                         output_field=IntegerField(),
