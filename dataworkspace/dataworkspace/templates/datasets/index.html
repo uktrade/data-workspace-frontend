@@ -71,11 +71,10 @@
         window.GOVUKFrontend
       );
       var searchInput = new ToggleInputClassOnFocus($("#live-search-form"))
-      {% flag ACCESSIBLE_AUTOCOMPLETE_FLAG %}
-        var dropdownData = {{ recently_viewed_catalogue_pages | to_json }}
-        var dataSearchURL = '{% url "datasets:find_suggested_searches" %}'
-        accessibleAutocompleteOptions(dropdownData, dataSearchURL, new GTMDatasetSearchSupport(), form)
-      {% endflag %}
+      var dropdownData = {{ recently_viewed_catalogue_pages | to_json }}
+      var dataSearchURL = '{% url "datasets:find_suggested_searches" %}'
+      accessibleAutocompleteOptions(dropdownData, dataSearchURL, new GTMDatasetSearchSupport(), form)
+     
     });
   </script>
   {% render_bundle "home-page" "js" %}
