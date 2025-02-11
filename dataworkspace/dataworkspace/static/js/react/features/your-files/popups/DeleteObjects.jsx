@@ -10,8 +10,11 @@ function DeleteTableHeader() {
   return (
     <thead>
       <tr className="govuk-table__row">
-        <th className="govuk-table__header">Name</th>
+        <th scope="col" className="govuk-table__header">
+          Name
+        </th>
         <th
+          scope="col"
           className="govuk-table__header govuk-table__header--numeric"
           style={{ width: '15em' }}
         >
