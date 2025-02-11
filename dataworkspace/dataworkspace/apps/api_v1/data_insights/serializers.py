@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Count, IntegerField, OuterRef, Q, Subquery, TextField
-from django.db.models.functions import Cast
+from django.db.models.functions import Cast, Coalesce
 from rest_framework import serializers
 
 from dataworkspace.apps.datasets.data_dictionary.service import DataDictionaryService
@@ -42,14 +42,17 @@ class OwnerInsightsSerializer(serializers.ModelSerializer):
             self.user_datasets(user)
             # access_request_count
             .annotate(
-                access_request_count=Subquery(
-                    AccessRequest.objects.filter(
-                        Q(catalogue_item_id=OuterRef("id")) & Q(data_access_status="waiting")
-                    )
-                    .values("id")
-                    .annotate(count=Count("id"))
-                    .values("count"),
-                    output_field=IntegerField(),
+                access_request_count=Coalesce(
+                    Subquery(
+                        AccessRequest.objects.filter(
+                            Q(catalogue_item_id=OuterRef("id")) & Q(data_access_status="waiting")
+                        )
+                        .values("catalogue_item_id")
+                        .annotate(count=Count("id"))
+                        .values("count"),
+                        output_field=IntegerField(),
+                    ),
+                    0,
                 )
             ).values("id", "name", "access_request_count")
         )
@@ -65,7 +68,14 @@ class OwnerInsightsSerializer(serializers.ModelSerializer):
                 {
                     "id": source_table.id,
                     "name": source_table.name,
-                    "data_dictionaries": service_ds.get_dictionary(source_table.id).items,
+                    "data_dictionaries": [
+                        {
+                            "name": item.name,
+                            "data_type": item.data_type,
+                            "definition": item.definition,
+                        }
+                        for item in service_ds.get_dictionary(source_table.id).items
+                    ],
                     "pipeline_last_run_success": last_run_success,
                 }
             )
