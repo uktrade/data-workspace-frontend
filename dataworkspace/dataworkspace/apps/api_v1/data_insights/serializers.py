@@ -68,7 +68,14 @@ class OwnerInsightsSerializer(serializers.ModelSerializer):
                 {
                     "id": source_table.id,
                     "name": source_table.name,
-                    "data_dictionaries": service_ds.get_dictionary(source_table.id).items,
+                    "data_dictionaries": [
+                        {
+                            "name": item.name,
+                            "data_type": item.data_type,
+                            "definition": item.definition,
+                        }
+                        for item in service_ds.get_dictionary(source_table.id).items
+                    ],
                     "pipeline_last_run_success": last_run_success,
                 }
             )
