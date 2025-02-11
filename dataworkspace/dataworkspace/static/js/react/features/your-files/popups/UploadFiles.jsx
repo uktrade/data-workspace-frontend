@@ -264,9 +264,6 @@ export class UploadFilesPopup extends React.Component {
                       !
                     </span>
                     <strong className="govuk-warning-text__text">
-                      <span className="govuk-warning-text__assistive">
-                        Warning
-                      </span>
                       Do not store SECRET or TOP SECRET data on Data Workspace.
                       You are responsible for the information security and data
                       protection of this upload. You can get help from the{' '}
