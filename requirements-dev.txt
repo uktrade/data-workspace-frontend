@@ -138,7 +138,7 @@ colorama==0.4.6
     # via djlint
 coverage==5.4
     # via pytest-cov
-cryptography==43.0.1
+cryptography==44.0.1
     # via -r requirements.txt
 debugpy==1.2.1
     # via -r requirements-dev.in
