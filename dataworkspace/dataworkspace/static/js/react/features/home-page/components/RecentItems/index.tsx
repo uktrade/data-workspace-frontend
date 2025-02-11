@@ -6,7 +6,12 @@ import Link from '@govuk-react/link';
 import styled from 'styled-components';
 
 import { Tile } from '../../../../components';
-import { DIVIDER_COLOUR, LINK_COLOUR } from '../../../../constants';
+import {
+  BLACK,
+  DIVIDER_COLOUR,
+  FOCUS_COLOUR,
+  LINK_COLOUR
+} from '../../../../constants';
 import URLS from '../../../../urls';
 
 const RecentItemsList = styled('ol')`
@@ -25,7 +30,17 @@ const RecentItemsLink = styled('a')`
   ${typography.font({ size: 19, weight: 'bold' })};
   color: ${LINK_COLOUR};
   text-decoration: none;
-  display: block;
+  &:focus {
+    color: ${BLACK};
+    background-color: ${FOCUS_COLOUR};
+    outline: none;
+  }
+`;
+
+const StyledLi = styled('li')`
+  ${typography.font({ size: 19, weight: 'bold' })};
+  color: ${LINK_COLOUR};
+  text-decoration: none;
   padding: ${SPACING_POINTS['3']}px 0;
 `;
 
@@ -42,9 +57,9 @@ export type RecentItemProps = {
 };
 
 const RecentItemsListItem: React.FC<RecentItemProps> = ({ url, name }) => (
-  <li>
+  <StyledLi>
     <RecentItemsLink href={url}>{name}</RecentItemsLink>
-  </li>
+  </StyledLi>
 );
 
 const RecentItems: React.FC<Record<'items', RecentItemProps[]>> = ({

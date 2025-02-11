@@ -10,6 +10,7 @@
     "cypress-e2e-testing": "file:cypress",
     "cypress-multi-reporters": "^1.6.4",
     "mocha-junit-reporter": "^2.2.1",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "dayjs": "^1.11.13"
   }
 }

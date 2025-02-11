@@ -6,7 +6,12 @@ import Link from '@govuk-react/link';
 import styled from 'styled-components';
 
 import { Tile } from '../../../../components';
-import { DIVIDER_COLOUR, LINK_COLOUR } from '../../../../constants';
+import {
+  BLACK,
+  DIVIDER_COLOUR,
+  FOCUS_COLOUR,
+  LINK_COLOUR
+} from '../../../../constants';
 import URLS from '../../../../urls';
 import BookmarkIcon from '../../icons/BookmarkIcon';
 
@@ -29,7 +34,17 @@ const YourBookmarksLink = styled('a')`
   ${typography.font({ size: 16, weight: 'bold' })};
   color: ${LINK_COLOUR};
   text-decoration: none;
-  display: flex;
+  &:focus {
+    color: ${BLACK};
+    background-color: ${FOCUS_COLOUR};
+    outline: none;
+  }
+`;
+
+const StyledLi = styled('li')`
+  ${typography.font({ size: 19, weight: 'bold' })};
+  color: ${LINK_COLOUR};
+  text-decoration: none;
   padding: ${SPACING_POINTS['3']}px 0;
 `;
 
@@ -51,14 +66,14 @@ export type YourBookmarksProps = {
 };
 
 const YourBookmarkListItem: React.FC<YourBookmarksProps> = ({ name, url }) => (
-  <li>
+  <StyledLi>
     <YourBookmarksLink href={url}>
       <BookmarkIconWrapper>
         <BookmarkIcon isBookmarked={true} />
       </BookmarkIconWrapper>
       {name}
     </YourBookmarksLink>
-  </li>
+  </StyledLi>
 );
 
 const YourBookmarks: React.FC<Record<'bookmarks', YourBookmarksProps[]>> = ({

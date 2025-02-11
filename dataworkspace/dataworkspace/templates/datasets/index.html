@@ -11,12 +11,16 @@
   {{ block.super }}
   <script nonce="{{ request.csp_nonce }}" src="{% static 'jquery-3.6.0.min.js' %}"></script>
   <script nonce="{{ request.csp_nonce }}" src="{% static 'gtm-support.js' %}"></script>
+
 {% endblock %}
 
 
 {% block header %}
   <div class="home-header">
     {{ block.super }}
+    {% if banner %}
+      {% include 'partials/notification_banner.html' %}
+    {% endif %}
   </div>
 {% endblock %}
 
@@ -40,9 +44,11 @@
 {% endblock %}
 
 {% block page_title %}Search - {{ block.super }}{% endblock %}
+
 {% block search_bar %}
 <div class="app-site-search__container">
   <div class="govuk-width-container">
+
   <form id="live-search-form" action="{% url 'datasets:find_datasets' %}" method="get" data-test="search-form">
     {% include 'partials/search_bar.html' with title="Search Data Workspace" gettingStartedLink=True %}
   </form>
@@ -65,11 +71,10 @@
         window.GOVUKFrontend
       );
       var searchInput = new ToggleInputClassOnFocus($("#live-search-form"))
-      {% flag ACCESSIBLE_AUTOCOMPLETE_FLAG %}
-        var dropdownData = {{ recently_viewed_catalogue_pages | to_json }}
-        var dataSearchURL = '{% url "datasets:find_suggested_searches" %}'
-        accessibleAutocompleteOptions(dropdownData, dataSearchURL, new GTMDatasetSearchSupport(), form)
-      {% endflag %}
+      var dropdownData = {{ recently_viewed_catalogue_pages | to_json }}
+      var dataSearchURL = '{% url "datasets:find_suggested_searches" %}'
+      accessibleAutocompleteOptions(dropdownData, dataSearchURL, new GTMDatasetSearchSupport(), form)
+     
     });
   </script>
   {% render_bundle "home-page" "js" %}

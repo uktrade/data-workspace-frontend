@@ -48,6 +48,8 @@ from dataworkspace.apps.core.models import Database
 from dataworkspace.apps.core.utils import (
     StreamingHttpResponseWithoutDjangoDbConnection,
     database_dsn,
+    is_last_days_remaining_notification_banner,
+    get_notification_banner,
     streaming_query_response,
     table_data,
     view_exists,
@@ -175,7 +177,12 @@ def _get_tags_as_dict():
 
 @csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC)
 def home_view(request):
-    return render(request, "datasets/index.html")
+    banner = get_notification_banner(request)
+    return render(
+        request,
+        "datasets/index.html",
+        {"banner": banner, "last_chance": is_last_days_remaining_notification_banner(banner)},
+    )
 
 
 @csp_update(SCRIPT_SRC=settings.WEBPACK_SCRIPT_SRC)
@@ -369,7 +376,6 @@ def find_datasets(request):
             "data_type": dict(data_types),
             "show_admin_filters": has_unpublished_dataset_access(request.user)
             and request.user.is_superuser,
-            "ACCESSIBLE_AUTOCOMPLETE_FLAG": settings.ACCESSIBLE_AUTOCOMPLETE_FLAG,
             "search_type": "searchBar" if filters.query else "noSearch",
             "has_filters": filters.has_filters(),
         },
