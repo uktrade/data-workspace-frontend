@@ -10,11 +10,8 @@ function DeleteTableHeader() {
   return (
     <thead>
       <tr className="govuk-table__row">
-        <th scope="col" className="govuk-table__header">
-          Name
-        </th>
+        <th className="govuk-table__header">Name</th>
         <th
-          scope="col"
           className="govuk-table__header govuk-table__header--numeric"
           style={{ width: '15em' }}
         >
@@ -220,105 +217,111 @@ export class DeleteObjectsPopup extends React.Component {
               <div className="modal-contents">
                 <div className="modal-body">
                   <div className="panel-body">
-                    <table
-                      className="govuk-table"
-                      style={{ tableLayout: 'fixed' }}
-                    >
-                      <DeleteTableHeader />
-                      <tbody id="s3objects-tbody">
-                        {folders.map((folder) => {
-                          const folderName = prefixToFolder(folder.Prefix);
-                          return (
-                            <tr
-                              key={folder.Prefix}
-                              className="govuk-table__row"
-                            >
-                              <td className="govuk-table__cell">
-                                {folderName}
-                              </td>
-                              <td className="govuk-table__cell"></td>
-                              <td className="govuk-table__cell"></td>
-                              <td className="govuk-table__cell govuk-table__cell--numeric govuk-table__cell-progress">
-                                {folder.deleteStarted ||
-                                folder.deleteFinished ||
-                                folder.deleteError ? null : (
-                                  <span>...</span>
-                                )}
+                    <div className="panel-body upload-files__table-container">
+                      <table
+                        className="govuk-table"
+                        style={{ tableLayout: 'fixed' }}
+                      >
+                        <DeleteTableHeader />
+                        <tbody id="s3objects-tbody">
+                          {folders.map((folder) => {
+                            const folderName = prefixToFolder(folder.Prefix);
+                            return (
+                              <tr
+                                key={folder.Prefix}
+                                className="govuk-table__row"
+                              >
+                                <td className="govuk-table__cell">
+                                  {folderName}
+                                </td>
+                                <td className="govuk-table__cell"></td>
+                                <td className="govuk-table__cell"></td>
+                                <td className="govuk-table__cell govuk-table__cell--numeric govuk-table__cell-progress">
+                                  {folder.deleteStarted ||
+                                  folder.deleteFinished ||
+                                  folder.deleteError ? null : (
+                                    <span>...</span>
+                                  )}
 
-                                {folder.deleteStarted &&
-                                !folder.deleteFinished &&
-                                !folder.deleteError ? (
-                                  <strong
-                                    className={'govuk-tag progress-percentage'}
-                                  >
-                                    Deleting
-                                  </strong>
-                                ) : null}
+                                  {folder.deleteStarted &&
+                                  !folder.deleteFinished &&
+                                  !folder.deleteError ? (
+                                    <strong
+                                      className={
+                                        'govuk-tag progress-percentage'
+                                      }
+                                    >
+                                      Deleting
+                                    </strong>
+                                  ) : null}
 
-                                {folder.deleteError ? (
-                                  <strong
-                                    className={'govuk-tag progress-error'}
-                                  >
-                                    {folder.deleteError}
-                                  </strong>
-                                ) : null}
+                                  {folder.deleteError ? (
+                                    <strong
+                                      className={'govuk-tag progress-error'}
+                                    >
+                                      {folder.deleteError}
+                                    </strong>
+                                  ) : null}
 
-                                {folder.deleteFinished ? (
-                                  <strong
-                                    className={
-                                      'govuk-tag progress-percentage-complete'
-                                    }
-                                  >
-                                    Deleted
-                                  </strong>
-                                ) : null}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                        {files.map((file) => {
-                          const filename = fullPathToFilename(file.Key);
-                          return (
-                            <tr
-                              key={file.Key}
-                              className="govuk-table__row"
-                              ng-repeat="object in model.objects"
-                            >
-                              <td className="govuk-table__cell">{filename}</td>
-                              <td className="govuk-table__cell govuk-table__cell--numeric">
-                                {file.LastModified.toLocaleString()}
-                              </td>
-                              <td className="govuk-table__cell govuk-table__cell--numeric">
-                                {bytesToSize(file.Size)}
-                              </td>
-                              <td className="govuk-table__cell govuk-table__cell--numeric govuk-table__cell-progress">
-                                {!file.deleteFinished && !file.deleteError ? (
-                                  <span>...</span>
-                                ) : null}
+                                  {folder.deleteFinished ? (
+                                    <strong
+                                      className={
+                                        'govuk-tag progress-percentage-complete'
+                                      }
+                                    >
+                                      Deleted
+                                    </strong>
+                                  ) : null}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                          {files.map((file) => {
+                            const filename = fullPathToFilename(file.Key);
+                            return (
+                              <tr
+                                key={file.Key}
+                                className="govuk-table__row"
+                                ng-repeat="object in model.objects"
+                              >
+                                <td className="govuk-table__cell">
+                                  {filename}
+                                </td>
+                                <td className="govuk-table__cell govuk-table__cell--numeric">
+                                  {file.LastModified.toLocaleString()}
+                                </td>
+                                <td className="govuk-table__cell govuk-table__cell--numeric">
+                                  {bytesToSize(file.Size)}
+                                </td>
+                                <td className="govuk-table__cell govuk-table__cell--numeric govuk-table__cell-progress">
+                                  {!file.deleteFinished && !file.deleteError ? (
+                                    <span>...</span>
+                                  ) : null}
 
-                                {file.deleteError ? (
-                                  <strong
-                                    className={'govuk-tag progress-error'}
-                                  >
-                                    {file.deleteError}
-                                  </strong>
-                                ) : null}
+                                  {file.deleteError ? (
+                                    <strong
+                                      className={'govuk-tag progress-error'}
+                                    >
+                                      {file.deleteError}
+                                    </strong>
+                                  ) : null}
 
-                                {file.deleteFinished ? (
-                                  <strong
-                                    className={
-                                      'govuk-tag progress-percentage-complete'
-                                    }
-                                  >
-                                    Deleted
-                                  </strong>
-                                ) : null}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                                  {file.deleteFinished ? (
+                                    <strong
+                                      className={
+                                        'govuk-tag progress-percentage-complete'
+                                      }
+                                    >
+                                      Deleted
+                                    </strong>
+                                  ) : null}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
                 <div className="modal-footer govuk-button-group">
