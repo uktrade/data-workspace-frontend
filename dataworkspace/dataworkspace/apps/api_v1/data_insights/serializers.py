@@ -80,7 +80,11 @@ class OwnerInsightsSerializer(serializers.ModelSerializer):
                         }
                         for item in service_ds.get_dictionary(source_table.id).items
                     ],
+<<<<<<< HEAD
                     "pipeline_last_run_success": source_table.pipeline_last_run_success(),
+=======
+                    "pipeline_last_run_success": last_run_success,
+>>>>>>> master
                 }
             )
         return source_table_response
