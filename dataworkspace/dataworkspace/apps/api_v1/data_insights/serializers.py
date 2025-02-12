@@ -66,7 +66,9 @@ class OwnerInsightsSerializer(serializers.ModelSerializer):
         service_ds = DataDictionaryService()
         source_table_response = []
         for source_table in source_tables:
-            if not table_exists(source_table.database.memorable_name, source_table.schema, source_table.name):
+            if not table_exists(
+                source_table.database.memorable_name, source_table.schema, source_table.name
+            ):
                 continue
             source_table_response.append(
                 {
