@@ -1,8 +1,9 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Count, IntegerField, OuterRef, Q, Subquery, TextField
-from django.db.models.functions import Cast
+from django.db.models.functions import Cast, Coalesce
 from rest_framework import serializers
 
+from dataworkspace.apps.core.utils import table_exists
 from dataworkspace.apps.datasets.data_dictionary.service import DataDictionaryService
 from dataworkspace.apps.datasets.models import DataSet, DataSetType, SourceTable
 from dataworkspace.apps.eventlog.models import EventLog
@@ -42,34 +43,47 @@ class OwnerInsightsSerializer(serializers.ModelSerializer):
             self.user_datasets(user)
             # access_request_count
             .annotate(
-                access_request_count=Subquery(
-                    AccessRequest.objects.filter(
-                        Q(catalogue_item_id=OuterRef("id")) & Q(data_access_status="waiting")
-                    )
-                    .values("id")
-                    .annotate(count=Count("id"))
-                    .values("count"),
-                    output_field=IntegerField(),
+                access_request_count=Coalesce(
+                    Subquery(
+                        AccessRequest.objects.filter(
+                            Q(catalogue_item_id=OuterRef("id")) & Q(data_access_status="waiting")
+                        )
+                        .values("catalogue_item_id")
+                        .annotate(count=Count("id"))
+                        .values("count"),
+                        output_field=IntegerField(),
+                    ),
+                    0,
                 )
             ).values("id", "name", "access_request_count")
         )
 
     def get_owned_source_tables(self, user):
-        dataset_ids = self.user_datasets(user).values("id")
-        st = []
+        dataset_ids = list(self.user_datasets(user).values_list("id", flat=True))
+        if not dataset_ids:
+            return []
         source_tables = SourceTable.objects.filter(dataset_id__in=dataset_ids)
         service_ds = DataDictionaryService()
+        source_table_response = []
         for source_table in source_tables:
-            last_run_success = source_table.pipeline_last_run_success()
-            st.append(
+            if not table_exists(source_table.database, source_table.schema, source_table.name):
+                continue
+            source_table_response.append(
                 {
                     "id": source_table.id,
                     "name": source_table.name,
-                    "data_dictionaries": service_ds.get_dictionary(source_table.id).items,
-                    "pipeline_last_run_success": last_run_success,
+                    "data_dictionaries": [
+                        {
+                            "name": item.name,
+                            "data_type": item.data_type,
+                            "definition": item.definition,
+                        }
+                        for item in service_ds.get_dictionary(source_table.id).items
+                    ],
+                    "pipeline_last_run_success": source_table.pipeline_last_run_success(),
                 }
             )
-        return st
+        return source_table_response
 
     def user_datasets(self, user):
         return (
