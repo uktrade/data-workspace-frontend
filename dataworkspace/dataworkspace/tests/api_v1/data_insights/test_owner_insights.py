@@ -1,5 +1,6 @@
 import pytest
 from django.urls import reverse
+from mock import mock
 from rest_framework import status
 
 from dataworkspace.apps.datasets.models import DataSetType
@@ -9,8 +10,10 @@ ENDPOINT = reverse("api-v1:data_insights:owner_insights")
 
 
 @pytest.mark.django_db
-def test_basic_response(client, user):
+@mock.patch("dataworkspace.apps.api_v1.data_insights.serializers.table_exists")
+def test_basic_response(table_exists, client, user):
     client.force_login(user)
+    table_exists.return_value = True
     ds = factories.DataSetFactory(
         information_asset_owner=user,
         name="this is one dataset",
@@ -47,6 +50,7 @@ def test_basic_response(client, user):
     owned_datasets = user_results[0]["owned_datasets"]
     assert len(owned_datasets) == 3
     assert [d for d in owned_datasets if d["name"] == ds.name][0]["access_request_count"] == 1
+
     assert len(user_results[0]["owned_source_tables"]) == 1
 
 

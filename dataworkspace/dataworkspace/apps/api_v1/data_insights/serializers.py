@@ -3,6 +3,7 @@ from django.db.models import Count, IntegerField, OuterRef, Q, Subquery, TextFie
 from django.db.models.functions import Cast, Coalesce
 from rest_framework import serializers
 
+from dataworkspace.apps.core.utils import table_exists
 from dataworkspace.apps.datasets.data_dictionary.service import DataDictionaryService
 from dataworkspace.apps.datasets.models import DataSet, DataSetType, SourceTable
 from dataworkspace.apps.eventlog.models import EventLog
@@ -58,13 +59,20 @@ class OwnerInsightsSerializer(serializers.ModelSerializer):
         )
 
     def get_owned_source_tables(self, user):
-        dataset_ids = self.user_datasets(user).values("id")
-        st = []
+        dataset_ids = list(
+            self.user_datasets(user).filter(type=DataSetType.MASTER).values_list("id", flat=True)
+        )
+        if not dataset_ids:
+            return []
         source_tables = SourceTable.objects.filter(dataset_id__in=dataset_ids)
         service_ds = DataDictionaryService()
+        source_table_response = []
         for source_table in source_tables:
-            last_run_success = source_table.pipeline_last_run_success()
-            st.append(
+            if not table_exists(
+                source_table.database.memorable_name, source_table.schema, source_table.name
+            ):
+                continue
+            source_table_response.append(
                 {
                     "id": source_table.id,
                     "name": source_table.name,
@@ -76,10 +84,10 @@ class OwnerInsightsSerializer(serializers.ModelSerializer):
                         }
                         for item in service_ds.get_dictionary(source_table.id).items
                     ],
-                    "pipeline_last_run_success": last_run_success,
+                    "pipeline_last_run_success": source_table.pipeline_last_run_success(),
                 }
             )
-        return st
+        return source_table_response
 
     def user_datasets(self, user):
         return (
