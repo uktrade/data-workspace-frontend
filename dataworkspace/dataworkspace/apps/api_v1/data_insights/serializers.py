@@ -59,7 +59,7 @@ class OwnerInsightsSerializer(serializers.ModelSerializer):
         )
 
     def get_owned_source_tables(self, user):
-        dataset_ids = list(self.user_datasets(user).values_list("id", flat=True))
+        dataset_ids = list(self.user_datasets(user).filter(type=DataSetType.MASTER).values_list("id", flat=True))
         if not dataset_ids:
             return []
         source_tables = SourceTable.objects.filter(dataset_id__in=dataset_ids)
