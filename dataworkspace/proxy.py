@@ -332,7 +332,7 @@ async def async_main():
         return (
             request.url.path.startswith("/api/v1/dataset/")
             or request.url.path.startswith("/api/v1/reference-dataset/")
-            or request.url.path.startswith("/api/v1/data_insights/")
+            or request.url.path.startswith("/api/v1/data-insights/")
             or request.url.path.startswith("/api/v1/eventlog/")
             or request.url.path.startswith("/api/v1/account/")
             or request.url.path.startswith("/api/v1/application-instance/")
