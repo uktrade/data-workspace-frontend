@@ -558,6 +558,7 @@ def data_dictionary_api_view_GET(request, source_uuid):
                         "name": item.name,
                         "data_type": item.data_type,
                         "definition": item.definition,
+                        "primary_key": item.primary_key,
                     }
                     for item in dictionary.items
                 ],

@@ -32,14 +32,16 @@ class DataDictionary:
         name: str
         data_type: str
         definition: str
+        primary_key: bool
 
-        def __init__(self, name: str, data_type: str, definition: str):
+        def __init__(self, name: str, data_type: str, definition: str, primary_key: bool):
             self.name = name
             self.data_type = data_type
             self.definition = definition
+            self.primary_key = primary_key
 
-    def append(self, name: str, data_type: str, definition: str):
-        item = DataDictionary.DataDictionaryRow(name, data_type, definition)
+    def append(self, name: str, data_type: str, definition: str, primary_key: bool = False):
+        item = DataDictionary.DataDictionaryRow(name, data_type, definition, primary_key)
         self.items.append(item)
 
 
@@ -70,6 +72,7 @@ class DataDictionaryService:
             schema=source_table.schema,
             table=source_table.table,
             include_types=True,
+            include_pks=True,
         )
         fields = source_table.field_definitions.all()
 
@@ -79,12 +82,12 @@ class DataDictionaryService:
             source_table.table,
             source_table.id,
         )
-        for name, data_type in columns:
+        for name, data_type, primary_key in columns:
             definition = ""
             if fields.filter(field=name).exists():
                 definition = fields.filter(field=name).first().description
 
-            data_dictionary.append(name, data_type, definition)
+            data_dictionary.append(name, data_type, definition, primary_key)
         return data_dictionary
 
     @staticmethod

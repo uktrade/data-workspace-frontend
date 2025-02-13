@@ -55,7 +55,7 @@
         <tbody>
             {% for item in dictionary.items %}
             <tr class="govuk-table__row">
-                    <th scope="row" class="govuk-table__header js-schema-column-{{ forloop.counter }}">{{ item.name }}</th>
+                    <th scope="row" class="govuk-table__header js-schema-column-{{ forloop.counter }}">{{ item.name }}{% if item.primary_key %} [PK]{% endif %}</th>
                 <td class="govuk-table__cell">
                     {{ item.data_type }}
                 </td>

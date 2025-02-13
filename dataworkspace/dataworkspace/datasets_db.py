@@ -18,7 +18,9 @@ from dataworkspace.utils import TYPE_CODES_REVERSED
 logger = logging.getLogger("app")
 
 
-def get_columns(database_name, schema=None, table=None, query=None, include_types=False):
+def get_columns(
+    database_name, schema=None, table=None, query=None, include_types=False, include_pks=False
+):
     if table is not None and schema is not None:
         source = psycopg2.sql.SQL("{}.{}").format(
             psycopg2.sql.Identifier(schema), psycopg2.sql.Identifier(table)
@@ -32,12 +34,41 @@ def get_columns(database_name, schema=None, table=None, query=None, include_type
         try:
             cursor.execute(psycopg2.sql.SQL("SELECT * from {} WHERE false").format(source))
 
-            if include_types:
+            if include_types and include_pks:
+                with connections[database_name].cursor() as cursor2:
+                    cursor2.execute(
+                        psycopg2.sql.SQL(
+                            """
+                        select kc.column_name
+                        from information_schema.table_constraints tc
+                          join information_schema.key_column_usage kc
+                            on kc.table_name = tc.table_name
+                            and kc.table_schema = tc.table_schema
+                            and kc.constraint_name = tc.constraint_name
+                        where tc.constraint_type = 'PRIMARY KEY'
+                          and kc.ordinal_position is not null
+                          and tc.table_schema = {}
+                          and tc.table_name = {}
+                        order by kc.position_in_unique_constraint;
+                    """
+                        ).format(psycopg2.sql.Literal(schema), psycopg2.sql.Literal(table))
+                    )
+                    pks = cursor2.fetchall()
+                    if pks:
+                        pk_dict = {pk[0]: True for pk in pks}
+                    else:
+                        pk_dict = {}
+
+                    return [
+                        (c[0], TYPE_CODES_REVERSED.get(c[1], "Unknown"), pk_dict.get(c[0], False))
+                        for c in cursor.description
+                    ]
+            elif include_types:
                 return [
                     (c[0], TYPE_CODES_REVERSED.get(c[1], "Unknown")) for c in cursor.description
                 ]
-
-            return [c[0] for c in cursor.description]
+            else:
+                return [c[0] for c in cursor.description]
         except Exception:  # pylint: disable=broad-except
             logger.error("Failed to get dataset fields", exc_info=True)
             return []
