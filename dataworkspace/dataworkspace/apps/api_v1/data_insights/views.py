@@ -38,4 +38,4 @@ class OwnerInsightsViewSet(viewsets.ModelViewSet):
         user_id = self.request.query_params.get("user_id")
         user = get_user_model().objects.get(pk=user_id)
         data = [serializer.data | {"user_id": user_id, "email": user.email}]
-        return Response({"results": data, "next": None})
+        return Response({"results": data, "next": None, "previous": None})
