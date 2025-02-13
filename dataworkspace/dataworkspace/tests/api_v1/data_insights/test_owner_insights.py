@@ -6,7 +6,7 @@ from rest_framework import status
 from dataworkspace.apps.datasets.models import DataSetType
 from dataworkspace.tests import factories
 
-ENDPOINT = reverse("api-v1:data_insights:owner_insights")
+ENDPOINT = reverse("api-v1:data_insights:owners:datasets-insights")
 
 
 @pytest.mark.django_db
