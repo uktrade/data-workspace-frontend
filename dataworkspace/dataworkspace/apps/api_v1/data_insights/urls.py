@@ -4,7 +4,7 @@ from django.urls import path
 
 urlpatterns = [
     path(
-        "owners/insights/",
+        "owners/insights",
         OwnerInsightsViewSet.as_view({"get": "get_owner_insights"}),
         name="owners-insights",
     ),
