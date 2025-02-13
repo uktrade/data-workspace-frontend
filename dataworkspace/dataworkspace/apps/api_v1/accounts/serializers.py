@@ -7,6 +7,7 @@ class UserSerializer(serializers.ModelSerializer):
     user_sso = serializers.SerializerMethodField("get_user_sso")
     first_login = serializers.SerializerMethodField()
     private_schema = serializers.SerializerMethodField()
+    sso_status = serializers.SerializerMethodField()
 
     class Meta:
         model = get_user_model()
@@ -21,6 +22,7 @@ class UserSerializer(serializers.ModelSerializer):
             "user_sso",
             "first_login",
             "private_schema",
+            "sso_status",
         )
 
     def get_user_permissions_subset(self, user):
@@ -46,3 +48,6 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_private_schema(self, user):
         return user.profile.get_private_schema()
+
+    def get_sso_status(self, user):
+        return user.profile.sso_status
