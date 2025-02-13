@@ -332,7 +332,7 @@ async def async_main():
         return (
             request.url.path.startswith("/api/v1/dataset/")
             or request.url.path.startswith("/api/v1/reference-dataset/")
-            or request.url.path.startswith("/api/v1/data_insights/owner_insights")
+            or request.url.path.startswith("/api/v1/data_insights/")
             or request.url.path.startswith("/api/v1/eventlog/")
             or request.url.path.startswith("/api/v1/account/")
             or request.url.path.startswith("/api/v1/application-instance/")
@@ -1274,7 +1274,7 @@ async def async_main():
                 request.url.host,
                 request.url.port,
                 request.url.path_qs,
-                request.headers["Content-Type"],
+                request.headers.get("Content-Type", ""),
                 content,
             )
             if error_message is not None:

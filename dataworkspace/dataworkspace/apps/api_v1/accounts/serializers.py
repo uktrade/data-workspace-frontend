@@ -7,6 +7,7 @@ class UserSerializer(serializers.ModelSerializer):
     user_sso = serializers.SerializerMethodField("get_user_sso")
     first_login = serializers.SerializerMethodField()
     private_schema = serializers.SerializerMethodField()
+    sso_status = serializers.SerializerMethodField()
 
     class Meta:
         model = get_user_model()
@@ -21,6 +22,7 @@ class UserSerializer(serializers.ModelSerializer):
             "user_sso",
             "first_login",
             "private_schema",
+            "sso_status",
         )
 
     def get_user_permissions_subset(self, user):
@@ -39,10 +41,25 @@ class UserSerializer(serializers.ModelSerializer):
         return output
 
     def get_user_sso(self, user):
-        return user.profile.sso_id
+        try:
+            return user.profile.sso_id
+        except get_user_model().profile.RelatedObjectDoesNotExist:
+            return None
 
     def get_first_login(self, user):
-        return user.profile.first_login
+        try:
+            return user.profile.first_login
+        except get_user_model().profile.RelatedObjectDoesNotExist:
+            return None
 
     def get_private_schema(self, user):
-        return user.profile.get_private_schema()
+        try:
+            return user.profile.get_private_schema()
+        except get_user_model().profile.RelatedObjectDoesNotExist:
+            return None
+
+    def get_sso_status(self, user):
+        try:
+            return user.profile.sso_status
+        except get_user_model().profile.RelatedObjectDoesNotExist:
+            return None
