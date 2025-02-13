@@ -1274,7 +1274,7 @@ async def async_main():
                 request.url.host,
                 request.url.port,
                 request.url.path_qs,
-                request.headers["Content-Type"],
+                request.headers.get("Content-Type", ""),
                 content,
             )
             if error_message is not None:
