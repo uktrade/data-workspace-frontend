@@ -1060,4 +1060,4 @@ class TestHomeViewNotifcationBanner:
     def test_html_tags_are_present_in_content(self):
         self.setUp(content="<i>italic</i><strong>bold</strong>")
         response = self.client.get(reverse("root"))
-        assert '<i>italic</i><strong>bold</strong>' in response.content.decode(response.charset)
+        assert "<i>italic</i><strong>bold</strong>" in response.content.decode(response.charset)
