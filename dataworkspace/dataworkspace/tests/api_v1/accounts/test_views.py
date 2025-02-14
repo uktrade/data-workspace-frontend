@@ -29,6 +29,7 @@ class TestUserAPIView(BaseAPIViewTest):
             "user_sso": str(user.profile.sso_id),
             "first_login": user.profile.first_login,
             "private_schema": user.profile.get_private_schema(),
+            "sso_status": user.profile.sso_status,
         }
 
     def test_success(self, unauthenticated_client):

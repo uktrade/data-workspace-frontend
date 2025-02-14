@@ -98,8 +98,9 @@ def test_user_with_no_datasets_doesnt_appear_in_response(client, user):
     client.force_login(user)
     response = client.get(f"{ENDPOINT}?user_id={user.id}")
     assert response.status_code == status.HTTP_200_OK
-    results = response.json()["results"]
-    assert len(results) == 0
+    results = response.json()["results"][0]
+    assert len(results["owned_datasets"]) == 0
+    assert len(results["owned_source_tables"]) == 0
 
 
 @pytest.mark.django_db
