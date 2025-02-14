@@ -38,7 +38,7 @@ class NotificationBanner(models.Model):
             )
 
     def save(self, *args, **kwargs):
-        self.content = bleach.clean(self.content, tags=["br", "a"], strip=True)
+        self.content = bleach.clean(self.content, tags=["br", "a", "strong", "i"], strip=True)
         self.campaign_name = re.sub(r"[^\w_)+]", "", self.campaign_name)
 
         return super().save(*args, **kwargs)
