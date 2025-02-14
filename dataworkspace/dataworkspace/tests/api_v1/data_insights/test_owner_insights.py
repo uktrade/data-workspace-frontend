@@ -6,7 +6,7 @@ from rest_framework import status
 from dataworkspace.apps.datasets.models import DataSetType
 from dataworkspace.tests import factories
 
-ENDPOINT = reverse("api-v1:data_insights:owners:datasets-insights")
+ENDPOINT = reverse("api-v1:data-insights:owners-insights")
 
 
 @pytest.mark.django_db
@@ -42,7 +42,7 @@ def test_basic_response(table_exists, client, user):
         schema="public",
     )
     factories.AccessRequestFactory(requester=user, catalogue_item_id=ds.id)
-    response = client.get(ENDPOINT)
+    response = client.get(f"{ENDPOINT}?user_id={user.id}")
     assert response.status_code == status.HTTP_200_OK
     results = response.json()["results"]
     user_results = [r for r in results if r["email"] == user.email]
@@ -84,7 +84,7 @@ def test_unpublished_data_doesnt_appear_in_response(client, user):
         dataset=ds,
         schema="public",
     )
-    response = client.get(ENDPOINT)
+    response = client.get(f"{ENDPOINT}?user_id={user.id}")
     assert response.status_code == status.HTTP_200_OK
     results = response.json()["results"]
     user_results = [r for r in results if r["email"] == user.email]
@@ -96,7 +96,7 @@ def test_unpublished_data_doesnt_appear_in_response(client, user):
 @pytest.mark.django_db
 def test_user_with_no_datasets_doesnt_appear_in_response(client, user):
     client.force_login(user)
-    response = client.get(ENDPOINT)
+    response = client.get(f"{ENDPOINT}?user_id={user.id}")
     assert response.status_code == status.HTTP_200_OK
     results = response.json()["results"]
     assert len(results) == 0
@@ -115,7 +115,7 @@ def test_declined_access_request_doesnt_appear_in_response(client, user):
     factories.AccessRequestFactory(
         requester=user, catalogue_item_id=ds.id, data_access_status="declined"
     )
-    response = client.get(ENDPOINT)
+    response = client.get(f"{ENDPOINT}?user_id={user.id}")
     assert response.status_code == status.HTTP_200_OK
     results = response.json()["results"]
     user_results = [r for r in results if r["email"] == user.email]
