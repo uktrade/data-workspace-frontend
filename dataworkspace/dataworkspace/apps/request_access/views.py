@@ -162,19 +162,25 @@ class AccessRequestConfirmationPage(RequestAccessMixin, DetailView):
             if access_request.catalogue_item_id
             else None
         )
-
         # In Dev Ignore the API call to Zendesk and notify
         if settings.ENVIRONMENT == "Dev":
+            access_request.zendesk_reference_number = "Test"
+            access_request.save()
             return super().get(request, *args, **kwargs)
 
-        if not access_request.zendesk_reference_number and isinstance(
-            catalogue_item, (DataSet, VisualisationCatalogueItem)
-        ):
-            access_request.zendesk_reference_number = zendesk.notify_dataset_access_request(
-                request,
-                access_request,
-                catalogue_item,
-            )
+        if not access_request.zendesk_reference_number:
+            if isinstance(catalogue_item, (DataSet, VisualisationCatalogueItem)):
+                access_request.zendesk_reference_number = zendesk.notify_dataset_access_request(
+                    request,
+                    access_request,
+                    catalogue_item,
+                )
+            else:
+                access_request.zendesk_reference_number = zendesk.create_zendesk_ticket(
+                    request,
+                    access_request,
+                    catalogue_item,
+                )
             access_request.save()
         return super().get(request, *args, **kwargs)
 
