@@ -869,11 +869,11 @@ class TestFeedbackViews(BaseTestCase):
 
 @pytest.mark.django_db
 class TestHomeViewNotifcationBanner:
-    def setUp(self, last_chance=False):
+    def setUp(self, last_chance=False, content="content"):
         if last_chance is True:
             self.banner = NotificationBanner.objects.create(
                 campaign_name="test",
-                content="content",
+                content=content,
                 end_date=date.today() + timedelta(days=3),
                 last_chance_days=3,
                 last_chance_content="last chance now",
@@ -882,7 +882,7 @@ class TestHomeViewNotifcationBanner:
         else:
             self.banner = NotificationBanner.objects.create(
                 campaign_name="test",
-                content="content",
+                content=content,
                 end_date=date.today() + timedelta(days=1),
                 published=True,
             )
@@ -1056,3 +1056,8 @@ class TestHomeViewNotifcationBanner:
         assert response.status_code == 200
         assert self.banner.campaign_name in response.cookies
         assert self.client.cookies.get(self.banner.campaign_name).value == "accepted"
+
+    def test_html_tags_are_present_in_content(self):
+        self.setUp(content="<i>italic</i><strong>bold</strong>")
+        response = self.client.get(reverse("root"))
+        assert "<i>italic</i><strong>bold</strong>" in response.content.decode(response.charset)
