@@ -96,7 +96,6 @@ class TestIsDataWorkspaceTeamMember:
     def test_non_dataworkspace_team_member_does_not_have_permission(self):
         user = factories.UserFactory.create(
             username="visualisation.creator@test.com",
-            is_staff=True,
             is_superuser=False,
         )
         visualisation = factories.VisualisationCatalogueItemFactory.create(
@@ -124,4 +123,4 @@ class TestIsDataWorkspaceTeamMember:
         # https://docs.djangoproject.com/en/3.0/topics/auth/default/#permission-caching
         user = get_object_or_404(get_user_model(), pk=user.id)
         assert has_access_as_dataworkspace_team_member is False
-        assert user.has_perm(perm_codename) is True
+        assert user.has_perm(perm_codename) is False
