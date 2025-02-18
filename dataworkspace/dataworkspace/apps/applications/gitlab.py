@@ -122,10 +122,7 @@ def gitlab_has_developer_access(user, gitlab_project_id):
 
 
 def is_dataworkspace_team_member(user, gitlab_project_id):
-    if user.is_superuser and gitlab_has_developer_access(user, gitlab_project_id):
-        return True
-    else:
-        return False
+    return bool(user.is_superuser and gitlab_has_developer_access(user, gitlab_project_id))
 
 
 def _ensure_user_has_manage_unpublish_perm(user):
