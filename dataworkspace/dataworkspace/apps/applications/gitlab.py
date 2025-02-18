@@ -121,6 +121,10 @@ def gitlab_has_developer_access(user, gitlab_project_id):
     return has_access
 
 
+def is_dataworkspace_team_member(user, gitlab_project_id) -> bool:
+    return bool(user.is_superuser and gitlab_has_developer_access(user, gitlab_project_id))
+
+
 def _ensure_user_has_manage_unpublish_perm(user):
     # Update the django permission controlling whether the user can preview unpublished visualisation catalogue pages.
     perm_codename = dataset_type_to_manage_unpublished_permission_codename(
