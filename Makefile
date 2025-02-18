@@ -47,7 +47,7 @@ docker-build:
 .PHONY: docker-test-unit
 docker-test-unit: TESTS ?= /dataworkspace/dataworkspace
 docker-test-unit: docker-build
-	docker compose --profile test -p data-workspace-test run data-workspace-test pytest -vv --junitxml=/test-results/junit.xml dataworkspace/dataworkspace/tests/applications/test_gitlab.py::TestIsDataWorkspaceTeamMember::test_dataworkspace_team_member_has_permission
+	docker compose --profile test -p data-workspace-test run data-workspace-test pytest -vv --junitxml=/test-results/junit.xml $(TESTS)
 
 .PHONY: docker-test-integration
 docker-test-integration: TESTS ?= test/
