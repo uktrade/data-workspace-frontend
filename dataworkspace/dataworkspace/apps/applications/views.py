@@ -1039,6 +1039,8 @@ def visualisation_catalogue_item_html_POST(request, gitlab_project):
 
 
 def visualisation_approvals_html_view(request, gitlab_project_id):
+    if waffle.flag_is_active(request, "THIRD_APPROVER"):
+        pass
     if not request.user.has_perm("applications.develop_visualisations"):
         raise ManageVisualisationsPermissionDeniedError(
             "manage visualisations", "To request access"
