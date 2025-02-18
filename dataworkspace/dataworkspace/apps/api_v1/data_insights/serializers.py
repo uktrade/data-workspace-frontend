@@ -2,7 +2,6 @@ from django.db.models import Count, IntegerField, OuterRef, Q, Subquery
 from django.db.models.functions import Coalesce
 from rest_framework import serializers
 
-from dataworkspace.apps.core.utils import table_exists
 from dataworkspace.apps.datasets.data_dictionary.service import DataDictionaryService
 from dataworkspace.apps.datasets.models import DataSet, SourceTable
 from dataworkspace.apps.request_access.models import AccessRequest
