@@ -121,7 +121,7 @@ def gitlab_has_developer_access(user, gitlab_project_id):
     return has_access
 
 
-def is_dataworkspace_team_member(user, gitlab_project_id) -> bool :
+def is_dataworkspace_team_member(user, gitlab_project_id) -> bool:
     return bool(user.is_superuser and gitlab_has_developer_access(user, gitlab_project_id))
 
 
