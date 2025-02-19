@@ -1,6 +1,5 @@
 import pytest
 from django.urls import reverse
-from mock import mock
 from rest_framework import status
 
 from dataworkspace.apps.datasets.models import DataSetType
