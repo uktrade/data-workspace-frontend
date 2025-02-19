@@ -147,8 +147,3 @@ class PipelineScheduleType(models.TextChoices):
     FRIDAYS = "0 0 * * 6", "Run once a week at midnight on Friday"
     MONTHLY = "@monthly", "Run once a month at midnight of the first day of the month"
     YEARLY = "@yearly", "Run once a year at midnight of January 1"
-
-
-class DataFlowPlatform(models.TextChoices):
-    GOV_PAAS = "gov_paas", "GOV.UK PaaS"
-    DATA_WORKSPACE_AWS = "data_workspace_aws", "Data Workspace AWS"

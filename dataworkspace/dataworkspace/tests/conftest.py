@@ -204,15 +204,15 @@ def metadata_db(db):
                 ('public','table1','2020-01-01 00:01:00.0','2020-09-02 00:01:00.0',NULL,1,'Pipeline1'),
                 ('public','table4', NULL,'2021-12-01 00:00:00.0',NULL,1,NULL);
 
-            CREATE TABLE IF NOT EXISTS dataflow.pipeline_dag_runs_v2 (
+            CREATE TABLE IF NOT EXISTS dataflow.pipeline_dag_runs_data_workspace (
                 pipeline_name TEXT,
                 pipeline_active TEXT,
                 final_state TEXT,
                 last_success_of_day TIMESTAMP,
                 run_end_date DATE
             );
-            TRUNCATE TABLE dataflow.pipeline_dag_runs_v2;
-            INSERT INTO dataflow.pipeline_dag_runs_v2 (
+            TRUNCATE TABLE dataflow.pipeline_dag_runs_data_workspace;
+            INSERT INTO dataflow.pipeline_dag_runs_data_workspace (
                 pipeline_name,
                 pipeline_active,
                 final_state,
