@@ -53,7 +53,6 @@ from dataworkspace.apps.core.models import (
 from dataworkspace.apps.datasets.constants import (
     GRID_ACRONYM_MAP,
     GRID_DATA_TYPE_MAP,
-    DataFlowPlatform,
     DataLinkType,
     DataSetType,
     PipelineScheduleType,
@@ -2899,11 +2898,6 @@ class Pipeline(TimeStampedUserModel):
     schedule = models.TextField(
         choices=PipelineScheduleType.choices, default=PipelineScheduleType.DAILY
     )
-    data_flow_platform = models.CharField(
-        max_length=255,
-        choices=DataFlowPlatform.choices,
-        default=DataFlowPlatform.DATA_WORKSPACE_AWS,
-    )
 
     class Meta:
         ordering = ("table_name",)
@@ -2929,11 +2923,7 @@ class Pipeline(TimeStampedUserModel):
 
     @property
     def dataflow_grid_view_url(self):
-        base_url = (
-            settings.DATAFLOW_API_CONFIG["DATAFLOW_BASE_URL"]
-            if self.data_flow_platform == DataFlowPlatform.GOV_PAAS
-            else settings.DATAFLOW_API_CONFIG["DATAFLOW_BASE_URL_DATA_WORKSPACE_AWS_USER_FACING"]
-        )
+        base_url = settings.DATAFLOW_API_CONFIG["DATAFLOW_BASE_URL_DATA_WORKSPACE_AWS_USER_FACING"]
         return f"{base_url}/dags/{self.dag_id}/grid"
 
     def get_absolute_url(self):

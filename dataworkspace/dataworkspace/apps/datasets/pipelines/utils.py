@@ -5,11 +5,6 @@ import requests
 from django.conf import settings
 from mohawk import Sender
 
-from dataworkspace.apps.datasets.constants import DataFlowPlatform
-
-API_URL_GOV_PAAS = (
-    f"{settings.DATAFLOW_API_CONFIG['DATAFLOW_BASE_URL']}/api/experimental/derived-dags"
-)
 API_URL_DATA_WORKSPACE_AWS_INTERNAL = f"{settings.DATAFLOW_API_CONFIG['DATAFLOW_BASE_URL_DATA_WORKSPACE_AWS_INTERNAL']}/api/experimental/derived-dags"
 HAWK_CREDS = {
     "id": settings.DATAFLOW_API_CONFIG["DATAFLOW_HAWK_ID"],
@@ -27,11 +22,7 @@ def split_schema_table(schema_table):
 
 
 def api_url(pipeline):
-    return (
-        API_URL_GOV_PAAS
-        if pipeline.data_flow_platform == DataFlowPlatform.GOV_PAAS
-        else API_URL_DATA_WORKSPACE_AWS_INTERNAL
-    )
+    return API_URL_DATA_WORKSPACE_AWS_INTERNAL
 
 
 def save_pipeline_to_dataflow(pipeline, method):
@@ -151,7 +142,4 @@ def _list_pipelines(api_url):
 
 
 def list_pipelines():
-    return {
-        DataFlowPlatform.GOV_PAAS: _list_pipelines(API_URL_GOV_PAAS),
-        DataFlowPlatform.DATA_WORKSPACE_AWS: _list_pipelines(API_URL_DATA_WORKSPACE_AWS_INTERNAL),
-    }
+    return _list_pipelines(API_URL_DATA_WORKSPACE_AWS_INTERNAL)
