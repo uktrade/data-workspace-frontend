@@ -53,8 +53,7 @@
 
       <input type="hidden" id="{{ form.submit_action.id_for_label }}" name="{{ form.submit_action.name }}"
         value="{{ is_currently_subscribed|yesno:" unsubscribe,subscribe" }}" />
-      <button data-module="govuk-button" data-prevent-double-click="true" type="submit" class="govuk-button">{{
-        is_currently_subscribed|yesno:"Unsubscribe,Subscribe" }}</button>
+      <button data-module="govuk-button" data-prevent-double-click="true" type="submit" class="govuk-button">{{ is_currently_subscribed|yesno:"Unsubscribe,Subscribe" }}</button>
     </form>
 
   </div>
